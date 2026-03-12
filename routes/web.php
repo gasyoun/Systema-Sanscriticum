@@ -1,36 +1,113 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Models\Lead;
+// --- НАШ НОВЫЙ ИМПОРТ ---
+use App\Models\LandingPage; 
+// ------------------------
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PromoController;
+use App\Http\Controllers\LeadController; 
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ShopController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
 */
 
-// Главная страница (пока оставляем стандартную или редирект на логин)
-Route::get('/login', function () {
-    return redirect()->route('filament.admin.auth.login');
-})->name('login');
 
-Route::get('/', function () {
-    return view('welcome');
+// Страница оформления заказа (Checkout)
+Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('checkout.show');
+
+// --- НОВЫЕ РОУТЫ ДЛЯ ПРОМОКОДОВ ---
+Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'])->name('checkout.promo');
+Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])->name('checkout.promo.remove');
+
+// 1. РЕДИРЕКТ (чтобы старые ссылки работали)
+Route::get('/promo/{slug}', function ($slug) {
+    return redirect('/' . $slug, 301);
 });
 
-// Группа маршрутов для Личного кабинета (только для авторизованных пользователей)
+// --- ГЛАВНАЯ И АВТОРИЗАЦИЯ ---
+
+// --- ИЗМЕНЕННЫЙ РОУТ ГЛАВНОЙ СТРАНИЦЫ (ВИТРИНА) ---
+Route::get('/', function () {
+    // Берем только опубликованные курсы, по 9 на страницу
+    $landings = LandingPage::where('is_active', true)->paginate(9);
+    return view('main', compact('landings'));
+});
+
+// Витрина магазина курсов
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+
+// Страница одного курса (добавили!)
+Route::get('/shop/course/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
+// --------------------------------------------------
+
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
+// --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
 Route::middleware(['auth'])->group(function () {
     
-    // 1. Главная страница кабинета (Список курсов)
-    Route::get('/cabinet', [StudentController::class, 'dashboard'])
-        ->name('student.dashboard');
+    Route::get('/home', function () {
+        $user = auth()->user();
+        if ($user->is_admin || $user->email === 'pe4kinsmart@gmail.com') {
+            return redirect('/admin');
+        }
+        return redirect()->route('student.dashboard');
+    })->name('home');
+
+    Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
+    Route::get('/cabinet', [StudentController::class, 'dashboard'])->name('student.dashboard');
     
-    // 2. Страница курса (Первый урок или список)
-    Route::get('/course/{slug}', [StudentController::class, 'showCourse'])
-        ->name('student.course');
+    // 👇 НОВЫЙ МАРШРУТ: СТРАНИЦА СООБЩЕНИЙ 👇
+    Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
     
-    // 3. Страница конкретного урока внутри курса
-    Route::get('/course/{slug}/lesson/{lessonId}', [StudentController::class, 'showCourse'])
-        ->name('student.lesson');
+    Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');
+    Route::get('/course/{slug}/lesson/{lessonId}', [StudentController::class, 'showLesson'])->name('student.lesson');
+
+    Route::post('/course/{slug}/lesson/{lessonId}/complete', [StudentController::class, 'completeLesson'])
+        ->name('student.lesson.complete');
+        
+    Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
+        ->name('student.lesson.note');
+
+    Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
+        ->name('student.certificate.download');
+        
+    Route::get('/admin/leads/export', [LeadController::class, 'export'])->name('leads.export');
 });
+
+
+// --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---
+Route::get('/force-download/{file}', function ($file) {
+    $path = storage_path('app/public/materials/' . $file); 
+    if (!file_exists($path)) {
+        $path = storage_path('app/public/archives/' . $file);
+    }
+    if (file_exists($path)) {
+        return response()->download($path);
+    }
+    abort(404, 'Файл не найден');
+})->name('force.download');
+
+Route::get('/files-debug', function () {
+    // ... ваш код дебага без изменений ...
+});
+
+
+// --- ОТПРАВКА ФОРМЫ ---
+Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
+Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
+
+
+// --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
+// ВАЖНО: Этот маршрут всегда в самом низу!
+Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

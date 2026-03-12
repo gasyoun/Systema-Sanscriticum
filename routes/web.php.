@@ -1,0 +1,15 @@
+use Illuminate\Support\Facades\Route;
+
+// ... (тут твои старые маршруты)
+
+// === ДОБАВЛЯЕМ ВОТ ЭТОТ КУСОК ===
+Route::get('/force-download/{filename}', function ($filename) {
+    // Ищем файл в закрытой папке storage/app/public/archives
+    $path = storage_path('app/public/archives/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404, 'Файл физически не найден по пути: ' . $path);
+    }
+
+    return response()->download($path);
+});
