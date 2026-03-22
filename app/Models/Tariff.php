@@ -51,7 +51,7 @@ class Tariff extends Model
         if ($marketing && $marketing->is_loyalty_active) {
             // Проверяем, есть ли у юзера ЛЮБЫЕ успешные оплаты
             $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)
-                ->where('status', 'paid')
+                ->whereIn('status', ['paid', 'success']) // Ловим оба успешных статуса
                 ->exists();
 
             if ($hasAnyPaid) {
@@ -62,17 +62,14 @@ class Tariff extends Model
         }
 
         // 2. АПГРЕЙД (Вычитаем то, что уже оплачено за ЭТОТ конкретный курс)
-        $courseSlug = $this->course->slug ?? null;
-        if ($courseSlug) {
-            $landingId = \App\Models\LandingPage::where('slug', $courseSlug)->value('id');
-            if ($landingId) {
-                $alreadyPaidAmount = \App\Models\Payment::where('user_id', $user->id)
-                    ->where('landing_page_id', $landingId)
-                    ->where('status', 'paid')
-                    ->sum('amount');
+        // ИСПРАВЛЕНИЕ ЗДЕСЬ: используем course_id напрямую вместо landing_page_id
+        if ($this->course_id) {
+            $alreadyPaidAmount = \App\Models\Payment::where('user_id', $user->id)
+                ->where('course_id', $this->course_id)
+                ->whereIn('status', ['paid', 'success'])
+                ->sum('amount');
                 
-                $finalPrice = $finalPrice - (float) $alreadyPaidAmount;
-            }
+            $finalPrice = $finalPrice - (float) $alreadyPaidAmount;
         }
 
         return $finalPrice > 0 ? $finalPrice : 0;

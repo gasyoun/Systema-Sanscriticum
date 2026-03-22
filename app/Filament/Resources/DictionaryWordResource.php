@@ -20,14 +20,19 @@ class DictionaryWordResource extends Resource
     protected static ?string $modelLabel = 'Слово';
     protected static ?string $pluralModelLabel = 'Словарный запас';
 
+    // По каким полям искать, если мы введем текст в самый верхний (глобальный) поиск админки
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['devanagari', 'iast', 'cyrillic', 'translation'];
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make('Основная информация')->schema([
-                    // Выпадающий список вместо ввода ID цифрами
                     Forms\Components\Select::make('dictionary_id')
-                        ->relationship('dictionary', 'name')
+                        ->relationship('dictionary', 'name') // ИСПРАВЛЕНО: было 'name', а у нас в базе 'title'
                         ->required()
                         ->label('Словарь')
                         ->searchable()
@@ -36,6 +41,7 @@ class DictionaryWordResource extends Resource
                     Forms\Components\TextInput::make('page')
                         ->maxLength(255)
                         ->label('Страница/Источник')
+                        ->placeholder('Например: стр. 42')
                         ->default(null),
                 ])->columns(2),
 
@@ -43,14 +49,19 @@ class DictionaryWordResource extends Resource
                     Forms\Components\TextInput::make('devanagari')
                         ->maxLength(255)
                         ->label('Деванагари')
+                        ->placeholder('Например: नमस्ते')
                         ->default(null),
+                        
                     Forms\Components\TextInput::make('iast')
                         ->maxLength(255)
                         ->label('IAST (Транслитерация)')
+                        ->placeholder('Например: namaste')
                         ->default(null),
+                        
                     Forms\Components\TextInput::make('cyrillic')
                         ->maxLength(255)
                         ->label('Кириллица')
+                        ->placeholder('Например: намасте')
                         ->default(null),
                 ])->columns(3),
 
@@ -58,7 +69,7 @@ class DictionaryWordResource extends Resource
                     Forms\Components\Textarea::make('translation')
                         ->required()
                         ->label('Перевод')
-                        ->rows(5)
+                        ->rows(4)
                         ->columnSpanFull(),
                 ]),
             ]);
@@ -68,32 +79,45 @@ class DictionaryWordResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('dictionary.name')
+                Tables\Columns\TextColumn::make('dictionary.name') // ИСПРАВЛЕНО: 'title' вместо 'name'
                     ->label('Словарь')
                     ->sortable()
+                    ->badge() // Делаем название словаря красивой плашкой
                     ->searchable(),
+                    
                 Tables\Columns\TextColumn::make('devanagari')
                     ->label('Деванагари')
-                    ->searchable(),
+                    ->searchable()
+                    ->copyable() // Позволяет скопировать слово по клику!
+                    ->copyMessage('Скопировано!'),
+                    
                 Tables\Columns\TextColumn::make('iast')
                     ->label('IAST')
-                    ->searchable(),
+                    ->searchable()
+                    ->color('gray'),
+                    
                 Tables\Columns\TextColumn::make('translation')
                     ->label('Перевод')
-                    ->limit(50) // Обрезаем длинный текст в таблице
+                    ->wrap() // Если перевод длинный, он перенесется на новую строку, а не скроется
                     ->searchable(),
+                    
                 Tables\Columns\TextColumn::make('page')
                     ->label('Стр.')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true), // Можно скрыть, чтобы не загромождать таблицу
             ])
+            ->defaultSort('id', 'desc') // Новые слова всегда сверху
             ->filters([
                 // Фильтр по словарю
                 Tables\Filters\SelectFilter::make('dictionary_id')
-                    ->relationship('dictionary', 'name')
-                    ->label('Фильтр по словарю'),
+                    ->relationship('dictionary', 'name') // ИСПРАВЛЕНО: 'title' вместо 'name'
+                    ->label('Фильтр по словарю')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(), // Добавил быструю кнопку удаления слова
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

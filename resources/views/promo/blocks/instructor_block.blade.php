@@ -13,77 +13,82 @@
                 {{-- ========================================== --}}
                 <div class="lg:col-span-5 flex flex-col">
                     
-                    {{-- 1. БЛОК ФОТО --}}
-                    <div class="relative mb-10">
-                        <div class="absolute top-4 left-4 w-full h-full border-2 border-[#E85C24]/30 rounded-[2.5rem] -z-0 translate-x-2 translate-y-2"></div>
+    {{-- 1. БЛОК ФОТО --}}
+    <div class="relative mb-10">
+        <div class="absolute top-4 left-4 w-full h-full border-2 border-[#E85C24]/30 rounded-[2.5rem] -z-0 translate-x-2 translate-y-2"></div>
+        
+        <div class="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] z-10 bg-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+            @php
+                $instructorImageUrl = !empty($data['image']) ? \Awcodes\Curator\Models\Media::find($data['image'])?->url : null;
+            @endphp
+            
+            @if($instructorImageUrl)
+                <img src="{{ $instructorImageUrl }}" alt="{{ $data['name'] ?? '' }}" class="w-full h-full object-cover object-top">
+            @else
+                <div class="w-full h-full flex items-center justify-center text-gray-300">
+                    <i class="fas fa-user text-6xl"></i>
+                </div>
+            @endif
+        </div>
+
+        {{-- Мобильная плашка --}}
+        <div class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/50 text-center lg:hidden z-20">
+            <h3 class="font-extrabold text-[#101010] text-xl">{{ $data['name'] ?? '' }}</h3>
+            <p class="text-[#E85C24] text-sm font-bold uppercase tracking-wider mt-1">{{ $data['role'] ?? '' }}</p>
+        </div>
+    </div>
+
+    {{-- 2. ПУБЛИКАЦИИ (Сетка 3 в ряд под фото) --}}
+    @if(!empty($data['publications']))
+        <div class="pt-4 lg:pt-2">
+            <h3 class="text-lg md:text-xl font-extrabold text-[#101010] mb-6 flex items-center justify-center lg:justify-start">
+                Публикации автора
+                <span class="ml-3 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-full">{{ count($data['publications']) }}</span>
+            </h3>
+            
+            {{-- Сетка 3 в ряд --}}
+            <div class="grid grid-cols-3 gap-3 md:gap-5">
+                @foreach($data['publications'] as $pub)
+                    @php
+                        $tag = !empty($pub['url']) ? 'a' : 'div';
+                        $href = !empty($pub['url']) ? 'href="'.$pub['url'].'" target="_blank"' : '';
+                        // Достаем картинку книги из Curator
+                        $pubImageUrl = !empty($pub['image']) ? \Awcodes\Curator\Models\Media::find($pub['image'])?->url : null;
+                    @endphp
+                    
+                    <{{ $tag }} {!! $href !!} class="group flex flex-col items-start {{ !empty($pub['url']) ? 'cursor-pointer' : 'cursor-default' }}">
                         
-                        <div class="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] z-10 bg-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
-                            @if(!empty($data['image']))
-                                <img src="{{ Storage::url($data['image']) }}" alt="{{ $data['name'] }}" class="w-full h-full object-cover object-top">
+                        {{-- Вертикальная обложка --}}
+                        <div class="w-full aspect-[2/3] bg-gray-200 rounded-lg overflow-hidden relative shadow-[4px_4px_10px_rgba(0,0,0,0.12)] border-l-2 border-white/60 mb-3 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[4px_10px_20px_rgba(232,92,36,0.25)]">
+                            @if($pubImageUrl)
+                                <img src="{{ $pubImageUrl }}" alt="{{ $pub['title'] ?? '' }}" class="absolute inset-0 w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                    <i class="fas fa-user text-6xl"></i>
+                                <div class="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-300">
+                                    <i class="fas fa-book text-xl md:text-2xl"></i>
                                 </div>
                             @endif
+                            {{-- Эффект глянца/блика на обложке --}}
+                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
                         </div>
 
-                        {{-- Мобильная плашка --}}
-                        <div class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/50 text-center lg:hidden z-20">
-                            <h3 class="font-extrabold text-[#101010] text-xl">{{ $data['name'] }}</h3>
-                            <p class="text-[#E85C24] text-sm font-bold uppercase tracking-wider mt-1">{{ $data['role'] }}</p>
+                        {{-- Текст --}}
+                        <div class="w-full">
+                            @if(!empty($pub['type']))
+                                <p class="text-[8px] md:text-[9px] font-extrabold uppercase tracking-widest text-[#E85C24] mb-1">
+                                    {{ $pub['type'] }}
+                                </p>
+                            @endif
+                            <h4 class="text-xs md:text-sm font-bold text-[#101010] leading-snug transition-colors line-clamp-3 group-hover:text-[#E85C24]" title="{{ $pub['title'] ?? '' }}">
+                                {{ $pub['title'] ?? '' }}
+                            </h4>
                         </div>
-                    </div>
+                    </{{ $tag }}>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
-                    {{-- 2. ПУБЛИКАЦИИ (Сетка 3 в ряд под фото) --}}
-                    @if(!empty($data['publications']))
-                        <div class="pt-4 lg:pt-2">
-                            <h3 class="text-lg md:text-xl font-extrabold text-[#101010] mb-6 flex items-center justify-center lg:justify-start">
-                                Публикации автора
-                                <span class="ml-3 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-full">{{ count($data['publications']) }}</span>
-                            </h3>
-                            
-                            {{-- Сетка 3 в ряд --}}
-                            <div class="grid grid-cols-3 gap-3 md:gap-5">
-                                @foreach($data['publications'] as $pub)
-                                    @php
-                                        $tag = !empty($pub['url']) ? 'a' : 'div';
-                                        $href = !empty($pub['url']) ? 'href="'.$pub['url'].'" target="_blank"' : '';
-                                    @endphp
-                                    
-                                    <{{ $tag }} {!! $href !!} class="group flex flex-col items-start {{ !empty($pub['url']) ? 'cursor-pointer' : 'cursor-default' }}">
-                                        
-                                        {{-- Вертикальная обложка (Анимация срабатывает ВСЕГДА) --}}
-                                        <div class="w-full aspect-[2/3] bg-gray-200 rounded-lg overflow-hidden relative shadow-[4px_4px_10px_rgba(0,0,0,0.12)] border-l-2 border-white/60 mb-3 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[4px_10px_20px_rgba(232,92,36,0.25)]">
-                                            @if(!empty($pub['image']))
-                                                <img src="{{ Storage::url($pub['image']) }}" alt="{{ $pub['title'] }}" class="absolute inset-0 w-full h-full object-cover">
-                                            @else
-                                                <div class="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-300">
-                                                    <i class="fas fa-book text-xl md:text-2xl"></i>
-                                                </div>
-                                            @endif
-                                            {{-- Эффект глянца/блика на обложке --}}
-                                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
-                                        </div>
-
-                                        {{-- Текст --}}
-                                        <div class="w-full">
-                                            @if(!empty($pub['type']))
-                                                <p class="text-[8px] md:text-[9px] font-extrabold uppercase tracking-widest text-[#E85C24] mb-1">
-                                                    {{ $pub['type'] }}
-                                                </p>
-                                            @endif
-                                            {{-- Подсветка текста при наведении срабатывает ВСЕГДА --}}
-                                            <h4 class="text-xs md:text-sm font-bold text-[#101010] leading-snug transition-colors line-clamp-3 group-hover:text-[#E85C24]" title="{{ $pub['title'] }}">
-                                                {{ $pub['title'] }}
-                                            </h4>
-                                        </div>
-                                    </{{ $tag }}>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                </div>
+</div>
 
                 {{-- ========================================== --}}
                 {{-- ПРАВАЯ КОЛОНКА: ИНФО                       --}}

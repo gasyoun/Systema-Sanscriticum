@@ -1,71 +1,81 @@
-<section class="py-10 lg:py-16 bg-white" id="team">
-    <div class="container mx-auto px-4">
+<section class="py-16 lg:py-24 bg-white relative overflow-hidden" id="team">
+    
+    {{-- Декоративный фоновый элемент --}}
+    <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-b from-[var(--surface-soft)] to-transparent opacity-50 pointer-events-none rounded-bl-full -translate-y-1/2 translate-x-1/3"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
         
-        {{-- Заголовок с полосой --}}
-        <div class="flex flex-col items-center mb-12">
-            <h2 class="text-2xl md:text-4xl font-extrabold text-[#101010] text-center max-w-3xl">
+        {{-- Заголовок с премиум-подачей --}}
+        <div class="flex flex-col items-center mb-16 relative">
+            <h2 class="text-3xl md:text-5xl font-extrabold text-[var(--text-primary)] text-center max-w-3xl tracking-tight leading-tight">
                 {{ $data['title'] ?? 'Наши преподаватели' }}
             </h2>
-            <div class="w-24 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
+            <div class="w-20 h-1.5 rounded-full mt-6" style="background: linear-gradient(90deg, var(--accent), #f0733b);"></div>
             
             @if(!empty($data['subtitle']))
-                <p class="text-gray-500 text-center mt-4 max-w-2xl text-lg">
+                <p class="text-[var(--text-muted)] font-medium text-center mt-6 max-w-2xl text-lg md:text-xl leading-relaxed">
                     {{ $data['subtitle'] }}
                 </p>
             @endif
         </div>
 
         @if(!empty($data['items']))
-        {{-- Сетка: 1 колонка на моб, 2 на планшете, 4 на десктопе --}}
+        {{-- Умная сетка: автоматически распределяет карточки, учитывая боковую форму --}}
         <div class="flex flex-wrap justify-center gap-6 lg:gap-8">
             
             @foreach($data['items'] as $item)
-                {{-- Карточка (добавлена фиксированная ширина для центровки flex) --}}
-                <div class="w-full md:w-[48%] lg:w-[23%] bg-[#F9FAFB] rounded-[2rem] p-6 text-center border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:bg-white group h-full flex flex-col items-center">
+                {{-- Карточка (flex-basis: 280px гарантирует, что карточка не будет слишком узкой) --}}
+                <div class="w-full flex-[1_1_280px] max-w-[380px] bg-[var(--surface-soft)] rounded-[2rem] p-8 lg:p-10 border border-[var(--border)] transition-all duration-500 hover:shadow-[0_20px_40px_rgba(232,92,36,0.08)] hover:-translate-y-2 hover:bg-white group flex flex-col items-center relative overflow-hidden">
                     
-                    {{-- Фото --}}
-                    <div class="w-32 h-32 mb-6 relative">
-                        <div class="absolute inset-0 bg-orange-100 rounded-full scale-95 group-hover:scale-110 transition-transform duration-500"></div>
+                    {{-- Декоративная светящаяся линия сверху при наведении --}}
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {{-- Аватар с эффектом свечения --}}
+                    <div class="w-32 h-32 mb-8 relative">
+                        <div class="absolute inset-0 rounded-full blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500 scale-110" style="background: linear-gradient(135deg, var(--accent), #fca5a5);"></div>
+                        
                         @if(!empty($item['image']))
                             <img src="{{ Storage::url($item['image']) }}" 
-                                 class="w-full h-full object-cover rounded-full border-4 border-white shadow-sm relative z-10" 
+                                 class="w-full h-full object-cover rounded-full border-4 border-white shadow-md relative z-10 group-hover:scale-105 transition-transform duration-500" 
                                  alt="{{ $item['name'] }}">
                         @else
                             {{-- Заглушка, если нет фото --}}
-                            <div class="w-full h-full rounded-full border-4 border-white shadow-sm bg-gray-200 flex items-center justify-center relative z-10 text-gray-400">
-                                <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            <div class="w-full h-full rounded-full border-4 border-white shadow-md bg-gray-100 flex items-center justify-center relative z-10 text-gray-400 group-hover:scale-105 transition-transform duration-500">
+                                <svg class="w-12 h-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                             </div>
                         @endif
                     </div>
 
                     {{-- Имя --}}
-                    <h3 class="text-xl font-bold text-[#101010] mb-2 leading-tight">
+                    <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2 text-center leading-tight group-hover:text-[var(--accent)] transition-colors duration-300">
                         {{ $item['name'] }}
                     </h3>
 
                     {{-- Роль / Должность --}}
                     @if(!empty($item['role']))
-                        <div class="text-[#E85C24] font-bold text-xs uppercase tracking-widest mb-4">
+                        <div class="font-black text-[10px] uppercase tracking-[0.2em] mb-6 text-center" style="color: var(--accent);">
                             {{ $item['role'] }}
                         </div>
                     @endif
 
-                    {{-- Описание (С поддержкой форматирования и ГАЛОЧКАМИ) --}}
+                    {{-- Описание (С крутыми стилями для галочек и списков) --}}
                     @if(!empty($item['description']))
-                        <div class="text-gray-500 text-sm leading-relaxed font-medium 
+                        <div class="w-full text-[var(--text-muted)] text-sm leading-relaxed font-medium 
                                     text-left
-                                    [&>p]:mb-2 [&>p:last-child]:mb-0 
+                                    [&>p]:mb-3 [&>p:last-child]:mb-0 
                                     
-                                    {{-- СТИЛИ СПИСКА: Галочки вместо точек --}}
-                                    [&>ul]:list-none [&>ul]:pl-0 [&>ul]:mb-2 
-                                    [&>ul>li]:relative [&>ul>li]:pl-6 [&>ul>li]:mb-2
-                                    [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-0
-                                    [&>ul>li]:before:content-['✔'] [&>ul>li]:before:text-green-500 [&>ul>li]:before:font-bold
+                                    {{-- СТИЛИ СПИСКА: Кастомные оранжевые галочки --}}
+                                    [&>ul]:list-none [&>ul]:pl-0 [&>ul]:mb-4 [&>ul]:mt-4
+                                    [&>ul>li]:relative [&>ul>li]:pl-7 [&>ul>li]:mb-3
+                                    [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-0.5
+                                    [&>ul>li]:before:content-[''] [&>ul>li]:before:w-4 [&>ul>li]:before:h-4
+                                    [&>ul>li]:before:bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23E85C24%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M16.707%205.293a1%201%200%20010%201.414l-8%208a1%201%200%2001-1.414%200l-4-4a1%201%200%20011.414-1.414L8%2012.586l7.293-7.293a1%201%200%20011.414%200z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')]
+                                    [&>ul>li]:before:bg-no-repeat [&>ul>li]:before:bg-center [&>ul>li]:before:bg-contain
                                     
                                     {{-- Стили нумерации и жирного текста --}}
-                                    [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2 
-                                    [&>strong]:text-gray-900 [&>strong]:font-bold 
-                                    [&>em]:text-orange-500">
+                                    [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4 [&>ol]:mt-4 [&>ol>li]:mb-2 [&>ol>li::marker]:text-[var(--accent)] [&>ol>li::marker]:font-bold
+                                    [&>strong]:text-[var(--text-primary)] [&>strong]:font-extrabold 
+                                    [&>em]:text-[var(--accent)]">
                             {!! $item['description'] !!}
                         </div>
                     @endif

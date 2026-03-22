@@ -24,6 +24,7 @@ use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\ColorPicker; // <-- ДОБАВЛЕНО
 use Filament\Forms\Components\Select;      // <-- ДОБАВЛЕНО
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 
 class LandingPageResource extends Resource
 {
@@ -128,19 +129,32 @@ class LandingPageResource extends Resource
                                     ]),
                                 
                                 // 13. ABOUT PLATFORM (Светлая карточка)
-                                Builder\Block::make('about_platform_light')
-                                    ->label('13. Светлая карточка (О платформе/Дисклеймер)')
-                                    ->icon('heroicon-m-information-circle')
-                                    ->schema([
-                                        TextInput::make('title')
-                                            ->label('Заголовок')
-                                            ->default('О нашей платформе'),
+Builder\Block::make('about_platform_light')
+    ->label('13. Светлая карточка (О платформе/Дисклеймер)')
+    ->icon('heroicon-m-information-circle')
+    ->schema([
+        TextInput::make('title')
+            ->label('Заголовок')
+            ->default('О нашей платформе')
+            ->columnSpanFull(),
                                             
-                                        RichEditor::make('content')
-                                            ->label('Текст')
-                                            ->toolbarButtons(['bold', 'italic', 'link', 'bulletList'])
-                                            ->default('<p>Все программы Общества ревнителей санскрита носят исключительно просветительский характер. Участие в них не ведёт к присвоению квалификации, профессии или получению документов об образовании.</p><p>Наша главная цель — популяризация санскрита, знакомство с богатым культурным и философским наследием Индии, а также создание сообщества единомышленников для совместного изучения этого древнего языка.</p><p>Наши лекторы — это индологи, востоковеды, филологи, философы, йоги с большим практическим опытом.</p><p>До встречи на занятиях!</p>'),
-                                    ]),    
+        RichEditor::make('content')
+            ->label('Текст')
+            ->toolbarButtons([
+                'bold', 
+                'italic', 
+                'strike', 
+                'link', 
+                'h2', 
+                'h3', 
+                'blockquote', 
+                'bulletList', 
+                'orderedList', 
+                'codeBlock'
+            ])
+            ->columnSpanFull() // Растягиваем редактор на всю ширину
+            ->default('<p>Все программы Общества ревнителей санскрита носят исключительно просветительский характер. Участие в них не ведёт к присвоению квалификации, профессии или получению документов об образовании.</p><p>Наша главная цель — популяризация санскрита, знакомство с богатым культурным и философским наследием Индии, а также создание сообщества единомышленников для совместного изучения этого древнего языка.</p><p>Наши лекторы — это индологи, востоковеды, филологи, философы, йоги с большим практическим опытом.</p><p>До встречи на занятиях!</p>'),
+    ]),    
 
                                 // 4. RESULTS (Бенто-сетка)
                                 Builder\Block::make('results_block')
@@ -154,10 +168,9 @@ class LandingPageResource extends Resource
                                         Repeater::make('items')
                                             ->label('Карточки преимуществ')
                                             ->schema([
-                                                FileUpload::make('icon')
+                                                CuratorPicker::make('icon')
                                                     ->label('Иконка (желательно PNG/SVG)')
-                                                    ->image()
-                                                    ->directory('promo'),
+                                                    ->buttonLabel('Выбрать из медиатеки'),
                                                 
                                                 TextInput::make('title')
                                                     ->label('Заголовок карточки')
@@ -276,11 +289,10 @@ class LandingPageResource extends Resource
                                                     ->label('Основной цвет фона')
                                                     ->default('#4b9b74'), // Зеленый цвет с вашего скриншота
                                                     
-                                                FileUpload::make('bg_image')
-                                                    ->label('Фоновое изображение (Облака/Узоры)')
-                                                    ->helperText('Изображение будет наложено поверх цвета фона с полупрозрачностью')
-                                                    ->image()
-                                                    ->directory('landing-blocks'),
+                                                CuratorPicker::make('bg_image')
+    ->label('Фоновое изображение (Облака/Узоры)')
+    ->helperText('Изображение будет наложено поверх цвета фона с полупрозрачностью')
+    ->buttonLabel('Выбрать фон'),
                                                     
                                                 ColorPicker::make('text_color')
                                                     ->label('Цвет текста')
@@ -391,13 +403,15 @@ Builder\Block::make('price_block')
                         ->avatar()
                         ->directory('promo'),
 
-                    FileUpload::make('images')
-                        ->label('Скриншоты (переписка/результат)')
-                        ->image()
-                        ->multiple()
-                        ->reorderable()
-                        ->directory('promo/reviews')
-                        ->maxFiles(3),
+                    CuratorPicker::make('images')
+    ->label('Скриншоты (переписка/результат)')
+    ->multiple() // Curator сам поймет, что нужно выбрать несколько!
+    ->buttonLabel('Добавить скриншоты'),
+                        
+                    TextInput::make('video_link')
+                        ->label('Ссылка на видеоотзыв (YouTube/Vimeo)')
+                        ->url() // проверяет, что ввели именно ссылку
+                        ->hint('Вставьте обычную ссылку на YouTube, и плеер сформируется автоматически.'),   
                 ]),
 
                 // 2. Блок с данными
@@ -463,12 +477,10 @@ Builder\Block::make('price_block')
         Repeater::make('items')
             ->label('Список преподавателей')
             ->schema([
-                FileUpload::make('image')
-                    ->label('Фото')
-                    ->image()
-                    ->avatar() // Круглое превью в админке
-                    ->directory('promo/team')
-                    ->required(),
+                CuratorPicker::make('image')
+    ->label('Фото')
+    ->required()
+    ->buttonLabel('Выбрать фото'),
 
                 TextInput::make('name')
                     ->label('Имя Фамилия')
@@ -493,18 +505,23 @@ Builder\Block::make('price_block')
                                     ->schema([
                                         Section::make('Контент')
                                             ->schema([
-                                                FileUpload::make('image')
-                                                    ->label('Фото преподавателя')
-                                                    ->image()
-                                                    ->directory('promo'),
-                                                
-                                                TextInput::make('name')
-                                                    ->label('Имя Фамилия')
-                                                    ->required(),
-                                                
-                                                TextInput::make('role')
-                                                    ->label('Должность / Статус')
-                                                    ->default('Автор курса'),
+                                                Grid::make(3)->schema([
+                                                    CuratorPicker::make('image')
+                                                        ->label('Фото преподавателя')
+                                                        ->size('xs')
+                                                        ->buttonLabel('Выбрать фото')
+                                                        ->columnSpan(1),
+                                                    
+                                                    Grid::make(1)->schema([
+                                                        TextInput::make('name')
+                                                            ->label('Имя Фамилия')
+                                                            ->required(),
+                                                        
+                                                        TextInput::make('role')
+                                                            ->label('Должность / Статус')
+                                                            ->default('Автор курса'),
+                                                    ])->columnSpan(2),
+                                                ]),
                                                 
                                                 RichEditor::make('bio')
                                                     ->label('Биография / Описание')
@@ -524,30 +541,33 @@ Builder\Block::make('price_block')
                                         Repeater::make('publications')
                                             ->label('Публикации и книги')
                                             ->schema([
-                                                TextInput::make('title')
-                                                    ->label('Название книги/статьи')
-                                                    ->required()
-                                                    ->maxLength(255),
+                                                Grid::make(3)->schema([
+                                                    CuratorPicker::make('image')
+                                                        ->label('Обложка (миниатюра)')
+                                                        ->size('xs')
+                                                        ->buttonLabel('Выбрать обложку')
+                                                        ->columnSpan(1),
                                                     
-                                                TextInput::make('type')
-                                                    ->label('Тип (например: Монография, Статья)')
-                                                    ->maxLength(50),
-                                                    
-                                                TextInput::make('url')
-                                                    ->label('Ссылка (если есть)')
-                                                    ->url()
-                                                    ->maxLength(255),
-                                                    
-                                                FileUpload::make('image')
-                                                    ->label('Обложка (миниатюра)')
-                                                    ->image()
-                                                    ->directory('promo/publications')
-                                                    ->imageEditor(),
+                                                    Grid::make(1)->schema([
+                                                        TextInput::make('title')
+                                                            ->label('Название книги/статьи')
+                                                            ->required()
+                                                            ->maxLength(255),
+                                                        
+                                                        TextInput::make('type')
+                                                            ->label('Тип (например: Монография, Статья)')
+                                                            ->maxLength(50),
+                                                        
+                                                        TextInput::make('url')
+                                                            ->label('Ссылка (если есть)')
+                                                            ->url()
+                                                            ->maxLength(255),
+                                                    ])->columnSpan(2),
+                                                ]),
                                             ])
-                                            ->columns(2)
                                             ->collapsed()
                                             ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
-                                        // === КОНЕЦ: ПУБЛИКАЦИИ ===    
+                                        // === КОНЕЦ: ПУБЛИКАЦИИ ===  
                                     ]),
                                     
                                     // 15. херо - НОВЫЙ БЛОК)
@@ -642,7 +662,9 @@ Builder\Block::make('price_block')
                         DatePicker::make('webinar_date')->native(false)->displayFormat('d.m.Y'),
                         TextInput::make('webinar_label')->default('Бесплатный вебинар'),    
                         TextInput::make('video_url'),
-                        FileUpload::make('image_path')->image()->directory('landings'),
+                        CuratorPicker::make('image_path')
+    ->label('Главное изображение')
+    ->buttonLabel('Медиатека'),
                         RichEditor::make('description')->columnSpanFull(),
                         Grid::make(3)->schema([
                             Fieldset::make('Карточка 1')->schema([

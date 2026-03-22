@@ -78,6 +78,51 @@ class CourseResource extends Resource
                             ->onColor('success')
                             ->offColor('danger'),
                     ]),
+                    
+                // БЛОК ТАРИФОВ
+                Forms\Components\Section::make('Тарифы и цены')
+                    ->schema([
+                        Forms\Components\Repeater::make('tariffs') 
+                            ->relationship('tariffs') // Указываем связь напрямую
+                            ->schema([
+                                Forms\Components\TextInput::make('title')
+                                    ->label('Название тарифа (например: Блок 1, Полный курс)')
+                                    ->required(),
+                                    
+                                Forms\Components\Select::make('type')
+                                    ->label('Тип доступа')
+                                    ->options([
+                                        'full' => 'Весь курс целиком',
+                                        'block' => 'Отдельный блок',
+                                    ])
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('block_number')
+                                    ->label('Номер блока')
+                                    ->numeric(),
+
+                                Forms\Components\TextInput::make('price')
+                                    ->label('Цена (₽)')
+                                    ->numeric()
+                                    ->required(),
+                                    
+                                Forms\Components\TextInput::make('old_price')
+                                    ->label('Старая цена (₽)')
+                                    ->numeric(),
+
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Описание тарифа')
+                                    ->rows(2),
+
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Активен')
+                                    ->default(true),
+                            ])
+                            ->columns(2)
+                            ->addActionLabel('Добавить тариф')
+                            ->reorderable()
+                            ->collapsible(),
+                    ]),
             ]);
     }
 
@@ -113,7 +158,6 @@ class CourseResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // ИСПРАВЛЕНО: Одинарные слеши
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
@@ -132,7 +176,6 @@ class CourseResource extends Resource
         return [
             'index' => Pages\ListCourses::route('/'),
             'create' => Pages\CreateCourse::route('/create'),
-            // ИСПРАВЛЕНО: Одинарный слеш
             'edit' => Pages\EditCourse::route('/{record}/edit'),
         ];
     }

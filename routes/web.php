@@ -12,6 +12,7 @@ use App\Http\Controllers\PromoController;
 use App\Http\Controllers\LeadController; 
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\TelegramController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('student.certificate.download');
         
     Route::get('/admin/leads/export', [LeadController::class, 'export'])->name('leads.export');
+});
+
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
 });
 
 

@@ -26,6 +26,16 @@ class GroupResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->label('Название группы'),
+                            
+                        // --- НОВЫЙ БЛОК: ИНТЕРАКТИВНЫЙ СПИСОК УЧЕНИКОВ ---
+                        Forms\Components\Select::make('users')
+                            ->relationship('users', 'name') // Автоматически подтягивает и сохраняет связи
+                            ->multiple()                    // Позволяет выбрать нескольких
+                            ->preload()                     // Подгружает первые результаты сразу
+                            ->searchable()                  // Включает поиск по имени
+                            ->label('Ученики в группе')
+                            ->placeholder('Начните вводить имя ученика...')
+                            ->helperText('Здесь вы можете посмотреть текущих участников, удалить их или добавить новых.'),
                     ])
             ]);
     }
@@ -34,16 +44,23 @@ class GroupResource extends Resource
     {
         return $table
             ->columns([
+                // Исправил дубль: теперь тут выводится реальный ID группы
+                Tables\Columns\TextColumn::make('id') 
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Название')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('name') // Дублируем для ID как на твоем скрине, или выводим реальный ID
-                    ->label('ID')
-                    ->searchable(),
+
+                // --- ОБНОВЛЕННАЯ КОЛОНКА УЧЕНИКОВ ---
                 Tables\Columns\TextColumn::make('users_count')
-                    ->counts('users') // Автоматически считает количество учеников в группе
-                    ->label('Учеников'),
+                    ->counts('users') 
+                    ->label('Учеников')
+                    ->badge() // Делает цифру красивым бейджиком
+                    ->color('info') // Синий цвет
             ])
             ->filters([
                 //
@@ -56,7 +73,6 @@ class GroupResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-            // Убрали тот самый headerActions, который двоил кнопку
     }
 
     public static function getRelations(): array
@@ -70,8 +86,8 @@ class GroupResource extends Resource
     {
         return [
             'index' => Pages\ListGroups::route('/'),
-           //'create' => Pages\CreateGroup::route('/create'),
-            //'edit' => Pages\EditGroup::route('/{record}/edit'),
+            // 'create' => Pages\CreateGroup::route('/create'),
+            // 'edit' => Pages\EditGroup::route('/{record}/edit'),
         ];
     }
 }

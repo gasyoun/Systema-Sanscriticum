@@ -86,9 +86,18 @@ class AnnouncementResource extends Resource
                             ->default(true),
                             
                         Forms\Components\Toggle::make('send_to_email')
-                            ->label('Продублировать на Email')
+                            ->label('Отправить на Email')
                             ->default(false),
-                    ])->columns(2),
+
+                        // 👇 НОВЫЕ ГАЛОЧКИ ДЛЯ МЕССЕНДЖЕРОВ 👇
+                        Forms\Components\Toggle::make('send_to_telegram')
+                            ->label('Отправить в Telegram')
+                            ->default(false),
+
+                        Forms\Components\Toggle::make('send_to_vk')
+                            ->label('Отправить в VK')
+                            ->default(false),
+                    ])->columns(2), // Оставляем 2 колонки, они красиво выстроятся в квадрат 2х2
             ]);
     }
 
@@ -108,11 +117,21 @@ class AnnouncementResource extends Resource
                     ->label('Email')
                     ->boolean(),
                     
+                // 👇 НОВЫЕ КОЛОНКИ В ТАБЛИЦЕ 👇
+                Tables\Columns\IconColumn::make('send_to_telegram')
+                    ->label('Telegram')
+                    ->boolean(),
+
+                Tables\Columns\IconColumn::make('send_to_vk')
+                    ->label('VK')
+                    ->boolean(),
+                    
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Дата создания')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
             ])
+
             ->defaultSort('created_at', 'desc')
             ->filters([
                 //

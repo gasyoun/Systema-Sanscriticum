@@ -79,46 +79,50 @@
     {{-- ========================================== --}}
     {{-- ВСПЛЫВАЮЩЕЕ ОКНО (МОДАЛКА) С ПЛЕЕРОМ       --}}
     {{-- ========================================== --}}
-    <div x-show="videoOpen" 
-         style="display: none;"
-         class="fixed inset-0 z-[100] flex items-center justify-center bg-[#101010]/90 backdrop-blur-md p-4 sm:p-6"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
-        
-        {{-- Подложка для закрытия --}}
-        <div class="absolute inset-0 cursor-pointer" @click="videoOpen = false"></div>
-
-        {{-- Контейнер плеера --}}
-        <div class="relative w-full max-w-5xl bg-black rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl z-10 aspect-video transform scale-95 md:scale-100"
-             x-show="videoOpen"
-             x-transition:enter="transition ease-out duration-300 delay-100"
-             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
-             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+    {{-- Обернули в x-teleport="body", чтобы вытащить модалку из-под z-10 родителя --}}
+    <template x-teleport="body">
+        <div x-show="videoOpen" 
+             style="display: none;"
+             {{-- Заменили z-[100] на z-[9999], чтобы точно перекрыть вообще всё на сайте --}}
+             class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#101010]/90 backdrop-blur-md p-4 sm:p-6"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95">
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
             
-            {{-- Кнопка закрыть (Крестик) --}}
-            <button @click="videoOpen = false" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            {{-- Подложка для закрытия --}}
+            <div class="absolute inset-0 cursor-pointer" @click="videoOpen = false"></div>
 
-            {{-- Iframe плеера --}}
-            <template x-if="videoOpen">
-                <iframe src="{{ $embedUrl }}" 
-                        class="w-full h-full border-0 absolute inset-0" 
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
-                        allowfullscreen>
-                </iframe>
-            </template>
-            
+            {{-- Контейнер плеера --}}
+            <div class="relative w-full max-w-5xl bg-black rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl z-10 aspect-video transform scale-95 md:scale-100"
+                 x-show="videoOpen"
+                 x-transition:enter="transition ease-out duration-300 delay-100"
+                 x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
+                
+                {{-- Кнопка закрыть (Крестик) --}}
+                <button @click="videoOpen = false" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {{-- Iframe плеера --}}
+                <template x-if="videoOpen">
+                    <iframe src="{{ $embedUrl }}" 
+                            class="w-full h-full border-0 absolute inset-0" 
+                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </template>
+                
+            </div>
         </div>
-    </div>
+    </template>
 
 </section>

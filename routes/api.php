@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TelegramWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 use App\Http\Controllers\Api\LessonController;
 
 Route::post('/sync-lessons', [LessonController::class, 'sync']);
+
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
+
+Route::post('/vk-webhook', [\App\Http\Controllers\Api\VkBotController::class, 'handle']);

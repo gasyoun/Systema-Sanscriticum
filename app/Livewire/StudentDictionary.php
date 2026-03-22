@@ -29,13 +29,14 @@ class StudentDictionary extends Component
     {
         $dictionaries = Dictionary::where('is_active', true)->get();
 
-        $words = DictionaryWord::query();
+        // Сразу подгружаем словарь, чтобы не было лишних запросов к базе (N+1 проблема)
+        $words = DictionaryWord::with('dictionary');
 
         if ($this->dictionary_id !== 'all') {
             $words->where('dictionary_id', $this->dictionary_id);
         }
 
-        if (strlen($this->search) >= 2) {
+        if (trim($this->search)) {
             $words->where(function ($query) {
                 $query->where('devanagari', 'like', '%' . $this->search . '%')
                       ->orWhere('iast', 'like', '%' . $this->search . '%')

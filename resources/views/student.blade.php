@@ -18,6 +18,14 @@
         .header { margin-bottom: 24px; border-bottom: 2px solid var(--line); padding-bottom: 12px; }
         .header h1 { font-size: 20px; font-weight: 800; margin: 0; }
 
+        /* --- СТИЛИ ДЛЯ TELEGRAM БЛОКА --- */
+        .tg-card { background: var(--card-bg); border: 1px solid #bae6fd; border-radius: 16px; padding: 16px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.05); }
+        .tg-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; color: #0369a1; }
+        .tg-desc { font-size: 13px; color: #6b635b; margin-bottom: 14px; line-height: 1.4; }
+        .btn-tg { background: #e0f2fe; color: #0284c7; width: 100%; text-decoration: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; box-sizing: border-box; }
+        .btn-tg:hover { background: #bae6fd; }
+        .tg-success { color: var(--success); font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
         /* Список уроков */
         .lessons-container { display: flex; flex-direction: column; gap: 16px; }
         .lesson-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
@@ -44,9 +52,28 @@
 <div class="app-container">
     <div class="header">
         <h1>Моё обучение</h1>
-        <p style="font-size: 12px; color: var(--text-sec)">Ученик: {{ Auth::user()->name ?? 'Гость' }}</p>
+        <p style="font-size: 12px; color: #6b635b; margin-top: 4px; margin-bottom: 0;">Ученик: {{ Auth::user()->name ?? 'Гость' }}</p>
     </div>
 
+    <div class="tg-card">
+        <div class="tg-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.96 1.25-5.54 3.67-.52.36-.99.54-1.41.53-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.22.35-.45.96-.69 3.75-1.64 6.25-2.72 7.5-3.24 3.56-1.49 4.3-1.74 4.78-1.75.11 0 .35.03.48.14.11.08.15.22.14.36z"/></svg>
+            Telegram-бот Академии
+        </div>
+        
+        @if(auth()->user() && auth()->user()->telegram_id)
+            <div class="tg-success">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Бот успешно подключен!
+            </div>
+            <div class="tg-desc" style="margin-bottom: 0; margin-top: 4px;">Теперь важные ссылки и расписание будут приходить вам в мессенджер.</div>
+        @else
+            <div class="tg-desc">Подключите бота, чтобы не пропустить важную информацию по обучению и доступы к урокам.</div>
+            <a href="{{ route('telegram.connect') }}" target="_blank" class="btn-tg">
+                Подключить бота
+            </a>
+        @endif
+    </div>
     <div class="lessons-container">
         @forelse($lessons as $lesson)
             <div class="lesson-card">
@@ -75,7 +102,7 @@
                 </div>
             </div>
         @empty
-            <p>Уроков пока нет. Расписание обновляется...</p>
+            <p style="text-align: center; color: #6b635b; margin-top: 20px;">Уроков пока нет. Расписание обновляется...</p>
         @endforelse
     </div>
 </div>
@@ -86,7 +113,7 @@
 </div>
 
 <script>
-    // Логика плеера (ваша оригинальная, адаптированная)
+    // Логика плеера
     function openVideo(url) {
         let embedSrc = '';
         if (url.includes('youtu.be') || url.includes('youtube.com')) {
@@ -113,7 +140,6 @@
 
     function startFlash(cards) {
         console.log("Запуск карточек:", cards);
-        // Здесь можно вставить вашу логику перелистывания карточек
         alert("Функция карточек в разработке, получено: " + JSON.stringify(cards).substring(0, 50) + "...");
     }
 </script>

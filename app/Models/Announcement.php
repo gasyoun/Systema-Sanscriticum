@@ -20,6 +20,8 @@ class Announcement extends Model
         'button_url',
         'is_published',
         'send_to_email',
+        'send_to_telegram',
+        'send_to_vk',
     ];
 
     // 2. Настройка типов данных (как в твоей модели User)

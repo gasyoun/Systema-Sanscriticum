@@ -127,16 +127,91 @@
           }
       }">
 
+    {{-- === ПРИЛИПАЮЩАЯ ШАПКА ВО ВСЮ ШИРИНУ === --}}
+    {{-- Убрали mb-6 md:mb-10, чтобы следующий блок начинался сразу под шапкой --}}
+    <header class="sticky top-0 w-full z-50 bg-[#FAF8F5]/80 backdrop-blur-md shadow-sm border-b border-[#E85C24]/10 transition-all duration-300">
+        
+        <div class="container mx-auto px-4 py-2 md:py-3 flex justify-start">
+            
+            <a href="/" class="flex flex-col items-start group">
+                <img src="{{ asset('images/logo.png') }}" alt="Общество ревнителей санскрита" class="w-auto h-12 md:h-14 object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300 shrink-0">
+                
+                <span class="mt-1 text-base md:text-lg font-semibold text-[#333333] group-hover:text-[#E85C24] transition-colors duration-300 leading-none" 
+                      style="font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', 'Georgia', serif;">
+                    Общество ревнителей санскрита
+                </span>
+            </a>
+            
+        </div>
+    </header>
+    {{-- ========================= --}}
+
     {{-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ НАШИ БЛОКИ --}}
     @yield('content')
 
-    {{-- ФУТЕР --}}
-    <footer class="bg-gray-900 text-gray-400 py-10 border-t border-gray-800 text-sm">
-        <div class="container mx-auto px-4 text-center">
-            <p class="mb-4">&copy; {{ date('Y') }} Все права защищены.</p>
-            <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-gray-500 hover:text-white underline transition-colors duration-300">
-                Политика конфиденциальности
-            </button>
+    {{-- ФУТЕР (Теплый тон, трехколоночный) --}}
+    <footer class="bg-[#F2EBE1] border-t border-[#E85C24]/10 text-gray-600 py-10 md:py-14">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center md:text-left">
+
+                {{-- 1. ЛЕВАЯ КОЛОНКА: Текстовые ссылки (Временно скрыты) --}}
+                <div class="flex flex-col space-y-3 items-center md:items-start">
+                    {{-- 
+                    <a href="#about" class="text-sm font-semibold hover:text-[#E85C24] transition-colors duration-300">О преподавателе</a>
+                    <a href="#courses" class="text-sm font-semibold hover:text-[#E85C24] transition-colors duration-300">Программа курса</a>
+                    <a href="#otz" class="text-sm font-semibold hover:text-[#E85C24] transition-colors duration-300">Отзывы учеников</a>
+                    <a href="#faq" class="text-sm font-semibold hover:text-[#E85C24] transition-colors duration-300">Частые вопросы</a>
+                    --}}
+                </div>
+
+                {{-- 2. ЦЕНТР: Брендинг, Документы и Копирайт --}}
+                <div class="flex flex-col items-center justify-center text-center">
+                    
+                    {{-- Название --}}
+                    <div class="font-bold text-[#101010] text-lg md:text-xl leading-tight mb-3" style="font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', 'Georgia', serif;">
+                        Общество ревнителей санскрита
+                    </div>
+                    
+                    {{-- Документы (Ссылки с анимированным подчеркиванием) --}}
+                    <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-[13px] md:text-sm font-medium mb-4">
+                        <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" 
+                                class="relative text-gray-500 hover:text-[#E85C24] transition-colors duration-300 group">
+                            Политика конфиденциальности
+                            <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#E85C24] transition-all duration-300 group-hover:w-full"></span>
+                        </button>
+                        
+                        <span class="hidden sm:block text-gray-300 text-xs">•</span>
+                        
+                        <button @click="viewDocument('Договор оферты', '/docs/oferta.pdf')" 
+                                class="relative text-gray-500 hover:text-[#E85C24] transition-colors duration-300 group">
+                            Публичная оферта
+                            <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#E85C24] transition-all duration-300 group-hover:w-full"></span>
+                        </button>
+                    </div>
+
+                    {{-- Копирайт --}}
+                    <p class="text-gray-400 text-[13px] md:text-sm">
+                        &copy; {{ date('Y') }} Все права защищены
+                    </p>
+                    
+                </div>
+
+                {{-- 3. ПРАВАЯ КОЛОНКА: Соцсети (В фирменном стиле) --}}
+                <div class="flex justify-center md:justify-end gap-4">
+                    {{-- Ссылка ВКонтакте --}}
+                    <a href="https://vk.com/samskrtamru" target="_blank" rel="noopener noreferrer" 
+                       class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-[#E85C24]/20 text-[#E85C24] hover:bg-[#E85C24] hover:text-white hover:border-[#E85C24] shadow-sm hover:shadow-md transition-all duration-300 group">
+                        <i class="fab fa-vk text-xl group-hover:scale-110 transition-transform"></i>
+                    </a>
+                    
+                    {{-- Ссылка Telegram --}}
+                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" 
+                       class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-[#E85C24]/20 text-[#E85C24] hover:bg-[#E85C24] hover:text-white hover:border-[#E85C24] shadow-sm hover:shadow-md transition-all duration-300 group">
+                        <i class="fab fa-telegram-plane text-xl group-hover:scale-110 transition-transform"></i>
+                    </a>
+                </div>
+
+            </div>
         </div>
     </footer>
 
