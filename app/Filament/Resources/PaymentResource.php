@@ -15,10 +15,10 @@ class PaymentResource extends Resource
     protected static ?string $model = Payment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static ?int $navigationSort = 80;
+    protected static ?string $navigationGroup = 'Продажи';
     protected static ?string $navigationLabel = 'Финансы';
-    protected static ?string $modelLabel = 'Платеж';
-    protected static ?string $pluralModelLabel = 'Платежи';
-    protected static ?int $navigationSort = 3; 
+    protected static ?string $pluralModelLabel = 'Транзакции';
 
     public static function form(Form $form): Form
     {
@@ -31,17 +31,11 @@ class PaymentResource extends Resource
                     ->preload()
                     ->required(),
 
-                // ---> ИЗМЕНИЛИ ЛЕНДИНГ НА КУРС <---
                 Forms\Components\Select::make('course_id')
                     ->label('Курс')
                     ->relationship('course', 'title')
                     ->searchable()
                     ->preload()
-                    ->required(),
-
-                Forms\Components\TextInput::make('amount')
-                    ->label('Сумма (₽)')
-                    ->numeric()
                     ->required(),
 
                 Forms\Components\Select::make('tariff')
@@ -55,6 +49,25 @@ class PaymentResource extends Resource
                     ])
                     ->default('full')
                     ->required(),
+
+                // --- НОВЫЙ БЛОК: Сумма и Номера блоков ---
+                Forms\Components\Grid::make(3)
+                    ->schema([
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Сумма (₽)')
+                            ->numeric()
+                            ->required(),
+
+                        Forms\Components\TextInput::make('start_block')
+                            ->label('Оплачен с блока №')
+                            ->numeric()
+                            ->helperText('Например: 52'),
+
+                        Forms\Components\TextInput::make('end_block')
+                            ->label('По блок №')
+                            ->numeric()
+                            ->helperText('Пусто, если курс куплен целиком'),
+                    ]),
 
                 Forms\Components\Select::make('status')
                     ->label('Статус')
@@ -87,12 +100,26 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->description(fn (Payment $record): string => $record->user->email ?? ''),
 
-                // ---> ИЗМЕНИЛИ ЛЕНДИНГ НА КУРС <---
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
+
+                // --- НОВАЯ КОЛОНКА: Умное отображение блоков ---
+                Tables\Columns\TextColumn::make('blocks_range')
+                    ->label('Оплаченные блоки')
+                    ->state(function (Payment $record) {
+                        if ($record->start_block && $record->end_block) {
+                            if ($record->start_block === $record->end_block) {
+                                return "Блок {$record->start_block}";
+                            }
+                            return "Блоки {$record->start_block} - {$record->end_block}";
+                        }
+                        return 'Весь курс (или не указано)';
+                    })
+                    ->badge()
+                    ->color(fn ($state) => $state === 'Весь курс (или не указано)' ? 'success' : 'info'),
 
                 Tables\Columns\TextColumn::make('tariff')
                     ->label('Тариф')
@@ -110,7 +137,8 @@ class PaymentResource extends Resource
                         default => $state,
                     })
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true), // Скрыл по умолчанию, чтобы не загромождать таблицу
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Сумма')
@@ -121,13 +149,13 @@ class PaymentResource extends Resource
                     ->label('Статус')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'paid' => 'success',     
+                        'paid', 'success' => 'success',     
                         'pending' => 'warning',  
                         'canceled' => 'danger',  
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'paid' => 'Оплачено',
+                        'paid', 'success' => 'Оплачено',
                         'pending' => 'Ожидает',
                         'canceled' => 'Отменено',
                         default => $state,
@@ -139,7 +167,6 @@ class PaymentResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // ---> ИЗМЕНИЛИ ЛЕНДИНГ НА КУРС <---
                 Tables\Filters\SelectFilter::make('course_id')
                     ->label('Фильтр по курсу')
                     ->relationship('course', 'title'),
@@ -150,16 +177,6 @@ class PaymentResource extends Resource
                         'pending' => 'Ожидает оплаты',
                         'paid' => 'Оплачено',
                         'canceled' => 'Отменено',
-                    ]),
-                    
-                Tables\Filters\SelectFilter::make('tariff')
-                    ->label('Фильтр по тарифу')
-                    ->options([
-                        'full' => 'Весь курс',
-                        'block_1' => 'Блок 1',
-                        'block_2' => 'Блок 2',
-                        'block_3' => 'Блок 3',
-                        'block_4' => 'Блок 4',
                     ]),
             ])
             ->actions([

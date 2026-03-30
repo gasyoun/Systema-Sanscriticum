@@ -20,9 +20,10 @@ class LeadResource extends Resource
     protected static ?string $model = Lead::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    
-    protected static ?string $navigationLabel = 'Лиды';
-    protected static ?string $pluralModelLabel = 'Заявки (Лиды)';
+    protected static ?int $navigationSort = 70;
+    protected static ?string $navigationGroup = 'Продажи';
+    protected static ?string $navigationLabel = 'Заявки (Лиды)';
+    protected static ?string $pluralModelLabel = 'Заявки';
 
     public static function canCreate(): bool
     {

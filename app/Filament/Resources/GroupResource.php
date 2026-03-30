@@ -15,7 +15,10 @@ class GroupResource extends Resource
     protected static ?string $model = Group::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationLabel = 'Группы';
+    protected static ?int $navigationSort = 30;
+    protected static ?string $navigationGroup = 'Обучение';
+    protected static ?string $navigationLabel = 'Учебные группы';
+    protected static ?string $pluralModelLabel = 'Группы';
 
     public static function form(Form $form): Form
     {

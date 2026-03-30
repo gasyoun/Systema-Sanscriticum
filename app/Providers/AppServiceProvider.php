@@ -23,8 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 1. ЖЕСТКОЕ ВКЛЮЧЕНИЕ HTTPS (без условий if)
-        URL::forceScheme('https');
+        // --- 1. ИСПРАВЛЕНИЕ КРИТ 3: Умное включение HTTPS ---
+        // Включаем https только если сайт на продакшене (APP_ENV=production) 
+        // или если мы явно попросили об этом через конфиг.
+        if (app()->isProduction() || config('app.force_https', false)) {
+            URL::forceScheme('https');
+        }
+        // ----------------------------------------------------
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);

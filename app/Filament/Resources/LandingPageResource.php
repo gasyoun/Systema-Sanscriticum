@@ -31,6 +31,10 @@ class LandingPageResource extends Resource
     protected static ?string $model = LandingPage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 130;
+    protected static ?string $navigationGroup = 'Маркетинг';
+    protected static ?string $navigationLabel = 'Лендинги';
+    protected static ?string $pluralModelLabel = 'Лендинги';
 
     public static function form(Form $form): Form
     {

@@ -16,7 +16,10 @@ class LessonResource extends Resource
     protected static ?string $model = Lesson::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+    protected static ?int $navigationSort = 20;
+    protected static ?string $navigationGroup = 'Обучение';
     protected static ?string $navigationLabel = 'Уроки';
+    protected static ?string $pluralModelLabel = 'Уроки';
 
     public static function form(Form $form): Form
     {

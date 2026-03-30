@@ -20,13 +20,13 @@ class ShopCourseResource extends Resource
 
     // Настройки отображения в меню
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'Магазин';
+    protected static ?int $navigationSort = 90;
+    protected static ?string $navigationGroup = 'Продажи';
     protected static ?string $navigationLabel = 'Витрина курсов';
     protected static ?string $modelLabel = 'Курс на витрине';
-    protected static ?string $pluralModelLabel = 'Витрина курсов';
+    protected static ?string $pluralModelLabel = 'Витрина';
     
-    // Сортировка в меню (чтобы витрина была повыше)
-    protected static ?int $navigationSort = 1;
+    
 
     public static function form(Form $form): Form
     {

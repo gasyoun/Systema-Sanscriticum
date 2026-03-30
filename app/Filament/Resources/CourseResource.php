@@ -16,12 +16,18 @@ class CourseResource extends Resource
     protected static ?string $model = Course::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = 'Обучение';
     protected static ?string $navigationLabel = 'Курсы';
+    protected static ?string $pluralModelLabel = 'Курсы';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                // ==========================================
+                // БЛОК: ИНФОРМАЦИЯ О КУРСЕ
+                // ==========================================
                 Forms\Components\Section::make('Информация о курсе')
                     ->schema([
                         // БЛОК 1: Название и Slug
@@ -72,18 +78,55 @@ class CourseResource extends Resource
                             ->helperText('Студенты из выбранных групп увидят этот курс у себя в кабинете.')
                             ->columnSpanFull(),
 
-                        Forms\Components\Toggle::make('is_visible')
-                            ->label('Показывать на сайте')
-                            ->default(true)
-                            ->onColor('success')
-                            ->offColor('danger'),
+                        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Объединили два свитча в сетку ---
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Toggle::make('is_visible')
+                                    ->label('Показывать на сайте')
+                                    ->default(true)
+                                    ->onColor('success')
+                                    ->offColor('danger'),
+
+                                Forms\Components\Toggle::make('is_elective')
+                                    ->label('Это факультатив')
+                                    ->helperText('Курс участвует в программе лояльности (скидки за объем)')
+                                    ->default(false)
+                                    ->onColor('warning'), // Золотой цвет для выделения
+                            ]),
                     ]),
                     
-                // БЛОК ТАРИФОВ
+                // ==========================================
+                // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
+                // ==========================================
+                Forms\Components\Section::make('Преподаватель и Зарплата')
+                    ->schema([
+                        Forms\Components\Select::make('teacher_id')
+                            ->label('Преподаватель')
+                            ->relationship('teacher', 'name') 
+                            ->searchable()
+                            ->preload(),
+
+                        Forms\Components\Select::make('salary_type')
+                            ->label('Схема расчета')
+                            ->options([
+                                'percent' => 'Процент от продаж (%)',
+                                'fix_per_student' => 'Фикс за каждого студента (₽)',
+                                'fix_total' => 'Фикс за весь курс (₽)',
+                            ]),
+
+                        Forms\Components\TextInput::make('salary_value')
+                            ->label('Ставка (Цифра)')
+                            ->numeric()
+                            ->helperText('Например: 30 (для 30%) или 5000 (для 5000 руб)'),
+                    ])->columns(3),
+
+                // ==========================================
+                // БЛОК: ТАРИФЫ И ЦЕНЫ
+                // ==========================================
                 Forms\Components\Section::make('Тарифы и цены')
                     ->schema([
                         Forms\Components\Repeater::make('tariffs') 
-                            ->relationship('tariffs') // Указываем связь напрямую
+                            ->relationship('tariffs') 
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->label('Название тарифа (например: Блок 1, Полный курс)')
@@ -147,12 +190,22 @@ class CourseResource extends Resource
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                // --- НОВАЯ КОЛОНКА В ТАБЛИЦЕ ---
+                Tables\Columns\IconColumn::make('is_elective')
+                    ->boolean()
+                    ->label('Факультатив'),
+
                 Tables\Columns\IconColumn::make('is_visible')
                     ->boolean()
                     ->label('Активен'),
             ])
             ->filters([
-                //
+                // --- НОВЫЙ ФИЛЬТР ПО ФАКУЛЬТАТИВАМ ---
+                Tables\Filters\TernaryFilter::make('is_elective')
+                    ->label('Тип курса')
+                    ->trueLabel('Только факультативы')
+                    ->falseLabel('Только базовые курсы')
+                    ->placeholder('Все курсы'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

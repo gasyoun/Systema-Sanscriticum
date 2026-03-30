@@ -11,11 +11,21 @@ class MarketingSetting extends Model
 
     protected $fillable = [
         'is_loyalty_active',
-        'loyalty_discount_percent',
+        'bundle_2_discount',
+        'bundle_3_discount',
+        'wholesale_small_threshold',
+        'wholesale_small_discount',
+        'wholesale_large_threshold',
+        'wholesale_large_discount',
     ];
 
     protected $casts = [
         'is_loyalty_active' => 'boolean',
-        'loyalty_discount_percent' => 'integer',
+        'bundle_2_discount' => 'integer',
+        'bundle_3_discount' => 'integer',
+        'wholesale_small_threshold' => 'integer',
+        'wholesale_small_discount' => 'integer',
+        'wholesale_large_threshold' => 'integer',
+        'wholesale_large_discount' => 'integer',
     ];
 }

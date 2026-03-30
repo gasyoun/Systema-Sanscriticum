@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // <--- 1. ДОБАВЬ ЭТУ СТРОКУ
+use Illuminate\Support\Str;
 
 class Certificate extends Model
 {
@@ -13,27 +13,25 @@ class Certificate extends Model
     protected $fillable = [
         'user_id',
         'course_id',
-        'number', // Убедись, что это поле есть в fillable
+        'number',
         'file_path',
-        'issue_at',
+        'issued_at', // <-- ИСПРАВЛЕНО: добавлена буква 'd'
     ];
 
-    // --- 2. ДОБАВЬ ЭТОТ БЛОК КОДА (МАГИЯ АВТОГЕНЕРАЦИИ) ---
     protected static function booted()
     {
         static::creating(function ($certificate) {
-            // Генерация номера
+            // Генерация уникального номера сертификата
             if (empty($certificate->number)) {
                 $certificate->number = date('Y') . '-' . strtoupper(Str::random(5));
             }
             
-            // 1. АВТОМАТИЧЕСКАЯ ДАТА (ДОБАВЬ ЭТО)
+            // Автоматическая подстановка даты выдачи
             if (empty($certificate->issued_at)) {
                 $certificate->issued_at = now();
             }
         });
     }
-    // -----------------------------------------------------
 
     public function user()
     {

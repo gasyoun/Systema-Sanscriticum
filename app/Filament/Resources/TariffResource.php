@@ -16,11 +16,12 @@ class TariffResource extends Resource
 
     // Иконка ценника для меню
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?int $navigationSort = 100;
+    protected static ?string $navigationGroup = 'Продажи';
     protected static ?string $navigationLabel = 'Тарифы (Цены)';
     protected static ?string $modelLabel = 'Тариф';
     protected static ?string $pluralModelLabel = 'Тарифы';
-    protected static ?int $navigationSort = 4;
-
+    
     public static function form(Form $form): Form
     {
         return $form

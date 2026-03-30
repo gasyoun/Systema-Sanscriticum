@@ -14,9 +14,11 @@ class ScheduleResource extends Resource
 {
     protected static ?string $model = Schedule::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar'; // <-- Иконка календаря
+    protected static ?int $navigationSort = 40;
+    protected static ?string $navigationGroup = 'Обучение';
     protected static ?string $navigationLabel = 'Расписание';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $pluralModelLabel = 'Расписание';
 
     public static function form(Form $form): Form
     {

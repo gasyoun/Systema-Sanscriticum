@@ -21,21 +21,55 @@ class Course extends Model
         // Добавляем новые поля сюда:
         'lessons_count',
         'hours_count',
+        'teacher_id',
+        'salary_type',
+        'salary_value',
+        // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
+        'is_elective',
     ];
+
+    // Подсказываем Laravel типы данных для переключателей
+    protected $casts = [
+        'is_visible' => 'boolean',
+        'is_elective' => 'boolean',
+    ];
+    
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class);
+    }
 
     // Связь: Один курс имеет много уроков
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
     }
+    
+    // ==========================================
+    // СВЯЗЬ: Один курс имеет много оплат
+    // ==========================================
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+    
     public function tariffs()
     {
         return $this->hasMany(Tariff::class);
     }
+
     // Связь: Курс доступен многим группам
     public function groups(): BelongsToMany
     {
         // Убедись, что модель Group существует. Если она называется иначе, поменяй здесь.
         return $this->belongsToMany(Group::class, 'course_group');
+    }
+
+    // --- НОВАЯ СВЯЗЬ: Курс -> Студенты (со статусами) ---
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+                    ->withPivot('status', 'note')
+                    ->withTimestamps();
     }
 }

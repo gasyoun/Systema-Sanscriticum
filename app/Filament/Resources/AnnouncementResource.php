@@ -15,9 +15,11 @@ class AnnouncementResource extends Resource
     protected static ?string $model = Announcement::class;
 
     // Делаем красивую иконку рупора в левом меню
-    protected static ?string $navigationIcon = 'heroicon-o-megaphone';
+    protected static ?string $navigationIcon = 'heroicon-o-megaphone'; // <-- Вот она!
+    protected static ?int $navigationSort = 120;
+    protected static ?string $navigationGroup = 'Маркетинг';
     protected static ?string $navigationLabel = 'Рассылки';
-    protected static ?string $pluralModelLabel = 'Сообщения';
+    protected static ?string $pluralModelLabel = 'Рассылки';
 
     public static function form(Form $form): Form
     {

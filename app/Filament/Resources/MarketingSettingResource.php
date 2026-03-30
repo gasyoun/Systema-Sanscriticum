@@ -20,13 +20,11 @@ class MarketingSettingResource extends Resource
     protected static ?string $modelLabel = 'Настройки';
     protected static ?string $pluralModelLabel = 'Настройки маркетинга';
 
-    // Разрешаем создать только ОДНУ запись настроек на весь сайт
     public static function canCreate(): bool
     {
         return MarketingSetting::count() === 0;
     }
 
-    // Запрещаем удалять настройки
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
         return false;
@@ -36,21 +34,73 @@ class MarketingSettingResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Программа лояльности "Для своих"')
-                    ->description('Скидка автоматически применяется ко всем студентам, у которых есть хотя бы один оплаченный курс в прошлом.')
+                // --- БЛОК 1: Главный рубильник ---
+                Forms\Components\Section::make('Общий статус лояльности')
                     ->schema([
                         Forms\Components\Toggle::make('is_loyalty_active')
-                            ->label('Включить автоматическую скидку выпускникам')
-                            ->default(false),
-                            
-                        Forms\Components\TextInput::make('loyalty_discount_percent')
-                            ->label('Размер скидки (%)')
-                            ->numeric()
-                            ->default(15)
-                            ->minValue(1)
-                            ->maxValue(99)
-                            ->required(),
-                    ])->columns(1),
+                            ->label('Программа лояльности включена')
+                            ->helperText('Если выключить, никакие скидки из блоков ниже применяться не будут.')
+                            ->default(false)
+                            ->live(), // Делаем переключатель "живым", чтобы скрывать/показывать блоки ниже
+                    ]),
+
+                // --- БЛОК 2: Пакетные скидки (Единовременная покупка) ---
+                Forms\Components\Section::make('Скидки за объем в чеке (Пакетные)')
+                    ->description('Применяются при единовременной покупке нескольких факультативов (при полной оплате).')
+                    ->schema([
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('bundle_2_discount')
+                                ->label('Скидка за 2 курса (%)')
+                                ->numeric()
+                                ->default(10)
+                                ->minValue(0)->maxValue(100),
+                                
+                            Forms\Components\TextInput::make('bundle_3_discount')
+                                ->label('Скидка за 3 и более курсов (%)')
+                                ->numeric()
+                                ->default(15)
+                                ->minValue(0)->maxValue(100),
+                        ]),
+                    ])
+                    ->visible(fn (Forms\Get $get) => $get('is_loyalty_active')), // Показываем только если лояльность включена
+
+                // --- БЛОК 3: Оптовики (Накопительные скидки за прошлый год) ---
+                Forms\Components\Section::make('Накопительные скидки ("Оптовики")')
+                    ->description('Скидки на факультативы, основанные на количестве купленных курсов за прошлый календарный год. Работают даже при поблочной оплате.')
+                    ->schema([
+                        // Мелкий опт
+                        Forms\Components\Fieldset::make('Мелкий опт')
+                            ->schema([
+                                Forms\Components\TextInput::make('wholesale_small_threshold')
+                                    ->label('Порог курсов (от)')
+                                    ->numeric()
+                                    ->default(5)
+                                    ->minValue(1),
+                                    
+                                Forms\Components\TextInput::make('wholesale_small_discount')
+                                    ->label('Скидка (%)')
+                                    ->numeric()
+                                    ->default(10)
+                                    ->minValue(0)->maxValue(100),
+                            ])->columns(2),
+
+                        // Крупный опт
+                        Forms\Components\Fieldset::make('Крупный опт')
+                            ->schema([
+                                Forms\Components\TextInput::make('wholesale_large_threshold')
+                                    ->label('Порог курсов (от)')
+                                    ->numeric()
+                                    ->default(10)
+                                    ->minValue(1),
+                                    
+                                Forms\Components\TextInput::make('wholesale_large_discount')
+                                    ->label('Скидка (%)')
+                                    ->numeric()
+                                    ->default(15)
+                                    ->minValue(0)->maxValue(100),
+                            ])->columns(2),
+                    ])
+                    ->visible(fn (Forms\Get $get) => $get('is_loyalty_active')),
             ]);
     }
 
@@ -59,16 +109,20 @@ class MarketingSettingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ToggleColumn::make('is_loyalty_active')
-                    ->label('Программа лояльности включена'),
+                    ->label('Лояльность включена'),
                     
-                Tables\Columns\TextColumn::make('loyalty_discount_percent')
-                    ->label('Размер скидки')
+                Tables\Columns\TextColumn::make('bundle_3_discount')
+                    ->label('Макс. пакетная')
+                    ->formatStateUsing(fn ($state) => $state . ' %'),
+                    
+                Tables\Columns\TextColumn::make('wholesale_large_discount')
+                    ->label('Макс. накопительная')
                     ->formatStateUsing(fn ($state) => $state . ' %'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
-            ->paginated(false); // Отключаем пагинацию, так как запись всего одна
+            ->paginated(false);
     }
 
     public static function getPages(): array

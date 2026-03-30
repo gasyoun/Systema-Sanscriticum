@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $page?->title }}</title>
     
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    
     {{-- === SEO И OPEN GRAPH === --}}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">

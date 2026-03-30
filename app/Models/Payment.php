@@ -21,6 +21,9 @@ class Payment extends Model
         'tariff', 
         'status',
         'transaction_id',
+        // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
+        'start_block',
+        'end_block',
     ];
 
     public function user(): BelongsTo

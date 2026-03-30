@@ -30,5 +30,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-
+    
+    'tochka' => [
+        'url' => env('TOCHKA_API_URL', 'https://enter.tochka.com/uapi/acquiring/v1.0'),
+        'token' => env('TOCHKA_API_TOKEN'),
+        'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
+    ],
 ];

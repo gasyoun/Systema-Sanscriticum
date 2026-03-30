@@ -21,6 +21,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession; 
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Support\HtmlString;
+use Filament\Navigation\NavigationGroup;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -30,7 +31,13 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->plugin(\Awcodes\Curator\CuratorPlugin::make())
+            ->navigationGroups([
+                NavigationGroup::make()->label('Обучение'),
+                NavigationGroup::make()->label('Пользователи'),
+                NavigationGroup::make()->label('Продажи'),
+                NavigationGroup::make()->label('Маркетинг'),
+                NavigationGroup::make()->label('Допматериалы'),
+            ])
             // --- НАЧАЛО: ПОБЕДА НАД КУРАТОРОМ + ОПТИМИЗАЦИЯ СКОРОСТИ ---
             ->renderHook(
                 \Filament\View\PanelsRenderHook::BODY_END,
@@ -94,7 +101,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->plugins([                        // <--- 2. ПОДКЛЮЧИЛИ САМ ПЛАГИН
+            ->plugins([                        // <--- 2. ПОДКЛЮЧИЛИ САМ ПЛАГИН (Оставили только здесь)
                 CuratorPlugin::make(),
             ])
             ->databaseNotifications() // Включаем колокольчик
@@ -107,6 +114,10 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\StudentStatsOverview::class,
+                \App\Filament\Widgets\CourseEarningsChart::class,
+                \App\Filament\Widgets\SalesFunnelChart::class,
+                \App\Filament\Widgets\RetentionChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,

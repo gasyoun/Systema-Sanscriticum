@@ -25,6 +25,10 @@ class User extends Authenticatable implements FilamentUser
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_auth_token',   // <-- Добавили для Telegram
         'vk_id',
+        // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
+        'phone',
+        'global_status',
+        'note',
     ];
 
     protected $hidden = [
@@ -73,6 +77,14 @@ class User extends Authenticatable implements FilamentUser
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
+    }
+
+    // --- НОВАЯ СВЯЗЬ: Студент -> Курсы (со статусами) ---
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class)
+                    ->withPivot('status', 'note')
+                    ->withTimestamps();
     }
 
     // ==========================================

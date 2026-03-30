@@ -13,7 +13,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TelegramController;
-
+use App\Http\Controllers\PaymentController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -116,3 +116,13 @@ Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут всегда в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
+
+// --- РОУТЫ ДЛЯ ТОЧКА БАНКА ---
+// Роут, на который отправляется форма по кнопке "К безопасной оплате"
+Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+
+// Сюда Точка вернет клиента после успешной оплаты
+Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+
+// Сюда Точка вернет клиента, если он нажмет "Отмена" или не хватит денег
+Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
