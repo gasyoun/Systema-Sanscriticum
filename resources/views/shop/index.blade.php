@@ -9,17 +9,46 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        <div class="text-center mb-16">
+        <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
                 Общество ревнителей санскрита
             </h1>
-            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-12">
+            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-8">
                 Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
             </p>
-            <h2 class="text-3xl font-bold text-[#E85C24]">
-                Наши курсы:
-            </h2>
         </div>
+
+        {{-- ========================================== --}}
+        {{-- СТИЛЬНАЯ СТРОКА ПОИСКА --}}
+        {{-- ========================================== --}}
+        <div class="mb-12 max-w-2xl mx-auto relative z-20">
+            <form action="" method="GET" class="relative flex items-center">
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-500"></i>
+                </div>
+                
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}" 
+                    placeholder="Найти курс, например: Синтаксис санскрита..." 
+                    class="w-full bg-[#111622]/80 backdrop-blur-md border border-[#1F2636] text-white pl-12 pr-36 py-4 rounded-2xl focus:outline-none focus:border-[#E85C24]/70 focus:ring-1 focus:ring-[#E85C24]/70 transition-all placeholder-slate-500 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                >
+                
+                <div class="absolute inset-y-0 right-2 flex items-center space-x-2">
+                    @if(request('search'))
+                        <a href="{{ request()->url() }}" class="text-slate-500 hover:text-[#E85C24] px-2 transition-colors" title="Сбросить поиск">
+                            <i class="fas fa-times text-lg"></i>
+                        </a>
+                    @endif
+                    
+                    <button type="submit" class="bg-[#E85C24] hover:bg-[#E85C24]/90 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)]">
+                        Найти
+                    </button>
+                </div>
+            </form>
+        </div>
+        {{-- ========================================== --}}
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             
@@ -63,14 +92,12 @@
 
                         <div class="mt-auto pt-5 border-t border-[#1F2636]/60">
                             @php
-                                // Умная сортировка: ищем полный тариф и берем цену одного (любого) блока
                                 $fullTariff = $course->tariffs->where('type', '!=', 'block')->first();
                                 $blockTariff = $course->tariffs->where('type', 'block')->sortBy('price')->first();
                             @endphp
 
                             @if($course->tariffs->count() > 0)
                                 <div class="space-y-2.5 mb-5">
-                                    {{-- Выводим цену за весь курс, если она есть --}}
                                     @if($fullTariff)
                                         <div class="flex items-center justify-between">
                                             <span class="text-slate-400 text-xs font-medium">Весь курс</span>
@@ -78,7 +105,6 @@
                                         </div>
                                     @endif
                                     
-                                    {{-- Выводим цену за 1 блок, если блоки существуют --}}
                                     @if($blockTariff)
                                         <div class="flex items-center justify-between">
                                             <span class="text-slate-400 text-xs font-medium">По модулям</span>
@@ -90,7 +116,6 @@
                                     @endif
                                 </div>
                                 
-                                {{-- Единая кнопка, ведущая к нашим новым вкладкам на странице курса --}}
                                 <a href="{{ route('shop.course.show', $course->slug) }}#tariffs" class="flex justify-center items-center w-full py-3 px-4 bg-[#1F2636] hover:bg-[#E85C24] text-white text-xs font-bold rounded-xl transition-all duration-300 group/btn shadow-md hover:shadow-[0_0_15px_rgba(232,92,36,0.4)] hover:-translate-y-0.5">
                                     Выбрать тариф
                                     <i class="fas fa-arrow-right ml-2 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300"></i>
@@ -108,12 +133,26 @@
             @empty
                 <div class="col-span-full text-center py-20">
                     <i class="fas fa-moon text-5xl text-slate-700 mb-4"></i>
-                    <h3 class="text-2xl font-bold text-white mb-2">Звезды пока не сошлись</h3>
-                    <p class="text-slate-400">Курсы находятся в стадии подготовки.</p>
+                    @if(request('search'))
+                        <h3 class="text-2xl font-bold text-white mb-2">Ничего не найдено</h3>
+                        <p class="text-slate-400">По запросу «{{ request('search') }}» курсов не найдено. Попробуйте изменить запрос.</p>
+                    @else
+                        <h3 class="text-2xl font-bold text-white mb-2">Звезды пока не сошлись</h3>
+                        <p class="text-slate-400">Курсы находятся в стадии подготовки.</p>
+                    @endif
                 </div>
             @endforelse
 
         </div>
+
+        {{-- ========================================== --}}
+        {{-- БЛОК ПАГИНАЦИИ --}}
+        {{-- ========================================== --}}
+        @if($courses->hasPages())
+            <div class="mt-16 pt-8 border-t border-[#1F2636] flex justify-center">
+                {{ $courses->links('partials.pagination') }}
+            </div>
+        @endif
 
     </div>
 </div>

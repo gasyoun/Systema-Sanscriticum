@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Обучение') | Sanskrit LMS</title>
+    <title>@yield('title', 'Обучение') | ОРС LMS</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -67,7 +67,7 @@
         {{-- Логотип --}}
         <div class="h-20 flex items-center justify-center shrink-0 border-b border-[#2C2C32] bg-[#141417]">
             <a href="{{ route('student.dashboard') }}" class="text-white text-2xl font-extrabold tracking-widest hover:text-[#E85C24] transition-colors">
-                SANSKRIT<span class="text-[#E85C24]">LMS</span>
+                ОРС<span class="text-[#E85C24]">LMS</span>
             </a>
         </div>
 

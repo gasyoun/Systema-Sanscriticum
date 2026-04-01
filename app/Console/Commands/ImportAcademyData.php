@@ -93,13 +93,71 @@ class ImportAcademyData extends Command
             if (empty($studentName) || empty($courseTitle)) continue;
 
             $amount = $cleanNumber($row[5] ?? 0); // Колонка F: Оплата
+            $startBlock = (int)$cleanNumber($row[3] ?? 0); 
+            $endBlock = (int)$cleanNumber($row[4] ?? 0); 
+            $dateRaw = trim($row[6] ?? ''); 
+            $statusRaw = trim($row[8] ?? ''); 
+            $note = trim($row[9] ?? ''); 
 
-            // Пропускаем расходы (отрицательные суммы)
-            if ($amount < 0) {
-                $countExpenses++;
-                continue;
+            // Парсим дату
+            $parsedDate = now();
+            if (!empty($dateRaw)) {
+                try {
+                    $parsedDate = \Carbon\Carbon::parse($dateRaw);
+                } catch (\Exception $e) { }
             }
 
+            // ==========================================
+            // ЛОГИКА ДЛЯ РАСХОДОВ И ВОЗВРАТОВ (МИНУСОВЫЕ СУММЫ)
+            // ==========================================
+            if ($amount < 0) {
+                // Пытаемся найти студента (вдруг это реальный возврат)
+                $userId = $users[$studentName] ?? null;
+                $courseId = $courses[$courseTitle] ?? null;
+
+                // Если это абстрактный расход (Реклама, Банк и т.д.), создаем технический профиль
+                if (!$userId) {
+                    $sysUser = \App\Models\User::firstOrCreate(
+                        ['email' => 'expenses@samskrte.ru'],
+                        ['name' => 'Системные расходы', 'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(10))]
+                    );
+                    $userId = $sysUser->id;
+                    $users['Системные расходы'] = $userId; // Кешируем, чтобы не создавать дважды
+                }
+
+                if (!$courseId) {
+                    $sysCourse = \App\Models\Course::firstOrCreate(
+                        ['title' => 'Прочие затраты (Технический)'],
+                        ['slug' => 'system-expenses', 'is_visible' => false]
+                    );
+                    $courseId = $sysCourse->id;
+                    $courses['Прочие затраты (Технический)'] = $courseId; 
+                }
+
+                // Информацию о том, на что ушел расход, сохраним в поле Транзакции, чтобы видеть в админке
+                $expenseDetails = mb_substr($studentName . ' - ' . $courseTitle, 0, 250);
+
+                $paymentsBatch[] = [
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'amount' => $amount,
+                    'tariff' => 'Расход', // В таблице будет красиво написано "Расход"
+                    'status' => 'paid', // Транзакция проведена (с минусом)
+                    'start_block' => null,
+                    'end_block' => null,
+                    'transaction_id' => $expenseDetails, 
+                    'created_at' => $parsedDate,
+                    'updated_at' => $parsedDate,
+                ];
+                $countExpenses++;
+                
+                // ВАЖНО: Пропускаем выдачу доступов и идем к следующей строке!
+                continue; 
+            }
+
+            // ==========================================
+            // ЛОГИКА ДЛЯ ОБЫЧНЫХ ПОЛОЖИТЕЛЬНЫХ ОПЛАТ
+            // ==========================================
             $userId = $users[$studentName] ?? null;
             $courseId = $courses[$courseTitle] ?? null;
 
@@ -108,39 +166,53 @@ class ImportAcademyData extends Command
                 continue;
             }
 
-            $startBlock = (int)$cleanNumber($row[3] ?? 0); 
-            $endBlock = (int)$cleanNumber($row[4] ?? 0); 
-            $dateRaw = trim($row[6] ?? ''); 
-            $statusRaw = trim($row[8] ?? ''); 
-            $note = trim($row[9] ?? ''); 
-
-            // Парсим дату (Carbon умный, сам поймет 10.12.23 или 10.12.2023)
-            $parsedDate = now();
-            if (!empty($dateRaw)) {
-                try {
-                    $parsedDate = \Carbon\Carbon::parse($dateRaw);
-                } catch (\Exception $e) { }
-            }
-
-            $tariff = 'full';
+            // --- НОВАЯ ЛОГИКА РАЗДЕЛЕНИЯ ОПЛАТ ПО БЛОКАМ ---
             if ($startBlock > 0) {
-                $tariff = 'block_' . $startBlock;
-            }
+                // Если конечный блок не указан или меньше начального, приравниваем их
+                $endBlock = ($endBlock >= $startBlock) ? $endBlock : $startBlock;
+                
+                // Считаем, сколько блоков купили разом
+                $blocksCount = $endBlock - $startBlock + 1;
+                
+                // Делим сумму на количество блоков (например, 15000 / 3 = 5000)
+                $amountPerBlock = $blocksCount > 0 ? round($amount / $blocksCount, 2) : $amount;
 
-            // Накапливаем оплаты
-            $paymentsBatch[] = [
-                'user_id' => $userId,
-                'course_id' => $courseId,
-                'amount' => $amount,
-                'tariff' => $tariff,
-                'status' => 'paid',
-                'start_block' => $startBlock > 0 ? $startBlock : null,
-                'end_block' => $endBlock > 0 ? $endBlock : null,
-                'transaction_id' => null,
-                'created_at' => $parsedDate,
-                'updated_at' => $parsedDate,
-            ];
-            $countPayments++;
+                for ($i = $startBlock; $i <= $endBlock; $i++) {
+                    $paymentsBatch[] = [
+                        'user_id' => $userId,
+                        'course_id' => $courseId,
+                        'amount' => $amountPerBlock,
+                        'tariff' => 'block_' . $i,
+                        'status' => 'paid',
+                        'start_block' => $i,
+                        'end_block' => $i,
+                        // Если это мульти-оплата, оставляем пометку в транзакции
+                        'transaction_id' => ($blocksCount > 1) ? "Мульти-оплата (Блоки {$startBlock}-{$endBlock})" : null,
+                        'created_at' => $parsedDate,
+                        'updated_at' => $parsedDate,
+                    ];
+                    $countPayments++;
+                }
+            } else {
+                // Весь курс целиком (Если start_block = 0 или пуст)
+                $paymentsBatch[] = [
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'amount' => $amount,
+                    'tariff' => 'full',
+                    'status' => 'paid',
+                    'start_block' => null,
+                    'end_block' => null,
+                    'transaction_id' => null,
+                    'created_at' => $parsedDate,
+                    'updated_at' => $parsedDate,
+                ];
+                $countPayments++;
+            }
+            
+            // ==========================================
+            // РАСКИДЫВАЕМ ДОСТУПЫ СТУДЕНТАМ
+            // ==========================================
 
             // ==========================================
             // РАСКИДЫВАЕМ ДОСТУПЫ СТУДЕНТАМ
@@ -177,14 +249,14 @@ class ImportAcademyData extends Command
 
             // Загружаем в БД пачками по 1000 строк (сверхскорость)
             if (count($paymentsBatch) >= 1000) {
-                DB::table('payments')->insert($paymentsBatch);
+                \Illuminate\Support\Facades\DB::table('payments')->insert($paymentsBatch);
                 $paymentsBatch = [];
             }
         }
 
         // Загружаем остатки оплат
         if (!empty($paymentsBatch)) {
-            DB::table('payments')->insert($paymentsBatch);
+            \Illuminate\Support\Facades\DB::table('payments')->insert($paymentsBatch);
         }
 
         fclose($file);
@@ -192,13 +264,15 @@ class ImportAcademyData extends Command
         $this->info("Оплаты загружены! Синхронизируем доступы в кабинеты...");
 
         // Раздаем доступы к группам
-        foreach ($groupUserBatch as $link) {
-            DB::table('group_user')->insertOrIgnore($link);
+        if (!empty($groupUserBatch)) {
+            foreach (array_chunk($groupUserBatch, 500) as $chunk) {
+                \Illuminate\Support\Facades\DB::table('group_user')->insertOrIgnore($chunk);
+            }
         }
 
         // Заполняем статусы "Обучается на курсах"
         foreach ($courseUserBatch as $link) {
-            $user = User::find($link['user_id']);
+            $user = \App\Models\User::find($link['user_id']);
             if ($user) {
                 $user->courses()->syncWithoutDetaching([
                     $link['course_id'] => [
@@ -209,8 +283,8 @@ class ImportAcademyData extends Command
             }
         }
 
-        $this->info("✅ Успешно перенесено оплат: {$countPayments}");
-        $this->info("⏭ Пропущено расходов (отрицательных сумм): {$countExpenses}");
+        $this->info("✅ Успешно перенесено положительных оплат: {$countPayments}");
+        $this->info("📉 Записано расходов / возвратов: {$countExpenses}");
         if ($countSkips > 0) {
             $this->warn("⚠️ Пропущено строк из-за несовпадений ФИО/Курса: {$countSkips}");
             $this->warn("  (Обычно это оплаты за курсы или консультации, которых нет в таблице 'Курсы')");
@@ -269,16 +343,32 @@ class ImportAcademyData extends Command
             // Генерируем случайный пароль для новых пользователей
             $password = $existingUser ? $existingUser->password : Hash::make(Str::random(10));
 
+            // ==========================================
+            // НОВОЕ: Умное склеивание примечания
+            // ==========================================
+            $combinedNoteParts = [];
+            if (!empty($telegram)) {
+                $combinedNoteParts[] = "Telegram: " . $telegram;
+            }
+            if (!empty($vk)) {
+                $combinedNoteParts[] = "VK: " . $vk;
+            }
+            if (!empty($note)) {
+                $combinedNoteParts[] = "Комментарий: " . $note;
+            }
+            // Склеиваем с переносом строки, если пусто - будет пустая строка
+            $finalNote = implode("\n", $combinedNoteParts);
+
+
             // Сохраняем в базу (без автоматической отправки писем, так как мы обходим контроллеры!)
             User::updateOrCreate(
                 ['name' => $name], // Ищем строго по ФИО
                 [
                     'email' => $email,
                     'phone' => $phone,
-                    'telegram_id' => $telegram, 
-                    'vk_id' => $vk,
+                    // Убрали telegram_id и vk_id, теперь всё лежит в note
                     'global_status' => $status,
-                    'note' => $note,
+                    'note' => $finalNote,
                     'password' => $password,
                 ]
             );

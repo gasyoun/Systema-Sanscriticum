@@ -24,64 +24,86 @@ class PaymentResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->label('Студент')
-                    ->relationship('user', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+                Forms\Components\Section::make('Детали транзакции')->schema([
+                    Forms\Components\Select::make('user_id')
+                        ->label('Студент')
+                        ->relationship('user', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->columnSpan(1),
 
-                Forms\Components\Select::make('course_id')
-                    ->label('Курс')
-                    ->relationship('course', 'title')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+                    Forms\Components\Select::make('course_id')
+                        ->label('Курс')
+                        ->relationship('course', 'title')
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->columnSpan(1),
 
-                Forms\Components\Select::make('tariff')
-                    ->label('Тариф (Доступ)')
-                    ->options([
-                        'full' => 'Весь курс (16 занятий)',
-                        'block_1' => 'Блок 1 (Занятия 1-4)',
-                        'block_2' => 'Блок 2 (Занятия 5-8)',
-                        'block_3' => 'Блок 3 (Занятия 9-12)',
-                        'block_4' => 'Блок 4 (Занятия 13-16)',
-                    ])
-                    ->default('full')
-                    ->required(),
+                    Forms\Components\Select::make('tariff')
+                        ->label('Тариф (Доступ)')
+                        ->options(function () {
+                            $options = ['full' => 'Весь курс целиком'];
+                            for ($i = 1; $i <= 100; $i++) {
+                                $startLesson = ($i - 1) * 4 + 1;
+                                $endLesson = $i * 4;
+                                $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+                            }
+                            return $options;
+                        })
+                        ->searchable()
+                        ->default('full')
+                        ->required()
+                        ->live() 
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if ($state === 'full') {
+                                $set('start_block', null);
+                                $set('end_block', null);
+                            } elseif (str_starts_with($state ?? '', 'block_')) {
+                                $blockNum = (int) str_replace('block_', '', $state);
+                                $set('start_block', $blockNum);
+                                $set('end_block', $blockNum);
+                            }
+                        })
+                        ->columnSpanFull(),
+                ])->columns(2),
 
-                // --- НОВЫЙ БЛОК: Сумма и Номера блоков ---
-                Forms\Components\Grid::make(3)
-                    ->schema([
-                        Forms\Components\TextInput::make('amount')
-                            ->label('Сумма (₽)')
-                            ->numeric()
+                Forms\Components\Section::make('Финансы')->schema([
+                    Forms\Components\Grid::make(3)
+                        ->schema([
+                            Forms\Components\TextInput::make('amount')
+                                ->label('Сумма (₽)')
+                                ->numeric()
+                                ->required(),
+
+                            Forms\Components\TextInput::make('start_block')
+                                ->label('Оплачен с блока №')
+                                ->numeric()
+                                ->helperText('Например: 52'),
+
+                            Forms\Components\TextInput::make('end_block')
+                                ->label('По блок №')
+                                ->numeric()
+                                ->helperText('Пусто, если курс куплен целиком'),
+                        ]),
+
+                    Forms\Components\Grid::make(2)->schema([
+                        Forms\Components\Select::make('status')
+                            ->label('Статус')
+                            ->options([
+                                'pending' => 'Ожидает оплаты',
+                                'paid' => 'Оплачено',
+                                'canceled' => 'Отменено / Ошибка',
+                            ])
+                            ->default('paid')
                             ->required(),
 
-                        Forms\Components\TextInput::make('start_block')
-                            ->label('Оплачен с блока №')
-                            ->numeric()
-                            ->helperText('Например: 52'),
-
-                        Forms\Components\TextInput::make('end_block')
-                            ->label('По блок №')
-                            ->numeric()
-                            ->helperText('Пусто, если курс куплен целиком'),
+                        Forms\Components\TextInput::make('transaction_id')
+                            ->label('ID транзакции (Банк / Расход)')
+                            ->maxLength(255),
                     ]),
-
-                Forms\Components\Select::make('status')
-                    ->label('Статус')
-                    ->options([
-                        'pending' => 'Ожидает оплаты',
-                        'paid' => 'Оплачено',
-                        'canceled' => 'Отменено / Ошибка',
-                    ])
-                    ->default('pending')
-                    ->required(),
-
-                Forms\Components\TextInput::make('transaction_id')
-                    ->label('ID транзакции (Банк)')
-                    ->maxLength(255),
+                ]),
             ]);
     }
 
@@ -89,82 +111,76 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
+                // 1. КОМПАКТНАЯ ДАТА (без времени)
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Дата')
-                    ->dateTime('d.m.Y H:i')
-                    ->sortable(),
+                    ->date('d.m.Y') // <-- Убрали время, оставили только компактную дату
+                    ->sortable()
+                    ->color('gray')
+                    ->size('sm'),
 
+                // 2. СТУДЕНТ (Добавили wrap, чтобы сузить колонку)
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Студент')
                     ->searchable()
                     ->sortable()
-                    ->description(fn (Payment $record): string => $record->user->email ?? ''),
+                    ->wrap() // <-- МАГИЯ ЗДЕСЬ: Длинные ФИО перенесутся на новую строку
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->description(fn (Payment $record): string => $record->user->email ?? 'Нет email'),
 
+                // 3. КУРС (Займет всё освободившееся пространство)
                 Tables\Columns\TextColumn::make('course.title')
-                    ->label('Курс')
+                    ->label('Курс и Тариф')
                     ->searchable()
                     ->sortable()
-                    ->wrap(),
-
-                // --- НОВАЯ КОЛОНКА: Умное отображение блоков ---
-                Tables\Columns\TextColumn::make('blocks_range')
-                    ->label('Оплаченные блоки')
-                    ->state(function (Payment $record) {
-                        if ($record->start_block && $record->end_block) {
-                            if ($record->start_block === $record->end_block) {
-                                return "Блок {$record->start_block}";
-                            }
-                            return "Блоки {$record->start_block} - {$record->end_block}";
+                    ->wrap()
+                    ->description(function (Payment $record) {
+                        $start = (int)$record->start_block;
+                        $end = (int)$record->end_block;
+                        
+                        if ($start > 0) {
+                            if ($end <= 0 || $start === $end) return "Блок {$start}";
+                            return "Блоки {$start} - {$end}";
                         }
-                        return 'Весь курс (или не указано)';
-                    })
-                    ->badge()
-                    ->color(fn ($state) => $state === 'Весь курс (или не указано)' ? 'success' : 'info'),
+                        
+                        if ($record->tariff === 'Расход') return 'Технический расход';
+                        return 'Весь курс';
+                    }),
 
-                Tables\Columns\TextColumn::make('tariff')
-                    ->label('Тариф')
-                    ->badge() 
-                    ->color(fn (string $state): string => match ($state) {
-                        'full' => 'success', 
-                        default => 'info',   
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'full' => 'Весь курс',
-                        'block_1' => 'Блок 1',
-                        'block_2' => 'Блок 2',
-                        'block_3' => 'Блок 3',
-                        'block_4' => 'Блок 4',
-                        default => $state,
-                    })
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true), // Скрыл по умолчанию, чтобы не загромождать таблицу
-
+                // 4. СУММА
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Сумма')
                     ->money('RUB', locale: 'ru')
-                    ->sortable(),
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::ExtraBold)
+                    ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
+                    ->alignment(\Filament\Support\Enums\Alignment::End),
 
+                // 5. СТАТУС
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         'paid', 'success' => 'success',     
                         'pending' => 'warning',  
                         'canceled' => 'danger',  
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'paid', 'success' => 'Оплачено',
                         'pending' => 'Ожидает',
                         'canceled' => 'Отменено',
-                        default => $state,
-                    }),
+                        default => $state ?? 'Не указан',
+                    })
+                    ->alignment(\Filament\Support\Enums\Alignment::Center),
 
+                // 6. ПРИМЕЧАНИЕ
                 Tables\Columns\TextColumn::make('transaction_id')
-                    ->label('ID Банка')
+                    ->label('Примечание (Банк)')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limit(30)
+                    ->color('gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course_id')
@@ -180,14 +196,15 @@ class PaymentResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->iconButton(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->striped(); 
     }
 
     public static function getRelations(): array

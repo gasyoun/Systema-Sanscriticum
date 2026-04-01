@@ -75,11 +75,12 @@
                 $isCompleted = auth()->user()->completedLessons->contains($lesson->id);
             @endphp
 
-            <a href="{{ $isUnlocked ? route('student.lesson', [$course->slug, $lesson->id]) : '#' }}" 
+            {{-- ИЗМЕНЕНИЕ 1: Ссылка ведет либо на урок, либо на страницу покупки тарифов --}}
+            <a href="{{ $isUnlocked ? route('student.lesson', [$course->slug, $lesson->id]) : route('shop.course.show', $course->slug) . '#tariffs' }}" 
                class="group block bg-white rounded-2xl border transition-all duration-300 relative overflow-hidden
                       {{ $isUnlocked 
                           ? 'border-gray-100 hover:border-[#E85C24]/30 hover:shadow-lg hover:-translate-y-1' 
-                          : 'border-gray-50 bg-gray-50/50 cursor-not-allowed opacity-75' }}">
+                          : 'border-gray-100 bg-gray-50/50 hover:border-[#E85C24]/40 hover:shadow-md hover:-translate-y-0.5' }}">
                 
                 {{-- Цветная полоска слева для пройденных уроков --}}
                 @if($isCompleted)
@@ -91,7 +92,7 @@
                     {{-- ИКОНКА / СТАТУС СЛЕВА --}}
                     <div class="flex-shrink-0">
                         @if(!$isUnlocked)
-                            <div class="w-12 h-12 rounded-2xl bg-gray-200 text-gray-400 flex items-center justify-center shadow-inner">
+                            <div class="w-12 h-12 rounded-2xl bg-gray-200 text-gray-400 flex items-center justify-center shadow-inner group-hover:bg-orange-50 group-hover:text-[#E85C24] transition-colors">
                                 <i class="fas fa-lock text-lg"></i>
                             </div>
                         @elseif($isCompleted)
@@ -108,7 +109,7 @@
                     {{-- ИНФОРМАЦИЯ ОБ УРОКЕ --}}
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                            <span class="text-[10px] font-bold uppercase tracking-widest {{ $isUnlocked ? 'text-[#E85C24]' : 'text-gray-400' }}">
+                            <span class="text-[10px] font-bold uppercase tracking-widest {{ $isUnlocked ? 'text-[#E85C24]' : 'text-gray-400 group-hover:text-[#E85C24] transition-colors' }}">
                                 Урок {{ $index + 1 }}
                             </span>
                             @if(!$isUnlocked)
@@ -119,7 +120,7 @@
                         </div>
                         
                         <h3 class="text-lg md:text-xl font-bold truncate transition-colors leading-tight
-                                   {{ $isUnlocked ? 'text-gray-900 group-hover:text-[#E85C24]' : 'text-gray-500' }}">
+                                   {{ $isUnlocked ? 'text-gray-900 group-hover:text-[#E85C24]' : 'text-gray-600 group-hover:text-gray-900' }}">
                             {{ $lesson->title }}
                         </h3>
                         
@@ -135,8 +136,9 @@
                                 </span>
                             @endif
                             @if(!$isUnlocked)
-                                <span class="text-red-500 flex items-center">
-                                    <i class="fas fa-shopping-cart mr-1.5"></i> Нужна оплата
+                                {{-- ИЗМЕНЕНИЕ 2: Красивый бейджик покупки --}}
+                                <span class="text-[#E85C24] flex items-center bg-orange-50 px-2 py-0.5 rounded-md font-bold transition-colors group-hover:bg-[#E85C24] group-hover:text-white">
+                                    <i class="fas fa-shopping-cart mr-1.5"></i> Докупить блок {{ $lesson->block_number }}
                                 </span>
                             @endif
                         </div>
@@ -153,8 +155,9 @@
                                 <i class="fas fa-chevron-right"></i>
                             </div>
                         @else
-                            <div class="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-gray-300">
-                                <i class="fas fa-lock"></i>
+                            {{-- ИЗМЕНЕНИЕ 3: Явная кнопка Купить --}}
+                            <div class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest group-hover:bg-[#E85C24] group-hover:text-white transition-all shadow-sm group-hover:shadow-[0_0_15px_rgba(232,92,36,0.3)]">
+                                Купить
                             </div>
                         @endif
                     </div>

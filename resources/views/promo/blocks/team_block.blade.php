@@ -30,18 +30,29 @@
                     {{-- Декоративная светящаяся линия сверху при наведении --}}
                     <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
-                    {{-- Аватар с эффектом свечения --}}
-                    <div class="w-32 h-32 mb-8 relative">
+                    {{-- Аватар с эффектом свечения и стильным ободком --}}
+                    <div class="w-32 h-32 mb-8 relative group/avatar">
+                        {{-- Светящийся фон (свечение за карточкой) --}}
                         <div class="absolute inset-0 rounded-full blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500 scale-110" style="background: linear-gradient(135deg, var(--accent), #fca5a5);"></div>
                         
-                        @if(!empty($item['image']))
-                            <img src="{{ Storage::url($item['image']) }}" 
-                                 class="w-full h-full object-cover rounded-full border-4 border-white shadow-md relative z-10 group-hover:scale-105 transition-transform duration-500" 
-                                 alt="{{ $item['name'] }}">
+                        @php
+                            // Ищем картинку в базе Куратора по её ID
+                            $media = \Awcodes\Curator\Models\Media::find($item['image']);
+                        @endphp
+
+                        @if($media)
+                            {{-- Обновленный блок картинки: добавили rounded-full и стильную двойную рамку --}}
+                            <div class="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-[var(--accent)] to-orange-200 shadow-lg group-hover:shadow-[0_0_20px_rgba(232,92,36,0.3)] transition-all duration-300 group-hover:scale-105">
+                                <div class="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
+                                    <img src="{{ $media->url }}" alt="{{ $item['name'] ?? 'Преподаватель' }}" class="w-full h-full object-cover rounded-full">
+                                </div>
+                            </div>
                         @else
-                            {{-- Заглушка, если нет фото --}}
-                            <div class="w-full h-full rounded-full border-4 border-white shadow-md bg-gray-100 flex items-center justify-center relative z-10 text-gray-400 group-hover:scale-105 transition-transform duration-500">
-                                <svg class="w-12 h-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            {{-- Заглушка (тоже круглая) --}}
+                            <div class="relative w-full h-full rounded-full p-1 bg-gray-200">
+                                <div class="w-full h-full rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
+                                    <i class="fas fa-user text-4xl"></i>
+                                </div>
                             </div>
                         @endif
                     </div>

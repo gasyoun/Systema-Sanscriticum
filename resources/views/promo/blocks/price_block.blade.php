@@ -165,14 +165,14 @@
 
                             {{-- Кнопка --}}
                             <div class="mt-auto">
-                                <a href="#order-form-anchor" 
-                                   class="block w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-widest text-center transition-all duration-300 
-                                          {{ $isPopular 
-                                             ? 'bg-[#E85C24] text-white hover:bg-[#d04a15] shadow-[0_8px_20px_rgba(232,92,36,0.3)] hover:-translate-y-0.5' 
-                                             : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:-translate-y-0.5' 
-                                          }}">
-                                    {{ $item['button_text'] ?? 'Записаться на курс' }}
-                                </a>
+                                <button @click.prevent="$dispatch('open-order-form')"
+        class="block w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-widest text-center transition-all duration-300 
+               {{ $isPopular 
+                  ? 'bg-[#E85C24] text-white hover:bg-[#d04a15] shadow-[0_8px_20px_rgba(232,92,36,0.3)] hover:-translate-y-0.5' 
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:-translate-y-0.5' 
+               }}">
+    {{ $item['button_text'] ?? 'Записаться на курс' }}
+</button>
                             </div>
 
                         </div>

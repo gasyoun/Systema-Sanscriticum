@@ -9,20 +9,28 @@ use Illuminate\Http\Request;
 class ShopController extends Controller
 {
     // МЕТОД 1: Витрина со всеми курсами
-    public function index()
+    public function index(Request $request)
     {
+        // Получаем строку поиска из URL (если она есть)
+        $search = $request->input('search');
+
         $courses = Course::where('is_visible', true)
+            // Если есть запрос поиска, фильтруем по названию
+            ->when($search, function ($query, $search) {
+                return $query->where('title', 'LIKE', "%{$search}%");
+            })
             ->with(['tariffs' => function ($query) {
                 $query->where('is_active', true)->orderBy('price', 'asc');
             }])
-            ->get();
+            ->paginate(9)
+            ->withQueryString(); // Важно! Сохраняет параметры поиска при переходе по страницам пагинации
 
         $page = new LandingPage([
-            'title' => 'Магазин курсов',
+            'title' => 'Общество ревнителей санскрита',
             'description' => 'Выберите курс и начните обучение'
         ]);
 
-        return view('shop.index', compact('courses', 'page'));
+        return view('shop.index', compact('courses', 'page', 'search'));
     }
 
     // МЕТОД 2: Страница одного конкретного курса

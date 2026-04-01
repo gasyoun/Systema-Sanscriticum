@@ -35,16 +35,20 @@ class LessonResource extends Resource
                     ->label('Название урока'),
                     
                 Forms\Components\Select::make('block_number')
-                    ->label('Блок (Модуль) курса')
-                    ->options([
-                        1 => 'Блок 1 (Занятия 1-4)',
-                        2 => 'Блок 2 (Занятия 5-8)',
-                        3 => 'Блок 3 (Занятия 9-12)',
-                        4 => 'Блок 4 (Занятия 13-16)',
-                    ])
-                    ->default(1)
-                    ->required()
-                    ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
+    ->label('Блок (Модуль) курса')
+    ->options(function () {
+        $options = [];
+        for ($i = 1; $i <= 100; $i++) {
+            $startLesson = ($i - 1) * 4 + 1; // Высчитываем первое занятие в блоке
+            $endLesson = $i * 4;             // Высчитываем последнее занятие в блоке
+            $options[$i] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+        }
+        return $options;
+    })
+    ->default(1)
+    ->required()
+    ->searchable() // Добавил поиск, чтобы куратору было удобно искать 52-й блок, а не крутить список
+    ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
                     
                 Forms\Components\DateTimePicker::make('lesson_date')
                     ->label('Дата и время урока')
@@ -131,6 +135,10 @@ class LessonResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    // Добавляем кнопку массового экспорта:
+                    \Filament\Tables\Actions\ExportBulkAction::make()
+                        ->exporter(\App\Filament\Exports\LessonExporter::class)
+                        ->label('Экспорт для файлов'),
                 ]),
             ])
             ->defaultSort('lesson_date', 'asc'); 

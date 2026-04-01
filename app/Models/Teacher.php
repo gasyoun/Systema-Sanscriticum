@@ -35,8 +35,17 @@ class Teacher extends Model
         $total = 0;
 
         foreach ($this->courses as $course) {
-            // Базовый запрос: только успешные оплаты
-            $query = $course->payments()->whereIn('status', ['success', 'paid']);
+            // На всякий случай всё равно пропускаем чисто технические курсы
+            if ($course->slug === 'system-expenses' || $course->title === 'Прочие затраты (Технический)') {
+                continue;
+            }
+
+            // ==========================================
+            // МАГИЯ: Считаем только ПОЛОЖИТЕЛЬНЫЕ оплаты (> 0)
+            // ==========================================
+            $query = $course->payments()
+                ->whereIn('status', ['success', 'paid'])
+                ->where('amount', '>', 0); 
             
             // Если попросили посчитать за конкретный месяц - фильтруем по дате
             if ($startDate && $endDate) {
