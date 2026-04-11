@@ -109,9 +109,11 @@ class CourseResource extends Resource
                         Forms\Components\Select::make('salary_type')
                             ->label('Схема расчета')
                             ->options([
-                                'percent' => 'Процент от продаж (%)',
+                                'percent' => 'Процент от продаж всего курса (%)',
                                 'fix_per_student' => 'Фикс за каждого студента (₽)',
                                 'fix_total' => 'Фикс за весь курс (₽)',
+                                'percent_per_block' => 'Процент с каждого блока (%)',
+                                'fix_per_block' => 'Фикс за каждый блок (₽)', // <--- ИЗМЕНИЛИ ТЕКСТ ЗДЕСЬ
                             ]),
 
                         Forms\Components\TextInput::make('salary_value')

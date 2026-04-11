@@ -90,6 +90,7 @@
                             @endif
                         </div>
 
+                        {{-- === БЛОК С ЦЕНАМИ И СКИДКАМИ === --}}
                         <div class="mt-auto pt-5 border-t border-[#1F2636]/60">
                             @php
                                 $fullTariff = $course->tariffs->where('type', '!=', 'block')->first();
@@ -97,21 +98,60 @@
                             @endphp
 
                             @if($course->tariffs->count() > 0)
-                                <div class="space-y-2.5 mb-5">
+                                <div class="space-y-2 mb-5">
+                                    {{-- ТАРИФ: ВЕСЬ КУРС --}}
                                     @if($fullTariff)
-                                        <div class="flex items-center justify-between">
+                                        @php
+                                            $fullFinalPrice = auth()->check() ? $fullTariff->calculateFinalPriceForUser(auth()->user()) : $fullTariff->price;
+                                            $fullDiscountPercent = auth()->check() ? $fullTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                                        @endphp
+                                        
+                                        <div class="flex justify-between items-center">
                                             <span class="text-slate-400 text-xs font-medium">Весь курс</span>
-                                            <span class="font-bold text-white text-sm">{{ number_format($fullTariff->price, 0, '.', ' ') }} ₽</span>
+                                            <div class="text-right flex items-center justify-end flex-wrap gap-x-1.5">
+                                                @if($fullFinalPrice < $fullTariff->price)
+                                                    <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($fullTariff->price, 0, '.', ' ') }}</span>
+                                                    <span class="font-bold text-[#38BDF8] text-sm">{{ number_format($fullFinalPrice, 0, '.', ' ') }} ₽</span>
+                                                    
+                                                    @if($fullDiscountPercent > 0)
+                                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">-{{ $fullDiscountPercent }}%</span>
+                                                    @elseif($fullFinalPrice == 0)
+                                                        <span class="text-[9px] text-green-400 font-bold uppercase tracking-wide">Куплено</span>
+                                                    @else
+                                                        <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-wide">Апгрейд</span>
+                                                    @endif
+                                                @else
+                                                    <span class="font-bold text-white text-sm">{{ number_format($fullTariff->price, 0, '.', ' ') }} ₽</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
                                     
+                                    {{-- ТАРИФ: ПО МОДУЛЯМ --}}
                                     @if($blockTariff)
-                                        <div class="flex items-center justify-between">
+                                        @php
+                                            $blockFinalPrice = auth()->check() ? $blockTariff->calculateFinalPriceForUser(auth()->user()) : $blockTariff->price;
+                                            $blockDiscountPercent = auth()->check() ? $blockTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                                        @endphp
+                                        
+                                        <div class="flex justify-between items-center">
                                             <span class="text-slate-400 text-xs font-medium">По модулям</span>
-                                            <span class="font-bold text-[#38BDF8] text-sm">
-                                                {{ number_format($blockTariff->price, 0, '.', ' ') }} ₽ 
-                                                <span class="text-[10px] text-slate-500 font-normal">/ блок</span>
-                                            </span>
+                                            <div class="text-right flex items-center justify-end flex-wrap gap-x-1.5">
+                                                @if($blockFinalPrice < $blockTariff->price)
+                                                    <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($blockTariff->price, 0, '.', ' ') }}</span>
+                                                    <span class="font-bold text-[#38BDF8] text-sm">{{ number_format($blockFinalPrice, 0, '.', ' ') }} ₽</span>
+                                                    
+                                                    @if($blockDiscountPercent > 0)
+                                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">-{{ $blockDiscountPercent }}%</span>
+                                                    @endif
+                                                    <span class="text-[10px] text-slate-500 font-normal">/ блок</span>
+                                                @else
+                                                    <span class="font-bold text-[#38BDF8] text-sm">
+                                                        {{ number_format($blockTariff->price, 0, '.', ' ') }} ₽ 
+                                                        <span class="text-[10px] text-slate-500 font-normal">/ блок</span>
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
                                 </div>
@@ -127,8 +167,9 @@
                                 </div>
                             @endif
                         </div>
+                        {{-- === КОНЕЦ БЛОКА ЦЕН === --}}
+                        
                     </div>
-                    
                 </div>
             @empty
                 <div class="col-span-full text-center py-20">

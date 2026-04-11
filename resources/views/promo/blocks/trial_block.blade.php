@@ -69,11 +69,11 @@
 
                     <div class="p-8 mt-2">
                         <h3 class="text-2xl font-extrabold text-gray-900 mb-2 text-center" id="modal-title">
-                            Запись на пробный урок
-                        </h3>
-                        <p class="text-sm text-gray-500 text-center mb-6">
-                            Оставьте контакты, и мы согласуем удобное время.
-                        </p>
+    {{ $data['modal_title'] ?? 'Запись на пробный урок' }}
+</h3>
+<p class="text-sm text-gray-500 text-center mb-6">
+    {{ $data['modal_text'] ?? 'Оставьте контакты, и мы согласуем удобное время.' }}
+</p>
 
                         <form action="{{ route('leads.store') }}" method="POST" class="space-y-4">
                             @csrf

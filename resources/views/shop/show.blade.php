@@ -136,9 +136,43 @@
 
                                 <h4 class="text-xl font-bold text-white mb-2 pr-16">{{ $tariff->title }}</h4>
                                 
-                                <div class="text-4xl font-black text-white mb-4">
-                                    {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
-                                </div>
+                                @php
+    $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
+    $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+@endphp
+
+<div class="mb-4">
+    @if($finalPrice < $tariff->price)
+        {{-- Если есть скидка или апгрейд --}}
+        <div class="flex items-end gap-3 mb-1">
+            <div class="text-4xl font-black text-[#38BDF8]">
+                {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl font-medium text-[#38BDF8]/70">₽</span>
+            </div>
+            
+            @if($discountPercent > 0)
+                <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                    Скидка -{{ $discountPercent }}%
+                </span>
+            @elseif($finalPrice == 0)
+                <span class="bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                    Куплено
+                </span>
+            @else
+                <span class="bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                    Апгрейд
+                </span>
+            @endif
+        </div>
+        <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
+            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+        </div>
+    @else
+        {{-- Обычная цена --}}
+        <div class="text-4xl font-black text-white">
+            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
+        </div>
+    @endif
+</div>
                                 
                                 @if($tariff->description)
                                     <p class="text-sm text-slate-400 mb-6 leading-relaxed">{{ $tariff->description }}</p>
@@ -171,9 +205,33 @@
                                         </span>
                                         <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
                                     </div>
-                                    <div class="text-xl font-black text-white text-right whitespace-nowrap">
-                                        {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
-                                    </div>
+                                    @php
+    $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
+    $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+@endphp
+
+<div class="text-right whitespace-nowrap">
+    @if($finalPrice < $tariff->price)
+        {{-- Зачеркнутая старая цена сверху --}}
+        <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
+            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+        </div>
+        {{-- Новая цена --}}
+        <div class="text-xl font-black text-[#38BDF8]">
+            {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm font-medium text-[#38BDF8]/70">₽</span>
+        </div>
+        {{-- Текст скидки --}}
+        @if($discountPercent > 0)
+            <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">-{{ $discountPercent }}% (Свои)</div>
+        @elseif($finalPrice == 0)
+             <div class="text-[10px] text-green-400 font-bold mt-1 tracking-wide uppercase">Оплачено</div>
+        @endif
+    @else
+        <div class="text-xl font-black text-white mt-3">
+            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
+        </div>
+    @endif
+</div>
                                 </div>
                                 
                                 @if($tariff->description)

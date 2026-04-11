@@ -38,32 +38,52 @@ class Tariff extends Model
      * УМНЫЙ АПГРЕЙД: Расчет цены для конкретного студента
      * ==========================================
      */
+    public function getDiscountPercentForUser($user): int
+    {
+        if (!$user) return 0;
+
+        $marketing = \App\Models\MarketingSetting::first();
+        if (!$marketing || !$marketing->is_loyalty_active) return 0;
+
+        // ЖЕЛЕЗОБЕТОННЫЙ ПОДСЧЕТ УНИКАЛЬНЫХ КУРСОВ (pluck + unique)
+        $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
+            ->whereIn('status', ['paid', 'success'])
+            ->where('created_at', '>=', now()->subYear()) // За последний год
+            ->whereNotNull('course_id') // Исключаем системные платежи без курса
+            ->pluck('course_id')
+            ->unique()
+            ->count();
+
+        // Проверяем пороги (от большего к меньшему)
+        if ($marketing->wholesale_large_threshold > 0 && $paidCoursesCount >= $marketing->wholesale_large_threshold) {
+            return $marketing->wholesale_large_discount;
+        } elseif ($marketing->wholesale_small_threshold > 0 && $paidCoursesCount >= $marketing->wholesale_small_threshold) {
+            return $marketing->wholesale_small_discount;
+        }
+
+        return 0; // Нет скидки
+    }
+
+    /**
+     * Расчет итоговой цены (использует процент из метода выше)
+     */
     public function calculateFinalPriceForUser($user): float
     {
-        if (!$user) {
-            return (float) $this->price;
-        }
+        if (!$user) return (float) $this->price;
 
         $finalPrice = (float) $this->price;
+        
+        // 1. Получаем процент лояльности
+        $discountPercent = $this->getDiscountPercentForUser($user);
 
-        // 1. АВТО-СКИДКА ДЛЯ СВОИХ (Лояльность)
-        $marketing = \App\Models\MarketingSetting::first();
-        if ($marketing && $marketing->is_loyalty_active) {
-            // Проверяем, есть ли у юзера ЛЮБЫЕ успешные оплаты
-            $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)
-                ->whereIn('status', ['paid', 'success']) // Ловим оба успешных статуса
-                ->exists();
-
-            if ($hasAnyPaid) {
-                // Вычитаем процент (например, 15%)
-                $discount = $finalPrice * ($marketing->loyalty_discount_percent / 100);
-                $finalPrice = $finalPrice - $discount;
-            }
+        // Применяем скидку, если она есть
+        if ($discountPercent > 0) {
+            $finalPrice = $finalPrice - ($finalPrice * ($discountPercent / 100));
         }
 
-        // 2. АПГРЕЙД (Вычитаем то, что уже оплачено за ЭТОТ конкретный курс)
-        // ИСПРАВЛЕНИЕ ЗДЕСЬ: используем course_id напрямую вместо landing_page_id
-        if ($this->course_id) {
+        // 2. ИСПРАВЛЕННЫЙ АПГРЕЙД 
+        // Вычитаем уже оплаченные деньги ТОЛЬКО если это покупка тарифа "full" (Полный курс)
+        if ($this->course_id && $this->type === 'full') {
             $alreadyPaidAmount = \App\Models\Payment::where('user_id', $user->id)
                 ->where('course_id', $this->course_id)
                 ->whereIn('status', ['paid', 'success'])
@@ -72,6 +92,7 @@ class Tariff extends Model
             $finalPrice = $finalPrice - (float) $alreadyPaidAmount;
         }
 
-        return $finalPrice > 0 ? $finalPrice : 0;
+        return max(0, $finalPrice);
     }
+    
 }

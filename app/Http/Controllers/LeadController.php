@@ -80,6 +80,9 @@ class LeadController extends Controller
     // =========================================================
     public function export()
     {
+        // Отсекаем всех, кто не является администратором
+            abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');
+        
         $fileName = 'leads_full_' . date('Y-m-d_H-i') . '.csv';
         
         $leads = Lead::with('landingPage')->latest()->get();

@@ -247,7 +247,7 @@ class UserResource extends Resource
 
                             foreach ($records as $record) {
                                 // ЗАЩИТА ОТ СПАМА: Если в примечании уже есть штамп, пропускаем студента
-                                if (str_contains($record->note ?? '', '[Доступ отправлен]')) {
+                                if (str_contains($record->note ?? '', '[Доступ отправлен')) {
                                     $skippedCount++;
                                     continue;
                                 }

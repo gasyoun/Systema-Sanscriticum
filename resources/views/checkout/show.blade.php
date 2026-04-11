@@ -144,7 +144,7 @@
                                         <i class="fas fa-crown text-base"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-extrabold text-white">Скидка для своих: -{{ $loyaltyPercent }}%</p>
+                                        <p class="text-sm font-extrabold text-white">Скидка для своих: -{{ $tariff->getDiscountPercentForUser(auth()->user()) }}%</p>
                                         <p class="text-xs text-indigo-200 mt-0.5 leading-relaxed">Применена автоматически (уже учились у нас)</p>
                                     </div>
                                 </div>

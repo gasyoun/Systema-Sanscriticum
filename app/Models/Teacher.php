@@ -30,39 +30,89 @@ class Teacher extends Model
     }
 
     // Умный расчет: если передать даты, посчитает за этот период. Если нет - за всё время.
+    // Умный расчет: если передать даты, посчитает за этот период. Если нет - за всё время.
     public function calculateEarnings($startDate = null, $endDate = null): float
     {
         $total = 0;
 
         foreach ($this->courses as $course) {
-            // На всякий случай всё равно пропускаем чисто технические курсы
+            // Пропускаем технические курсы
             if ($course->slug === 'system-expenses' || $course->title === 'Прочие затраты (Технический)') {
                 continue;
             }
 
-            // ==========================================
-            // МАГИЯ: Считаем только ПОЛОЖИТЕЛЬНЫЕ оплаты (> 0)
-            // ==========================================
+            // Базовый запрос: только успешные оплаты
             $query = $course->payments()
                 ->whereIn('status', ['success', 'paid'])
                 ->where('amount', '>', 0); 
             
-            // Если попросили посчитать за конкретный месяц - фильтруем по дате
             if ($startDate && $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
+                $query->whereBetween('payments.created_at', [$startDate, $endDate]);
             }
             
-            $paymentsCount = $query->count(); 
-            $paymentsSum = $query->sum('amount'); 
+            // Выгружаем оплаты
+            $payments = $query->get();
 
-            if ($course->salary_type === 'percent') {
-                $total += $paymentsSum * ($course->salary_value / 100);
-            } elseif ($course->salary_type === 'fix_per_student') {
-                $total += $paymentsCount * $course->salary_value;
-            } elseif ($course->salary_type === 'fix_total') {
-                if ($paymentsCount > 0) {
-                    $total += $course->salary_value;
+            if ($payments->isEmpty()) {
+                continue;
+            }
+
+            // 1. КЛАССИЧЕСКИЕ МЕТРИКИ
+            $paymentsSum = $payments->sum('amount'); 
+            $uniqueStudentsCount = $payments->unique('user_id')->count();
+
+            // ==========================================
+            // 2. ДИНАМИЧЕСКИЙ ПОДСЧЕТ БЛОКОВ
+            // ==========================================
+            // Ищем максимальный номер блока среди тарифов этого курса
+            $maxBlockNumber = \App\Models\Tariff::where('course_id', $course->id)
+                ->whereNotNull('block_number')
+                ->where('block_number', '>', 0)
+                ->max('block_number');
+            
+            // Если блоков нет (например, обычный курс), делим на 1, чтобы не было ошибки деления на ноль
+            $totalBlocksInCourse = $maxBlockNumber ?: 1; 
+            
+            $blockRevenue = 0;
+
+            foreach ($payments as $payment) {
+                // Используем поле tariff из таблицы payments
+                if ($payment->tariff === 'full') { 
+                    // Если купили курс целиком, берем долю за 1 блок
+                    $blockRevenue += ($payment->amount / $totalBlocksInCourse);
+                } else {
+                    // Если купили конкретный блок (tariff = 'block_1', 'block_2' и т.д.)
+                    $blockRevenue += $payment->amount;
                 }
+            }
+
+            // 3. НАЧИСЛЯЕМ ЗАРПЛАТУ
+            switch ($course->salary_type) {
+                case 'percent':
+                    // % от всей выручки курса
+                    $total += $paymentsSum * ($course->salary_value / 100);
+                    break;
+
+                case 'fix_per_student':
+                    // Фикс за каждого уникального студента на всем курсе
+                    $total += $uniqueStudentsCount * $course->salary_value;
+                    break;
+
+                case 'fix_total':
+                    // Единоразовый фикс за ведение курса
+                    $total += $course->salary_value;
+                    break;
+
+                case 'percent_per_block':
+                    // % от "чистой" доли блока (розница + часть от опта)
+                    $total += $blockRevenue * ($course->salary_value / 100);
+                    break;
+
+                case 'fix_per_block':
+                    // ИСПРАВЛЕНО: Фикс за каждый блок в курсе
+                    // Умножаем ставку на общее количество блоков в этом курсе
+                    $total += $totalBlocksInCourse * $course->salary_value;
+                    break;
             }
         }
 

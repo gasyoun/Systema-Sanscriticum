@@ -575,36 +575,51 @@ Builder\Block::make('price_block')
                                     ]),
                                     
                                     // 16. TRIAL BLOCK (Пробное занятие)
-                                Builder\Block::make('trial_block')
-                                    ->label('16. Блок "Сомневаетесь?" (Пробный урок)')
-                                    ->icon('heroicon-m-hand-raised')
-                                    ->schema([
-                                        TextInput::make('title')
-                                            ->label('Заголовок')
-                                            ->default('Сомневаетесь, что у вас получится?'),
-                                            
-                                        Textarea::make('description')
-                                            ->label('Текст описания')
-                                            ->rows(4)
-                                            ->default('Мы понимаем. Начинать новое всегда волнительно. Поэтому приглашаем вас на бесплатное пробное занятие — без обязательств и оплаты. Вы познакомитесь с преподавателем, попробуете свои силы и поймёте, насколько это комфортно именно для вас. Если не зайдет — останетесь при своём, ничего не потеряв.'),
-                                            
-                                        TextInput::make('button_text')
-                                            ->label('Текст кнопки')
-                                            ->default('Да, хочу попробовать'),
-                                            
-                                        TextInput::make('form_name')
-                                            ->label('Скрытая метка формы (увидите в Excel)')
-                                            ->default('Бесплатное пробное занятие')
-                                            ->required(),
+Builder\Block::make('trial_block')
+    ->label('16. Блок "Сомневаетесь?" (Пробный урок)')
+    ->icon('heroicon-m-hand-raised')
+    ->schema([
+        TextInput::make('title')
+            ->label('Заголовок')
+            ->default('Сомневаетесь, что у вас получится?'),
+        
+        Textarea::make('description')
+            ->label('Текст описания')
+            ->rows(4)
+            ->default('Мы понимаем. Начинать новое всегда волнительно. Поэтому приглашаем вас на бесплатное пробное занятие — без обязательств и оплаты. Вы познакомитесь с преподавателем, попробуете свои силы и поймёте, насколько это комфортно именно для вас. Если не зайдет — останетесь при своём, ничего не потеряв.'),
+        
+        TextInput::make('button_text')
+            ->label('Текст кнопки')
+            ->default('Да, хочу попробовать'),
+        
+        // --- НОВЫЕ ПОЛЯ ДЛЯ НАСТРОЙКИ МОДАЛКИ ---
+        \Filament\Forms\Components\Fieldset::make('Настройки всплывающей формы')
+            ->schema([
+                TextInput::make('modal_title')
+                    ->label('Заголовок формы')
+                    ->default('Запись на пробный урок')
+                    ->columnSpanFull(),
+                    
+                TextInput::make('modal_text')
+                    ->label('Текст-подсказка под заголовком')
+                    ->default('Оставьте контакты, и мы согласуем удобное время.')
+                    ->columnSpanFull(),
 
-                                        Section::make('🎨 Дизайн')
-                                            ->collapsed()
-                                            ->schema([
-                                                ColorPicker::make('bg_color')->label('Цвет фона')->default('#FFFFFF'),
-                                                ColorPicker::make('text_color')->label('Цвет текста')->default('#101010'),
-                                                ColorPicker::make('button_bg')->label('Цвет кнопки')->default('#E85C24'),
-                                            ])->columns(3),
-                                    ]),
+                TextInput::make('form_name')
+                    ->label('Скрытая метка формы (увидите в Excel/CRM)')
+                    ->default('Бесплатное пробное занятие')
+                    ->required()
+                    ->columnSpanFull(),
+            ]),
+
+        Section::make('🎨 Дизайн')
+            ->collapsed()
+            ->schema([
+                ColorPicker::make('bg_color')->label('Цвет фона')->default('#FFFFFF'),
+                ColorPicker::make('text_color')->label('Цвет текста')->default('#101010'),
+                ColorPicker::make('button_bg')->label('Цвет кнопки')->default('#E85C24'),
+            ])->columns(3),
+    ]),
                                     
                                     // 15. херо - НОВЫЙ БЛОК)
                                     Block::make('new_paribok_hero')

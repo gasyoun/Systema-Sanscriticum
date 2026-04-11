@@ -13,8 +13,8 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Carbon;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Http; // <--- Нужно для отправки вебхука
-use Illuminate\Support\Facades\Log;  // <--- Нужно для логов
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ListSchedules extends ListRecords
 {
@@ -26,7 +26,9 @@ class ListSchedules extends ListRecords
             // 1. Стандартная кнопка
             Actions\CreateAction::make()->label('Добавить вручную'),
 
-            // 2. Наш Генератор
+            // ==========================================
+            // 2. ОБНОВЛЕННЫЙ ГЕНЕРАТОР ПОТОКА
+            // ==========================================
             Actions\Action::make('generate')
                 ->label('Сгенерировать поток')
                 ->icon('heroicon-o-arrow-path-rounded-square')
@@ -48,11 +50,11 @@ class ListSchedules extends ListRecords
                                 ->reactive(),
                         ]),
 
-                    // Дата и Время
-                    \Filament\Forms\Components\Grid::make(2)
+                    // Даты, Время и Смещение
+                    \Filament\Forms\Components\Grid::make(3)
                         ->schema([
                             DatePicker::make('start_date')
-                                ->label('Дата первого занятия')
+                                ->label('Дата занятия')
                                 ->required()
                                 ->default(now()),
 
@@ -61,6 +63,13 @@ class ListSchedules extends ListRecords
                                 ->required()
                                 ->default('19:00')
                                 ->seconds(false),
+                                
+                            // --- НОВОЕ ПОЛЕ: Смещение ---
+                            TextInput::make('start_index')
+                                ->label('Начать с урока №')
+                                ->numeric()
+                                ->default(1)
+                                ->required(),
                         ]),
                     
                     // Ссылка на Zoom
@@ -87,36 +96,36 @@ class ListSchedules extends ListRecords
                     $lessons = $course ? $course->lessons : collect();
                     $count = (int) $data['count'];
                     
-                    // Формируем описание с Zoom ссылкой
+                    // Учитываем, с какого урока начинаем (минус 1, так как массивы начинаются с 0)
+                    $startIndex = (int) $data['start_index'] - 1;
+                    
                     $baseDescription = 'Автоматически создано по курсу ' . $course->title;
                     if (!empty($data['zoom_url'])) {
                         $baseDescription .= "\n\nСсылка на урок: " . $data['zoom_url'];
                     }
 
-                    // Массив для сбора всех созданных уроков (для n8n)
                     $createdSchedules = [];
 
-                    // === ГЛАВНАЯ МАГИЯ: ОТКЛЮЧАЕМ OBSERVER НА ВРЕМЯ ЦИКЛА ===
-                    // Это нужно, чтобы Laravel не отправлял 16 отдельных запросов
-                    Schedule::withoutEvents(function () use ($count, $lessons, $data, $startDate, $baseDescription, &$createdSchedules) {
+                    Schedule::withoutEvents(function () use ($count, $lessons, $data, $startDate, $baseDescription, $startIndex, &$createdSchedules) {
                         
                         for ($i = 0; $i < $count; $i++) {
-                            $lessonTitle = isset($lessons[$i]) 
-                                ? $lessons[$i]->title 
-                                : 'Занятие ' . ($i + 1);
+                            // Вычисляем реальный индекс урока
+                            $currentLessonIndex = $startIndex + $i;
+                            
+                            $lessonTitle = isset($lessons[$currentLessonIndex]) 
+                                ? $lessons[$currentLessonIndex]->title 
+                                : 'Занятие ' . ($currentLessonIndex + 1);
 
-                            // Создаем запись в БД
                             $schedule = Schedule::create([
-                                'title'     => $lessonTitle,
-                                'group_id'  => $data['group_id'],
-                                'course_id' => $data['course_id'],
-                                'start'     => $startDate->copy(),
-                                'end'       => $startDate->copy()->addHours(2),
-                                'color'     => '#3788d8',
+                                'title'       => $lessonTitle,
+                                'group_id'    => $data['group_id'],
+                                'course_id'   => $data['course_id'],
+                                'start'       => $startDate->copy(),
+                                'end'         => $startDate->copy()->addHours(2),
+                                'color'       => '#3788d8',
                                 'description' => $baseDescription, 
                             ]);
 
-                            // Сохраняем данные в массив
                             $createdSchedules[] = [
                                 'id' => $schedule->id,
                                 'title' => $schedule->title,
@@ -129,7 +138,6 @@ class ListSchedules extends ListRecords
                         }
                     });
 
-                    // === ОТПРАВЛЯЕМ ОДИН БОЛЬШОЙ ЗАПРОС В n8n ===
                     try {
                         Http::timeout(5)->post('https://context-ai.ru/webhook-test/6a4e0703-4059-47ba-8bad-c3c3d51447ff', [
                             'action' => 'bulk_create',
@@ -145,7 +153,61 @@ class ListSchedules extends ListRecords
                         ->send();
                 }),
 
-            // 3. Кнопка очистки (оставил на всякий случай, если нужна)
+            // ==========================================
+            // 3. НОВЫЙ ИНСТРУМЕНТ: МАССОВЫЙ ПЕРЕНОС
+            // ==========================================
+            Actions\Action::make('shift_schedule')
+                ->label('Перенести расписание')
+                ->icon('heroicon-o-calendar-days')
+                ->color('warning')
+                ->modalHeading('Сдвиг расписания группы')
+                ->modalDescription('Если занятие отменилось, выберите группу и дату отмененного занятия. Система сдвинет это и все последующие занятия на указанное количество дней.')
+                ->form([
+                    Select::make('group_id')
+                        ->label('Какую группу двигаем?')
+                        ->relationship('group', 'name')
+                        ->required(),
+
+                    DatePicker::make('from_date')
+                        ->label('Начиная с какой даты?')
+                        ->required()
+                        ->default(now()),
+
+                    TextInput::make('shift_days')
+                        ->label('На сколько дней сдвинуть?')
+                        ->numeric()
+                        ->default(7)
+                        ->required()
+                        ->helperText('Положительное число двигает вперед (напр: 7), отрицательное - назад (напр: -7).'),
+                ])
+                ->action(function (array $data) {
+                    $shiftDays = (int) $data['shift_days'];
+                    
+                    // Находим все занятия этой группы, начиная с указанной даты (включая саму дату)
+                    $schedules = Schedule::where('group_id', $data['group_id'])
+                        ->where('start', '>=', Carbon::parse($data['from_date'])->startOfDay())
+                        ->get();
+
+                    $shiftedCount = 0;
+
+                    // Отключаем ивенты, чтобы не спамить n8n по одному обновлению (если у тебя там висят триггеры)
+                    Schedule::withoutEvents(function () use ($schedules, $shiftDays, &$shiftedCount) {
+                        foreach ($schedules as $schedule) {
+                            $schedule->update([
+                                'start' => Carbon::parse($schedule->start)->addDays($shiftDays),
+                                'end'   => Carbon::parse($schedule->end)->addDays($shiftDays),
+                            ]);
+                            $shiftedCount++;
+                        }
+                    });
+
+                    Notification::make()
+                        ->title("Успешно сдвинуто занятий: $shiftedCount")
+                        ->success()
+                        ->send();
+                }),
+
+            // 4. Кнопка очистки
             Actions\Action::make('clear_group')
                 ->label('Очистить расписание')
                 ->icon('heroicon-o-trash')

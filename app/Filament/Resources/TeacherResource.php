@@ -3,15 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TeacherResource\Pages;
-use App\Filament\Resources\TeacherResource\RelationManagers;
 use App\Models\Teacher;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TeacherResource extends Resource
 {
@@ -67,22 +62,20 @@ class TeacherResource extends Resource
                     ->icon('heroicon-m-paper-airplane'),
 
                 \Filament\Tables\Columns\TextColumn::make('courses_count')
-                    ->counts('courses') // Встроенная фишка Filament для подсчета связей
+                    ->counts('courses') 
                     ->label('Курсов')
                     ->badge()
                     ->color('info'),
 
-                // А ВОТ И НАША МАГИЯ ЗАРПЛАТЫ!
                 // КОЛОНКА "БАЛАНС" С ВЫПАДАЮЩИМ ОКНОМ
                 \Filament\Tables\Columns\TextColumn::make('balance')
                     ->label('К выплате (Баланс)')
                     ->state(function (\App\Models\Teacher $record) {
-                        $earned = $record->calculateEarnings(); // Заработал всего
-                        $paid = $record->payouts()->sum('amount'); // Уже выплачено
+                        $earned = $record->calculateEarnings(); 
+                        $paid = $record->payouts()->sum('amount'); 
                         return number_format($earned - $paid, 0, '.', ' ') . ' ₽';
                     })
                     ->badge()
-                    // Если мы должны деньги - желтый, если в расчете - зеленый
                     ->color(fn (string $state) => str_contains($state, '-') || $state === '0 ₽' ? 'success' : 'warning')
                     ->icon('heroicon-m-wallet')
                     ->action(
@@ -91,26 +84,56 @@ class TeacherResource extends Resource
                             ->modalHeading(fn (\App\Models\Teacher $record) => 'Финансы: ' . $record->name)
                             ->modalWidth('md')
                             ->form([
-                                // Блок 1: Статистика (только для чтения)
-                                \Filament\Forms\Components\Placeholder::make('month_stats')
-                                    ->label('📈 Заработано за текущий месяц:')
-                                    ->content(fn (\App\Models\Teacher $record) => 
-                                        number_format($record->calculateEarnings(now()->startOfMonth(), now()->endOfMonth()), 0, '.', ' ') . ' ₽'
-                                    ),
-                                
-                                \Filament\Forms\Components\Placeholder::make('total_stats')
-                                    ->label('💰 Заработано за всё время:')
-                                    ->content(fn (\App\Models\Teacher $record) => 
-                                        number_format($record->calculateEarnings(), 0, '.', ' ') . ' ₽'
-                                    ),
+                                // Интерактивная статистика с фильтрами
+                                \Filament\Forms\Components\Section::make('Детальная статистика')
+                                    ->schema([
+                                        \Filament\Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                \Filament\Forms\Components\DatePicker::make('filter_start')
+                                                    ->label('От даты')
+                                                    ->default(now()->startOfMonth())
+                                                    ->live(),
+                                                    
+                                                \Filament\Forms\Components\DatePicker::make('filter_end')
+                                                    ->label('До даты')
+                                                    ->default(now()->endOfMonth())
+                                                    ->live(),
+                                            ]),
 
-                                \Filament\Forms\Components\Placeholder::make('paid_stats')
-                                    ->label('✅ Уже выплачено вами:')
-                                    ->content(fn (\App\Models\Teacher $record) => 
-                                        number_format($record->payouts()->sum('amount'), 0, '.', ' ') . ' ₽'
-                                    ),
+                                        \Filament\Forms\Components\Placeholder::make('custom_period_stats')
+                                            ->label('📊 Заработано за выбранный период:')
+                                            ->content(function (\Filament\Forms\Get $get, \App\Models\Teacher $record) {
+                                                $start = $get('filter_start');
+                                                $end = $get('filter_end');
 
-                                // Блок 2: Форма для новой выплаты
+                                                if (!$start || !$end) return 'Выберите даты';
+
+                                                $earned = $record->calculateEarnings(
+                                                    \Carbon\Carbon::parse($start)->startOfDay(),
+                                                    \Carbon\Carbon::parse($end)->endOfDay()
+                                                );
+
+                                                return number_format($earned, 0, '.', ' ') . ' ₽';
+                                            }),
+                                    ]),
+
+                                // Общие цифры за всё время
+                                \Filament\Forms\Components\Section::make('Общие показатели')
+                                    ->schema([
+                                        \Filament\Forms\Components\Placeholder::make('total_stats')
+                                            ->label('💰 Заработано за всё время:')
+                                            ->content(fn (\App\Models\Teacher $record) => 
+                                                number_format($record->calculateEarnings(), 0, '.', ' ') . ' ₽'
+                                            ),
+
+                                        \Filament\Forms\Components\Placeholder::make('paid_stats')
+                                            ->label('✅ Уже выплачено вами:')
+                                            ->content(fn (\App\Models\Teacher $record) => 
+                                                number_format($record->payouts()->sum('amount'), 0, '.', ' ') . ' ₽'
+                                            ),
+                                    ])->columns(2),
+
+                                // Блок 3: Форма для новой выплаты
                                 \Filament\Forms\Components\Section::make('Зафиксировать новую выплату')
                                     ->description('Внесите сюда сумму, которую вы перевели преподавателю.')
                                     ->schema([
@@ -152,9 +175,7 @@ class TeacherResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
