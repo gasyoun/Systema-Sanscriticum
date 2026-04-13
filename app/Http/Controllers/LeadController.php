@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class LeadController extends Controller
 {
     // =========================================================
-    // 1. МЕТОД СОХРАНЕНИЯ ЗАЯВКИ
+    // 1. МЕТОД СОХРАНЕНИЯ ЗАЯВКИ (БЕЗОПАСНЫЙ)
     // =========================================================
     public function store(Request $request)
     {
@@ -19,8 +19,7 @@ class LeadController extends Controller
             'contact'         => 'required|string',
             'email'           => 'required|email',
             'landing_page_id' => 'nullable|integer',
-            'form_name'       => 'nullable|string', // <-- НОВОЕ: Название формы
-            // UTM метки и прочее
+            'form_name'       => 'nullable|string',
             'utm_source'      => 'nullable|string',
             'utm_medium'      => 'nullable|string',
             'utm_campaign'    => 'nullable|string',
@@ -31,30 +30,31 @@ class LeadController extends Controller
             'is_promo_agreed' => 'nullable', 
         ]);
 
-        // Подготовка данных для сохранения
-        $data = $request->all();
+        // === ИСПРАВЛЕНИЕ УЯЗВИМОСТИ ===
+        // Берем ТОЛЬКО проверенные данные, отсекая любой хакерский мусор из запроса
+        $data = $validated;
         
         // Преобразуем чекбокс "on" в true/false
         $data['is_promo_agreed'] = $request->has('is_promo_agreed');
         
-        // Добавляем технические данные
+        // Добавляем технические данные (это безопасно, так как мы берем их из сервера, а не от юзера)
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
 
         // === ИЗЯЩНЫЙ ХАК ===
-        // Если пришло имя формы, дописываем его в utm_content, чтобы не ломать БД
-        if (!empty($validated['form_name'])) {
+        // Если пришло имя формы, дописываем его в utm_content
+        if (!empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
-            $data['utm_content'] = '[' . $validated['form_name'] . '] ' . $existingUtm;
+            $data['utm_content'] = '[' . $data['form_name'] . '] ' . $existingUtm;
         }
 
-        // 2. Сохраняем лид в базу
+        // 2. БЕЗОПАСНО сохраняем лид в базу
         $lead = Lead::create($data);
 
         // 3. --- ЛОГИКА ДЛЯ ПИКСЕЛЕЙ ---
         $landing = null;
-        if ($request->has('landing_page_id')) {
-            $landing = LandingPage::find($request->landing_page_id);
+        if (!empty($data['landing_page_id'])) {
+            $landing = LandingPage::find($data['landing_page_id']);
         }
 
         $flashData = [

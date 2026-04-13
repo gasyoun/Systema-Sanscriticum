@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Lead;
-// --- НАШ НОВЫЙ ИМПОРТ ---
 use App\Models\LandingPage; 
-// ------------------------
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PromoController;
@@ -14,12 +12,13 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PaymentController;
+use Illuminate\Support\Facades\Storage;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
 
 // Страница оформления заказа (Checkout)
 Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('checkout.show');
@@ -45,9 +44,8 @@ Route::get('/', function () {
 // Витрина магазина курсов
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 
-// Страница одного курса (добавили!)
+// Страница одного курса
 Route::get('/shop/course/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
-// --------------------------------------------------
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -68,7 +66,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
     Route::get('/cabinet', [StudentController::class, 'dashboard'])->name('student.dashboard');
     
-    // 👇 НОВЫЙ МАРШРУТ: СТРАНИЦА СООБЩЕНИЙ 👇
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
     
     Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');
@@ -84,24 +81,24 @@ Route::middleware(['auth'])->group(function () {
         ->name('student.certificate.download');
         
     Route::get('/admin/leads/export', [LeadController::class, 'export'])->name('leads.export');
-});
 
-    Route::middleware(['auth'])->group(function () {
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
 });
 
 
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---
-Route::get('/force-download/{file}', function ($file) {
-    $path = storage_path('app/public/materials/' . $file); 
-    if (!file_exists($path)) {
-        $path = storage_path('app/public/archives/' . $file);
+
+// БЕЗОПАСНОЕ СКАЧИВАНИЕ ФАЙЛОВ
+Route::get('/force-download/{file}', function (string $file) {
+    $safeFileName = basename($file);
+    $path = $safeFileName; 
+
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404, 'Файл не найден.');
     }
-    if (file_exists($path)) {
-        return response()->download($path);
-    }
-    abort(404, 'Файл не найден');
-})->name('force.download');
+
+    return Storage::disk('public')->download($path);
+})->middleware('auth')->name('force-download');
 
 Route::get('/files-debug', function () {
     // ... ваш код дебага без изменений ...
@@ -113,16 +110,13 @@ Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store
 Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
 
 
-// --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
-// ВАЖНО: Этот маршрут всегда в самом низу!
-Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
-
 // --- РОУТЫ ДЛЯ ТОЧКА БАНКА ---
-// Роут, на который отправляется форма по кнопке "К безопасной оплате"
+// Перенес их выше роута-перехватчика {slug} для безопасности
 Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
-
-// Сюда Точка вернет клиента после успешной оплаты
 Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
-
-// Сюда Точка вернет клиента, если он нажмет "Отмена" или не хватит денег
 Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
+
+
+// --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
+// ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
+Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

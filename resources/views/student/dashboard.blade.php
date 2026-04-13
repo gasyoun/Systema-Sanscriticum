@@ -16,6 +16,7 @@
     {{-- ========================================== --}}
     {{-- БЛОКИ БОТОВ (В ОДИН РЯД)                   --}}
     {{-- ========================================== --}}
+    @if(false)
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         
         {{-- УМНЫЙ БЛОК TELEGRAM --}}
@@ -79,6 +80,7 @@
         </div>
         
     </div>
+    @endif
 
     {{-- НАВИГАЦИЯ ПО ВКЛАДКАМ (Премиум стиль) --}}
     <div class="flex space-x-6 border-b border-gray-200 mb-10 overflow-x-auto custom-scrollbar">
