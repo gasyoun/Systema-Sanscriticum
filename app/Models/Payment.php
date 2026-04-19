@@ -61,24 +61,25 @@ class Payment extends Model
     // ГЛАВНЫЙ МЕТОД: ЗАПУСКАЕТ ВСЕ ПРОЦЕССЫ
     // ==========================================
     public function processSuccessfulPayment()
-    {
+{
+    \Illuminate\Support\Facades\DB::transaction(function () {
         $this->grantAccess();
         $this->sendWelcomeEmailIfNeeded();
-        
-        // --- ОТПРАВКА В TELEGRAM ---
-        if ($this->user) {
-            // Пытаемся достать название курса (если связь настроена)
-            $courseName = $this->course->title ?? 'Обучающий материал';
-            $url = url('/login'); // Ссылка на вход
-            
-            $text = "🎉 <b>Оплата успешно получена!</b>\n\n";
-            $text .= "Намасте! Ваш доступ к курсу <b>«{$courseName}»</b> открыт.\n\n";
-            $text .= "Можете приступать к занятиям прямо сейчас:\n";
-            $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
+    });
 
-            $this->user->sendTelegramMessage($text);
-        }
+    // Telegram-уведомление — вне транзакции (не критично если не отправится)
+    if ($this->user) {
+        $courseName = $this->course->title ?? 'Обучающий материал';
+        $url = url('/login');
+
+        $text = "🎉 <b>Оплата успешно получена!</b>\n\n";
+        $text .= "Намасте! Ваш доступ к курсу <b>«{$courseName}»</b> открыт.\n\n";
+        $text .= "Можете приступать к занятиям прямо сейчас:\n";
+        $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
+
+        $this->user->sendTelegramMessage($text);
     }
+}
 
     // ==========================================
     // ЛОГИКА ВЫДАЧИ ДОСТУПА И ГРУПП

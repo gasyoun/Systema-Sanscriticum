@@ -64,6 +64,10 @@
         [x-cloak] { display: none !important; }
     </style>
 
+    {{-- BOTFAQTOR (должен быть выше Метрики и Analytics) --}}
+    <script type="text/javascript">window._ab_id_=170518</script>
+    <script src="https://cdn.botfaqtor.ru/one.js"></script>
+
     {{-- ANALYTICS --}}
     @if($page?->yandex_metrika_id)
     <script type="text/javascript" >

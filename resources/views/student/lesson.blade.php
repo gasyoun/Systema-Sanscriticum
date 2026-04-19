@@ -53,7 +53,7 @@
          currentTime: 0, 
          autoScroll: true, 
          searchQuery: '',
-         activeTab: '{{ $hasTranscript ? 'transcript' : 'notes' }}',
+         activeTab: '{{ $hasTranscript ? 'transcript' : ($hasAttachments ? 'materials' : 'notes') }}',
          
          init() {
              window.addEventListener('message', (event) => {
@@ -250,21 +250,22 @@
             </button>
             @endif
             
-            <button @click="activeTab = 'notes'" 
-                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
-                    :class="activeTab === 'notes' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
-                <i class="far fa-edit text-base"></i> Заметки
-            </button>
-
             @if($hasAttachments)
-            <button @click="activeTab = 'materials'" 
-                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
-                    :class="activeTab === 'materials' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
-                <i class="fas fa-layer-group text-base"></i> Файлы
-            </button>
+<button @click="activeTab = 'materials'" 
+        class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
+        :class="activeTab === 'materials' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
+    <i class="fas fa-layer-group text-base"></i> Файлы
+</button>
+@endif
+
+<button @click="activeTab = 'notes'" 
+        class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
+        :class="activeTab === 'notes' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
+    <i class="far fa-edit text-base"></i> Заметки
+</button>
             @endif
         </div>
-        @endif
+        
 
         {{-- БЛОК 1: ТРАНСКРИПТ --}}
         @if($hasTranscript)

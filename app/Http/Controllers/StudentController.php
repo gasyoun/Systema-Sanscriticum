@@ -9,6 +9,7 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Services\CertificateService;
 use Illuminate\Support\Carbon;
+use App\Services\CourseMaterialsArchiver;
 
 // --- ИМПОРТЫ ДОЛЖНЫ БЫТЬ ЗДЕСЬ, В САМОМ ВЕРХУ ---
 use Illuminate\Support\Facades\Storage;
@@ -248,6 +249,36 @@ class StudentController extends Controller
 
         return redirect()->back()->with('success', 'Заметка сохранена');
     }
+    
+    /**
+ * Скачать архив со всеми материалами курса.
+ * Учитывает права доступа студента (оплаченные блоки).
+ */
+public function downloadCourseMaterials(string $slug, CourseMaterialsArchiver $archiver)
+{
+    $user = auth()->user();
+    $userGroupIds = $user->groups->pluck('id');
+
+    // Проверяем, что курс доступен этому студенту (он в нужной группе)
+    $course = Course::where('slug', $slug)
+        ->where('is_visible', true)
+        ->whereHas('groups', function ($query) use ($userGroupIds) {
+            $query->whereIn('groups.id', $userGroupIds);
+        })
+        ->firstOrFail();
+
+    $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
+
+    if (empty($unlockedTariffs)) {
+        return back()->with('error', 'У вас нет оплаченных блоков для этого курса.');
+    }
+
+    try {
+        return $archiver->buildForUser($course, $user, $unlockedTariffs);
+    } catch (\RuntimeException $e) {
+        return back()->with('error', $e->getMessage());
+    }
+}
 
     /**
      * Скачивание сертификата

@@ -27,7 +27,9 @@ class LeadController extends Controller
             'utm_term'        => 'nullable|string',
             'click_id'        => 'nullable|string',
             'referrer'        => 'nullable|string',
-            'is_promo_agreed' => 'nullable', 
+            'is_promo_agreed' => 'nullable',
+            'source_article_id'   => 'nullable|integer',
+            'source_article_slug' => 'nullable|string|max:255',
         ]);
 
         // === ИСПРАВЛЕНИЕ УЯЗВИМОСТИ ===
@@ -70,6 +72,21 @@ class LeadController extends Controller
             }
             $flashData['conversion_event'] = 'lead'; 
         }
+        
+        // === Логика для лидов из блога ===
+if (empty($landing) && !empty($validated['source_article_id'])) {
+    $marketing = \App\Models\MarketingSetting::first();
+    
+    if ($marketing) {
+        if (!empty($marketing->blog_yandex_metrika_id)) {
+            $flashData['yandex_id'] = $marketing->blog_yandex_metrika_id;
+        }
+        if (!empty($marketing->blog_vk_pixel_id)) {
+            $flashData['vk_id'] = $marketing->blog_vk_pixel_id;
+        }
+        $flashData['conversion_event'] = 'lead_from_article';
+    }
+}
 
         // 4. Редирект на страницу спасибо
         return redirect()->route('thank.you')->with($flashData);

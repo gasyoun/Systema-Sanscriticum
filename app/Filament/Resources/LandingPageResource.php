@@ -620,6 +620,46 @@ Builder\Block::make('trial_block')
                 ColorPicker::make('button_bg')->label('Цвет кнопки')->default('#E85C24'),
             ])->columns(3),
     ]),
+    
+    
+                                    // 14. FAQ (Частые вопросы)
+Builder\Block::make('faq_block')
+    ->label('14. FAQ (Частые вопросы)')
+    ->icon('heroicon-m-question-mark-circle')
+    ->schema([
+        TextInput::make('title')
+            ->label('Заголовок блока')
+            ->default('Частые вопросы')
+            ->required(),
+
+        Textarea::make('subtitle')
+            ->label('Подзаголовок (опционально)')
+            ->placeholder('Собрали ответы на самые популярные вопросы о курсе')
+            ->rows(2),
+
+        Repeater::make('items')
+            ->label('Вопросы и ответы')
+            ->schema([
+                TextInput::make('question')
+                    ->label('Вопрос')
+                    ->required()
+                    ->maxLength(255),
+
+                RichEditor::make('answer')
+                    ->label('Ответ')
+                    ->required()
+                    ->toolbarButtons([
+                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                    ]),
+            ])
+            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+            ->collapsible()
+            ->collapsed()
+            ->reorderableWithButtons()
+            ->cloneable()
+            ->minItems(1)
+            ->defaultItems(3),
+    ]),
                                     
                                     // 15. херо - НОВЫЙ БЛОК)
                                     Block::make('new_paribok_hero')

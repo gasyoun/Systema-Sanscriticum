@@ -17,6 +17,8 @@ class MarketingSetting extends Model
         'wholesale_small_discount',
         'wholesale_large_threshold',
         'wholesale_large_discount',
+        'blog_yandex_metrika_id',
+        'blog_vk_pixel_id',
     ];
 
     protected $casts = [

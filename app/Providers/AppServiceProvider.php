@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\URL; // <--- Важно!
 use Illuminate\Support\Carbon;
 use App\Models\Schedule;
 use App\Observers\ScheduleObserver;
+use App\Models\ArticleView;
+use App\Observers\ArticleViewObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,5 +38,7 @@ class AppServiceProvider extends ServiceProvider
 
         // 3. Локаль
         Carbon::setLocale('ru');
+        
+        ArticleView::observe(ArticleViewObserver::class);
     }
 }

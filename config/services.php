@@ -36,4 +36,8 @@ return [
         'token' => env('TOCHKA_API_TOKEN'),
         'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
     ],
+    
+    'lesson_sync' => [
+    'secret' => env('LESSON_SYNC_SECRET'),
+    ],
 ];

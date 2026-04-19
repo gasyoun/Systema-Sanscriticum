@@ -1,17 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LessonController extends Controller
 {
     public function sync(Request $request)
     {
-        // Проверка вашего ключа
-        if ($request->header('X-Secret-Key') !== 'Ivan3128211498') {
+        // Проверка ключа (fail-closed)
+        $secret = config('services.lesson_sync.secret');
+
+        if (empty($secret) || !hash_equals($secret, (string) $request->header('X-Secret-Key'))) {
+            Log::warning('Lesson sync: неавторизованный доступ', [
+                'ip' => $request->ip(),
+            ]);
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -21,7 +29,6 @@ class LessonController extends Controller
             $courseId = $course['id'];
             $title = $course['title'];
 
-            // Собираем все даты из видео и тем
             $dates = array_unique(array_merge(
                 array_keys($course['videoLinks'] ?? []),
                 array_keys($course['lessonTopics'] ?? [])

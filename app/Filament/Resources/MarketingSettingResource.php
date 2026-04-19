@@ -99,7 +99,8 @@ class MarketingSettingResource extends Resource
                                     ->default(15)
                                     ->minValue(0)->maxValue(100),
                             ])->columns(2),
-                    ])
+                            
+                            ])
                     ->visible(fn (Forms\Get $get) => $get('is_loyalty_active')),
             ]);
     }

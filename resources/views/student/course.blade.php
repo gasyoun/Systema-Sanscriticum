@@ -52,6 +52,34 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Кнопка скачать все материалы --}}
+@php
+    // Считаем, есть ли вообще материалы хоть в одном доступном уроке
+    $hasAnyMaterials = $lessons->contains(function ($lesson) use ($unlockedTariffs) {
+        $isUnlocked = in_array('full', $unlockedTariffs) 
+            || in_array('block_' . $lesson->block_number, $unlockedTariffs);
+        return $isUnlocked && !empty($lesson->attachments) && count($lesson->attachments) > 0;
+    });
+@endphp
+
+@if($hasAnyMaterials)
+<div class="mt-6 flex justify-end">
+    <a href="{{ route('student.course.materials.download', $course->slug) }}"
+       class="inline-flex items-center gap-2 px-5 py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+       onclick="this.classList.add('opacity-70','pointer-events-none'); this.querySelector('.btn-text').textContent='Готовим архив...';">
+        <i class="fas fa-file-archive"></i>
+        <span class="btn-text">Скачать все материалы</span>
+    </a>
+</div>
+
+@if(session('error'))
+    <div class="mt-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        {{ session('error') }}
+    </div>
+@endif
+@endif
 
             </div>
         </div>

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Санскрит для взрослого мозга: зачем, как и с чего начать — ОРС</title>
+    <meta name="description" content="Честный разбор для людей 35+: как санскрит работает с мозгом, вниманием и ощущением смысла — без мистики и пафоса.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --accent:      #E85C24;
+            --accent-dark: #c24a18;
+            --bg:          #FAF8F5;
+            --bg-card:     #FFFFFF;
+            --bg-section:  #F4F0EB;
+            --text-primary:#101010;
+            --text-muted:  #6B6560;
+            --text-light:  #9C9690;
+            --border:      #EDE8E2;
+            --serif:       'Lora', 'Charter', Georgia, serif;
+            --sans:        'Montserrat', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .reading-progress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 9999;
+            background: linear-gradient(90deg, var(--accent), #f0a060);
+            width: 0%; transition: width .1s linear;
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* ── HEADER ── */
+        .site-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(250,248,245,.88);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(232,92,36,.1);
+            box-shadow: 0 1px 20px rgba(0,0,0,.04);
+        }
+        .site-header__inner {
+            max-width: 1280px; margin: 0 auto;
+            padding: 10px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .site-header__brand { display: flex; flex-direction: column; text-decoration: none; gap: 2px; }
+        .site-header__logo-text {
+            font-family: var(--serif); font-size: 1.05rem; font-weight: 600;
+            color: #333; transition: color .2s;
+        }
+        .site-header__brand:hover .site-header__logo-text { color: var(--accent); }
+        .site-header__tagline {
+            font-size: .65rem; font-weight: 600; letter-spacing: .12em;
+            text-transform: uppercase; color: var(--text-light);
+        }
+        .header-cta {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 20px; background: var(--accent); color: #fff;
+            font-size: .75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .08em; text-decoration: none; border-radius: 12px;
+            transition: all .2s; box-shadow: 0 4px 12px rgba(232,92,36,.25);
+        }
+        .header-cta:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232,92,36,.35); }
+
+        /* ── HERO ── */
+        .article-hero {
+            background: linear-gradient(160deg, #1a1008 0%, #2d1a09 40%, #1f1008 100%);
+            position: relative; overflow: hidden; padding: 80px 24px 60px;
+        }
+        .article-hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(ellipse 60% 50% at 80% 50%, rgba(232,92,36,.1) 0%, transparent 70%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+        .article-hero__deva {
+            position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+            font-size: clamp(7rem, 17vw, 20rem); font-family: var(--serif);
+            color: rgba(255,255,255,.025); user-select: none; pointer-events: none;
+            line-height: 1; letter-spacing: -.05em;
+        }
+        .article-hero__inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+        .article-hero__badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px;
+            background: rgba(232,92,36,.15); border: 1px solid rgba(232,92,36,.3);
+            border-radius: 50px; font-size: .68rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: .15em; color: #f09060; margin-bottom: 24px;
+        }
+        .article-hero__badge::before {
+            content: ''; width: 6px; height: 6px; background: var(--accent);
+            border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+        .article-hero__title {
+            font-family: var(--serif); font-size: clamp(1.9rem, 4.5vw, 3.4rem);
+            font-weight: 700; line-height: 1.2; color: #FAF8F5;
+            margin-bottom: 20px; letter-spacing: -.02em;
+        }
+        .article-hero__title em { font-style: italic; color: #f09060; }
+        .article-hero__lead {
+            font-size: 1.08rem; line-height: 1.78; color: rgba(250,248,245,.62);
+            max-width: 680px; margin-bottom: 36px;
+        }
+        .article-hero__meta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .article-hero__meta-item {
+            display: flex; align-items: center; gap: 7px;
+            font-size: .78rem; font-weight: 600;
+            color: rgba(250,248,245,.4); text-transform: uppercase; letter-spacing: .06em;
+        }
+        .article-hero__meta-item i { color: rgba(232,92,36,.7); font-size: .85rem; }
+
+        /* ── LAYOUT ── */
+        .article-layout {
+            max-width: 1180px; margin: 0 auto;
+            padding: 60px 24px 80px;
+            display: grid; grid-template-columns: 1fr 280px;
+            gap: 60px; align-items: start;
+        }
+        @media (max-width: 900px) {
+            .article-layout { grid-template-columns: 1fr; }
+            .article-sidebar { display: none; }
+        }
+
+        /* ── SIDEBAR ── */
+        .article-sidebar { position: sticky; top: 88px; }
+        .toc-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.04);
+            margin-bottom: 20px;
+        }
+        .toc-card__title {
+            font-size: .65rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .15em; color: var(--text-light); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toc-card__title::before { content:''; width:16px; height:2px; background:var(--accent); border-radius:2px; }
+        .toc-list { list-style: none; }
+        .toc-list li { margin-bottom: 3px; }
+        .toc-list a {
+            display: block; padding: 7px 10px;
+            font-size: .8rem; font-weight: 600; color: var(--text-muted);
+            text-decoration: none; border-radius: 10px; transition: all .2s; line-height: 1.4;
+        }
+        .toc-list a:hover, .toc-list a.active { background: rgba(232,92,36,.07); color: var(--accent); }
+        .toc-list a.active { font-weight: 700; }
+        .toc-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 18px; height: 18px; background: var(--bg-section); border-radius: 5px;
+            font-size: .65rem; font-weight: 800; color: var(--text-light); margin-right: 6px;
+        }
+
+        /* Sidebar stat card */
+        .stat-card {
+            background: linear-gradient(145deg, #1a1008 0%, #2d1a09 50%, #1f1510 100%);
+            border-radius: 20px; padding: 28px 24px;
+            margin-bottom: 20px;
+            position: relative; overflow: hidden;
+            border: 1px solid rgba(232,92,36,.12);
+            box-shadow: 0 8px 32px rgba(0,0,0,.15);
+        }
+        .stat-card::before {
+            content: 'ॐ';
+            position: absolute; right: -8px; bottom: -14px;
+            font-size: 7rem; color: rgba(232,92,36,.04);
+            font-family: var(--serif); pointer-events: none; line-height: 1;
+        }
+        .stat-card__label {
+            font-size: .65rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .15em; color: rgba(232,92,36,.7); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .stat-card__label::before {
+            content: ''; width: 16px; height: 2px;
+            background: var(--accent); border-radius: 2px;
+        }
+        .stat-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; position: relative;
+            transition: transform .2s ease;
+        }
+        .stat-item:hover { transform: translateX(4px); }
+        .stat-item + .stat-item {
+            border-top: 1px solid rgba(250,248,245,.06);
+        }
+        .stat-item__icon {
+            flex-shrink: 0; width: 40px; height: 40px;
+            background: rgba(232,92,36,.1);
+            border: 1px solid rgba(232,92,36,.15);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .9rem; color: rgba(232,92,36,.8);
+            transition: background .2s, border-color .2s;
+        }
+        .stat-item:hover .stat-item__icon {
+            background: rgba(232,92,36,.18);
+            border-color: rgba(232,92,36,.3);
+        }
+        .stat-item__content { display: flex; flex-direction: column; gap: 2px; }
+        .stat-item__value {
+            font-family: var(--serif); font-size: 1.5rem; font-weight: 700;
+            color: #FAF8F5; line-height: 1; letter-spacing: -.02em;
+        }
+        .stat-item__desc {
+            font-size: .72rem; color: rgba(250,248,245,.45);
+            font-weight: 500; line-height: 1.3;
+        }
+
+        /* ── ARTICLE BODY ── */
+        .article-body { min-width: 0; }
+
+        .article-intro {
+            background: var(--bg-card); border-radius: 24px; padding: 36px 40px;
+            border: 1px solid var(--border); margin-bottom: 48px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,.04);
+        }
+        .article-intro::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            background: linear-gradient(180deg, var(--accent) 0%, #f0a060 100%);
+            border-radius: 4px 0 0 4px;
+        }
+        .article-intro p {
+            font-family: var(--serif); font-size: 1.1rem; line-height: 1.82;
+            color: #2a2220; margin-bottom: 14px;
+        }
+        .article-intro p:last-child { margin-bottom: 0; }
+
+        /* Section */
+        .article-section { margin-bottom: 64px; scroll-margin-top: 100px; }
+        .section-header { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 32px; }
+        .section-number {
+            flex-shrink: 0; width: 52px; height: 52px; background: var(--accent); color: #fff;
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; font-weight: 900;
+            box-shadow: 0 6px 16px rgba(232,92,36,.3); margin-top: 4px;
+        }
+        .section-title {
+            font-family: var(--serif); font-size: clamp(1.45rem, 3vw, 2rem);
+            font-weight: 700; color: var(--text-primary); line-height: 1.25; letter-spacing: -.02em;
+        }
+        .section-divider { width: 44px; height: 3px; background: var(--accent); border-radius: 3px; margin-top: 10px; }
+
+        /* Subsection */
+        .subsection { margin-bottom: 36px; }
+        .subsection-title {
+            font-size: 1.05rem; font-weight: 800; color: var(--text-primary);
+            margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .subsection-title::before {
+            content: ''; width: 8px; height: 8px; background: var(--accent);
+            border-radius: 50%; flex-shrink: 0;
+        }
+
+        /* Prose */
+        .prose p {
+            font-size: 1rem; line-height: 1.82; color: #3a3530; margin-bottom: 16px;
+        }
+        .prose p:last-child { margin-bottom: 0; }
+
+        /* Highlight paragraph — первый абзац крупнее */
+        .prose p.lead {
+            font-family: var(--serif); font-size: 1.08rem; color: #2a2220; font-weight: 400;
+        }
+
+        /* Sep */
+        .section-sep {
+            border: none; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 40px 0;
+        }
+
+        /* Pullquote */
+        .pullquote {
+            margin: 28px 0; padding: 26px 30px;
+            background: linear-gradient(135deg, #2d1a09 0%, #1a1008 100%);
+            border-radius: 20px; position: relative; overflow: hidden;
+        }
+        .pullquote::before {
+            content: '\201C'; position: absolute; top: -10px; left: 18px;
+            font-family: var(--serif); font-size: 8rem;
+            color: rgba(232,92,36,.12); line-height: 1; pointer-events: none;
+        }
+        .pullquote__text {
+            font-family: var(--serif); font-size: 1.12rem; line-height: 1.65;
+            color: #f0e8de; font-style: italic; position: relative; z-index: 1;
+        }
+
+        /* Results list */
+        .results-list { list-style: none; margin-top: 16px; display: grid; gap: 10px; }
+        .results-list li {
+            display: flex; align-items: flex-start; gap: 14px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px 18px;
+            font-size: .95rem; color: #3a3530; line-height: 1.55; font-weight: 500;
+            transition: box-shadow .2s, transform .2s;
+        }
+        .results-list li:hover { box-shadow: 0 6px 18px rgba(0,0,0,.06); transform: translateY(-1px); }
+        .results-list li::before {
+            content: '✓'; flex-shrink: 0; width: 24px; height: 24px;
+            background: rgba(232,92,36,.1); color: var(--accent);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: .8rem; font-weight: 900; margin-top: 1px;
+        }
+
+        /* ── FAQ ── */
+        .faq-section {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 28px; padding: 40px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.04); margin-bottom: 48px;
+        }
+        .faq-section__title {
+            font-family: var(--serif); font-size: 1.7rem; font-weight: 700;
+            color: var(--text-primary); margin-bottom: 28px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .faq-section__title::before {
+            content: '?'; width: 44px; height: 44px; flex-shrink: 0;
+            background: rgba(232,92,36,.1); border: 1px solid rgba(232,92,36,.2);
+            color: var(--accent); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--sans); font-weight: 900; font-size: 1.3rem;
+        }
+        .faq-item { border-top: 1px solid var(--border); padding: 20px 0; }
+        .faq-item:last-child { border-bottom: 1px solid var(--border); }
+        .faq-question { font-size: .97rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; line-height: 1.45; }
+        .faq-answer { font-size: .93rem; line-height: 1.78; color: var(--text-muted); }
+
+        /* ── CTA ── */
+        .article-cta {
+            background: linear-gradient(135deg, #1a1008 0%, #2d1a09 60%, #1a1008 100%);
+            border-radius: 28px; padding: 48px 44px; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .article-cta::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(232,92,36,.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .article-cta__eyebrow { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .2em; color: rgba(232,92,36,.8); margin-bottom: 14px; }
+        .article-cta__title {
+            font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 700; color: #FAF8F5; line-height: 1.3; margin-bottom: 16px;
+            position: relative; z-index: 1;
+        }
+        .article-cta__text {
+            font-size: .97rem; line-height: 1.75; color: rgba(250,248,245,.6);
+            max-width: 560px; margin: 0 auto 32px; position: relative; z-index: 1;
+        }
+        .article-cta__btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 36px; background: var(--accent); color: #fff;
+            font-size: .85rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .1em; text-decoration: none; border-radius: 16px;
+            transition: all .25s; box-shadow: 0 8px 24px rgba(232,92,36,.4);
+            position: relative; z-index: 1;
+        }
+        .article-cta__btn:hover { background: var(--accent-dark); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(232,92,36,.5); }
+
+        /* ── FOOTER ── */
+        .site-footer {
+            background: #F2EBE1; border-top: 1px solid rgba(232,92,36,.1);
+            padding: 40px 24px; text-align: center;
+        }
+        .site-footer__brand { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+        .site-footer__links { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .site-footer__links a { font-size: .8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .site-footer__links a:hover { color: var(--accent); }
+        .site-footer__copy { font-size: .75rem; color: var(--text-light); }
+
+        /* ── FADE-IN ── */
+        .fade-in { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 640px) {
+            .article-hero { padding: 60px 20px 40px; }
+            .article-layout { padding: 36px 20px 60px; gap: 36px; }
+            .article-intro { padding: 24px 22px; }
+            .faq-section { padding: 28px 22px; }
+            .article-cta { padding: 36px 24px; }
+        }
+    </style>
+
+    <!-- Structured Data из исходной статьи -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {"@type":"Question","name":"Мне уже 35+, не поздно ли начинать?","acceptedAnswer":{"@type":"Answer","text":"Нет. Основные ученики как раз 30–55. В этом возрасте у вас больше вопросов к себе и к миру, а санскрит дает инструменты для работы с этими вопросами. Детям проще с памятью, взрослым — с мотивацией."}},
+        {"@type":"Question","name":"Сколько времени в неделю нужно закладывать?","acceptedAnswer":{"@type":"Answer","text":"Минимум 5–7 часов: занятия, домашка, чтение. Если хотите реально читать и разбирать тексты, целитесь в 10 часов. Через 2–3 месяца большинство перестают путаться в азбуке и базовой грамматике."}},
+        {"@type":"Question","name":"Это очень тяжело?","acceptedAnswer":{"@type":"Answer","text":"Да, это настоящая умственная работа, а не расслабляющий вебинар. Мозг устанет. Но это усталость после тренировки, а не выгорание от бессмысленных задач."}},
+        {"@type":"Question","name":"Что, если я гуманитарий, технарь или никогда не учил языки?","acceptedAnswer":{"@type":"Answer","text":"Санскрит равнодушен к ярлыкам. Гуманитарию он дает структуру и точность, технарю — живой язык вместо сухого кода, человеку без языкового опыта — первый честный опыт системного обучения."}},
+        {"@type":"Question","name":"С чего начать, если откликается?","acceptedAnswer":{"@type":"Answer","text":"С простого шага: открытого занятия, вводного блока или бота с алфавитом. Неделя–две такой практики покажет, ложится ли санскрит на ваш график и голову, без обязательств."}}
+      ]
+    }
+    </script>
+</head>
+<body>
+
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+    <div class="site-header__inner">
+        <a href="/" class="site-header__brand">
+            <span class="site-header__logo-text">Общество ревнителей санскрита</span>
+            <span class="site-header__tagline">samskrtam.ru</span>
+        </a>
+        <a href="http://samskrtam.ru/ku" class="header-cta">
+            <i class="fas fa-graduation-cap"></i>
+            Записаться
+        </a>
+    </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="article-hero">
+    <div class="article-hero__deva">संस्कृत</div>
+    <div class="article-hero__inner">
+        <div class="article-hero__badge">Для людей 35+</div>
+        <h1 class="article-hero__title">
+            Санскрит для взрослого мозга:<br>
+            <em>зачем, как и с чего начать</em>
+        </h1>
+        <p class="article-hero__lead">
+            Честный разбор: как санскрит работает с мозгом, вниманием и ощущением смысла — без мистики и пафоса.
+        </p>
+        <div class="article-hero__meta">
+            <span class="article-hero__meta-item"><i class="far fa-clock"></i> 10 минут чтения</span>
+            <span class="article-hero__meta-item"><i class="fas fa-university"></i> Общество ревнителей санскрита</span>
+        </div>
+    </div>
+</section>
+
+<!-- ── LAYOUT ── -->
+<div class="article-layout">
+
+    <!-- BODY -->
+    <main class="article-body">
+
+        <!-- Intro -->
+        <div class="article-intro fade-in">
+            <p>Современному взрослому человеку легко отмахнуться от санскрита: язык древний, жизнь перегружена, непонятно, что это даст «здесь и сейчас».</p>
+            <p>Ниже — честный разбор для людей 35+: как санскрит работает с мозгом, вниманием и ощущением смысла, без мистики и пафоса.</p>
+        </div>
+
+        <!-- ══ SECTION 1 ══ -->
+        <section class="article-section fade-in" id="s1">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div>
+                    <h2 class="section-title">Санскрит — тренажёр для мозга 35+</h2>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <!-- 1.1 -->
+            <div class="subsection">
+                <div class="subsection-title">Сложная грамматика и мнемотехника</div>
+                <div class="prose">
+                    <p class="lead">Древняя индийская грамматика изначально задумывалась как инструмент для других наук. Осваивая её, вы тренируете память, внимание и умение держать в голове несколько уровней правил одновременно — ровно то, чего обычно не хватает взрослому мозгу 35+.</p>
+                    <p>Санскрит — не стена правил, а советский конструктор. Есть корни, приставки, суффиксы и несколько моделей, по которым собираются слова. Вы не зубрите словарь по одному слову, а учитесь собирать смыслы из деталей. Сначала это похоже на сборку шкафа из ИКЕА без нормальной инструкции: деталей много, легко запутаться. Через несколько недель мозг узнаёт знакомые куски сам, длинные слова уже не пугают, а возникает спокойное ощущение: «ладно, разберусь».</p>
+                    <p>Для мозга это обычная силовая тренировка. Память учится удерживать форму и правило, а не голый список. Внимание перестаёт пропускать «мелочи» вроде долготы или суффикса, которые меняют смысл. Логика включается каждый раз, когда нужно объяснить: от какого корня пошла форма, по какому правилу она образована, почему получилось именно так.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <!-- 1.2 -->
+            <div class="subsection">
+                <div class="subsection-title">Повышает умственные способности</div>
+                <div class="prose">
+                    <p class="lead">Санскрит — не «для души», а для мозга. На занятиях вы одновременно держите в голове корень, суффиксы, грамматические категории и контекст. Память работает не на разовую зубрёжку, а на многократное осмысленное воспроизведение.</p>
+                    <p>Внимание тренируется потому, что мелкие отличия в форме реально меняют смысл. Их нельзя игнорировать: пропустили долготу или суффикс — получили другую конструкцию. Логика включается, когда вы раскладываете слово по шагам: что тут за корень, какие к нему прилипли морфемы, почему форма выглядит так, а не иначе.</p>
+                </div>
+                <div class="pullquote">
+                    <p class="pullquote__text">Первое впечатление у взрослых учеников обычно одно: «мозг устал, но приятно». После пары месяцев становится заметно, что легче концентрироваться на задачах, меньше тянет дёргать телефон, проще дочитывать сложные тексты и инструкции.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <!-- 1.3 -->
+            <div class="subsection">
+                <div class="subsection-title">Перенос в другие области</div>
+                <div class="prose">
+                    <p class="lead">Мозг не умеет держать санскрит на отдельной полке. Если вы научились разбирать сложные конструкции здесь, этот навык расползается по другим областям.</p>
+                    <p>Работа с грамматикой приучает искать инварианты — общее ядро за разными формами. Вы привыкаете не цепляться за поверхность, а спрашивать: какой тут корень, какая модель, какой тип связи. Потом автоматически переносите это в другие языки, профессиональные термины, сложные системы правил и кода.</p>
+                    <p>После нескольких месяцев многие замечают, что им проще разбираться в новых языках, юридических и технических текстах: глаз ищет структуру, а не только «слова по смыслу». Программисты и аналитики отдельно говорят, что опыт работы с синтаксическими деревьями и жёсткими правилами языка помогает лучше понимать архитектуру кода и логику алгоритмов.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <!-- 1.4 -->
+            <div class="subsection">
+                <div class="subsection-title">Логика и структура речи</div>
+                <div class="prose">
+                    <p class="lead">Санскрит вынуждает думать структурно. Почти каждое сложное слово можно разложить на части и увидеть, как именно устроен смысл. Возникает привычка за любой фразой искать конструкцию, которую можно проверить.</p>
+                    <p>Со временем это переносится на родной язык. Вы начинаете яснее формулировать мысли, убирать лишнее, замечать противоречия в своей речи и в чужих текстах. Философские работы, научные статьи, инструкции перестают казаться монолитом: вы подходите к ним, как к санскритскому предложению, — ищете опорные слова, связи, главную мысль.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ SECTION 2 ══ -->
+        <section class="article-section fade-in" id="s2">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div>
+                    <h2 class="section-title">Санскрит — работа с подсознанием без мистики</h2>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <div class="subsection-title">Слово как вибрация</div>
+                <div class="prose">
+                    <p class="lead">В йогической традиции слово — это не только смысл, но и звук, который действует на подсознание. Алфавит санскрита устроен так, что его проговаривание само по себе становится короткой практикой концентрации.</p>
+                    <p>Чтение алфавита — несколько минут чистого внимания: один ряд звуков, одно дыхание, никаких параллельных задач. За счёт предсказуемого ритма и чёткого проговаривания уровень внутреннего шума падает, дыхание выравнивается, становится проще переключиться с внешних раздражителей на своё состояние.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Мантры и ритм</div>
+                <div class="prose">
+                    <p class="lead">Мантра — это текст, встроенный в метр. Чередование долгих и кратких слогов, устойчивый рисунок пауз и ударений даёт мозгу понятный шаблон. Вниманию проще держаться за эту структуру, чем за поток случайных мыслей.</p>
+                    <p>Практикующие говорят, что во время рецитации внимание как будто подсаживается на мелодию и ритм: легче оставаться внутри текста, меньше хочется отвлекаться. Несколько минут мантры становятся предсказуемым переключателем состояния — более экологичным, чем бесконечная прокрутка ленты.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Очистка ума</div>
+                <div class="prose">
+                    <p class="lead">Самскары — это следы опыта в сознании: устойчивые реакции, привычные «колеи» мыслей. В современном режиме постоянной ленты к ним добавляются новости, комментарии, случайные фразы, которые оседают и создают ощущение перегруженности.</p>
+                    <p>Занимаясь мантрами и текстами на санскрите, вы сознательно выбираете, чем занят ум. На время чтения внешний поток выключается, всё внимание уходит в один текст и один набор звуков. Постепенно становится проще отличать свои мысли от зашумляющего фона и видеть, какие реакции повторяются изо дня в день.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Инсайты и интуиция</div>
+                <div class="prose">
+                    <p class="lead">Когда ум регулярно проходит через режим сосредоточенной работы — алфавит, грамматика, чтение текстов, — мысли привыкают выстраиваться в цепочки. На этом фоне становится легче увидеть, что действительно важно, а что принято по инерции.</p>
+                    <p>Не каждая мысль в голове — ваша. Многие фразы, ожидания и страхи просто подхвачены из среды. Санскрит даёт опыт «выстраданных» цепочек: когда вы сами доходите до понимания смысла, а не повторяете чьи-то тезисы. В этих собственных цепочках и появляются инсайты — про работу, отношения, практику.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ SECTION 3 ══ -->
+        <section class="article-section fade-in" id="s3">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div>
+                    <h2 class="section-title">Санскрит — машина времени вглубь себя</h2>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <div class="subsection-title">Погружение в древнюю культуру</div>
+                <div class="prose">
+                    <p class="lead">Санскрит даёт прямой контакт с текстами, которым тысячи лет. Вместо пересказов и переложений вы разбираете гимны, трактаты и комментарии, которые читали и произносили люди задолго до нас.</p>
+                    <p>Это меняет масштаб восприятия времени. Личные проблемы и новости не исчезают, но отходят назад: становится видно, что у человечества всегда были длинные истории, а не только «то, что произошло сегодня». Чувство конца света от очередной ленты сменяется ощущением включённости в длинный ряд.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Сохранение знаний без искажений</div>
+                <div class="prose">
+                    <p class="lead">Веды и классическая литература хранят древние философские, астрономические, медицинские представления. Перевод всегда будет фильтром: переводчик выбирает слова и акценты, что-то подчёркивает, что-то оставляет за кадром.</p>
+                    <p>Знание санскрита уменьшает искажение. Даже если вы не станете профессиональным индологом, возможность проверить ключевые места в оригинале сильно меняет отношение к текстам. Вы меньше зависите от чужих интерпретаций и больше опираетесь на собственное чтение.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Содружество языков</div>
+                <div class="prose">
+                    <p class="lead">Санскрит помогает увидеть родство языков и историю слов. Осваивая корни и модели, вы начинаете узнавать их в русском, английском и других языках. Бытовые глаголы неожиданно оказываются родственниками древних корней.</p>
+                    <p>Это превращает изучение языков из зубрёжки в исследование. Вы собираете не список разрозненных слов, а сеть родственных форм и смыслов. Это экономит усилия и даёт ощущение глубины своего языка.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Медитативное время</div>
+                <div class="prose">
+                    <p class="lead">Чтение и пение санскрита часто меняет ощущение времени. Внимание сужается до текста, ритма, длины звуков, и привычная многозадачность становится невозможной.</p>
+                    <p>Когда вы полностью погружены в одну сложную деятельность, час воспринимается как одна цельная, насыщенная минута. После таких занятий остаётся чувство, что время прожито, а не потрачено «на что-то по мелочи».</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ SECTION 4 ══ -->
+        <section class="article-section fade-in" id="s4">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div>
+                    <h2 class="section-title">Путешествие к истокам собственного «я»</h2>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <div class="subsection-title">Внутренняя тишина</div>
+                <div class="prose">
+                    <p class="lead">Тишина — это не отсутствие звуков, а отсутствие внутреннего шума. Санскритские практики создают условия для такой тишины: ум занят одной структурой, а не десятком задач.</p>
+                    <p>Через регулярное чтение алфавита, мантр, текстов появляется ясное ощущение паузы внутри. Не «релаксация» в смысле отключки, а собранность без постоянного фонового монолога. Язык показывает, что многое в вашей голове устроено «чуточку не так», как казалось, и это не всегда приятно, но полезно.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Сообщество и поддержка</div>
+                <div class="prose">
+                    <p class="lead">Санскрит редко изучают в одиночку. Вокруг него быстро формируется сообщество людей, которым не всё равно, чем они кормят свой ум. Это чаты, курсы, семинары, живые встречи.</p>
+                    <p>Общий язык и общий опыт сложных текстов создают редкий формат поддержки: можно обсуждать не только грамматику, но и то, как практика влияет на жизнь. Внутри таких сообществ нормально написать «меня тошнит от санскрита, почти 12 часов подряд» и одновременно получить поддержку и ироничную мотивацию.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <div class="subsection">
+                <div class="subsection-title">Санскрит и возраст</div>
+                <div class="prose">
+                    <p class="lead">Санскрит нормально заходит людям 35+. Детям проще с памятью, но взрослым проще с мотивацией и пониманием, зачем всё это. В реальных группах успешно учатся и школьники, и люди за пятьдесят, и те, кто пришёл после смены профессии.</p>
+                    <p>Главное условие — не «талант к языкам», а способность сидеть ровно хотя бы 10 часов в неделю. Если пятилетний ребёнок может освоить деванагари, то отговорки взрослого про «нет способностей» выглядят странно.</p>
+                </div>
+            </div>
+
+            <hr class="section-sep">
+
+            <!-- 4.4 Results -->
+            <div class="subsection">
+                <div class="subsection-title">Практические результаты</div>
+                <div class="prose">
+                    <p>Санскрит не обещает чудес, но даёт набор конкретных результатов. Через несколько месяцев регулярных занятий вы:</p>
+                </div>
+                <ul class="results-list">
+                    <li>Читаете деванагари и не пугаетесь длинных слов</li>
+                    <li>Лучше концентрируетесь и позже «выпадаете» в ленту</li>
+                    <li>Спокойнее относитесь к новостям, потому что ощущаете масштаб времени</li>
+                    <li>Попадаете в сообщество людей, с которыми можно обсуждать смысл, а не только новости</li>
+                </ul>
+                <div class="prose" style="margin-top: 20px;">
+                    <p>Кто-то на этом останавливается и держит санскрит как тренировку для мозга. Кто-то идёт в рукописи, философию, преподавание. Кто-то оставляет себе мантры как личную практику «перезагрузки». Общий эффект один: становится сложнее жить на автопилоте.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ FAQ ══ -->
+        <section class="article-section fade-in" id="s5">
+            <div class="faq-section">
+                <h2 class="faq-section__title">Частые вопросы</h2>
+
+                <div class="faq-item">
+                    <p class="faq-question">Мне уже 35+, не поздно ли начинать?</p>
+                    <p class="faq-answer">Нет. Основные ученики как раз 30–55. В этом возрасте у вас больше вопросов к себе и к миру, а санскрит даёт инструменты для работы с этими вопросами. Детям проще с памятью, взрослым — с мотивацией.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-question">Сколько времени в неделю нужно закладывать?</p>
+                    <p class="faq-answer">Минимум 5–7 часов: занятия, домашка, чтение. Если хотите не просто «послушать, как звучит», а реально читать и разбирать тексты, целитесь в 10 часов. Через 2–3 месяца большинство перестают путаться в азбуке и базовой грамматике.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-question">Это очень тяжело?</p>
+                    <p class="faq-answer">Да, это настоящая умственная работа, а не расслабляющий вебинар. Мозг устанет. Но это усталость после тренировки, а не выгорание от бессмысленных задач. Санскрит честно унимает гордыню и собирает голову.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-question">Что, если я гуманитарий, технарь или никогда не учил языки?</p>
+                    <p class="faq-answer">Санскрит равнодушен к ярлыкам. Гуманитарию он даёт структуру и точность, технарю — живой язык вместо сухого кода, человеку без языкового опыта — первый честный опыт системного обучения. Важнее не «тип», а готовность выделить время.</p>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-question">С чего начать, если откликается?</p>
+                    <p class="faq-answer">С простого шага: открытого занятия, вводного блока или бота с алфавитом. Неделя–две такой практики покажет, ложится ли санскрит на ваш график и голову, без обязательств и «подписки на следующую жизнь».</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ CTA ══ -->
+        <div class="article-cta fade-in">
+            <p class="article-cta__eyebrow">Первый шаг</p>
+            <h2 class="article-cta__title">Попробуйте — неделя покажет всё</h2>
+            <p class="article-cta__text">
+                Никто не требует ни религиозной позиции, ни академической карьеры. Достаточно усидчивости и готовности уделять языку время каждую неделю. Оставьте заявку — куратор ответит и поможет выбрать формат.
+            </p>
+            <a href="http://samskrtam.ru/ku" class="article-cta__btn">
+                Записаться на курс
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+    </main>
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="article-sidebar">
+
+        <!-- Stats -->
+        <div class="stat-card">
+            <div class="stat-card__label">О сообществе</div>
+            <div class="stat-item">
+                <div class="stat-item__icon"><i class="fas fa-users"></i></div>
+                <div class="stat-item__content">
+                    <span class="stat-item__value">7 000</span>
+                    <span class="stat-item__desc">участников в сообществе</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item__icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="stat-item__content">
+                    <span class="stat-item__value">35+</span>
+                    <span class="stat-item__desc">средний возраст учеников</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item__icon"><i class="fas fa-scroll"></i></div>
+                <div class="stat-item__content">
+                    <span class="stat-item__value">3 500</span>
+                    <span class="stat-item__desc">лет — возраст первых текстов</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc-card">
+            <div class="toc-card__title">Содержание</div>
+            <ul class="toc-list">
+                <li><a href="#s1" class="active"><span class="toc-num">1</span>Тренажёр для мозга</a></li>
+                <li><a href="#s2"><span class="toc-num">2</span>Работа с подсознанием</a></li>
+                <li><a href="#s3"><span class="toc-num">3</span>Машина времени</a></li>
+                <li><a href="#s4"><span class="toc-num">4</span>Путь к себе</a></li>
+                <li><a href="#s5"><span class="toc-num">?</span>Частые вопросы</a></li>
+            </ul>
+        </div>
+
+    </aside>
+
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+    <p class="site-footer__brand">Общество ревнителей санскрита</p>
+    <div class="site-footer__links">
+        <a href="/docs/privacy.pdf">Политика конфиденциальности</a>
+        <span style="color:#d4cdc7">•</span>
+        <a href="/docs/oferta.pdf">Публичная оферта</a>
+        <span style="color:#d4cdc7">•</span>
+        <a href="http://samskrtam.ru">На главную</a>
+    </div>
+    <p class="site-footer__copy">&copy; 2025 Все права защищены</p>
+</footer>
+
+<script>
+    // Progress bar
+    const bar = document.getElementById('readingProgress');
+    window.addEventListener('scroll', () => {
+        const total = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.width = (window.scrollY / total * 100) + '%';
+    });
+
+    // Fade-in
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(el => {
+            if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); }
+        });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Active TOC
+    const sections = document.querySelectorAll('.article-section[id]');
+    const tocLinks  = document.querySelectorAll('.toc-list a');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+        tocLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+    });
+</script>
+
+</body>
+</html>

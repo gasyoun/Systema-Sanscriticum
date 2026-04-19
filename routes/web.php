@@ -51,6 +51,16 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// ═══════════════════════════════════════════════════════════════
+// СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
+// ═══════════════════════════════════════════════════════════════
+Route::prefix('s')->name('articles.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ArticleController::class, 'index'])
+        ->name('index');
+
+    Route::get('/{article:slug}', [\App\Http\Controllers\ArticleController::class, 'show'])
+        ->name('show');
+});
 
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
 Route::middleware(['auth'])->group(function () {
@@ -74,6 +84,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/course/{slug}/lesson/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
         
+    Route::get('/course/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
+    ->name('student.course.materials.download');
+    
     Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
 
