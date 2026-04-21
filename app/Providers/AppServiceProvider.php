@@ -9,6 +9,8 @@ use App\Models\Schedule;
 use App\Observers\ScheduleObserver;
 use App\Models\ArticleView;
 use App\Observers\ArticleViewObserver;
+use App\Models\Payment;
+use App\Observers\PaymentObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,5 +42,7 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale('ru');
         
         ArticleView::observe(ArticleViewObserver::class);
+        
+        Payment::observe(PaymentObserver::class);
     }
 }

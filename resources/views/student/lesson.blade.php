@@ -5,6 +5,53 @@
 
 @section('content')
 
+<style>
+    /* ============================================ */
+    /* GRID-ЛЕЙАУТ УРОКА                            */
+    /* ============================================ */
+    .lesson-layout {
+        display: block;
+        width: 100%;
+        position: relative;
+    }
+    .lesson-main-col {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .lesson-side-col {
+        width: 100%;
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 20;
+    }
+    @media (min-width: 768px) {
+        .lesson-layout {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 420px !important;
+            gap: 1.5rem !important;
+            align-items: start !important;
+        }
+        .lesson-main-col {
+            min-width: 0 !important;
+            width: auto !important;
+        }
+        .lesson-side-col {
+            width: 420px !important;
+            margin-top: 0 !important;
+            position: sticky !important;
+            top: 1.5rem !important;
+            align-self: start !important;
+        }
+        .lesson-side-col.has-tabs {
+            max-height: calc(100vh - 3rem);
+        }
+    }
+</style>
+
 @php
     // --- УМНЫЙ ПАРСЕР ССЫЛОК YOUTUBE ---
     $cleanYoutubeId = null;
@@ -47,7 +94,7 @@
 {{-- ========================================== --}}
 {{-- ГЛАВНЫЙ КОНТЕЙНЕР (Умный Flexbox с 3 Табами) --}}
 {{-- ========================================== --}}
-<div class="w-full flex flex-col xl:flex-row gap-6 2xl:gap-8 items-start relative max-w-full"
+<div class="lesson-layout relative"
      x-data="{ 
          player: '{{ $cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none') }}',
          currentTime: 0, 
@@ -132,8 +179,7 @@
 
     {{-- ========================================== --}}
     {{-- ЛЕВАЯ КОЛОНКА (Главная: Видео и Текст)     --}}
-    {{-- ========================================== --}}
-    <div class="flex-1 min-w-0 flex flex-col gap-6 w-full">
+<div class="lesson-main-col">
         
         {{-- ВИДЕОПЛЕЕР --}}
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
@@ -184,45 +230,167 @@
             </div>
         </div>
 
-        {{-- ПЛАШКА: Название урока --}}
-        <div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 relative z-10">
-            <div>
-                @php
-                    $lessonIndex = $lessons->pluck('id')->search($lesson->id) + 1;
-                    $totalLessons = $lessons->count();
-                @endphp
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-[#E85C24]/10 text-[#E85C24] px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
-                        Урок {{ $lessonIndex }} из {{ $totalLessons }}
+        {{-- ПЛАШКА: Название урока + Навигация + Действия --}}
+<div x-data="{ navOpen: false }" 
+     class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-gray-100 relative transition-[z-index]"
+     :class="navOpen ? 'z-40' : 'z-10'">
+    
+    @php
+        $lessonIndex = $lessons->pluck('id')->search($lesson->id) + 1;
+        $totalLessons = $lessons->count();
+        
+        // Текущий список доступных блоков для студента (для выпадашки)
+        $unlockedBlocksSet = collect($unlockedTariffs ?? [])
+            ->map(fn($t) => str_replace('block_', '', $t))
+            ->filter(fn($v) => $v === 'full' || is_numeric($v))
+            ->values();
+        $hasFull = $unlockedBlocksSet->contains('full');
+    @endphp
+
+    {{-- Верхний ряд: метки и кнопки --}}
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        
+        {{-- Левая часть: заголовок --}}
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <span class="bg-[#E85C24]/10 text-[#E85C24] px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
+                    Урок {{ $lessonIndex }} из {{ $totalLessons }}
+                </span>
+                @if($lesson->duration ?? null)
+                    <span class="text-xs md:text-sm text-gray-500 font-bold flex items-center">
+                        <i class="far fa-clock mr-1.5 text-gray-400"></i> {{ $lesson->duration }} мин
                     </span>
-                    @if($lesson->duration)
-                        <span class="text-xs md:text-sm text-gray-500 font-bold flex items-center">
-                            <i class="far fa-clock mr-1.5 text-gray-400"></i> {{ $lesson->duration }} мин
-                        </span>
-                    @endif
-                </div>
-                <h1 class="text-lg md:text-xl font-extrabold text-[#1A1A1A] leading-tight">{{ $lesson->title }}</h1>
-            </div>
-
-            <div class="flex items-center gap-3 shrink-0">
-                <a href="https://t.me/rusamskrtam" target="_blank" class="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-xl bg-gray-50 text-gray-600 hover:bg-blue-500 hover:text-white border border-gray-200 transition-colors shadow-sm" title="Написать куратору">
-                    <i class="fab fa-telegram-plane text-lg"></i>
-                </a>
-
-                @if(auth()->user()->completedLessons->contains($lesson->id))
-                    <div class="inline-flex justify-center items-center px-5 py-2.5 rounded-xl bg-green-50 text-green-600 text-xs md:text-sm font-extrabold border border-green-200 cursor-default">
-                        <i class="fas fa-check-circle mr-2 text-base"></i> Пройден
-                    </div>
-                @else
-                    <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center justify-center px-6 py-2.5 md:py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white rounded-xl font-extrabold text-xs md:text-sm transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
-                            Завершить
-                        </button>
-                    </form>
                 @endif
             </div>
+            <h1 class="text-lg md:text-xl font-extrabold text-[#1A1A1A] leading-tight">
+                {{ $lesson->title }}
+            </h1>
         </div>
+
+        {{-- Правая часть: действия --}}
+        <div class="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
+
+            {{-- === КНОПКА: Чат курса (если URL задан в админке) === --}}
+            @if(!empty($course->chat_url))
+                <a href="{{ $course->chat_url }}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   title="Чат курса"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-900 hover:bg-black text-white text-xs md:text-sm font-extrabold leading-none transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 uppercase tracking-wide">
+                    <i class="fas fa-users text-base"></i>
+                    <span class="hidden md:inline">Чат курса</span>
+                </a>
+            @endif
+
+            {{-- === КНОПКА: Написать куратору (синяя, заметная) === --}}
+            <a href="https://t.me/rusamskrtam" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               title="Написать куратору"
+               class="inline-flex items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-[#229ED9] hover:bg-[#1b87b8] text-white text-xs md:text-sm font-extrabold leading-none transition-all shadow-[0_5px_15px_rgba(34,158,217,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+                <i class="fab fa-telegram-plane text-base"></i>
+                <span class="hidden md:inline">Куратору</span>
+            </a>
+
+            {{-- === КНОПКА: Завершить / Пройден === --}}
+            @if(auth()->user()->completedLessons->contains($lesson->id))
+                <div class="inline-flex justify-center items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-green-50 text-green-600 text-xs md:text-sm font-extrabold leading-none border border-green-200 cursor-default">
+                    <i class="fas fa-check-circle mr-2 text-base"></i> Пройден
+                </div>
+            @else
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+    Завершить
+</button>
+                </form>
+            @endif
+        </div>
+    </div>
+
+    {{-- === ВЫПАДАЮЩАЯ НАВИГАЦИЯ ПО УРОКАМ КУРСА === --}}
+<div class="mt-5 pt-5 border-t border-gray-100 relative">
+        
+        <button type="button" 
+        @click="navOpen = !navOpen" 
+        @click.away="navOpen = false"
+        class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all text-left group">
+    <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center shrink-0">
+            <i class="fas fa-list-ul text-sm"></i>
+        </div>
+        <div class="min-w-0">
+            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Навигация по курсу</p>
+            <p class="text-sm font-extrabold text-gray-900 truncate">Перейти к другому уроку</p>
+        </div>
+    </div>
+    <i class="fas fa-chevron-down text-gray-400 transition-transform shrink-0" 
+       :class="navOpen ? 'rotate-180' : ''"></i>
+        </button>
+        
+        <div x-show="navOpen" 
+     x-cloak
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 translate-y-1"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 translate-y-1"
+     class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 z-30 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            
+            <div class="p-2">
+                @foreach($lessons as $idx => $l)
+                    @php
+                        // Проверяем доступ к уроку (та же логика, что в контроллере)
+                        $isUnlocked = $hasFull || $unlockedBlocksSet->contains((string)$l->block_number);
+                        $isCurrent = $l->id === $lesson->id;
+                        $isCompleted = auth()->user()->completedLessons->contains($l->id);
+                    @endphp
+
+                    @if($isUnlocked && !$isCurrent)
+                        <a href="{{ route('student.lesson', [$course->slug, $l->id]) }}" 
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group">
+                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-100 text-gray-600 text-xs font-extrabold group-hover:bg-[#E85C24] group-hover:text-white transition-colors">
+                                {{ $idx + 1 }}
+                            </span>
+                            <span class="flex-1 text-sm font-bold text-gray-800 truncate group-hover:text-[#E85C24] transition-colors">
+                                {{ $l->title }}
+                            </span>
+                            @if($isCompleted)
+                                <i class="fas fa-check-circle text-green-500 text-sm shrink-0" title="Пройден"></i>
+                            @endif
+                        </a>
+                    @elseif($isCurrent)
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#E85C24]/10 border border-[#E85C24]/30 cursor-default">
+                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-[#E85C24] text-white text-xs font-extrabold">
+                                {{ $idx + 1 }}
+                            </span>
+                            <span class="flex-1 text-sm font-extrabold text-[#E85C24] truncate">
+                                {{ $l->title }}
+                            </span>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#E85C24] bg-white px-2 py-0.5 rounded shrink-0">
+                                Сейчас
+                            </span>
+                        </div>
+                    @else
+                        {{-- Закрытый урок --}}
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg opacity-60 cursor-not-allowed">
+                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-200 text-gray-400 text-xs font-extrabold">
+                                <i class="fas fa-lock text-[10px]"></i>
+                            </span>
+                            <span class="flex-1 text-sm font-bold text-gray-400 truncate">
+                                {{ $l->title }}
+                            </span>
+                            <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded shrink-0">
+                                Блок {{ $l->block_number }}
+                            </span>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
 
         {{-- КОНТЕНТ УРОКА (Описание) --}}
         @if($lesson->content || $lesson->topic)
@@ -237,7 +405,8 @@
     {{-- ========================================== --}}
     {{-- ПРАВАЯ КОЛОНКА (Инструменты: Транскрипт / Заметки / Файлы) --}}
     {{-- ========================================== --}}
-    <div class="w-full xl:w-[420px] shrink-0 xl:sticky xl:top-6 h-auto xl:h-[calc(100vh-48px)] flex flex-col relative z-20">
+    {{-- Если нет ни транскрипта, ни материалов — колонка уже и без sticky-растяжки --}}
+<div class="lesson-side-col {{ $showTabs ? 'has-tabs' : '' }}">
         
         {{-- ПЕРЕКЛЮЧАТЕЛЬ ТАБОВ (Показываем только если есть выбор) --}}
         @if($showTabs)
@@ -320,25 +489,42 @@
         @endif
 
         {{-- БЛОК 2: ЗАМЕТКИ --}}
-        <div x-show="activeTab === 'notes'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             class="bg-[#FFF9C4] rounded-3xl p-5 md:p-6 shadow-sm border border-yellow-200 flex flex-col h-max">
-             
-            <h3 class="font-extrabold text-yellow-900 mb-4 flex items-center text-sm uppercase tracking-wide shrink-0">
-                <i class="far fa-edit mr-2 text-yellow-600"></i> Мои заметки
-            </h3>
-            
-            <form action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}" method="POST" class="flex flex-col">
-                @csrf
-                <textarea name="notes" rows="8" class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar" placeholder="Важные мысли из урока, инсайты, вопросы к преподавателю...">{{ $currentNote ?? '' }}</textarea>
-                
-                <button type="submit" class="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
-                    Сохранить изменения
-                </button>
-            </form>
+<div x-show="activeTab === 'notes'" 
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 translate-y-2"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     class="bg-yellow-50 rounded-3xl p-5 md:p-6 shadow-sm border border-yellow-200 flex flex-col
+            {{ $showTabs ? 'flex-1 min-h-[500px]' : 'h-auto' }}">
+     
+    <h3 class="font-extrabold text-yellow-900 mb-4 flex items-center text-sm uppercase tracking-wide shrink-0">
+        <i class="far fa-edit mr-2 text-yellow-600"></i> Мои заметки
+    </h3>
+    
+    <form action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}" method="POST" class="flex flex-col flex-1">
+        @csrf
+        <textarea name="notes" 
+                  rows="{{ $showTabs ? 8 : 14 }}" 
+                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}" 
+                  placeholder="Важные мысли из урока, инсайты, вопросы к преподавателю...">{{ $currentNote ?? '' }}</textarea>
+        
+        <button type="submit" class="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
+            Сохранить изменения
+        </button>
+    </form>
+
+    {{-- Декоративная подпись внизу, заполняет место и делает блок «завершённым» --}}
+    @unless($showTabs)
+        <div class="mt-4 pt-4 border-t border-yellow-200/60 flex items-start gap-3 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-yellow-200/50 text-yellow-700 flex items-center justify-center shrink-0">
+                <i class="fas fa-lightbulb text-sm"></i>
+            </div>
+            <div class="text-[11px] text-yellow-900/70 leading-relaxed">
+                <p class="font-extrabold uppercase tracking-wider mb-1">Совет</p>
+                <p>Записывайте ключевые мысли и тайм-коды интересных моментов — это ускорит возврат к материалу при подготовке к следующим урокам.</p>
+            </div>
         </div>
+    @endunless
+</div>
 
         {{-- БЛОК 3: ФАЙЛЫ И МАТЕРИАЛЫ --}}
         @if($hasAttachments)

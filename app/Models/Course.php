@@ -17,6 +17,7 @@ class Course extends Model
         'slug',
         'image_path',
         'description',
+        'chat_url',
         'is_visible',
         // Добавляем новые поля сюда:
         'lessons_count',

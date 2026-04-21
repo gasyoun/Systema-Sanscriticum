@@ -69,21 +69,29 @@ class PaymentController extends Controller
 
         $finalPrice = max(0, $finalPrice);
 
-        // --- ОПРЕДЕЛЯЕМ КЛЮЧ ДЛЯ ДОСТУПА ---
-        $tariffKey = $tariff->type;
+        // --- ОПРЕДЕЛЯЕМ КЛЮЧ ДЛЯ ДОСТУПА И НОМЕРА БЛОКОВ ---
+$tariffKey = $tariff->type;
+$startBlock = null;
+$endBlock = null;
 
-        if ($tariff->type === 'block') {
-            $tariffKey = 'block_' . $tariff->block_number;
-        }
+if ($tariff->type === 'block') {
+    $tariffKey = 'block_' . $tariff->block_number;
+    // 💡 Сохраняем номер блока — для отчётности в Google Sheets 
+    // и чтобы администратор видел, за какой блок платят
+    $startBlock = $tariff->block_number;
+    $endBlock = $tariff->block_number;
+}
 
-        // 4. СОЗДАЕМ ПЛАТЕЖ
-        $payment = Payment::create([
-            'user_id'   => $user->id,
-            'course_id' => $tariff->course->id ?? null,
-            'amount'    => $finalPrice,
-            'tariff'    => $tariffKey,
-            'status'    => 'pending',
-        ]);
+// 4. СОЗДАЕМ ПЛАТЕЖ
+$payment = Payment::create([
+    'user_id'     => $user->id,
+    'course_id'   => $tariff->course->id ?? null,
+    'amount'      => $finalPrice,
+    'tariff'      => $tariffKey,
+    'status'      => 'pending',
+    'start_block' => $startBlock,
+    'end_block'   => $endBlock,
+]);
 
         // 5. ИНКРЕМЕНТИРУЕМ ПРОМОКОД
         if ($promo) {

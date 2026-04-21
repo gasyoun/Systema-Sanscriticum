@@ -23,7 +23,8 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-    </style>
+        
+        </style>
     
     @livewireScripts
     
@@ -166,27 +167,54 @@
          :class="sidebarOpen ? 'lg:pl-[280px]' : 'pl-0'">
         
         {{-- Верхняя шапка --}}
-        <header class="sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 sm:px-8">
-            
-            <div class="flex items-center">
-                {{-- Кнопка "Гамбургер" ТЕПЕРЬ ВИДНА И НА ПК! Управляет сворачиванием меню --}}
-                <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 hover:text-[#E85C24] hover:bg-gray-100 active:scale-95 transition-all">
-                    <i class="fas fa-bars text-lg"></i>
-                </button>
-                
-                {{-- Заголовок страницы --}}
-                <h1 class="text-xl md:text-2xl font-extrabold text-[#1A1A1A] uppercase tracking-tight truncate">
-                    @yield('header')
-                </h1>
-            </div>
+<header class="sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 sm:px-8">
+    
+    <div class="flex items-center min-w-0">
+        {{-- Кнопка "Гамбургер" (видна и на ПК) --}}
+        <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 hover:text-[#E85C24] hover:bg-gray-100 active:scale-95 transition-all shrink-0">
+            <i class="fas fa-bars text-lg"></i>
+        </button>
+        
+        {{-- Заголовок страницы --}}
+        <h1 class="text-xl md:text-2xl font-extrabold text-[#1A1A1A] uppercase tracking-tight truncate">
+            @yield('header')
+        </h1>
+    </div>
 
-            {{-- Аватарка для мобилок справа вверху --}}
-            <div class="lg:hidden shrink-0">
-                <div class="w-10 h-10 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center font-extrabold shadow-md">
-                    {{ substr(Auth::user()->name, 0, 1) }}
-                </div>
+    {{-- Правая часть: соцсети + аватарка на мобилках --}}
+    <div class="flex items-center gap-2 md:gap-3 shrink-0">
+
+        {{-- === СОЦИАЛЬНЫЕ СЕТИ === --}}
+        <div class="hidden sm:flex items-center gap-1.5 md:gap-2">
+            @php
+                // Тянем конфиг один раз и фильтруем пустые
+                $socials = array_filter([
+                    'vk'       => ['url' => config('social.vk'),       'icon' => 'fab fa-vk',         'title' => 'ВКонтакте',  'hover' => 'hover:bg-[#0077FF]'],
+                    'telegram' => ['url' => config('social.telegram'), 'icon' => 'fab fa-telegram-plane', 'title' => 'Telegram', 'hover' => 'hover:bg-[#229ED9]'],
+                    'facebook' => ['url' => config('social.facebook'), 'icon' => 'fab fa-facebook-f',  'title' => 'Facebook',   'hover' => 'hover:bg-[#1877F2]'],
+                    'website'  => ['url' => config('social.website'),  'icon' => 'fas fa-globe',       'title' => 'Наш сайт',   'hover' => 'hover:bg-[#E85C24]'],
+                ], fn ($s) => !empty($s['url']));
+            @endphp
+
+            @foreach($socials as $key => $social)
+                <a href="{{ $social['url'] }}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   title="{{ $social['title'] }}"
+                   class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 {{ $social['hover'] }} hover:text-white hover:border-transparent active:scale-95 transition-all">
+                    <i class="{{ $social['icon'] }} text-base"></i>
+                </a>
+            @endforeach
+        </div>
+
+        {{-- Аватарка для мобилок --}}
+        <div class="lg:hidden">
+            <div class="w-10 h-10 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center font-extrabold shadow-md">
+                {{ substr(Auth::user()->name, 0, 1) }}
             </div>
-        </header>
+        </div>
+    </div>
+</header>
 
         {{-- Основная рабочая область --}}
         <main class="flex-1 overflow-y-auto bg-[#F4F1EA] p-4 sm:p-8 relative custom-scrollbar">

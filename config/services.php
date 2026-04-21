@@ -40,4 +40,9 @@ return [
     'lesson_sync' => [
     'secret' => env('LESSON_SYNC_SECRET'),
     ],
+    
+    'n8n' => [
+    'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
+],
+    
 ];

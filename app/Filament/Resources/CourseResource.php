@@ -51,6 +51,14 @@ class CourseResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->label('Описание')
                             ->columnSpanFull(),
+                            
+                        Forms\Components\TextInput::make('chat_url')
+                            ->label('Ссылка на чат курса')
+                            ->url()
+                            ->maxLength(500)
+                            ->placeholder('https://vk.me/join/... или https://t.me/...')
+                            ->helperText('Универсальная ссылка на чат курса (VK, Telegram, Discord). Если пусто — кнопка в кабинете студента не показывается.')
+                            ->columnSpanFull(),
 
                         // БЛОК 3: Статистика
                         Forms\Components\Grid::make(2)

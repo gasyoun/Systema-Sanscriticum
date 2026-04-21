@@ -9,6 +9,7 @@ use App\Mail\StudentWelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class Payment extends Model
 {
@@ -84,25 +85,40 @@ class Payment extends Model
     // ==========================================
     // ЛОГИКА ВЫДАЧИ ДОСТУПА И ГРУПП
     // ==========================================
-    public function grantAccess()
-    {
-        $user = $this->user;
-        $course = $this->course; // Берем курс из этого платежа
+    public function grantAccess(): void
+{
+    $user = $this->user;
+    $course = $this->course;
 
-        if (!$course) return; // Защита от ошибки, если курс пустой
-
-        // 1. Ищем группу, название которой совпадает с названием курса.
-        // Оставили только колонку 'name', так как 'title' в таблице групп нет
-        $group = \App\Models\Group::where('name', $course->title)->first();
-
-        // 2. Если такая группа найдена в базе — добавляем в нее студента
-        if ($group) {
-            $user->groups()->syncWithoutDetaching([$group->id]);
-        } else {
-            // Пишем в лог сервера, если админ забыл создать группу для курса
-            \Illuminate\Support\Facades\Log::warning("Внимание: Не найдена группа для курса: " . $course->title);
-        }
+    if (!$course) {
+        Log::warning("grantAccess: платёж #{$this->id} без курса, пропускаем.");
+        return;
     }
+
+    if (!$user) {
+        Log::warning("grantAccess: платёж #{$this->id} без пользователя, пропускаем.");
+        return;
+    }
+
+    // Все группы, привязанные к этому курсу через pivot course_group
+    $groupIds = $course->groups()->pluck('groups.id')->toArray();
+
+    if (empty($groupIds)) {
+        Log::warning(
+            "grantAccess: у курса '{$course->title}' (id={$course->id}) " .
+            "нет привязанных групп. Проверьте вкладку «Группы» в админке курса."
+        );
+        return;
+    }
+
+    // syncWithoutDetaching — добавляет новые связи, не удаляя существующие
+    $user->groups()->syncWithoutDetaching($groupIds);
+
+    Log::info(
+        "grantAccess: студент #{$user->id} ({$user->email}) добавлен в " .
+        count($groupIds) . " групп(у/ы) курса '{$course->title}'."
+    );
+}
 
     // ==========================================
     // ГЕНЕРАЦИЯ ПАРОЛЯ И ОТПРАВКА ПИСЬМА
