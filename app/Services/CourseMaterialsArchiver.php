@@ -196,6 +196,9 @@ class CourseMaterialsArchiver
         return $tariffs;
     }
 
+
+
+
     /**
      * Чистит имя папки от недопустимых символов.
      * Кириллица сохраняется — nelexa/zip корректно её сериализует с UTF-8.
