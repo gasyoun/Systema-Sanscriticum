@@ -60,8 +60,7 @@
             </button>
 
             <div class="text-center text-xs text-slate-500 pt-2">
-                Забыли пароль? Напишите в
-                <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#38BDF8] hover:underline">
+                Забыли пароль? Напишите                 <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#38BDF8] hover:underline">
                     Куратору Тг</a> или <a href="https://vk.me/event89658969" target="_blank" class="text-[#38BDF8] hover:underline">
                     Куратору Вк</a>
             </div>

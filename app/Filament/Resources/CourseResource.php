@@ -100,6 +100,13 @@ class CourseResource extends Resource
                                     ->helperText('Курс участвует в программе лояльности (скидки за объем)')
                                     ->default(false)
                                     ->onColor('warning'), // Золотой цвет для выделения
+                                    
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Доступен студентам в ЛК')
+                                    ->helperText('Если выключить — курс исчезнет из личных кабинетов студентов, даже если они его купили. Используйте для архивации.')
+                                    ->default(true)
+                                    ->onColor('success')
+                                    ->inline(false),    
                             ]),
                     ]),
                     
@@ -208,6 +215,11 @@ class CourseResource extends Resource
                 Tables\Columns\IconColumn::make('is_visible')
                     ->boolean()
                     ->label('Активен'),
+                    
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Активен в ЛК')
+                    ->boolean()
+                    ->sortable(),    
             ])
             ->filters([
                 // --- НОВЫЙ ФИЛЬТР ПО ФАКУЛЬТАТИВАМ ---

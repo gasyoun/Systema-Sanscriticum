@@ -69,46 +69,48 @@ class StudentController extends Controller
      * Главная панель (Мои курсы)
      */
     public function dashboard()
-    {
-        $user = auth()->user();
-        $userGroupIds = $user->groups->pluck('id');
+{
+    $user = auth()->user();
+    $userGroupIds = $user->groups->pluck('id');
 
-        $courses = Course::where('is_visible', true)
-            ->whereHas('groups', function($query) use ($userGroupIds) {
-                $query->whereIn('groups.id', $userGroupIds);
-            })
-            ->get();
+    // БЫЛО: where('is_visible', true) — ломало доступ при скрытии с витрины
+    // СТАЛО: фильтруем по is_active (видимость в ЛК)
+    $courses = Course::where('is_active', true)
+        ->whereHas('groups', function ($query) use ($userGroupIds) {
+            $query->whereIn('groups.id', $userGroupIds);
+        })
+        ->get();
 
-        $certificates = $user->certificates()
-            ->with('course')
-            ->orderBy('created_at', 'desc')
-            ->get();
+    $certificates = $user->certificates()
+        ->with('course')
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        return view('student.dashboard', compact('courses', 'certificates'));
-    }
+    return view('student.dashboard', compact('courses', 'certificates'));
+}
 
     /**
      * Просмотр содержания курса (список уроков)
      */
     public function showCourse($slug)
-    {
-        $user = auth()->user();
-        $userGroupIds = $user->groups->pluck('id');
+{
+    $user = auth()->user();
+    $userGroupIds = $user->groups->pluck('id');
 
-        $course = Course::where('slug', $slug)
-            ->where('is_visible', true)
-            ->whereHas('groups', function($query) use ($userGroupIds) {
-                $query->whereIn('groups.id', $userGroupIds);
-            })
-            ->firstOrFail();
+    // БЫЛО: where('is_visible', true)
+    // СТАЛО: where('is_active', true)
+    $course = Course::where('slug', $slug)
+        ->where('is_active', true)
+        ->whereHas('groups', function ($query) use ($userGroupIds) {
+            $query->whereIn('groups.id', $userGroupIds);
+        })
+        ->firstOrFail();
 
-        $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
-        
-        // Передаем ID пользователя и SLUG курса
-        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
+    $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
+    $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
 
-        return view('student.course', compact('course', 'lessons', 'unlockedTariffs'));
-    }
+    return view('student.course', compact('course', 'lessons', 'unlockedTariffs'));
+}
 
     /**
      * Просмотр конкретного урока (Плеер + Навигация)

@@ -19,7 +19,7 @@ class Course extends Model
         'description',
         'chat_url',
         'is_visible',
-        // Добавляем новые поля сюда:
+        'is_active',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -33,6 +33,7 @@ class Course extends Model
     protected $casts = [
         'is_visible' => 'boolean',
         'is_elective' => 'boolean',
+        'is_active'  => 'boolean',
     ];
     
     public function teacher()
