@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
@@ -51,4 +52,49 @@ class AuthController extends Controller
 
         return redirect('/login');
     }
+    
+    /**
+ * AJAX-логин с витрины магазина.
+ * Не редиректит, возвращает JSON. Сессия — стандартная web-guard,
+ * так что auth()->check() в Blade-шаблонах начнет возвращать true после reload().
+ */
+public function shopLogin(Request $request): JsonResponse
+{
+    $credentials = $request->validate([
+        'email'    => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
+
+    if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Неверный email или пароль.',
+        ], 422);
+    }
+
+    $request->session()->regenerate();
+
+    $user = Auth::user();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Вы успешно вошли.',
+        'user'    => [
+            'name'  => $user->name,
+            'email' => $user->email,
+        ],
+    ]);
+}
+
+/**
+ * AJAX-выход (с витрины — без редиректа на /login).
+ */
+public function shopLogout(Request $request): JsonResponse
+{
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return response()->json(['success' => true]);
+}
 }

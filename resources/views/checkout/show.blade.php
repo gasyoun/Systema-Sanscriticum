@@ -172,13 +172,7 @@
             </div>
         @endif
         
-        <div class="flex justify-center items-center gap-6 mt-16 opacity-50 grayscale">
-            <i class="fab fa-cc-visa text-3xl"></i>
-            <i class="fab fa-cc-mastercard text-3xl"></i>
-            <i class="fab fa-cc-apple-pay text-3xl"></i>
-            <i class="fab fa-cc-google-pay text-3xl"></i>
-        </div>
-
+        
     </div>
 </div>
 @endsection

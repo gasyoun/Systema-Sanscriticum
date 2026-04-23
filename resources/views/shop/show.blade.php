@@ -1,4 +1,4 @@
-@extends('layouts.promo') 
+@extends('layouts.shop') 
 @section('title', $course->title . ' — Общество ревнителей санскрита')
 
 @section('content')
@@ -128,63 +128,89 @@
                          class="space-y-4" x-cloak>
                          
                         @foreach($fullTariffs as $tariff)
-                            <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border border-[#E85C24]/30 hover:border-[#E85C24] transition-all duration-300 relative overflow-hidden group shadow-[0_0_20px_rgba(232,92,36,0.05)]">
-                                {{-- Плашка Выгодно --}}
-                                <div class="absolute top-0 right-0 bg-[#E85C24] text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
-                                    ВЫГОДНО
-                                </div>
+    @php
+        $tariffKey = $tariff->type === 'block' ? 'block_' . $tariff->block_number : 'full';
+        $isPurchased = in_array($tariffKey, $purchasedKeys, true);
+        $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
+        $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+    @endphp
 
-                                <h4 class="text-xl font-bold text-white mb-2 pr-16">{{ $tariff->title }}</h4>
-                                
-                                @php
-    $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
-    $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
-@endphp
+    <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24]' }} transition-all duration-300 relative overflow-hidden group">
 
-<div class="mb-4">
-    @if($finalPrice < $tariff->price)
-        {{-- Если есть скидка или апгрейд --}}
-        <div class="flex items-end gap-3 mb-1">
-            <div class="text-4xl font-black text-[#38BDF8]">
-                {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl font-medium text-[#38BDF8]/70">₽</span>
+        {{-- Плашка статуса: Куплено / Выгодно --}}
+        @if($isPurchased)
+            <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
+                <i class="fas fa-check-circle mr-1"></i> КУПЛЕНО
             </div>
-            
-            @if($discountPercent > 0)
-                <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                    Скидка -{{ $discountPercent }}%
-                </span>
-            @elseif($finalPrice == 0)
-                <span class="bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                    Куплено
-                </span>
+        @else
+            <div class="absolute top-0 right-0 bg-[#E85C24] text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
+                ВЫГОДНО
+            </div>
+        @endif
+
+        <h4 class="text-xl font-bold text-white mb-2 pr-20">{{ $tariff->title }}</h4>
+
+        {{-- Цена --}}
+        <div class="mb-4">
+            @if($isPurchased)
+                <div class="text-2xl font-black text-emerald-400">
+                    Доступ открыт
+                </div>
+                <div class="text-sm text-slate-500 mt-1">
+                    Оплачено: {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+                </div>
+            @elseif($discountPercent > 0)
+                {{-- Скидка по программе лояльности --}}
+                <div class="flex items-end gap-3 mb-1">
+                    <div class="text-4xl font-black text-[#38BDF8]">
+                        {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
+                    </div>
+                    <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                        Скидка -{{ $discountPercent }}%
+                    </span>
+                </div>
+                <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
+                    {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+                </div>
+            @elseif($finalPrice < $tariff->price)
+                {{-- Полный курс, часть блоков уже оплачена — доплата --}}
+                <div class="flex items-end gap-3 mb-1">
+                    <div class="text-4xl font-black text-[#38BDF8]">
+                        {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 mb-1">
+                    Доплата с учётом ранее купленных блоков
+                </div>
+                <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
+                    {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+                </div>
             @else
-                <span class="bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                    Апгрейд
-                </span>
+                {{-- Обычная цена --}}
+                <div class="text-4xl font-black text-white">
+                    {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
+                </div>
             @endif
         </div>
-        <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
-            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
-        </div>
-    @else
-        {{-- Обычная цена --}}
-        <div class="text-4xl font-black text-white">
-            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
-        </div>
-    @endif
-</div>
-                                
-                                @if($tariff->description)
-                                    <p class="text-sm text-slate-400 mb-6 leading-relaxed">{{ $tariff->description }}</p>
-                                @endif
-                                
-                                {{-- ИСПОЛЬЗУЕМ ВАШУ ФУНКЦИЮ askConsent ДЛЯ МЕТРИКИ И ОФЕРТЫ --}}
-                                <button @click.prevent="askConsent('{{ route('checkout.show', $tariff->id) }}')" 
-                                        class="w-full flex justify-center items-center py-4 px-4 bg-[#E85C24] text-white text-base font-bold rounded-xl hover:bg-[#d64e1c] hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
-                                    Записаться на курс
-                                </button>
-                            </div>
-                        @endforeach
+
+        @if($tariff->description)
+            <p class="text-sm text-slate-400 mb-6 leading-relaxed">{{ $tariff->description }}</p>
+        @endif
+
+        {{-- Кнопка --}}
+        @if($isPurchased)
+            <a href="{{ route('student.course', $course->slug) }}"
+   class="w-full flex justify-center items-center py-4 px-4 bg-emerald-500 ...">
+    <i class="fas fa-arrow-right mr-2"></i> Перейти к обучению
+</a>
+        @else
+            <a href="{{ route('checkout.show', $tariff->id) }}"
+   class="w-full flex justify-center items-center py-4 px-4 bg-[#E85C24] text-white text-base font-bold rounded-xl hover:bg-[#d64e1c] hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
+    Записаться на курс
+</a>
+        @endif
+    </div>
+@endforeach
                     </div>
 
                     {{-- ВКЛАДКА 2: ПО МОДУЛЯМ --}}
@@ -196,54 +222,63 @@
                          class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar" x-cloak>
                          
                         @foreach($blockTariffs as $tariff)
-                            <div class="bg-[#111622] rounded-xl p-5 border border-[#1F2636] hover:border-[#38BDF8]/50 transition-all duration-300 group">
-                                
-                                <div class="flex justify-between items-start mb-3 gap-2">
-                                    <div>
-                                        <span class="inline-block text-[10px] font-black text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded border border-[#38BDF8]/20 mb-2 tracking-widest uppercase">
-                                            БЛОК {{ $tariff->block_number }}
-                                        </span>
-                                        <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
-                                    </div>
-                                    @php
-    $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
-    $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
-@endphp
+    @php
+        $tariffKey = 'block_' . $tariff->block_number;
+        $isPurchased = in_array($tariffKey, $purchasedKeys, true);
+        $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
+        $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+    @endphp
 
-<div class="text-right whitespace-nowrap">
-    @if($finalPrice < $tariff->price)
-        {{-- Зачеркнутая старая цена сверху --}}
-        <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
-            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+    <div class="bg-[#111622] rounded-xl p-5 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#1F2636] hover:border-[#38BDF8]/50' }} transition-all duration-300 group">
+
+        <div class="flex justify-between items-start mb-3 gap-2">
+            <div>
+                <span class="inline-block text-[10px] font-black text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded border border-[#38BDF8]/20 mb-2 tracking-widest uppercase">
+                    БЛОК {{ $tariff->block_number }}
+                </span>
+                <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
+            </div>
+
+            <div class="text-right whitespace-nowrap">
+                @if($isPurchased)
+                    <div class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2.5 py-1.5 rounded tracking-wider">
+                        <i class="fas fa-check-circle"></i> Оплачено
+                    </div>
+                @elseif($discountPercent > 0)
+                    <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
+                        {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+                    </div>
+                    <div class="text-xl font-black text-[#38BDF8]">
+                        {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
+                    </div>
+                    <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
+                        -{{ $discountPercent }}%
+                    </div>
+                @else
+                    <div class="text-xl font-black text-white mt-3">
+                        {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
+                    </div>
+                @endif
+            </div>
         </div>
-        {{-- Новая цена --}}
-        <div class="text-xl font-black text-[#38BDF8]">
-            {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm font-medium text-[#38BDF8]/70">₽</span>
-        </div>
-        {{-- Текст скидки --}}
-        @if($discountPercent > 0)
-            <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">-{{ $discountPercent }}% (Свои)</div>
-        @elseif($finalPrice == 0)
-             <div class="text-[10px] text-green-400 font-bold mt-1 tracking-wide uppercase">Оплачено</div>
+
+        @if($tariff->description)
+            <p class="text-xs text-slate-400 mb-4">{{ $tariff->description }}</p>
         @endif
-    @else
-        <div class="text-xl font-black text-white mt-3">
-            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
-        </div>
-    @endif
-</div>
-                                </div>
-                                
-                                @if($tariff->description)
-                                    <p class="text-xs text-slate-400 mb-4">{{ $tariff->description }}</p>
-                                @endif
-                                
-                                <button @click.prevent="askConsent('{{ route('checkout.show', $tariff->id) }}')" 
-                                        class="w-full flex justify-center items-center py-3 px-4 bg-[#1F2636] text-white text-sm font-bold rounded-lg hover:bg-[#38BDF8] hover:text-[#0A0D14] transition-colors">
-                                    Оплатить модуль
-                                </button>
-                            </div>
-                        @endforeach
+
+        @if($isPurchased)
+            <a href="{{ route('student.course', $course->slug) }}"
+               class="w-full flex justify-center items-center py-3 px-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-bold rounded-lg hover:bg-emerald-500 hover:text-white transition-colors">
+                <i class="fas fa-arrow-right mr-2"></i> Перейти к блоку
+            </a>
+        @else
+            <a href="{{ route('checkout.show', $tariff->id) }}"
+   class="w-full flex justify-center items-center py-3 px-4 bg-[#1F2636] text-white text-sm font-bold rounded-lg hover:bg-[#38BDF8] hover:text-[#0A0D14] transition-colors">
+    Оплатить модуль
+</a>
+        @endif
+    </div>
+@endforeach
                     </div>
 
                 @else

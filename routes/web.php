@@ -51,6 +51,13 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::post('/shop/login', [AuthController::class, 'shopLogin'])
+    ->middleware('throttle:5,1')
+    ->name('shop.login');
+
+Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
+    ->name('shop.logout');
+    
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════

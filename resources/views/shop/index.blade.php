@@ -1,4 +1,4 @@
-@extends('layouts.promo') 
+@extends('layouts.shop') 
 @section('title', 'Общество ревнителей санскрита')
 
 @section('content')
@@ -155,6 +155,20 @@
                                         </div>
                                     @endif
                                 </div>
+                                
+                                @php
+    $courseKeys = $purchasedByCourse[$course->id] ?? [];
+    $hasAnyPurchased = !empty($courseKeys);
+    $fullPurchased = in_array('full', $courseKeys, true);
+@endphp
+
+{{-- Бейдж над названием --}}
+@if($hasAnyPurchased)
+    <div class="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded mb-3">
+        <i class="fas fa-check-circle"></i>
+        {{ $fullPurchased ? 'Весь курс куплен' : 'Блоки куплены' }}
+    </div>
+@endif
                                 
                                 <a href="{{ route('shop.course.show', $course->slug) }}#tariffs" class="flex justify-center items-center w-full py-3 px-4 bg-[#1F2636] hover:bg-[#E85C24] text-white text-xs font-bold rounded-xl transition-all duration-300 group/btn shadow-md hover:shadow-[0_0_15px_rgba(232,92,36,0.4)] hover:-translate-y-0.5">
                                     Выбрать тариф
