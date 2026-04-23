@@ -52,108 +52,184 @@ class CourseMaterialsArchiver
      * Создаёт ZIP-архив через nelexa/zip — корректная UTF-8 поддержка имён.
      */
     private function buildArchive(Course $course, array $unlockedTariffs): string
-    {
-        \Log::info('[Archiver] Старт сборки', [
-        'course_id'  => $course->id,
+{
+    \Log::info('[Archiver] Старт сборки', [
+        'course_id'   => $course->id,
         'course_slug' => $course->slug,
-        'tariffs'    => $unlockedTariffs,
+        'tariffs'     => $unlockedTariffs,
     ]);
-    
-        $course->load(['lessons' => function ($q): void {
-            $q->orderBy('block_number')->orderBy('id');
-        }]);
 
-        $accessibleLessons = $course->lessons->filter(
-            fn ($lesson) => $this->isLessonUnlocked($lesson, $unlockedTariffs)
-        );
+    $course->load(['lessons' => function ($q): void {
+        $q->orderBy('block_number')->orderBy('id');
+    }]);
 
-        if ($accessibleLessons->isEmpty()) {
-            throw new \RuntimeException('У вас нет доступа ни к одному уроку этого курса.');
-        }
+    $accessibleLessons = $course->lessons->filter(
+        fn ($lesson) => $this->isLessonUnlocked($lesson, $unlockedTariffs)
+    );
 
-        // Готовим временную директорию
-        $tmpDir = storage_path('app/tmp/course-archives');
-        if (!is_dir($tmpDir) && !mkdir($tmpDir, 0775, true) && !is_dir($tmpDir)) {
-            throw new \RuntimeException('Не удалось создать временную директорию');
-        }
+    if ($accessibleLessons->isEmpty()) {
+        throw new \RuntimeException('У вас нет доступа ни к одному уроку этого курса.');
+    }
 
-        $archivePath = $tmpDir . '/' . $course->slug . '_' . now()->format('Y-m-d_His') . '_' . uniqid() . '.zip';
+    $tmpDir = storage_path('app/tmp/course-archives');
+    if (!is_dir($tmpDir) && !mkdir($tmpDir, 0775, true) && !is_dir($tmpDir)) {
+        throw new \RuntimeException('Не удалось создать временную директорию');
+    }
 
-        $zipFile = new ZipFile();
+    $archivePath = $tmpDir . '/' . $course->slug . '_' . now()->format('Y-m-d_His') . '_' . uniqid() . '.zip';
 
-        try {
-            $totalSize = 0;
-            $filesAdded = 0;
-            $courseFolder = $this->sanitizeFolderName($course->title);
+    $zipFile = new ZipFile();
 
-            foreach ($accessibleLessons as $index => $lesson) {
-                if (empty($lesson->attachments) || !is_array($lesson->attachments)) {
+    try {
+        $totalSize    = 0;
+        $filesAdded   = 0;
+        $courseFolder = $this->sanitizeFolderName($course->title);
+
+        foreach ($accessibleLessons->values() as $index => $lesson) {
+            if (empty($lesson->attachments) || !is_array($lesson->attachments)) {
+                continue;
+            }
+
+            $lessonNum    = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
+            $lessonFolder = $courseFolder . '/Урок ' . $lessonNum . ' - ' . $this->sanitizeFolderName($lesson->title);
+
+            foreach ($lesson->attachments as $relativePath) {
+                $absolutePath = Storage::disk('public')->path($relativePath);
+
+                if (!is_file($absolutePath)) {
                     continue;
                 }
 
-                $lessonNum = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
-                $lessonFolder = $courseFolder . '/Урок ' . $lessonNum . ' - ' . $this->sanitizeFolderName($lesson->title);
+                $fileSize = filesize($absolutePath) ?: 0;
 
-                foreach ($lesson->attachments as $relativePath) {
-                    $absolutePath = Storage::disk('public')->path($relativePath);
-
-                    if (!is_file($absolutePath)) {
-                        continue;
-                    }
-
-                    $fileSize = filesize($absolutePath) ?: 0;
-
-                    // Защита от слишком большого архива
-                    if ($totalSize + $fileSize > self::MAX_ARCHIVE_SIZE_BYTES) {
-                        $zipFile->close();
-                        @unlink($archivePath);
-                        throw new \RuntimeException(
-                            'Размер архива превысил 2 ГБ. Скачайте материалы поурочно.'
-                        );
-                    }
-
-                    $fileName = basename($relativePath);
-                    $entryName = $lessonFolder . '/' . $fileName;
-
-                    // Добавляем файл в архив. Сжатие STORED (без сжатия) для PDF/MP3/MP4/ZIP —
-                    // они уже сжаты, повторно жать бессмысленно, только время тратить.
-                    // Для текстовых файлов оставляем DEFLATED.
-                    $compressionMethod = $this->shouldCompress($fileName)
-                        ? ZipCompressionMethod::DEFLATED
-                        : ZipCompressionMethod::STORED;
-
-                    $zipFile->addFile($absolutePath, $entryName, $compressionMethod);
-
-                    $totalSize += $fileSize;
-                    $filesAdded++;
+                if ($totalSize + $fileSize > self::MAX_ARCHIVE_SIZE_BYTES) {
+                    $zipFile->close();
+                    @unlink($archivePath);
+                    throw new \RuntimeException(
+                        'Размер архива превысил 2 ГБ. Скачайте материалы поурочно.'
+                    );
                 }
-            }
 
-            if ($filesAdded === 0) {
-                $zipFile->close();
-                @unlink($archivePath);
-                throw new \RuntimeException('У уроков курса пока нет загруженных материалов.');
-            }
+                $fileName  = basename($relativePath);
+                $entryName = $lessonFolder . '/' . $fileName;
 
-            // Сохраняем архив на диск
-            $zipFile->saveAsFile($archivePath);
-            $zipFile->close();
-        } catch (\Throwable $e) {
-            $zipFile->close();
-            if (file_exists($archivePath)) {
-                @unlink($archivePath);
+                $compressionMethod = $this->shouldCompress($fileName)
+                    ? ZipCompressionMethod::DEFLATED
+                    : ZipCompressionMethod::STORED;
+
+                $zipFile->addFile($absolutePath, $entryName, $compressionMethod);
+
+                $totalSize += $fileSize;
+                $filesAdded++;
             }
-            throw $e;
         }
-        
-\Log::info('[Archiver] Архив собран', [
-    'path'        => $archivePath,
-    'size_bytes'  => file_exists($archivePath) ? filesize($archivePath) : 0,
-    'files_count' => $filesAdded,
-]);
 
-        return $archivePath;
+        // --- НОВОЕ: добавляем текстовый файл со ссылками на видео ---
+        $videoLinksContent = $this->buildVideoLinksFile($course, $accessibleLessons);
+        $hasVideoLinks     = $videoLinksContent !== null;
+
+        if ($hasVideoLinks) {
+            $zipFile->addFromString(
+                $courseFolder . '/Ссылки на видео.txt',
+                $videoLinksContent,
+                ZipCompressionMethod::DEFLATED
+            );
+        }
+
+        // Падаем только если нет ни файлов, ни ссылок
+        if ($filesAdded === 0 && !$hasVideoLinks) {
+            $zipFile->close();
+            @unlink($archivePath);
+            throw new \RuntimeException('У уроков курса пока нет ни материалов, ни ссылок на видео.');
+        }
+
+        $zipFile->saveAsFile($archivePath);
+        $zipFile->close();
+    } catch (\Throwable $e) {
+        $zipFile->close();
+        if (file_exists($archivePath)) {
+            @unlink($archivePath);
+        }
+        throw $e;
     }
+
+    \Log::info('[Archiver] Архив собран', [
+        'path'        => $archivePath,
+        'size_bytes'  => file_exists($archivePath) ? filesize($archivePath) : 0,
+        'files_count' => $filesAdded,
+    ]);
+
+    return $archivePath;
+}
+
+/**
+ * Собирает текстовый файл со ссылками на видео уроков, сгруппированный по блокам.
+ * Возвращает null, если ни одной ссылки нет.
+ */
+private function buildVideoLinksFile(Course $course, \Illuminate\Support\Collection $lessons): ?string
+{
+    /** @var VideoLinkNormalizer $normalizer */
+    $normalizer = app(VideoLinkNormalizer::class);
+
+    // Группируем уроки по блокам, сохраняя порядок
+    $byBlock = $lessons->groupBy(fn ($l) => (int) ($l->block_number ?? 0))
+        ->sortKeys();
+
+    $lines   = [];
+    $lines[] = 'Курс: ' . $course->title;
+    $lines[] = 'Сгенерировано: ' . now()->format('d.m.Y H:i');
+    $lines[] = str_repeat('=', 60);
+    $lines[] = '';
+
+    $hasAnyLink = false;
+
+    foreach ($byBlock as $blockNumber => $blockLessons) {
+        $blockTitle = $blockNumber > 0
+            ? 'Блок ' . $blockNumber
+            : 'Без блока';
+
+        $lines[] = '### ' . $blockTitle . ' ###';
+        $lines[] = '';
+
+        $lessonIndex = 0;
+
+        foreach ($blockLessons as $lesson) {
+            $lessonIndex++;
+
+            // Берём ссылки из всех возможных полей, нормализуем, убираем дубли
+            $youtube = $normalizer->youtube($lesson->youtube_url)
+                ?? $normalizer->youtube($lesson->video_url ?? null);
+
+            $rutube = $normalizer->rutube($lesson->rutube_url);
+
+            if ($youtube === null && $rutube === null) {
+                continue;
+            }
+
+            $hasAnyLink = true;
+
+            $lines[] = sprintf('Урок %02d: %s', $lessonIndex, $lesson->title);
+
+            if ($youtube !== null) {
+                $lines[] = 'YouTube: ' . $youtube;
+            }
+            if ($rutube !== null) {
+                $lines[] = 'Rutube:  ' . $rutube;
+            }
+
+            $lines[] = '';
+        }
+
+        $lines[] = '';
+    }
+
+    if (!$hasAnyLink) {
+        return null;
+    }
+
+    // BOM для корректного отображения кириллицы в Windows Notepad
+    return "\xEF\xBB\xBF" . implode("\r\n", $lines);
+}
 
     /**
      * Стоит ли сжимать файл по расширению.
@@ -195,9 +271,6 @@ class CourseMaterialsArchiver
 
         return $tariffs;
     }
-
-
-
 
     /**
      * Чистит имя папки от недопустимых символов.

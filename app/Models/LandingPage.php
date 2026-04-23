@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Artisan; 
 
 class LandingPage extends Model
 {
@@ -54,16 +53,7 @@ class LandingPage extends Model
         // ---------------------------------------
     ];
 
-    // Автоматическая очистка кэша при сохранении
-    protected static function booted()
-    {
-        static::saved(function ($model) {
-            // Очищаем кэш, чтобы изменения на сайте появились сразу
-            Artisan::call('view:clear'); 
-            Artisan::call('cache:clear');
-        });
-    }
-
+    
     // Связь с лидами (если понадобится)
     public function leads()
     {

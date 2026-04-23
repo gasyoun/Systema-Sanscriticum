@@ -95,4 +95,27 @@ class Tariff extends Model
         return max(0, $finalPrice);
     }
     
+    /**
+ * Куплен ли этот конкретный тариф пользователем.
+ * Для full-тарифа — есть ли успешный платёж с tariff='full' на этом курсе.
+ * Для block-тарифа — есть ли платёж с ключом 'block_{block_number}'.
+ */
+public function isPurchasedBy($user): bool
+{
+    if (!$user || !$this->course_id) {
+        return false;
+    }
+
+    $tariffKey = $this->type === 'block'
+        ? 'block_' . $this->block_number
+        : 'full';
+
+    return \App\Models\Payment::query()
+        ->where('user_id', $user->id)
+        ->where('course_id', $this->course_id)
+        ->where('tariff', $tariffKey)
+        ->whereIn('status', ['paid', 'success'])
+        ->exists();
+}
+    
 }

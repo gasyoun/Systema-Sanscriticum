@@ -11,6 +11,8 @@ use App\Models\ArticleView;
 use App\Observers\ArticleViewObserver;
 use App\Models\Payment;
 use App\Observers\PaymentObserver;
+use App\Models\LandingPage;
+use App\Observers\LandingPageObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,5 +46,7 @@ class AppServiceProvider extends ServiceProvider
         ArticleView::observe(ArticleViewObserver::class);
         
         Payment::observe(PaymentObserver::class);
+        
+        LandingPage::observe(LandingPageObserver::class);
     }
 }
