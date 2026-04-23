@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Розыгрыш</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0b14;
+    --bg-2: #15121f;
+    --surface: #1a1726;
+    --surface-2: #221d33;
+    --gold: #e8b04a;
+    --gold-bright: #ffd36a;
+    --plum: #8b5cf6;
+    --rose: #f472b6;
+    --text: #f4f1ea;
+    --text-dim: #a49fb5;
+    --muted: #6b6680;
+    --border: #2a2440;
+    --vk: #5181b8;
+    --tg: #2AABEE;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(139,92,246,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 30%, rgba(232,176,74,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(244,114,182,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  .container {
+    max-width: 1180px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    padding: 6px 16px;
+    border: 1px solid rgba(232,176,74,0.3);
+    border-radius: 999px;
+    background: rgba(232,176,74,0.05);
+  }
+
+  .eyebrow::before, .eyebrow::after {
+    content: '';
+    width: 14px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+  }
+
+  .tagline {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+
+  /* Upload section */
+  .upload-section {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  .upload-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .upload-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    background: var(--bg-2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+
+  .upload-tab {
+    padding: 8px 18px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+
+  .upload-tab:hover { color: var(--text); }
+
+  .upload-tab.active {
+    background: var(--gold);
+    color: #1a1305;
+  }
+
+  .upload-content { display: none; }
+  .upload-content.active { display: block; }
+
+  .upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .upload-hint {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-style: italic;
+  }
+
+  textarea#text-input {
+    width: 100%;
+    min-height: 160px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  textarea#text-input:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+
+  .file-drop:hover, .file-drop.dragover {
+    border-color: var(--gold);
+    background: rgba(232,176,74,0.05);
+  }
+
+  .file-drop .icon {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  .file-drop .main-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .file-drop .sub-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .file-drop input { display: none; }
+
+  .platform-select {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .platform-select .label {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .platform-chip {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .platform-chip:hover { color: var(--text); }
+
+  .platform-chip.active.vk {
+    background: rgba(81,129,184,0.2);
+    color: var(--vk);
+    border-color: var(--vk);
+  }
+  .platform-chip.active.tg {
+    background: rgba(42,171,238,0.2);
+    color: var(--tg);
+    border-color: var(--tg);
+  }
+  .platform-chip.active.mixed {
+    background: rgba(232,176,74,0.15);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  .load-btn {
+    margin-top: 16px;
+    padding: 12px 28px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .load-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Main layout */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr minmax(260px, 320px);
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 1080px) {
+    .layout {
+      grid-template-columns: minmax(260px, 320px) 1fr;
+    }
+    .result-slot { grid-column: 1 / -1; justify-self: center; max-width: 400px; }
+  }
+
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Participants panel */
+  .panel {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    max-height: 620px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+
+  .panel-count {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .panel-scroll {
+    overflow-y: auto;
+    flex: 1;
+    margin-right: -12px;
+    padding-right: 12px;
+  }
+
+  .panel-scroll::-webkit-scrollbar { width: 6px; }
+  .panel-scroll::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 18px 0 10px;
+  }
+
+  .group-label:first-child { margin-top: 0; }
+
+  .group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-vk {
+    background: rgba(81,129,184,0.15);
+    color: var(--vk);
+    border: 1px solid rgba(81,129,184,0.3);
+  }
+
+  .badge-tg {
+    background: rgba(42,171,238,0.15);
+    color: var(--tg);
+    border: 1px solid rgba(42,171,238,0.3);
+  }
+
+  .participants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .participant {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+  }
+
+  .participant .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--muted);
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .participant .name {
+    flex: 1;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.3s;
+  }
+
+  .participant .indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.3;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .participant.active {
+    background: linear-gradient(90deg, rgba(232,176,74,0.15), rgba(232,176,74,0.02));
+  }
+  .participant.active .name { color: var(--gold-bright); }
+  .participant.active .indicator {
+    background: var(--gold-bright);
+    opacity: 1;
+    box-shadow: 0 0 10px var(--gold-bright);
+  }
+
+  .participant.winner {
+    background: linear-gradient(90deg, rgba(232,176,74,0.25), rgba(232,176,74,0.05));
+    border-color: rgba(232,176,74,0.4);
+    transform: scale(1.02);
+  }
+  .participant.winner .num { color: var(--gold); }
+  .participant.winner .name {
+    color: var(--gold-bright);
+    font-weight: 500;
+  }
+  .participant.winner .indicator {
+    background: var(--gold-bright);
+    opacity: 1;
+    box-shadow: 0 0 12px var(--gold-bright), 0 0 24px var(--gold);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+  }
+
+  .participant.dimmed { opacity: 0.25; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+  }
+
+  /* Slot machine */
+  .slot-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding-top: 20px;
+  }
+
+  .slot-machine {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border: 1px solid rgba(232,176,74,0.3);
+    border-radius: 20px;
+    padding: 36px 28px;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .slot-machine::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .slot-window {
+    position: relative;
+    height: 140px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0a0812 0%, #15121f 50%, #0a0812 100%);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    box-shadow:
+      inset 0 20px 30px -10px rgba(0,0,0,0.8),
+      inset 0 -20px 30px -10px rgba(0,0,0,0.8);
+  }
+
+  /* Top and bottom fade masks */
+  .slot-window::before, .slot-window::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 40px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .slot-window::before {
+    top: 0;
+    background: linear-gradient(180deg, rgba(10,8,18,1) 0%, transparent 100%);
+  }
+  .slot-window::after {
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(10,8,18,1) 0%, transparent 100%);
+  }
+
+  /* Center highlight line */
+  .slot-indicator {
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    height: 48px;
+    transform: translateY(-50%);
+    border-top: 1px solid rgba(232,176,74,0.5);
+    border-bottom: 1px solid rgba(232,176,74,0.5);
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(232,176,74,0.08) 50%,
+      transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .slot-indicator::before, .slot-indicator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: translateY(-50%);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+  }
+  .slot-indicator::before {
+    left: 8px;
+    border-left: 10px solid var(--gold);
+  }
+  .slot-indicator::after {
+    right: 8px;
+    border-right: 10px solid var(--gold);
+  }
+
+  .slot-track {
+    position: relative;
+    will-change: transform;
+  }
+
+  .slot-item {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 24px;
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .slot-item .mini-badge {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    opacity: 0.8;
+  }
+
+  .mini-badge.vk {
+    background: rgba(81,129,184,0.2);
+    color: var(--vk);
+  }
+  .mini-badge.tg {
+    background: rgba(42,171,238,0.2);
+    color: var(--tg);
+  }
+
+  .slot-decoration {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .slot-decoration .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.5;
+    transition: all 0.3s;
+  }
+
+  .slot-machine.spinning .slot-decoration .dot {
+    animation: blink 0.5s ease-in-out infinite;
+    background: var(--gold);
+    opacity: 1;
+  }
+  .slot-machine.spinning .slot-decoration .dot:nth-child(2) { animation-delay: 0.15s; }
+  .slot-machine.spinning .slot-decoration .dot:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  button#spin {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    padding: 18px 56px;
+    background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 60%, #b8842d 100%);
+    color: #1a1305;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow:
+      0 4px 20px rgba(232,176,74,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button#spin::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.6s;
+  }
+
+  button#spin:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 28px rgba(232,176,74,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+
+  button#spin:hover:not(:disabled)::before { left: 100%; }
+
+  button#spin:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Result */
+  .result-slot {
+    position: sticky;
+    top: 40px;
+    min-height: 200px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .result-placeholder {
+    padding: 40px 28px;
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    width: 100%;
+    background: rgba(26,23,38,0.4);
+  }
+
+  .result-placeholder .icon {
+    font-size: 1.4rem;
+    opacity: 0.4;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .result-box {
+    width: 100%;
+    padding: 28px 32px;
+    background: linear-gradient(135deg, rgba(232,176,74,0.12) 0%, rgba(139,92,246,0.08) 100%);
+    border: 1px solid rgba(232,176,74,0.4);
+    border-radius: 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: resultIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .result-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  @keyframes resultIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .result-box .trophy {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  .result-box .label {
+    font-size: 0.68rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    margin-bottom: 10px;
+  }
+
+  .result-box .name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .result-box .platform {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border: 1px solid rgba(232,176,74,0.3);
+    border-radius: 999px;
+    margin-top: 4px;
+  }
+
+  /* Confetti */
+  .particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 200;
+  }
+
+  .p {
+    position: absolute;
+    width: 10px;
+    height: 14px;
+    animation: fall 2.4s ease-out forwards;
+  }
+
+  @keyframes fall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(900deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="eyebrow">Общество ревнителей санскрита</div>
+    <h1>Большой <em>розыгрыш</em></h1>
+    <p class="tagline">Загрузите список · нажмите кнопку · получите победителя</p>
+  </header>
+
+  <!-- Upload section -->
+  <div class="upload-section">
+    <div class="upload-tabs">
+      <button class="upload-tab active" data-tab="text">📝 Текстом</button>
+      <button class="upload-tab" data-tab="file">📁 Файлом</button>
+    </div>
+
+    <!-- Text input -->
+    <div class="upload-content active" id="tab-text">
+      <div class="upload-label">
+        <span>Список участников</span>
+        <span class="upload-hint">поддерживает разделение по платформам</span>
+      </div>
+      <textarea id="text-input" placeholder="Вариант 1 — заголовки групп:
+
+ВК:
+Маргарита Некрасова
+Milla Bella
+
+Телеграм:
+Nadezhda Evgenyevna
+Баэль Ааран
+
+───────────────────────
+
+Вариант 2 — через запятую:
+
+Маргарита Некрасова, ВК
+Nadezhda Evgenyevna, TG"></textarea>
+
+      <div class="platform-select">
+        <span class="label">По умолчанию:</span>
+        <button class="platform-chip mixed active" data-platform="mixed">Не указано</button>
+        <button class="platform-chip vk" data-platform="ВКонтакте">ВКонтакте</button>
+        <button class="platform-chip tg" data-platform="Telegram">Telegram</button>
+      </div>
+
+      <button class="load-btn" id="load-text">Загрузить список</button>
+    </div>
+
+    <!-- File input -->
+    <div class="upload-content" id="tab-file">
+      <label class="file-drop" id="file-drop">
+        <div class="icon">📁</div>
+        <div class="main-text">Нажмите или перетащите файл</div>
+        <div class="sub-text">.txt, .csv — поддерживает заголовки групп (ВК:/Телеграм:) и формат <code>Имя, Платформа</code></div>
+        <input type="file" id="file-input" accept=".txt,.csv">
+      </label>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="layout">
+
+    <aside class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Участники</div>
+        <div class="panel-count" id="total-count">0</div>
+      </div>
+      <div class="panel-scroll" id="participants-scroll">
+        <div class="empty-state">Загрузите список участников выше</div>
+      </div>
+    </aside>
+
+    <section class="slot-section">
+      <div class="slot-machine" id="slot-machine">
+        <div class="slot-window">
+          <div class="slot-indicator"></div>
+          <div class="slot-track" id="slot-track"></div>
+        </div>
+        <div class="slot-decoration">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+
+      <button id="spin" disabled>Крутить</button>
+    </section>
+
+    <div class="result-slot">
+      <div id="result">
+        <div class="result-placeholder">
+          <span class="icon">🎲</span>
+          Здесь появится<br>победитель
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="particles" id="particles"></div>
+
+<script>
+// ======== STATE ========
+let participants = [];
+let currentPlatformDefault = 'mixed';
+
+// ======== TABS ========
+document.querySelectorAll('.upload-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.upload-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.upload-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ======== PLATFORM CHIPS ========
+document.querySelectorAll('.platform-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.platform-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentPlatformDefault = chip.dataset.platform;
+  });
+});
+
+// ======== LOAD FROM TEXT ========
+document.getElementById('load-text').addEventListener('click', () => {
+  const text = document.getElementById('text-input').value.trim();
+  if (!text) {
+    alert('Введите хотя бы одно имя');
+    return;
+  }
+  const parsed = parseText(text, currentPlatformDefault);
+  if (parsed.length === 0) {
+    alert('Не удалось распознать ни одного участника');
+    return;
+  }
+  loadParticipants(parsed);
+});
+
+// ======== LOAD FROM FILE ========
+const fileInput = document.getElementById('file-input');
+const fileDrop = document.getElementById('file-drop');
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+['dragover', 'dragenter'].forEach(ev => {
+  fileDrop.addEventListener(ev, e => {
+    e.preventDefault();
+    fileDrop.classList.add('dragover');
+  });
+});
+['dragleave', 'drop'].forEach(ev => {
+  fileDrop.addEventListener(ev, e => {
+    e.preventDefault();
+    fileDrop.classList.remove('dragover');
+  });
+});
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const parsed = parseText(ev.target.result, 'mixed');
+    if (parsed.length === 0) {
+      alert('Не удалось распознать ни одного участника в файле');
+      return;
+    }
+    loadParticipants(parsed);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// Detect if a line is a group header (e.g., "ВК:", "Телеграм", "VK")
+function detectHeaderPlatform(line) {
+  // Strip trailing colons, dashes, emojis
+  const clean = line.replace(/[:—–\-\s\d.)]+$/, '').trim().toLowerCase();
+  // Very short line that matches a platform name
+  if (clean.length > 20) return null; // too long to be a header
+  if (/^(вк|vk|вконтакте|в контакте)$/i.test(clean)) return 'ВКонтакте';
+  if (/^(тг|tg|телеграм|телега|telegram|тлг)$/i.test(clean)) return 'Telegram';
+  return null;
+}
+
+// Normalize any platform string to "ВКонтакте" / "Telegram" / default
+function normalizePlatform(raw, fallback) {
+  if (!raw) return fallback;
+  const low = raw.toLowerCase().trim();
+  if (/вк|vk|контакт/.test(low)) return 'ВКонтакте';
+  if (/тг|tg|телег|telegram|тлг/.test(low)) return 'Telegram';
+  return fallback;
+}
+
+// Parse multi-line text with support for group headers
+function parseText(text, defaultPlatform) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const result = [];
+  let currentGroup = defaultPlatform === 'mixed' ? 'Все' : defaultPlatform;
+
+  for (const line of lines) {
+    // Check if line is a group header
+    const header = detectHeaderPlatform(line);
+    if (header) {
+      currentGroup = header;
+      continue;
+    }
+
+    // Check for inline platform: "Name, Platform" or "Name; Platform" or "Name — Platform"
+    const parts = line.split(/\s*[,;]\s*|\s+[—–]\s+/);
+    const name = parts[0].trim();
+    if (!name) continue;
+
+    const inlinePlatform = parts[1] ? normalizePlatform(parts[1], null) : null;
+    const platform = inlinePlatform || currentGroup;
+
+    result.push({ name, platform });
+  }
+
+  return result;
+}
+
+function loadParticipants(list) {
+  participants = list;
+  renderList();
+  buildSlotTrack();
+  document.getElementById('spin').disabled = participants.length < 2;
+  document.getElementById('result').innerHTML = `
+    <div class="result-placeholder">
+      <span class="icon">🎲</span>
+      Здесь появится<br>победитель
+    </div>`;
+}
+
+// ======== RENDER LIST ========
+function renderList() {
+  const scroll = document.getElementById('participants-scroll');
+  document.getElementById('total-count').textContent = participants.length + ' всего';
+
+  if (participants.length === 0) {
+    scroll.innerHTML = '<div class="empty-state">Загрузите список участников выше</div>';
+    return;
+  }
+
+  // Group by platform
+  const groups = {};
+  participants.forEach((p, i) => {
+    if (!groups[p.platform]) groups[p.platform] = [];
+    groups[p.platform].push({ ...p, index: i });
+  });
+
+  let html = '';
+  const order = ['ВКонтакте', 'Telegram', 'Все'];
+  const allPlatforms = [...order.filter(p => groups[p]), ...Object.keys(groups).filter(p => !order.includes(p))];
+
+  allPlatforms.forEach(platform => {
+    const badgeClass = platform === 'ВКонтакте' ? 'badge-vk' : platform === 'Telegram' ? 'badge-tg' : '';
+    const badgeText = platform === 'ВКонтакте' ? 'ВК' : platform === 'Telegram' ? 'TG' : '•';
+
+    html += `
+      <div class="group-label">
+        <span class="badge ${badgeClass}">${badgeText}</span>
+        ${platform}
+      </div>
+      <div class="participants-list">
+        ${groups[platform].map(p => `
+          <div class="participant" data-index="${p.index}">
+            <span class="num">${String(p.index + 1).padStart(2, '0')}</span>
+            <span class="name">${escapeHtml(p.name)}</span>
+            <span class="indicator"></span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+
+  scroll.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+// ======== SLOT MACHINE ========
+const ITEM_HEIGHT = 48;
+const slotTrack = document.getElementById('slot-track');
+const slotMachine = document.getElementById('slot-machine');
+let slotItems = [];
+
+function buildSlotTrack() {
+  if (participants.length === 0) {
+    slotTrack.innerHTML = '<div class="slot-item" style="color:var(--muted);font-style:italic;">Список пуст</div>';
+    slotTrack.style.transform = 'translateY(0)';
+    return;
+  }
+
+  // Repeat participants many times for smooth spinning
+  const repeats = 40;
+  slotItems = [];
+  for (let r = 0; r < repeats; r++) {
+    participants.forEach(p => slotItems.push(p));
+  }
+
+  slotTrack.innerHTML = slotItems.map((p, i) => {
+    const badgeClass = p.platform === 'ВКонтакте' ? 'vk' : p.platform === 'Telegram' ? 'tg' : '';
+    const badgeText = p.platform === 'ВКонтакте' ? 'ВК' : p.platform === 'Telegram' ? 'TG' : '';
+    return `
+      <div class="slot-item" data-idx="${i % participants.length}">
+        ${escapeHtml(p.name)}
+        ${badgeText ? `<span class="mini-badge ${badgeClass}">${badgeText}</span>` : ''}
+      </div>`;
+  }).join('');
+
+  // Start in middle so it's centered
+  const startOffset = Math.floor(repeats / 2) * participants.length * ITEM_HEIGHT;
+  const centerOffset = (slotTrack.parentElement.clientHeight / 2) - (ITEM_HEIGHT / 2);
+  slotTrack.style.transition = 'none';
+  slotTrack.style.transform = `translateY(${centerOffset - startOffset}px)`;
+}
+
+// ======== SPIN ========
+let spinning = false;
+let currentPosition = 0;
+
+document.getElementById('spin').addEventListener('click', () => {
+  if (spinning || participants.length < 2) return;
+  spinning = true;
+  slotMachine.classList.add('spinning');
+  document.getElementById('spin').disabled = true;
+
+  document.getElementById('result').innerHTML = `
+    <div class="result-placeholder">
+      <span class="icon">🎲</span>
+      Крутится...
+    </div>`;
+
+  document.querySelectorAll('.participant').forEach(el => {
+    el.classList.remove('winner', 'active', 'dimmed');
+  });
+
+  const winnerIdx = Math.floor(Math.random() * participants.length);
+
+  // Calculate target position
+  const repeats = 40;
+  const N = participants.length;
+  const centerOffset = (slotTrack.parentElement.clientHeight / 2) - (ITEM_HEIGHT / 2);
+
+  // Choose a target far into the track (near the end) so we get long spin
+  const targetRepeat = repeats - 5;
+  const targetItemIndex = targetRepeat * N + winnerIdx;
+  const targetY = centerOffset - targetItemIndex * ITEM_HEIGHT;
+
+  // Add small random sub-pixel so it doesn't look identical every time
+  const jitter = 0;
+
+  const duration = 4500;
+
+  slotTrack.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.85, 0.25, 1)`;
+  slotTrack.style.transform = `translateY(${targetY + jitter}px)`;
+
+  setTimeout(() => {
+    spinning = false;
+    slotMachine.classList.remove('spinning');
+    document.getElementById('spin').disabled = false;
+    showResult(winnerIdx);
+  }, duration + 50);
+});
+
+function getCurrentY() {
+  const transform = slotTrack.style.transform;
+  const match = transform.match(/translateY\(([-\d.]+)px\)/);
+  return match ? parseFloat(match[1]) : 0;
+}
+
+function showResult(i) {
+  const p = participants[i];
+
+  document.querySelectorAll('.participant').forEach(el => {
+    el.classList.remove('active');
+    if (parseInt(el.dataset.index) === i) {
+      el.classList.add('winner');
+      // Scroll into view within panel
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      el.classList.add('dimmed');
+    }
+  });
+
+  const platformText = p.platform && p.platform !== 'Все' ? p.platform : '';
+
+  document.getElementById('result').innerHTML = `
+    <div class="result-box">
+      <div class="trophy">🏆</div>
+      <div class="label">Победитель</div>
+      <div class="name">${escapeHtml(p.name)}</div>
+      ${platformText ? `<div class="platform">${platformText}</div>` : ''}
+    </div>`;
+
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  const cols = ['#e8b04a','#ffd36a','#8b5cf6','#f472b6','#ffffff'];
+  for (let i = 0; i < 120; i++) {
+    const el = document.createElement('div');
+    el.className = 'p';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = '-20px';
+    el.style.background = cols[Math.floor(Math.random() * cols.length)];
+    el.style.animationDelay = Math.random() * 1.5 + 's';
+    el.style.animationDuration = (1.8 + Math.random() * 1.2) + 's';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    if (Math.random() > 0.5) el.style.borderRadius = '50%';
+    container.appendChild(el);
+  }
+  setTimeout(() => container.innerHTML = '', 4500);
+}
+
+// ======== START EMPTY ========
+loadParticipants([]);
+</script>
+</body>
+</html>

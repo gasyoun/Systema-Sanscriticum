@@ -34,15 +34,17 @@
 <body class="h-full flex overflow-hidden bg-[#F4F1EA]" x-data="{ sidebarOpen: window.innerWidth >= 1024 }">
     
     @php
-        $menuCourses = collect();
-        if(auth()->check()) {
-            $menuCourses = \App\Models\Course::where('is_visible', true)
-                ->whereHas('groups', function($q) {
-                    $q->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-                })
-                ->get();
-        }
-    @endphp
+    $menuCourses = collect();
+    if (auth()->check()) {
+        // БЫЛО: is_visible — курс пропадал из меню при скрытии с витрины
+        // СТАЛО: is_active — меню отражает реальный доступ студента
+        $menuCourses = \App\Models\Course::where('is_active', true)
+            ->whereHas('groups', function ($q) {
+                $q->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+            })
+            ->get();
+    }
+@endphp
 
     {{-- ========================================== --}}
     {{-- ЗАТЕМНЕНИЕ ФОНА НА МОБИЛКЕ               --}}
@@ -181,39 +183,49 @@
         </h1>
     </div>
 
-    {{-- Правая часть: соцсети + аватарка на мобилках --}}
-    <div class="flex items-center gap-2 md:gap-3 shrink-0">
+    {{-- Правая часть: контакты + магазин + соцсети + аватарка на мобилках --}}
+<div class="flex items-center gap-2 md:gap-3 shrink-0">
 
-        {{-- === СОЦИАЛЬНЫЕ СЕТИ === --}}
-        <div class="hidden sm:flex items-center gap-1.5 md:gap-2">
-            @php
-                // Тянем конфиг один раз и фильтруем пустые
-                $socials = array_filter([
-                    'vk'       => ['url' => config('social.vk'),       'icon' => 'fab fa-vk',         'title' => 'ВКонтакте',  'hover' => 'hover:bg-[#0077FF]'],
-                    'telegram' => ['url' => config('social.telegram'), 'icon' => 'fab fa-telegram-plane', 'title' => 'Telegram', 'hover' => 'hover:bg-[#229ED9]'],
-                    'facebook' => ['url' => config('social.facebook'), 'icon' => 'fab fa-facebook-f',  'title' => 'Facebook',   'hover' => 'hover:bg-[#1877F2]'],
-                    'website'  => ['url' => config('social.website'),  'icon' => 'fas fa-globe',       'title' => 'Наш сайт',   'hover' => 'hover:bg-[#E85C24]'],
-                ], fn ($s) => !empty($s['url']));
-            @endphp
+    {{-- === КОНТАКТЫ (телефон + email) === --}}
+    @include('partials.contacts-bar', ['variant' => 'light'])
 
-            @foreach($socials as $key => $social)
-                <a href="{{ $social['url'] }}" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   title="{{ $social['title'] }}"
-                   class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 {{ $social['hover'] }} hover:text-white hover:border-transparent active:scale-95 transition-all">
-                    <i class="{{ $social['icon'] }} text-base"></i>
-                </a>
-            @endforeach
-        </div>
+    {{-- Разделитель (только если что-то слева есть) --}}
+    @if(config('social.phone') || config('social.email'))
+        <div class="hidden sm:block w-px h-6 bg-gray-200"></div>
+    @endif
 
-        {{-- Аватарка для мобилок --}}
-        <div class="lg:hidden">
-            <div class="w-10 h-10 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center font-extrabold shadow-md">
-                {{ substr(Auth::user()->name, 0, 1) }}
-            </div>
+    {{-- === КНОПКА МАГАЗИНА === --}}
+    @include('partials.shop-link', ['variant' => 'light'])
+
+    {{-- === СОЦИАЛЬНЫЕ СЕТИ === --}}
+    <div class="hidden sm:flex items-center gap-1.5 md:gap-2">
+        @php
+            $socials = array_filter([
+                'vk'       => ['url' => config('social.vk'),       'icon' => 'fab fa-vk',             'title' => 'ВКонтакте',  'hover' => 'hover:bg-[#0077FF]'],
+                'telegram' => ['url' => config('social.telegram'), 'icon' => 'fab fa-telegram-plane', 'title' => 'Telegram',   'hover' => 'hover:bg-[#229ED9]'],
+                'facebook' => ['url' => config('social.facebook'), 'icon' => 'fab fa-facebook-f',     'title' => 'Facebook',   'hover' => 'hover:bg-[#1877F2]'],
+                'website'  => ['url' => config('social.website'),  'icon' => 'fas fa-globe',          'title' => 'Наш сайт',   'hover' => 'hover:bg-[#E85C24]'],
+            ], fn ($s) => !empty($s['url']));
+        @endphp
+
+        @foreach($socials as $key => $social)
+            <a href="{{ $social['url'] }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               title="{{ $social['title'] }}"
+               class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 {{ $social['hover'] }} hover:text-white hover:border-transparent active:scale-95 transition-all">
+                <i class="{{ $social['icon'] }} text-base"></i>
+            </a>
+        @endforeach
+    </div>
+
+    {{-- Аватарка для мобилок --}}
+    <div class="lg:hidden">
+        <div class="w-10 h-10 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center font-extrabold shadow-md">
+            {{ substr(Auth::user()->name, 0, 1) }}
         </div>
     </div>
+</div>
 </header>
 
         {{-- Основная рабочая область --}}

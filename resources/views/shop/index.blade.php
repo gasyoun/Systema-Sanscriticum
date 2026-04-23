@@ -55,18 +55,38 @@
             @forelse($courses as $course)
                 <div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-[#E85C24]/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
                     
-                    <a href="{{ route('shop.course.show', $course->slug) }}" class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] flex items-center justify-center border-b border-[#1F2636] overflow-hidden group/img block rounded-t-2xl">
-                        @if($course->image_path)
-                            <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
-                            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
-                        @else
-                            <i class="fas fa-om text-6xl text-slate-700/30 group-hover/img:scale-110 transition-transform duration-500"></i>
-                        @endif
-                    </a>
+                    <a href="{{ route('shop.course.show', $course->slug) }}" 
+   class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] flex items-center justify-center border-b border-[#1F2636] overflow-hidden group/img block rounded-t-2xl">
+    
+    @if($course->image_path)
+        <img src="{{ Storage::url($course->image_path) }}" 
+             alt="{{ $course->title }}" 
+             class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
+    @else
+        <i class="fas fa-om text-6xl text-slate-700/30 group-hover/img:scale-110 transition-transform duration-500"></i>
+    @endif
 
-                    <div class="absolute top-[52%] -left-2 bg-[#E85C24] text-white text-[10px] font-black uppercase px-3 py-1.5 rounded shadow-[0_4px_15px_rgba(232,92,36,0.6)] tracking-wider z-20">
-                        {{ $course->lessons_count ? $course->lessons_count . ' лекций' : 'Онлайн-курс' }}
-                    </div>
+    {{-- === МЕТА-БЕЙДЖ ВНУТРИ ФОТО (нижний-левый угол) === --}}
+    @if($course->lessons_count || $course->hours_count)
+        <div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
+            
+            @if($course->lessons_count)
+                <span class="inline-flex items-center gap-1.5 bg-[#E85C24] text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
+                    <i class="fas fa-play-circle text-[9px]"></i>
+                    {{ $course->lessons_count }} {{ trans_choice('лекция|лекции|лекций', $course->lessons_count) }}
+                </span>
+            @endif
+
+            @if($course->hours_count)
+                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider border border-white/10">
+                    <i class="far fa-clock text-[9px]"></i>
+                    {{ $course->hours_count }} ч
+                </span>
+            @endif
+        </div>
+    @endif
+</a>
 
                     <div class="p-6 flex flex-col flex-grow justify-between bg-[#111622] z-10 relative rounded-b-2xl">
                         <div>

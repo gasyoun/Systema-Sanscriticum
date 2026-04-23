@@ -71,6 +71,14 @@
 
             {{-- Правый блок: Войти / Аккаунт --}}
             <div class="flex items-center gap-2 md:gap-3 shrink-0">
+                
+                {{-- Контакты для тёмной шапки магазина --}}
+@include('partials.contacts-bar', ['variant' => 'dark'])
+
+{{-- Разделитель --}}
+@if(config('social.phone') || config('social.email'))
+    <div class="hidden sm:block w-px h-6 bg-[#1F2636]"></div>
+@endif
                 @auth
                     <div x-data="{ userMenu: false }" class="relative" @click.outside="userMenu = false">
                         <button @click="userMenu = !userMenu"
