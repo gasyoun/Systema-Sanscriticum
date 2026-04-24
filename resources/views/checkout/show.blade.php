@@ -1,4 +1,4 @@
-@extends('layouts.promo')
+@extends('layouts.shop')
 @section('title', 'Оформление заказа')
 
 @section('content')
@@ -9,7 +9,11 @@
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tighter">Оформление заказа</h1>
             <p class="mt-2 text-lg text-gray-500">Пожалуйста, проверьте данные заказа и выберите удобный способ оплаты</p>
         </div>
-
+@guest
+    <div class="mb-10">
+        @include('partials.guest-purchase-warning', ['variant' => 'light'])
+    </div>
+@endguest
         @if($finalPrice == 0 && auth()->check())
             <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center">
                 <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
@@ -31,6 +35,8 @@
     <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
 
     @guest
+    
+    
         <div class="bg-white p-7 rounded-3xl shadow-lg shadow-gray-100/30 border border-gray-100">
             <h4 class="text-sm font-bold text-gray-900 mb-5 uppercase tracking-wider">Ваши данные для доступа</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">

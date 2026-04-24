@@ -70,7 +70,7 @@ Route::prefix('s')->name('articles.')->group(function () {
 });
 
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'track.activity'])->group(function () {
     
     Route::get('/home', function () {
         $user = auth()->user();
@@ -96,6 +96,9 @@ Route::middleware(['auth'])->group(function () {
     
     Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
+        
+    Route::post('/api/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store'])
+        ->name('activity.heartbeat');    
 
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');

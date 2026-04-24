@@ -12,7 +12,58 @@
         <h2 class="text-3xl md:text-4xl font-extrabold text-[#101010] tracking-tight mb-2">Добро пожаловать, {{ auth()->user()->name }}!</h2>
         <p class="text-gray-500 text-lg">Управляйте своим обучением, материалами и оплатами.</p>
     </div>
-
+    
+    {{-- ========================================== --}}
+{{-- УВЕДОМЛЕНИЕ О НАПОЛНЕНИИ КАБИНЕТА          --}}
+{{-- ========================================== --}}
+<div x-data="{ 
+        show: localStorage.getItem('cabinet_notice_v1') !== 'dismissed',
+        dismiss() { 
+            this.show = false; 
+            localStorage.setItem('cabinet_notice_v1', 'dismissed'); 
+        }
+     }" 
+     x-show="show"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 -translate-y-2"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 -translate-y-2"
+     class="mb-8 relative bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#E85C24]/20 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(232,92,36,0.06)] overflow-hidden">
+    
+    {{-- Декоративное свечение --}}
+    <div class="absolute top-0 right-0 w-40 h-40 bg-[#E85C24] blur-[60px] opacity-10 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+    
+    <div class="flex items-start gap-4 relative z-10">
+        {{-- Иконка --}}
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E85C24] to-orange-500 text-white flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(232,92,36,0.3)]">
+            <i class="fas fa-tools text-lg"></i>
+        </div>
+        
+        {{-- Контент --}}
+        <div class="flex-1 min-w-0 pr-8">
+            <h3 class="text-base md:text-lg font-extrabold text-gray-900 mb-1.5 leading-tight">
+                Кабинет находится на стадии наполнения
+            </h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Уважаемые студенты! В данный момент мы активно работаем над загрузкой всех материалов. 
+                Некоторые ваши курсы могут быть временно недоступны, а в открытых курсах часть уроков 
+                ещё может загружаться. Приносим искренние извинения за временные неудобства — 
+                все материалы появятся в ближайшее время.
+            </p>
+        </div>
+        
+        {{-- Кнопка закрытия --}}
+        <button @click="dismiss()" 
+                type="button"
+                class="absolute top-0 right-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-white/60 transition-all"
+                aria-label="Закрыть уведомление">
+            <i class="fas fa-times text-sm"></i>
+        </button>
+    </div>
+</div>
+    
     {{-- ========================================== --}}
     {{-- БЛОКИ БОТОВ (В ОДИН РЯД)                   --}}
     {{-- ========================================== --}}

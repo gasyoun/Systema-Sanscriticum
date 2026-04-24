@@ -5,6 +5,8 @@
 
 @section('content')
 
+<div x-data="lessonHeartbeat({ lessonId: {{ $lesson->id }} })" x-init="init()" class="hidden"></div>
+
 <style>
     /* ============================================ */
     /* GRID-ЛЕЙАУТ УРОКА                            */
