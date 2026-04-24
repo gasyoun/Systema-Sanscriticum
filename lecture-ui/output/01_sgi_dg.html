@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вводное занятие. Сакральная география Индии</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css?v=1">
+  <style>
+  /* ── Toolbar ───────────────────────────────────────────────────────────── */
+  #toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(44, 30, 18, 0.97);
+    backdrop-filter: blur(6px);
+    color: #e8d8c0;
+    font-size: 13px;
+    min-height: 36px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+  /* Обёртка: тулбар + app-layout занимают всю высоту экрана */
+  #page-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* app-layout теперь занимает оставшееся место */
+  #page-shell #app-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .tb-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #e8d8c0;
+    cursor: pointer;
+    padding: 3px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: background 0.15s;
+    line-height: 1.4;
+  }
+  .tb-btn:hover { background: rgba(255,255,255,0.18); }
+  .tb-btn.active { background: rgba(200,160,80,0.35); border-color: rgba(200,160,80,0.6); }
+  .tb-mode-btn { font-size: 12px; }
+  .tb-icon-btn { padding: 3px 7px; font-size: 13px; }
+  #go-top-btn { margin-left: var(--mode-btn-w, 120px); }
+  #toc-current-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    padding: 0 6px 0 0;
+    min-width: 0;
+  }
+  #toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  #progress-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 116px;
+    flex-shrink: 0;
+  }
+  /* Сдвигаем progress+time влево на ширину 4 кнопок навигации через JS */
+  #read-pct-wrap { display: inline-block; width: 2.8em; text-align: right; flex-shrink: 0; }
+  #read-pct { font-weight: 600; color: #e8d8c0; }
+  #read-time {
+    color: #a09070;
+    display: inline-block;
+    min-width: 4.5em;  /* хватит на "(99 мин)" */
+  }
+  /* В правой панели оглавления показываем только одну ссылку — активный источник.
+     По умолчанию (нет класса на body) и при links-yt-only — YT.
+     link-sep скрываем всегда, чтобы не оставалось висящих разделителей. */
+  #toc-panel .toc-list .link-sep { display: none; }
+
+  /* По умолчанию и YT-режим: показываем только YT */
+  #toc-panel .toc-list .rt-toc   { display: none; }
+  #toc-panel .toc-list .audio-toc { display: none; }
+
+  /* RT-режим: показываем только RT */
+  body.links-rt-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-rt-only #toc-panel .toc-list .rt-toc    { display: inline; }
+
+  /* Audio-режим: показываем только AU */
+  body.links-audio-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-audio-only #toc-panel .toc-list .audio-toc { display: inline; }
+
+  /* Подсветка текущего раздела в правой панели оглавления */
+  #toc-panel .toc-list li.toc-active > a:not(.yt-toc):not(.rt-toc):not(.audio-toc) {
+    color: var(--ink, #1a1410) !important;
+    font-weight: 400 !important;
+    background: rgba(201, 168, 76, 0.18);
+    border-radius: 3px;
+    /* без padding/margin — не влияем на геометрию и высоту блока */
+  }
+  /* Компенсируем height:100vh у #text-panel из внешнего CSS —
+     тулбар теперь занимает часть высоты, panel должен быть меньше */
+  /* ── Мобильный тулбар (≤900px) ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    /* Отключаем page-shell — на мобильном скроллится body */
+    #page-shell {
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+    /* Тулбар фиксируем вверху — выше video-panel */
+    #toolbar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      padding: 3px 6px;
+      gap: 3px;
+      min-height: 30px;
+      flex-wrap: nowrap;
+    }
+    /* video-panel опускаем под тулбар */
+    #video-panel {
+      top: var(--toolbar-h, 30px) !important;
+    }
+    .tb-btn {
+      padding: 2px 5px !important;
+      font-size: 11px !important;
+    }
+    .tb-icon-btn {
+      padding: 2px 5px !important;
+      font-size: 12px !important;
+    }
+    /* Скрываем текстовые метки — оставляем только иконки */
+    #mode-label { display: none; }
+    #autoscroll-label { font-size: 0; }
+    #autoscroll-label::before { content: '⏩'; font-size: 12px; }
+    .tb-btn.active #autoscroll-label::before { content: '⏸'; }
+    /* Скрываем заголовок раздела, полоску прогрессбара и авто */
+    #toc-current-title { display: none !important; }
+    #progress-bar-wrap { display: none !important; }
+    #autoscroll-btn { display: none !important; }
+    /* Возвращаем проценты и минуты */
+    #read-pct { font-size: 11px !important; }
+    #read-time { display: inline-block !important; font-size: 11px; min-width: 3.5em; }
+    #progress-group { width: auto; gap: 0; }
+    #go-top-btn { margin-left: 6px; }
+    /* Кнопка режима — как на десктопе, показываем текст */
+    #mode-label { display: inline !important; }
+    #mode-toggle { padding: 3px 9px !important; font-size: 12px !important; }
+  }
+
+  @media (min-width: 901px) {
+    #text-panel      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #app-layout      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #video-sticky    { top: 0 !important; height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #video-container { max-height: var(--video-max-h, 40vh) !important; }
+    #audio-container {
+      height: var(--video-max-h, 40vh);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      #audio-container {
+        height: auto !important;
+        padding: 8px !important;
+        justify-content: center !important;
+      }
+      #audio-play-icon { display: none !important; visibility: hidden !important; }
+      #video-container { display: none !important; }
+    }
+    #audio-play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      font-size: 48px;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    #audio-container:hover #audio-play-icon {
+      color: rgba(255,255,255,0.5);
+    }
+    #video-extra     { overflow-y: hidden !important; }
+    #toc-panel       { padding: 2px 4px !important; }
+    #toc-panel .toc-list { margin: 0 !important; }
+    #toc-panel .toc-h2  { margin-top: 0.17rem !important; margin-bottom: 0.05rem !important; }
+    #toc-panel .toc-h3  { margin-top: 0.07rem !important; margin-bottom: 0.07rem !important; }
+  }
+  /* Ландшафтный режим на телефоне — тулбар как на десктопе */
+  @media (max-width: 900px) and (orientation: landscape) {
+    #toc-current-title { display: flex !important; }
+    #progress-bar-wrap { display: inline-flex !important; }
+    #autoscroll-btn    { display: inline-flex !important; }
+    #progress-group    { width: 116px; }
+    #read-time         { display: inline-block !important; }
+    #mode-label        { display: inline !important; }
+  }
+
+  /* audio-visible работает на всех экранах */
+  #audio-container.audio-visible { display: flex !important; }
+
+  /* ── Нумерация заголовков в тексте (синхронно с оглавлением) ── */
+  .page { counter-reset: h2-counter; }
+  .page h2, .page h3, .page [id] { scroll-margin-top: calc(var(--toolbar-h, 36px) + 8px); }
+  .page h2 { counter-increment: h2-counter; counter-reset: h3-counter; }
+  .page h3 {
+    counter-increment: h3-counter;
+    font-style: normal !important;
+  }
+  .page h2::before {
+    content: counter(h2-counter) ". ";
+    color: #9a7a30;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .page h3::before {
+    content: counter(h2-counter) "." counter(h3-counter) " ";
+    color: #b8954a;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Переопределяем #mode-toggle из внешнего CSS — он там fixed bottom/right */
+  #mode-toggle {
+    position: static !important;
+    bottom: unset !important;
+    right: unset !important;
+    top: unset !important;
+    left: unset !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    color: #e8d8c0 !important;
+    cursor: pointer !important;
+    padding: 3px 9px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-family: inherit !important;
+  }
+  #mode-toggle:hover { background: rgba(255,255,255,0.22) !important; transform: none !important; }
+  #mode-toggle.ext-active { background: rgba(200,160,80,0.35) !important; border-color: rgba(200,160,80,0.6) !important; }
+  /* Сбросить старые стили #read-pct и #scroll-arrow из внешнего CSS */
+  #read-pct { font-size: 12px !important; opacity: 1 !important; letter-spacing: 0 !important; color: #e8d8c0 !important; font-weight: 600 !important; }
+  #progress-bar-wrap {
+    display: inline-flex;
+    align-items: center;
+    width: 80px;
+    height: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #c9a84c, #8b6914);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  #mode-icon { font-size: 14px !important; line-height: 1 !important; }
+  /* Таймкод абзаца — иконка ▶, время в tooltip */
+  a.para-timecode {
+    display: inline-block;
+    font-size: 0.6em;
+    line-height: 1;
+    vertical-align: middle;
+    color: #b8954a;
+    opacity: 0.55;
+    text-decoration: none;
+    margin-right: 2px;
+    transition: opacity 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  a.para-timecode:hover { opacity: 1; color: #9a7a30; }
+
+  </style>
+</head>
+<body>
+<div id="page-shell">
+<div id="toolbar">
+  <span id="toc-current-title"></span>
+  <span id="toolbar-right">
+    <span id="progress-group">
+      <span id="progress-bar-wrap" title="Прогресс чтения"><span id="progress-bar"></span></span>
+      <span id="read-pct-wrap"><span id="read-pct">0%</span></span>
+    </span>
+    <span id="read-time"></span>
+    <button id="go-top-btn" class="tb-btn tb-icon-btn" title="В начало текста">↑↑</button>
+    <button id="toc-prev-btn" class="tb-btn tb-icon-btn" title="Предыдущий раздел">▲</button>
+    <button id="toc-next-btn" class="tb-btn tb-icon-btn" title="Следующий раздел">▼</button>
+    <button id="go-end-btn" class="tb-btn tb-icon-btn" title="В конец текста">↓↓</button>
+    <button id="autoscroll-btn" class="tb-btn" title="Автоскроллинг">
+      <span id="autoscroll-label">⏩ Авто</span>
+    </button>
+    <button id="mode-toggle" class="tb-btn tb-mode-btn" title="Переключить режим плеера">
+      <span id="mode-icon">⊞</span>
+      <span id="mode-label">Внешний плеер</span>
+    </button>
+  </span>
+</div>
+
+<div id="app-layout">
+<div id="text-panel">
+<div class="page">
+
+  <header class="cover">
+    <p class="series">Курс «Сакральная география Индии» · Вводное занятие</p>
+    <h1>Сакральная география Индии</h1>
+    <p class="subtitle">Лектор: Сергей Викторович Щербак</p>
+    <p class="meta">
+      Институт исследования санскрита · Общество ревнителей санскрита<br>
+Февраль 2026 – июнь 2026<br>      25 февраля 2026 · Ведущий: Марцис Гасунс · Видеозапись:
+      <a href="https://youtu.be/PlXhBTiZfCw" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg" target="_blank">RT</a>
+    </p>
+  </header>
+
+  <nav class="toc" id="toc-nav">
+    <h2 class="toc-title">Содержание</h2>
+    <ul class="toc-list">
+      <li class="toc-h2"><a href="#s1">Повторение: метафора тела и сакральная география</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=29" title="0:29" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=29" title="0:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=29" title="0:29">AU</a></li>
+      <li class="toc-h3"><a href="#s1_1">Островное сознание Индии и телесная онтология</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=84" title="1:24" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=84" title="1:24" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=84" title="1:24">AU</a></li>
+      <li class="toc-h3"><a href="#s1_2">Тело как генеральная метафора индийской культуры</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=222" title="3:42" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=222" title="3:42" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=222" title="3:42">AU</a></li>
+      <li class="toc-h2"><a href="#s2">Тема лекции: тиртха и сеть тиртхаятры</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=550" title="9:10" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=550" title="9:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=550" title="9:10">AU</a></li>
+      <li class="toc-h3"><a href="#s2_1">Тиртхики: паломники, соединяющие тиртхи в сеть</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=606" title="10:06" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=606" title="10:06" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=606" title="10:06">AU</a></li>
+      <li class="toc-h2"><a href="#s3">Литература курса</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=710" title="11:50" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=710" title="11:50" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=710" title="11:50">AU</a></li>
+      <li class="toc-h3"><a href="#s3_1">Диана Эк и «Сакральная география Индии»</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=785" title="13:05" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=785" title="13:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=785" title="13:05">AU</a></li>
+      <li class="toc-h3"><a href="#s3_2">Марк Дычковский: взгляд изнутри традиции</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=850" title="14:10" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=850" title="14:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=850" title="14:10">AU</a></li>
+      <li class="toc-h3"><a href="#s3_3">Дычковский и парадигма нью-эйдж</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=1154" title="19:14" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1154" title="19:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1154" title="19:14">AU</a></li>
+      <li class="toc-h3"><a href="#s3_4">Динеш Серкар: шакта-питхи и археология тиртх</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=1374" title="22:54" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1374" title="22:54" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1374" title="22:54">AU</a></li>
+      <li class="toc-h3"><a href="#s3_5">Елена Андреева и Ирина Глушкова</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=1491" title="24:51" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1491" title="24:51" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1491" title="24:51">AU</a></li>
+      <li class="toc-h3"><a href="#s3_6">Обзор глав книги Дианы Эк</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=1702" title="28:22" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1702" title="28:22" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1702" title="28:22">AU</a></li>
+      <li class="toc-h2"><a href="#s4">Феномен тиртхи: определение и образ двух берегов</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=1996" title="33:16" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1996" title="33:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1996" title="33:16">AU</a></li>
+      <li class="toc-h3"><a href="#s4_1">Два берега Варанаси: онтология жизни и смерти</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2057" title="34:17" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2057" title="34:17" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2057" title="34:17">AU</a></li>
+      <li class="toc-h3"><a href="#s4_2">Тиртха как брод между мирами и образ алтаря</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2112" title="35:12" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2112" title="35:12" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2112" title="35:12">AU</a></li>
+      <li class="toc-h3"><a href="#s4_3">Система ашрам: ванапрастха и саньяса как движение к вечности</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2317" title="38:37" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2317" title="38:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2317" title="38:37">AU</a></li>
+      <li class="toc-h2"><a href="#s5">Источники по тиртхам: шрути, эпос, пураны</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2556" title="42:36" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2556" title="42:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2556" title="42:36">AU</a></li>
+      <li class="toc-h2"><a href="#s6">Альберуни об индийском паломничестве</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2681" title="44:41" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2681" title="44:41" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2681" title="44:41">AU</a></li>
+      <li class="toc-h2"><a href="#s7">Разнообразие тиртх и тиртхаятра</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2786" title="46:26" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2786" title="46:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2786" title="46:26">AU</a></li>
+      <li class="toc-h3"><a href="#s7_1">Амарнатх: сезонная тиртха в Гималаях</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2889" title="48:09" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2889" title="48:09" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2889" title="48:09">AU</a></li>
+      <li class="toc-h3"><a href="#s7_2">Кумбхамела: массовое паломничество и шахи-снана</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=2974" title="49:34" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2974" title="49:34" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2974" title="49:34">AU</a></li>
+      <li class="toc-h3"><a href="#s7_3">Переносные тиртхи: ганга-джала и маршрут Каши — Рамешварам</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3078" title="51:18" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3078" title="51:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3078" title="51:18">AU</a></li>
+      <li class="toc-h2"><a href="#s8">Ритуалы паломника и систематизация тиртх</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3348" title="55:48" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3348" title="55:48" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3348" title="55:48">AU</a></li>
+      <li class="toc-h3"><a href="#s8_1">Санкальпа, снана, тарпана и другие обряды тиртхаятры</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3348" title="55:48" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3348" title="55:48" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3348" title="55:48">AU</a></li>
+      <li class="toc-h3"><a href="#s8_2">Лакшмидхара: «Суждения о святых местах»</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3446" title="57:26" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3446" title="57:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3446" title="57:26">AU</a></li>
+      <li class="toc-h2"><a href="#s9">Генезис понятия тиртха в истории индийской религии</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3618" title="1:00:18" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3618" title="1:00:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3618" title="1:00:18">AU</a></li>
+      <li class="toc-h3"><a href="#s9_1">От ведийского брода к метафизическому переходу</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3618" title="1:00:18" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3618" title="1:00:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3618" title="1:00:18">AU</a></li>
+      <li class="toc-h3"><a href="#s9_2">Эпос и Пураны: тиртха как тело божества</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3788" title="1:03:08" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3788" title="1:03:08" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3788" title="1:03:08">AU</a></li>
+      <li class="toc-h2"><a href="#s10">Махабхарата: Араньяка-парва как путеводитель по тиртхам</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3935" title="1:05:35" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3935" title="1:05:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3935" title="1:05:35">AU</a></li>
+      <li class="toc-h3"><a href="#s10_1">Датировка Араньяка-парвы и проблемы перевода</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=3995" title="1:06:35" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3995" title="1:06:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3995" title="1:06:35">AU</a></li>
+      <li class="toc-h3"><a href="#s10_2">Роль брахманов и ритуалы паломника в Раньяка-парве</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4115" title="1:08:35" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4115" title="1:08:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4115" title="1:08:35">AU</a></li>
+      <li class="toc-h3"><a href="#s10_3">Нарада и риши как проводники пандавов по тиртхам</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4246" title="1:10:46" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4246" title="1:10:46" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4246" title="1:10:46">AU</a></li>
+      <li class="toc-h2"><a href="#s11">Тиртха Пушкара: экономика заслуг и мифология Брахмы</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4417" title="1:13:37" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4417" title="1:13:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4417" title="1:13:37">AU</a></li>
+      <li class="toc-h3"><a href="#s11_1">Нарада о паломничестве для бедняков и тиртха Пушкара</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4417" title="1:13:37" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4417" title="1:13:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4417" title="1:13:37">AU</a></li>
+      <li class="toc-h3"><a href="#s11_2">Таблица заслуг тиртх и ритуал Ашвамедхи</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4611" title="1:16:51" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4611" title="1:16:51" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4611" title="1:16:51">AU</a></li>
+      <li class="toc-h3"><a href="#s11_3">Мифология Пушкары: Брахма, Савитри и Гаятри</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=4836" title="1:20:36" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4836" title="1:20:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4836" title="1:20:36">AU</a></li>
+      <li class="toc-h3"><a href="#s11_4">Храм Брахмы в Пушкаре и его проклятие</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=5087" title="1:24:47" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5087" title="1:24:47" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5087" title="1:24:47">AU</a></li>
+      <li class="toc-h2"><a href="#s12">Ритуал тарпаны и символика брахманского шнура</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=5367" title="1:29:27" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5367" title="1:29:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5367" title="1:29:27">AU</a></li>
+      <li class="toc-h3"><a href="#s12_1">Питри-тарпана: обряд почитания предков</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=5428" title="1:30:28" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5428" title="1:30:28" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5428" title="1:30:28">AU</a></li>
+      <li class="toc-h3"><a href="#s12_2">Правое и левое: мир живых и мир мёртвых в индийской метафизике</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=5860" title="1:37:40" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5860" title="1:37:40" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5860" title="1:37:40">AU</a></li>
+      <li class="toc-h2"><a href="#s13">Вопросы слушателей</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=6374" title="1:46:14" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6374" title="1:46:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6374" title="1:46:14">AU</a></li>
+      <li class="toc-h3"><a href="#s13_1">О двух берегах Варанаси и восточном береге как мире Шивы</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=6404" title="1:46:44" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6404" title="1:46:44" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6404" title="1:46:44">AU</a></li>
+      <li class="toc-h3"><a href="#s13_2">Об ашрамах жизни, варнах и правах шудр</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=6679" title="1:51:19" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6679" title="1:51:19" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6679" title="1:51:19">AU</a></li>
+      <li class="toc-h3"><a href="#s13_3">О млеччха: статус и этимология термина</a> <a class="yt-toc" href="https://youtu.be/PlXhBTiZfCw?t=6980" title="1:56:20" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6980" title="1:56:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6980" title="1:56:20">AU</a></li>
+    </ul>
+  </nav>
+
+
+  <h2 id="s1">Повторение: метафора тела и сакральная география
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=29" title="0:29" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=29" title="0:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=29">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=29" data-t="29" title="0:29">▶</a> Мы завершили прошлый раз, я не показывал этот слайд. Так, 18:00. Уважаемые друзья, приветствую вас на уже не вводном, а первом занятии нашего курса по сакральной географии Индии. И как мы договаривались, краткое содержание того, о чем мы говорили на вводной лекции Это прежде всего предмет, которым мы занимаемся, то есть сакральная география это не то, что можно о ней думать, это не непосредственная география, а скорее воображаемая география, которая решается пути которой прокладываются через воображение и религиозные практики. Это если совсем кратко, но это можно расширять.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-1">
+      <img src="./src/img/01_01.jpg" alt="Сакральная география Индии" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 1.</span> Сакральная география Индии</figcaption>
+    </figure>
+
+
+
+  <h3 id="s1_1">Островное сознание Индии и телесная онтология
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=84" title="1:24" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=84" title="1:24" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=84">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=84" data-t="84" title="1:24">▶</a> У мысли есть расширитель. Индия получается в каком-то привилегированном положении, в отношении других регионов и других территорий, по которым тоже можно отслеживать подобные пути работы воображения. Она была островом и очень долгое время как бы островное сознание у него есть изолированность и она эта изолированность она сохраняется в даже через многие столетия тысячелетия это как бы такая парадигма и физической географии и культуры потому что культуры длинная память А вот что касается Индии, то она долгое время как бы в изолированности была и сформировала такое островное сознание, так сказать, хотя это не совсем так, потому что ее постоянно завоевывали, к ней проявляли интерес разного рода захватчики, а британцы считали ее вообще короной, жемчужиной в короне империи, то есть относились к ней как стране богатой, чрезвычайно интересной во всех отношениях, с мощнейшей культурой и полезной в экономическом и во всех остальных смыслах. Индия сама преображалась, она как бы не оставалась прежней, она пережила волны своего собственного изменения, своего преобразования внутри самой себя. И таким образом и внешние завоеватели, и изнутри себя изменяясь Индия все равно оставляла в себе какое-то хтоническое архаическое начало и это начало пожалуй можно определить как телесность.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-2">
+      <img src="./src/img/01_02.jpg" alt="Сад камней (Кайсэки)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 2.</span> Сад камней (Кайсэки)</figcaption>
+    </figure>
+
+
+    <figure id="slide-3">
+      <img src="./src/img/01_03.jpg" alt="Умирающие боги: сравнительная мифология" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 3.</span> Умирающие боги: сравнительная мифология</figcaption>
+    </figure>
+
+
+
+  <h3 id="s1_2">Тело как генеральная метафора индийской культуры
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=222" title="3:42" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=222" title="3:42" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=222">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=222" data-t="222" title="3:42">▶</a> Вот все, что относится к телу, к его образу, к его восприятию, к его функциям это про Индию. Это определяет ее главную, главную онтологическую суть, на которую может накладываться все, угодно, в том числе интеллектуальная жизнь, эмоциональная, эстетическая, но вот тело, онтология тела и метафора тела она сохраняется в Индии через все столетия, завоевателей, все собственные увлечения Мхараты самой собой. Вот как бы такая генеральная метафора положила, проложила путь к уникальности сакральной географии этой страны, этой территории и сформировала разного рода идеи, которые которые вращаются вокруг телесности.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-4">
+      <img src="./src/img/01_04.jpg" alt="Гондвана и дрейф Индийской плиты" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 4.</span> Гондвана и дрейф Индийской плиты</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=293" data-t="293" title="4:53">▶</a> Сергей Викторович, или выключаем показ пустой папки, или включаем презентацию. Давайте так, в смысле</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=301" data-t="301" title="5:01">▶</a> А, у меня не запущено, да? Да. А, понятно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=304" data-t="304" title="5:04">▶</a> Или никак? Есть презентации?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=308" data-t="308" title="5:08">▶</a> Так ну вот сейчас видно или нет?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=312" data-t="312" title="5:12">▶</a> Нет, вы видимо изначально включили показ какой-то конкретной папки. Вот он идёт, нужно остановить показ и запустить заново. Понял, хорошо. Сейчас делимся и делимся.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=329" data-t="329" title="5:29">▶</a> Теперь другое дело. Так точно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=333" data-t="333" title="5:33">▶</a> А теперь, если вы ещё на весь экран в за</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=336" data-t="336" title="5:36">▶</a> А нет, нет, я так не хочу, то есть и мне и слушателям будет удобно,</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=340" data-t="340" title="5:40">▶</a> и тогда хотя бы сверху закройте те две жёлтых предупреждения, которые у вас высвечиваются в правом верхнем углу. Есть крестики,</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=348" data-t="348" title="5:48">▶</a> понял, да, сейчас закрою, пожалуйста, закрою. Ага, отлично. Так, итак, кратко содержание предыдущей лекции. Ну, в принципе, завершено. Да, то есть можно по нему вот эти пять минут, которые сообщают то, о чем было раньше сказано.</p>
+        <p><a class="para-timecode" href="?t=368" data-t="368" title="6:08">▶</a> Но в целом я передал. Единственное, что я, наверное, хотел еще обратить внимание на то, что метафора тела не примитивна, ее можно и нужно рассматривать через глубочайшую философскую и эстетическую традиции и мы это сможем показать и сможем доказать как это работает конкретно в Индии. Это как бы путь самой Бхараты. Антологию чужой культуры так просто на себя не примешь, в ней надо не просто пожить, в ней надо родиться, чтобы полноценно освоить язык и все типы отношений социальных и прочих. Вот и много чего еще, что передается молниеносно, как вот сейчас в социальных сетях какие-то мемы или идеи передаются практически как молния.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-5">
+      <img src="./src/img/01_07.jpg" alt="Пуруша-сукта" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 5.</span> Пуруша-сукта</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=422" data-t="422" title="7:02">▶</a> Точно также и онтология другой культуры непостижима для внешнего наблюдателя это вот такой определенный факт можно пытаться стать хорошим знатоком или ретранслятором каких-то основных идей, но онтологически нет. То есть можно, но с большой-большой натяжкой, но лучше быть билингвой или трилингвой или сколько угодно ещё с самого раннего детства, тогда больше шансов на то, что получится. Поэтому вот эту метафору тела, её нужно всё время вспоминать, когда мы говорим даже о высокой философии, и пытаться понять, как она устроена изнутри сознания. Ну, то есть, мы это делаем. Европейский и научный аппарат для этого подходит и интеллектуальный всячески.</p>
+        <p><a class="para-timecode" href="?t=477" data-t="477" title="7:57">▶</a> То есть, так что максимально продуктивно и добросовестно это будем делать. Итак, тело, которое формируется, это тело, тело, естественно, не человеческое, то есть тело представление о высшем божественном сакральном. Оно в Индии, значит, разного разного масштаба бывает и, наверное, такой небольшой масштаб Мы можем это же действительно с мурти в храме, когда перед нами предстаёт какой-то образ божества, изваянный из металла или камня, или нарисованный. Вот, но иногда он предстает через сеть. Вот этот слайд я в прошлый раз не показывал, хотя презентацию отправил вместе с ней.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-6">
+      <img src="./src/img/01_05.jpg" alt="Пандавы у подножия Гималаев" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 6.</span> Пандавы у подножия Гималаев</figcaption>
+    </figure>
+
+
+    <figure id="slide-7">
+      <img src="./src/img/01_08.jpg" alt="Поклонение мурти в индуистском храме" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 7.</span> Поклонение мурти в индуистском храме</figcaption>
+    </figure>
+
+
+
+  <h2 id="s2">Тема лекции: тиртха и сеть тиртхаятры
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=550" title="9:10" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=550" title="9:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=550">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=550" data-t="550" title="9:10">▶</a> То есть сегодняшняя тема лекции у нас посвящена целиком киртхи. Объясню дальше, что это понятие означает. Вот это не совсем телесная здесь метафора, здесь скорее образ фокуса, фокусировки на на теле. Да, то есть, когда мы смотрим на человека, на вообще любой предмет объект нам нужно сфокусироваться вот киртха это своеобразный образ фокусировки но о титхе чуть чуть позже титха это как бы единичный способ настройки на видение божественного тела. Но у нее много других определений, просто это первое приближение, которое у нас сейчас нужно.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-8">
+      <img src="./src/img/01_06.jpg" alt="Бассейн реки Ганга" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 8.</span> Бассейн реки Ганга</figcaption>
+    </figure>
+
+
+    <figure id="slide-9">
+      <img src="./src/img/01_09.jpg" alt="Храм Минакши и богиня" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 9.</span> Храм Минакши и богиня</figcaption>
+    </figure>
+
+
+    <figure id="slide-10">
+      <img src="./src/img/01_10.jpg" alt="Дурга-пуджа" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 10.</span> Дурга-пуджа</figcaption>
+    </figure>
+
+
+
+  <h3 id="s2_1">Тиртхики: паломники, соединяющие тиртхи в сеть
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=606" title="10:06" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=606" title="10:06" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=606">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=606" data-t="606" title="10:06">▶</a> В Индии так случилось, что вот эти тиртхи отдельные или места соприкосновения человеческого и сакрального объединились в сети. Сеть это система взаимосвязанных маршрутов, но при этом важно, что эти маршруты не статичны, у них нет такого вот фиксированного положения, как например там едем в Лондон, летим или как Лондон при этом у нас представляется такой незыблемой точкой. Вот в Индии для индийской сакральной географии, для индийского онтологического чувства важно движение. Те, кто включены в индийскую культуру, обладают этой онтологией и стараются приблизиться к высшему началу, к сакральным величинам, находится в постоянном движении это паломники тиртхики собственно они называются как тиртхики соединяющие тиртхи воедино И вот когда они собраны, то возникает полное познание тела Бхарата, тела божества. Ну вот это смысл данного слайда.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-11">
+      <img src="./src/img/01_11.jpg" alt="Джаганнатх и Чар-дхам" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 11.</span> Джаганнатх и Чар-дхам</figcaption>
+    </figure>
+
+
+    <figure id="slide-12">
+      <img src="./src/img/01_12.jpg" alt="Вишну-Ананташайя" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 12.</span> Вишну-Ананташайя</figcaption>
+    </figure>
+
+
+    <figure id="slide-13">
+      <img src="./src/img/01_15.jpg" alt="Сети священных мест Индии" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 13.</span> Сети священных мест Индии</figcaption>
+    </figure>
+
+
+    <figure id="slide-14">
+      <img src="./src/img/01_16.jpg" alt="Маршрут Рамы (Рамаяна)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 14.</span> Маршрут Рамы (Рамаяна)</figcaption>
+    </figure>
+
+
+    <figure id="slide-15">
+      <img src="./src/img/01_17.jpg" alt="Тиртхи как сеть (Махабхарата)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 15.</span> Тиртхи как сеть (Махабхарата)</figcaption>
+    </figure>
+
+
+
+  <h2 id="s3">Литература курса
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=710" title="11:50" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=710" title="11:50" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=710">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=710" data-t="710" title="11:50">▶</a> А теперь мы перейдем к довольно важной части нашего курса, а именно литературе, которую я предлагаю в качестве важной для того, чтобы программно знакомиться с курсом сакральной географии Индии. Этого курса еще в российских вузах или каких-то образовательных проектах, ну, кроме вот того, который сейчас мы с вами осуществляем, нет. Поэтому это как бы область, развивающаяся область религиоведения, ну, лучше всего, наверное, представленная в Соединенных Штатах Америки. Поэтому что-то приходится делать заново и, в частности, оформлять то, что значимо в плане чтения, литературы. На русском языке не так много книг и концепций, которые, ну, как бы, написаны с пониманием того, что разговор идет именно о сакральной географии.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-16">
+      <img src="./src/img/01_18.jpg" alt="Литература" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 16.</span> Литература</figcaption>
+    </figure>
+
+
+
+  <h3 id="s3_1">Диана Эк и «Сакральная география Индии»
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=785" title="13:05" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=785" title="13:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=785">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=785" data-t="785" title="13:05">▶</a> Они скорее с других позиций написаны, за исключением, может быть, представлено здесь зелененькой книге Ирины Петровны Глушковой из Института востоковедения. Она прямо и четко называется Подвижность и подвижничество, как бы постулируя идею движения как самого важного теория и практика. Вот она передо мной. Книга большая, о ней я расскажу чуть позже, потому что есть более важные программные тексты, с которыми, наверное, в первую очередь нужно ознакомиться. Наверное, на первом месте у нас будет книга, выделенная сейчас мной Дианы Эк, американской исследовательницы из Гарвардского, так, Гарвардского университета.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s3_2">Марк Дычковский: взгляд изнутри традиции
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=850" title="14:10" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=850" title="14:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=850">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=850" data-t="850" title="14:10">▶</a> Она индолог, религиовед по первому образованию, как бакалавр, и о ней будет тоже отдельный слайд, следующий слайд. А пока вот как бы мы проводим такой обзор наших книг. Всё-таки я хотел бы сосредоточиться на еще двух версиях описания сакральной географии. В центре сверху верхнего ряда книг книга Марка Дычковского, и эта фигура для нас довольно важная и интересная. Это британский санскритолог польского происхождения.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-17">
+      <img src="./src/img/01_19.jpg" alt="Книги Дычковского" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 17.</span> Книги Дычковского</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=906" data-t="906" title="15:06">▶</a> Мать у него была итальянка, а отец поляк. Они после, нет, во время войны, Второй мировой, переехали в Британию, и там жили. В общем, карьера его складывалась поначалу как академического ендолога, но потом в возрасте 22 лет он посетил Индию и навсегда она очаровала его сердце. Надо сказать, что религиозно он принял некоторые идеи, собственно, не некоторые, а стал Кашмирским шаваитом в традиции При этом сохранял свою жизнь, сохранял двойную онкологию, то есть продолжая оставаться ученым, индологом, он писал тексты, книги, много текстов написал о Индии, философии, ее метафизике, ее религии как бы изнутри опыта своего. Много чем занимался.</p>
+        <p><a class="para-timecode" href="?t=1006" data-t="1006" title="16:46">▶</a> Его книгу я предложил в качестве программной Путешествие в мир Танг, но это не означает, что только этой книгой можно как бы она является единственной. Вот здесь перечень книг, которые изданы в разные годы краткое содержание, почему эти книги полезны для сакральной географии. Естественно, что все они, к сожалению, еще не переведены на русский язык, как и книга Диана Эк, чего бы очень хотелось, но, наверное, это в будущем. Вот взгляд в Марка Дычковского скорее для нас важен как взгляд человека, который находится внутри индийской антологии, примерил ее на себя, написал диссертацию, писал он диссертацию о значит скажем так энергиях нам нужно бы, конечно, сохранить академическую строгость, чтобы не переходить на язык, понятийный язык популярной эзотерики, нью-эйджской терминологии. Поэтому здесь достаточно сложность есть вот потому что погружаться именно в тот язык с его определениями очень бы не хотелось но из песни слов не выкинешь и во время во время когда Дычковский переехал в Индию жил там в Аранасе вся европейская элита такая интеллектуальная и очень многие американские тоже паломники двинулись в Индию для того, чтобы открыть там альтернативную сакральную родину и поэтому как бы были восхищены ее многими идеями религиозными и философскими.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s3_3">Дычковский и парадигма нью-эйдж
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=1154" title="19:14" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1154" title="19:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1154">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1154" data-t="1154" title="19:14">▶</a> И вот это двигалось параллельно с этой самой парадигмой нью-эйдж, такой вот легкой популярной эзотерической системы, в которой все оказывается предельно легко и понятно. Вот, вот вам, вот перед вами там все религии ведут к одной цели, вот там всякие максимумы, типа того, что существуют какие-то вибрации, какие-то энергии, какие-то легкие пути с вот вам там каналы человеческом теле вот то есть много бы надёргано из сложной терминологии тантрической, и традиционной. Но это все превращено в такой компот. И в общем этот компот на самом деле в некотором смысле на эндологов повлиял. Выбирая для себя предметы и объекты исследований, Чистить полностью себя от этого исторического мундежа довольно трудно было.</p>
+        <p><a class="para-timecode" href="?t=1233" data-t="1233" title="20:33">▶</a> Но у Дычковского это получилось, потому что он глубоко интегрирован в традицию. Вот он описывал тантрическую систему во многом и его интересовало, интересовал звук, прежде всего звук как главное в энергии связанной с Шивой и Шакти главная идея о том, что эта энергия постоянно присутствует в человеке и вообще во всем мироздании. И нужно домыслить, как бы ее очистить от всего не из того, что неважно, да, то есть того, что как вот наносное, приблизившись к ее непосредственной сути. Вот эту суть Дычковский, да и собственно традиция кашмирского шиваизма, во многом видит в идее звука и разного рода вибрации, которые создаются этим звуком. Вот у него увлечение музыкой было одним из ключевых в его жизни.</p>
+        <p><a class="para-timecode" href="?t=1324" data-t="1324" title="22:04">▶</a> Он жил в Аранасе и каждую неделю можно было прийти к нему, послушать музыкальные импровизации, которые он исполнял на ситаре. И он играл разные раки, был специалистом в индийской музыке, в индийской музыкальной традиции. Ну, в общем, человек крайне интересный. К сожалению, он ушел от нас примерно год назад, ровно где-то в феврале прошлого года. Марка Дычковского больше с нами нет, но его книги продолжают оставаться, его наследие продолжает оставаться важным для изучения сакральной географии.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s3_4">Динеш Серкар: шакта-питхи и археология тиртх
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=1374" title="22:54" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1374" title="22:54" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1374">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1374" data-t="1374" title="22:54">▶</a> Об этом человеке можно много чего еще рассказывать. Он много кому был известен, и российские индологи были с ним знакомы. Что касается Динеша Серкара, то он академический индийский исследователь, который занимался скорее археологией. Вот он пытался отделить действительные археологические и биографические данные от представлений мифологических представлений которые наслаиваются на на образ вот этих самых тирт и питх, потому что даются они в в Индии существует много мифологии, которая как бы не подтверждается документами, не подтверждается археологией, не подтверждается научным научным поиском и находками. И вот скорее серкара нужно рассматривать как такого въедливого червя, такого внимательного, который отделяет действительно существующее от воображаемых, но тем не менее это его книги и в частности книгу, которая перед вами, шакта питхи тело богини из пятидесяти одной там или ста восьми или другого количества мест в которых она обитает которые по Индии распространены на поп харате говорили в прошлый раз о том, что тело Харата не равно телу политической современной Индии.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s3_5">Елена Андреева и Ирина Глушкова
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=1491" title="24:51" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1491" title="24:51" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1491">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1491" data-t="1491" title="24:51">▶</a> Вот и вот такой образ у данного автора и его книг скорее это нужно иметь в виду, чтобы попытаться отделить содержание от реального научного. Дальше ещё одна российская исследовательница, которая сейчас известна своим трехтомным сочинением Елена Андреева. Её трехтомник называется История и культура индийского храма, вышедшая с 2021 года и по сравнительно недавнее время в издательстве Ganga. Прекрасное издательство, которое много чего замечательного издает по индологии. И она начинала с с исследования храмов храмовой культуры Южной Индии.</p>
+        <p><a class="para-timecode" href="?t=1566" data-t="1566" title="26:06">▶</a> Так случилось, что это исследование, особенно для русскоязычного читателя, стало сообразным ключом к очень многим тайнам, связанным с идеей храма, с образом храма, с его ритуалами, с его жизнью, его эстетикой. Первая книга посвящена истории храмостроительства, собственно, архитектурным идеям и внутренним идеям, которые связаны со строительством индийского храма. Вот вторая книга сосредоточена на жизни храма и третья книга называется эстетика храма трехтомник ее очень рекомендую к ознакомлению прочтению насколько мне известно первый том этой книги есть в если покопаться где-то в библиотеках ВКонтакте, там можно найти. Версию всегда можно приобрести, она тоже есть. Вот, ну, о книгах Ирины Петровны Блушковой тоже я расскажу попозже.</p>
+        <p><a class="para-timecode" href="?t=1643" data-t="1643" title="27:23">▶</a> Автор очень интересный, но тут есть проблемы. Ну, и прежняя книга её, которая была прежде чем вышла ее докторская диссертация подвижности, подвижничества, называется Индийское паломничество. Тоже названа в том же ключе о том, что движение внутри паломничества является как бы осью одной из осей сакральной географии без движения просто статика индийская, она не полна, то есть две оси есть. Есть тиртхи или питхи, места, где пребывает божественное начало и движение между ними. Вот как бы две системы координат индийской сакральной географии.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s3_6">Обзор глав книги Дианы Эк
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=1702" title="28:22" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1702" title="28:22" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1702">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1702" data-t="1702" title="28:22">▶</a> Как обещала книге Диана Экт, отдельный слайд. Здесь расписано 10 глав ее книги Сакральная география Индии. Потом у вас будет возможность ознакомиться с этим слайдом презентации подробнее. Здесь описаны ключевые темы и важность для нашего курса. Но опять же, эту книгу вряд ли можно достать в электронном виде.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-18">
+      <img src="./src/img/01_20.jpg" alt="Диана Эк: India: A Sacred Geography" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 18.</span> Диана Эк: India: A Sacred Geography</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1737" data-t="1737" title="28:57">▶</a> Скорее всего, ее лучше заказать, ну, или как-то интересоваться каждым текстом в отдельности. Вот чем-то очень похожи пути Марка Дычковского и Дианы Эк. Она тоже в возрасте 22 лет. Она родилась в 45 году после войны в семье методистов, то есть она христианка по своему исходному мировоззрению, вот, но она не перестала быть как бы, нельзя сказать, что она свою христианскую антологию сохранила, вот, но она, по крайней мере, не стала носителем индийской традиции какой-либо, не приняла посвящение, не приняла парампару, осталась светским исследователем, религиоведом. Вот в этом, хотя очарована Индией, она безусловно и вне всякого сомнения, ее как бы нужно именно так и рассматривать.</p>
+        <p><a class="para-timecode" href="?t=1819" data-t="1819" title="30:19">▶</a> Иногда она идеализирует индийские идеи как то, что могло бы быть, скажем так, альтернативным путем для западного сознания. У нас так случилось в нашей части мира, что мы обладаем так называемой фаустовской антологией. Мы все время ищем вне дома где-то в других мирах, других культурах. Нам кажется, что основание нужно найти там И велика вероятность того, что мы там будем очарованы идеями какой-то альтернативной сакральной прародины и домой не вернемся. Но, в общем, я не говорю, что необходимо, например, ее искать или куда-то идти и оставаться там, или возвращаться домой.</p>
+        <p><a class="para-timecode" href="?t=1885" data-t="1885" title="31:25">▶</a> Куда домой тоже непонятно. Вот просто сама антология западного человека она вот напоминает такую фаустовскую тему поиска какого-то глобального поиска. Ну и не в последнюю очередь это, конечно, поиск сакральной прародины, которую многие видели в альтернативе христианскому мировоззрению. Многие видели в больших культурах и цивилизациях, таких как Индия вот но здесь в главах книги видна связь между темами которые затрагиваются. Например, вторая глава паломники Индии.</p>
+        <p><a class="para-timecode" href="?t=1943" data-t="1943" title="32:23">▶</a> Опять же, тема о движении его, которая является одной из осей сакральной географии, поднята и уделяется большое значение тому, как двигается индийский паломник, какие он исполняет ритуалы. Это будет важно и для нашего курса. Мы посмотрим, как какие основные ритуалы, обряды совершаются в ходе паломничества. Уже сегодня мы видим некоторые из них. Сейчас бегло посмотрите, если у вас какие-то вопросы есть по книге Дианы Эк или вообще литературе, то здесь сделать паузу, заострить на них больше внимания.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s4">Феномен тиртхи: определение и образ двух берегов
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=1996" title="33:16" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=1996" title="33:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1996">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=1996" data-t="1996" title="33:16">▶</a> Вот, если нет, то тогда перейдем уже непосредственно к феномену тиртх и будем, конечно, помнить те идеи, которые затрагивают авторы наших пособий, учебников для нашего курса. Итак тиртха, перед вами бутниковый кадр двух берегов Ганги в Варанасе. Варанасе мы посвятим отдельные две лекции. Что же важно здесь увидеть? Один из этих берегов насыщен жизнью.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-19">
+      <img src="./src/img/01_21.jpg" alt="Тиртха" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 19.</span> Тиртха</figcaption>
+    </figure>
+
+
+
+  <h3 id="s4_1">Два берега Варанаси: онтология жизни и смерти
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2057" title="34:17" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2057" title="34:17" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2057">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2057" data-t="2057" title="34:17">▶</a> Это такой человеческий муравейник здесь протекает та жизнь земная которую мы с вами живем и которой живет которую живет этот город а противоположный берег восточный пуст. Хотя, если вы там были или будете, он не совсем пустынен, там есть отдельные ашрамы, небольшие строения. Там живут абхори, садху, отшельники, которые туда приезжают. Туда можно просто на лодочке сплавать, посмотреть, как этот берег устроен. Но принципиально то, что он пустынен.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s4_2">Тиртха как брод между мирами и образ алтаря
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2112" title="35:12" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2112" title="35:12" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2112">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2112" data-t="2112" title="35:12">▶</a> Он как бы символизирует тот мир, который наступает после физической смерти, после того как жизнь здесь завершена. Ну в общем и получается, что в Аранасе здесь тиртха, как раз конкретная та тиртха, которая является бродом с как бы связывает миры, она как бы брод между мирами, ну буквально слово тиштха и означает переправу брод, Чуть позже у нас будет целый слайд о том как формировалось это понятие в Индии, какое оно имеет происхождение, генезис, как оно изменялось со временем. Вот, но важно, что оно как бы представляет собой место, где два мира, а на самом деле три, соединяются в один в один фокус. Как я уже говорил, что мы можем использовать метафору фокуса, фокусировки взгляда. Еще тиртху отождествляют с Видийским алтарем.</p>
+        <p><a class="para-timecode" href="?t=2208" data-t="2208" title="36:48">▶</a> У алтаря, если вы увидите его рисунок или непосредственно побывав в Индии увидите как проводится тот или иной ритуал алтаря например агнихотра то вы увидите, что он как бы состоит из трёх ступенек. Это не просто промление алтаря, а образ трёх миров мира этого земного мира между промежуточной сферы Антара, то есть некая серединная, серединный мир, такая атмосфера что ли. И высший мир, Сварги, мир божественный, Вот как бы он включает в себя вот эти три образа. И точно так же любая тирстха, она является напоминает вот это тройственное строение алтаря, является таким же фокусом, такой же встречей двух онтологий. Два берега это две онтологии, и если на западе нам кажется, что здесь жизнь, в истинной онтологии жизнь на востоке, там, где берег пустынен.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s4_3">Система ашрам: ванапрастха и саньяса как движение к вечности
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2317" title="38:37" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2317" title="38:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2317">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2317" data-t="2317" title="38:37">▶</a> То есть сосредоточение происходит на том, что не очевидно на вот этом тех смыслах которые рождаются уже после жизни здесь Интересно, что человеческая жизнь в Индии построена неординарным образом. Существует так называемая система ашрам, в которой два периода жизни это периоды жизни. Два периода жизни человек проводит в социуме среди людей, в этом муравейнике человеческом, Вот, а два периода он уходит постепенно, готовится к переходу туда, на берег подлинности, на берег вечности. И эти два периода, ванапрастха и саньяси, они как бы совершаются уже в зрелом возрасте, человек достигает седин, когда он уже готов завершить те игры, которые он играл в среди себе подобных и направиться в направиться к вечности. Вот эти две два периода жизни он, особенно последний период саньяси, совершает в движении.</p>
+        <p><a class="para-timecode" href="?t=2426" data-t="2426" title="40:26">▶</a> В напрасно еще как-то связано с отшельническим пребыванием где-то на окраине деревни, в лесу, в специально построенном шалаше или в другом отшельническом месте. А вот саньяси он должен находиться в постоянном движении. И таково устройство Индии довольно с древних, хотя не самых древнейших времен, потому что климат позволяет не быть привязанным к определенному месту. Зима не столь мучительный период, как, например, для людей, которые живут на севере. Ну, сезон дождей, да, это как бы время, которое нужно переждать, но не критично для его для того, чтобы его переждать это время строить отапливаемые какие-то дома и заниматься специально этим полгода для того чтобы хорошо себя чувствовать зимой то есть можно спать под открытым небом даже период, когда не самая комфортная погода на дворе, но не под открытым небом, под каким-то навесом, но это не такая уж большая сложность и питаться можно тоже довольно много чем, потому что в Индии и урожай не один раз в год собирают, а два или больше в зависимости от места и все растет практически круглый год поэтому пропитание можно себе добыть поэтому как бы вот эта идея движения она существовала с каких-то незапамятных времен Вот, хотя интересно, что есть в средневековый автор, помимо литературы, у нас еще будут источники, к которым нужно обращаться.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s5">Источники по тиртхам: шрути, эпос, пураны
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2556" title="42:36" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2556" title="42:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2556">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2556" data-t="2556" title="42:36">▶</a> Это, конечно же, тексты индийских шрути, то есть важнейшие тексты для индийской традиции ведийские тексты. Дальше будут для нас важны тексты эпоса и Техас, это Махабхара, Тарамайна, вот и Пураны, то есть те многочисленные тексты, источники, которые впервые нам сообщают о тиртхах, о различных мифах Индии, о том буквально энциклопедии индийской жизни в сакральном ее исполнении о том как проводить различные обряды и ритуалы там это большие большие, большое количество текстов, которые важны для индуизма, уже который существует в нашу, в новую эру, то есть после периода буддийского, которым Индия тоже была увлечена. Вот поэтому, а, пуранические тексты, пураническая традиция тоже для нас играет роль. Ну и периодически для Индии играют роль тексты, которые как бы о ней сообщают о её изменениях в как бы независимой, не исходящей изнутри индийской традиции. Вот одним из таких текстов является текст Альберуни, который так и называется Индия.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s6">Альберуни об индийском паломничестве
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2681" title="44:41" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2681" title="44:41" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2681">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2681" data-t="2681" title="44:41">▶</a> Альберуни жил в 11 веке. Он посвятил Индии большой трактат, который называется как Индия. В этом трактате он говорит о индийском паломничестве буквально следующее: паломничество для индийцев не обязательно, но только добровольно и достойно похвалы. Оно состоит в том, что человек отправляется в какую-либо чистую местность к какому-нибудь почитаемому идолу или к одной из священных рек. Там он совершает омовение, поклоняется идолу, принося ему дары, произносит перед ним обильные славословия и читает молитвы, постится, раздает милостыню брахманам, жрецам и прочим, бреет волосы на голове и бороду и возвращается домой.</p>
+        <p><a class="para-timecode" href="?t=2736" data-t="2736" title="45:36">▶</a> Ну вот здесь описано видение беруни паломнического движения. Но надо сказать, что к одиннадцатому веку оно было довольно обширно. Просто в фокус Бергни не попало это многообразие индийского паломничества, которое действительно было. Он как бы скудно его описывает достаточно. Хотя индийское паломничество включает в себя практически все, что происходит в смысле сакральной, религиозной, культурной жизни Индии, это так или иначе связано с движением от одной святыни к другой.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s7">Разнообразие тиртх и тиртхаятра
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2786" title="46:26" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2786" title="46:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2786">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2786" data-t="2786" title="46:26">▶</a> Вот и это могут быть очень разные места, в которые паломник отправляется. Как те, кто достигли соответствующих ашрам, то есть, например, саньяса достиг человек, он должен все время находиться в движении. Ну и просто паломник, который дает определенные обеты отправиться куда-то для того, чтобы осуществить свои собственные цели, достигнуть их. Он может быть любого возраста, этот паломник. Паломничества могут отправляться женщины старики и кто угодно вот поэтому движение по Индии многообразно и оно очень нелинейно в плане собственно самих вот тиртхи очень разные бывают они могут быть такими удивительными, как например Амарнатх, это в Кашмире ледяной лингам Шивы, то есть место Шиваитского паломничества, пещера, в которой растет сталагмит, и паломничество к нему давно существует, организовано, и оно удивительно тем, что это природный объект, как бы нерукотворная киртха, в которой он растет либо уменьшается в зависимости от лунного цикла.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_1">Амарнатх: сезонная тиртха в Гималаях
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2889" title="48:09" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2889" title="48:09" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2889">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2889" data-t="2889" title="48:09">▶</a> Ну вот с ним связана определенная мифология. Движение к этой киртхе возможно только в несколько недель в году, то есть это на большой высоте в Гималаях. Киртха это находится там кругом семитысячники вокруг То есть вот так такие бывают паломнические маршруты скажем так не очень удобным некомфортным условиям потому что паломнические маршруты нередко связаны с обетами, например, передвигаться только пешком или с разного рода другими врата обетами, которые может давать. Тиртхи могут быть сезонными, то есть в определенное время проводятся праздники. Например, такое время наступает периодически в нескольких тиртках Индии называется оно кумбхамеава.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_2">Кумбхамела: массовое паломничество и шахи-снана
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=2974" title="49:34" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=2974" title="49:34" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2974">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=2974" data-t="2974" title="49:34">▶</a> Это самое массовое паломничество к святым местам. Их несколько основных. Они связаны с водой. Вот и там проводится так называемый шахснан, такое омовение. Во время вот этого праздника кумбхамира периодически проводится, например, в Праяге, Джайне, там ещё в нескольких местах в Индии.</p>
+        <p><a class="para-timecode" href="?t=3020" data-t="3020" title="50:20">▶</a> Во время этого важного омовения о легенде и о том, как оно проходит, я еще подробно отдельно расскажу. Просто сейчас как бы обзор возможных необычных тирт, которые связаны с идеей тирт ха-ятры. Из во время этого этой снаны к массовым паломникам, а их там собираются в буквальном смысле миллионы людей, выходят садху, так называемые нак садху. Это отшельники, которые живут в разных местах и, в частности, недалеко от мест паломничества, но обычно они людям не показываются. И тут они выходят к этому основную основную омовение.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_3">Переносные тиртхи: ганга-джала и маршрут Каши — Рамешварам
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3078" title="51:18" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3078" title="51:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3078">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3078" data-t="3078" title="51:18">▶</a> И это тоже довольно зрелищный интересный ожидаемый всеми момент праздника Кумбхамелы. Я избегаю употребления слова фестиваль, как это обычно делается в современном дискурсе, поэтому пусть лучше будет праздник. Фестиваль это что-то светское, все-таки как бы кумбха мила и подобного рода события это значимые сакральные события не просто как культурная культурный фестиваль туда приезжают за другими за развлечения Сами эти выходящие к киртхикам садху, они сами по себе киртхи, то есть есть понимание киртхи как не только как физического места, связанного с географией, но и разного рода другие, другое понимание, это тиртхи могут быть переносными. Вот интересно, что между разными киртками, находящимися в разных местах Индии, существует как бы диалог. Вот один из такого рода геологического взаимодействия существует между точкой, которую мы как-то рассматривали на прошлой лекции, если помните, Рамешвара вот этот мост, туда идет.</p>
+        <p><a class="para-timecode" href="?t=3179" data-t="3179" title="52:59">▶</a> И на карте Индии он здесь обозначен как один из Джйотерлингамов Шивы великих храмов на самом юге. Он один такой важный. Вот в этом месте происходит, туда происходит паломничество многих тиркиков, которые движутся от Ганги, то есть, например, от Каши Вишванатха, который расположен как раз вот здесь, недалеко от Маникарники, Кхата, сейчас сделана такая достаточно широкая дорога. Сам этот храм Каши Вишванатх тоже один из 12 джитерлинтонов. Паломники осуществляют путь отсюда в Рамешварам и берут в качестве переносной кирдхи кувшин, специальный кувшин, который определённым образом запечатывается, наливают воду из Ганги, то есть это называется ганга джала и везут или идут пешком через территорию всей Бхараты в Рамешварам, где ганга джалу из кувшина выливают в храме Шивы на лингам, который совершает таким образом обряд абхишеки, умилостивление Шивы с помощью воды из Ганг, то есть как бы по себе перемещение вот этого священного сосуда с водой из реки является уже тоже переносной тиртхой ну и и так далее то есть тиртхи многообразны как феномен они не только статичны не только привязаны к географии но могут быть людьми достигшими святости, достижений в развитии своего сознания, свободе от сансары, к очищению, могут быть переносными, могут быть еще другими.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-20">
+      <img src="./src/img/01_13.jpg" alt="Мост к Рамешвараму" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 20.</span> Мост к Рамешвараму</figcaption>
+    </figure>
+
+
+    <figure id="slide-21">
+      <img src="./src/img/01_14.jpg" alt="12 Jyotirlinga Shrines" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 21.</span> 12 Jyotirlinga Shrines</figcaption>
+    </figure>
+
+
+
+  <h2 id="s8">Ритуалы паломника и систематизация тиртх
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3348" title="55:48" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3348" title="55:48" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3348">AU</a>
+    </span>
+  </h2>
+
+
+
+  <h3 id="s8_1">Санкальпа, снана, тарпана и другие обряды тиртхаятры
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3348" title="55:48" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3348" title="55:48" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3348">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3348" data-t="3348" title="55:48">▶</a> На протяжении всей всего маршрута тиртхики выполняют очень большое количество различных ритуалов, поэтому если присмотреться к ним, то можно заметить, что они практически никогда не находятся как бы в свободном таком ничего не делании и все время их их перемещения связаны с какими-то действиями с какими-то обрядами Ну, например, эти обряды и ритуалы начинаются с момента, когда он ещё находится дома. Так называемые санкальпа, врата то есть обеты но также во время дороги во время пути кетхик совершает многочисленные омовения снаны ачаманы продакшны, париграмы, пуджи, принимают даршаны различных богов, совершают тарпаны, пиндоданы и так далее. То есть вот об этом всем мы будем говорить подробно. Интересно, что в индийском административном пространстве прекрасно понимали, что страна так устроена, как такое бесконечное перемещение всех отовсюду и в самые разные места. То есть это как бы такое движение безостановочное.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s8_2">Лакшмидхара: «Суждения о святых местах»
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3446" title="57:26" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3446" title="57:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3446">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3446" data-t="3446" title="57:26">▶</a> Вот и в средневековье особенно, к власти пришли мусульманские правители, султаны и потом уже в период династии моголов, административно те, кто находились у власти, понимали, что это движение не должно быть хаотичным, его нужно организовать. И появились разного рода дхармашастры и те, ну, то есть, мусульманские султаны всячески спонсировали тех кто занимался такого рода попыткой организации в том числе паломнических маршрутов. Появились такие так называемые бхатты, знатоки Дхармашастр, наиболее важные тексты Дхармашастр и их создатели жили в Аранасе как раз. Вот и это тоже определенная традиция описывать тиртхи. Вот один из основоположников такого систематического описания тиртх Лакшмидхара написал трактат книгу Суждения о святых местах, где впервые изложил системно теорию тиртхи.</p>
+        <p><a class="para-timecode" href="?t=3543" data-t="3543" title="59:03">▶</a> Это сочинение было написано в двенадцатом веке. Он описывает все тиртхаятры, которые были известны на этот момент. И вот там он, в том числе, систематизирует и и обряды, которые проводит тиркхик во время своего паломнического движения. Вот интересно, что у позднейшего комментатора по имени Касамби, который откомментировал труд Лакшмидхары, он пишет, что буквально у любого, кто исполнит хотя бы десятую часть ритуалов, предназначенных тому или иному божеству, дате лунного календаря, празднику, не останется времени ни на что другое. Ну, то есть, жизнь паломника буквальным образом перенасыщена разного рода действиями, которые необходимо сделать во время паломничества.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s9">Генезис понятия тиртха в истории индийской религии
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3618" title="1:00:18" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3618" title="1:00:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3618">AU</a>
+    </span>
+  </h2>
+
+
+
+  <h3 id="s9_1">От ведийского брода к метафизическому переходу
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3618" title="1:00:18" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3618" title="1:00:18" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3618">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3618" data-t="3618" title="1:00:18">▶</a> Значит, ну теперь посмотрим на генезис понятия тиртха в связи с историей как бы индийской культуры и индийской религии. В самых ранних слоях индийского как бы исторического самосознания как сакральной земли еще паломничества не происходит. То есть период ранневедийский, в частности в Ригведе, это понятие не встречается. Акцент там на местах проведения ярджны. Постепенно в поздневедийском периоде появляется метафора киртхи как сначала как физического брода через реку, а затем как такого способа перехода между мирами.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-22">
+      <img src="./src/img/01_22.jpg" alt="Генезис понятия тиртха" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 22.</span> Генезис понятия тиртха</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3689" data-t="3689" title="1:01:29">▶</a> В шаттападха брахмане яджни проводят у воды и это место проведения рассматривается как посредник между мирами. В упанишадах, которые тоже входят в ашрути в ранний период индийских текстов уже появляется понятие тиркхи как метафизического перехода, не как место. Самый значимый переход к киртхам как в ее современном понимании, в их современном понимании и к движению между ними происходит в период Техас или эпоса. Самый важный текст, который нас как бы переносит в мир тиртх, как бы так сказать директивно это третья книга Махабхараты, которая называется Раньяка Парва или Ивана Парва. Там уже присутствует сеть и сами тиртхи описываются, и сеть паломнических маршрутов как чего-то уже существующего, разветвленного, требующего внимания, того, за что полагаются те или иные заслуги.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s9_2">Эпос и Пураны: тиртха как тело божества
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3788" title="1:03:08" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3788" title="1:03:08" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3788">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3788" data-t="3788" title="1:03:08">▶</a> Ну, то есть Араньяка Парва или несколько других книг Махабхара это буквальным образом рекламирует тиртхи. И в Пуранический период тоже, видите, указаны довольно примерные даты его становления и перемен жизни общества индийского к вот этому слою новому вот 4 11 века нашей эры здесь создаются наиболее важные Пураны Пуранический период который часто отождествляется с современным индуизмом сейчас индуизм можно сказать продолжает жить в этом периоде но в целом Хотя там много всего Вот там уже тиртхи обогащаются, вот понятие тиртха обогащаются и мифологическими историями, и наслоениями, и спецификой. У каждой тиртхи появляется своя, своя особенность непохожесть на другую и плоды и заслуги которые можно получить именно там именно в этой тирке они в другой Вот все эти поранические тексты, есть великие пораны, есть второстепенные пораны. У них еще есть у некоторых поран множество редакций, которые могут отличаться друг от друга то есть целый мир в котором восхваляются их их значение всяким все всевозможным способом обогащается путем рассказывания разных историй как вот и самое главное что здесь уже в Пуранах тиска становится как бы телом божества, телом космоса. Вот, ну а сейчас мы перейдем к наиболее важному тексту, от которого в развитии института тиртхаятры проложены буквально все маршруты.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s10">Махабхарата: Араньяка-парва как путеводитель по тиртхам
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3935" title="1:05:35" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3935" title="1:05:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3935">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3935" data-t="3935" title="1:05:35">▶</a> Это третья книга Махабхараты. Как мы в прошлый раз немного говорили, в связи с тем, что готовится ее переиздание. Уже есть договоренность с Ярославом Владимировичем Васильковым о том, что это переиздание будет довольно скоро проведено. Книга, которая обложка, которая перед вами и которая вышла в еще в советское время в восемьдесят седьмом году, она тоже играет роль значительно. Есть альтернативные переводы 3 книги Махабхара например перевод Смирнова там есть скажем так есть проблемные места проблемные клоны.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-23">
+      <img src="./src/img/01_23.jpg" alt="Тиртхи в Махабхарате" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 23.</span> Тиртхи в Махабхарате</figcaption>
+    </figure>
+
+
+
+  <h3 id="s10_1">Датировка Араньяка-парвы и проблемы перевода
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=3995" title="1:06:35" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=3995" title="1:06:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3995">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=3995" data-t="3995" title="1:06:35">▶</a> Это прежде всего то, что понятие тиртхи переводит как кляниться, но это довольно странно. Странная коннотация, связанная с тем, что но это не совсем колодец не совсем то место которое не всегда связано с водой в частности поэтому ну и много там довольно таких вольных ограничной наук советской играет свою важную роль. Судя по всему, в Махабхарте очень сложно что-либо датировать, но судя по всему она относится, хотя она третья книга всего это книга об изгнании бандлов в лес временном изгнании и нахождении там она довольно поздняя то есть датируется она если в целом период и Техас датируется условно с 5 века до нашей эры по 5 век нашей эры, то есть тысячелетие целое, то Раньяка Парва датируется поздним, то есть первым четвертым веком нашей эры. Но это связано с анализом лексики и мифологических наслоений по сравнению с Пуранами. Вот и еще признак поздней датировки это систематизация Тирск в виде путеводителя, которая для Пуран как раз характерна.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s10_2">Роль брахманов и ритуалы паломника в Раньяка-парве
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4115" title="1:08:35" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4115" title="1:08:35" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4115">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4115" data-t="4115" title="1:08:35">▶</a> Что касается ещё одного важного аспекта армии Акапарова это то, что оно связано с влиянием брахманов, которые привлекали внимание к своим кирткам. То есть киртки, как бы, становились становились местами где которые над которыми брахманы осуществляли или пытались осуществлять контроль, и поэтому Арнье довольно много сказано о том, что важным является не только посещение той или иной дирхи, но и дары, которые дирхик осуществляет по отношению к брахманам. Ну, опять же, в Раньякапарде уделяется значение уделяется место ритуалам, которые паломник должен осуществлять. И, в частности, одним из таких ритуалов является сна на омовение. Поминается иногда пост, воздержание и возлияние божества или тарпаны.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s10_3">Нарада и риши как проводники пандавов по тиртхам
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4246" title="1:10:46" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4246" title="1:10:46" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4246">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4246" data-t="4246" title="1:10:46">▶</a> Качестве путеводителя гуру, который помогает пандова, рассказывает о пирхах и помогает понять их специфику той или иной тиртхи, выступают мудрецы или риши, которых довольно много в махабхараке такой своеобразный, своеобразными проводниками являются, как известные, риши из индийской, видийской еще традиции, например, нарада или ломаша, так и те, которые, скажем, известны из более поздних текстов не ведийского уже собрания, а из более поздних. Ну в частности из ведийских ришек, которые проводят пандаву рассказывают им о тиртхах, гасья, васиштха, ломаша опять же ведущий проводник в подвижничестве. Значит, здесь упоминается Нарада. Нарада один из сыновей Брахмы. Вот его имя встречается уже в Ригведе.</p>
+        <p><a class="para-timecode" href="?t=4384" data-t="4384" title="1:13:04">▶</a> Он там как носитель сакрального знания, но наиболее развернуто оно имя этого Аришу упоминается в Упанишадах. В Чикандоге, в Брихадараньяке Упанишаде. И там он выступает как учитель и вопрошатель. То есть Нарада это странник трех миров, кстати мастер музыки, играет на вине, вестник богов. В общем у него богатая мифологическая история.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s11">Тиртха Пушкара: экономика заслуг и мифология Брахмы
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4417" title="1:13:37" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4417" title="1:13:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4417">AU</a>
+    </span>
+  </h2>
+
+
+
+  <h3 id="s11_1">Нарада о паломничестве для бедняков и тиртха Пушкара
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4417" title="1:13:37" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4417" title="1:13:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4417">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4417" data-t="4417" title="1:13:37">▶</a> Вот он как бы рассказывает о том какой порядок осуществлен в ранних текстах в Шруде. Вот он говорит, святые мудрецы установили в Ведах должный порядок для совершения жертвоприношений в этой жизни. Но при этом указывает, что бедняку совершать жертвоприношения не под силу, потому что для них нужно обладать достаточным богатством, чтобы одарить, например, брахманов или подготовить все необходимые предметы. То есть заказать большой ведийский ритуал довольно дорого. Вот поэтому Народа советует этим самым беднякам осуществлять вот это паломничество.</p>
+        <p><a class="para-timecode" href="?t=4481" data-t="4481" title="1:14:41">▶</a> То есть совершать их могут цари и прочие люди состоятельные, а не бедняки. Есть такие обряды, исполнение которых посильные беднякам и плод их равен благому плоду жертвоприношений. И вот он дальше входит в теорию Тирт, подробно рассказывая и о местах, которые имеет, которые важно посетить паломнику, и об обрядах, которые нужно там совершить. В частности, Рекламирует он как бы некоторые тиртхи, в частности тиртху в пушкаре. Буквально так: пусть, пускай идет причастный в великий доле тиртку бога-богов, что находится в мире людей, но славна во всей тройственной вселенной и известна под названием Ушкара.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-24">
+      <img src="./src/img/01_24.jpg" alt="Тиртхи в Махабхарате" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 24.</span> Тиртхи в Махабхарате</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4546" data-t="4546" title="1:15:46">▶</a> В любой из трех молитвенных часов, о Владыка Земли, потомок у тысячи поте, ну это как бы числительное, тиртх незримо пребывает в Ушкаре. То есть туда там находятся все мифологические персонажи: Рудры, Васу, гандхарвы, апсары и многие другие персонажи индийской метафизики. Интересно здесь об экономике тиртх, то есть о том как важно не просто их посещать, но и помогать брахманам. Ниже отрывок. Кто, пребывая в роще накормит хотя бы одного брахмана, тому за такое деяние у Бхишма здесь и по смерти уготовано блаженство.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-25">
+      <img src="./src/img/01_25.jpg" alt="Пушкар в Махабхарате, гл. 80, §§38–47" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 25.</span> Пушкар в Махабхарате, гл. 80, §§38–47</figcaption>
+    </figure>
+
+
+
+  <h3 id="s11_2">Таблица заслуг тиртх и ритуал Ашвамедхи
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4611" title="1:16:51" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4611" title="1:16:51" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4611">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4611" data-t="4611" title="1:16:51">▶</a> Значит, если проанализировать тиртхи из араньякапарвы по мере их не только значимости, но и плодам, которые дают паломнику какие-то заслуги, то вот такую таблицу я сделал. Здесь в качестве ТИРТХ упоминаются значит, упоминание ТИРТХ здесь приведено в таблице по мере их значимости тех заслуг, которые которые даются для в результате их посещения. Помните, мы на прошлом занятии поговорили немного об индульгенциях, которые можно приобрести, посещая те или иные тиртхи. Вот как бы здесь в правой колонке упоминаются эти самые заслуги, чему равно посещение тех или иных тир. Вот здесь пушкара на втором месте в средней колонке описание и то, где они находятся в Индии.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-26">
+      <img src="./src/img/01_26.jpg" alt="Тиртхи из Араньякапарвы" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 26.</span> Тиртхи из Араньякапарвы</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4696" data-t="4696" title="1:18:16">▶</a> Вот, значит, посещение пушкары равно, согласно Махабхарате, десяти проведенным Ашвамедхам, а 12-летнее пребывание в этой киртхе гарантирует попадание после смерти в мир Брахмы. Что такое Ашвамедха сейчас подробно не расскажу. Для этого наверное какое-то время выделим, но это наиболее важный и дорогостоящий ритуал еще ведийского периода, который связан с жертвоприношением коня. Он длительный по времени, длился целый год, включает в себя много-много участников, много аспектов и сам ритуал его называют царским. То есть он предполагал огромную подготовку и финансирование, то есть немало нужно средств для того, чтобы осуществить этот ритуал, поэтому его называют царским ритуалом.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-27">
+      <img src="./src/img/01_27.jpg" alt="Пушкар (Раджастан)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 27.</span> Пушкар (Раджастан)</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4762" data-t="4762" title="1:19:22">▶</a> То есть 10 аршвамедха это как бы такое своеобразная метафора чрезвычайной недоступности для простого человека этого ритуала того, что его может осуществлять только властитель, то есть особо наделенная властью и состоянием. Поэтому здесь все указано в вашем метках, то есть чему равно посещение тех или иных тиртх. Ваша метка как бы сообразная валюта, определяющая значимость посещения и проведения там соответствующих обрядов. Что касается пушкары, то на следующем слайде справа карта Индии, в которой место Кошкары обозначено таким значком. Вот находится оно в штате Раджастан.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s11_3">Мифология Пушкары: Брахма, Савитри и Гаятри
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=4836" title="1:20:36" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=4836" title="1:20:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4836">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4836" data-t="4836" title="1:20:36">▶</a> И связано оно с мифологией озера, которое находится в его центре этого города и этой тиртхи. Ну, собственно, само слово санскритская пушкара оно и означает озеро, водоем. Вот поэтому, вам встречается в санскритских текстах это название, то оно так или иначе может означать именно нарицательное. То есть, это священный водоем как таковой. В пушкаре есть главный миф о том, как Брахма, то есть создатель миров, такой демиург, проводит яджни, то есть жертвоприношение, сначала создает это озеро, а потом проводит яджни на его берегу для того, чтобы как бы поддержать вновь созданный мир живых существ.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-28">
+      <img src="./src/img/01_28.jpg" alt="Шри Брахма мандир" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 28.</span> Шри Брахма мандир</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=4920" data-t="4920" title="1:22:00">▶</a> То есть считается, что он создатель демиург всех миров И вот в одной из это происходит в нашу кальпу, но в более раннюю югу, то есть период времени, в который живут живые существа, они различаются по качеству проживания. И вот если мы сейчас проживаем в самую неблагоприятную югу, называется Кали-югой, то жертвоприношение, жертвоприношение Прахмы осуществлено в более более раннюю благополучную югу и как бы из его он роняет в это в это место Индии на эту территорию лотос и собственно из Лотоса произрастает Лотос это начало существования этого озера и дальше он проводит там яджни. Ну и разные еще события случаются в связи с этим божественным персонажем в Пушкаре, а именно то, что он там женится. Интересно, что у него, значит, его избранницей становится Саввитри, богиня, но она вовремя не приходит на свадебный обряд, и Брахма выбирает другую избранницу Гаятри, с которой проводится у него бы свадьба. Савитри чуть-чуть запаздывает, но позже увидев, что Брахма уже женился, то есть уже проведены все обрядовые действия, которые свойственны этой самскаре, то есть обряду жизненного цикла, она уже понимает, что не является той самой избранницей, она проклинает Брахму и указывает, тебе, в результате того, что ты нарушил свое обещание, тебе будут поклоняться только здесь, только в Пушкаре будет твой храм, нигде больше.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s11_4">Храм Брахмы в Пушкаре и его проклятие
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=5087" title="1:24:47" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5087" title="1:24:47" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5087">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5087" data-t="5087" title="1:24:47">▶</a> Но это на самом деле немного преувеличение, потому что в Индии только один в Индии. На самом деле их некоторое количество есть, но действительно самый важный здесь расположен в Пушкаре. И есть, собственно, Мандир, храм. Вот здесь на следующем слайде вы можете наблюдать, как он выглядит на левом левой фотографии в центре амурти Брахмы четырехликого и справа там в глубине можно увидеть ту самую его богиню Гаятри которая на которой он женился вместо обещания данного Савитри. Ну и правый слайд, правая фотография это фотография одного из Гхатов Пушкары, где Гхатов 52, как и в Варанасе большое количество Гхатов, то есть спусков к реке И на горизонте виднеется две таких горы, которые связаны с храмами жен Прахма.</p>
+        <p><a class="para-timecode" href="?t=5183" data-t="5183" title="1:26:23">▶</a> То есть оказалось, что и Гая три и Савви три стали его супругами. То есть у него две, получается, жены. В текстах Пуран иногда говорится, что их три, потому что третья это Сарасвати, еще одна богиня, которая часто с савитре отождествляется. Там сложная и генеалогия, и образы этих богинь. Мы о них будем еще подробно говорить, особенно о Сарасвате, которая будет предметом нашего внимания и анализов, когда мы перейдем к рекам, особенно Ганги, потому что это важный персонаж.</p>
+        <p><a class="para-timecode" href="?t=5229" data-t="5229" title="1:27:09">▶</a> Вот как бы с Брахмой связана неясность определенная прежде всего того сколько у него жен то ли одна то ли две то ли три вот и проклятие Брахмы связано с тем что в его Гарбхагриху, то есть в место, где находится его мурти, могут входить, но не могут осуществлять пуджа, то есть служение, женатые мужчины. Но это как раз и объясняется тем, что Савитри указала на то, что брахман нарушил свой брачный обет, и тем самым он как бы отнял у женатых людей связь с Брахмой. И Поскольку Брахма оказывается не вполне честен по отношению к своей жене. Этого быть не должно по дхарме, поэтому женатые мужчины не могут осуществлять пуджа в каме Брахмы, Мандире Брахмы в Ушкаре. Вот эти горы они связаны с горы которые виднеются на горизонте одна из них связана с с ветре которая там храм который там находится другая по-моему не гора гаетри другая гора насколько я помню там другая мифологическая история вот что важно в этом слайде предыдущем, фотографии вы видите, как женщины, вошедшие в воду, осуществляют ритуал, который связан с выливанием воды сквозь пальцы или или водой.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s12">Ритуал тарпаны и символика брахманского шнура
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=5367" title="1:29:27" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5367" title="1:29:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5367">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5367" data-t="5367" title="1:29:27">▶</a> Значит, этот ритуал называется Тарпан. У него довольно интересная, непростой, непростая процедура проведения. Вот есть такое народное понимание Тарпаны, где каждый может паломник ее осуществлять. Как вот видите здесь женщины. Вот есть Тарпана, которая произведена по всем правилам и она включает в себя включает в себя определенные действия у меня есть слайд в котором вы можете посмотреть и увидеть разницу между тарпанами, осуществляемыми в пользу мудрецов Риши, богов, предков.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s12_1">Питри-тарпана: обряд почитания предков
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=5428" title="1:30:28" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5428" title="1:30:28" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5428">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5428" data-t="5428" title="1:30:28">▶</a> И на следующем слайде слайдов мы посмотрим то, как это производится Ну а пока я вам покажу слайд связанный с ритуалами подготовки и ходу тиртхаятры здесь пока только категории ритуалов, которые важны для акта. То есть, для осуществления тиртхаятры. Или иных Вот, а следующий слайд показывает то, как проводится, как должна по правилам проводиться Тарпана. Ее должны проводить, прошедшие обряд самскару у Панаямы, дважды рожденные из трех высших варн, то есть брахманы, кшатрии и вайшьи, которым при этом ритуале выдается так называемый шнур брахманский и здесь вы видите двух брахманов, одного садху учителя и ученика, у которых эти шнуры надеты через разные, как бы по-разному надеты у одного на правом плече, а у другого на левом. Вот это вот ключевое различие между надеванием этого шнура в ритуалах, связанных с жизнью и ритуалах, связанных со смертью.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-29">
+      <img src="./src/img/01_29.jpg" alt="Ритуалы подготовки и в ходе тиртха-ятры" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 29.</span> Ритуалы подготовки и в ходе тиртха-ятры</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5550" data-t="5550" title="1:32:30">▶</a> И здесь написано внизу в таблице перечисляются то, какие виды ритуалов проводятся правильным образом. Как именно они проводятся, кому адресуется через какое плечо повита надет надета яджна повита и через что выливается вода используется кунжут или нет то есть кунжут вместе с водой используется, семена кунжута считаются очищающими, такое мифологическое значение имеет. И в правой колонке то, что должно сказать при выливании воды через первые три строки это ритуалы, связанные с джиннью, с почитанием различного рода существ, богов, мудрецов риши или всем существам. И мантр, которые произносятся в связи с ними. А четвертая строка это ритуалы, связанные с предками Питри.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-30">
+      <img src="./src/img/01_30.jpg" alt="Тарпана (по правилам, с яджнопавитой)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 30.</span> Тарпана (по правилам, с яджнопавитой)</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5621" data-t="5621" title="1:33:41">▶</a> Вот они производятся особым образом и в при проведении этой тарпаны шнур переносится на другое плечо. Вот теперь сейчас мне нужно сделать небольшую остановку. Я сейчас прервусь буквально на две минуты. Вы, пожалуйста, определите, что не так в этом рисунке, котором есть ошибка. Я этот кадр взял из ролика Кришнаитов допущена определенная ошибка.</p>
+        <p><a class="para-timecode" href="?t=5671" data-t="5671" title="1:34:31">▶</a> Вот пока я сделаю сейчас небольшую паузу. Пожалуйста, найдите. Если найдете, скажите в чате или как-нибудь другим образом. Сейчас прошу прощения за небольшой перерыв.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5693" data-t="5693" title="1:34:53">▶</a> Не разочарованы ли вы курсом сакральной географии Индии? Может быть, вы хотите возврата средств? Всё не так, как вы хотели.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5707" data-t="5707" title="1:35:07">▶</a> Март Юрьевич, что за пессимистичное настроение? Очень интересно всё. Думаем о хорошем. Реально интересно. И загадка прям увлекательная.</p>
+        <p><a class="para-timecode" href="?t=5722" data-t="5722" title="1:35:22">▶</a> А Вы знаете ответ?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5724" data-t="5724" title="1:35:24">▶</a> Нет. Я, слава тебе Господи, роликов-клишнитов не смотрю, Бог миловал.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5731" data-t="5731" title="1:35:31">▶</a> Я не вижу здесь кунжута, например. При том, что верёвка через правое плечо. Видите ли вы там кунжут? И палец непонятно большой или кончики, что-то не видно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5750" data-t="5750" title="1:35:50">▶</a> Ну, с количеством пальцев там явно есть проблемки.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5756" data-t="5756" title="1:35:56">▶</a> Ну вот, уже нашли кое-что. Найдите десять различий.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5760" data-t="5760" title="1:36:00">▶</a> Слушайте, вообще кришнаиты говорят, что это не верёвка. Они говорят, что это брахманский шнур. Я просто слышала такое выражение, и поэтому они не называют это верёвкой. А вот через какое плечо, я даже не знаю.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5776" data-t="5776" title="1:36:16">▶</a> А здесь в табличке подсказка внизу.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5780" data-t="5780" title="1:36:20">▶</a> Меня просто я смотрю с телефона, и у меня тут не видно всё вслепую.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5784" data-t="5784" title="1:36:24">▶</a> Написано, что только когда предкам это через правое плечо, все остальные богам, мудрецам и существам через левое.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5795" data-t="5795" title="1:36:35">▶</a> Так, а мы про что говорили, что они какую эту проводят</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5801" data-t="5801" title="1:36:41">▶</a> процедуру? Карпана.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5804" data-t="5804" title="1:36:44">▶</a> Карпана, да. Какую процедуру? Про чём и говорили.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5807" data-t="5807" title="1:36:47">▶</a> А здесь об этом я не шла речь.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 04</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5809" data-t="5809" title="1:36:49">▶</a> В любом случае получается, что одного через правое, другого через левое. Получается, что</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5817" data-t="5817" title="1:36:57">▶</a> То ли свадьба, то ли заупокой непонятно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5821" data-t="5821" title="1:37:01">▶</a> Непонятно, а через левое я что-то не вижу.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 04</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5826" data-t="5826" title="1:37:06">▶</a> Там если увеличить, то видно, что у этого мужчины, который сидит слева, у него через правое плечо. Тот, который справа, у него через</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5836" data-t="5836" title="1:37:16">▶</a> левое плечо.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5838" data-t="5838" title="1:37:18">▶</a> Так, я вернулся. Я, к сожалению, не слышу, как шло обсуждение. Нашли?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5846" data-t="5846" title="1:37:26">▶</a> Ну похоже, что нашли.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5849" data-t="5849" title="1:37:29">▶</a> Да, у каждого из них по-разному сделан брахманский шнур, а значит, каждый из них проводит свою пуджу.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s12_2">Правое и левое: мир живых и мир мёртвых в индийской метафизике
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=5860" title="1:37:40" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=5860" title="1:37:40" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5860">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=5860" data-t="5860" title="1:37:40">▶</a> Да, спасибо, все правильно. Но тот, кто слева, он наблюдает, он не проводит тарпана. То есть он наблюдает, и тут важно, что тарпана проводится через обратите внимание, что он воду выливает через палец большой палец правой руки. Этот палец посвящен предкам, то есть это особый ритуал. Вся ладонь и фаланги пальцев, которые связаны друг с другом, это живые, это мир живых, а это отличный от живых мир мёртвых.</p>
+        <p><a class="para-timecode" href="?t=5904" data-t="5904" title="1:38:24">▶</a> Здесь вообще глубочайшая и многообразная символика даже в этом, но он здесь сейчас впечатляет Питри Тарпана, то есть он проводит обряд, который связан с предками. И в этом случае он должен переместить с левого с правого плеча вернее с левого плеча на правое обряды, связанные с миром живых это всегда продакшина это то, где правая рука, всегда касается как бы сакрального объекта. Если вы обходите храм, то продакшина всегда по часовой стрелке. Также движется Солнце, также движется небесные объекты, Луна. Вот они всегда по правую сторону, а ритуалы, связанные с миром мертвых, с ямой, с предками, они проводятся в обратную сторону.</p>
+        <p><a class="para-timecode" href="?t=5979" data-t="5979" title="1:39:39">▶</a> И, например, обряды, связанные с погребальным ритуалом Аньешти, Там тоже меняется положение тела умершего. И обряды, связанные с почитанием предка вообще со смертью, как таковой, обязательно брахманский шнур надевается на правое плечо так, чтобы его рука, которая касается брахманского шнура, была, была левой.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6029" data-t="6029" title="1:40:29">▶</a> Чистой или левой? Что-то такое?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6033" data-t="6033" title="1:40:33">▶</a> Левая рука не бывает чистой. Ну</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6037" data-t="6037" title="1:40:37">▶</a> да, вот поэтому они же дают-то все правой рукой, а левую они как-то за спину прячут.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6044" data-t="6044" title="1:40:44">▶</a> Да, то есть и как бы мир, мир связанный со смертью он всегда слева, он как бы нарушает порядок ритус, он не наследует правильность и правость как таковую да то есть индийская индийская метафизика она на правую на правую сторону в принципе ориентирована</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6068" data-t="6068" title="1:41:08">▶</a> Но это всех касается направления или это только кришнаиты?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6072" data-t="6072" title="1:41:12">▶</a> Нет, нет, это здесь я взял рисунок из кришнаитского ролика. Долго искал, какой именно выбрать слайд для изображения, как Тарпа направляется. Но вот у них неверно изображен этот юноша, который неправильно надел яржна повиту. Правильное положение ритуал предкам проводится шнур должен быть другой стороне. Но это такие детали, которые, кажется, что они значения не имеют, они играют огромнейшую роль.</p>
+        <p><a class="para-timecode" href="?t=6115" data-t="6115" title="1:41:55">▶</a> Вот когда вы непосредственно там все это наблюдаете, наблюдение за такими мелочами, оно как бы придает смысл всему, потому что все, что все, что осуществляет паломник это все все целиком наполнено смыслом.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6129" data-t="6129" title="1:42:09">▶</a> Ну вот я, например, слышала такое, что они-то все это взяли как бы им про пхупада все рассказал, и он-то точно знает, как правильно надо, куда шнур надеть, какой рукой как положить, какой рукой что как надеть, ну то есть вот через какие пальцы пропустить. И я вот например слышала такую информацию, что кришнаиты там они даже в Индии живут когда они даже там типа у брахманов учатся даже вот проводят какие-то поклонения агнютам но что-то вот такое но я хочу сказать что у них ведь учителя тоже какие-то непростые крестьяне и не шудры и даже не ну как не правители то есть их научили так То есть может быть это их просто вот направление такое, а, например, там, скажем, у тех же слюваитов например, у них по-другому. Я просто сравниваю и спрашиваю.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6194" data-t="6194" title="1:43:14">▶</a> Я понял, понял. Эти ритуалы являются общими, и в них ошибки быть не может. Это просто ошибка художника и недосмотр, скажем так. Либо учительный аспект по всей видимости тут не случайно гуру учитель наблюдает за действиями молодого только что получившего парампару или прошедшего по найам дваждырожденного то есть наблюдать за его действиями и готов скорректировать его правильность или неправильность того что он делает то есть может и такое быть может это быть слайд провокация то есть не обязательно что все они все эти правила они универсальны они не единственным исключением является тантрические разного рода сообщества, которые могут нарушать, но там все равно есть правила. В так называемой Панчамакаре, то есть пяти правилам тантры левой руки, называемый, вот есть определенные правила, которые тоже не нарушаются внутри этого сообщества, но это отдельные культы и они в любом случае не связаны с брахманским благочестием и с уповитой, как способом надевания шнура.</p>
+        <p><a class="para-timecode" href="?t=6291" data-t="6291" title="1:44:51">▶</a> На самом деле, если вы устали, потому что монолог это сложно все время слушать, можем на этом остановить сегодняшний рассказ, потому что на самом деле у меня есть еще много что рассказать о мире, о киртхах и обрядах, связанных с почитанием предков питре и вообще, как бы, вот этой частью индийского, индийской метафизики и внимание, которое уделяется предкам в религии, скажем так, в целом в индуизме. Вот здесь я много чего могу рассказать, дальнейшие слайды они об этом, но это как бы особая тема внутри особого рода тирт вот если вы устали то мы можем перейти к вопросам обсуждению там каким-то кому-то уточнению может быть а если нет готовы еще слушать я могу вот эту часть рассказать но она она требует времени требует еще как минимум там не знаю минут 20 только рассказ об этом</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s13">Вопросы слушателей
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=6374" title="1:46:14" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6374" title="1:46:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6374">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6374" data-t="6374" title="1:46:14">▶</a> Есть ли вопросы?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6376" data-t="6376" title="1:46:16">▶</a> У меня вопросов нет. Я бы хотела переварить, и у нас еще сейчас начнется следующее занятие.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6384" data-t="6384" title="1:46:24">▶</a> У нас в восемь начнется, Евгения. Есть и вопросы?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6394" data-t="6394" title="1:46:34">▶</a> У меня пока нет. Было</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6396" data-t="6396" title="1:46:36">▶</a> очень интересно. У меня тоже пока нет вопросов.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6400" data-t="6400" title="1:46:40">▶</a> А можете мне с ходу Самохина Елена?</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6403" data-t="6403" title="1:46:43">▶</a> Елена, давайте.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s13_1">О двух берегах Варанаси и восточном береге как мире Шивы
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=6404" title="1:46:44" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6404" title="1:46:44" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6404">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6404" data-t="6404" title="1:46:44">▶</a> У меня вот какой вопрос по поводу варанасии. Вот такое разделение берегов. Очень интересно, я раньше никогда не задумалась на эту тему. Один совершенно пустынный, а другой густонаселённый. Так сложилось, просто случайно или какой-то замысел такой был</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6423" data-t="6423" title="1:47:03">▶</a> Ну конечно замысел то есть это киртха варанасе известно с довольно древних времен Как вы знаете, даже буддийская первая проповедь Будды привязана к Варанаси, вернее к его окрестностям, то есть в 12 километрах от города находится так называемый Сарнатх и там Будда произнес свою первую проповедь. Но это означает, что город во время Будды в пятом веке до нашей эры уже существовал, процветал и именно так он и был организован. Там, конечно, не было той современной архитектуры, которая есть сейчас. Если вы посмотрите на застроенный берег Варанаси, то там величественные красивые дворцы, храмы, мандиры. То есть весь западный берег застроен так, что это монументальное впечатление о городе, но все это многообразие городское, и это величие самого Варанаси это результат уже градостроительства при великих моголовах, то есть раньше город был скромнее и столь заселенным он, конечно, не был, всегда был местом проведения погребальных обрядов Аньешти и всегда там были гхаты на этой стороне.</p>
+        <p><a class="para-timecode" href="?t=6529" data-t="6529" title="1:48:49">▶</a> Но вот в такой вот сплошной застройке, как сейчас, с очень тесными улочками Гали и с такой вот плотностью, это результат уже гораздо более поздних времен, нежели античные древние. А что касается восточного берега, то он всегда был пустынным, всегда был местом жилища только лишь определенных отшельников, копаликов, акхори, шиваитских садху, которые принимали определённые обеты жизни на той стороне. То есть это место, куда переправляется джива или сознание только что значит премированного человека. То есть это мир Шивы, Он невидимый, поэтому там нет никакой человеческой застройки. Но это не значит, что там нет Бога.</p>
+        <p><a class="para-timecode" href="?t=6600" data-t="6600" title="1:50:00">▶</a> Там как раз и раскрывается сущность сущность этого перехода то есть там он видит свет кшивы собственно каши мы об этом много еще будем говорить просто не хочу сейчас слишком сильно заходить в тему Аранаши, потому что ей посвящено целых две лекции будет. И Каши это свет, город света. Вот этот свет начинает видеть тот, кто совершил этот переход, совершил обряд Аньешти, обряд перехода в мир Шивы. То есть он всегда был пустым. Тот берег, и хотя и не будучи застроенным как сейчас, всегда состоял из хатов, спусков к реке ступенечных, Всегда там проводились обряды, арати, многочисленные пуджи, тарпаны, и омовения, но облик города менялся.</p>
+        <p><a class="para-timecode" href="?t=6673" data-t="6673" title="1:51:13">▶</a> Вот с восточная сторона всегда была пустынная это город мертв Спасибо</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s13_2">Об ашрамах жизни, варнах и правах шудр
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=6679" title="1:51:19" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6679" title="1:51:19" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6679">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6679" data-t="6679" title="1:51:19">▶</a> большое очень интересно а вот ашрамы жизни хотела тоже уточнить они вестительны только для двиджи для дваждырожденных или шудры не ходят саньясу не имеют права</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6697" data-t="6697" title="1:51:37">▶</a> нет нет они только для двиджа вернее так что существует такая ступенчатая система, для брахмана все четыре легитим положены, то есть брахмачари грихастхого напрастха и санньяси все четыре для кшатриев в идеале три то есть кшатри должен завершить свое свой жизненный путь Ну как бы по дхарме по своей кшатрийской дхарме третий на ванапрастхе этого будет достаточно как бы но если он может перейти к санньяси может стать как брахман, перейти этот переход осуществить еще один, но для этого ему нужно специальные дикши, посвящения получать. Вот по своей дхарме он ее выполнит если он достигнет ванапрастхи как панда например да то есть пандавы же тоже потом ушли они как бы ушли в санньясу но вот период их изгнания как бы равен ванапрастхи они кшатрии для вайшьев достаточно по дхарме первых двух то есть брахмачари вот он проходит обряд у панаямы и грихастхи он женится заводит семью обладает богатством, влиянием, властью, довольством. У него кама, осуществление желаний, у него артха, это польза, прибыль, которая от всего, что он делает, ему достается. То есть, он живет в довольстве, и этого тоже достаточно. Что касается Шудр, то они, в принципе, исключены из из этой системы специальных самскар, потому что панаяма переводит человека в первое, первую ашраму, прахмачари.</p>
+        <p><a class="para-timecode" href="?t=6824" data-t="6824" title="1:53:44">▶</a> Панаяма это ритуал, в котором мальчику еще, подростку, зависит тоже от варны, то есть если он брахман, то обряд проводится примерно в 8 лет, если он кшатре, то лет в десять, если он вайшья то там побольше период до двадцати с чем-то лет он может проводиться спокойно вот это посвящение в ученичество брахмачари это первый период только для трех высших варн только для дварторожденных но не для шудр шудр исключены из вот этого контекста ведийского они не могут изучать и даже слушать ведийские самхиты ведийские тексты как таковые Слышать Веды просто запрещено и смертельно опасно для Шудр. Существует в Дхармашастрах есть указание о том, что Шудру слышавшего Веды необходимо влить в уши расплавленный свинец того кто произнес в идийские или каким-то образом поучаствовал жертвоприношении в яржне в идийской язык вырвать. То есть, короче говоря, с судрами можно все, что угодно проводить, если они неправомерным образом коснулись ритуально значимых сакральных величин. Шудрам можно слушать катхи, рассказы, то есть поранические мифы поранические легенды пересказы и поранические же мантры осуществлять но есть из мантр некая некий список исключений то есть Гаятри мантра тоже принадлежит таким универсальным, могут все рецитировать. Но ни в коем случае никаких ни ведийских обрядов, никаких тарпан, ничего.</p>
+        <p><a class="para-timecode" href="?t=6953" data-t="6953" title="1:55:53">▶</a> Тарпана может, но только самовольно. Но и то там есть ограничения. То есть у Шудр большие ограничения в том, что им положено делать</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6968" data-t="6968" title="1:56:08">▶</a> в таком случае ум лечь коим мы являемся все если млечиха услышит цитаты тоже положено</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s13_3">О млеччха: статус и этимология термина
+    <span class="yt-link">
+      <a href="https://youtu.be/PlXhBTiZfCw?t=6980" title="1:56:20" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg&t=6980" title="1:56:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6980">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=6980" data-t="6980" title="1:56:20">▶</a> Млечки неприкасаемые. Мы еще неприкасаемые не коснулись. Это еще одна категория, которой ничего нельзя. Это инородные. Они не являются частью тела.</p>
+        <p><a class="para-timecode" href="?t=6993" data-t="6993" title="1:56:33">▶</a> Вот слово млечха, оно, насколько я знаю, имеет именно такую этимологию. Млечка означает чужеродное тело, то есть они не принадлежат к сакральному телу Бхараты, они не относятся к тому, осуществлено, вот как бы главный миф Индии это жертвоприношение Пуруши, они не являются частью тела Пуруши, они не имеют права, может как гости могут находиться, к ним нужно проявлять уважение, но к ним не относятся как к равным и никогда не будут относиться при всем вот всех возможных постижениях, передачах и парампаре которую осуществляют некоторые существуют реформаторы которые так не думают но традиционные вот с марта такие вот консервативные индуисты смотрят именно так и на млеч и на</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7058" data-t="7058" title="1:57:38">▶</a> прикасаем Только вы привели слово этимология. Словом этимология согласиться не могу, потому что это слово считается что пришло из шумера.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7068" data-t="7068" title="1:57:48">▶</a> Из шумерской, да, это весна.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7070" data-t="7070" title="1:57:50">▶</a> Название конкретной географической области, поэтому это заимствованное слово в рамках санскрита не то, что этимологически не разложимое, а словообразование никак не разложимое, это просто заимствование.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7086" data-t="7086" title="1:58:06">▶</a> Я понимаю, да, но я просто встречал такую я как бы сказал, не уверено, что как бы этимология насколько я знаю</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7096" data-t="7096" title="1:58:16">▶</a> этимология у нас у нас есть один авторитет по этимологии это трёхтомный этимологический санскритско-немецкий словарь Майрхофера кева и эва и это в принципе противоречие. Просто слово этимология такое очень важное для меня слово. То есть есть народные этимологии, есть семантические этимологии. Но если вы имеете в виду лингвистическую этимологию,</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7123" data-t="7123" title="1:58:43">▶</a> я понимаю, понимаю.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7125" data-t="7125" title="1:58:45">▶</a> Конечно, это несовместимо.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7126" data-t="7126" title="1:58:46">▶</a> Безусловно, да. Так я просто я вспомню источник, в котором я читал о семантической этимологии.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7134" data-t="7134" title="1:58:54">▶</a> Семантическую конечно возможно, но это как раз область нерукты, то есть это не имеет ничего общего с лингвистикой, то есть это за пределами лингвистики.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7145" data-t="7145" title="1:59:05">▶</a> Согласен, это играет роль. Просто насчёт шумерского топонима или топоним это или? Да, пожалуй, да. То есть я слышал тоже как от гипотезы. Ну а более вероятной, скажем так, более вероятной.</p>
+        <p><a class="para-timecode" href="?t=7162" data-t="7162" title="1:59:22">▶</a> Возможно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7163" data-t="7163" title="1:59:23">▶</a> Я слышала только переводы иноверец чужеземец.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7168" data-t="7168" title="1:59:28">▶</a> Но там что-то связанное с идеей чужеродного тела, но возможно семантическое понимание этого термина. Спасибо, очень интересно. Спасибо.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7183" data-t="7183" title="1:59:43">▶</a> Елене пришлось даже свою клятву нарушить, так сказать. Она клялась, что не будет ходить на всякие такие курсы. Нарушила врату.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 05</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7197" data-t="7197" title="1:59:57">▶</a> И пожалела.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7199" data-t="7199" title="1:59:59">▶</a> Врату можно принимать и снимать, это не проблема. Главное это сделать корректно.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7209" data-t="7209" title="2:00:09">▶</a> Ну что, тогда на сегодня всё тогда.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7212" data-t="7212" title="2:00:12">▶</a> Сегодня в следующий раз я в плане у нас сегодня обсуждения тиртх, но ничего, если мы перенесём темы на следующий раз.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 01</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7222" data-t="7222" title="2:00:22">▶</a> Я не думаю, что поступят жалобы, пока мэрии письменные вряд ли поступят.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7229" data-t="7229" title="2:00:29">▶</a> Всё, спасибо! Спасибо вам! До свидания! До</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 02</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7235" data-t="7235" title="2:00:35">▶</a> Спасибо!</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 03</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7236" data-t="7236" title="2:00:36">▶</a> До свидания! Спасибо!</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">СПИКЕР 00</div>      <div class="dialog-text">
+        <p><a class="para-timecode" href="?t=7238" data-t="7238" title="2:00:38">▶</a> Всего доброго!</p>
+      </div>
+    </div>
+
+
+
+  <nav class="slides-toc" id="slides-toc-nav">
+    <h2 class="slides-toc-title">Слайды</h2>
+    <ol class="slides-toc-list">
+        <li class="slides-toc-item">
+          <a href="#slide-1">
+            <span class="slides-toc-num">Слайд 1.</span>
+            Сакральная география Индии
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-2">
+            <span class="slides-toc-num">Слайд 2.</span>
+            Сад камней (Кайсэки)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-3">
+            <span class="slides-toc-num">Слайд 3.</span>
+            Умирающие боги: сравнительная мифология
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-4">
+            <span class="slides-toc-num">Слайд 4.</span>
+            Гондвана и дрейф Индийской плиты
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-5">
+            <span class="slides-toc-num">Слайд 5.</span>
+            Пуруша-сукта
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-6">
+            <span class="slides-toc-num">Слайд 6.</span>
+            Пандавы у подножия Гималаев
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-7">
+            <span class="slides-toc-num">Слайд 7.</span>
+            Поклонение мурти в индуистском храме
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-8">
+            <span class="slides-toc-num">Слайд 8.</span>
+            Бассейн реки Ганга
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-9">
+            <span class="slides-toc-num">Слайд 9.</span>
+            Храм Минакши и богиня
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-10">
+            <span class="slides-toc-num">Слайд 10.</span>
+            Дурга-пуджа
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-11">
+            <span class="slides-toc-num">Слайд 11.</span>
+            Джаганнатх и Чар-дхам
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-12">
+            <span class="slides-toc-num">Слайд 12.</span>
+            Вишну-Ананташайя
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-13">
+            <span class="slides-toc-num">Слайд 13.</span>
+            Сети священных мест Индии
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-14">
+            <span class="slides-toc-num">Слайд 14.</span>
+            Маршрут Рамы (Рамаяна)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-15">
+            <span class="slides-toc-num">Слайд 15.</span>
+            Тиртхи как сеть (Махабхарата)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-16">
+            <span class="slides-toc-num">Слайд 16.</span>
+            Литература
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-17">
+            <span class="slides-toc-num">Слайд 17.</span>
+            Книги Дычковского
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-18">
+            <span class="slides-toc-num">Слайд 18.</span>
+            Диана Эк: India: A Sacred Geography
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-19">
+            <span class="slides-toc-num">Слайд 19.</span>
+            Тиртха
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-20">
+            <span class="slides-toc-num">Слайд 20.</span>
+            Мост к Рамешвараму
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-21">
+            <span class="slides-toc-num">Слайд 21.</span>
+            12 Jyotirlinga Shrines
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-22">
+            <span class="slides-toc-num">Слайд 22.</span>
+            Генезис понятия тиртха
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-23">
+            <span class="slides-toc-num">Слайд 23.</span>
+            Тиртхи в Махабхарате
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-24">
+            <span class="slides-toc-num">Слайд 24.</span>
+            Тиртхи в Махабхарате
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-25">
+            <span class="slides-toc-num">Слайд 25.</span>
+            Пушкар в Махабхарате, гл. 80, §§38–47
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-26">
+            <span class="slides-toc-num">Слайд 26.</span>
+            Тиртхи из Араньякапарвы
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-27">
+            <span class="slides-toc-num">Слайд 27.</span>
+            Пушкар (Раджастан)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-28">
+            <span class="slides-toc-num">Слайд 28.</span>
+            Шри Брахма мандир
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-29">
+            <span class="slides-toc-num">Слайд 29.</span>
+            Ритуалы подготовки и в ходе тиртха-ятры
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-30">
+            <span class="slides-toc-num">Слайд 30.</span>
+            Тарпана (по правилам, с яджнопавитой)
+          </a>
+        </li>
+    </ol>
+  </nav>
+
+</div><!-- /.page -->
+</div><!-- /text-panel -->
+
+<div id="video-panel">
+  <div id="video-sticky">
+    <div id="video-player-area">
+      <div id="video-source-tabs">
+        <button class="vsrc-btn active" data-src="yt">YouTube</button>
+        <button class="vsrc-btn" data-src="rt">Rutube</button>
+        <button class="vsrc-btn" data-src="audio">Audio</button>
+      </div>
+      <div id="video-container">
+        <iframe id="video-frame"
+          src="https://www.youtube.com/embed/PlXhBTiZfCw?enablejsapi=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="audio-container">
+        <span id="audio-play-icon">▶</span>
+        <audio id="audio-player" controls preload="none">
+          <source src="./src/audio/01.mp3" type="audio/mpeg">
+        </audio>
+      </div>
+      <div id="video-hint" style="display:none"></div>
+    </div>
+    <div id="video-extra">
+      <div id="toc-panel"></div>
+    </div>
+  </div>
+</div><!-- /video-panel -->
+
+</div><!-- /app-layout -->
+</div><!-- /page-shell -->
+
+<script>
+(function() {
+  var YT_EMBED = 'https://www.youtube.com/embed/PlXhBTiZfCw?enablejsapi=1';
+  var RT_EMBED = 'https://rutube.ru/play/embed/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg';
+  var YT_BASE  = 'https://youtu.be/PlXhBTiZfCw';
+  var RT_BASE  = 'https://rutube.ru/video/private/6a6adb22b1c500adc5490c716b147e6e/?p=LzXd2wPNCqOVXnwnpOGbqg';
+
+  var mode     = (window.innerWidth <= 900) ? 'external' : 'embedded';
+  var videoSrc = 'yt';
+  var linkMode = 'both';
+  var lastSec  = 0;
+
+  var layout    = document.getElementById('app-layout');
+  var frame     = document.getElementById('video-frame');
+  var audioEl   = document.getElementById('audio-player');
+  var videoCont = document.getElementById('video-container');
+  var audioCont = document.getElementById('audio-container');
+  var toggle        = document.getElementById('mode-toggle');
+  var modeLabel     = document.getElementById('mode-label');
+  var modeIcon      = document.getElementById('mode-icon');
+  var srcBtns       = document.querySelectorAll('.vsrc-btn');
+  var hint          = document.getElementById('video-hint');
+  var autoscrollBtn = document.getElementById('autoscroll-btn');
+  var autoscrollLbl = document.getElementById('autoscroll-label');
+  var goTopBtn      = document.getElementById('go-top-btn');
+  var goEndBtn      = document.getElementById('go-end-btn');
+  var tocNextBtn    = document.getElementById('toc-next-btn');
+  var tocPrevBtn    = document.getElementById('toc-prev-btn');
+  var tocTitleEl    = document.getElementById('toc-current-title');
+  var readPctEl     = document.getElementById('read-pct');
+  var readTimeEl    = document.getElementById('read-time');
+
+  var YT_OFFSET = 0;
+  var RT_OFFSET = 0;
+  var AU_OFFSET = 0;
+
+  function fmtTime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    var p = function(n) { return String(n).padStart(2, '0'); };
+    return h > 0 ? h + ':' + p(m) + ':' + p(ss) : m + ':' + p(ss);
+  }
+
+  function showPlayer(src) {
+    if (src === 'audio') {
+      videoCont.style.display = 'none';
+      audioCont.classList.add('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — аудио перемотается';
+    } else {
+      videoCont.style.display = '';
+      audioCont.classList.remove('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается';
+    }
+  }
+
+  function updateHint(src, sec) {
+    var t = (src === 'rt') ? sec + RT_OFFSET : sec;
+    var label = (src === 'audio') ? 'аудио перемотается' : 'видео перемотается';
+    hint.innerHTML = 'Нажмите на время <span class="timecode">' + fmtTime(t) + '</span> в тексте — ' + label;
+  }
+
+  function updateLinkVisibility(lm) {
+    linkMode = lm;
+    document.body.classList.remove('links-yt-only', 'links-rt-only', 'links-audio-only');
+    if (lm === 'yt')    document.body.classList.add('links-yt-only');
+    if (lm === 'rt')    document.body.classList.add('links-rt-only');
+    if (lm === 'audio') document.body.classList.add('links-audio-only');
+  }
+
+  function reloadFrame(src) {
+    var container = document.getElementById('video-container');
+    var oldFrame = document.getElementById('video-frame');
+    oldFrame.parentNode.removeChild(oldFrame);
+    var newFrame = document.createElement('iframe');
+    newFrame.id = 'video-frame';
+    newFrame.src = src;
+    newFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    newFrame.setAttribute('allowfullscreen', '');
+    if (src.indexOf('rutube') !== -1) {
+      newFrame.addEventListener('load', function() {
+        var attempts = 0;
+        var interval = setInterval(function() {
+          try { newFrame.contentWindow.postMessage('{"method":"play"}', 'https://rutube.ru'); } catch(e) {}
+          attempts++;
+          if (attempts >= 10) clearInterval(interval);
+        }, 500);
+      });
+    }
+    container.appendChild(newFrame);
+    frame = newFrame;
+  }
+
+  function loadAt(src, sec) {
+    if (src === 'yt') {
+      reloadFrame(YT_EMBED + '&start=' + (sec + YT_OFFSET) + '&autoplay=1');
+    } else if (src === 'rt') {
+      reloadFrame(RT_EMBED + '&t=' + (sec + RT_OFFSET) + '&autoplay=1');
+    } else if (src === 'audio') {
+      audioEl.currentTime = sec + AU_OFFSET;
+      audioEl.play();
+    }
+  }
+
+  srcBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.src === videoSrc) return;
+      if (videoSrc === 'audio') audioEl.pause();
+      else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      srcBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      videoSrc = btn.dataset.src;
+      updateLinkVisibility(videoSrc);
+      showPlayer(videoSrc);
+      if (lastSec > 0) loadAt(videoSrc, lastSec);
+      else if (videoSrc === 'yt') reloadFrame(YT_EMBED);
+      else if (videoSrc === 'rt') reloadFrame(RT_EMBED);
+    });
+  });
+
+  toggle.addEventListener('click', function() {
+    mode = mode === 'embedded' ? 'external' : 'embedded';
+    applyMode();
+  });
+
+  var tocNav            = document.getElementById('toc-nav');
+  var tocPanel          = document.getElementById('toc-panel');
+  var tocOriginalParent = tocNav.parentNode;
+  var tocNextSibling    = tocNav.nextSibling;
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function moveToc(toPanel) {
+    if (toPanel && !isMobile()) tocPanel.appendChild(tocNav);
+    else tocOriginalParent.insertBefore(tocNav, tocNextSibling);
+  }
+
+  function updateMobilePadding() {
+    var videoPanel = document.getElementById('video-panel');
+    var toolbar    = document.getElementById('toolbar');
+    if (window.innerWidth <= 900) {
+      var toolbarH = toolbar ? toolbar.offsetHeight : 30;
+      // Тулбар всегда top:0 на мобильном (задано в CSS)
+      if (mode === 'embedded') {
+        // Видео fixed под тулбаром
+        var videoPanelH = videoPanel ? videoPanel.offsetHeight : 0;
+        var totalH = toolbarH + videoPanelH;
+        document.getElementById('text-panel').style.paddingTop = totalH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (totalH + 8) + 'px';
+        });
+      } else {
+        // External: только тулбар сверху
+        document.getElementById('text-panel').style.paddingTop = toolbarH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (toolbarH + 8) + 'px';
+        });
+      }
+    } else {
+      if (toolbar) toolbar.style.top = '';
+      document.getElementById('text-panel').style.paddingTop = '';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = '';
+      });
+    }
+  }
+
+  function applyMode() {
+    if (mode === 'embedded') {
+      layout.classList.remove('mode-external');
+      layout.classList.add('mode-embedded');
+      modeLabel.textContent = 'Внешний плеер';
+      modeIcon.textContent = '⊞';
+      toggle.classList.remove('ext-active');
+      moveToc(true);
+    } else {
+      // Остановить всё при переходе во внешний режим
+      if (videoSrc === 'audio') {
+        audioEl.pause();
+      } else {
+        reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      }
+      layout.classList.remove('mode-embedded');
+      layout.classList.add('mode-external');
+      modeLabel.textContent = 'Встроенный плеер';
+      modeIcon.textContent = '▶';
+      toggle.classList.add('ext-active');
+      moveToc(false);
+    }
+    requestAnimationFrame(function() {
+      _videoFitDone = false;
+      updateMobilePadding();
+      alignTocTitle();
+      fitVideoToToc(true);
+    });
+  }
+
+  window.addEventListener('resize', function() {
+    _videoFitDone = false;
+    moveToc(mode === 'embedded');
+    updateMobilePadding();
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+  });
+
+  // Выравниваем toc-current-title по левому краю текста (.page)
+  var _videoFitDone = false;
+  function fitVideoToToc(force) {
+    if (window.innerWidth <= 900) return;
+    if (_videoFitDone && !force) return;
+    // Сбрасываем фиксацию tocNav перед пересчётом
+    var tocNavReset = document.getElementById('toc-nav');
+    if (tocNavReset) tocNavReset.style.minHeight = '';
+    var sticky      = document.getElementById('video-sticky');
+    var videoExtra  = document.getElementById('video-extra');
+    var playerArea  = document.getElementById('video-player-area');
+    if (!sticky || !videoExtra || !playerArea) return;
+
+    // Высота sticky = всё доступное место в видео-панели
+    var stickyH     = sticky.clientHeight;
+    // Мерим содержимое video-extra напрямую через toc-nav + его отступы
+    var tocNavEl    = document.getElementById('toc-nav');
+    var tocPanelEl  = document.getElementById('toc-panel');
+    var extraH;
+    if (tocNavEl) {
+      // tocNav.offsetHeight + padding toc-panel + небольшой запас
+      var tocPanelStyle = tocPanelEl ? getComputedStyle(tocPanelEl) : null;
+      var tocPad = tocPanelStyle
+        ? parseInt(tocPanelStyle.paddingTop||0) + parseInt(tocPanelStyle.paddingBottom||0)
+        : 4;
+      extraH = tocNavEl.offsetHeight + tocPad + 4;
+    } else {
+      extraH = videoExtra.offsetHeight;
+    }
+    // Всё что в player-area кроме контейнера видео
+    var tabsEl      = document.getElementById('video-source-tabs');
+    var hintEl      = document.getElementById('video-hint');
+    var audioEl2    = document.getElementById('audio-container');
+    var tabsH       = tabsEl ? tabsEl.offsetHeight : 0;
+    var hintH       = hintEl ? hintEl.offsetHeight : 0;
+    var audioH      = (audioEl2 && audioEl2.style.display !== 'none') ? audioEl2.offsetHeight : 0;
+    var playerPad   = parseInt(getComputedStyle(playerArea).paddingTop)
+                    + parseInt(getComputedStyle(playerArea).paddingBottom);
+
+    // Видео = sticky минус всё остальное, без запаса
+    var available   = stickyH - extraH - tabsH - hintH - audioH - playerPad;
+    var finalH      = Math.max(120, Math.round(available));
+
+    document.documentElement.style.setProperty('--video-max-h', finalH + 'px');
+    // Фиксируем min-height у tocNav — не даём оглавлению уменьшиться при смене YT/RT/AU
+    var tocNavEl2 = document.getElementById('toc-nav');
+    if (tocNavEl2) tocNavEl2.style.minHeight = tocNavEl2.offsetHeight + 'px';
+    _videoFitDone = true;
+  }
+
+  function alignProgressToButtons() {
+    var modeBtn = document.getElementById('mode-toggle');
+    if (!modeBtn) return;
+    var w = modeBtn.offsetWidth;
+    document.documentElement.style.setProperty('--mode-btn-w', w + 'px');
+  }
+
+  function alignTocTitle() {
+    var page = document.querySelector('#text-panel .page');
+    var toolbar = document.getElementById('toolbar');
+    if (toolbar) {
+      var toolbarH = toolbar.offsetHeight;
+      document.documentElement.style.setProperty('--toolbar-h', toolbarH + 'px');
+      // scroll-padding-top чтобы якоря не уходили под тулбар
+      textPanel.style.scrollPaddingTop = toolbarH + 'px';
+      document.documentElement.style.scrollPaddingTop = toolbarH + 'px';
+      // scroll-margin-top на все заголовки
+      document.querySelectorAll('.page h2, .page h3').forEach(function(el) {
+        el.style.scrollMarginTop = (toolbarH + 4) + 'px';
+      });
+    }
+    if (!page || !toolbar) return;
+    // Вычисляем отступ по CSS-логике .page:
+    // max-width: 780px, margin: 0 auto, padding-left: 40px
+    // left = max(0, (panelWidth - 780) / 2) + 40
+    var panelWidth = textPanel.clientWidth;
+    var maxWidth = 780;
+    var pageMargin = panelWidth > maxWidth ? (panelWidth - maxWidth) / 2 : 0;
+    var pagePaddingLeft = 40;
+    var offset = pageMargin + pagePaddingLeft;
+    // Вычитаем padding самого тулбара (10px)
+    tocTitleEl.style.marginLeft = Math.max(0, offset - 10) + 'px';
+    tocTitleEl.style.paddingLeft = '0';
+  }
+
+    showPlayer('yt');
+  updateLinkVisibility('yt');
+  applyMode();
+  // Вызываем выравнивание несколько раз — layout может устаканиваться постепенно
+  requestAnimationFrame(function() {
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 200);
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 800);
+  });
+
+  function handleTimecodeClick(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (!a) return;
+    var href    = a.href || '';
+    var isAudio = a.classList.contains('audio-toc');
+    var isYT    = a.classList.contains('yt-toc') || (!isAudio && !a.classList.contains('rt-toc') && href.indexOf('youtu') !== -1);
+    var isRT    = a.classList.contains('rt-toc') || (!isAudio && !isYT && href.indexOf('rutube') !== -1);
+    var tMatch  = href.match(/[?&]t=(\d+)/);
+    var sec     = tMatch ? parseInt(tMatch[1]) : 0;
+
+    if (mode === 'embedded') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSec = sec;
+      if (isAudio) {
+        if (videoSrc !== 'audio') {
+          reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === 'audio'); });
+          videoSrc = 'audio';
+          showPlayer('audio');
+        }
+        updateLinkVisibility('audio');
+        loadAt('audio', sec);
+      } else if (isYT || isRT) {
+        var targetSrc = isYT ? 'yt' : 'rt';
+        if (targetSrc !== videoSrc) {
+          if (videoSrc === 'audio') audioEl.pause();
+          else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === targetSrc); });
+          videoSrc = targetSrc;
+          showPlayer(targetSrc);
+        }
+        updateLinkVisibility(targetSrc);
+        loadAt(videoSrc, sec);
+      }
+      // Если клик из оглавления — скроллим текст к соответствующему заголовку
+      var li = a.closest('li');
+      if (li) {
+        var anchorLink = li.querySelector('a[href^="#"]');
+        if (anchorLink) {
+          var targetId = anchorLink.getAttribute('href').slice(1);
+          var targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            var scrollEl = window.innerWidth > 900 ? textPanel : document.documentElement;
+            var videoPanel = document.getElementById('video-panel');
+            var offset = targetEl.offsetTop - (window.innerWidth <= 900 ? videoPanel.offsetHeight + 8 : 8);
+            scrollEl.scrollTo({ top: offset, behavior: 'smooth' });
+          }
+        }
+      } else {
+        document.getElementById('video-sticky').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else {
+      if (isAudio) {
+        e.preventDefault();
+        window.open('./src/audio/01.mp3#t=' + sec, '_blank');
+      }
+    }
+  }
+
+  // Подсветка по клику на пункте оглавления в правой панели
+  var tocClickIdx = -1;  // индекс принудительно выбранного пункта
+  var tocClickTimer = null;
+  tocPanel.addEventListener('click', function(e) {
+    var li = e.target.closest('li');
+    if (!li) return;
+    var allLi = Array.from(tocPanel.querySelectorAll('.toc-list li'));
+    var idx = allLi.indexOf(li);
+    if (idx < 0) return;
+    tocClickIdx = idx;
+    allLi.forEach(function(el, i) { el.classList.toggle('toc-active', i === idx); });
+    // Снимаем принудительный индекс когда скролл доедет (через 1 сек)
+    if (tocClickTimer) clearTimeout(tocClickTimer);
+    tocClickTimer = setTimeout(function() { tocClickIdx = -1; }, 1000);
+  });
+
+  // Клик на пустую область audio-container — play/pause
+  var audioCont2 = document.getElementById('audio-container');
+  var audioPlayIcon = document.getElementById('audio-play-icon');
+  audioCont2.addEventListener('click', function(e) {
+    if (e.target.closest('audio')) return; // клик на сам плеер — не трогаем
+    if (audioEl.paused) {
+      audioEl.play();
+      audioPlayIcon.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      audioPlayIcon.textContent = '▶';
+    }
+  });
+  audioEl.addEventListener('play',  function() {
+    audioPlayIcon.textContent = '⏸';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+  audioEl.addEventListener('pause', function() {
+    audioPlayIcon.textContent = '▶';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+
+  document.addEventListener('click', handleTimecodeClick);
+  document.addEventListener('touchend', function(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (a && mode === 'embedded') handleTimecodeClick(e);
+  }, { passive: false });
+
+  // ── Клик на таймкоде абзаца — переход на активный источник ─────────────
+  function handleParaTimecode(e) {
+    var a = e.target.closest('a.para-timecode');
+    if (!a) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var sec = parseInt(a.dataset.t, 10);
+    if (isNaN(sec)) return;
+    if (mode === 'embedded') {
+      loadAt(videoSrc, sec);
+      updateHint(videoSrc, sec);
+    } else {
+      var url;
+      if (videoSrc === 'yt') {
+        url = YT_BASE + (YT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + YT_OFFSET);
+      } else if (videoSrc === 'rt') {
+        url = RT_BASE + (RT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + RT_OFFSET);
+      } else {
+        url = './src/audio/01.mp3#t=' + (sec + AU_OFFSET);
+      }
+      window.open(url, '_blank');
+    }
+  }
+    document.addEventListener('click', handleParaTimecode);
+  document.addEventListener('touchend', function(e) {
+    if (e.target.closest('a.para-timecode')) handleParaTimecode(e);
+  }, { passive: false });
+
+  // ── Панель инструментов ─────────────────────────────────────────────────
+
+  var textPanel = document.getElementById('text-panel');
+
+  function getScrollEl() {
+    return (window.innerWidth > 900) ? textPanel : document.documentElement;
+  }
+
+  // Текущий активный раздел
+  function getCurrentTocIndex() {
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    var best = -1;
+    for (var i = 0; i < tocItems.length; i++) {
+      var el = document.getElementById(tocItems[i].id);
+      if (!el) continue;
+      var elTop = scrollEl === textPanel
+        ? el.offsetTop - scrollEl.scrollTop
+        : el.getBoundingClientRect().top;
+      if (elTop <= toolbarH + 8) best = i;
+    }
+    return best;
+  }
+
+  // Строим структуру разделов для нумерации — синхронно с CSS-счётчиками
+  var tocItems = [];
+  (function() {
+    var h2n = 0, h3n = 0;
+    document.querySelectorAll('#toc-nav .toc-list li').forEach(function(li) {
+      var a = li.querySelector('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tag = el.tagName.toLowerCase();
+      var title = el.childNodes[0].textContent.trim();
+      if (tag === 'h2') {
+        h2n++; h3n = 0;
+        tocItems.push({ id: id, tag: 'h2', h2: h2n, h3: 0, title: title, parentTitle: '' });
+      } else if (tag === 'h3') {
+        h3n++;
+        var parentTitle = '';
+        // Ищем последний h2 в tocItems
+        for (var j = tocItems.length - 1; j >= 0; j--) {
+          if (tocItems[j].tag === 'h2') { parentTitle = tocItems[j].title; break; }
+        }
+        tocItems.push({ id: id, tag: 'h3', h2: h2n, h3: h3n, title: title, parentTitle: parentTitle });
+      }
+    });
+  })();
+
+  function updateTocTitle() {
+    var idx = getCurrentTocIndex();
+
+    // Подсветка активного пункта в #toc-panel при скролле
+    // (не перебиваем если был недавний клик)
+    var tocPanelItems = tocPanel.querySelectorAll('.toc-list li');
+    var activeIdx = (tocClickIdx >= 0) ? tocClickIdx : idx;
+    tocPanelItems.forEach(function(li, i) { li.classList.toggle('toc-active', i === activeIdx); });
+
+
+    if (idx < 0 || idx >= tocItems.length) { tocTitleEl.textContent = ''; return; }
+    var item = tocItems[idx];
+    var text;
+    if (item.tag === 'h2') {
+      text = item.h2 + '. ' + item.title;
+    } else {
+      text = item.h2 + '.' + item.h3 + ' ' + item.title + ' / ' + item.parentTitle;
+    }
+    tocTitleEl.textContent = text;
+  }
+
+  // Скролл к разделу по индексу
+  function scrollToTocItem(idx) {
+    if (idx < 0 || idx >= tocItems.length) return;
+    var el = document.getElementById(tocItems[idx].id);
+    if (!el) return;
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    if (scrollEl === textPanel) {
+      scrollEl.scrollTo({ top: el.offsetTop - toolbarH - 4, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - toolbarH - 4, behavior: 'smooth' });
+    }
+  }
+
+  tocNextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx + 1);
+  });
+
+  tocPrevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx <= 0 ? 0 : idx - 1);
+  });
+
+  goTopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    getScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  goEndBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var scrollEl = getScrollEl();
+    // scrollHeight может быть неточным при первом вызове (lazy-render).
+    // Передаём заведомо большое число — браузер сам ограничит до максимума.
+    scrollEl.scrollTo({ top: 999999999, behavior: 'smooth' });
+  });
+
+  // Прогресс + время чтения
+  var WORDS_PER_MIN = 150;
+  var totalWords = (document.getElementById('text-panel').innerText.match(/\S+/g) || []).length;
+  var totalMinutes = Math.max(1, Math.round(totalWords / WORDS_PER_MIN));
+
+  var progressBarEl = document.getElementById('progress-bar');
+
+  // alignTocTitle объявлена выше
+
+  function updateProgress() {
+    var scrollEl     = getScrollEl();
+    var scrollTop    = scrollEl.scrollTop;
+    var scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+    var pct = scrollHeight > 0 ? Math.round(scrollTop / scrollHeight * 100) : 0;
+    readPctEl.textContent = pct + '%';
+    progressBarEl.style.width = pct + '%';
+    var minsLeft = Math.max(1, Math.round(totalMinutes * (1 - pct / 100)));
+    readTimeEl.textContent = '\u00a0(' + minsLeft + '\u00a0мин)';
+  }
+
+  textPanel.addEventListener('scroll', updateProgress);
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  textPanel.addEventListener('scroll', updateTocTitle);
+  window.addEventListener('scroll', updateTocTitle);
+  updateTocTitle();
+
+  // Автоскроллинг
+  var autoscrollActive = false;
+  var autoscrollSpeed  = 1;   // px/frame
+  var autoscrollRaf    = null;
+
+  function autoscrollStep() {
+    if (!autoscrollActive) return;
+    var scrollEl = getScrollEl();
+    scrollEl.scrollTop += autoscrollSpeed;
+    autoscrollRaf = requestAnimationFrame(autoscrollStep);
+  }
+
+  autoscrollBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    autoscrollActive = !autoscrollActive;
+    if (autoscrollActive) {
+      autoscrollBtn.classList.add('active');
+      autoscrollLbl.textContent = '⏸ Стоп';
+      autoscrollRaf = requestAnimationFrame(autoscrollStep);
+    } else {
+      autoscrollBtn.classList.remove('active');
+      autoscrollLbl.textContent = '⏩ Авто';
+      if (autoscrollRaf) cancelAnimationFrame(autoscrollRaf);
+    }
+  });
+
+
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Занятие №3. Сакральная география Индии</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css?v=1">
+  <style>
+  /* ── Toolbar ───────────────────────────────────────────────────────────── */
+  #toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(44, 30, 18, 0.97);
+    backdrop-filter: blur(6px);
+    color: #e8d8c0;
+    font-size: 13px;
+    min-height: 36px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+  /* Обёртка: тулбар + app-layout занимают всю высоту экрана */
+  #page-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* app-layout теперь занимает оставшееся место */
+  #page-shell #app-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .tb-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #e8d8c0;
+    cursor: pointer;
+    padding: 3px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: background 0.15s;
+    line-height: 1.4;
+  }
+  .tb-btn:hover { background: rgba(255,255,255,0.18); }
+  .tb-btn.active { background: rgba(200,160,80,0.35); border-color: rgba(200,160,80,0.6); }
+  .tb-mode-btn { font-size: 12px; }
+  .tb-icon-btn { padding: 3px 7px; font-size: 13px; }
+  #go-top-btn { margin-left: var(--mode-btn-w, 120px); }
+  #toc-current-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    padding: 0 6px 0 0;
+    min-width: 0;
+  }
+  #toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  #progress-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 116px;
+    flex-shrink: 0;
+  }
+  /* Сдвигаем progress+time влево на ширину 4 кнопок навигации через JS */
+  #read-pct-wrap { display: inline-block; width: 2.8em; text-align: right; flex-shrink: 0; }
+  #read-pct { font-weight: 600; color: #e8d8c0; }
+  #read-time {
+    color: #a09070;
+    display: inline-block;
+    min-width: 4.5em;  /* хватит на "(99 мин)" */
+  }
+  /* В правой панели оглавления показываем только одну ссылку — активный источник.
+     По умолчанию (нет класса на body) и при links-yt-only — YT.
+     link-sep скрываем всегда, чтобы не оставалось висящих разделителей. */
+  #toc-panel .toc-list .link-sep { display: none; }
+
+  /* По умолчанию и YT-режим: показываем только YT */
+  #toc-panel .toc-list .rt-toc   { display: none; }
+  #toc-panel .toc-list .audio-toc { display: none; }
+
+  /* RT-режим: показываем только RT */
+  body.links-rt-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-rt-only #toc-panel .toc-list .rt-toc    { display: inline; }
+
+  /* Audio-режим: показываем только AU */
+  body.links-audio-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-audio-only #toc-panel .toc-list .audio-toc { display: inline; }
+
+  /* Подсветка текущего раздела в правой панели оглавления */
+  #toc-panel .toc-list li.toc-active > a:not(.yt-toc):not(.rt-toc):not(.audio-toc) {
+    color: var(--ink, #1a1410) !important;
+    font-weight: 400 !important;
+    background: rgba(201, 168, 76, 0.18);
+    border-radius: 3px;
+    /* без padding/margin — не влияем на геометрию и высоту блока */
+  }
+  /* Компенсируем height:100vh у #text-panel из внешнего CSS —
+     тулбар теперь занимает часть высоты, panel должен быть меньше */
+  /* ── Мобильный тулбар (≤900px) ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    /* Отключаем page-shell — на мобильном скроллится body */
+    #page-shell {
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+    /* Тулбар фиксируем вверху — выше video-panel */
+    #toolbar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      padding: 3px 6px;
+      gap: 3px;
+      min-height: 30px;
+      flex-wrap: nowrap;
+    }
+    /* video-panel опускаем под тулбар */
+    #video-panel {
+      top: var(--toolbar-h, 30px) !important;
+    }
+    .tb-btn {
+      padding: 2px 5px !important;
+      font-size: 11px !important;
+    }
+    .tb-icon-btn {
+      padding: 2px 5px !important;
+      font-size: 12px !important;
+    }
+    /* Скрываем текстовые метки — оставляем только иконки */
+    #mode-label { display: none; }
+    #autoscroll-label { font-size: 0; }
+    #autoscroll-label::before { content: '⏩'; font-size: 12px; }
+    .tb-btn.active #autoscroll-label::before { content: '⏸'; }
+    /* Скрываем заголовок раздела, полоску прогрессбара и авто */
+    #toc-current-title { display: none !important; }
+    #progress-bar-wrap { display: none !important; }
+    #autoscroll-btn { display: none !important; }
+    /* Возвращаем проценты и минуты */
+    #read-pct { font-size: 11px !important; }
+    #read-time { display: inline-block !important; font-size: 11px; min-width: 3.5em; }
+    #progress-group { width: auto; gap: 0; }
+    #go-top-btn { margin-left: 6px; }
+    /* Кнопка режима — как на десктопе, показываем текст */
+    #mode-label { display: inline !important; }
+    #mode-toggle { padding: 3px 9px !important; font-size: 12px !important; }
+  }
+
+  @media (min-width: 901px) {
+    #text-panel      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #app-layout      { height: calc(100vh - var(--toolbar-h, 36px)) !important; overflow: hidden !important; }
+    #video-panel     { height: auto !important; overflow: visible !important; position: relative !important; align-self: flex-start !important; }
+    #video-sticky    { position: fixed !important; top: var(--toolbar-h, 36px) !important; right: 0 !important; width: 50% !important; height: calc(100vh - var(--toolbar-h, 36px)) !important; z-index: 1 !important; overflow: hidden !important; background: transparent !important; }
+    #video-container { max-height: var(--video-max-h, 50vh) !important; }
+    #audio-container {
+      height: var(--video-max-h, 50vh);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      #audio-container {
+        height: auto !important;
+        padding: 8px !important;
+        justify-content: center !important;
+      }
+      #audio-play-icon { display: none !important; visibility: hidden !important; }
+      #video-container { display: none !important; }
+    }
+    #audio-play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      font-size: 48px;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    #audio-container:hover #audio-play-icon {
+      color: rgba(255,255,255,0.5);
+    }
+    #video-extra     { overflow-y: auto !important; scrollbar-gutter: stable; flex: 0 1 auto !important; background: transparent !important; }
+    #toc-panel       { background: var(--paper, #F8F4EC) !important; padding: 2px 4px !important; }
+    #toc-panel .toc-list { margin: 0 !important; padding-bottom: 4px !important; }
+    #toc-panel .toc-h2  { margin-top: 0.17rem !important; margin-bottom: 0.05rem !important; }
+    #toc-panel .toc-h3  { margin-top: 0.07rem !important; margin-bottom: 0.07rem !important; }
+  }
+  /* Ландшафтный режим на телефоне — тулбар как на десктопе */
+  @media (max-width: 900px) and (orientation: landscape) {
+    #toc-current-title { display: flex !important; }
+    #progress-bar-wrap { display: inline-flex !important; }
+    #autoscroll-btn    { display: inline-flex !important; }
+    #progress-group    { width: 116px; }
+    #read-time         { display: inline-block !important; }
+    #mode-label        { display: inline !important; }
+  }
+
+  /* audio-visible работает на всех экранах */
+  #audio-container.audio-visible { display: flex !important; }
+
+  /* Табы теперь под видео — меняем отступы */
+  #video-source-tabs { margin-bottom: 0 !important; margin-top: 6px !important; }
+  /* ── Нумерация заголовков в тексте (синхронно с оглавлением) ── */
+  .page { counter-reset: h2-counter; }
+  .page h2, .page h3, .page [id] { scroll-margin-top: calc(var(--toolbar-h, 36px) + 8px); }
+  .page h2 { counter-increment: h2-counter; counter-reset: h3-counter; }
+  .page h3 {
+    counter-increment: h3-counter;
+    font-style: normal !important;
+  }
+  .page h2::before {
+    content: counter(h2-counter) ". ";
+    color: #9a7a30;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .page h3::before {
+    content: counter(h2-counter) "." counter(h3-counter) " ";
+    color: #b8954a;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Переопределяем #mode-toggle из внешнего CSS — он там fixed bottom/right */
+  #mode-toggle {
+    position: static !important;
+    bottom: unset !important;
+    right: unset !important;
+    top: unset !important;
+    left: unset !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    color: #e8d8c0 !important;
+    cursor: pointer !important;
+    padding: 3px 9px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-family: inherit !important;
+  }
+  #mode-toggle:hover { background: rgba(255,255,255,0.22) !important; transform: none !important; }
+  #mode-toggle.ext-active { background: rgba(200,160,80,0.35) !important; border-color: rgba(200,160,80,0.6) !important; }
+  /* Сбросить старые стили #read-pct и #scroll-arrow из внешнего CSS */
+  #read-pct { font-size: 12px !important; opacity: 1 !important; letter-spacing: 0 !important; color: #e8d8c0 !important; font-weight: 600 !important; }
+  #progress-bar-wrap {
+    display: inline-flex;
+    align-items: center;
+    width: 80px;
+    height: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #c9a84c, #8b6914);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  #mode-icon { font-size: 14px !important; line-height: 1 !important; }
+  /* Таймкод абзаца — иконка ▶, время в tooltip */
+  a.para-timecode {
+    display: inline-block;
+    font-size: 0.6em;
+    line-height: 1;
+    vertical-align: middle;
+    color: #b8954a;
+    opacity: 0.55;
+    text-decoration: none;
+    margin-right: 2px;
+    transition: opacity 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  a.para-timecode:hover { opacity: 1; color: #9a7a30; }
+
+  /* ── Глоссарий ─────────────────────────────────────────────────────────── */
+  .glossary {
+    margin: 3em 0 2em;
+    padding: 1.5em 2em 2em;
+    border-top: 2px solid rgba(200,160,80,0.35);
+  }
+  .glossary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--accent, #b8922a);
+    margin: 0 0 1em;
+    letter-spacing: 0.02em;
+  }
+  .glossary-count {
+    font-size: 0.82em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin: -0.5em 0 1.2em;
+  }
+  .glossary-plain {
+    font-size: 0.95em;
+    line-height: 1.7;
+    margin: 0 0 2em;
+    opacity: 0.88;
+  }
+  .glossary-list {
+    margin: 0;
+    padding: 0;
+  }
+  .glossary-list dt {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 1em;
+    margin: 1em 0 0.15em;
+    color: #6b3a1f;
+  }
+  .glossary-list .gterm-tag {
+    display: inline;
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 0.82em;
+    opacity: 0.45;
+    margin-left: 0.5em;
+    letter-spacing: 0.03em;
+  }
+  .glossary-list dt a {
+    color: var(--accent, #b8922a);
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+    transition: opacity 0.15s;
+  }
+  .glossary-list dt a:hover { opacity: 0.75; }
+  .glossary-list dd {
+    margin: 0 0 0.25em 0;
+    padding-left: 1.2em;
+    border-left: 2px solid rgba(200,160,80,0.25);
+    font-size: 0.95em;
+    line-height: 1.55;
+    opacity: 0.88;
+  }
+  .glossary-list dt .gterm-refs {
+    display: inline;
+    font-size: 0.85em;
+    font-weight: 400;
+    opacity: 0.5;
+    margin-left: 0.5em;
+  }
+  .glossary-list dt .gterm-refs a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+    margin-right: 0.2em;
+  }
+  .glossary-list dt .gterm-refs a:hover { opacity: 0.75; }
+
+  /* ── Номер лекции на обложке ── */
+  .cover .lesson-date {
+    font-size: 13px;
+    color: var(--muted, #6B5E45);
+    margin-top: -14px;
+    margin-bottom: 20px;
+  }
+
+  </style>
+  <script>
+  /* Измеряем тулбар до первой отрисовки, чтобы --toolbar-h был точным сразу */
+  document.addEventListener('DOMContentLoaded', function() {
+    var tb = document.getElementById('toolbar');
+    if (tb) {
+      document.documentElement.style.setProperty('--toolbar-h', tb.offsetHeight + 'px');
+    }
+  });
+  </script>
+</head>
+<body>
+<div id="page-shell">
+<div id="toolbar">
+  <span id="toc-current-title"></span>
+  <span id="toolbar-right">
+    <span id="progress-group">
+      <span id="progress-bar-wrap" title="Прогресс чтения"><span id="progress-bar"></span></span>
+      <span id="read-pct-wrap"><span id="read-pct">0%</span></span>
+    </span>
+    <span id="read-time"></span>
+    <button id="go-top-btn" class="tb-btn tb-icon-btn" title="В начало текста">↑↑</button>
+    <button id="toc-prev-btn" class="tb-btn tb-icon-btn" title="Предыдущий раздел">▲</button>
+    <button id="toc-next-btn" class="tb-btn tb-icon-btn" title="Следующий раздел">▼</button>
+    <button id="go-end-btn" class="tb-btn tb-icon-btn" title="В конец текста">↓↓</button>
+    <button id="autoscroll-btn" class="tb-btn" title="Автоскроллинг">
+      <span id="autoscroll-label">⏩ Авто</span>
+    </button>
+    <button id="mode-toggle" class="tb-btn tb-mode-btn" title="Переключить режим плеера">
+      <span id="mode-icon">⊞</span>
+      <span id="mode-label">Внешний плеер</span>
+    </button>
+  </span>
+</div>
+
+<div id="app-layout">
+<div id="text-panel">
+<div class="page">
+
+  <header class="cover">
+    <p class="series">Курс «Сакральная география Индии» · Занятие №3</p>
+    <h1>Сакральная география Индии</h1>
+    <p class="subtitle">Лектор: Сергей Викторович Щербак</p>
+    <p class="lesson-date">18 марта 2026</p>
+    <p class="meta">
+      Общество ревнителей санскрита<br>
+Февраль 2026 – июнь 2026<br>      Ведущий: Марцис Гасунс · Видеозапись:
+      <a href="https://youtu.be/8D9KeIcig6I" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw" target="_blank">RT</a>
+    </p>
+  </header>
+
+  <nav class="toc" id="toc-nav">
+    <h2 class="toc-title">Содержание</h2>
+    <ul class="toc-list">
+      <li class="toc-h2"><a href="#s1">Вступление. Повторение пройденного</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=402" title="6:42" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=402" title="6:42" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=402" title="6:42">AU</a></li>
+      <li class="toc-h2"><a href="#s2">История храмового строительства: от дерева к камню</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=909" title="15:09" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=909" title="15:09" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=909" title="15:09">AU</a></li>
+      <li class="toc-h3"><a href="#s2_1">Буддийские и деревянные храмы: утраченное наследие</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=959" title="15:59" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=959" title="15:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=959" title="15:59">AU</a></li>
+      <li class="toc-h3"><a href="#s2_2">Золотой век Гуптов и начало каменного строительства</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=1222" title="20:22" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1222" title="20:22" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1222" title="20:22">AU</a></li>
+      <li class="toc-h2"><a href="#s3">Два стиля индуистского храма: нагара и дравида</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=1934" title="32:14" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1934" title="32:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1934" title="32:14">AU</a></li>
+      <li class="toc-h3"><a href="#s3_1">Географическое распределение стилей</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=1997" title="33:17" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1997" title="33:17" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1997" title="33:17">AU</a></li>
+      <li class="toc-h2"><a href="#s4">Шикхара: структура и символика башни</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=2136" title="35:36" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2136" title="35:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2136" title="35:36">AU</a></li>
+      <li class="toc-h3"><a href="#s4_1">Архитектурный приём латина</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=2245" title="37:25" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2245" title="37:25" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2245" title="37:25">AU</a></li>
+      <li class="toc-h3"><a href="#s4_2">Амалака — навершие шикхары</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=2420" title="40:20" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2420" title="40:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2420" title="40:20">AU</a></li>
+      <li class="toc-h2"><a href="#s5">Структура северного храма (нагара)</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=2676" title="44:36" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2676" title="44:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2676" title="44:36">AU</a></li>
+      <li class="toc-h3"><a href="#s5_1">Гарбхагриха и мандапа</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=2796" title="46:36" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2796" title="46:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2796" title="46:36">AU</a></li>
+      <li class="toc-h3"><a href="#s5_2">Внешний облик и паломническая привлекательность</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3016" title="50:16" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3016" title="50:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3016" title="50:16">AU</a></li>
+      <li class="toc-h2"><a href="#s6">Материалы и ритуал выбора места для строительства</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3192" title="53:12" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3192" title="53:12" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3192" title="53:12">AU</a></li>
+      <li class="toc-h2"><a href="#s7">Храм Кайласанатха в Элоре: высечен из скалы</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3365" title="56:05" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3365" title="56:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3365" title="56:05">AU</a></li>
+      <li class="toc-h3"><a href="#s7_1">Династия Раштракутов и заказчик храма</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3626" title="1:00:26" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3626" title="1:00:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3626" title="1:00:26">AU</a></li>
+      <li class="toc-h3"><a href="#s7_2">Масштаб и логика строительства сверху вниз</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3754" title="1:02:34" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3754" title="1:02:34" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3754" title="1:02:34">AU</a></li>
+      <li class="toc-h3"><a href="#s7_3">Символика и скульптурный декор</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3820" title="1:03:40" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3820" title="1:03:40" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3820" title="1:03:40">AU</a></li>
+      <li class="toc-h2"><a href="#s8">Другие выдающиеся храмы нагара</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3975" title="1:06:15" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3975" title="1:06:15" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3975" title="1:06:15">AU</a></li>
+      <li class="toc-h3"><a href="#s8_1">Храм Сурьи в Конарке</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=3975" title="1:06:15" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3975" title="1:06:15" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3975" title="1:06:15">AU</a></li>
+      <li class="toc-h3"><a href="#s8_2">Храм Рамы в Айодхье: современное строительство</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=4168" title="1:09:28" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4168" title="1:09:28" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4168" title="1:09:28">AU</a></li>
+      <li class="toc-h2"><a href="#s9">Опыт посещения храма: сравнение с церковью и мечетью</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=4619" title="1:16:59" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4619" title="1:16:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4619" title="1:16:59">AU</a></li>
+      <li class="toc-h3"><a href="#s9_1">Постепенное погружение и даршан</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=4914" title="1:21:54" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4914" title="1:21:54" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4914" title="1:21:54">AU</a></li>
+      <li class="toc-h3"><a href="#s9_2">Гарбхагриха: камерное пространство встречи с божеством</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=5011" title="1:23:31" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5011" title="1:23:31" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5011" title="1:23:31">AU</a></li>
+      <li class="toc-h2"><a href="#s10">Космология пространства и тело как храм</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=5399" title="1:29:59" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5399" title="1:29:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5399" title="1:29:59">AU</a></li>
+      <li class="toc-h3"><a href="#s10_1">Пуруша-мандала и соразмерность тела</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=5904" title="1:38:24" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5904" title="1:38:24" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5904" title="1:38:24">AU</a></li>
+      <li class="toc-h2"><a href="#s11">Стхапати: зодчий как риши и творец</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=5987" title="1:39:47" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5987" title="1:39:47" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5987" title="1:39:47">AU</a></li>
+      <li class="toc-h3"><a href="#s11_1">Знание стхапати: джняна, янтра и символика</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=6490" title="1:48:10" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=6490" title="1:48:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6490" title="1:48:10">AU</a></li>
+      <li class="toc-h3"><a href="#s11_2">Геометрия: янтра и Васту-Пуруша-мандала</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=6769" title="1:52:49" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=6769" title="1:52:49" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6769" title="1:52:49">AU</a></li>
+      <li class="toc-h2"><a href="#s12">Ритуалы строительства: Каршана-пратиштха</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=7086" title="1:58:06" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7086" title="1:58:06" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7086" title="1:58:06">AU</a></li>
+      <li class="toc-h3"><a href="#s12_1">Исследование и освящение земли: Бхупарикша</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=7227" title="2:00:27" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7227" title="2:00:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7227" title="2:00:27">AU</a></li>
+      <li class="toc-h3"><a href="#s12_2">Испытание земли на вкус, запах и звук</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=7323" title="2:02:03" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7323" title="2:02:03" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7323" title="2:02:03">AU</a></li>
+      <li class="toc-h2"><a href="#s13">Вопросы слушателей. Завершение</a> <a class="yt-toc" href="https://youtu.be/8D9KeIcig6I?t=7558" title="2:05:58" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7558" title="2:05:58" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7558" title="2:05:58">AU</a></li>
+    </ul>
+  </nav>
+
+
+  <h2 id="s1">Вступление. Повторение пройденного
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=402" title="6:42" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=402" title="6:42" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=402">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p0"><a class="para-timecode" href="?t=351" data-t="351" title="5:51">▶</a> Уважаемые друзья, добрый вечер. Начинаем наше занятие. Сегодня, я так понимаю, о Марте с её речи не будет. Вот поэтому я начну сам, а вот сейчас запустим презентацию. Подскажите, пожалуйста, видно презентацию или нет? Пока нет.</p>
+      </div>
+    </div>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p1"><a class="para-timecode" href="?t=402" data-t="402" title="6:42">▶</a> Не видно, да? Всё в порядке. А сейчас видно, да? Всё хорошо. В двух словах о том, о чём мы говорили на прошлых двух или трёх занятиях.</p>
+        <p id="p2"><a class="para-timecode" href="?t=462" data-t="462" title="7:42">▶</a> Сейчас какие-то проблемы просто с Зумом. Сейчас, секундочку, попробуем их решить. Так, ну ладно, если будут какие-то проблемы или вопросы, сразу об этом пишите, пожалуйста, потому что непонятные вещи с Zoom происходят сегодня. Вот, значит, мы с вами занимаемся сакральной географией Индии, и это территория воображаемого. Это тот предмет, где соединяется дополненная реальность воображаемого мира, религиозных, мифологических представлений и естественного ландшафта, где при слиянии идеальном этих двух компонентов происходит победа первого над вторым, то есть воображаемого над реальным.</p>
+        <p id="p3"><a class="para-timecode" href="?t=542" data-t="542" title="9:02">▶</a> Вот как бы в основе предмета сакральной географии лежит такая феноменологическая постановка задач. Так нам нужно попытаться увидеть глазами паломника верующего таким образом ландшафт, чтобы он преобразился, став живым сакральным объектом для него. То есть происходит перемещение из мира наших обыденных представлений в идеальное мироустройство. И на этом пути есть множество феноменов, которые мы один за другим рассматриваем. Первый мы рассмотрели — феномен тиртхи как таковой и тиртхаятры, то есть движение от одной святыни к другой.</p>
+        <p id="p4"><a class="para-timecode" href="?t=610" data-t="610" title="10:10">▶</a> На разных примерах и подробно остановились на путешествии на юг. То есть южное направление. Каждое направление в сакральной географии имеет свои признаки, символы, свой многообразный символизм. И, в частности, юг, первое, с чем мы подробно познакомились, — это мир Ямы, мир одного из 33 ведущих индийских девов, который иначе называется Дхарма, и он царь мертвых. Вот тиртха, которую мы исследовали на прошлой лекции, находится в штате Бихар — это город Гая, а точнее там храм Вишнупады, следа бога Вишну, и он многими текстами, посвящёнными тиртхаятре, связывается с царством мёртвых, с посмертным существованием питры, предков, о том, как это совершается этот путь и что на нём, какие вехи на нём преодолеваются. Соответственно, что должен делать потомок, то есть сын или вообще потомки, как обобщающее, для того, чтобы при этом им было хорошо там?</p>
+        <p id="p5"><a class="para-timecode" href="?t=703" data-t="703" title="11:43">▶</a> Вот мы это подробно рассмотрели. Это как бы один из вариантов рассмотрения тиртхи как таковой феномена на примере юга. Заодно познакомились с тем, что каждая из сторон света наделяется значимой символикой, значимым содержимым и, соответственно, воображение тех, кто ориентируется в пространстве Индии, всегда с югом ассоциируется путь предков, царство мёртвых. Такая, в общем, сложная сторона, роль неблагоприятная. Но при правильном отношении всё на своих местах.</p>
+        <p id="p6"><a class="para-timecode" href="?t=756" data-t="756" title="12:36">▶</a> Просто эта сторона занимает своё место в жизни. По мере нашего дальнейшего путешествия в мир индийской символики и мифологии мы будем знакомиться и видеть, как устроены другие стороны света. А сегодня я бы хотел нашу лекцию, встречу посвятить целиком храму и храмовому строительству как важнейшим, одному из самых ключевых фактов сакральной географии Индии. Это совершенно невероятный феномен, это захватывающая тема в изучении индийской культуры — храмовая архитектура, которая многообразна, она наше воображение и нашу эстетическую и интеллектуальную сферы окрыляет, когда мы видим непосредственно, особенно в самой Бхарате, это строительство и этот феномен культуры. Сами индийцы называют его видья — это наука, но всё, что связано с этим существительным, видья, наука — это целая система, наука строительства, храмового строительства, и чем больше мы погружаемся в историю храмового строительства и того, как создавалась эта система храмов, тем больше у нас вопросов в отношении дискретности истории индийского храма, а именно то, что монументальное сооружение храма в Индии появляется достаточно поздно.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s2">История храмового строительства: от дерева к камню
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=909" title="15:09" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=909" title="15:09" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=909">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p7"><a class="para-timecode" href="?t=909" data-t="909" title="15:09">▶</a> Мы знаем, что индийская история, мифология и тексты, которые сопровождают эту культуру, насчитывают тысячи лет, а вот монументальная храмовая архитектура — где-то не раньше, чем с 5 века нашей эры. Что же такое? Почему так? Это, в общем, загадку порождает для человека, который с особенностями индийской истории не очень глубоко знаком. На самом деле для того, кто подробно изучает, становится понятно, что там происходит.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s2_1">Буддийские и деревянные храмы: утраченное наследие
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=959" title="15:59" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=959" title="15:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=959">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p8"><a class="para-timecode" href="?t=959" data-t="959" title="15:59">▶</a> Тем не менее, это загадка. Дело в том, что храмы-то строились. И другое дело, что тысячелетие до 5 века нашей эры — это буддийское тысячелетие. То есть Индия находилась под влиянием буддизма. Это такое мощное её внутреннее увлечение, так скажем, буддизм и джайнизм.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-1">
+      <img src="./src/img/03_01.jpg" alt="Храм – от пещер к камню" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 1.</span> Храм – от пещер к камню</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p9"><a class="para-timecode" href="?t=990" data-t="990" title="16:30">▶</a> Вот и соответственно всё, что строилось в этот период, в большей степени было связано с этими течениями индийской метафизики, религии, философии. Буддизм строил, соответственно, не индуистские типы сооружений. Нас ждёт буддийский период. В дальнейшем в нашем изучении сакральной географии мы увидим, как из чего буддизм берёт свою архитектуру, как он строит её, познакомимся с понятиями вихара, чайтья и ступа, ну, в общем, со всей буддийской терминологией, которая связана с искусством и с храмовым строительством. Но это всё же не индуизм.</p>
+        <p id="p10"><a class="para-timecode" href="?t=1045" data-t="1045" title="17:25">▶</a> Хотя, в общем, при дальнейшем рассмотрении мы увидим, как буддийские элементы заимствуются уже в индуистской архитектуре. Надо сказать, что большой был период, он в буддизме отражён, но также и храмовое строительство в контексте самого индуизма связано с пещерным строительством. И здесь на верхних двух слайдах, как фотографиях, видите пещеры, расположенные в Мадхья-Прадеш, центральных штатах Индии. Только там сверху плашечка закрывает заголовок почему-то. А, да, так.</p>
+        <p id="p11"><a class="para-timecode" href="?t=1097" data-t="1097" title="18:17">▶</a> То есть там такая синяя полоса. Я не понимаю, почему. Да, вот, её надо утащить. Она мешает. Она не уточилась.</p>
+        <p id="p12"><a class="para-timecode" href="?t=1109" data-t="1109" title="18:29">▶</a> И не видно заголовка. Ну, единственное, что я могу, наверное, как-то свернуть. Это не помогает — теперь совсем не видно ничего. То есть, теперь видно. Вот, и тогда он будет чуть поменьше, но, наверное, это на содержании не должно сказаться. Сейчас мы уменьшим здесь. Вот, сейчас вот так. Вот эти две фотографии видите на верхней части слайда. Это пещерные храмы.</p>
+        <p id="p13"><a class="para-timecode" href="?t=1161" data-t="1161" title="19:21">▶</a> Они были и в буддизме, и в джайнизме. Когда будем буддийский период рассматривать, мы с вами познакомимся с такими чудесными местами как Аджанта и Эллора, другие пещеры были, Карли и так далее. Уже сегодня мы, кстати, видим одно из храмовых сооружений Эллоры чуть позже, через один слайд. В общем, это строительство разворачивалось в пещерах, не только буддийское и джайнское, но ещё и индуистское. Храмовая скульптура уже существовала в тот период, который мы обозначаем как период золотого века индийского искусства, период Гуптов.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s2_2">Золотой век Гуптов и начало каменного строительства
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=1222" title="20:22" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1222" title="20:22" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1222">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p14"><a class="para-timecode" href="?t=1222" data-t="1222" title="20:22">▶</a> Он длился с четвёртого по шестой века нашей эры. Нельзя сказать, что прямо однозначно он такой безоблачный, но по крайней мере его описывают как период, когда правители этой династии делали всё для восстановления мощи и красоты и эстетики в целом, да и философию развивали, индийского государства, индийской государственности и всей индийской культуры. Вот поэтому в этот период особенно развивается строительство, то есть оно, можно сказать, начинается, оно выходит из пещеры — но пещеры, храмовые помещения уже были в какой-то степени развиты. Здесь вы видите на правом верхнем слайде из пещеры Дашавтара почитание одной из аватар Вишну, а именно Вараха, третьей аватары, когда мифологический сюжет о том, как Вишну в облике вепря спасает из вод прекрасную землю и как бы выводит её из воды на сушу. Но по меньшей мере этот период был периодом строительства, периодом развития скульптуры, но именно монументальная архитектура тоже начинается с пятого века, и самые ранние храмы этого периода, которые мы знаем, — это типичный храм северный, более северный, чем по отношению к Матхуре, — это штат, ну, вот в нём уже есть зачатки того, что впоследствии станет феноменом северной архитектуры. Именно башня, которая расположена над главным святилищем — гарбхагрихой.</p>
+        <p id="p15"><a class="para-timecode" href="?t=1387" data-t="1387" title="23:07">▶</a> Башня эта получит название в северной архитектуре — шикхара. Здесь она в некоторой степени уже представлена, хотя ещё не проявлена её форма, у неё ещё нет завершающих композицию элементов, таких как амалака и калаша. Вот в этом храме ещё используется кирпич — кирпич тоже использовался как материал для строительства довольно давно. Надо сказать, что мы индийскую историю отсчитываем ещё до так называемой протоиндийской цивилизации, в которой был кирпич представлен и из него строились сооружения самые разные — от общественных до жилых помещений строились из кирпича. Более того, кирпич был стандартизирован — чёткую длину, ширину, высоту — и, в общем, по всей территории той индийской культуры, которую мы сейчас называем культурой Харапы. И тот же кирпич использовался в качестве стандарта. Но надо сказать, что кирпич — это для индийского климата не самое подходящее для монументального именно строительства.</p>
+        <p id="p16"><a class="para-timecode" href="?t=1483" data-t="1483" title="24:43">▶</a> Прежде всего потому, что ещё не столь совершенны были строительные технологии, в частности, раствор. То есть он размывался в период дождей, много где влажно, и поэтому кирпичные храмы они подвержены большему разрушению, и поэтому они не сохранялись. Но точно так же как и не сохранились для нас прежние храмы, которые строились, например, в связи с деревьями. Был период почитания деревьев и живущих в них духов — якшей. Точно так же, как и почитание нагов. Вот эти две хтонические сущности, наги и якши, они повсеместно почитались в Индии на протяжении неисчислимого числа столетий. И в какой-то степени до сих пор традиция вот такого почитания древесных и водных духов сохранилась.</p>
+        <p id="p17"><a class="para-timecode" href="?t=1554" data-t="1554" title="25:54">▶</a> Но не в самом вот магистральном индуизме, а, скажем, в деревенском и в племенном. Индия, помимо того, что мы знаем о ней как цивилизации городской, такой уже устоявшейся, урбанистической, она ещё включает в себя много-много, огромное количество так называемых зарегистрированных племён, или в простоте их называют адиваси. Вот там своеобразная культура — она по форме заимствует много чего из ортодоксального индуизма, даже похожим образом выглядят их храмовые строения, но если приглядываться к религиозным и мифологическим представлениям, то там содержание несколько другое, нежели привычная нам система, связанная с индуизмом, с тем, что мы называем индуизм: почитание богов, ключевой фактор текстологической традиции, то есть Веды в основе, брахманы как сословие, в руках которого находится и религиозная, подчас законодательная власть, и так далее. То есть там, среди вот этих племён, это несколько по-другому выглядит. Там есть свои иерархии, но они всё-таки не целиком копируют индуистское устройство.</p>
+        <p id="p18"><a class="para-timecode" href="?t=1664" data-t="1664" title="27:44">▶</a> Так вот, храмовое строительство, связанное с деревянным зодчеством, было, и оно тоже не сохранилось. На сегодняшний день нет ни одного древнего деревянного храма, который бы нам показывал вот этот разрыв между древностями индуизма, ещё брахманизма, и вот началом периода строительства храмов и наращивания этой эстетики и сложности храмовой архитектуры, которые начинаются с пятого века, дальше совершенствуются, являя самый удивительный феномен. Дальше происходит переход к каменному строительству. Собственно, камень становится — ну, он и мыслился таковым, просто у строителей-архитекторов ещё не созрели технологии обработки камня — к эпохе Гуптов и дальше они уже потихонечку осваивались, появлялись инструменты, и камни обрабатывались. В камне, прежде всего, находили идею созвучия вечности божеств.</p>
+        <p id="p19"><a class="para-timecode" href="?t=1759" data-t="1759" title="29:19">▶</a> Любые разрушаемые материалы, которые могли быть использованы от глины до дерева или кирпича, — не прочность. Эта идея строительства из таких материалов не соответствует представлению о бессмертии, о неразрушимости божественного мира, который является как бы целью и к нему именно обращено воображение и вера тех, кто эту религию исповедует, осуществляет служение. То есть камень казался подходящим для того, чтобы построить на Земле так называемое земное небо. В общем-то, метафора она часто только в индийском пространстве упоминается, но для Индии она играет вот такую роль, что камень был наибольшим образом подходящим материалом для строительства, неразрушимым. И вот первый каменный храм датируется эпохой Гуптов. Мы знаем, что Индия неоднородна в представлении о том, как должно выглядеть священное храмовое пространство, и самое большое разделение, о котором мы знаем, которое воочию можем наблюдать, когда перемещаемся от одного штата к другому, — это север и юг. И вот классика рассказа об индийской храмовой архитектуре обязательно два этих элемента как бы рассматривает, и по отношению к ним есть определённые законы храмового строительства. Всего существует не два, а три стиля. Третий — стиль вишара, он как бы соединяет между собой элементы первых двух: северного — стиля нагара, и южного — дравида.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s3">Два стиля индуистского храма: нагара и дравида
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=1934" title="32:14" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1934" title="32:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1934">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p20"><a class="para-timecode" href="?t=1934" data-t="1934" title="32:14">▶</a> Я не буду слишком сильно погружать вас в именно искусствоведческую часть и архитектурную часть, связанную с деталями этих стилей, потому что не в этом наша задача. Вот, ну, здесь я написал для памяти о том, чем эти стили различаются, скорее такое как бы поэтическое метафорическое запоминание того, чем они отличны друг от друга. Вот и, но всё же некоторые вещи скажу. В стиле нагара, который территориально соответствует северу Индии и, значит, штатам, включённым в так называемый индуязычный пояс. Конечно, неплохо бы это всё на карте показать, но позже я покажу.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-2">
+      <img src="./src/img/03_02.jpg" alt="Стили индийских храмов" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 2.</span> Стили индийских храмов</figcaption>
+    </figure>
+
+
+
+  <h3 id="s3_1">Географическое распределение стилей
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=1997" title="33:17" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=1997" title="33:17" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1997">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p21"><a class="para-timecode" href="?t=1997" data-t="1997" title="33:17">▶</a> То есть они как бы расположены по определённым локациям, то есть территория северного стиля простирается от Гималаев до гор Виндхья. Дальше, от горной системы Виндхья до реки Кришна — это уже Декан, Деканское плоскогорье, где доминирует как раз смешанный стиль вишара. И всё, что ниже реки Кришна до Индийского океана, до штатов Тамилнаду, Керала и Карнатака, обнимающих юг, — это стиль дравида. Ну, вот так примерно географически они расположены, хотя элементы разных могут проникать с севера на юг и наоборот. Но сейчас, в настоящее время, всё-таки существует строгость в понимании того, как эти стили формируются, чем они друг от друга отличаются.</p>
+        <p id="p22"><a class="para-timecode" href="?t=2078" data-t="2078" title="34:38">▶</a> И эклектика, когда элементы одного стиля добавляются в другой, не приветствуется, скажем так. В Индии существует, как и у нас, наука, и эстетически тоже будет, наверное, не очень правильным, если, скажем, православный храм будет выглядеть как католический, готический особенно собор. У него есть свои законы. И точно так же в Индии северный и южный стиль не перемешиваются друг с другом. Даже существует табу определённое — примерно, называть башню южного стиля шикхарой. Вот шикхарой называется вот эта башня, которая представлена вверху на слайде, который вы видите. А, кстати, видно, как я вожу мышкой или это не отмечается?</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s4">Шикхара: структура и символика башни
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=2136" title="35:36" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2136" title="35:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2136">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p23"><a class="para-timecode" href="?t=2136" data-t="2136" title="35:36">▶</a> Видно. Видно, отлично. Вот башня, которую сейчас обвожу мышкой, — это шикхара в стиле нагара, то есть северного стиля. Вот только она называется шикхарой. На юге тоже есть башня, но она именуется виманой.</p>
+        <p id="p24"><a class="para-timecode" href="?t=2154" data-t="2154" title="35:54">▶</a> У неё есть тоже своя структура, свои особенности, свои навершия. Там есть так называемая вершина, которая по структуре своей отличается от пирамидальной виманы, — вот называется практически как ступа индийская, и она её напоминает. Присмотревшись, мы обнаружим её структурные элементы. Но башня по своим правилам там создана, функционирует, у неё своё назначение. Вот в северном стиле башня не пирамидальная, которая как бы кверху, как конус поднимается, а как бы дугообразная. Можно сказать, что вазообразная даже, наверное. Вот видите эти дуги, которые формируют стороны башни, они как бы непрямые.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s4_1">Архитектурный приём латина
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=2245" title="37:25" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2245" title="37:25" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2245">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p25"><a class="para-timecode" href="?t=2245" data-t="2245" title="37:25">▶</a> Вот этот приём архитектурный называется латина, и он тоже имеет смысл, то есть это не случайное построение. Вот шикхара буквальным образом имитирует гору. Но это не простая гора, а гора Меру — та гора, которая отождествлялась с центром мироздания, с той осью, которой соединяется небо и земля. Горой Меру индийской мифологии и её ролью как таким проводником в мир богов. И на этой же горе расположены все уровни, многоразличные уровни по индийской космологии различных божественных областей, и много всего. Мы с этим ещё много будем знакомиться. Так вот, шикхара — это не что иное, как гора Меру в миниатюре и в таком визуальном представлении.</p>
+        <p id="p26"><a class="para-timecode" href="?t=2322" data-t="2322" title="38:42">▶</a> Она имеет нелинейный подъём, то есть кверху она как бы сначала расширяется: в нижних её ярусах, которые видимы человеческим глазом, не одарённым какими-то сверхспособностями, — видит что-то другое тот человеческий глаз, который видит, — он видит обычную гору белоснежную, а там дальше в какой-то момент начинает расширяться кверху. Вот, ну, в общем, у неё довольно сложная геометрия, у этой горы. И шикхара — это как бы напоминание об этой сложной геометрии. Венчает шикхару два важных элемента, которые, можно сказать, структурируют пространство и заодно напоминают о каких-то важных мифологических, символически значимых вещах. Но прежде всего это амалака — вот как правило она такая немножко расплюснутая, но не совсем, это диск — это на самом деле аллюзия на плод, один из сакральных плодов индийской, скажем, растительной мифологии. Называется он амла, собственно, от него и происходит амалака.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s4_2">Амалака — навершие шикхары
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=2420" title="40:20" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2420" title="40:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2420">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p27"><a class="para-timecode" href="?t=2420" data-t="2420" title="40:20">▶</a> Этот участок индийского храма обозначается вот амла — священный плод, у него там множество свойств полезных. Вот и если присмотреться к амле — это такой крыжовник, крыжовник наш отечественный, да, мы когда его рассматриваем, мы видим, что он как бы дольками разделён на определённые сектора. Вот точно так же и в плоде амлы. Он маленький такой, как маленькое яблочко, может быть, ну, собственно, как крыжовник, как виноградина так выглядит. В нём, присмотревшись, вы увидите такие как дольки намеченные. Они, правда, не разделяются, как в мандарине, но тем не менее они там есть.</p>
+        <p id="p28"><a class="para-timecode" href="?t=2476" data-t="2476" title="41:16">▶</a> И вот здесь, когда амалаку устанавливают как навершие на башне шикхары, то её обычно как бы разделяют такими секторами. Их этих секторов может быть, ну, в самом минимальном случае 8, а так обычно 16, 32 или 64. Ну, всё это определённые числа, определённая символика. Вот это внешние элементы, которые структурируют пространство. И если их восемь, например, этих секторов, то этим обозначаются так называемые дикпалы или локапалы, то есть хранители сторон света.</p>
+        <p id="p29"><a class="para-timecode" href="?t=2528" data-t="2528" title="42:08">▶</a> Концепция, с которой мы уже сегодня, наверное, приблизимся, познакомимся с этой идеей дикпалов, хранителей сторон света. Если там больше элементов, у амалаки больше рёбер, то там подразумевается, что к хранителям сторон света добавляются их метрики, их супруги, скажем так, их ваханы, транспортное средство ездовое, — тогда как бы количество этих рёбер амалаки увеличивается. Вот их становится не 8, а больше. Но я вам покажу на примере разных храмов индийских стиля нагара, как этот элемент реализуется. Ну и в конце на самом верху находится калаша, или сосуд. Подразумевается — тоже мифологически этот сосуд связан с напитком богов, амритой, с тем элементом, с тем мифологическим сюжетом, который как бы связан ещё с мифом о пахтании океана, где боги этот напиток находят, его уносят, для того чтобы недостойные бессмертия не смогли его отведать. Ну и соответственно за него разворачивается такая борьба. Но для человека как существа по определению смертного этот сюжет становится как бы идеей, он проникает как бы в символическую суть его представления о сакральном, и поэтому калаша как вот сосуд условной амриты он как бы венчает само здание, сооружение храма. Ну вот, наверное, этого достаточно, чтобы понять. Нет, пожалуй, наверное, ещё расскажу вам о других элементах отличия храмовой архитектуры юга и севера.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s5">Структура северного храма (нагара)
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=2676" title="44:36" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2676" title="44:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2676">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p30"><a class="para-timecode" href="?t=2676" data-t="2676" title="44:36">▶</a> На севере храм как бы индивидуален. Он состоит из такого относительно единого комплекса, который расположен на одной платформе, по преимуществу. Бывает так, что перед храмом расположен кунда или пушкара — храмовый пруд. Бывает так, что храм огражден каким-то образом, какими-то стенами — пракара — или ещё какими-то элементами, которые как бы его площадь расширяют, но это не характерно в принципе для северной индийской архитектуры.</p>
+        <p id="p31"><a class="para-timecode" href="?t=2720" data-t="2720" title="45:20">▶</a> То есть северный храм, храм стиля нагара, — это скорее нечто индивидуалистичное. То есть таких храмов много, они могут быть расположены в самых разных неожиданных местах, они могут занимать маленькую площадь, могут быть огромными — как, например, вот в других городах вот — могут быть скромными, то есть, но они в любом случае будут как бы компактными. И вот элементы сооружений, которые помимо шикхары, — шикхара как бы главное, потому что в ней внутри расположена мурти божества. И та пещерка — это то место, которое связывается с алтарём. Индуистский алтарь называется гарбхагриха, то есть место зародыша. Вот и там расположена главная мурти, главное мурти храма, то есть изваяние божества.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s5_1">Гарбхагриха и мандапа
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=2796" title="46:36" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=2796" title="46:36" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2796">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p32"><a class="para-timecode" href="?t=2796" data-t="2796" title="46:36">▶</a> Вот, а другие помещения, которые примыкают к гарбхагрихе, — они называются мандапа. И тоже они делятся на несколько типов. Вот есть ардха-мандапа. Часто она бывает не крытая, а с колоннами. Вот. Так или иначе, место входа.</p>
+        <p id="p33"><a class="para-timecode" href="?t=2828" data-t="2828" title="47:08">▶</a> Ещё не присутствие в храме, погружение в сакральную действительность, а вот как бы предположительно, что это место встречи человека и его заступления на храмовое пространство и храмовую территорию. И мандапа — одно или два сооружения, но чаще всего одно, в котором, как правило, — это зал с колоннами, он уже крытый — и в этом зале происходит много всего, связанного с общинной жизнью. Например, там могут разыгрываться различные танцевальные представления, связанные с храмом, — танцуют свои танцы храмовые или ещё какие-то сюжеты, связанные с жизнью общины, тут же там проходят. Но это важное, но не самое главное храмовое помещение. Таким образом, паломник, зайдя в храм, движется от ардха-мандапы к мандапе и дальше к шикхаре, внутри обходит территорию гарбхагрихи. Как бы там часто существует внутренний обход — прадакшина такая, то есть вокруг гарбхагрихи существует такой обход, но это не всегда тоже так, потому что северный храм, он, как правило, очень разный.</p>
+        <p id="p34"><a class="para-timecode" href="?t=2938" data-t="2938" title="48:58">▶</a> То есть это как бы такое схематизированное представление о том, как выглядит северный храм. То есть не всегда есть внутренний обход, он всегда есть снаружи, внутри не всегда, но это в идеальном случае. Что касается стиля дравида, то храмы юга Индии представляют собой подчас целые города, ну, то есть это как такое большое пространство, которое огражденo от внешнего мира специальными стенами — пракара, стены, которые окружают огромную территорию, и входя в неё, вы входите через одни из ворот. Ворота эти — это феномен индийской, южноиндийской архитектуры, который получил название гопурам. Он связан с — то есть это надвратные башни, которые иногда могут затмить своей красотой, изяществом и скульптурой, которая там представлена в огромном количестве, — просто невероятно.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s5_2">Внешний облик и паломническая привлекательность
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3016" title="50:16" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3016" title="50:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3016">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p35"><a class="para-timecode" href="?t=3016" data-t="3016" title="50:16">▶</a> То есть они привлекательны для паломников, для тех, кто это наблюдает. То есть это то, что видно извне, а всю храмовую территорию-то не видно. Она за стенами находится, и более того, гопурамов два до четырёх может быть, то есть они как бы маркируют входы из разных сторон света, то есть юг, север, восток. Вот и поэтому стиль дравида — это чаще всего такая огороженная огромная храмовая территория. Там много отличий от северной архитектуры.</p>
+        <p id="p36"><a class="para-timecode" href="?t=3067" data-t="3067" title="51:07">▶</a> Там могут присутствовать длинные колонные залы, просто колонны без какого-либо — без стен, например, то есть только потолок, колонны, заходите, долго-долго идёте между колонн, потом входите в другие помещения, так доходите до центральной башни, до виманы, и там тоже расположены гарбхагриха и мурти божества. Стиль вишара чаще всего напоминает южный стиль дравида, хотя там есть собственные элементы. Ну, в общем, наверное, такой очерк о храмовом различии стилей храмового строительства думаю достаточен. Если вопросы у вас есть уже сейчас, их задавайте, чтобы не упускать возможность. Вот и мы движемся дальше. Так, сейчас, да, значит, что касается каменного строительства, то я уже сказал, что этот материал к моменту империи Гуптов, пятому, условно, веку нашей эры стал восприниматься как наиболее подходящий для монументального строительства храмов. Существовала разработанная система определения камня, типа камней, как подходящего или не подходящего к строительству. То есть он должен был добываться в правильных местах, он должен был испытываться различным образом: на звук, на цвет, на текстуру, на прикосновение, впитывает ли он влагу, и так далее.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s6">Материалы и ритуал выбора места для строительства
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3192" title="53:12" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3192" title="53:12" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3192">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p37"><a class="para-timecode" href="?t=3192" data-t="3192" title="53:12">▶</a> То есть прежде чем приступить к постройке храма, это определение материала для строительства имело большое значение. Здесь, в этой таблице, я собрал положения в шилпашастрах — текстах, которые относятся к строительству, вообще к храмовой архитектуре и скульптуре, — текстах, которые регламентируют подходы к выбору материала, но не только к выбору материала. Как мы дальше увидим, ко всему процессу храмового строительства и ко всем, буквально ко всем элементам. То есть здесь нет вообще никаких пустот. То есть каждый из аспектов строительства описан предельно понятным и детализированным образом.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-3">
+      <img src="./src/img/03_03.jpg" alt="Критерии выбора камня" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 3.</span> Критерии выбора камня</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p38"><a class="para-timecode" href="?t=3265" data-t="3265" title="54:25">▶</a> То есть каждое из действий, связанное со строительством храма, имеет большое-большое значение. И вот дальше мы посмотрим это в деталях. Ну вот, Манасара — это одна из самых важных шилпашастр, которая посвящена строительству храма. Буквально энциклопедия всего, что мы можем знать об индийском храме, — можно здесь найти. Конечно, она не единственная шастра, которая посвящена архитектуре, но, скажем так, наиболее значимая. Здесь буквально цитата о том, как определяют, пригоден или непригоден камень из какого-то каменного месторождения для дальнейшего строительства. На следующем слайде вы видите как бы некоторые из феноменов индийского храмового строительства, взятых из разных времён, и, ну, скажем, я здесь выбрал наиболее непохожие способы строительства храмов, чтобы можно было как бы совершить такой своеобразный охват и типов строительства, и времён.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s7">Храм Кайласанатха в Элоре: высечен из скалы
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3365" title="56:05" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3365" title="56:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3365">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p39"><a class="para-timecode" href="?t=3365" data-t="3365" title="56:05">▶</a> Здесь представлен храм, высеченный полностью в скале. Это храм Кайласанатха, который находится в той самой Эллоре, большом огромном пещерном комплексе, — сейчас это объект культурного наследия, находится в штате Махараштра. И Кайласанатха — это одна из 29 пещер, если я не ошибаюсь, 16-я по счёту. То есть они как бы находятся в скале в длинной, и из храмов занимает своё место. Кайласанатха — это 16-й храм, как раз посередине, недалеко от входа. Вот здесь он сфотографирован, моя фотография, правда. Когда поднимаешься наверх туда по тропам — надо знать, какими тропами туда идти, — чтобы чётко: начинают тебе кричать, потому что там охранники, кто внизу, всячески наблюдают за порядком и свистеть начинают. В общем, как бы успеваешь там немножко пофотографировать, и вот он — очень красивый и во всех смыслах выдающийся храм, полностью высеченный из скалы, но не способом, которым мы обычно представляем себе строительство храмов. То есть, не способом, с помощью которого мы строим что-то, добавляя элементы, а как бы здесь горная порода, которая существовала как цельная и никак не слитная. Более того, она ещё и вулканического происхождения.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-4">
+      <img src="./src/img/03_04.jpg" alt="Развитие индуистской храмовой мысли" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 4.</span> Развитие индуистской храмовой мысли</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p40"><a class="para-timecode" href="?t=3518" data-t="3518" title="58:38">▶</a> Здесь камень необычный — базальт или гранит. Строители убирали лишнее, строя его сверху. То есть какая должна быть проектировочная мысль и расчёт для того, чтобы вот как бы из цельного камня высечь шаг за шагом сверху вниз вот такой огромный, можно сказать даже, храмовый комплекс. То есть он состоит из классического: вот то, что вам только что показывал, — там ардха-мандапа, мандапа, и это скорее не шикхара, это вимана по своей структуре, потому что вимана она не дугообразная, как шикхара обычно, да, то есть там проведены не вот эти меридианы латина, — она пирамидальная по своей структуре. Ну, в общем, это и объясняется, наверное, заказчиком этого храма. Его называли Кришна Первый. Жил он в восьмом веке.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_1">Династия Раштракутов и заказчик храма
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3626" title="1:00:26" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3626" title="1:00:26" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3626">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p41"><a class="para-timecode" href="?t=3626" data-t="3626" title="1:00:26">▶</a> Это император династии Раштракутов. Надо сказать, что происходил он, конечно, по происхождению не как бы классический князь. Да, то есть это империя, которую он построил, и надо сказать, что этот храм знаменует его победу над южными царствами Индии некоторыми. Он в частности захватил Канчипурам — это город, тоже храмовый город, в котором огромное количество храмов Вишну, сейчас считается, что их там 108. Город, связанный с мощной архитектурной традицией. Находится он в штате Тамилнаду и расположен между, ну, если представляете, между Ченнаи и Мадураем. Тоже, наверное, имеет смысл показывать всё это на карте Google.</p>
+        <p id="p42"><a class="para-timecode" href="?t=3713" data-t="3713" title="1:01:53">▶</a> Наверное, со следующего, знаете, мы так и будем поступать. Да, пожалуй. Да, чтобы лучше отражать географические представления. Вот, Кришна Первый как бы знаменовал этим храмом свою победу над южными царствами. Вот и выписал ни много ни мало больше тысячи мастеров и резчиков по камню из южных областей Индии — поэтому, собственно, такой проект и осуществился.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_2">Масштаб и логика строительства сверху вниз
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3754" title="1:02:34" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3754" title="1:02:34" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3754">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p43"><a class="para-timecode" href="?t=3754" data-t="3754" title="1:02:34">▶</a> Он довольно дерзкий. То есть с точки зрения логики строительства совершенно невероятный. То есть высечь из камня сверху вниз. С Эллорой мы ещё будем знакомиться, когда перейдём к буддийской и джайнской части нашего повествования сакральной географии. Ну вот уже достаточно того, что мы как бы понимаем, что в храмовой мысли о сакральном понимании камня и горы.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s7_3">Символика и скульптурный декор
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3820" title="1:03:40" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3820" title="1:03:40" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3820">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p44"><a class="para-timecode" href="?t=3820" data-t="3820" title="1:03:40">▶</a> Здесь соединилось довольно немало символических элементов. То есть, император или стхапати, те, кто непосредственно являются архитекторами, воплотителями этих идей, прекрасно понимают, что сама гора и камень содержат в себе божественное начало. И вот они как бы это осуществили с помощью вот такого необычного проекта. Но надо сказать, что это не единственный проект в Индии с вот таким видом строительства, когда строится не из блоков, а как бы сверху вниз освобождается. Ну, как по мысли — если помните, у Микеланджело есть такая зарисовка: «Я увидел ангела в камне и только освободил его» — для того чтобы он был свободен, то есть примерно в таком же ключе действовали архитекторы и исполнители этого храма Кайласанатха. Значит, справа на слайде, тут два слайда для большей репрезентации этого необычнейшего, — а храм Сурьи в Конарке. То есть это на другой стороне, на востоке Индии, — храм на берегу Бенгальского залива в штате Одиша, раньше назывался Ориса. Вот как бы, если с Кайласанатха мы на западе — это Махараштра, один из самых больших штатов Индии, столица Махараштры Мумбаи, то есть для ориентировки, — то здесь мы на востоке. И там тоже в ознаменование военных побед и как бы такого соперничества с надвигающейся угрозой со стороны мусульманских султанов, захвативших Бенгалию.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s8">Другие выдающиеся храмы нагара
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3975" title="1:06:15" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3975" title="1:06:15" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3975">AU</a>
+    </span>
+  </h2>
+
+
+
+  <h3 id="s8_1">Храм Сурьи в Конарке
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=3975" title="1:06:15" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=3975" title="1:06:15" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3975">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p45"><a class="para-timecode" href="?t=3975" data-t="3975" title="1:06:15">▶</a> Один из императоров 12 века строит храм Сурьи в Конарке. Он тоже является своеобразным чудом индийской архитектуры. Он построен, во-первых, как единственный храм, посвящённый богу солнца Сурье. Построен не как храм для посещения, а скорее как колесница Сурьи, то есть он как будто гигантская колесница, в нём высечено 12 пар колёс, то есть 24 колеса, как видно на нижней фотографии здесь, которые эту колесницу движут. Движут семь коней. Ну, когда там рассказывают гиды-экскурсоводы об этой истории, то они говорят, что это обсерватория, что там эти — здесь всё символично, здесь как бы эти 24 колеса они символизируют год. Здесь более-менее верно, хотя на самом деле не столько год, сколько фазы луны, то есть тёмная сторона луны — 15 дней и светлая — там шукла и кришна, внутри месяца. Да, вот, но что касается семи коней, то они говорят, что 7 — это 7 дней недели. Ну, конечно, ничего подобного Индия не знала до британских колонизаторов, не так считались в Индии. И здесь прямая отсылка к Ригведе, где упоминается Сурья, перед которым колесница, которого сопряжена с семью конями, и они как бы движут его по небосводу. Есть, надо сказать, что да, здесь, конечно, архитектура становится астрономическим инструментом. Лучи восходящего солнца освещают главное святилище, то есть утром, но это также метафора, то есть храм как средство передвижения божества через космическое пространство.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s8_2">Храм Рамы в Айодхье: современное строительство
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=4168" title="1:09:28" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4168" title="1:09:28" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4168">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p46"><a class="para-timecode" href="?t=4168" data-t="4168" title="1:09:28">▶</a> И наконец, фотография, которую вы видите слева внизу на слайде, — это современный храм, построенный в городе Айодхья в Уттар-Прадеше, в одном из северных штатов Индии. Это так называемый Рам Мандир, который считается, что он восстановлен после разрушения его некогда в эпоху Моголов в 16 веке. Он был разрушен, на месте этого храма Рамы была построена мечеть, которая названа в честь одного из видных императоров династии Моголов, а именно Бабура. Считается, что как мусульманские завоеватели разрушили некогда существовавший здесь храм Рамы, вот точно так же индийские националисты в 1992 году — сравнительно недавно — посчитали, что они вправе поступить так же, то есть они разрушили мечеть Бабура. Это было ужасное для Индии событие, поскольку привело к противостоянию индуистов и мусульман, привело к многочисленным жертвам. Вот но правительство Индии от идеи восстановления на этом историческом месте храма Рамы не отказалось. Оно всячески инвестировало в него, запустило такой своеобразный краудфандинг по всей Индии.</p>
+        <p id="p47"><a class="para-timecode" href="?t=4290" data-t="4290" title="1:11:30">▶</a> Люди из самых разных частей жертвовали средства для восстановления храма. То есть такой своеобразный интересный политический ход. Ну, и, собственно, правильный с точки зрения самой идеи храмостроительства. То есть она должна быть инициирована самими людьми, а не целиком вкладываться. Да, у храмов бывают заказчики, они, бывает, строят даже вполне монументальные сооружения. Ну вот, как бы, в идеале это должно быть такое коллективное, коллективный вклад в его строительство. И наконец его построили — этот храм в 2020 году, в 2024, то есть пока там шёл косметический ремонт, в 2024 году его полностью соорудили, освятили по всем правилам шилпашастр, и в частности той самой Манасары, о которой я говорил и которая ещё в нашем рассказе будет дальше фигурировать.</p>
+        <p id="p48"><a class="para-timecode" href="?t=4378" data-t="4378" title="1:12:58">▶</a> То есть этот храм принадлежит к стилю нагара. Естественно, здесь нет никаких элементов стиля дравида, то есть гопурамов и так далее, и стен-пракар тут нет. Но в общем он интересно здесь понаблюдать, что традиция храмостроительства в соответствии с теми законами и с теми принципами, которые заложены в глубокой древности и отражены в шилпашастрах, в частности, живы, и более того, они уточнены разного рода — там, спутниковыми снимками, уточнённым анализом, современным анализом материалов для храмового строительства, то есть применены самые современные технологии для того, чтобы этот храм построить по всем-всем правилам, которые положены для традиции храмостроительства в Индии. И это, на самом деле, как бы, довольно интересно изучать и наблюдать, потому что буквально в наше время происходит вот такое чудесное сохранение той традиции, которая насчитывает как минимум полторы тысячи лет. И что не менее интересно — это меняет экономику, то есть это меняет конкретно экономику тех мест: количество людей, которые туда приезжают, зашкаливает. Да, безусловно, там сотни тысяч паломников, и праздники индийские, которые проводятся, но не только вишнуитские, но и общие, такие как Дивали, они как бы собирают там огромные толпы.</p>
+        <p id="p49"><a class="para-timecode" href="?t=4510" data-t="4510" title="1:15:10">▶</a> Это как бы такое место силы. Там очень много. Вот, можно изучать это место как социологический эксперимент, то есть там не одну диссертацию можно писать, наблюдая за тем, что там происходит сейчас. Когда лепестки роз, например, с самолётов, с вертолётов сыпятся на этот храм, много чего ещё происходит. Дальше я хотел бы предложить некий мысленный эксперимент для того, чтобы мы могли лучше понять идею сакрального значения, сакрального присутствия в храмах. Сейчас мы обозрели некоторое количество монументальных вполне храмов Индии, но при всём том, что это может казаться таким помпезным и пафосным, эти сооружения и выглядеть они могут впечатляюще так, что подавлять своей массивностью, своими формами, но тем не менее сама идея храмового как бы присутствия и контакта с божеством, которое становится самым главным тем, для чего туда паломник или верующий приходит, — она другая, она не монументальная.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s9">Опыт посещения храма: сравнение с церковью и мечетью
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=4619" title="1:16:59" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4619" title="1:16:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4619">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p50"><a class="para-timecode" href="?t=4619" data-t="4619" title="1:16:59">▶</a> Вот я бы предложил представить, как верующий заходит в разного типа храм. Здесь я выбрал христианский храм, мечеть в Иране и индийскую гарбхагриху, то есть цель, ради которой приходит верующий в храм. То есть если в христианский храм, например, готический какой-нибудь известный собор, заходите и сразу чувствуете себя в огромном пространстве, то есть оно, это пространство, ну, как бы, нельзя сказать, что оно прям подавляет, но тем не менее чувство себя как бы маленьким, ничтожным перед лицом трансцендентного бога, который бесконечно больше, влияет на атмосферу своего нахождения там. То есть паломник или верующий там себя чувствует как бы как песчинка. Архитектура в таких местах — это путь вверх, это отрицание земного, стремление к небесному, в частности, небесному Иерусалиму.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-5">
+      <img src="./src/img/03_05.jpg" alt="Соразмерность (māna)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 5.</span> Соразмерность (māna)</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p51"><a class="para-timecode" href="?t=4709" data-t="4709" title="1:18:29">▶</a> Что касается — ну, двигаясь к алтарю, вы тоже как бы отчуждены немного от того, что там обычно происходит. Во время литургии, службы, всё-таки её ведёт священник, эту службу, и по своей программе он движется. Эта алтарная часть до Второго Ватиканского собора была как бы лицом к алтарю обращена, и, соответственно, как бы то, что там происходит, это вас касается только, ну, как бы вторичным образом. То есть вы получаете оттуда только что-то уже второстепенное. То есть вы непосредственно не взаимодействуете с Богом в алтаре. И подобное же чувство охватывает верующего мусульманина, да и человека, который просто восхищается мусульманской архитектурой в мечети. Вот, заходите, видите геометрические узоры, бесконечное их повторение, пространство — это обычно залито светом, который проникает куда только не проникает, в частности в Исфахане, в этой мечети, много света.</p>
+        <p id="p52"><a class="para-timecode" href="?t=4807" data-t="4807" title="1:20:07">▶</a> Каллиграфия. То есть вы чувствуете, что вы находитесь в центре космического порядка, где всё подчинено математической гармонии. Бог здесь не имеет ни формы, ни какого-то соотношения с человеком никакого нет, он непостижим, он проявляет себя через абстрактную красоту. Человек — это точка созерцания, наверное, в геометрически выверенной Вселенной, так скажем. Вот такое тоже сравнение. Оно тоже не является вымышленным, это как бы совершенно согласуется с мусульманской теологией.</p>
+        <p id="p53"><a class="para-timecode" href="?t=4867" data-t="4867" title="1:21:07">▶</a> И хотя христианская более личностна, здесь более абстрактно, потому что Бог непостижим, ничего, никого нельзя добавить в сотоварищи. Такого вот непосредственного общения не происходит. Совершенно не то при входе в индийский храм. Первое, что делает всегда верующий, заходя в храм, — это снимает обувь. Это абсолютно применимо практически ко всем индийским храмам, не только индийским, но и индуистским, но и буддийским, джайнским тоже. Вступая на территорию, вы снимаете обувь, потому что земля священна, то есть вы как бы с ней соприкасаетесь.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s9_1">Постепенное погружение и даршан
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=4914" title="1:21:54" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=4914" title="1:21:54" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4914">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p54"><a class="para-timecode" href="?t=4914" data-t="4914" title="1:21:54">▶</a> Дальше вы входите, ну, иногда в гигантское пространство, но всё же постепенно. Значит, сначала в ардха-мандапу, о которой я говорил прежде. Давайте следующий слайд. Вот он — его можно к этому применить, к этому рассказу. То есть начало — путь на адиштхану.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-6">
+      <img src="./src/img/03_06.jpg" alt="Путь к гарбхагрихе" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 6.</span> Путь к гарбхагрихе</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p55"><a class="para-timecode" href="?t=4942" data-t="4942" title="1:22:22">▶</a> Храм всегда находится на возвышении, и это какое-то количество ступеней вас настраивает постепенно к тому, что вы покидаете обычное пространство суеты и входите на священную территорию, как бы поднимаетесь, что тоже включает разного рода метафорику. То есть вы возвышаетесь, это всё. Метафоры они сквозные даже в секулярном литературном языке по отношению к простому, к низменному, возвышенному. Вот, дальше движетесь вы через ардха-мандапу, вот это маленькое помещение, в большой колонный зал мандапа, и потом вы приближаетесь к гарбхагрихе. Но вам всё это величие, которое снаружи кажется монументальным и таким значительным, — оно совершенно иным образом выглядит изнутри.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s9_2">Гарбхагриха: камерное пространство встречи с божеством
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=5011" title="1:23:31" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5011" title="1:23:31" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5011">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p56"><a class="para-timecode" href="?t=5011" data-t="5011" title="1:23:31">▶</a> Оно там совершенно камерное. Вот на схеме, которую вы видите на левой части этого рисунка, значит, гарбхагриха обозначена цифрой один. Вокруг неё вот эта самая прадакшина — проход вокруг — существует. Сама она представляет собой маленькую камеру. Обычно она там три метра, может быть пять метров.</p>
+        <p id="p57"><a class="para-timecode" href="?t=5053" data-t="5053" title="1:24:13">▶</a> Вот это тесная камера. Если вы бывали в простых деревенских индийских храмах индуистских, то вы поймёте, о чём идёт речь. Она практически не бывает освещена. Это тёмное всегда помещение. Там, в лучшем случае, откуда-нибудь падает свет, вы еле-еле видите, что там происходит.</p>
+        <p id="p58"><a class="para-timecode" href="?t=5078" data-t="5078" title="1:24:38">▶</a> Там может брахман, который обслуживает алтарь и выполняет требу, так скажем, да, то есть проводит пуджи, — он может в лучшем случае немножко осветить вам специальной лампадкой для того, чтобы вы увидели мурти. В обычном своём самом простом исполнении гарбхагриха — это тёмное помещение, маленькое тёмное камерное, очень интимное. И там вот в этой камере проступает образ мурти, то есть божественного изваяния того божества, к которому вы пришли, — либо лингама, если вы зашли в шиваитский храм, либо статую Вишну или какой-то из его аватар, ну или многообразных других богов, которых в Индии множество. Вот, но вы в любом случае как бы, пройдя определённый путь, совершив прадакшину вокруг гарбхагрихи, если такая возможность есть и храм позволяет так сделать, вы как бы попадаете в очень маленькое интимное помещение, и ваша задача как посетителя храма, храмового пространства — встретиться глазами с мурти, с божеством. То есть не посмотреть на него снизу вверх, не каким-то образом признать своё ничтожество, а встретиться глазами и получить так называемый даршан.</p>
+        <p id="p59"><a class="para-timecode" href="?t=5183" data-t="5183" title="1:26:23">▶</a> Вот это главная суть контакта, то есть получить взгляд божества, испытать его на себе. Это как бы даёт понимание индийского храмового пространства, его самой сокрытой, самой тайной части как своеобразной соразмерности. Ну вот на предыдущем слайде я его так и назвал — мана, соразмерность, которая даётся с помощью вот такого непосредственного интимного, можно сказать, контакта с божеством. То есть это даёт нам представление о принципиально другой теологии пространства. В авраамических традициях, в иудаизме, в христианстве, в исламе бог трансцендентен, он вне мира, и сакральное пространство — это место, где небо спускается на землю, но никогда не сливается с ней. А в индуизме божество имманентно, оно уже здесь, оно в материи, и храм — это место, где эта имманентность становится явной, когда происходит контакт с божеством и даршан, который вы получаете.</p>
+        <p id="p60"><a class="para-timecode" href="?t=5275" data-t="5275" title="1:27:55">▶</a> То есть индийский храм, в конечном счёте, несмотря на свою массивную структуру — может быть очень большим и красивым, — он не подавляет, а обнимает. И когда вы входите в гарбхагриху, опять же, если вам позволяют, потому что обычно это — «хинду онли», туристов если пускают, то, ну как бы, вы можете видеть порой довольно брезгливые, иногда недовольные взгляды — в лицо вам никогда этого не покажут, но подумают, во всяком случае можно ощутить эту несоразмерность, несоответствие, да, то есть млечча — всё-таки это другая традиция. Но всё-таки, считаясь с тем, что с просветительской какой-то функцией можно посетить и пуджу, и зайти в гарбхагриху, и это не будет таким вот прям — опять же, с разрешения. Я имею в виду сейчас не большие храмы городские, а вот такие вот деревенские, очень маленькие камерные, в которых можно почувствовать ритмы и биение сердца, то есть самой потаённой индийской религиозности, которая нам интересна, потому что нам интересна эта культура. Вот и, таким образом, возникает понимание, что индийские боги гораздо ближе к человеку. Вот и они не просто спасители или судьи, они воплощаются в концепции аватар. Мы это видим в нисхождении.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s10">Космология пространства и тело как храм
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=5399" title="1:29:59" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5399" title="1:29:59" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5399">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p61"><a class="para-timecode" href="?t=5399" data-t="5399" title="1:29:59">▶</a> Вот и более того, существует какая-то непроявленная космология пространства, связанная с тем, что божества были прежде здесь, на земле, такими же, как мы с вами. То есть все мифологические сюжеты, которые мы в Индии можем слышать или вычитывать из Пуран или другой литературы, даже из Шрути, — они происходили здесь, на земле. Вот это одно из ключевых положений сакральной географии как таковой. То есть эти мифы и мифология они не где-то там в ином мире, они здесь, в конкретной земле, на конкретной Курукшетре, например, или в конкретной Гае, или Рамешвараме, или где-нибудь ещё, где происходили те или иные события, и они там не были какими-то. Или, например, Брахма свой лотос обронил в Пушкару, которую мы с вами рассматривали на одной из предыдущих лекций, — не будучи каким-то трансцендентным божеством, а вот он пришёл и обронил, и он здесь находится, в этом храме, там есть его мурти, тоже вы можете встретиться с ним глазами. Правда, у него четыре лика, и они смотрят в разные стороны света, но один-то вы точно увидите перед собой, он будет на вас смотреть. Вот как бы вот такая вот соразмерность и тождественность человеку — она в индийском сакральном пространстве, священном пространстве всей Бхараты и всей теологии, можно так сказать, — она доминирует.</p>
+        <p id="p62"><a class="para-timecode" href="?t=5533" data-t="5533" title="1:32:13">▶</a> То есть вот эти вещи нужно иметь в виду. Доходит до буквально очень странных вещей, которые современному человеку очень сложно понять. Ну, например, когда корова — священное животное — когда вы пьёте её молоко, вы пьёте молоко богини, которая вам его даёт посредством коров. Ну, то есть разного рода метафорика вот такая, которая соотносит непрерывно в жизни индуиста буквальное, повседневное и сакральное. Она тотально пронизывает его мышление.</p>
+        <p id="p63"><a class="para-timecode" href="?t=5578" data-t="5578" title="1:32:58">▶</a> Понимаете, как это интересно? И это даёт нам подсказку к разгадке мифологического сознания индуистов. Но это вот такая зарисовка, которая, думаю, что нам полезна для всего курса. Что касается храма и его соразмерности вот этой с человеком, то она проявляется во многих, во многих его аспектах, частях, в проходе по различным храмовым территориям. Даже находясь внутри мандапы, то есть вот этого открытого или закрытого — чаще всего оно закрыто, — но вот здесь, в данном случае, в храме Амрутешвара — это храм Шивы, находится в Карнатаке, это южная архитектура, — там больше мандаб, ардха-мандаба и мандаба — это больше открытое пространство, которое не имеет стен, имеет вот колонный зал, например.</p>
+        <p id="p64"><a class="para-timecode" href="?t=5653" data-t="5653" title="1:34:13">▶</a> Но даже находясь внутри традиционного, обычного храма, если не южного, вы как бы находитесь внутри разного рода метафор, и вот колонны, ну как бы эзотерически объясняя, можно какие угодно здесь себе находить аналогии. Например, что это каналы нади, которые соединяют небо и землю. Колонны как бы передают идею этих энергетических каналов, но это не совсем верное толкование. Ну да, оно присутствует в тантрической традиции, там, в агамах. Ну, то есть, есть такое, можно так понимать, да, — но гораздо более естественным и таким опять же соразмерным кажется объяснение, которое, ну, оно вообще не очевидно, понимаете. Вот на что похожи эти колонны. Ну вот, давайте какие-нибудь версии, что из человеческого обихода, из бытового или даже какого-то понятного нам, соразмерного человеку чего-то феноменального, — на что оно похоже? Вот будут версии у вас, что такое колонны, почему они так богаты, украшены орнаментально?</p>
+        <p id="p65"><a class="para-timecode" href="?t=5767" data-t="5767" title="1:36:07">▶</a> И с помощью каких-то зарисовок, каких-то как будто колец, как будто здесь какая-то такая вот утончённая эстетика. Что это — понимаете, вот голову это не приходит, если ты не погружён в эту идею соразмерности. Это браслеты, это украшение рук божества. Понимаете, это эстетика, это в храме вообще на самом деле всё, каждая из его частей созвучна разным частям человеческого тела. Ну, например, ступни — это пада. То есть вот эти самые гопурамы огромные, которые иногда затмевают своим величием сам основной храм храмовой территории городских, там — Мадурай, тамильских, керальских, — вот, но это ступни божества, то есть это аналог этой части тела. В храме есть шея — грива, нос — насика, голова, — собственно говоря, шикхара, калаша — это символ, связанный с головой.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-7">
+      <img src="./src/img/03_07.jpg" alt="Амрутешвара (Амрутхапура, Карнатака)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 7.</span> Амрутешвара (Амрутхапура, Карнатака)</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p66"><a class="para-timecode" href="?t=5876" data-t="5876" title="1:37:56">▶</a> Вот, то есть в храме всё вот это соотносится. Есть где-то у меня слайд, не помню в каком он месте. Сейчас попробую найти. Вот этот я вам его покажу немножко заблаговременно. Как соотносится тело и храм.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s10_1">Пуруша-мандала и соразмерность тела
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=5904" title="1:38:24" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5904" title="1:38:24" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5904">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p67"><a class="para-timecode" href="?t=5904" data-t="5904" title="1:38:24">▶</a> Но сильно мы на нём не будем останавливаться, здесь лишь отметим вот эту идею соразмерности лежащего тела и храмовых построек, которые как бы от ног к голове соответствуют телу божества. Ну и многообразный символизм энергетический уже связан с тантрической терминологией, с понятиями чакр, этих самых каналов — шумна и других каналов. Но вся эта терминология она очень сложная, она сейчас нам не поможет лучше понять то, о чём мы сейчас ведём речь, говоря об индийском храме в принципе. А вот идея соразмерности она вполне вполне здесь даёт нам правильный подход. То есть индийский храм — это интимное, камерное, очень человеческое пространство, каким бы он ни был монументальным снаружи. Вот, ну, дальше мы перейдём к идее архитектора.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s11">Стхапати: зодчий как риши и творец
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=5987" title="1:39:47" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=5987" title="1:39:47" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5987">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p68"><a class="para-timecode" href="?t=5987" data-t="5987" title="1:39:47">▶</a> То есть то, что перед нами — чудо архитектуры, — в этом сомнений никаких нет. А вот к фигуре того, кто это пространство создаёт, такого волшебника, чародея, который создал всю индийскую архитектуру за вот эти полторы тысячи лет храмового строительства, — эта фигура стоит отдельного нашего внимания. Вот я долго думал, фотографию или рисунок здесь изобразить, но ничего лучше не нашёл, чем стхапати. Это некая должность, и в то же время титул, брахманский титул — стхапати может быть только исключительно. Этот человек — это конкретный персонаж, это доктор Ганапати, который удостоен ордена Падма Бхушан. Это одна из важнейших наград современной Индии.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-8">
+      <img src="./src/img/03_08.jpg" alt="Стхапати" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 8.</span> Стхапати</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p69"><a class="para-timecode" href="?t=6079" data-t="6079" title="1:41:19">▶</a> Это индийский архитектор, скульптор и автор книг, посвящённых, собственно, стхапати-видье. Одна из них переведена на русский язык. Вот здесь вы видите выходные данные этой книги «Стхапати Веда». В 2016 году она вышла. Но это не реклама этой книги.</p>
+        <p id="p70"><a class="para-timecode" href="?t=6104" data-t="6104" title="1:41:44">▶</a> Честно говоря, я сам читал. Просто был удивлён тем, что она переведена на русский язык. Но это выдающийся, один из видных индийских архитекторов. Здесь он изображает одно из божеств. Это для того, чтобы приблизить нас к образу не конкретно доктора Ганапати, а фигуры стхапати как той персоны, которая делает храм возможным.</p>
+        <p id="p71"><a class="para-timecode" href="?t=6146" data-t="6146" title="1:42:26">▶</a> Если переводить слово стхапати на русский язык, то чаще всего встречается перевод «архитектор», но это абсолютно неверно. Это поверхностный перевод и даже может вводить в заблуждение. В западной традиции архитектор — это профессионал, который проектирует здание, опираясь на эстетику, функциональность и инженерные расчёты. В индийской традиции стхапати — это риши. Помните этот важнейший архетипический тип персонажей в индийской мифологии и даже философии?</p>
+        <p id="p72"><a class="para-timecode" href="?t=6191" data-t="6191" title="1:43:11">▶</a> Потому что, в общем, риши являются, например, авторами различных частей ведийского канона, то есть авторами итихас, эпоса Рамаяны — Вальмики, Вьяс, ну и так далее. То есть некие провидцы, мудрецы, которые имеют для Индии такое первостепенное значение. То есть это такие полубожественные персонажи, которые никак не похожи на пророков Ветхого Завета, — если сравнивать их с авраамической традицией, — это что-то вроде вот таких полубожественных персонажей, которые здесь же, на земле жили, сотворяли свои аскезы, наращивали тапас, вот эту самую главную энергию, огненную энергию, которая даёт вам право на такую перспективу бессмертия, перспективу жизни с богами на Раю. Это не аскеза в христианском смысле или каком-то ещё другом, кроме индийского. Это капитал, который делает вас, в общем-то, равным.</p>
+        <p id="p73"><a class="para-timecode" href="?t=6288" data-t="6288" title="1:44:48">▶</a> Если вы накопили количество тапаса, достаточного для того, чтобы стать божеством, — вы им станете, и никакая сила, никакое противодействие, никакая магическая энергия не может лишить вас этого. Так, может, конечно, произойти искушение — вы пойдёте, не выдержите его интенсивности, — вот, но если вы не поддались ему, то сам по себе накопленный, эта сакральная энергия, она имеет абсолютную ценность, она переводит вас из мира профана в мир божественный. И вот к чему это я говорю — к тому, что стхапати это персонаж, который должен с помощью этого самого тапаса не спроектировать храм, а увидеть его таким, каким он должен быть, и воплотить во всех деталях, не упустив ни один из элементов, отражённый в соответствующих строительных шастрах, ну и вообще в руководствах по строительству храмов. Ничего он не должен упустить. Он работает как бы вместе с двумя ещё фигурами тоже брахманского происхождения. Это его коллеги по работе. То есть это стхапака, то есть тот, кто устанавливает и обслуживает — не очень корректное слово, но как бы — устанавливает мурти божества. То есть этот человек, который целиком мурти занят.</p>
+        <p id="p74"><a class="para-timecode" href="?t=6434" data-t="6434" title="1:47:14">▶</a> Это брахманский титул — стхапака. И ещё брахман, который проводит пуджи, ачарья, так скажем, который осуществляет разного рода ритуал, который не может осуществить непосредственно стхапати или стхапака. Вот это троица как бы таких наиболее важных творцов индийского храма. Что должен знать стхапати? Прежде всего он должен обладать этим самым знанием, потому что оно и никакое не слово, никакое не творение, а вот знание было в начале.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s11_1">Знание стхапати: джняна, янтра и символика
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=6490" title="1:48:10" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=6490" title="1:48:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6490">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p75"><a class="para-timecode" href="?t=6490" data-t="6490" title="1:48:10">▶</a> Если мы упоминаем это начало как такое парадигматическое начало всего индийского в Индии. Есть знание — стхапати, это не изобретение, например, новых стилей или разработка каких-то особенностей архитектурных. Это не креативность, а это знание вечных принципов. Стхапати не придумывает храм, он вспоминает. Примерно так, как Платон, когда он говорит в «Диалоге о государстве» об идеях и о том, что эти идеи существуют: уже их не нужно изобретать, они уже существуют, их нужно только припомнить. Вот это знание — припоминание того, как, что такое храм, как он должен выглядеть, — поэтому оно накапливается только с помощью тапаса.</p>
+        <p id="p76"><a class="para-timecode" href="?t=6561" data-t="6561" title="1:49:21">▶</a> Стхапати обращается не с мёртвой материей. Он работает — все элементы, из которых будет произведён будущий храм, они живые, и прежде всего это живая земля, где обитает дух местности, о которой мы особенно будем говорить. Так называемый Васту Пуруша — дух места. Стхапати должен не потревожить его, а его умилостивить, этот дух. Для этого сам стхапати должен быть чистым, он должен знать мантры, он должен быть инициирован правильным образом, пройти все самскары. То есть должна быть квалификация, то есть знать, как эти мантры, чему они редуцируются, где их краткая форма, где их развёрнутая форма, все тексты Пуран — он всё должен знать. Вот в Манасаре, которую я уже упоминал неоднократно, сказано буквально следующее: стхапати, который строит без знания шастр, строит для нарака, для ада.</p>
+        <p id="p77"><a class="para-timecode" href="?t=6640" data-t="6640" title="1:50:40">▶</a> То есть буквально так. То есть это второй уровень знания, который стхапати должен иметь, — не только вот сама джняна, с которой всё начинается, но и тексты. То есть знание зафиксировано в основных текстах. Но Манасара — я уже упоминал. Существуют ещё другие. Маямата — это относится к дравидийской традиции. Но есть и другие тексты по архитектуре в Индии, таких ключевых несколько есть. Ещё все не будем упоминать. Тексты — это не инструкции по сборке, это космологии, где каждый элемент храма соответствует соответствующему элементу Вселенной. И поскольку известно многое о сакральном мире, мире космологическом, об устройстве горы Меру, например, — то есть о том, как она выглядит, из чего состоит, каких уровней, слоёв, — то там, в этих текстах, как бы озвучены пропорции.</p>
+        <p id="p78"><a class="para-timecode" href="?t=6725" data-t="6725" title="1:52:05">▶</a> Ну, например, какой ширины или высоты должна быть шикхара. Вот и там, например, говорится, что шикхара должна быть полтора, два или два с половиной раза больше ширины гарбхагрихи, то есть зависит от типа храма. Почему? Потому что это пропорция горы Меру к её основанию. О космологии в Пуранах мы ещё будем говорить, прежде всего упоминая Вишну-пурану как один из важнейших текстов по индийской космологии.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s11_2">Геометрия: янтра и Васту-Пуруша-мандала
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=6769" title="1:52:49" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=6769" title="1:52:49" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=6769">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p79"><a class="para-timecode" href="?t=6769" data-t="6769" title="1:52:49">▶</a> Но это всё ещё в будущем. Дальше стхапати должен знать и понимать геометрию. На индийском архитектурном языке это янтра. Ну, собственно, это не является чем-то совершенно недоступным для западного сознания. Янтра — это геометрический, так скажем, сложный геометрический символ, который там из разных элементов состоит.</p>
+        <p id="p80"><a class="para-timecode" href="?t=6803" data-t="6803" title="1:53:23">▶</a> Ключевыми являются и круг, и треугольник, и совокупность треугольников, и так далее. Но, в любом случае, это геометрические схемы. Янтра — это не чертёж в западном смысле. Это, условно историческим языком выражаясь, энергетическая карта. Каждая линия, каждый угол, каждое пересечение — это своеобразный поток энергии, поток праны.</p>
+        <p id="p81"><a class="para-timecode" href="?t=6834" data-t="6834" title="1:53:54">▶</a> Основная янтра для храма — это так называемая Васту-Пуруша-мандала, о которой мы будем говорить. Но есть и другие янтры — для определения центра, для ориентации по сторонам света, для расчёта пропорций. То есть стхапати должен знать и понимать науку янтр. Это как бы вот ещё одно знание, которое соответствует этой должности, этому призванию. Дальше — символика.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-9">
+      <img src="./src/img/03_10.jpg" alt="Ваступуруша-мандала" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 9.</span> Ваступуруша-мандала</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p82"><a class="para-timecode" href="?t=6873" data-t="6873" title="1:54:33">▶</a> Что касается Васту Пуруши, то это просто отдельный мир. Есть, у нас будет скоро отдельный слайд, посвящённый Васту Пуруше, и мы это посмотрим. Кроме этого ещё много-много знаний. Но на Васту-Пуруша-мандале мы довольно многое проясним. Это ещё одна область знаний, которая соответствует тому, что должен стхапати.</p>
+        <p id="p83"><a class="para-timecode" href="?t=6904" data-t="6904" title="1:55:04">▶</a> То есть это знание символики. Ну, здесь под символикой подразумевается не только символика янтр, не только геометрические какие-то линии. Дальше — само строительство. Только после всего предыдущего — четыре этапа мы уже насчитали: это джняна сама по себе, янтра, символика, символ, — и собственно начинается только потом строительство из формы, с материи, рупа. Вот и даже здесь стхапати не строит, он как бы высекает. Вот примерно как храм Кайласанатха мы видели — высечен из инертной массы скалы, как бы из ничего. Да, он проявлен — он как бы проявляет, вот, каждый камень. Но там есть порядок освящения камня, там освящается не каждый буквально камень, а каждый порядковый камень, десятый, например.</p>
+        <p id="p84"><a class="para-timecode" href="?t=6974" data-t="6974" title="1:56:14">▶</a> Освящается мантрой перед укладкой. Каждая колонна выверяется по отвесу не только для устойчивости, но и для того, чтобы быть вертикальной осью, связывающей небо и землю. В этом смысле любая колонна — это такая скамбха. То есть иногда вот скамбха в дравидийской архитектуре — вернёмся к слайду, который я показывал, а, наверное, нет в этом смысла сейчас, — найдём здесь. Вот, скамбха строится как отдельное сооружение перед храмом, перед самой вот территорией непосредственно храмовой монументальной. То есть она являет собой своеобразный столп, который символизирует ось мира.</p>
+        <p id="p85"><a class="para-timecode" href="?t=7039" data-t="7039" title="1:57:19">▶</a> Тоже феномен, много с чем связанный в индийской культуре и мифологии, начиная с древнейших времён, с важнейших ведийских ритуалов. Но каждая из колонн храма — ни много ни мало — это повторение той самой основной единственной скамбхи. Вот, ну, и так далее, то есть каждый элемент храма в строительстве тоже связан со знанием стхапати. Дальше — храмовый ритуал. Их много.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s12">Ритуалы строительства: Каршана-пратиштха
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=7086" title="1:58:06" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7086" title="1:58:06" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7086">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p86"><a class="para-timecode" href="?t=7086" data-t="7086" title="1:58:06">▶</a> Вся теория храмовых ритуалов на следующем слайде перечислена, да, то есть это 11 стадий строительства храма, которые соответствуют ритуалам, которые должно произвести до начала, во время строительства и по его завершении. Называется вся эта система Каршана-пратиштха. Здесь как бы начало — каршана — это земледелие, пратиштха — это оживление, одухотворение. То есть как бы первый и последний элемент сюда включены для того, чтобы обозначить всю систему ритуалов, которые проходят во время прямого строительства. Но вот этот уровень ритуалистики тоже должен быть хорошо известен. Вот и, собственно, вот такая роль человека, который отвечает за то, чтобы индийский храм появился в месте, где его не было.</p>
+      </div>
+    </div>
+
+
+    <figure id="slide-10">
+      <img src="./src/img/03_09.jpg" alt="Каршана-пратиштха" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 10.</span> Каршана-пратиштха</figcaption>
+    </figure>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p87"><a class="para-timecode" href="?t=7175" data-t="7175" title="1:59:35">▶</a> Сама система Каршана-пратиштхи довольно интересная — у нас мы не будем каждый из ритуалов специально исследовать, вот, но на некоторых остановимся подробно, потому что они заслуживают нашего внимания в связи с нашим предметом сакральной географии. То есть эти ритуалы передают идеи сакральной географии наилучшим образом, скажем так. То есть все мы не будем исследовать. Но главное то, что, во-первых, отношение к тому, где будет построен храм. Естественно, он строится на земле.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s12_1">Исследование и освящение земли: Бхупарикша
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=7227" title="2:00:27" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7227" title="2:00:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7227">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p88"><a class="para-timecode" href="?t=7227" data-t="7227" title="2:00:27">▶</a> И всё начинается с исследования земли. Причём, не такого, как делает, например, западный землемер, агроном, который определяет, или строитель, который определяет высоты, — его сама Земля не особо интересует. А вот для стхапати Земля — это живое место, сама по себе живая территория, не отдельная от представления о сакральном. Это сакральная территория, которая будет ещё служить другой роли, чем та, которой она служит сейчас. Поэтому её нужно перед строительством.</p>
+        <p id="p89"><a class="para-timecode" href="?t=7284" data-t="7284" title="2:01:24">▶</a> Я тут выписал себе слово очень хорошее. Честно говоря, не помню, в каком слайде о Бхупарикше, а возможно, что я слайд его не поместил, — что землю нужно понять. Да, вот, землю нужно понять. То есть найти место для строительства будущего храма, убедиться, что там нет злых духов или других живых существ. Земля должна быть плодородной, подходящей для стройки.</p>
+      </div>
+    </div>
+
+
+
+  <h3 id="s12_2">Испытание земли на вкус, запах и звук
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=7323" title="2:02:03" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7323" title="2:02:03" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7323">AU</a>
+    </span>
+  </h3>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p90"><a class="para-timecode" href="?t=7323" data-t="7323" title="2:02:03">▶</a> Потом начинается испытание Земли на разные виды органов чувств, на соответствие. То есть её пробуют на вкус, её смешивают, то есть смотрят, как Земля вступает во взаимодействие с водой, как она впитывает воду. Почитаются хранители сторон света в данном участке Земли, и планеты, которые связаны именно с этой землёй, а не с какой-то другой, почитаются лунные стоянки — накшатры, и так далее. То есть очень много чего на этом этапе происходит. Определяется Земля на цвет: если он белый, то он как бы соответствует брахманскому статусу, если он красный, то это как шатрийская, если он жёлтый — ближе к вайшьям, если чёрный, то — чудом, — для храма используется лучше всего, если земля проявляет себя белой или жёлтой.</p>
+        <p id="p91"><a class="para-timecode" href="?t=7407" data-t="7407" title="2:03:27">▶</a> Запах земли должен быть приятным, как запах земли после дождя. Звук при ударе палкой — земля должна звучать как барабан, колокол — это признак плотности. Текстура важна — земля должна быть мягкой, не рыхлой, твёрдой, но не каменистой. Ну и так далее. То есть очень много чего исследуется на этом этапе. Про выбор — вот, шилабхаришка, изучение, выбор материала для изображения на примере камня мы уже это посмотрели. Вот, каршана, собственно, это третья стадия ритуалов строительства и стадии строительства.</p>
+        <p id="p92"><a class="para-timecode" href="?t=7459" data-t="7459" title="2:04:19">▶</a> Она связана с плодородием. Как я уже говорил, что каршана — это плодородие. Там тоже проводится множество ритуалов, связанных с плодородностью земли. Разные виды семян берут, значит, землю на пробы, высаживают разные виды семян — это уже как бы брахманы делают в своих каких-то отдельных помещениях, других храмах, — смотрят над входом, над сходами, то есть это тоже является частью испытания земли. Дальше — важнейший из стадий строительства храма — храмовый ритуал, который называется васту-пуджа. Здесь вот мы остановимся чуть подробнее. Ну вот, наверное, сегодня уже время наше подходит к завершению. Да, мы уже два часа с вами занимаемся, на самой такой минуте, да. Давайте, может быть, если вопросы есть сейчас такие обобщающие, которые по мотивам услышанного могут быть сформулированы, то их быстренько обсудим, если кратко, и тогда дальнейшее перенесём на следующую лекцию.</p>
+      </div>
+    </div>
+
+
+
+  <h2 id="s13">Вопросы слушателей. Завершение
+    <span class="yt-link">
+      <a href="https://youtu.be/8D9KeIcig6I?t=7558" title="2:05:58" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw&t=7558" title="2:05:58" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=7558">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog-turn">
+<div class="dialog-speaker">ЛЕКТОР</div>      <div class="dialog-text">
+        <p id="p93"><a class="para-timecode" href="?t=7558" data-t="7558" title="2:05:58">▶</a> Есть ли устные или письменные вопросы? Нет, этот восторг, видимо, не передать словами. Что будет в следующей серии? Вы меня спрашиваете? Да.</p>
+        <p id="p94"><a class="para-timecode" href="?t=7583" data-t="7583" title="2:06:23">▶</a> Значит, для — ну, мы завершим историю о храмах. Там дальше будет Васту-Пуруша-мандала. И посмотрим, как эта система работает не только по отношению к храму, но и по отношению к городу. Вот и проследим, что означает хранение сторон света, то есть идею локапала, божеств, которые охраняют запад, юг, восток и так далее. И посмотрим то, как закладывается, ну, один из ритуалов, храмовых ритуалов — Гарбханьяса. Вот посмотрим. У меня есть видеосюжет о том, как этот ритуал происходит, как освящается храм для его последующего оживления, для пратиштхи, когда оживляется мурти — главное божество. Ну, наверное, все части храмовой, в том разделе сакральной географии, который хотел бы посвятить храму, — и дальше мы перейдём к рекам.</p>
+        <p id="p95"><a class="para-timecode" href="?t=7674" data-t="7674" title="2:07:54">▶</a> Юля написала: «Спасибо, очень интересно! Наконец-то стало понятно, что видела не раз.» Тогда на этом сегодня всё. Спасибо и до встречи через неделю. Спасибо вам.</p>
+        <p id="p96"><a class="para-timecode" href="?t=7691" data-t="7691" title="2:08:11">▶</a> До встречи через неделю. До свидания.</p>
+      </div>
+    </div>
+
+
+
+  <nav class="slides-toc" id="slides-toc-nav">
+    <h2 class="slides-toc-title">Список слайдов</h2>
+    <ol class="slides-toc-list">
+        <li class="slides-toc-item">
+          <a href="#slide-1">
+            <span class="slides-toc-num">Слайд 1.</span>
+            Храм – от пещер к камню
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-2">
+            <span class="slides-toc-num">Слайд 2.</span>
+            Стили индийских храмов
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-3">
+            <span class="slides-toc-num">Слайд 3.</span>
+            Критерии выбора камня
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-4">
+            <span class="slides-toc-num">Слайд 4.</span>
+            Развитие индуистской храмовой мысли
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-5">
+            <span class="slides-toc-num">Слайд 5.</span>
+            Соразмерность (māna)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-6">
+            <span class="slides-toc-num">Слайд 6.</span>
+            Путь к гарбхагрихе
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-7">
+            <span class="slides-toc-num">Слайд 7.</span>
+            Амрутешвара (Амрутхапура, Карнатака)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-8">
+            <span class="slides-toc-num">Слайд 8.</span>
+            Стхапати
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-9">
+            <span class="slides-toc-num">Слайд 9.</span>
+            Ваступуруша-мандала
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-10">
+            <span class="slides-toc-num">Слайд 10.</span>
+            Каршана-пратиштха
+          </a>
+        </li>
+    </ol>
+  </nav>
+
+  <section class="glossary" id="glossary">
+    <h2 class="glossary-title">Список терминов</h2>
+    <p class="glossary-count">28 терминов</p>
+
+    <p class="glossary-plain">
+      <a href="#gterm-1"><i>Айодхья</i></a>,       <a href="#gterm-2"><i>амалака</i></a>,       <a href="#gterm-3"><i>буддизм</i></a>,       <a href="#gterm-4"><i>Бхупарикша</i></a>,       <a href="#gterm-5"><i>Виджняна Бхикшу</i></a>,       <a href="#gterm-6"><i>гарбхагриха</i></a>,       <a href="#gterm-7"><i>Гаудапада</i></a>,       <a href="#gterm-8"><i>Гупты</i></a>,       <a href="#gterm-9"><i>даршан</i></a>,       <a href="#gterm-10"><i>джняна</i></a>,       <a href="#gterm-11"><i>дикпалы</i></a>,       <a href="#gterm-12"><i>дравида</i></a>,       <a href="#gterm-13"><i>Кайласанатха</i></a>,       <a href="#gterm-14"><i>Каршана-пратиштха</i></a>,       <a href="#gterm-15"><i>Конарк</i></a>,       <a href="#gterm-16"><i>латина</i></a>,       <a href="#gterm-17"><i>мандапа</i></a>,       <a href="#gterm-18"><i>нагара</i></a>,       <a href="#gterm-19"><i>Раштракуты</i></a>,       <a href="#gterm-20"><i>риши</i></a>,       <a href="#gterm-21"><i>стхапати</i></a>,       <a href="#gterm-22"><i>стхула-шарира</i></a>,       <a href="#gterm-23"><i>Сурья</i></a>,       <a href="#gterm-24"><i>тапас</i></a>,       <a href="#gterm-25"><i>храм</i></a>,       <a href="#gterm-26"><i>шикхара</i></a>,       <a href="#gterm-27"><i>Элора</i></a>,       <a href="#gterm-28"><i>янтра</i></a>    </p>
+
+    <dl class="glossary-list">
+      <dt id="gterm-1">
+        <a href="#p46" >Айодхья</a>
+<span class="gterm-refs"><a href="#p46">1</a> <a href="#p47">2</a> <a href="#p48">3</a></span><span class="gterm-tag">География</span>      </dt>
+      <dd>город в Уттар-Прадеше; место строительства современного храма Рамы, открытого после десятилетий политического противостояния</dd>
+      <dt id="gterm-2">
+        <a href="#p27" >амалака</a>
+<span class="gterm-refs"><a href="#p27">1</a> <a href="#p28">2</a> <a href="#p29">3</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>священный плод; навершие шикхары в стиле нагара, разделённое секторами; ассоциируется с хранителями сторон света дикпалами</dd>
+      <dt id="gterm-3">
+        <a href="#p8" >буддизм</a>
+<span class="gterm-refs"><a href="#p8">1</a> <a href="#p9">2</a> <a href="#p10">3</a> <a href="#p13">4</a></span><span class="gterm-tag">Философские школы</span>      </dt>
+      <dd>в контексте лекции — источник части ранней храмовой архитектуры; буддийские пещерные постройки предшествовали каменным индуистским храмам</dd>
+      <dt id="gterm-4">
+        <a href="#p88" >Бхупарикша</a>
+<span class="gterm-refs"><a href="#p88">1</a> <a href="#p89">2</a> <a href="#p90">3</a> <a href="#p91">4</a> <a href="#p92">5</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>«исследование земли»; первый этап Каршана-пратиштхи — проверка участка на плодородие, запах, вкус, звук и цвет почвы</dd>
+      <dt id="gterm-5">
+        <a href="#p38" >Виджняна Бхикшу</a>
+<span class="gterm-refs"><a href="#p38">1</a></span><span class="gterm-tag">Персоналии</span>      </dt>
+      <dd>теоретик веданты XVII века; написал комментарии к санкхье и другим системам; связывал все ортодоксальные школы в единый ведантийский космос</dd>
+      <dt id="gterm-6">
+        <a href="#p56" >гарбхагриха</a>
+<span class="gterm-refs"><a href="#p56">1</a> <a href="#p57">2</a> <a href="#p58">3</a> <a href="#p59">4</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>«лоно, чрево храма»; сакральная камера в центре храма, где хранится изображение божества; крайне тесная, пронизанная непроявленной космологией</dd>
+      <dt id="gterm-7">
+        <a href="#p37" >Гаудапада</a>
+<span class="gterm-refs"><a href="#p37">1</a></span><span class="gterm-tag">Персоналии</span>      </dt>
+      <dd>автор раннего (500–600 гг.) комментария к Санкхья-карике</dd>
+      <dt id="gterm-8">
+        <a href="#p14" >Гупты</a>
+<span class="gterm-refs"><a href="#p14">1</a></span><span class="gterm-tag">Династии</span>      </dt>
+      <dd>правящая династия IV–VI вв.; их эпоха считается «золотым веком» — временем расцвета каменного храмового строительства</dd>
+      <dt id="gterm-9">
+        <a href="#p54" >даршан</a>
+<span class="gterm-refs"><a href="#p54">1</a> <a href="#p59">2</a> <a href="#p60">3</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>в данной лекции — «взгляд божества»; ключевая цель посещения индуистского храма: получить взгляд мурти и испытать его на себе</dd>
+      <dt id="gterm-10">
+        <a href="#p75" >джняна</a>
+<span class="gterm-refs"><a href="#p75">1</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>знание; первый уровень знания стхапати, включающий теоретические основы архитектуры и символики</dd>
+      <dt id="gterm-11">
+        <a href="#p29" >дикпалы</a>
+<span class="gterm-refs"><a href="#p29">1</a></span><span class="gterm-tag">Боги и мифологические персонажи</span>      </dt>
+      <dd>хранители сторон света; идея упомянута в связи с амалакой и последующим изучением символики стхапати</dd>
+      <dt id="gterm-12">
+        <a href="#p20" >дравида</a>
+<span class="gterm-refs"><a href="#p20">1</a> <a href="#p21">2</a> <a href="#p22">3</a></span><span class="gterm-tag">Понятия курса</span>      </dt>
+      <dd>южный архитектурный стиль индуистского храма; отличается от северного стиля нагара характерными гопурами — надвратными башнями</dd>
+      <dt id="gterm-13">
+        <a href="#p39" >Кайласанатха</a>
+<span class="gterm-refs"><a href="#p39">1</a> <a href="#p40">2</a> <a href="#p41">3</a> <a href="#p43">4</a> <a href="#p44">5</a></span><span class="gterm-tag">Архитектурные памятники и сакральные места</span>      </dt>
+      <dd>храм в Элоре, полностью высеченный из скалы сверху вниз; заказан императором династии Раштракутов в VIII веке</dd>
+      <dt id="gterm-14">
+        <a href="#p86" >Каршана-пратиштха</a>
+<span class="gterm-refs"><a href="#p86">1</a> <a href="#p87">2</a> <a href="#p88">3</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>ритуальный цикл строительства храма; включает 11 стадий от исследования земли до освящения мурти</dd>
+      <dt id="gterm-15">
+        <a href="#p45" >Конарк</a>
+<span class="gterm-refs"><a href="#p45">1</a></span><span class="gterm-tag">География</span>      </dt>
+      <dd>место в Одише, где в XII веке построен храм Сурьи в форме солнечной колесницы — одно из чудес индийской архитектуры</dd>
+      <dt id="gterm-16">
+        <a href="#p25" >латина</a>
+<span class="gterm-refs"><a href="#p25">1</a> <a href="#p26">2</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>архитектурный приём: шикхара расширяется книзу, образуя нелинейный подъём, а не прямую вертикаль; несёт символический смысл</dd>
+      <dt id="gterm-17">
+        <a href="#p32" >мандапа</a>
+<span class="gterm-refs"><a href="#p32">1</a> <a href="#p33">2</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>колонный зал, примыкающий к гарбхагрихе; используется для ритуальных собраний и встречи паломников</dd>
+      <dt id="gterm-18">
+        <a href="#p20" >нагара</a>
+<span class="gterm-refs"><a href="#p20">1</a> <a href="#p21">2</a> <a href="#p23">3</a> <a href="#p30">4</a> <a href="#p31">5</a> <a href="#p48">6</a></span><span class="gterm-tag">Понятия курса</span>      </dt>
+      <dd>северный архитектурный стиль индуистского храма; индивидуалистичен, представляет собой единый вертикальный комплекс с шикхарой</dd>
+      <dt id="gterm-19">
+        <a href="#p41" >Раштракуты</a>
+<span class="gterm-refs"><a href="#p41">1</a></span><span class="gterm-tag">Династии</span>      </dt>
+      <dd>правящая династия; её Emperor заказал постройку Кайласанатха в Элоре; происходил из неклассической брахманской среды</dd>
+      <dt id="gterm-20">
+        <a href="#p72" >риши</a>
+<span class="gterm-refs"><a href="#p72">1</a> <a href="#p73">2</a></span><span class="gterm-tag">Персоналии</span>      </dt>
+      <dd>провидцы-мудрецы; в контексте лекции стхапати сравнивается с риши: он тоже обладает трансцендентным знанием, полученным от Брахмы</dd>
+      <dt id="gterm-21">
+        <a href="#p68" >стхапати</a>
+<span class="gterm-refs"><a href="#p68">1</a> <a href="#p69">2</a> <a href="#p71">3</a> <a href="#p72">4</a> <a href="#p75">5</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>зодчий-строитель в традиции индийской сакральной архитектуры; не просто архитектор, но риши и создатель живого пространства</dd>
+      <dt id="gterm-22">
+        <a href="#p82" >стхула-шарира</a>
+<span class="gterm-refs"><a href="#p82">1</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>грубое физическое тело; временное скопление плотных элементов, распадающееся после каждой жизни</dd>
+      <dt id="gterm-23">
+        <a href="#p45" >Сурья</a>
+<span class="gterm-refs"><a href="#p45">1</a></span><span class="gterm-tag">Боги и мифологические персонажи</span>      </dt>
+      <dd>бог солнца; в его честь построен знаменитый храм в Конарке</dd>
+      <dt id="gterm-24">
+        <a href="#p73" >тапас</a>
+<span class="gterm-refs"><a href="#p73">1</a> <a href="#p74">2</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>в данной лекции — аскеза, накопленная стхапати; при достаточном количестве тапаса можно стать божеством</dd>
+      <dt id="gterm-25">
+        <a href="#p59" >храм</a>
+<span class="gterm-refs"><a href="#p59">1</a> <a href="#p60">2</a> <a href="#p61">3</a> <a href="#p64">4</a> <a href="#p67">5</a></span><span class="gterm-tag">Понятия курса</span>      </dt>
+      <dd>в индийской традиции — одновременно дом бога, центр космического порядка, соразмерное тело Пуруши и пространство даршана</dd>
+      <dt id="gterm-26">
+        <a href="#p15" >шикхара</a>
+<span class="gterm-refs"><a href="#p15">1</a> <a href="#p23">2</a> <a href="#p24">3</a> <a href="#p25">4</a> <a href="#p26">5</a> <a href="#p27">6</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>башня-навершие северного (нагара) храма; её архитектурный принцип — латина; состоит из ярусов с нелинейным подъёмом и завершается амалакой</dd>
+      <dt id="gterm-27">
+        <a href="#p39" >Элора</a>
+<span class="gterm-refs"><a href="#p39">1</a> <a href="#p40">2</a></span><span class="gterm-tag">География</span>      </dt>
+      <dd>пещерный комплекс в Махараштре; место расположения храма Кайласанатха, высеченного из скалы; статус объекта наследия ЮНЕСКО</dd>
+      <dt id="gterm-28">
+        <a href="#p79" >янтра</a>
+<span class="gterm-refs"><a href="#p79">1</a> <a href="#p80">2</a> <a href="#p81">3</a></span><span class="gterm-tag">Санскритские термины</span>      </dt>
+      <dd>в данной лекции — геометрическая схема, которую должен знать стхапати; ключевая — Васту-Пуруша-мандала</dd>
+    </dl>
+  </section>
+
+</div><!-- /.page -->
+</div><!-- /text-panel -->
+
+<div id="video-panel">
+  <div id="video-sticky">
+    <div id="video-player-area">
+      <div id="video-container">
+        <iframe id="video-frame"
+          src="https://www.youtube.com/embed/8D9KeIcig6I?enablejsapi=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="audio-container">
+        <span id="audio-play-icon">▶</span>
+        <audio id="audio-player" controls preload="none">
+          <source src="./src/audio/03.mp3" type="audio/mpeg">
+        </audio>
+      </div>
+      <div id="video-source-tabs">
+        <button class="vsrc-btn active" data-src="yt">YouTube</button>
+        <button class="vsrc-btn" data-src="rt">Rutube</button>
+        <button class="vsrc-btn" data-src="audio">Audio</button>
+      </div>
+      <div id="video-hint" style="display:none"></div>
+    </div>
+    <div id="video-extra">
+      <div id="toc-panel"></div>
+    </div>
+  </div>
+</div><!-- /video-panel -->
+
+</div><!-- /app-layout -->
+</div><!-- /page-shell -->
+
+<script>
+(function() {
+  var YT_EMBED = 'https://www.youtube.com/embed/8D9KeIcig6I?enablejsapi=1';
+  var RT_EMBED = 'https://rutube.ru/play/embed/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw';
+  var YT_BASE  = 'https://youtu.be/8D9KeIcig6I';
+  var RT_BASE  = 'https://rutube.ru/video/private/e53c79d86695590f1b20948f048c985d/?p=sqf-ZfDhshhXpLENULNFYw';
+
+  // ── Настройки видеопанели ────────────────────────────────────────────────
+  var VIDEO_RATIO_IDEAL = 0.50; // нормальная высота видео (доля от высоты панели)
+  var VIDEO_RATIO_MIN   = 0.40; // минимальная высота видео (максимальное сжатие)
+
+  var mode     = (window.innerWidth <= 900) ? 'external' : 'embedded';
+  var videoSrc = 'yt';
+  var linkMode = 'both';
+  var lastSec  = 0;
+
+  var layout    = document.getElementById('app-layout');
+  var frame     = document.getElementById('video-frame');
+  var audioEl   = document.getElementById('audio-player');
+  var videoCont = document.getElementById('video-container');
+  var audioCont = document.getElementById('audio-container');
+  var toggle        = document.getElementById('mode-toggle');
+  var modeLabel     = document.getElementById('mode-label');
+  var modeIcon      = document.getElementById('mode-icon');
+  var srcBtns       = document.querySelectorAll('.vsrc-btn');
+  var hint          = document.getElementById('video-hint');
+  var autoscrollBtn = document.getElementById('autoscroll-btn');
+  var autoscrollLbl = document.getElementById('autoscroll-label');
+  var goTopBtn      = document.getElementById('go-top-btn');
+  var goEndBtn      = document.getElementById('go-end-btn');
+  var tocNextBtn    = document.getElementById('toc-next-btn');
+  var tocPrevBtn    = document.getElementById('toc-prev-btn');
+  var tocTitleEl    = document.getElementById('toc-current-title');
+  var readPctEl     = document.getElementById('read-pct');
+  var readTimeEl    = document.getElementById('read-time');
+
+  var YT_OFFSET = 0;
+  var RT_OFFSET = 0;
+  var AU_OFFSET = 0;
+
+  function fmtTime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    var p = function(n) { return String(n).padStart(2, '0'); };
+    return h > 0 ? h + ':' + p(m) + ':' + p(ss) : m + ':' + p(ss);
+  }
+
+  function showPlayer(src) {
+    if (src === 'audio') {
+      videoCont.style.display = 'none';
+      audioCont.classList.add('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — аудио перемотается';
+    } else {
+      videoCont.style.display = '';
+      audioCont.classList.remove('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается';
+    }
+  }
+
+  function updateHint(src, sec) {
+    var t = (src === 'rt') ? sec + RT_OFFSET : sec;
+    var label = (src === 'audio') ? 'аудио перемотается' : 'видео перемотается';
+    hint.innerHTML = 'Нажмите на время <span class="timecode">' + fmtTime(t) + '</span> в тексте — ' + label;
+  }
+
+  function updateLinkVisibility(lm) {
+    linkMode = lm;
+    document.body.classList.remove('links-yt-only', 'links-rt-only', 'links-audio-only');
+    if (lm === 'yt')    document.body.classList.add('links-yt-only');
+    if (lm === 'rt')    document.body.classList.add('links-rt-only');
+    if (lm === 'audio') document.body.classList.add('links-audio-only');
+  }
+
+  function reloadFrame(src) {
+    var container = document.getElementById('video-container');
+    var oldFrame = document.getElementById('video-frame');
+    oldFrame.parentNode.removeChild(oldFrame);
+    var newFrame = document.createElement('iframe');
+    newFrame.id = 'video-frame';
+    newFrame.src = src;
+    newFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    newFrame.setAttribute('allowfullscreen', '');
+    if (src.indexOf('rutube') !== -1) {
+      newFrame.addEventListener('load', function() {
+        var attempts = 0;
+        var interval = setInterval(function() {
+          try { newFrame.contentWindow.postMessage('{"method":"play"}', 'https://rutube.ru'); } catch(e) {}
+          attempts++;
+          if (attempts >= 10) clearInterval(interval);
+        }, 500);
+      });
+    }
+    container.appendChild(newFrame);
+    frame = newFrame;
+  }
+
+  function loadAt(src, sec) {
+    if (src === 'yt') {
+      reloadFrame(YT_EMBED + '&start=' + (sec + YT_OFFSET) + '&autoplay=1');
+    } else if (src === 'rt') {
+      reloadFrame(RT_EMBED + '&t=' + (sec + RT_OFFSET) + '&autoplay=1');
+    } else if (src === 'audio') {
+      audioEl.currentTime = sec + AU_OFFSET;
+      audioEl.play();
+    }
+  }
+
+  srcBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.src === videoSrc) return;
+      if (videoSrc === 'audio') audioEl.pause();
+      else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      srcBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      videoSrc = btn.dataset.src;
+      updateLinkVisibility(videoSrc);
+      showPlayer(videoSrc);
+      if (lastSec > 0) loadAt(videoSrc, lastSec);
+      else if (videoSrc === 'yt') reloadFrame(YT_EMBED);
+      else if (videoSrc === 'rt') reloadFrame(RT_EMBED);
+    });
+  });
+
+  toggle.addEventListener('click', function() {
+    mode = mode === 'embedded' ? 'external' : 'embedded';
+    applyMode();
+  });
+
+  var tocNav            = document.getElementById('toc-nav');
+  var tocPanel          = document.getElementById('toc-panel');
+  var tocOriginalParent = tocNav.parentNode;
+  var tocNextSibling    = tocNav.nextSibling;
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function moveToc(toPanel) {
+    if (toPanel && !isMobile()) tocPanel.appendChild(tocNav);
+    else tocOriginalParent.insertBefore(tocNav, tocNextSibling);
+  }
+
+  function updateMobilePadding() {
+    var videoPanel = document.getElementById('video-panel');
+    var toolbar    = document.getElementById('toolbar');
+    if (window.innerWidth <= 900) {
+      var toolbarH = toolbar ? toolbar.offsetHeight : 30;
+      // Тулбар всегда top:0 на мобильном (задано в CSS)
+      if (mode === 'embedded') {
+        // Видео fixed под тулбаром
+        var videoPanelH = videoPanel ? videoPanel.offsetHeight : 0;
+        var totalH = toolbarH + videoPanelH;
+        document.getElementById('text-panel').style.paddingTop = totalH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (totalH + 8) + 'px';
+        });
+      } else {
+        // External: только тулбар сверху
+        document.getElementById('text-panel').style.paddingTop = toolbarH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (toolbarH + 8) + 'px';
+        });
+      }
+    } else {
+      if (toolbar) toolbar.style.top = '';
+      document.getElementById('text-panel').style.paddingTop = '';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = '';
+      });
+    }
+  }
+
+  function applyMode() {
+    if (mode === 'embedded') {
+      layout.classList.remove('mode-external');
+      layout.classList.add('mode-embedded');
+      modeLabel.textContent = 'Внешний плеер';
+      modeIcon.textContent = '⊞';
+      toggle.classList.remove('ext-active');
+      moveToc(true);
+    } else {
+      // Остановить всё при переходе во внешний режим
+      if (videoSrc === 'audio') {
+        audioEl.pause();
+      } else {
+        reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      }
+      layout.classList.remove('mode-embedded');
+      layout.classList.add('mode-external');
+      modeLabel.textContent = 'Встроенный плеер';
+      modeIcon.textContent = '▶';
+      toggle.classList.add('ext-active');
+      moveToc(false);
+    }
+    requestAnimationFrame(function() {
+      _videoFitDone = false;
+      updateMobilePadding();
+      alignTocTitle();
+      fitVideoToToc(true);
+    });
+  }
+
+  window.addEventListener('resize', function() {
+    _videoFitDone = false;
+    moveToc(mode === 'embedded');
+    updateMobilePadding();
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+  });
+
+  // Выравниваем toc-current-title по левому краю текста (.page)
+  var _videoFitDone = false;
+  function fitVideoToToc(force) {
+    if (window.innerWidth <= 900) return;
+    if (_videoFitDone && !force) return;
+    // Сбрасываем фиксацию tocNav перед пересчётом
+    var tocNavReset = document.getElementById('toc-nav');
+    if (tocNavReset) tocNavReset.style.minHeight = '';
+    var sticky      = document.getElementById('video-sticky');
+    var videoExtra  = document.getElementById('video-extra');
+    var playerArea  = document.getElementById('video-player-area');
+    if (!sticky || !videoExtra || !playerArea) return;
+
+    // Высота sticky = всё доступное место в видео-панели
+    var stickyH     = sticky.clientHeight;
+    // Мерим содержимое video-extra напрямую через toc-nav + его отступы
+    var tocNavEl    = document.getElementById('toc-nav');
+    var tocPanelEl  = document.getElementById('toc-panel');
+    var extraH;
+    if (tocNavEl) {
+      // tocNav.offsetHeight + padding toc-panel + небольшой запас
+      var tocPanelStyle = tocPanelEl ? getComputedStyle(tocPanelEl) : null;
+      var tocPad = tocPanelStyle
+        ? parseInt(tocPanelStyle.paddingTop||0) + parseInt(tocPanelStyle.paddingBottom||0)
+        : 4;
+      extraH = tocNavEl.offsetHeight + tocPad + 4;
+    } else {
+      extraH = videoExtra.offsetHeight;
+    }
+    // Всё что в player-area кроме контейнера видео
+    var tabsEl      = document.getElementById('video-source-tabs');
+    var hintEl      = document.getElementById('video-hint');
+    var audioEl2    = document.getElementById('audio-container');
+    var tabsH       = tabsEl ? tabsEl.offsetHeight : 0;
+    var hintH       = hintEl ? hintEl.offsetHeight : 0;
+    var audioH      = (audioEl2 && audioEl2.style.display !== 'none') ? audioEl2.offsetHeight : 0;
+    var playerPad   = parseInt(getComputedStyle(playerArea).paddingTop)
+                    + parseInt(getComputedStyle(playerArea).paddingBottom);
+
+    // Фиксированные части player-area (табы, hint, padding) — не меняются
+    var fixedH      = tabsH + hintH + audioH + playerPad;
+
+    // Пределы высоты видео (константы — в начале скрипта)
+    var VIDEO_IDEAL = Math.round(stickyH * VIDEO_RATIO_IDEAL);
+    var VIDEO_MIN   = Math.round(stickyH * VIDEO_RATIO_MIN);
+
+    // Сколько места остаётся оглавлению при идеальной высоте видео
+    var tocAvailIdeal = stickyH - VIDEO_IDEAL - fixedH;
+
+    var finalH;
+    if (extraH <= tocAvailIdeal) {
+      // Оглавление помещается при видео 50% — оставляем 50%
+      finalH = VIDEO_IDEAL;
+    } else {
+      // Оглавление не помещается — сжимаем видео, но не ниже 40%
+      var needed = stickyH - extraH - fixedH;
+      finalH = Math.max(VIDEO_MIN, Math.round(needed));
+    }
+
+    document.documentElement.style.setProperty('--video-max-h', finalH + 'px');
+    // Фиксируем min-height у tocNav — не даём оглавлению уменьшиться при смене YT/RT/AU
+    var tocNavEl2 = document.getElementById('toc-nav');
+    if (tocNavEl2) tocNavEl2.style.minHeight = tocNavEl2.offsetHeight + 'px';
+    _videoFitDone = true;
+  }
+
+  function alignProgressToButtons() {
+    var modeBtn = document.getElementById('mode-toggle');
+    if (!modeBtn) return;
+    var w = modeBtn.offsetWidth;
+    document.documentElement.style.setProperty('--mode-btn-w', w + 'px');
+  }
+
+  function alignTocTitle() {
+    var page = document.querySelector('#text-panel .page');
+    var toolbar = document.getElementById('toolbar');
+    if (toolbar) {
+      var toolbarH = toolbar.offsetHeight;
+      document.documentElement.style.setProperty('--toolbar-h', toolbarH + 'px');
+      // scroll-padding-top чтобы якоря не уходили под тулбар
+      textPanel.style.scrollPaddingTop = toolbarH + 'px';
+      document.documentElement.style.scrollPaddingTop = toolbarH + 'px';
+      // scroll-margin-top на все заголовки
+      document.querySelectorAll('.page h2, .page h3').forEach(function(el) {
+        el.style.scrollMarginTop = (toolbarH + 4) + 'px';
+      });
+    }
+    if (!page || !toolbar) return;
+    // Вычисляем отступ по CSS-логике .page:
+    // max-width: 780px, margin: 0 auto, padding-left: 40px
+    // left = max(0, (panelWidth - 780) / 2) + 40
+    var panelWidth = textPanel.clientWidth;
+    var maxWidth = 780;
+    var pageMargin = panelWidth > maxWidth ? (panelWidth - maxWidth) / 2 : 0;
+    var pagePaddingLeft = 40;
+    var offset = pageMargin + pagePaddingLeft;
+    // Вычитаем padding самого тулбара (10px)
+    tocTitleEl.style.marginLeft = Math.max(0, offset - 10) + 'px';
+    tocTitleEl.style.paddingLeft = '0';
+  }
+
+    showPlayer('yt');
+  updateLinkVisibility('yt');
+  applyMode();
+  // Вызываем выравнивание несколько раз — layout может устаканиваться постепенно
+  requestAnimationFrame(function() {
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 200);
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 800);
+  });
+
+  function handleTimecodeClick(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (!a) return;
+    var href    = a.href || '';
+    var isAudio = a.classList.contains('audio-toc');
+    var isYT    = a.classList.contains('yt-toc') || (!isAudio && !a.classList.contains('rt-toc') && href.indexOf('youtu') !== -1);
+    var isRT    = a.classList.contains('rt-toc') || (!isAudio && !isYT && href.indexOf('rutube') !== -1);
+    var tMatch  = href.match(/[?&]t=(\d+)/);
+    var sec     = tMatch ? parseInt(tMatch[1]) : 0;
+
+    if (mode === 'embedded') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSec = sec;
+      if (isAudio) {
+        if (videoSrc !== 'audio') {
+          reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === 'audio'); });
+          videoSrc = 'audio';
+          showPlayer('audio');
+        }
+        updateLinkVisibility('audio');
+        loadAt('audio', sec);
+      } else if (isYT || isRT) {
+        var targetSrc = isYT ? 'yt' : 'rt';
+        if (targetSrc !== videoSrc) {
+          if (videoSrc === 'audio') audioEl.pause();
+          else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === targetSrc); });
+          videoSrc = targetSrc;
+          showPlayer(targetSrc);
+        }
+        updateLinkVisibility(targetSrc);
+        loadAt(videoSrc, sec);
+      }
+      // Если клик из оглавления — скроллим текст к соответствующему заголовку
+      var li = a.closest('li');
+      if (li) {
+        var anchorLink = li.querySelector('a[href^="#"]');
+        if (anchorLink) {
+          var targetId = anchorLink.getAttribute('href').slice(1);
+          var targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            var scrollEl = window.innerWidth > 900 ? textPanel : document.documentElement;
+            var videoPanel = document.getElementById('video-panel');
+            var offset = targetEl.offsetTop - (window.innerWidth <= 900 ? videoPanel.offsetHeight + 8 : 8);
+            scrollEl.scrollTo({ top: offset, behavior: 'instant' });
+          }
+        }
+      } else {
+        document.getElementById('video-sticky').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else {
+      if (isAudio) {
+        e.preventDefault();
+        window.open('./src/audio/03.mp3#t=' + sec, '_blank');
+      }
+    }
+  }
+
+  // Подсветка по клику на пункте оглавления в правой панели
+  var tocClickIdx = -1;  // индекс принудительно выбранного пункта
+  var tocClickTimer = null;
+  tocPanel.addEventListener('click', function(e) {
+    var li = e.target.closest('li');
+    if (!li) return;
+    var allLi = Array.from(tocPanel.querySelectorAll('.toc-list li'));
+    var idx = allLi.indexOf(li);
+    if (idx < 0) return;
+    tocClickIdx = idx;
+    allLi.forEach(function(el, i) { el.classList.toggle('toc-active', i === idx); });
+    // Снимаем принудительный индекс когда скролл доедет (через 1 сек)
+    if (tocClickTimer) clearTimeout(tocClickTimer);
+    tocClickTimer = setTimeout(function() { tocClickIdx = -1; }, 1000);
+  });
+
+  // Клик на пустую область audio-container — play/pause
+  var audioCont2 = document.getElementById('audio-container');
+  var audioPlayIcon = document.getElementById('audio-play-icon');
+  audioCont2.addEventListener('click', function(e) {
+    if (e.target.closest('audio')) return; // клик на сам плеер — не трогаем
+    if (audioEl.paused) {
+      audioEl.play();
+      audioPlayIcon.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      audioPlayIcon.textContent = '▶';
+    }
+  });
+  audioEl.addEventListener('play',  function() {
+    audioPlayIcon.textContent = '⏸';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+  audioEl.addEventListener('pause', function() {
+    audioPlayIcon.textContent = '▶';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+
+  document.addEventListener('click', handleTimecodeClick);
+  document.addEventListener('touchend', function(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (a && mode === 'embedded') handleTimecodeClick(e);
+  }, { passive: false });
+
+  // ── Клик на таймкоде абзаца — переход на активный источник ─────────────
+  function handleParaTimecode(e) {
+    var a = e.target.closest('a.para-timecode');
+    if (!a) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var sec = parseInt(a.dataset.t, 10);
+    if (isNaN(sec)) return;
+    if (mode === 'embedded') {
+      loadAt(videoSrc, sec);
+      updateHint(videoSrc, sec);
+    } else {
+      var url;
+      if (videoSrc === 'yt') {
+        url = YT_BASE + (YT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + YT_OFFSET);
+      } else if (videoSrc === 'rt') {
+        url = RT_BASE + (RT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + RT_OFFSET);
+      } else {
+        url = './src/audio/03.mp3#t=' + (sec + AU_OFFSET);
+      }
+      window.open(url, '_blank');
+    }
+  }
+    document.addEventListener('click', handleParaTimecode);
+  document.addEventListener('touchend', function(e) {
+    if (e.target.closest('a.para-timecode')) handleParaTimecode(e);
+  }, { passive: false });
+
+  // ── Панель инструментов ─────────────────────────────────────────────────
+
+  var textPanel = document.getElementById('text-panel');
+
+  function getScrollEl() {
+    return (window.innerWidth > 900) ? textPanel : document.documentElement;
+  }
+
+  // Текущий активный раздел
+  function getCurrentTocIndex() {
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    var best = -1;
+    for (var i = 0; i < tocItems.length; i++) {
+      var el = document.getElementById(tocItems[i].id);
+      if (!el) continue;
+      var elTop = scrollEl === textPanel
+        ? el.offsetTop - scrollEl.scrollTop
+        : el.getBoundingClientRect().top;
+      if (elTop <= toolbarH + 8) best = i;
+    }
+    return best;
+  }
+
+  // Строим структуру разделов для нумерации — синхронно с CSS-счётчиками
+  var tocItems = [];
+  (function() {
+    var h2n = 0, h3n = 0;
+    document.querySelectorAll('#toc-nav .toc-list li').forEach(function(li) {
+      var a = li.querySelector('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tag = el.tagName.toLowerCase();
+      var title = el.childNodes[0].textContent.trim();
+      if (tag === 'h2') {
+        h2n++; h3n = 0;
+        tocItems.push({ id: id, tag: 'h2', h2: h2n, h3: 0, title: title, parentTitle: '' });
+      } else if (tag === 'h3') {
+        h3n++;
+        var parentTitle = '';
+        // Ищем последний h2 в tocItems
+        for (var j = tocItems.length - 1; j >= 0; j--) {
+          if (tocItems[j].tag === 'h2') { parentTitle = tocItems[j].title; break; }
+        }
+        tocItems.push({ id: id, tag: 'h3', h2: h2n, h3: h3n, title: title, parentTitle: parentTitle });
+      }
+    });
+  })();
+
+  function updateTocTitle() {
+    var idx = getCurrentTocIndex();
+
+    // Подсветка активного пункта в #toc-panel при скролле
+    // (не перебиваем если был недавний клик)
+    var tocPanelItems = tocPanel.querySelectorAll('.toc-list li');
+    var activeIdx = (tocClickIdx >= 0) ? tocClickIdx : idx;
+    tocPanelItems.forEach(function(li, i) { li.classList.toggle('toc-active', i === activeIdx); });
+
+
+    if (idx < 0 || idx >= tocItems.length) { tocTitleEl.textContent = ''; return; }
+    var item = tocItems[idx];
+    var text;
+    if (item.tag === 'h2') {
+      text = item.h2 + '. ' + item.title;
+    } else {
+      text = item.h2 + '.' + item.h3 + ' ' + item.title + ' / ' + item.parentTitle;
+    }
+    tocTitleEl.textContent = text;
+  }
+
+  // Скролл к разделу по индексу
+  function scrollToTocItem(idx) {
+    if (idx < 0 || idx >= tocItems.length) return;
+    var el = document.getElementById(tocItems[idx].id);
+    if (!el) return;
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    if (scrollEl === textPanel) {
+      scrollEl.scrollTo({ top: el.offsetTop - toolbarH - 4, behavior: 'instant' });
+    } else {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - toolbarH - 4, behavior: 'instant' });
+    }
+  }
+
+  tocNextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx + 1);
+  });
+
+  tocPrevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx <= 0 ? 0 : idx - 1);
+  });
+
+  goTopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    getScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  goEndBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var scrollEl = getScrollEl();
+    // scrollHeight может быть неточным при первом вызове (lazy-render).
+    // Передаём заведомо большое число — браузер сам ограничит до максимума.
+    scrollEl.scrollTo({ top: 999999999, behavior: 'smooth' });
+  });
+
+  // Прогресс + время чтения
+  var WORDS_PER_MIN = 150;
+  var totalWords = (document.getElementById('text-panel').innerText.match(/\S+/g) || []).length;
+  var totalMinutes = Math.max(1, Math.round(totalWords / WORDS_PER_MIN));
+
+  var progressBarEl = document.getElementById('progress-bar');
+
+  // alignTocTitle объявлена выше
+
+  function updateProgress() {
+    var scrollEl     = getScrollEl();
+    var scrollTop    = scrollEl.scrollTop;
+    var scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+    var pct = scrollHeight > 0 ? Math.round(scrollTop / scrollHeight * 100) : 0;
+    readPctEl.textContent = pct + '%';
+    progressBarEl.style.width = pct + '%';
+    var minsLeft = Math.max(1, Math.round(totalMinutes * (1 - pct / 100)));
+    readTimeEl.textContent = '\u00a0(' + minsLeft + '\u00a0мин)';
+  }
+
+  textPanel.addEventListener('scroll', updateProgress);
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  textPanel.addEventListener('scroll', updateTocTitle);
+  window.addEventListener('scroll', updateTocTitle);
+  updateTocTitle();
+
+  // Автоскроллинг
+  var autoscrollActive = false;
+  var autoscrollSpeed  = 1;   // px/frame
+  var autoscrollRaf    = null;
+
+  function autoscrollStep() {
+    if (!autoscrollActive) return;
+    var scrollEl = getScrollEl();
+    scrollEl.scrollTop += autoscrollSpeed;
+    autoscrollRaf = requestAnimationFrame(autoscrollStep);
+  }
+
+  autoscrollBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    autoscrollActive = !autoscrollActive;
+    if (autoscrollActive) {
+      autoscrollBtn.classList.add('active');
+      autoscrollLbl.textContent = '⏸ Стоп';
+      autoscrollRaf = requestAnimationFrame(autoscrollStep);
+    } else {
+      autoscrollBtn.classList.remove('active');
+      autoscrollLbl.textContent = '⏩ Авто';
+      if (autoscrollRaf) cancelAnimationFrame(autoscrollRaf);
+    }
+  });
+
+  // ── Навигация по якорям глоссария с поддержкой кнопки «Назад» ───────────
+  //
+  // Проблема: текст скроллится внутри #text-panel, а не в window.
+  // Браузер не сохраняет scrollTop панели в истории — кнопка «Назад»
+  // возвращает якорь в URL, но не позицию скролла.
+  //
+  // Решение: при клике на ссылку внутри .glossary или на .gterm-refs a
+  // сохраняем текущий scrollTop в history.state, потом скроллим к цели
+  // и пушим новую запись. При popstate — восстанавливаем scrollTop.
+
+  function scrollPanelToEl(el) {
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 36;
+    var scrollEl = getScrollEl();
+    var top;
+    if (scrollEl === textPanel) {
+      top = el.offsetTop - toolbarH - 8;
+    } else {
+      top = el.getBoundingClientRect().top + window.scrollY - toolbarH - 8;
+    }
+    scrollEl.scrollTo({ top: top, behavior: 'instant' });
+  }
+
+  function getScrollTop() {
+    var scrollEl = getScrollEl();
+    return scrollEl === textPanel ? textPanel.scrollTop : window.scrollY;
+  }
+
+  document.addEventListener('click', function(e) {
+    // Ловим клики на ссылки §N в глоссарии и на ссылки термина из текста
+    var a = e.target.closest(
+      '.glossary-list .gterm-refs a[href^="#p"], ' +
+      '.glossary-plain a[href^="#gterm-"], ' +
+      '.glossary-list dt a[href^="#p"], ' +
+      '.slides-toc-list a[href^="#slide-"]'
+    );
+    if (!a) return;
+
+    var targetId = a.getAttribute('href').slice(1);
+    var targetEl = document.getElementById(targetId);
+    if (!targetEl) return;
+
+    e.preventDefault();
+
+    // Сохраняем текущую позицию в текущей записи истории
+    history.replaceState(
+      { scrollTop: getScrollTop(), fromHash: location.hash },
+      '',
+      location.href
+    );
+
+    // Пушим новую запись с якорем цели
+    // scrollTop: null означает «скролл к якорю», а не «восстановить позицию»
+    history.pushState(
+      { scrollTop: null, fromHash: '#' + targetId, prevScrollTop: getScrollTop() },
+      '',
+      '#' + targetId
+    );
+
+    scrollPanelToEl(targetEl);
+  });
+
+  // При нажатии «Назад» / «Вперёд» — восстанавливаем сохранённый scrollTop
+  window.addEventListener('popstate', function(e) {
+    var state = e.state;
+
+    // scrollTop задан — восстанавливаем позицию (возврат из слайда/глоссария)
+    if (state && state.scrollTop !== null && state.scrollTop !== undefined) {
+      var scrollEl = getScrollEl();
+      var savedTop = state.scrollTop;
+      setTimeout(function() {
+        scrollEl.scrollTo({ top: savedTop, behavior: 'instant' });
+      }, 150);
+      return;
+    }
+
+    // scrollTop не задан — переход вперёд к якорю
+    if (state && state.fromHash) {
+      var targetEl = document.getElementById(state.fromHash.slice(1));
+      if (targetEl) {
+        setTimeout(function() { scrollPanelToEl(targetEl); }, 150);
+      }
+    }
+  });
+
+
+
+})();
+</script>
+</body>
+</html>

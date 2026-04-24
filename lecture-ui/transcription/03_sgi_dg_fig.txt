@@ -1,0 +1,11 @@
+§8 <figure><img 1><figcaption>Храм – от пещер к камню</figcaption></figure>
+§20 <figure><img 2><figcaption>Стили индийских храмов</figcaption></figure>
+§37 <figure><img 3><figcaption>Критерии выбора камня</figcaption></figure>
+§39 <figure><img 4><figcaption>Развитие индуистской храмовой мысли</figcaption></figure>
+§50 <figure><img 5><figcaption>Соразмерность (māna)</figcaption></figure>
+§54 <figure><img 6><figcaption>Путь к гарбхагрихе</figcaption></figure>
+§65 <figure><img 7><figcaption>Амрутешвара (Амрутхапура, Карнатака)</figcaption></figure>
+§68 <figure><img 8><figcaption>Стхапати</figcaption></figure>
+§81 <figure><img 10><figcaption>Ваступуруша-мандала</figcaption></figure>
+§86 <figure><img 9><figcaption>Каршана-пратиштха</figcaption></figure>
+# img 10 на §81, img 9 на §86: нарушение числового порядка. В §81–82 лектор, рассказывая о знаниях стхапати и янтрах, показывает слайд «Ваступуруша-мандала» (img 10) как иллюстрацию к теме янтры храма. Слайд «Каршана-пратиштха» (img 9) появляется позже — в §86, когда лектор переходит к 11 стадиям строительного ритуала. Таким образом, img 10 показан раньше img 9, хотя в PDF расположен после него.

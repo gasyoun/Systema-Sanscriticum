@@ -1,0 +1,62 @@
+§0 <figure><img 1><figcaption>Ведийская литература. Ригведа: структура и тематика гимнов</figcaption></figure>
+§5 <figure><img 2><figcaption>Ведийская метрика</figcaption></figure>
+§10 <figure><img 8><figcaption>Пада и стих</figcaption></figure>
+# img 8 на §10: лектор вводит термины «пада» и «рич» (слайд 8) в рамках вводного объяснения метрики, до перехода к конкретным примерам размеров (§24+); числовой порядок нарушён, но показ реален
+§24 <figure><img 3><figcaption>Пример 8-сложного размера (ануштубх, гаятри) (1/2)</figcaption></figure>
+§25 <figure><img 5><figcaption>Пример триштубха</figcaption></figure>
+§26 <figure><img 6><figcaption>Пример джагати</figcaption></figure>
+§27 <figure><img 4><figcaption>Пример 8-сложного размера (ануштубх, гаятри) (2/2)</figcaption></figure>
+# img 5 и 6 на §25-26 (между img 3 и img 4): лектор разбирает примеры размеров не строго по номерам PDF — после ануштубха 1/2 переходит к триштубху и джагати, затем возвращается ко второму примеру ануштубха (каденции ямб/трохей); числовой порядок img нарушён
+§41 <figure><img 7><figcaption>Стихотворные размеры и боги</figcaption></figure>
+§42 <figure><img 9><figcaption>Группировка строф</figcaption></figure>
+§44 <figure><img 10><figcaption>Гимн I.2 (пример tṛca) (1/3)</figcaption></figure>
+§45 <figure><img 11><figcaption>Гимн I.2 (пример tṛca) (2/3)</figcaption></figure>
+§45 <figure><img 12><figcaption>Гимн I.2 (пример tṛca) (3/3)</figcaption></figure>
+§46 <figure><img 13><figcaption>Гимн III.28 (пример диады) (1/3)</figcaption></figure>
+§47 <figure><img 14><figcaption>Гимн III.28 (пример диады) (2/3)</figcaption></figure>
+§48 <figure><img 15><figcaption>Гимн III.28 (пример диады) (3/3)</figcaption></figure>
+§49 <figure><img 16><figcaption>Структура гимна</figcaption></figure>
+§58 <figure><img 17><figcaption>Гимн Агни (I.1.1)</figcaption></figure>
+§59 <figure><img 18><figcaption>Гимн Агни (I.1.2)</figcaption></figure>
+§60 <figure><img 19><figcaption>Гимн Агни (I.1.3)</figcaption></figure>
+§61 <figure><img 20><figcaption>Гимн Агни (I.1.4)</figcaption></figure>
+§61 <figure><img 21><figcaption>Гимн Агни (I.1.5-6)</figcaption></figure>
+§62 <figure><img 22><figcaption>Гимн Агни (I.1.7-9)</figcaption></figure>
+§64 <figure><img 23><figcaption>Мифы в «Ригведе»</figcaption></figure>
+§66 <figure><img 24><figcaption>Что такое миф?</figcaption></figure>
+§67 <figure><img 25><figcaption>Из гимна Индре (VI.30.3)</figcaption></figure>
+§69 <figure><img 26><figcaption>Миф — не событие прошлого</figcaption></figure>
+§71 <figure><img 27><figcaption>Миф и ритуал</figcaption></figure>
+§74 <figure><img 28><figcaption>Происхождение сомы</figcaption></figure>
+§75 <figure><img 29><figcaption>Миф как объяснение</figcaption></figure>
+§78 <figure><img 30><figcaption>Миф как моральное поучение</figcaption></figure>
+§80 <figure><img 31><figcaption>Описание Индры</figcaption></figure>
+§82 <figure><img 32><figcaption>Благоговейный ужас</figcaption></figure>
+§84 <figure><img 33><figcaption>Рибху — мастера, ставшие богами</figcaption></figure>
+§85 <figure><img 34><figcaption>Время глаголов в мифе</figcaption></figure>
+§87 <figure><img 35><figcaption>Мифические сказания</figcaption></figure>
+§88 <figure><img 36><figcaption>Мифическое сказание о Драпсе</figcaption></figure>
+§89 <figure><img 37><figcaption>Саранью и Вивасват</figcaption></figure>
+§91 <figure><img 38><figcaption>Легенды</figcaption></figure>
+§93 <figure><img 39><figcaption>Легенда о Чьяване (1/2)</figcaption></figure>
+§93 <figure><img 40><figcaption>Легенда о Чьяване (2/2)</figcaption></figure>
+§94 <figure><img 41><figcaption>Легенда о Ребху</figcaption></figure>
+§96 <figure><img 42><figcaption>Семейная легенда о Готаме</figcaption></figure>
+§97 <figure><img 43><figcaption>Диргхашравас Аушиджа</figcaption></figure>
+§98 <figure><img 44><figcaption>Легенда о Шьявашве (V.61)</figcaption></figure>
+§98 <figure><img 45><figcaption>История в «Ригведе»</figcaption></figure>
+§98 <figure><img 46><figcaption>Состязание Мудгалани (X.102)</figcaption></figure>
+§98 <figure><img 47><figcaption>Атри спасает солнце (V.40)</figcaption></figure>
+§98 <figure><img 48><figcaption>Бхарадваджа и победа над Варчином и Шамбарой</figcaption></figure>
+# img 45–48 на §98: серия иллюстративных слайдов-примеров (история, состязание, Атри, Бхарадваджа); лектор перечисляет разные типы преданий в рамках одного тематически единого параграфа
+§99 <figure><img 49><figcaption>Магия</figcaption></figure>
+§100 <figure><img 50><figcaption>Заговор на возвращение духа</figcaption></figure>
+§100 <figure><img 51><figcaption>Заговор против ядовитых насекомых и змей (1/2)</figcaption></figure>
+§101 <figure><img 52><figcaption>Заговор против ядовитых насекомых и змей (2/2)</figcaption></figure>
+§101 <figure><img 53><figcaption>Против соперницы</figcaption></figure>
+§101 <figure><img 54><figcaption>К лягушкам</figcaption></figure>
+§101 <figure><img 55><figcaption>К оружию</figcaption></figure>
+§102 <figure><img 56><figcaption>Гимн игрока</figcaption></figure>
+§103 <figure><img 57><figcaption>Гимны-диалоги (самвада)</figcaption></figure>
+§104 <figure><img 58><figcaption>Пуруравас и Урваши</figcaption></figure>
+§116 <figure><img 59><figcaption>Конец лекции</figcaption></figure>

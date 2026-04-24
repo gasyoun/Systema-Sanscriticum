@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ lecture.meta.lesson_title }}. {{ lecture.meta.course }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/{{ '%02d' % lecture.meta.lesson_number }}.css?v=1">
+</head>
+<body>
+<div id="app-layout">
+<div id="text-panel">
+<div class="page">
+
+  {# ═══════════════════════════════ ОБЛОЖКА ═══════════════════════════════ #}
+  <header class="cover">
+    <p class="series">Курс «{{ lecture.meta.course }}» · {{ lecture.meta.lesson_title }}</p>
+    <h1>{{ lecture.meta.title }}</h1>
+    <p class="subtitle">Лектор: {{ lecture.meta.lecturer }}</p>
+    <p class="meta">
+      {{ lecture.meta.organization }}<br>
+      {% if lecture.meta.period %}{{ lecture.meta.period }}<br>{% endif %}
+      {{ lecture.meta.date_display }} · Ведущий: {{ lecture.meta.host }} · Видеозапись:
+      <a href="{{ lecture.meta.video.youtube }}" target="_blank">YT</a><span class="link-sep">/</span><a href="{{ lecture.meta.video.rutube }}" target="_blank">RT</a>
+    </p>
+  </header>
+
+  {# ═══════════════════════════════ ОГЛАВЛЕНИЕ ═══════════════════════════ #}
+  <nav class="toc" id="toc-nav">
+    <h2 class="toc-title">Содержание</h2>
+    <ul class="toc-list">
+    {% for section in lecture.sections %}
+      <li class="toc-h{{ section.level }}"><a href="#{{ section.id }}">{{ section.title }}</a>
+        {%- if section.timecodes.yt is defined %} <a class="yt-toc" href="{{ lecture.meta.video.youtube }}?t={{ section.timecodes.yt }}" title="{{ section._yt_time }}" target="_blank">YT</a><span class="link-sep">/</span>
+        {%- endif %}
+        {%- if section.timecodes.rt is defined %}<a class="rt-toc" href="{{ lecture.meta.video.rutube }}&t={{ section.timecodes.rt }}" title="{{ section._rt_time }}" target="_blank">RT</a><span class="link-sep">/</span>
+        {%- endif %}
+        {%- if section.timecodes.au is defined %}<a class="audio-toc" href="?t={{ section.timecodes.au }}" title="{{ section._yt_time }}">AU</a>
+        {%- endif %}</li>
+    {% endfor %}
+    </ul>
+  </nav>
+
+  {# ═══════════════════════════════ СЕКЦИИ ════════════════════════════════ #}
+  {% for section in lecture.sections %}
+
+  <h{{ section.level }} id="{{ section.id }}">{{ section.title }}
+    {% if section.timecodes.yt is defined %}
+    <span class="yt-link">
+      <a href="{{ section._yt_url }}" title="{{ section._yt_time }}" target="_blank">YT</a><span class="link-sep">/</span><a href="{{ section._rt_url }}" title="{{ section._rt_time }}" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t={{ section.timecodes.au }}">AU</a>
+    </span>
+    {% endif %}
+  </h{{ section.level }}>
+
+  {% for block in section.content %}
+
+    {# — Диалог — #}
+    {% if block.type == "dialog" %}
+    <div class="dialog">
+      {% for turn in block.turns %}
+      <div class="dialog-turn">
+        <div class="dialog-speaker">{{ turn.role | upper_role }}</div>
+        <div class="dialog-text">
+          {% if turn.text is string %}
+          <p>{{ turn.text }}</p>
+          {% else %}
+          {% for para in turn.text %}<p>{{ para }}</p>{% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# — Интерджекция — #}
+    {% elif block.type == "interjection" %}
+    <p class="interjection"><span class="interjection-speaker">{{ block.speaker | upper_role }}:</span> {{ block.text }}</p>
+
+    {# — Картинка — #}
+    {% elif block.type == "figure" %}
+    <figure>
+      <img src="{{ block.src }}" alt="{{ block.alt }}" loading="lazy">
+      <figcaption>{{ block.caption }}</figcaption>
+    </figure>
+
+    {# — Текст — #}
+    {% elif block.type == "text" %}
+    {% for para in block.paragraphs %}
+    <p>{{ para }}</p>
+    {% endfor %}
+
+  {% endif %}
+  {% endfor %}
+
+  {% endfor %}
+
+</div><!-- /.page -->
+</div><!-- /text-panel -->
+
+{# ═══════════════════════ ПАНЕЛЬ ВИДЕОПЛЕЕРА ════════════════════════════ #}
+{% set yt_id = lecture.meta.video.youtube | yt_id %}
+{% set rt_id = lecture.meta.video.rutube | rt_id %}
+<div id="video-panel">
+  <div id="video-sticky">
+    <div id="video-player-area">
+      <div id="video-source-tabs">
+        <button class="vsrc-btn active" data-src="yt">YouTube</button>
+        <button class="vsrc-btn" data-src="rt">Rutube</button>
+        <button class="vsrc-btn" data-src="audio">Audio</button>
+      </div>
+      <div id="video-container">
+        <iframe id="video-frame"
+          src="https://www.youtube.com/embed/{{ yt_id }}?enablejsapi=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="audio-container">
+        <audio id="audio-player" controls preload="none">
+          <source src="./src/audio/{{ lecture.meta.lesson_number | lesson_audio }}" type="audio/mpeg">
+        </audio>
+      </div>
+      <div id="video-hint">Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается</div>
+    </div>
+    <div id="video-extra">
+      <div id="toc-panel"></div>
+    </div>
+  </div>
+</div><!-- /video-panel -->
+
+</div><!-- /app-layout -->
+
+<button id="mode-toggle" title="Переключить режим видео">
+  <span id="mode-icon">⊞</span>
+  <span id="mode-label">Внешнее видео</span>
+  <span id="read-pct"></span><span id="scroll-arrow" style="display:none"> · <a id="scroll-arrow-link" href="#" title="Наверх" style="padding: 4px 8px; margin: -4px -4px; display:inline-block;">↑</a></span>
+</button>
+
+<script>
+(function() {
+  var YT_EMBED = 'https://www.youtube.com/embed/{{ yt_id }}?enablejsapi=1';
+  var RT_EMBED = '{{ lecture.meta.video.rutube | rt_id }}';
+  var YT_BASE  = '{{ lecture.meta.video.youtube }}';
+  var RT_BASE  = '{{ lecture.meta.video.rutube }}';
+
+  var mode     = 'embedded';
+  var videoSrc = 'yt';
+  var linkMode = 'both';
+  var lastSec  = 0;
+
+  var layout    = document.getElementById('app-layout');
+  var frame     = document.getElementById('video-frame');
+  var audioEl   = document.getElementById('audio-player');
+  var videoCont = document.getElementById('video-container');
+  var audioCont = document.getElementById('audio-container');
+  var toggle    = document.getElementById('mode-toggle');
+  var modeLabel = document.getElementById('mode-label');
+  var modeIcon  = document.getElementById('mode-icon');
+  var srcBtns   = document.querySelectorAll('.vsrc-btn');
+  var hint      = document.getElementById('video-hint');
+
+  var RT_OFFSET = 17;
+
+  function fmtTime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    var p = function(n) { return String(n).padStart(2, '0'); };
+    return h > 0 ? h + ':' + p(m) + ':' + p(ss) : m + ':' + p(ss);
+  }
+
+  function showPlayer(src) {
+    if (src === 'audio') {
+      videoCont.style.display = 'none';
+      audioCont.style.display = 'block';
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — аудио перемотается';
+    } else {
+      videoCont.style.display = '';
+      audioCont.style.display = 'none';
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается';
+    }
+  }
+
+  function updateHint(src, sec) {
+    var t = (src === 'rt') ? sec + RT_OFFSET : sec;
+    var label = (src === 'audio') ? 'аудио перемотается' : 'видео перемотается';
+    hint.innerHTML = 'Нажмите на время <span class="timecode">' + fmtTime(t) + '</span> в тексте — ' + label;
+  }
+
+  function updateLinkVisibility(lm) {
+    linkMode = lm;
+    document.body.classList.remove('links-yt-only', 'links-rt-only', 'links-audio-only');
+    if (lm === 'yt')    document.body.classList.add('links-yt-only');
+    if (lm === 'rt')    document.body.classList.add('links-rt-only');
+    if (lm === 'audio') document.body.classList.add('links-audio-only');
+  }
+
+  function reloadFrame(src) {
+    var container = document.getElementById('video-container');
+    var oldFrame = document.getElementById('video-frame');
+    oldFrame.parentNode.removeChild(oldFrame);
+    var newFrame = document.createElement('iframe');
+    newFrame.id = 'video-frame';
+    newFrame.src = src;
+    newFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    newFrame.setAttribute('allowfullscreen', '');
+    if (src.indexOf('rutube') !== -1) {
+      newFrame.addEventListener('load', function() {
+        var attempts = 0;
+        var interval = setInterval(function() {
+          try { newFrame.contentWindow.postMessage('{"method":"play"}', 'https://rutube.ru'); } catch(e) {}
+          attempts++;
+          if (attempts >= 10) clearInterval(interval);
+        }, 500);
+      });
+    }
+    container.appendChild(newFrame);
+    frame = newFrame;
+  }
+
+  function loadAt(src, sec) {
+    if (src === 'yt') {
+      reloadFrame(YT_EMBED + '&start=' + sec + '&autoplay=1');
+    } else if (src === 'rt') {
+      reloadFrame(RT_EMBED + '&t=' + (sec + RT_OFFSET) + '&autoplay=1');
+    } else if (src === 'audio') {
+      audioEl.currentTime = sec;
+      audioEl.play();
+    }
+  }
+
+  srcBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.src === videoSrc) return;
+      if (videoSrc === 'audio') audioEl.pause();
+      else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      srcBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      videoSrc = btn.dataset.src;
+      updateLinkVisibility(videoSrc);
+      showPlayer(videoSrc);
+      if (lastSec > 0) loadAt(videoSrc, lastSec);
+      else if (videoSrc === 'yt') reloadFrame(YT_EMBED);
+      else if (videoSrc === 'rt') reloadFrame(RT_EMBED);
+    });
+  });
+
+  toggle.addEventListener('click', function() {
+    mode = mode === 'embedded' ? 'external' : 'embedded';
+    applyMode();
+  });
+
+  var tocNav            = document.getElementById('toc-nav');
+  var tocPanel          = document.getElementById('toc-panel');
+  var tocOriginalParent = tocNav.parentNode;
+  var tocNextSibling    = tocNav.nextSibling;
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function moveToc(toPanel) {
+    if (toPanel && !isMobile()) tocPanel.appendChild(tocNav);
+    else tocOriginalParent.insertBefore(tocNav, tocNextSibling);
+  }
+
+  function updateMobilePadding() {
+    var videoPanel = document.getElementById('video-panel');
+    if (window.innerWidth <= 900 && mode === 'embedded') {
+      var h = videoPanel.offsetHeight;
+      document.getElementById('text-panel').style.paddingTop = h + 'px';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = (h + 8) + 'px';
+      });
+    } else {
+      document.getElementById('text-panel').style.paddingTop = '';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = '';
+      });
+    }
+  }
+
+  function applyMode() {
+    if (mode === 'embedded') {
+      layout.classList.remove('mode-external');
+      layout.classList.add('mode-embedded');
+      modeLabel.textContent = 'Внешний плеер';
+      modeIcon.textContent = '⊞';
+      toggle.classList.remove('ext-active');
+      moveToc(true);
+    } else {
+      // Остановить всё при переходе во внешний режим
+      if (videoSrc === 'audio') {
+        audioEl.pause();
+      } else {
+        reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      }
+      layout.classList.remove('mode-embedded');
+      layout.classList.add('mode-external');
+      modeLabel.textContent = 'Встроенный плеер';
+      modeIcon.textContent = '▶';
+      toggle.classList.add('ext-active');
+      moveToc(false);
+    }
+    requestAnimationFrame(function() { requestAnimationFrame(updateMobilePadding); });
+  }
+
+  window.addEventListener('resize', function() {
+    moveToc(mode === 'embedded');
+    updateMobilePadding();
+  });
+
+  showPlayer('yt');
+  applyMode();
+
+  function handleTimecodeClick(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (!a) return;
+    var href    = a.href || '';
+    var isAudio = a.classList.contains('audio-toc');
+    var isYT    = a.classList.contains('yt-toc') || (!isAudio && !a.classList.contains('rt-toc') && href.indexOf('youtu') !== -1);
+    var isRT    = a.classList.contains('rt-toc') || (!isAudio && !isYT && href.indexOf('rutube') !== -1);
+    var tMatch  = href.match(/[?&]t=(\d+)/);
+    var sec     = tMatch ? parseInt(tMatch[1]) : 0;
+
+    if (mode === 'embedded') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSec = sec;
+      if (isAudio) {
+        if (videoSrc !== 'audio') {
+          reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === 'audio'); });
+          videoSrc = 'audio';
+          showPlayer('audio');
+        }
+        updateLinkVisibility('audio');
+        loadAt('audio', sec);
+      } else if (isYT || isRT) {
+        var targetSrc = isYT ? 'yt' : 'rt';
+        if (targetSrc !== videoSrc) {
+          if (videoSrc === 'audio') audioEl.pause();
+          else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === targetSrc); });
+          videoSrc = targetSrc;
+          showPlayer(targetSrc);
+        }
+        updateLinkVisibility(targetSrc);
+        loadAt(videoSrc, sec);
+      }
+      // Если клик из оглавления — скроллим текст к соответствующему заголовку
+      var li = a.closest('li');
+      if (li) {
+        var anchorLink = li.querySelector('a[href^="#"]');
+        if (anchorLink) {
+          var targetId = anchorLink.getAttribute('href').slice(1);
+          var targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            var scrollEl = window.innerWidth > 900 ? textPanel : document.documentElement;
+            var videoPanel = document.getElementById('video-panel');
+            var offset = targetEl.offsetTop - (window.innerWidth <= 900 ? videoPanel.offsetHeight + 8 : 8);
+            scrollEl.scrollTo({ top: offset, behavior: 'smooth' });
+          }
+        }
+      } else {
+        document.getElementById('video-sticky').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else {
+      if (isAudio) {
+        e.preventDefault();
+        window.open('./src/audio/{{ lecture.meta.lesson_number | lesson_audio }}#t=' + sec, '_blank');
+      }
+    }
+  }
+
+  document.addEventListener('click', handleTimecodeClick);
+  document.addEventListener('touchend', function(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (a && mode === 'embedded') handleTimecodeClick(e);
+  }, { passive: false });
+
+  // Процент прочитанного на кнопке режима
+  var pctEl = document.getElementById('read-pct');
+  var textPanel = document.getElementById('text-panel');
+  function getScrollEl() {
+    return (window.innerWidth > 900) ? textPanel : document.documentElement;
+  }
+  function updateProgress() {
+    var scrollEl     = getScrollEl();
+    var scrollTop    = scrollEl.scrollTop;
+    var scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+    var pct = scrollHeight > 0 ? Math.round(scrollTop / scrollHeight * 100) : 0;
+    pctEl.textContent = pct > 0 ? ' · ' + pct + '%' : '';
+  }
+  textPanel.addEventListener('scroll', updateProgress);
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  // Стрелка «наверх»
+  var scrollArrow     = document.getElementById('scroll-arrow');
+  var scrollArrowLink = document.getElementById('scroll-arrow-link');
+  function updateScrollTopBtn() {
+    var scrollEl = getScrollEl();
+    var scrolled = scrollEl.scrollTop > 200;
+    scrollArrow.style.display = scrolled ? 'inline' : 'none';
+  }
+  scrollArrow.addEventListener('click', function(e) { e.stopPropagation(); });
+  scrollArrowLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    getScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  textPanel.addEventListener('scroll', updateScrollTopBtn);
+  window.addEventListener('scroll', updateScrollTopBtn);
+  window.addEventListener('resize', updateScrollTopBtn);
+  updateScrollTopBtn();
+
+})();
+</script>
+</body>
+</html>

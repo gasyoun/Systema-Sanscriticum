@@ -1,0 +1,17 @@
+§0 <figure><img 1><figcaption>Ведийская литература. «Ригведа». Поэт и поэтическое творчество</figcaption></figure>
+§12 <figure><img 2><figcaption>Поэтическое вдохновение</figcaption></figure>
+§16 <figure><img 3><figcaption>Ригведа I.122.20</figcaption></figure>
+§18 <figure><img 4><figcaption>Ригведа X.177.1</figcaption></figure>
+§22 <figure><img 5><figcaption>Маруты являются Шьяваше (V.61)</figcaption></figure>
+§31 <figure><img 6><figcaption>Моление о поэтическом даре (I.61)</figcaption></figure>
+§40 <figure><img 7><figcaption>Боги — источники вдохновения</figcaption></figure>
+§42 <figure><img 8><figcaption>Агни (Ригведа III.5)</figcaption></figure>
+§44 <figure><img 9><figcaption>Сома (Ригведа IX.73)</figcaption></figure>
+§45 <figure><img 10><figcaption>Ашвины (Ригведа I.117)</figcaption></figure>
+§48 <figure><img 11><figcaption>Вач (Речь) (Ригведа X.125)</figcaption></figure>
+§50 <figure><img 12><figcaption>Ведийские поэты</figcaption></figure>
+§58 <figure><img 13><figcaption>Ригведа I.61</figcaption></figure>
+§61 <figure><img 14><figcaption>Ригведа V.2</figcaption></figure>
+§62 <figure><img 15><figcaption>Ригведа I.159</figcaption></figure>
+§68 <figure><img 16><figcaption>Поэты и общество</figcaption></figure>
+§70 <figure><img 17><figcaption>Конец лекции</figcaption></figure>
