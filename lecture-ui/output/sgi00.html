@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вводное занятие. Сакральная география Индии</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/00.css?v=1">
+  <style>
+  /* ── Toolbar ───────────────────────────────────────────────────────────── */
+  #toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(44, 30, 18, 0.97);
+    backdrop-filter: blur(6px);
+    color: #e8d8c0;
+    font-size: 13px;
+    min-height: 36px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+  /* Обёртка: тулбар + app-layout занимают всю высоту экрана */
+  #page-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* app-layout теперь занимает оставшееся место */
+  #page-shell #app-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .tb-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #e8d8c0;
+    cursor: pointer;
+    padding: 3px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: background 0.15s;
+    line-height: 1.4;
+  }
+  .tb-btn:hover { background: rgba(255,255,255,0.18); }
+  .tb-btn.active { background: rgba(200,160,80,0.35); border-color: rgba(200,160,80,0.6); }
+  .tb-mode-btn { font-size: 12px; }
+  .tb-icon-btn { padding: 3px 7px; font-size: 13px; }
+  #go-top-btn { margin-left: var(--mode-btn-w, 120px); }
+  #toc-current-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    padding: 0 6px 0 0;
+    min-width: 0;
+  }
+  #toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  #progress-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 116px;
+    flex-shrink: 0;
+  }
+  /* Сдвигаем progress+time влево на ширину 4 кнопок навигации через JS */
+  #read-pct-wrap { display: inline-block; width: 2.8em; text-align: right; flex-shrink: 0; }
+  #read-pct { font-weight: 600; color: #e8d8c0; }
+  #read-time {
+    color: #a09070;
+    display: inline-block;
+    min-width: 4.5em;  /* хватит на "(99 мин)" */
+  }
+  /* Подсветка текущего раздела в правой панели оглавления */
+  #toc-panel .toc-list li.toc-active > a:not(.yt-toc):not(.rt-toc):not(.audio-toc) {
+    color: var(--ink, #1a1410) !important;
+    font-weight: 400 !important;
+    background: rgba(201, 168, 76, 0.18);
+    border-radius: 3px;
+    /* без padding/margin — не влияем на геометрию и высоту блока */
+  }
+  /* Компенсируем height:100vh у #text-panel из внешнего CSS —
+     тулбар теперь занимает часть высоты, panel должен быть меньше */
+  /* ── Мобильный тулбар (≤900px) ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    /* Отключаем page-shell — на мобильном скроллится body */
+    #page-shell {
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+    /* Тулбар фиксируем вверху — выше video-panel */
+    #toolbar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      padding: 3px 6px;
+      gap: 3px;
+      min-height: 30px;
+      flex-wrap: nowrap;
+    }
+    /* video-panel опускаем под тулбар */
+    #video-panel {
+      top: var(--toolbar-h, 30px) !important;
+    }
+    .tb-btn {
+      padding: 2px 5px !important;
+      font-size: 11px !important;
+    }
+    .tb-icon-btn {
+      padding: 2px 5px !important;
+      font-size: 12px !important;
+    }
+    /* Скрываем текстовые метки — оставляем только иконки */
+    #mode-label { display: none; }
+    #autoscroll-label { font-size: 0; }
+    #autoscroll-label::before { content: '⏩'; font-size: 12px; }
+    .tb-btn.active #autoscroll-label::before { content: '⏸'; }
+    /* Скрываем заголовок раздела, полоску прогрессбара и авто */
+    #toc-current-title { display: none !important; }
+    #progress-bar-wrap { display: none !important; }
+    #autoscroll-btn { display: none !important; }
+    /* Возвращаем проценты и минуты */
+    #read-pct { font-size: 11px !important; }
+    #read-time { display: inline-block !important; font-size: 11px; min-width: 3.5em; }
+    #progress-group { width: auto; gap: 0; }
+    #go-top-btn { margin-left: 6px; }
+    /* Кнопка режима — как на десктопе, показываем текст */
+    #mode-label { display: inline !important; }
+    #mode-toggle { padding: 3px 9px !important; font-size: 12px !important; }
+  }
+
+  @media (min-width: 901px) {
+    #text-panel      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #app-layout      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #video-sticky    { top: 0 !important; height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #video-container { max-height: var(--video-max-h, 40vh) !important; }
+    #audio-container {
+      height: var(--video-max-h, 40vh);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      #audio-container {
+        height: auto !important;
+        padding: 8px !important;
+        justify-content: center !important;
+      }
+      #audio-play-icon { display: none !important; visibility: hidden !important; }
+      #video-container { display: none !important; }
+    }
+    #audio-play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      font-size: 48px;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    #audio-container:hover #audio-play-icon {
+      color: rgba(255,255,255,0.5);
+    }
+    #video-extra     { overflow-y: hidden !important; }
+    #toc-panel       { padding: 2px 4px !important; }
+    #toc-panel .toc-list { margin: 0 !important; }
+    #toc-panel .toc-h2  { margin-top: 0.17rem !important; margin-bottom: 0.05rem !important; }
+    #toc-panel .toc-h3  { margin-top: 0.07rem !important; margin-bottom: 0.07rem !important; }
+  }
+  /* Ландшафтный режим на телефоне — тулбар как на десктопе */
+  @media (max-width: 900px) and (orientation: landscape) {
+    #toc-current-title { display: flex !important; }
+    #progress-bar-wrap { display: inline-flex !important; }
+    #autoscroll-btn    { display: inline-flex !important; }
+    #progress-group    { width: 116px; }
+    #read-time         { display: inline-block !important; }
+    #mode-label        { display: inline !important; }
+  }
+
+  /* audio-visible работает на всех экранах */
+  #audio-container.audio-visible { display: flex !important; }
+
+  /* ── Нумерация заголовков в тексте (синхронно с оглавлением) ── */
+  .page { counter-reset: h2-counter; }
+  .page h2, .page h3, .page [id] { scroll-margin-top: calc(var(--toolbar-h, 36px) + 8px); }
+  .page h2 { counter-increment: h2-counter; counter-reset: h3-counter; }
+  .page h3 {
+    counter-increment: h3-counter;
+    font-style: normal !important;
+  }
+  .page h2::before {
+    content: counter(h2-counter) ". ";
+    color: #9a7a30;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .page h3::before {
+    content: counter(h2-counter) "." counter(h3-counter) " ";
+    color: #b8954a;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Переопределяем #mode-toggle из внешнего CSS — он там fixed bottom/right */
+  #mode-toggle {
+    position: static !important;
+    bottom: unset !important;
+    right: unset !important;
+    top: unset !important;
+    left: unset !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    color: #e8d8c0 !important;
+    cursor: pointer !important;
+    padding: 3px 9px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-family: inherit !important;
+  }
+  #mode-toggle:hover { background: rgba(255,255,255,0.22) !important; transform: none !important; }
+  #mode-toggle.ext-active { background: rgba(200,160,80,0.35) !important; border-color: rgba(200,160,80,0.6) !important; }
+  /* Сбросить старые стили #read-pct и #scroll-arrow из внешнего CSS */
+  #read-pct { font-size: 12px !important; opacity: 1 !important; letter-spacing: 0 !important; color: #e8d8c0 !important; font-weight: 600 !important; }
+  #progress-bar-wrap {
+    display: inline-flex;
+    align-items: center;
+    width: 80px;
+    height: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #c9a84c, #8b6914);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  #mode-icon { font-size: 14px !important; line-height: 1 !important; }
+  </style>
+</head>
+<body>
+<div id="page-shell">
+<div id="toolbar">
+  <span id="toc-current-title"></span>
+  <span id="toolbar-right">
+    <span id="progress-group">
+      <span id="progress-bar-wrap" title="Прогресс чтения"><span id="progress-bar"></span></span>
+      <span id="read-pct-wrap"><span id="read-pct">0%</span></span>
+    </span>
+    <span id="read-time"></span>
+    <button id="go-top-btn" class="tb-btn tb-icon-btn" title="В начало текста">↑↑</button>
+    <button id="toc-prev-btn" class="tb-btn tb-icon-btn" title="Предыдущий раздел">▲</button>
+    <button id="toc-next-btn" class="tb-btn tb-icon-btn" title="Следующий раздел">▼</button>
+    <button id="go-end-btn" class="tb-btn tb-icon-btn" title="В конец текста">↓↓</button>
+    <button id="autoscroll-btn" class="tb-btn" title="Автоскроллинг">
+      <span id="autoscroll-label">⏩ Авто</span>
+    </button>
+    <button id="mode-toggle" class="tb-btn tb-mode-btn" title="Переключить режим плеера">
+      <span id="mode-icon">⊞</span>
+      <span id="mode-label">Внешний плеер</span>
+    </button>
+  </span>
+</div>
+
+<div id="app-layout">
+<div id="text-panel">
+<div class="page">
+
+  <header class="cover">
+    <p class="series">Курс «Сакральная география Индии» · Вводное занятие</p>
+    <h1>Сакральная география Индии</h1>
+    <p class="subtitle">Лектор: Сергей Викторович Щербак</p>
+    <p class="meta">
+      Институт исследования санскрита · Общество ревнителей санскрита<br>
+Февраль 2026 – июнь 2026<br>      25 февраля 2026 · Ведущий: Марцис Гасунс · Видеозапись:
+      <a href="https://youtu.be/pie7Voc43Cs" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA" target="_blank">RT</a>
+    </p>
+  </header>
+
+  <nav class="toc" id="toc-nav">
+    <h2 class="toc-title">Содержание</h2>
+    <ul class="toc-list">
+      <li class="toc-h2"><a href="#intro">Вступительное слово</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=29" title="0:29" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=46" title="0:46" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=29" title="0:29">AU</a></li>
+      <li class="toc-h2"><a href="#course">О курсе и лекторе</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=124" title="2:04" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=141" title="2:21" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=124" title="2:04">AU</a></li>
+      <li class="toc-h2"><a href="#lecture">Лекция</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=693" title="11:33" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=710" title="11:50" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=693" title="11:33">AU</a></li>
+      <li class="toc-h3"><a href="#hypothesis">Гипотеза: ландшафт и культура</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=959" title="15:59" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=976" title="16:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=959" title="15:59">AU</a></li>
+      <li class="toc-h3"><a href="#japan">Пример: Япония</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=1100" title="18:20" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1117" title="18:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1100" title="18:20">AU</a></li>
+      <li class="toc-h3"><a href="#egypt">Пример: Египет и Междуречье</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=1263" title="21:03" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1280" title="21:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1263" title="21:03">AU</a></li>
+      <li class="toc-h3"><a href="#indostan">Видео: формирование Индостана</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=1553" title="25:53" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1570" title="26:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1553" title="25:53">AU</a></li>
+      <li class="toc-h2"><a href="#india">Индия: изоляция и инклюзивизм</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=1838" title="30:38" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1855" title="30:55" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1838" title="30:38">AU</a></li>
+      <li class="toc-h3"><a href="#pandavas">Пандавы идут на север. Белый цвет</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=2350" title="39:10" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2367" title="39:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2350" title="39:10">AU</a></li>
+      <li class="toc-h3"><a href="#ganga">Метафора реки: Ганга</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=2500" title="41:40" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2517" title="41:57" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2500" title="41:40">AU</a></li>
+      <li class="toc-h2"><a href="#body">Идея тела в индийской культуре</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=2712" title="45:12" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2729" title="45:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2712" title="45:12">AU</a></li>
+      <li class="toc-h3"><a href="#purusha">Пуруша-сукта и варны</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=2948" title="49:08" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2965" title="49:25" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2948" title="49:08">AU</a></li>
+      <li class="toc-h3"><a href="#jati">Джати и касты</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=3359" title="55:59" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3376" title="56:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3359" title="55:59">AU</a></li>
+      <li class="toc-h3"><a href="#minakshi">Даршан и богиня Минакши</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=3722" title="1:02:02" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3739" title="1:02:19" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3722" title="1:02:02">AU</a></li>
+      <li class="toc-h3"><a href="#broque">Сильвен Броке: «Тело в индуизме»</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=3897" title="1:04:57" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3914" title="1:05:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3897" title="1:04:57">AU</a></li>
+      <li class="toc-h2"><a href="#feeding">Кормление богов</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=4014" title="1:06:54" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4031" title="1:07:11" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4014" title="1:06:54">AU</a></li>
+      <li class="toc-h3"><a href="#jagannath">Джаганнатха-Пури и 56 блюд</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=4376" title="1:12:56" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4393" title="1:13:13" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4376" title="1:12:56">AU</a></li>
+      <li class="toc-h3"><a href="#nepal">Видео: кормление в Непале</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=4280" title="1:11:20" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4297" title="1:11:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4280" title="1:11:20">AU</a></li>
+      <li class="toc-h3"><a href="#rameshvaram">Рамешварам</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=4633" title="1:17:13" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4650" title="1:17:30" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4633" title="1:17:13">AU</a></li>
+      <li class="toc-h2"><a href="#networks">Сети паломничества</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=4872" title="1:21:12" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4889" title="1:21:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4872" title="1:21:12">AU</a></li>
+      <li class="toc-h2"><a href="#conclusion">Завершение лекции</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=5114" title="1:25:14" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=5131" title="1:25:31" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5114" title="1:25:14">AU</a></li>
+      <li class="toc-h2"><a href="#discussion">Вопросы и обсуждение</a> <a class="yt-toc" href="https://youtu.be/pie7Voc43Cs?t=5148" title="1:25:48" target="_blank">YT</a><span class="link-sep">/</span><a class="rt-toc" href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=5165" title="1:26:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5148" title="1:25:48">AU</a></li>
+    </ul>
+  </nav>
+
+
+  <h2 id="intro">Вступительное слово
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=29" title="0:29" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=46" title="0:46" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=29">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog">
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Так, мы запустились. Сегодня, 25 февраля 2026 года, пройдет бесплатное ознакомительное занятие. Непосредственно сам курс — из 16 частей — мы начнем с 4 марта в 18:00 по Москве. А сегодня поговорим о плане и замысле.</p>
+        </div>
+      </div>
+    </div>
+
+
+
+  <h2 id="course">О курсе и лекторе
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=124" title="2:04" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=141" title="2:21" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=124">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog">
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Хочу представить лектора, которого лично я знаю уже достаточно давно. Мы неоднократно пересекались — помимо онлайна — еще и в офлайне. Но я никогда прежде не задумывался о том, что в рамках Общества ревнителей санскрита могут быть курсы религиоведческого направления. Когда я спросил Сергея, хочет ли он и сможет ли, — был удивлен, услышав дважды положительный ответ. Более того, «Сакральная география Индии» — это курс, который вы читаете уже какой раз? Третий? Или…</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Наверное, четвертый. Я начал в ковидный год — никуда не ездили, и я подумал, что нужно это осуществить. Это была давняя мечта. Более того, один мой друг и коллега Сергей Владимирович Пахомов меня на это благословил, можно так сказать. Я запустил курс в 2020-м, потом проводил несколько раз. Но каждый раз — это новый формат и новый курс: в нем будет обновленная информация, они не похожи друг на друга.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>То есть курс апробирован, он не нулевой? Есть ли у вас представление о том, как будет устроено занятие? У нас выложена программа. Предполагается, что каждое занятие будет сопровождаться презентацией и вашим рассказом. Расскажите сначала о курсе, а потом — о себе.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Хорошо, спасибо. Думаю, лучше организовать курс с помощью презентаций. Кроме того, я буду время от времени запускать видеосюжеты. Очень хочу, чтобы у нас был диалог, интерактив — задавайте вопросы прямо по ходу. Курс может быть несколько сложноватым для тех, кто впервые встречается не просто со знакомством с Индией, а с погружением в ее глубины. Поэтому не стесняйтесь спрашивать, если я пропускаю базовые вещи: понятие варн, концепты индийской метафизики и философии. Поэтому, пожалуйста, — очень хочу интерактива. Постараюсь отвечать на вопросы по ходу. Буду запускать видеосюжеты, возможно, аудио. И поскольку большое значение имеют карты — Google Maps тоже будем использовать, будем виртуально путешествовать по Индии.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Презентации предполагается выкладывать или только показывать? У нас есть курсы, на которых лекторы выкладывают презентацию после занятия.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Понял. Да, пожалуйста, презентация будет доступна всем. Если у нас есть общение в телеграм-канале — я тоже могу к этому подключаться. Единственное, прошу не обижаться, если я не отвечаю сразу: отвечу позже.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Тогда, поскольку вопросов пока нет, Сергей Викторович, прошу рассказать о себе.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Спасибо, Марцис. Мне очень приятно выступать, делиться знаниями и собственным интересом с почтенной аудиторией, с любителями и ревнителями санскрита. У меня два образования: я культуролог по первому и религиовед по второму. Давно интересуюсь культурами Азии — определил свой интерес как культуры Южной и Юго-Восточной Азии. Много занимался буддизмом. Недавно вышла моя книга о буддизме — большая монография, охватывающая разные его аспекты, в 16 адаптированных для книги лекциях. Вышла буквально месяц назад.</p>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="dialog">
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+<p>Буддизм, конечно, — продукт Индии, безусловно ее сын. А сама Индия интересует меня глубинно и давно. Так случилось, что я работаю по специальности: в МГИМО занимаюсь культурами Южной и Юго-Восточной Азии, а также современными международными процессами в связи с культурами стран этих двух больших регионов.</p><p>Курс сакральной географии Индии интересует меня давно и глубинно — в связи с одной гипотезой, о которой сейчас расскажу. Пожалуй, вот все, что необходимо для краткой самопрезентации. Не хочу слишком зацикливать на себе внимание — хотя поневоле придется это делать, поскольку я буду предлагать авторские размышления.</p>        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Тогда начнем собственно обзор курса.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Давайте. Я только хотел бы, чтобы это все-таки была и первая лекция грядущего курса — чтобы на нее тоже можно было опираться, поскольку я хочу выложить здесь какой-то материал.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Программа опубликована и доступна. Но надо понимать, что в любой отдельно взятый момент люди узнают про курс, и для погружения требуется время. Есть те, кто давно ждали и готовились, а есть те, кто три минуты назад узнали про ваше существование. Поэтому всегда такой живой процесс.</p>
+        </div>
+      </div>
+    </div>
+
+
+
+  <h2 id="lecture">Лекция
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=693" title="11:33" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=710" title="11:50" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=693">AU</a>
+    </span>
+  </h2>
+
+
+    <p>Хорошо. Буду в начале каждой лекции напоминать содержание предыдущих. Итак, название курса кажется интуитивно понятным, хотя это немного не так. Слово «география» сразу наводит на мысль об естественных науках и каких-то закономерностях. «Сакральная» — о прикосновении к тайнам. Но «Индия» здесь самое определенное понятие. Это культура Индии — все культуры, которые в нее входят и каким-то образом синхронизированы друг с другом. У нее есть огромное влияние в мире, она распространила его очень давно. Представьте, что огромный валун брошен в воду и круги расходятся по ней. Именно так существует понятие «большой Индии», которая впитала в себя метафизические, философские, культурные и социальные аспекты жизни. Такой была Индонезия когда-то, такова Юго-Восточная Азия — Мьянма, Таиланд, Камбоджа.</p>
+    <p>Нужно все же уточнить, в чем состоит первоначальная гипотеза курса. Она достаточно проблематична с научной точки зрения, хотя наш курс в принципе не будет выходить за рамки науки. Мы будем допускать предположения и метафоры как инструменты, возможно, поэзию — потому что она настраивает нас на другой ритм. Но ни в коем случае не популярную эзотерику, не доморощенные мифы и современные интерпретации в духе теософии и прочих оккультных дисциплин.</p>
+    <p>Это научная область, которая описывает то, как организовано пространство религиозного опыта. Под «пространством» здесь понимается пространство воображения, которое координируется с реальным ландшафтом — с полями, реками, морями, океанами, горами. Но эта координация сложная, нелинейная, без прямой синхронизации. Можно видеть горы и при этом видеть не горы, а бога или богов. Вот так может быть устроен опыт.</p>
+    <p>Все это касается названия курса и его темы. Гипотеза же состоит в том, что человеческая культура — вторая природа — каким-то удивительным и очень непростым образом оказывается связана с ландшафтом, с пространством, в котором разворачивается жизнь человека. Это пространство буквально-географическое — те самые горы, та самая равнина или пустыня. Созвучие между ландшафтом и культурой есть, оно едва уловимо и не может быть легко доказано научно: наука еще не сумела подойти к доказательству этой связи. Хотя есть разные опыты: например, опыт Монтескье, считавшего, что ландшафт обусловливает социальное поведение, — так называемый географический детерминизм. Существуют и другие концепции, например, концепция Льва Николаевича Гумилева, который тоже попытался решить этот вопрос по-своему.</p>
+
+
+    <p class="interjection"><span class="interjection-speaker">ВЕДУЩИЙ:</span> Я Гумилева процитирую, не удержусь. Он говорит: «Ландшафт — это не фон, а активный фактор этногенеза».</p>
+
+
+
+  <h3 id="hypothesis">Гипотеза: ландшафт и культура
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=959" title="15:59" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=976" title="16:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=959">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Безусловно, да, он интуитивно прав. Но дело не только в том, чтобы откликаться на интуицию, — дело в способе доказательства подобных идей. На самом деле я такие идеи коллекционирую, их накопилось довольно много.</p>
+
+
+
+  <h3 id="japan">Пример: Япония
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=1100" title="18:20" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1117" title="18:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1100">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Допустим, перед вами слайд с контурами Японии. Это островное государство, культура которого завершена: ей много столетий, и у нее есть своя акцентуация. Она совершенно отчетливо связана с островным сознанием. Островов много, но Япония каким-то удивительным способом воспринимает свой контур — границу суши и моря — не как границу стихий, а как рамку, внутри которой все должно быть завершено. Аспекты японской культуры именно таковы: это миниатюрное, это способ миниатюризировать различные феномены жизни, которые завершаются через определенного рода метафоры. Перед вами знаменитый Сад камней кайсэки, в котором камни символизируют горы, а песок — воду. Завершенность в японской культуре достигается через минимализм. Таково же устройство бонсая — дерево в миниатюре, уход за которым есть своеобразная медитация на завершенность процесса. Или вот способ организации поэтического творчества — хайку: миниатюрные сюжеты, короткие стихотворения, завершающиеся в 17 слогах, в которых — глубинная связь природы и мировоззрения человека, и времени — того самого мгновения, в которое хайку произносится.</p>
+
+
+    <figure id="slide-1">
+      <img src="./src/img/01_02.jpg" alt="Япония: карта, сад камней Реандзи, бонсай, хайку" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 1.</span> Япония: карта, сад камней Реандзи, бонсай, хайку</figcaption>
+    </figure>
+
+
+
+  <h3 id="egypt">Пример: Египет и Междуречье
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=1263" title="21:03" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1280" title="21:20" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1263">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Такие примеры созвучия культуры и ландшафта можно находить и в древности. Например, всем нам хорошо известна история древних цивилизаций Египта и Междуречья. Центром культурной и хозяйственной деятельности была река. Здесь показан Нил — его фотография из космоса; видна зеленая полоса вдоль русла, позволявшая выращивать урожай. Интересно, что в Средиземноморье — в Египте, Древнем Вавилоне, Шумере — реки разливались синхронно, в одно и то же время, вплоть до дней: было известно, когда произойдет разлив Нила. Поскольку это явление регулярно повторялось каждый год, сформировалась определенная мифология и метафизика, в которой центральным элементом стал умирающий и воскресающий бог. Жизнь — хозяйственная, религиозная и культурная — была сосредоточена вокруг разлива рек, и культура откликалась на то, что случалось с ландшафтом.</p>
+
+
+    <figure id="slide-2">
+      <img src="./src/img/01_03.jpg" alt="Нил из космоса. Мифы об умирающих и воскресающих богах Средиземноморья (сравнительная таблица)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 2.</span> Нил из космоса. Мифы об умирающих и воскресающих богах Средиземноморья (сравнительная таблица)</figcaption>
+    </figure>
+
+
+    <p>Таких примеров можно привести много из разных областей, разных культур. Можно объяснить древнегреческую культуру, исходя из ее ландшафтной организации: полисная система возникает внутри межгорных долин. Горные хребты разделяли побережье Эгейского моря на изолированные долины, и в каждой формировалась своя полисная культура, отличная от других — в том числе по ландшафтным соображениям. Эти культуры начинали конкурировать между собой: так возникала агональность, соревнование — и собственно развитие древнегреческой цивилизации. Можно рассказать о культуре Голландии, которую периодически затапливает и организация социума откликается на это; о культуре острова Бали, организованной вокруг вулкана; о скандинавской мифологии, в которой Рагнарек — это своеобразная полярная ночь, накрывающая все живое; о Сахаре, о Китае с его централизованной цивилизацией, где император должен был управлять, синхронизируя работу тысяч деревень в долинах Хуанхэ и Янцзы.</p>
+    <p>Подобного рода соответствий мы можем найти очень много, но нас интересует прежде всего предмет нашего исследования — культура Индии. Давайте переключимся на небольшой видеосюжет, в котором показано, как формировался Индостан и к чему это привело. У подобных больших тектонических сдвигов существует большая и плодотворная инерционная память, поэтому то, что вы сейчас увидите, делает Индию своеобразным отдельным организмом в контексте всего земного ландшафта.</p>
+
+
+
+  <h3 id="indostan">Видео: формирование Индостана
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=1553" title="25:53" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1570" title="26:10" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1553">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-3">
+      <img src="./src/img/01_04.jpg" alt="Разделение Лавразии и Гондваны (триас, 200 млн лет назад) и движение Индостана к Евразийской плите" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 3.</span> Разделение Лавразии и Гондваны (триас, 200 млн лет назад) и движение Индостана к Евразийской плите</figcaption>
+    </figure>
+
+
+    <p>То, что вы видите, — это разделение суперконтинентов Лавразии и Гондваны, произошедшее в конце кембрийской эпохи. Главное: Индия отделилась от Гондваны и двинулась в сторону Лавразии с определенной скоростью. Самое интересное — она продолжает двигаться в этом направлении. Формирование Гималаев — результат этого движения.</p>
+
+
+
+  <h2 id="india">Индия: изоляция и инклюзивизм
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=1838" title="30:38" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=1855" title="30:55" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=1838">AU</a>
+    </span>
+  </h2>
+
+
+    <p>Индия присоединилась к Лавразии, но сохранила свою изолированность благодаря почти непроходимым Гималаям на севере. Эта изолированность привела к особенностям культуры — к ее замкнутости в хорошем смысле. Конечно, на протяжении всей известной нам истории Индия впитывала в себя разного рода завоевателей: ей интересовались все, последними были британцы, организовавшие Ост-Индскую компанию и превратившие ее в колонию. Тем не менее Индия сохранила глубинное культурное содержание. Это можно передать словами Макса Вебера о «расколдовывании мира», происходящем в связи с развитием науки: Индия избежала расколдовывания, сохранив самые древние, хтонические, культовые, мифологические, ритуальные практики и продолжает их хранить.</p>
+    <p>При этом Индия, конечно, сама изменялась. Американский религиовед и санскритолог Шелдон Поллок систематизировал это, сказав, что Индия пережила этапы брахманизации, санскритизации и исламизации — внутренние увлечения, к которым она тяготела. Внешние завоеватели тоже пытались ее изменить, но для Индии это не оказалось роковым: она выработала своеобразный культурный иммунитет на подобного рода инвазию. Способ интерпретации, который Индия изобрела в связи с воздействием различных культур извне, можно назвать одним словом — инклюзивизм. Она впитывала в себя все возможные влияния и адаптировала их, выдавая за собственное содержание. В отличие от эксклюзивизма, когда культура не принимает никакого влияния извне и всячески сопротивляется ему.</p>
+    <p>Что касается исторических периодов: можем выделить культуру долины Инда — культуру Харапп, это древность, бронзовый век, от трех тысяч лет до нашей эры. Можем выделить цивилизацию долины Ганги, начавшую формироваться в середине первого тысячелетия до нашей эры. Завоевание Александра Македонского привело к формированию ответа — больших государств, таких как Магадха на северо-востоке Индии. Не упомяну об арийском завоевании Индии — вторжении индоевропейских племен с севера: оно оказало огромное влияние, но в науке спорят два лагеря — сторонники и противники этой идеи, и европейская индология долгое время была сторонницей инвазионизма. Добавим буддизм, начавший формироваться в V–IV веках до нашей эры и перекроивший Индию в соответствии со своими представлениями; буддийские государства, коррелировавшие с внешними захватчиками — бактрийцами, индогреками. Среднеазиатские завоевания, начавшиеся с нашествия белых гуннов, — и дальше все новые завоеватели. А начиная с VII века — ислам; к X–XI веку в Индии сформировалась мусульманская культура.</p>
+    <p>Все эти внешние влияния приходили волнами, но Индия оставляла свое культурное содержание нетронутым. Вот это удивительно.</p>
+
+
+
+  <h3 id="pandavas">Пандавы идут на север. Белый цвет
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=2350" title="39:10" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2367" title="39:27" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2350">AU</a>
+    </span>
+  </h3>
+
+
+    <p>На следующем слайде — сюжет из последней книги Махабхараты. Когда закончилась битва на Курукшетре и установился мир в Хастинапуре, Пандавы — понимая, что следующий этап их жизни есть возвращение в Девалоку, к богам, — двинулись на север, к Гималаям. Вот они: впятером, и Драупади впереди, и собака Юдхиштхиры. Это восемнадцатая книга Махабхараты, тридцать четвертая глава: «Пандавы, оставив царство, двинулись на север, к белым горам, чьи вершины касаются небес. Там, где снег светлее луны, они нашли путь к освобождению — не через власть, а через отказ от мира».</p>
+
+
+    <figure id="slide-4">
+      <img src="./src/img/01_05.jpg" alt="Пандавы, Драупади и пес Юдхиштхиры перед Гималаями. Иллюстрация: @vibesofdivinity" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 4.</span> Пандавы, Драупади и пес Юдхиштхиры перед Гималаями. Иллюстрация: @vibesofdivinity</figcaption>
+    </figure>
+
+
+    <p>Здесь нам на помощь, к нашей метафоре взаимодействия ландшафта и культуры, вступает цвет. Белый цвет — цвет гор и снега — в индийской традиции символизирует чистоту. Северный путь — путь кайвальи, освобождения — это не метафора, а географическая доктрина: если вы идете на север, вы идете к вечности. Белый снег — это чистота; что подтверждается многократно (даже цвет срединной полосы индийского флага об этом же, но об интерпретации флага сейчас говорить не будем).</p>
+    <p>Ландшафт уже предложил несколько решений: во-первых, движение к северу как направление; во-вторых, цветовое решение. Много ассоциаций, которые позднее лягут в основу многих космологических идей Индии.</p>
+
+
+
+  <h3 id="ganga">Метафора реки: Ганга
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=2500" title="41:40" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2517" title="41:57" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2500">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-5">
+      <img src="./src/img/01_06.jpg" alt="Бассейн Ганги: от истоков в Дэвапраяге до дельты у Калькутты" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 5.</span> Бассейн Ганги: от истоков в Дэвапраяге до дельты у Калькутты</figcaption>
+    </figure>
+
+
+    <p>И все же, для того чтобы понять Индию в качестве генерального образа, я бы предложил метафору реки. Перед вами Ганга — о ней в последующих лекциях будет большой разговор: о различных местах, связанных с этой рекой, о ее мифологии. Она оживет в нашем представлении и предстанет совершенно иной, нежели просто географическая данность.</p>
+    <p>Идею вливания в Индию различных культурных слоев можно помыслить как притоки. Вот они: начиная с самого северного пути, где Ганга спускается с Гималаев, где реки Алакнанда и Бхагиратхи образуют в местечке Дэвапраяг собственно Гангу как реку, — и дальнейшее течение, впитывающее все новые и новые слои. Вот таким образом можно представить себе многообразие культуры Индии, которая при этом сохраняет свое глубинное содержание: идею чистоты и очищения, метафору реки — переход на другой берег, освобождение, тиртхика, очищенный ее водами.</p>
+
+
+
+  <h2 id="body">Идея тела в индийской культуре
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=2712" title="45:12" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2729" title="45:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2712">AU</a>
+    </span>
+  </h2>
+
+
+    <p>Еще один из самых ключевых аспектов индийской культуры — идея тела. Мы обычно эту идею понимаем упрощенно: для нас тело — подчиненный инструмент, важнее жизнь духа. Этот дуализм сформировался в европейской философии давно и глубоко проник в нее. Жизнь Индии с телом и идеей тела связана не только мифологически, через генеральные сюжеты вроде Пуруши Сукты, — но и философски. Приближаясь к аутентичному восприятию Индии, мы вдруг понимаем, что за простой телесностью и простыми отношениями — питанием, тактильностью, прикосновением — стоит глубочайшая философская традиция. К сожалению, она очень плохо была отрефлексирована классической индологией, и только в постколониальных исследованиях, развернувшихся сравнительно недавно, мы видим изменение отношения к телесности. Я постараюсь предложить вам размышления об этом, опираясь на творчество некоторых индологов — прежде всего французских — о которых расскажу. Они предлагают переосмыслить идею телесности, и мы увидим Индию совершенно иной: не через призму европейского дуализма «дух — тело», а в другом измерении.</p>
+
+
+
+  <h3 id="purusha">Пуруша-сукта и варны
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=2948" title="49:08" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=2965" title="49:25" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=2948">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-6">
+      <img src="./src/img/01_07.jpg" alt="Пуруша-сукта (Ригведа X.90): четыре варны как части тела космического Пуруши" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 6.</span> Пуруша-сукта (Ригведа X.90): четыре варны как части тела космического Пуруши</figcaption>
+    </figure>
+
+
+    <p>Возвращаясь к сюжету слайда: генеральный мифологический сюжет Индии, сформировавший культуру, общество, иерархию и многие ценности, — это идея о вселенском жертвоприношении, совершенном в начале времен некой сущностью по имени Пуруша. Текст, соответствующий этой мифологеме, называется Пуруша-сукта; он входит в самую раннюю из самхит ведийского канона — в десятую мандалу Ригведы (позднюю по отношению к другим мандалам). Но он занимает критически важное место в мышлении и мифологии всего, что вышло из обаяния ведийской и затем брахманической культуры.</p>
+    <p>При этом жертвоприношении из тела Пуруши было рождено все мироздание — звезды, луна, солнце, земля, животные. Но самое интересное: человеческое общество разделилось в результате жертвоприношения на четыре части, соответствующие различным частям тела. Брахманы — те, кто вышли из его уст: они владеют священным словом. Кшатрии — из рук: их дхарма — управление, защита, война. Из бедер Пуруши родились вайшьи — агенты экономики: земледелие, скотоводство, производство. Наконец, шудры — из ног: различные профессии, как правило обслуживание трех высших варн, дважды рожденных.</p>
+    <p>Здесь очень важно понимать: в метафоре генеральной метафоры Индии как телесной — это не иерархия, а инструментальная принадлежность к единому телу. Из разных частей тела Пуруши рождаются разные инструменты его принадлежности к нему как к единому телу. Цвета здесь выбраны в соответствии с индийской символикой: белый — брахман, красный — кшатрий (кровь), желтый — вайшья (пшеница, поле), черный — шудра (ноги, ходящие по земле).</p>
+    <p>Против данной парадигмы выступали самые разные движения, рассматривая ее как иерархию и социальную несправедливость. Они выдвигали альтернативы, чтобы не оказаться в цикле насилия, — потому что эта система реально порождала и до сих пор порождает в Индии отношения насилия, поскольку метафора тела часто неправильно понимается даже в самой индийской мифологии. Я еще раз повторю: там, где тело божества становится телом социального организма, — оно не иерархично, а инструментально.</p>
+
+
+
+  <h3 id="jati">Джати и касты
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=3359" title="55:59" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3376" title="56:16" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3359">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Аналогичным образом можно размышлять и о так называемых кастах, или джати. Они устроены примерно так же: общество делится на профессиональные, этнические или религиозные сообщества, принятая в них эндогамия — браки только внутри одной касты, — они не наследуют других родов деятельности или религий. Религиозное общество Индии кастовое и таким в общем продолжает оставаться, несмотря на модернизацию и преобразования последних 80 лет — с 1947 года. Так или иначе, война всех против всех в кастовом обществе Индии наследует этой идее разделения на четыре варны. Но это тоже можно понимать как продолжение телесности: если правильно понимается принадлежность к своему рождению как принадлежность к телесности божества — не может нога стать рукой, не может палец стать глазом, — то где ты родился, в какой семье (джати и означает «рождение»), таким и оставайся, ибо противоречить божественному порядку опасно и для себя, и для общества. Такова генеральная идея, если мыслить Индию изнутри ее метафоры тела.</p>
+
+
+    <figure id="slide-7">
+      <img src="./src/img/01_08.jpg" alt="Прикосновение к мурти в индийском храме — телесный контакт как религиозная практика" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 7.</span> Прикосновение к мурти в индийском храме — телесный контакт как религиозная практика</figcaption>
+    </figure>
+
+
+    <p>Идея телесности пронизывает все индийское общество — не только через принадлежность к частям тела Пуруши. Она распространяется на религиозные практики, восприятие, коммуникацию. В религиозных практиках она проявляется, например, через идею касания и прикосновения. Индийская культура очень тактильна: когда индуист приходит в храм, он стремится прикоснуться к мурти — телу божества, обойти все пространство скульптуры. Важен именно телесный контакт. Скульптуры божеств, мурти, бывают просто стерты от прикосновений рук благодарных бхактов — последователей. Идея телесного контакта удивительным образом оказывается важной для всех религиозных практик: божество не абстрактно, не располагается в каком-то инобытии — оно вполне телесно, оно воплощается. Отсюда и идеи аватар — прихода бога в различных телах.</p>
+
+
+
+  <h3 id="minakshi">Даршан и богиня Минакши
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=3722" title="1:02:02" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3739" title="1:02:19" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3722">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-8">
+      <img src="./src/img/01_09.jpg" alt="Богиня Минакши и гопурамы храмового комплекса в Мадурае (штат Тамилнаду)" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 8.</span> Богиня Минакши и гопурамы храмового комплекса в Мадурае (штат Тамилнаду)</figcaption>
+    </figure>
+
+
+    <p>Перед вами образ мурти богини Минакши, которой посвящен храм в Мадурае на юге Индии, в штате Тамилнаду. Это огромная территория, ограниченная величественными башнями-гопурамами. Минакши — супруга Шивы, одна из ее субличностей, можно сказать. Верующие бхакты, пришедшие в храм, стремятся лицезреть ее мурти и обрести даршан. Даршан — это взгляд богини: простейшее объяснение — когда она проникает в вас и происходит прикосновение к божественной реальности. В храме Мадурая говорят, что после даршана Минакши твое тело становится ее телом — происходит синхронизация с феноменальной идеей связи с божественным образом. Такого даршана жаждут бхакты.</p>
+
+
+
+  <h3 id="broque">Сильвен Броке: «Тело в индуизме»
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=3897" title="1:04:57" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=3914" title="1:05:14" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=3897">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Здесь обращусь к творчеству одного из интереснейших индологов современности — Сильвена Броке. Его книга, вышедшая в 2019 году, так и называется: «Тело в индуизме». Он рефлексирует над телесностью как философией, предлагая взгляд на Индию совершенно иным образом — не через привычные нам европейские понятия и философские идеи. Это как образ цветка, который мы не замечали, не будучи внимательны к философии тела и касания: его бутон закрыт днем, а ночью он раскрывается и раскрывает не только свой облик, но и аромат. Вот примерно так Сильвен Броке подходит к феноменологии индийского образа тела.</p>
+
+
+
+  <h2 id="feeding">Кормление богов
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=4014" title="1:06:54" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4031" title="1:07:11" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4014">AU</a>
+    </span>
+  </h2>
+
+
+    <p>Телесность выходит за пределы лишь лицезрения образа и касания. Она заключается еще и в феномене питания. Богов кормят — и это не реликт каких-то отживших форм религиозного служения. Это практика, перерастающая сам феномен кормления и становящаяся наращиванием силы: когда мы едим сами, мы укрепляем организм; когда кормим питомцев, они поддерживают жизнь. Все растет благодаря пище — это не мои слова, это слова из Ригведы. Более того, существует утверждение: «Аннам Брахма» — «Брахма есть пища». Когда мы кормим божество, мы делаем его сильнее. Оно отвечает нам фактической связью. Мы можем его кормить — это совершенно другая идея, которая делает нас искренними в подобных проявлениях отношения к нему; это приводит к интимной связи. Перед вами ритуал кормления Кали в храме Кали в Калькутте.</p>
+
+
+    <figure id="slide-9">
+      <img src="./src/img/01_10.jpg" alt="Ритуал кормления богини Кали в храме Калигхат, Калькутта" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 9.</span> Ритуал кормления богини Кали в храме Калигхат, Калькутта</figcaption>
+    </figure>
+
+
+
+  <h3 id="jagannath">Джаганнатха-Пури и 56 блюд
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=4376" title="1:12:56" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4393" title="1:13:13" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4376">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-10">
+      <img src="./src/img/01_11.jpg" alt="Троица Джаганнатха-Пури: Джаганнатха, Баладева и Субхадра. Карта чардхама" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 10.</span> Троица Джаганнатха-Пури: Джаганнатха, Баладева и Субхадра. Карта чардхама</figcaption>
+    </figure>
+
+
+
+  <h3 id="nepal">Видео: кормление в Непале
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=4280" title="1:11:20" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4297" title="1:11:37" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4280">AU</a>
+    </span>
+  </h3>
+
+
+    <p>Все, что касается кулинарии и приготовления пищи для богов, — это огромная тема в индийской религиозной практике. Феноменальный пример — город Джаганнатха-Пури в штате Одиша (прежнее название — Ориса). Перед вами троица божеств: Джаганнатха, Баладева и Субхадра. Для них работает огромная кухня, в которой ежедневно приготавливается 56 различных блюд; кормят богов шесть раз в день.</p>
+    <p>Это место связано с вишнуитской мифологией, в которой Вишну понимается как распростертый по всему телу Индии: его туловище — то, что принимает пищу, — находится именно в Пури, там он спит и ест; голова его — в Бадринатхе на севере; ноги — в Дваракe на крайнем западе в Гуджарате; а сердце — в Рамешваре на юге, в штате Тамилнаду, там же, где мы только что виртуально были в связи с образом богини Минакши. Четыре места, где тело Вишну распростерто, — они охватывают всю территорию Индии. Это одна из сетей паломничества — так называемый чардхам: четыре города, четыре храма. (Есть и альтернативный северный чардхам, но об этом в других лекциях.)</p>
+
+
+    <figure id="slide-11">
+      <img src="./src/img/01_12.jpg" alt="Вишну-Ананташайя: Вишну, покоящийся на змее Шеше" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 11.</span> Вишну-Ананташайя: Вишну, покоящийся на змее Шеше</figcaption>
+    </figure>
+
+
+
+  <h3 id="rameshvaram">Рамешварам
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=4633" title="1:17:13" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4650" title="1:17:30" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4633">AU</a>
+    </span>
+  </h3>
+
+
+    <figure id="slide-12">
+      <img src="./src/img/01_13.jpg" alt="Железнодорожный мост Памбан — единственная дорога на остров Рамешварам" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 12.</span> Железнодорожный мост Памбан — единственная дорога на остров Рамешварам</figcaption>
+    </figure>
+
+
+    <p>Приблизимся к сердцу Вишну — к Рамешваре. Это то, что вы видите: железнодорожный мост Памбан, своеобразный аналог нашего Крымского моста, соединяющий материк с островом. Раньше туда вела песчаная коса, но в 1962 году ее разрушило стихийное бедствие, и теперь маршрут пролегает через этот мост. В городе Рамешварам расположен храм Рамы. Говоря о Раме, мы обращаемся к вишнуитской мифологии: Рама — седьмой аватар бога Вишну, пришедший на землю в образе идеального царя. Приходя в этот храм, мы оказываемся в переплетении нескольких маршрутов: мы находимся в южной точке чардхама — в сердце Вишну. Но удивительным образом мы находимся и в шиваитском мире: шиваиты считают, что этот храм является одним из 12 важнейших мест шиваитского паломничества — джьотирлинг. Таким образом, вишнуитский и шиваитский миры пересекаются в этом месте.</p>
+
+
+
+  <h2 id="networks">Сети паломничества
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=4872" title="1:21:12" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=4889" title="1:21:29" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=4872">AU</a>
+    </span>
+  </h2>
+
+
+    <figure id="slide-13">
+      <img src="./src/img/01_14.jpg" alt="Карта 12 джьотирлингов Шивы по всей Индии" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 13.</span> Карта 12 джьотирлингов Шивы по всей Индии</figcaption>
+    </figure>
+
+
+    <p>Различные места, где расположены важные храмы разных традиций Индии, объединяются в сети. Перед вами схема великих джьотирлингов Шивы — об этом будет отдельная лекция. Если составить систематизацию всех возможных сетей паломничества, объединенных идеей божественной телесности, мы придем примерно к вот этой таблице. Она очень сложная, здесь далеко не все. В левой колонке — названия сетей. Здесь не только индуистские, но и буддийские маршруты, и сикхские, и джайнские — к ним мы тоже будем обращаться в этом курсе. Присутствует, например, сеть питх — мест, содержащих ту или иную часть тела богини Сати, супруги Шивы, погибшей в жертвенном костре; об этом — отдельный разговор в рамках темы шактизма. Поскольку презентация будет вам доступна вне времени лекции, вы сможете изучить ее внимательно. Я просто постарался систематизировать здесь что мог, но это далеко не все: нет, например, маршрута Рамы, связанного с его главным подвигом — освобождением супруги Ситы и победой над демоном Раваной.</p>
+
+
+    <figure id="slide-14">
+      <img src="./src/img/01_17.jpg" alt="Махабхарата, Вана-парва 82: «Тиртхи собраны вместе, как спицы в колесе»" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 14.</span> Махабхарата, Вана-парва 82: «Тиртхи собраны вместе, как спицы в колесе»</figcaption>
+    </figure>
+
+
+    <figure id="slide-15">
+      <img src="./src/img/01_15.jpg" alt="Основные сети паломничества Индии: индуистские, буддийские, джайнские, сикхские, суфийские" loading="lazy">
+      <figcaption><span class="slide-label">Слайд 15.</span> Основные сети паломничества Индии: индуистские, буддийские, джайнские, сикхские, суфийские</figcaption>
+    </figure>
+
+
+
+  <h2 id="conclusion">Завершение лекции
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=5114" title="1:25:14" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=5131" title="1:25:31" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5114">AU</a>
+    </span>
+  </h2>
+
+
+    <p>Это все — многообразные миры Индии, которых мы коснемся. Очень надеюсь, что мне удалось донести некоторые важные идеи, касающиеся сакральной географии Индии как предмета нашего интереса. Предлагаю совместно размышлять над теми метафорами, которые были озвучены в ходе этой вводной лекции. Дальше мы будем идти по пути углубления, надеюсь, вместе с вами.</p>
+    <p>Вот, пожалуй, лекционную часть на этом завершу и с удовольствием послушаю ваши реплики, комментарии, вопросы.</p>
+    <p>---</p>
+
+
+
+  <h2 id="discussion">Вопросы и обсуждение
+    <span class="yt-link">
+      <a href="https://youtu.be/pie7Voc43Cs?t=5148" title="1:25:48" target="_blank">YT</a><span class="link-sep">/</span><a href="https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA&t=5165" title="1:26:05" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t=5148">AU</a>
+    </span>
+  </h2>
+
+
+    <div class="dialog">
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Есть ли какие-то вопросы? Татьяна?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ТАТЬЯНА</div>
+        <div class="dialog-text">
+          <p>Меня очень заинтересовал слайд с кормлением богов. Я подумала: поскольку все завязано на телесность, то пища преподносится живая, человеческая. Но если пойти глубже, то, скорее всего, речь идет о том, что боги, как и все мы в этом мире, — питаются человеческой энергией. Но об этом так прямо не говорится, видимо потому, что это слишком откровенно. Правильно я понимаю или ошибаюсь?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+<p>Хороший вопрос. Важно в ответе обойти стороной эзотерическую компоненту — то есть не начинать рассуждать о вибрациях, энергиях и тому подобном. Это соблазнительный путь, у него есть многочисленные последователи, но у нас другая метафора.</p><p>Дело в том, что осуществляя кормление мурти или прикосновение к нему, мы делаем это со всей ответственностью, серьезностью, искренностью. Если мы действительно верим в то, что пища есть Брахман, то переключаемся с «что мы делаем» на «как мы это делаем».</p><p>Не могу удержаться, чтобы не рассказать об одном замечательном человеке. Лет восемь назад я занимался организацией культурологических пространств и приглашал разных лекторов. Однажды пригласил замечательного Сергея Дмитриевича Серебряного — мэтра российской индологии, возглавляющего один из институтов РГГУ. Он начал лекцию с пространного рассуждения о том, как не доверяет индийцам. «Я им не доверяю», — сказал он, — и потом вдруг: «Ну посмотрите, как они едят». Это действительно настраивает на другой режим восприятия. Если вы понаблюдаете в харати или через фильмы — с каким удовольствием они принимают пищу. Это примерно как причастие в христианстве, только не раз в неделю, а ежедневная практика. «Пища есть Брахман» — буквально так и воспринимается, без рефлексии над разделением на фракции «та энергия» и «эта энергия».</p><p>Что касается дарения пищи: здесь важна щедрость. Пищу для божества готовят специально, в домах брахмана — это ежедневная практика. Причем такую сакральную еду может готовить только сам брахман: он взаимодействует с Агни, готовя на огне. Но есть еще метафорическая идея: человеческое тело — тоже место обитания богов. Агни в человеческом теле пребывает в желудке: он перерабатывает пищу так же, как огонь перерабатывает дрова. И вот в работе Сильвена Броке отчетливо видно смещение акцента в постколониальной индологии: не с вопроса «кем я являюсь», а с вопроса «как?». В философии тела в индийском контексте есть несколько аспектов: стхула — то, как я вижу свое тело в зеркале; сукшма — то, как я чувствую его в желаниях; и то, как я несу свое тело как судьбу. Эта мысль философски очень близка Хайдеггеру — его идее «бытия к смерти», где смерть не событие, а горизонт. Карана — это то, как мы несем не нами данную телесность с ее атрибутами: болезнями, возрастом, полом. Важна повседневность, важно то, что мы люди, и в этой своей людскости проявляем максимальную искренность. Ну конечно, это энергия — то, с чем мы приходим к божеству. И на это невозможно не ответить.</p>        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Анна?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">АННА</div>
+        <div class="dialog-text">
+          <p>Хотела спросить про презентации: они будут на каждой лекции или только на вводной?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Краткий ответ — да, презентация будет на каждой лекции. В конце нашего 16-лекционного курса у нас будет презентация в PowerPoint, состоящая из нескольких сотен слайдов — у меня обычно так бывает.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Сергей — не только прекрасный рассказчик, но и наглядный презентатор. Я сейчас получил отзыв от участницы прежних курсов Марины Станиславовны Степановой: «Мне нравится Сергей Викторович как специалист и как лектор: полностью владеет материалом не только теоретически, но и как практик, путешественник. Манера подачи материала продуманная, спокойная и в то же время не скучная».</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Спасибо, но перехваливать не стоит.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Есть ли еще вопросы? Ольга пишет: «Вы много раз были в Индии, посетили все регионы? Она такая большая».</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Нет, конечно, не все регионы. Я бывал в Индии больше десяти раз, но мое внимание больше сосредотачивалось на штатах, связанных с долиной Ганги, и еще я бывал в Махараштре. Что касается буддизма — много мест, связанных с буддийской историей, посетил; в моей книге есть глава о буддийской сакральной географии. Но Индия — это необъятная территория культуры, и сказать «я ее понял» не может никто. Хочу порекомендовать книгу: Вильгельм Хальбфасс, «Индия и Европа. Опыт понимания» (в переводе участвовал Андрей Всеволодович Парибок и другие). Замечательный труд о попытке объять Индию, будучи европейцем. Это очень сложно, в том числе потому, что для Индии мы не свои, если не рождены там. Существует убеждение, что покидать тело Бхараты нельзя — особенно это касается брахманов: обратный путь либо сложен, либо невозможен. В этом смысле есть дискуссии о том, что никакой неоиндуизм, выходящий за пределы Индии, невозможен. И это отражено в текстах дхармашастр — прямое предписание не пересекать водоем.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">УЧАСТНИЦА</div>
+        <div class="dialog-text">
+          <p>Извините, можно вопрос? Тогда мне непонятно, как с этим связан Муктинатх — один из почитаемых храмов индуистов, находящийся в Непале. Это же уже за пределами Индии.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+<p>Хороший вопрос! Я был в Муктинатхе два раза, у меня даже есть вода из всех 108 источников. Непал — да, но это территория той же культуры. Современные границы Индии — результат политических преобразований и порой насильственного раздела тела Бхараты. Это тело простирается до границ Гималаев, где и находится Непал. До 1947 года Индия политически всегда была раздробленной: несколько периодов, когда она была более-менее объединена (Маурьи, Гупты), — а так всегда это была совокупность царств и княжеств. Поэтому у нас есть соблазн смотреть на политические границы Индии как на единственную карту. А на самом деле Бхарата объемлет территории Непала, Пакистана, Бангладеш, Шри-Ланки — и Афганистана тоже кусочек. А дальняя периферия — страны Юго-Восточной Азии, даже Индонезия, воспринявшая очень много от индийской культуры.</p><p>Посмотрите на слайд — вот категория Дивья-Деша: 108 храмов, и в примечании сказано, что 106 находятся в Индии, один — в Непале, один — на небесах. Последний завершает: если вы посетили все 107, то в Девалоку вам как бы уже заказан билет. Муктинатх того стоит, это потрясающее место. Могу о нем рассказать отдельно. Кстати, если у вас есть пожелания по темам — их можно углубить, сделать экскурс или даже отдельную лекцию.</p>        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Насчет «покупки индульгенций» — ведь это изощренный ее способ?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Знаете, это начинается уже в Махабхарате, в третьей книге — Вана-парве. Там очень подробно о том, как эти «индульгенции» приобрести, что тебе будет за то или иное паломничество.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Кстати, скажу: третья книга готовится к изданию — Ярослав Владимирович завершил новый перевод (на него ушел год). Надеюсь, в ближайшие годы в издательстве «Восточная литература» выйдет новый перевод Лесной книги. Вот такие хорошие новости.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Ольга спрашивает: «А горы будут затронуты в курсе? Арунахала, горы Тибета?»</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Да, мы будем об этом говорить специально в разделе о Шиве. Курс делится на несколько локаций — по географии и тематике. Специально посвященной горам лекции не будет: я мыслю курс не как путеводитель по местности, а как путешествие по смыслам и по включенности природных ландшафтов в мифологические сюжеты. Арунахала, конечно, безусловно будет — это великая гора Шивы и великий храм. Но в контексте других рассказов, а не как отдельный субъект. Поверьте, их будет достаточно.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Расскажите общий план программы — почему именно такая структура, чего будет больше, чего меньше?</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Я сделал так, чтобы буддизм и джайнизм не занимали слишком много места: буддизм ушел из Индии в XIII веке и вернулся только в конце XIX–XX веке. Итак: эта первая лекция — о теле божества. Надеюсь, что-то удалось донести. Вторая лекция будет посвящена тиртхам и самой идее тиртха-ятры как концепту движения: сакральная география не статична, она — движение. Третья — о храме как теле божества: архитектурные особенности, корреляция с идеей телесности, вдыхание жизни. Затем — две лекции о Варанаси: это удивительнейший город во всех отношениях, одна из важнейших тиртх индийского паломничества. Потом — шиваитские миры: джьотирлинги, великие места Шивы. Затем — вишнуитские места. Потом — Рамаяна и путь Рамы в контексте сакральной географии. Шактизму посвятим не меньше двух лекций. И последняя лекция мыслится мной как синтез: каким образом Индия — пройдя через огромное количество завоеваний, будучи политически раздробленной — была, стала и остается единой культурой. Этот синтез очень важен и интересен именно в контексте сакральной географии.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Спасибо. Когда я рассматривал вашу карту долины Ганги, понял, что мне потребовалось 22 года, чтобы собрать всего лишь пять точек вдоль нее: Харидвар, Агра, Патна, Варанаси, Калькутта.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Именно. У нас две лекции по Ганге — и это удивительно и оправданно. Все равно останутся тайны, но если мы внимательны к тем аспектам, которые сама Индия считает важными, — очень надеюсь, что мы попадаем в цель.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>Тогда наши встречи начинаются 4 марта 2026 года в 18:00 по московскому времени. Встречаемся 16 раз, должны закончить до июля. Остается поблагодарить нашего лектора. Это будет наш первый культурологический курс в рамках Общества ревнителей санскрита.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Я бы сказал, что акцент скорее на культурологии, нежели на религиоведении.</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ВЕДУЩИЙ</div>
+        <div class="dialog-text">
+          <p>До встречи через неделю!</p>
+        </div>
+      </div>
+      <div class="dialog-turn">
+        <div class="dialog-speaker">ЛЕКТОР</div>
+        <div class="dialog-text">
+          <p>Спасибо!</p>
+        </div>
+      </div>
+    </div>
+
+
+
+  <nav class="slides-toc" id="slides-toc-nav">
+    <h2 class="slides-toc-title">Слайды</h2>
+    <ol class="slides-toc-list">
+        <li class="slides-toc-item">
+          <a href="#slide-1">
+            <span class="slides-toc-num">Слайд 1.</span>
+            Япония: карта, сад камней Реандзи, бонсай, хайку
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-2">
+            <span class="slides-toc-num">Слайд 2.</span>
+            Нил из космоса. Мифы об умирающих и воскресающих богах Средиземноморья (сравнительная таблица)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-3">
+            <span class="slides-toc-num">Слайд 3.</span>
+            Разделение Лавразии и Гондваны (триас, 200 млн лет назад) и движение Индостана к Евразийской плите
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-4">
+            <span class="slides-toc-num">Слайд 4.</span>
+            Пандавы, Драупади и пес Юдхиштхиры перед Гималаями. Иллюстрация: @vibesofdivinity
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-5">
+            <span class="slides-toc-num">Слайд 5.</span>
+            Бассейн Ганги: от истоков в Дэвапраяге до дельты у Калькутты
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-6">
+            <span class="slides-toc-num">Слайд 6.</span>
+            Пуруша-сукта (Ригведа X.90): четыре варны как части тела космического Пуруши
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-7">
+            <span class="slides-toc-num">Слайд 7.</span>
+            Прикосновение к мурти в индийском храме — телесный контакт как религиозная практика
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-8">
+            <span class="slides-toc-num">Слайд 8.</span>
+            Богиня Минакши и гопурамы храмового комплекса в Мадурае (штат Тамилнаду)
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-9">
+            <span class="slides-toc-num">Слайд 9.</span>
+            Ритуал кормления богини Кали в храме Калигхат, Калькутта
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-10">
+            <span class="slides-toc-num">Слайд 10.</span>
+            Троица Джаганнатха-Пури: Джаганнатха, Баладева и Субхадра. Карта чардхама
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-11">
+            <span class="slides-toc-num">Слайд 11.</span>
+            Вишну-Ананташайя: Вишну, покоящийся на змее Шеше
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-12">
+            <span class="slides-toc-num">Слайд 12.</span>
+            Железнодорожный мост Памбан — единственная дорога на остров Рамешварам
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-13">
+            <span class="slides-toc-num">Слайд 13.</span>
+            Карта 12 джьотирлингов Шивы по всей Индии
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-14">
+            <span class="slides-toc-num">Слайд 14.</span>
+            Махабхарата, Вана-парва 82: «Тиртхи собраны вместе, как спицы в колесе»
+          </a>
+        </li>
+        <li class="slides-toc-item">
+          <a href="#slide-15">
+            <span class="slides-toc-num">Слайд 15.</span>
+            Основные сети паломничества Индии: индуистские, буддийские, джайнские, сикхские, суфийские
+          </a>
+        </li>
+    </ol>
+  </nav>
+
+</div><!-- /.page -->
+</div><!-- /text-panel -->
+
+<div id="video-panel">
+  <div id="video-sticky">
+    <div id="video-player-area">
+      <div id="video-source-tabs">
+        <button class="vsrc-btn active" data-src="yt">YouTube</button>
+        <button class="vsrc-btn" data-src="rt">Rutube</button>
+        <button class="vsrc-btn" data-src="audio">Audio</button>
+      </div>
+      <div id="video-container">
+        <iframe id="video-frame"
+          src="https://www.youtube.com/embed/pie7Voc43Cs?enablejsapi=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="audio-container">
+        <span id="audio-play-icon">▶</span>
+        <audio id="audio-player" controls preload="none">
+          <source src="./src/audio/00.mp3" type="audio/mpeg">
+        </audio>
+      </div>
+      <div id="video-hint" style="display:none"></div>
+    </div>
+    <div id="video-extra">
+      <div id="toc-panel"></div>
+    </div>
+  </div>
+</div><!-- /video-panel -->
+
+</div><!-- /app-layout -->
+</div><!-- /page-shell -->
+
+<script>
+(function() {
+  var YT_EMBED = 'https://www.youtube.com/embed/pie7Voc43Cs?enablejsapi=1';
+  var RT_EMBED = 'https://rutube.ru/play/embed/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA';
+  var YT_BASE  = 'https://youtu.be/pie7Voc43Cs';
+  var RT_BASE  = 'https://rutube.ru/video/private/55cbd589e088bed81f94e0cf2e54b38b/?p=GXBbor4AgWOsFoRQDDBDRA';
+
+  var mode     = (window.innerWidth <= 900) ? 'external' : 'embedded';
+  var videoSrc = 'yt';
+  var linkMode = 'both';
+  var lastSec  = 0;
+
+  var layout    = document.getElementById('app-layout');
+  var frame     = document.getElementById('video-frame');
+  var audioEl   = document.getElementById('audio-player');
+  var videoCont = document.getElementById('video-container');
+  var audioCont = document.getElementById('audio-container');
+  var toggle        = document.getElementById('mode-toggle');
+  var modeLabel     = document.getElementById('mode-label');
+  var modeIcon      = document.getElementById('mode-icon');
+  var srcBtns       = document.querySelectorAll('.vsrc-btn');
+  var hint          = document.getElementById('video-hint');
+  var autoscrollBtn = document.getElementById('autoscroll-btn');
+  var autoscrollLbl = document.getElementById('autoscroll-label');
+  var goTopBtn      = document.getElementById('go-top-btn');
+  var goEndBtn      = document.getElementById('go-end-btn');
+  var tocNextBtn    = document.getElementById('toc-next-btn');
+  var tocPrevBtn    = document.getElementById('toc-prev-btn');
+  var tocTitleEl    = document.getElementById('toc-current-title');
+  var readPctEl     = document.getElementById('read-pct');
+  var readTimeEl    = document.getElementById('read-time');
+
+  var RT_OFFSET = 17;
+
+  function fmtTime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    var p = function(n) { return String(n).padStart(2, '0'); };
+    return h > 0 ? h + ':' + p(m) + ':' + p(ss) : m + ':' + p(ss);
+  }
+
+  function showPlayer(src) {
+    if (src === 'audio') {
+      videoCont.style.display = 'none';
+      audioCont.classList.add('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — аудио перемотается';
+    } else {
+      videoCont.style.display = '';
+      audioCont.classList.remove('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается';
+    }
+  }
+
+  function updateHint(src, sec) {
+    var t = (src === 'rt') ? sec + RT_OFFSET : sec;
+    var label = (src === 'audio') ? 'аудио перемотается' : 'видео перемотается';
+    hint.innerHTML = 'Нажмите на время <span class="timecode">' + fmtTime(t) + '</span> в тексте — ' + label;
+  }
+
+  function updateLinkVisibility(lm) {
+    linkMode = lm;
+    document.body.classList.remove('links-yt-only', 'links-rt-only', 'links-audio-only');
+    if (lm === 'yt')    document.body.classList.add('links-yt-only');
+    if (lm === 'rt')    document.body.classList.add('links-rt-only');
+    if (lm === 'audio') document.body.classList.add('links-audio-only');
+  }
+
+  function reloadFrame(src) {
+    var container = document.getElementById('video-container');
+    var oldFrame = document.getElementById('video-frame');
+    oldFrame.parentNode.removeChild(oldFrame);
+    var newFrame = document.createElement('iframe');
+    newFrame.id = 'video-frame';
+    newFrame.src = src;
+    newFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    newFrame.setAttribute('allowfullscreen', '');
+    if (src.indexOf('rutube') !== -1) {
+      newFrame.addEventListener('load', function() {
+        var attempts = 0;
+        var interval = setInterval(function() {
+          try { newFrame.contentWindow.postMessage('{"method":"play"}', 'https://rutube.ru'); } catch(e) {}
+          attempts++;
+          if (attempts >= 10) clearInterval(interval);
+        }, 500);
+      });
+    }
+    container.appendChild(newFrame);
+    frame = newFrame;
+  }
+
+  function loadAt(src, sec) {
+    if (src === 'yt') {
+      reloadFrame(YT_EMBED + '&start=' + sec + '&autoplay=1');
+    } else if (src === 'rt') {
+      reloadFrame(RT_EMBED + '&t=' + (sec + RT_OFFSET) + '&autoplay=1');
+    } else if (src === 'audio') {
+      audioEl.currentTime = sec;
+      audioEl.play();
+    }
+  }
+
+  srcBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.src === videoSrc) return;
+      if (videoSrc === 'audio') audioEl.pause();
+      else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      srcBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      videoSrc = btn.dataset.src;
+      updateLinkVisibility(videoSrc);
+      showPlayer(videoSrc);
+      if (lastSec > 0) loadAt(videoSrc, lastSec);
+      else if (videoSrc === 'yt') reloadFrame(YT_EMBED);
+      else if (videoSrc === 'rt') reloadFrame(RT_EMBED);
+    });
+  });
+
+  toggle.addEventListener('click', function() {
+    mode = mode === 'embedded' ? 'external' : 'embedded';
+    applyMode();
+  });
+
+  var tocNav            = document.getElementById('toc-nav');
+  var tocPanel          = document.getElementById('toc-panel');
+  var tocOriginalParent = tocNav.parentNode;
+  var tocNextSibling    = tocNav.nextSibling;
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function moveToc(toPanel) {
+    if (toPanel && !isMobile()) tocPanel.appendChild(tocNav);
+    else tocOriginalParent.insertBefore(tocNav, tocNextSibling);
+  }
+
+  function updateMobilePadding() {
+    var videoPanel = document.getElementById('video-panel');
+    var toolbar    = document.getElementById('toolbar');
+    if (window.innerWidth <= 900) {
+      var toolbarH = toolbar ? toolbar.offsetHeight : 30;
+      // Тулбар всегда top:0 на мобильном (задано в CSS)
+      if (mode === 'embedded') {
+        // Видео fixed под тулбаром
+        var videoPanelH = videoPanel ? videoPanel.offsetHeight : 0;
+        var totalH = toolbarH + videoPanelH;
+        document.getElementById('text-panel').style.paddingTop = totalH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (totalH + 8) + 'px';
+        });
+      } else {
+        // External: только тулбар сверху
+        document.getElementById('text-panel').style.paddingTop = toolbarH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (toolbarH + 8) + 'px';
+        });
+      }
+    } else {
+      if (toolbar) toolbar.style.top = '';
+      document.getElementById('text-panel').style.paddingTop = '';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = '';
+      });
+    }
+  }
+
+  function applyMode() {
+    if (mode === 'embedded') {
+      layout.classList.remove('mode-external');
+      layout.classList.add('mode-embedded');
+      modeLabel.textContent = 'Внешний плеер';
+      modeIcon.textContent = '⊞';
+      toggle.classList.remove('ext-active');
+      moveToc(true);
+    } else {
+      // Остановить всё при переходе во внешний режим
+      if (videoSrc === 'audio') {
+        audioEl.pause();
+      } else {
+        reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      }
+      layout.classList.remove('mode-embedded');
+      layout.classList.add('mode-external');
+      modeLabel.textContent = 'Встроенный плеер';
+      modeIcon.textContent = '▶';
+      toggle.classList.add('ext-active');
+      moveToc(false);
+    }
+    requestAnimationFrame(function() {
+      _videoFitDone = false;
+      updateMobilePadding();
+      alignTocTitle();
+      fitVideoToToc(true);
+    });
+  }
+
+  window.addEventListener('resize', function() {
+    _videoFitDone = false;
+    moveToc(mode === 'embedded');
+    updateMobilePadding();
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+  });
+
+  // Выравниваем toc-current-title по левому краю текста (.page)
+  var _videoFitDone = false;
+  function fitVideoToToc(force) {
+    if (window.innerWidth <= 900) return;
+    if (_videoFitDone && !force) return;
+    // Сбрасываем фиксацию tocNav перед пересчётом
+    var tocNavReset = document.getElementById('toc-nav');
+    if (tocNavReset) tocNavReset.style.minHeight = '';
+    var sticky      = document.getElementById('video-sticky');
+    var videoExtra  = document.getElementById('video-extra');
+    var playerArea  = document.getElementById('video-player-area');
+    if (!sticky || !videoExtra || !playerArea) return;
+
+    // Высота sticky = всё доступное место в видео-панели
+    var stickyH     = sticky.clientHeight;
+    // Мерим содержимое video-extra напрямую через toc-nav + его отступы
+    var tocNavEl    = document.getElementById('toc-nav');
+    var tocPanelEl  = document.getElementById('toc-panel');
+    var extraH;
+    if (tocNavEl) {
+      // tocNav.offsetHeight + padding toc-panel + небольшой запас
+      var tocPanelStyle = tocPanelEl ? getComputedStyle(tocPanelEl) : null;
+      var tocPad = tocPanelStyle
+        ? parseInt(tocPanelStyle.paddingTop||0) + parseInt(tocPanelStyle.paddingBottom||0)
+        : 4;
+      extraH = tocNavEl.offsetHeight + tocPad + 4;
+    } else {
+      extraH = videoExtra.offsetHeight;
+    }
+    // Всё что в player-area кроме контейнера видео
+    var tabsEl      = document.getElementById('video-source-tabs');
+    var hintEl      = document.getElementById('video-hint');
+    var audioEl2    = document.getElementById('audio-container');
+    var tabsH       = tabsEl ? tabsEl.offsetHeight : 0;
+    var hintH       = hintEl ? hintEl.offsetHeight : 0;
+    var audioH      = (audioEl2 && audioEl2.style.display !== 'none') ? audioEl2.offsetHeight : 0;
+    var playerPad   = parseInt(getComputedStyle(playerArea).paddingTop)
+                    + parseInt(getComputedStyle(playerArea).paddingBottom);
+
+    // Видео = sticky минус всё остальное, без запаса
+    var available   = stickyH - extraH - tabsH - hintH - audioH - playerPad;
+    var finalH      = Math.max(120, Math.round(available));
+
+    document.documentElement.style.setProperty('--video-max-h', finalH + 'px');
+    // Фиксируем min-height у tocNav — не даём оглавлению уменьшиться при смене YT/RT/AU
+    var tocNavEl2 = document.getElementById('toc-nav');
+    if (tocNavEl2) tocNavEl2.style.minHeight = tocNavEl2.offsetHeight + 'px';
+    _videoFitDone = true;
+  }
+
+  function alignProgressToButtons() {
+    var modeBtn = document.getElementById('mode-toggle');
+    if (!modeBtn) return;
+    var w = modeBtn.offsetWidth;
+    document.documentElement.style.setProperty('--mode-btn-w', w + 'px');
+  }
+
+  function alignTocTitle() {
+    var page = document.querySelector('#text-panel .page');
+    var toolbar = document.getElementById('toolbar');
+    if (toolbar) {
+      var toolbarH = toolbar.offsetHeight;
+      document.documentElement.style.setProperty('--toolbar-h', toolbarH + 'px');
+      // scroll-padding-top чтобы якоря не уходили под тулбар
+      textPanel.style.scrollPaddingTop = toolbarH + 'px';
+      document.documentElement.style.scrollPaddingTop = toolbarH + 'px';
+      // scroll-margin-top на все заголовки
+      document.querySelectorAll('.page h2, .page h3').forEach(function(el) {
+        el.style.scrollMarginTop = (toolbarH + 4) + 'px';
+      });
+    }
+    if (!page || !toolbar) return;
+    // Вычисляем отступ по CSS-логике .page:
+    // max-width: 780px, margin: 0 auto, padding-left: 40px
+    // left = max(0, (panelWidth - 780) / 2) + 40
+    var panelWidth = textPanel.clientWidth;
+    var maxWidth = 780;
+    var pageMargin = panelWidth > maxWidth ? (panelWidth - maxWidth) / 2 : 0;
+    var pagePaddingLeft = 40;
+    var offset = pageMargin + pagePaddingLeft;
+    // Вычитаем padding самого тулбара (10px)
+    tocTitleEl.style.marginLeft = Math.max(0, offset - 10) + 'px';
+    tocTitleEl.style.paddingLeft = '0';
+  }
+
+    showPlayer('yt');
+  applyMode();
+  // Вызываем выравнивание несколько раз — layout может устаканиваться постепенно
+  requestAnimationFrame(function() {
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 200);
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 800);
+  });
+
+  function handleTimecodeClick(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (!a) return;
+    var href    = a.href || '';
+    var isAudio = a.classList.contains('audio-toc');
+    var isYT    = a.classList.contains('yt-toc') || (!isAudio && !a.classList.contains('rt-toc') && href.indexOf('youtu') !== -1);
+    var isRT    = a.classList.contains('rt-toc') || (!isAudio && !isYT && href.indexOf('rutube') !== -1);
+    var tMatch  = href.match(/[?&]t=(\d+)/);
+    var sec     = tMatch ? parseInt(tMatch[1]) : 0;
+
+    if (mode === 'embedded') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSec = sec;
+      if (isAudio) {
+        if (videoSrc !== 'audio') {
+          reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === 'audio'); });
+          videoSrc = 'audio';
+          showPlayer('audio');
+        }
+        updateLinkVisibility('audio');
+        loadAt('audio', sec);
+      } else if (isYT || isRT) {
+        var targetSrc = isYT ? 'yt' : 'rt';
+        if (targetSrc !== videoSrc) {
+          if (videoSrc === 'audio') audioEl.pause();
+          else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === targetSrc); });
+          videoSrc = targetSrc;
+          showPlayer(targetSrc);
+        }
+        updateLinkVisibility(targetSrc);
+        loadAt(videoSrc, sec);
+      }
+      // Если клик из оглавления — скроллим текст к соответствующему заголовку
+      var li = a.closest('li');
+      if (li) {
+        var anchorLink = li.querySelector('a[href^="#"]');
+        if (anchorLink) {
+          var targetId = anchorLink.getAttribute('href').slice(1);
+          var targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            var scrollEl = window.innerWidth > 900 ? textPanel : document.documentElement;
+            var videoPanel = document.getElementById('video-panel');
+            var offset = targetEl.offsetTop - (window.innerWidth <= 900 ? videoPanel.offsetHeight + 8 : 8);
+            scrollEl.scrollTo({ top: offset, behavior: 'smooth' });
+          }
+        }
+      } else {
+        document.getElementById('video-sticky').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else {
+      if (isAudio) {
+        e.preventDefault();
+        window.open('./src/audio/00.mp3#t=' + sec, '_blank');
+      }
+    }
+  }
+
+  // Подсветка по клику на пункте оглавления в правой панели
+  var tocClickIdx = -1;  // индекс принудительно выбранного пункта
+  var tocClickTimer = null;
+  tocPanel.addEventListener('click', function(e) {
+    var li = e.target.closest('li');
+    if (!li) return;
+    var allLi = Array.from(tocPanel.querySelectorAll('.toc-list li'));
+    var idx = allLi.indexOf(li);
+    if (idx < 0) return;
+    tocClickIdx = idx;
+    allLi.forEach(function(el, i) { el.classList.toggle('toc-active', i === idx); });
+    // Снимаем принудительный индекс когда скролл доедет (через 1 сек)
+    if (tocClickTimer) clearTimeout(tocClickTimer);
+    tocClickTimer = setTimeout(function() { tocClickIdx = -1; }, 1000);
+  });
+
+  // Клик на пустую область audio-container — play/pause
+  var audioCont2 = document.getElementById('audio-container');
+  var audioPlayIcon = document.getElementById('audio-play-icon');
+  audioCont2.addEventListener('click', function(e) {
+    if (e.target.closest('audio')) return; // клик на сам плеер — не трогаем
+    if (audioEl.paused) {
+      audioEl.play();
+      audioPlayIcon.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      audioPlayIcon.textContent = '▶';
+    }
+  });
+  audioEl.addEventListener('play',  function() {
+    audioPlayIcon.textContent = '⏸';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+  audioEl.addEventListener('pause', function() {
+    audioPlayIcon.textContent = '▶';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+
+  document.addEventListener('click', handleTimecodeClick);
+  document.addEventListener('touchend', function(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (a && mode === 'embedded') handleTimecodeClick(e);
+  }, { passive: false });
+
+  // ── Панель инструментов ─────────────────────────────────────────────────
+
+  var textPanel = document.getElementById('text-panel');
+
+  function getScrollEl() {
+    return (window.innerWidth > 900) ? textPanel : document.documentElement;
+  }
+
+  // Текущий активный раздел
+  function getCurrentTocIndex() {
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    var best = -1;
+    for (var i = 0; i < tocItems.length; i++) {
+      var el = document.getElementById(tocItems[i].id);
+      if (!el) continue;
+      var elTop = scrollEl === textPanel
+        ? el.offsetTop - scrollEl.scrollTop
+        : el.getBoundingClientRect().top;
+      if (elTop <= toolbarH + 8) best = i;
+    }
+    return best;
+  }
+
+  // Строим структуру разделов для нумерации — синхронно с CSS-счётчиками
+  var tocItems = [];
+  (function() {
+    var h2n = 0, h3n = 0;
+    document.querySelectorAll('#toc-nav .toc-list li').forEach(function(li) {
+      var a = li.querySelector('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tag = el.tagName.toLowerCase();
+      var title = el.childNodes[0].textContent.trim();
+      if (tag === 'h2') {
+        h2n++; h3n = 0;
+        tocItems.push({ id: id, tag: 'h2', h2: h2n, h3: 0, title: title, parentTitle: '' });
+      } else if (tag === 'h3') {
+        h3n++;
+        var parentTitle = '';
+        // Ищем последний h2 в tocItems
+        for (var j = tocItems.length - 1; j >= 0; j--) {
+          if (tocItems[j].tag === 'h2') { parentTitle = tocItems[j].title; break; }
+        }
+        tocItems.push({ id: id, tag: 'h3', h2: h2n, h3: h3n, title: title, parentTitle: parentTitle });
+      }
+    });
+  })();
+
+  function updateTocTitle() {
+    var idx = getCurrentTocIndex();
+
+    // Подсветка активного пункта в #toc-panel при скролле
+    // (не перебиваем если был недавний клик)
+    var tocPanelItems = tocPanel.querySelectorAll('.toc-list li');
+    var activeIdx = (tocClickIdx >= 0) ? tocClickIdx : idx;
+    tocPanelItems.forEach(function(li, i) { li.classList.toggle('toc-active', i === activeIdx); });
+
+
+    if (idx < 0 || idx >= tocItems.length) { tocTitleEl.textContent = ''; return; }
+    var item = tocItems[idx];
+    var text;
+    if (item.tag === 'h2') {
+      text = item.h2 + '. ' + item.title;
+    } else {
+      text = item.h2 + '.' + item.h3 + ' ' + item.title + ' / ' + item.parentTitle;
+    }
+    tocTitleEl.textContent = text;
+  }
+
+  // Скролл к разделу по индексу
+  function scrollToTocItem(idx) {
+    if (idx < 0 || idx >= tocItems.length) return;
+    var el = document.getElementById(tocItems[idx].id);
+    if (!el) return;
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    if (scrollEl === textPanel) {
+      scrollEl.scrollTo({ top: el.offsetTop - toolbarH - 4, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - toolbarH - 4, behavior: 'smooth' });
+    }
+  }
+
+  tocNextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx + 1);
+  });
+
+  tocPrevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx <= 0 ? 0 : idx - 1);
+  });
+
+  goTopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    getScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  goEndBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var scrollEl = getScrollEl();
+    // scrollHeight может быть неточным при первом вызове (lazy-render).
+    // Передаём заведомо большое число — браузер сам ограничит до максимума.
+    scrollEl.scrollTo({ top: 999999999, behavior: 'smooth' });
+  });
+
+  // Прогресс + время чтения
+  var WORDS_PER_MIN = 150;
+  var totalWords = (document.getElementById('text-panel').innerText.match(/\S+/g) || []).length;
+  var totalMinutes = Math.max(1, Math.round(totalWords / WORDS_PER_MIN));
+
+  var progressBarEl = document.getElementById('progress-bar');
+
+  // alignTocTitle объявлена выше
+
+  function updateProgress() {
+    var scrollEl     = getScrollEl();
+    var scrollTop    = scrollEl.scrollTop;
+    var scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+    var pct = scrollHeight > 0 ? Math.round(scrollTop / scrollHeight * 100) : 0;
+    readPctEl.textContent = pct + '%';
+    progressBarEl.style.width = pct + '%';
+    var minsLeft = Math.max(1, Math.round(totalMinutes * (1 - pct / 100)));
+    readTimeEl.textContent = '\u00a0(' + minsLeft + '\u00a0мин)';
+  }
+
+  textPanel.addEventListener('scroll', updateProgress);
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  textPanel.addEventListener('scroll', updateTocTitle);
+  window.addEventListener('scroll', updateTocTitle);
+  updateTocTitle();
+
+  // Автоскроллинг
+  var autoscrollActive = false;
+  var autoscrollSpeed  = 1;   // px/frame
+  var autoscrollRaf    = null;
+
+  function autoscrollStep() {
+    if (!autoscrollActive) return;
+    var scrollEl = getScrollEl();
+    scrollEl.scrollTop += autoscrollSpeed;
+    autoscrollRaf = requestAnimationFrame(autoscrollStep);
+  }
+
+  autoscrollBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    autoscrollActive = !autoscrollActive;
+    if (autoscrollActive) {
+      autoscrollBtn.classList.add('active');
+      autoscrollLbl.textContent = '⏸ Стоп';
+      autoscrollRaf = requestAnimationFrame(autoscrollStep);
+    } else {
+      autoscrollBtn.classList.remove('active');
+      autoscrollLbl.textContent = '⏩ Авто';
+      if (autoscrollRaf) cancelAnimationFrame(autoscrollRaf);
+    }
+  });
+
+
+
+})();
+</script>
+</body>
+</html>

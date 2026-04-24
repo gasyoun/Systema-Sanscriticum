@@ -1,0 +1,31 @@
+§0 <figure><img 1><figcaption>Лекция 2. Ведийские откровения: индийская протофилософия</figcaption></figure>
+§3 <figure><img 2><figcaption>Индийская протофилософия</figcaption></figure>
+§5 <figure><img 3><figcaption>Состав вед</figcaption></figure>
+§7 <figure><img 4><figcaption>Структура шрути</figcaption></figure>
+§11 <figure><img 5><figcaption>Боги Ригведы: девы, асуры и хенотеизм</figcaption></figure>
+§16 <figure><img 6><figcaption>Рта, анрта и майя</figcaption></figure>
+§27 <figure><img 7><figcaption>Происхождение универсума</figcaption></figure>
+§32 <figure><img 8><figcaption>Космогонические гимны: Индра, Вритра, Пуруша</figcaption></figure>
+§37 <figure><img 9><figcaption>Брахман (Brahman)</figcaption></figure>
+§40 <figure><img 10><figcaption>Сакральность речи, Кама, прана</figcaption></figure>
+§42 <figure><img 11><figcaption>Посмертие в Ригведе</figcaption></figure>
+§47 <figure><img 12><figcaption>Эпоха брахманизма</figcaption></figure>
+§49 <figure><img 13><figcaption>Специализация знания и диалектика</figcaption></figure>
+§56 <figure><img 14><figcaption>Упанишады</figcaption></figure>
+§58 <figure><img 15><figcaption>Самые авторитетные упанишады</figcaption></figure>
+§59 <figure><img 16><figcaption>Некоторые персоналии</figcaption></figure>
+§61 <figure><img 17><figcaption>Брахман</figcaption></figure>
+§66 <figure><img 18><figcaption>Атман (Ātman)</figcaption></figure>
+§79 <figure><img 19><figcaption>Судьба человека</figcaption></figure>
+§83 <figure><img 20><figcaption>Загробный путь. Версия «Брихадараньяки» (VI.2.15-16) и «Чхандогьи» (V.10)</figcaption></figure>
+§86 <figure><img 21><figcaption>Авидья, сансара, пунар джанман</figcaption></figure>
+§87 <figure><img 22><figcaption>Видья, мокша, четыре состояния сознания</figcaption></figure>
+§90 <figure><img 23><figcaption>Философия «Бхагавадгиты» («Песнь Господня»)</figcaption></figure>
+§92 <figure><img 24><figcaption>Представление о Боге и мире</figcaption></figure>
+§94 <figure><img 25><figcaption>Три пути к Богу</figcaption></figure>
+§95 <figure><img 26><figcaption>Джняна-марга</figcaption></figure>
+§97 <figure><img 27><figcaption>Вселенская форма Кришны (viśvarūpa)</figcaption></figure>
+§98 <figure><img 28><figcaption>Карма-марга</figcaption></figure>
+§103 <figure><img 29><figcaption>Карма-марга: саматва и йога</figcaption></figure>
+§104 <figure><img 30><figcaption>Бхакти-марга</figcaption></figure>
+§105 <figure><img 31><figcaption>Социальная философия</figcaption></figure>

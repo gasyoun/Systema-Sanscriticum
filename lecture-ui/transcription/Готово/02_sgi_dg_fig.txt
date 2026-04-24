@@ -1,0 +1,52 @@
+§0 <figure><img 1><figcaption>Сакральная география Индии</figcaption></figure>
+§1 <figure><img 2><figcaption>Сад камней (Кайсэки)</figcaption></figure>
+§2 <figure><img 3><figcaption>Боги смерти в мировых мифологиях</figcaption></figure>
+§2 <figure><img 4><figcaption>Лавразия, Гондвана и движение Индийской плиты</figcaption></figure>
+§2 <figure><img 5><figcaption>Пандавы у Гималаев</figcaption></figure>
+§2 <figure><img 6><figcaption>Карта бассейна Ганги</figcaption></figure>
+# img 3–6 на §2: серия немых вводных слайдов — сравнительная мифология, геологический и географический контекст Индии; лектор в §2 разворачивает тему тела, культуры и ответов на вопросы бытия
+§3 <figure><img 7><figcaption>Пуруша-сукта</figcaption></figure>
+§5 <figure><img 8><figcaption>Прикосновение к мурти в храме</figcaption></figure>
+§5 <figure><img 9><figcaption>Храм Минакши и богиня Минакши</figcaption></figure>
+§5 <figure><img 10><figcaption>Пуджа Дурге</figcaption></figure>
+§5 <figure><img 11><figcaption>Джаганнатх и чар-дхам</figcaption></figure>
+§5 <figure><img 12><figcaption>Вишну-Ананташайя</figcaption></figure>
+§5 <figure><img 13><figcaption>Мост Памбан к Рамешвараму</figcaption></figure>
+§5 <figure><img 14><figcaption>12 Jyotirlinga Shrines</figcaption></figure>
+§5 <figure><img 15><figcaption>Священные сети тиртх Индии</figcaption></figure>
+§5 <figure><img 16><figcaption>Маршрут Рамы по Индии</figcaption></figure>
+# img 8–16 на §5: галерея иллюстраций к теме «долг перед богами»; лектор в §5–6 разворачивает тему ягьи/пуджи и священных мест — храмы, места паломничества, сети тиртх, маршруты аватаров
+§9 <figure><img 31><figcaption>Книга Пандея</figcaption></figure>
+§10 <figure><img 32><figcaption>Самскары</figcaption></figure>
+§23 <figure><img 33><figcaption>Яма</figcaption></figure>
+§27 <figure><img 29><figcaption>Ритуалы подготовки и в ходе тиртха-ятры</figcaption></figure>
+§27 <figure><img 34><figcaption>Питримедха</figcaption></figure>
+§28 <figure><img 30><figcaption>Тарпана (по правилам, с яджнопавитой)</figcaption></figure>
+§29 <figure><img 17><figcaption>Тиртхи как сеть маршрутов</figcaption></figure>
+§29 <figure><img 18><figcaption>Литература</figcaption></figure>
+§29 <figure><img 19><figcaption>Книги Дычковского</figcaption></figure>
+§29 <figure><img 20><figcaption>Диана Эк: India: A Sacred Geography</figcaption></figure>
+§29 <figure><img 21><figcaption>Тиртха</figcaption></figure>
+§29 <figure><img 22><figcaption>Генезис понятия тиртха</figcaption></figure>
+§29 <figure><img 23><figcaption>Тиртхи в Махабхарате (книга)</figcaption></figure>
+# img 17–23 на §29: серия теоретических и библиографических слайдов к теме тиртх; лектор в §29 переключается на тему тиртх Махабхараты («помним из первой нашей встречи о тиртхах... расположил наиболее важных по количеству заслуг») и последовательно показывает теоретическую базу — сети тиртх, литературу, генезис понятия, введение к Махабхарате
+§30 <figure><img 24><figcaption>Тиртхи в Махабхарате (текст)</figcaption></figure>
+§30 <figure><img 25><figcaption>Паломничество к Пушкару (текст из Махабхараты)</figcaption></figure>
+§30 <figure><img 26><figcaption>Тиртхи из Араньякапарвы</figcaption></figure>
+§30 <figure><img 27><figcaption>Пушкар (Раджастан)</figcaption></figure>
+# img 24–27 на §30: последовательные слайды о тиртхах Араньякапарвы; лектор в §30 разворачивает тему конкретных тиртх и их заслуг — текст Махабхараты о Пушкаре, таблица тиртх, фото Пушкара
+§31 <figure><img 28><figcaption>Шри Брахма мандир</figcaption></figure>
+§32 <figure><img 35><figcaption>Gaya Vishnupad mandir</figcaption></figure>
+§38 <figure><img 36><figcaption>Пинда-дана в Гайе</figcaption></figure>
+§40 <figure><img 37><figcaption>Что такое питри-лока?</figcaption></figure>
+§41 <figure><img 38><figcaption>Иерархия миров предков</figcaption></figure>
+§59 <figure><img 39><figcaption>Акшаявата в храме Вишнупада (Гайя)</figcaption></figure>
+
+# НЕПОСЛЕДОВАТЕЛЬНОСТЬ СЛАЙДОВ:
+# Слайды img 29–35 (стр. 29–35 PDF) показаны в другом порядке относительно PDF:
+# — img 31 (Книга Пандея) и img 32 (Самскары) показаны на §9–10 — раньше своего места в PDF
+# — img 33 (Яма) показан на §23 — раньше своего места в PDF
+# — img 29 (Ритуалы тиртха-ятры) и img 34 (Питримедха) показаны на §27 — раньше своего места в PDF
+# — img 30 (Тарпана) показан на §28 — раньше своего места в PDF
+# — img 17–23 (теоретические слайды о тиртхах) показаны на §29 — позже своего места в PDF (в PDF они стоят после слайдов о долге перед богами, §5, но в лекции лектор показывает их после ритуальной инверсии)
+# — img 35 (Gaya Vishnupad mandir, стр. 35 PDF) показан на §32 — соответствует правильному месту

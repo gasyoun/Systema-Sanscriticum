@@ -1,0 +1,32 @@
+§0 <figure><img 1><figcaption>Мир, созданный для духа: философия санкхьи</figcaption></figure>
+§1 <figure><img 2><figcaption>Sāṁkhya</figcaption></figure>
+§4 <figure><img 3><figcaption>Санкхья как методология</figcaption></figure>
+§7 <figure><img 4><figcaption>Санкхья как набор духовных методов</figcaption></figure>
+§9 <figure><img 5><figcaption>Шветашватара-упанишада: санкхья и йога</figcaption></figure>
+§13 <figure><img 6><figcaption>(Прото)санкхья Арады Каламы</figcaption></figure>
+§15 <figure><img 7><figcaption>КШЕТРА</figcaption></figure>
+§19 <figure><img 8><figcaption>Многоуровневая иерархия и атман</figcaption></figure>
+§23 <figure><img 9><figcaption>Санкхья в «Мокшадхарме»</figcaption></figure>
+§27 <figure><img 10><figcaption>Школьная санкхья</figcaption></figure>
+§29 <figure><img 11><figcaption>Наставники</figcaption></figure>
+§34 <figure><img 12><figcaption>Текстовые источники санкхьи</figcaption></figure>
+§41 <figure><img 13><figcaption>Дуализм</figcaption></figure>
+§47 <figure><img 14><figcaption>Различия</figcaption></figure>
+§51 <figure><img 15><figcaption>Причины существования пуруши</figcaption></figure>
+§55 <figure><img 16><figcaption>Множественность пуруш</figcaption></figure>
+§57 <figure><img 17><figcaption>Три гуны (triguṇa)</figcaption></figure>
+§65 <figure><img 18><figcaption>Взаимная связь гун и метафора лампы</figcaption></figure>
+§67 <figure><img 19><figcaption>Satkāryavāda</figcaption></figure>
+§73 <figure><img 20><figcaption>«Эволюция» (pariṇāma)</figcaption></figure>
+§76 <figure><img 21><figcaption>Производные таттвы</figcaption></figure>
+§82 <figure><img 22><figcaption>Антахкарана и тонкое тело</figcaption></figure>
+§83 <figure><img 23><figcaption>Схема таттв санкхьи</figcaption></figure>
+§84 <figure><img 24><figcaption>Генезис плотных элементов</figcaption></figure>
+§85 <figure><img 25><figcaption>Предпосылки интеллекта и жизненные траектории</figcaption></figure>
+§87 <figure><img 26><figcaption>14 типов живых существ</figcaption></figure>
+§88 <figure><img 27><figcaption>Страдание</figcaption></figure>
+§90 <figure><img 28><figcaption>Взаимодействие пуруши и пракрити</figcaption></figure>
+§94 <figure><img 29><figcaption>Закабаление и освобождение</figcaption></figure>
+§99 <figure><img 31><figcaption>Освобождение при жизни и после смерти</figcaption></figure>
+§107 <figure><img 30><figcaption>Возражение против Ишвары</figcaption></figure>
+# img 31 на §99, img 30 на §107: нарушение числового порядка. В §99 лектор говорит «вот последний слайд» и переходит к слайду об освобождении при жизни (img 31). Слайд «Возражение против Ишвары» (img 30) показывается позже — в сессии вопросов и ответов, когда слушатель спрашивает об Ишваре (§106), и лектор обращается к соответствующему слайду (§107–108).

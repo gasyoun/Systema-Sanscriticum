@@ -1,0 +1,41 @@
+§0 <figure><img 1><figcaption>Древнеиндийская литература</figcaption></figure>
+§1 <figure><img 2><figcaption>Семь риши в «Ригведе»</figcaption></figure>
+§12 <figure><img 3><figcaption>Списки семи риши</figcaption></figure>
+§13 <figure><img 4><figcaption>Риши – авторы «Ригведы»</figcaption></figure>
+§17 <figure><img 5><figcaption>Женщины-риши</figcaption></figure>
+§22 <figure><img 6><figcaption>Гимн Апалы (VIII.91)</figcaption></figure>
+§26 <figure><img 7><figcaption>Ангирас, Атхарван, Бхригу</figcaption></figure>
+§32 <figure><img 8><figcaption>Диргхатамас</figcaption></figure>
+§36 <figure><img 9><figcaption>Гимн-загадка (I.164)</figcaption></figure>
+§38 <figure><img 10><figcaption>Агастья</figcaption></figure>
+§50 <figure><img 11><figcaption>Вишвамитра</figcaption></figure>
+§56 <figure><img 12><figcaption>Вишвамитра и реки (III.33)</figcaption></figure>
+§59 <figure><img 13><figcaption>Гимн III.53</figcaption></figure>
+§59 <figure><img 14><figcaption>Битва десяти царей</figcaption></figure>
+§61 <figure><img 15><figcaption>Вражда Васиштхи и Вишвамитры</figcaption></figure>
+§61 <figure><img 16><figcaption>Васиштха</figcaption></figure>
+§62 <figure><img 17><figcaption>Происхождение Васиштхи</figcaption></figure>
+§68 <figure><img 18><figcaption>Гимн VII.86</figcaption></figure>
+§69 <figure><img 19><figcaption>Гимн VII.88</figcaption></figure>
+§71 <figure><img 20><figcaption>Тайный язык поэтов</figcaption></figure>
+§75 <figure><img 21><figcaption>Из Брихадараньяка-упанишады</figcaption></figure>
+§76 <figure><img 22><figcaption>Кеннинги и хейти</figcaption></figure>
+§77 <figure><img 23><figcaption>Пример хейти</figcaption></figure>
+§78 <figure><img 24><figcaption>Тайные имена Агни</figcaption></figure>
+§80 <figure><img 25><figcaption>Брахмодья</figcaption></figure>
+§83 <figure><img 26><figcaption>Миф об Ангирасах</figcaption></figure>
+§85 <figure><img 27><figcaption>Из гимна X.67</figcaption></figure>
+§88 <figure><img 28><figcaption>Гимн Священной Речи (X.125)</figcaption></figure>
+§93 <figure><img 29><figcaption>Приглашения и воззвания</figcaption></figure>
+§95 <figure><img 30><figcaption>Перечисление имен</figcaption></figure>
+§96 <figure><img 31><figcaption>Перечисление спасенных</figcaption></figure>
+§100 <figure><img 32><figcaption>Гимны апри</figcaption></figure>
+§101 <figure><img 33><figcaption>Восхваление</figcaption></figure>
+§102 <figure><img 34><figcaption>Генотеизм</figcaption></figure>
+§102 <figure><img 35><figcaption>Молитвы</figcaption></figure>
+§103 <figure><img 36><figcaption>Проклятия</figcaption></figure>
+§104 <figure><img 37><figcaption>Самовосхваления</figcaption></figure>
+§107 <figure><img 38><figcaption>Данастути — восхваление щедрости</figcaption></figure>
+§110 <figure><img 39><figcaption>Богиня Дакшина</figcaption></figure>
+§111 <figure><img 40><figcaption>Диалог с покровителем</figcaption></figure>
+§206 <figure><img 41><figcaption>Конец лекции</figcaption></figure>

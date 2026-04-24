@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ lecture.meta.lesson_title }}. {{ lecture.meta.course }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css?v=1">
+  <style>
+  /* ── Toolbar ───────────────────────────────────────────────────────────── */
+  #toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(44, 30, 18, 0.97);
+    backdrop-filter: blur(6px);
+    color: #e8d8c0;
+    font-size: 13px;
+    min-height: 36px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+  /* Обёртка: тулбар + app-layout занимают всю высоту экрана */
+  #page-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* app-layout теперь занимает оставшееся место */
+  #page-shell #app-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .tb-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #e8d8c0;
+    cursor: pointer;
+    padding: 3px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: background 0.15s;
+    line-height: 1.4;
+  }
+  .tb-btn:hover { background: rgba(255,255,255,0.18); }
+  .tb-btn.active { background: rgba(200,160,80,0.35); border-color: rgba(200,160,80,0.6); }
+  .tb-mode-btn { font-size: 12px; }
+  .tb-icon-btn { padding: 3px 7px; font-size: 13px; }
+  #go-top-btn { margin-left: var(--mode-btn-w, 120px); }
+  #toc-current-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    padding: 0 6px 0 0;
+    min-width: 0;
+  }
+  #toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    color: #c8b090;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  #progress-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 116px;
+    flex-shrink: 0;
+  }
+  /* Сдвигаем progress+time влево на ширину 4 кнопок навигации через JS */
+  #read-pct-wrap { display: inline-block; width: 2.8em; text-align: right; flex-shrink: 0; }
+  #read-pct { font-weight: 600; color: #e8d8c0; }
+  #read-time {
+    color: #a09070;
+    display: inline-block;
+    min-width: 4.5em;  /* хватит на "(99 мин)" */
+  }
+  /* В правой панели оглавления показываем только одну ссылку — активный источник.
+     По умолчанию (нет класса на body) и при links-yt-only — YT.
+     link-sep скрываем всегда, чтобы не оставалось висящих разделителей. */
+  #toc-panel .toc-list .link-sep { display: none; }
+
+  /* По умолчанию и YT-режим: показываем только YT */
+  #toc-panel .toc-list .rt-toc   { display: none; }
+  #toc-panel .toc-list .audio-toc { display: none; }
+
+  /* RT-режим: показываем только RT */
+  body.links-rt-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-rt-only #toc-panel .toc-list .rt-toc    { display: inline; }
+
+  /* Audio-режим: показываем только AU */
+  body.links-audio-only #toc-panel .toc-list .yt-toc    { display: none; }
+  body.links-audio-only #toc-panel .toc-list .audio-toc { display: inline; }
+
+  /* Подсветка текущего раздела в правой панели оглавления */
+  #toc-panel .toc-list li.toc-active > a:not(.yt-toc):not(.rt-toc):not(.audio-toc) {
+    color: var(--ink, #1a1410) !important;
+    font-weight: 400 !important;
+    background: rgba(201, 168, 76, 0.18);
+    border-radius: 3px;
+    /* без padding/margin — не влияем на геометрию и высоту блока */
+  }
+  /* Компенсируем height:100vh у #text-panel из внешнего CSS —
+     тулбар теперь занимает часть высоты, panel должен быть меньше */
+  /* ── Мобильный тулбар (≤900px) ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    /* Отключаем page-shell — на мобильном скроллится body */
+    #page-shell {
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+    /* Тулбар фиксируем вверху — выше video-panel */
+    #toolbar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      padding: 3px 6px;
+      gap: 3px;
+      min-height: 30px;
+      flex-wrap: nowrap;
+    }
+    /* video-panel опускаем под тулбар */
+    #video-panel {
+      top: var(--toolbar-h, 30px) !important;
+    }
+    .tb-btn {
+      padding: 2px 5px !important;
+      font-size: 11px !important;
+    }
+    .tb-icon-btn {
+      padding: 2px 5px !important;
+      font-size: 12px !important;
+    }
+    /* Скрываем текстовые метки — оставляем только иконки */
+    #mode-label { display: none; }
+    #autoscroll-label { font-size: 0; }
+    #autoscroll-label::before { content: '⏩'; font-size: 12px; }
+    .tb-btn.active #autoscroll-label::before { content: '⏸'; }
+    /* Скрываем заголовок раздела, полоску прогрессбара и авто */
+    #toc-current-title { display: none !important; }
+    #progress-bar-wrap { display: none !important; }
+    #autoscroll-btn { display: none !important; }
+    /* Возвращаем проценты и минуты */
+    #read-pct { font-size: 11px !important; }
+    #read-time { display: inline-block !important; font-size: 11px; min-width: 3.5em; }
+    #progress-group { width: auto; gap: 0; }
+    #go-top-btn { margin-left: 6px; }
+    /* Кнопка режима — как на десктопе, показываем текст */
+    #mode-label { display: inline !important; }
+    #mode-toggle { padding: 3px 9px !important; font-size: 12px !important; }
+  }
+
+  @media (min-width: 901px) {
+    #text-panel      { height: calc(100vh - var(--toolbar-h, 36px)) !important; }
+    #app-layout      { height: calc(100vh - var(--toolbar-h, 36px)) !important; overflow: hidden !important; }
+    #video-panel     { height: auto !important; overflow: visible !important; position: relative !important; align-self: flex-start !important; }
+    #video-sticky    { position: fixed !important; top: var(--toolbar-h, 36px) !important; right: 0 !important; width: 50% !important; height: calc(100vh - var(--toolbar-h, 36px)) !important; z-index: 1 !important; overflow: hidden !important; background: transparent !important; }
+    #video-container { max-height: var(--video-max-h, 50vh) !important; }
+    #audio-container {
+      height: var(--video-max-h, 50vh);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      #audio-container {
+        height: auto !important;
+        padding: 8px !important;
+        justify-content: center !important;
+      }
+      #audio-play-icon { display: none !important; visibility: hidden !important; }
+      #video-container { display: none !important; }
+    }
+    #audio-play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      font-size: 48px;
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    #audio-container:hover #audio-play-icon {
+      color: rgba(255,255,255,0.5);
+    }
+    #video-extra     { overflow-y: auto !important; scrollbar-gutter: stable; flex: 0 1 auto !important; background: transparent !important; }
+    #toc-panel       { background: var(--paper, #F8F4EC) !important; padding: 2px 4px !important; }
+    #toc-panel .toc-list { margin: 0 !important; padding-bottom: 4px !important; }
+    #toc-panel .toc-h2  { margin-top: 0.17rem !important; margin-bottom: 0.05rem !important; }
+    #toc-panel .toc-h3  { margin-top: 0.07rem !important; margin-bottom: 0.07rem !important; }
+  }
+  /* Ландшафтный режим на телефоне — тулбар как на десктопе */
+  @media (max-width: 900px) and (orientation: landscape) {
+    #toc-current-title { display: flex !important; }
+    #progress-bar-wrap { display: inline-flex !important; }
+    #autoscroll-btn    { display: inline-flex !important; }
+    #progress-group    { width: 116px; }
+    #read-time         { display: inline-block !important; }
+    #mode-label        { display: inline !important; }
+  }
+
+  /* audio-visible работает на всех экранах */
+  #audio-container.audio-visible { display: flex !important; }
+
+  /* Табы теперь под видео — меняем отступы */
+  #video-source-tabs { margin-bottom: 0 !important; margin-top: 6px !important; }
+  /* ── Нумерация заголовков в тексте (синхронно с оглавлением) ── */
+  .page { counter-reset: h2-counter; }
+  .page h2, .page h3, .page [id] { scroll-margin-top: calc(var(--toolbar-h, 36px) + 8px); }
+  .page h2 { counter-increment: h2-counter; counter-reset: h3-counter; }
+  .page h3 {
+    counter-increment: h3-counter;
+    font-style: normal !important;
+  }
+  .page h2::before {
+    content: counter(h2-counter) ". ";
+    color: #9a7a30;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .page h3::before {
+    content: counter(h2-counter) "." counter(h3-counter) " ";
+    color: #b8954a;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Переопределяем #mode-toggle из внешнего CSS — он там fixed bottom/right */
+  #mode-toggle {
+    position: static !important;
+    bottom: unset !important;
+    right: unset !important;
+    top: unset !important;
+    left: unset !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    color: #e8d8c0 !important;
+    cursor: pointer !important;
+    padding: 3px 9px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-family: inherit !important;
+  }
+  #mode-toggle:hover { background: rgba(255,255,255,0.22) !important; transform: none !important; }
+  #mode-toggle.ext-active { background: rgba(200,160,80,0.35) !important; border-color: rgba(200,160,80,0.6) !important; }
+  /* Сбросить старые стили #read-pct и #scroll-arrow из внешнего CSS */
+  #read-pct { font-size: 12px !important; opacity: 1 !important; letter-spacing: 0 !important; color: #e8d8c0 !important; font-weight: 600 !important; }
+  #progress-bar-wrap {
+    display: inline-flex;
+    align-items: center;
+    width: 80px;
+    height: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #c9a84c, #8b6914);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  #mode-icon { font-size: 14px !important; line-height: 1 !important; }
+  /* Таймкод абзаца — иконка ▶, время в tooltip */
+  a.para-timecode {
+    display: inline-block;
+    font-size: 0.6em;
+    line-height: 1;
+    vertical-align: middle;
+    color: #b8954a;
+    opacity: 0.55;
+    text-decoration: none;
+    margin-right: 2px;
+    transition: opacity 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  a.para-timecode:hover { opacity: 1; color: #9a7a30; }
+
+  /* ── Глоссарий ─────────────────────────────────────────────────────────── */
+  .glossary {
+    margin: 3em 0 2em;
+    padding: 1.5em 2em 2em;
+    border-top: 2px solid rgba(200,160,80,0.35);
+  }
+  .glossary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--accent, #b8922a);
+    margin: 0 0 1em;
+    letter-spacing: 0.02em;
+  }
+  .glossary-count {
+    font-size: 0.82em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin: -0.5em 0 1.2em;
+  }
+  .glossary-plain {
+    font-size: 0.95em;
+    line-height: 1.7;
+    margin: 0 0 2em;
+    opacity: 0.88;
+  }
+  .glossary-list {
+    margin: 0;
+    padding: 0;
+  }
+  .glossary-list dt {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 1em;
+    margin: 1em 0 0.15em;
+    color: #6b3a1f;
+  }
+  .glossary-list .gterm-tag {
+    display: inline;
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 0.82em;
+    opacity: 0.45;
+    margin-left: 0.5em;
+    letter-spacing: 0.03em;
+  }
+  .glossary-list dt a {
+    color: var(--accent, #b8922a);
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+    transition: opacity 0.15s;
+  }
+  .glossary-list dt a:hover { opacity: 0.75; }
+  .glossary-list dd {
+    margin: 0 0 0.25em 0;
+    padding-left: 1.2em;
+    border-left: 2px solid rgba(200,160,80,0.25);
+    font-size: 0.95em;
+    line-height: 1.55;
+    opacity: 0.88;
+  }
+  .glossary-list dt .gterm-refs {
+    display: inline;
+    font-size: 0.85em;
+    font-weight: 400;
+    opacity: 0.5;
+    margin-left: 0.5em;
+  }
+  .glossary-list dt .gterm-refs a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+    margin-right: 0.2em;
+  }
+  .glossary-list dt .gterm-refs a:hover { opacity: 0.75; }
+
+  /* ── Номер лекции на обложке ── */
+  .cover .lesson-date {
+    font-size: 13px;
+    color: var(--muted, #6B5E45);
+    margin-top: -14px;
+    margin-bottom: 20px;
+  }
+
+  </style>
+  <script>
+  /* Измеряем тулбар до первой отрисовки, чтобы --toolbar-h был точным сразу */
+  document.addEventListener('DOMContentLoaded', function() {
+    var tb = document.getElementById('toolbar');
+    if (tb) {
+      document.documentElement.style.setProperty('--toolbar-h', tb.offsetHeight + 'px');
+    }
+  });
+  </script>
+</head>
+<body>
+<div id="page-shell">
+<div id="toolbar">
+  <span id="toc-current-title"></span>
+  <span id="toolbar-right">
+    <span id="progress-group">
+      <span id="progress-bar-wrap" title="Прогресс чтения"><span id="progress-bar"></span></span>
+      <span id="read-pct-wrap"><span id="read-pct">0%</span></span>
+    </span>
+    <span id="read-time"></span>
+    <button id="go-top-btn" class="tb-btn tb-icon-btn" title="В начало текста">↑↑</button>
+    <button id="toc-prev-btn" class="tb-btn tb-icon-btn" title="Предыдущий раздел">▲</button>
+    <button id="toc-next-btn" class="tb-btn tb-icon-btn" title="Следующий раздел">▼</button>
+    <button id="go-end-btn" class="tb-btn tb-icon-btn" title="В конец текста">↓↓</button>
+    <button id="autoscroll-btn" class="tb-btn" title="Автоскроллинг">
+      <span id="autoscroll-label">⏩ Авто</span>
+    </button>
+    <button id="mode-toggle" class="tb-btn tb-mode-btn" title="Переключить режим плеера">
+      <span id="mode-icon">⊞</span>
+      <span id="mode-label">Внешний плеер</span>
+    </button>
+  </span>
+</div>
+
+<div id="app-layout">
+<div id="text-panel">
+<div class="page">
+
+  {# ═══════════════════════════════ ОБЛОЖКА ═══════════════════════════════ #}
+  <header class="cover">
+    <p class="series">Курс «{{ lecture.meta.course }}» · {{ lecture.meta.lesson_title }}</p>
+    <h1>{{ lecture.meta.title }}</h1>
+    <p class="subtitle">Лектор: {{ lecture.meta.lecturer }}</p>
+    <p class="lesson-date">{{ lecture.meta.date_display }}</p>
+    <p class="meta">
+      {{ lecture.meta.organization }}<br>
+      {% if lecture.meta.period %}{{ lecture.meta.period }}<br>{% endif %}
+      Ведущий: {{ lecture.meta.host }} · Видеозапись:
+      <a href="{{ lecture.meta.video.youtube }}" target="_blank">YT</a><span class="link-sep">/</span><a href="{{ lecture.meta.video.rutube }}" target="_blank">RT</a>
+    </p>
+  </header>
+
+  {# ═══════════════════════════════ ОГЛАВЛЕНИЕ ═══════════════════════════ #}
+  <nav class="toc" id="toc-nav">
+    <h2 class="toc-title">Содержание</h2>
+    <ul class="toc-list">
+    {% for section in lecture.sections %}
+      {% if section.title %}
+      <li class="toc-h{{ section.level }}"><a href="#{{ section.id }}">{{ section.title }}</a>
+        {%- if section.timecodes.yt is defined %} <a class="yt-toc" href="{{ lecture.meta.video.youtube }}?t={{ section.timecodes.yt }}" title="{{ section._yt_time }}" target="_blank">YT</a><span class="link-sep">/</span>
+        {%- endif %}
+        {%- if section.timecodes.rt is defined %}<a class="rt-toc" href="{{ lecture.meta.video.rutube }}&t={{ section.timecodes.rt }}" title="{{ section._rt_time }}" target="_blank">RT</a><span class="link-sep">/</span>
+        {%- endif %}
+        {%- if section.timecodes.au is defined %}<a class="audio-toc" href="?t={{ section.timecodes.au }}" title="{{ section._yt_time }}">AU</a>
+        {%- endif %}</li>
+      {% endif %}
+    {% endfor %}
+    </ul>
+  </nav>
+
+  {# ═══════════════════════════════ СЕКЦИИ ════════════════════════════════ #}
+  {%- set ns = namespace(para_n=0) %}
+  {% for section in lecture.sections %}
+
+  {% if section.title %}
+  <h{{ section.level }} id="{{ section.id }}">{{ section.title }}
+    {% if section.timecodes.yt is defined %}
+    <span class="yt-link">
+      <a href="{{ section._yt_url }}" title="{{ section._yt_time }}" target="_blank">YT</a><span class="link-sep">/</span><a href="{{ section._rt_url }}" title="{{ section._rt_time }}" target="_blank">RT</a><span class="link-sep">/</span><a class="audio-toc" href="?t={{ section.timecodes.au }}">AU</a>
+    </span>
+    {% endif %}
+  </h{{ section.level }}>
+  {% endif %}
+
+  {% for block in section.content %}
+
+    {# — Речевой блок (speech) — #}
+    {% if block.type == "speech" %}
+    <div class="dialog-turn">
+      {% if block.role %}<div class="dialog-speaker">{{ block.role | upper_role }}</div>{% endif %}
+      <div class="dialog-text">
+        {% for para in block.paragraphs %}
+        {%- set ns.para_n = ns.para_n + 1 %}
+        <p id="p{{ para.dg_ref if para.dg_ref is defined else ns.para_n }}">{% if para.t is not none %}<a class="para-timecode" href="?t={{ para.t }}" data-t="{{ para.t }}" title="{{ para.t | seconds_to_ts }}">▶</a> {% endif %}{{ para.text }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# — Картинка — #}
+    {% elif block.type == "figure" %}
+    <figure id="slide-{{ block._slide_number }}">
+      <img src="{{ block.src }}" alt="{{ block.alt }}" loading="lazy">
+      <figcaption><span class="slide-label">Слайд {{ block._slide_number }}.</span> {{ block.caption }}</figcaption>
+    </figure>
+
+  {% endif %}
+  {% endfor %}
+
+  {% endfor %}
+
+  {# ═══════════════════════ ОГЛАВЛЕНИЕ СЛАЙДОВ ════════════════════════════ #}
+  <nav class="slides-toc" id="slides-toc-nav">
+    <h2 class="slides-toc-title">Список слайдов</h2>
+    <ol class="slides-toc-list">
+    {% for section in lecture.sections %}
+      {% for block in section.content %}
+        {% if block.type == "figure" %}
+        <li class="slides-toc-item">
+          <a href="#slide-{{ block._slide_number }}">
+            <span class="slides-toc-num">Слайд {{ block._slide_number }}.</span>
+            {{ block.caption }}
+          </a>
+        </li>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    </ol>
+  </nav>
+
+  {# ════════════════════════════ ГЛОССАРИЙ ════════════════════════════════ #}
+  {% if lecture.glossary %}
+  <section class="glossary" id="glossary">
+    <h2 class="glossary-title">Список терминов</h2>
+    <p class="glossary-count">{{ lecture.glossary | length }}
+      {%- set n = lecture.glossary | length -%}
+      {%- set n10 = n % 10 -%}
+      {%- set n100 = n % 100 -%}
+      {%- if n10 == 1 and n100 != 11 %} термин
+      {%- elif n10 in [2,3,4] and n100 not in [12,13,14] %} термина
+      {%- else %} терминов
+      {%- endif %}</p>
+
+    {# Алфавитный указатель — быстрые ссылки #}
+    <p class="glossary-plain">
+    {% for entry in lecture.glossary %}
+      <a href="#gterm-{{ loop.index }}"><i>{{ entry.term }}</i></a>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    </p>
+
+    <dl class="glossary-list">
+    {% for entry in lecture.glossary %}
+      <dt id="gterm-{{ loop.index }}">
+        <a href="#p{{ entry.refs[0] }}" {% if not entry.refs %}style="pointer-events:none"{% endif %}>{{ entry.term }}</a>
+        {% if entry.refs %}<span class="gterm-refs">{% for ref in entry.refs %}<a href="#p{{ ref }}">{{ loop.index }}</a>{% if not loop.last %} {% endif %}{% endfor %}</span>{% endif %}
+        {% if entry.tag %}<span class="gterm-tag">{{ entry.tag_label if entry.tag_label is defined and entry.tag_label else entry.tag }}</span>{% endif %}
+      </dt>
+      <dd>{{ entry.definition }}</dd>
+    {% endfor %}
+    </dl>
+  </section>
+  {% endif %}
+
+</div><!-- /.page -->
+</div><!-- /text-panel -->
+
+{# ═══════════════════════ ПАНЕЛЬ ВИДЕОПЛЕЕРА ════════════════════════════ #}
+{% set yt_id = lecture.meta.video.youtube | yt_id %}
+{% set rt_id = lecture.meta.video.rutube | rt_id %}
+<div id="video-panel">
+  <div id="video-sticky">
+    <div id="video-player-area">
+      <div id="video-container">
+        <iframe id="video-frame"
+          src="https://www.youtube.com/embed/{{ yt_id }}?enablejsapi=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="audio-container">
+        <span id="audio-play-icon">▶</span>
+        <audio id="audio-player" controls preload="none">
+          <source src="./src/audio/{{ lecture.meta.lesson_number | lesson_audio }}" type="audio/mpeg">
+        </audio>
+      </div>
+      <div id="video-source-tabs">
+        <button class="vsrc-btn active" data-src="yt">YouTube</button>
+        <button class="vsrc-btn" data-src="rt">Rutube</button>
+        <button class="vsrc-btn" data-src="audio">Audio</button>
+      </div>
+      <div id="video-hint" style="display:none"></div>
+    </div>
+    <div id="video-extra">
+      <div id="toc-panel"></div>
+    </div>
+  </div>
+</div><!-- /video-panel -->
+
+</div><!-- /app-layout -->
+</div><!-- /page-shell -->
+
+<script>
+(function() {
+  var YT_EMBED = 'https://www.youtube.com/embed/{{ yt_id }}?enablejsapi=1';
+  var RT_EMBED = '{{ lecture.meta.video.rutube | rt_id }}';
+  var YT_BASE  = '{{ lecture.meta.video.youtube }}';
+  var RT_BASE  = '{{ lecture.meta.video.rutube }}';
+
+  // ── Настройки видеопанели ────────────────────────────────────────────────
+  var VIDEO_RATIO_IDEAL = 0.50; // нормальная высота видео (доля от высоты панели)
+  var VIDEO_RATIO_MIN   = 0.40; // минимальная высота видео (максимальное сжатие)
+
+  var mode     = (window.innerWidth <= 900) ? 'external' : 'embedded';
+  var videoSrc = 'yt';
+  var linkMode = 'both';
+  var lastSec  = 0;
+
+  var layout    = document.getElementById('app-layout');
+  var frame     = document.getElementById('video-frame');
+  var audioEl   = document.getElementById('audio-player');
+  var videoCont = document.getElementById('video-container');
+  var audioCont = document.getElementById('audio-container');
+  var toggle        = document.getElementById('mode-toggle');
+  var modeLabel     = document.getElementById('mode-label');
+  var modeIcon      = document.getElementById('mode-icon');
+  var srcBtns       = document.querySelectorAll('.vsrc-btn');
+  var hint          = document.getElementById('video-hint');
+  var autoscrollBtn = document.getElementById('autoscroll-btn');
+  var autoscrollLbl = document.getElementById('autoscroll-label');
+  var goTopBtn      = document.getElementById('go-top-btn');
+  var goEndBtn      = document.getElementById('go-end-btn');
+  var tocNextBtn    = document.getElementById('toc-next-btn');
+  var tocPrevBtn    = document.getElementById('toc-prev-btn');
+  var tocTitleEl    = document.getElementById('toc-current-title');
+  var readPctEl     = document.getElementById('read-pct');
+  var readTimeEl    = document.getElementById('read-time');
+
+  var YT_OFFSET = {{ lecture.meta.yt_offset }};
+  var RT_OFFSET = {{ lecture.meta.rt_offset }};
+  var AU_OFFSET = {{ lecture.meta.au_offset }};
+
+  function fmtTime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    var p = function(n) { return String(n).padStart(2, '0'); };
+    return h > 0 ? h + ':' + p(m) + ':' + p(ss) : m + ':' + p(ss);
+  }
+
+  function showPlayer(src) {
+    if (src === 'audio') {
+      videoCont.style.display = 'none';
+      audioCont.classList.add('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — аудио перемотается';
+    } else {
+      videoCont.style.display = '';
+      audioCont.classList.remove('audio-visible');
+      hint.innerHTML = 'Нажмите на время <span class="timecode">00:00</span> в тексте — видео перемотается';
+    }
+  }
+
+  function updateHint(src, sec) {
+    var t = (src === 'rt') ? sec + RT_OFFSET : sec;
+    var label = (src === 'audio') ? 'аудио перемотается' : 'видео перемотается';
+    hint.innerHTML = 'Нажмите на время <span class="timecode">' + fmtTime(t) + '</span> в тексте — ' + label;
+  }
+
+  function updateLinkVisibility(lm) {
+    linkMode = lm;
+    document.body.classList.remove('links-yt-only', 'links-rt-only', 'links-audio-only');
+    if (lm === 'yt')    document.body.classList.add('links-yt-only');
+    if (lm === 'rt')    document.body.classList.add('links-rt-only');
+    if (lm === 'audio') document.body.classList.add('links-audio-only');
+  }
+
+  function reloadFrame(src) {
+    var container = document.getElementById('video-container');
+    var oldFrame = document.getElementById('video-frame');
+    oldFrame.parentNode.removeChild(oldFrame);
+    var newFrame = document.createElement('iframe');
+    newFrame.id = 'video-frame';
+    newFrame.src = src;
+    newFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    newFrame.setAttribute('allowfullscreen', '');
+    if (src.indexOf('rutube') !== -1) {
+      newFrame.addEventListener('load', function() {
+        var attempts = 0;
+        var interval = setInterval(function() {
+          try { newFrame.contentWindow.postMessage('{"method":"play"}', 'https://rutube.ru'); } catch(e) {}
+          attempts++;
+          if (attempts >= 10) clearInterval(interval);
+        }, 500);
+      });
+    }
+    container.appendChild(newFrame);
+    frame = newFrame;
+  }
+
+  function loadAt(src, sec) {
+    if (src === 'yt') {
+      reloadFrame(YT_EMBED + '&start=' + (sec + YT_OFFSET) + '&autoplay=1');
+    } else if (src === 'rt') {
+      reloadFrame(RT_EMBED + '&t=' + (sec + RT_OFFSET) + '&autoplay=1');
+    } else if (src === 'audio') {
+      audioEl.currentTime = sec + AU_OFFSET;
+      audioEl.play();
+    }
+  }
+
+  srcBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.src === videoSrc) return;
+      if (videoSrc === 'audio') audioEl.pause();
+      else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      srcBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      videoSrc = btn.dataset.src;
+      updateLinkVisibility(videoSrc);
+      showPlayer(videoSrc);
+      if (lastSec > 0) loadAt(videoSrc, lastSec);
+      else if (videoSrc === 'yt') reloadFrame(YT_EMBED);
+      else if (videoSrc === 'rt') reloadFrame(RT_EMBED);
+    });
+  });
+
+  toggle.addEventListener('click', function() {
+    mode = mode === 'embedded' ? 'external' : 'embedded';
+    applyMode();
+  });
+
+  var tocNav            = document.getElementById('toc-nav');
+  var tocPanel          = document.getElementById('toc-panel');
+  var tocOriginalParent = tocNav.parentNode;
+  var tocNextSibling    = tocNav.nextSibling;
+
+  function isMobile() { return window.innerWidth <= 900; }
+
+  function moveToc(toPanel) {
+    if (toPanel && !isMobile()) tocPanel.appendChild(tocNav);
+    else tocOriginalParent.insertBefore(tocNav, tocNextSibling);
+  }
+
+  function updateMobilePadding() {
+    var videoPanel = document.getElementById('video-panel');
+    var toolbar    = document.getElementById('toolbar');
+    if (window.innerWidth <= 900) {
+      var toolbarH = toolbar ? toolbar.offsetHeight : 30;
+      // Тулбар всегда top:0 на мобильном (задано в CSS)
+      if (mode === 'embedded') {
+        // Видео fixed под тулбаром
+        var videoPanelH = videoPanel ? videoPanel.offsetHeight : 0;
+        var totalH = toolbarH + videoPanelH;
+        document.getElementById('text-panel').style.paddingTop = totalH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (totalH + 8) + 'px';
+        });
+      } else {
+        // External: только тулбар сверху
+        document.getElementById('text-panel').style.paddingTop = toolbarH + 'px';
+        document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+          el.style.scrollMarginTop = (toolbarH + 8) + 'px';
+        });
+      }
+    } else {
+      if (toolbar) toolbar.style.top = '';
+      document.getElementById('text-panel').style.paddingTop = '';
+      document.querySelectorAll('h2, h3, [id]').forEach(function(el) {
+        el.style.scrollMarginTop = '';
+      });
+    }
+  }
+
+  function applyMode() {
+    if (mode === 'embedded') {
+      layout.classList.remove('mode-external');
+      layout.classList.add('mode-embedded');
+      modeLabel.textContent = 'Внешний плеер';
+      modeIcon.textContent = '⊞';
+      toggle.classList.remove('ext-active');
+      moveToc(true);
+    } else {
+      // Остановить всё при переходе во внешний режим
+      if (videoSrc === 'audio') {
+        audioEl.pause();
+      } else {
+        reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+      }
+      layout.classList.remove('mode-embedded');
+      layout.classList.add('mode-external');
+      modeLabel.textContent = 'Встроенный плеер';
+      modeIcon.textContent = '▶';
+      toggle.classList.add('ext-active');
+      moveToc(false);
+    }
+    requestAnimationFrame(function() {
+      _videoFitDone = false;
+      updateMobilePadding();
+      alignTocTitle();
+      fitVideoToToc(true);
+    });
+  }
+
+  window.addEventListener('resize', function() {
+    _videoFitDone = false;
+    moveToc(mode === 'embedded');
+    updateMobilePadding();
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+  });
+
+  // Выравниваем toc-current-title по левому краю текста (.page)
+  var _videoFitDone = false;
+  function fitVideoToToc(force) {
+    if (window.innerWidth <= 900) return;
+    if (_videoFitDone && !force) return;
+    // Сбрасываем фиксацию tocNav перед пересчётом
+    var tocNavReset = document.getElementById('toc-nav');
+    if (tocNavReset) tocNavReset.style.minHeight = '';
+    var sticky      = document.getElementById('video-sticky');
+    var videoExtra  = document.getElementById('video-extra');
+    var playerArea  = document.getElementById('video-player-area');
+    if (!sticky || !videoExtra || !playerArea) return;
+
+    // Высота sticky = всё доступное место в видео-панели
+    var stickyH     = sticky.clientHeight;
+    // Мерим содержимое video-extra напрямую через toc-nav + его отступы
+    var tocNavEl    = document.getElementById('toc-nav');
+    var tocPanelEl  = document.getElementById('toc-panel');
+    var extraH;
+    if (tocNavEl) {
+      // tocNav.offsetHeight + padding toc-panel + небольшой запас
+      var tocPanelStyle = tocPanelEl ? getComputedStyle(tocPanelEl) : null;
+      var tocPad = tocPanelStyle
+        ? parseInt(tocPanelStyle.paddingTop||0) + parseInt(tocPanelStyle.paddingBottom||0)
+        : 4;
+      extraH = tocNavEl.offsetHeight + tocPad + 4;
+    } else {
+      extraH = videoExtra.offsetHeight;
+    }
+    // Всё что в player-area кроме контейнера видео
+    var tabsEl      = document.getElementById('video-source-tabs');
+    var hintEl      = document.getElementById('video-hint');
+    var audioEl2    = document.getElementById('audio-container');
+    var tabsH       = tabsEl ? tabsEl.offsetHeight : 0;
+    var hintH       = hintEl ? hintEl.offsetHeight : 0;
+    var audioH      = (audioEl2 && audioEl2.style.display !== 'none') ? audioEl2.offsetHeight : 0;
+    var playerPad   = parseInt(getComputedStyle(playerArea).paddingTop)
+                    + parseInt(getComputedStyle(playerArea).paddingBottom);
+
+    // Фиксированные части player-area (табы, hint, padding) — не меняются
+    var fixedH      = tabsH + hintH + audioH + playerPad;
+
+    // Пределы высоты видео (константы — в начале скрипта)
+    var VIDEO_IDEAL = Math.round(stickyH * VIDEO_RATIO_IDEAL);
+    var VIDEO_MIN   = Math.round(stickyH * VIDEO_RATIO_MIN);
+
+    // Сколько места остаётся оглавлению при идеальной высоте видео
+    var tocAvailIdeal = stickyH - VIDEO_IDEAL - fixedH;
+
+    var finalH;
+    if (extraH <= tocAvailIdeal) {
+      // Оглавление помещается при видео 50% — оставляем 50%
+      finalH = VIDEO_IDEAL;
+    } else {
+      // Оглавление не помещается — сжимаем видео, но не ниже 40%
+      var needed = stickyH - extraH - fixedH;
+      finalH = Math.max(VIDEO_MIN, Math.round(needed));
+    }
+
+    document.documentElement.style.setProperty('--video-max-h', finalH + 'px');
+    // Фиксируем min-height у tocNav — не даём оглавлению уменьшиться при смене YT/RT/AU
+    var tocNavEl2 = document.getElementById('toc-nav');
+    if (tocNavEl2) tocNavEl2.style.minHeight = tocNavEl2.offsetHeight + 'px';
+    _videoFitDone = true;
+  }
+
+  function alignProgressToButtons() {
+    var modeBtn = document.getElementById('mode-toggle');
+    if (!modeBtn) return;
+    var w = modeBtn.offsetWidth;
+    document.documentElement.style.setProperty('--mode-btn-w', w + 'px');
+  }
+
+  function alignTocTitle() {
+    var page = document.querySelector('#text-panel .page');
+    var toolbar = document.getElementById('toolbar');
+    if (toolbar) {
+      var toolbarH = toolbar.offsetHeight;
+      document.documentElement.style.setProperty('--toolbar-h', toolbarH + 'px');
+      // scroll-padding-top чтобы якоря не уходили под тулбар
+      textPanel.style.scrollPaddingTop = toolbarH + 'px';
+      document.documentElement.style.scrollPaddingTop = toolbarH + 'px';
+      // scroll-margin-top на все заголовки
+      document.querySelectorAll('.page h2, .page h3').forEach(function(el) {
+        el.style.scrollMarginTop = (toolbarH + 4) + 'px';
+      });
+    }
+    if (!page || !toolbar) return;
+    // Вычисляем отступ по CSS-логике .page:
+    // max-width: 780px, margin: 0 auto, padding-left: 40px
+    // left = max(0, (panelWidth - 780) / 2) + 40
+    var panelWidth = textPanel.clientWidth;
+    var maxWidth = 780;
+    var pageMargin = panelWidth > maxWidth ? (panelWidth - maxWidth) / 2 : 0;
+    var pagePaddingLeft = 40;
+    var offset = pageMargin + pagePaddingLeft;
+    // Вычитаем padding самого тулбара (10px)
+    tocTitleEl.style.marginLeft = Math.max(0, offset - 10) + 'px';
+    tocTitleEl.style.paddingLeft = '0';
+  }
+
+    showPlayer('yt');
+  updateLinkVisibility('yt');
+  applyMode();
+  // Вызываем выравнивание несколько раз — layout может устаканиваться постепенно
+  requestAnimationFrame(function() {
+    alignTocTitle();
+    alignProgressToButtons();
+    fitVideoToToc();
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 200);
+    setTimeout(function() { alignTocTitle(); alignProgressToButtons(); fitVideoToToc(); }, 800);
+  });
+
+  function handleTimecodeClick(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (!a) return;
+    var href    = a.href || '';
+    var isAudio = a.classList.contains('audio-toc');
+    var isYT    = a.classList.contains('yt-toc') || (!isAudio && !a.classList.contains('rt-toc') && href.indexOf('youtu') !== -1);
+    var isRT    = a.classList.contains('rt-toc') || (!isAudio && !isYT && href.indexOf('rutube') !== -1);
+    var tMatch  = href.match(/[?&]t=(\d+)/);
+    var sec     = tMatch ? parseInt(tMatch[1]) : 0;
+
+    if (mode === 'embedded') {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSec = sec;
+      if (isAudio) {
+        if (videoSrc !== 'audio') {
+          reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === 'audio'); });
+          videoSrc = 'audio';
+          showPlayer('audio');
+        }
+        updateLinkVisibility('audio');
+        loadAt('audio', sec);
+      } else if (isYT || isRT) {
+        var targetSrc = isYT ? 'yt' : 'rt';
+        if (targetSrc !== videoSrc) {
+          if (videoSrc === 'audio') audioEl.pause();
+          else reloadFrame(videoSrc === 'yt' ? YT_EMBED : RT_EMBED);
+          srcBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.src === targetSrc); });
+          videoSrc = targetSrc;
+          showPlayer(targetSrc);
+        }
+        updateLinkVisibility(targetSrc);
+        loadAt(videoSrc, sec);
+      }
+      // Если клик из оглавления — скроллим текст к соответствующему заголовку
+      var li = a.closest('li');
+      if (li) {
+        var anchorLink = li.querySelector('a[href^="#"]');
+        if (anchorLink) {
+          var targetId = anchorLink.getAttribute('href').slice(1);
+          var targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            var scrollEl = window.innerWidth > 900 ? textPanel : document.documentElement;
+            var videoPanel = document.getElementById('video-panel');
+            var offset = targetEl.offsetTop - (window.innerWidth <= 900 ? videoPanel.offsetHeight + 8 : 8);
+            scrollEl.scrollTo({ top: offset, behavior: 'instant' });
+          }
+        }
+      } else {
+        document.getElementById('video-sticky').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    } else {
+      if (isAudio) {
+        e.preventDefault();
+        window.open('./src/audio/{{ lecture.meta.lesson_number | lesson_audio }}#t=' + sec, '_blank');
+      }
+    }
+  }
+
+  // Подсветка по клику на пункте оглавления в правой панели
+  var tocClickIdx = -1;  // индекс принудительно выбранного пункта
+  var tocClickTimer = null;
+  tocPanel.addEventListener('click', function(e) {
+    var li = e.target.closest('li');
+    if (!li) return;
+    var allLi = Array.from(tocPanel.querySelectorAll('.toc-list li'));
+    var idx = allLi.indexOf(li);
+    if (idx < 0) return;
+    tocClickIdx = idx;
+    allLi.forEach(function(el, i) { el.classList.toggle('toc-active', i === idx); });
+    // Снимаем принудительный индекс когда скролл доедет (через 1 сек)
+    if (tocClickTimer) clearTimeout(tocClickTimer);
+    tocClickTimer = setTimeout(function() { tocClickIdx = -1; }, 1000);
+  });
+
+  // Клик на пустую область audio-container — play/pause
+  var audioCont2 = document.getElementById('audio-container');
+  var audioPlayIcon = document.getElementById('audio-play-icon');
+  audioCont2.addEventListener('click', function(e) {
+    if (e.target.closest('audio')) return; // клик на сам плеер — не трогаем
+    if (audioEl.paused) {
+      audioEl.play();
+      audioPlayIcon.textContent = '⏸';
+    } else {
+      audioEl.pause();
+      audioPlayIcon.textContent = '▶';
+    }
+  });
+  audioEl.addEventListener('play',  function() {
+    audioPlayIcon.textContent = '⏸';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+  audioEl.addEventListener('pause', function() {
+    audioPlayIcon.textContent = '▶';
+    if (window.innerWidth <= 900) audioPlayIcon.style.display = 'none';
+  });
+
+  document.addEventListener('click', handleTimecodeClick);
+  document.addEventListener('touchend', function(e) {
+    var a = e.target.closest('a.yt-toc, a.rt-toc, a.audio-toc, .yt-link a');
+    if (a && mode === 'embedded') handleTimecodeClick(e);
+  }, { passive: false });
+
+  // ── Клик на таймкоде абзаца — переход на активный источник ─────────────
+  function handleParaTimecode(e) {
+    var a = e.target.closest('a.para-timecode');
+    if (!a) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var sec = parseInt(a.dataset.t, 10);
+    if (isNaN(sec)) return;
+    if (mode === 'embedded') {
+      loadAt(videoSrc, sec);
+      updateHint(videoSrc, sec);
+    } else {
+      var url;
+      if (videoSrc === 'yt') {
+        url = YT_BASE + (YT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + YT_OFFSET);
+      } else if (videoSrc === 'rt') {
+        url = RT_BASE + (RT_BASE.indexOf('?') >= 0 ? '&' : '?') + 't=' + (sec + RT_OFFSET);
+      } else {
+        url = './src/audio/{{ lecture.meta.lesson_number | lesson_audio }}#t=' + (sec + AU_OFFSET);
+      }
+      window.open(url, '_blank');
+    }
+  }
+    document.addEventListener('click', handleParaTimecode);
+  document.addEventListener('touchend', function(e) {
+    if (e.target.closest('a.para-timecode')) handleParaTimecode(e);
+  }, { passive: false });
+
+  // ── Панель инструментов ─────────────────────────────────────────────────
+
+  var textPanel = document.getElementById('text-panel');
+
+  function getScrollEl() {
+    return (window.innerWidth > 900) ? textPanel : document.documentElement;
+  }
+
+  // Текущий активный раздел
+  function getCurrentTocIndex() {
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    var best = -1;
+    for (var i = 0; i < tocItems.length; i++) {
+      var el = document.getElementById(tocItems[i].id);
+      if (!el) continue;
+      var elTop = scrollEl === textPanel
+        ? el.offsetTop - scrollEl.scrollTop
+        : el.getBoundingClientRect().top;
+      if (elTop <= toolbarH + 8) best = i;
+    }
+    return best;
+  }
+
+  // Строим структуру разделов для нумерации — синхронно с CSS-счётчиками
+  var tocItems = [];
+  (function() {
+    var h2n = 0, h3n = 0;
+    document.querySelectorAll('#toc-nav .toc-list li').forEach(function(li) {
+      var a = li.querySelector('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (!el) return;
+      var tag = el.tagName.toLowerCase();
+      var title = el.childNodes[0].textContent.trim();
+      if (tag === 'h2') {
+        h2n++; h3n = 0;
+        tocItems.push({ id: id, tag: 'h2', h2: h2n, h3: 0, title: title, parentTitle: '' });
+      } else if (tag === 'h3') {
+        h3n++;
+        var parentTitle = '';
+        // Ищем последний h2 в tocItems
+        for (var j = tocItems.length - 1; j >= 0; j--) {
+          if (tocItems[j].tag === 'h2') { parentTitle = tocItems[j].title; break; }
+        }
+        tocItems.push({ id: id, tag: 'h3', h2: h2n, h3: h3n, title: title, parentTitle: parentTitle });
+      }
+    });
+  })();
+
+  function updateTocTitle() {
+    var idx = getCurrentTocIndex();
+
+    // Подсветка активного пункта в #toc-panel при скролле
+    // (не перебиваем если был недавний клик)
+    var tocPanelItems = tocPanel.querySelectorAll('.toc-list li');
+    var activeIdx = (tocClickIdx >= 0) ? tocClickIdx : idx;
+    tocPanelItems.forEach(function(li, i) { li.classList.toggle('toc-active', i === activeIdx); });
+
+
+    if (idx < 0 || idx >= tocItems.length) { tocTitleEl.textContent = ''; return; }
+    var item = tocItems[idx];
+    var text;
+    if (item.tag === 'h2') {
+      text = item.h2 + '. ' + item.title;
+    } else {
+      text = item.h2 + '.' + item.h3 + ' ' + item.title + ' / ' + item.parentTitle;
+    }
+    tocTitleEl.textContent = text;
+  }
+
+  // Скролл к разделу по индексу
+  function scrollToTocItem(idx) {
+    if (idx < 0 || idx >= tocItems.length) return;
+    var el = document.getElementById(tocItems[idx].id);
+    if (!el) return;
+    var scrollEl = getScrollEl();
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 40;
+    if (scrollEl === textPanel) {
+      scrollEl.scrollTo({ top: el.offsetTop - toolbarH - 4, behavior: 'instant' });
+    } else {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - toolbarH - 4, behavior: 'instant' });
+    }
+  }
+
+  tocNextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx + 1);
+  });
+
+  tocPrevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var idx = getCurrentTocIndex();
+    scrollToTocItem(idx <= 0 ? 0 : idx - 1);
+  });
+
+  goTopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    getScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  goEndBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var scrollEl = getScrollEl();
+    // scrollHeight может быть неточным при первом вызове (lazy-render).
+    // Передаём заведомо большое число — браузер сам ограничит до максимума.
+    scrollEl.scrollTo({ top: 999999999, behavior: 'smooth' });
+  });
+
+  // Прогресс + время чтения
+  var WORDS_PER_MIN = 150;
+  var totalWords = (document.getElementById('text-panel').innerText.match(/\S+/g) || []).length;
+  var totalMinutes = Math.max(1, Math.round(totalWords / WORDS_PER_MIN));
+
+  var progressBarEl = document.getElementById('progress-bar');
+
+  // alignTocTitle объявлена выше
+
+  function updateProgress() {
+    var scrollEl     = getScrollEl();
+    var scrollTop    = scrollEl.scrollTop;
+    var scrollHeight = scrollEl.scrollHeight - scrollEl.clientHeight;
+    var pct = scrollHeight > 0 ? Math.round(scrollTop / scrollHeight * 100) : 0;
+    readPctEl.textContent = pct + '%';
+    progressBarEl.style.width = pct + '%';
+    var minsLeft = Math.max(1, Math.round(totalMinutes * (1 - pct / 100)));
+    readTimeEl.textContent = '\u00a0(' + minsLeft + '\u00a0мин)';
+  }
+
+  textPanel.addEventListener('scroll', updateProgress);
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  textPanel.addEventListener('scroll', updateTocTitle);
+  window.addEventListener('scroll', updateTocTitle);
+  updateTocTitle();
+
+  // Автоскроллинг
+  var autoscrollActive = false;
+  var autoscrollSpeed  = 1;   // px/frame
+  var autoscrollRaf    = null;
+
+  function autoscrollStep() {
+    if (!autoscrollActive) return;
+    var scrollEl = getScrollEl();
+    scrollEl.scrollTop += autoscrollSpeed;
+    autoscrollRaf = requestAnimationFrame(autoscrollStep);
+  }
+
+  autoscrollBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    autoscrollActive = !autoscrollActive;
+    if (autoscrollActive) {
+      autoscrollBtn.classList.add('active');
+      autoscrollLbl.textContent = '⏸ Стоп';
+      autoscrollRaf = requestAnimationFrame(autoscrollStep);
+    } else {
+      autoscrollBtn.classList.remove('active');
+      autoscrollLbl.textContent = '⏩ Авто';
+      if (autoscrollRaf) cancelAnimationFrame(autoscrollRaf);
+    }
+  });
+
+  // ── Навигация по якорям глоссария с поддержкой кнопки «Назад» ───────────
+  //
+  // Проблема: текст скроллится внутри #text-panel, а не в window.
+  // Браузер не сохраняет scrollTop панели в истории — кнопка «Назад»
+  // возвращает якорь в URL, но не позицию скролла.
+  //
+  // Решение: при клике на ссылку внутри .glossary или на .gterm-refs a
+  // сохраняем текущий scrollTop в history.state, потом скроллим к цели
+  // и пушим новую запись. При popstate — восстанавливаем scrollTop.
+
+  function scrollPanelToEl(el) {
+    var toolbar = document.getElementById('toolbar');
+    var toolbarH = toolbar ? toolbar.offsetHeight : 36;
+    var scrollEl = getScrollEl();
+    var top;
+    if (scrollEl === textPanel) {
+      top = el.offsetTop - toolbarH - 8;
+    } else {
+      top = el.getBoundingClientRect().top + window.scrollY - toolbarH - 8;
+    }
+    scrollEl.scrollTo({ top: top, behavior: 'instant' });
+  }
+
+  function getScrollTop() {
+    var scrollEl = getScrollEl();
+    return scrollEl === textPanel ? textPanel.scrollTop : window.scrollY;
+  }
+
+  document.addEventListener('click', function(e) {
+    // Ловим клики на ссылки §N в глоссарии и на ссылки термина из текста
+    var a = e.target.closest(
+      '.glossary-list .gterm-refs a[href^="#p"], ' +
+      '.glossary-plain a[href^="#gterm-"], ' +
+      '.glossary-list dt a[href^="#p"], ' +
+      '.slides-toc-list a[href^="#slide-"]'
+    );
+    if (!a) return;
+
+    var targetId = a.getAttribute('href').slice(1);
+    var targetEl = document.getElementById(targetId);
+    if (!targetEl) return;
+
+    e.preventDefault();
+
+    // Сохраняем текущую позицию в текущей записи истории
+    history.replaceState(
+      { scrollTop: getScrollTop(), fromHash: location.hash },
+      '',
+      location.href
+    );
+
+    // Пушим новую запись с якорем цели
+    // scrollTop: null означает «скролл к якорю», а не «восстановить позицию»
+    history.pushState(
+      { scrollTop: null, fromHash: '#' + targetId, prevScrollTop: getScrollTop() },
+      '',
+      '#' + targetId
+    );
+
+    scrollPanelToEl(targetEl);
+  });
+
+  // При нажатии «Назад» / «Вперёд» — восстанавливаем сохранённый scrollTop
+  window.addEventListener('popstate', function(e) {
+    var state = e.state;
+
+    // scrollTop задан — восстанавливаем позицию (возврат из слайда/глоссария)
+    if (state && state.scrollTop !== null && state.scrollTop !== undefined) {
+      var scrollEl = getScrollEl();
+      var savedTop = state.scrollTop;
+      setTimeout(function() {
+        scrollEl.scrollTo({ top: savedTop, behavior: 'instant' });
+      }, 150);
+      return;
+    }
+
+    // scrollTop не задан — переход вперёд к якорю
+    if (state && state.fromHash) {
+      var targetEl = document.getElementById(state.fromHash.slice(1));
+      if (targetEl) {
+        setTimeout(function() { scrollPanelToEl(targetEl); }, 150);
+      }
+    }
+  });
+
+
+
+})();
+</script>
+</body>
+</html>

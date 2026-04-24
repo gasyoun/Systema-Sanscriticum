@@ -1,0 +1,30 @@
+§0 <figure><img 1><figcaption>Сакральная география Индии</figcaption></figure>
+§1 <figure><img 2><figcaption>Сад камней (Кайсэки)</figcaption></figure>
+§1 <figure><img 3><figcaption>Умирающие боги: сравнительная мифология</figcaption></figure>
+§2 <figure><img 4><figcaption>Гондвана и дрейф Индийской плиты</figcaption></figure>
+§13 <figure><img 7><figcaption>Пуруша-сукта</figcaption></figure>
+§15 <figure><img 5><figcaption>Пандавы у подножия Гималаев</figcaption></figure>
+§15 <figure><img 8><figcaption>Поклонение мурти в индуистском храме</figcaption></figure>
+§16 <figure><img 6><figcaption>Бассейн реки Ганга</figcaption></figure>
+§16 <figure><img 9><figcaption>Храм Минакши и богиня</figcaption></figure>
+§16 <figure><img 10><figcaption>Дурга-пуджа</figcaption></figure>
+§17 <figure><img 11><figcaption>Джаганнатх и Чар-дхам</figcaption></figure>
+§17 <figure><img 12><figcaption>Вишну-Ананташайя</figcaption></figure>
+§17 <figure><img 15><figcaption>Сети священных мест Индии</figcaption></figure>
+§17 <figure><img 16><figcaption>Маршрут Рамы (Рамаяна)</figcaption></figure>
+§17 <figure><img 17><figcaption>Тиртхи как сеть (Махабхарата)</figcaption></figure>
+§18 <figure><img 18><figcaption>Литература</figcaption></figure>
+§20 <figure><img 19><figcaption>Книги Дычковского</figcaption></figure>
+§30 <figure><img 20><figcaption>Диана Эк: India: A Sacred Geography</figcaption></figure>
+§35 <figure><img 21><figcaption>Тиртха</figcaption></figure>
+§49 <figure><img 13><figcaption>Мост к Рамешвараму</figcaption></figure>
+§49 <figure><img 14><figcaption>12 Jyotirlinga Shrines</figcaption></figure>
+§53 <figure><img 22><figcaption>Генезис понятия тиртха</figcaption></figure>
+§56 <figure><img 23><figcaption>Тиртхи в Махабхарате</figcaption></figure>
+§62 <figure><img 24><figcaption>Тиртхи в Махабхарате</figcaption></figure>
+§63 <figure><img 25><figcaption>Пушкар в Махабхарате, гл. 80, §§38–47</figcaption></figure>
+§64 <figure><img 26><figcaption>Тиртхи из Араньякапарвы</figcaption></figure>
+§65 <figure><img 27><figcaption>Пушкар (Раджастан)</figcaption></figure>
+§67 <figure><img 28><figcaption>Шри Брахма мандир</figcaption></figure>
+§73 <figure><img 29><figcaption>Ритуалы подготовки и в ходе тиртха-ятры</figcaption></figure>
+§74 <figure><img 30><figcaption>Тарпана (по правилам, с яджнопавитой)</figcaption></figure>

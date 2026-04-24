@@ -1,0 +1,157 @@
+<style>
+*{box-sizing:border-box}
+.pipe{display:flex;flex-direction:column;align-items:center;gap:0;padding:16px 8px;font-family:var(--font-sans)}
+.row{display:flex;justify-content:center;align-items:flex-start;gap:8px;width:100%}
+.node{border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;transition:opacity .15s;border:0.5px solid;min-width:80px}
+.node:hover{opacity:0.75}
+.node-teal{background:#E1F5EE;border-color:#0F6E56;color:#085041}
+.node-purple{background:#EEEDFE;border-color:#534AB7;color:#3C3489}
+.node-amber{background:#FAEEDA;border-color:#854F0B;color:#633806}
+.node-coral{background:#FAECE7;border-color:#993C1D;color:#712B13}
+.node-green{background:#EAF3DE;border-color:#3B6D11;color:#27500A}
+.sub{font-size:11px;font-weight:400;margin-top:2px;opacity:.75}
+.script-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:10px 14px;width:100%;max-width:560px}
+.script-title{font-size:13px;font-weight:500;color:#3C3489;text-align:center;margin-bottom:8px;cursor:pointer}
+.script-title:hover{opacity:.75}
+.io-row{display:flex;gap:8px;align-items:flex-start}
+.io-col{flex:1}
+.io-label{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:5px}
+.io-items{display:flex;flex-direction:column;gap:4px}
+.divider{width:1px;background:var(--color-border-tertiary);margin:0 4px;min-height:60px}
+.arr-down{display:flex;justify-content:center;align-items:center;height:28px;color:var(--color-text-tertiary);font-size:16px}
+.correction-wrap{display:flex;align-items:flex-start;gap:0;width:100%;max-width:560px}
+.correction-main{flex:1}
+.dashed-connector{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+.dashed-line{border-left:1.5px dashed var(--color-border-secondary);height:100%;min-height:44px;width:1px}
+.dashed-arrow{color:var(--color-text-tertiary);font-size:13px;margin-top:-2px}
+.instr4-side{background:#FAECE7;border:0.5px solid #993C1D;color:#712B13;border-radius:var(--border-radius-md);padding:7px 10px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;transition:opacity .15s;margin-right:8px;margin-top:6px}
+.instr4-side:hover{opacity:.75}
+</style>
+
+<div class="pipe">
+
+  <div style="display:flex;justify-content:center;margin-bottom:0;width:100%;max-width:560px">
+    <div class="node node-teal" onclick="sendPrompt('Что содержит Deepgram JSON транскрипт?')" style="min-width:200px">
+      filename_dg.json
+      <div class="sub">транскрипт Deepgram</div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:center;gap:90px;height:22px;width:100%;max-width:500px;margin:0 auto">
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+  </div>
+
+  <div class="row" style="max-width:560px;align-items:stretch">
+    <div class="node node-coral" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Как устроена инструкция для генерации оглавления?')">инструкция 1<div class="sub">TOC</div></div>
+    <div class="node node-coral" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Как устроена инструкция для генерации глоссария?')">инструкция 2<div class="sub">глоссарий</div></div>
+    <div class="node node-coral" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Как устроена инструкция для генерации списка слайдов?')">инструкция 3<div class="sub">слайды</div></div>
+  </div>
+
+  <div style="display:flex;justify-content:center;gap:90px;height:22px;width:100%;max-width:500px;margin:0 auto">
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+    <div style="width:1px;background:var(--color-border-secondary)"></div>
+  </div>
+
+  <div class="row" style="max-width:560px;align-items:stretch">
+    <div class="node node-teal" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Что такое файл оглавления _toc.txt?')">_toc.txt<div class="sub">h1/h2/h3 + §N</div></div>
+    <div class="node node-teal" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Что такое файл глоссария _glossary.txt?')">_glossary.txt<div class="sub">термины + §N</div></div>
+    <div class="node node-teal" style="min-width:0;flex:1;font-size:11px" onclick="sendPrompt('Что такое файл слайдов _fig.txt?')">_fig.txt<div class="sub">§N + figure</div></div>
+  </div>
+
+  <div class="arr-down">↓</div>
+
+  <div class="script-box">
+    <div class="script-title" onclick="sendPrompt('Как работает скрипт make_text_from_json_dg.py?')">make_text_from_json_dg.py</div>
+    <div class="io-row">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <div class="node node-teal" style="font-size:11px;text-align:left;min-width:0">filename_dg.json</div>
+          <div class="node node-teal" style="font-size:11px;text-align:left;min-width:0">_toc.txt</div>
+          <div class="node node-teal" style="font-size:11px;text-align:left;min-width:0">_fig.txt</div>
+          <div class="node node-teal" style="font-size:11px;text-align:left;min-width:0">_glossary.txt</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <div class="node node-amber" style="font-size:11px;text-align:left;min-width:0">filename.txt<div class="sub">текст + &lt;!-- GLOSSARY --&gt;</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr-down">↓</div>
+
+  <div class="correction-wrap">
+    <div class="instr4-side" onclick="sendPrompt('Как устроена инструкция по коррекции транскрипта?')">
+      инструкция 4<div class="sub">коррекция</div>
+    </div>
+    <div class="dashed-connector">
+      <div class="dashed-line"></div>
+      <div class="dashed-arrow">→</div>
+    </div>
+    <div class="correction-main">
+      <div class="node node-coral" style="width:100%;border-radius:var(--border-radius-lg);text-align:left" onclick="sendPrompt('Что происходит на этапе коррекции транскрипта?')">
+        ИИ + ручная правка
+        <div class="sub">орфография, терминология — глоссарий не трогается</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr-down">↓</div>
+
+  <div class="script-box">
+    <div class="script-title" onclick="sendPrompt('Как работает скрипт makejson2.py?')">makejson2.py</div>
+    <div class="io-row">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <div class="node node-amber" style="font-size:11px;text-align:left;min-width:0">filename.txt (правленый)<div class="sub">с блоком GLOSSARY</div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <div class="node node-amber" style="font-size:11px;text-align:left;min-width:0">data/NN.json<div class="sub">meta + sections + glossary</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr-down">↓</div>
+
+  <div class="script-box">
+    <div class="script-title" onclick="sendPrompt('Как работает скрипт build2.py?')">build2.py</div>
+    <div class="io-row">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <div class="node node-amber" style="font-size:11px;text-align:left;min-width:0">data/NN.json</div>
+          <div class="node node-teal" style="font-size:11px;text-align:left;min-width:0">template.html.j2<div class="sub">Jinja2-шаблон</div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <div class="node node-green" style="font-size:12px;text-align:left;min-width:0">output/NN.html<div class="sub">финальная HTML-страница</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;justify-content:center">
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#E1F5EE;border:0.5px solid #0F6E56"></div>файлы / данные</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#FAECE7;border:0.5px solid #993C1D"></div>инструкции / правка</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#EEEDFE;border:0.5px solid #534AB7"></div>скрипты</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#FAEEDA;border:0.5px solid #854F0B"></div>промежуточные файлы</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#EAF3DE;border:0.5px solid #3B6D11"></div>результат</div>
+  </div>
+
+</div>

@@ -1,0 +1,23 @@
+§0 <figure><img 1><figcaption>Ведийская литература</figcaption></figure>
+§6 <figure><img 2><figcaption>Структура мира «Ригведы»</figcaption></figure>
+§22 <figure><img 3><figcaption>Категории богов по трем мирам</figcaption></figure>
+§26 <figure><img 5><figcaption>Категории существ</figcaption></figure>
+§31 <figure><img 4><figcaption>Садхьи</figcaption></figure>
+# img 4 на §31, после img 5 на §26: лектор рассматривает категории существ (§26) раньше, чем переходит к садхьям и концепциям возникновения богов (§31), хотя в PDF слайд «Садхьи» предшествует слайду «Категории существ»
+§31 <figure><img 6><figcaption>Три концепции родительства</figcaption></figure>
+§33 <figure><img 7><figcaption>Праджапати в «Ригведе»</figcaption></figure>
+§38 <figure><img 18><figcaption>Митра</figcaption></figure>
+# img 18 на §38: лектор развёрнуто говорит о Митре именно здесь («Когда же его зажигают, он становится Митрой»), хотя в PDF слайд «Митра» стоит после слайда «Варуна» (img 17, §60)
+§39 <figure><img 8><figcaption>Агни</figcaption></figure>
+§49 <figure><img 9><figcaption>Индра</figcaption></figure>
+§53 <figure><img 10><figcaption>Вритра</figcaption></figure>
+§54 <figure><img 11><figcaption>Из гимна I.32 (1, 2)</figcaption></figure>
+§55 <figure><img 12><figcaption>Из гимна I.32 (3, 4)</figcaption></figure>
+§56 <figure><img 13><figcaption>Из гимна I.32 (5, 6)</figcaption></figure>
+§57 <figure><img 14><figcaption>Из гимна I.32 (8, 11)</figcaption></figure>
+§58 <figure><img 15><figcaption>Миф о Вале</figcaption></figure>
+§59 <figure><img 16><figcaption>Другие демоны, побежденные Индрой</figcaption></figure>
+§60 <figure><img 17><figcaption>Варуна</figcaption></figure>
+§63 <figure><img 19><figcaption>Сома</figcaption></figure>
+§65 <figure><img 20><figcaption>Из гимна IV.27</figcaption></figure>
+§67 <figure><img 21><figcaption>Конец лекции</figcaption></figure>

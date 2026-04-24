@@ -1,0 +1,21 @@
+§0  <figure><img 1><figcaption>Введение в индийскую философию</figcaption></figure>
+§1  <figure><img 2><figcaption>Лекция 1. Введение: что такое индийская философия?</figcaption></figure>
+§2  <figure><img 3><figcaption>Литература</figcaption></figure>
+§4  <figure><img 4><figcaption>Bibliography</figcaption></figure>
+§5  <figure><img 5><figcaption>Название Индии: Синдху, Бхарат, Арьяварта</figcaption></figure>
+§11 <figure><img 6><figcaption>Особенности традиционной индийской культуры</figcaption></figure>
+§26 <figure><img 7><figcaption>Единство в многообразии: санскрит, социальный строй, религиозность</figcaption></figure>
+§28 <figure><img 8><figcaption>Влияние индийской культуры на другие регионы</figcaption></figure>
+§30 <figure><img 9><figcaption>Понятие «философии» в индийской традиции: анвикшики, даршана</figcaption></figure>
+§36 <figure><img 10><figcaption>Даршана: определение и три вида страдания</figcaption></figure>
+§39 <figure><img 11><figcaption>Астика и настика</figcaption></figure>
+§42 <figure><img 12><figcaption>Āstika</figcaption></figure>
+§45 <figure><img 13><figcaption>Nāstika</figcaption></figure>
+§46 <figure><img 14><figcaption>Индийские историко-философские сочинения</figcaption></figure>
+§50 <figure><img 15><figcaption>Мадхава Видьяраня и «Сарва-даршана-санграха»</figcaption></figure>
+§52 <figure><img 16><figcaption>Виды философских текстов</figcaption></figure>
+§55 <figure><img 17><figcaption>Специализация школ и культура дискуссий</figcaption></figure>
+§59 <figure><img 18><figcaption>Периодизация ИФ</figcaption></figure>
+§62 <figure><img 19><figcaption>Общие черты индийской философии</figcaption></figure>
+§64 <figure><img 20><figcaption>Функционирование ИФ</figcaption></figure>
+§66 <figure><img 21><figcaption>Запад и Восток</figcaption></figure>

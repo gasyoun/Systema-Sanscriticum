@@ -1,0 +1,624 @@
+:root {
+  --gold: #8B6914;
+  --gold-light: #C9A84C;
+  --ink: #1a1410;
+  --paper: #F8F4EC;
+  --paper-dark: #EDE7D5;
+  --muted: #6B5E45;
+  --accent: #5C3317;
+  --rule: #C9A84C44;
+  --max-width: 780px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'PT Serif', Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 17px;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
+}
+
+/* ── Page shell ── */
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 60px 40px 100px;
+}
+
+/* ── Cover ── */
+.cover {
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 40px;
+  margin-bottom: 56px;
+  text-align: center;
+}
+.cover .series {
+  font-size: 13px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+.cover h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.6rem;
+  line-height: 1.2;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.cover .subtitle {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 1.05rem;
+  margin-bottom: 20px;
+}
+.cover .meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.cover .meta a { color: var(--gold); text-decoration: none; }
+
+/* ── Section headings ── */
+h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.55rem;
+  color: var(--accent);
+  margin: 52px 0 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--gold);
+  margin: 36px 0 12px;
+}
+
+/* ── Body text ── */
+p { margin-bottom: 1.1em; }
+p + p { text-indent: 1.4em; }
+
+/* ── Block quote / cited text ── */
+blockquote {
+  border-left: 3px solid var(--gold-light);
+  margin: 24px 0 24px 0;
+  padding: 14px 24px;
+  background: var(--paper-dark);
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  color: var(--accent);
+}
+blockquote p { margin-bottom: .5em; }
+blockquote p + p { text-indent: 0; }
+
+/* ── Speaker turns ── */
+.dialog {
+  margin: 28px 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--paper-dark);
+}
+.dialog-turn {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  border-bottom: 1px solid var(--rule);
+}
+.dialog-turn:last-child { border-bottom: none; }
+.dialog-speaker {
+  padding: 14px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(139,105,20,.07);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 16px;
+}
+.dialog-text {
+  padding: 14px 20px;
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+.dialog-text p + p { text-indent: 0; margin-top: .5em; }
+
+/* ── Figures ── */
+/* ── Оглавление ── */
+.toc {
+  background: #fdf8ef;
+  border: 1px solid #c8a94e;
+  border-radius: 4px;
+  padding: 1.5rem 2rem 1.5rem 1.5rem;
+  margin: 0 0 2.5rem 0;
+  page-break-inside: avoid;
+}
+.toc-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: #7a5c1e;
+  margin: 0 0 0.8rem 0;
+  border: none;
+  padding: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.toc-list {
+  margin: 0;
+  padding: 0 0 0 1.2rem;
+  list-style: none;
+  counter-reset: toc-h2;
+}
+.toc-h2 {
+  counter-increment: toc-h2;
+  counter-reset: toc-h3;
+  margin: 0.35rem 0 0.1rem;
+  font-size: 0.95rem;
+}
+.toc-h2::before {
+  content: counter(toc-h2) ". ";
+  color: #9a7a30;
+  font-weight: 600;
+}
+.toc-h3 {
+  counter-increment: toc-h3;
+  margin: 0.15rem 0 0.15rem 1.5rem;
+  font-size: 0.88rem;
+  color: #5a4a2a;
+}
+.toc-h3::before {
+  content: counter(toc-h2) "." counter(toc-h3) " ";
+  color: #b8954a;
+  font-size: 0.82rem;
+}
+.toc a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.toc a:hover {
+  color: #c8a94e;
+  text-decoration: underline;
+}
+
+figure {
+  margin: 36px 0;
+  text-align: center;
+}
+figure img {
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+  background: var(--paper-dark);
+  /* placeholder styling until images are added */
+  min-height: 60px;
+}
+figcaption {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── Decorative rule between major sections ── */
+.section-rule {
+  text-align: center;
+  margin: 48px 0 4px;
+  color: var(--gold-light);
+  font-size: 1.1rem;
+  letter-spacing: .4em;
+}
+
+/* ── Note / annotation ── */
+.note {
+  background: rgba(139,105,20,.08);
+  border-radius: 4px;
+  padding: 12px 18px;
+  font-size: 14.5px;
+  color: var(--muted);
+  margin: 20px 0;
+}
+
+/* ── Тайм-коды и ссылки на видео ── */
+.yt-link {
+  font-family: 'PT Serif', serif;
+  font-size: 0.78em;
+  font-style: normal;
+  font-weight: 400;
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.yt-link .timecode {
+  color: #c0392b;
+}
+.yt-link a {
+  font-size: 1em;
+  text-decoration: none;
+  opacity: 0.65;
+  transition: opacity 0.15s;
+}
+.yt-link a:hover { opacity: 1; text-decoration: underline; }
+.yt-link a[href*="youtu"] { color: #c0392b; }
+.yt-link a[href*="rutube"] { color: #1a6fa8; }
+.yt-link a.audio-toc { color: #2a7a4a; font-size: 1em; }
+
+a.yt-toc {
+  font-size: 0.78em;
+  color: #c0392b;
+  opacity: 0.65;
+  text-decoration: none;
+  white-space: nowrap;
+}
+a.yt-toc:hover { opacity: 1; text-decoration: underline; }
+
+a.rt-toc {
+  font-size: 0.78em;
+  color: #1a6fa8;
+  opacity: 0.65;
+  text-decoration: none;
+  white-space: nowrap;
+}
+a.audio-toc {
+  font-size: 0.78em;
+  color: #2a7a4a;
+  opacity: 0.65;
+  text-decoration: none;
+  white-space: nowrap;
+}
+a.audio-toc:hover { opacity: 1; text-decoration: underline; }
+
+
+
+.toc .timecode {
+  font-size: 0.78em;
+  color: #c0392b;
+}
+
+@media (max-width: 600px) {
+  .page { padding: 32px 20px 60px; }
+  .dialog-turn { grid-template-columns: 1fr; }
+  .dialog-speaker { border-right: none; border-bottom: 1px solid var(--rule); }
+}
+@media print {
+  body { background: white; }
+  .page { padding: 20px; }
+}
+/* ── Десктоп: layout фиксирован по высоте окна, скроллится только text-panel ── */
+@media (min-width: 901px) {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #app-layout {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #text-panel {
+    overflow-y: auto;
+    height: 100vh;
+  }
+}
+
+/* ════════════════════════════════════════
+   ДВУХКОЛОНОЧНЫЙ LAYOUT
+════════════════════════════════════════ */
+
+#app-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ── Текстовая панель ── */
+#text-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-y: auto;
+  transition: width 0.35s ease;
+}
+#text-panel .page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* ── Видео-панель (режим embedded) ── */
+#video-panel {
+  display: none;
+  width: 50%;
+  flex-shrink: 0;
+  border-left: 2px solid var(--rule);
+  background: var(--paper);  /* фон как у текста */
+  position: relative;
+}
+#video-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* Верхняя зона плеера — темный фон */
+#video-player-area {
+  background: #1a1410;
+  padding: 6px 8px 6px;
+}
+
+/* Нижняя свободная зона — фон как у текста, со скроллом для TOC */
+#video-extra {
+  background: var(--paper);
+  flex: 1 1 0;
+  overflow-y: auto;
+  min-height: 0;
+}
+#toc-panel {
+  padding: 4px 4px 4px;
+}
+/* В режиме external TOC возвращается в text-panel — стили не меняются */
+
+/* Вкладки YT / RT */
+#video-source-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.vsrc-btn {
+  flex: 1;
+  padding: 3px 0;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #2a2420;
+  color: #aaa;
+  font-family: 'PT Serif', serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vsrc-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+}
+.vsrc-btn:hover:not(.active) {
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+}
+
+/* Обертка: ограничивает высоту плеера в 50vh */
+#video-container {
+  position: relative;
+  width: 100%;
+  max-height: 50vh;
+  /* Высота = min(ширина*9/16, 50vh) */
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+/* iframe занимает весь контейнер */
+#video-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#video-hint {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #666;
+  font-family: 'PT Serif', serif;
+  font-style: italic;
+  text-align: center;
+  line-height: 1.4;
+}
+#video-hint .timecode {
+  font-style: normal;
+}
+
+/* ── Режим embedded: показать видео-панель ── */
+#app-layout.mode-embedded #video-panel {
+  display: block;
+}
+
+/* ── Кнопка переключения режима ── */
+#mode-toggle {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px 10px 14px;
+  background: var(--accent);
+  color: #f8f4ec;
+  border: none;
+  border-radius: 30px;
+  font-family: 'PT Serif', serif;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.30);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+#mode-toggle:hover {
+  background: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+#mode-toggle.ext-active {
+  background: #2a5a3a;
+}
+#mode-toggle.ext-active:hover {
+  background: #3a7a50;
+}
+#read-pct {
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+#scroll-arrow {
+  font-size: 12px;
+  opacity: 0.75;
+}
+#scroll-arrow-link {
+  color: #f8f4ec;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+#scroll-arrow-link:hover {
+  color: var(--gold-light);
+}
+#mode-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── Адаптив: на узких экранах видео уходит под текст ── */
+
+
+/* Переносы не нужны в технических элементах */
+.yt-link, a.yt-toc, a.rt-toc, .timecode,
+#toc-panel, code, pre {
+  hyphens: none;
+  -webkit-hyphens: none;
+}
+/* ── TOC в режиме embedded: строчный список без заголовка ── */
+#toc-panel .toc-title {
+  display: none;
+}
+#toc-panel .toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  columns: 2;
+  column-gap: 16px;
+}
+#toc-panel .toc-list li {
+  display: block;
+}
+#toc-panel .toc-list li::after {
+  content: '';
+}
+#toc-panel .toc-list li a:not(.yt-toc):not(.rt-toc):not(.audio-toc) {
+  color: var(--ink);
+  text-decoration: none;
+}
+#toc-panel .toc-list li a:not(.yt-toc):not(.rt-toc):not(.audio-toc):hover {
+  text-decoration: underline;
+}
+#toc-panel {
+  padding: 4px 4px 4px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+/* ── Реплика ведущего внутри лекции ── */
+p.interjection {
+  margin: 1em 0;
+  padding: 6px 16px;
+  border-left: 2px solid var(--gold-light);
+  font-size: 0.93em;
+  color: var(--muted);
+  font-style: italic;
+}
+p.interjection .interjection-speaker {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.82em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-right: 0.4em;
+}
+/* ── Аудио-контейнер ── */
+#audio-container {
+  display: none;
+  padding: 12px 8px 8px;
+}
+#audio-player {
+  width: 100%;
+  height: 36px;
+  accent-color: var(--gold);
+}
+
+/* По умолчанию (both) — оба видны, разделитель / виден */
+.yt-link .link-sep,
+.toc-list .link-sep { display: inline; }
+
+/* Только YT */
+body.links-yt-only a.rt-toc,
+body.links-yt-only a.audio-toc,
+body.links-yt-only .yt-link a[href*="rutube"] { display: none; }
+body.links-yt-only .yt-link .link-sep,
+body.links-yt-only .toc-list .link-sep { display: none; }
+
+/* Только RT */
+body.links-rt-only a.yt-toc,
+body.links-rt-only a.audio-toc,
+body.links-rt-only .yt-link a[href*="youtu"] { display: none; }
+body.links-rt-only .yt-link .link-sep,
+body.links-rt-only .toc-list .link-sep { display: none; }
+
+/* Только Аудио */
+body.links-audio-only a.yt-toc,
+body.links-audio-only a.rt-toc,
+body.links-audio-only .yt-link a[href*="youtu"],
+body.links-audio-only .yt-link a[href*="rutube"] { display: none; }
+body.links-audio-only .yt-link .link-sep,
+body.links-audio-only .toc-list .link-sep { display: none; }
+@media (max-width: 900px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  #app-layout {
+    display: block;
+    min-height: unset;
+    height: auto;
+  }
+
+  #text-panel {
+    overflow-y: visible;
+    height: auto;
+  }
+
+  /* Видео фиксировано вверху экрана */
+  #video-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-left: none;
+    border-bottom: 2px solid var(--rule);
+    background: #1a1410;
+    z-index: 100;
+  }
+
+  #video-sticky {
+    position: static;
+    height: auto;
+  }
+
+  #video-extra { display: none; }
+
+  #mode-toggle { bottom: 16px; right: 16px; }
+}

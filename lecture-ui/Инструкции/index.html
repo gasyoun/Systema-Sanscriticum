@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пайплайна: от транскрипта к интерактивной лекции</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --border: #2a2a2a;
+  --text: #e8e4dc;
+  --muted: #6b6760;
+  --teal: #2dd4a0;
+  --teal-dim: #1a3d30;
+  --teal-mid: #0f6e56;
+  --purple: #a78bfa;
+  --purple-dim: #1e1a3a;
+  --purple-mid: #534AB7;
+  --amber: #f59e0b;
+  --amber-dim: #2a1f08;
+  --amber-mid: #854F0B;
+  --coral: #f87171;
+  --coral-dim: #2a1010;
+  --coral-mid: #993C1D;
+  --green: #6ee7b7;
+  --green-dim: #0d2b1f;
+  --font-serif: 'Spectral', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-serif);
+  min-height: 100vh;
+  padding: 40px 20px 60px;
+}
+h1 {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  text-align: center;
+  margin-bottom: 48px;
+}
+.pipe {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.node {
+  border: 0.5px solid;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  transition: all .18s;
+  text-align: center;
+  line-height: 1.4;
+}
+.node:hover { transform: translateY(-1px); filter: brightness(1.15); }
+.node .sub { font-size: 10px; opacity: .6; margin-top: 3px; font-weight: 400; }
+.node-teal  { background: var(--teal-dim);   border-color: var(--teal-mid);   color: var(--teal); }
+.node-purple{ background: var(--purple-dim);  border-color: var(--purple-mid); color: var(--purple); }
+.node-amber { background: var(--amber-dim);   border-color: var(--amber-mid);  color: var(--amber); }
+.node-coral { background: var(--coral-dim);   border-color: var(--coral-mid);  color: var(--coral); }
+.node-green { background: var(--green-dim);   border-color: #3B6D11;           color: var(--green); }
+.row { display: flex; gap: 8px; width: 100%; justify-content: center; }
+.arr { display: flex; justify-content: center; align-items: center; height: 28px; color: var(--muted); font-size: 18px; }
+.fan {
+  display: flex;
+  justify-content: center;
+  height: 22px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  margin: 0 auto;
+}
+.fan::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 1px; height: 100%;
+  background: var(--border);
+}
+.fan-3 { gap: 90px; }
+.fan-line {
+  width: 1px;
+  background: var(--border);
+  height: 100%;
+}
+.script-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  width: 100%;
+}
+.script-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--purple);
+  text-align: center;
+  margin-bottom: 12px;
+  text-decoration: none;
+  display: block;
+  transition: opacity .15s;
+}
+.script-name:hover { opacity: .75; }
+.io-grid { display: flex; gap: 8px; }
+.io-col { flex: 1; }
+.io-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.io-items { display: flex; flex-direction: column; gap: 4px; }
+.io-div { width: 1px; background: var(--border); margin: 0 4px; }
+.correction-wrap { display: flex; align-items: flex-start; gap: 0; width: 100%; }
+.instr4 {
+  background: var(--coral-dim);
+  border: 0.5px solid var(--coral-mid);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--coral);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-right: 10px;
+  margin-top: 4px;
+  transition: all .18s;
+  flex-shrink: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+.instr4:hover { filter: brightness(1.15); }
+.dashed-conn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  flex-shrink: 0;
+}
+.dashed-line {
+  width: 1px;
+  border-left: 1.5px dashed #3a3028;
+  height: 30px;
+}
+.dashed-arr { color: var(--muted); font-size: 12px; margin-top: -2px; transform: rotate(-90deg); display: inline-block; }
+.corr-main { flex: 1; }
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 36px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  border: 0.5px solid;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+<h1>Пайплайна · от транскрипта к интерактивной лекции</h1>
+
+<div class="pipe">
+
+  <a href="deepgram-json.html" class="node node-teal" style="min-width:220px">
+    filename_dg.json
+    <div class="sub">транскрипт Deepgram</div>
+  </a>
+
+  <div class="fan fan-3" style="max-width:420px">
+    <div class="fan-line"></div>
+    <div class="fan-line"></div>
+    <div class="fan-line"></div>
+  </div>
+
+  <div class="row" style="max-width:540px">
+    <a href="instr1-toc.html"      class="node node-coral" style="flex:1;min-width:0;font-size:11px">инструкция 1<div class="sub">TOC</div></a>
+    <a href="instr2-glossary.html" class="node node-coral" style="flex:1;min-width:0;font-size:11px">инструкция 2<div class="sub">глоссарий</div></a>
+    <a href="instr3-figures.html"  class="node node-coral" style="flex:1;min-width:0;font-size:11px">инструкция 3<div class="sub">слайды</div></a>
+  </div>
+
+  <div class="fan fan-3" style="max-width:420px">
+    <div class="fan-line"></div>
+    <div class="fan-line"></div>
+    <div class="fan-line"></div>
+  </div>
+
+  <div class="row" style="max-width:540px">
+    <a href="toc-txt.html"      class="node node-teal" style="flex:1;min-width:0;font-size:11px">_toc.txt<div class="sub">h1/h2/h3 + §N</div></a>
+    <a href="glossary-txt.html" class="node node-teal" style="flex:1;min-width:0;font-size:11px">_glossary.txt<div class="sub">термины + §N</div></a>
+    <a href="fig-txt.html"      class="node node-teal" style="flex:1;min-width:0;font-size:11px">_fig.txt<div class="sub">§N + figure</div></a>
+  </div>
+
+  <div class="arr">↓</div>
+
+  <div class="script-card">
+    <a href="script-make-text.html" class="script-name">make_text_from_json_dg.py</a>
+    <div class="io-grid">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <a href="deepgram-json.html"  class="node node-teal"  style="font-size:10px;text-align:left">filename_dg.json</a>
+          <a href="toc-txt.html"        class="node node-teal"  style="font-size:10px;text-align:left">_toc.txt</a>
+          <a href="fig-txt.html"        class="node node-teal"  style="font-size:10px;text-align:left">_fig.txt</a>
+          <a href="glossary-txt.html"   class="node node-teal"  style="font-size:10px;text-align:left">_glossary.txt</a>
+        </div>
+      </div>
+      <div class="io-div"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <a href="filename-txt.html" class="node node-amber" style="font-size:10px;text-align:left">filename.txt<div class="sub">текст + GLOSSARY</div></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr">↓</div>
+
+  <div class="correction-wrap">
+    <a href="instr4-correction.html" class="instr4">инструкция 4<div class="sub">коррекция</div></a>
+    <div class="dashed-conn">
+      <div class="dashed-line"></div>
+      <span class="dashed-arr">▶</span>
+    </div>
+    <div class="corr-main">
+      <a href="correction-step.html" class="node node-coral" style="display:block;text-align:left;font-size:12px">
+        ИИ + ручная правка
+        <div class="sub">орфография, терминология — глоссарий не трогается</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="arr">↓</div>
+
+  <div class="script-card">
+    <a href="script-makejson.html" class="script-name">makejson2.py</a>
+    <div class="io-grid">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <a href="filename-txt.html" class="node node-amber" style="font-size:10px;text-align:left">filename.txt (правленый)<div class="sub">с блоком GLOSSARY</div></a>
+        </div>
+      </div>
+      <div class="io-div"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <a href="nn-json.html" class="node node-amber" style="font-size:10px;text-align:left">data/NN.json<div class="sub">meta + sections + glossary</div></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr">↓</div>
+
+  <div class="script-card">
+    <a href="script-build2.html" class="script-name">build2.py</a>
+    <div class="io-grid">
+      <div class="io-col">
+        <div class="io-label">вход</div>
+        <div class="io-items">
+          <a href="nn-json.html"    class="node node-amber" style="font-size:10px;text-align:left">data/NN.json</a>
+          <a href="template-j2.html"   class="node node-teal"  style="font-size:10px;text-align:left">template.html.j2<div class="sub">Jinja2-шаблон</div></a>
+        </div>
+      </div>
+      <div class="io-div"></div>
+      <div class="io-col">
+        <div class="io-label">выход</div>
+        <div class="io-items">
+          <a href="output-html.html" class="node node-green" style="font-size:10px;text-align:left">output/NN.html<div class="sub">финальная страница</div></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1a3d30;border-color:#0F6E56"></div>файлы / данные</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2a1010;border-color:#993C1D"></div>инструкции / правка</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1e1a3a;border-color:#534AB7"></div>скрипты</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2a1f08;border-color:#854F0B"></div>промежуточные файлы</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0d2b1f;border-color:#3B6D11"></div>результат</div>
+  </div>
+
+</div>
+</body>
+</html>

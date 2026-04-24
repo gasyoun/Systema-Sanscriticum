@@ -1,0 +1,35 @@
+§0 <figure><img 1><figcaption>Рывок к решающему обособлению: философия классической йоги</figcaption></figure>
+§1 <figure><img 2><figcaption>«КЛАССИЧЕСКАЯ» ЙОГА</figcaption></figure>
+§5 <figure><img 3><figcaption>Единственная философская школа йоги</figcaption></figure>
+§8 <figure><img 4><figcaption>Patañjali</figcaption></figure>
+§13 <figure><img 5><figcaption>Мангала-шлока</figcaption></figure>
+§15 <figure><img 6><figcaption>Один в трех ликах</figcaption></figure>
+§19 <figure><img 7><figcaption>Тексты</figcaption></figure>
+§24 <figure><img 8><figcaption>Структура «Йога-сутр»</figcaption></figure>
+§27 <figure><img 9><figcaption>Связь йоги с санкхьей: сходства и отличия</figcaption></figure>
+§33 <figure><img 10><figcaption>Онтология</figcaption></figure>
+§34 <figure><img 11><figcaption>Время</figcaption></figure>
+§36 <figure><img 12><figcaption>Три вида паринамы</figcaption></figure>
+§38 <figure><img 13><figcaption>Пракрити как видимое для пуруши</figcaption></figure>
+§47 <figure><img 14><figcaption>Прасава и пратипрасава: страдание и свёртывание</figcaption></figure>
+§49 <figure><img 15><figcaption>Иерархия уровней</figcaption></figure>
+§50 <figure><img 16><figcaption>Таттвы: санкхья Ишваракришны и йога Патанджали</figcaption></figure>
+§55 <figure><img 17><figcaption>Теория причинности</figcaption></figure>
+§58 <figure><img 18><figcaption>Карма</figcaption></figure>
+§64 <figure><img 19><figcaption>Пять базовых аффектов (kleśa)</figcaption></figure>
+§65 <figure><img 20><figcaption>Клеши как ложные наполнители сознания</figcaption></figure>
+§68 <figure><img 21><figcaption>Санскары, вритти и цикл кармы</figcaption></figure>
+§72 <figure><img 22><figcaption>Pañcavṛtti</figcaption></figure>
+§76 <figure><img 23><figcaption>Страдание и бесстрастие</figcaption></figure>
+§77 <figure><img 24><figcaption>Пуруша</figcaption></figure>
+§81 <figure><img 25><figcaption>Īśvara</figcaption></figure>
+§84 <figure><img 26><figcaption>Определение йоги</figcaption></figure>
+§86 <figure><img 27><figcaption>Пять ментальных уровней (cittabhūmi)</figcaption></figure>
+§93 <figure><img 28><figcaption>Йога действия (kriyā-yoga)</figcaption></figure>
+§94 <figure><img 29><figcaption>Восьмичленная (aṣṭāṅga) йога</figcaption></figure>
+§95 <figure><img 30><figcaption>Основные обеты, 5 шт</figcaption></figure>
+§96 <figure><img 31><figcaption>Плоды ямы: цитаты из йога-сутр</figcaption></figure>
+§100 <figure><img 32><figcaption>Дополнительные обеты, 5 шт.</figcaption></figure>
+§103 <figure><img 33><figcaption>Асана</figcaption></figure>
+§104 <figure><img 34><figcaption>Пранаяма</figcaption></figure>
+§106 <figure><img 35><figcaption>Пратьяхара</figcaption></figure>
