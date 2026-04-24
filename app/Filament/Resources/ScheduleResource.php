@@ -34,6 +34,14 @@ class ScheduleResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->label('Описание / Ссылка')
                             ->columnSpanFull(),
+                            
+                        Forms\Components\TextInput::make('link')
+                            ->label('Ссылка на Zoom / Google Meet')
+                            ->placeholder('https://zoom.us/j/...')
+                            ->url()
+                            ->maxLength(1024)
+                            ->prefixIcon('heroicon-m-video-camera')
+                            ->columnSpanFull(),    
 
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -79,6 +87,12 @@ class ScheduleResource extends Resource
                     ->label('Группа')
                     ->badge()
                     ->placeholder('Для всех'),
+                    
+                Tables\Columns\IconColumn::make('link')
+                    ->label('Zoom')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-video-camera')
+                    ->falseIcon('heroicon-o-minus'),    
 
                 Tables\Columns\ColorColumn::make('color')
                     ->label('Цвет'),

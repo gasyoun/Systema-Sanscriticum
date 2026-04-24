@@ -16,5 +16,6 @@ class VerifyCsrfToken extends Middleware
         '/vk-webhook', 
         '/api/vk',
         '/telegram-webhook', // Заодно и Телеграм добавим, чтобы точно не блокировало
+        'api/heartbeat',
     ];
 }

@@ -1,0 +1,32 @@
+[90m= [39m[34;4mApp\Models\User[39;24m {#7225
+    [34mid[39m: [35m6198[39m,
+    [34mname[39m: "[32mЛихварь Ольга Владиславовна[39m",
+    [34memail[39m: "[32mLikhvar@list.ru[39m",
+    [34mis_admin[39m: [35m0[39m,
+    [34mglobal_status[39m: "[32mОбычный студент[39m",
+    [34mnote[39m: """
+      [32mTelegram: @divyaratna[39m\n
+      \n
+      [32m[Доступ отправлен: 23.04.2026 16:43][39m
+      """,
+    [34memail_verified_at[39m: [36mnull[39m,
+    #[33mpassword[39m: "[32m$2y$12$pt9HkQuGQQDIYxhB9F.dYu5HeLXuZ65awMw/teuK0aMDnDgbJCZe6[39m",
+    #[33mremember_token[39m: [36mnull[39m,
+    [34mlast_login_at[39m: "[32m2026-04-23 22:42:11[39m",
+    [34mlast_activity_at[39m: "[32m2026-04-23 22:43:44[39m",
+    [34mlast_login_ip[39m: "[32m109.252.187.191[39m",
+    [34mlogin_count[39m: [35m1[39m,
+    [34mtotal_time_spent[39m: [35m0[39m,
+    [34mtotal_lessons_opened[39m: [35m0[39m,
+    [34mcreated_at[39m: "[32m2026-04-22 09:02:59[39m",
+    [34mupdated_at[39m: "[32m2026-04-23 22:42:11[39m",
+    [34mphone[39m: "",
+    [34mtelegram_id[39m: [36mnull[39m,
+    [34mvk_id[39m: [36mnull[39m,
+    [34mtelegram_auth_token[39m: [36mnull[39m,
+    [34msource[39m: [36mnull[39m,
+    [34mutm_campaign[39m: [36mnull[39m,
+    [34msocial_links[39m: [36mnull[39m,
+    [34mimage_id[39m: [36mnull[39m,
+  }
+

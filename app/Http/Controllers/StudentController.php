@@ -130,7 +130,21 @@ class StudentController extends Controller
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке ' . $lesson->block_number . '. Для просмотра необходимо оплатить доступ.');
         }
-        // ---------------------------
+        // ==========================================
+    // --- ТРЕКИНГ ПРОСМОТРА УРОКА (async) ---
+    // ==========================================
+    // Не dispatchим для админов (они просматривают уроки для проверки, это не учебная активность)
+    if (!$user->is_admin) {
+        \App\Jobs\TrackLessonViewJob::dispatch(
+            userId:           $user->id,
+            lessonId:         $lesson->id,
+            courseId:         $course->id,
+            laravelSessionId: request()->session()->getId(),
+            url:              request()->fullUrl(),
+            ipAddress:        request()->ip(),
+        );
+    }
+    // ==========================================
         
         $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
 

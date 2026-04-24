@@ -29,6 +29,12 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'global_status',
         'note',
+        'last_login_at',
+        'last_activity_at',
+        'last_login_ip',
+        'login_count',
+        'total_time_spent',
+        'total_lessons_opened',
     ];
 
     protected $hidden = [
@@ -42,6 +48,11 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'last_login_at'        => 'datetime',
+            'last_activity_at'     => 'datetime',
+            'login_count'          => 'integer',
+            'total_time_spent'     => 'integer',
+            'total_lessons_opened' => 'integer',
         ];
     }
 
@@ -205,4 +216,46 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(ChatMessage::class);
     }
+    
+    /**
+ * Все сессии пользователя.
+ */
+public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(UserSession::class)->orderByDesc('started_at');
+}
+
+/**
+ * Текущая активная сессия (если есть).
+ */
+public function activeSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+{
+    return $this->hasOne(UserSession::class)->where('is_active', true)->latestOfMany('started_at');
+}
+
+/**
+ * Все просмотры уроков.
+ */
+public function lessonViews(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(LessonView::class);
+}
+
+/**
+ * Сырые события активности.
+ */
+public function activityEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(ActivityEvent::class);
+}
+
+/**
+ * Проверка: онлайн ли студент сейчас.
+ * Онлайн = была активность не более 5 минут назад.
+ */
+public function isOnline(): bool
+{
+    return $this->last_activity_at !== null
+        && $this->last_activity_at->gt(now()->subMinutes(5));
+}
 }

@@ -15,10 +15,18 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        Registered::class => [
-            SendEmailVerificationNotification::class,
-        ],
-    ];
+    Registered::class => [
+        SendEmailVerificationNotification::class,
+    ],
+
+    // --- ТРЕКИНГ АКТИВНОСТИ ---
+    \Illuminate\Auth\Events\Login::class => [
+        \App\Listeners\UserLoginListener::class,
+    ],
+    \Illuminate\Auth\Events\Logout::class => [
+        \App\Listeners\UserLogoutListener::class,
+    ],
+];
 
     /**
      * Register any events for your application.
