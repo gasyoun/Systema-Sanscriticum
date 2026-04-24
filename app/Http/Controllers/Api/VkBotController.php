@@ -22,7 +22,7 @@ class VkBotController extends Controller
         // 1. ПОДТВЕРЖДЕНИЕ СЕРВЕРА ДЛЯ ВК
         if (($data['type'] ?? '') === 'confirmation') {
             // Принудительно отдаем как простой текст без HTML и JSON
-            return response((string) env('VK_CONFIRM_CODE'), 200)
+            return response((string) config('services.vk.confirm_code'), 200)
                         ->header('Content-Type', 'text/plain');
         }
 
@@ -50,7 +50,7 @@ class VkBotController extends Controller
                 return response('ok', 200);
             }
 
-            $adminId = env('ADMIN_TELEGRAM_ID');
+            $adminId = config('services.telegram.admin_id');
 
             // Сохраняем вопрос в базу
             ChatMessage::create([
@@ -63,8 +63,10 @@ class VkBotController extends Controller
             // ПРОВЕРКА: Если бот на паузе (отвечает человек)
             if (Cache::has("chat_human_vk_{$vkId}")) {
                 if ($adminId) {
-                    $adminUrl = env('APP_URL') . "/admin/dialogs?user_id={$user->id}";
-                    $alertMessage = "🔵 <b>Новое сообщение из ВК от {$user->name}:</b>\n\n<i>{$text}</i>\n\n👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
+                    $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                    $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
+                    $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+                    $alertMessage = "🔵 <b>Новое сообщение из ВК от {$safeName}:</b>\n\n<i>{$safeText}</i>\n\n👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
                     $this->sendTelegramAlert($adminId, $alertMessage); // Шлем пуш админу в ТГ
                 }
                 return response('ok', 200);
@@ -78,8 +80,10 @@ class VkBotController extends Controller
                     $this->sendVkMessage($vkId, "🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!");
                     
                     if ($adminId) {
-                        $adminUrl = env('APP_URL') . "/admin/dialogs?user_id={$user->id}";
-                        $this->sendTelegramAlert($adminId, "🔔 <b>СТУДЕНТ ИЗ ВК ЗОВЕТ КУРАТОРА!</b>\nИмя: {$user->name}\nВопрос: {$text}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
+                        $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                        $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
+                        $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+                        $this->sendTelegramAlert($adminId, "🔔 <b>СТУДЕНТ ИЗ ВК ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeText}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
                     }
                     return response('ok', 200);
                 }
@@ -89,8 +93,8 @@ class VkBotController extends Controller
             $this->sendVkMessage($vkId, "⏳ Изучаю манускрипты...");
 
             try {
-                $folderId = env('YANDEX_FOLDER_ID');
-                $apiKey = env('YANDEX_API_KEY');
+                $folderId = config('services.yandex.folder_id');
+                $apiKey = config('services.yandex.api_key');
 
                 // БАЗА ЗНАНИЙ
                 $knowledgeBase = '
@@ -212,7 +216,7 @@ class VkBotController extends Controller
     {
         // ДОБАВЛЕНО asForm() - чтобы ВК понял наш токен!
         $response = Http::asForm()->post('https://api.vk.com/method/messages.send', [
-            'access_token' => env('VK_BOT_TOKEN'),
+            'access_token' => config('services.vk.bot_token'),
             'v' => '5.131',
             'user_id' => $vkId,
             'message' => $text,
@@ -229,11 +233,15 @@ class VkBotController extends Controller
     // Уведомление Админа в Телеграм
     private function sendTelegramAlert($chatId, $text)
     {
-        $token = env('TELEGRAM_BOT_TOKEN');
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        $token = config('services.telegram.bot_token');
+        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
             'text' => $text,
             'parse_mode' => 'HTML',
         ]);
+
+        if (!$response->successful()) {
+            Log::error('Telegram alert error', ['status' => $response->status(), 'body' => $response->body()]);
+        }
     }
 }

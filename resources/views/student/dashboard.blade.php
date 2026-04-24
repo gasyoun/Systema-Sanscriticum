@@ -124,7 +124,7 @@
             </div>
 
             @if(!auth()->user() || !auth()->user()->vk_id)
-                <a href="https://vk.me/club{{ env('VK_GROUP_ID') }}?ref={{ auth()->id() }}" target="_blank" class="relative z-10 shrink-0 px-6 py-3.5 bg-[#0077FF] hover:bg-[#005ce6] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,119,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,119,255,0.4)] hover:-translate-y-0.5 flex items-center w-full sm:w-auto justify-center">
+                <a href="https://vk.me/club{{ config('services.vk.group_id') }}?ref={{ auth()->id() }}" target="_blank" class="relative z-10 shrink-0 px-6 py-3.5 bg-[#0077FF] hover:bg-[#005ce6] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,119,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,119,255,0.4)] hover:-translate-y-0.5 flex items-center w-full sm:w-auto justify-center">
                     Подключить ВК-бота
                 </a>
             @endif

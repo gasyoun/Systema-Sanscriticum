@@ -20,7 +20,7 @@ class TelegramController extends Controller
         ]);
 
         // 3. Достаем имя бота из .env
-        $botUsername = env('TELEGRAM_BOT_USERNAME');
+        $botUsername = config('services.telegram.bot_username');
 
         // 4. Формируем ту самую магическую Deep Link ссылку
         $url = "https://t.me/{$botUsername}?start={$token}";

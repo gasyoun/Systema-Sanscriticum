@@ -28,9 +28,12 @@ class Announcement extends Model
     protected function casts(): array
     {
         return [
-            'target_groups' => 'array', // Магия перевода из базы в массив
-            'is_published' => 'boolean',
-            'send_to_email' => 'boolean',
+            'target_groups'  => 'array',
+            'target_courses' => 'array',
+            'is_published'   => 'boolean',
+            'send_to_email'     => 'boolean',
+            'send_to_telegram'  => 'boolean',
+            'send_to_vk'        => 'boolean',
         ];
     }
 }
