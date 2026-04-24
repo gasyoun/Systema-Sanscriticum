@@ -42,19 +42,14 @@ final class HeartbeatController extends Controller
         // Находим запись просмотра. Если её нет — значит что-то пошло не так
         // (студент должен был сначала открыть урок → TrackLessonViewJob создать запись).
         // Но может быть race condition — job ещё не успел. Создадим запись здесь.
-        $view = LessonView::where('user_id', $user->id)
-            ->where('lesson_id', $lessonId)
-            ->first();
+        $lesson = Lesson::find($lessonId);
+        if (!$lesson) {
+            return response()->json(['ok' => false], 404);
+        }
 
-        if ($view === null) {
-            $lesson = Lesson::find($lessonId);
-            if (!$lesson) {
-                return response()->json(['ok' => false], 404);
-            }
-
-            $view = LessonView::create([
-                'user_id'            => $user->id,
-                'lesson_id'          => $lesson->id,
+        $view = LessonView::firstOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lessonId],
+            [
                 'course_id'          => $lesson->course_id,
                 'first_opened_at'    => now(),
                 'last_opened_at'     => now(),
@@ -62,8 +57,8 @@ final class HeartbeatController extends Controller
                 'open_count'         => 1,
                 'total_time_on_page' => 0,
                 'is_completed'       => false,
-            ]);
-        }
+            ]
+        );
 
         // Server-side throttle: не даём клиенту долбить чаще чем раз в MIN_INTERVAL_SECONDS
         // Защита от агрессивной накрутки time-on-page.
@@ -92,7 +87,7 @@ final class HeartbeatController extends Controller
             ->where('id', $view->id)
             ->update([
                 'last_heartbeat_at'  => now(),
-                'total_time_on_page' => DB::raw("total_time_on_page + {$delta}"),
+                'total_time_on_page' => DB::raw('total_time_on_page + ' . (int) $delta),
             ]);
 
         // Заодно тикаем heartbeat активной сессии (чтобы cron-закрыватель не убил её).

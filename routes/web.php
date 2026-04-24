@@ -74,7 +74,7 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     
     Route::get('/home', function () {
         $user = auth()->user();
-        if ($user->is_admin || $user->email === 'pe4kinsmart@gmail.com') {
+        if ($user->is_admin) {
             return redirect('/admin');
         }
         return redirect()->route('student.dashboard');
@@ -103,7 +103,9 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');
         
-    Route::get('/admin/leads/export', [LeadController::class, 'export'])->name('leads.export');
+    Route::get('/admin/leads/export', [LeadController::class, 'export'])
+        ->middleware('admin')
+        ->name('leads.export');
 
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
 });
@@ -123,9 +125,7 @@ Route::get('/force-download/{file}', function (string $file) {
     return Storage::disk('public')->download($path);
 })->middleware('auth')->name('force-download');
 
-Route::get('/files-debug', function () {
-    // ... ваш код дебага без изменений ...
-});
+// Debug-маршрут удалён из production (см. BUGS_REPORT.md #1.1)
 
 
 // --- ОТПРАВКА ФОРМЫ ---

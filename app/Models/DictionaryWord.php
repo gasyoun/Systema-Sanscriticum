@@ -9,7 +9,14 @@ class DictionaryWord extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'dictionary_id',
+        'devanagari',
+        'iast',
+        'cyrillic',
+        'translation',
+        'page',
+    ];
 
     // Обратная связь: Каждое слово принадлежит какому-то одному словарю
     public function dictionary()

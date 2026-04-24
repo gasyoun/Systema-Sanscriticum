@@ -9,7 +9,16 @@ class ChatMessage extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'role',
+        'text',
+        'is_read',
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
 
     // Сообщение принадлежит студенту
     public function user()

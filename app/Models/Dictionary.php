@@ -9,8 +9,11 @@ class Dictionary extends Model
 {
     use HasFactory;
 
-    // Разрешаем массовое заполнение всех полей
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'description',
+        'is_active',
+    ];
 
     // Подсказываем Laravel, что это логический тип (true/false)
     protected $casts = [

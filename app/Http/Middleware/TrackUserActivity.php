@@ -43,11 +43,6 @@ final class TrackUserActivity
 
     private function track(Request $request): void
 {
-    \Illuminate\Support\Facades\Log::info('TRACK STEP 1: entered', [
-        'url'  => $request->getRequestUri(),
-        'auth' => Auth::check(),
-    ]);
-
     if (!Auth::check()) {
         return;
     }

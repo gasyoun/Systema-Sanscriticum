@@ -16,7 +16,7 @@ class ShopController extends Controller
     $search = $request->input('search');
 
     $courses = Course::where('is_visible', true)
-        ->when($search, fn ($q, $s) => $q->where('title', 'LIKE', "%{$s}%"))
+        ->when($search, fn ($q, $s) => $q->where('title', 'LIKE', '%' . str_replace(['%', '_'], ['\%', '\_'], $s) . '%'))
         ->with(['tariffs' => function ($query) {
             $query->where('is_active', true)->orderBy('price', 'asc');
         }])

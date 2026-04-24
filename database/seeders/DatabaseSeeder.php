@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'pe4kin.85@mail.ru'],
             [
                 'name' => 'Admin',
-                'password' => Hash::make('240885'), // <-- ЗАМЕНИ 'password' НА СВОЙ ПАРОЛЬ
+                'password' => Hash::make(env('ADMIN_PASSWORD', 'change-me-immediately')),
             ]
         );
     }

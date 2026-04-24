@@ -12,10 +12,10 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        // Добавляем вебхуки в исключения защиты CSRF
-        '/vk-webhook', 
-        '/api/vk',
-        '/telegram-webhook', // Заодно и Телеграм добавим, чтобы точно не блокировало
-        'api/heartbeat',
+        '/api/vk-webhook',
+        '/api/telegram/webhook',
+        '/api/webhooks/tochka',
+        '/api/sync-lessons',
+        '/api/heartbeat',
     ];
 }
