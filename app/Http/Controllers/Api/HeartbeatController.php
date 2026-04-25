@@ -39,29 +39,8 @@ final class HeartbeatController extends Controller
         // Финальная защита от "watched: 99999" помимо FormRequest правил.
         $delta = min($delta, self::MAX_DELTA_SECONDS);
 
-        // Находим запись просмотра. Если её нет — значит что-то пошло не так
-        // (студент должен был сначала открыть урок → TrackLessonViewJob создать запись).
-        // Но может быть race condition — job ещё не успел. Создадим запись здесь.
-        $lesson = Lesson::find($lessonId);
-        if (!$lesson) {
-            return response()->json(['ok' => false], 404);
-        }
-
-        $view = LessonView::firstOrCreate(
-            ['user_id' => $user->id, 'lesson_id' => $lessonId],
-            [
-                'course_id'          => $lesson->course_id,
-                'first_opened_at'    => now(),
-                'last_opened_at'     => now(),
-                'last_heartbeat_at'  => now(),
-                'open_count'         => 1,
-                'total_time_on_page' => 0,
-                'is_completed'       => false,
-            ]
-        );
-
-        // Server-side throttle: не даём клиенту долбить чаще чем раз в MIN_INTERVAL_SECONDS
-        // Защита от агрессивной накрутки time-on-page.
+        // Server-side throttle вынесен ВЫШЕ любых SQL-запросов: троттлированные
+        // вызовы должны быть максимально дешёвыми (Redis-only).
         $throttleKey = "heartbeat:{$user->id}:{$lessonId}";
 
         try {
@@ -74,12 +53,34 @@ final class HeartbeatController extends Controller
             );
 
             if (!$acquired) {
-                // Слишком часто — вежливо отвечаем OK, но не обновляем
                 return response()->json(['ok' => true, 'throttled' => true]);
             }
         } catch (\Throwable $e) {
             Log::warning('Heartbeat throttle Redis failed', ['error' => $e->getMessage()]);
             // Даже если Redis упал — не блокируем heartbeat
+        }
+
+        // Cold-path: lesson_views ещё не существует — нужен course_id из урока.
+        // На hot-path (запись уже есть) Lesson::find НЕ выполняется.
+        $view = LessonView::firstOrNew(
+            ['user_id' => $user->id, 'lesson_id' => $lessonId]
+        );
+
+        if (!$view->exists) {
+            $lesson = Lesson::find($lessonId);
+            if (!$lesson) {
+                return response()->json(['ok' => false], 404);
+            }
+
+            $view->fill([
+                'course_id'          => $lesson->course_id,
+                'first_opened_at'    => now(),
+                'last_opened_at'     => now(),
+                'last_heartbeat_at'  => now(),
+                'open_count'         => 1,
+                'total_time_on_page' => 0,
+                'is_completed'       => false,
+            ])->save();
         }
 
         // Инкрементим счётчик и пишем heartbeat. Одним запросом, через DB::table для скорости.

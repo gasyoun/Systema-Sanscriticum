@@ -63,4 +63,9 @@ return [
         'agent_id'  => env('YANDEX_AGENT_ID'),
     ],
 
+    'admin' => [
+        'email'    => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
 ];

@@ -28,10 +28,19 @@ class VkBotController extends Controller
 
         // 2. ОБРАБОТКА НОВОГО СООБЩЕНИЯ
         if (($data['type'] ?? '') === 'message_new') {
-            $messageObj = $data['object']['message'];
-            $vkId = $messageObj['from_id'];
-            $text = $messageObj['text'] ?? '';
-            $ref = $messageObj['ref'] ?? null; // ID студента из ссылки vk.me
+            $messageObj = $data['object']['message'] ?? null;
+            $vkId = is_array($messageObj) ? ($messageObj['from_id'] ?? null) : null;
+
+            // Малформированный payload (битый callback / сканер / replay): отвечаем 200
+            // чтобы VK не уходил в бесконечный retry, и логируем для диагностики.
+            if (!is_int($vkId) && !ctype_digit((string) $vkId)) {
+                Log::warning('VK webhook: malformed message_new payload', ['data' => $data]);
+                return response('ok', 200);
+            }
+
+            $vkId = (int) $vkId;
+            $text = is_string($messageObj['text'] ?? null) ? $messageObj['text'] : '';
+            $ref  = $messageObj['ref'] ?? null; // ID студента из ссылки vk.me
 
             $user = User::where('vk_id', $vkId)->first();
             
