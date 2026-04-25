@@ -49,7 +49,7 @@ class LessonController extends Controller
                         'video_url' => $course['videoLinks'][$date] ?? null,
                         'rutube_url' => $course['rutubeLinks'][$date] ?? null,
                         'topic' => $course['lessonTopics'][$date] ?? null,
-                        'flash_cards' => isset($course['flashCards'][$date]) ? json_encode($course['flashCards'][$date]) : null,
+                        'flash_cards' => $course['flashCards'][$date] ?? null,
                     ]
                 );
             }

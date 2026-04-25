@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Внутренние security-аудиты и заметки — не коммитятся в репозиторий
+BUGS_REPORT.md
+SECURITY_AUDIT*.md

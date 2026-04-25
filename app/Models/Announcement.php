@@ -14,6 +14,7 @@ class Announcement extends Model
         'title',
         'preview',
         'target_groups',
+        'target_courses',
         'image_path',
         'content',
         'button_text',

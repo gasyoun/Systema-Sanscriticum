@@ -30,6 +30,7 @@ class Lesson extends Model
     // Обязательно добавь это, чтобы JSON превращался в массив
     protected $casts = [
         'attachments' => 'array',
+        'flash_cards' => 'array',
         'is_published' => 'boolean',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
     ];
