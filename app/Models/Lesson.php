@@ -15,19 +15,22 @@ class Lesson extends Model
         'slug',
         'topic',
         'lesson_date',
-        'video_url',   // (старое поле, если было)
-        'rutube_url',  // Rutube
-        'youtube_url', // <--- ВОТ НАШ НОВИЧОК
-        'attachments', // Файлы
+        'video_url',
+        'rutube_url',
+        'youtube_url',
+        'attachments',
         'course_id',
+        'group_id',
         'is_published',
-        'block_number', // <--- ВОТ ПОЛЕ ДЛЯ БЛОКА (МОДУЛЯ)
+        'block_number',
         'transcript_file',
+        'flash_cards',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
     protected $casts = [
         'attachments' => 'array',
+        'flash_cards' => 'array',
         'is_published' => 'boolean',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
     ];

@@ -42,7 +42,30 @@ return [
     ],
     
     'n8n' => [
-    'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
-],
-    
+        'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
+    ],
+
+    'telegram' => [
+        'bot_token'    => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'admin_id'     => env('ADMIN_TELEGRAM_ID'),
+    ],
+
+    'vk' => [
+        'bot_token'    => env('VK_BOT_TOKEN'),
+        'group_id'     => env('VK_GROUP_ID'),
+        'confirm_code' => env('VK_CONFIRM_CODE'),
+    ],
+
+    'yandex' => [
+        'api_key'   => env('YANDEX_API_KEY'),
+        'folder_id' => env('YANDEX_FOLDER_ID'),
+        'agent_id'  => env('YANDEX_AGENT_ID'),
+    ],
+
+    'admin' => [
+        'email'    => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
 ];
