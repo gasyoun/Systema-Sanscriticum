@@ -70,7 +70,7 @@ class TelegramWebhookController extends Controller
     // ==========================================
     private function processStudentQuestion($user, $question, $chatId)
     {
-        $adminId = env('ADMIN_TELEGRAM_ID');
+        $adminId = config('services.telegram.admin_id');
 
         // 1. СОХРАНЯЕМ ВОПРОС СТУДЕНТА В БАЗУ
         ChatMessage::create([
@@ -83,10 +83,11 @@ class TelegramWebhookController extends Controller
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {
-                // Генерируем ссылку в админку (замени URL на свой реальный домен)
-                $adminUrl = env('APP_URL') . "/admin/dialogs?user_id={$user->id}";
-                
-                $alertMessage = "🔴 <b>Новое сообщение от {$user->name}:</b>\n\n<i>{$question}</i>\n\n";
+                $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+
+                $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
+                $safeQuestion = htmlspecialchars($question, ENT_QUOTES, 'UTF-8');
+                $alertMessage = "🔴 <b>Новое сообщение от {$safeName}:</b>\n\n<i>{$safeQuestion}</i>\n\n";
                 $alertMessage .= "👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
                 
                 $this->sendMessage($adminId, $alertMessage);
@@ -102,8 +103,10 @@ class TelegramWebhookController extends Controller
                 $this->sendMessage($chatId, "🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!");
                 
                 if ($adminId) {
-                    $adminUrl = env('APP_URL') . "/admin/dialogs?user_id={$user->id}";
-                    $this->sendMessage($adminId, "🔔 <b>СТУДЕНТ ЗОВЕТ КУРАТОРА!</b>\nИмя: {$user->name}\nВопрос: {$question}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
+                    $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                    $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
+                    $safeQuestion = htmlspecialchars($question, ENT_QUOTES, 'UTF-8');
+                    $this->sendMessage($adminId, "🔔 <b>СТУДЕНТ ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeQuestion}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
                 }
                 return;
             }
@@ -112,9 +115,9 @@ class TelegramWebhookController extends Controller
         $this->sendMessage($chatId, "⏳ <i>Изучаю манускрипты...</i>");
 
         try {
-            $folderId = env('YANDEX_FOLDER_ID');
-            $apiKey = env('YANDEX_API_KEY');
-            $agentId = env('YANDEX_AGENT_ID'); // Твой ID агента (fvt...)
+            $folderId = config('services.yandex.folder_id');
+            $apiKey = config('services.yandex.api_key');
+            $agentId = config('services.yandex.agent_id');
 
             // ==========================================
             // МАГИЯ ПАМЯТИ: Формируем единый текст диалога
@@ -187,12 +190,16 @@ class TelegramWebhookController extends Controller
     // ==========================================
     private function sendMessage($chatId, $text)
     {
-        $token = env('TELEGRAM_BOT_TOKEN');
-        
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        $token = config('services.telegram.bot_token');
+
+        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
             'text' => $text,
             'parse_mode' => 'HTML',
         ]);
+
+        if (!$response->successful()) {
+            Log::error('Telegram API error', ['status' => $response->status(), 'body' => $response->body()]);
+        }
     }
 }

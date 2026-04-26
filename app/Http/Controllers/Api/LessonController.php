@@ -23,7 +23,14 @@ class LessonController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $courses = $request->all();
+        $courses = $request->validate([
+            '*.id'           => 'required|integer',
+            '*.title'        => 'required|string|max:255',
+            '*.videoLinks'   => 'nullable|array',
+            '*.rutubeLinks'  => 'nullable|array',
+            '*.lessonTopics' => 'nullable|array',
+            '*.flashCards'   => 'nullable|array',
+        ]);
 
         foreach ($courses as $course) {
             $courseId = $course['id'];
@@ -42,7 +49,7 @@ class LessonController extends Controller
                         'video_url' => $course['videoLinks'][$date] ?? null,
                         'rutube_url' => $course['rutubeLinks'][$date] ?? null,
                         'topic' => $course['lessonTopics'][$date] ?? null,
-                        'flash_cards' => isset($course['flashCards'][$date]) ? json_encode($course['flashCards'][$date]) : null,
+                        'flash_cards' => $course['flashCards'][$date] ?? null,
                     ]
                 );
             }
