@@ -491,21 +491,21 @@
 
     {# — Речевой блок (speech) — #}
     {% if block.type == "speech" %}
-    <div class="dialog-turn">
+    <div class="dialog-turn" data-section-id="{{ section.id }}" data-block-index="{{ loop.index0 }}" data-block-type="speech">
       {% if block.role %}<div class="dialog-speaker">{{ block.role | upper_role }}</div>{% endif %}
       <div class="dialog-text">
         {% for para in block.paragraphs %}
         {%- set ns.para_n = ns.para_n + 1 %}
-        <p id="p{{ para.dg_ref if para.dg_ref is defined else ns.para_n }}">{% if para.t is not none %}<a class="para-timecode" href="?t={{ para.t }}" data-t="{{ para.t }}" title="{{ para.t | seconds_to_ts }}">▶</a> {% endif %}{{ para.text }}</p>
+        <p id="p{{ para.dg_ref if para.dg_ref is defined else ns.para_n }}" data-para-index="{{ loop.index0 }}">{% if para.t is not none %}<a class="para-timecode" href="?t={{ para.t }}" data-t="{{ para.t }}" title="{{ para.t | seconds_to_ts }}">▶</a> {% endif %}<span class="para-text">{{ para.text }}</span></p>
         {% endfor %}
       </div>
     </div>
 
     {# — Картинка — #}
     {% elif block.type == "figure" %}
-    <figure id="slide-{{ block._slide_number }}">
+    <figure id="slide-{{ block._slide_number }}" data-section-id="{{ section.id }}" data-block-index="{{ loop.index0 }}" data-block-type="figure">
       <img src="{{ block.src }}" alt="{{ block.alt }}" loading="lazy">
-      <figcaption><span class="slide-label">Слайд {{ block._slide_number }}.</span> {{ block.caption }}</figcaption>
+      <figcaption><span class="slide-label">Слайд {{ block._slide_number }}.</span> <span class="figure-caption">{{ block.caption }}</span></figcaption>
     </figure>
 
   {% endif %}
@@ -639,9 +639,9 @@
   var readPctEl     = document.getElementById('read-pct');
   var readTimeEl    = document.getElementById('read-time');
 
-  var YT_OFFSET = {{ lecture.meta.yt_offset }};
-  var RT_OFFSET = {{ lecture.meta.rt_offset }};
-  var AU_OFFSET = {{ lecture.meta.au_offset }};
+  var YT_OFFSET = {{ lecture.meta.yt_offset | default(0) }};
+  var RT_OFFSET = {{ lecture.meta.rt_offset | default(0) }};
+  var AU_OFFSET = {{ lecture.meta.au_offset | default(0) }};
 
   function fmtTime(s) {
     var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;

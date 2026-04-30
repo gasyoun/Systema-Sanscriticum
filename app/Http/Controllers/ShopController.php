@@ -53,9 +53,12 @@ class ShopController extends Controller
         abort(404, 'Курс не найден');
     }
 
-    $course->load(['tariffs' => function ($query) {
+    $course->load([
+    'tariffs' => function ($query) {
         $query->where('is_active', true)->orderBy('price', 'asc');
-    }]);
+    },
+    'teacher', // подгружаем преподавателя одним запросом
+]);
 
     // Собираем массив купленных тарифов ОДНИМ запросом (без N+1)
     $purchasedKeys = [];
