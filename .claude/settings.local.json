@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr:*)",
+      "Bash(where gh:*)",
+      "Bash(grep:*)",
+      "Bash(php artisan:*)",
+      "Bash(php -l database/seeders/DatabaseSeeder.php)",
+      "Bash(php -l app/Models/Announcement.php)",
+      "Bash(php -l app/Models/Lesson.php)",
+      "Bash(php -l app/Models/User.php)",
+      "Bash(php -l app/Http/Controllers/Api/LessonController.php)",
+      "Bash(git rm *)",
+      "Bash(php -l app/Http/Controllers/Api/HeartbeatController.php)",
+      "Bash(php -l app/Http/Middleware/VerifyCsrfToken.php)",
+      "Bash(php -l app/Http/Controllers/Api/VkBotController.php)",
+      "Bash(php -l database/migrations/2026_04_24_200000_add_missing_indexes.php)",
+      "Bash(php -l database/migrations/2026_04_25_120100_drop_redundant_fk_indexes.php)",
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $app = require '\\\\''bootstrap/app.php'\\\\''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); var_dump\\(Schema::hasColumn\\('\\\\''users'\\\\'', '\\\\''is_lecture_editor'\\\\''\\)\\);')"
+    ]
+  }
+}

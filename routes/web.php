@@ -140,6 +140,21 @@ Route::get('/payment/success', [PaymentController::class, 'success'])->name('pay
 Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
 
 
+// --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
+Route::middleware(['web', 'auth'])
+    ->prefix('editor/lectures/{draft}')
+    ->name('editor.lecture.')
+    ->group(function () {
+        Route::get('preview', [\App\Http\Controllers\Editor\LectureDraftController::class, 'preview'])
+            ->name('preview');
+        Route::get('asset/{path}', [\App\Http\Controllers\Editor\LectureDraftController::class, 'asset'])
+            ->where('path', '.*')
+            ->name('asset');
+        Route::post('patch', [\App\Http\Controllers\Editor\LectureDraftController::class, 'patch'])
+            ->name('patch');
+    });
+
+
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

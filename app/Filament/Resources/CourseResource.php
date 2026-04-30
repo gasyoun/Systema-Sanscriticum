@@ -108,6 +108,45 @@ class CourseResource extends Resource
                                     ->onColor('success')
                                     ->inline(false),    
                             ]),
+
+                        // БЛОК: КАТЕГОРИИ И ФОРМАТ
+Forms\Components\Grid::make(2)
+    ->schema([
+        Forms\Components\Select::make('categories')
+            ->label('Категории')
+            ->multiple()
+            ->relationship('categories', 'name')
+            ->preload()
+            ->searchable()
+            ->createOptionForm([
+                // Создание категории прямо из формы курса — быстрый сценарий
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn ($state, Forms\Set $set) =>
+                        $set('slug', Str::slug($state))
+                    ),
+                Forms\Components\TextInput::make('slug')
+                    ->required()
+                    ->unique('categories', 'slug'),
+                Forms\Components\TextInput::make('icon')
+                    ->placeholder('fa-om'),
+                Forms\Components\ColorPicker::make('color'),
+            ])
+            ->helperText('Курс может относиться к нескольким категориям (Философия, Лингвистика и т.д.)')
+            ->columnSpanFull(),
+
+        Forms\Components\Radio::make('format')
+            ->label('Формат курса')
+            ->options([
+                'live'     => '🔴 Идёт сейчас (live-поток)',
+                'recorded' => '📼 В записи (доступен в любое время)',
+            ])
+            ->default('recorded')
+            ->required()
+            ->inline(false)
+            ->columnSpanFull(),
+    ]),    
                     ]),
                     
                 // ==========================================

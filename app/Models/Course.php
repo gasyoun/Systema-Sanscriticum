@@ -27,7 +27,19 @@ class Course extends Model
         'salary_value',
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
+        'format',
     ];
+
+    public function categories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+{
+    return $this->belongsToMany(Category::class, 'category_course');
+}
+
+// Хелпер для шаблонов — лейблы статуса
+public function isLive(): bool
+{
+    return $this->format === 'live';
+}
 
     // Подсказываем Laravel типы данных для переключателей
     protected $casts = [
