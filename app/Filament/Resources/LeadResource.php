@@ -42,10 +42,17 @@ class LeadResource extends Resource
                         Forms\Components\Select::make('landing_page_id')
                             ->relationship('landingPage', 'title')
                             ->label('Лендинг'),
+                            
+                        Forms\Components\TextInput::make('social')
+    ->label('Telegram / VK / Instagram')
+    ->maxLength(255)
+    ->placeholder('@username или ссылка')
+    ->columnSpanFull(),    
+    
                         Forms\Components\Toggle::make('is_promo_agreed')
                             ->label('Согласие на рассылку'),
                     ])->columns(2),
-
+                    
                 Forms\Components\Section::make('Маркетинг и Аналитика')
                     ->collapsible()
                     ->collapsed()
@@ -94,6 +101,15 @@ class LeadResource extends Resource
                     ->icon('heroicon-m-envelope')
                     ->copyable()
                     ->searchable(),
+                    
+                Tables\Columns\TextColumn::make('social')
+    ->label('Соц. сеть')
+    ->searchable()
+    ->limit(30)
+    ->copyable()
+    ->copyMessage('Скопировано')
+    ->placeholder('—')
+    ->toggleable(isToggledHiddenByDefault: true),    
                     
                 // В LeadResource.php -> table() -> columns([...])
                 Tables\Columns\IconColumn::make('is_promo_agreed')
