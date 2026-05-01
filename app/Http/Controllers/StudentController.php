@@ -125,8 +125,11 @@ class StudentController extends Controller
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $courseSlug);
         $requiredTariff = 'block_' . $lesson->block_number;
 
+        // Открытые уроки/вебинары доступны любому залогиненному без покупки
+        $isFreeLesson = (bool) $lesson->is_free;
+
         // Проверяем наличие 'full' или конкретного 'block_X'
-        if (!in_array('full', $unlockedTariffs) && !in_array($requiredTariff, $unlockedTariffs)) {
+        if (!$isFreeLesson && !in_array('full', $unlockedTariffs) && !in_array($requiredTariff, $unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке ' . $lesson->block_number . '. Для просмотра необходимо оплатить доступ.');
         }
@@ -335,6 +338,22 @@ public function downloadCourseMaterials(string $slug, CourseMaterialsArchiver $a
         return null;
     }
     
+    /**
+     * Раздел «Открытые уроки / вебинары» — доступен любому залогиненному студенту.
+     * Показывает все уроки с is_free=true (независимо от покупок и групп).
+     */
+    public function openLessons()
+    {
+        $lessons = Lesson::free()
+            ->where('is_published', true)
+            ->with('course:id,title,slug')
+            ->orderByDesc('lesson_date')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('student.open-lessons', compact('lessons'));
+    }
+
     public function messages()
     {
         $user = auth()->user();
