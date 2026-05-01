@@ -22,6 +22,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'is_admin',
+        'is_lecture_editor',
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_auth_token',   // <-- Добавили для Telegram
         'vk_id',
@@ -48,6 +49,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_lecture_editor' => 'boolean',
             'last_login_at'        => 'datetime',
             'last_activity_at'     => 'datetime',
             'login_count'          => 'integer',
@@ -61,7 +63,10 @@ class User extends Authenticatable implements FilamentUser
     // ==========================================
     public function canAccessPanel(Panel $panel): bool
     {
-        return (bool) $this->is_admin;
+        return match ($panel->getId()) {
+            'editor' => (bool) ($this->is_admin || $this->is_lecture_editor),
+            default  => (bool) $this->is_admin,
+        };
     }
 
     // ==========================================

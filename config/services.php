@@ -68,4 +68,12 @@ return [
         'password' => env('ADMIN_PASSWORD'),
     ],
 
+    'lecture_builder' => [
+        'url'        => env('LECTURE_BUILDER_URL', 'http://127.0.0.1:5001'),
+        'token'      => env('LECTURE_BUILDER_TOKEN'),
+        'timeout'    => (int) env('LECTURE_BUILDER_TIMEOUT', 180),
+        // AI-задачи могут идти долго (особенно correct: N запросов подряд)
+        'ai_timeout' => (int) env('LECTURE_BUILDER_AI_TIMEOUT', 600),
+    ],
+
 ];

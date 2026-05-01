@@ -92,7 +92,14 @@ class UserResource extends Resource
                             ->helperText('Дает полный доступ в панель управления')
                             ->onColor('success')
                             ->offColor('danger')
-                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),  
+                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+
+                        Forms\Components\Toggle::make('is_lecture_editor')
+                            ->label('Редактор лекций')
+                            ->helperText('Доступ к панели сборки лекций (без доступа в админку)')
+                            ->onColor('success')
+                            ->offColor('gray')
+                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
                     ])->columns(1),
             ]);
     }
@@ -185,6 +192,13 @@ class UserResource extends Resource
         ->label('Админ')
         ->boolean()
         ->alignment('center')
+        ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+
+    Tables\Columns\IconColumn::make('is_lecture_editor')
+        ->label('Ред. лекций')
+        ->boolean()
+        ->alignment('center')
+        ->toggleable(isToggledHiddenByDefault: true)
         ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
 ])
             ->defaultSort('last_activity_at', 'desc')

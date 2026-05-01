@@ -8,6 +8,9 @@
 .env
 .env.backup
 .env.production
+/lecture-builder/.env
+/lecture-builder/.venv/
+__pycache__/
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
