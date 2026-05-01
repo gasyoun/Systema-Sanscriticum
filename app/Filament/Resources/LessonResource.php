@@ -52,8 +52,14 @@ class LessonResource extends Resource
                     
                 Forms\Components\DateTimePicker::make('lesson_date')
                     ->label('Дата и время урока')
-                    ->required() 
-                    ->default(now()), 
+                    ->required()
+                    ->default(now()),
+
+                Forms\Components\Toggle::make('is_free')
+                    ->label('Открытый урок / вебинар')
+                    ->helperText('Доступен любому залогиненному студенту без покупки курса. Уроки появятся в кабинете в разделе «Открытые уроки».')
+                    ->onColor('success')
+                    ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('topic')
                     ->label('Описание / Тема')
@@ -115,19 +121,30 @@ class LessonResource extends Resource
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('block_number')
                     ->label('Блок')
-                    ->badge() 
+                    ->badge()
                     ->color('info')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('title')
                     ->label('Урок')
                     ->searchable(),
+
+                Tables\Columns\IconColumn::make('is_free')
+                    ->label('Открытый')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-lock-open')
+                    ->falseIcon('heroicon-o-lock-closed')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
             ])
             ->filters([
-                //
+                Tables\Filters\TernaryFilter::make('is_free')
+                    ->label('Открытость')
+                    ->trueLabel('Только открытые')
+                    ->falseLabel('Только платные'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

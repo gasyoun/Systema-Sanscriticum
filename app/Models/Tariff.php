@@ -15,6 +15,7 @@ class Tariff extends Model
         'title',
         'type',
         'block_number',
+        'course_block_id',
         'price',
         'old_price',
         'description',
@@ -31,6 +32,11 @@ class Tariff extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function block(): BelongsTo
+    {
+        return $this->belongsTo(CourseBlock::class, 'course_block_id');
     }
 
     /**

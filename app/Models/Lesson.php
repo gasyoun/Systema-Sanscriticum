@@ -22,6 +22,7 @@ class Lesson extends Model
         'course_id',
         'group_id',
         'is_published',
+        'is_free',
         'block_number',
         'transcript_file',
         'flash_cards',
@@ -32,11 +33,18 @@ class Lesson extends Model
         'attachments' => 'array',
         'flash_cards' => 'array',
         'is_published' => 'boolean',
+        'is_free' => 'boolean',
+        'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
     ];
 
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_free', true);
     }
 }
