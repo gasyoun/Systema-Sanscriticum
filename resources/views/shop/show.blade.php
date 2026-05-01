@@ -102,8 +102,12 @@
         </section>
 
         {{-- ───── 2. ТАРИФЫ ───── --}}
+        @php
+            $hasCurrentBlock = !empty($currentBlockNumber);
+            $defaultTab = $hasCurrentBlock ? 'blocks' : 'full';
+        @endphp
         <section id="tariffs" class="mb-16 lg:mb-20"
-                 x-data="{ tab: 'full' }"
+                 x-data="{ tab: '{{ $defaultTab }}' }"
                  x-init="if({{ $course->tariffs->where('type', '!=', 'block')->count() }} === 0) tab = 'blocks'">
 
             <h2 class="text-3xl font-bold text-white mb-8">Выберите вариант участия</h2>
@@ -115,7 +119,16 @@
 
             @php
                 $fullTariffs = $course->tariffs->where('type', '!=', 'block');
-                $blockTariffs = $course->tariffs->where('type', 'block')->sortBy('block_number');
+                $blockTariffs = $course->tariffs->where('type', 'block')->sortBy('block_number')->values();
+
+                // Поднимаем актуальный блок в начало, чтобы он был сразу виден
+                if (!empty($currentBlockNumber)) {
+                    $currentTariff = $blockTariffs->firstWhere('block_number', $currentBlockNumber);
+                    if ($currentTariff) {
+                        $rest = $blockTariffs->reject(fn ($t) => $t->block_number === $currentBlockNumber);
+                        $blockTariffs = collect([$currentTariff])->concat($rest)->values();
+                    }
+                }
             @endphp
 
             @if($course->tariffs->count() > 0)
@@ -141,7 +154,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-2"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="grid grid-cols-1 md:grid-cols-2 gap-6" x-cloak>
+                     class="grid grid-cols-1 gap-6 {{ $fullTariffs->count() > 1 ? 'md:grid-cols-2' : 'md:max-w-2xl md:mx-auto' }}" x-cloak>
 
                     @foreach($fullTariffs as $tariff)
                         @php
@@ -151,7 +164,7 @@
                             $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
                         @endphp
 
-                        <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24]' }} transition-all duration-300 relative overflow-hidden group">
+                        <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24] hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(232,92,36,0.35)]' }} transition-all duration-300 relative overflow-hidden group">
 
                             @if($isPurchased)
                                 <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
@@ -226,7 +239,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-2"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" x-cloak>
+                     class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr" x-cloak>
 
                     @foreach($blockTariffs as $tariff)
                         @php
@@ -234,16 +247,39 @@
                             $isPurchased = in_array($tariffKey, $purchasedKeys, true);
                             $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
                             $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $defaultBlockTitle = 'Блок ' . $tariff->block_number;
+                            $hasCustomTitle = $tariff->title && trim($tariff->title) !== $defaultBlockTitle;
+                            $isCurrent = !$isPurchased && $tariff->block_number === ($currentBlockNumber ?? null);
+
+                            if ($isPurchased) {
+                                $borderClasses = 'border-emerald-500/50';
+                            } elseif ($isCurrent) {
+                                $borderClasses = 'border-[#E85C24] shadow-[0_0_0_1px_rgba(232,92,36,0.4),0_12px_40px_-12px_rgba(232,92,36,0.45)] hover:-translate-y-1';
+                            } else {
+                                $borderClasses = 'border-[#1F2636] hover:border-[#38BDF8]/60 hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(56,189,248,0.3)]';
+                            }
                         @endphp
 
-                        <div class="bg-[#111622] rounded-xl p-5 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#1F2636] hover:border-[#38BDF8]/50' }} transition-all duration-300 group flex flex-col">
+                        <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-xl p-5 border {{ $borderClasses }} transition-all duration-300 group flex flex-col relative">
 
-                            <div class="flex justify-between items-start mb-3 gap-2">
-                                <div class="min-w-0">
-                                    <span class="inline-block text-[10px] font-black text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded border border-[#38BDF8]/20 mb-2 tracking-widest uppercase">
+                            @if($isCurrent)
+                                <div class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5 bg-[#E85C24] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md shadow-[#E85C24]/30">
+                                    <span class="relative flex h-1.5 w-1.5">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                                    </span>
+                                    Сейчас идёт
+                                </div>
+                            @endif
+
+                            <div class="flex justify-between items-start mb-3 gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <span class="inline-block text-[10px] font-black {{ $isCurrent ? 'text-[#E85C24] bg-[#E85C24]/10 border-[#E85C24]/30' : 'text-[#38BDF8] bg-[#38BDF8]/10 border-[#38BDF8]/20' }} px-2 py-1 rounded border {{ $hasCustomTitle ? 'mb-2' : '' }} tracking-widest uppercase">
                                         БЛОК {{ $tariff->block_number }}
                                     </span>
-                                    <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
+                                    @if($hasCustomTitle)
+                                        <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
+                                    @endif
                                 </div>
 
                                 <div class="text-right whitespace-nowrap shrink-0">
@@ -262,7 +298,7 @@
                                             -{{ $discountPercent }}%
                                         </div>
                                     @else
-                                        <div class="text-xl font-black text-white mt-3">
+                                        <div class="text-xl font-black text-white">
                                             {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
                                         </div>
                                     @endif
@@ -282,7 +318,7 @@
                                     </a>
                                 @else
                                     <a href="{{ route('checkout.show', $tariff->id) }}"
-                                       class="w-full flex justify-center items-center py-3 px-4 bg-[#1F2636] text-white text-sm font-bold rounded-lg hover:bg-[#38BDF8] hover:text-[#0A0D14] transition-colors">
+                                       class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-[#E85C24] hover:bg-[#d64e1c] text-white shadow-md shadow-[#E85C24]/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
                                         Оплатить модуль
                                     </a>
                                 @endif

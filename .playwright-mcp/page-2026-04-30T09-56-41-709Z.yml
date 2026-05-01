@@ -1,0 +1,118 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Общество ревнителей санскрита Ревнители санскрита Магазин курсов" [ref=e4] [cursor=pointer]:
+        - /url: http://localhost:8000/shop
+        - img "Общество ревнителей санскрита" [ref=e5]
+        - generic [ref=e6]:
+          - generic [ref=e7]: Ревнители санскрита
+          - generic [ref=e8]: Магазин курсов
+      - navigation [ref=e9]:
+        - link "Все курсы" [ref=e10] [cursor=pointer]:
+          - /url: http://localhost:8000/shop
+        - link "Блог" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:8000/s
+        - link "О школе" [ref=e12] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - text: 
+          - link "" [ref=e15] [cursor=pointer]:
+            - /url: tel:+79181925084
+            - generic [ref=e16]: 
+          - text: 
+          - link "" [ref=e17] [cursor=pointer]:
+            - /url: mailto:rusamskrtam@yandex.ru
+            - generic [ref=e18]: 
+        - button " Войти" [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: 
+          - generic [ref=e22]: Войти
+  - main [ref=e23]:
+    - generic [ref=e24]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]: Онлайн-программа
+            - generic [ref=e32]:
+              - generic [ref=e33]: 
+              - text: 16 лекций
+          - heading "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [level=1] [ref=e34]
+          - generic [ref=e35]:
+            - link "Выбрать тариф" [ref=e36] [cursor=pointer]:
+              - /url: "#tariffs"
+            - link "Все курсы" [ref=e37] [cursor=pointer]:
+              - /url: http://localhost:8000/shop
+          - link " Преподаватель Трефилова Елена Вячеславовна " [ref=e38] [cursor=pointer]:
+            - /url: http://localhost:8000/shop?teacher=6
+            - generic [ref=e40]: 
+            - generic [ref=e41]:
+              - generic [ref=e42]: Преподаватель
+              - generic [ref=e43]: Трефилова Елена Вячеславовна
+            - generic [ref=e44]: 
+        - generic [ref=e47]: 
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - heading "О курсе" [level=2] [ref=e52]
+          - paragraph [ref=e54]: Подробное описание курса скоро появится.
+        - generic [ref=e55]:
+          - heading "Выберите вариант участия" [level=2] [ref=e56]
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - generic [ref=e62]: 
+              - paragraph [ref=e63]:
+                - button "Войдите" [ref=e64] [cursor=pointer]
+                - text: ", чтобы увидеть купленные курсы и персональные скидки."
+            - generic [ref=e65]:
+              - paragraph [ref=e66]:
+                - generic [ref=e67]: 
+                - text: Важно
+              - paragraph [ref=e68]: Если Вы раньше покупали наши курсы — не регистрируйтесь самостоятельно, напишите куратору. Он создаст аккаунт вручную, и все ваши доступы сохранятся.
+            - generic [ref=e69]:
+              - paragraph [ref=e70]: Связаться с куратором
+              - generic [ref=e71]:
+                - link " Telegram" [ref=e72] [cursor=pointer]:
+                  - /url: https://t.me/rusamskrtam
+                  - generic [ref=e73]: 
+                  - generic [ref=e74]: Telegram
+                - link " ВКонтакте" [ref=e75] [cursor=pointer]:
+                  - /url: https://vk.me/event89658969
+                  - generic [ref=e76]: 
+                  - generic [ref=e77]: ВКонтакте
+          - generic [ref=e78]:
+            - button "Весь курс" [ref=e79] [cursor=pointer]
+            - button "По модулям" [ref=e80] [cursor=pointer]
+          - generic [ref=e82]:
+            - generic [ref=e83]: ВЫГОДНО
+            - heading "Весь курс целиком" [level=4] [ref=e84]
+            - generic [ref=e86]: 12 000 ₽
+            - link "Записаться на курс" [ref=e87] [cursor=pointer]:
+              - /url: http://localhost:8000/checkout/1406
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e90]: 
+            - heading "Вечный доступ" [level=3] [ref=e91]
+            - paragraph [ref=e92]: Материалы курса остаются с вами навсегда. Пересматривайте лекции в любое время.
+          - generic [ref=e93]:
+            - generic [ref=e94]: 
+            - heading "Онлайн формат" [level=3] [ref=e95]
+            - paragraph [ref=e96]: Учитесь из любой точки мира в своем собственном темпе, без привязки к жесткому расписанию.
+  - contentinfo [ref=e97]:
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - paragraph [ref=e101]: Глубокое изучение санскрита в традиции живых учителей.
+        - generic [ref=e102]:
+          - button "Политика конфиденциальности" [ref=e103] [cursor=pointer]
+          - button "Публичная оферта" [ref=e104] [cursor=pointer]
+          - paragraph [ref=e105]: © 2026 Все права защищены
+        - generic [ref=e106]:
+          - link "" [ref=e107] [cursor=pointer]:
+            - /url: https://vk.com/club88831040
+            - generic [ref=e108]: 
+          - link "" [ref=e109] [cursor=pointer]:
+            - /url: https://t.me/samskrtamru
+            - generic [ref=e110]: 
+          - link "" [ref=e111] [cursor=pointer]:
+            - /url: https://samskrte.ru
+            - generic [ref=e112]: 
+      - text: 
+  - text:  

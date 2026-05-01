@@ -136,6 +136,7 @@ class ShopCourseResource extends Resource
         return [
             // Используем полный и точный путь к нашему новому файлу
             \App\Filament\Resources\ShopCourseResource\RelationManagers\TariffsRelationManager::class,
+            \App\Filament\Resources\ShopCourseResource\RelationManagers\BlocksRelationManager::class,
         ];
     }
 

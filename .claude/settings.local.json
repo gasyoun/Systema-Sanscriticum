@@ -18,5 +18,9 @@
       "Bash(php -l database/migrations/2026_04_25_120100_drop_redundant_fk_indexes.php)",
       "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $app = require '\\\\''bootstrap/app.php'\\\\''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); var_dump\\(Schema::hasColumn\\('\\\\''users'\\\\'', '\\\\''is_lecture_editor'\\\\''\\)\\);')"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright",
+    "context7"
+  ]
 }

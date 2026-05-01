@@ -57,8 +57,13 @@ class ShopController extends Controller
     'tariffs' => function ($query) {
         $query->where('is_active', true)->orderBy('price', 'asc');
     },
+    'tariffs.block',
+    'blocks',
     'teacher', // подгружаем преподавателя одним запросом
 ]);
+
+    $currentBlock = $course->currentBlock();
+    $currentBlockNumber = $currentBlock?->number;
 
     // Собираем массив купленных тарифов ОДНИМ запросом (без N+1)
     $purchasedKeys = [];
@@ -76,6 +81,6 @@ class ShopController extends Controller
 
     $page = new LandingPage(['title' => $course->title]);
 
-    return view('shop.show', compact('course', 'page', 'purchasedKeys'));
+    return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber'));
 }
 }
