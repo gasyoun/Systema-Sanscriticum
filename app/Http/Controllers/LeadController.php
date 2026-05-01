@@ -18,6 +18,7 @@ class LeadController extends Controller
             'name'            => 'required|string|max:255',
             'contact'         => 'required|string',
             'email'           => 'required|email',
+            'social'              => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
             'form_name'       => 'nullable|string',
             'utm_source'      => 'nullable|string',
@@ -71,6 +72,10 @@ class LeadController extends Controller
                 $flashData['vk_id'] = $landing->vk_pixel_id;
             }
             $flashData['conversion_event'] = 'lead'; 
+            
+            if (!empty($landing->redirect_after_submit_url)) {
+        $flashData['redirect_url'] = $landing->redirect_after_submit_url;
+    }
         }
         
         // === Логика для лидов из блога ===
@@ -113,7 +118,7 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
         ];
 
         $columns = [
-            'ID', 'Дата', 'Лендинг', 'Имя', 'Телефон', 'Email', 'Рассылка',
+            'ID', 'Дата', 'Лендинг', 'Имя', 'Телефон', 'Email', 'Соц. сеть', 'Рассылка',
             'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content (Форма)', // Изменил заголовок для наглядности
             'UTM Term', 'Click ID', 'IP Адрес', 'Referrer', 'User Agent'
         ];
@@ -131,6 +136,7 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
                     $lead->name,
                     $lead->contact,
                     $lead->email ?? '',
+                    $lead->social ?? '',
                     $lead->is_promo_agreed ? 'Да' : 'Нет',
                     $lead->utm_source ?? '',
                     $lead->utm_medium ?? '',

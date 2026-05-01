@@ -773,7 +773,18 @@ Builder\Block::make('faq_block')
                         ]),
                         TextInput::make('button_text')->default('Записаться'),
                         TextInput::make('button_subtext'),
-                        TextInput::make('telegram_url')->url(),
+                        TextInput::make('telegram_url')
+    ->label('Ссылка на Telegram-канал (для блока на лендинге)')
+    ->helperText('Используется как ссылка "Подписаться на канал" в legacy-блоках. НЕ управляет редиректом после заявки.')
+    ->url()
+    ->maxLength(500),
+
+TextInput::make('redirect_after_submit_url')
+    ->label('Редирект после отправки заявки (URL)')
+    ->helperText('Если заполнено — после страницы "Спасибо" пользователь автоматически перейдёт по этой ссылке (например, https://t.me/hindiruss). Цели в Метрику/VK успеют отстреляться. Оставь пустым, если редирект не нужен.')
+    ->url()
+    ->maxLength(500)
+    ->placeholder('https://t.me/hindiruss'),
                     ]),
             ]);
     }

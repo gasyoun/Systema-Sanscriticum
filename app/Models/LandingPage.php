@@ -27,6 +27,7 @@ class LandingPage extends Model
         'description',
         'button_text',
         'telegram_url',
+        'redirect_after_submit_url',
         'yandex_metrika_id',
         'vk_pixel_id',
         
