@@ -85,10 +85,16 @@
                 Кабинет
             </a>
             
-            <a href="{{ route('student.calendar') }}" 
+            <a href="{{ route('student.calendar') }}"
                class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
                 <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
                 Расписание
+            </a>
+
+            <a href="{{ route('student.open-lessons') }}"
+               class="{{ request()->routeIs('student.open-lessons') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-lock-open mr-3 w-5 text-center {{ request()->routeIs('student.open-lessons') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Открытые уроки
             </a>
             {{-- Сообщения --}}
             <a href="{{ route('student.messages') }}" 

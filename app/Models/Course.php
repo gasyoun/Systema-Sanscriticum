@@ -72,6 +72,16 @@ public function isLive(): bool
         return $this->hasMany(Tariff::class);
     }
 
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(CourseBlock::class)->orderBy('number');
+    }
+
+    public function currentBlock(): ?CourseBlock
+    {
+        return $this->blocks()->current()->orderBy('number')->first();
+    }
+
     // Связь: Курс доступен многим группам
     public function groups(): BelongsToMany
     {

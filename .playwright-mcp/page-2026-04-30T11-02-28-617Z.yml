@@ -1,0 +1,713 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Общество ревнителей санскрита Ревнители санскрита Магазин курсов" [ref=e4] [cursor=pointer]:
+        - /url: http://localhost:8000/shop
+        - img "Общество ревнителей санскрита" [ref=e5]
+        - generic [ref=e6]:
+          - generic [ref=e7]: Ревнители санскрита
+          - generic [ref=e8]: Магазин курсов
+      - navigation [ref=e9]:
+        - link "Все курсы" [ref=e10] [cursor=pointer]:
+          - /url: http://localhost:8000/shop
+        - link "Блог" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:8000/s
+        - link "О школе" [ref=e12] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - link " +7 918 192-50-84" [ref=e15] [cursor=pointer]:
+            - /url: tel:+79181925084
+            - generic [ref=e16]: 
+            - generic [ref=e17]: +7 918 192-50-84
+          - text: 
+          - link " rusamskrtam@yandex.ru" [ref=e18] [cursor=pointer]:
+            - /url: mailto:rusamskrtam@yandex.ru
+            - generic [ref=e19]: 
+            - generic [ref=e20]: rusamskrtam@yandex.ru
+          - text: 
+        - button " Войти" [ref=e22] [cursor=pointer]:
+          - generic [ref=e23]: 
+          - generic [ref=e24]: Войти
+  - main [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: Онлайн-программа
+            - generic [ref=e34]:
+              - generic [ref=e35]: 
+              - text: 400 лекций
+          - heading "Синтаксис санскрита" [level=1] [ref=e36]
+          - generic [ref=e37]:
+            - link "Выбрать тариф" [ref=e38] [cursor=pointer]:
+              - /url: "#tariffs"
+            - link "Все курсы" [ref=e39] [cursor=pointer]:
+              - /url: http://localhost:8000/shop
+          - link " Преподаватель Лейтан Эдгар Зигфридович " [ref=e40] [cursor=pointer]:
+            - /url: http://localhost:8000/shop?teacher=2
+            - generic [ref=e42]: 
+            - generic [ref=e43]:
+              - generic [ref=e44]: Преподаватель
+              - generic [ref=e45]: Лейтан Эдгар Зигфридович
+            - generic [ref=e46]: 
+        - generic [ref=e49]: 
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - heading "О курсе" [level=2] [ref=e54]
+          - paragraph [ref=e56]: Подробное описание курса скоро появится.
+        - generic [ref=e57]:
+          - heading "Выберите вариант участия" [level=2] [ref=e58]
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - generic [ref=e64]: 
+              - paragraph [ref=e65]:
+                - button "Войдите" [ref=e66] [cursor=pointer]
+                - text: ", чтобы увидеть купленные курсы и персональные скидки."
+            - generic [ref=e67]:
+              - paragraph [ref=e68]:
+                - generic [ref=e69]: 
+                - text: Важно
+              - paragraph [ref=e70]: Если Вы раньше покупали наши курсы — не регистрируйтесь самостоятельно, напишите куратору. Он создаст аккаунт вручную, и все ваши доступы сохранятся.
+            - generic [ref=e71]:
+              - paragraph [ref=e72]: Связаться с куратором
+              - generic [ref=e73]:
+                - link " Telegram" [ref=e74] [cursor=pointer]:
+                  - /url: https://t.me/rusamskrtam
+                  - generic [ref=e75]: 
+                  - generic [ref=e76]: Telegram
+                - link " ВКонтакте" [ref=e77] [cursor=pointer]:
+                  - /url: https://vk.me/event89658969
+                  - generic [ref=e78]: 
+                  - generic [ref=e79]: ВКонтакте
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: Сейчас идёт
+              - generic [ref=e86]:
+                - generic [ref=e88]: БЛОК 63
+                - generic [ref=e90]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e92] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/63
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - generic [ref=e96]: БЛОК 1
+                - generic [ref=e98]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e100] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/1
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e104]: БЛОК 2
+                - generic [ref=e106]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e108] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/2
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e112]: БЛОК 3
+                - generic [ref=e114]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e116] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/3
+            - generic [ref=e117]:
+              - generic [ref=e118]:
+                - generic [ref=e120]: БЛОК 4
+                - generic [ref=e122]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e124] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/4
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - generic [ref=e128]: БЛОК 5
+                - generic [ref=e130]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e132] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/5
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e136]: БЛОК 6
+                - generic [ref=e138]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e140] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/6
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e144]: БЛОК 7
+                - generic [ref=e146]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e148] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/7
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - generic [ref=e152]: БЛОК 8
+                - generic [ref=e154]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e156] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/8
+            - generic [ref=e157]:
+              - generic [ref=e158]:
+                - generic [ref=e160]: БЛОК 9
+                - generic [ref=e162]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e164] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/9
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - generic [ref=e168]: БЛОК 10
+                - generic [ref=e170]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e172] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/10
+            - generic [ref=e173]:
+              - generic [ref=e174]:
+                - generic [ref=e176]: БЛОК 11
+                - generic [ref=e178]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e180] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/11
+            - generic [ref=e181]:
+              - generic [ref=e182]:
+                - generic [ref=e184]: БЛОК 12
+                - generic [ref=e186]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e188] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/12
+            - generic [ref=e189]:
+              - generic [ref=e190]:
+                - generic [ref=e192]: БЛОК 13
+                - generic [ref=e194]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e196] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/13
+            - generic [ref=e197]:
+              - generic [ref=e198]:
+                - generic [ref=e200]: БЛОК 14
+                - generic [ref=e202]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e204] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/14
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - generic [ref=e208]: БЛОК 15
+                - generic [ref=e210]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e212] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/15
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - generic [ref=e216]: БЛОК 16
+                - generic [ref=e218]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e220] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/16
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e224]: БЛОК 17
+                - generic [ref=e226]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e228] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/17
+            - generic [ref=e229]:
+              - generic [ref=e230]:
+                - generic [ref=e232]: БЛОК 18
+                - generic [ref=e234]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e236] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/18
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - generic [ref=e240]: БЛОК 19
+                - generic [ref=e242]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e244] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/19
+            - generic [ref=e245]:
+              - generic [ref=e246]:
+                - generic [ref=e248]: БЛОК 20
+                - generic [ref=e250]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e252] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/20
+            - generic [ref=e253]:
+              - generic [ref=e254]:
+                - generic [ref=e256]: БЛОК 21
+                - generic [ref=e258]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e260] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/21
+            - generic [ref=e261]:
+              - generic [ref=e262]:
+                - generic [ref=e264]: БЛОК 22
+                - generic [ref=e266]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e268] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/22
+            - generic [ref=e269]:
+              - generic [ref=e270]:
+                - generic [ref=e272]: БЛОК 23
+                - generic [ref=e274]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e276] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/23
+            - generic [ref=e277]:
+              - generic [ref=e278]:
+                - generic [ref=e280]: БЛОК 24
+                - generic [ref=e282]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e284] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/24
+            - generic [ref=e285]:
+              - generic [ref=e286]:
+                - generic [ref=e288]: БЛОК 25
+                - generic [ref=e290]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e292] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/25
+            - generic [ref=e293]:
+              - generic [ref=e294]:
+                - generic [ref=e296]: БЛОК 26
+                - generic [ref=e298]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e300] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/26
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic [ref=e304]: БЛОК 27
+                - generic [ref=e306]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e308] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/27
+            - generic [ref=e309]:
+              - generic [ref=e310]:
+                - generic [ref=e312]: БЛОК 28
+                - generic [ref=e314]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e316] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/28
+            - generic [ref=e317]:
+              - generic [ref=e318]:
+                - generic [ref=e320]: БЛОК 29
+                - generic [ref=e322]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e324] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/29
+            - generic [ref=e325]:
+              - generic [ref=e326]:
+                - generic [ref=e328]: БЛОК 30
+                - generic [ref=e330]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e332] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/30
+            - generic [ref=e333]:
+              - generic [ref=e334]:
+                - generic [ref=e336]: БЛОК 31
+                - generic [ref=e338]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e340] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/31
+            - generic [ref=e341]:
+              - generic [ref=e342]:
+                - generic [ref=e344]: БЛОК 32
+                - generic [ref=e346]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e348] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/32
+            - generic [ref=e349]:
+              - generic [ref=e350]:
+                - generic [ref=e352]: БЛОК 33
+                - generic [ref=e354]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e356] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/33
+            - generic [ref=e357]:
+              - generic [ref=e358]:
+                - generic [ref=e360]: БЛОК 34
+                - generic [ref=e362]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e364] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/34
+            - generic [ref=e365]:
+              - generic [ref=e366]:
+                - generic [ref=e368]: БЛОК 35
+                - generic [ref=e370]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e372] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/35
+            - generic [ref=e373]:
+              - generic [ref=e374]:
+                - generic [ref=e376]: БЛОК 36
+                - generic [ref=e378]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e380] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/36
+            - generic [ref=e381]:
+              - generic [ref=e382]:
+                - generic [ref=e384]: БЛОК 37
+                - generic [ref=e386]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e388] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/37
+            - generic [ref=e389]:
+              - generic [ref=e390]:
+                - generic [ref=e392]: БЛОК 38
+                - generic [ref=e394]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e396] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/38
+            - generic [ref=e397]:
+              - generic [ref=e398]:
+                - generic [ref=e400]: БЛОК 39
+                - generic [ref=e402]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e404] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/39
+            - generic [ref=e405]:
+              - generic [ref=e406]:
+                - generic [ref=e408]: БЛОК 40
+                - generic [ref=e410]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e412] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/40
+            - generic [ref=e413]:
+              - generic [ref=e414]:
+                - generic [ref=e416]: БЛОК 41
+                - generic [ref=e418]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e420] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/41
+            - generic [ref=e421]:
+              - generic [ref=e422]:
+                - generic [ref=e424]: БЛОК 42
+                - generic [ref=e426]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e428] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/42
+            - generic [ref=e429]:
+              - generic [ref=e430]:
+                - generic [ref=e432]: БЛОК 43
+                - generic [ref=e434]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e436] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/43
+            - generic [ref=e437]:
+              - generic [ref=e438]:
+                - generic [ref=e440]: БЛОК 44
+                - generic [ref=e442]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e444] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/44
+            - generic [ref=e445]:
+              - generic [ref=e446]:
+                - generic [ref=e448]: БЛОК 45
+                - generic [ref=e450]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e452] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/45
+            - generic [ref=e453]:
+              - generic [ref=e454]:
+                - generic [ref=e456]: БЛОК 46
+                - generic [ref=e458]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e460] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/46
+            - generic [ref=e461]:
+              - generic [ref=e462]:
+                - generic [ref=e464]: БЛОК 47
+                - generic [ref=e466]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e468] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/47
+            - generic [ref=e469]:
+              - generic [ref=e470]:
+                - generic [ref=e472]: БЛОК 48
+                - generic [ref=e474]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e476] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/48
+            - generic [ref=e477]:
+              - generic [ref=e478]:
+                - generic [ref=e480]: БЛОК 49
+                - generic [ref=e482]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e484] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/49
+            - generic [ref=e485]:
+              - generic [ref=e486]:
+                - generic [ref=e488]: БЛОК 50
+                - generic [ref=e490]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e492] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/50
+            - generic [ref=e493]:
+              - generic [ref=e494]:
+                - generic [ref=e496]: БЛОК 51
+                - generic [ref=e498]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e500] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/51
+            - generic [ref=e501]:
+              - generic [ref=e502]:
+                - generic [ref=e504]: БЛОК 52
+                - generic [ref=e506]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e508] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/52
+            - generic [ref=e509]:
+              - generic [ref=e510]:
+                - generic [ref=e512]: БЛОК 53
+                - generic [ref=e514]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e516] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/53
+            - generic [ref=e517]:
+              - generic [ref=e518]:
+                - generic [ref=e520]: БЛОК 54
+                - generic [ref=e522]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e524] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/54
+            - generic [ref=e525]:
+              - generic [ref=e526]:
+                - generic [ref=e528]: БЛОК 55
+                - generic [ref=e530]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e532] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/55
+            - generic [ref=e533]:
+              - generic [ref=e534]:
+                - generic [ref=e536]: БЛОК 56
+                - generic [ref=e538]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e540] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/56
+            - generic [ref=e541]:
+              - generic [ref=e542]:
+                - generic [ref=e544]: БЛОК 57
+                - generic [ref=e546]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e548] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/57
+            - generic [ref=e549]:
+              - generic [ref=e550]:
+                - generic [ref=e552]: БЛОК 58
+                - generic [ref=e554]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e556] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/58
+            - generic [ref=e557]:
+              - generic [ref=e558]:
+                - generic [ref=e560]: БЛОК 59
+                - generic [ref=e562]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e564] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/59
+            - generic [ref=e565]:
+              - generic [ref=e566]:
+                - generic [ref=e568]: БЛОК 60
+                - generic [ref=e570]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e572] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/60
+            - generic [ref=e573]:
+              - generic [ref=e574]:
+                - generic [ref=e576]: БЛОК 61
+                - generic [ref=e578]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e580] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/61
+            - generic [ref=e581]:
+              - generic [ref=e582]:
+                - generic [ref=e584]: БЛОК 62
+                - generic [ref=e586]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e588] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/62
+            - generic [ref=e589]:
+              - generic [ref=e590]:
+                - generic [ref=e592]: БЛОК 64
+                - generic [ref=e594]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e596] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/64
+            - generic [ref=e597]:
+              - generic [ref=e598]:
+                - generic [ref=e600]: БЛОК 65
+                - generic [ref=e602]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e604] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/65
+            - generic [ref=e605]:
+              - generic [ref=e606]:
+                - generic [ref=e608]: БЛОК 66
+                - generic [ref=e610]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e612] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/66
+            - generic [ref=e613]:
+              - generic [ref=e614]:
+                - generic [ref=e616]: БЛОК 67
+                - generic [ref=e618]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e620] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/67
+            - generic [ref=e621]:
+              - generic [ref=e622]:
+                - generic [ref=e624]: БЛОК 68
+                - generic [ref=e626]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e628] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/68
+            - generic [ref=e629]:
+              - generic [ref=e630]:
+                - generic [ref=e632]: БЛОК 69
+                - generic [ref=e634]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e636] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/69
+            - generic [ref=e637]:
+              - generic [ref=e638]:
+                - generic [ref=e640]: БЛОК 70
+                - generic [ref=e642]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e644] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/70
+            - generic [ref=e645]:
+              - generic [ref=e646]:
+                - generic [ref=e648]: БЛОК 71
+                - generic [ref=e650]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e652] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/71
+            - generic [ref=e653]:
+              - generic [ref=e654]:
+                - generic [ref=e656]: БЛОК 72
+                - generic [ref=e658]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e660] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/72
+            - generic [ref=e661]:
+              - generic [ref=e662]:
+                - generic [ref=e664]: БЛОК 73
+                - generic [ref=e666]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e668] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/73
+            - generic [ref=e669]:
+              - generic [ref=e670]:
+                - generic [ref=e672]: БЛОК 74
+                - generic [ref=e674]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e676] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/74
+            - generic [ref=e677]:
+              - generic [ref=e678]:
+                - generic [ref=e680]: БЛОК 75
+                - generic [ref=e682]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e684] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/75
+            - generic [ref=e685]:
+              - generic [ref=e686]:
+                - generic [ref=e688]: БЛОК 76
+                - generic [ref=e690]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e692] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/76
+            - generic [ref=e693]:
+              - generic [ref=e694]:
+                - generic [ref=e696]: БЛОК 77
+                - generic [ref=e698]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e700] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/77
+            - generic [ref=e701]:
+              - generic [ref=e702]:
+                - generic [ref=e704]: БЛОК 78
+                - generic [ref=e706]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e708] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/78
+            - generic [ref=e709]:
+              - generic [ref=e710]:
+                - generic [ref=e712]: БЛОК 79
+                - generic [ref=e714]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e716] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/79
+            - generic [ref=e717]:
+              - generic [ref=e718]:
+                - generic [ref=e720]: БЛОК 80
+                - generic [ref=e722]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e724] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/80
+            - generic [ref=e725]:
+              - generic [ref=e726]:
+                - generic [ref=e728]: БЛОК 81
+                - generic [ref=e730]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e732] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/81
+            - generic [ref=e733]:
+              - generic [ref=e734]:
+                - generic [ref=e736]: БЛОК 82
+                - generic [ref=e738]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e740] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/82
+            - generic [ref=e741]:
+              - generic [ref=e742]:
+                - generic [ref=e744]: БЛОК 83
+                - generic [ref=e746]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e748] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/83
+            - generic [ref=e749]:
+              - generic [ref=e750]:
+                - generic [ref=e752]: БЛОК 84
+                - generic [ref=e754]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e756] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/84
+            - generic [ref=e757]:
+              - generic [ref=e758]:
+                - generic [ref=e760]: БЛОК 85
+                - generic [ref=e762]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e764] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/85
+            - generic [ref=e765]:
+              - generic [ref=e766]:
+                - generic [ref=e768]: БЛОК 86
+                - generic [ref=e770]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e772] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/86
+            - generic [ref=e773]:
+              - generic [ref=e774]:
+                - generic [ref=e776]: БЛОК 87
+                - generic [ref=e778]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e780] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/87
+            - generic [ref=e781]:
+              - generic [ref=e782]:
+                - generic [ref=e784]: БЛОК 88
+                - generic [ref=e786]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e788] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/88
+            - generic [ref=e789]:
+              - generic [ref=e790]:
+                - generic [ref=e792]: БЛОК 89
+                - generic [ref=e794]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e796] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/89
+            - generic [ref=e797]:
+              - generic [ref=e798]:
+                - generic [ref=e800]: БЛОК 90
+                - generic [ref=e802]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e804] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/90
+            - generic [ref=e805]:
+              - generic [ref=e806]:
+                - generic [ref=e808]: БЛОК 91
+                - generic [ref=e810]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e812] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/91
+            - generic [ref=e813]:
+              - generic [ref=e814]:
+                - generic [ref=e816]: БЛОК 92
+                - generic [ref=e818]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e820] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/92
+            - generic [ref=e821]:
+              - generic [ref=e822]:
+                - generic [ref=e824]: БЛОК 93
+                - generic [ref=e826]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e828] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/93
+            - generic [ref=e829]:
+              - generic [ref=e830]:
+                - generic [ref=e832]: БЛОК 94
+                - generic [ref=e834]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e836] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/94
+            - generic [ref=e837]:
+              - generic [ref=e838]:
+                - generic [ref=e840]: БЛОК 95
+                - generic [ref=e842]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e844] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/95
+            - generic [ref=e845]:
+              - generic [ref=e846]:
+                - generic [ref=e848]: БЛОК 96
+                - generic [ref=e850]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e852] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/96
+            - generic [ref=e853]:
+              - generic [ref=e854]:
+                - generic [ref=e856]: БЛОК 97
+                - generic [ref=e858]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e860] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/97
+            - generic [ref=e861]:
+              - generic [ref=e862]:
+                - generic [ref=e864]: БЛОК 98
+                - generic [ref=e866]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e868] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/98
+            - generic [ref=e869]:
+              - generic [ref=e870]:
+                - generic [ref=e872]: БЛОК 99
+                - generic [ref=e874]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e876] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/99
+            - generic [ref=e877]:
+              - generic [ref=e878]:
+                - generic [ref=e880]: БЛОК 100
+                - generic [ref=e882]: 4 800 ₽
+              - link "Оплатить модуль" [ref=e884] [cursor=pointer]:
+                - /url: http://localhost:8000/checkout/100
+        - generic [ref=e885]:
+          - generic [ref=e886]:
+            - generic [ref=e887]: 
+            - heading "Вечный доступ" [level=3] [ref=e888]
+            - paragraph [ref=e889]: Материалы курса остаются с вами навсегда. Пересматривайте лекции в любое время.
+          - generic [ref=e890]:
+            - generic [ref=e891]: 
+            - heading "Онлайн формат" [level=3] [ref=e892]
+            - paragraph [ref=e893]: Учитесь из любой точки мира в своем собственном темпе, без привязки к жесткому расписанию.
+  - contentinfo [ref=e894]:
+    - generic [ref=e895]:
+      - generic [ref=e896]:
+        - paragraph [ref=e898]: Глубокое изучение санскрита в традиции живых учителей.
+        - generic [ref=e899]:
+          - button "Политика конфиденциальности" [ref=e900] [cursor=pointer]
+          - button "Публичная оферта" [ref=e901] [cursor=pointer]
+          - paragraph [ref=e902]: © 2026 Все права защищены
+        - generic [ref=e903]:
+          - link "" [ref=e904] [cursor=pointer]:
+            - /url: https://vk.com/club88831040
+            - generic [ref=e905]: 
+          - link "" [ref=e906] [cursor=pointer]:
+            - /url: https://t.me/samskrtamru
+            - generic [ref=e907]: 
+          - link "" [ref=e908] [cursor=pointer]:
+            - /url: https://samskrte.ru
+            - generic [ref=e909]: 
+      - text: 
+  - text:  

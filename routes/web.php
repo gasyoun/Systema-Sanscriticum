@@ -82,7 +82,9 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
 
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
     Route::get('/cabinet', [StudentController::class, 'dashboard'])->name('student.dashboard');
-    
+
+    Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
+
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
     
     Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');

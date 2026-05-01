@@ -59,6 +59,21 @@ class TariffResource extends Resource
                             ->visible(fn (Forms\Get $get) => $get('type') === 'block')
                             ->required(fn (Forms\Get $get) => $get('type') === 'block')
                             ->helperText('Введите цифру (например: 1, 2, 3), чтобы система поняла, к каким именно урокам дать доступ после оплаты.'),
+
+                        Forms\Components\Select::make('course_block_id')
+                            ->label('Сущность блока (даты, флаг «сейчас идёт»)')
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'block')
+                            ->options(function (Forms\Get $get) {
+                                $courseId = $get('course_id');
+                                if (!$courseId) return [];
+                                return \App\Models\CourseBlock::where('course_id', $courseId)
+                                    ->orderBy('number')
+                                    ->get()
+                                    ->mapWithKeys(fn ($b) => [$b->id => '№'.$b->number.($b->title ? ' — '.$b->title : '')])
+                                    ->all();
+                            })
+                            ->searchable()
+                            ->helperText('Привяжите тариф к блоку курса, чтобы система знала даты блока и его актуальность. Создать блок можно во вкладке «Блоки курса» внутри витрины.'),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Цены и отображение')
