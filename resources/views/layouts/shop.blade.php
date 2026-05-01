@@ -11,13 +11,10 @@
 
     {{-- Tailwind + FontAwesome (в тон shop/index.blade.php) --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-    {{-- Alpine для модалок/дропдаунов --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <style>
+<style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Nunito Sans', sans-serif; }
 
@@ -234,5 +231,7 @@
 </script>
 
     @stack('scripts')
+
+    @livewireScripts    
 </body>
 </html>

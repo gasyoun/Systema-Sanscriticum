@@ -21,7 +21,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \App\Services\Lecture\LectureBuilderClient::class,
+            fn () => \App\Services\Lecture\LectureBuilderClient::fromConfig(),
+        );
+        $this->app->singleton(
+            \App\Services\Lecture\LectureAiClient::class,
+            fn () => \App\Services\Lecture\LectureAiClient::fromConfig(),
+        );
     }
 
     /**
@@ -35,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
         if (app()->isProduction() || config('app.force_https', false)) {
             URL::forceScheme('https');
         }
+
+        if (str_contains(config('app.url'), 'trycloudflare.com')) {
+        URL::forceScheme('https');
+    }
         // ----------------------------------------------------
 
         // 2. Наблюдатель
