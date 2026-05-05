@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Services\CertificateService;
 use Illuminate\Support\Carbon;
 use App\Services\CourseMaterialsArchiver;
+use App\Services\Prana\PranaService;
 
 // --- ИМПОРТЫ ДОЛЖНЫ БЫТЬ ЗДЕСЬ, В САМОМ ВЕРХУ ---
 use Illuminate\Support\Facades\Storage;
@@ -75,10 +76,12 @@ class StudentController extends Controller
 
     // БЫЛО: where('is_visible', true) — ломало доступ при скрытии с витрины
     // СТАЛО: фильтруем по is_active (видимость в ЛК)
+    // lessons:id,course_id — eager-load для прогресс-бара в карточках курсов (без этого N+1).
     $courses = Course::where('is_active', true)
         ->whereHas('groups', function ($query) use ($userGroupIds) {
             $query->whereIn('groups.id', $userGroupIds);
         })
+        ->with(['lessons:id,course_id'])
         ->get();
 
     $certificates = $user->certificates()
@@ -86,7 +89,17 @@ class StudentController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
-    return view('student.dashboard', compact('courses', 'certificates'));
+    $pranaTransactions = $user->pranaTransactions()->limit(30)->get();
+    $pranaRewards      = config('prana.rewards', []);
+    $pranaReasons      = config('prana.reasons', []);
+
+    return view('student.dashboard', compact(
+        'courses',
+        'certificates',
+        'pranaTransactions',
+        'pranaRewards',
+        'pranaReasons',
+    ));
 }
 
     /**
@@ -115,7 +128,7 @@ class StudentController extends Controller
     /**
      * Просмотр конкретного урока (Плеер + Навигация)
      */
-    public function showLesson($courseSlug, $lessonId)
+    public function showLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
         $course = Course::where('slug', $courseSlug)->firstOrFail();
@@ -146,6 +159,12 @@ class StudentController extends Controller
             url:              request()->fullUrl(),
             ipAddress:        request()->ip(),
         );
+
+        // Прана за просмотр открытого урока/вебинара (раз на урок благодаря
+        // уникальному индексу по reason+source).
+        if ($lesson->is_free) {
+            $prana->award($user, 'open_lesson_view', $lesson);
+        }
     }
     // ==========================================
         
@@ -234,14 +253,34 @@ class StudentController extends Controller
     /**
      * Отметить урок как пройденный
      */
-    public function completeLesson($courseSlug, $lessonId)
+    public function completeLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
-        
-        if (!$user->completedLessons()->where('lesson_id', $lessonId)->exists()) {
+        $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
+
+        $alreadyCompleted = $user->completedLessons()->where('lesson_id', $lessonId)->exists();
+
+        if (!$alreadyCompleted) {
             $user->completedLessons()->attach($lessonId, [
                 'is_completed' => true,
             ]);
+
+            $course = Course::where('slug', $courseSlug)->firstOrFail();
+            $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+            // Начисление за урок (идемпотентно по lesson_id).
+            $prana->award($user, 'lesson_complete', $lesson);
+
+            // Если этот урок закрыл весь курс — начисляем бонус за курс
+            // (тоже идемпотентно по course_id).
+            $totalLessons     = $course->lessons()->count();
+            $completedLessons = $user->completedLessons()
+                ->where('lessons.course_id', $course->id)
+                ->count();
+
+            if ($totalLessons > 0 && $completedLessons >= $totalLessons) {
+                $prana->award($user, 'course_complete', $course);
+            }
         }
 
         return redirect()->back()->with('success', 'Урок пройден!');
@@ -254,6 +293,7 @@ class StudentController extends Controller
     {
         $user = auth()->user();
         $request->validate(['notes' => 'nullable|string|max:5000']);
+        $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
 
         $existing = $user->completedLessons()->where('lesson_id', $lessonId)->first();
 
@@ -268,6 +308,28 @@ class StudentController extends Controller
 
         return redirect()->back()->with('success', 'Заметка сохранена');
     }
+
+    /**
+     * Проверяет, что урок принадлежит курсу из URL и доступен пользователю
+     * (свободный или оплачен через full/block_X). Иначе — abort(403/404).
+     * Защищает completeLesson/saveNote от IDOR на уроки чужих курсов.
+     */
+    private function ensureLessonAccessible($user, string $courseSlug, $lessonId): void
+    {
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+        if ($lesson->is_free) {
+            return;
+        }
+
+        $unlocked = $this->getUserUnlockedTariffs($user->id, $courseSlug);
+        $required = 'block_' . $lesson->block_number;
+
+        if (!in_array('full', $unlocked, true) && !in_array($required, $unlocked, true)) {
+            abort(403, 'Нет доступа к этому уроку.');
+        }
+    }
     
     /**
  * Скачать архив со всеми материалами курса.
@@ -278,9 +340,10 @@ public function downloadCourseMaterials(string $slug, CourseMaterialsArchiver $a
     $user = auth()->user();
     $userGroupIds = $user->groups->pluck('id');
 
-    // Проверяем, что курс доступен этому студенту (он в нужной группе)
+    // Проверяем, что курс доступен этому студенту (он в нужной группе).
+    // Используем is_active (а не is_visible) — это видимость в ЛК, согласованно с dashboard/showCourse.
     $course = Course::where('slug', $slug)
-        ->where('is_visible', true)
+        ->where('is_active', true)
         ->whereHas('groups', function ($query) use ($userGroupIds) {
             $query->whereIn('groups.id', $userGroupIds);
         })

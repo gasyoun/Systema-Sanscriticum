@@ -1,0 +1,111 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Общество ревнителей санскрита Ревнители санскрита" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "Общество ревнителей санскрита" [ref=e5]
+        - generic [ref=e7]: Ревнители санскрита
+      - navigation [ref=e8]:
+        - link "Главная" [ref=e9] [cursor=pointer]:
+          - /url: /
+        - link "Все курсы" [ref=e10] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop
+        - link "Блог" [ref=e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/s
+      - link "Войти" [ref=e13] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop
+        - img [ref=e14]
+        - generic [ref=e16]: Войти
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - heading "Общество ревнителей санскрита" [level=1] [ref=e19]
+      - paragraph [ref=e21]: Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
+      - heading "Наши курсы:" [level=2] [ref=e22]
+    - link "Бесплатный вебинар Россия Узнать подробнее о программе курса, расписании и стоимости. Записаться" [ref=e24] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000/ros
+      - generic [ref=e25]: Бесплатный вебинар
+      - generic [ref=e26]:
+        - img [ref=e29]
+        - generic [ref=e32]:
+          - heading "Россия" [level=3] [ref=e33]
+          - paragraph [ref=e34]: Узнать подробнее о программе курса, расписании и стоимости.
+          - generic [ref=e36]:
+            - text: Записаться
+            - img [ref=e37]
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - heading "Курсы в записи" [level=2] [ref=e44]
+          - paragraph [ref=e46]: Учитесь в своём темпе — записи лекций с пожизненным доступом.
+        - link "Все курсы" [ref=e47] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop?format=recorded
+          - text: Все курсы
+          - img [ref=e48]
+      - generic [ref=e50]:
+        - link "В записи Караки по Панини 2026 от 4 800 ₽ Подробнее" [ref=e51] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2026
+          - generic [ref=e53]: В записи
+          - heading "Караки по Панини 2026" [level=3] [ref=e54]
+          - generic [ref=e55]:
+            - generic [ref=e56]: от 4 800 ₽
+            - generic [ref=e57]:
+              - text: Подробнее
+              - img [ref=e58]
+        - link "В записи Караки по Панини 2025 в записи от 4 800 ₽ Подробнее" [ref=e60] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2025-v-zapisi
+          - generic [ref=e62]: В записи
+          - heading "Караки по Панини 2025 в записи" [level=3] [ref=e63]
+          - generic [ref=e64]:
+            - generic [ref=e65]: от 4 800 ₽
+            - generic [ref=e66]:
+              - text: Подробнее
+              - img [ref=e67]
+        - link "В записи Ликбез по лингвистике (2 поток, 2025-2026) в записи от 4 800 ₽ Подробнее" [ref=e69] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi
+          - generic [ref=e71]: В записи
+          - heading "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [level=3] [ref=e72]
+          - generic [ref=e73]:
+            - generic [ref=e74]: от 4 800 ₽
+            - generic [ref=e75]:
+              - text: Подробнее
+              - img [ref=e76]
+        - link "В записи Напевный санскрит - гимн Сутры Патанджали 2026 от 4 800 ₽ Подробнее" [ref=e78] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026
+          - generic [ref=e80]: В записи
+          - heading "Напевный санскрит - гимн Сутры Патанджали 2026" [level=3] [ref=e81]
+          - generic [ref=e82]:
+            - generic [ref=e83]: от 4 800 ₽
+            - generic [ref=e84]:
+              - text: Подробнее
+              - img [ref=e85]
+        - link "В записи Напевный санскрит - гимн сутр Патанджали 2026 от 6 000 ₽ Подробнее" [ref=e87] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026
+          - generic [ref=e89]: В записи
+          - heading "Напевный санскрит - гимн сутр Патанджали 2026" [level=3] [ref=e90]
+          - generic [ref=e91]:
+            - generic [ref=e92]: от 6 000 ₽
+            - generic [ref=e93]:
+              - text: Подробнее
+              - img [ref=e94]
+        - link "В записи Напевный санскрит - гимн Нарасимхе 2023 от 4 000 ₽ Подробнее" [ref=e96] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023
+          - generic [ref=e98]: В записи
+          - heading "Напевный санскрит - гимн Нарасимхе 2023" [level=3] [ref=e99]
+          - generic [ref=e100]:
+            - generic [ref=e101]: от 4 000 ₽
+            - generic [ref=e102]:
+              - text: Подробнее
+              - img [ref=e103]
+    - generic [ref=e108]:
+      - heading "О нашей платформе" [level=2] [ref=e109]
+      - generic [ref=e111]:
+        - paragraph [ref=e112]: Все программы Общества ревнителей санскрита носят исключительно просветительский характер. Участие в них не ведёт к присвоению квалификации, профессии или получению документов об образовании.
+        - paragraph [ref=e113]: Наша главная цель — популяризация санскрита, знакомство с богатым культурным и философским наследием Индии, а также создание сообщества единомышленников для совместного изучения этого древнего языка.
+        - paragraph [ref=e114]: Наши лекторы — это индологи, востоковеды, филологи, философы, йоги с большим практическим опытом.
+        - paragraph [ref=e115]: До встречи на занятиях!
+    - generic [ref=e116]:
+      - link "Следить за новостями в Telegram" [ref=e117] [cursor=pointer]:
+        - /url: https://t.me/+N4xQ6zHFepk5NmYy
+        - img [ref=e118]
+        - text: Следить за новостями в Telegram
+      - paragraph [ref=e120]: © 2026 Общество ревнителей санскрита. Все права защищены.

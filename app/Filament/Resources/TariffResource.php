@@ -10,8 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class TariffResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Tariff::class;
 
     // Иконка ценника для меню

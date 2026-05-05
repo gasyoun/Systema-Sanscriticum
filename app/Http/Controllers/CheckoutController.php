@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Tariff;
 use App\Models\LandingPage;
 use App\Models\PromoCode; // Не забываем импортировать модель!
+use App\Services\Prana\PranaService;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
-    public function show(Tariff $tariff)
+    public function show(Tariff $tariff, PranaService $prana)
     {
         if (!$tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
@@ -60,8 +61,26 @@ class CheckoutController extends Controller
             }
         }
 
+        // --- ПРАНА ---
+        $pranaBalance     = $user ? $prana->balance($user) : 0;
+        $pranaMaxSpend    = $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0;
+        $pranaRate        = (int) config('prana.rate', 10);
+        $pranaSharePct    = (int) round((float) config('prana.max_share_of_price', 0.30) * 100);
+
         // ВАЖНО: Добавили isLoyal и loyaltyPercent в передачу шаблону!
-        return view('checkout.show', compact('tariff', 'finalPrice', 'page', 'appliedPromo', 'discountAmount', 'isLoyal', 'loyaltyPercent'));
+        return view('checkout.show', compact(
+            'tariff',
+            'finalPrice',
+            'page',
+            'appliedPromo',
+            'discountAmount',
+            'isLoyal',
+            'loyaltyPercent',
+            'pranaBalance',
+            'pranaMaxSpend',
+            'pranaRate',
+            'pranaSharePct',
+        ));
     }
 
     // Метод: Применить промокод

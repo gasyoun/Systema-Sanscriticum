@@ -26,8 +26,12 @@ use Filament\Forms\Components\ColorPicker; // <-- ДОБАВЛЕНО
 use Filament\Forms\Components\Select;      // <-- ДОБАВЛЕНО
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 
+use App\Filament\Concerns\AdminOnly;
+
 class LandingPageResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LandingPage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

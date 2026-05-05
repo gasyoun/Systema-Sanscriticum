@@ -1,0 +1,751 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Общество ревнителей санскрита Ревнители санскрита Магазин курсов" [ref=e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop
+        - img "Общество ревнителей санскрита" [ref=e5]
+        - generic [ref=e6]:
+          - generic [ref=e7]: Ревнители санскрита
+          - generic [ref=e8]: Магазин курсов
+      - navigation [ref=e9]:
+        - link "Все курсы" [ref=e10] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop
+        - link "Блог" [ref=e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/s
+        - link "О школе" [ref=e12] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - link " +7 918 192-50-84" [ref=e15] [cursor=pointer]:
+            - /url: tel:+79181925084
+            - generic [ref=e16]: 
+            - generic [ref=e17]: +7 918 192-50-84
+          - text: 
+          - link " rusamskrtam@yandex.ru" [ref=e18] [cursor=pointer]:
+            - /url: mailto:rusamskrtam@yandex.ru
+            - generic [ref=e19]: 
+            - generic [ref=e20]: rusamskrtam@yandex.ru
+          - text: 
+        - button " Войти" [ref=e22] [cursor=pointer]:
+          - generic [ref=e23]: 
+          - generic [ref=e24]: Войти
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - heading "Общество ревнителей санскрита" [level=1] [ref=e29]
+        - paragraph [ref=e30]: Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
+      - generic [ref=e31]:
+        - generic [ref=e33]:
+          - generic:
+            - generic: 
+          - textbox "Найти курс..." [ref=e34]
+        - generic [ref=e35]:
+          - complementary [ref=e36]:
+            - text:  
+            - generic [ref=e37]:
+              - heading " Фильтры" [level=3] [ref=e39]:
+                - generic [ref=e40]: 
+                - text: Фильтры
+              - generic [ref=e41]:
+                - heading "Формат" [level=4] [ref=e42]
+                - generic [ref=e43]:
+                  - button "Все курсы " [ref=e44] [cursor=pointer]:
+                    - generic [ref=e45]: Все курсы
+                    - generic [ref=e46]: 
+                  - button "Идут сейчас" [ref=e47] [cursor=pointer]:
+                    - generic [ref=e48]: Идут сейчас
+                  - button " В записи" [ref=e50] [cursor=pointer]:
+                    - generic [ref=e51]:
+                      - generic [ref=e52]: 
+                      - text: В записи
+              - generic [ref=e53]:
+                - heading "Категории" [level=4] [ref=e54]
+                - generic [ref=e55]:
+                  - button "Синтаксис 1" [ref=e56] [cursor=pointer]:
+                    - generic [ref=e58]: Синтаксис
+                    - generic [ref=e60]: "1"
+                  - button "Философия 2" [ref=e61] [cursor=pointer]:
+                    - generic [ref=e63]: Философия
+                    - generic [ref=e65]: "2"
+              - generic [ref=e66]:
+                - heading "Преподаватель" [level=4] [ref=e67]
+                - generic [ref=e68]:
+                  - combobox [ref=e69] [cursor=pointer]:
+                    - option "Все преподаватели" [selected]
+                    - option "Ворошилов Максим Анатольевич"
+                    - option "Гасунс Марцис Юрьевич"
+                    - option "Демченко Максим Борисович"
+                    - option "Дружинин Владимир Юрьевич"
+                    - option "Емельянов Владимир Владимирович"
+                    - option "Клебанов Андрей Александрович"
+                    - option "Костина Екатерина Александровна"
+                    - option "Лейтан Эдгар Зигфридович"
+                    - option "Леонов Максим Владимирович"
+                    - option "Леонченко Владимир Владимирович"
+                    - option "Литвиненко Ольга Андреевна"
+                    - option "Лундышева Ольга Владимировна"
+                    - option "Падмавати"
+                    - option "Парибок Андрей Всеволодович"
+                    - option "Пахомов Сергей Владимирович"
+                    - option "Соболева Елена Леонидовна"
+                    - option "Толчельников Иван Евгеньевич"
+                    - option "Трефилова Елена Вячеславовна"
+                    - option "Уша Санка"
+                    - option "Широбоков Андрей Петрович"
+                    - option "Щербак Сергей Викторович"
+                  - generic: 
+          - generic [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72]: "Показано: 24 из 120"
+              - text: 
+            - generic [ref=e73]:
+              - generic [ref=e74]:
+                - link "  В записи  12 лекции" [ref=e75] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2026
+                  - generic [ref=e76]: 
+                  - generic [ref=e78]:
+                    - generic [ref=e79]: 
+                    - text: В записи
+                  - generic [ref=e81]:
+                    - generic [ref=e82]: 
+                    - text: 12 лекции
+                - generic [ref=e83]:
+                  - generic [ref=e84]:
+                    - generic [ref=e86]: Клебанов Андрей Александрович
+                    - link "Караки по Панини 2026" [ref=e87] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2026
+                      - heading "Караки по Панини 2026" [level=2] [ref=e88]
+                  - generic [ref=e89]:
+                    - generic [ref=e91]:
+                      - generic [ref=e92]: По модулям
+                      - generic [ref=e94]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e95] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e96]: 
+              - generic [ref=e97]:
+                - link "  В записи  16 лекции" [ref=e98] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2025-v-zapisi
+                  - generic [ref=e99]: 
+                  - generic [ref=e101]:
+                    - generic [ref=e102]: 
+                    - text: В записи
+                  - generic [ref=e104]:
+                    - generic [ref=e105]: 
+                    - text: 16 лекции
+                - generic [ref=e106]:
+                  - generic [ref=e107]:
+                    - generic [ref=e109]: Клебанов Андрей Александрович
+                    - link "Караки по Панини 2025 в записи" [ref=e110] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2025-v-zapisi
+                      - heading "Караки по Панини 2025 в записи" [level=2] [ref=e111]
+                  - generic [ref=e112]:
+                    - generic [ref=e113]:
+                      - generic [ref=e114]:
+                        - generic [ref=e115]: Весь курс
+                        - generic [ref=e117]: 12 000 ₽
+                      - generic [ref=e118]:
+                        - generic [ref=e119]: По модулям
+                        - generic [ref=e121]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e122] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2025-v-zapisi#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e123]: 
+              - generic [ref=e124]:
+                - link "  В записи  16 лекции" [ref=e125] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi
+                  - generic [ref=e126]: 
+                  - generic [ref=e128]:
+                    - generic [ref=e129]: 
+                    - text: В записи
+                  - generic [ref=e131]:
+                    - generic [ref=e132]: 
+                    - text: 16 лекции
+                - generic [ref=e133]:
+                  - generic [ref=e134]:
+                    - generic [ref=e136]: Трефилова Елена Вячеславовна
+                    - link "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [ref=e137] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi
+                      - heading "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [level=2] [ref=e138]
+                  - generic [ref=e139]:
+                    - generic [ref=e140]:
+                      - generic [ref=e141]:
+                        - generic [ref=e142]: Весь курс
+                        - generic [ref=e144]: 12 000 ₽
+                      - generic [ref=e145]:
+                        - generic [ref=e146]: По модулям
+                        - generic [ref=e148]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e149] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e150]: 
+              - generic [ref=e151]:
+                - link "  В записи  16 лекции" [ref=e152] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026
+                  - generic [ref=e153]: 
+                  - generic [ref=e155]:
+                    - generic [ref=e156]: 
+                    - text: В записи
+                  - generic [ref=e158]:
+                    - generic [ref=e159]: 
+                    - text: 16 лекции
+                - generic [ref=e160]:
+                  - generic [ref=e161]:
+                    - generic [ref=e163]: Уша Санка
+                    - link "Напевный санскрит - гимн Сутры Патанджали 2026" [ref=e164] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026
+                      - heading "Напевный санскрит - гимн Сутры Патанджали 2026" [level=2] [ref=e165]
+                  - generic [ref=e166]:
+                    - generic [ref=e167]:
+                      - generic [ref=e168]:
+                        - generic [ref=e169]: Весь курс
+                        - generic [ref=e171]: 12 000 ₽
+                      - generic [ref=e172]:
+                        - generic [ref=e173]: По модулям
+                        - generic [ref=e175]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e176] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e177]: 
+              - generic [ref=e178]:
+                - link "  В записи  16 лекции" [ref=e179] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026
+                  - generic [ref=e180]: 
+                  - generic [ref=e182]:
+                    - generic [ref=e183]: 
+                    - text: В записи
+                  - generic [ref=e185]:
+                    - generic [ref=e186]: 
+                    - text: 16 лекции
+                - generic [ref=e187]:
+                  - generic [ref=e188]:
+                    - generic [ref=e190]: Уша Санка
+                    - link "Напевный санскрит - гимн сутр Патанджали 2026" [ref=e191] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026
+                      - heading "Напевный санскрит - гимн сутр Патанджали 2026" [level=2] [ref=e192]
+                  - generic [ref=e193]:
+                    - generic [ref=e194]:
+                      - generic [ref=e195]:
+                        - generic [ref=e196]: Весь курс
+                        - generic [ref=e198]: 22 000 ₽
+                      - generic [ref=e199]:
+                        - generic [ref=e200]: По модулям
+                        - generic [ref=e202]: 6 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e203] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e204]: 
+              - generic [ref=e205]:
+                - link "  В записи  12 лекции" [ref=e206] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023
+                  - generic [ref=e207]: 
+                  - generic [ref=e209]:
+                    - generic [ref=e210]: 
+                    - text: В записи
+                  - generic [ref=e212]:
+                    - generic [ref=e213]: 
+                    - text: 12 лекции
+                - generic [ref=e214]:
+                  - generic [ref=e215]:
+                    - generic [ref=e217]: Уша Санка
+                    - link "Напевный санскрит - гимн Нарасимхе 2023" [ref=e218] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023
+                      - heading "Напевный санскрит - гимн Нарасимхе 2023" [level=2] [ref=e219]
+                  - generic [ref=e220]:
+                    - generic [ref=e221]:
+                      - generic [ref=e222]:
+                        - generic [ref=e223]: Весь курс
+                        - generic [ref=e225]: 12 000 ₽
+                      - generic [ref=e226]:
+                        - generic [ref=e227]: По модулям
+                        - generic [ref=e229]: 4 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e230] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e231]: 
+              - generic [ref=e232]:
+                - link "  В записи  12 лекции" [ref=e233] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/depozit-ucashhegosia
+                  - generic [ref=e234]: 
+                  - generic [ref=e236]:
+                    - generic [ref=e237]: 
+                    - text: В записи
+                  - generic [ref=e239]:
+                    - generic [ref=e240]: 
+                    - text: 12 лекции
+                - generic [ref=e241]:
+                  - generic [ref=e242]:
+                    - generic [ref=e244]: Гасунс Марцис Юрьевич
+                    - link "Депозит учащегося" [ref=e245] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/depozit-ucashhegosia
+                      - heading "Депозит учащегося" [level=2] [ref=e246]
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: 
+                    - generic [ref=e250]: Набор закрыт
+              - generic [ref=e251]:
+                - link "  В записи  16 лекции" [ref=e252] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/vediiskaia-literatura-2026
+                  - generic [ref=e253]: 
+                  - generic [ref=e255]:
+                    - generic [ref=e256]: 
+                    - text: В записи
+                  - generic [ref=e258]:
+                    - generic [ref=e259]: 
+                    - text: 16 лекции
+                - generic [ref=e260]:
+                  - generic [ref=e261]:
+                    - generic [ref=e263]: Леонов Максим Владимирович
+                    - link "Ведийская литература 2026" [ref=e264] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/vediiskaia-literatura-2026
+                      - heading "Ведийская литература 2026" [level=2] [ref=e265]
+                  - generic [ref=e266]:
+                    - generic [ref=e267]:
+                      - generic [ref=e268]:
+                        - generic [ref=e269]: Весь курс
+                        - generic [ref=e271]: 16 500 ₽
+                      - generic [ref=e272]:
+                        - generic [ref=e273]: По модулям
+                        - generic [ref=e275]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e276] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/vediiskaia-literatura-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e277]: 
+              - generic [ref=e278]:
+                - link "  В записи  12 лекции" [ref=e279] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-durge-2023-v-zapisi
+                  - generic [ref=e280]: 
+                  - generic [ref=e282]:
+                    - generic [ref=e283]: 
+                    - text: В записи
+                  - generic [ref=e285]:
+                    - generic [ref=e286]: 
+                    - text: 12 лекции
+                - generic [ref=e287]:
+                  - generic [ref=e288]:
+                    - generic [ref=e290]: Уша Санка
+                    - link "Напевный санскрит - гимн Дурге 2023 в записи" [ref=e291] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-durge-2023-v-zapisi
+                      - heading "Напевный санскрит - гимн Дурге 2023 в записи" [level=2] [ref=e292]
+                  - generic [ref=e293]:
+                    - generic [ref=e294]:
+                      - generic [ref=e295]:
+                        - generic [ref=e296]: Весь курс
+                        - generic [ref=e298]: 12 000 ₽
+                      - generic [ref=e299]:
+                        - generic [ref=e300]: По модулям
+                        - generic [ref=e302]: 4 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e303] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-durge-2023-v-zapisi#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e304]: 
+              - generic [ref=e305]:
+                - link "  В записи  8 лекции" [ref=e306] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/razbor-xanuman-calisy-2026
+                  - generic [ref=e307]: 
+                  - generic [ref=e309]:
+                    - generic [ref=e310]: 
+                    - text: В записи
+                  - generic [ref=e312]:
+                    - generic [ref=e313]: 
+                    - text: 8 лекции
+                - generic [ref=e314]:
+                  - generic [ref=e315]:
+                    - generic [ref=e317]: Демченко Максим Борисович
+                    - link "Разбор Хануман Чалисы 2026" [ref=e318] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/razbor-xanuman-calisy-2026
+                      - heading "Разбор Хануман Чалисы 2026" [level=2] [ref=e319]
+                  - generic [ref=e320]:
+                    - generic [ref=e321]:
+                      - generic [ref=e322]:
+                        - generic [ref=e323]: Весь курс
+                        - generic [ref=e325]: 12 000 ₽
+                      - generic [ref=e326]:
+                        - generic [ref=e327]: По модулям
+                        - generic [ref=e329]: 6 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e330] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/razbor-xanuman-calisy-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e331]: 
+              - generic [ref=e332]:
+                - link "  В записи  16 лекции" [ref=e333] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-cast-2-2026
+                  - generic [ref=e334]: 
+                  - generic [ref=e336]:
+                    - generic [ref=e337]: 
+                    - text: В записи
+                  - generic [ref=e339]:
+                    - generic [ref=e340]: 
+                    - text: 16 лекции
+                - generic [ref=e341]:
+                  - generic [ref=e342]:
+                    - generic [ref=e344]: Ворошилов Максим Анатольевич
+                    - link "Кашмирский шиваизм, часть 2 2026" [ref=e345] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-cast-2-2026
+                      - heading "Кашмирский шиваизм, часть 2 2026" [level=2] [ref=e346]
+                  - generic [ref=e347]:
+                    - generic [ref=e348]:
+                      - generic [ref=e349]:
+                        - generic [ref=e350]: Весь курс
+                        - generic [ref=e352]: 12 000 ₽
+                      - generic [ref=e353]:
+                        - generic [ref=e354]: По модулям
+                        - generic [ref=e356]: 3 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e357] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-cast-2-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e358]: 
+              - generic [ref=e359]:
+                - link "  В записи  16 лекции" [ref=e360] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/rannie-sanskritskie-rukopisi-2026
+                  - generic [ref=e361]: 
+                  - generic [ref=e363]:
+                    - generic [ref=e364]: 
+                    - text: В записи
+                  - generic [ref=e366]:
+                    - generic [ref=e367]: 
+                    - text: 16 лекции
+                - generic [ref=e368]:
+                  - generic [ref=e369]:
+                    - generic [ref=e371]: Лундышева Ольга Владимировна
+                    - link "Ранние санскритские рукописи 2026" [ref=e372] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/rannie-sanskritskie-rukopisi-2026
+                      - heading "Ранние санскритские рукописи 2026" [level=2] [ref=e373]
+                  - generic [ref=e374]:
+                    - generic [ref=e375]:
+                      - generic [ref=e376]:
+                        - generic [ref=e377]: Весь курс
+                        - generic [ref=e379]: 16 500 ₽
+                      - generic [ref=e380]:
+                        - generic [ref=e381]: По модулям
+                        - generic [ref=e383]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e384] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/rannie-sanskritskie-rukopisi-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e385]: 
+              - generic [ref=e386]:
+                - link "  В записи  16 лекции" [ref=e387] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/geografiia-indii-2026
+                  - generic [ref=e388]: 
+                  - generic [ref=e390]:
+                    - generic [ref=e391]: 
+                    - text: В записи
+                  - generic [ref=e393]:
+                    - generic [ref=e394]: 
+                    - text: 16 лекции
+                - generic [ref=e395]:
+                  - generic [ref=e396]:
+                    - generic [ref=e398]: Щербак Сергей Викторович
+                    - link "География Индии 2026" [ref=e399] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/geografiia-indii-2026
+                      - heading "География Индии 2026" [level=2] [ref=e400]
+                  - generic [ref=e401]:
+                    - generic [ref=e402]:
+                      - generic [ref=e403]:
+                        - generic [ref=e404]: Весь курс
+                        - generic [ref=e406]: 16 500 ₽
+                      - generic [ref=e407]:
+                        - generic [ref=e408]: По модулям
+                        - generic [ref=e410]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e411] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/geografiia-indii-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e412]: 
+              - generic [ref=e413]:
+                - link "  В записи  16 лекции" [ref=e414] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/kalligrafiia-2026
+                  - generic [ref=e415]: 
+                  - generic [ref=e417]:
+                    - generic [ref=e418]: 
+                    - text: В записи
+                  - generic [ref=e420]:
+                    - generic [ref=e421]: 
+                    - text: 16 лекции
+                - generic [ref=e422]:
+                  - generic [ref=e423]:
+                    - generic [ref=e425]: Литвиненко Ольга Андреевна
+                    - link "Каллиграфия 2026" [ref=e426] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kalligrafiia-2026
+                      - heading "Каллиграфия 2026" [level=2] [ref=e427]
+                  - generic [ref=e428]:
+                    - generic [ref=e429]:
+                      - generic [ref=e430]:
+                        - generic [ref=e431]: Весь курс
+                        - generic [ref=e433]: 16 500 ₽
+                      - generic [ref=e434]:
+                        - generic [ref=e435]: По модулям
+                        - generic [ref=e437]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e438] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kalligrafiia-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e439]: 
+              - generic [ref=e440]:
+                - link "  В записи  12 лекции" [ref=e441] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/dop-zaniatiia-po-xindi
+                  - generic [ref=e442]: 
+                  - generic [ref=e444]:
+                    - generic [ref=e445]: 
+                    - text: В записи
+                  - generic [ref=e447]:
+                    - generic [ref=e448]: 
+                    - text: 12 лекции
+                - generic [ref=e449]:
+                  - generic [ref=e450]:
+                    - generic [ref=e452]: Костина Екатерина Александровна
+                    - link "Доп. занятия по хинди" [ref=e453] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/dop-zaniatiia-po-xindi
+                      - heading "Доп. занятия по хинди" [level=2] [ref=e454]
+                  - generic [ref=e455]:
+                    - generic [ref=e457]:
+                      - generic [ref=e458]: Весь курс
+                      - generic [ref=e460]: 1 500 ₽
+                    - link "Выбрать тариф " [ref=e461] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/dop-zaniatiia-po-xindi#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e462]: 
+              - generic [ref=e463]:
+                - link "  В записи  16 лекции" [ref=e464] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-2025-v-zapisi
+                  - generic [ref=e465]: 
+                  - generic [ref=e467]:
+                    - generic [ref=e468]: 
+                    - text: В записи
+                  - generic [ref=e470]:
+                    - generic [ref=e471]: 
+                    - text: 16 лекции
+                - generic [ref=e472]:
+                  - generic [ref=e473]:
+                    - generic [ref=e475]: Ворошилов Максим Анатольевич
+                    - link "Кашмирский шиваизм 2025 в записи" [ref=e476] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-2025-v-zapisi
+                      - heading "Кашмирский шиваизм 2025 в записи" [level=2] [ref=e477]
+                  - generic [ref=e478]:
+                    - generic [ref=e479]:
+                      - generic [ref=e480]:
+                        - generic [ref=e481]: Весь курс
+                        - generic [ref=e483]: 12 000 ₽
+                      - generic [ref=e484]:
+                        - generic [ref=e485]: По модулям
+                        - generic [ref=e487]: 3 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e488] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/kasmirskii-sivaizm-2025-v-zapisi#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e489]: 
+              - generic [ref=e490]:
+                - link "  В записи  80 лекции" [ref=e491] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr60
+                  - generic [ref=e492]: 
+                  - generic [ref=e494]:
+                    - generic [ref=e495]: 
+                    - text: В записи
+                  - generic [ref=e497]:
+                    - generic [ref=e498]: 
+                    - text: 80 лекции
+                - generic [ref=e499]:
+                  - generic [ref=e500]:
+                    - generic [ref=e502]: Гасунс Марцис Юрьевич
+                    - link "Грамматика по Кочергиной гр.60" [ref=e503] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr60
+                      - heading "Грамматика по Кочергиной гр.60" [level=2] [ref=e504]
+                  - generic [ref=e505]:
+                    - generic [ref=e507]:
+                      - generic [ref=e508]: По модулям
+                      - generic [ref=e510]: 8 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e511] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr60#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e512]: 
+              - generic [ref=e513]:
+                - link "  В записи  80 лекции" [ref=e514] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr59
+                  - generic [ref=e515]: 
+                  - generic [ref=e517]:
+                    - generic [ref=e518]: 
+                    - text: В записи
+                  - generic [ref=e520]:
+                    - generic [ref=e521]: 
+                    - text: 80 лекции
+                - generic [ref=e522]:
+                  - generic [ref=e523]:
+                    - generic [ref=e525]: Гасунс Марцис Юрьевич
+                    - link "Грамматика по Кочергиной гр.59" [ref=e526] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr59
+                      - heading "Грамматика по Кочергиной гр.59" [level=2] [ref=e527]
+                  - generic [ref=e528]:
+                    - generic [ref=e530]:
+                      - generic [ref=e531]: По модулям
+                      - generic [ref=e533]: 8 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e534] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-po-kocerginoi-gr59#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e535]: 
+              - generic [ref=e536]:
+                - link "  В записи  12 лекции" [ref=e537] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/vostocnye-kalendari-2026
+                  - generic [ref=e538]: 
+                  - generic [ref=e540]:
+                    - generic [ref=e541]: 
+                    - text: В записи
+                  - generic [ref=e543]:
+                    - generic [ref=e544]: 
+                    - text: 12 лекции
+                - generic [ref=e545]:
+                  - generic [ref=e546]:
+                    - generic [ref=e548]: Емельянов Владимир Владимирович
+                    - link "Восточные календари (2026)" [ref=e549] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/vostocnye-kalendari-2026
+                      - heading "Восточные календари (2026)" [level=2] [ref=e550]
+                  - generic [ref=e552]:
+                    - generic [ref=e553]: 
+                    - generic [ref=e554]: Набор закрыт
+              - generic [ref=e555]:
+                - link "  В записи  80 лекции" [ref=e556] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/grammatika-xindi-gr-5-vt
+                  - generic [ref=e557]: 
+                  - generic [ref=e559]:
+                    - generic [ref=e560]: 
+                    - text: В записи
+                  - generic [ref=e562]:
+                    - generic [ref=e563]: 
+                    - text: 80 лекции
+                - generic [ref=e564]:
+                  - generic [ref=e565]:
+                    - generic [ref=e567]: Костина Екатерина Александровна
+                    - link "Грамматика хинди гр. 5, вт" [ref=e568] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-xindi-gr-5-vt
+                      - heading "Грамматика хинди гр. 5, вт" [level=2] [ref=e569]
+                  - generic [ref=e570]:
+                    - generic [ref=e572]:
+                      - generic [ref=e573]: По модулям
+                      - generic [ref=e575]: 6 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e576] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/grammatika-xindi-gr-5-vt#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e577]: 
+              - generic [ref=e578]:
+                - link "  В записи  16 лекции" [ref=e579] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/gimn-suri-2026
+                  - generic [ref=e580]: 
+                  - generic [ref=e582]:
+                    - generic [ref=e583]: 
+                    - text: В записи
+                  - generic [ref=e585]:
+                    - generic [ref=e586]: 
+                    - text: 16 лекции
+                - generic [ref=e587]:
+                  - generic [ref=e588]:
+                    - generic [ref=e590]: Уша Санка
+                    - link "Гимн Сурьи 2026" [ref=e591] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-suri-2026
+                      - heading "Гимн Сурьи 2026" [level=2] [ref=e592]
+                  - generic [ref=e593]:
+                    - generic [ref=e594]:
+                      - generic [ref=e595]:
+                        - generic [ref=e596]: Весь курс
+                        - generic [ref=e598]: 17 000 ₽
+                      - generic [ref=e599]:
+                        - generic [ref=e600]: По модулям
+                        - generic [ref=e602]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e603] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-suri-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e604]: 
+              - generic [ref=e605]:
+                - link "  В записи  16 лекции" [ref=e606] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/gimn-bxagavadgity-2026-13-cast
+                  - generic [ref=e607]: 
+                  - generic [ref=e609]:
+                    - generic [ref=e610]: 
+                    - text: В записи
+                  - generic [ref=e612]:
+                    - generic [ref=e613]: 
+                    - text: 16 лекции
+                - generic [ref=e614]:
+                  - generic [ref=e615]:
+                    - generic [ref=e617]: Уша Санка
+                    - link "Гимн Бхагавадгиты 2026 (1/3 часть)" [ref=e618] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-bxagavadgity-2026-13-cast
+                      - heading "Гимн Бхагавадгиты 2026 (1/3 часть)" [level=2] [ref=e619]
+                  - generic [ref=e620]:
+                    - generic [ref=e621]:
+                      - generic [ref=e622]:
+                        - generic [ref=e623]: Весь курс
+                        - generic [ref=e625]: 20 000 ₽
+                      - generic [ref=e626]:
+                        - generic [ref=e627]: По модулям
+                        - generic [ref=e629]: 6 000 ₽ / блок
+                    - link "Выбрать тариф " [ref=e630] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-bxagavadgity-2026-13-cast#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e631]: 
+              - generic [ref=e632]:
+                - link "  В записи  16 лекции" [ref=e633] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/gimn-abxinavagupty-2026
+                  - generic [ref=e634]: 
+                  - generic [ref=e636]:
+                    - generic [ref=e637]: 
+                    - text: В записи
+                  - generic [ref=e639]:
+                    - generic [ref=e640]: 
+                    - text: 16 лекции
+                - generic [ref=e641]:
+                  - generic [ref=e642]:
+                    - generic [ref=e644]: Уша Санка
+                    - link "Гимн Абхинавагупты 2026" [ref=e645] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-abxinavagupty-2026
+                      - heading "Гимн Абхинавагупты 2026" [level=2] [ref=e646]
+                  - generic [ref=e647]:
+                    - generic [ref=e648]:
+                      - generic [ref=e649]:
+                        - generic [ref=e650]: Весь курс
+                        - generic [ref=e652]: 17 000 ₽
+                      - generic [ref=e653]:
+                        - generic [ref=e654]: По модулям
+                        - generic [ref=e656]: 4 800 ₽ / блок
+                    - link "Выбрать тариф " [ref=e657] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/gimn-abxinavagupty-2026#tariffs
+                      - text: Выбрать тариф
+                      - generic [ref=e658]: 
+              - generic [ref=e659]:
+                - link "  В записи  16 лекции" [ref=e660] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/shop/course/saravali-2026
+                  - generic [ref=e661]: 
+                  - generic [ref=e663]:
+                    - generic [ref=e664]: 
+                    - text: В записи
+                  - generic [ref=e666]:
+                    - generic [ref=e667]: 
+                    - text: 16 лекции
+                - generic [ref=e668]:
+                  - generic [ref=e669]:
+                    - generic [ref=e671]: Широбоков Андрей Петрович
+                    - link "Саравали 2026" [ref=e672] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8000/shop/course/saravali-2026
+                      - heading "Саравали 2026" [level=2] [ref=e673]
+                  - generic [ref=e675]:
+                    - generic [ref=e676]: 
+                    - generic [ref=e677]: Набор закрыт
+            - generic [ref=e678]:
+              - text: 
+              - button " Показать ещё" [ref=e679] [cursor=pointer]:
+                - generic [ref=e680]: 
+                - text: Показать ещё
+  - contentinfo [ref=e682]:
+    - generic [ref=e683]:
+      - generic [ref=e684]:
+        - paragraph [ref=e686]: Глубокое изучение санскрита в традиции живых учителей.
+        - generic [ref=e687]:
+          - button "Политика конфиденциальности" [ref=e688] [cursor=pointer]
+          - button "Публичная оферта" [ref=e689] [cursor=pointer]
+          - paragraph [ref=e690]: © 2026 Все права защищены
+        - generic [ref=e691]:
+          - link "" [ref=e692] [cursor=pointer]:
+            - /url: https://vk.com/club88831040
+            - generic [ref=e693]: 
+          - link "" [ref=e694] [cursor=pointer]:
+            - /url: https://t.me/samskrtamru
+            - generic [ref=e695]: 
+          - link "" [ref=e696] [cursor=pointer]:
+            - /url: https://samskrte.ru
+            - generic [ref=e697]: 
+      - text: 
+  - text:  

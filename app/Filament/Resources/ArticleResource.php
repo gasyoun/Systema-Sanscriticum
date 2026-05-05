@@ -14,8 +14,12 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 
+use App\Filament\Concerns\AdminOnly;
+
 class ArticleResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Article::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

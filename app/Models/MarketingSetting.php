@@ -19,6 +19,15 @@ class MarketingSetting extends Model
         'wholesale_large_discount',
         'blog_yandex_metrika_id',
         'blog_vk_pixel_id',
+        // --- ПРАНА ---
+        'is_prana_active',
+        'prana_rate',
+        'prana_max_share_percent',
+        'prana_reward_lesson_complete',
+        'prana_reward_course_complete',
+        'prana_reward_open_lesson_view',
+        'prana_reward_daily_login',
+        'prana_reward_payment_success',
     ];
 
     protected $casts = [
@@ -29,5 +38,13 @@ class MarketingSetting extends Model
         'wholesale_small_discount' => 'integer',
         'wholesale_large_threshold' => 'integer',
         'wholesale_large_discount' => 'integer',
+        'is_prana_active' => 'boolean',
+        'prana_rate' => 'integer',
+        'prana_max_share_percent' => 'integer',
+        'prana_reward_lesson_complete' => 'integer',
+        'prana_reward_course_complete' => 'integer',
+        'prana_reward_open_lesson_view' => 'integer',
+        'prana_reward_daily_login' => 'integer',
+        'prana_reward_payment_success' => 'integer',
     ];
 }

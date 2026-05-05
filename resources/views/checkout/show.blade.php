@@ -30,9 +30,16 @@
                 
                 <div class="md:col-span-7 space-y-8 mb-10 md:mb-0">
                     
-                    <form action="{{ route('payment.create') }}" method="POST" id="checkout-form">
+                    <form action="{{ route('payment.create') }}" method="POST" id="checkout-form"
+                          x-data="{
+                              prana: 0,
+                              max: {{ (int) ($pranaMaxSpend ?? 0) }},
+                              rate: {{ (int) ($pranaRate ?? 10) }},
+                              get rubles() { return Math.floor(this.prana / this.rate); }
+                          }">
     @csrf
     <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
+    <input type="hidden" name="prana_amount" :value="prana">
 
     @guest
     
@@ -66,6 +73,51 @@
             </div>
         </div>
     @endguest
+
+    {{-- ============================================ --}}
+    {{-- СПИСАНИЕ ПРАНЫ                             --}}
+    {{-- ============================================ --}}
+    @auth
+        @if(\App\Services\Prana\PranaSettings::isActive() && ($pranaBalance ?? 0) > 0)
+            <div class="bg-white p-7 rounded-3xl shadow-lg shadow-gray-100/30 border border-gray-100 mt-8">
+                <div class="flex items-start gap-4 mb-5">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-[#E85C24] flex items-center justify-center shrink-0 border border-orange-100 text-2xl">
+                        <span aria-hidden="true">🪷</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base font-extrabold text-gray-900 leading-tight">Списать прану</h4>
+                        <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                            Доступно <span class="font-bold text-gray-700">{{ number_format($pranaBalance, 0, '.', ' ') }}</span> праны.
+                            До {{ $pranaSharePct }}% стоимости ({{ $pranaRate }} праны = 1 ₽).
+                        </p>
+                    </div>
+                </div>
+
+                @if(($pranaMaxSpend ?? 0) > 0)
+                    <div class="space-y-3">
+                        <input type="range" min="0" :max="max" step="{{ $pranaRate }}" x-model.number="prana"
+                               class="w-full accent-[#E85C24]">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-500">Спишется:</span>
+                            <span class="font-extrabold text-gray-900">
+                                <span x-text="prana"></span> праны
+                                <span class="text-gray-400">·</span>
+                                −<span x-text="rubles"></span> ₽
+                            </span>
+                        </div>
+                        <button type="button" @click="prana = max"
+                                class="w-full text-xs font-bold text-[#E85C24] hover:text-[#d64e1c] py-2 border border-orange-100 rounded-lg bg-orange-50/50 hover:bg-orange-50 transition">
+                            Максимум — <span x-text="max"></span> праны
+                        </button>
+                    </div>
+                @else
+                    <p class="text-xs text-gray-400 italic">
+                        Прану нельзя списать на этом заказе (минимальная сумма к оплате — 1 ₽).
+                    </p>
+                @endif
+            </div>
+        @endif
+    @endauth
 </form>
 
                     <div class="bg-white p-7 rounded-3xl shadow-lg shadow-gray-100/30 border border-gray-100">
@@ -94,9 +146,19 @@
                     </div>
 
                     <div class="bg-white p-7 rounded-3xl shadow-lg shadow-gray-100/30 border border-gray-100">
-                        <button type="submit" form="checkout-form" class="w-full flex justify-center items-center py-4.5 px-6 rounded-xl shadow-lg shadow-orange-200 text-xl font-bold text-white bg-[#E85C24] hover:bg-[#d64e1c] hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
+                        <button type="submit" form="checkout-form"
+                                x-data="{
+                                    base: {{ (int) round((float) $finalPrice) }},
+                                    rate: {{ (int) ($pranaRate ?? 10) }},
+                                    get total() {
+                                        const input = document.querySelector('#checkout-form input[name=prana_amount]');
+                                        const p = input ? parseInt(input.value || 0) : 0;
+                                        return Math.max(1, this.base - Math.floor(p / this.rate));
+                                    }
+                                }"
+                                class="w-full flex justify-center items-center py-4.5 px-6 rounded-xl shadow-lg shadow-orange-200 text-xl font-bold text-white bg-[#E85C24] hover:bg-[#d64e1c] hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
                             <i class="fas fa-lock mr-2.5 opacity-80"></i>
-                            К безопасной оплате на {{ number_format($finalPrice, 0, '.', ' ') }} ₽
+                            К безопасной оплате на <span x-text="total.toLocaleString('ru-RU')" class="ml-1">{{ number_format($finalPrice, 0, '.', ' ') }}</span> ₽
                         </button>
                         
                         <p class="text-center text-xs text-gray-400 mt-5 leading-relaxed">
@@ -107,8 +169,18 @@
                 </div>
 
                 
-                <div class="md:col-span-5 relative">
-                    
+                <div class="md:col-span-5 relative"
+                     x-data="{
+                         basePrice: {{ (int) round((float) $finalPrice) }},
+                         get pranaRubles() {
+                             const formEl = document.getElementById('checkout-form');
+                             const input = formEl?.querySelector('input[name=prana_amount]');
+                             const prana = input ? parseInt(input.value || 0) : 0;
+                             return Math.floor(prana / {{ (int) ($pranaRate ?? 10) }});
+                         },
+                         get total() { return Math.max(1, this.basePrice - this.pranaRubles); }
+                     }">
+
                     <div class="md:sticky md:top-6 space-y-8">
                         
                         <div class="bg-white p-7 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100">
@@ -161,15 +233,24 @@
                             @if($finalPrice < $tariff->price)
                                 <div class="flex items-baseline gap-3 mb-2 border-b border-indigo-900/50 pb-3">
                                     <span class="text-3xl lg:text-4xl font-black tracking-tight text-white">
-                                        {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-indigo-300 font-medium">₽</span>
+                                        <span x-text="total.toLocaleString('ru-RU')">{{ number_format($finalPrice, 0, '.', ' ') }}</span>
+                                        <span class="text-xl text-indigo-300 font-medium">₽</span>
                                     </span>
                                     <span class="text-lg text-indigo-400 line-through font-medium">{{ number_format($tariff->price, 0, '.', ' ') }} ₽</span>
                                 </div>
                             @else
                                 <div class="text-5xl lg:text-6xl font-black text-white tracking-tight mb-2">
-                                    {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-3xl text-indigo-300 font-medium">₽</span>
+                                    <span x-text="total.toLocaleString('ru-RU')">{{ number_format($finalPrice, 0, '.', ' ') }}</span>
+                                    <span class="text-3xl text-indigo-300 font-medium">₽</span>
                                 </div>
                             @endif
+
+                            <template x-if="pranaRubles > 0">
+                                <p class="text-xs text-amber-300 font-bold mt-2 flex items-center gap-1.5">
+                                    <span aria-hidden="true">🪷</span>
+                                    Списано праны: −<span x-text="pranaRubles.toLocaleString('ru-RU')"></span> ₽
+                                </p>
+                            </template>
                         </div>
 
                     </div>

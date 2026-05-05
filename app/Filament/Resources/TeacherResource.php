@@ -8,8 +8,12 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class TeacherResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Teacher::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
