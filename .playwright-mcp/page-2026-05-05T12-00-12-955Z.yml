@@ -1,0 +1,58 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Общество ревнителей санскрита Ревнители санскрита Блог" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img "Общество ревнителей санскрита" [ref=e6]
+          - generic [ref=e7]:
+            - generic [ref=e8]: Ревнители санскрита
+            - generic [ref=e9]: Блог
+        - navigation [ref=e10]:
+          - link "Главная" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Все курсы" [ref=e12] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000/shop
+          - link "Блог" [ref=e13] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000/s
+        - link "Войти" [ref=e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop
+          - img [ref=e16]
+          - generic [ref=e18]: Войти
+    - generic [ref=e19]:
+      - generic: ग्रन्थ
+      - generic [ref=e20]:
+        - heading "Статьи" [level=1] [ref=e21]
+        - paragraph [ref=e22]: Разборы, практика и философия санскрита — без пафоса и воды.
+    - generic [ref=e23]:
+      - complementary [ref=e24]:
+        - generic [ref=e25]:
+          - heading "Поиск" [level=4] [ref=e26]
+          - searchbox "Название статьи..." [ref=e27]
+        - heading "Рубрики" [level=4] [ref=e28]
+        - list [ref=e29]:
+          - listitem [ref=e30]:
+            - link "Все статьи 0" [ref=e31] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/s
+              - generic [ref=e32]: Все статьи
+              - generic [ref=e33]: "0"
+      - generic [ref=e35]:
+        - generic [ref=e36]: 
+        - paragraph [ref=e37]: Пока нет опубликованных статей.
+    - contentinfo [ref=e38]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Общество ревнителей санскрита
+          - generic [ref=e43]:
+            - button "Политика конфиденциальности" [ref=e44]: Политика конфиденциальности
+            - generic [ref=e45]: •
+            - button "Публичная оферта" [ref=e46]: Публичная оферта
+          - paragraph [ref=e47]: © 2026 Все права защищены
+        - generic [ref=e48]:
+          - link "" [ref=e49] [cursor=pointer]:
+            - /url: https://vk.com/samskrtamru
+            - generic [ref=e50]: 
+          - link "" [ref=e51] [cursor=pointer]:
+            - /url: https://t.me/rusamskrtam
+            - generic [ref=e52]: 
+  - text:  

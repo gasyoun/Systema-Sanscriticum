@@ -10,8 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class MarketingSettingResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = MarketingSetting::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-8-tooth';
@@ -102,6 +106,84 @@ class MarketingSettingResource extends Resource
                             
                             ])
                     ->visible(fn (Forms\Get $get) => $get('is_loyalty_active')),
+
+                // ==========================================
+                // ПРАНА (геймификация)
+                // ==========================================
+                Forms\Components\Section::make('🪷 Прана (геймификация)')
+                    ->description('Виртуальная валюта студентов. Накапливается за активность, тратится на покупку курсов.')
+                    ->schema([
+                        Forms\Components\Toggle::make('is_prana_active')
+                            ->label('Прана включена')
+                            ->helperText('Если выключить: бейдж и вкладка скроются у студентов, начисления остановятся, на checkout пропадёт слайдер списания. Уже накопленные балансы сохранятся — при повторном включении продолжат работать.')
+                            ->default(true)
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live(),
+
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('prana_rate')
+                                    ->label('Курс конвертации')
+                                    ->helperText('Сколько праны = 1 ₽ скидки. По умолчанию 10 (значит 100 праны = 10 ₽).')
+                                    ->numeric()
+                                    ->default(10)
+                                    ->minValue(1)
+                                    ->maxValue(1000)
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('prana_max_share_percent')
+                                    ->label('Макс. доля цены, %')
+                                    ->helperText('Какую долю стоимости курса можно покрыть праной. По умолчанию 30%.')
+                                    ->numeric()
+                                    ->default(30)
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->suffix('%')
+                                    ->required(),
+                            ])
+                            ->visible(fn (Forms\Get $get) => $get('is_prana_active')),
+
+                        Forms\Components\Fieldset::make('Сколько праны начисляется за активность')
+                            ->schema([
+                                Forms\Components\TextInput::make('prana_reward_lesson_complete')
+                                    ->label('За завершённый урок')
+                                    ->numeric()
+                                    ->default(10)
+                                    ->minValue(0)
+                                    ->suffix('🪷'),
+
+                                Forms\Components\TextInput::make('prana_reward_course_complete')
+                                    ->label('За пройденный курс целиком')
+                                    ->numeric()
+                                    ->default(500)
+                                    ->minValue(0)
+                                    ->suffix('🪷'),
+
+                                Forms\Components\TextInput::make('prana_reward_open_lesson_view')
+                                    ->label('За просмотр открытого урока / вебинара')
+                                    ->numeric()
+                                    ->default(20)
+                                    ->minValue(0)
+                                    ->suffix('🪷'),
+
+                                Forms\Components\TextInput::make('prana_reward_daily_login')
+                                    ->label('Ежедневный вход в кабинет')
+                                    ->numeric()
+                                    ->default(5)
+                                    ->minValue(0)
+                                    ->suffix('🪷'),
+
+                                Forms\Components\TextInput::make('prana_reward_payment_success')
+                                    ->label('За успешную оплату')
+                                    ->numeric()
+                                    ->default(50)
+                                    ->minValue(0)
+                                    ->suffix('🪷'),
+                            ])
+                            ->columns(2)
+                            ->visible(fn (Forms\Get $get) => $get('is_prana_active')),
+                    ]),
             ]);
     }
 
@@ -119,6 +201,11 @@ class MarketingSettingResource extends Resource
                 Tables\Columns\TextColumn::make('wholesale_large_discount')
                     ->label('Макс. накопительная')
                     ->formatStateUsing(fn ($state) => $state . ' %'),
+
+                Tables\Columns\IconColumn::make('is_prana_active')
+                    ->label('🪷 Прана')
+                    ->boolean()
+                    ->alignment('center'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

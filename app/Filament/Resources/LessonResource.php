@@ -3,17 +3,69 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\LessonResource\Pages;
+use App\Models\Course;
 use App\Models\Lesson;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\FileUpload;
+use Illuminate\Database\Eloquent\Builder;
 
 class LessonResource extends Resource
 {
     protected static ?string $model = Lesson::class;
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+        return $user->isTeacher()
+            && $user->teacher_id
+            && optional($record->course)->teacher_id === $user->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canEdit($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher() && $user->teacher_id) {
+            $query->whereHas('course', function ($q) use ($user) {
+                $q->where('teacher_id', $user->teacher_id);
+            });
+        }
+
+        return $query;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-play-circle';
     protected static ?int $navigationSort = 20;
@@ -26,7 +78,17 @@ class LessonResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('course_id')
-                    ->relationship('course', 'title') 
+                    ->relationship(
+                        name: 'course',
+                        titleAttribute: 'title',
+                        modifyQueryUsing: function (Builder $query) {
+                            // Учитель видит в селекте только свои курсы; админ — все.
+                            $user = auth()->user();
+                            if ($user && $user->isTeacher() && $user->teacher_id) {
+                                $query->where('teacher_id', $user->teacher_id);
+                            }
+                        },
+                    )
                     ->required()
                     ->label('Привязать к курсу'),
 

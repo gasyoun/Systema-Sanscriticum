@@ -10,6 +10,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Support\RoleGate;
+use App\Support\Roles;
+
 class PaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
@@ -19,6 +22,26 @@ class PaymentResource extends Resource
     protected static ?string $navigationGroup = 'Продажи';
     protected static ?string $navigationLabel = 'Финансы';
     protected static ?string $pluralModelLabel = 'Транзакции';
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canCreate(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
 
     public static function form(Form $form): Form
     {

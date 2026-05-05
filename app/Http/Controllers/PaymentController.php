@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Tariff;
 use App\Models\PromoCode;
 use App\Models\Payment;
+use App\Services\Prana\PranaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
@@ -15,10 +16,11 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    public function createPayment(Request $request)
+    public function createPayment(Request $request, PranaService $prana)
 {
     $rules = [
-        'tariff_id' => 'required|exists:tariffs,id',
+        'tariff_id'    => 'required|exists:tariffs,id',
+        'prana_amount' => 'nullable|integer|min:0',
     ];
 
     if (!auth()->check()) {
@@ -28,7 +30,7 @@ class PaymentController extends Controller
 
     $request->validate($rules);
 
-    return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+    return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana) {
 
         // 2. ПОЛУЧАЕМ ИЛИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ
         if (auth()->check()) {
@@ -69,6 +71,23 @@ class PaymentController extends Controller
 
         $finalPrice = max(0, $finalPrice);
 
+        // --- ПРАНА: списание в счёт оплаты ---
+        $pranaToSpend = (int) $request->input('prana_amount', 0);
+        $pranaDiscountRubles = 0.0;
+
+        if ($pranaToSpend > 0 && auth()->check()) {
+            // Пересчитываем серверный максимум — игнорируем то, что прислал клиент.
+            $maxSpend = $prana->maxSpendableForPrice($user, $finalPrice);
+            $pranaToSpend = min($pranaToSpend, $maxSpend);
+
+            if ($pranaToSpend > 0) {
+                $pranaDiscountRubles = $prana->pranaToRubles($pranaToSpend);
+                $finalPrice = max(1, $finalPrice - $pranaDiscountRubles);
+            }
+        } else {
+            $pranaToSpend = 0;
+        }
+
         // --- ОПРЕДЕЛЯЕМ КЛЮЧ ДЛЯ ДОСТУПА И НОМЕРА БЛОКОВ ---
 $tariffKey = $tariff->type;
 $startBlock = null;
@@ -87,11 +106,18 @@ $payment = Payment::create([
     'user_id'     => $user->id,
     'course_id'   => $tariff->course->id ?? null,
     'amount'      => $finalPrice,
+    'prana_spent' => $pranaToSpend,
     'tariff'      => $tariffKey,
     'status'      => 'pending',
     'start_block' => $startBlock,
     'end_block'   => $endBlock,
 ]);
+
+// Списываем прану ровно сейчас, в той же транзакции — потом, если оплата
+// не пройдёт, наблюдатель Payment::updated вернёт её через refundPranaIfSpent().
+if ($pranaToSpend > 0) {
+    $prana->spend($user, $pranaToSpend, 'spent_on_purchase', $payment);
+}
 
         // 5. ИНКРЕМЕНТИРУЕМ ПРОМОКОД
         if ($promo) {

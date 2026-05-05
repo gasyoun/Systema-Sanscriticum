@@ -4,16 +4,67 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CourseResource\Pages;
 use App\Models\Course;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class CourseResource extends Resource
 {
     protected static ?string $model = Course::class;
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        // Учитель не создаёт курсы — только админ.
+        return RoleGate::adminOnly();
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+        // Учитель может редактировать только свой курс — но менять состав курса
+        // (тарифы, группы и т.п.) пусть остаётся за админом. Для учителя оставим
+        // edit, чтобы он мог открыть карточку и быстро дойти до уроков.
+        return $user->isTeacher() && $user->teacher_id === $record->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher() && $user->teacher_id) {
+            $query->where('teacher_id', $user->teacher_id);
+        }
+
+        return $query;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?int $navigationSort = 10;

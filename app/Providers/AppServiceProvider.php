@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL; // <--- Важно!
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Carbon;
+use App\Models\Course;
 use App\Models\Schedule;
 use App\Observers\ScheduleObserver;
 use App\Models\ArticleView;
@@ -57,7 +60,29 @@ class AppServiceProvider extends ServiceProvider
         ArticleView::observe(ArticleViewObserver::class);
         
         Payment::observe(PaymentObserver::class);
-        
+
         LandingPage::observe(LandingPageObserver::class);
+
+        // Сквозной мини-блок «Курсы в записи» для главной и лендингов
+        View::composer(['main', 'layouts.promo', 'promo.legacy'], function ($view): void {
+            if (array_key_exists('recordedCoursesMini', $view->getData())) {
+                return;
+            }
+
+            $courses = Cache::remember('recorded_courses_mini_v1', 300, function () {
+                return Course::query()
+                    ->where('is_visible', true)
+                    ->where('format', 'recorded')
+                    ->with([
+                        'tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price'),
+                        'categories:id,name,slug,color',
+                    ])
+                    ->latest('id')
+                    ->limit(6)
+                    ->get();
+            });
+
+            $view->with('recordedCoursesMini', $courses);
+        });
     }
 }

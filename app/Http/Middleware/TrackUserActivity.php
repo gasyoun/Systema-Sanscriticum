@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Services\Activity\ActivityTracker;
+use App\Services\Prana\PranaService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,7 @@ final class TrackUserActivity
 
     public function __construct(
         private readonly ActivityTracker $tracker,
+        private readonly PranaService $prana,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -62,12 +64,17 @@ final class TrackUserActivity
 
     try {
         $acquired = Redis::set($throttleKey, '1', 'EX', self::THROTTLE_SECONDS, 'NX');
-        
+
         if (!$acquired) {
             return;
         }
 
         $this->updateActivity($user->id, $request);
+
+        // Daily-login бонус — идемпотентен через source_id=YYYYMMDD.
+        // Дёшево попытаться раз в минуту: после первого успеха в день
+        // unique-индекс мгновенно отбивает остальные попытки.
+        $this->prana->awardDailyLogin($user);
     } catch (\Throwable $e) {
         \Illuminate\Support\Facades\Log::warning('TrackUserActivity failed', [
             'user_id' => $userId,

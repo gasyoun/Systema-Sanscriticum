@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\Roles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -22,6 +24,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'is_admin',
+        'role',
+        'teacher_id',
         'is_lecture_editor',
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_auth_token',   // <-- Добавили для Telegram
@@ -36,6 +40,7 @@ class User extends Authenticatable implements FilamentUser
         'login_count',
         'total_time_spent',
         'total_lessons_opened',
+        'prana_balance',
     ];
 
     protected $hidden = [
@@ -55,6 +60,7 @@ class User extends Authenticatable implements FilamentUser
             'login_count'          => 'integer',
             'total_time_spent'     => 'integer',
             'total_lessons_opened' => 'integer',
+            'prana_balance'        => 'integer',
         ];
     }
 
@@ -64,9 +70,57 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
-            'editor' => (bool) ($this->is_admin || $this->is_lecture_editor),
-            default  => (bool) $this->is_admin,
+            'editor' => $this->isAdminLike() || (bool) $this->is_lecture_editor,
+            default  => $this->isAdminLike() || $this->isTeacher() || $this->isManager(),
         };
+    }
+
+    // ==========================================
+    // ХЕЛПЕРЫ РОЛЕЙ
+    // ==========================================
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === Roles::SUPER_ADMIN;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === Roles::ADMIN;
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === Roles::TEACHER;
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === Roles::MANAGER;
+    }
+
+    /**
+     * super_admin или admin — то, что раньше понималось под is_admin.
+     */
+    public function isAdminLike(): bool
+    {
+        return in_array($this->role, Roles::adminLike(), true);
+    }
+
+    /**
+     * Синхронизируем legacy-флаг is_admin с ролью.
+     * Старый код (Payment.php, TrackUserActivity и т.п.) читает is_admin,
+     * и пока его не выпиливаем — держим в актуальном состоянии.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $user) {
+            $user->is_admin = in_array($user->role, Roles::adminLike(), true);
+        });
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class);
     }
 
     // ==========================================
@@ -251,6 +305,14 @@ public function lessonViews(): \Illuminate\Database\Eloquent\Relations\HasMany
 public function activityEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
 {
     return $this->hasMany(ActivityEvent::class);
+}
+
+/**
+ * История начислений и списаний праны.
+ */
+public function pranaTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(PranaTransaction::class)->orderByDesc('created_at');
 }
 
 /**

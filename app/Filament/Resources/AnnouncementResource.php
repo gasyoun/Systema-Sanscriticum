@@ -10,8 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class AnnouncementResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Announcement::class;
 
     // Делаем красивую иконку рупора в левом меню

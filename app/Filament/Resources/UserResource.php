@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -25,6 +27,38 @@ class UserResource extends Resource
     protected static ?string $navigationGroup = 'Пользователи';
     protected static ?string $navigationLabel = 'Студенты';
     protected static ?string $pluralModelLabel = 'Студенты';
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canCreate(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        // Супер-админ редактирует кого угодно. Обычный админ не может править
+        // других супер-админов и админов — только обычных пользователей.
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        if ($user->isAdmin()) {
+            return !in_array($record->role, Roles::adminLike(), true);
+        }
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canEdit($record) && auth()->id() !== $record->id;
+    }
 
     public static function form(Form $form): Form
     {
@@ -86,20 +120,36 @@ class UserResource extends Resource
                             ->multiple()
                             ->relationship('groups', 'name')
                             ->preload(),
-                        
-                        Forms\Components\Toggle::make('is_admin')
-                            ->label('Права администратора')
-                            ->helperText('Дает полный доступ в панель управления')
-                            ->onColor('success')
-                            ->offColor('danger')
-                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+
+                        Forms\Components\Select::make('role')
+                            ->label('Роль в админке')
+                            ->helperText('Без роли — обычный студент, без доступа в админку. Назначать админа и супер-админа может только супер-админ.')
+                            ->options(function () {
+                                $all = Roles::all();
+                                // Обычный админ не может выдавать роли admin/super_admin.
+                                if (!RoleGate::isSuperAdmin()) {
+                                    unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN]);
+                                }
+                                return $all;
+                            })
+                            ->placeholder('— Студент —')
+                            ->live()
+                            ->visible(fn () => RoleGate::adminOnly()),
+
+                        Forms\Components\Select::make('teacher_id')
+                            ->label('Связь с карточкой преподавателя')
+                            ->relationship('teacher', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Учитель видит и правит только курсы, привязанные к этой карточке.')
+                            ->visible(fn (Forms\Get $get) => $get('role') === Roles::TEACHER),
 
                         Forms\Components\Toggle::make('is_lecture_editor')
                             ->label('Редактор лекций')
                             ->helperText('Доступ к панели сборки лекций (без доступа в админку)')
                             ->onColor('success')
                             ->offColor('gray')
-                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+                            ->visible(fn () => RoleGate::isSuperAdmin()),
                     ])->columns(1),
             ]);
     }
@@ -187,19 +237,28 @@ class UserResource extends Resource
             return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
         }),
 
-    // --- КОЛОНКА 5: АДМИН (только для суперадмина) ---
-    Tables\Columns\IconColumn::make('is_admin')
-        ->label('Админ')
-        ->boolean()
+    // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
+    Tables\Columns\TextColumn::make('role')
+        ->label('Роль')
+        ->badge()
+        ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
+        ->color(fn (?string $state): string => match ($state) {
+            Roles::SUPER_ADMIN => 'danger',
+            Roles::ADMIN       => 'warning',
+            Roles::TEACHER     => 'info',
+            Roles::MANAGER     => 'primary',
+            default            => 'gray',
+        })
         ->alignment('center')
-        ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+        ->toggleable()
+        ->visible(fn () => RoleGate::adminOnly()),
 
     Tables\Columns\IconColumn::make('is_lecture_editor')
         ->label('Ред. лекций')
         ->boolean()
         ->alignment('center')
         ->toggleable(isToggledHiddenByDefault: true)
-        ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+        ->visible(fn () => RoleGate::isSuperAdmin()),
 ])
             ->defaultSort('last_activity_at', 'desc')
             ->filters([

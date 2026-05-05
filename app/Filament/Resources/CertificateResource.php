@@ -13,8 +13,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use App\Filament\Concerns\AdminOnly;
+
 class CertificateResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Certificate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
