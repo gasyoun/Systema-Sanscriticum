@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="bg-white p-7 rounded-3xl shadow-lg shadow-gray-100/30 border border-gray-100">
-                        <button type="submit" form="checkout-form" class="w-full flex justify-center items-center py-4.5 px-6 rounded-xl shadow-lg shadow-orange-200 text-xl font-bold text-white bg-[#E85C24] hover:bg-[#d64e1c] hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
+                        <button type="submit" form="checkout-form" class="w-full flex justify-center items-center py-3 px-6 rounded-xl shadow-lg shadow-orange-200 text-xl font-bold text-white bg-[#E85C24] hover:bg-[#d64e1c] hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
                             <i class="fas fa-lock mr-2.5 opacity-80"></i>
                             К безопасной оплате на {{ number_format($finalPrice, 0, '.', ' ') }} ₽
                         </button>
