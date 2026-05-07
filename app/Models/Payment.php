@@ -75,8 +75,9 @@ class Payment extends Model
         $this->awardPranaForPurchase();
     });
 
-    // Telegram-уведомление — вне транзакции (не критично если не отправится)
-    if ($this->user) {
+    // Telegram-уведомление — через очередь, чтобы не держать row-lock webhook'а
+    // во время синхронного HTTP-вызова к api.telegram.org.
+    if ($this->user_id) {
         $courseName = $this->course->title ?? 'Обучающий материал';
         $url = url('/login');
 
@@ -85,7 +86,7 @@ class Payment extends Model
         $text .= "Можете приступать к занятиям прямо сейчас:\n";
         $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
 
-        $this->user->sendTelegramMessage($text);
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 }
 

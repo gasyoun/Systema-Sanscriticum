@@ -38,10 +38,11 @@ class CourseResource extends Resource
         if ($user->isAdminLike()) {
             return true;
         }
-        // Учитель может редактировать только свой курс — но менять состав курса
-        // (тарифы, группы и т.п.) пусть остаётся за админом. Для учителя оставим
-        // edit, чтобы он мог открыть карточку и быстро дойти до уроков.
-        return $user->isTeacher() && $user->teacher_id === $record->teacher_id;
+        // Учитель может редактировать только свой курс. Без teacher_id —
+        // никаких прав, иначе NULL === NULL пропустит orphan-курсы.
+        return $user->isTeacher()
+            && $user->teacher_id !== null
+            && $user->teacher_id === $record->teacher_id;
     }
 
     public static function canDelete($record): bool
@@ -59,8 +60,14 @@ class CourseResource extends Resource
         $query = parent::getEloquentQuery();
 
         $user = auth()->user();
-        if ($user && $user->isTeacher() && $user->teacher_id) {
-            $query->where('teacher_id', $user->teacher_id);
+        if ($user && $user->isTeacher()) {
+            // Учитель без teacher_id (после nullOnDelete каскада или
+            // misconfigured аккаунта) не должен видеть orphan-курсы.
+            if (!$user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('teacher_id', $user->teacher_id);
+            }
         }
 
         return $query;

@@ -1,10 +1,14 @@
 @props([
     'variant' => 'dark',
     'subtitle' => null,
+    'showLogin' => true,
 ])
 
 @php
     $isDark = $variant === 'dark';
+    $contactsVariant = $isDark ? 'dark' : 'light';
+    $hasContacts    = config('social.phone') || config('social.email');
+    $dividerColor   = $isDark ? 'bg-[#1F2636]' : 'bg-[#E85C24]/15';
 
     $headerBg     = $isDark
         ? 'bg-[#0A0D14]/90 border-[#1F2636]'
@@ -70,6 +74,13 @@
 
         <div x-data="{ mobileNav: false }" class="flex items-center gap-2 shrink-0">
 
+            {{-- Контакты (телефон + email) --}}
+            @include('partials.contacts-bar', ['variant' => $contactsVariant])
+
+            @if($hasContacts && ($showLogin || auth()->check()))
+                <div class="hidden sm:block w-px h-6 {{ $dividerColor }}"></div>
+            @endif
+
             @auth
                 <a href="{{ $cabinetUrl }}"
                    class="hidden sm:inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-sm font-bold transition-all {{ $btnGhost }}">
@@ -80,14 +91,16 @@
                     <span class="hidden md:inline">Кабинет</span>
                 </a>
             @else
-                <a href="{{ $shopUrl }}"
-                   class="hidden sm:inline-flex items-center gap-2 px-4 md:px-5 py-2 rounded-xl text-sm font-bold transition-all {{ $btnPrimary }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    <span>Войти</span>
-                </a>
+                @if($showLogin)
+                    <a href="{{ $shopUrl }}"
+                       class="hidden sm:inline-flex items-center gap-2 px-4 md:px-5 py-2 rounded-xl text-sm font-bold transition-all {{ $btnPrimary }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>Войти</span>
+                    </a>
+                @endif
             @endauth
 
             <button type="button"
@@ -116,7 +129,9 @@
                     @auth
                         <a href="{{ $cabinetUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-bold {{ $btnGhost }}">Личный кабинет</a>
                     @else
-                        <a href="{{ $shopUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-bold {{ $btnPrimary }} text-center">Войти</a>
+                        @if($showLogin)
+                            <a href="{{ $shopUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-bold {{ $btnPrimary }} text-center">Войти</a>
+                        @endif
                     @endauth
                 </nav>
             </div>
