@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\Roles;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
@@ -25,11 +26,14 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Admin']
         );
 
-        // Синхронизируем пароль и admin-флаг при каждом запуске сидера:
+        // Синхронизируем пароль и роль при каждом запуске сидера:
         // изменение ADMIN_PASSWORD в .env должно вступать в силу после db:seed.
+        // Роль — единственный источник правды (booted::saving синхронизирует
+        // legacy-флаг is_admin от неё). Задаём super_admin, чтобы сидерный
+        // аккаунт мог править других админов и назначать роли.
         $admin->forceFill([
             'password' => Hash::make($password),
-            'is_admin' => true,
+            'role'     => Roles::SUPER_ADMIN,
         ])->save();
     }
 }
