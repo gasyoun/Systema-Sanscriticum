@@ -110,11 +110,17 @@ class User extends Authenticatable implements FilamentUser
      * Синхронизируем legacy-флаг is_admin с ролью.
      * Старый код (Payment.php, TrackUserActivity и т.п.) читает is_admin,
      * и пока его не выпиливаем — держим в актуальном состоянии.
+     *
+     * Гейт по isDirty('role'): иначе любой save() с явно заданным is_admin
+     * (например, в DatabaseSeeder->forceFill(['is_admin' => true])) был бы
+     * молча перезатёрт — у свежесозданной записи role=null → is_admin=false.
      */
     protected static function booted(): void
     {
         static::saving(function (self $user) {
-            $user->is_admin = in_array($user->role, Roles::adminLike(), true);
+            if ($user->isDirty('role') || !$user->exists) {
+                $user->is_admin = in_array($user->role, Roles::adminLike(), true);
+            }
         });
     }
 
@@ -131,10 +137,29 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Group::class);
     }
 
+    /**
+     * Реально пройденные уроки (is_completed=true). Используется и для
+     * прогресс-баров в шаблонах, и для гейта повторного начисления праны.
+     * Заметки сохраняются отдельной строкой пивота (см. lessonProgress),
+     * поэтому без wherePivot('is_completed', true) сюда попадали бы черновики
+     * заметок и ломали и счётчик course_complete, и идемпотентность.
+     */
     public function completedLessons(): BelongsToMany
     {
         return $this->belongsToMany(Lesson::class, 'lesson_user')
-                    ->withPivot('notes')
+                    ->wherePivot('is_completed', true)
+                    ->withPivot('notes', 'is_completed')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Прогресс по урокам без фильтра по is_completed: используется для
+     * чтения/записи заметок и для апдейта pivot-строки при «отметить пройденным».
+     */
+    public function lessonProgress(): BelongsToMany
+    {
+        return $this->belongsToMany(Lesson::class, 'lesson_user')
+                    ->withPivot('notes', 'is_completed')
                     ->withTimestamps();
     }
     

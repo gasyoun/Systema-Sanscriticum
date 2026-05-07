@@ -128,35 +128,39 @@ class UserResource extends Resource
 
                         Forms\Components\Select::make('role')
                             ->label('Роль в админке')
-                            ->helperText('Без роли — обычный студент, без доступа в админку. Назначать админа и супер-админа может только супер-админ.')
-                            ->options(function () {
+                            ->helperText('Без роли — обычный студент, без доступа в админку. Роль «Преподаватель» назначается через раздел «Преподаватели».')
+                            ->options(function (?\Illuminate\Database\Eloquent\Model $record) {
                                 $all = Roles::all();
-                                // Обычный админ не может выдавать роли admin/super_admin.
                                 if (!RoleGate::isSuperAdmin()) {
                                     unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN]);
+                                }
+                                // Роль преподавателя выдаётся только через TeacherResource.
+                                // Если у записи она уже есть — оставляем её в списке как информационную.
+                                if (!$record || $record->role !== Roles::TEACHER) {
+                                    unset($all[Roles::TEACHER]);
+                                } else {
+                                    $all[Roles::TEACHER] = $all[Roles::TEACHER] . ' (управление в «Преподавателях»)';
                                 }
                                 return $all;
                             })
                             // Серверная защита от подмены значения через DevTools/POST.
-                            // UI-фильтр options() не валидирует submit — нужен явный Rule::in.
-                            ->rule(function () {
+                            ->rule(function (?\Illuminate\Database\Eloquent\Model $record) {
                                 $allowed = RoleGate::isSuperAdmin()
                                     ? Roles::all()
                                     : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN]));
-                                return \Illuminate\Validation\Rule::in([null, ...array_keys($allowed)]);
+                                // TEACHER нельзя выдать через эту форму ни админу, ни супер-админу.
+                                unset($allowed[Roles::TEACHER]);
+                                $keys = array_keys($allowed);
+                                // Сохранять текущую роль записи всегда можно — иначе на edit'е
+                                // существующего преподавателя или себя самого save валится.
+                                if ($record && $record->role) {
+                                    $keys[] = $record->role;
+                                }
+                                return \Illuminate\Validation\Rule::in([null, ...$keys]);
                             })
                             ->placeholder('— Студент —')
                             ->live()
                             ->visible(fn () => RoleGate::adminOnly()),
-
-                        Forms\Components\Select::make('teacher_id')
-                            ->label('Связь с карточкой преподавателя')
-                            ->relationship('teacher', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->helperText('Учитель видит и правит только курсы, привязанные к этой карточке.')
-                            ->required(fn (Forms\Get $get) => $get('role') === Roles::TEACHER)
-                            ->visible(fn (Forms\Get $get) => $get('role') === Roles::TEACHER),
 
                         Forms\Components\Toggle::make('is_lecture_editor')
                             ->label('Редактор лекций')

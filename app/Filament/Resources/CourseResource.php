@@ -135,6 +135,7 @@ class CourseResource extends Resource
                             ]),
 
                         // БЛОК 4: Доступ и Видимость
+                        // Только админ — учитель не должен раздавать доступ группам.
                         Forms\Components\Select::make('groups')
                             ->multiple()
                             ->relationship('groups', 'name')
@@ -142,7 +143,9 @@ class CourseResource extends Resource
                             ->searchable()
                             ->label('Доступ для групп')
                             ->helperText('Студенты из выбранных групп увидят этот курс у себя в кабинете.')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->visible(fn () => RoleGate::adminOnly())
+                            ->dehydrated(fn () => RoleGate::adminOnly()),
 
                         // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Объединили два свитча в сетку ---
                         Forms\Components\Grid::make(2)
@@ -210,11 +213,15 @@ Forms\Components\Grid::make(2)
                 // ==========================================
                 // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
                 // ==========================================
+                // canEdit() пускает учителя на свой курс (для правки контента),
+                // но teacher_id/salary_type/salary_value — admin-only: иначе
+                // учитель сможет переназначить курс или поднять себе ставку.
                 Forms\Components\Section::make('Преподаватель и Зарплата')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
                         Forms\Components\Select::make('teacher_id')
                             ->label('Преподаватель')
-                            ->relationship('teacher', 'name') 
+                            ->relationship('teacher', 'name')
                             ->searchable()
                             ->preload(),
 
@@ -237,10 +244,13 @@ Forms\Components\Grid::make(2)
                 // ==========================================
                 // БЛОК: ТАРИФЫ И ЦЕНЫ
                 // ==========================================
+                // Тарифы — admin-only: иначе учитель сможет переписать цену
+                // своего курса или включить/выключить тарифы.
                 Forms\Components\Section::make('Тарифы и цены')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
-                        Forms\Components\Repeater::make('tariffs') 
-                            ->relationship('tariffs') 
+                        Forms\Components\Repeater::make('tariffs')
+                            ->relationship('tariffs')
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->label('Название тарифа (например: Блок 1, Полный курс)')

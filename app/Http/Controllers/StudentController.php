@@ -11,6 +11,7 @@ use App\Services\CertificateService;
 use Illuminate\Support\Carbon;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\Prana\PranaService;
+use App\Services\Prana\PranaSettings;
 
 // --- ИМПОРТЫ ДОЛЖНЫ БЫТЬ ЗДЕСЬ, В САМОМ ВЕРХУ ---
 use Illuminate\Support\Facades\Storage;
@@ -90,7 +91,10 @@ class StudentController extends Controller
         ->get();
 
     $pranaTransactions = $user->pranaTransactions()->limit(30)->get();
-    $pranaRewards      = config('prana.rewards', []);
+    // Сами числа наград админ редактирует в админке → читаем через PranaSettings,
+    // иначе панель «Как заработать прану» расходится с тем, что реально начисляет
+    // PranaService::award. Лейблы (reasons) не редактируются — оставляем config.
+    $pranaRewards      = PranaSettings::allRewards();
     $pranaReasons      = config('prana.reasons', []);
 
     return view('student.dashboard', compact(
@@ -171,9 +175,11 @@ class StudentController extends Controller
         $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
 
         $currentNote = null;
-        $completedLesson = $user->completedLessons()->where('lesson_id', $lesson->id)->first();
-        if ($completedLesson) {
-            $currentNote = $completedLesson->pivot->notes;
+        // Заметка может быть сохранена ДО отметки «пройдено», поэтому читаем
+        // через lessonProgress (без фильтра по is_completed).
+        $progressRow = $user->lessonProgress()->where('lesson_id', $lesson->id)->first();
+        if ($progressRow) {
+            $currentNote = $progressRow->pivot->notes;
         }
 
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
@@ -258,12 +264,24 @@ class StudentController extends Controller
         $user = auth()->user();
         $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
 
+        // Уже пройден? Проверяем по реально завершённой строке pivot,
+        // а не по любой записи (которую могла создать saveNote с is_completed=false).
         $alreadyCompleted = $user->completedLessons()->where('lesson_id', $lessonId)->exists();
 
         if (!$alreadyCompleted) {
-            $user->completedLessons()->attach($lessonId, [
-                'is_completed' => true,
-            ]);
+            // Если строка pivot уже есть (от saveNote) — апдейтим её,
+            // иначе attach. Иначе создадим дубль pivot-строки (на таблице
+            // lesson_user нет уникального индекса по user_id+lesson_id).
+            $hasPivotRow = $user->lessonProgress()->where('lesson_id', $lessonId)->exists();
+            if ($hasPivotRow) {
+                $user->lessonProgress()->updateExistingPivot($lessonId, [
+                    'is_completed' => true,
+                ]);
+            } else {
+                $user->lessonProgress()->attach($lessonId, [
+                    'is_completed' => true,
+                ]);
+            }
 
             $course = Course::where('slug', $courseSlug)->firstOrFail();
             $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
@@ -272,14 +290,22 @@ class StudentController extends Controller
             $prana->award($user, 'lesson_complete', $lesson);
 
             // Если этот урок закрыл весь курс — начисляем бонус за курс
-            // (тоже идемпотентно по course_id).
-            $totalLessons     = $course->lessons()->count();
-            $completedLessons = $user->completedLessons()
-                ->where('lessons.course_id', $course->id)
-                ->count();
+            // (тоже идемпотентно по course_id). Гейтим по членству в группах
+            // курса — иначе на курсах, где все уроки is_free=true, любой
+            // залогиненный юзер мог бы прокликать course_complete (+500🪷).
+            $userInCourseGroups = $course->groups()
+                ->whereIn('groups.id', $user->groups->pluck('id'))
+                ->exists();
 
-            if ($totalLessons > 0 && $completedLessons >= $totalLessons) {
-                $prana->award($user, 'course_complete', $course);
+            if ($userInCourseGroups) {
+                $totalLessons     = $course->lessons()->count();
+                $completedLessons = $user->completedLessons()
+                    ->where('lessons.course_id', $course->id)
+                    ->count();
+
+                if ($totalLessons > 0 && $completedLessons >= $totalLessons) {
+                    $prana->award($user, 'course_complete', $course);
+                }
             }
         }
 
@@ -295,12 +321,15 @@ class StudentController extends Controller
         $request->validate(['notes' => 'nullable|string|max:5000']);
         $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
 
-        $existing = $user->completedLessons()->where('lesson_id', $lessonId)->first();
+        // Через lessonProgress (без фильтра по is_completed) — иначе на пользователе,
+        // у которого уже есть строка pivot с is_completed=false (от прошлой заметки),
+        // мы создавали бы дубль вместо апдейта.
+        $existing = $user->lessonProgress()->where('lesson_id', $lessonId)->first();
 
         if ($existing) {
-            $user->completedLessons()->updateExistingPivot($lessonId, ['notes' => $request->input('notes')]);
+            $user->lessonProgress()->updateExistingPivot($lessonId, ['notes' => $request->input('notes')]);
         } else {
-            $user->completedLessons()->attach($lessonId, [
+            $user->lessonProgress()->attach($lessonId, [
                 'is_completed' => false,
                 'notes' => $request->input('notes')
             ]);

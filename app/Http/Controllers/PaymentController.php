@@ -8,6 +8,7 @@ use App\Models\Tariff;
 use App\Models\PromoCode;
 use App\Models\Payment;
 use App\Services\Prana\PranaService;
+use App\Services\Prana\PranaSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
@@ -79,6 +80,15 @@ class PaymentController extends Controller
             // Пересчитываем серверный максимум — игнорируем то, что прислал клиент.
             $maxSpend = $prana->maxSpendableForPrice($user, $finalPrice);
             $pranaToSpend = min($pranaToSpend, $maxSpend);
+
+            // Снэпим к кратному rate — иначе клиент может прислать значение
+            // вне step слайдера (например, 295 при rate=10) и получить дробную
+            // скидку в payments.amount. maxSpendableForPrice уже возвращает
+            // кратное rate, но min(295, 300) даёт 295.
+            $rate = PranaSettings::rate();
+            if ($rate > 0) {
+                $pranaToSpend = intdiv($pranaToSpend, $rate) * $rate;
+            }
 
             if ($pranaToSpend > 0) {
                 $pranaDiscountRubles = $prana->pranaToRubles($pranaToSpend);

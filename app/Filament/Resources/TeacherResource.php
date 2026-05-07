@@ -29,12 +29,37 @@ class TeacherResource extends Resource
                             ->required()
                             ->maxLength(255),
                         \Filament\Forms\Components\TextInput::make('email')
+                            ->label('Email')
                             ->email()
+                            ->required(fn (string $operation) => $operation === 'create')
+                            ->helperText(fn (string $operation) => $operation === 'create'
+                                ? 'Будет логином преподавателя в админке.'
+                                : null)
                             ->maxLength(255),
                         \Filament\Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel(),
                     ])->columns(3),
+
+                \Filament\Forms\Components\Section::make('Аккаунт для входа в админку')
+                    ->description('Создаётся автоматически с ролью «Преподаватель». Email из блока выше будет логином.')
+                    ->schema([
+                        \Filament\Forms\Components\TextInput::make('account_password')
+                            ->label('Пароль')
+                            ->password()
+                            ->revealable()
+                            ->minLength(6)
+                            ->maxLength(255)
+                            ->required(fn (string $operation) => $operation === 'create')
+                            ->helperText(fn (string $operation) => $operation === 'create'
+                                ? 'Минимум 6 символов. Передайте его преподавателю любым удобным способом.'
+                                : 'Заполните, чтобы сбросить пароль преподавателя. Оставьте пустым — текущий пароль не изменится.')
+                            ->dehydrated(false),
+                    ])
+                    ->visible(fn (?\App\Models\Teacher $record, string $operation) =>
+                        $operation === 'create' || ($record && $record->email)
+                    )
+                    ->columns(1),
 
                 \Filament\Forms\Components\Section::make('Соцсети и Реквизиты')
                     ->schema([
