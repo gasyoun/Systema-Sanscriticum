@@ -187,7 +187,13 @@ class PranaService
 
         $maxByRules = $maxRubles * $rate;
 
-        return max(0, min($maxByRules, $this->balance($user)));
+        // Балансы вроде 5 при rate=10 (после daily_login бонуса) дали бы
+        // дробную скидку и копейки в payments.amount. Снэпим до кратного rate.
+        $balance = $rate > 0
+            ? intdiv($this->balance($user), $rate) * $rate
+            : $this->balance($user);
+
+        return max(0, min($maxByRules, $balance));
     }
 
     /**

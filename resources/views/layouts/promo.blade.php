@@ -133,13 +133,10 @@
           }
       }">
 
-    <x-public-header variant="light" />
+    <x-public-header variant="light" :show-login="false" />
 
     {{-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ НАШИ БЛОКИ --}}
     @yield('content')
-
-    {{-- Сквозной мини-блок «Курсы в записи» --}}
-    <x-courses-recorded-mini variant="light" :courses="$recordedCoursesMini ?? null" />
 
     {{-- ФУТЕР (Теплый тон, трехколоночный) --}}
     <footer class="bg-[#F2EBE1] border-t border-[#E85C24]/10 text-gray-600 py-10 md:py-14">

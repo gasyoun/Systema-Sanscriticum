@@ -49,6 +49,11 @@ class UserResource extends Resource
         if ($user->isSuperAdmin()) {
             return true;
         }
+        // Свой собственный профиль — всегда можно (повышение роли всё равно
+        // отрезано Rule::in на поле role в форме).
+        if ($user->id === $record->id && $user->isAdminLike()) {
+            return true;
+        }
         if ($user->isAdmin()) {
             return !in_array($record->role, Roles::adminLike(), true);
         }
@@ -132,6 +137,14 @@ class UserResource extends Resource
                                 }
                                 return $all;
                             })
+                            // Серверная защита от подмены значения через DevTools/POST.
+                            // UI-фильтр options() не валидирует submit — нужен явный Rule::in.
+                            ->rule(function () {
+                                $allowed = RoleGate::isSuperAdmin()
+                                    ? Roles::all()
+                                    : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN]));
+                                return \Illuminate\Validation\Rule::in([null, ...array_keys($allowed)]);
+                            })
                             ->placeholder('— Студент —')
                             ->live()
                             ->visible(fn () => RoleGate::adminOnly()),
@@ -142,6 +155,7 @@ class UserResource extends Resource
                             ->searchable()
                             ->preload()
                             ->helperText('Учитель видит и правит только курсы, привязанные к этой карточке.')
+                            ->required(fn (Forms\Get $get) => $get('role') === Roles::TEACHER)
                             ->visible(fn (Forms\Get $get) => $get('role') === Roles::TEACHER),
 
                         Forms\Components\Toggle::make('is_lecture_editor')

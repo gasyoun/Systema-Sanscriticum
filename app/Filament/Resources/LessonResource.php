@@ -26,7 +26,13 @@ class LessonResource extends Resource
 
     public static function canCreate(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+        if (RoleGate::any(Roles::ADMIN)) {
+            return true;
+        }
+        // Учитель может создавать уроки только если у него заполнен teacher_id —
+        // иначе scope course_id будет 1=0 и сохранение всё равно упадёт.
+        $user = auth()->user();
+        return $user?->isTeacher() === true && $user->teacher_id !== null;
     }
 
     public static function canEdit($record): bool
@@ -58,10 +64,14 @@ class LessonResource extends Resource
         $query = parent::getEloquentQuery();
 
         $user = auth()->user();
-        if ($user && $user->isTeacher() && $user->teacher_id) {
-            $query->whereHas('course', function ($q) use ($user) {
-                $q->where('teacher_id', $user->teacher_id);
-            });
+        if ($user && $user->isTeacher()) {
+            if (!$user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('course', function ($q) use ($user) {
+                    $q->where('teacher_id', $user->teacher_id);
+                });
+            }
         }
 
         return $query;
@@ -83,12 +93,32 @@ class LessonResource extends Resource
                         titleAttribute: 'title',
                         modifyQueryUsing: function (Builder $query) {
                             // Учитель видит в селекте только свои курсы; админ — все.
+                            // Учителю без teacher_id вообще ничего не показываем.
                             $user = auth()->user();
-                            if ($user && $user->isTeacher() && $user->teacher_id) {
-                                $query->where('teacher_id', $user->teacher_id);
+                            if ($user && $user->isTeacher()) {
+                                if (!$user->teacher_id) {
+                                    $query->whereRaw('1 = 0');
+                                } else {
+                                    $query->where('teacher_id', $user->teacher_id);
+                                }
                             }
                         },
                     )
+                    // Серверная валидация: Filament-default Rule::exists для relationship-Select
+                    // не накладывает where, поэтому учитель может через POST передать чужой
+                    // course_id и BelongsTo::associate его сохранит. Дополняем явным правилом.
+                    ->rule(function () {
+                        $user = auth()->user();
+                        if ($user?->isTeacher() && $user->teacher_id) {
+                            return \Illuminate\Validation\Rule::exists('courses', 'id')
+                                ->where('teacher_id', $user->teacher_id);
+                        }
+                        if ($user?->isTeacher() && !$user->teacher_id) {
+                            // Учитель без teacher_id — никакой курс не валиден.
+                            return \Illuminate\Validation\Rule::in([]);
+                        }
+                        return null;
+                    })
                     ->required()
                     ->label('Привязать к курсу'),
 

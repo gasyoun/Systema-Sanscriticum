@@ -116,7 +116,15 @@ $payment = Payment::create([
 // Списываем прану ровно сейчас, в той же транзакции — потом, если оплата
 // не пройдёт, наблюдатель Payment::updated вернёт её через refundPranaIfSpent().
 if ($pranaToSpend > 0) {
-    $prana->spend($user, $pranaToSpend, 'spent_on_purchase', $payment);
+    try {
+        $prana->spend($user, $pranaToSpend, 'spent_on_purchase', $payment);
+    } catch (\RuntimeException $e) {
+        // Race: вторая вкладка/двойной клик успели списать раньше. Не отдаём 500 —
+        // транзакция откатится по ValidationException, юзер вернётся к форме с ошибкой.
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'prana_amount' => 'Не удалось списать прану — обновите страницу и попробуйте снова.',
+        ]);
+    }
 }
 
         // 5. ИНКРЕМЕНТИРУЕМ ПРОМОКОД

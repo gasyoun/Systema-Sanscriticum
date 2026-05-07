@@ -63,13 +63,13 @@ class AppServiceProvider extends ServiceProvider
 
         LandingPage::observe(LandingPageObserver::class);
 
-        // Сквозной мини-блок «Курсы в записи» для главной и лендингов
-        View::composer(['main', 'layouts.promo', 'promo.legacy'], function ($view): void {
+        // Мини-блок «Курсы в записи»: главная, legacy-лендинги и builder-блок
+        View::composer(['main', 'promo.show', 'promo.legacy', 'promo.blocks.recorded_courses_block'], function ($view): void {
             if (array_key_exists('recordedCoursesMini', $view->getData())) {
                 return;
             }
 
-            $courses = Cache::remember('recorded_courses_mini_v1', 300, function () {
+            $courses = Cache::remember('recorded_courses_mini_v2', 300, function () {
                 return Course::query()
                     ->where('is_visible', true)
                     ->where('format', 'recorded')
@@ -78,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
                         'categories:id,name,slug,color',
                     ])
                     ->latest('id')
-                    ->limit(6)
+                    ->limit(24)
                     ->get();
             });
 
