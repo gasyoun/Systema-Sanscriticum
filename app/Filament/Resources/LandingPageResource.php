@@ -26,8 +26,12 @@ use Filament\Forms\Components\ColorPicker; // <-- ДОБАВЛЕНО
 use Filament\Forms\Components\Select;      // <-- ДОБАВЛЕНО
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 
+use App\Filament\Concerns\AdminOnly;
+
 class LandingPageResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LandingPage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -111,6 +115,27 @@ class LandingPageResource extends Resource
                                             ])->grid(2),
                                     ]),
                                     
+                                // 11.1. RECORDED COURSES (Мини-блок «Курсы в записи»)
+                                Builder\Block::make('recorded_courses_block')
+                                    ->label('11.1. Курсы в записи (слайдер по 6)')
+                                    ->icon('heroicon-m-rectangle-stack')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок блока')
+                                            ->default('Курсы в записи'),
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок')
+                                            ->default('Учитесь в своём темпе — записи лекций с пожизненным доступом.')
+                                            ->rows(2),
+                                        Select::make('variant')
+                                            ->label('Цветовая схема')
+                                            ->options([
+                                                'light' => 'Светлая (под тёплый фон лендинга)',
+                                                'dark'  => 'Тёмная',
+                                            ])
+                                            ->default('light'),
+                                    ]),
+
                                 // 11. COURSES GRID (Сетка других курсов)
                                 Builder\Block::make('courses_grid')
                                     ->label('11. Сетка курсов (Светлая)')

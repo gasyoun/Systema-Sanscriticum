@@ -10,8 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class PromoCodeResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = PromoCode::class;
 
     // Иконка билетика/купона для меню

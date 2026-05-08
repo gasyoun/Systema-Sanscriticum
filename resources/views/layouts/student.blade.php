@@ -26,7 +26,10 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
         
         </style>
-    
+
+    {{-- Livewire styles — должны быть в <head>, иначе wire:loading элементы видны до загрузки JS --}}
+    @livewireStyles
+
     @livewireScripts
     
 </head>
@@ -192,6 +195,18 @@
 
     {{-- Правая часть: контакты + магазин + соцсети + аватарка на мобилках --}}
 <div class="flex items-center gap-2 md:gap-3 shrink-0">
+
+    {{-- === БЕЙДЖ ПРАНЫ === --}}
+    @auth
+        @if(\App\Services\Prana\PranaSettings::isActive())
+            <a href="{{ route('student.dashboard') }}#prana"
+               title="Ваш баланс праны"
+               class="hidden sm:inline-flex items-center gap-2 px-3.5 h-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 text-[#E85C24] hover:from-orange-100 hover:to-amber-100 transition-all">
+                <span class="text-lg leading-none" aria-hidden="true">🪷</span>
+                <span class="text-sm font-extrabold tabular-nums">{{ number_format((int) (auth()->user()->prana_balance ?? 0), 0, '.', ' ') }}</span>
+            </a>
+        @endif
+    @endauth
 
     {{-- === КОНТАКТЫ (телефон + email) === --}}
     @include('partials.contacts-bar', ['variant' => 'light'])

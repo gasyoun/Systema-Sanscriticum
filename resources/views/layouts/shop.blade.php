@@ -24,6 +24,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #E85C24; }
     </style>
 
+    {{-- Livewire styles — должны быть в <head>, иначе wire:loading элементы видны до загрузки JS --}}
+    @livewireStyles
+
     @stack('head')
 </head>
 

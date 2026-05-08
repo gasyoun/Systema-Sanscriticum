@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
@@ -53,24 +54,31 @@ class WebhookController extends Controller
                 return response('OK', 200);
             }
 
-            $payment = Payment::find($paymentId);
-
-            if (! $payment) {
-                Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
-                return response('OK', 200);
-            }
-
             $successStatuses = ['paid', 'authorized', 'APPROVED', 'AUTHORIZED', 'captured', 'completed'];
+            $failureStatuses = ['rejected', 'canceled', 'failed'];
 
-            if (in_array($statusFromBank, $successStatuses, true)) {
-                if ($payment->status !== 'paid') {
-                    $payment->update(['status' => 'paid']);
-                    Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
+            // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
+            // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
+            DB::transaction(function () use ($paymentId, $statusFromBank, $successStatuses, $failureStatuses) {
+                $payment = Payment::lockForUpdate()->find($paymentId);
+
+                if (! $payment) {
+                    Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
+                    return;
                 }
-            } elseif (in_array($statusFromBank, ['rejected', 'canceled', 'failed'], true)) {
-                $payment->update(['status' => 'failed']);
-                Log::info("❌ ОТКАЗ: Заказ №{$payment->id} отменен банком.");
-            }
+
+                if (in_array($statusFromBank, $successStatuses, true)) {
+                    if ($payment->status !== 'paid') {
+                        $payment->update(['status' => 'paid']);
+                        Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
+                    }
+                } elseif (in_array($statusFromBank, $failureStatuses, true)) {
+                    if ($payment->status !== 'failed') {
+                        $payment->update(['status' => 'failed']);
+                        Log::info("❌ ОТКАЗ: Заказ №{$payment->id} отменен банком.");
+                    }
+                }
+            });
 
             return response('OK', 200);
 

@@ -115,6 +115,8 @@
           }
       }">
 
+    <x-public-header variant="light" />
+
     <section class="relative bg-[#F9FAFB] pt-12 pb-20 lg:pt-24 lg:pb-32 overflow-hidden" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 200)">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -432,6 +434,9 @@
             </style>
         </div> 
     </div>
+
+    <x-courses-recorded-mini variant="light" :courses="$recordedCoursesMini ?? null" />
+
     <footer class="bg-gray-900 text-gray-400 py-10 border-t border-gray-800 text-sm">
         <div class="container mx-auto px-4 text-center">
             <p class="mb-4">&copy; {{ date('Y') }} Все права защищены.</p>

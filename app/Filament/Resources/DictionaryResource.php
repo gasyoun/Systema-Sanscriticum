@@ -10,8 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class DictionaryResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Dictionary::class;
 
     // Иконки и перевод для левого меню

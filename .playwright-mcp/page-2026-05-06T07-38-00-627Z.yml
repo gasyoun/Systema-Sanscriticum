@@ -1,0 +1,309 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Общество ревнителей санскрита Ревнители санскрита" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "Общество ревнителей санскрита" [ref=e5]
+        - generic [ref=e7]: Ревнители санскрита
+      - navigation [ref=e8]:
+        - link "Главная" [ref=e9] [cursor=pointer]:
+          - /url: /
+        - link "Все курсы" [ref=e10] [cursor=pointer]:
+          - /url: http://localhost:8000/shop
+        - link "Блог" [ref=e11] [cursor=pointer]:
+          - /url: http://localhost:8000/s
+      - link "Войти" [ref=e13] [cursor=pointer]:
+        - /url: http://localhost:8000/shop
+        - img [ref=e14]
+        - generic [ref=e16]: Войти
+  - generic [ref=e19]:
+    - generic [ref=e23]:
+      - img [ref=e24]
+      - generic [ref=e26]: Загрузите фото (портрет)
+    - generic [ref=e27]:
+      - paragraph [ref=e28]: Авторский курс
+      - heading "Россия" [level=1] [ref=e29]
+      - link "Записаться" [ref=e31] [cursor=pointer]:
+        - /url: "#order-form-anchor"
+        - text: Записаться
+        - img [ref=e32]
+  - generic [ref=e35]:
+    - heading "Особенности обучения" [level=2] [ref=e36]
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - img [ref=e40]
+        - heading "Системность" [level=3] [ref=e42]
+        - paragraph [ref=e43]: Строгая методология. Мы не учим "по верхам", а даем академический фундамент грамматики и философии.
+      - generic [ref=e44]:
+        - img [ref=e46]
+        - heading "Первоисточники" [level=3] [ref=e48]
+        - paragraph [ref=e49]: Работа с реальными текстами. Вы начнете читать шлоки из Бхагавад-гиты и Упанишад уже на первом месяце.
+      - generic [ref=e50]:
+        - img [ref=e52]
+        - heading "Обратная связь" [level=3] [ref=e54]
+        - paragraph [ref=e55]: Живая проверка заданий. Куратор разбирает ошибки и помогает понять сложные моменты, а не просто ставит галочки.
+  - generic [ref=e58]:
+    - generic [ref=e60]:
+      - generic:
+        - img
+      - heading "Детали программы" [level=3] [ref=e63]
+    - generic [ref=e66]:
+      - heading "Записаться на курс" [level=3] [ref=e67]
+      - paragraph [ref=e68]: Оставьте заявку, и мы свяжемся с вами в Telegram.
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]: Ваше имя
+            - textbox "Иван" [ref=e73]
+          - generic [ref=e74]:
+            - generic [ref=e75]: Телефон / Telegram
+            - textbox "+7 999 000-00-00" [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e78]: Email
+            - textbox "mail@example.com" [ref=e79]
+        - generic [ref=e80]:
+          - generic [ref=e81] [cursor=pointer]:
+            - checkbox "Я даю согласие на обработку моих персональных данных в соответствии с политикой конфиденциальности" [checked] [ref=e83]
+            - generic [ref=e84]: Я даю согласие на обработку моих персональных данных в соответствии с политикой конфиденциальности
+          - generic [ref=e85] [cursor=pointer]:
+            - checkbox "Я даю согласие на получение рассылки" [checked] [ref=e87]
+            - generic [ref=e88]: Я даю согласие на получение рассылки
+        - button "Записаться" [ref=e89]
+  - generic [ref=e91]:
+    - generic [ref=e92]:
+      - generic [ref=e93]:
+        - heading "Курсы в записи" [level=2] [ref=e94]
+        - paragraph [ref=e96]: Учитесь в своём темпе — записи лекций с пожизненным доступом.
+      - generic [ref=e97]:
+        - generic [ref=e98]:
+          - button "Предыдущие курсы" [ref=e99]:
+            - img [ref=e100]
+          - button "Следующие курсы" [ref=e102]:
+            - img [ref=e103]
+        - link "Все курсы" [ref=e105] [cursor=pointer]:
+          - /url: http://localhost:8000/shop?format=recorded
+          - text: Все курсы
+          - img [ref=e106]
+    - generic [ref=e109]:
+      - generic [ref=e110]:
+        - link "В записи Караки по Панини 2025 в записи от 4 800 ₽ Подробнее" [ref=e111] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/karaki-po-panini-2025-v-zapisi
+          - generic [ref=e113]: В записи
+          - heading "Караки по Панини 2025 в записи" [level=3] [ref=e114]
+          - generic [ref=e115]:
+            - generic [ref=e116]: от 4 800 ₽
+            - generic [ref=e117]:
+              - text: Подробнее
+              - img [ref=e118]
+        - link "В записи Ликбез по лингвистике (2 поток, 2025-2026) в записи от 4 800 ₽ Подробнее" [ref=e120] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi
+          - generic [ref=e122]: В записи
+          - heading "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [level=3] [ref=e123]
+          - generic [ref=e124]:
+            - generic [ref=e125]: от 4 800 ₽
+            - generic [ref=e126]:
+              - text: Подробнее
+              - img [ref=e127]
+        - link "В записи Напевный санскрит - гимн Сутры Патанджали 2026 от 4 800 ₽ Подробнее" [ref=e129] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026
+          - generic [ref=e131]: В записи
+          - heading "Напевный санскрит - гимн Сутры Патанджали 2026" [level=3] [ref=e132]
+          - generic [ref=e133]:
+            - generic [ref=e134]: от 4 800 ₽
+            - generic [ref=e135]:
+              - text: Подробнее
+              - img [ref=e136]
+        - link "В записи Напевный санскрит - гимн сутр Патанджали 2026 от 6 000 ₽ Подробнее" [ref=e138] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026
+          - generic [ref=e140]: В записи
+          - heading "Напевный санскрит - гимн сутр Патанджали 2026" [level=3] [ref=e141]
+          - generic [ref=e142]:
+            - generic [ref=e143]: от 6 000 ₽
+            - generic [ref=e144]:
+              - text: Подробнее
+              - img [ref=e145]
+        - link "В записи Напевный санскрит - гимн Нарасимхе 2023 от 4 000 ₽ Подробнее" [ref=e147] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023
+          - generic [ref=e149]: В записи
+          - heading "Напевный санскрит - гимн Нарасимхе 2023" [level=3] [ref=e150]
+          - generic [ref=e151]:
+            - generic [ref=e152]: от 4 000 ₽
+            - generic [ref=e153]:
+              - text: Подробнее
+              - img [ref=e154]
+        - link "В записи Ведийская литература 2026 от 4 800 ₽ Подробнее" [ref=e156] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/vediiskaia-literatura-2026
+          - generic [ref=e158]: В записи
+          - heading "Ведийская литература 2026" [level=3] [ref=e159]
+          - generic [ref=e160]:
+            - generic [ref=e161]: от 4 800 ₽
+            - generic [ref=e162]:
+              - text: Подробнее
+              - img [ref=e163]
+      - generic [ref=e165]:
+        - link "В записи Напевный санскрит - гимн Дурге 2023 в записи от 4 000 ₽ Подробнее" [ref=e166] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/napevnyi-sanskrit-gimn-durge-2023-v-zapisi
+          - generic [ref=e168]: В записи
+          - heading "Напевный санскрит - гимн Дурге 2023 в записи" [level=3] [ref=e169]
+          - generic [ref=e170]:
+            - generic [ref=e171]: от 4 000 ₽
+            - generic [ref=e172]:
+              - text: Подробнее
+              - img [ref=e173]
+        - link "В записи Разбор Хануман Чалисы 2026 от 6 000 ₽ Подробнее" [ref=e175] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/razbor-xanuman-calisy-2026
+          - generic [ref=e177]: В записи
+          - heading "Разбор Хануман Чалисы 2026" [level=3] [ref=e178]
+          - generic [ref=e179]:
+            - generic [ref=e180]: от 6 000 ₽
+            - generic [ref=e181]:
+              - text: Подробнее
+              - img [ref=e182]
+        - link "В записи Кашмирский шиваизм, часть 2 2026 от 3 000 ₽ Подробнее" [ref=e184] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/kasmirskii-sivaizm-cast-2-2026
+          - generic [ref=e186]: В записи
+          - heading "Кашмирский шиваизм, часть 2 2026" [level=3] [ref=e187]
+          - generic [ref=e188]:
+            - generic [ref=e189]: от 3 000 ₽
+            - generic [ref=e190]:
+              - text: Подробнее
+              - img [ref=e191]
+        - link "В записи Ранние санскритские рукописи 2026 от 4 800 ₽ Подробнее" [ref=e193] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/rannie-sanskritskie-rukopisi-2026
+          - generic [ref=e195]: В записи
+          - heading "Ранние санскритские рукописи 2026" [level=3] [ref=e196]
+          - generic [ref=e197]:
+            - generic [ref=e198]: от 4 800 ₽
+            - generic [ref=e199]:
+              - text: Подробнее
+              - img [ref=e200]
+        - link "В записи География Индии 2026 от 4 800 ₽ Подробнее" [ref=e202] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/geografiia-indii-2026
+          - generic [ref=e204]: В записи
+          - heading "География Индии 2026" [level=3] [ref=e205]
+          - generic [ref=e206]:
+            - generic [ref=e207]: от 4 800 ₽
+            - generic [ref=e208]:
+              - text: Подробнее
+              - img [ref=e209]
+        - link "В записи Каллиграфия 2026 от 4 800 ₽ Подробнее" [ref=e211] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/kalligrafiia-2026
+          - generic [ref=e213]: В записи
+          - heading "Каллиграфия 2026" [level=3] [ref=e214]
+          - generic [ref=e215]:
+            - generic [ref=e216]: от 4 800 ₽
+            - generic [ref=e217]:
+              - text: Подробнее
+              - img [ref=e218]
+      - generic [ref=e220]:
+        - link "В записи Доп. занятия по хинди от 1 500 ₽ Подробнее" [ref=e221] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/dop-zaniatiia-po-xindi
+          - generic [ref=e223]: В записи
+          - heading "Доп. занятия по хинди" [level=3] [ref=e224]
+          - generic [ref=e225]:
+            - generic [ref=e226]: от 1 500 ₽
+            - generic [ref=e227]:
+              - text: Подробнее
+              - img [ref=e228]
+        - link "В записи Кашмирский шиваизм 2025 в записи от 3 000 ₽ Подробнее" [ref=e230] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/kasmirskii-sivaizm-2025-v-zapisi
+          - generic [ref=e232]: В записи
+          - heading "Кашмирский шиваизм 2025 в записи" [level=3] [ref=e233]
+          - generic [ref=e234]:
+            - generic [ref=e235]: от 3 000 ₽
+            - generic [ref=e236]:
+              - text: Подробнее
+              - img [ref=e237]
+        - link "В записи Грамматика по Кочергиной гр.60 от 8 000 ₽ Подробнее" [ref=e239] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/grammatika-po-kocerginoi-gr60
+          - generic [ref=e241]: В записи
+          - heading "Грамматика по Кочергиной гр.60" [level=3] [ref=e242]
+          - generic [ref=e243]:
+            - generic [ref=e244]: от 8 000 ₽
+            - generic [ref=e245]:
+              - text: Подробнее
+              - img [ref=e246]
+        - link "В записи Грамматика по Кочергиной гр.59 от 8 000 ₽ Подробнее" [ref=e248] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/grammatika-po-kocerginoi-gr59
+          - generic [ref=e250]: В записи
+          - heading "Грамматика по Кочергиной гр.59" [level=3] [ref=e251]
+          - generic [ref=e252]:
+            - generic [ref=e253]: от 8 000 ₽
+            - generic [ref=e254]:
+              - text: Подробнее
+              - img [ref=e255]
+        - link "В записи Восточные календари (2026) Подробнее" [ref=e257] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/vostocnye-kalendari-2026
+          - generic [ref=e259]: В записи
+          - heading "Восточные календари (2026)" [level=3] [ref=e260]
+          - generic [ref=e262]:
+            - text: Подробнее
+            - img [ref=e263]
+        - link "В записи Грамматика хинди гр. 5, вт от 6 000 ₽ Подробнее" [ref=e265] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/grammatika-xindi-gr-5-vt
+          - generic [ref=e267]: В записи
+          - heading "Грамматика хинди гр. 5, вт" [level=3] [ref=e268]
+          - generic [ref=e269]:
+            - generic [ref=e270]: от 6 000 ₽
+            - generic [ref=e271]:
+              - text: Подробнее
+              - img [ref=e272]
+      - generic [ref=e274]:
+        - link "В записи Гимн Сурьи 2026 от 4 800 ₽ Подробнее" [ref=e275] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/gimn-suri-2026
+          - generic [ref=e277]: В записи
+          - heading "Гимн Сурьи 2026" [level=3] [ref=e278]
+          - generic [ref=e279]:
+            - generic [ref=e280]: от 4 800 ₽
+            - generic [ref=e281]:
+              - text: Подробнее
+              - img [ref=e282]
+        - link "В записи Гимн Бхагавадгиты 2026 (1/3 часть) от 6 000 ₽ Подробнее" [ref=e284] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/gimn-bxagavadgity-2026-13-cast
+          - generic [ref=e286]: В записи
+          - heading "Гимн Бхагавадгиты 2026 (1/3 часть)" [level=3] [ref=e287]
+          - generic [ref=e288]:
+            - generic [ref=e289]: от 6 000 ₽
+            - generic [ref=e290]:
+              - text: Подробнее
+              - img [ref=e291]
+        - link "В записи Гимн Абхинавагупты 2026 от 4 800 ₽ Подробнее" [ref=e293] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/gimn-abxinavagupty-2026
+          - generic [ref=e295]: В записи
+          - heading "Гимн Абхинавагупты 2026" [level=3] [ref=e296]
+          - generic [ref=e297]:
+            - generic [ref=e298]: от 4 800 ₽
+            - generic [ref=e299]:
+              - text: Подробнее
+              - img [ref=e300]
+        - link "В записи Саравали 2026 Подробнее" [ref=e302] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/saravali-2026
+          - generic [ref=e304]: В записи
+          - heading "Саравали 2026" [level=3] [ref=e305]
+          - generic [ref=e307]:
+            - text: Подробнее
+            - img [ref=e308]
+        - link "В записи Основы индийской философии 2026 Подробнее" [ref=e310] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/osnovy-indiiskoi-filosofii-2026
+          - generic [ref=e312]: В записи
+          - heading "Основы индийской философии 2026" [level=3] [ref=e313]
+          - generic [ref=e315]:
+            - text: Подробнее
+            - img [ref=e316]
+        - link "В записи Детский санскрит 2025, гр. 1 Подробнее" [ref=e318] [cursor=pointer]:
+          - /url: http://localhost:8000/shop/course/detskii-sanskrit-2025-gr-1
+          - generic [ref=e320]: В записи
+          - heading "Детский санскрит 2025, гр. 1" [level=3] [ref=e321]
+          - generic [ref=e323]:
+            - text: Подробнее
+            - img [ref=e324]
+    - generic [ref=e326]:
+      - button "Страница 1" [ref=e327]
+      - button "Страница 2" [ref=e328]
+      - button "Страница 3" [ref=e329]
+      - button "Страница 4" [ref=e330]
+  - contentinfo [ref=e331]:
+    - generic [ref=e332]:
+      - paragraph [ref=e333]: © 2026 Все права защищены.
+      - button "Политика конфиденциальности" [ref=e334]
+  - text:  

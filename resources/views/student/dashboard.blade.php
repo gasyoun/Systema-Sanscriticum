@@ -6,7 +6,7 @@
 @section('content')
 
 {{-- Добавляем x-data для управления активной вкладкой --}}
-<div x-data="{ activeTab: 'courses' }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
+<div x-data="{ activeTab: window.location.hash === '#prana' ? 'prana' : 'courses' }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <div class="mb-6 mt-6">
         <h2 class="text-3xl md:text-4xl font-extrabold text-[#101010] tracking-tight mb-2">Добро пожаловать, {{ auth()->user()->name }}!</h2>
@@ -147,11 +147,19 @@
             <i class="fas fa-book mr-2"></i>Словари
         </button>
 
-        <button @click="activeTab = 'payments'" 
-                :class="activeTab === 'payments' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
+        <button @click="activeTab = 'payments'"
+                :class="activeTab === 'payments' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-wallet mr-2"></i>Мои оплаты
         </button>
+
+        @if(\App\Services\Prana\PranaSettings::isActive())
+            <button @click="activeTab = 'prana'"
+                    :class="activeTab === 'prana' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                    class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
+                <span class="mr-2" aria-hidden="true">🪷</span>Прана
+            </button>
+        @endif
     </div>
 
     {{-- ========================================== --}}
@@ -284,14 +292,120 @@
     {{-- ========================================== --}}
     {{-- ВКЛАДКА 3: МОИ ОПЛАТЫ --}}
     {{-- ========================================== --}}
-    <div x-show="activeTab === 'payments'" 
+    <div x-show="activeTab === 'payments'"
          style="display: none;"
-         x-transition:enter="transition ease-out duration-300" 
-         x-transition:enter-start="opacity-0 translate-y-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
          x-transition:enter-end="opacity-100 translate-y-0">
-         
+
          @livewire('student-payments')
     </div>
+
+    {{-- ========================================== --}}
+    {{-- ВКЛАДКА 4: ПРАНА                            --}}
+    {{-- ========================================== --}}
+    @if(\App\Services\Prana\PranaSettings::isActive())
+    <div x-show="activeTab === 'prana'"
+         style="display: none;"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0">
+
+        @php
+            $balance = (int) (auth()->user()->prana_balance ?? 0);
+            $rate    = \App\Services\Prana\PranaSettings::rate();
+            $maxPct  = (int) round(\App\Services\Prana\PranaSettings::maxShare() * 100);
+        @endphp
+
+        {{-- Баланс --}}
+        <div class="bg-gradient-to-br from-[#19191C] via-[#252529] to-[#19191C] text-white rounded-3xl p-8 md:p-10 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[#E85C24] blur-[80px] opacity-30 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div>
+                    <p class="text-xs font-bold text-orange-300 uppercase tracking-widest mb-3">Ваш баланс праны</p>
+                    <div class="flex items-baseline gap-3">
+                        <span class="text-6xl md:text-7xl" aria-hidden="true">🪷</span>
+                        <span class="text-5xl md:text-6xl font-black tracking-tight tabular-nums">{{ number_format($balance, 0, '.', ' ') }}</span>
+                    </div>
+                    <p class="text-sm text-gray-400 mt-3 max-w-md leading-relaxed">
+                        {{ $rate }} праны = 1 ₽ скидки. Списать можно до {{ $maxPct }}% стоимости любого курса.
+                    </p>
+                </div>
+                <a href="{{ route('shop.index') }}"
+                   class="inline-flex items-center justify-center px-6 py-3.5 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-sm font-extrabold rounded-xl transition-all shadow-lg shadow-orange-900/30 hover:-translate-y-0.5">
+                    Выбрать курс
+                    <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </a>
+            </div>
+        </div>
+
+        {{-- Как заработать --}}
+        <div class="mb-8">
+            <h3 class="text-2xl font-extrabold text-gray-900 mb-5">Как заработать прану</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @php
+                    $earnIcons = [
+                        'lesson_complete'  => ['fa-check-circle', 'text-emerald-500', 'bg-emerald-50'],
+                        'course_complete'  => ['fa-graduation-cap', 'text-purple-500', 'bg-purple-50'],
+                        'open_lesson_view' => ['fa-video', 'text-blue-500', 'bg-blue-50'],
+                        'daily_login'      => ['fa-calendar-day', 'text-amber-500', 'bg-amber-50'],
+                        'payment_success'  => ['fa-shopping-bag', 'text-rose-500', 'bg-rose-50'],
+                    ];
+                @endphp
+                @foreach($pranaRewards as $reason => $amount)
+                    @if($amount > 0)
+                        @php
+                            [$icon, $iconColor, $iconBg] = $earnIcons[$reason] ?? ['fa-star', 'text-gray-500', 'bg-gray-50'];
+                            $label = $pranaReasons[$reason] ?? $reason;
+                        @endphp
+                        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl {{ $iconBg }} {{ $iconColor }} flex items-center justify-center shrink-0 text-lg">
+                                <i class="fas {{ $icon }}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-900 truncate">{{ $label }}</p>
+                                <p class="text-xs text-[#E85C24] font-extrabold mt-0.5">+{{ $amount }} 🪷</p>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+
+        {{-- История --}}
+        <div>
+            <h3 class="text-2xl font-extrabold text-gray-900 mb-5">История</h3>
+            @if($pranaTransactions->isEmpty())
+                <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+                    <div class="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-3 text-3xl">🪷</div>
+                    <p class="text-gray-500">Пока нет начислений. Пройдите первый урок — и тут появится запись.</p>
+                </div>
+            @else
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] divide-y divide-gray-50 overflow-hidden">
+                    @foreach($pranaTransactions as $tx)
+                        @php
+                            $isPositive = $tx->amount >= 0;
+                            $label = $tx->reasonLabel();
+                        @endphp
+                        <div class="flex items-center gap-4 px-5 py-4">
+                            <div class="w-10 h-10 rounded-xl {{ $isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }} flex items-center justify-center shrink-0">
+                                <i class="fas {{ $isPositive ? 'fa-arrow-up' : 'fa-arrow-down' }} text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-900 truncate">{{ $label }}</p>
+                                <p class="text-xs text-gray-400 mt-0.5">{{ $tx->created_at->translatedFormat('d F Y, H:i') }}</p>
+                            </div>
+                            <div class="text-base font-extrabold tabular-nums {{ $isPositive ? 'text-emerald-600' : 'text-rose-600' }}">
+                                {{ $isPositive ? '+' : '' }}{{ $tx->amount }}
+                                <span class="text-xs">🪷</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
 
 </div> {{-- Конец главного x-data контейнера --}}
 

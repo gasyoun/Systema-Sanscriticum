@@ -1,0 +1,157 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e8]:
+      - img [ref=e9]
+      - generic [ref=e11]: Загрузите фото (портрет)
+    - generic [ref=e12]:
+      - paragraph [ref=e13]: Авторский курс
+      - heading "Россия" [level=1] [ref=e14]
+      - link "Записаться" [ref=e16] [cursor=pointer]:
+        - /url: "#order-form-anchor"
+        - text: Записаться
+        - img [ref=e17]
+  - generic [ref=e20]:
+    - heading "Особенности обучения" [level=2] [ref=e21]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - img [ref=e25]
+        - heading "Системность" [level=3] [ref=e27]
+        - paragraph [ref=e28]: Строгая методология. Мы не учим "по верхам", а даем академический фундамент грамматики и философии.
+      - generic [ref=e29]:
+        - img [ref=e31]
+        - heading "Первоисточники" [level=3] [ref=e33]
+        - paragraph [ref=e34]: Работа с реальными текстами. Вы начнете читать шлоки из Бхагавад-гиты и Упанишад уже на первом месяце.
+      - generic [ref=e35]:
+        - img [ref=e37]
+        - heading "Обратная связь" [level=3] [ref=e39]
+        - paragraph [ref=e40]: Живая проверка заданий. Куратор разбирает ошибки и помогает понять сложные моменты, а не просто ставит галочки.
+  - generic [ref=e43]:
+    - generic [ref=e45]:
+      - generic:
+        - img
+      - heading "Детали программы" [level=3] [ref=e48]
+    - generic [ref=e51]:
+      - heading "Записаться на курс" [level=3] [ref=e52]
+      - paragraph [ref=e53]: Оставьте заявку, и мы свяжемся с вами в Telegram.
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: Ваше имя
+            - textbox "Иван" [ref=e58]
+          - generic [ref=e59]:
+            - generic [ref=e60]: Телефон / Telegram
+            - textbox "+7 999 000-00-00" [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e63]: Email
+            - textbox "mail@example.com" [ref=e64]
+        - generic [ref=e65]:
+          - generic [ref=e66] [cursor=pointer]:
+            - checkbox "Я даю согласие на обработку моих персональных данных в соответствии с политикой конфиденциальности" [checked] [ref=e68]
+            - generic [ref=e69]: Я даю согласие на обработку моих персональных данных в соответствии с политикой конфиденциальности
+          - generic [ref=e70] [cursor=pointer]:
+            - checkbox "Я даю согласие на получение рассылки" [checked] [ref=e72]
+            - generic [ref=e73]: Я даю согласие на получение рассылки
+        - button "Записаться" [ref=e74]
+  - contentinfo [ref=e75]:
+    - generic [ref=e76]:
+      - paragraph [ref=e77]: © 2026 Все права защищены.
+      - button "Политика конфиденциальности" [ref=e78]
+  - text:  
+  - banner [ref=e79]:
+    - generic [ref=e80]:
+      - link "Общество ревнителей санскрита Ревнители санскрита" [ref=e81] [cursor=pointer]:
+        - /url: /
+        - img "Общество ревнителей санскрита" [ref=e82]
+        - generic [ref=e84]: Ревнители санскрита
+      - navigation [ref=e85]:
+        - link "Главная" [ref=e86] [cursor=pointer]:
+          - /url: /
+        - link "Все курсы" [ref=e87] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/shop
+        - link "Блог" [ref=e88] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/s
+      - link "Войти" [ref=e90] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop
+        - img [ref=e91]
+        - generic [ref=e93]: Войти
+  - generic [ref=e95]:
+    - generic [ref=e96]:
+      - generic [ref=e97]:
+        - heading "Курсы в записи" [level=2] [ref=e98]
+        - paragraph [ref=e100]: Учитесь в своём темпе — записи лекций с пожизненным доступом.
+      - link "Все курсы" [ref=e101] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop?format=recorded
+        - text: Все курсы
+        - img [ref=e102]
+    - generic [ref=e104]:
+      - link "В записи Караки по Панини 2026 от 4 800 ₽ Подробнее" [ref=e105] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2026
+        - generic [ref=e107]: В записи
+        - heading "Караки по Панини 2026" [level=3] [ref=e108]
+        - generic [ref=e109]:
+          - generic [ref=e110]: от 4 800 ₽
+          - generic [ref=e111]:
+            - text: Подробнее
+            - img [ref=e112]
+      - link "В записи Караки по Панини 2025 в записи от 4 800 ₽ Подробнее" [ref=e114] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/karaki-po-panini-2025-v-zapisi
+        - generic [ref=e116]: В записи
+        - heading "Караки по Панини 2025 в записи" [level=3] [ref=e117]
+        - generic [ref=e118]:
+          - generic [ref=e119]: от 4 800 ₽
+          - generic [ref=e120]:
+            - text: Подробнее
+            - img [ref=e121]
+      - link "В записи Ликбез по лингвистике (2 поток, 2025-2026) в записи от 4 800 ₽ Подробнее" [ref=e123] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/likbez-po-lingvistike-2-potok-2025-2026-v-zapisi
+        - generic [ref=e125]: В записи
+        - heading "Ликбез по лингвистике (2 поток, 2025-2026) в записи" [level=3] [ref=e126]
+        - generic [ref=e127]:
+          - generic [ref=e128]: от 4 800 ₽
+          - generic [ref=e129]:
+            - text: Подробнее
+            - img [ref=e130]
+      - link "В записи Напевный санскрит - гимн Сутры Патанджали 2026 от 4 800 ₽ Подробнее" [ref=e132] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutry-patandzali-2026
+        - generic [ref=e134]: В записи
+        - heading "Напевный санскрит - гимн Сутры Патанджали 2026" [level=3] [ref=e135]
+        - generic [ref=e136]:
+          - generic [ref=e137]: от 4 800 ₽
+          - generic [ref=e138]:
+            - text: Подробнее
+            - img [ref=e139]
+      - link "В записи Напевный санскрит - гимн сутр Патанджали 2026 от 6 000 ₽ Подробнее" [ref=e141] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-sutr-patandzali-2026
+        - generic [ref=e143]: В записи
+        - heading "Напевный санскрит - гимн сутр Патанджали 2026" [level=3] [ref=e144]
+        - generic [ref=e145]:
+          - generic [ref=e146]: от 6 000 ₽
+          - generic [ref=e147]:
+            - text: Подробнее
+            - img [ref=e148]
+      - link "В записи Напевный санскрит - гимн Нарасимхе 2023 от 4 000 ₽ Подробнее" [ref=e150] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/shop/course/napevnyi-sanskrit-gimn-narasimxe-2023
+        - generic [ref=e152]: В записи
+        - heading "Напевный санскрит - гимн Нарасимхе 2023" [level=3] [ref=e153]
+        - generic [ref=e154]:
+          - generic [ref=e155]: от 4 000 ₽
+          - generic [ref=e156]:
+            - text: Подробнее
+            - img [ref=e157]
+  - contentinfo [ref=e159]:
+    - generic [ref=e161]:
+      - generic [ref=e162]:
+        - generic [ref=e163]: Общество ревнителей санскрита
+        - generic [ref=e164]:
+          - button "Политика конфиденциальности" [ref=e165]: Политика конфиденциальности
+          - generic [ref=e166]: •
+          - button "Публичная оферта" [ref=e167]: Публичная оферта
+        - paragraph [ref=e168]: © 2026 Все права защищены
+      - generic [ref=e169]:
+        - link "" [ref=e170] [cursor=pointer]:
+          - /url: https://vk.com/samskrtamru
+          - generic [ref=e171]: 
+        - link "" [ref=e172] [cursor=pointer]:
+          - /url: https://t.me/rusamskrtam
+          - generic [ref=e173]: 
+  - text:  

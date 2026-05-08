@@ -12,8 +12,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+use App\Filament\Concerns\AdminOnly;
+
 class ArticleCategoryResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = ArticleCategory::class;
 
     // Иконка в сайдбаре Filament
