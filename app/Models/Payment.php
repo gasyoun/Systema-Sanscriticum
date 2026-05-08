@@ -19,7 +19,8 @@ class Payment extends Model
         'user_id',
         'course_id',
         'amount',
-        'tariff', 
+        'prana_spent',
+        'tariff',
         'status',
         'transaction_id',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
@@ -55,6 +56,11 @@ class Payment extends Model
             if ($payment->isDirty('status') && in_array($payment->status, ['success', 'paid'])) {
                 $payment->processSuccessfulPayment();
             }
+
+            // Откатываем списанную прану, если оплата сорвалась.
+            if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'cancelled'])) {
+                $payment->refundPranaIfSpent();
+            }
         });
     }
 
@@ -66,10 +72,12 @@ class Payment extends Model
     \Illuminate\Support\Facades\DB::transaction(function () {
         $this->grantAccess();
         $this->sendWelcomeEmailIfNeeded();
+        $this->awardPranaForPurchase();
     });
 
-    // Telegram-уведомление — вне транзакции (не критично если не отправится)
-    if ($this->user) {
+    // Telegram-уведомление — через очередь, чтобы не держать row-lock webhook'а
+    // во время синхронного HTTP-вызова к api.telegram.org.
+    if ($this->user_id) {
         $courseName = $this->course->title ?? 'Обучающий материал';
         $url = url('/login');
 
@@ -78,7 +86,7 @@ class Payment extends Model
         $text .= "Можете приступать к занятиям прямо сейчас:\n";
         $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
 
-        $this->user->sendTelegramMessage($text);
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 }
 
@@ -119,6 +127,42 @@ class Payment extends Model
         count($groupIds) . " групп(у/ы) курса '{$course->title}'."
     );
 }
+
+    // ==========================================
+    // НАЧИСЛЕНИЕ ПРАНЫ ЗА УСПЕШНУЮ ОПЛАТУ
+    // ==========================================
+    public function awardPranaForPurchase(): void
+    {
+        if (!$this->user) {
+            return;
+        }
+
+        // Бесплатные «оплаты» (промокод на 100% и т.п.) не должны давать прану.
+        if ((float) $this->amount <= 0) {
+            return;
+        }
+
+        // Идемпотентно по этому платежу — индекс не даст начислить дважды.
+        app(\App\Services\Prana\PranaService::class)
+            ->award($this->user, 'payment_success', $this);
+    }
+
+    // ==========================================
+    // ВОЗВРАТ ПРАНЫ ПРИ НЕУДАЧЕ
+    // ==========================================
+    public function refundPranaIfSpent(): void
+    {
+        if (!$this->user || (int) $this->prana_spent <= 0) {
+            return;
+        }
+
+        app(\App\Services\Prana\PranaService::class)->refund(
+            $this->user,
+            (int) $this->prana_spent,
+            'refund_failed',
+            $this,
+        );
+    }
 
     // ==========================================
     // ГЕНЕРАЦИЯ ПАРОЛЯ И ОТПРАВКА ПИСЬМА

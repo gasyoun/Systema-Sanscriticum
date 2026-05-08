@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use App\Services\CertificateService;
 use Illuminate\Support\Carbon;
 use App\Services\CourseMaterialsArchiver;
+use App\Services\Prana\PranaService;
+use App\Services\Prana\PranaSettings;
 
 // --- ИМПОРТЫ ДОЛЖНЫ БЫТЬ ЗДЕСЬ, В САМОМ ВЕРХУ ---
 use Illuminate\Support\Facades\Storage;
@@ -75,10 +77,12 @@ class StudentController extends Controller
 
     // БЫЛО: where('is_visible', true) — ломало доступ при скрытии с витрины
     // СТАЛО: фильтруем по is_active (видимость в ЛК)
+    // lessons:id,course_id — eager-load для прогресс-бара в карточках курсов (без этого N+1).
     $courses = Course::where('is_active', true)
         ->whereHas('groups', function ($query) use ($userGroupIds) {
             $query->whereIn('groups.id', $userGroupIds);
         })
+        ->with(['lessons:id,course_id'])
         ->get();
 
     $certificates = $user->certificates()
@@ -86,7 +90,20 @@ class StudentController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
-    return view('student.dashboard', compact('courses', 'certificates'));
+    $pranaTransactions = $user->pranaTransactions()->limit(30)->get();
+    // Сами числа наград админ редактирует в админке → читаем через PranaSettings,
+    // иначе панель «Как заработать прану» расходится с тем, что реально начисляет
+    // PranaService::award. Лейблы (reasons) не редактируются — оставляем config.
+    $pranaRewards      = PranaSettings::allRewards();
+    $pranaReasons      = config('prana.reasons', []);
+
+    return view('student.dashboard', compact(
+        'courses',
+        'certificates',
+        'pranaTransactions',
+        'pranaRewards',
+        'pranaReasons',
+    ));
 }
 
     /**
@@ -115,7 +132,7 @@ class StudentController extends Controller
     /**
      * Просмотр конкретного урока (Плеер + Навигация)
      */
-    public function showLesson($courseSlug, $lessonId)
+    public function showLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
         $course = Course::where('slug', $courseSlug)->firstOrFail();
@@ -146,15 +163,23 @@ class StudentController extends Controller
             url:              request()->fullUrl(),
             ipAddress:        request()->ip(),
         );
+
+        // Прана за просмотр открытого урока/вебинара (раз на урок благодаря
+        // уникальному индексу по reason+source).
+        if ($lesson->is_free) {
+            $prana->award($user, 'open_lesson_view', $lesson);
+        }
     }
     // ==========================================
         
         $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
 
         $currentNote = null;
-        $completedLesson = $user->completedLessons()->where('lesson_id', $lesson->id)->first();
-        if ($completedLesson) {
-            $currentNote = $completedLesson->pivot->notes;
+        // Заметка может быть сохранена ДО отметки «пройдено», поэтому читаем
+        // через lessonProgress (без фильтра по is_completed).
+        $progressRow = $user->lessonProgress()->where('lesson_id', $lesson->id)->first();
+        if ($progressRow) {
+            $currentNote = $progressRow->pivot->notes;
         }
 
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
@@ -234,14 +259,54 @@ class StudentController extends Controller
     /**
      * Отметить урок как пройденный
      */
-    public function completeLesson($courseSlug, $lessonId)
+    public function completeLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
-        
-        if (!$user->completedLessons()->where('lesson_id', $lessonId)->exists()) {
-            $user->completedLessons()->attach($lessonId, [
-                'is_completed' => true,
-            ]);
+        $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
+
+        // Уже пройден? Проверяем по реально завершённой строке pivot,
+        // а не по любой записи (которую могла создать saveNote с is_completed=false).
+        $alreadyCompleted = $user->completedLessons()->where('lesson_id', $lessonId)->exists();
+
+        if (!$alreadyCompleted) {
+            // Если строка pivot уже есть (от saveNote) — апдейтим её,
+            // иначе attach. Иначе создадим дубль pivot-строки (на таблице
+            // lesson_user нет уникального индекса по user_id+lesson_id).
+            $hasPivotRow = $user->lessonProgress()->where('lesson_id', $lessonId)->exists();
+            if ($hasPivotRow) {
+                $user->lessonProgress()->updateExistingPivot($lessonId, [
+                    'is_completed' => true,
+                ]);
+            } else {
+                $user->lessonProgress()->attach($lessonId, [
+                    'is_completed' => true,
+                ]);
+            }
+
+            $course = Course::where('slug', $courseSlug)->firstOrFail();
+            $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+            // Начисление за урок (идемпотентно по lesson_id).
+            $prana->award($user, 'lesson_complete', $lesson);
+
+            // Если этот урок закрыл весь курс — начисляем бонус за курс
+            // (тоже идемпотентно по course_id). Гейтим по членству в группах
+            // курса — иначе на курсах, где все уроки is_free=true, любой
+            // залогиненный юзер мог бы прокликать course_complete (+500🪷).
+            $userInCourseGroups = $course->groups()
+                ->whereIn('groups.id', $user->groups->pluck('id'))
+                ->exists();
+
+            if ($userInCourseGroups) {
+                $totalLessons     = $course->lessons()->count();
+                $completedLessons = $user->completedLessons()
+                    ->where('lessons.course_id', $course->id)
+                    ->count();
+
+                if ($totalLessons > 0 && $completedLessons >= $totalLessons) {
+                    $prana->award($user, 'course_complete', $course);
+                }
+            }
         }
 
         return redirect()->back()->with('success', 'Урок пройден!');
@@ -254,19 +319,45 @@ class StudentController extends Controller
     {
         $user = auth()->user();
         $request->validate(['notes' => 'nullable|string|max:5000']);
+        $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
 
-        $existing = $user->completedLessons()->where('lesson_id', $lessonId)->first();
+        // Через lessonProgress (без фильтра по is_completed) — иначе на пользователе,
+        // у которого уже есть строка pivot с is_completed=false (от прошлой заметки),
+        // мы создавали бы дубль вместо апдейта.
+        $existing = $user->lessonProgress()->where('lesson_id', $lessonId)->first();
 
         if ($existing) {
-            $user->completedLessons()->updateExistingPivot($lessonId, ['notes' => $request->input('notes')]);
+            $user->lessonProgress()->updateExistingPivot($lessonId, ['notes' => $request->input('notes')]);
         } else {
-            $user->completedLessons()->attach($lessonId, [
+            $user->lessonProgress()->attach($lessonId, [
                 'is_completed' => false,
                 'notes' => $request->input('notes')
             ]);
         }
 
         return redirect()->back()->with('success', 'Заметка сохранена');
+    }
+
+    /**
+     * Проверяет, что урок принадлежит курсу из URL и доступен пользователю
+     * (свободный или оплачен через full/block_X). Иначе — abort(403/404).
+     * Защищает completeLesson/saveNote от IDOR на уроки чужих курсов.
+     */
+    private function ensureLessonAccessible($user, string $courseSlug, $lessonId): void
+    {
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+        if ($lesson->is_free) {
+            return;
+        }
+
+        $unlocked = $this->getUserUnlockedTariffs($user->id, $courseSlug);
+        $required = 'block_' . $lesson->block_number;
+
+        if (!in_array('full', $unlocked, true) && !in_array($required, $unlocked, true)) {
+            abort(403, 'Нет доступа к этому уроку.');
+        }
     }
     
     /**
@@ -278,9 +369,10 @@ public function downloadCourseMaterials(string $slug, CourseMaterialsArchiver $a
     $user = auth()->user();
     $userGroupIds = $user->groups->pluck('id');
 
-    // Проверяем, что курс доступен этому студенту (он в нужной группе)
+    // Проверяем, что курс доступен этому студенту (он в нужной группе).
+    // Используем is_active (а не is_visible) — это видимость в ЛК, согласованно с dashboard/showCourse.
     $course = Course::where('slug', $slug)
-        ->where('is_visible', true)
+        ->where('is_active', true)
         ->whereHas('groups', function ($query) use ($userGroupIds) {
             $query->whereIn('groups.id', $userGroupIds);
         })

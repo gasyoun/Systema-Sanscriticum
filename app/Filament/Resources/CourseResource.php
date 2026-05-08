@@ -4,16 +4,74 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CourseResource\Pages;
 use App\Models\Course;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class CourseResource extends Resource
 {
     protected static ?string $model = Course::class;
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        // Учитель не создаёт курсы — только админ.
+        return RoleGate::adminOnly();
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+        // Учитель может редактировать только свой курс. Без teacher_id —
+        // никаких прав, иначе NULL === NULL пропустит orphan-курсы.
+        return $user->isTeacher()
+            && $user->teacher_id !== null
+            && $user->teacher_id === $record->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher()) {
+            // Учитель без teacher_id (после nullOnDelete каскада или
+            // misconfigured аккаунта) не должен видеть orphan-курсы.
+            if (!$user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('teacher_id', $user->teacher_id);
+            }
+        }
+
+        return $query;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?int $navigationSort = 10;
@@ -77,6 +135,7 @@ class CourseResource extends Resource
                             ]),
 
                         // БЛОК 4: Доступ и Видимость
+                        // Только админ — учитель не должен раздавать доступ группам.
                         Forms\Components\Select::make('groups')
                             ->multiple()
                             ->relationship('groups', 'name')
@@ -84,7 +143,9 @@ class CourseResource extends Resource
                             ->searchable()
                             ->label('Доступ для групп')
                             ->helperText('Студенты из выбранных групп увидят этот курс у себя в кабинете.')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->visible(fn () => RoleGate::adminOnly())
+                            ->dehydrated(fn () => RoleGate::adminOnly()),
 
                         // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Объединили два свитча в сетку ---
                         Forms\Components\Grid::make(2)
@@ -152,11 +213,15 @@ Forms\Components\Grid::make(2)
                 // ==========================================
                 // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
                 // ==========================================
+                // canEdit() пускает учителя на свой курс (для правки контента),
+                // но teacher_id/salary_type/salary_value — admin-only: иначе
+                // учитель сможет переназначить курс или поднять себе ставку.
                 Forms\Components\Section::make('Преподаватель и Зарплата')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
                         Forms\Components\Select::make('teacher_id')
                             ->label('Преподаватель')
-                            ->relationship('teacher', 'name') 
+                            ->relationship('teacher', 'name')
                             ->searchable()
                             ->preload(),
 
@@ -179,10 +244,13 @@ Forms\Components\Grid::make(2)
                 // ==========================================
                 // БЛОК: ТАРИФЫ И ЦЕНЫ
                 // ==========================================
+                // Тарифы — admin-only: иначе учитель сможет переписать цену
+                // своего курса или включить/выключить тарифы.
                 Forms\Components\Section::make('Тарифы и цены')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
-                        Forms\Components\Repeater::make('tariffs') 
-                            ->relationship('tariffs') 
+                        Forms\Components\Repeater::make('tariffs')
+                            ->relationship('tariffs')
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->label('Название тарифа (например: Блок 1, Полный курс)')

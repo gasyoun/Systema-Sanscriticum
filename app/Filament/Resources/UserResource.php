@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -25,6 +27,43 @@ class UserResource extends Resource
     protected static ?string $navigationGroup = 'Пользователи';
     protected static ?string $navigationLabel = 'Студенты';
     protected static ?string $pluralModelLabel = 'Студенты';
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canCreate(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        // Супер-админ редактирует кого угодно. Обычный админ не может править
+        // других супер-админов и админов — только обычных пользователей.
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        // Свой собственный профиль — всегда можно (повышение роли всё равно
+        // отрезано Rule::in на поле role в форме).
+        if ($user->id === $record->id && $user->isAdminLike()) {
+            return true;
+        }
+        if ($user->isAdmin()) {
+            return !in_array($record->role, Roles::adminLike(), true);
+        }
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canEdit($record) && auth()->id() !== $record->id;
+    }
 
     public static function form(Form $form): Form
     {
@@ -86,21 +125,62 @@ class UserResource extends Resource
                             ->multiple()
                             ->relationship('groups', 'name')
                             ->preload(),
-                        
-                        Forms\Components\Toggle::make('is_admin')
-                            ->label('Права администратора')
-                            ->helperText('Дает полный доступ в панель управления')
-                            ->onColor('success')
-                            ->offColor('danger')
-                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+
+                        Forms\Components\Select::make('role')
+                            ->label('Роль в админке')
+                            ->helperText('Без роли — обычный студент, без доступа в админку. Роль «Преподаватель» назначается через раздел «Преподаватели».')
+                            ->options(function (?\Illuminate\Database\Eloquent\Model $record) {
+                                $all = Roles::all();
+                                if (!RoleGate::isSuperAdmin()) {
+                                    unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN]);
+                                }
+                                // Роль преподавателя выдаётся только через TeacherResource.
+                                // Если у записи она уже есть — оставляем её в списке как информационную.
+                                if (!$record || $record->role !== Roles::TEACHER) {
+                                    unset($all[Roles::TEACHER]);
+                                } else {
+                                    $all[Roles::TEACHER] = $all[Roles::TEACHER] . ' (управление в «Преподавателях»)';
+                                }
+                                return $all;
+                            })
+                            // Серверная защита от подмены значения через DevTools/POST.
+                            ->rule(function (?\Illuminate\Database\Eloquent\Model $record) {
+                                $allowed = RoleGate::isSuperAdmin()
+                                    ? Roles::all()
+                                    : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN]));
+                                // TEACHER нельзя выдать через эту форму ни админу, ни супер-админу.
+                                unset($allowed[Roles::TEACHER]);
+                                $keys = array_keys($allowed);
+                                // Сохранять текущую роль записи всегда можно — иначе на edit'е
+                                // существующего преподавателя или себя самого save валится.
+                                if ($record && $record->role) {
+                                    $keys[] = $record->role;
+                                }
+                                return \Illuminate\Validation\Rule::in([null, ...$keys]);
+                            })
+                            ->placeholder('— Студент —')
+                            ->live()
+                            ->visible(fn () => RoleGate::adminOnly()),
 
                         Forms\Components\Toggle::make('is_lecture_editor')
                             ->label('Редактор лекций')
                             ->helperText('Доступ к панели сборки лекций (без доступа в админку)')
                             ->onColor('success')
                             ->offColor('gray')
-                            ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+                            ->visible(fn () => RoleGate::isSuperAdmin()),
                     ])->columns(1),
+
+                Forms\Components\Section::make('🪷 Прана')
+                    ->description('Текущий баланс лояльности студента. Начисление и списание — кнопкой в списке студентов.')
+                    ->schema([
+                        Forms\Components\Placeholder::make('prana_balance_view')
+                            ->label('Баланс')
+                            ->content(fn (?\App\Models\User $record) => $record
+                                ? number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны'
+                                : '—'),
+                    ])
+                    ->visible(fn (string $operation) => $operation !== 'create' && RoleGate::adminOnly())
+                    ->columns(1),
             ]);
     }
 
@@ -187,19 +267,43 @@ class UserResource extends Resource
             return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
         }),
 
-    // --- КОЛОНКА 5: АДМИН (только для суперадмина) ---
-    Tables\Columns\IconColumn::make('is_admin')
-        ->label('Админ')
-        ->boolean()
+    // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
+    Tables\Columns\TextColumn::make('role')
+        ->label('Роль')
+        ->badge()
+        ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
+        ->color(fn (?string $state): string => match ($state) {
+            Roles::SUPER_ADMIN => 'danger',
+            Roles::ADMIN       => 'warning',
+            Roles::TEACHER     => 'info',
+            Roles::MANAGER     => 'primary',
+            default            => 'gray',
+        })
         ->alignment('center')
-        ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+        ->toggleable()
+        ->visible(fn () => RoleGate::adminOnly()),
 
     Tables\Columns\IconColumn::make('is_lecture_editor')
         ->label('Ред. лекций')
         ->boolean()
         ->alignment('center')
         ->toggleable(isToggledHiddenByDefault: true)
-        ->visible(fn () => auth()->user()->email === 'pe4kinsmart@gmail.com'),
+        ->visible(fn () => RoleGate::isSuperAdmin()),
+
+    Tables\Columns\TextColumn::make('prana_balance')
+        ->label('Прана')
+        ->badge()
+        ->color(fn (?int $state) => match (true) {
+            $state === null || $state === 0 => 'gray',
+            $state >= 1000                  => 'warning',
+            default                         => 'success',
+        })
+        ->icon('heroicon-m-sparkles')
+        ->formatStateUsing(fn (?int $state) => number_format((int) $state, 0, '.', ' '))
+        ->sortable()
+        ->alignment('center')
+        ->toggleable()
+        ->visible(fn () => RoleGate::adminOnly()),
 ])
             ->defaultSort('last_activity_at', 'desc')
             ->filters([
@@ -299,7 +403,93 @@ Tables\Filters\Filter::make('never_logged_in')
                 Tables\Actions\EditAction::make()
                     ->iconButton()
                     ->tooltip('Редактировать'),
-                
+
+                Tables\Actions\Action::make('grant_prana')
+                    ->iconButton()
+                    ->icon('heroicon-o-sparkles')
+                    ->color('success')
+                    ->tooltip('Начислить / списать прану')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->modalHeading(fn (User $record) => 'Прана студента: ' . $record->name)
+                    ->modalDescription(fn (User $record) =>
+                        'Текущий баланс: ' . number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны.')
+                    ->modalSubmitActionLabel('Применить')
+                    ->modalWidth('md')
+                    ->form([
+                        Forms\Components\ToggleButtons::make('direction')
+                            ->label('Операция')
+                            ->options([
+                                'grant'  => 'Начислить',
+                                'deduct' => 'Списать',
+                            ])
+                            ->icons([
+                                'grant'  => 'heroicon-m-plus-circle',
+                                'deduct' => 'heroicon-m-minus-circle',
+                            ])
+                            ->colors([
+                                'grant'  => 'success',
+                                'deduct' => 'danger',
+                            ])
+                            ->default('grant')
+                            ->inline()
+                            ->required(),
+
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Количество')
+                            ->numeric()
+                            ->minValue(1)
+                            ->step(1)
+                            ->required()
+                            ->suffix('праны'),
+
+                        Forms\Components\Textarea::make('comment')
+                            ->label('Комментарий')
+                            ->placeholder('За что? Например: бонус за участие в стриме.')
+                            ->rows(2)
+                            ->maxLength(500),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $admin = auth()->user();
+                        if (!$admin || !\App\Support\RoleGate::adminOnly()) {
+                            Notification::make()->title('Недостаточно прав.')->danger()->send();
+                            return;
+                        }
+
+                        $amount = (int) $data['amount'];
+                        $delta  = $data['direction'] === 'deduct' ? -$amount : $amount;
+
+                        try {
+                            $newBalance = app(\App\Services\Prana\PranaService::class)
+                                ->adminAdjust($record, $delta, $admin, $data['comment'] ?? null);
+
+                            Notification::make()
+                                ->title($delta > 0 ? 'Прана начислена' : 'Прана списана')
+                                ->body(($delta > 0 ? '+' : '') . number_format($delta, 0, '.', ' ')
+                                    . ' праны. Новый баланс: '
+                                    . number_format($newBalance, 0, '.', ' ') . '.')
+                                ->success()
+                                ->send();
+                        } catch (\RuntimeException $e) {
+                            Notification::make()
+                                ->title('Не удалось списать')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Admin prana adjust failed', [
+                                'user_id'  => $record->id,
+                                'admin_id' => $admin->id,
+                                'delta'    => $delta,
+                                'error'    => $e->getMessage(),
+                            ]);
+                            Notification::make()
+                                ->title('Ошибка')
+                                ->body('Что-то пошло не так. Подробности в логах.')
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\Action::make('send_password')
                     ->iconButton()
                     ->icon('heroicon-o-key')

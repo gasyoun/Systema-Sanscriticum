@@ -13,8 +13,12 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
 use Illuminate\Support\Str;
 
+use App\Filament\Concerns\AdminOnly;
+
 class ShopCourseResource extends Resource
 {
+    use AdminOnly;
+
     // Указываем ту же самую модель Course!
     protected static ?string $model = Course::class;
 

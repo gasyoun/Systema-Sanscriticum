@@ -113,36 +113,7 @@ window.sendGoal = function(goalName) {
     {{-- КЛАСС .article-page КРИТИЧЕН — все стили из article.css под ним заскоуплены --}}
     <div class="article-page">
 
-        {{-- ═══════════════ ШАПКА САЙТА ═══════════════ --}}
-        <header class="sticky top-0 w-full z-50 bg-[#FAF8F5]/80 backdrop-blur-md shadow-sm border-b border-[#E85C24]/10 transition-all duration-300">
-            <div class="container mx-auto px-4 py-2 md:py-3 flex justify-between items-center">
-
-                <a href="/" class="flex flex-col items-start group">
-                    <img src="{{ asset('images/logo.png') }}" alt="Общество ревнителей санскрита"
-                         class="w-auto h-12 md:h-14 object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300 shrink-0">
-                    <span class="mt-1 text-base md:text-lg font-semibold text-[#333333] group-hover:text-[#E85C24] transition-colors duration-300 leading-none"
-                          style="font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', 'Georgia', serif;">
-                        Общество ревнителей санскрита
-                    </span>
-                </a>
-
-                {{-- Правая часть шапки: ссылка на блог + CTA --}}
-                <div class="flex items-center gap-3 md:gap-5">
-                    <a href="{{ route('articles.index') }}"
-                       class="hidden sm:inline-flex items-center text-sm font-semibold text-gray-700 hover:text-[#E85C24] transition-colors">
-                        <i class="fas fa-newspaper mr-2"></i>
-                        Статьи
-                    </a>
-                    <button type="button"
-        @click="isTrialModalOpen = true"
-        class="inline-flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-[#E85C24] hover:bg-[#c24a18] text-white text-xs md:text-sm font-bold uppercase tracking-wider rounded-xl shadow-md shadow-[#E85C24]/25 hover:shadow-lg transition-all">
-    <i class="fas fa-graduation-cap"></i>
-    <span>Записаться</span>
-</button>
-                </div>
-
-            </div>
-        </header>
+        <x-public-header variant="light" subtitle="Блог" />
 
         {{-- ═══════════════ КОНТЕНТ СТРАНИЦЫ ═══════════════ --}}
         @yield('content')

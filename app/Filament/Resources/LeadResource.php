@@ -15,6 +15,9 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
 
+use App\Support\RoleGate;
+use App\Support\Roles;
+
 class LeadResource extends Resource
 {
     protected static ?string $model = Lead::class;
@@ -25,9 +28,24 @@ class LeadResource extends Resource
     protected static ?string $navigationLabel = 'Заявки (Лиды)';
     protected static ?string $pluralModelLabel = 'Заявки';
 
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
     public static function canCreate(): bool
     {
-        return false; 
+        return false;
     }
 
     public static function form(Form $form): Form

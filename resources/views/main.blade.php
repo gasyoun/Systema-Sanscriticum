@@ -19,7 +19,9 @@
     <meta name="twitter:image" content="{{ asset('images/og-main-preview.jpg') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }
@@ -49,12 +51,14 @@
         nav[role="navigation"] span[aria-current="page"] span { background-color: #E85C24 !important; border-color: #E85C24 !important; color: #fff !important; }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden pt-12 pb-20">
+<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden pb-20">
 
     <div class="fixed top-0 left-0 w-96 h-96 bg-[#E85C24] rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
     <div class="fixed bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
 
-    <div class="container mx-auto px-4 relative z-10 max-w-7xl">
+    <x-public-header variant="dark" />
+
+    <div class="container mx-auto px-4 relative z-10 max-w-7xl pt-10 md:pt-14">
         
         <div class="text-center mb-16">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">
@@ -144,6 +148,10 @@
             </div>
         @endif
 
+        {{-- Сквозной мини-блок «Курсы в записи» --}}
+        <div class="-mx-4 mt-16">
+            <x-courses-recorded-mini variant="dark" :courses="$recordedCoursesMini ?? null" />
+        </div>
 
         <div class="mt-24 bg-gray-800/40 border border-gray-700/60 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-xl">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#2AABEE] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
