@@ -112,13 +112,15 @@ class User extends Authenticatable implements FilamentUser
      * и пока его не выпиливаем — держим в актуальном состоянии.
      *
      * Гейт по isDirty('role'): иначе любой save() с явно заданным is_admin
-     * (например, в DatabaseSeeder->forceFill(['is_admin' => true])) был бы
-     * молча перезатёрт — у свежесозданной записи role=null → is_admin=false.
+     * (например, в legacy-сидере или фабрике) был бы молча перезатёрт,
+     * потому что у свежесозданной записи role=null → is_admin вычисляется
+     * как false. На новой модели isDirty('role') = true ровно когда role
+     * передана в create()/fill() — тогда синхронизация уместна.
      */
     protected static function booted(): void
     {
         static::saving(function (self $user) {
-            if ($user->isDirty('role') || !$user->exists) {
+            if ($user->isDirty('role')) {
                 $user->is_admin = in_array($user->role, Roles::adminLike(), true);
             }
         });

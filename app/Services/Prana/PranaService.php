@@ -162,6 +162,62 @@ class PranaService
     }
 
     /**
+     * Ручное начисление/списание праны администратором.
+     * В отличие от award()/spend() — не зависит от PranaSettings::isActive(),
+     * не использует source-идемпотентность (каждый клик админа — отдельная запись)
+     * и принимает отрицательную сумму как списание.
+     *
+     * Возвращает свежий баланс после операции.
+     * Бросает RuntimeException, если списание уводит баланс ниже нуля.
+     */
+    public function adminAdjust(
+        User $user,
+        int $delta,
+        User $admin,
+        ?string $comment = null,
+    ): int {
+        if ($delta === 0) {
+            return $this->balance($user);
+        }
+
+        $reason = $delta > 0 ? 'admin_grant' : 'admin_deduct';
+
+        $meta = array_filter([
+            'admin_id'    => $admin->id,
+            'admin_name'  => $admin->name,
+            'admin_email' => $admin->email,
+            'comment'     => $comment ? trim($comment) : null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return DB::transaction(function () use ($user, $delta, $reason, $meta) {
+            $current = (int) DB::table('users')
+                ->where('id', $user->id)
+                ->lockForUpdate()
+                ->value('prana_balance');
+
+            $next = $current + $delta;
+            if ($next < 0) {
+                throw new \RuntimeException(
+                    "Списание {$delta} увело бы баланс в минус (текущий: {$current})."
+                );
+            }
+
+            PranaTransaction::create([
+                'user_id'     => $user->id,
+                'amount'      => $delta,
+                'reason'      => $reason,
+                'source_type' => null,
+                'source_id'   => null,
+                'meta'        => $meta ?: null,
+            ]);
+
+            DB::table('users')->where('id', $user->id)->update(['prana_balance' => $next]);
+
+            return $next;
+        });
+    }
+
+    /**
      * Сколько праны можно списать на оплату при данной итоговой цене.
      * Учитывает: 30%-кап от цены, текущий баланс, курс конвертации,
      * и оставляет минимум 1 ₽ к оплате (нельзя обнулить заказ праной).
