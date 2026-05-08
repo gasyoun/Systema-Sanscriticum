@@ -179,41 +179,29 @@
                             <h4 class="text-xl font-bold text-white mb-2 pr-20">{{ $tariff->title }}</h4>
 
                             <div class="mb-4">
-                                @if($isPurchased)
-                                    <div class="text-2xl font-black text-emerald-400">Доступ открыт</div>
-                                    <div class="text-sm text-slate-500 mt-1">
-                                        Оплачено: {{ number_format($tariff->price, 0, '.', ' ') }} ₽
-                                    </div>
-                                @elseif($discountPercent > 0)
-                                    <div class="flex items-end gap-3 mb-1">
-                                        <div class="text-4xl font-black text-[#38BDF8]">
-                                            {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
-                                        </div>
-                                        <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                                            Скидка -{{ $discountPercent }}%
-                                        </span>
-                                    </div>
-                                    <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
-                                        {{ number_format($tariff->price, 0, '.', ' ') }} ₽
-                                    </div>
-                                @elseif($finalPrice < $tariff->price)
-                                    <div class="flex items-end gap-3 mb-1">
-                                        <div class="text-4xl font-black text-[#38BDF8]">
-                                            {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-xs text-slate-400 mb-1">
-                                        Доплата с учётом ранее купленных блоков
-                                    </div>
-                                    <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
-                                        {{ number_format($tariff->price, 0, '.', ' ') }} ₽
-                                    </div>
-                                @else
-                                    <div class="text-4xl font-black text-white">
-                                        {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
-                                    </div>
-                                @endif
-                            </div>
+    @if($isPurchased)
+        <div class="text-2xl font-black text-emerald-400">Доступ открыт</div>
+        <div class="text-sm text-slate-500 mt-1">
+            Оплачено: {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+        </div>
+    @elseif($discountPercent > 0)
+        <div class="flex items-end gap-3 mb-1">
+            <div class="text-4xl font-black text-[#38BDF8]">
+                {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
+            </div>
+            <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                Скидка -{{ $discountPercent }}%
+            </span>
+        </div>
+        <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
+            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+        </div>
+    @else
+        <div class="text-4xl font-black text-white">
+            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-xl text-slate-500 font-medium">₽</span>
+        </div>
+    @endif
+</div>
 
                             @if($tariff->description)
                                 <p class="text-sm text-slate-400 mb-6 leading-relaxed">{{ $tariff->description }}</p>

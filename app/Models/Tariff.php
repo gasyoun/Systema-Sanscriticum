@@ -73,33 +73,51 @@ class Tariff extends Model
     /**
      * Расчет итоговой цены (использует процент из метода выше)
      */
-    public function calculateFinalPriceForUser($user): float
-    {
-        if (!$user) return (float) $this->price;
-
-        $finalPrice = (float) $this->price;
-        
-        // 1. Получаем процент лояльности
-        $discountPercent = $this->getDiscountPercentForUser($user);
-
-        // Применяем скидку, если она есть
-        if ($discountPercent > 0) {
-            $finalPrice = $finalPrice - ($finalPrice * ($discountPercent / 100));
-        }
-
-        // 2. ИСПРАВЛЕННЫЙ АПГРЕЙД 
-        // Вычитаем уже оплаченные деньги ТОЛЬКО если это покупка тарифа "full" (Полный курс)
-        if ($this->course_id && $this->type === 'full') {
-            $alreadyPaidAmount = \App\Models\Payment::where('user_id', $user->id)
-                ->where('course_id', $this->course_id)
-                ->whereIn('status', ['paid', 'success'])
-                ->sum('amount');
-                
-            $finalPrice = $finalPrice - (float) $alreadyPaidAmount;
-        }
-
-        return max(0, $finalPrice);
+    /**
+ * Расчет итоговой цены для пользователя.
+ *
+ * Учитывает:
+ *  - скидку лояльности / накопительную (оптовики) — через getDiscountPercentForUser()
+ *
+ * НЕ учитывает (отключено через config('features.upgrade_payments_enabled')):
+ *  - "апгрейд" — вычитание сумм ранее оплаченных блоков при покупке полного курса.
+ *    Логика временно отключена: вызывала пересчёт в минус при повторных покупках
+ *    'full' и расхождение между витриной/чекаутом/эквайрингом.
+ */
+public function calculateFinalPriceForUser($user): float
+{
+    if (!$user) {
+        return (float) $this->price;
     }
+
+    $finalPrice = (float) $this->price;
+
+    // 1. Скидка лояльности / накопительная (оптовики) — остаётся включённой
+    $discountPercent = $this->getDiscountPercentForUser($user);
+    if ($discountPercent > 0) {
+        $finalPrice -= $finalPrice * ($discountPercent / 100);
+    }
+
+    // 2. АПГРЕЙД (доплата с учётом ранее купленных блоков) — управляется фича-флагом
+    if (config('features.upgrade_payments_enabled', false)
+        && $this->course_id
+        && $this->type === 'full'
+    ) {
+        // ВНИМАНИЕ: текущая реализация некорректна — вычитает ВСЕ платежи по курсу,
+        // включая прошлые 'full'. Перед включением переписать на учёт только 'block_*'
+        // и реальной стоимости блока на момент перерасчёта.
+        $alreadyPaidAmount = \App\Models\Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $this->course_id)
+            ->whereIn('status', ['paid', 'success'])
+            ->where('tariff', 'like', 'block_%') // защита: только блоки
+            ->sum('amount');
+
+        $finalPrice -= (float) $alreadyPaidAmount;
+    }
+
+    return max(0, $finalPrice);
+}
     
     /**
  * Куплен ли этот конкретный тариф пользователем.
