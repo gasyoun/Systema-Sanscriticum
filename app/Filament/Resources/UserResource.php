@@ -169,6 +169,18 @@ class UserResource extends Resource
                             ->offColor('gray')
                             ->visible(fn () => RoleGate::isSuperAdmin()),
                     ])->columns(1),
+
+                Forms\Components\Section::make('🪷 Прана')
+                    ->description('Текущий баланс лояльности студента. Начисление и списание — кнопкой в списке студентов.')
+                    ->schema([
+                        Forms\Components\Placeholder::make('prana_balance_view')
+                            ->label('Баланс')
+                            ->content(fn (?\App\Models\User $record) => $record
+                                ? number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны'
+                                : '—'),
+                    ])
+                    ->visible(fn (string $operation) => $operation !== 'create' && RoleGate::adminOnly())
+                    ->columns(1),
             ]);
     }
 
@@ -277,6 +289,21 @@ class UserResource extends Resource
         ->alignment('center')
         ->toggleable(isToggledHiddenByDefault: true)
         ->visible(fn () => RoleGate::isSuperAdmin()),
+
+    Tables\Columns\TextColumn::make('prana_balance')
+        ->label('Прана')
+        ->badge()
+        ->color(fn (?int $state) => match (true) {
+            $state === null || $state === 0 => 'gray',
+            $state >= 1000                  => 'warning',
+            default                         => 'success',
+        })
+        ->icon('heroicon-m-sparkles')
+        ->formatStateUsing(fn (?int $state) => number_format((int) $state, 0, '.', ' '))
+        ->sortable()
+        ->alignment('center')
+        ->toggleable()
+        ->visible(fn () => RoleGate::adminOnly()),
 ])
             ->defaultSort('last_activity_at', 'desc')
             ->filters([
@@ -376,7 +403,93 @@ Tables\Filters\Filter::make('never_logged_in')
                 Tables\Actions\EditAction::make()
                     ->iconButton()
                     ->tooltip('Редактировать'),
-                
+
+                Tables\Actions\Action::make('grant_prana')
+                    ->iconButton()
+                    ->icon('heroicon-o-sparkles')
+                    ->color('success')
+                    ->tooltip('Начислить / списать прану')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->modalHeading(fn (User $record) => 'Прана студента: ' . $record->name)
+                    ->modalDescription(fn (User $record) =>
+                        'Текущий баланс: ' . number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны.')
+                    ->modalSubmitActionLabel('Применить')
+                    ->modalWidth('md')
+                    ->form([
+                        Forms\Components\ToggleButtons::make('direction')
+                            ->label('Операция')
+                            ->options([
+                                'grant'  => 'Начислить',
+                                'deduct' => 'Списать',
+                            ])
+                            ->icons([
+                                'grant'  => 'heroicon-m-plus-circle',
+                                'deduct' => 'heroicon-m-minus-circle',
+                            ])
+                            ->colors([
+                                'grant'  => 'success',
+                                'deduct' => 'danger',
+                            ])
+                            ->default('grant')
+                            ->inline()
+                            ->required(),
+
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Количество')
+                            ->numeric()
+                            ->minValue(1)
+                            ->step(1)
+                            ->required()
+                            ->suffix('праны'),
+
+                        Forms\Components\Textarea::make('comment')
+                            ->label('Комментарий')
+                            ->placeholder('За что? Например: бонус за участие в стриме.')
+                            ->rows(2)
+                            ->maxLength(500),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $admin = auth()->user();
+                        if (!$admin || !\App\Support\RoleGate::adminOnly()) {
+                            Notification::make()->title('Недостаточно прав.')->danger()->send();
+                            return;
+                        }
+
+                        $amount = (int) $data['amount'];
+                        $delta  = $data['direction'] === 'deduct' ? -$amount : $amount;
+
+                        try {
+                            $newBalance = app(\App\Services\Prana\PranaService::class)
+                                ->adminAdjust($record, $delta, $admin, $data['comment'] ?? null);
+
+                            Notification::make()
+                                ->title($delta > 0 ? 'Прана начислена' : 'Прана списана')
+                                ->body(($delta > 0 ? '+' : '') . number_format($delta, 0, '.', ' ')
+                                    . ' праны. Новый баланс: '
+                                    . number_format($newBalance, 0, '.', ' ') . '.')
+                                ->success()
+                                ->send();
+                        } catch (\RuntimeException $e) {
+                            Notification::make()
+                                ->title('Не удалось списать')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Admin prana adjust failed', [
+                                'user_id'  => $record->id,
+                                'admin_id' => $admin->id,
+                                'delta'    => $delta,
+                                'error'    => $e->getMessage(),
+                            ]);
+                            Notification::make()
+                                ->title('Ошибка')
+                                ->body('Что-то пошло не так. Подробности в логах.')
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\Action::make('send_password')
                     ->iconButton()
                     ->icon('heroicon-o-key')
