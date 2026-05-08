@@ -1,66 +1,178 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Systema Sanscriticum — платформа онлайн-обучения
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel-приложение: учебный кабинет, магазин курсов, конструктор лендингов, редактор лекций и панель администратора.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Оглавление
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- [Стек](#стек)
+- [Быстрый старт](#быстрый-старт)
+- [Модули](#модули)
+- [Роадмап](#роадмап)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Стек
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Слой | Технологии |
+|---|---|
+| Backend | Laravel 10, PHP 8.1+ |
+| Frontend | Vite 5, Tailwind CSS 4, Axios |
+| Admin | Filament v3 |
+| Очереди | Laravel Horizon + Redis |
+| БД | MySQL (прод), SQLite (тесты) |
+| Деплой | Laravel Sail (Docker) |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Быстрый старт
 
-## Laravel Sponsors
+```bash
+cp .env.example .env
+composer install
+npm install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+php artisan key:generate
+php artisan migrate --seed   # создаёт тестового админа из ADMIN_EMAIL / ADMIN_PASSWORD
 
-### Premium Partners
+npm run dev                  # фронтенд на :5173
+php artisan serve            # бэкенд на :8000
+php artisan horizon          # мониторинг очередей на /horizon
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Для запуска через Docker Sail:
 
-## Contributing
+```bash
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Модули
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. Учебный кабинет (`/cabinet`)
 
-## Security Vulnerabilities
+Личный кабинет студента. Показывает только курсы, к которым у пользователя есть доступ (через группы).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Ключевые файлы:**
+- `app/Http/Controllers/StudentController.php` — маршруты кабинета
+- `resources/views/student/` — шаблоны
+- `app/Models/LessonView.php` — отслеживание просмотров и времени на уроке
 
-## License
+Студент видит уроки только тех `Group`, в которых он состоит. Доступ выдаётся автоматически при успешной оплате — вручную группы не назначаются.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Функции: прохождение уроков, заметки, скачивание материалов, календарь событий, сертификаты.
+
+---
+
+### 2. Магазин курсов (`/shop`, `/checkout`)
+
+Витрина курсов с постраничной навигацией, страница курса с выбором тарифа, оформление заказа.
+
+**Ключевые файлы:**
+- `app/Http/Controllers/ShopController.php`
+- `app/Http/Controllers/CheckoutController.php`
+- `app/Models/Tariff.php` — логика цен, скидки за лояльность, вычет уже оплаченного (апгрейд)
+- `app/Models/PromoCode.php` — промокоды (процент или фиксированная сумма)
+
+Оплата идёт через **Точку Банк**: вебхук `/api/webhooks/tochka` → `PaymentObserver` → автоматическая выдача доступа.
+
+---
+
+### 3. Конструктор лендингов (`/{slug}`)
+
+Лендинги для курсов строятся из JSON-блоков (около 20 типов: hero, форма заявки, цены, программа, FAQ, отзывы и др.). Последний маршрут в `routes/web.php` перехватывает любой slug и ищет соответствующий `LandingPage`.
+
+**Ключевые файлы:**
+- `app/Models/LandingPage.php`
+- `resources/views/promo/blocks/` — Blade-компоненты блоков
+- `app/Filament/Resources/LandingPageResource.php` — редактор в админке
+
+Добавление нового типа блока: создать Blade в `promo/blocks/`, зарегистрировать в `LandingPage::renderBlock()`.
+
+---
+
+### 4. Система лекций (`/editor`)
+
+Отдельная Filament-панель для авторов контента. Лекции проходят цикл: черновик (`LectureDraft`) → сборка HTML → публикация.
+
+**Ключевые файлы:**
+- `app/Services/Lecture/` — клиент к микросервису сборки, AI-клиент, паблишер
+- `app/Filament/Editor/` — ресурсы и страницы редактора
+- `app/Providers/Filament/LectureEditorPanelProvider.php`
+
+Редактор доступен пользователям с флагом `is_lecture_editor`. Полный администратор (`is_admin`) видит обе панели.
+
+---
+
+### 5. Панель администратора (`/admin`)
+
+Filament v3, 18 CRUD-ресурсов: пользователи, курсы, уроки, платежи, тарифы, промокоды, преподаватели, расписание, объявления, статьи и т.д.
+
+**Дополнительные возможности:**
+- Управление медиафайлами (Filament Curator)
+- Экспорт в Excel (filament-excel)
+- Мониторинг очередей (`/horizon`)
+- Резервное копирование БД (Spatie Backup)
+
+---
+
+### 6. Блог (`/s/...`)
+
+Статьи с категориями, подсчётом просмотров (по хэшу посетителя), временем чтения и SEO-метаданными.
+
+**Ключевые файлы:**
+- `app/Http/Controllers/ArticleController.php`
+- `app/Services/ArticleViewTracker.php`
+
+---
+
+### 7. Трекинг активности
+
+Трёхуровневая система:
+
+| Уровень | Что делает |
+|---|---|
+| Middleware `TrackUserActivity` | Обновляет `users.last_activity_at` на каждом запросе |
+| `ActivityTracker` (сервис) | Пишет события в `activity_events` (append-only лог) |
+| `LessonView` (модель) | Хранит время на уроке, счётчик открытий, хартбит (AJAX каждые N секунд) |
+
+---
+
+### 8. Уведомления (Telegram / VK)
+
+Студентам можно отправлять сообщения через привязанный Telegram или VK аккаунт:
+- `User::sendTelegramMessage()` / `User::sendVkMessage()`
+- Входящие вебхуки: `/api/telegram/webhook`, `/api/vk-webhook`
+- Job `SendMessengerAlerts` — массовая рассылка через очередь
+
+---
+
+### 9. Преподаватели и выплаты
+
+Модель `Teacher` поддерживает 4 модели оплаты: процент от платежей, за студента, за блок курса, фиксированная ставка. История выплат в `TeacherPayout`.
+
+---
+
+## Роадмап
+
+### Ближайшие задачи
+
+- [ ] **Апгрейд тарифов** — логика в `Tariff` готова, платёжный флоу отключён (`config/features.php → upgrade_payments_enabled`). Нужно довести UI оформления и протестировать.
+- [ ] **Тесты** — покрытие минимальное (3–4 файла). Приоритет: `Payment`, `Tariff::calculateFinalPriceForUser`, `PromoCode`.
+- [ ] **Чат поддержки** — модель `ChatMessage` существует, UI и обработчик не реализованы.
+
+### Среднесрочно
+
+- [ ] **Мобильная адаптация кабинета** — текущие шаблоны верстались под десктоп.
+- [ ] **Аналитика преподавателей** — дашборд с прогрессом студентов и воронкой просмотров уроков.
+- [ ] **Реферальная программа** — инфраструктура промокодов готова, нужна привязка к реферальным ссылкам.
+- [ ] **Социальная авторизация** — `config/social.php` и модели созданы, OAuth не подключён.
+
+### Долгосрочно
+
+- [ ] **API для мобильного приложения** — Sanctum настроен, нужны полноценные эндпоинты кабинета.
+- [ ] **Редактор лекций v2** — доработка AI-функций (`LectureAiClient`) и совместного редактирования.
+- [ ] **Вебинары / live-сессии** — модель `Schedule` есть, интеграция с видеоплатформой не реализована.

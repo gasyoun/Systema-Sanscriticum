@@ -15,6 +15,7 @@ class Lead extends Model
         'name',
         'contact',
         'email',            // <--- Важно: Добавили Email
+        'social',
         'is_promo_agreed',
 
         // Аналитика (UTM метки) - теперь они будут сохраняться
