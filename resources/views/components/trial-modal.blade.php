@@ -80,6 +80,18 @@
                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
                         </div>
                         
+                        {{-- Telegram / VK / Instagram (необязательное) --}}
+<div>
+    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">
+        Telegram / VK / Instagram
+        <span class="text-gray-300 normal-case tracking-normal font-medium">— необязательно</span>
+    </label>
+    <input type="text" name="social" placeholder="@username или ссылка"
+           maxlength="255"
+           value="{{ old('social') }}"
+           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
+</div>
+                        
                         <div class="space-y-2.5 pt-2">
                             <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                 <div class="flex items-center h-5 mt-px shrink-0">
