@@ -70,6 +70,18 @@
                         <input type="email" name="email" required placeholder="mail@example.com"
                                class="w-full px-5 py-4 rounded-xl border border-transparent bg-[#252529] text-white placeholder-[#505055] focus:bg-[#2C2C32] focus:border-[#3E3E45] focus:ring-0 transition text-base">
                     </div>
+                    
+{{-- Telegram / VK / Instagram (необязательное) --}}
+<div>
+    <label class="block text-[10px] font-bold text-[#65656B] uppercase tracking-widest mb-2">
+        Telegram / VK / Instagram
+        <span class="text-[#505055] normal-case tracking-normal font-medium">— необязательно</span>
+    </label>
+    <input type="text" name="social" placeholder="@username или ссылка"
+           maxlength="255"
+           value="{{ old('social') }}"
+           class="w-full px-5 py-4 rounded-xl border border-transparent bg-[#252529] text-white placeholder-[#505055] focus:bg-[#2C2C32] focus:border-[#3E3E45] focus:ring-0 transition text-base">
+</div>
 
                     {{-- Чекбоксы --}}
                     <div class="space-y-3 pt-2">

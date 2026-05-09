@@ -65,31 +65,36 @@ class PaymentResource extends Resource
                         ->columnSpan(1),
 
                     Forms\Components\Select::make('tariff')
-                        ->label('Тариф (Доступ)')
-                        ->options(function () {
-                            $options = ['full' => 'Весь курс целиком'];
-                            for ($i = 1; $i <= 100; $i++) {
-                                $startLesson = ($i - 1) * 4 + 1;
-                                $endLesson = $i * 4;
-                                $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
-                            }
-                            return $options;
-                        })
-                        ->searchable()
-                        ->default('full')
-                        ->required()
-                        ->live() 
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            if ($state === 'full') {
-                                $set('start_block', null);
-                                $set('end_block', null);
-                            } elseif (str_starts_with($state ?? '', 'block_')) {
-                                $blockNum = (int) str_replace('block_', '', $state);
-                                $set('start_block', $blockNum);
-                                $set('end_block', $blockNum);
-                            }
-                        })
-                        ->columnSpanFull(),
+    ->label('Тариф (Доступ)')
+    ->options(function () {
+        $options = [
+            'full'   => 'Весь курс целиком',
+            'Расход' => '💸 Системный расход / Возврат',
+        ];
+
+        for ($i = 1; $i <= 100; $i++) {
+            $startLesson = ($i - 1) * 4 + 1;
+            $endLesson   = $i * 4;
+            $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+        }
+
+        return $options;
+    })
+    ->searchable()
+    ->default('full')
+    ->required()
+    ->live()
+    ->afterStateUpdated(function ($state, callable $set) {
+        if ($state === 'full' || $state === 'Расход') {
+            $set('start_block', null);
+            $set('end_block', null);
+        } elseif (str_starts_with($state ?? '', 'block_')) {
+            $blockNum = (int) str_replace('block_', '', $state);
+            $set('start_block', $blockNum);
+            $set('end_block', $blockNum);
+        }
+    })
+    ->columnSpanFull(),
                 ])->columns(2),
 
                 Forms\Components\Section::make('Финансы')->schema([
