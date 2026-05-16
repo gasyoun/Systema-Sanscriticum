@@ -213,20 +213,33 @@ return [
     ],
 
     'environments' => [
-        'production' => [
-            'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
-            ],
-        ],
-
-        'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
-            ],
+    'production' => [
+        'supervisor-1' => [
+            'connection' => 'redis',
+            'queue' => ['default', 'tracking', 'imports', 'mailing', 'messages', 'certificates'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
+            'maxProcesses' => 10,
+            'tries' => 1,
+            'timeout' => 600,
+            'memory' => 128,
+            'nice' => 0,
         ],
     ],
+    'local' => [
+        'supervisor-1' => [
+            'connection' => 'redis',
+            'queue' => ['default', 'tracking', 'imports', 'mailing', 'messages', 'certificates'],
+            'balance' => 'simple',
+            'minProcesses' => 1,
+            'maxProcesses' => 3,
+            'tries' => 1,
+            'timeout' => 600,
+            'memory' => 128,
+        ],
+    ],
+],
 
     /*
     |--------------------------------------------------------------------------

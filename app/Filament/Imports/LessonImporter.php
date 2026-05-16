@@ -22,9 +22,12 @@ class LessonImporter extends Importer
                 ->label('Название курса'),
 
             ImportColumn::make('block_number')
-                ->requiredMapping()
-                ->numeric()
-                ->label('Блок (просто цифра: 1, 2, 3 или 4)'),
+    ->requiredMapping()
+    ->rules(['required', 'integer', 'min:1', 'max:200'])
+    ->castStateUsing(fn ($state): ?int =>
+        ($state === null || trim((string) $state) === '') ? null : (int) $state
+    )
+    ->label('Блок (просто цифра: 1, 2, 3 или 4)'),
 
             ImportColumn::make('title')
                 ->requiredMapping()
