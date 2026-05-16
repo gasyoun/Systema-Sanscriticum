@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Lesson extends Model
 {
@@ -37,6 +39,28 @@ class Lesson extends Model
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Lesson $lesson): void {
+            if ($lesson->block_number === null || $lesson->block_number === '') {
+                $key = 'lesson_block_null_log:' . ($lesson->id ?? 'new');
+
+                if (Cache::add($key, 1, now()->addMinute())) {
+                    Log::warning(
+                        'Lesson::saving — block_number was null, fallback to 1',
+                        [
+                            'lesson_id' => $lesson->id,
+                            'user_id'   => auth()->id(),
+                            'changes'   => $lesson->getDirty(),
+                        ]
+                    );
+                }
+
+                $lesson->block_number = 1;
+            }
+        });
+    }
 
     public function course(): BelongsTo
     {
