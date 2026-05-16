@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\LandingPage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LeadController extends Controller
 {
@@ -13,6 +14,13 @@ class LeadController extends Controller
     // =========================================================
     public function store(Request $request)
     {
+        // 0. Rate limit: 1 заявка / 5 сек / IP
+        $rlKey = 'lead-submit:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
         // 1. Валидация данных
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
@@ -51,7 +59,26 @@ class LeadController extends Controller
             $data['utm_content'] = '[' . $data['form_name'] . '] ' . $existingUtm;
         }
 
-        // 2. БЕЗОПАСНО сохраняем лид в базу
+        // 2. Проверка повторной заявки с того же email
+        $isDuplicate = false;
+        if (!empty($data['landing_page_id'])) {
+            $isDuplicate = Lead::where('email', $data['email'])
+                ->where('landing_page_id', $data['landing_page_id'])
+                ->exists();
+        } elseif (!empty($data['source_article_slug'])) {
+            $isDuplicate = Lead::where('email', $data['email'])
+                ->where('source_article_slug', $data['source_article_slug'])
+                ->exists();
+        }
+
+        if ($isDuplicate) {
+            return redirect()->route('thank.you')->with([
+                'is_duplicate'    => true,
+                'duplicate_email' => $data['email'],
+            ]);
+        }
+
+        // 3. БЕЗОПАСНО сохраняем лид в базу
         $lead = Lead::create($data);
 
         // 3. --- ЛОГИКА ДЛЯ ПИКСЕЛЕЙ ---
