@@ -30,6 +30,7 @@ class Lead extends Model
         'ip_address',
         'user_agent',
         'referrer',
+        'source_article_slug',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)

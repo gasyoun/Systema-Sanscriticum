@@ -9,6 +9,35 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// Зеркало серверного rate-limit'а LeadController::store (1 / 5 сек / IP) —
+// чтобы юзер видел "Отправка..." вместо голой 429.
+let lastLeadSubmitAt = 0;
+
+document.addEventListener('submit', function (event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.action || !form.action.includes('/leads/store')) return;
+
+    const now = Date.now();
+    if (now - lastLeadSubmitAt < 5000) {
+        event.preventDefault();
+        return;
+    }
+    lastLeadSubmitAt = now;
+
+    const button = form.querySelector('button[type="submit"]');
+    if (!button) return;
+
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = 'Отправка...';
+
+    setTimeout(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }, 5000);
+}, true);
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting
