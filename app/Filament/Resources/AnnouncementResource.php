@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\AnnouncementResource\Pages;
 use App\Models\Announcement;
 use Filament\Forms;
@@ -9,8 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-
-use App\Filament\Concerns\AdminOnly;
 
 class AnnouncementResource extends Resource
 {
@@ -20,9 +19,13 @@ class AnnouncementResource extends Resource
 
     // Делаем красивую иконку рупора в левом меню
     protected static ?string $navigationIcon = 'heroicon-o-megaphone'; // <-- Вот она!
+
     protected static ?int $navigationSort = 120;
+
     protected static ?string $navigationGroup = 'Маркетинг';
+
     protected static ?string $navigationLabel = 'Рассылки';
+
     protected static ?string $pluralModelLabel = 'Рассылки';
 
     public static function form(Form $form): Form
@@ -43,14 +46,14 @@ class AnnouncementResource extends Resource
                             ->maxLength(255)
                             ->helperText('Этот текст студент увидит до того, как раскроет сообщение.')
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Select::make('target_courses')
                             ->label('Кому отправить? (Фильтр по курсам)')
                             ->multiple() // Позволяет выбрать несколько курсов
                             ->options(\App\Models\Course::pluck('title', 'id')) // Берем названия всех курсов из базы
                             ->placeholder('Всем студентам (оставьте пустым)')
                             ->helperText('Если ничего не выбрано, рассылка отобразится у ВСЕХ студентов платформы.')
-                            ->columnSpanFull(),    
+                            ->columnSpanFull(),
 
                         // 👇 Поле для картинки 👇
                         Forms\Components\FileUpload::make('image_path')
@@ -78,7 +81,7 @@ class AnnouncementResource extends Resource
                         Forms\Components\TextInput::make('button_text')
                             ->label('Текст на кнопке')
                             ->placeholder('Например: Записаться на курс'),
-                            
+
                         Forms\Components\TextInput::make('button_url')
                             ->label('Ссылка для кнопки')
                             ->url()
@@ -90,7 +93,7 @@ class AnnouncementResource extends Resource
                         Forms\Components\Toggle::make('is_published')
                             ->label('Опубликовать в кабинетах студентов')
                             ->default(true),
-                            
+
                         Forms\Components\Toggle::make('send_to_email')
                             ->label('Отправить на Email')
                             ->default(false),
@@ -114,15 +117,15 @@ class AnnouncementResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->label('Заголовок')
                     ->searchable(),
-                    
+
                 Tables\Columns\IconColumn::make('is_published')
                     ->label('В кабинете')
                     ->boolean(),
-                    
+
                 Tables\Columns\IconColumn::make('send_to_email')
                     ->label('Email')
                     ->boolean(),
-                    
+
                 // 👇 НОВЫЕ КОЛОНКИ В ТАБЛИЦЕ 👇
                 Tables\Columns\IconColumn::make('send_to_telegram')
                     ->label('Telegram')
@@ -131,7 +134,7 @@ class AnnouncementResource extends Resource
                 Tables\Columns\IconColumn::make('send_to_vk')
                     ->label('VK')
                     ->boolean(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Дата создания')
                     ->dateTime('d.m.Y H:i')

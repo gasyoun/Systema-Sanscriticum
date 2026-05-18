@@ -22,8 +22,8 @@ class PranaTransaction extends Model
     ];
 
     protected $casts = [
-        'amount'     => 'integer',
-        'meta'       => 'array',
+        'amount' => 'integer',
+        'meta' => 'array',
         'created_at' => 'datetime',
     ];
 
@@ -39,6 +39,6 @@ class PranaTransaction extends Model
 
     public function reasonLabel(): string
     {
-        return config('prana.reasons.' . $this->reason, $this->reason);
+        return config('prana.reasons.'.$this->reason, $this->reason);
     }
 }

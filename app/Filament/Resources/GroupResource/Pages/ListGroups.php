@@ -25,7 +25,7 @@ class ListGroups extends ListRecords
                 ->color('gray')
                 ->exporter(GroupExporter::class)
                 ->formats([ExportFormat::Csv])
-                ->fileName(fn () => 'groups-' . now()->format('Y-m-d_H-i-s')),
+                ->fileName(fn () => 'groups-'.now()->format('Y-m-d_H-i-s')),
         ];
     }
 }

@@ -31,7 +31,7 @@ class BlogAnalyticsServiceProvider extends ServiceProvider
 
                 return [
                     'yandex_id' => $settings?->blog_yandex_metrika_id ?: null,
-                    'vk_id'     => $settings?->blog_vk_pixel_id ?: null,
+                    'vk_id' => $settings?->blog_vk_pixel_id ?: null,
                 ];
             });
 

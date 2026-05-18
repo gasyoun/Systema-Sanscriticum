@@ -31,7 +31,7 @@ class LectureAiClient
     {
         return new self(
             baseUrl: rtrim((string) config('services.lecture_builder.url'), '/'),
-            token:   config('services.lecture_builder.token'),
+            token: config('services.lecture_builder.token'),
             timeout: (int) config('services.lecture_builder.ai_timeout', 600),
         );
     }
@@ -40,18 +40,18 @@ class LectureAiClient
     {
         return $this->postJson('/ai/structure', [
             'working_dir' => $absoluteWorkingDir,
-            'hint'        => $hint,
-            'apply'       => $apply,
+            'hint' => $hint,
+            'apply' => $apply,
         ]);
     }
 
     public function correct(string $absoluteWorkingDir, string $hint = '', bool $apply = true,
-                            int $maxParagraphs = 0): array
+        int $maxParagraphs = 0): array
     {
         return $this->postJson('/ai/correct', [
-            'working_dir'    => $absoluteWorkingDir,
-            'hint'           => $hint,
-            'apply'          => $apply,
+            'working_dir' => $absoluteWorkingDir,
+            'hint' => $hint,
+            'apply' => $apply,
             'max_paragraphs' => $maxParagraphs,
         ]);
     }
@@ -60,33 +60,33 @@ class LectureAiClient
     {
         return $this->postJson('/ai/place_slides', [
             'working_dir' => $absoluteWorkingDir,
-            'hint'        => $hint,
-            'apply'       => $apply,
+            'hint' => $hint,
+            'apply' => $apply,
         ]);
     }
 
     public function verifyTimecodes(string $absoluteWorkingDir, string $hint = '', bool $apply = true,
-                                    ?string $ytUrl = null): array
+        ?string $ytUrl = null): array
     {
         return $this->postJson('/ai/timecodes', [
             'working_dir' => $absoluteWorkingDir,
-            'hint'        => $hint,
-            'apply'       => $apply,
-            'yt_url'      => $ytUrl,
+            'hint' => $hint,
+            'apply' => $apply,
+            'yt_url' => $ytUrl,
         ]);
     }
 
     private function postJson(string $path, array $payload): array
     {
-        $response = $this->request()->post($this->baseUrl . $path, $payload);
+        $response = $this->request()->post($this->baseUrl.$path, $payload);
         $body = $response->json();
 
-        if (!is_array($body)) {
+        if (! is_array($body)) {
             throw new RuntimeException("lecture-builder вернул не-JSON ответ (HTTP {$response->status()})");
         }
 
-        if (!$response->successful() || !($body['ok'] ?? false)) {
-            $error = $body['error'] ?? ('HTTP ' . $response->status());
+        if (! $response->successful() || ! ($body['ok'] ?? false)) {
+            $error = $body['error'] ?? ('HTTP '.$response->status());
             throw new RuntimeException("AI {$path}: {$error}");
         }
 
@@ -99,6 +99,7 @@ class LectureAiClient
         if ($this->token) {
             $req = $req->withHeaders(['X-Builder-Token' => $this->token]);
         }
+
         return $req;
     }
 }

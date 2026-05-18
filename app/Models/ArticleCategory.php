@@ -30,7 +30,7 @@ class ArticleCategory extends Model
     protected static function booted(): void
     {
         static::saving(function (self $category): void {
-            if (empty($category->slug) && !empty($category->name)) {
+            if (empty($category->slug) && ! empty($category->name)) {
                 $category->slug = Str::slug($category->name);
             }
         });
@@ -50,9 +50,9 @@ class ArticleCategory extends Model
     public function publishedArticles(): HasMany
     {
         return $this->hasMany(Article::class, 'category_id')
-                    ->where('is_published', true)
-                    ->whereNotNull('published_at')
-                    ->where('published_at', '<=', now());
+            ->where('is_published', true)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     /**

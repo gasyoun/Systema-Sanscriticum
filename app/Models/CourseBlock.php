@@ -24,11 +24,11 @@ class CourseBlock extends Model
     ];
 
     protected $casts = [
-        'starts_at'  => 'datetime',
-        'ends_at'    => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
         'is_current' => 'boolean',
-        'is_active'  => 'boolean',
-        'number'     => 'integer',
+        'is_active' => 'boolean',
+        'number' => 'integer',
     ];
 
     public function course(): BelongsTo
@@ -55,7 +55,7 @@ class CourseBlock extends Model
         }
 
         $startOfToday = now()->startOfDay();
-        $endOfToday   = now()->endOfDay();
+        $endOfToday = now()->endOfDay();
 
         if ($this->starts_at && $this->starts_at->gt($endOfToday)) {
             return false;
@@ -71,19 +71,19 @@ class CourseBlock extends Model
     public function scopeCurrent(Builder $query): Builder
     {
         $startOfToday = now()->startOfDay();
-        $endOfToday   = now()->endOfDay();
+        $endOfToday = now()->endOfDay();
 
         return $query->where(function (Builder $q) use ($startOfToday, $endOfToday) {
             $q->where('is_current', true)
-              ->orWhere(function (Builder $sub) use ($startOfToday, $endOfToday) {
-                  $sub->where(function (Builder $w) use ($endOfToday) {
-                      $w->whereNull('starts_at')->orWhere('starts_at', '<=', $endOfToday);
-                  })->where(function (Builder $w) use ($startOfToday) {
-                      $w->whereNull('ends_at')->orWhere('ends_at', '>=', $startOfToday);
-                  })->where(function (Builder $w) {
-                      $w->whereNotNull('starts_at')->orWhereNotNull('ends_at');
-                  });
-              });
+                ->orWhere(function (Builder $sub) use ($startOfToday, $endOfToday) {
+                    $sub->where(function (Builder $w) use ($endOfToday) {
+                        $w->whereNull('starts_at')->orWhere('starts_at', '<=', $endOfToday);
+                    })->where(function (Builder $w) use ($startOfToday) {
+                        $w->whereNull('ends_at')->orWhere('ends_at', '>=', $startOfToday);
+                    })->where(function (Builder $w) {
+                        $w->whereNotNull('starts_at')->orWhereNotNull('ends_at');
+                    });
+                });
         });
     }
 }

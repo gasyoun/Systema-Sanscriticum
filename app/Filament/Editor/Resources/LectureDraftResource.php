@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Editor\Resources;
 
 use App\Filament\Editor\Resources\LectureDraftResource\Pages;
-use App\Models\Course;
 use App\Models\LectureDraft;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,9 +16,13 @@ use Illuminate\Database\Eloquent\Builder;
 class LectureDraftResource extends Resource
 {
     protected static ?string $model = LectureDraft::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationLabel = 'Лекции';
+
     protected static ?string $pluralModelLabel = 'Черновики лекций';
+
     protected static ?string $modelLabel = 'Черновик лекции';
 
     public static function form(Form $form): Form
@@ -96,20 +99,20 @@ class LectureDraftResource extends Resource
                     ->label('Статус')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        LectureDraft::STATUS_DRAFT         => 'gray',
+                        LectureDraft::STATUS_DRAFT => 'gray',
                         LectureDraft::STATUS_PREPROCESSING => 'warning',
-                        LectureDraft::STATUS_EDITING       => 'info',
-                        LectureDraft::STATUS_BUILT         => 'success',
-                        LectureDraft::STATUS_PUBLISHED     => 'primary',
-                        default                            => 'gray',
+                        LectureDraft::STATUS_EDITING => 'info',
+                        LectureDraft::STATUS_BUILT => 'success',
+                        LectureDraft::STATUS_PUBLISHED => 'primary',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        LectureDraft::STATUS_DRAFT         => 'Черновик',
+                        LectureDraft::STATUS_DRAFT => 'Черновик',
                         LectureDraft::STATUS_PREPROCESSING => 'Препроцесс',
-                        LectureDraft::STATUS_EDITING       => 'Редактирование',
-                        LectureDraft::STATUS_BUILT         => 'Собрано',
-                        LectureDraft::STATUS_PUBLISHED     => 'Опубликовано',
-                        default                            => $state,
+                        LectureDraft::STATUS_EDITING => 'Редактирование',
+                        LectureDraft::STATUS_BUILT => 'Собрано',
+                        LectureDraft::STATUS_PUBLISHED => 'Опубликовано',
+                        default => $state,
                     }),
 
                 Tables\Columns\TextColumn::make('course.title')
@@ -136,11 +139,11 @@ class LectureDraftResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Статус')
                     ->options([
-                        LectureDraft::STATUS_DRAFT         => 'Черновик',
+                        LectureDraft::STATUS_DRAFT => 'Черновик',
                         LectureDraft::STATUS_PREPROCESSING => 'Препроцесс',
-                        LectureDraft::STATUS_EDITING       => 'Редактирование',
-                        LectureDraft::STATUS_BUILT         => 'Собрано',
-                        LectureDraft::STATUS_PUBLISHED     => 'Опубликовано',
+                        LectureDraft::STATUS_EDITING => 'Редактирование',
+                        LectureDraft::STATUS_BUILT => 'Собрано',
+                        LectureDraft::STATUS_PUBLISHED => 'Опубликовано',
                     ]),
             ])
             ->actions([
@@ -162,7 +165,7 @@ class LectureDraftResource extends Resource
         $user = auth()->user();
         $query = parent::getEloquentQuery();
 
-        if ($user && !$user->is_admin) {
+        if ($user && ! $user->is_admin) {
             $query->where('created_by', $user->id);
         }
 
@@ -177,9 +180,9 @@ class LectureDraftResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListLectureDrafts::route('/'),
+            'index' => Pages\ListLectureDrafts::route('/'),
             'create' => Pages\CreateLectureDraft::route('/create'),
-            'edit'   => Pages\EditLectureDraft::route('/{record}/edit'),
+            'edit' => Pages\EditLectureDraft::route('/{record}/edit'),
         ];
     }
 }

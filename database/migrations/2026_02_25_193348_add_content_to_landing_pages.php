@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('landing_pages', function (Blueprint $table) {
             // Это поле 'content' будет хранить ВСЕ блоки сразу
             // (Hero, Видео, Отзывы, Форму и т.д.) в формате JSON
-            if (!Schema::hasColumn('landing_pages', 'content')) {
+            if (! Schema::hasColumn('landing_pages', 'content')) {
                 $table->json('content')->nullable()->after('slug');
             }
         });

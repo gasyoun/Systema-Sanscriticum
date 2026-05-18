@@ -3,24 +3,30 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use Filament\Resources\Pages\Page;
-use App\Models\User;
 use App\Models\ChatMessage;
+use App\Models\User;
+use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Http;
 
 class Dialogs extends Page
 {
     protected static string $resource = UserResource::class;
+
     protected static string $view = 'filament.resources.user-resource.pages.dialogs';
-    
+
     // Переопределяем название в меню
     protected static ?string $navigationLabel = 'Чат с куратором';
+
     protected static ?string $title = 'Диалоги с ИИ и студентами';
+
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
     public $activeUserId = null; // ID студента, чей чат сейчас открыт
+
     public $newMessage = '';     // Текст ответа куратора
+
     public $usersWithChats = []; // Список студентов слева
+
     public $messages = [];       // Сообщения в открытом чате
 
     public function mount()
@@ -49,7 +55,7 @@ class Dialogs extends Page
     public function selectUser($userId)
     {
         $this->activeUserId = $userId;
-        
+
         // Помечаем все сообщения этого студента как прочитанные
         ChatMessage::where('user_id', $userId)
             ->where('role', 'user')
@@ -71,7 +77,7 @@ class Dialogs extends Page
     // Кнопка "Отправить"
     public function sendMessageToStudent()
     {
-        if (empty(trim($this->newMessage)) || !$this->activeUserId) {
+        if (empty(trim($this->newMessage)) || ! $this->activeUserId) {
             return;
         }
 
@@ -88,10 +94,10 @@ class Dialogs extends Page
         // 2. Отправляем в Telegram студенту через API
         $token = env('TELEGRAM_BOT_TOKEN');
         $chatId = $user->telegram_id;
-        
+
         Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
-            'text' => "👨‍🏫 <b>Куратор:</b>\n" . $this->newMessage,
+            'text' => "👨‍🏫 <b>Куратор:</b>\n".$this->newMessage,
             'parse_mode' => 'HTML',
         ]);
 

@@ -35,9 +35,9 @@ class OpenLessonsTest extends TestCase
         $user = User::factory()->create();
         $course = Course::factory()->create();
 
-        $visible    = Lesson::factory()->for($course)->free()->create(['title' => 'Открытый и опубликован']);
+        $visible = Lesson::factory()->for($course)->free()->create(['title' => 'Открытый и опубликован']);
         $unpublished = Lesson::factory()->for($course)->free()->unpublished()->create(['title' => 'Открытый но скрытый']);
-        $paid       = Lesson::factory()->for($course)->create(['title' => 'Платный']);
+        $paid = Lesson::factory()->for($course)->create(['title' => 'Платный']);
 
         $html = $this->actingAs($user)->get('/open-lessons')->getContent();
 

@@ -10,11 +10,11 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('landing_pages', function (Blueprint $table) {
-        $table->string('vk_pixel_id')->nullable();
-    });
-}
+    {
+        Schema::table('landing_pages', function (Blueprint $table) {
+            $table->string('vk_pixel_id')->nullable();
+        });
+    }
 
     /**
      * Reverse the migrations.

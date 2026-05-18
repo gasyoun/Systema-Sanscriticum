@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 
 class TelegramController extends Controller
 {
@@ -16,7 +15,7 @@ class TelegramController extends Controller
 
         // 2. Записываем его студенту в базу данных
         $user->update([
-            'telegram_auth_token' => $token
+            'telegram_auth_token' => $token,
         ]);
 
         // 3. Достаем имя бота из .env

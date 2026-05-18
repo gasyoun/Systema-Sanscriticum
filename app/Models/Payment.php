@@ -5,10 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Mail\StudentWelcomeMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class Payment extends Model
@@ -68,72 +64,75 @@ class Payment extends Model
     // ГЛАВНЫЙ МЕТОД: ЗАПУСКАЕТ ВСЕ ПРОЦЕССЫ
     // ==========================================
     public function processSuccessfulPayment()
-{
-    \Illuminate\Support\Facades\DB::transaction(function () {
-        $this->grantAccess();
-        $this->sendWelcomeEmailIfNeeded();
-        $this->awardPranaForPurchase();
-    });
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $this->grantAccess();
+            $this->sendWelcomeEmailIfNeeded();
+            $this->awardPranaForPurchase();
+        });
 
-    // Telegram-уведомление — через очередь, чтобы не держать row-lock webhook'а
-    // во время синхронного HTTP-вызова к api.telegram.org.
-    if ($this->user_id) {
-        $courseName = $this->course->title ?? 'Обучающий материал';
-        $url = url('/login');
+        // Telegram-уведомление — через очередь, чтобы не держать row-lock webhook'а
+        // во время синхронного HTTP-вызова к api.telegram.org.
+        if ($this->user_id) {
+            $courseName = $this->course->title ?? 'Обучающий материал';
+            $url = url('/login');
 
-        $text = "🎉 <b>Оплата успешно получена!</b>\n\n";
-        $text .= "Намасте! Ваш доступ к курсу <b>«{$courseName}»</b> открыт.\n\n";
-        $text .= "Можете приступать к занятиям прямо сейчас:\n";
-        $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
+            $text = "🎉 <b>Оплата успешно получена!</b>\n\n";
+            $text .= "Намасте! Ваш доступ к курсу <b>«{$courseName}»</b> открыт.\n\n";
+            $text .= "Можете приступать к занятиям прямо сейчас:\n";
+            $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
 
-        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+            \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+        }
     }
-}
 
     // ==========================================
     // ЛОГИКА ВЫДАЧИ ДОСТУПА И ГРУПП
     // ==========================================
     public function grantAccess(): void
-{
-    $user = $this->user;
-    $course = $this->course;
+    {
+        $user = $this->user;
+        $course = $this->course;
 
-    if (!$course) {
-        Log::warning("grantAccess: платёж #{$this->id} без курса, пропускаем.");
-        return;
-    }
+        if (! $course) {
+            Log::warning("grantAccess: платёж #{$this->id} без курса, пропускаем.");
 
-    if (!$user) {
-        Log::warning("grantAccess: платёж #{$this->id} без пользователя, пропускаем.");
-        return;
-    }
+            return;
+        }
 
-    // Все группы, привязанные к этому курсу через pivot course_group
-    $groupIds = $course->groups()->pluck('groups.id')->toArray();
+        if (! $user) {
+            Log::warning("grantAccess: платёж #{$this->id} без пользователя, пропускаем.");
 
-    if (empty($groupIds)) {
-        Log::warning(
-            "grantAccess: у курса '{$course->title}' (id={$course->id}) " .
-            "нет привязанных групп. Проверьте вкладку «Группы» в админке курса."
+            return;
+        }
+
+        // Все группы, привязанные к этому курсу через pivot course_group
+        $groupIds = $course->groups()->pluck('groups.id')->toArray();
+
+        if (empty($groupIds)) {
+            Log::warning(
+                "grantAccess: у курса '{$course->title}' (id={$course->id}) ".
+                'нет привязанных групп. Проверьте вкладку «Группы» в админке курса.'
+            );
+
+            return;
+        }
+
+        // syncWithoutDetaching — добавляет новые связи, не удаляя существующие
+        $user->groups()->syncWithoutDetaching($groupIds);
+
+        Log::info(
+            "grantAccess: студент #{$user->id} ({$user->email}) добавлен в ".
+            count($groupIds)." групп(у/ы) курса '{$course->title}'."
         );
-        return;
     }
-
-    // syncWithoutDetaching — добавляет новые связи, не удаляя существующие
-    $user->groups()->syncWithoutDetaching($groupIds);
-
-    Log::info(
-        "grantAccess: студент #{$user->id} ({$user->email}) добавлен в " .
-        count($groupIds) . " групп(у/ы) курса '{$course->title}'."
-    );
-}
 
     // ==========================================
     // НАЧИСЛЕНИЕ ПРАНЫ ЗА УСПЕШНУЮ ОПЛАТУ
     // ==========================================
     public function awardPranaForPurchase(): void
     {
-        if (!$this->user) {
+        if (! $this->user) {
             return;
         }
 
@@ -152,7 +151,7 @@ class Payment extends Model
     // ==========================================
     public function refundPranaIfSpent(): void
     {
-        if (!$this->user || (int) $this->prana_spent <= 0) {
+        if (! $this->user || (int) $this->prana_spent <= 0) {
             return;
         }
 
@@ -171,8 +170,9 @@ class Payment extends Model
     {
         $student = $this->user;
 
-        if (!$student) {
-            \Illuminate\Support\Facades\Log::error('Студент не найден для платежа ID: ' . $this->id);
+        if (! $student) {
+            \Illuminate\Support\Facades\Log::error('Студент не найден для платежа ID: '.$this->id);
+
             return;
         }
 
@@ -185,14 +185,14 @@ class Payment extends Model
         // Если это первая оплата
         if ($paymentsCount === 1) {
             \Illuminate\Support\Facades\Log::info("Генерируем пароль и отправляем письмо студенту: {$student->email}");
-            
-            $newPassword = \Illuminate\Support\Str::random(8); 
+
+            $newPassword = \Illuminate\Support\Str::random(8);
             $student->password = \Illuminate\Support\Facades\Hash::make($newPassword);
             $student->save();
 
             \Illuminate\Support\Facades\Mail::to($student->email)->send(new \App\Mail\StudentWelcomeMail($student, $newPassword));
-            
-            \Illuminate\Support\Facades\Log::info("Письмо успешно передано в почтовик!");
+
+            \Illuminate\Support\Facades\Log::info('Письмо успешно передано в почтовик!');
         } else {
             \Illuminate\Support\Facades\Log::warning("Письмо НЕ отправлено, так как это не первая оплата (счетчик: {$paymentsCount})");
         }

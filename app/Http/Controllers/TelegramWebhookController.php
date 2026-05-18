@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache; // Добавили для переключения на человека
 use App\Models\ChatMessage;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http; // Добавили для переключения на человека
+use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
@@ -32,14 +32,14 @@ class TelegramWebhookController extends Controller
                     // Привязываем Telegram ID к студенту и удаляем временный токен
                     $user->update([
                         'telegram_id' => $chatId,
-                        'telegram_auth_token' => null 
+                        'telegram_auth_token' => null,
                     ]);
 
                     $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!");
                 } else {
-                    $this->sendMessage($chatId, "Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.");
+                    $this->sendMessage($chatId, 'Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.');
                 }
-            } 
+            }
             // Если просто написали /start без токена
             elseif ($text === '/start') {
                 $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
@@ -56,7 +56,7 @@ class TelegramWebhookController extends Controller
                     $this->processStudentQuestion($user, $text, $chatId);
                 } else {
                     // Пишет кто-то левый или неавторизованный
-                    $this->sendMessage($chatId, "Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.");
+                    $this->sendMessage($chatId, 'Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.');
                 }
             }
         }
@@ -83,15 +83,16 @@ class TelegramWebhookController extends Controller
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {
-                $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
 
                 $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
                 $safeQuestion = htmlspecialchars($question, ENT_QUOTES, 'UTF-8');
                 $alertMessage = "🔴 <b>Новое сообщение от {$safeName}:</b>\n\n<i>{$safeQuestion}</i>\n\n";
                 $alertMessage .= "👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
-                
+
                 $this->sendMessage($adminId, $alertMessage);
             }
+
             return;
         }
 
@@ -99,20 +100,21 @@ class TelegramWebhookController extends Controller
         $triggerWords = ['куратор', 'человек', 'помощь', 'админ', 'менеджер', 'оператор'];
         foreach ($triggerWords as $word) {
             if (mb_stripos($question, $word) !== false) {
-                Cache::put("chat_human_{$chatId}", true, 7200); 
-                $this->sendMessage($chatId, "🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!");
-                
+                Cache::put("chat_human_{$chatId}", true, 7200);
+                $this->sendMessage($chatId, '🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!');
+
                 if ($adminId) {
-                    $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                    $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
                     $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
                     $safeQuestion = htmlspecialchars($question, ENT_QUOTES, 'UTF-8');
                     $this->sendMessage($adminId, "🔔 <b>СТУДЕНТ ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeQuestion}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
                 }
+
                 return;
             }
         }
 
-        $this->sendMessage($chatId, "⏳ <i>Изучаю манускрипты...</i>");
+        $this->sendMessage($chatId, '⏳ <i>Изучаю манускрипты...</i>');
 
         try {
             $folderId = config('services.yandex.folder_id');
@@ -124,15 +126,15 @@ class TelegramWebhookController extends Controller
             // ==========================================
             // Берем последние 10 сообщений (этого хватит для контекста)
             $dbHistory = ChatMessage::where('user_id', $user->id)
-                                    ->orderBy('id', 'desc')
-                                    ->take(10)
-                                    ->get()
-                                    ->reverse();
+                ->orderBy('id', 'desc')
+                ->take(10)
+                ->get()
+                ->reverse();
 
             // Склеиваем историю в один текст
             $dialogueText = "История диалога:\n";
             foreach ($dbHistory as $msg) {
-                // Поскольку вопрос пользователя мы УЖЕ сохранили в базу на Шаге 1, 
+                // Поскольку вопрос пользователя мы УЖЕ сохранили в базу на Шаге 1,
                 // он тоже попадет сюда в самый конец текста.
                 $roleName = ($msg->role === 'user') ? 'Студент' : 'ИИ-Куратор';
                 $dialogueText .= "{$roleName}: {$msg->text}\n";
@@ -140,14 +142,14 @@ class TelegramWebhookController extends Controller
 
             // НОВЫЙ RESPONSES API ЯНДЕКСА
             $response = Http::withHeaders([
-                'Authorization' => 'Api-Key ' . $apiKey, // Вернули Api-Key!
-                'OpenAI-Project' => $folderId,          
+                'Authorization' => 'Api-Key '.$apiKey, // Вернули Api-Key!
+                'OpenAI-Project' => $folderId,
                 'Content-Type' => 'application/json',
-            ])->timeout(45)->post("https://ai.api.cloud.yandex.net/v1/responses", [
+            ])->timeout(45)->post('https://ai.api.cloud.yandex.net/v1/responses', [
                 'prompt' => [
-                    'id' => $agentId // Передаем голый ID, как в curl
+                    'id' => $agentId, // Передаем голый ID, как в curl
                 ],
-                'input' => $dialogueText // Отправляем весь диалог целиком
+                'input' => $dialogueText, // Отправляем весь диалог целиком
             ]);
 
             if ($response->successful()) {
@@ -163,25 +165,25 @@ class TelegramWebhookController extends Controller
                     }
                 }
 
-                $aiAnswer = $aiAnswer ?? "Ответ не найден.";
+                $aiAnswer = $aiAnswer ?? 'Ответ не найден.';
                 // ==========================================
-                
+
                 // СОХРАНЯЕМ ОТВЕТ БОТА В БАЗУ
                 ChatMessage::create([
                     'user_id' => $user->id,
                     'role' => 'bot',
                     'text' => $aiAnswer,
-                    'is_read' => true, 
+                    'is_read' => true,
                 ]);
 
                 $this->sendMessage($chatId, $aiAnswer);
             } else {
-                Log::error('Ошибка Yandex Responses API: ' . $response->body());
+                Log::error('Ошибка Yandex Responses API: '.$response->body());
                 $this->sendMessage($chatId, "Мои чакры перегружены 🧘‍♂️. Пожалуйста, напишите 'позови куратора', и вам ответит человек.");
             }
         } catch (\Exception $e) {
-            Log::error('Сбой связи с Yandex: ' . $e->getMessage());
-            $this->sendMessage($chatId, "Связь со вселенной прервалась. Позовите куратора.");
+            Log::error('Сбой связи с Yandex: '.$e->getMessage());
+            $this->sendMessage($chatId, 'Связь со вселенной прервалась. Позовите куратора.');
         }
     }
 
@@ -198,7 +200,7 @@ class TelegramWebhookController extends Controller
             'parse_mode' => 'HTML',
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('Telegram API error', ['status' => $response->status(), 'body' => $response->body()]);
         }
     }

@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $email    = config('services.admin.email');
+        $email = config('services.admin.email');
         $password = config('services.admin.password');
 
         if (empty($password)) {
@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
         // аккаунт мог править других админов и назначать роли.
         $admin->forceFill([
             'password' => Hash::make($password),
-            'role'     => Roles::SUPER_ADMIN,
+            'role' => Roles::SUPER_ADMIN,
         ])->save();
     }
 }

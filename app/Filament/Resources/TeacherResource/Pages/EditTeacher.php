@@ -41,10 +41,10 @@ class EditTeacher extends EditRecord
 
         /** @var User $user */
         $user = User::firstOrNew(['email' => $email]);
-        $isNewUser = !$user->exists;
+        $isNewUser = ! $user->exists;
 
-        $user->name       = $user->name ?: $teacher->name;
-        $user->role       = Roles::TEACHER;
+        $user->name = $user->name ?: $teacher->name;
+        $user->role = Roles::TEACHER;
         $user->teacher_id = $teacher->id;
 
         if ($isNewUser || filled($password)) {
@@ -56,7 +56,7 @@ class EditTeacher extends EditRecord
         if ($isNewUser) {
             Notification::make()
                 ->title('Создан аккаунт преподавателя')
-                ->body("Логин: {$email}. " . (filled($password)
+                ->body("Логин: {$email}. ".(filled($password)
                     ? 'Используется указанный вами пароль.'
                     : 'Сгенерирован случайный пароль — задайте новый через эту же форму.'))
                 ->success()

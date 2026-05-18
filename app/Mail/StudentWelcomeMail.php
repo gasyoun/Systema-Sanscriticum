@@ -15,6 +15,7 @@ class StudentWelcomeMail extends Mailable implements ShouldQueue // ShouldQueue 
     use Queueable, SerializesModels;
 
     public $user;
+
     public $password;
 
     public function __construct(User $user, $password)

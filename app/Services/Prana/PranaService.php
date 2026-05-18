@@ -26,7 +26,7 @@ class PranaService
         ?int $amount = null,
         array $meta = [],
     ): bool {
-        if (!PranaSettings::isActive()) {
+        if (! PranaSettings::isActive()) {
             return false;
         }
 
@@ -39,12 +39,12 @@ class PranaService
         try {
             return DB::transaction(function () use ($user, $reason, $source, $amount, $meta) {
                 PranaTransaction::create([
-                    'user_id'     => $user->id,
-                    'amount'      => $amount,
-                    'reason'      => $reason,
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'reason' => $reason,
                     'source_type' => $source?->getMorphClass(),
-                    'source_id'   => $source?->getKey(),
-                    'meta'        => $meta ?: null,
+                    'source_id' => $source?->getKey(),
+                    'meta' => $meta ?: null,
                 ]);
 
                 DB::table('users')->where('id', $user->id)->increment('prana_balance', $amount);
@@ -61,9 +61,10 @@ class PranaService
             }
             Log::warning('PranaService::award failed', [
                 'user_id' => $user->id,
-                'reason'  => $reason,
-                'error'   => $e->getMessage(),
+                'reason' => $reason,
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -92,17 +93,17 @@ class PranaService
 
             if ($current < $amount) {
                 throw new \RuntimeException(
-                    'Недостаточно праны: запрошено ' . $amount . ', доступно ' . $current
+                    'Недостаточно праны: запрошено '.$amount.', доступно '.$current
                 );
             }
 
             PranaTransaction::create([
-                'user_id'     => $user->id,
-                'amount'      => -$amount,
-                'reason'      => $reason,
+                'user_id' => $user->id,
+                'amount' => -$amount,
+                'reason' => $reason,
                 'source_type' => $source?->getMorphClass(),
-                'source_id'   => $source?->getKey(),
-                'meta'        => $meta ?: null,
+                'source_id' => $source?->getKey(),
+                'meta' => $meta ?: null,
             ]);
 
             DB::table('users')->where('id', $user->id)->decrement('prana_balance', $amount);
@@ -129,12 +130,12 @@ class PranaService
         try {
             return DB::transaction(function () use ($user, $amount, $reason, $source, $meta) {
                 PranaTransaction::create([
-                    'user_id'     => $user->id,
-                    'amount'      => $amount,
-                    'reason'      => $reason,
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'reason' => $reason,
                     'source_type' => $source->getMorphClass(),
-                    'source_id'   => $source->getKey(),
-                    'meta'        => $meta ?: null,
+                    'source_id' => $source->getKey(),
+                    'meta' => $meta ?: null,
                 ]);
 
                 DB::table('users')->where('id', $user->id)->increment('prana_balance', $amount);
@@ -149,9 +150,10 @@ class PranaService
             }
             Log::warning('PranaService::refund failed', [
                 'user_id' => $user->id,
-                'reason'  => $reason,
-                'error'   => $e->getMessage(),
+                'reason' => $reason,
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -183,10 +185,10 @@ class PranaService
         $reason = $delta > 0 ? 'admin_grant' : 'admin_deduct';
 
         $meta = array_filter([
-            'admin_id'    => $admin->id,
-            'admin_name'  => $admin->name,
+            'admin_id' => $admin->id,
+            'admin_name' => $admin->name,
             'admin_email' => $admin->email,
-            'comment'     => $comment ? trim($comment) : null,
+            'comment' => $comment ? trim($comment) : null,
         ], fn ($v) => $v !== null && $v !== '');
 
         return DB::transaction(function () use ($user, $delta, $reason, $meta) {
@@ -203,12 +205,12 @@ class PranaService
             }
 
             PranaTransaction::create([
-                'user_id'     => $user->id,
-                'amount'      => $delta,
-                'reason'      => $reason,
+                'user_id' => $user->id,
+                'amount' => $delta,
+                'reason' => $reason,
                 'source_type' => null,
-                'source_id'   => null,
-                'meta'        => $meta ?: null,
+                'source_id' => null,
+                'meta' => $meta ?: null,
             ]);
 
             DB::table('users')->where('id', $user->id)->update(['prana_balance' => $next]);
@@ -224,11 +226,11 @@ class PranaService
      */
     public function maxSpendableForPrice(User $user, float $finalPrice): int
     {
-        if (!PranaSettings::isActive()) {
+        if (! PranaSettings::isActive()) {
             return 0;
         }
 
-        $rate  = PranaSettings::rate();
+        $rate = PranaSettings::rate();
         $share = PranaSettings::maxShare();
 
         if ($finalPrice <= 0) {
@@ -266,7 +268,7 @@ class PranaService
      */
     public function awardDailyLogin(User $user): bool
     {
-        if (!PranaSettings::isActive()) {
+        if (! PranaSettings::isActive()) {
             return false;
         }
 
@@ -280,12 +282,12 @@ class PranaService
         try {
             return DB::transaction(function () use ($user, $amount, $sourceId) {
                 PranaTransaction::create([
-                    'user_id'     => $user->id,
-                    'amount'      => $amount,
-                    'reason'      => 'daily_login',
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'reason' => 'daily_login',
                     'source_type' => $user->getMorphClass(),
-                    'source_id'   => $sourceId,
-                    'meta'        => null,
+                    'source_id' => $sourceId,
+                    'meta' => null,
                 ]);
 
                 DB::table('users')->where('id', $user->id)->increment('prana_balance', $amount);
@@ -300,8 +302,9 @@ class PranaService
             }
             Log::warning('PranaService::awardDailyLogin failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

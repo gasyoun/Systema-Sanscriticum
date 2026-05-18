@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Schedule;
 use Filament\Forms;
@@ -10,8 +11,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-use App\Filament\Concerns\AdminOnly;
-
 class ScheduleResource extends Resource
 {
     use AdminOnly;
@@ -19,9 +18,13 @@ class ScheduleResource extends Resource
     protected static ?string $model = Schedule::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar'; // <-- Иконка календаря
+
     protected static ?int $navigationSort = 40;
+
     protected static ?string $navigationGroup = 'Обучение';
+
     protected static ?string $navigationLabel = 'Расписание';
+
     protected static ?string $pluralModelLabel = 'Расписание';
 
     public static function form(Form $form): Form
@@ -34,18 +37,18 @@ class ScheduleResource extends Resource
                             ->label('Название события')
                             ->required()
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\Textarea::make('description')
                             ->label('Описание / Ссылка')
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\TextInput::make('link')
                             ->label('Ссылка на Zoom / Google Meet')
                             ->placeholder('https://zoom.us/j/...')
                             ->url()
                             ->maxLength(1024)
                             ->prefixIcon('heroicon-m-video-camera')
-                            ->columnSpanFull(),    
+                            ->columnSpanFull(),
 
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -64,7 +67,7 @@ class ScheduleResource extends Resource
                             ->label('Для группы (Пусто = для всех)')
                             ->searchable()
                             ->preload(),
-                            
+
                         Forms\Components\ColorPicker::make('color')
                             ->label('Цвет метки')
                             ->default('#3788d8'),
@@ -81,22 +84,22 @@ class ScheduleResource extends Resource
                     ->label('Дата')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('title')
                     ->label('Событие')
                     ->searchable()
                     ->description(fn (Schedule $record) => \Illuminate\Support\Str::limit($record->description, 50)),
-                
+
                 Tables\Columns\TextColumn::make('group.name')
                     ->label('Группа')
                     ->badge()
                     ->placeholder('Для всех'),
-                    
+
                 Tables\Columns\IconColumn::make('link')
                     ->label('Zoom')
                     ->boolean()
                     ->trueIcon('heroicon-o-video-camera')
-                    ->falseIcon('heroicon-o-minus'),    
+                    ->falseIcon('heroicon-o-minus'),
 
                 Tables\Columns\ColorColumn::make('color')
                     ->label('Цвет'),
@@ -108,7 +111,7 @@ class ScheduleResource extends Resource
                 // Действия для ОДНОЙ строки
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-            ]) 
+            ])
             // ВАЖНО: Мы закрыли actions(), и теперь вызываем bulkActions() как отдельный метод
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

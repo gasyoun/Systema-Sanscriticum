@@ -10,23 +10,23 @@ return [
 
     // Сколько начислять за разные виды активности.
     'rewards' => [
-        'lesson_complete'    => 10,
-        'course_complete'    => 500,
-        'open_lesson_view'   => 20,
-        'daily_login'        => 5,
-        'payment_success'    => 50,
+        'lesson_complete' => 10,
+        'course_complete' => 500,
+        'open_lesson_view' => 20,
+        'daily_login' => 5,
+        'payment_success' => 50,
     ],
 
     // Человекочитаемые подписи для истории и «как заработать».
     'reasons' => [
-        'lesson_complete'    => 'Завершён урок',
-        'course_complete'    => 'Курс пройден полностью',
-        'open_lesson_view'   => 'Просмотр открытого урока',
-        'daily_login'        => 'Ежедневный вход',
-        'payment_success'    => 'Покупка курса',
-        'spent_on_purchase'  => 'Списано при оплате',
-        'refund_failed'      => 'Возврат за несостоявшуюся оплату',
-        'admin_grant'        => 'Начислено администратором',
-        'admin_deduct'       => 'Списано администратором',
+        'lesson_complete' => 'Завершён урок',
+        'course_complete' => 'Курс пройден полностью',
+        'open_lesson_view' => 'Просмотр открытого урока',
+        'daily_login' => 'Ежедневный вход',
+        'payment_success' => 'Покупка курса',
+        'spent_on_purchase' => 'Списано при оплате',
+        'refund_failed' => 'Возврат за несостоявшуюся оплату',
+        'admin_grant' => 'Начислено администратором',
+        'admin_deduct' => 'Списано администратором',
     ],
 ];

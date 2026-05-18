@@ -16,7 +16,7 @@ final class UserLogoutListener
 
     public function handle(Logout $event): void
     {
-        if (!$event->user instanceof User) {
+        if (! $event->user instanceof User) {
             return;
         }
 

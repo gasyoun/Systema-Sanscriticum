@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Models\Group;
 use Filament\Forms;
@@ -10,8 +11,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-use App\Filament\Concerns\AdminOnly;
-
 class GroupResource extends Resource
 {
     use AdminOnly;
@@ -19,9 +18,13 @@ class GroupResource extends Resource
     protected static ?string $model = Group::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?int $navigationSort = 30;
+
     protected static ?string $navigationGroup = 'Обучение';
+
     protected static ?string $navigationLabel = 'Учебные группы';
+
     protected static ?string $pluralModelLabel = 'Группы';
 
     public static function form(Form $form): Form
@@ -33,7 +36,7 @@ class GroupResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->label('Название группы'),
-                            
+
                         // --- НОВЫЙ БЛОК: ИНТЕРАКТИВНЫЙ СПИСОК УЧЕНИКОВ ---
                         Forms\Components\Select::make('users')
                             ->relationship('users', 'name') // Автоматически подтягивает и сохраняет связи
@@ -43,7 +46,7 @@ class GroupResource extends Resource
                             ->label('Ученики в группе')
                             ->placeholder('Начните вводить имя ученика...')
                             ->helperText('Здесь вы можете посмотреть текущих участников, удалить их или добавить новых.'),
-                    ])
+                    ]),
             ]);
     }
 
@@ -52,7 +55,7 @@ class GroupResource extends Resource
         return $table
             ->columns([
                 // Исправил дубль: теперь тут выводится реальный ID группы
-                Tables\Columns\TextColumn::make('id') 
+                Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
@@ -64,10 +67,10 @@ class GroupResource extends Resource
 
                 // --- ОБНОВЛЕННАЯ КОЛОНКА УЧЕНИКОВ ---
                 Tables\Columns\TextColumn::make('users_count')
-                    ->counts('users') 
+                    ->counts('users')
                     ->label('Учеников')
                     ->badge() // Делает цифру красивым бейджиком
-                    ->color('info') // Синий цвет
+                    ->color('info'), // Синий цвет
             ])
             ->filters([
                 //

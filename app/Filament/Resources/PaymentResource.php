@@ -4,23 +4,26 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-use App\Support\RoleGate;
-use App\Support\Roles;
-
 class PaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+
     protected static ?int $navigationSort = 80;
+
     protected static ?string $navigationGroup = 'Продажи';
+
     protected static ?string $navigationLabel = 'Финансы';
+
     protected static ?string $pluralModelLabel = 'Транзакции';
 
     public static function canViewAny(): bool
@@ -65,36 +68,36 @@ class PaymentResource extends Resource
                         ->columnSpan(1),
 
                     Forms\Components\Select::make('tariff')
-    ->label('Тариф (Доступ)')
-    ->options(function () {
-        $options = [
-            'full'   => 'Весь курс целиком',
-            'Расход' => '💸 Системный расход / Возврат',
-        ];
+                        ->label('Тариф (Доступ)')
+                        ->options(function () {
+                            $options = [
+                                'full' => 'Весь курс целиком',
+                                'Расход' => '💸 Системный расход / Возврат',
+                            ];
 
-        for ($i = 1; $i <= 100; $i++) {
-            $startLesson = ($i - 1) * 4 + 1;
-            $endLesson   = $i * 4;
-            $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
-        }
+                            for ($i = 1; $i <= 100; $i++) {
+                                $startLesson = ($i - 1) * 4 + 1;
+                                $endLesson = $i * 4;
+                                $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+                            }
 
-        return $options;
-    })
-    ->searchable()
-    ->default('full')
-    ->required()
-    ->live()
-    ->afterStateUpdated(function ($state, callable $set) {
-        if ($state === 'full' || $state === 'Расход') {
-            $set('start_block', null);
-            $set('end_block', null);
-        } elseif (str_starts_with($state ?? '', 'block_')) {
-            $blockNum = (int) str_replace('block_', '', $state);
-            $set('start_block', $blockNum);
-            $set('end_block', $blockNum);
-        }
-    })
-    ->columnSpanFull(),
+                            return $options;
+                        })
+                        ->searchable()
+                        ->default('full')
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if ($state === 'full' || $state === 'Расход') {
+                                $set('start_block', null);
+                                $set('end_block', null);
+                            } elseif (str_starts_with($state ?? '', 'block_')) {
+                                $blockNum = (int) str_replace('block_', '', $state);
+                                $set('start_block', $blockNum);
+                                $set('end_block', $blockNum);
+                            }
+                        })
+                        ->columnSpanFull(),
                 ])->columns(2),
 
                 Forms\Components\Section::make('Финансы')->schema([
@@ -163,15 +166,21 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->description(function (Payment $record) {
-                        $start = (int)$record->start_block;
-                        $end = (int)$record->end_block;
-                        
+                        $start = (int) $record->start_block;
+                        $end = (int) $record->end_block;
+
                         if ($start > 0) {
-                            if ($end <= 0 || $start === $end) return "Блок {$start}";
+                            if ($end <= 0 || $start === $end) {
+                                return "Блок {$start}";
+                            }
+
                             return "Блоки {$start} - {$end}";
                         }
-                        
-                        if ($record->tariff === 'Расход') return 'Технический расход';
+
+                        if ($record->tariff === 'Расход') {
+                            return 'Технический расход';
+                        }
+
                         return 'Весь курс';
                     }),
 
@@ -189,9 +198,9 @@ class PaymentResource extends Resource
                     ->label('Статус')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
-                        'paid', 'success' => 'success',     
-                        'pending' => 'warning',  
-                        'canceled' => 'danger',  
+                        'paid', 'success' => 'success',
+                        'pending' => 'warning',
+                        'canceled' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -232,7 +241,7 @@ class PaymentResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
-            ->striped(); 
+            ->striped();
     }
 
     public static function getRelations(): array
