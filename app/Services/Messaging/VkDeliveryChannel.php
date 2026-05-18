@@ -36,8 +36,10 @@ final class VkDeliveryChannel implements DeliveryChannel
         return "https://vk.me/{$this->groupScreenName}?ref={$token}";
     }
 
-    public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void
+    public function sendDocument(string $userIdInChannel, string $filePath, string $caption, ?string $displayName = null): void
     {
+        $finalName = $displayName ?: basename($filePath);
+
         $uploadUrl = Http::asForm()->post('https://api.vk.com/method/docs.getMessagesUploadServer', [
             'type' => 'doc',
             'peer_id' => $userIdInChannel,
@@ -55,7 +57,7 @@ final class VkDeliveryChannel implements DeliveryChannel
         }
 
         try {
-            $uploaded = Http::attach('file', $handle, basename($filePath))
+            $uploaded = Http::attach('file', $handle, $finalName)
                 ->post($uploadUrl)
                 ->json();
         } finally {
@@ -70,7 +72,7 @@ final class VkDeliveryChannel implements DeliveryChannel
 
         $saved = Http::asForm()->post('https://api.vk.com/method/docs.save', [
             'file' => $uploaded['file'],
-            'title' => basename($filePath),
+            'title' => $finalName,
             'access_token' => $this->accessToken,
             'v' => self::API_VERSION,
         ])->json('response');
