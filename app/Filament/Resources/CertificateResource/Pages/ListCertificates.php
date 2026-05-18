@@ -3,14 +3,14 @@
 namespace App\Filament\Resources\CertificateResource\Pages;
 
 use App\Filament\Resources\CertificateResource;
+use App\Jobs\GenerateCertificatesArchive;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Group;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
-use Filament\Resources\Pages\ListRecords;
 use Filament\Notifications\Notification;
-use App\Jobs\GenerateCertificatesArchive; // Подключаем нашу Job
+use Filament\Resources\Pages\ListRecords; // Подключаем нашу Job
 
 class ListCertificates extends ListRecords
 {
@@ -44,9 +44,10 @@ class ListCertificates extends ListRecords
                     $groupId = $data['group_id'];
                     $courseId = $data['course_id'];
                     $group = Group::with('users')->find($groupId);
-                    
-                    if (!$group || $group->users->isEmpty()) {
+
+                    if (! $group || $group->users->isEmpty()) {
                         Notification::make()->title('В этой группе нет студентов')->warning()->send();
+
                         return;
                     }
 
@@ -83,7 +84,7 @@ class ListCertificates extends ListRecords
                 ->action(function (array $data) {
                     // === ЗАПУСКАЕМ ЗАДАЧУ В ФОН ===
                     GenerateCertificatesArchive::dispatch(
-                        $data['group_id'], 
+                        $data['group_id'],
                         auth()->id()
                     );
                     // ==============================
@@ -96,4 +97,4 @@ class ListCertificates extends ListRecords
                 }),
         ];
     }
-}    
+}

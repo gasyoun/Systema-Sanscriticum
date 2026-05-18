@@ -40,20 +40,20 @@ final class ActivityTracker
             return $existing;
         }
 
-        $agent = new Agent();
+        $agent = new Agent;
         $agent->setUserAgent($request->userAgent() ?? '');
 
         return UserSession::create([
-            'user_id'           => $user->id,
-            'session_id'        => $laravelSessionId,
-            'started_at'        => now(),
+            'user_id' => $user->id,
+            'session_id' => $laravelSessionId,
+            'started_at' => now(),
             'last_heartbeat_at' => now(),
-            'ip_address'        => $request->ip(),
-            'user_agent'        => mb_substr($request->userAgent() ?? '', 0, 500),
-            'device_type'       => $this->detectDeviceType($agent),
-            'browser'           => mb_substr((string) $agent->browser(), 0, 50) ?: null,
-            'os'                => mb_substr((string) $agent->platform(), 0, 50) ?: null,
-            'is_active'         => true,
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr($request->userAgent() ?? '', 0, 500),
+            'device_type' => $this->detectDeviceType($agent),
+            'browser' => mb_substr((string) $agent->browser(), 0, 50) ?: null,
+            'os' => mb_substr((string) $agent->platform(), 0, 50) ?: null,
+            'is_active' => true,
         ]);
     }
 
@@ -67,10 +67,10 @@ final class ActivityTracker
             return DB::transaction(function () use ($user, $request) {
                 // Атомарно инкрементим счётчик и обновляем метаданные
                 $user->forceFill([
-                    'last_login_at'    => now(),
+                    'last_login_at' => now(),
                     'last_activity_at' => now(),
-                    'last_login_ip'    => $request->ip(),
-                    'login_count'      => $user->login_count + 1,
+                    'last_login_ip' => $request->ip(),
+                    'login_count' => $user->login_count + 1,
                 ])->save();
 
                 $session = $this->startSession($user, $request);
@@ -80,7 +80,7 @@ final class ActivityTracker
                     session: $session,
                     type: ActivityEvent::TYPE_LOGIN,
                     data: [
-                        'ip'         => $request->ip(),
+                        'ip' => $request->ip(),
                         'user_agent' => mb_substr($request->userAgent() ?? '', 0, 200),
                     ],
                     request: $request,
@@ -92,8 +92,9 @@ final class ActivityTracker
             // Трекинг НИКОГДА не должен ломать логин. Ловим всё, пишем в лог.
             Log::warning('ActivityTracker::handleLogin failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -132,7 +133,7 @@ final class ActivityTracker
         } catch (\Throwable $e) {
             Log::warning('ActivityTracker::handleLogout failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -152,19 +153,19 @@ final class ActivityTracker
     ): void {
         try {
             DB::table('activity_events')->insert([
-                'user_id'    => $user->id,
+                'user_id' => $user->id,
                 'session_id' => $session?->id,
                 'event_type' => $type,
-                'event_data' => !empty($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : null,
-                'url'        => $request ? mb_substr($request->fullUrl(), 0, 500) : null,
+                'event_data' => ! empty($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : null,
+                'url' => $request ? mb_substr($request->fullUrl(), 0, 500) : null,
                 'ip_address' => $request?->ip(),
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
             Log::warning('ActivityTracker::logEvent failed', [
                 'user_id' => $user->id,
-                'type'    => $type,
-                'error'   => $e->getMessage(),
+                'type' => $type,
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -186,6 +187,7 @@ final class ActivityTracker
         if ($agent->isDesktop()) {
             return 'desktop';
         }
+
         return 'unknown';
     }
 }

@@ -26,7 +26,7 @@ class LectureBuilderClient
     {
         return new self(
             baseUrl: rtrim((string) config('services.lecture_builder.url'), '/'),
-            token:   config('services.lecture_builder.token'),
+            token: config('services.lecture_builder.token'),
             timeout: (int) config('services.lecture_builder.timeout', 180),
         );
     }
@@ -34,7 +34,8 @@ class LectureBuilderClient
     public function isHealthy(): bool
     {
         try {
-            $response = $this->request()->get($this->baseUrl . '/health');
+            $response = $this->request()->get($this->baseUrl.'/health');
+
             return $response->successful() && (bool) ($response->json('ok') ?? false);
         } catch (\Throwable) {
             return false;
@@ -55,11 +56,11 @@ class LectureBuilderClient
         array $meta = [],
     ): array {
         $payload = array_filter([
-            'working_dir'    => $absoluteWorkingDir,
+            'working_dir' => $absoluteWorkingDir,
             'raw_transcript' => $rawTranscriptRel,
-            'raw_pdf'        => $rawPdfRel,
-            'lesson_number'  => $lessonNumber,
-            'meta'           => $meta ?: null,
+            'raw_pdf' => $rawPdfRel,
+            'lesson_number' => $lessonNumber,
+            'meta' => $meta ?: null,
         ], fn ($v) => $v !== null);
 
         return $this->postJson('/preprocess', $payload);
@@ -72,24 +73,24 @@ class LectureBuilderClient
     ): array {
         return $this->postJson('/render', [
             'working_dir' => $absoluteWorkingDir,
-            'data_json'   => $dataJson,
-            'template'    => $template,
+            'data_json' => $dataJson,
+            'template' => $template,
         ]);
     }
 
     private function postJson(string $path, array $payload): array
     {
-        $response = $this->request()->post($this->baseUrl . $path, $payload);
+        $response = $this->request()->post($this->baseUrl.$path, $payload);
 
         $body = $response->json();
-        if (!is_array($body)) {
+        if (! is_array($body)) {
             throw new RuntimeException("lecture-builder вернул не-JSON ответ (HTTP {$response->status()})");
         }
 
-        if (!$response->successful() || !($body['ok'] ?? false)) {
-            $error = $body['error'] ?? ('HTTP ' . $response->status());
+        if (! $response->successful() || ! ($body['ok'] ?? false)) {
+            $error = $body['error'] ?? ('HTTP '.$response->status());
             $trace = $body['trace'] ?? null;
-            throw new RuntimeException("lecture-builder {$path}: {$error}" . ($trace ? "\n\n{$trace}" : ''));
+            throw new RuntimeException("lecture-builder {$path}: {$error}".($trace ? "\n\n{$trace}" : ''));
         }
 
         return $body;

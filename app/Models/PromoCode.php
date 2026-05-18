@@ -30,7 +30,7 @@ class PromoCode extends Model
     // Метод: Проверяет, можно ли применить этот код прямо сейчас
     public function isValid(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 

@@ -34,15 +34,16 @@ class DictionaryWordImporter extends Importer
 
     public function resolveRecord(): ?DictionaryWord
     {
-        return new DictionaryWord();
+        return new DictionaryWord;
     }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Импорт слов завершен. Добавлено: ' . number_format($import->successful_rows) . ' слов.';
+        $body = 'Импорт слов завершен. Добавлено: '.number_format($import->successful_rows).' слов.';
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' Ошибок: ' . number_format($failedRowsCount) . '.';
+            $body .= ' Ошибок: '.number_format($failedRowsCount).'.';
         }
+
         return $body;
     }
 }

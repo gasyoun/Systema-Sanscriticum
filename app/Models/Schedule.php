@@ -26,7 +26,7 @@ class Schedule extends Model
 
     protected $casts = [
         'start' => 'datetime',
-        'end'   => 'datetime',
+        'end' => 'datetime',
     ];
 
     public function group(): BelongsTo
@@ -47,7 +47,7 @@ class Schedule extends Model
     {
         return Attribute::make(
             get: function (?string $value): ?string {
-                if (!empty($value)) {
+                if (! empty($value)) {
                     return $value;
                 }
 

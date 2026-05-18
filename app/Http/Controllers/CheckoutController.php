@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tariff;
 use App\Models\LandingPage;
-use App\Models\PromoCode; // Не забываем импортировать модель!
+use App\Models\PromoCode;
+use App\Models\Tariff; // Не забываем импортировать модель!
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
     public function show(Tariff $tariff, PranaService $prana)
     {
-        if (!$tariff->is_active) {
+        if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
         }
 
@@ -25,7 +25,7 @@ class CheckoutController extends Controller
 
         return view('checkout.show', array_merge([
             'tariff' => $tariff,
-            'page'   => $page,
+            'page' => $page,
         ], $state));
     }
 
@@ -37,11 +37,12 @@ class CheckoutController extends Controller
         $code = mb_strtoupper(trim($request->code));
         $promo = PromoCode::where('code', $code)->first();
 
-        if (!$promo || !$promo->isValid()) {
+        if (! $promo || ! $promo->isValid()) {
             $message = 'Промокод не найден или истек срок его действия.';
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['ok' => false, 'message' => $message], 422);
             }
+
             return back()->with('error', $message);
         }
 
@@ -50,6 +51,7 @@ class CheckoutController extends Controller
         if ($request->expectsJson() || $request->ajax()) {
             return $this->stateJson($tariff, $prana, 'Промокод успешно применён!');
         }
+
         return back()->with('success', 'Промокод успешно применен!');
     }
 
@@ -61,6 +63,7 @@ class CheckoutController extends Controller
         if ($request->expectsJson() || $request->ajax()) {
             return $this->stateJson($tariff, $prana, 'Промокод снят.');
         }
+
         return back();
     }
 
@@ -87,37 +90,37 @@ class CheckoutController extends Controller
             }
         }
 
-        $basePrice  = (float) $tariff->price;
+        $basePrice = (float) $tariff->price;
         $finalPrice = $tariff->calculateFinalPriceForUser($user);
         $loyaltyDiscount = max(0.0, $basePrice - $finalPrice);
 
-        $appliedPromo   = null;
+        $appliedPromo = null;
         $discountAmount = 0.0;
 
         if (session()->has('promo_code')) {
             $promo = PromoCode::where('code', session('promo_code'))->first();
             if ($promo && $promo->isValid()) {
-                $appliedPromo   = $promo;
+                $appliedPromo = $promo;
                 $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
                 $discountAmount = $finalPrice - $priceWithPromo;
-                $finalPrice     = $priceWithPromo;
+                $finalPrice = $priceWithPromo;
             } else {
                 session()->forget('promo_code');
             }
         }
 
         return [
-            'finalPrice'       => $finalPrice,
-            'basePrice'        => $basePrice,
-            'loyaltyDiscount'  => $loyaltyDiscount,
-            'appliedPromo'     => $appliedPromo,
-            'discountAmount'   => $discountAmount,
-            'isLoyal'          => $isLoyal,
-            'loyaltyPercent'   => $loyaltyPercent,
-            'pranaBalance'     => $user ? $prana->balance($user) : 0,
-            'pranaMaxSpend'    => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
-            'pranaRate'        => PranaSettings::rate(),
-            'pranaSharePct'    => (int) round(PranaSettings::maxShare() * 100),
+            'finalPrice' => $finalPrice,
+            'basePrice' => $basePrice,
+            'loyaltyDiscount' => $loyaltyDiscount,
+            'appliedPromo' => $appliedPromo,
+            'discountAmount' => $discountAmount,
+            'isLoyal' => $isLoyal,
+            'loyaltyPercent' => $loyaltyPercent,
+            'pranaBalance' => $user ? $prana->balance($user) : 0,
+            'pranaMaxSpend' => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
+            'pranaRate' => PranaSettings::rate(),
+            'pranaSharePct' => (int) round(PranaSettings::maxShare() * 100),
         ];
     }
 
@@ -126,23 +129,23 @@ class CheckoutController extends Controller
         $s = $this->computeState($tariff, $prana);
 
         return response()->json([
-            'ok'      => true,
+            'ok' => true,
             'message' => $message,
-            'state'   => [
-                'finalPrice'      => (int) round($s['finalPrice']),
-                'basePrice'       => (int) round($s['basePrice']),
+            'state' => [
+                'finalPrice' => (int) round($s['finalPrice']),
+                'basePrice' => (int) round($s['basePrice']),
                 'loyaltyDiscount' => (int) round($s['loyaltyDiscount']),
-                'discountAmount'  => (int) round($s['discountAmount']),
-                'pranaMaxSpend'   => (int) $s['pranaMaxSpend'],
-                'pranaRate'       => (int) $s['pranaRate'],
-                'pranaSharePct'   => (int) $s['pranaSharePct'],
-                'appliedPromo'    => $s['appliedPromo'] ? [
-                    'code'  => $s['appliedPromo']->code,
-                    'type'  => $s['appliedPromo']->type,
+                'discountAmount' => (int) round($s['discountAmount']),
+                'pranaMaxSpend' => (int) $s['pranaMaxSpend'],
+                'pranaRate' => (int) $s['pranaRate'],
+                'pranaSharePct' => (int) $s['pranaSharePct'],
+                'appliedPromo' => $s['appliedPromo'] ? [
+                    'code' => $s['appliedPromo']->code,
+                    'type' => $s['appliedPromo']->type,
                     'value' => (float) $s['appliedPromo']->value,
                 ] : null,
-                'isLoyal'         => $s['isLoyal'],
-                'loyaltyPercent'  => (int) $s['loyaltyPercent'],
+                'isLoyal' => $s['isLoyal'],
+                'loyaltyPercent' => (int) $s['loyaltyPercent'],
             ],
         ]);
     }

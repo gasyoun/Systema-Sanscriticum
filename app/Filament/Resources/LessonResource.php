@@ -12,7 +12,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 
 class LessonResource extends Resource
@@ -32,18 +31,20 @@ class LessonResource extends Resource
         // Учитель может создавать уроки только если у него заполнен teacher_id —
         // иначе scope course_id будет 1=0 и сохранение всё равно упадёт.
         $user = auth()->user();
+
         return $user?->isTeacher() === true && $user->teacher_id !== null;
     }
 
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
         if ($user->isAdminLike()) {
             return true;
         }
+
         return $user->isTeacher()
             && $user->teacher_id
             && optional($record->course)->teacher_id === $user->teacher_id;
@@ -65,7 +66,7 @@ class LessonResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher()) {
-            if (!$user->teacher_id) {
+            if (! $user->teacher_id) {
                 $query->whereRaw('1 = 0');
             } else {
                 $query->whereHas('course', function ($q) use ($user) {
@@ -78,9 +79,13 @@ class LessonResource extends Resource
     }
 
     protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+
     protected static ?int $navigationSort = 20;
+
     protected static ?string $navigationGroup = 'Обучение';
+
     protected static ?string $navigationLabel = 'Уроки';
+
     protected static ?string $pluralModelLabel = 'Уроки';
 
     public static function form(Form $form): Form
@@ -96,7 +101,7 @@ class LessonResource extends Resource
                             // Учителю без teacher_id вообще ничего не показываем.
                             $user = auth()->user();
                             if ($user && $user->isTeacher()) {
-                                if (!$user->teacher_id) {
+                                if (! $user->teacher_id) {
                                     $query->whereRaw('1 = 0');
                                 } else {
                                     $query->where('teacher_id', $user->teacher_id);
@@ -113,10 +118,11 @@ class LessonResource extends Resource
                             return \Illuminate\Validation\Rule::exists('courses', 'id')
                                 ->where('teacher_id', $user->teacher_id);
                         }
-                        if ($user?->isTeacher() && !$user->teacher_id) {
+                        if ($user?->isTeacher() && ! $user->teacher_id) {
                             // Учитель без teacher_id — никакой курс не валиден.
                             return \Illuminate\Validation\Rule::in([]);
                         }
+
                         return null;
                     })
                     ->required()
@@ -125,23 +131,24 @@ class LessonResource extends Resource
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->label('Название урока'),
-                    
+
                 Forms\Components\Select::make('block_number')
-    ->label('Блок (Модуль) курса')
-    ->options(function () {
-        $options = [];
-        for ($i = 1; $i <= 100; $i++) {
-            $startLesson = ($i - 1) * 4 + 1; // Высчитываем первое занятие в блоке
-            $endLesson = $i * 4;             // Высчитываем последнее занятие в блоке
-            $options[$i] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
-        }
-        return $options;
-    })
-    ->default(1)
-    ->required()
-    ->searchable() // Добавил поиск, чтобы куратору было удобно искать 52-й блок, а не крутить список
-    ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
-                    
+                    ->label('Блок (Модуль) курса')
+                    ->options(function () {
+                        $options = [];
+                        for ($i = 1; $i <= 100; $i++) {
+                            $startLesson = ($i - 1) * 4 + 1; // Высчитываем первое занятие в блоке
+                            $endLesson = $i * 4;             // Высчитываем последнее занятие в блоке
+                            $options[$i] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+                        }
+
+                        return $options;
+                    })
+                    ->default(1)
+                    ->required()
+                    ->searchable() // Добавил поиск, чтобы куратору было удобно искать 52-й блок, а не крутить список
+                    ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
+
                 Forms\Components\DateTimePicker::make('lesson_date')
                     ->label('Дата и время урока')
                     ->required()
@@ -160,8 +167,8 @@ class LessonResource extends Resource
                 Forms\Components\TextInput::make('youtube_url')
                     ->label('Ссылка на YouTube')
                     ->placeholder('https://www.youtube.com/watch?v=...')
-                    ->url() 
-                    ->suffixIcon('heroicon-m-video-camera') 
+                    ->url()
+                    ->suffixIcon('heroicon-m-video-camera')
                     ->columnSpanFull(),
 
                 Forms\Components\TextInput::make('rutube_url')
@@ -179,7 +186,7 @@ class LessonResource extends Resource
                     ->preserveFilenames()
                     ->columnSpanFull()
                     ->helperText('Загрузите JSON-файл расшифровки лекции (например, из Nova-3), чтобы студенты могли читать текст и перематывать видео по клику.'),
-                
+
                 // --- ОБНОВЛЕННОЕ ПОЛЕ: МАТЕРИАЛЫ К УРОКУ ---
                 Forms\Components\FileUpload::make('attachments')
                     ->label('Материалы к уроку (PDF, Аудио, Видео)')
@@ -191,14 +198,14 @@ class LessonResource extends Resource
                     ->downloadable() // Можно скачать из админки
                     ->openable() // Можно открыть из админки
                     ->acceptedFileTypes([
-                        'application/pdf', 
+                        'application/pdf',
                         'audio/*',           // Любое аудио (mp3, wav, m4a, ogg)
                         'video/mp4',         // Видео MP4
                         'video/quicktime',   // Видео MOV (iPhone)
                         'video/webm',        // Видео WebM
                         'application/zip',   // Архивы
                         'application/msword', // Word (doc)
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // Word (docx)
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word (docx)
                     ])
                     ->maxSize(102400) // Максимальный вес ОДНОГО файла - 100 МБ (102400 КБ)
                     ->columnSpanFull()
@@ -250,7 +257,7 @@ class LessonResource extends Resource
                         ->label('Экспорт для файлов'),
                 ]),
             ])
-            ->defaultSort('lesson_date', 'asc'); 
+            ->defaultSort('lesson_date', 'asc');
     }
 
     public static function getRelations(): array

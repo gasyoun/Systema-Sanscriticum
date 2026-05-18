@@ -18,11 +18,11 @@ class CourseFactory extends Factory
         $title = $this->faker->unique()->sentence(3);
 
         return [
-            'title'      => $title,
-            'slug'       => Str::slug($title) . '-' . $this->faker->unique()->numberBetween(1, 99999),
+            'title' => $title,
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1, 99999),
             'is_visible' => true,
-            'is_active'  => true,
-            'format'     => 'recorded',
+            'is_active' => true,
+            'format' => 'recorded',
         ];
     }
 

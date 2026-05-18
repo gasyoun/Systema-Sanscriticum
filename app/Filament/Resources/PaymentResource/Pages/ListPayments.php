@@ -67,6 +67,7 @@ class ListPayments extends ListRecords
                             // Когда файл загружен — читаем заголовки и кладём в state формы
                             if (! $state) {
                                 $set('headers', []);
+
                                 return;
                             }
 
@@ -76,6 +77,7 @@ class ListPayments extends ListRecords
 
                             if (! file_exists($path)) {
                                 $set('headers', []);
+
                                 return;
                             }
 
@@ -104,7 +106,7 @@ class ListPayments extends ListRecords
                     Forms\Components\Select::make('user_lookup_field')
                         ->label('По какому полю искать студента?')
                         ->options([
-                            'name'  => 'ФИО (User.name)',
+                            'name' => 'ФИО (User.name)',
                             'email' => 'Email (User.email)',
                             'phone' => 'Телефон (User.phone)',
                         ])
@@ -165,6 +167,7 @@ class ListPayments extends ListRecords
         $course = Course::find($data['course_id']);
         if (! $course) {
             Notification::make()->title('Курс не найден')->danger()->send();
+
             return;
         }
 
@@ -174,9 +177,10 @@ class ListPayments extends ListRecords
         if (! file_exists($absolutePath)) {
             Notification::make()
                 ->title('Файл не найден на сервере')
-                ->body('Путь: ' . $relativePath)
+                ->body('Путь: '.$relativePath)
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -205,6 +209,7 @@ class ListPayments extends ListRecords
                 ->danger()
                 ->persistent()
                 ->send();
+
             return;
         } finally {
             Storage::disk('local')->delete($relativePath);
@@ -221,9 +226,9 @@ class ListPayments extends ListRecords
 
         if (! empty($stats['missing_users'])) {
             $preview = array_slice($stats['missing_users'], 0, 10);
-            $body .= "\n\n⚠️ Не найдены студенты:\n• " . implode("\n• ", $preview);
+            $body .= "\n\n⚠️ Не найдены студенты:\n• ".implode("\n• ", $preview);
             if (count($stats['missing_users']) > 10) {
-                $body .= "\n…и ещё " . (count($stats['missing_users']) - 10);
+                $body .= "\n…и ещё ".(count($stats['missing_users']) - 10);
             }
         }
 

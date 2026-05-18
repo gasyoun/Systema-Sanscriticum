@@ -15,12 +15,13 @@ final class RoleGate
     public static function any(string ...$roles): bool
     {
         $user = auth()->user();
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return false;
         }
         if ($user->isSuperAdmin()) {
             return true;
         }
+
         return in_array($user->role, $roles, true);
     }
 
@@ -32,6 +33,7 @@ final class RoleGate
     public static function isSuperAdmin(): bool
     {
         $user = auth()->user();
+
         return $user instanceof User && $user->isSuperAdmin();
     }
 }

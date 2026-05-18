@@ -44,15 +44,15 @@ class Lesson extends Model
     {
         static::saving(function (Lesson $lesson): void {
             if ($lesson->block_number === null || $lesson->block_number === '') {
-                $key = 'lesson_block_null_log:' . ($lesson->id ?? 'new');
+                $key = 'lesson_block_null_log:'.($lesson->id ?? 'new');
 
                 if (Cache::add($key, 1, now()->addMinute())) {
                     Log::warning(
                         'Lesson::saving — block_number was null, fallback to 1',
                         [
                             'lesson_id' => $lesson->id,
-                            'user_id'   => auth()->id(),
-                            'changes'   => $lesson->getDirty(),
+                            'user_id' => auth()->id(),
+                            'changes' => $lesson->getDirty(),
                         ]
                     );
                 }

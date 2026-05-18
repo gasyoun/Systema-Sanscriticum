@@ -9,14 +9,16 @@ use Illuminate\Console\Command;
 class CleanCourseArchives extends Command
 {
     protected $signature = 'archives:cleanup {--hours=24 : Удалять архивы старше N часов}';
+
     protected $description = 'Удаляет старые ZIP-архивы материалов курсов из storage/app/tmp/course-archives';
 
     public function handle(): int
     {
         $dir = storage_path('app/tmp/course-archives');
 
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             $this->info('Директория архивов не существует — нечего чистить.');
+
             return self::SUCCESS;
         }
 
@@ -24,7 +26,7 @@ class CleanCourseArchives extends Command
         $deleted = 0;
         $freedBytes = 0;
 
-        foreach (glob($dir . '/*.zip') as $file) {
+        foreach (glob($dir.'/*.zip') as $file) {
             if (filemtime($file) < $threshold) {
                 $freedBytes += filesize($file) ?: 0;
                 if (@unlink($file)) {

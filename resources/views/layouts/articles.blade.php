@@ -191,7 +191,7 @@ window.sendGoal = function(goalName) {
     {{-- Место для страниц добавить свои скрипты (прогресс-бар, fade-in, TOC) --}}
     
     {{-- Универсальная модалка пробного занятия --}}
-<x-trial-modal :form-name="isset($article) ? 'Статья: ' . $article->title : 'Блог'" />
+<x-trial-modal :form-name="isset($article) ? 'Статья: ' . $article->title : 'Блог'" :article="$article ?? null" />
 
 @stack('scripts')
 </body>

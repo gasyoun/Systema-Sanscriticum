@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\DictionaryWordResource\Pages;
 
-use App\Filament\Resources\DictionaryWordResource;
 use App\Filament\Imports\DictionaryWordImporter;
+use App\Filament\Resources\DictionaryWordResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -20,7 +20,7 @@ class ListDictionaryWords extends ListRecords
                 ->label('Импорт из CSV')
                 ->color('success')
                 ->icon('heroicon-o-arrow-down-tray'),
-                
+
             // Стандартная кнопка создания одного слова
             Actions\CreateAction::make()
                 ->label('Добавить слово'),

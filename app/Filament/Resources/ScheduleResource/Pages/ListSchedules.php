@@ -152,10 +152,10 @@ class ListSchedules extends ListRecords
                                 ->default('{TITLE} (#{N}, {DATE}) | {BN}-е занятие {BLOCK}-го блока')
                                 ->helperText(new \Illuminate\Support\HtmlString(
                                     'Доступные плейсхолдеры: '
-                                    . '<code>{N}</code> <code>{DATE}</code> <code>{TITLE}</code> '
-                                    . '<code>{BLOCK}</code> <code>{BN}</code>. '
-                                    . 'Разделитель <code>|</code> режет результат на части: '
-                                    . '<b>Название</b> | <b>Описание</b> | <b>Тег</b>.'
+                                    .'<code>{N}</code> <code>{DATE}</code> <code>{TITLE}</code> '
+                                    .'<code>{BLOCK}</code> <code>{BN}</code>. '
+                                    .'Разделитель <code>|</code> режет результат на части: '
+                                    .'<b>Название</b> | <b>Описание</b> | <b>Тег</b>.'
                                 )),
                         ]),
 
@@ -219,25 +219,26 @@ class ListSchedules extends ListRecords
                 ->title('Не выбрано ни одного дня недели')
                 ->danger()
                 ->send();
+
             return;
         }
 
         $config = new GeneratorConfig(
-            groupId:           (int) $data['group_id'],
-            courseId:          !empty($data['course_id']) ? (int) $data['course_id'] : null,
-            title:             (string) $data['title'],
-            startDate:         Carbon::parse($data['start_date']),
-            startTime:         (string) $data['start_time'],
-            durationMinutes:   (int) $data['duration_minutes'],
-            totalLessons:      (int) $data['total'],
-            startNumber:       (int) $data['start_number'],
-            startLessonIndex:  (int) $data['start_lesson_index'],
-            weekdays:          $weekdays,
-            template:          (string) $data['template'],
-            skipDates:         collect($data['skip_dates'] ?? [])->pluck('date')->filter()->values()->all(),
-            addDates:          collect($data['add_dates']  ?? [])->pluck('date')->filter()->values()->all(),
-            link:              !empty($data['link']) ? (string) $data['link'] : null,
-            preserve:          (bool) ($data['preserve'] ?? true),
+            groupId: (int) $data['group_id'],
+            courseId: ! empty($data['course_id']) ? (int) $data['course_id'] : null,
+            title: (string) $data['title'],
+            startDate: Carbon::parse($data['start_date']),
+            startTime: (string) $data['start_time'],
+            durationMinutes: (int) $data['duration_minutes'],
+            totalLessons: (int) $data['total'],
+            startNumber: (int) $data['start_number'],
+            startLessonIndex: (int) $data['start_lesson_index'],
+            weekdays: $weekdays,
+            template: (string) $data['template'],
+            skipDates: collect($data['skip_dates'] ?? [])->pluck('date')->filter()->values()->all(),
+            addDates: collect($data['add_dates'] ?? [])->pluck('date')->filter()->values()->all(),
+            link: ! empty($data['link']) ? (string) $data['link'] : null,
+            preserve: (bool) ($data['preserve'] ?? true),
         );
 
         try {
@@ -255,6 +256,7 @@ class ListSchedules extends ListRecords
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -264,6 +266,7 @@ class ListSchedules extends ListRecords
                 ->body('Проверьте дни недели, пропуски и общее количество.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -285,19 +288,19 @@ class ListSchedules extends ListRecords
             Http::timeout(5)->post(
                 'https://context-ai.ru/webhook-test/6a4e0703-4059-47ba-8bad-c3c3d51447ff',
                 [
-                    'action'    => 'bulk_create',
+                    'action' => 'bulk_create',
                     'schedules' => $schedules->map(fn (Schedule $s) => [
-                        'id'          => $s->id,
-                        'title'       => $s->title,
-                        'start'       => $s->start->format('d.m.Y H:i'),
-                        'group'       => $s->group?->name ?? 'Все',
+                        'id' => $s->id,
+                        'title' => $s->title,
+                        'start' => $s->start->format('d.m.Y H:i'),
+                        'group' => $s->group?->name ?? 'Все',
                         'description' => $s->description,
-                        'link'        => $s->link,
+                        'link' => $s->link,
                     ])->all(),
                 ]
             );
         } catch (\Throwable $e) {
-            Log::error('Bulk n8n webhook error: ' . $e->getMessage());
+            Log::error('Bulk n8n webhook error: '.$e->getMessage());
         }
     }
 }

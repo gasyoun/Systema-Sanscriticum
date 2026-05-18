@@ -12,6 +12,7 @@
     'title' => 'Запись на пробный урок',
     'description' => 'Оставьте контакты, и мы согласуем удобное время.',
     'formName' => 'Пробное занятие из статьи',
+    'article' => null,
 ])
 
 <template x-teleport="body">
@@ -58,11 +59,11 @@
                         @csrf
                         <input type="hidden" name="form_name" value="{{ $formName }}">
                         <input type="hidden" name="referrer" value="{{ request()->fullUrl() }}">
-                        {{-- Если открыли модалку со страницы статьи — передадим её ID для аналитики --}}
-                        @isset($article)
+                        {{-- Если открыли модалку со страницы статьи — передадим её ID для аналитики и дедупликации --}}
+                        @if($article)
                             <input type="hidden" name="source_article_id" value="{{ $article->id }}">
                             <input type="hidden" name="source_article_slug" value="{{ $article->slug }}">
-                        @endisset
+                        @endif
                         
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">Ваше имя</label>

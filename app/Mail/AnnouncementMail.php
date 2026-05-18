@@ -17,6 +17,7 @@ class AnnouncementMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public $announcement;
+
     public $user;
 
     public function __construct(Announcement $announcement, User $user)

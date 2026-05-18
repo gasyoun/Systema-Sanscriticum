@@ -2,22 +2,23 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use Awcodes\Curator\Models\Media;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class MigrateMediaToCurator extends Command
 {
     protected $signature = 'app:migrate-media';
+
     protected $description = 'Безопасный перенос путей файлов в медиатеку Curator';
 
     protected array $map = [
-        'courses'       => 'image',
-        'lessons'       => 'image',
+        'courses' => 'image',
+        'lessons' => 'image',
         'landing_pages' => 'image_path',
-        'tariffs'       => 'image',
+        'tariffs' => 'image',
         'announcements' => 'image_path',
     ];
 
@@ -26,8 +27,9 @@ class MigrateMediaToCurator extends Command
         $this->info('🚀 Начинаем БЕЗОПАСНУЮ миграцию медиафайлов...');
 
         foreach ($this->map as $table => $oldColumn) {
-            if (!Schema::hasTable($table) || !Schema::hasColumn($table, $oldColumn) || !Schema::hasColumn($table, 'image_id')) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $oldColumn) || ! Schema::hasColumn($table, 'image_id')) {
                 $this->warn("⚠️ Пропуск {$table}: нет таблицы, колонки {$oldColumn} или новой колонки image_id.");
+
                 continue;
             }
 
@@ -35,9 +37,10 @@ class MigrateMediaToCurator extends Command
                 ->whereNotNull($oldColumn)
                 ->whereNull('image_id')
                 ->get();
-            
+
             if ($records->isEmpty()) {
                 $this->line("📍 В таблице {$table} нет новых файлов для переноса.");
+
                 continue;
             }
 
@@ -47,12 +50,12 @@ class MigrateMediaToCurator extends Command
 
             foreach ($records as $record) {
                 $path = $record->$oldColumn;
-                
+
                 $mediaId = $this->getOrCreateMedia($path);
 
                 if ($mediaId) {
                     DB::table($table)->where('id', $record->id)->update([
-                        'image_id' => $mediaId
+                        'image_id' => $mediaId,
                     ]);
                 }
                 $bar->advance();
@@ -66,12 +69,14 @@ class MigrateMediaToCurator extends Command
 
     private function getOrCreateMedia(?string $path)
     {
-        if (!$path) return null;
+        if (! $path) {
+            return null;
+        }
 
         $cleanPath = str_replace(['/storage/', 'storage/'], '', $path);
 
-        if (!Storage::disk('public')->exists($cleanPath)) {
-            return null; 
+        if (! Storage::disk('public')->exists($cleanPath)) {
+            return null;
         }
 
         $existing = Media::where('path', $cleanPath)->first();
@@ -108,7 +113,8 @@ class MigrateMediaToCurator extends Command
 
             return $media->id;
         } catch (\Exception $e) {
-            \Log::error("Ошибка добавления {$cleanPath} в Curator: " . $e->getMessage());
+            \Log::error("Ошибка добавления {$cleanPath} в Curator: ".$e->getMessage());
+
             return null;
         }
     }

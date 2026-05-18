@@ -28,6 +28,7 @@ final class PreprocessLectureDraftJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 1;
+
     public int $timeout = 300;
 
     public function __construct(
@@ -44,11 +45,12 @@ final class PreprocessLectureDraftJob implements ShouldQueue
         $draft = LectureDraft::find($this->draftId);
         if ($draft === null) {
             Log::warning('PreprocessLectureDraftJob: черновик не найден', ['id' => $this->draftId]);
+
             return;
         }
 
         $draft->forceFill([
-            'status'    => LectureDraft::STATUS_PREPROCESSING,
+            'status' => LectureDraft::STATUS_PREPROCESSING,
             'error_log' => null,
         ])->save();
 
@@ -57,24 +59,24 @@ final class PreprocessLectureDraftJob implements ShouldQueue
 
             $result = $client->preprocess(
                 absoluteWorkingDir: $absoluteWorkingDir,
-                rawTranscriptRel: 'raw/' . $this->rawTranscriptName,
-                rawPdfRel: $this->rawPdfName ? 'raw/' . $this->rawPdfName : null,
+                rawTranscriptRel: 'raw/'.$this->rawTranscriptName,
+                rawPdfRel: $this->rawPdfName ? 'raw/'.$this->rawPdfName : null,
                 lessonNumber: $this->lessonNumber,
                 meta: $draft->meta ?? [],
             );
 
             $draft->forceFill([
-                'status'         => LectureDraft::STATUS_EDITING,
+                'status' => LectureDraft::STATUS_EDITING,
                 'data_json_path' => $storage->relativePath($draft, $result['data_json'] ?? 'data.json'),
-                'slides_dir'     => $storage->relativePath($draft, 'slides'),
+                'slides_dir' => $storage->relativePath($draft, 'slides'),
             ])->save();
         } catch (\Throwable $e) {
             Log::error('PreprocessLectureDraftJob failed', [
                 'draft_id' => $draft->id,
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             $draft->forceFill([
-                'status'    => LectureDraft::STATUS_DRAFT,
+                'status' => LectureDraft::STATUS_DRAFT,
                 'error_log' => $e->getMessage(),
             ])->save();
             throw $e;

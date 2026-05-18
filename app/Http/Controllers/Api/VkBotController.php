@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\ChatMessage;
-use Illuminate\Support\Facades\Http;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class VkBotController extends Controller
@@ -15,7 +15,7 @@ class VkBotController extends Controller
     public function handle(Request $request)
     {
         $data = $request->all();
-        
+
         // ПРИНУДИТЕЛЬНЫЙ ЛОГ ВСЕХ ВХОДЯЩИХ ЗАПРОСОВ
         Log::info('VK WEBHOOK CATCHED:', $data);
 
@@ -23,7 +23,7 @@ class VkBotController extends Controller
         if (($data['type'] ?? '') === 'confirmation') {
             // Принудительно отдаем как простой текст без HTML и JSON
             return response((string) config('services.vk.confirm_code'), 200)
-                        ->header('Content-Type', 'text/plain');
+                ->header('Content-Type', 'text/plain');
         }
 
         // 2. ОБРАБОТКА НОВОГО СООБЩЕНИЯ
@@ -33,29 +33,32 @@ class VkBotController extends Controller
 
             // Малформированный payload (битый callback / сканер / replay): отвечаем 200
             // чтобы VK не уходил в бесконечный retry, и логируем для диагностики.
-            if (!is_int($vkId) && !ctype_digit((string) $vkId)) {
+            if (! is_int($vkId) && ! ctype_digit((string) $vkId)) {
                 Log::warning('VK webhook: malformed message_new payload', ['data' => $data]);
+
                 return response('ok', 200);
             }
 
             $vkId = (int) $vkId;
             $text = is_string($messageObj['text'] ?? null) ? $messageObj['text'] : '';
-            $ref  = $messageObj['ref'] ?? null; // ID студента из ссылки vk.me
+            $ref = $messageObj['ref'] ?? null; // ID студента из ссылки vk.me
 
             $user = User::where('vk_id', $vkId)->first();
-            
+
             // Если перешел по кнопке с сайта
-            if (!$user && $ref) {
+            if (! $user && $ref) {
                 $user = User::find($ref);
                 if ($user) {
                     $user->update(['vk_id' => $vkId]);
-                    $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь. Чем могу помочь?");
+                    $this->sendVkMessage($vkId, '✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь. Чем могу помочь?');
+
                     return response('ok', 200);
                 }
             }
 
-            if (!$user) {
-                $this->sendVkMessage($vkId, "Пожалуйста, перейдите в этот чат по кнопке из личного кабинета на сайте, чтобы я мог вас узнать.");
+            if (! $user) {
+                $this->sendVkMessage($vkId, 'Пожалуйста, перейдите в этот чат по кнопке из личного кабинета на сайте, чтобы я мог вас узнать.');
+
                 return response('ok', 200);
             }
 
@@ -72,12 +75,13 @@ class VkBotController extends Controller
             // ПРОВЕРКА: Если бот на паузе (отвечает человек)
             if (Cache::has("chat_human_vk_{$vkId}")) {
                 if ($adminId) {
-                    $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                    $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
                     $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
                     $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
                     $alertMessage = "🔵 <b>Новое сообщение из ВК от {$safeName}:</b>\n\n<i>{$safeText}</i>\n\n👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
                     $this->sendTelegramAlert($adminId, $alertMessage); // Шлем пуш админу в ТГ
                 }
+
                 return response('ok', 200);
             }
 
@@ -85,21 +89,22 @@ class VkBotController extends Controller
             $triggerWords = ['куратор', 'человек', 'помощь', 'админ', 'менеджер', 'оператор'];
             foreach ($triggerWords as $word) {
                 if (mb_stripos($text, $word) !== false) {
-                    Cache::put("chat_human_vk_{$vkId}", true, 7200); 
-                    $this->sendVkMessage($vkId, "🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!");
-                    
+                    Cache::put("chat_human_vk_{$vkId}", true, 7200);
+                    $this->sendVkMessage($vkId, '🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!');
+
                     if ($adminId) {
-                        $adminUrl = config('app.url') . "/admin/dialogs?user_id={$user->id}";
+                        $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
                         $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
                         $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
                         $this->sendTelegramAlert($adminId, "🔔 <b>СТУДЕНТ ИЗ ВК ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeText}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
                     }
+
                     return response('ok', 200);
                 }
             }
 
             // Если не позвал человека, бот начинает "думать"
-            $this->sendVkMessage($vkId, "⏳ Изучаю манускрипты...");
+            $this->sendVkMessage($vkId, '⏳ Изучаю манускрипты...');
 
             try {
                 $folderId = config('services.yandex.folder_id');
@@ -161,17 +166,17 @@ class VkBotController extends Controller
 | | | 15% скидка | 4080 | 14025 | 60$/51€ | 187$/157€ |
 ';
 
-                $systemPrompt = "Ты — ИИ-куратор Академии Санскрита. Помогай студентам, используя ТОЛЬКО информацию из Базы Знаний ниже. Отвечай вежливо, начинай только первый ответ со слова 'Намасте'. Рассказывай какие курсы есть в базе, сразу всю информацию не выдавай, если спрашивает какие курсы есть, выдай несколько из базы и только если студент просит все курсы - выдать весь список названий. Если студент спрашивает про конкретный курс выдавай сразу всю инфу по курсу. Точно так же выдавай всю информацию. Если ответа на вопрос нет в Базе Знаний, не выдумывай! Скажи: 'Этой информации пока нет в моих свитках. Пожалуйста, напишите фразу \"Позови куратора\", чтобы вам ответил человек'.\n\nБАЗА ЗНАНИЙ:\n" . $knowledgeBase;
+                $systemPrompt = "Ты — ИИ-куратор Академии Санскрита. Помогай студентам, используя ТОЛЬКО информацию из Базы Знаний ниже. Отвечай вежливо, начинай только первый ответ со слова 'Намасте'. Рассказывай какие курсы есть в базе, сразу всю информацию не выдавай, если спрашивает какие курсы есть, выдай несколько из базы и только если студент просит все курсы - выдать весь список названий. Если студент спрашивает про конкретный курс выдавай сразу всю инфу по курсу. Точно так же выдавай всю информацию. Если ответа на вопрос нет в Базе Знаний, не выдумывай! Скажи: 'Этой информации пока нет в моих свитках. Пожалуйста, напишите фразу \"Позови куратора\", чтобы вам ответил человек'.\n\nБАЗА ЗНАНИЙ:\n".$knowledgeBase;
 
                 // ДОСТАЕМ КОНТЕКСТ (Память диалога)
                 $dbHistory = ChatMessage::where('user_id', $user->id)
-                                        ->orderBy('id', 'desc')
-                                        ->take(20)
-                                        ->get()
-                                        ->reverse();
+                    ->orderBy('id', 'desc')
+                    ->take(20)
+                    ->get()
+                    ->reverse();
 
                 $messagesForYandex = [['role' => 'system', 'text' => $systemPrompt]];
-                
+
                 foreach ($dbHistory as $msg) {
                     $role = ($msg->role === 'user') ? 'user' : 'assistant';
                     $messagesForYandex[] = ['role' => $role, 'text' => $msg->text];
@@ -179,21 +184,21 @@ class VkBotController extends Controller
 
                 // ВЫЗОВ ЯНДЕКСА
                 $response = Http::withHeaders([
-                    'Authorization' => 'Api-Key ' . $apiKey,
+                    'Authorization' => 'Api-Key '.$apiKey,
                     'Content-Type' => 'application/json',
-                ])->timeout(45)->post("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", [
+                ])->timeout(45)->post('https://llm.api.cloud.yandex.net/foundationModels/v1/completion', [
                     'modelUri' => "gpt://{$folderId}/yandexgpt/latest",
                     'completionOptions' => [
                         'stream' => false,
-                        'temperature' => 0.3, 
-                        'maxTokens' => 2000
+                        'temperature' => 0.3,
+                        'maxTokens' => 2000,
                     ],
-                    'messages' => $messagesForYandex
+                    'messages' => $messagesForYandex,
                 ]);
 
                 if ($response->successful()) {
-                    $aiAnswer = $response->json('result.alternatives.0.message.text') ?? "Ответ не найден.";
-                    
+                    $aiAnswer = $response->json('result.alternatives.0.message.text') ?? 'Ответ не найден.';
+
                     // СОХРАНЯЕМ ОТВЕТ БОТА
                     ChatMessage::create([
                         'user_id' => $user->id,
@@ -204,22 +209,22 @@ class VkBotController extends Controller
 
                     $this->sendVkMessage($vkId, $aiAnswer);
                 } else {
-                    Log::error('Ошибка Yandex (ВК): ' . $response->body());
+                    Log::error('Ошибка Yandex (ВК): '.$response->body());
                     $this->sendVkMessage($vkId, "Мои чакры перегружены 🧘‍♂️. Пожалуйста, напишите 'позови куратора', и вам ответит человек.");
                 }
             } catch (\Exception $e) {
-                Log::error('Сбой связи с Yandex (ВК): ' . $e->getMessage());
-                $this->sendVkMessage($vkId, "Связь со вселенной прервалась. Позовите куратора.");
+                Log::error('Сбой связи с Yandex (ВК): '.$e->getMessage());
+                $this->sendVkMessage($vkId, 'Связь со вселенной прервалась. Позовите куратора.');
             }
-        } 
-        
+        }
+
         return response('ok', 200);
     }
 
     // ==========================================
     // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // ==========================================
-    
+
     // Отправка в ВК
     private function sendVkMessage($vkId, $text)
     {
@@ -249,7 +254,7 @@ class VkBotController extends Controller
             'parse_mode' => 'HTML',
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('Telegram alert error', ['status' => $response->status(), 'body' => $response->body()]);
         }
     }

@@ -381,9 +381,18 @@
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Email</label>
-                                        <input type="email" name="email" required 
-                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm" 
+                                        <input type="email" name="email" required
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm"
                                                placeholder="mail@example.com">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                            Telegram / VK / Instagram
+                                            <span class="text-gray-600 normal-case tracking-normal font-medium">— необязательно</span>
+                                        </label>
+                                        <input type="text" name="social" placeholder="@username или ссылка"
+                                               maxlength="255" value="{{ old('social') }}"
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm">
                                     </div>
                                 </div>
 

@@ -11,11 +11,15 @@ class LectureDraft extends Model
 {
     use HasFactory;
 
-    public const STATUS_DRAFT         = 'draft';
+    public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PREPROCESSING = 'preprocessing';
-    public const STATUS_EDITING       = 'editing';
-    public const STATUS_BUILT         = 'built';
-    public const STATUS_PUBLISHED     = 'published';
+
+    public const STATUS_EDITING = 'editing';
+
+    public const STATUS_BUILT = 'built';
+
+    public const STATUS_PUBLISHED = 'published';
 
     public const STATUSES = [
         self::STATUS_DRAFT,
@@ -58,8 +62,9 @@ class LectureDraft extends Model
         $candidate = $slug;
         $i = 2;
         while (self::where('slug', $candidate)->exists()) {
-            $candidate = $slug . '-' . $i++;
+            $candidate = $slug.'-'.$i++;
         }
+
         return $candidate;
     }
 
@@ -80,6 +85,6 @@ class LectureDraft extends Model
 
     public function workingDir(): string
     {
-        return 'lectures/' . $this->id;
+        return 'lectures/'.$this->id;
     }
 }

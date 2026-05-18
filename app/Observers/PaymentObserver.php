@@ -37,7 +37,7 @@ class PaymentObserver
             && in_array($payment->status, self::SUCCESS_STATUSES, true);
 
         // Если уже был paid и изменилось что-то значимое (сумма, блоки, курс)
-        $stillPaidAndChanged = !$payment->isDirty('status')
+        $stillPaidAndChanged = ! $payment->isDirty('status')
             && in_array($payment->status, self::SUCCESS_STATUSES, true)
             && $payment->isDirty(['amount', 'start_block', 'end_block', 'course_id', 'tariff']);
 
