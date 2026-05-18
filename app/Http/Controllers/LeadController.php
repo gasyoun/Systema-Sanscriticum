@@ -148,7 +148,9 @@ class LeadController extends Controller
     private function attachMagnet(Lead $lead, LandingPage $landing, ?string $social): void
     {
         $parsed = app(SocialChannelParser::class)->parse($social);
-        $channel = $parsed['channel'] ?? $landing->lead_magnet_default_channel;
+        // Telegram — конечный fallback: landing мог быть создан до миграции 2026_05_16_000002
+        // или сохранён через Filament с null в Select (поле visible-by-toggle не загружает default при edit).
+        $channel = $parsed['channel'] ?? $landing->lead_magnet_default_channel ?? 'telegram';
 
         // Полагаемся на UNIQUE index magnet_token + retry на коллизии —
         // do/while с exists() не атомарен. Коллизии при 62^12 практически невозможны,
