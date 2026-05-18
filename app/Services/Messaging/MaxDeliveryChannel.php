@@ -24,7 +24,7 @@ final class MaxDeliveryChannel implements DeliveryChannel
 
     public function __construct()
     {
-        $settings = MarketingSetting::first();
+        $settings = MarketingSetting::cached();
         $this->token = (string) ($settings?->max_bot_token ?? '');
         $this->botUsername = (string) ($settings?->max_bot_username ?? '');
     }
@@ -41,10 +41,21 @@ final class MaxDeliveryChannel implements DeliveryChannel
 
     public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void
     {
-        $uploaded = Http::withToken($this->token)
-            ->attach('content', fopen($filePath, 'r'), basename($filePath))
-            ->post(self::API_BASE.'/uploads', ['type' => 'file'])
-            ->json();
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            throw new RuntimeException("Max sendDocument: cannot open file {$filePath}");
+        }
+
+        try {
+            $uploaded = Http::withToken($this->token)
+                ->attach('content', $handle, basename($filePath))
+                ->post(self::API_BASE.'/uploads', ['type' => 'file'])
+                ->json();
+        } finally {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+        }
 
         $uploadToken = $uploaded['token'] ?? null;
 
@@ -55,7 +66,8 @@ final class MaxDeliveryChannel implements DeliveryChannel
 
         $response = Http::withToken($this->token)
             ->post(self::API_BASE.'/messages', [
-                'recipient' => ['user_id' => (int) $userIdInChannel],
+                // user_id строковый — передаём как есть, чтобы не терять идентификаторы за пределами int.
+                'recipient' => ['user_id' => $userIdInChannel],
                 'attachments' => [
                     [
                         'type' => 'file',

@@ -13,7 +13,10 @@ final class VerifyMaxMagnetWebhook
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $expected = (string) (MarketingSetting::first()?->max_webhook_secret ?? '');
+        // Внимание: Max Bot API при подписке принимает только {url}, без header/body-секрета,
+        // поэтому секрет идёт в path. URL хранится только в Max и нашей БД, но всё равно
+        // может всплыть в access-логах прокси — ротируйте max_webhook_secret при инцидентах.
+        $expected = (string) (MarketingSetting::cached()?->max_webhook_secret ?? '');
         $received = (string) $request->route('secret', '');
 
         if ($expected === '' || ! hash_equals($expected, $received)) {

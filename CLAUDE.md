@@ -92,6 +92,18 @@ LandingPage ──> JSON blocks
 - **VK** — webhook at `/api/vk-webhook`; `User::sendVkMessage()`
 - **DomPDF** — certificate PDF generation via `CertificateService`
 
+### Lead-magnet bots (Telegram / VK / MAX)
+
+Отдельные webhook-эндпоинты для доставки lead-магнита, не пересекающиеся с основными:
+
+- Telegram: `POST /api/webhooks/telegram-magnet` (header-secret `X-Telegram-Bot-Api-Secret-Token`)
+- VK: `POST /api/webhooks/vk-magnet` (secret в body)
+- MAX: `POST /api/webhooks/max-magnet/{secret}` (secret в **path** — Max Bot API не поддерживает header/body-секрет)
+
+**Ротация `max_webhook_secret`:** так как у Max секрет идёт в URL, он может всплыть в логах reverse-прокси, CDN и в access-логах nginx. При любом инциденте (доступ к логам, утечка дампа БД) — перегенерировать секрет в админке `MarketingSetting` и заново запустить `php artisan max:set-magnet-webhook`. Аналогично — после смены админ-аккаунта.
+
+Все webhook-секреты и bot-токены шифруются в БД через Eloquent `encrypted` cast (`MarketingSetting::$casts`).
+
 ## Environment Notes
 
 - Timezone is hardcoded to `Europe/Moscow` in `config/app.php`

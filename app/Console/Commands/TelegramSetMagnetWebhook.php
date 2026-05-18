@@ -16,7 +16,7 @@ final class TelegramSetMagnetWebhook extends Command
 
     public function handle(TelegramDeliveryChannel $telegram): int
     {
-        $secret = (string) (MarketingSetting::first()?->tg_webhook_secret ?? '');
+        $secret = (string) (MarketingSetting::cached()?->tg_webhook_secret ?? '');
 
         if ($secret === '') {
             $this->error('tg_webhook_secret не задан в MarketingSetting.');

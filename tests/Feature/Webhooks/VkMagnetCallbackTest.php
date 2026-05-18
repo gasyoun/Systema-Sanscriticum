@@ -125,6 +125,20 @@ class VkMagnetCallbackTest extends TestCase
     }
 
     /** @test */
+    public function second_confirmation_after_completion_is_rejected(): void
+    {
+        // Первое подтверждение — успех.
+        $first = $this->postJson('/api/webhooks/vk-magnet', ['type' => 'confirmation']);
+        $first->assertOk();
+        $this->assertSame($this->confirmation, $first->getContent());
+
+        // Второе — middleware должен ответить 403, иначе любой неаутентифицированный
+        // POST мог бы получить код и зарегистрировать наш сервер как webhook чужой группы.
+        $second = $this->postJson('/api/webhooks/vk-magnet', ['type' => 'confirmation']);
+        $second->assertStatus(403);
+    }
+
+    /** @test */
     public function non_message_event_is_ignored(): void
     {
         Bus::fake();

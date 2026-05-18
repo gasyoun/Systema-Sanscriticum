@@ -45,10 +45,11 @@ final class ProcessVkMagnetCallback implements ShouldQueue
             $token = $decoded['token'] ?? $decoded['ref'] ?? null;
         }
 
-        // Fallback — юзер мог ввести токен текстом.
+        // Fallback — юзер мог ввести токен текстом. Токены строго 12 символов
+        // (см. LeadController::attachMagnet → Str::random(12)).
         if (! $token) {
             $text = trim($msg['text'] ?? '');
-            if (preg_match('/^[a-zA-Z0-9]{12,16}$/', $text)) {
+            if (preg_match('/^[a-zA-Z0-9]{12}$/', $text)) {
                 $token = $text;
             }
         }

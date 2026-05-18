@@ -18,7 +18,7 @@ final class TelegramDeliveryChannel implements DeliveryChannel
 
     public function __construct()
     {
-        $settings = MarketingSetting::first();
+        $settings = MarketingSetting::cached();
         $this->token = (string) ($settings?->tg_bot_token ?? '');
         $this->botUsername = (string) ($settings?->tg_bot_username ?? '');
     }
@@ -35,22 +35,30 @@ final class TelegramDeliveryChannel implements DeliveryChannel
 
     public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void
     {
-        $response = Http::attach(
-            'document',
-            fopen($filePath, 'r'),
-            basename($filePath)
-        )->post("https://api.telegram.org/bot{$this->token}/sendDocument", [
-            'chat_id' => $userIdInChannel,
-            'caption' => $caption,
-            'parse_mode' => 'HTML',
-        ]);
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            throw new RuntimeException("Telegram sendDocument: cannot open file {$filePath}");
+        }
 
-        if (! $response->successful() || ! ($response->json('ok') ?? false)) {
-            Log::error('Telegram sendDocument failed', [
-                'chat_id' => $userIdInChannel,
-                'response' => $response->json(),
-            ]);
-            throw new RuntimeException('Telegram sendDocument error: '.$response->body());
+        try {
+            $response = Http::attach('document', $handle, basename($filePath))
+                ->post("https://api.telegram.org/bot{$this->token}/sendDocument", [
+                    'chat_id' => $userIdInChannel,
+                    'caption' => $caption,
+                    'parse_mode' => 'HTML',
+                ]);
+
+            if (! $response->successful() || ! ($response->json('ok') ?? false)) {
+                Log::error('Telegram sendDocument failed', [
+                    'chat_id' => $userIdInChannel,
+                    'response' => $response->json(),
+                ]);
+                throw new RuntimeException('Telegram sendDocument error: '.$response->body());
+            }
+        } finally {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
         }
     }
 
