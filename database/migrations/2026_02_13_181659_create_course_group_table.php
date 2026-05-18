@@ -10,13 +10,14 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('course_group', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('course_id')->constrained()->cascadeOnDelete();
-        $table->foreignId('group_id')->constrained()->cascadeOnDelete(); // Предполагаем, что таблица групп называется groups
-    });
-}
+    {
+        Schema::create('course_group', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete(); // Предполагаем, что таблица групп называется groups
+        });
+    }
+
     /**
      * Reverse the migrations.
      */

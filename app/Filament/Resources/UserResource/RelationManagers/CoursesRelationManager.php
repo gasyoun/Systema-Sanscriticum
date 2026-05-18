@@ -11,9 +11,10 @@ use Filament\Tables\Table;
 class CoursesRelationManager extends RelationManager
 {
     protected static string $relationship = 'courses';
-    
+
     // Как таблица будет называться в интерфейсе
     protected static ?string $title = 'Обучается на курсах';
+
     protected static ?string $recordTitleAttribute = 'title';
 
     public function form(Form $form): Form
@@ -34,7 +35,7 @@ class CoursesRelationManager extends RelationManager
                     ])
                     ->default('Записался')
                     ->required(),
-                    
+
                 Forms\Components\Textarea::make('note')
                     ->label('Примечание (только по этому курсу)')
                     ->maxLength(65535)
@@ -51,7 +52,7 @@ class CoursesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
@@ -61,7 +62,7 @@ class CoursesRelationManager extends RelationManager
                         'Покинул', 'Исключен' => 'danger',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('note')
                     ->label('Примечание')
                     ->wrap() // Позволяет длинному тексту переноситься на новые строки

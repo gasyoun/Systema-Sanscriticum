@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use Filament\Forms;
@@ -13,19 +14,22 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 
-use App\Filament\Concerns\AdminOnly;
-
 class CategoryResource extends Resource
 {
     use AdminOnly;
 
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-tag';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+
     protected static ?string $navigationGroup = 'Обучение';
-    protected static ?int    $navigationSort  = 15;
+
+    protected static ?int $navigationSort = 15;
+
     protected static ?string $navigationLabel = 'Категории курсов';
-    protected static ?string $modelLabel      = 'Категория';
+
+    protected static ?string $modelLabel = 'Категория';
+
     protected static ?string $pluralModelLabel = 'Категории';
 
     public static function form(Form $form): Form
@@ -37,8 +41,7 @@ class CategoryResource extends Resource
                         ->label('Название')
                         ->required()
                         ->live(onBlur: true)
-                        ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) =>
-                            $operation === 'create' ? $set('slug', Str::slug($state)) : null
+                        ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null
                         ),
                     Forms\Components\TextInput::make('slug')
                         ->label('URL-адрес')
@@ -93,9 +96,9 @@ class CategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListCategories::route('/'),
+            'index' => Pages\ListCategories::route('/'),
             'create' => Pages\CreateCategory::route('/create'),
-            'edit'   => Pages\EditCategory::route('/{record}/edit'),
+            'edit' => Pages\EditCategory::route('/{record}/edit'),
         ];
     }
 }

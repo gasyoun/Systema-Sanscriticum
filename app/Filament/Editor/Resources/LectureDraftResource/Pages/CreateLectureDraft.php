@@ -16,6 +16,7 @@ class CreateLectureDraft extends CreateRecord
     {
         $data['created_by'] = auth()->id();
         $data['status'] = LectureDraft::STATUS_DRAFT;
+
         return $data;
     }
 

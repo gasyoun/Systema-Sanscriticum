@@ -35,14 +35,21 @@ class ActivityEvent extends Model
      * Используем константы вместо "магических строк" — чтобы IDE автокомплит ловил
      * и при рефакторинге можно было легко найти все использования.
      */
-    public const TYPE_LOGIN             = 'login';
-    public const TYPE_LOGOUT            = 'logout';
-    public const TYPE_LESSON_OPEN       = 'lesson_open';
-    public const TYPE_LESSON_COMPLETE   = 'lesson_complete';
-    public const TYPE_NOTE_SAVED        = 'note_saved';
+    public const TYPE_LOGIN = 'login';
+
+    public const TYPE_LOGOUT = 'logout';
+
+    public const TYPE_LESSON_OPEN = 'lesson_open';
+
+    public const TYPE_LESSON_COMPLETE = 'lesson_complete';
+
+    public const TYPE_NOTE_SAVED = 'note_saved';
+
     public const TYPE_MATERIAL_DOWNLOAD = 'material_download';
-    public const TYPE_COURSE_VIEW       = 'course_view';
-    public const TYPE_SESSION_TIMEOUT   = 'session_timeout';
+
+    public const TYPE_COURSE_VIEW = 'course_view';
+
+    public const TYPE_SESSION_TIMEOUT = 'session_timeout';
 
     public function user(): BelongsTo
     {

@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('marketing_settings', function (Blueprint $table) {
@@ -27,13 +28,13 @@ return new class extends Migration {
         // Переносим текущие значения из config/prana.php в существующую строку настроек,
         // чтобы поведение не сменилось после миграции.
         $defaults = [
-            'is_prana_active'              => true,
-            'prana_rate'                   => (int) config('prana.rate', 10),
-            'prana_max_share_percent'      => (int) round((float) config('prana.max_share_of_price', 0.30) * 100),
+            'is_prana_active' => true,
+            'prana_rate' => (int) config('prana.rate', 10),
+            'prana_max_share_percent' => (int) round((float) config('prana.max_share_of_price', 0.30) * 100),
             'prana_reward_lesson_complete' => (int) config('prana.rewards.lesson_complete', 10),
             'prana_reward_course_complete' => (int) config('prana.rewards.course_complete', 500),
-            'prana_reward_open_lesson_view'=> (int) config('prana.rewards.open_lesson_view', 20),
-            'prana_reward_daily_login'     => (int) config('prana.rewards.daily_login', 5),
+            'prana_reward_open_lesson_view' => (int) config('prana.rewards.open_lesson_view', 20),
+            'prana_reward_daily_login' => (int) config('prana.rewards.daily_login', 5),
             'prana_reward_payment_success' => (int) config('prana.rewards.payment_success', 50),
         ];
 

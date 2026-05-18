@@ -31,7 +31,7 @@ class SendTelegramMessageJob implements ShouldQueue
     public function handle(): void
     {
         $user = User::find($this->userId);
-        if (!$user) {
+        if (! $user) {
             return;
         }
         $user->sendTelegramMessage($this->text);
@@ -41,7 +41,7 @@ class SendTelegramMessageJob implements ShouldQueue
     {
         Log::warning('SendTelegramMessageJob failed permanently', [
             'user_id' => $this->userId,
-            'error'   => $exception->getMessage(),
+            'error' => $exception->getMessage(),
         ]);
     }
 }

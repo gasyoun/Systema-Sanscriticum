@@ -41,19 +41,19 @@ final class TemplateRenderer
         $displayDate = $date->format('d.m.y');
 
         $rendered = strtr($template, [
-            '{N}'     => (string) $lessonNumber,
-            '{DATE}'  => $displayDate,
+            '{N}' => (string) $lessonNumber,
+            '{DATE}' => $displayDate,
             '{TITLE}' => $groupTitle,
             '{BLOCK}' => (string) $blockNum,
-            '{BN}'    => (string) $lessonInBlock,
+            '{BN}' => (string) $lessonInBlock,
         ]);
 
         $parts = array_map('trim', explode('|', $rendered));
 
         return [
-            'title'       => $parts[0] ?? '',
+            'title' => $parts[0] ?? '',
             'description' => $parts[1] ?? '',
-            'tag'         => $parts[2] ?? "(#{$lessonNumber}, {$displayDate})",
+            'tag' => $parts[2] ?? "(#{$lessonNumber}, {$displayDate})",
         ];
     }
 }

@@ -25,12 +25,12 @@ class LessonView extends Model
     ];
 
     protected $casts = [
-        'first_opened_at'    => 'datetime',
-        'last_opened_at'     => 'datetime',
-        'last_heartbeat_at'  => 'datetime',
-        'open_count'         => 'integer',
+        'first_opened_at' => 'datetime',
+        'last_opened_at' => 'datetime',
+        'last_heartbeat_at' => 'datetime',
+        'open_count' => 'integer',
         'total_time_on_page' => 'integer',
-        'is_completed'       => 'boolean',
+        'is_completed' => 'boolean',
     ];
 
     public function user(): BelongsTo

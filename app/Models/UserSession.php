@@ -31,13 +31,13 @@ class UserSession extends Model
     ];
 
     protected $casts = [
-        'started_at'        => 'datetime',
+        'started_at' => 'datetime',
         'last_heartbeat_at' => 'datetime',
-        'ended_at'          => 'datetime',
-        'duration_seconds'  => 'integer',
-        'pages_viewed'      => 'integer',
-        'lessons_viewed'    => 'integer',
-        'is_active'         => 'boolean',
+        'ended_at' => 'datetime',
+        'duration_seconds' => 'integer',
+        'pages_viewed' => 'integer',
+        'lessons_viewed' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -59,9 +59,9 @@ class UserSession extends Model
         $endedAt ??= $this->last_heartbeat_at ?? now();
 
         $this->update([
-            'ended_at'         => $endedAt,
+            'ended_at' => $endedAt,
             'duration_seconds' => max(0, $endedAt->getTimestamp() - $this->started_at->getTimestamp()),
-            'is_active'        => false,
+            'is_active' => false,
         ]);
     }
 

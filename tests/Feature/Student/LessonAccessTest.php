@@ -32,7 +32,7 @@ class LessonAccessTest extends TestCase
     /** @test */
     public function free_lesson_is_accessible_without_paid_tariff(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $course = Course::factory()->create();
         $lesson = Lesson::factory()->for($course)->free()->create(['block_number' => 1]);
 
@@ -44,10 +44,10 @@ class LessonAccessTest extends TestCase
     /** @test */
     public function paid_lesson_redirects_back_to_course_when_user_has_no_tariff(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $course = Course::factory()->create();
         $lesson = Lesson::factory()->for($course)->create([
-            'is_free'      => false,
+            'is_free' => false,
             'block_number' => 2,
         ]);
 

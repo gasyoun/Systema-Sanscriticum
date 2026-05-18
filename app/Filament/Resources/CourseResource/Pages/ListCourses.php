@@ -26,7 +26,7 @@ class ListCourses extends ListRecords
                 ->formats([
                     \Filament\Actions\Exports\Enums\ExportFormat::Csv,
                 ])
-                ->fileName(fn () => 'courses-' . now()->format('Y-m-d_H-i-s')),
+                ->fileName(fn () => 'courses-'.now()->format('Y-m-d_H-i-s')),
         ];
     }
 }

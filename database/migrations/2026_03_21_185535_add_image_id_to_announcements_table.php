@@ -12,7 +12,7 @@ return new class extends Migration
         if (Schema::hasTable('announcements')) {
             Schema::table('announcements', function (Blueprint $table) {
                 // Добавляем колонку только если её там нет
-                if (!Schema::hasColumn('announcements', 'image_id')) {
+                if (! Schema::hasColumn('announcements', 'image_id')) {
                     $table->foreignId('image_id')->nullable()->constrained('media')->nullOnDelete();
                 }
             });

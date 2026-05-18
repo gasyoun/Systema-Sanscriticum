@@ -15,7 +15,7 @@ class ListLeads extends ListRecords
         return [
             // Стандартная кнопка "Создать"
             Actions\CreateAction::make(),
-            
+
             // === НАША НОВАЯ КНОПКА ===
             Actions\Action::make('export')
                 ->label('Скачать Excel')

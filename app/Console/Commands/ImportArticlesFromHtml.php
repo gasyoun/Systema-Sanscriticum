@@ -30,15 +30,16 @@ class ImportArticlesFromHtml extends Command
 
         if (empty($files)) {
             $this->warn('Не найдено HTML-файлов для импорта.');
+
             return self::SUCCESS;
         }
 
-        $this->info('Найдено файлов: ' . count($files));
+        $this->info('Найдено файлов: '.count($files));
         $this->newLine();
 
         $imported = 0;
-        $skipped  = 0;
-        $errors   = 0;
+        $skipped = 0;
+        $errors = 0;
 
         foreach ($files as $file) {
             $this->line("→ Обрабатываю: <fg=cyan>{$file}</>");
@@ -47,20 +48,21 @@ class ImportArticlesFromHtml extends Command
                 $result = $this->importFile($file);
 
                 match ($result) {
-                    'created'   => $imported++,
-                    'updated'   => $imported++,
-                    'skipped'   => $skipped++,
+                    'created' => $imported++,
+                    'updated' => $imported++,
+                    'skipped' => $skipped++,
                 };
             } catch (\Throwable $e) {
                 $errors++;
                 $this->error("  ✗ Ошибка: {$e->getMessage()}");
+
                 continue;
             }
 
             // Удаляем исходник, если флаг --delete
             if ($this->option('delete')) {
                 if (@unlink($file)) {
-                    $this->line("  <fg=gray>✓ Исходник удалён</>");
+                    $this->line('  <fg=gray>✓ Исходник удалён</>');
                 } else {
                     $this->warn("  ⚠ Не удалось удалить: {$file}");
                 }
@@ -84,8 +86,9 @@ class ImportArticlesFromHtml extends Command
             // Если путь относительный — считаем от public/
             $absolute = str_starts_with($path, '/') ? $path : public_path($path);
 
-            if (!is_file($absolute)) {
+            if (! is_file($absolute)) {
                 $this->error("Файл не найден: {$absolute}");
+
                 return [];
             }
 
@@ -95,12 +98,13 @@ class ImportArticlesFromHtml extends Command
         // По умолчанию — все .html в public/articles/
         $dir = public_path('articles');
 
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             $this->error("Папка не найдена: {$dir}");
+
             return [];
         }
 
-        return glob($dir . '/*.html') ?: [];
+        return glob($dir.'/*.html') ?: [];
     }
 
     /**
@@ -119,8 +123,9 @@ class ImportArticlesFromHtml extends Command
         $slug = pathinfo($path, PATHINFO_FILENAME);
         $existing = Article::where('slug', $slug)->first();
 
-        if ($existing && !$this->option('force')) {
+        if ($existing && ! $this->option('force')) {
             $this->warn("  ⚠ Статья со slug '{$slug}' уже существует. Используйте --force для перезаписи.");
+
             return 'skipped';
         }
 
@@ -130,11 +135,13 @@ class ImportArticlesFromHtml extends Command
         if ($existing) {
             $existing->update($data);
             $this->info("  ✓ Обновлена: <fg=yellow>{$data['title']}</>");
+
             return 'updated';
         }
 
         Article::create($data);
         $this->info("  ✓ Создана: <fg=green>{$data['title']}</>");
+
         return 'created';
     }
 
@@ -180,17 +187,17 @@ class ImportArticlesFromHtml extends Command
         $body = $this->innerHtml($bodyNode);
 
         return [
-            'slug'             => $slug,
-            'title'            => $title,
-            'subtitle'         => $subtitle,
-            'excerpt'          => $excerpt,
-            'body'             => $body,
-            'reading_time'     => $readingTime,
-            'author_name'      => $authorName,
-            'meta_title'       => $metaTitle,
+            'slug' => $slug,
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'excerpt' => $excerpt,
+            'body' => $body,
+            'reading_time' => $readingTime,
+            'author_name' => $authorName,
+            'meta_title' => $metaTitle,
             'meta_description' => $metaDescription,
-            'is_published'     => true,
-            'published_at'     => now(),
+            'is_published' => true,
+            'published_at' => now(),
             // category_id, cover_path — заполняются вручную в админке
         ];
     }
@@ -201,6 +208,7 @@ class ImportArticlesFromHtml extends Command
     private function safeText(Crawler $crawler, string $selector): ?string
     {
         $node = $crawler->filter($selector);
+
         return $node->count() > 0 ? trim($node->text()) : null;
     }
 
@@ -210,6 +218,7 @@ class ImportArticlesFromHtml extends Command
     private function safeAttr(Crawler $crawler, string $selector, string $attr): ?string
     {
         $node = $crawler->filter($selector);
+
         return $node->count() > 0 ? $node->attr($attr) : null;
     }
 
@@ -271,7 +280,7 @@ class ImportArticlesFromHtml extends Command
     private function innerHtml(Crawler $node): string
     {
         $domNode = $node->getNode(0);
-        if (!$domNode) {
+        if (! $domNode) {
             return '';
         }
 

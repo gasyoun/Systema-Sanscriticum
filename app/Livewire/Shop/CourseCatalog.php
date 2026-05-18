@@ -85,11 +85,10 @@ class CourseCatalog extends Component
             ->where('is_visible', true)
             ->when($this->search !== '', function ($q) {
                 $escaped = str_replace(['%', '_'], ['\%', '\_'], $this->search);
-                $q->where('title', 'LIKE', '%' . $escaped . '%');
+                $q->where('title', 'LIKE', '%'.$escaped.'%');
             })
-            ->when(!empty($this->categoryIds), function ($q) {
-                $q->whereHas('categories', fn ($qq) =>
-                    $qq->whereIn('categories.id', $this->categoryIds)
+            ->when(! empty($this->categoryIds), function ($q) {
+                $q->whereHas('categories', fn ($qq) => $qq->whereIn('categories.id', $this->categoryIds)
                 );
             })
             ->when($this->teacherId !== '', fn ($q) => $q->where('teacher_id', $this->teacherId))
@@ -121,7 +120,7 @@ class CourseCatalog extends Component
     public function hasActiveFilters(): bool
     {
         return $this->search !== ''
-            || !empty($this->categoryIds)
+            || ! empty($this->categoryIds)
             || $this->teacherId !== ''
             || $this->format !== '';
     }
@@ -137,7 +136,7 @@ class CourseCatalog extends Component
 
         $courses = $this->baseQuery()
             ->with([
-                'tariffs'    => fn ($q) => $q->where('is_active', true)->orderBy('price'),
+                'tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price'),
                 'teacher:id,name',
                 'categories:id,name,slug,color,icon',
             ])
@@ -160,9 +159,9 @@ class CourseCatalog extends Component
         }
 
         return view('livewire.shop.course-catalog', [
-            'courses'           => $courses,
-            'totalCount'        => $totalCount,
-            'hasMore'           => $hasMore,
+            'courses' => $courses,
+            'totalCount' => $totalCount,
+            'hasMore' => $hasMore,
             'purchasedByCourse' => $purchasedByCourse,
         ]);
     }

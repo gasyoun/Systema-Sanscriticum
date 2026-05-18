@@ -17,7 +17,7 @@ final class UserLoginListener
     public function handle(Login $event): void
     {
         // Трекаем только реальных пользователей нашей системы
-        if (!$event->user instanceof User) {
+        if (! $event->user instanceof User) {
             return;
         }
 

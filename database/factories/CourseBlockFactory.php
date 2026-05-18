@@ -15,10 +15,10 @@ class CourseBlockFactory extends Factory
     public function definition(): array
     {
         return [
-            'number'     => $this->faker->numberBetween(1, 100),
-            'title'      => null,
+            'number' => $this->faker->numberBetween(1, 100),
+            'title' => null,
             'is_current' => false,
-            'is_active'  => true,
+            'is_active' => true,
         ];
     }
 
@@ -31,7 +31,7 @@ class CourseBlockFactory extends Factory
     {
         return $this->state(fn () => [
             'starts_at' => $starts,
-            'ends_at'   => $ends,
+            'ends_at' => $ends,
         ]);
     }
 }

@@ -11,46 +11,46 @@ return new class extends Migration
         // 1. Обновляем таблицу users (Студенты)
         Schema::table('users', function (Blueprint $table) {
             // Проверяем каждую колонку перед добавлением
-            if (!Schema::hasColumn('users', 'phone')) {
+            if (! Schema::hasColumn('users', 'phone')) {
                 $table->string('phone')->nullable()->after('email');
             }
-            if (!Schema::hasColumn('users', 'global_status')) {
+            if (! Schema::hasColumn('users', 'global_status')) {
                 $table->string('global_status')->default('Обычный студент')->after('is_admin');
             }
-            if (!Schema::hasColumn('users', 'note')) {
+            if (! Schema::hasColumn('users', 'note')) {
                 $table->text('note')->nullable()->after('global_status');
             }
         });
 
         // 2. Обновляем таблицу courses (Курсы)
         Schema::table('courses', function (Blueprint $table) {
-            if (!Schema::hasColumn('courses', 'is_elective')) {
+            if (! Schema::hasColumn('courses', 'is_elective')) {
                 $table->boolean('is_elective')->default(false)->after('is_visible');
             }
         });
 
         // 3. Обновляем таблицу payments (Оплаты)
         Schema::table('payments', function (Blueprint $table) {
-            if (!Schema::hasColumn('payments', 'start_block')) {
+            if (! Schema::hasColumn('payments', 'start_block')) {
                 $table->integer('start_block')->nullable()->after('amount');
             }
-            if (!Schema::hasColumn('payments', 'end_block')) {
+            if (! Schema::hasColumn('payments', 'end_block')) {
                 $table->integer('end_block')->nullable()->after('start_block');
             }
         });
 
         // 4. Создаем связующую таблицу (если её еще нет)
-        if (!Schema::hasTable('course_user')) {
+        if (! Schema::hasTable('course_user')) {
             Schema::create('course_user', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
                 $table->foreignId('course_id')->constrained()->cascadeOnDelete();
-                
-                $table->string('status')->default('Записался'); 
+
+                $table->string('status')->default('Записался');
                 $table->text('note')->nullable();
-                
+
                 $table->timestamps();
-                $table->unique(['user_id', 'course_id']); 
+                $table->unique(['user_id', 'course_id']);
             });
         }
     }

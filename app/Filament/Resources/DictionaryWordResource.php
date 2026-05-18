@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\DictionaryWordResource\Pages;
 use App\Models\DictionaryWord;
 use Filament\Forms;
@@ -9,8 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-
-use App\Filament\Concerns\AdminOnly;
 
 class DictionaryWordResource extends Resource
 {
@@ -20,8 +19,11 @@ class DictionaryWordResource extends Resource
 
     // Иконка и навигация
     protected static ?string $navigationIcon = 'heroicon-o-language';
+
     protected static ?string $navigationGroup = 'Допматериалы';
+
     protected static ?string $modelLabel = 'Слово';
+
     protected static ?string $pluralModelLabel = 'Словарный запас';
 
     // По каким полям искать, если мы введем текст в самый верхний (глобальный) поиск админки
@@ -41,7 +43,7 @@ class DictionaryWordResource extends Resource
                         ->label('Словарь')
                         ->searchable()
                         ->preload(),
-                        
+
                     Forms\Components\TextInput::make('page')
                         ->maxLength(255)
                         ->label('Страница/Источник')
@@ -55,13 +57,13 @@ class DictionaryWordResource extends Resource
                         ->label('Деванагари')
                         ->placeholder('Например: नमस्ते')
                         ->default(null),
-                        
+
                     Forms\Components\TextInput::make('iast')
                         ->maxLength(255)
                         ->label('IAST (Транслитерация)')
                         ->placeholder('Например: namaste')
                         ->default(null),
-                        
+
                     Forms\Components\TextInput::make('cyrillic')
                         ->maxLength(255)
                         ->label('Кириллица')
@@ -88,23 +90,23 @@ class DictionaryWordResource extends Resource
                     ->sortable()
                     ->badge() // Делаем название словаря красивой плашкой
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('devanagari')
                     ->label('Деванагари')
                     ->searchable()
                     ->copyable() // Позволяет скопировать слово по клику!
                     ->copyMessage('Скопировано!'),
-                    
+
                 Tables\Columns\TextColumn::make('iast')
                     ->label('IAST')
                     ->searchable()
                     ->color('gray'),
-                    
+
                 Tables\Columns\TextColumn::make('translation')
                     ->label('Перевод')
                     ->wrap() // Если перевод длинный, он перенесется на новую строку, а не скроется
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('page')
                     ->label('Стр.')
                     ->searchable()
