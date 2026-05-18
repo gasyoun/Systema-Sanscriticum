@@ -68,8 +68,43 @@ class VkMagnetCallbackTest extends TestCase
     }
 
     /** @test */
-    public function payload_with_ref_token_attaches_vk_user_id(): void
+    public function ref_field_from_deep_link_attaches_vk_user_id(): void
     {
+        Bus::fake([SendLeadMagnet::class]);
+
+        $landing = LandingPage::create([
+            'title' => 'L', 'slug' => 'l-'.uniqid(),
+            'lead_magnet_enabled' => true, 'lead_magnet_file_path' => 'm/x.pdf',
+        ]);
+        $lead = Lead::create([
+            'landing_page_id' => $landing->id,
+            'name' => 'X', 'contact' => '+1', 'email' => 'x@x.com',
+            'magnet_token' => 'VKTOKEN', 'magnet_channel' => 'vk',
+        ]);
+
+        // VK кладёт ref из vk.me/group?ref=TOKEN в message.ref (отдельное поле),
+        // а не внутрь message.payload (тот появляется только при нажатии InlineKeyboard).
+        (new ProcessVkMagnetCallback([
+            'type' => 'message_new',
+            'object' => [
+                'message' => [
+                    'from_id' => 12345,
+                    'text' => 'Привет',
+                    'ref' => 'VKTOKEN',
+                    'ref_source' => 'site',
+                ],
+            ],
+        ]))->handle();
+
+        $this->assertSame(12345, $lead->fresh()->vk_user_id);
+        Bus::assertDispatched(SendLeadMagnet::class);
+    }
+
+    /** @test */
+    public function inline_keyboard_payload_with_token_also_works(): void
+    {
+        // Регрессионный fallback: если бот когда-нибудь начнёт отправлять
+        // InlineKeyboard с payload {"token": "..."} — тоже должно работать.
         Bus::fake([SendLeadMagnet::class]);
 
         $landing = LandingPage::create([
@@ -87,12 +122,11 @@ class VkMagnetCallbackTest extends TestCase
             'object' => [
                 'message' => [
                     'from_id' => 12345,
-                    'payload' => json_encode(['ref' => 'VKTOKEN']),
+                    'payload' => json_encode(['token' => 'VKTOKEN']),
                 ],
             ],
         ]))->handle();
 
-        $this->assertSame(12345, $lead->fresh()->vk_user_id);
         Bus::assertDispatched(SendLeadMagnet::class);
     }
 

@@ -32,16 +32,21 @@ final class ProcessVkMagnetCallback implements ShouldQueue
 
         $msg = $this->event['object']['message'] ?? [];
         $userId = $msg['from_id'] ?? null;
-        $payload = $msg['payload'] ?? null;
 
         if (! $userId) {
             return;
         }
 
-        // VK передаёт ?ref=TOKEN из deep-link'а как JSON-payload первого сообщения.
-        $token = null;
-        if ($payload) {
-            $decoded = json_decode($payload, true);
+        // VK передаёт ?ref=TOKEN из deep-link'а как ОТДЕЛЬНОЕ поле message.ref
+        // (а не внутри JSON-payload, как ошибочно предполагал старый код).
+        // Документация: https://dev.vk.com/api/community-events/json-schema → message.ref/ref_source
+        // Поле появляется только в самом первом сообщении после перехода по реф-ссылке.
+        $token = $msg['ref'] ?? null;
+
+        // На всякий случай — старая логика payload (если бот когда-нибудь начнёт
+        // отправлять InlineKeyboard с payload {"token": "..."}).
+        if (! $token && ! empty($msg['payload'])) {
+            $decoded = json_decode($msg['payload'], true);
             $token = $decoded['token'] ?? $decoded['ref'] ?? null;
         }
 
@@ -55,7 +60,13 @@ final class ProcessVkMagnetCallback implements ShouldQueue
         }
 
         if (! $token) {
-            Log::info('VK callback: no token in message', ['user_id' => $userId]);
+            Log::info('VK callback: no token in message', [
+                'user_id' => $userId,
+                'msg_keys' => array_keys($msg),
+                'text' => $msg['text'] ?? null,
+                'has_ref' => isset($msg['ref']),
+                'has_payload' => isset($msg['payload']),
+            ]);
 
             return;
         }
