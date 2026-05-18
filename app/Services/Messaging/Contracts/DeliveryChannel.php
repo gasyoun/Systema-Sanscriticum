@@ -15,7 +15,9 @@ interface DeliveryChannel
 
     /**
      * Отправляет документ юзеру. $userIdInChannel — chat_id (TG), user_id (VK/Max).
+     * $displayName — имя файла, под которым юзер увидит его в мессенджере;
+     * если null — берётся basename($filePath) (обычно это ULID от Curator, юзеру не очень).
      * Кидает RuntimeException при ошибке — Job уйдёт в retry/failed.
      */
-    public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void;
+    public function sendDocument(string $userIdInChannel, string $filePath, string $caption, ?string $displayName = null): void;
 }

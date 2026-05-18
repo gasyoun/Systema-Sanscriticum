@@ -90,7 +90,11 @@ final class SendLeadMagnet implements ShouldQueue
         $caption = $landing->lead_magnet_caption
             ?: "Ваш бонус — «{$landing->lead_magnet_title}» 🎁";
 
-        $channels->get($channelName)->sendDocument($userId, $filePath, $caption);
+        // Curator переименовывает файлы в ULID — юзеру в чате это выглядит уродливо.
+        // Строим «человеческое» имя из lead_magnet_title (если есть) + расширения исходника.
+        $displayName = $this->buildDisplayName($landing->lead_magnet_title, $filePath);
+
+        $channels->get($channelName)->sendDocument($userId, $filePath, $caption, $displayName);
 
         $lead->update(['magnet_delivered_at' => now()]);
 
@@ -102,5 +106,28 @@ final class SendLeadMagnet implements ShouldQueue
         Log::error("SendLeadMagnet: FAILED for Lead #{$this->leadId}", [
             'error' => $e->getMessage(),
         ]);
+    }
+
+    /**
+     * Кириллица в Telegram filename отображается нормально; для VK безопаснее
+     * без слешей/двоеточий — оставляем буквы/цифры/пробелы/дефисы/подчёркивания.
+     * Если title пустой — fallback на basename ULID-файла (старое поведение).
+     */
+    private function buildDisplayName(?string $title, string $filePath): ?string
+    {
+        if (! $title) {
+            return null;
+        }
+
+        $cleaned = preg_replace('~[\\\\/:*?"<>|]+~u', '', $title);
+        $cleaned = trim(preg_replace('~\s+~u', ' ', $cleaned));
+
+        if ($cleaned === '') {
+            return null;
+        }
+
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+
+        return $ext ? "{$cleaned}.{$ext}" : $cleaned;
     }
 }

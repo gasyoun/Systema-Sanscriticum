@@ -33,7 +33,7 @@ final class TelegramDeliveryChannel implements DeliveryChannel
         return "https://t.me/{$this->botUsername}?start={$token}";
     }
 
-    public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void
+    public function sendDocument(string $userIdInChannel, string $filePath, string $caption, ?string $displayName = null): void
     {
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
@@ -41,7 +41,7 @@ final class TelegramDeliveryChannel implements DeliveryChannel
         }
 
         try {
-            $response = Http::attach('document', $handle, basename($filePath))
+            $response = Http::attach('document', $handle, $displayName ?: basename($filePath))
                 ->post("https://api.telegram.org/bot{$this->token}/sendDocument", [
                     'chat_id' => $userIdInChannel,
                     'caption' => $caption,
