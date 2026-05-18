@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Payment;
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Firebase\JWT\JWT;
-use Firebase\JWT\JWK;
-use Firebase\JWT\Key;
 
 class WebhookController extends Controller
 {
@@ -33,9 +32,10 @@ class WebhookController extends Controller
                 $decoded = JWT::decode($jwt, $key);
             } catch (\UnexpectedValueException $e) {
                 Log::warning('Tochka webhook: невалидная подпись JWT', [
-                    'ip'    => $request->ip(),
+                    'ip' => $request->ip(),
                     'error' => $e->getMessage(),
                 ]);
+
                 return response('Invalid signature', 401);
             }
 
@@ -51,6 +51,7 @@ class WebhookController extends Controller
 
             if (! $paymentId) {
                 Log::info("Вебхук: В purpose нет номера заказа. Purpose: {$purpose}");
+
                 return response('OK', 200);
             }
 
@@ -64,6 +65,7 @@ class WebhookController extends Controller
 
                 if (! $payment) {
                     Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
+
                     return;
                 }
 
@@ -83,9 +85,10 @@ class WebhookController extends Controller
             return response('OK', 200);
 
         } catch (\Exception $e) {
-            Log::error('Ошибка Вебхука: ' . $e->getMessage(), [
+            Log::error('Ошибка Вебхука: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response('Server error', 500);
         }
     }

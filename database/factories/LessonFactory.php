@@ -15,12 +15,12 @@ class LessonFactory extends Factory
     public function definition(): array
     {
         return [
-            'title'        => $this->faker->sentence(4),
-            'topic'        => $this->faker->sentence(),
-            'lesson_date'  => now()->subDays($this->faker->numberBetween(0, 30)),
+            'title' => $this->faker->sentence(4),
+            'topic' => $this->faker->sentence(),
+            'lesson_date' => now()->subDays($this->faker->numberBetween(0, 30)),
             'block_number' => 1,
             'is_published' => true,
-            'is_free'      => false,
+            'is_free' => false,
         ];
     }
 

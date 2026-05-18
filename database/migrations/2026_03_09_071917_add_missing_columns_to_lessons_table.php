@@ -10,16 +10,16 @@ return new class extends Migration
     {
         Schema::table('lessons', function (Blueprint $table) {
             // Добавляем недостающие колонки, если их нет
-            if (!Schema::hasColumn('lessons', 'slug')) {
+            if (! Schema::hasColumn('lessons', 'slug')) {
                 $table->string('slug')->nullable()->after('title');
             }
-            if (!Schema::hasColumn('lessons', 'block_number')) {
+            if (! Schema::hasColumn('lessons', 'block_number')) {
                 $table->integer('block_number')->default(1)->after('course_id');
             }
-            if (!Schema::hasColumn('lessons', 'youtube_url')) {
+            if (! Schema::hasColumn('lessons', 'youtube_url')) {
                 $table->string('youtube_url')->nullable()->after('rutube_url');
             }
-            if (!Schema::hasColumn('lessons', 'is_published')) {
+            if (! Schema::hasColumn('lessons', 'is_published')) {
                 $table->boolean('is_published')->default(true)->after('block_number');
             }
         });

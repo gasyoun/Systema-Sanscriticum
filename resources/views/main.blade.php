@@ -3,20 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Общество ревнителей санскрита</title>
-    
+    @php
+        $siteName    = 'Общество ревнителей санскрита';
+        $pageTitle   = 'Общество ревнителей санскрита — курсы санскрита, индийской философии и текстов';
+        $description = 'Образовательная платформа для глубокого изучения санскрита, индийской философии и древних текстов. Онлайн-курсы, лекции, открытые занятия и сообщество единомышленников.';
+        $keywords    = 'санскрит, курсы санскрита, изучение санскрита онлайн, индийская философия, веды, упанишады, бхагавадгита, индология, деванагари';
+        $ogImage     = asset('images/og-main-preview.jpg');
+        $canonical   = url('/');
+    @endphp
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $description }}">
+    <meta name="keywords" content="{{ $keywords }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ $canonical }}">
+
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
-    
+
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ config('app.url') }}">
-    <meta property="og:title" content="Общество ревнителей санскрита">
-    <meta property="og:description" content="Платформа для глубокого изучения языка, философии и текстов.">
-    <meta property="og:image" content="{{ asset('images/og-main-preview.jpg') }}">
-    
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $description }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:alt" content="{{ $siteName }}">
+
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Общество ревнителей санскрита">
-    <meta name="twitter:description" content="Платформа для глубокого изучения языка, философии и текстов.">
-    <meta name="twitter:image" content="{{ asset('images/og-main-preview.jpg') }}">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $description }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

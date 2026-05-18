@@ -14,13 +14,13 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('article_id')
-                  ->constrained('articles')
-                  ->cascadeOnDelete();
+                ->constrained('articles')
+                ->cascadeOnDelete();
 
             // FK к таблице медиа Curator. Она у тебя называется "media".
             $table->foreignId('media_id')
-                  ->constrained('media')
-                  ->cascadeOnDelete();
+                ->constrained('media')
+                ->cascadeOnDelete();
 
             $table->unsignedSmallInteger('sort_order')->default(0);
 

@@ -16,9 +16,9 @@ return new class extends Migration
             // Связь с рубрикой. nullable — чтобы можно было создать статью без рубрики.
             // onDelete('set null') — при удалении рубрики статьи не теряются.
             $table->foreignId('category_id')
-                  ->nullable()
-                  ->constrained('article_categories')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('article_categories')
+                ->nullOnDelete();
 
             // URL и заголовки
             $table->string('slug')->unique();     // "sanskrit-for-adults"

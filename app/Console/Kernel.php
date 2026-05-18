@@ -13,15 +13,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('archives:cleanup --hours=24')
-             ->dailyAt('03:00');
-             
+            ->dailyAt('03:00');
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
-    // Закрываем сессии, у которых нет heartbeat > 15 минут
-    $schedule->job(new \App\Jobs\CloseStaleSessionsJob())
-        ->everyFiveMinutes()
-        ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
-        ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
-        ->name('close-stale-sessions');  // имя для логов и блокировки     
+        // Закрываем сессии, у которых нет heartbeat > 15 минут
+        $schedule->job(new \App\Jobs\CloseStaleSessionsJob)
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
+            ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
+            ->name('close-stale-sessions');  // имя для логов и блокировки
     }
 
     /**

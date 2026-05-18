@@ -17,6 +17,7 @@ use App\Models\MarketingSetting;
 final class PranaSettings
 {
     private static ?MarketingSetting $cached = null;
+
     private static bool $cachedLoaded = false;
 
     public static function isActive(): bool
@@ -25,6 +26,7 @@ final class PranaSettings
         if ($row === null) {
             return (bool) config('prana.enabled', true);
         }
+
         return (bool) $row->is_prana_active;
     }
 
@@ -32,6 +34,7 @@ final class PranaSettings
     {
         $row = self::row();
         $value = $row?->prana_rate ?? (int) config('prana.rate', 10);
+
         return max(1, (int) $value);
     }
 
@@ -43,20 +46,23 @@ final class PranaSettings
         $row = self::row();
         if ($row !== null) {
             $percent = (int) $row->prana_max_share_percent;
+
             return max(0.0, min(1.0, $percent / 100));
         }
+
         return (float) config('prana.max_share_of_price', 0.30);
     }
 
     public static function reward(string $key): int
     {
         $row = self::row();
-        $column = 'prana_reward_' . $key;
+        $column = 'prana_reward_'.$key;
 
         if ($row !== null && isset($row->{$column})) {
             return (int) $row->{$column};
         }
-        return (int) config('prana.rewards.' . $key, 0);
+
+        return (int) config('prana.rewards.'.$key, 0);
     }
 
     /**
@@ -69,6 +75,7 @@ final class PranaSettings
         foreach ($keys as $k) {
             $out[$k] = self::reward($k);
         }
+
         return $out;
     }
 
@@ -80,7 +87,7 @@ final class PranaSettings
 
     private static function row(): ?MarketingSetting
     {
-        if (!self::$cachedLoaded) {
+        if (! self::$cachedLoaded) {
             try {
                 self::$cached = MarketingSetting::query()->first();
             } catch (\Throwable $e) {
@@ -88,6 +95,7 @@ final class PranaSettings
             }
             self::$cachedLoaded = true;
         }
+
         return self::$cached;
     }
 }

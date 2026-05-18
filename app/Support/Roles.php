@@ -7,9 +7,12 @@ namespace App\Support;
 final class Roles
 {
     public const SUPER_ADMIN = 'super_admin';
-    public const ADMIN       = 'admin';
-    public const TEACHER     = 'teacher';
-    public const MANAGER     = 'manager';
+
+    public const ADMIN = 'admin';
+
+    public const TEACHER = 'teacher';
+
+    public const MANAGER = 'manager';
 
     /**
      * @return array<string,string> [code => human label]
@@ -18,9 +21,9 @@ final class Roles
     {
         return [
             self::SUPER_ADMIN => 'Супер-админ',
-            self::ADMIN       => 'Администратор',
-            self::TEACHER     => 'Преподаватель',
-            self::MANAGER     => 'Менеджер',
+            self::ADMIN => 'Администратор',
+            self::TEACHER => 'Преподаватель',
+            self::MANAGER => 'Менеджер',
         ];
     }
 

@@ -92,8 +92,8 @@
             
             <div class="prose prose-invert prose-lg prose-slate max-w-none">
                 @if($course->description)
-                    <div class="text-slate-300 leading-relaxed space-y-6">
-                        {!! nl2br(e($course->description)) !!}
+                    <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
+                        {!! $course->description !!}
                     </div>
                 @else
                     <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
@@ -256,7 +256,7 @@
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                                     </span>
-                                    Сейчас идёт
+                                    СЕЙЧАС ИДЁТ
                                 </div>
                             @endif
 

@@ -15,21 +15,21 @@ class TariffFactory extends Factory
     public function definition(): array
     {
         return [
-            'title'        => 'Весь курс целиком',
-            'type'         => 'full',
+            'title' => 'Весь курс целиком',
+            'type' => 'full',
             'block_number' => null,
-            'price'        => 12000,
-            'is_active'    => true,
+            'price' => 12000,
+            'is_active' => true,
         ];
     }
 
     public function block(int $number): static
     {
         return $this->state(fn () => [
-            'title'        => 'Блок ' . $number,
-            'type'         => 'block',
+            'title' => 'Блок '.$number,
+            'type' => 'block',
             'block_number' => $number,
-            'price'        => 4800,
+            'price' => 4800,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MarketingSettingResource\Pages;
 use App\Models\MarketingSetting;
 use Filament\Forms;
@@ -10,8 +11,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-use App\Filament\Concerns\AdminOnly;
-
 class MarketingSettingResource extends Resource
 {
     use AdminOnly;
@@ -19,9 +18,13 @@ class MarketingSettingResource extends Resource
     protected static ?string $model = MarketingSetting::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-8-tooth';
+
     protected static ?string $navigationGroup = 'Маркетинг';
+
     protected static ?string $navigationLabel = 'Глобальные настройки';
+
     protected static ?string $modelLabel = 'Настройки';
+
     protected static ?string $pluralModelLabel = 'Настройки маркетинга';
 
     public static function canCreate(): bool
@@ -58,7 +61,7 @@ class MarketingSettingResource extends Resource
                                 ->numeric()
                                 ->default(10)
                                 ->minValue(0)->maxValue(100),
-                                
+
                             Forms\Components\TextInput::make('bundle_3_discount')
                                 ->label('Скидка за 3 и более курсов (%)')
                                 ->numeric()
@@ -80,7 +83,7 @@ class MarketingSettingResource extends Resource
                                     ->numeric()
                                     ->default(5)
                                     ->minValue(1),
-                                    
+
                                 Forms\Components\TextInput::make('wholesale_small_discount')
                                     ->label('Скидка (%)')
                                     ->numeric()
@@ -96,15 +99,15 @@ class MarketingSettingResource extends Resource
                                     ->numeric()
                                     ->default(10)
                                     ->minValue(1),
-                                    
+
                                 Forms\Components\TextInput::make('wholesale_large_discount')
                                     ->label('Скидка (%)')
                                     ->numeric()
                                     ->default(15)
                                     ->minValue(0)->maxValue(100),
                             ])->columns(2),
-                            
-                            ])
+
+                    ])
                     ->visible(fn (Forms\Get $get) => $get('is_loyalty_active')),
 
                 // ==========================================
@@ -184,6 +187,86 @@ class MarketingSettingResource extends Resource
                             ->columns(2)
                             ->visible(fn (Forms\Get $get) => $get('is_prana_active')),
                     ]),
+
+                // ==========================================
+                // БОТЫ ДЛЯ LEAD-MAGNET
+                // ==========================================
+                Forms\Components\Section::make('🤖 Боты для lead-magnet')
+                    ->description('Отдельные боты, через которые доставляется файл-подарок после заявки. Токены шифруются в БД.')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\Select::make('magnet_delivery_mode')
+                            ->label('Режим доставки магнита')
+                            ->options([
+                                'redirect' => 'Авто-редирект (юзер сразу попадает в бота)',
+                                'page' => 'Страница «Спасибо» с кнопками выбора канала',
+                            ])
+                            ->default('redirect')
+                            ->helperText('redirect — максимальная конверсия. page — юзер сам выбирает канал.'),
+
+                        Forms\Components\Fieldset::make('Telegram Bot')
+                            ->schema([
+                                Forms\Components\TextInput::make('tg_bot_username')
+                                    ->label('Username бота (без @)')
+                                    ->placeholder('samskrtam_magnet_bot')
+                                    ->maxLength(100),
+                                Forms\Components\TextInput::make('tg_bot_token')
+                                    ->label('Bot Token')
+                                    ->password()
+                                    ->revealable()
+                                    ->placeholder('Получить у @BotFather')
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('tg_webhook_secret')
+                                    ->label('Webhook Secret (случайная строка 32+ символов)')
+                                    ->password()
+                                    ->revealable()
+                                    ->helperText('Сгенерировать: php artisan tinker → Str::random(48)')
+                                    ->maxLength(64),
+                            ])->columns(1),
+
+                        Forms\Components\Fieldset::make('VK Сообщество')
+                            ->schema([
+                                Forms\Components\TextInput::make('vk_group_screen_name')
+                                    ->label('Screen Name группы')
+                                    ->placeholder('samskrtam_community')
+                                    ->maxLength(100),
+                                Forms\Components\TextInput::make('vk_group_id')
+                                    ->label('ID группы (число)')
+                                    ->placeholder('123456789')
+                                    ->maxLength(20),
+                                Forms\Components\TextInput::make('vk_access_token')
+                                    ->label('Access Token сообщества')
+                                    ->password()
+                                    ->revealable(),
+                                Forms\Components\TextInput::make('vk_callback_secret')
+                                    ->label('Callback Secret')
+                                    ->password()
+                                    ->revealable()
+                                    ->maxLength(64),
+                                Forms\Components\TextInput::make('vk_confirmation_code')
+                                    ->label('Confirmation Code (из настроек Callback API)')
+                                    ->helperText('Возьмите из VK → Управление сообществом → API → Callback API → Confirmation')
+                                    ->maxLength(64),
+                            ])->columns(2),
+
+                        Forms\Components\Fieldset::make('Max Bot')
+                            ->schema([
+                                Forms\Components\TextInput::make('max_bot_username')
+                                    ->label('Username бота (без @)')
+                                    ->placeholder('samskrtam_magnet_bot')
+                                    ->maxLength(100),
+                                Forms\Components\TextInput::make('max_bot_token')
+                                    ->label('Bot Token')
+                                    ->password()
+                                    ->revealable(),
+                                Forms\Components\TextInput::make('max_webhook_secret')
+                                    ->label('Webhook Secret')
+                                    ->password()
+                                    ->revealable()
+                                    ->maxLength(64),
+                            ])->columns(1),
+                    ]),
             ]);
     }
 
@@ -193,14 +276,14 @@ class MarketingSettingResource extends Resource
             ->columns([
                 Tables\Columns\ToggleColumn::make('is_loyalty_active')
                     ->label('Лояльность включена'),
-                    
+
                 Tables\Columns\TextColumn::make('bundle_3_discount')
                     ->label('Макс. пакетная')
-                    ->formatStateUsing(fn ($state) => $state . ' %'),
-                    
+                    ->formatStateUsing(fn ($state) => $state.' %'),
+
                 Tables\Columns\TextColumn::make('wholesale_large_discount')
                     ->label('Макс. накопительная')
-                    ->formatStateUsing(fn ($state) => $state . ' %'),
+                    ->formatStateUsing(fn ($state) => $state.' %'),
 
                 Tables\Columns\IconColumn::make('is_prana_active')
                     ->label('🪷 Прана')

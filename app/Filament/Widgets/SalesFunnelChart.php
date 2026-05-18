@@ -9,14 +9,16 @@ use Filament\Widgets\ChartWidget;
 class SalesFunnelChart extends ChartWidget
 {
     protected static ?string $heading = 'Воронка продаж (Лиды -> Деньги)';
+
     protected static ?int $sort = 3;
+
     protected static ?string $maxHeight = '300px';
-    
+
     public static function canView(): bool
     {
         return false; // Возвращаем false, и виджет полностью исчезает
     }
-    
+
     protected function getData(): array
     {
         $leadsCount = Lead::count();
@@ -36,6 +38,6 @@ class SalesFunnelChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar'; 
+        return 'bar';
     }
 }

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Awcodes\Curator\Models\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Awcodes\Curator\Models\Media;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Article extends Model
 {
@@ -38,10 +38,10 @@ class Article extends Model
     ];
 
     protected $casts = [
-        'is_published'  => 'boolean',
-        'published_at'  => 'datetime',
-        'reading_time'  => 'integer',
-        'views_count'   => 'integer',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
+        'reading_time' => 'integer',
+        'views_count' => 'integer',
     ];
 
     // ==========================================================
@@ -52,7 +52,7 @@ class Article extends Model
     {
         // Авто-slug из title, если не задан
         static::saving(function (self $article): void {
-            if (empty($article->slug) && !empty($article->title)) {
+            if (empty($article->slug) && ! empty($article->title)) {
                 $article->slug = Str::slug($article->title);
             }
 
@@ -76,18 +76,18 @@ class Article extends Model
     {
         return $this->hasMany(ArticleView::class);
     }
-    
+
     /**
- * Картинки, выбранные из медиатеки для вставки в тело статьи.
- * Pivot-таблица article_inline_images хранит порядок.
- */
-public function inlineImages(): BelongsToMany
-{
-    return $this->belongsToMany(Media::class, 'article_inline_images', 'article_id', 'media_id')
-                ->withPivot('sort_order')
-                ->withTimestamps()
-                ->orderByPivot('sort_order');
-}
+     * Картинки, выбранные из медиатеки для вставки в тело статьи.
+     * Pivot-таблица article_inline_images хранит порядок.
+     */
+    public function inlineImages(): BelongsToMany
+    {
+        return $this->belongsToMany(Media::class, 'article_inline_images', 'article_id', 'media_id')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
 
     // ==========================================================
     // SCOPES (переиспользуемые условия выборки)
@@ -99,8 +99,8 @@ public function inlineImages(): BelongsToMany
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true)
-                     ->whereNotNull('published_at')
-                     ->where('published_at', '<=', now());
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     /**
@@ -113,12 +113,12 @@ public function inlineImages(): BelongsToMany
             return $query;
         }
 
-        $term = '%' . str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+        $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
         return $query->where(function (Builder $q) use ($term): void {
             $q->where('title', 'like', $term)
-              ->orWhere('subtitle', 'like', $term)
-              ->orWhere('excerpt', 'like', $term);
+                ->orWhere('subtitle', 'like', $term)
+                ->orWhere('excerpt', 'like', $term);
         });
     }
 
@@ -146,8 +146,8 @@ public function inlineImages(): BelongsToMany
     public function getUniqueViewsCountAttribute(): int
     {
         return (int) $this->views()
-                          ->distinct('visitor_hash')
-                          ->count('visitor_hash');
+            ->distinct('visitor_hash')
+            ->count('visitor_hash');
     }
 
     /**

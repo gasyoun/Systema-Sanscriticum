@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Activity\HeartbeatRequest;
 use App\Models\Lesson;
 use App\Models\LessonView;
-use App\Models\UserSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -52,7 +51,7 @@ final class HeartbeatController extends Controller
                 'NX'
             );
 
-            if (!$acquired) {
+            if (! $acquired) {
                 return response()->json(['ok' => true, 'throttled' => true]);
             }
         } catch (\Throwable $e) {
@@ -66,20 +65,20 @@ final class HeartbeatController extends Controller
             ['user_id' => $user->id, 'lesson_id' => $lessonId]
         );
 
-        if (!$view->exists) {
+        if (! $view->exists) {
             $lesson = Lesson::find($lessonId);
-            if (!$lesson) {
+            if (! $lesson) {
                 return response()->json(['ok' => false], 404);
             }
 
             $view->fill([
-                'course_id'          => $lesson->course_id,
-                'first_opened_at'    => now(),
-                'last_opened_at'     => now(),
-                'last_heartbeat_at'  => now(),
-                'open_count'         => 1,
+                'course_id' => $lesson->course_id,
+                'first_opened_at' => now(),
+                'last_opened_at' => now(),
+                'last_heartbeat_at' => now(),
+                'open_count' => 1,
                 'total_time_on_page' => 0,
-                'is_completed'       => false,
+                'is_completed' => false,
             ])->save();
         }
 
@@ -87,8 +86,8 @@ final class HeartbeatController extends Controller
         DB::table('lesson_views')
             ->where('id', $view->id)
             ->update([
-                'last_heartbeat_at'  => now(),
-                'total_time_on_page' => DB::raw('total_time_on_page + ' . (int) $delta),
+                'last_heartbeat_at' => now(),
+                'total_time_on_page' => DB::raw('total_time_on_page + '.(int) $delta),
             ]);
 
         // Заодно тикаем heartbeat активной сессии (чтобы cron-закрыватель не убил её).

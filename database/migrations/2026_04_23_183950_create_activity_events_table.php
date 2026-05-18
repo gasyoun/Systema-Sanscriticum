@@ -9,16 +9,35 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-{
-    // Партиционирование по RANGE (TO_DAYS(created_at)).
-    //
-    // ВАЖНО: created_at здесь DATETIME, а не TIMESTAMP. Причина:
-    // TIMESTAMP в MySQL хранится в UTC и конвертируется в таймзону сессии при чтении,
-    // из-за чего MySQL считает TO_DAYS(timestamp_column) "timezone-dependent"
-    // и запрещает его использовать в партиционировании (error 1486).
-    // DATETIME хранится as-is — функция детерминирована, партиционирование работает.
+    {
+        // SQLite (тесты) не понимает MySQL-синтаксис партиционирования — создаём упрощённую таблицу.
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::create('activity_events', function ($table) {
+                $table->bigIncrements('id');
+                $table->unsignedBigInteger('user_id');
+                $table->unsignedBigInteger('session_id')->nullable();
+                $table->string('event_type', 40);
+                $table->json('event_data')->nullable();
+                $table->string('url', 500)->nullable();
+                $table->string('ip_address', 45)->nullable();
+                $table->dateTime('created_at')->useCurrent();
+                $table->index(['user_id', 'created_at']);
+                $table->index(['event_type', 'created_at']);
+                $table->index('session_id');
+            });
 
-    DB::statement("
+            return;
+        }
+
+        // Партиционирование по RANGE (TO_DAYS(created_at)).
+        //
+        // ВАЖНО: created_at здесь DATETIME, а не TIMESTAMP. Причина:
+        // TIMESTAMP в MySQL хранится в UTC и конвертируется в таймзону сессии при чтении,
+        // из-за чего MySQL считает TO_DAYS(timestamp_column) "timezone-dependent"
+        // и запрещает его использовать в партиционировании (error 1486).
+        // DATETIME хранится as-is — функция детерминирована, партиционирование работает.
+
+        DB::statement("
         CREATE TABLE `activity_events` (
             `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             `user_id` BIGINT UNSIGNED NOT NULL,
@@ -52,7 +71,7 @@ return new class extends Migration
             PARTITION p_future VALUES LESS THAN MAXVALUE
         )
     ");
-}
+    }
 
     public function down(): void
     {

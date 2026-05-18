@@ -22,9 +22,9 @@ class ArticleController extends Controller
     {
         // Валидируем входящие параметры — никакого доверия query string
         $validated = $request->validate([
-            'q'        => ['nullable', 'string', 'max:100'],
+            'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:255', 'exists:article_categories,slug'],
-            'page'     => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
         // ── Базовый запрос опубликованных статей ──
@@ -38,7 +38,7 @@ class ArticleController extends Controller
             ->latest('published_at');
 
         // ── Фильтр по рубрике ──
-        if (!empty($validated['category'])) {
+        if (! empty($validated['category'])) {
             $query->whereHas('category', function ($q) use ($validated): void {
                 $q->where('slug', $validated['category']);
             });
@@ -104,13 +104,13 @@ class ArticleController extends Controller
 
             return [
                 'yandex_id' => $settings?->blog_yandex_metrika_id ?: null,
-                'vk_id'     => $settings?->blog_vk_pixel_id ?: null,
+                'vk_id' => $settings?->blog_vk_pixel_id ?: null,
             ];
         });
 
         return [
             'yandex_id' => $article->yandex_metrika_id ?: $defaults['yandex_id'],
-            'vk_id'     => $article->vk_pixel_id ?: $defaults['vk_id'],
+            'vk_id' => $article->vk_pixel_id ?: $defaults['vk_id'],
         ];
     }
 }

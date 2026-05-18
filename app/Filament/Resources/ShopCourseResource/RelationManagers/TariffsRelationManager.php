@@ -12,10 +12,10 @@ class TariffsRelationManager extends RelationManager
 {
     // Имя связи в модели Course (должно быть tariffs)
     protected static string $relationship = 'tariffs';
-    
+
     // Заголовок блока на странице
     protected static ?string $title = 'Тарифы и цены';
-    
+
     protected static ?string $recordTitleAttribute = 'title';
 
     public function form(Form $form): Form
@@ -26,18 +26,18 @@ class TariffsRelationManager extends RelationManager
                     ->required()
                     ->label('Название тарифа (например: Базовый)')
                     ->maxLength(255),
-                    
+
                 Forms\Components\TextInput::make('price')
                     ->required()
                     ->numeric()
                     ->label('Стоимость (₽)')
                     ->minValue(0),
-                    
+
                 Forms\Components\Textarea::make('description')
                     ->label('Что входит в тариф (кратко)')
                     ->rows(3)
                     ->columnSpanFull(),
-                    
+
                 Forms\Components\Toggle::make('is_active')
                     ->label('Доступен для покупки')
                     ->default(true)
@@ -49,18 +49,18 @@ class TariffsRelationManager extends RelationManager
     {
         return $table
             // Убираем лишние тени, чтобы органично смотрелось внутри курса
-            ->modifyQueryUsing(fn ($query) => $query->latest()) 
+            ->modifyQueryUsing(fn ($query) => $query->latest())
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->label('Название')
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('price')
                     ->label('Цена')
                     ->badge()
                     ->color('success')
-                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', ' ') . ' ₽'),
-                    
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', ' ').' ₽'),
+
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Активен'),
             ])

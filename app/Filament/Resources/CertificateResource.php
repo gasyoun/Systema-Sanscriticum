@@ -2,18 +2,14 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\CertificateResource\Pages;
-use App\Filament\Resources\CertificateResource\RelationManagers;
 use App\Models\Certificate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-
-use App\Filament\Concerns\AdminOnly;
 
 class CertificateResource extends Resource
 {
@@ -22,9 +18,13 @@ class CertificateResource extends Resource
     protected static ?string $model = Certificate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?int $navigationSort = 60;
+
     protected static ?string $navigationGroup = 'Пользователи';
+
     protected static ?string $navigationLabel = 'Сертификаты';
+
     protected static ?string $pluralModelLabel = 'Сертификаты';
 
     public static function form(Form $form): Form

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\ActivityEvent;
-use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonView;
 use App\Models\User;
@@ -57,10 +56,10 @@ final class TrackLessonViewJob implements ShouldQueue
     public function handle(): void
     {
         // Защитный slice — если запись исчезла, пока job висел в очереди
-        $user   = User::find($this->userId);
+        $user = User::find($this->userId);
         $lesson = Lesson::find($this->lessonId);
 
-        if (!$user || !$lesson) {
+        if (! $user || ! $lesson) {
             // Молча завершаемся — нет смысла ретраить, данные пропали
             return;
         }
@@ -74,9 +73,9 @@ final class TrackLessonViewJob implements ShouldQueue
             });
         } catch (\Throwable $e) {
             Log::warning('TrackLessonViewJob failed', [
-                'user_id'   => $this->userId,
+                'user_id' => $this->userId,
                 'lesson_id' => $this->lessonId,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             // Пробрасываем — Horizon заретраит по backoff
             throw $e;
@@ -97,22 +96,23 @@ final class TrackLessonViewJob implements ShouldQueue
 
         if ($existing === null) {
             LessonView::create([
-                'user_id'            => $userId,
-                'lesson_id'          => $lessonId,
-                'course_id'          => $this->courseId,
-                'first_opened_at'    => now(),
-                'last_opened_at'     => now(),
-                'open_count'         => 1,
+                'user_id' => $userId,
+                'lesson_id' => $lessonId,
+                'course_id' => $this->courseId,
+                'first_opened_at' => now(),
+                'last_opened_at' => now(),
+                'open_count' => 1,
                 'total_time_on_page' => 0,
-                'is_completed'       => false,
+                'is_completed' => false,
             ]);
+
             return true; // новый просмотр
         }
 
         // Повторный просмотр — апдейтим счётчик и дату
         $existing->update([
             'last_opened_at' => now(),
-            'open_count'     => $existing->open_count + 1,
+            'open_count' => $existing->open_count + 1,
         ]);
 
         return false;
@@ -124,7 +124,7 @@ final class TrackLessonViewJob implements ShouldQueue
      */
     private function updateUserCounters(User $user, bool $isNewView): void
     {
-        if (!$isNewView) {
+        if (! $isNewView) {
             return;
         }
 
@@ -164,16 +164,16 @@ final class TrackLessonViewJob implements ShouldQueue
             : null;
 
         DB::table('activity_events')->insert([
-            'user_id'    => $user->id,
+            'user_id' => $user->id,
             'session_id' => $sessionRecord?->id,
             'event_type' => ActivityEvent::TYPE_LESSON_OPEN,
             'event_data' => json_encode([
-                'lesson_id'    => $lesson->id,
+                'lesson_id' => $lesson->id,
                 'lesson_title' => $lesson->title,
-                'course_id'    => $this->courseId,
+                'course_id' => $this->courseId,
                 'block_number' => $lesson->block_number,
             ], JSON_UNESCAPED_UNICODE),
-            'url'        => $this->url ? mb_substr($this->url, 0, 500) : null,
+            'url' => $this->url ? mb_substr($this->url, 0, 500) : null,
             'ip_address' => $this->ipAddress,
             'created_at' => now(),
         ]);

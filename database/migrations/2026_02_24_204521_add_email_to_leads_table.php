@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::table('leads', function (Blueprint $table) {
             // Добавляем колонку email, если её еще нет
-            if (!Schema::hasColumn('leads', 'email')) {
+            if (! Schema::hasColumn('leads', 'email')) {
                 $table->string('email')->nullable()->after('contact');
             }
-            
+
             // Заодно добавим поля аналитики, если их нет (чтобы два раза не вставать)
-            if (!Schema::hasColumn('leads', 'utm_source')) {
+            if (! Schema::hasColumn('leads', 'utm_source')) {
                 $table->string('utm_source')->nullable();
                 $table->string('utm_medium')->nullable();
                 $table->string('utm_campaign')->nullable();
@@ -33,10 +33,10 @@ return new class extends Migration
     {
         Schema::table('leads', function (Blueprint $table) {
             $table->dropColumn([
-                'email', 
-                'utm_source', 'utm_medium', 'utm_campaign', 
-                'utm_content', 'utm_term', 'click_id', 
-                'ip_address', 'user_agent', 'referrer'
+                'email',
+                'utm_source', 'utm_medium', 'utm_campaign',
+                'utm_content', 'utm_term', 'click_id',
+                'ip_address', 'user_agent', 'referrer',
             ]);
         });
     }

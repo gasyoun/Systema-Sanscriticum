@@ -8,24 +8,28 @@ use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Filament\Notifications\Notification;
+use Illuminate\Support\Str;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     // Современная иконка для бокового меню
-    protected static ?string $navigationIcon = 'heroicon-o-users'; 
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?int $navigationSort = 50;
+
     protected static ?string $navigationGroup = 'Пользователи';
+
     protected static ?string $navigationLabel = 'Студенты';
+
     protected static ?string $pluralModelLabel = 'Студенты';
 
     public static function canViewAny(): bool
@@ -41,7 +45,7 @@ class UserResource extends Resource
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
         // Супер-админ редактирует кого угодно. Обычный админ не может править
@@ -55,8 +59,9 @@ class UserResource extends Resource
             return true;
         }
         if ($user->isAdmin()) {
-            return !in_array($record->role, Roles::adminLike(), true);
+            return ! in_array($record->role, Roles::adminLike(), true);
         }
+
         return false;
     }
 
@@ -76,7 +81,7 @@ class UserResource extends Resource
                             ->label('Имя')
                             ->required()
                             ->maxLength(255),
-                            
+
                         Forms\Components\TextInput::make('email')
                             ->label('Email')
                             ->email()
@@ -88,7 +93,7 @@ class UserResource extends Resource
                             ->label('Телефон')
                             ->tel()
                             ->maxLength(255),
-                            
+
                         Forms\Components\TextInput::make('password')
                             ->label('Пароль')
                             ->password()
@@ -131,16 +136,17 @@ class UserResource extends Resource
                             ->helperText('Без роли — обычный студент, без доступа в админку. Роль «Преподаватель» назначается через раздел «Преподаватели».')
                             ->options(function (?\Illuminate\Database\Eloquent\Model $record) {
                                 $all = Roles::all();
-                                if (!RoleGate::isSuperAdmin()) {
+                                if (! RoleGate::isSuperAdmin()) {
                                     unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN]);
                                 }
                                 // Роль преподавателя выдаётся только через TeacherResource.
                                 // Если у записи она уже есть — оставляем её в списке как информационную.
-                                if (!$record || $record->role !== Roles::TEACHER) {
+                                if (! $record || $record->role !== Roles::TEACHER) {
                                     unset($all[Roles::TEACHER]);
                                 } else {
-                                    $all[Roles::TEACHER] = $all[Roles::TEACHER] . ' (управление в «Преподавателях»)';
+                                    $all[Roles::TEACHER] = $all[Roles::TEACHER].' (управление в «Преподавателях»)';
                                 }
+
                                 return $all;
                             })
                             // Серверная защита от подмены значения через DevTools/POST.
@@ -156,6 +162,7 @@ class UserResource extends Resource
                                 if ($record && $record->role) {
                                     $keys[] = $record->role;
                                 }
+
                                 return \Illuminate\Validation\Rule::in([null, ...$keys]);
                             })
                             ->placeholder('— Студент —')
@@ -176,7 +183,7 @@ class UserResource extends Resource
                         Forms\Components\Placeholder::make('prana_balance_view')
                             ->label('Баланс')
                             ->content(fn (?\App\Models\User $record) => $record
-                                ? number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны'
+                                ? number_format((int) $record->prana_balance, 0, '.', ' ').' праны'
                                 : '—'),
                     ])
                     ->visible(fn (string $operation) => $operation !== 'create' && RoleGate::adminOnly())
@@ -188,152 +195,170 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-    // --- КОЛОНКА 1: СТУДЕНТ ---
-    // name основное, email и id — подписи под ним
-    Tables\Columns\TextColumn::make('name')
-        ->label('Студент')
-        ->searchable()
-        ->sortable()
-        ->weight('bold')
-        ->description(fn ($record) => $record->email . ' · ID: ' . $record->id)
-        ->wrap(),
+                // --- КОЛОНКА 1: СТУДЕНТ ---
+                // name основное, email и id — подписи под ним
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Студент')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) => $record->email.' · ID: '.$record->id)
+                    ->wrap(),
 
-    // --- КОЛОНКА 2: КОНТАКТЫ ---
-    // Телефон + мелкие иконки TG/VK под ним
-    Tables\Columns\TextColumn::make('phone')
-        ->label('Контакты')
-        ->copyable()
-        ->copyMessage('Телефон скопирован')
-        ->icon('heroicon-m-phone')
-        ->iconColor('gray')
-        ->placeholder('—')
-        ->description(function ($record): string {
-            $tg = $record->telegram_id ? '✈ TG' : '';
-            $vk = $record->vk_id ? '💬 VK' : '';
-            $parts = array_filter([$tg, $vk]);
-            return !empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
-        }),
+                // --- КОЛОНКА 2: КОНТАКТЫ ---
+                // Телефон + мелкие иконки TG/VK под ним
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Контакты')
+                    ->copyable()
+                    ->copyMessage('Телефон скопирован')
+                    ->icon('heroicon-m-phone')
+                    ->iconColor('gray')
+                    ->placeholder('—')
+                    ->description(function ($record): string {
+                        $tg = $record->telegram_id ? '✈ TG' : '';
+                        $vk = $record->vk_id ? '💬 VK' : '';
+                        $parts = array_filter([$tg, $vk]);
 
-    // --- КОЛОНКА 3: СТАТУС ---
-    Tables\Columns\TextColumn::make('global_status')
-        ->label('Статус')
-        ->badge()
-        ->color(fn (string $state): string => match ($state) {
-            'VIP'                   => 'warning',
-            'Техподдержка'          => 'danger',
-            'Занимается бесплатно'  => 'info',
-            'Бартер'                => 'info',
-            default                 => 'success',
-        })
-        ->searchable()
-        ->sortable(),
+                        return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
+                    }),
 
-    // --- КОЛОНКА 4: АКТИВНОСТЬ ---
-    // last_activity_at основное, мелкая подстрочная статистика под ним
-    Tables\Columns\TextColumn::make('last_activity_at')
-        ->label('Последний визит')
-        ->sortable()
-        ->formatStateUsing(function ($state): string {
-            if ($state === null) return 'Никогда';
-            return \Carbon\Carbon::parse($state)->diffForHumans();
-        })
-        ->tooltip(fn ($state): ?string => $state
-            ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
-            : null)
-        ->color(function ($state): string {
-            if ($state === null) return 'gray';
-            $d = \Carbon\Carbon::parse($state);
-            if ($d->gt(now()->subMinutes(5))) return 'success';
-            if ($d->gt(now()->subHour()))    return 'warning';
-            if ($d->gt(now()->subDays(7)))   return 'gray';
-            return 'danger';
-        })
-        ->icon(function ($state): string {
-            if ($state === null) return 'heroicon-m-minus-circle';
-            $d = \Carbon\Carbon::parse($state);
-            if ($d->gt(now()->subMinutes(5))) return 'heroicon-m-signal';
-            return 'heroicon-m-clock';
-        })
-        ->weight('medium')
-        ->description(function ($record): string {
-            $lessons = (int) $record->total_lessons_opened;
-            $seconds = (int) $record->total_time_spent;
-            $visits  = (int) $record->login_count;
+                // --- КОЛОНКА 3: СТАТУС ---
+                Tables\Columns\TextColumn::make('global_status')
+                    ->label('Статус')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'VIP' => 'warning',
+                        'Техподдержка' => 'danger',
+                        'Занимается бесплатно' => 'info',
+                        'Бартер' => 'info',
+                        default => 'success',
+                    })
+                    ->searchable()
+                    ->sortable(),
 
-            $hours = intdiv($seconds, 3600);
-            $mins  = intdiv($seconds % 3600, 60);
-            $time  = $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
+                // --- КОЛОНКА 4: АКТИВНОСТЬ ---
+                // last_activity_at основное, мелкая подстрочная статистика под ним
+                Tables\Columns\TextColumn::make('last_activity_at')
+                    ->label('Последний визит')
+                    ->sortable()
+                    ->formatStateUsing(function ($state): string {
+                        if ($state === null) {
+                            return 'Никогда';
+                        }
 
-            return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
-        }),
+                        return \Carbon\Carbon::parse($state)->diffForHumans();
+                    })
+                    ->tooltip(fn ($state): ?string => $state
+                        ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
+                        : null)
+                    ->color(function ($state): string {
+                        if ($state === null) {
+                            return 'gray';
+                        }
+                        $d = \Carbon\Carbon::parse($state);
+                        if ($d->gt(now()->subMinutes(5))) {
+                            return 'success';
+                        }
+                        if ($d->gt(now()->subHour())) {
+                            return 'warning';
+                        }
+                        if ($d->gt(now()->subDays(7))) {
+                            return 'gray';
+                        }
 
-    // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
-    Tables\Columns\TextColumn::make('role')
-        ->label('Роль')
-        ->badge()
-        ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
-        ->color(fn (?string $state): string => match ($state) {
-            Roles::SUPER_ADMIN => 'danger',
-            Roles::ADMIN       => 'warning',
-            Roles::TEACHER     => 'info',
-            Roles::MANAGER     => 'primary',
-            default            => 'gray',
-        })
-        ->alignment('center')
-        ->toggleable()
-        ->visible(fn () => RoleGate::adminOnly()),
+                        return 'danger';
+                    })
+                    ->icon(function ($state): string {
+                        if ($state === null) {
+                            return 'heroicon-m-minus-circle';
+                        }
+                        $d = \Carbon\Carbon::parse($state);
+                        if ($d->gt(now()->subMinutes(5))) {
+                            return 'heroicon-m-signal';
+                        }
 
-    Tables\Columns\IconColumn::make('is_lecture_editor')
-        ->label('Ред. лекций')
-        ->boolean()
-        ->alignment('center')
-        ->toggleable(isToggledHiddenByDefault: true)
-        ->visible(fn () => RoleGate::isSuperAdmin()),
+                        return 'heroicon-m-clock';
+                    })
+                    ->weight('medium')
+                    ->description(function ($record): string {
+                        $lessons = (int) $record->total_lessons_opened;
+                        $seconds = (int) $record->total_time_spent;
+                        $visits = (int) $record->login_count;
 
-    Tables\Columns\TextColumn::make('prana_balance')
-        ->label('Прана')
-        ->badge()
-        ->color(fn (?int $state) => match (true) {
-            $state === null || $state === 0 => 'gray',
-            $state >= 1000                  => 'warning',
-            default                         => 'success',
-        })
-        ->icon('heroicon-m-sparkles')
-        ->formatStateUsing(fn (?int $state) => number_format((int) $state, 0, '.', ' '))
-        ->sortable()
-        ->alignment('center')
-        ->toggleable()
-        ->visible(fn () => RoleGate::adminOnly()),
-])
+                        $hours = intdiv($seconds, 3600);
+                        $mins = intdiv($seconds % 3600, 60);
+                        $time = $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
+
+                        return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
+                    }),
+
+                // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
+                Tables\Columns\TextColumn::make('role')
+                    ->label('Роль')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
+                    ->color(fn (?string $state): string => match ($state) {
+                        Roles::SUPER_ADMIN => 'danger',
+                        Roles::ADMIN => 'warning',
+                        Roles::TEACHER => 'info',
+                        Roles::MANAGER => 'primary',
+                        default => 'gray',
+                    })
+                    ->alignment('center')
+                    ->toggleable()
+                    ->visible(fn () => RoleGate::adminOnly()),
+
+                Tables\Columns\IconColumn::make('is_lecture_editor')
+                    ->label('Ред. лекций')
+                    ->boolean()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => RoleGate::isSuperAdmin()),
+
+                Tables\Columns\TextColumn::make('prana_balance')
+                    ->label('Прана')
+                    ->badge()
+                    ->color(fn (?int $state) => match (true) {
+                        $state === null || $state === 0 => 'gray',
+                        $state >= 1000 => 'warning',
+                        default => 'success',
+                    })
+                    ->icon('heroicon-m-sparkles')
+                    ->formatStateUsing(fn (?int $state) => number_format((int) $state, 0, '.', ' '))
+                    ->sortable()
+                    ->alignment('center')
+                    ->toggleable()
+                    ->visible(fn () => RoleGate::adminOnly()),
+            ])
             ->defaultSort('last_activity_at', 'desc')
             ->filters([
-                
+
                 // --- НОВЫЙ ФИЛЬТР: Наличие настоящего email ---
-    Tables\Filters\TernaryFilter::make('has_real_email')
-        ->label('Email')
-        ->placeholder('Все студенты')
-        ->trueLabel('Только с настоящим email')
-        ->falseLabel('Только с заглушкой @no-email.com')
-        ->queries(
-            true: fn (Builder $query) => $query->where('email', 'not like', '%@no-email.com'),
-            false: fn (Builder $query) => $query->where('email', 'like', '%@no-email.com'),
-            blank: fn (Builder $query) => $query, // показываем всех
-        ),
-        
-        // --- НОВЫЙ ФИЛЬТР: Отправлено ли письмо с доступом ---
-    Tables\Filters\TernaryFilter::make('access_sent')
-        ->label('Письмо с доступом')
-        ->placeholder('Все студенты')
-        ->trueLabel('Доступ уже отправлен')
-        ->falseLabel('Доступ ещё не отправлен')
-        ->queries(
-            true: fn (Builder $query) => $query->where('note', 'like', '%[Доступ отправлен%'),
-            false: fn (Builder $query) => $query->where(function (Builder $q) {
-                $q->whereNull('note')
-                  ->orWhere('note', 'not like', '%[Доступ отправлен%');
-            }),
-            blank: fn (Builder $query) => $query,
-        ),
+                Tables\Filters\TernaryFilter::make('has_real_email')
+                    ->label('Email')
+                    ->placeholder('Все студенты')
+                    ->trueLabel('Только с настоящим email')
+                    ->falseLabel('Только с заглушкой @no-email.com')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('email', 'not like', '%@no-email.com'),
+                        false: fn (Builder $query) => $query->where('email', 'like', '%@no-email.com'),
+                        blank: fn (Builder $query) => $query, // показываем всех
+                    ),
+
+                // --- НОВЫЙ ФИЛЬТР: Отправлено ли письмо с доступом ---
+                Tables\Filters\TernaryFilter::make('access_sent')
+                    ->label('Письмо с доступом')
+                    ->placeholder('Все студенты')
+                    ->trueLabel('Доступ уже отправлен')
+                    ->falseLabel('Доступ ещё не отправлен')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('note', 'like', '%[Доступ отправлен%'),
+                        false: fn (Builder $query) => $query->where(function (Builder $q) {
+                            $q->whereNull('note')
+                                ->orWhere('note', 'not like', '%[Доступ отправлен%');
+                        }),
+                        blank: fn (Builder $query) => $query,
+                    ),
                 // --- НОВЫЙ ФИЛЬТР ПО СТАТУСУ ---
                 Tables\Filters\SelectFilter::make('global_status')
                     ->label('Статус студента')
@@ -352,52 +377,52 @@ class UserResource extends Resource
                 Tables\Filters\Filter::make('has_vk')
                     ->label('Есть ВК-бот')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('vk_id')),
-                    
+
                 // --- ФИЛЬТРЫ ПО АКТИВНОСТИ ---
 
-Tables\Filters\Filter::make('online_now')
-    ->label('Онлайн сейчас')
-    ->query(fn (Builder $query): Builder => $query
-        ->where('last_activity_at', '>=', now()->subMinutes(5))
-    )
-    ->indicator('Онлайн сейчас'),
+                Tables\Filters\Filter::make('online_now')
+                    ->label('Онлайн сейчас')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where('last_activity_at', '>=', now()->subMinutes(5))
+                    )
+                    ->indicator('Онлайн сейчас'),
 
-Tables\Filters\Filter::make('active_today')
-    ->label('Активные сегодня')
-    ->query(fn (Builder $query): Builder => $query
-        ->whereDate('last_activity_at', today())
-    )
-    ->indicator('Активные сегодня'),
+                Tables\Filters\Filter::make('active_today')
+                    ->label('Активные сегодня')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->whereDate('last_activity_at', today())
+                    )
+                    ->indicator('Активные сегодня'),
 
-Tables\Filters\Filter::make('inactive_7_days')
-    ->label('Неактивные 7+ дней')
-    ->query(fn (Builder $query): Builder => $query
-        ->where(function (Builder $q) {
-            $q->whereNull('last_activity_at')
-              ->orWhere('last_activity_at', '<', now()->subDays(7));
-        })
-        ->whereNotNull('last_login_at') // только те, кто вообще заходил
-    )
-    ->indicator('Неактивные 7+ дней'),
+                Tables\Filters\Filter::make('inactive_7_days')
+                    ->label('Неактивные 7+ дней')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where(function (Builder $q) {
+                            $q->whereNull('last_activity_at')
+                                ->orWhere('last_activity_at', '<', now()->subDays(7));
+                        })
+                        ->whereNotNull('last_login_at') // только те, кто вообще заходил
+                    )
+                    ->indicator('Неактивные 7+ дней'),
 
-Tables\Filters\Filter::make('inactive_30_days')
-    ->label('Неактивные 30+ дней')
-    ->query(fn (Builder $query): Builder => $query
-        ->where(function (Builder $q) {
-            $q->whereNull('last_activity_at')
-              ->orWhere('last_activity_at', '<', now()->subDays(30));
-        })
-        ->whereNotNull('last_login_at')
-    )
-    ->indicator('Неактивные 30+ дней'),
+                Tables\Filters\Filter::make('inactive_30_days')
+                    ->label('Неактивные 30+ дней')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where(function (Builder $q) {
+                            $q->whereNull('last_activity_at')
+                                ->orWhere('last_activity_at', '<', now()->subDays(30));
+                        })
+                        ->whereNotNull('last_login_at')
+                    )
+                    ->indicator('Неактивные 30+ дней'),
 
-Tables\Filters\Filter::make('never_logged_in')
-    ->label('Никогда не заходили')
-    ->query(fn (Builder $query): Builder => $query
-        ->whereNull('last_login_at')
-    )
-    ->indicator('Никогда не заходили'),    
-                    
+                Tables\Filters\Filter::make('never_logged_in')
+                    ->label('Никогда не заходили')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->whereNull('last_login_at')
+                    )
+                    ->indicator('Никогда не заходили'),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
@@ -410,24 +435,23 @@ Tables\Filters\Filter::make('never_logged_in')
                     ->color('success')
                     ->tooltip('Начислить / списать прану')
                     ->visible(fn () => RoleGate::adminOnly())
-                    ->modalHeading(fn (User $record) => 'Прана студента: ' . $record->name)
-                    ->modalDescription(fn (User $record) =>
-                        'Текущий баланс: ' . number_format((int) $record->prana_balance, 0, '.', ' ') . ' праны.')
+                    ->modalHeading(fn (User $record) => 'Прана студента: '.$record->name)
+                    ->modalDescription(fn (User $record) => 'Текущий баланс: '.number_format((int) $record->prana_balance, 0, '.', ' ').' праны.')
                     ->modalSubmitActionLabel('Применить')
                     ->modalWidth('md')
                     ->form([
                         Forms\Components\ToggleButtons::make('direction')
                             ->label('Операция')
                             ->options([
-                                'grant'  => 'Начислить',
+                                'grant' => 'Начислить',
                                 'deduct' => 'Списать',
                             ])
                             ->icons([
-                                'grant'  => 'heroicon-m-plus-circle',
+                                'grant' => 'heroicon-m-plus-circle',
                                 'deduct' => 'heroicon-m-minus-circle',
                             ])
                             ->colors([
-                                'grant'  => 'success',
+                                'grant' => 'success',
                                 'deduct' => 'danger',
                             ])
                             ->default('grant')
@@ -450,13 +474,14 @@ Tables\Filters\Filter::make('never_logged_in')
                     ])
                     ->action(function (User $record, array $data) {
                         $admin = auth()->user();
-                        if (!$admin || !\App\Support\RoleGate::adminOnly()) {
+                        if (! $admin || ! \App\Support\RoleGate::adminOnly()) {
                             Notification::make()->title('Недостаточно прав.')->danger()->send();
+
                             return;
                         }
 
                         $amount = (int) $data['amount'];
-                        $delta  = $data['direction'] === 'deduct' ? -$amount : $amount;
+                        $delta = $data['direction'] === 'deduct' ? -$amount : $amount;
 
                         try {
                             $newBalance = app(\App\Services\Prana\PranaService::class)
@@ -464,9 +489,9 @@ Tables\Filters\Filter::make('never_logged_in')
 
                             Notification::make()
                                 ->title($delta > 0 ? 'Прана начислена' : 'Прана списана')
-                                ->body(($delta > 0 ? '+' : '') . number_format($delta, 0, '.', ' ')
-                                    . ' праны. Новый баланс: '
-                                    . number_format($newBalance, 0, '.', ' ') . '.')
+                                ->body(($delta > 0 ? '+' : '').number_format($delta, 0, '.', ' ')
+                                    .' праны. Новый баланс: '
+                                    .number_format($newBalance, 0, '.', ' ').'.')
                                 ->success()
                                 ->send();
                         } catch (\RuntimeException $e) {
@@ -477,10 +502,10 @@ Tables\Filters\Filter::make('never_logged_in')
                                 ->send();
                         } catch (\Throwable $e) {
                             \Illuminate\Support\Facades\Log::error('Admin prana adjust failed', [
-                                'user_id'  => $record->id,
+                                'user_id' => $record->id,
                                 'admin_id' => $admin->id,
-                                'delta'    => $delta,
-                                'error'    => $e->getMessage(),
+                                'delta' => $delta,
+                                'error' => $e->getMessage(),
                             ]);
                             Notification::make()
                                 ->title('Ошибка')
@@ -500,65 +525,66 @@ Tables\Filters\Filter::make('never_logged_in')
                     ->modalDescription('Текущий пароль студента будет сброшен. Новый случайный пароль будет немедленно отправлен ему на почту.')
                     ->modalSubmitActionLabel('Да, выслать')
                     ->action(function (User $record) {
-    $email = trim((string) $record->email);
+                        $email = trim((string) $record->email);
 
-    // Ранняя проверка, чтобы не сбросить пароль на "битом" юзере
-    if (
-        $email === ''
-        || str_ends_with($email, '@no-email.com')
-        || !filter_var($email, FILTER_VALIDATE_EMAIL)
-    ) {
-        Notification::make()
-            ->title('Некорректный email')
-            ->body("У студента указан невалидный адрес: «{$email}». Сначала обновите email в карточке.")
-            ->danger()
-            ->send();
-        return;
-    }
+                        // Ранняя проверка, чтобы не сбросить пароль на "битом" юзере
+                        if (
+                            $email === ''
+                            || str_ends_with($email, '@no-email.com')
+                            || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+                        ) {
+                            Notification::make()
+                                ->title('Некорректный email')
+                                ->body("У студента указан невалидный адрес: «{$email}». Сначала обновите email в карточке.")
+                                ->danger()
+                                ->send();
 
-    $newPassword = Str::random(8);
-    $emailText = "Намасте, {$record->name}!\n\n"
-        . "Ваш пароль для доступа к личному кабинету Академии был сброшен администратором.\n\n"
-        . "Ваш новый пароль: {$newPassword}\n\n"
-        . "С уважением,\nОбщество ревнителей санскрита.";
+                            return;
+                        }
 
-    try {
-        // Сначала — письмо, потом — обновление пароля
-        Mail::raw($emailText, function ($message) use ($email) {
-            $message->to($email)
-                    ->subject('Ваш новый пароль от личного кабинета');
-        });
+                        $newPassword = Str::random(8);
+                        $emailText = "Намасте, {$record->name}!\n\n"
+                            ."Ваш пароль для доступа к личному кабинету Академии был сброшен администратором.\n\n"
+                            ."Ваш новый пароль: {$newPassword}\n\n"
+                            ."С уважением,\nОбщество ревнителей санскрита.";
 
-        $record->update(['password' => Hash::make($newPassword)]);
+                        try {
+                            // Сначала — письмо, потом — обновление пароля
+                            Mail::raw($emailText, function ($message) use ($email) {
+                                $message->to($email)
+                                    ->subject('Ваш новый пароль от личного кабинета');
+                            });
 
-        Notification::make()
-            ->title('Новый пароль успешно отправлен на почту студента!')
-            ->success()
-            ->send();
-    } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
-        Notification::make()
-            ->title('Некорректный email')
-            ->body("Symfony Mailer отклонил адрес «{$email}». Пароль не сброшен.")
-            ->danger()
-            ->send();
-    } catch (\Throwable $e) {
-        \Illuminate\Support\Facades\Log::error('Send password failed', [
-            'user_id' => $record->id,
-            'email'   => $email,
-            'error'   => $e->getMessage(),
-        ]);
-        Notification::make()
-            ->title('Ошибка отправки письма')
-            ->body('Пароль не сброшен. Подробности в логах: ' . $e->getMessage())
-            ->danger()
-            ->send();
-    }
+                            $record->update(['password' => Hash::make($newPassword)]);
+
+                            Notification::make()
+                                ->title('Новый пароль успешно отправлен на почту студента!')
+                                ->success()
+                                ->send();
+                        } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
+                            Notification::make()
+                                ->title('Некорректный email')
+                                ->body("Symfony Mailer отклонил адрес «{$email}». Пароль не сброшен.")
+                                ->danger()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Send password failed', [
+                                'user_id' => $record->id,
+                                'email' => $email,
+                                'error' => $e->getMessage(),
+                            ]);
+                            Notification::make()
+                                ->title('Ошибка отправки письма')
+                                ->body('Пароль не сброшен. Подробности в логах: '.$e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    
+
                     // --- НОВАЯ КНОПКА: МАССОВАЯ РАССЫЛКА ДОСТУПОВ ---
                     Tables\Actions\BulkAction::make('send_bulk_access')
                         ->label('Разослать доступы')
@@ -569,89 +595,91 @@ Tables\Filters\Filter::make('never_logged_in')
                         ->modalDescription('Система сгенерирует уникальные пароли и отправит письма. Студенты, которым доступ уже отправлялся (есть отметка в примечании), будут пропущены для защиты от спама.')
                         ->modalSubmitActionLabel('Да, отправить')
                         ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-    $sentCount = 0;
-    $skippedCount = 0;
-    $invalidEmails = []; // битые адреса
-    $failedEmails  = []; // валидные с виду, но mailer упал
+                            $sentCount = 0;
+                            $skippedCount = 0;
+                            $invalidEmails = []; // битые адреса
+                            $failedEmails = []; // валидные с виду, но mailer упал
 
-    foreach ($records as $record) {
-        // 1. Защита от спама
-        if (str_contains($record->note ?? '', '[Доступ отправлен')) {
-            $skippedCount++;
-            continue;
-        }
+                            foreach ($records as $record) {
+                                // 1. Защита от спама
+                                if (str_contains($record->note ?? '', '[Доступ отправлен')) {
+                                    $skippedCount++;
 
-        // 2. Отсекаем заглушки и заведомо невалидные адреса
-        $email = trim((string) $record->email);
+                                    continue;
+                                }
 
-        if (
-            $email === ''
-            || str_ends_with($email, '@no-email.com')
-            || !filter_var($email, FILTER_VALIDATE_EMAIL)
-        ) {
-            $invalidEmails[] = "#{$record->id} {$record->name} ({$email})";
-            continue;
-        }
+                                // 2. Отсекаем заглушки и заведомо невалидные адреса
+                                $email = trim((string) $record->email);
 
-        // 3. Генерируем пароль заранее, но НЕ сохраняем до успешной отправки
-        $newPassword = \Illuminate\Support\Str::random(8);
+                                if (
+                                    $email === ''
+                                    || str_ends_with($email, '@no-email.com')
+                                    || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+                                ) {
+                                    $invalidEmails[] = "#{$record->id} {$record->name} ({$email})";
 
-        $emailText = "Намасте, {$record->name}!\n\n"
-            . "Ваш доступ к личному кабинету обучающей платформы открыт.\n\n"
-            . "Ссылка для входа: " . url('/login') . "\n"
-            . "Ваш логин (email): {$email}\n"
-            . "Ваш пароль: {$newPassword}\n\n"
-            . "С уважением,\nКоманда Общества ревнителей санскрита.";
+                                    continue;
+                                }
 
-        try {
-            // 4. Сначала пытаемся отправить письмо
-            \Illuminate\Support\Facades\Mail::raw($emailText, function ($message) use ($email) {
-                $message->to($email)
-                        ->subject('Ваш доступ к обучающей платформе');
-            });
+                                // 3. Генерируем пароль заранее, но НЕ сохраняем до успешной отправки
+                                $newPassword = \Illuminate\Support\Str::random(8);
 
-            // 5. И только если почта ушла — сохраняем пароль и ставим штамп
-            $record->update([
-                'password' => \Illuminate\Support\Facades\Hash::make($newPassword),
-                'note'     => trim(($record->note ?? '') . "\n\n[Доступ отправлен: " . now()->format('d.m.Y H:i') . "]"),
-            ]);
+                                $emailText = "Намасте, {$record->name}!\n\n"
+                                    ."Ваш доступ к личному кабинету обучающей платформы открыт.\n\n"
+                                    .'Ссылка для входа: '.url('/login')."\n"
+                                    ."Ваш логин (email): {$email}\n"
+                                    ."Ваш пароль: {$newPassword}\n\n"
+                                    ."С уважением,\nКоманда Общества ревнителей санскрита.";
 
-            $sentCount++;
-        } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
-            // RFC-невалидный адрес, который filter_var всё-таки пропустил
-            $invalidEmails[] = "#{$record->id} {$record->name} ({$email})";
-        } catch (\Throwable $e) {
-            // SMTP упал, таймаут, что угодно — логируем и идём дальше
-            \Illuminate\Support\Facades\Log::error('Bulk access mail failed', [
-                'user_id' => $record->id,
-                'email'   => $email,
-                'error'   => $e->getMessage(),
-            ]);
-            $failedEmails[] = "#{$record->id} {$record->name} ({$email})";
-        }
-    }
+                                try {
+                                    // 4. Сначала пытаемся отправить письмо
+                                    \Illuminate\Support\Facades\Mail::raw($emailText, function ($message) use ($email) {
+                                        $message->to($email)
+                                            ->subject('Ваш доступ к обучающей платформе');
+                                    });
 
-    // 6. Собираем отчёт
-    $body = "Успешно отправлено: {$sentCount} шт.\n"
-          . "Пропущено (уже отправлялось): {$skippedCount} шт.\n"
-          . "Некорректный email: " . count($invalidEmails) . " шт.\n"
-          . "Ошибка отправки: " . count($failedEmails) . " шт.";
+                                    // 5. И только если почта ушла — сохраняем пароль и ставим штамп
+                                    $record->update([
+                                        'password' => \Illuminate\Support\Facades\Hash::make($newPassword),
+                                        'note' => trim(($record->note ?? '')."\n\n[Доступ отправлен: ".now()->format('d.m.Y H:i').']'),
+                                    ]);
 
-    if (!empty($invalidEmails)) {
-        $body .= "\n\nНевалидные:\n" . implode("\n", array_slice($invalidEmails, 0, 10));
-        if (count($invalidEmails) > 10) {
-            $body .= "\n… и ещё " . (count($invalidEmails) - 10);
-        }
-    }
+                                    $sentCount++;
+                                } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
+                                    // RFC-невалидный адрес, который filter_var всё-таки пропустил
+                                    $invalidEmails[] = "#{$record->id} {$record->name} ({$email})";
+                                } catch (\Throwable $e) {
+                                    // SMTP упал, таймаут, что угодно — логируем и идём дальше
+                                    \Illuminate\Support\Facades\Log::error('Bulk access mail failed', [
+                                        'user_id' => $record->id,
+                                        'email' => $email,
+                                        'error' => $e->getMessage(),
+                                    ]);
+                                    $failedEmails[] = "#{$record->id} {$record->name} ({$email})";
+                                }
+                            }
 
-    \Filament\Notifications\Notification::make()
-        ->title('Рассылка завершена')
-        ->body($body)
-        ->{ (count($invalidEmails) + count($failedEmails)) > 0 ? 'warning' : 'success' }()
-        ->persistent() // чтобы куратор точно прочитал отчёт
-        ->send();
-})
-->deselectRecordsAfterCompletion(),
+                            // 6. Собираем отчёт
+                            $body = "Успешно отправлено: {$sentCount} шт.\n"
+                                  ."Пропущено (уже отправлялось): {$skippedCount} шт.\n"
+                                  .'Некорректный email: '.count($invalidEmails)." шт.\n"
+                                  .'Ошибка отправки: '.count($failedEmails).' шт.';
+
+                            if (! empty($invalidEmails)) {
+                                $body .= "\n\nНевалидные:\n".implode("\n", array_slice($invalidEmails, 0, 10));
+                                if (count($invalidEmails) > 10) {
+                                    $body .= "\n… и ещё ".(count($invalidEmails) - 10);
+                                }
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Рассылка завершена')
+                                ->body($body)
+                                ->{ (count($invalidEmails) + count($failedEmails)) > 0 ? 'warning' : 'success' }()
+                                ->persistent() // чтобы куратор точно прочитал отчёт
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

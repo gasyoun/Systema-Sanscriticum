@@ -25,9 +25,9 @@
                     {{ $course->title }}
                 </h1>
                 
-                <p class="text-gray-500 text-base md:text-lg leading-relaxed mb-8 max-w-3xl">
-                    {{ $course->description }}
-                </p>
+                <div class="text-gray-500 text-base md:text-lg leading-relaxed mb-8 max-w-3xl prose prose-slate [&_a]:text-indigo-600 [&_a:hover]:text-indigo-500 [&_a]:underline">
+                    {!! $course->description !!}
+                </div>
 
                 @php
                     $total = $lessons->count();

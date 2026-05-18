@@ -36,10 +36,10 @@ class CreateTeacher extends CreateRecord
 
             /** @var User $user */
             $user = User::firstOrNew(['email' => $email]);
-            $isNewUser = !$user->exists;
+            $isNewUser = ! $user->exists;
 
-            $user->name       = $user->name ?: $teacher->name;
-            $user->role       = Roles::TEACHER;
+            $user->name = $user->name ?: $teacher->name;
+            $user->role = Roles::TEACHER;
             $user->teacher_id = $teacher->id;
 
             if ($isNewUser || filled($password)) {
@@ -50,7 +50,7 @@ class CreateTeacher extends CreateRecord
 
             Notification::make()
                 ->title($isNewUser ? 'Аккаунт преподавателя создан' : 'Существующий пользователь привязан к преподавателю')
-                ->body("Логин: {$email}" . ($isNewUser ? ' · Роль: Преподаватель' : ' · Роль обновлена на «Преподаватель»'))
+                ->body("Логин: {$email}".($isNewUser ? ' · Роль: Преподаватель' : ' · Роль обновлена на «Преподаватель»'))
                 ->success()
                 ->send();
 
