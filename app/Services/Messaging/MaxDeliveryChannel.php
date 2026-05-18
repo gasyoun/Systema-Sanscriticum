@@ -39,7 +39,7 @@ final class MaxDeliveryChannel implements DeliveryChannel
         return "https://max.ru/@{$this->botUsername}?start={$token}";
     }
 
-    public function sendDocument(string $userIdInChannel, string $filePath, string $caption): void
+    public function sendDocument(string $userIdInChannel, string $filePath, string $caption, ?string $displayName = null): void
     {
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
@@ -48,7 +48,7 @@ final class MaxDeliveryChannel implements DeliveryChannel
 
         try {
             $uploaded = Http::withToken($this->token)
-                ->attach('content', $handle, basename($filePath))
+                ->attach('content', $handle, $displayName ?: basename($filePath))
                 ->post(self::API_BASE.'/uploads', ['type' => 'file'])
                 ->json();
         } finally {
