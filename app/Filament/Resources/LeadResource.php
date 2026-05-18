@@ -4,28 +4,30 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+// --- ИМПОРТЫ ДЛЯ EXCEL (ВАЖНО!) ---
 use Filament\Tables;
 use Filament\Tables\Table;
-
-// --- ИМПОРТЫ ДЛЯ EXCEL (ВАЖНО!) ---
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
-
-use App\Support\RoleGate;
-use App\Support\Roles;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class LeadResource extends Resource
 {
     protected static ?string $model = Lead::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?int $navigationSort = 70;
+
     protected static ?string $navigationGroup = 'Продажи';
+
     protected static ?string $navigationLabel = 'Заявки (Лиды)';
+
     protected static ?string $pluralModelLabel = 'Заявки';
 
     public static function canViewAny(): bool
@@ -60,17 +62,17 @@ class LeadResource extends Resource
                         Forms\Components\Select::make('landing_page_id')
                             ->relationship('landingPage', 'title')
                             ->label('Лендинг'),
-                            
+
                         Forms\Components\TextInput::make('social')
-    ->label('Telegram / VK / Instagram')
-    ->maxLength(255)
-    ->placeholder('@username или ссылка')
-    ->columnSpanFull(),    
-    
+                            ->label('Telegram / VK / Instagram')
+                            ->maxLength(255)
+                            ->placeholder('@username или ссылка')
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('is_promo_agreed')
                             ->label('Согласие на рассылку'),
                     ])->columns(2),
-                    
+
                 Forms\Components\Section::make('Маркетинг и Аналитика')
                     ->collapsible()
                     ->collapsed()
@@ -88,7 +90,7 @@ class LeadResource extends Resource
                             Forms\Components\TextInput::make('referrer')->label('Referrer'),
                         ]),
                         Forms\Components\Textarea::make('user_agent')->label('UA')->columnSpanFull(),
-                    ])
+                    ]),
             ]);
     }
 
@@ -100,16 +102,16 @@ class LeadResource extends Resource
                     ->label('Дата')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('landingPage.title')
                     ->label('Лендинг')
                     ->searchable()
                     ->limit(20),
-                    
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Имя')
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('contact')
                     ->label('Контакты')
                     ->searchable(),
@@ -119,23 +121,52 @@ class LeadResource extends Resource
                     ->icon('heroicon-m-envelope')
                     ->copyable()
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('social')
-    ->label('Соц. сеть')
-    ->searchable()
-    ->limit(30)
-    ->copyable()
-    ->copyMessage('Скопировано')
-    ->placeholder('—')
-    ->toggleable(isToggledHiddenByDefault: true),    
-                    
+                    ->label('Соц. сеть')
+                    ->searchable()
+                    ->limit(30)
+                    ->copyable()
+                    ->copyMessage('Скопировано')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('magnet_channel')
+                    ->label('Канал')
+                    ->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'telegram' => 'info',
+                        'vk' => 'danger',
+                        'max' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'telegram' => 'TG',
+                        'vk' => 'VK',
+                        'max' => 'Max',
+                        default => '—',
+                    })
+                    ->toggleable(),
+
+                Tables\Columns\IconColumn::make('magnet_delivered_at')
+                    ->label('Магнит')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-clock')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record) => $record->magnet_delivered_at
+                        ? 'Доставлен: '.$record->magnet_delivered_at->format('d.m.Y H:i')
+                        : 'Не доставлен')
+                    ->toggleable(),
+
                 // В LeadResource.php -> table() -> columns([...])
                 Tables\Columns\IconColumn::make('is_promo_agreed')
                     ->label('Рассылка')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
-                    ->sortable(),    
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('utm_source')
                     ->label('Источник')
@@ -157,13 +188,13 @@ class LeadResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    
+
                     // === НАСТРОЙКА ПОЛНОЙ ВЫГРУЗКИ ===
                     ExportBulkAction::make()
                         ->label('Скачать полный отчет (Excel)')
                         ->exports([
                             ExcelExport::make()
-                                ->withFilename('leads_full_' . date('Y-m-d'))
+                                ->withFilename('leads_full_'.date('Y-m-d'))
                                 ->withColumns([
                                     // 1. Основное
                                     Column::make('id')->heading('ID'),
@@ -172,7 +203,7 @@ class LeadResource extends Resource
                                     Column::make('name')->heading('Имя'),
                                     Column::make('contact')->heading('Телефон'),
                                     Column::make('email')->heading('Email'),
-                                    
+
                                     // 2. Галочки (Форматируем True/False в Да/Нет)
                                     Column::make('is_promo_agreed')
                                         ->heading('Рассылка?')
@@ -184,19 +215,22 @@ class LeadResource extends Resource
                                     Column::make('utm_campaign')->heading('Кампания'),
                                     Column::make('utm_content')->heading('Объявление'),
                                     Column::make('utm_term')->heading('Ключевое слово'),
-                                    
+
                                     // 4. Технические данные
                                     Column::make('click_id')->heading('Click ID'),
                                     Column::make('ip_address')->heading('IP адрес'),
                                     Column::make('referrer')->heading('Пришел с сайта'),
                                     Column::make('user_agent')->heading('Информация об устройстве'),
-                                ])
+                                ]),
                         ]),
                 ]),
             ]);
     }
 
-    public static function getRelations(): array { return []; }
+    public static function getRelations(): array
+    {
+        return [];
+    }
 
     public static function getPages(): array
     {

@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lead;
 use App\Models\LandingPage;
+use App\Models\Lead;
+use App\Models\MarketingSetting;
+use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\Messaging\SocialChannelParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LeadController extends Controller
 {
@@ -15,7 +19,7 @@ class LeadController extends Controller
     public function store(Request $request)
     {
         // 0. Rate limit: 1 заявка / 5 сек / IP
-        $rlKey = 'lead-submit:' . $request->ip();
+        $rlKey = 'lead-submit:'.$request->ip();
         if (RateLimiter::tooManyAttempts($rlKey, 1)) {
             abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
         }
@@ -23,49 +27,49 @@ class LeadController extends Controller
 
         // 1. Валидация данных
         $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'contact'         => 'required|string',
-            'email'           => 'required|email',
-            'social'              => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
+            'contact' => 'required|string',
+            'email' => 'required|email',
+            'social' => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
-            'form_name'       => 'nullable|string',
-            'utm_source'      => 'nullable|string',
-            'utm_medium'      => 'nullable|string',
-            'utm_campaign'    => 'nullable|string',
-            'utm_content'     => 'nullable|string',
-            'utm_term'        => 'nullable|string',
-            'click_id'        => 'nullable|string',
-            'referrer'        => 'nullable|string',
+            'form_name' => 'nullable|string',
+            'utm_source' => 'nullable|string',
+            'utm_medium' => 'nullable|string',
+            'utm_campaign' => 'nullable|string',
+            'utm_content' => 'nullable|string',
+            'utm_term' => 'nullable|string',
+            'click_id' => 'nullable|string',
+            'referrer' => 'nullable|string',
             'is_promo_agreed' => 'nullable',
-            'source_article_id'   => 'nullable|integer',
+            'source_article_id' => 'nullable|integer',
             'source_article_slug' => 'nullable|string|max:255',
         ]);
 
         // === ИСПРАВЛЕНИЕ УЯЗВИМОСТИ ===
         // Берем ТОЛЬКО проверенные данные, отсекая любой хакерский мусор из запроса
         $data = $validated;
-        
+
         // Преобразуем чекбокс "on" в true/false
         $data['is_promo_agreed'] = $request->has('is_promo_agreed');
-        
+
         // Добавляем технические данные (это безопасно, так как мы берем их из сервера, а не от юзера)
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
 
         // === ИЗЯЩНЫЙ ХАК ===
         // Если пришло имя формы, дописываем его в utm_content
-        if (!empty($data['form_name'])) {
+        if (! empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
-            $data['utm_content'] = '[' . $data['form_name'] . '] ' . $existingUtm;
+            $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;
         }
 
         // 2. Проверка повторной заявки с того же email
         $isDuplicate = false;
-        if (!empty($data['landing_page_id'])) {
+        if (! empty($data['landing_page_id'])) {
             $isDuplicate = Lead::where('email', $data['email'])
                 ->where('landing_page_id', $data['landing_page_id'])
                 ->exists();
-        } elseif (!empty($data['source_article_slug'])) {
+        } elseif (! empty($data['source_article_slug'])) {
             $isDuplicate = Lead::where('email', $data['email'])
                 ->where('source_article_slug', $data['source_article_slug'])
                 ->exists();
@@ -73,7 +77,7 @@ class LeadController extends Controller
 
         if ($isDuplicate) {
             return redirect()->route('thank.you')->with([
-                'is_duplicate'    => true,
+                'is_duplicate' => true,
                 'duplicate_email' => $data['email'],
             ]);
         }
@@ -83,8 +87,13 @@ class LeadController extends Controller
 
         // 3. --- ЛОГИКА ДЛЯ ПИКСЕЛЕЙ ---
         $landing = null;
-        if (!empty($data['landing_page_id'])) {
+        if (! empty($data['landing_page_id'])) {
             $landing = LandingPage::find($data['landing_page_id']);
+        }
+
+        // Lead-magnet: если у лендинга включён магнит — привязываем токен и канал.
+        if ($landing && $landing->hasLeadMagnet()) {
+            $this->attachMagnet($lead, $landing, $validated['social'] ?? null);
         }
 
         $flashData = [
@@ -92,33 +101,50 @@ class LeadController extends Controller
         ];
 
         if ($landing) {
-            if (!empty($landing->yandex_metrika_id)) {
+            if (! empty($landing->yandex_metrika_id)) {
                 $flashData['yandex_id'] = $landing->yandex_metrika_id;
             }
-            if (!empty($landing->vk_pixel_id)) {
+            if (! empty($landing->vk_pixel_id)) {
                 $flashData['vk_id'] = $landing->vk_pixel_id;
             }
-            $flashData['conversion_event'] = 'lead'; 
-            
-            if (!empty($landing->redirect_after_submit_url)) {
-        $flashData['redirect_url'] = $landing->redirect_after_submit_url;
-    }
+            $flashData['conversion_event'] = 'lead';
+
+            if (! empty($landing->redirect_after_submit_url)) {
+                $flashData['redirect_url'] = $landing->redirect_after_submit_url;
+            }
         }
-        
+
+        // Lead-magnet flash: deep-link бота. Имеет приоритет над redirect_after_submit_url,
+        // иначе юзер уйдёт на лендинг и не получит файл.
+        if ($lead->magnet_token && $lead->magnet_channel) {
+            $deliveryMode = MarketingSetting::first()?->magnet_delivery_mode ?? 'redirect';
+            $deepLink = app(DeliveryChannelManager::class)
+                ->get($lead->magnet_channel)
+                ->buildDeepLink($lead->magnet_token);
+
+            if ($deliveryMode === 'redirect') {
+                $flashData['redirect_url'] = $deepLink;
+            } else {
+                $flashData['magnet_deep_link'] = $deepLink;
+            }
+            $flashData['magnet_title'] = $landing->lead_magnet_title;
+            $flashData['magnet_channel'] = $lead->magnet_channel;
+        }
+
         // === Логика для лидов из блога ===
-if (empty($landing) && !empty($validated['source_article_id'])) {
-    $marketing = \App\Models\MarketingSetting::first();
-    
-    if ($marketing) {
-        if (!empty($marketing->blog_yandex_metrika_id)) {
-            $flashData['yandex_id'] = $marketing->blog_yandex_metrika_id;
+        if (empty($landing) && ! empty($validated['source_article_id'])) {
+            $marketing = \App\Models\MarketingSetting::first();
+
+            if ($marketing) {
+                if (! empty($marketing->blog_yandex_metrika_id)) {
+                    $flashData['yandex_id'] = $marketing->blog_yandex_metrika_id;
+                }
+                if (! empty($marketing->blog_vk_pixel_id)) {
+                    $flashData['vk_id'] = $marketing->blog_vk_pixel_id;
+                }
+                $flashData['conversion_event'] = 'lead_from_article';
+            }
         }
-        if (!empty($marketing->blog_vk_pixel_id)) {
-            $flashData['vk_id'] = $marketing->blog_vk_pixel_id;
-        }
-        $flashData['conversion_event'] = 'lead_from_article';
-    }
-}
 
         // 4. Редирект на страницу спасибо
         return redirect()->route('thank.you')->with($flashData);
@@ -130,29 +156,29 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
     public function export()
     {
         // Отсекаем всех, кто не является администратором
-            abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');
-        
-        $fileName = 'leads_full_' . date('Y-m-d_H-i') . '.csv';
-        
+        abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');
+
+        $fileName = 'leads_full_'.date('Y-m-d_H-i').'.csv';
+
         $leads = Lead::with('landingPage')->latest()->get();
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = [
             'ID', 'Дата', 'Лендинг', 'Имя', 'Телефон', 'Email', 'Соц. сеть', 'Рассылка',
             'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content (Форма)', // Изменил заголовок для наглядности
-            'UTM Term', 'Click ID', 'IP Адрес', 'Referrer', 'User Agent'
+            'UTM Term', 'Click ID', 'IP Адрес', 'Referrer', 'User Agent',
         ];
 
-        $callback = function() use($leads, $columns) {
+        $callback = function () use ($leads, $columns) {
             $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF"); 
+            fwrite($file, "\xEF\xBB\xBF");
             fputcsv($file, $columns, ';');
 
             foreach ($leads as $lead) {
@@ -181,5 +207,24 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Привязывает к лиду уникальный magnet_token и канал доставки.
+     * Канал = распознанный из social || дефолт лендинга.
+     */
+    private function attachMagnet(Lead $lead, LandingPage $landing, ?string $social): void
+    {
+        $parsed = app(SocialChannelParser::class)->parse($social);
+        $channel = $parsed['channel'] ?? $landing->lead_magnet_default_channel;
+
+        do {
+            $token = Str::random(12);
+        } while (Lead::where('magnet_token', $token)->exists());
+
+        $lead->update([
+            'magnet_token' => $token,
+            'magnet_channel' => $channel,
+        ]);
     }
 }

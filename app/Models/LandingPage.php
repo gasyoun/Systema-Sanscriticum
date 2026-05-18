@@ -13,16 +13,16 @@ class LandingPage extends Model
         'title',
         'slug',
         'is_active',
-        
+
         // --- ГЛАВНОЕ ИЗМЕНЕНИЕ: Разрешаем поле конструктора ---
-        'content', 
+        'content',
         // -----------------------------------------------------
 
         'image_path',
         'instructor_label',
         'instructor_name',
-        'webinar_date',    
-        'webinar_label',   
+        'webinar_date',
+        'webinar_label',
         'video_url',
         'description',
         'button_text',
@@ -30,31 +30,44 @@ class LandingPage extends Model
         'redirect_after_submit_url',
         'yandex_metrika_id',
         'vk_pixel_id',
-        
+
         // Поля Hero-секции (Legacy)
         'subtitle',
         'hero_description',
         'bullet_1',
         'bullet_2',
         'button_subtext',
-        
+
         // Особенности обучения (Legacy)
         'features_title',
         'feature_1_title', 'feature_1_text',
         'feature_2_title', 'feature_2_text',
         'feature_3_title', 'feature_3_text',
+
+        // Lead-magnet — файл, который бот пришлёт юзеру после заявки
+        'lead_magnet_enabled',
+        'lead_magnet_file_path',
+        'lead_magnet_title',
+        'lead_magnet_caption',
+        'lead_magnet_default_channel',
     ];
 
     protected $casts = [
         'webinar_date' => 'datetime', // Лучше использовать datetime
         'is_active' => 'boolean',
-        
+
         // --- ВАЖНО: Превращаем JSON в массив ---
-        'content' => 'array', 
+        'content' => 'array',
         // ---------------------------------------
+
+        'lead_magnet_enabled' => 'boolean',
     ];
 
-    
+    public function hasLeadMagnet(): bool
+    {
+        return $this->lead_magnet_enabled && ! empty($this->lead_magnet_file_path);
+    }
+
     // Связь с лидами (если понадобится)
     public function leads()
     {
@@ -71,14 +84,20 @@ class LandingPage extends Model
     public function getShowcaseImageAttribute()
     {
         // 1. Сначала ищем в новых блоках конструктора (content)
-        if (!empty($this->content) && is_array($this->content)) {
+        if (! empty($this->content) && is_array($this->content)) {
             foreach ($this->content as $block) {
                 $data = $block['data'] ?? [];
-                
+
                 // Проверяем популярные названия полей для картинок в вашем Filament
-                if (!empty($data['image'])) return $data['image'];
-                if (!empty($data['background_image'])) return $data['background_image'];
-                if (!empty($data['cover'])) return $data['cover'];
+                if (! empty($data['image'])) {
+                    return $data['image'];
+                }
+                if (! empty($data['background_image'])) {
+                    return $data['background_image'];
+                }
+                if (! empty($data['cover'])) {
+                    return $data['cover'];
+                }
             }
         }
 
@@ -91,15 +110,23 @@ class LandingPage extends Model
      */
     public function getShowcaseDescriptionAttribute()
     {
-        if (!empty($this->content) && is_array($this->content)) {
+        if (! empty($this->content) && is_array($this->content)) {
             foreach ($this->content as $block) {
                 $data = $block['data'] ?? [];
-                
+
                 // Проверяем популярные названия полей для текста
-                if (!empty($data['description'])) return strip_tags($data['description']);
-                if (!empty($data['text'])) return strip_tags($data['text']);
-                if (!empty($data['subtitle'])) return strip_tags($data['subtitle']);
-                if (!empty($data['hero_text'])) return strip_tags($data['hero_text']);
+                if (! empty($data['description'])) {
+                    return strip_tags($data['description']);
+                }
+                if (! empty($data['text'])) {
+                    return strip_tags($data['text']);
+                }
+                if (! empty($data['subtitle'])) {
+                    return strip_tags($data['subtitle']);
+                }
+                if (! empty($data['hero_text'])) {
+                    return strip_tags($data['hero_text']);
+                }
             }
         }
 

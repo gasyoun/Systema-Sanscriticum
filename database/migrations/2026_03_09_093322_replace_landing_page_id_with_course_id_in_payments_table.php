@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,8 +15,12 @@ return new class extends Migration
         });
 
         Schema::table('payments', function (Blueprint $table) {
-            // 2. Аккуратно отвязываем и удаляем старую колонку лендинга
-            $table->dropForeign(['landing_page_id']);
+            // 2. Аккуратно отвязываем и удаляем старую колонку лендинга.
+            // SQLite не поддерживает dropForeign — на тестовом окружении просто пропускаем,
+            // FK всё равно отсутствует в схеме SQLite.
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->dropForeign(['landing_page_id']);
+            }
             $table->dropColumn('landing_page_id');
         });
     }
