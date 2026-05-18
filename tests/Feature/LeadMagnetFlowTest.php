@@ -32,6 +32,7 @@ class LeadMagnetFlowTest extends TestCase
             'tg_bot_username' => 'test_magnet_bot',
             'tg_bot_token' => 'fake-tg-token',
             'vk_group_screen_name' => 'test_group',
+            'vk_access_token' => 'fake-vk-token',
             'max_bot_username' => 'test_max_bot',
             'max_bot_token' => 'fake-max-token',
         ]);
@@ -130,18 +131,21 @@ class LeadMagnetFlowTest extends TestCase
     }
 
     /** @test */
-    public function flash_carries_magnet_deep_link_in_page_mode(): void
+    public function flash_carries_magnet_deep_links_in_page_mode(): void
     {
         MarketingSetting::first()->update(['magnet_delivery_mode' => 'page']);
 
         $resp = $this->postLead(['social' => 'vk.com/durov']);
 
         $lead = Lead::latest('id')->first();
-        $expected = "https://vk.me/test_group?ref={$lead->magnet_token}";
 
         $resp->assertRedirect()
-            ->assertSessionHas('magnet_deep_link', $expected)
-            ->assertSessionMissing('redirect_url'); // в режиме page redirect_url не ставится
+            ->assertSessionHas('magnet_deep_links', function ($links) use ($lead) {
+                return is_array($links)
+                    && ($links['vk'] ?? null) === "https://vk.me/test_group?ref={$lead->magnet_token}"
+                    && ($links['telegram'] ?? null) === "https://t.me/test_magnet_bot?start={$lead->magnet_token}";
+            })
+            ->assertSessionMissing('redirect_url'); // в page-режиме redirect_url не ставится
     }
 
     /** @test */

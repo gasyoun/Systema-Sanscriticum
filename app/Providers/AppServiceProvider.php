@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Article;
 use App\Models\ArticleView;
-use App\Models\Course; // <--- Важно!
+use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Payment;
 use App\Models\Schedule;
@@ -11,6 +12,7 @@ use App\Observers\ArticleViewObserver;
 use App\Observers\LandingPageObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\ScheduleObserver;
+use App\Observers\SitemapCacheInvalidator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
@@ -62,6 +64,11 @@ class AppServiceProvider extends ServiceProvider
         Payment::observe(PaymentObserver::class);
 
         LandingPage::observe(LandingPageObserver::class);
+
+        // Сброс sitemap.xml-кэша при изменении контента, который туда входит.
+        LandingPage::observe(SitemapCacheInvalidator::class);
+        Course::observe(SitemapCacheInvalidator::class);
+        Article::observe(SitemapCacheInvalidator::class);
 
         // Мини-блок «Курсы в записи»: главная, legacy-лендинги и builder-блок
         View::composer(['main', 'promo.show', 'promo.legacy', 'promo.blocks.recorded_courses_block'], function ($view): void {

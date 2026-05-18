@@ -20,7 +20,7 @@ final class VkDeliveryChannel implements DeliveryChannel
 
     public function __construct()
     {
-        $settings = MarketingSetting::first();
+        $settings = MarketingSetting::cached();
         $this->groupScreenName = (string) ($settings?->vk_group_screen_name ?? '');
         $this->accessToken = (string) ($settings?->vk_access_token ?? '');
     }
@@ -49,9 +49,20 @@ final class VkDeliveryChannel implements DeliveryChannel
             throw new RuntimeException('VK: не удалось получить upload URL');
         }
 
-        $uploaded = Http::attach('file', fopen($filePath, 'r'), basename($filePath))
-            ->post($uploadUrl)
-            ->json();
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            throw new RuntimeException("VK sendDocument: cannot open file {$filePath}");
+        }
+
+        try {
+            $uploaded = Http::attach('file', $handle, basename($filePath))
+                ->post($uploadUrl)
+                ->json();
+        } finally {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+        }
 
         if (empty($uploaded['file'])) {
             throw new RuntimeException('VK: ошибка загрузки файла');
@@ -71,9 +82,11 @@ final class VkDeliveryChannel implements DeliveryChannel
             throw new RuntimeException('VK: не удалось сохранить документ: '.json_encode($saved));
         }
 
+        // random_id используется VK для дедупа — полный 32-битный диапазон даёт ничтожный риск коллизий.
+        // peer_id — рекомендованный параметр (user_id deprecated с 5.80).
         $response = Http::asForm()->post('https://api.vk.com/method/messages.send', [
-            'user_id' => $userIdInChannel,
-            'random_id' => random_int(100000, 999999999),
+            'peer_id' => $userIdInChannel,
+            'random_id' => random_int(1, 2_147_483_647),
             'message' => $caption,
             'attachment' => "doc{$ownerId}_{$docId}",
             'access_token' => $this->accessToken,

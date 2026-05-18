@@ -18,9 +18,17 @@ final class VkMagnetCallbackController extends Controller
 
         // VK при настройке Callback API ждёт строго plaintext с кодом подтверждения.
         if (($payload['type'] ?? '') === 'confirmation') {
-            $code = (string) (MarketingSetting::first()?->vk_confirmation_code ?? '');
+            $settings = MarketingSetting::cached();
+            $code = (string) ($settings?->vk_confirmation_code ?? '');
 
-            return response($code, 200)->header('Content-Type', 'text/plain');
+            // Сначала готовим response — если update упадёт, мы не должны
+            // терять шанс на повторное подтверждение. Помечаем completed_at
+            // после того, как ответ собран и готов к отправке.
+            $response = response($code, 200)->header('Content-Type', 'text/plain');
+
+            $settings?->update(['vk_confirmation_completed_at' => now()]);
+
+            return $response;
         }
 
         ProcessVkMagnetCallback::dispatch($payload);

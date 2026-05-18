@@ -39,13 +39,14 @@ final class ProcessMaxMagnetUpdate implements ShouldQueue
         }
 
         // Max передаёт payload из deep-link'а в start_payload (формат может варьироваться)
-        // или юзер шлёт токен текстом первым сообщением.
+        // или юзер шлёт токен текстом первым сообщением. Токены строго 12 символов
+        // (см. LeadController::attachMagnet → Str::random(12)).
         $token = $this->update['message']['start_payload'] ?? null;
-        if (! $token && preg_match('/^[a-zA-Z0-9]{12,16}$/', $text)) {
+        if (! $token && preg_match('/^[a-zA-Z0-9]{12}$/', $text)) {
             $token = $text;
         }
         // /start TOKEN формат как в TG
-        if (! $token && preg_match('~^/start\s+([a-zA-Z0-9]{12,16})$~', $text, $m)) {
+        if (! $token && preg_match('~^/start\s+([a-zA-Z0-9]{12})$~', $text, $m)) {
             $token = $m[1];
         }
 

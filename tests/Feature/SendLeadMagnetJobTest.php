@@ -232,7 +232,21 @@ class SendLeadMagnetJobTest extends TestCase
     /** @test */
     public function uses_default_caption_when_lead_magnet_caption_empty(): void
     {
-        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        // Читаем body внутри fake-callback: к моменту Http::assertSent внешний
+        // fopen-handle уже закрыт (try/finally fclose в TelegramDeliveryChannel),
+        // и доступ к $req->body() через assertSent даёт TypeError на закрытом потоке.
+        $captionFound = false;
+        $endpointHit = false;
+        Http::fake(function ($request) use (&$captionFound, &$endpointHit) {
+            if (str_contains($request->url(), '/sendDocument')) {
+                $endpointHit = true;
+                if (str_contains($request->body(), 'Алфавит')) {
+                    $captionFound = true;
+                }
+            }
+
+            return Http::response(['ok' => true]);
+        });
 
         file_put_contents($this->tmpFile, 'PDF');
         $landing = LandingPage::create([
@@ -251,10 +265,7 @@ class SendLeadMagnetJobTest extends TestCase
 
         (new SendLeadMagnet($lead->id))->handle(app(DeliveryChannelManager::class));
 
-        // Multipart body содержит caption как form-поле — ищем подстроку напрямую.
-        Http::assertSent(function ($req) {
-            return str_contains($req->body(), 'Алфавит')
-                && str_contains($req->url(), '/sendDocument');
-        });
+        $this->assertTrue($endpointHit, '/sendDocument endpoint не вызван');
+        $this->assertTrue($captionFound, 'caption "Алфавит" не найден в multipart body');
     }
 }

@@ -13,7 +13,7 @@ final class VerifyTelegramMagnetWebhook
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $expected = (string) (MarketingSetting::first()?->tg_webhook_secret ?? '');
+        $expected = (string) (MarketingSetting::cached()?->tg_webhook_secret ?? '');
         $received = (string) $request->header('X-Telegram-Bot-Api-Secret-Token', '');
 
         if ($expected === '' || ! hash_equals($expected, $received)) {

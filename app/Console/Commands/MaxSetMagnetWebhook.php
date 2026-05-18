@@ -16,7 +16,7 @@ final class MaxSetMagnetWebhook extends Command
 
     public function handle(MaxDeliveryChannel $max): int
     {
-        $secret = (string) (MarketingSetting::first()?->max_webhook_secret ?? '');
+        $secret = (string) (MarketingSetting::cached()?->max_webhook_secret ?? '');
 
         if ($secret === '') {
             $this->error('max_webhook_secret не задан в MarketingSetting.');
