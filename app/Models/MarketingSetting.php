@@ -28,6 +28,20 @@ class MarketingSetting extends Model
         'prana_reward_open_lesson_view',
         'prana_reward_daily_login',
         'prana_reward_payment_success',
+
+        // --- LEAD MAGNET BOTS ---
+        'magnet_delivery_mode',
+        'tg_bot_username',
+        'tg_bot_token',
+        'tg_webhook_secret',
+        'vk_group_screen_name',
+        'vk_group_id',
+        'vk_access_token',
+        'vk_callback_secret',
+        'vk_confirmation_code',
+        'max_bot_username',
+        'max_bot_token',
+        'max_webhook_secret',
     ];
 
     protected $casts = [
@@ -46,5 +60,10 @@ class MarketingSetting extends Model
         'prana_reward_open_lesson_view' => 'integer',
         'prana_reward_daily_login' => 'integer',
         'prana_reward_payment_success' => 'integer',
+
+        // Bot-токены шифруются на уровне модели — в БД лежит шифр, не plaintext.
+        'tg_bot_token' => 'encrypted',
+        'vk_access_token' => 'encrypted',
+        'max_bot_token' => 'encrypted',
     ];
 }

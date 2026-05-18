@@ -31,6 +31,19 @@ class Lead extends Model
         'user_agent',
         'referrer',
         'source_article_slug',
+
+        // Lead-magnet — токен и канал доставки файла
+        'magnet_token',
+        'magnet_channel',
+        'magnet_delivered_at',
+        'telegram_chat_id',
+        'vk_user_id',
+        'max_user_id',
+    ];
+
+    protected $casts = [
+        'magnet_delivered_at' => 'datetime',
+        'is_promo_agreed' => 'boolean',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)

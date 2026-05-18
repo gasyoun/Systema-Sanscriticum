@@ -100,40 +100,67 @@
         @php
             $tgUrl = session('redirect_url') ?: 'https://t.me/rusamskrtam';
             $hasAutoRedirect = (bool) session('redirect_url');
+            $magnetTitle   = session('magnet_title');
+            $magnetChannel = session('magnet_channel');
+            $magnetDeepLink = session('magnet_deep_link'); // только в режиме 'page'
+            $channelName = match ($magnetChannel) {
+                'telegram' => 'Telegram',
+                'vk'       => 'ВКонтакте',
+                'max'      => 'Max',
+                default    => 'Telegram',
+            };
+            $buttonLabel = match ($magnetChannel) {
+                'vk'  => 'Открыть ВКонтакте',
+                'max' => 'Открыть Max',
+                default => 'Перейти в Telegram сейчас',
+            };
         @endphp
 
         <p class="text-xl text-gray-300 mb-12 leading-relaxed">
             Спасибо! Мы уже получили ваши данные.<br>
-            @if($hasAutoRedirect)
+            @if($magnetTitle && ($hasAutoRedirect || $magnetDeepLink))
+                Сейчас откроем {{ $channelName }}, чтобы прислать вам
+                <strong class="text-white">«{{ $magnetTitle }}»</strong>…
+            @elseif($hasAutoRedirect)
                 Сейчас вы будете перенаправлены в наш Telegram-канал…
             @else
                 Чтобы ускорить процесс, напишите нам в Telegram прямо сейчас.
             @endif
         </p>
 
-        {{-- КНОПКА TELEGRAM --}}
-        <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
-           @if(session('yandex_id'))
-               onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'telegram_click'); return true;"
-           @endif
-           class="group inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
-                  bg-gradient-to-r from-[#2AABEE] to-[#0088cc] hover:brightness-110
-                  shadow-[0_0_25px_rgba(0,136,204,0.5)] hover:shadow-[0_0_40px_rgba(0,136,204,0.8)]">
+        {{-- Режим 'page' — кнопка получения магнита без авто-редиректа --}}
+        @if($magnetDeepLink && !$hasAutoRedirect)
+            <a href="{{ $magnetDeepLink }}" target="_blank" rel="noopener noreferrer"
+               class="group inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
+                      bg-gradient-to-r from-[#E85C24] to-[#d04a15] hover:brightness-110
+                      shadow-[0_0_25px_rgba(232,92,36,0.5)] hover:shadow-[0_0_40px_rgba(232,92,36,0.8)]">
+                Получить «{{ $magnetTitle }}» в {{ $channelName }}
+            </a>
+        @else
+            {{-- КНОПКА TELEGRAM (или другого канала при redirect-режиме магнита) --}}
+            <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
+               @if(session('yandex_id'))
+                   onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'telegram_click'); return true;"
+               @endif
+               class="group inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
+                      bg-gradient-to-r from-[#2AABEE] to-[#0088cc] hover:brightness-110
+                      shadow-[0_0_25px_rgba(0,136,204,0.5)] hover:shadow-[0_0_40px_rgba(0,136,204,0.8)]">
 
-            <svg class="w-7 h-7 mr-3 transition-transform group-hover:-translate-y-0.5 group-hover:rotate-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 11.944 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.628 4.476-1.636z"/>
-            </svg>
+                <svg class="w-7 h-7 mr-3 transition-transform group-hover:-translate-y-0.5 group-hover:rotate-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 11.944 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.628 4.476-1.636z"/>
+                </svg>
+                @if($hasAutoRedirect)
+                    {{ $magnetTitle ? $buttonLabel : 'Перейти в Telegram сейчас' }}
+                @else
+                    Написать в Telegram
+                @endif
+            </a>
+
             @if($hasAutoRedirect)
-                Перейти в Telegram сейчас
-            @else
-                Написать в Telegram
+                <p class="mt-4 text-xs text-gray-500">
+                    Если перенаправление не сработало — нажмите кнопку выше.
+                </p>
             @endif
-        </a>
-
-        @if($hasAutoRedirect)
-            <p class="mt-4 text-xs text-gray-500">
-                Если перенаправление не сработало — нажмите кнопку выше.
-            </p>
         @endif
 
     @endif
