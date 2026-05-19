@@ -15,4 +15,4 @@ Disallow: /horizon
 Disallow: /force-download/
 Disallow: /api/
 
-Sitemap: /sitemap.xml
+Sitemap: https://samskrte.ru/sitemap.xml
