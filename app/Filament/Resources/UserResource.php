@@ -689,6 +689,7 @@ class UserResource extends Resource
         return [
             // ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ: добавили UserResource\
             UserResource\RelationManagers\CoursesRelationManager::class,
+            UserResource\RelationManagers\PaymentPromisesRelationManager::class,
         ];
     }
 

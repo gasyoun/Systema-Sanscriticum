@@ -153,6 +153,15 @@
             <i class="fas fa-wallet mr-2"></i>Мои оплаты
         </button>
 
+        @if($debts->isNotEmpty())
+            <button @click="activeTab = 'debts'"
+                    :class="activeTab === 'debts' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                    class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Мои долги
+                <span class="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-[#E85C24] rounded-full">{{ $debts->count() }}</span>
+            </button>
+        @endif
+
         @if(\App\Services\Prana\PranaSettings::isActive())
             <button @click="activeTab = 'prana'"
                     :class="activeTab === 'prana' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
@@ -225,6 +234,40 @@
                             <div class="bg-gray-100 rounded-full h-1.5 w-full overflow-hidden mb-5">
                                 <div class="bg-[#E85C24] h-full rounded-full transition-all duration-1000 relative" style="width: {{ $percent }}%"></div>
                             </div>
+
+                            {{-- Баннер: при активном обещании показываем нейтральный, иначе оранжевый «долг» --}}
+                            @if($debt = $debtsByCourseId->get($course->id))
+                                @if($debt->promise_active)
+                                    <div class="block w-full mb-3 px-3 py-2 bg-emerald-50 border border-emerald-200/70 rounded-lg">
+                                        <div class="flex items-start gap-2">
+                                            <i class="fas fa-handshake text-emerald-600 text-xs mt-0.5 shrink-0"></i>
+                                            <div class="text-xs leading-snug">
+                                                <span class="font-bold text-emerald-700">Договорённость:</span>
+                                                <span class="text-gray-700">оплата до {{ $debt->promise->promised_at->format('d.m.Y') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <button @click.prevent="activeTab = 'debts'"
+                                            class="block w-full mb-3 px-3 py-2 {{ $debt->promise_overdue ? 'bg-red-50 hover:bg-red-100 border-red-300' : 'bg-orange-50 hover:bg-orange-100 border-[#E85C24]/30' }} border rounded-lg text-left transition-colors"
+                                            title="Перейти в раздел «Мои долги»">
+                                        <div class="flex items-start gap-2">
+                                            <i class="fas {{ $debt->promise_overdue ? 'fa-clock text-red-600' : 'fa-exclamation-triangle text-[#E85C24]' }} text-xs mt-0.5 shrink-0"></i>
+                                            <div class="text-xs leading-snug flex-1">
+                                                <div>
+                                                    <span class="font-bold {{ $debt->promise_overdue ? 'text-red-700' : 'text-[#E85C24]' }}">Не оплачено:</span>
+                                                    <span class="text-gray-700">{{ $debt->debt_label }}</span>
+                                                </div>
+                                                @if($debt->debt_amount)
+                                                    <div class="text-gray-500 mt-0.5">
+                                                        {{ $debt->debt_amount_approximate ? '≈ ' : '' }}{{ number_format($debt->debt_amount, 0, '.', ' ') }} ₽
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </button>
+                                @endif
+                            @endif
 
                             {{-- Кнопка --}}
                             <a href="{{ route('student.course', $course->slug) }}" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
@@ -300,6 +343,100 @@
 
          @livewire('student-payments')
     </div>
+
+    {{-- ========================================== --}}
+    {{-- ВКЛАДКА 4: МОИ ДОЛГИ                        --}}
+    {{-- ========================================== --}}
+    @if($debts->isNotEmpty())
+    <div x-show="activeTab === 'debts'"
+         style="display: none;"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0">
+
+        <div class="mb-5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#E85C24]/20 rounded-xl px-4 py-3 flex items-center gap-3">
+            <i class="fas fa-exclamation-triangle text-[#E85C24] shrink-0"></i>
+            <p class="text-sm text-gray-700 leading-snug">
+                <span class="font-bold text-gray-900">Есть неоплаченные блоки.</span>
+                Чтобы доступ оставался активным, оформите недостающие.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($debts as $debt)
+                @php
+                    $cardBorder = $debt->promise_active
+                        ? 'border-emerald-200 hover:border-emerald-400'
+                        : ($debt->promise_overdue ? 'border-red-200 hover:border-red-400' : 'border-gray-100 hover:border-[#E85C24]/40');
+                    $iconBg = $debt->promise_active
+                        ? 'bg-emerald-50 text-emerald-600'
+                        : ($debt->promise_overdue ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-[#E85C24]');
+                    $accentLabel = $debt->promise_active
+                        ? 'text-emerald-700'
+                        : ($debt->promise_overdue ? 'text-red-700' : 'text-[#E85C24]');
+                    $accentBg = $debt->promise_active
+                        ? 'bg-emerald-50/70 border-emerald-200/60'
+                        : ($debt->promise_overdue ? 'bg-red-50/70 border-red-200/60' : 'bg-orange-50/60 border-[#E85C24]/15');
+                @endphp
+
+                <div class="bg-white rounded-xl border {{ $cardBorder }} hover:shadow-sm transition-all duration-200 p-4 flex flex-col">
+                    <div class="flex items-start gap-2.5 mb-3">
+                        <div class="w-7 h-7 rounded-md {{ $iconBg }} flex items-center justify-center shrink-0 text-xs">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h4 class="flex-1 text-sm font-bold text-gray-900 leading-snug line-clamp-2">
+                            {{ $debt->course->title }}
+                        </h4>
+                    </div>
+
+                    @if($debt->ref_block && $debt->ref_block->starts_at && $debt->ref_block->ends_at)
+                        <p class="text-[11px] text-gray-500 mb-2.5 leading-snug">
+                            Текущий блок №{{ $debt->ref_block->number }} ·
+                            {{ $debt->ref_block->starts_at->format('d.m') }}–{{ $debt->ref_block->ends_at->format('d.m.Y') }}
+                        </p>
+                    @endif
+
+                    @if($debt->promise_active)
+                        <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
+                            <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
+                                <i class="fas fa-handshake mr-1"></i>Договорённость
+                            </div>
+                            <div class="text-xs font-semibold text-gray-800 leading-snug">
+                                Оплата до {{ $debt->promise->promised_at->format('d.m.Y') }}
+                                @if($debt->promise->amount)
+                                    · {{ number_format((float) $debt->promise->amount, 0, '.', ' ') }} ₽
+                                @endif
+                            </div>
+                            @if($debt->promise->note)
+                                <div class="text-[11px] text-gray-500 mt-1 leading-snug">{{ $debt->promise->note }}</div>
+                            @endif
+                        </div>
+                    @else
+                        <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
+                            <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
+                                {{ $debt->promise_overdue ? 'Срок договорённости прошёл · ' : 'Не оплачено · ' }}{{ count($debt->debt_block_numbers) }} бл.
+                            </div>
+                            <div class="text-xs font-semibold text-gray-800 leading-snug">
+                                {{ $debt->debt_label }}
+                            </div>
+                            @if($debt->debt_amount)
+                                <div class="text-sm font-extrabold text-gray-900 mt-1">
+                                    {{ $debt->debt_amount_approximate ? '≈ ' : '' }}{{ number_format($debt->debt_amount, 0, '.', ' ') }} ₽
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <a href="{{ route('student.course', $debt->course->slug) }}"
+                       class="mt-auto flex items-center justify-center px-3 py-1.5 {{ $debt->promise_active ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#E85C24] hover:bg-[#d34f1c]' }} text-white text-xs font-bold rounded-lg transition-colors">
+                        <span>К курсу</span>
+                        <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     {{-- ========================================== --}}
     {{-- ВКЛАДКА 4: ПРАНА                            --}}
