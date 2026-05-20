@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +32,7 @@ class PaymentPromise extends Model
         'fulfilled_at',
         'cancelled_at',
         'fulfilled_payment_id',
+        'installment_group_id',
     ];
 
     protected $casts = [
@@ -76,10 +78,33 @@ class PaymentPromise extends Model
         return $query->where('user_id', $userId)->where('course_id', $courseId);
     }
 
+    public function scopeInGroup(Builder $query, string $groupId): Builder
+    {
+        return $query->where('installment_group_id', $groupId);
+    }
+
     public function isOverdue(): bool
     {
         return $this->status === self::STATUS_ACTIVE
             && $this->promised_at !== null
             && $this->promised_at->lt(now()->startOfDay());
+    }
+
+    public function isPartOfInstallment(): bool
+    {
+        return $this->installment_group_id !== null;
+    }
+
+    /** @return Collection<int, self> */
+    public function installmentMates(): Collection
+    {
+        if ($this->installment_group_id === null) {
+            return new Collection;
+        }
+
+        return self::query()
+            ->inGroup($this->installment_group_id)
+            ->orderBy('promised_at')
+            ->get();
     }
 }

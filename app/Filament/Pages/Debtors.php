@@ -7,11 +7,13 @@ namespace App\Filament\Pages;
 use App\Filament\Exports\DebtorsExporter;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendMessengerAlerts;
+use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Services\DebtorsReport;
+use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
 use App\Support\RoleGate;
 use Filament\Forms;
@@ -280,11 +282,11 @@ class Debtors extends Page implements HasTable
 
                 Tables\Filters\Filter::make('has_telegram')
                     ->label('Есть Telegram')
-                    ->query(fn ($q) => $q->whereNotNull('users.telegram_id')),
+                    ->query(fn ($query) => $query->whereNotNull('users.telegram_id')),
 
                 Tables\Filters\Filter::make('has_vk')
                     ->label('Есть VK')
-                    ->query(fn ($q) => $q->whereNotNull('users.vk_id')),
+                    ->query(fn ($query) => $query->whereNotNull('users.vk_id')),
 
                 Tables\Filters\TernaryFilter::make('with_active_promise')
                     ->label('Обещание оплатить')
@@ -292,25 +294,26 @@ class Debtors extends Page implements HasTable
                     ->trueLabel('С обещанием')
                     ->falseLabel('Без обещания')
                     ->queries(
-                        true: fn ($q) => $q->whereExists(function ($sub) {
+                        true: fn ($query) => $query->whereExists(function ($sub) {
                             $sub->select(DB::raw(1))
                                 ->from('payment_promises')
                                 ->whereColumn('payment_promises.user_id', 'users.id')
                                 ->whereColumn('payment_promises.course_id', 'd.course_id')
                                 ->where('payment_promises.status', PaymentPromise::STATUS_ACTIVE);
                         }),
-                        false: fn ($q) => $q->whereNotExists(function ($sub) {
+                        false: fn ($query) => $query->whereNotExists(function ($sub) {
                             $sub->select(DB::raw(1))
                                 ->from('payment_promises')
                                 ->whereColumn('payment_promises.user_id', 'users.id')
                                 ->whereColumn('payment_promises.course_id', 'd.course_id')
                                 ->where('payment_promises.status', PaymentPromise::STATUS_ACTIVE);
                         }),
-                        blank: fn ($q) => $q,
+                        blank: fn ($query) => $query,
                     ),
             ])
             ->actions([
                 $this->promiseAction(),
+                $this->installmentAction(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -578,6 +581,94 @@ class Debtors extends Page implements HasTable
                         })
                         ->cancelParentActions(),
                 ];
+            });
+    }
+
+    private function installmentAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('installment')
+            ->label('Рассрочка')
+            ->icon('heroicon-o-banknotes')
+            ->color('info')
+            ->modalHeading(fn (Model $r): string => 'Рассрочка по оплате — '.($r->name ?: $r->email))
+            ->modalDescription('Каждая строка — отдельное обещание оплаты. Все строки объединяются в один план рассрочки.')
+            ->modalWidth('2xl')
+            ->fillForm(function (Model $r): array {
+                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+                $info = app(DebtorsReport::class)->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
+                $totalDebt = $info['amount'] !== null ? (float) $info['amount'] : null;
+
+                // 3 равных взноса по умолчанию, остаток в последний
+                $schedule = [];
+                $start = now()->addDays(7);
+                if ($totalDebt !== null && $totalDebt > 0) {
+                    $base = (int) floor(($totalDebt * 100) / 3) / 100; // в копейках, чтоб не плыло
+                    $remainder = $totalDebt - $base * 2;
+                    $amounts = [$base, $base, $remainder];
+                    for ($i = 0; $i < 3; $i++) {
+                        $schedule[] = [
+                            'promised_at' => $start->copy()->addMonths($i)->toDateString(),
+                            'amount' => $amounts[$i],
+                        ];
+                    }
+                } else {
+                    for ($i = 0; $i < 3; $i++) {
+                        $schedule[] = [
+                            'promised_at' => $start->copy()->addMonths($i)->toDateString(),
+                            'amount' => null,
+                        ];
+                    }
+                }
+
+                return ['schedule' => $schedule];
+            })
+            ->form([
+                Forms\Components\Repeater::make('schedule')
+                    ->label('График платежей')
+                    ->schema([
+                        Forms\Components\DatePicker::make('promised_at')
+                            ->label('Дата')
+                            ->required()
+                            ->native(false)
+                            ->minDate(now()->subDays(1)),
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Сумма (₽)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1),
+                    ])
+                    ->columns(2)
+                    ->minItems(2)
+                    ->defaultItems(3)
+                    ->addActionLabel('Добавить платёж')
+                    ->reorderable(false)
+                    ->required(),
+                Forms\Components\Textarea::make('note')
+                    ->label('Комментарий ко всему плану')
+                    ->rows(3)
+                    ->placeholder('Например: «договорились на 3 месяца, по 5 числам»'),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $user = User::find($r->id);
+                $course = Course::find($r->course_id);
+                if (! $user || ! $course) {
+                    Notification::make()->title('Студент или курс не найдены')->danger()->send();
+
+                    return;
+                }
+
+                app(InstallmentPlanCreator::class)->create(
+                    $user,
+                    $course,
+                    array_values($data['schedule'] ?? []),
+                    isset($data['note']) && trim((string) $data['note']) !== '' ? $data['note'] : null,
+                );
+
+                Notification::make()
+                    ->title('Рассрочка создана')
+                    ->body('Создано платежей: '.count($data['schedule'] ?? []))
+                    ->success()
+                    ->send();
             });
     }
 
