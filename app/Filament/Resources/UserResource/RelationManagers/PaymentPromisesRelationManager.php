@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
-use App\Filament\Resources\PaymentResource;
 use App\Models\Course;
-use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Services\DebtorsReport;
+use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -63,7 +62,7 @@ class PaymentPromisesRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('id')
-            ->modifyQueryUsing(fn ($q) => $q->orderByDesc('promised_at'))
+            ->modifyQueryUsing(fn ($query) => $query->orderByDesc('promised_at'))
             ->columns([
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
@@ -81,14 +80,14 @@ class PaymentPromisesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->formatStateUsing(fn (?string $s): string => match ($s) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                         PaymentPromise::STATUS_ACTIVE => 'Активно',
                         PaymentPromise::STATUS_FULFILLED => 'Выполнено',
                         PaymentPromise::STATUS_EXPIRED => 'Просрочено',
                         PaymentPromise::STATUS_CANCELLED => 'Отменено',
-                        default => $s ?? '—',
+                        default => $state ?? '—',
                     })
-                    ->color(fn (?string $s): string => match ($s) {
+                    ->color(fn (?string $state): string => match ($state) {
                         PaymentPromise::STATUS_ACTIVE => 'warning',
                         PaymentPromise::STATUS_FULFILLED => 'success',
                         PaymentPromise::STATUS_EXPIRED => 'danger',
@@ -103,20 +102,93 @@ class PaymentPromisesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('fulfilled_payment_id')
                     ->label('Платёж')
                     ->formatStateUsing(fn ($state) => $state ? '#'.$state : null)
-                    ->url(fn (PaymentPromise $r): ?string => $r->fulfilled_payment_id
-                        ? PaymentResource::getUrl('edit', ['record' => $r->fulfilled_payment_id])
-                        : null)
-                    ->openUrlInNewTab()
+                    ->placeholder('—'),
+                Tables\Columns\TextColumn::make('installment_group_id')
+                    ->label('План')
+                    ->badge()
+                    ->color('info')
+                    ->formatStateUsing(fn (?string $state): ?string => $state ? '#'.substr($state, 0, 8) : null)
+                    ->tooltip(fn (?string $state): ?string => $state)
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создано')
                     ->date('d.m.Y')
-                    ->toggleable(isToggledByDefault: false),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Новое обещание')
                     ->icon('heroicon-o-plus'),
+                Tables\Actions\Action::make('create_installment')
+                    ->label('Рассрочка')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('info')
+                    ->modalHeading('Новая рассрочка')
+                    ->modalDescription('Каждая строка — отдельное обещание оплаты. Все строки объединяются в один план рассрочки.')
+                    ->modalWidth('2xl')
+                    ->fillForm(function (): array {
+                        $start = now()->addDays(7);
+
+                        return [
+                            'schedule' => [
+                                ['promised_at' => $start->copy()->toDateString(), 'amount' => null],
+                                ['promised_at' => $start->copy()->addMonth()->toDateString(), 'amount' => null],
+                                ['promised_at' => $start->copy()->addMonths(2)->toDateString(), 'amount' => null],
+                            ],
+                        ];
+                    })
+                    ->form([
+                        Forms\Components\Select::make('course_id')
+                            ->label('Курс')
+                            ->options(fn () => Course::query()->where('is_active', true)->orderBy('title')->pluck('title', 'id'))
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Repeater::make('schedule')
+                            ->label('График платежей')
+                            ->schema([
+                                Forms\Components\DatePicker::make('promised_at')
+                                    ->label('Дата')
+                                    ->required()
+                                    ->native(false)
+                                    ->minDate(now()->subDays(1)),
+                                Forms\Components\TextInput::make('amount')
+                                    ->label('Сумма (₽)')
+                                    ->numeric()
+                                    ->required()
+                                    ->minValue(1),
+                            ])
+                            ->columns(2)
+                            ->minItems(2)
+                            ->defaultItems(3)
+                            ->addActionLabel('Добавить платёж')
+                            ->reorderable(false)
+                            ->required(),
+                        Forms\Components\Textarea::make('note')
+                            ->label('Комментарий ко всему плану')
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data): void {
+                        $user = $this->getOwnerRecord();
+                        $course = Course::find($data['course_id']);
+                        if (! $course) {
+                            Notification::make()->title('Курс не найден')->danger()->send();
+
+                            return;
+                        }
+
+                        app(InstallmentPlanCreator::class)->create(
+                            $user,
+                            $course,
+                            array_values($data['schedule'] ?? []),
+                            isset($data['note']) && trim((string) $data['note']) !== '' ? $data['note'] : null,
+                        );
+
+                        Notification::make()
+                            ->title('Рассрочка создана')
+                            ->body('Создано платежей: '.count($data['schedule'] ?? []))
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->actions([
                 Tables\Actions\Action::make('fulfil')
@@ -176,6 +248,22 @@ class PaymentPromisesRelationManager extends RelationManager
                             'cancelled_at' => now(),
                         ]);
                         Notification::make()->title('Договорённость отменена')->warning()->send();
+                    }),
+                Tables\Actions\Action::make('cancel_installment')
+                    ->label('Отменить всю рассрочку')
+                    ->icon('heroicon-o-x-mark')
+                    ->color('danger')
+                    ->visible(fn (PaymentPromise $r) => $r->installment_group_id !== null
+                        && $r->status === PaymentPromise::STATUS_ACTIVE)
+                    ->requiresConfirmation()
+                    ->modalDescription('Все активные обещания этого плана будут отменены. Уже выполненные платежи не затрагиваются.')
+                    ->action(function (PaymentPromise $r): void {
+                        $count = app(InstallmentPlanCreator::class)->cancelGroup($r->installment_group_id);
+                        Notification::make()
+                            ->title('Рассрочка отменена')
+                            ->body("Отменено обещаний: {$count}")
+                            ->warning()
+                            ->send();
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
