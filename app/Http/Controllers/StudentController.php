@@ -100,12 +100,17 @@ class StudentController extends Controller
         $pranaRewards = PranaSettings::allRewards();
         $pranaReasons = config('prana.reasons', []);
 
+        $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
+        $debtsByCourseId = $debts->keyBy('course_id');
+
         return view('student.dashboard', compact(
             'courses',
             'certificates',
             'pranaTransactions',
             'pranaRewards',
             'pranaReasons',
+            'debts',
+            'debtsByCourseId',
         ));
     }
 

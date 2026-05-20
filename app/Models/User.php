@@ -306,6 +306,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ChatMessage::class);
     }
 
+    public function paymentPromises(): HasMany
+    {
+        return $this->hasMany(PaymentPromise::class);
+    }
+
     /**
      * Все сессии пользователя.
      */
