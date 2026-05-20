@@ -21,18 +21,23 @@ class InstallmentPlanCreator
      * Группа позволяет потом одной кнопкой «Отменить всю рассрочку» закрыть
      * все обещания плана разом.
      *
+     * Возвращает uuid группы и список созданных promises в порядке нарастания
+     * даты — это нужно вызывающему, чтобы привязать к каждой строке расписания
+     * дополнительные действия (например, открытие доступа к блокам).
+     *
      * @param  list<array{promised_at: string|\DateTimeInterface, amount: numeric}>  $schedule
-     * @return string uuid группы
+     * @return array{group_id: string, promises: list<PaymentPromise>}
      */
-    public function create(User $user, Course $course, array $schedule, ?string $note = null): string
+    public function create(User $user, Course $course, array $schedule, ?string $note = null): array
     {
         $normalized = $this->normalizeSchedule($schedule);
 
         $groupId = (string) Str::uuid();
 
-        DB::transaction(function () use ($user, $course, $normalized, $note, $groupId): void {
+        $created = DB::transaction(function () use ($user, $course, $normalized, $note, $groupId): array {
+            $out = [];
             foreach ($normalized as $row) {
-                PaymentPromise::create([
+                $out[] = PaymentPromise::create([
                     'user_id' => $user->id,
                     'course_id' => $course->id,
                     'promised_at' => $row['promised_at'],
@@ -42,9 +47,11 @@ class InstallmentPlanCreator
                     'installment_group_id' => $groupId,
                 ]);
             }
+
+            return $out;
         });
 
-        return $groupId;
+        return ['group_id' => $groupId, 'promises' => $created];
     }
 
     /**
