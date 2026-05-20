@@ -12,6 +12,7 @@ use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
+use App\Services\ConditionalAccessGranter;
 use App\Services\DebtorsReport;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
@@ -380,6 +381,7 @@ class Debtors extends Page implements HasTable
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
             ->whereIn('status', ['paid', 'success'])
+            ->where('is_conditional', false)
             ->get(['start_block', 'end_block']);
 
         $debt = [];
@@ -496,6 +498,27 @@ class Debtors extends Page implements HasTable
                     ->label('Комментарий')
                     ->rows(3)
                     ->placeholder('Например: «получит зарплату 25-го, оплатит вечером»'),
+                Forms\Components\Toggle::make('grant_access')
+                    ->label('Открыть доступ под обещание')
+                    ->helperText('Студент получит доступ к материалам авансом, до фактической оплаты. Отзыв доступа — вручную.')
+                    ->live()
+                    ->dehydrated(true),
+                Forms\Components\Radio::make('access_mode')
+                    ->label('Что открыть')
+                    ->options([
+                        ConditionalAccessGranter::MODE_FULL => 'Весь курс',
+                        ConditionalAccessGranter::MODE_BLOCKS => 'Конкретные блоки',
+                    ])
+                    ->default(ConditionalAccessGranter::MODE_BLOCKS)
+                    ->inline()
+                    ->live()
+                    ->visible(fn (Forms\Get $get): bool => (bool) $get('grant_access')),
+                Forms\Components\TextInput::make('access_blocks')
+                    ->label('Номера блоков (через запятую)')
+                    ->placeholder('5, 6, 7')
+                    ->helperText('Перечислите номера блоков курса, которые нужно открыть.')
+                    ->visible(fn (Forms\Get $get): bool => (bool) $get('grant_access')
+                        && $get('access_mode') === ConditionalAccessGranter::MODE_BLOCKS),
             ])
             ->action(function (Model $r, array $data): void {
                 $existing = $this->existingActivePromise($r);
@@ -507,16 +530,28 @@ class Debtors extends Page implements HasTable
 
                 if ($existing) {
                     $existing->update($payload);
+                    $promise = $existing;
                 } else {
-                    PaymentPromise::create(array_merge($payload, [
+                    $promise = PaymentPromise::create(array_merge($payload, [
                         'user_id' => $r->id,
                         'course_id' => $r->course_id,
                         'status' => PaymentPromise::STATUS_ACTIVE,
                     ]));
                 }
 
+                $grantOpened = false;
+                if (! empty($data['grant_access'])) {
+                    $mode = (string) ($data['access_mode'] ?? ConditionalAccessGranter::MODE_BLOCKS);
+                    $blocks = $mode === ConditionalAccessGranter::MODE_BLOCKS
+                        ? $this->parseBlockNumbers((string) ($data['access_blocks'] ?? ''))
+                        : [];
+                    app(ConditionalAccessGranter::class)->grantForPromise($promise, $mode, $blocks);
+                    $grantOpened = true;
+                }
+
                 Notification::make()
                     ->title($existing ? 'Договорённость обновлена' : 'Договорённость сохранена')
+                    ->body($grantOpened ? 'Доступ под обещание открыт, студент получил уведомление в TG.' : null)
                     ->success()
                     ->send();
             })
@@ -580,8 +615,87 @@ class Debtors extends Page implements HasTable
                             Notification::make()->title('Договорённость отменена')->warning()->send();
                         })
                         ->cancelParentActions(),
+                    Tables\Actions\Action::make('grant_access')
+                        ->label('Открыть доступ')
+                        ->color('info')
+                        ->icon('heroicon-o-lock-open')
+                        ->visible(fn () => ! app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
+                        ->modalHeading('Открыть доступ под обещание')
+                        ->fillForm([
+                            'access_mode' => ConditionalAccessGranter::MODE_BLOCKS,
+                            'access_blocks' => '',
+                        ])
+                        ->form([
+                            Forms\Components\Radio::make('access_mode')
+                                ->label('Что открыть')
+                                ->options([
+                                    ConditionalAccessGranter::MODE_FULL => 'Весь курс',
+                                    ConditionalAccessGranter::MODE_BLOCKS => 'Конкретные блоки',
+                                ])
+                                ->default(ConditionalAccessGranter::MODE_BLOCKS)
+                                ->inline()
+                                ->live(),
+                            Forms\Components\TextInput::make('access_blocks')
+                                ->label('Номера блоков (через запятую)')
+                                ->placeholder('5, 6, 7')
+                                ->visible(fn (Forms\Get $get): bool => $get('access_mode') === ConditionalAccessGranter::MODE_BLOCKS),
+                        ])
+                        ->action(function (array $data) use ($existing): void {
+                            $mode = (string) ($data['access_mode'] ?? ConditionalAccessGranter::MODE_BLOCKS);
+                            $blocks = $mode === ConditionalAccessGranter::MODE_BLOCKS
+                                ? $this->parseBlockNumbers((string) ($data['access_blocks'] ?? ''))
+                                : [];
+                            app(ConditionalAccessGranter::class)->grantForPromise($existing, $mode, $blocks);
+                            Notification::make()->title('Доступ открыт')->success()->send();
+                        })
+                        ->cancelParentActions(),
+                    Tables\Actions\Action::make('revoke_access')
+                        ->label('Отозвать доступ')
+                        ->color('danger')
+                        ->icon('heroicon-o-lock-closed')
+                        ->visible(fn () => app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
+                        ->requiresConfirmation()
+                        ->modalDescription('Все conditional-платежи по этому обещанию будут удалены. Студент потеряет доступ к открытым под обещание блокам.')
+                        ->action(function () use ($existing): void {
+                            $n = app(ConditionalAccessGranter::class)->revokeForPromise($existing);
+                            Notification::make()
+                                ->title('Доступ отозван')
+                                ->body("Удалено платежей: {$n}")
+                                ->warning()
+                                ->send();
+                        })
+                        ->cancelParentActions(),
                 ];
             });
+    }
+
+    /**
+     * Парсит строку «5, 6, 7» / «1-3, 5» в массив номеров блоков.
+     *
+     * @return list<int>
+     */
+    private function parseBlockNumbers(string $input): array
+    {
+        $result = [];
+        foreach (preg_split('/\s*,\s*/', trim($input)) ?: [] as $chunk) {
+            if ($chunk === '') {
+                continue;
+            }
+            if (preg_match('/^(\d+)\s*-\s*(\d+)$/', $chunk, $m)) {
+                $from = (int) $m[1];
+                $to = (int) $m[2];
+                if ($from > $to) {
+                    [$from, $to] = [$to, $from];
+                }
+                for ($n = $from; $n <= $to; $n++) {
+                    $result[] = $n;
+                }
+            } elseif (ctype_digit($chunk)) {
+                $result[] = (int) $chunk;
+            }
+        }
+
+        return array_values(array_unique($result));
     }
 
     private function installmentAction(): Tables\Actions\Action
@@ -636,6 +750,15 @@ class Debtors extends Page implements HasTable
                             ->numeric()
                             ->required()
                             ->minValue(1),
+                        Forms\Components\TextInput::make('block_from')
+                            ->label('Откр. с блока №')
+                            ->numeric()
+                            ->minValue(1)
+                            ->helperText('Заполните оба поля, чтобы открыть доступ к диапазону при сохранении плана.'),
+                        Forms\Components\TextInput::make('block_to')
+                            ->label('по №')
+                            ->numeric()
+                            ->minValue(1),
                     ])
                     ->columns(2)
                     ->minItems(2)
@@ -657,16 +780,47 @@ class Debtors extends Page implements HasTable
                     return;
                 }
 
-                app(InstallmentPlanCreator::class)->create(
+                $schedule = array_values($data['schedule'] ?? []);
+                $result = app(InstallmentPlanCreator::class)->create(
                     $user,
                     $course,
-                    array_values($data['schedule'] ?? []),
+                    array_map(fn ($row) => [
+                        'promised_at' => $row['promised_at'],
+                        'amount' => $row['amount'],
+                    ], $schedule),
                     isset($data['note']) && trim((string) $data['note']) !== '' ? $data['note'] : null,
                 );
 
+                $grantedTotal = 0;
+                $granter = app(ConditionalAccessGranter::class);
+                foreach ($result['promises'] as $i => $promise) {
+                    $row = $schedule[$i] ?? null;
+                    if ($row === null) {
+                        continue;
+                    }
+                    $from = $row['block_from'] ?? null;
+                    $to = $row['block_to'] ?? null;
+                    if ($from === null || $from === '' || $to === null || $to === '') {
+                        continue;
+                    }
+                    $from = (int) $from;
+                    $to = (int) $to;
+                    if ($from > $to) {
+                        [$from, $to] = [$to, $from];
+                    }
+                    $blocks = range($from, $to);
+                    $granter->grantForPromise($promise, ConditionalAccessGranter::MODE_BLOCKS, $blocks);
+                    $grantedTotal += count($blocks);
+                }
+
+                $body = 'Создано платежей: '.count($result['promises']);
+                if ($grantedTotal > 0) {
+                    $body .= ". Открыт доступ к {$grantedTotal} блоку(ам).";
+                }
+
                 Notification::make()
                     ->title('Рассрочка создана')
-                    ->body('Создано платежей: '.count($data['schedule'] ?? []))
+                    ->body($body)
                     ->success()
                     ->send();
             });

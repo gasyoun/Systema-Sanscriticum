@@ -15,6 +15,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('archives:cleanup --hours=24')
             ->dailyAt('03:00');
 
+        // Перевод просроченных promises в статус expired — ночью.
+        $schedule->command('promises:expire')
+            ->dailyAt('03:30');
+
+        // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
+        $schedule->command('promises:remind-tomorrow')
+            ->dailyAt('09:00');
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new \App\Jobs\CloseStaleSessionsJob)

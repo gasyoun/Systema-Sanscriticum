@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Models\Course;
+use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Services\ConditionalAccessGranter;
 use App\Services\DebtorsReport;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
@@ -110,6 +112,15 @@ class PaymentPromisesRelationManager extends RelationManager
                     ->formatStateUsing(fn (?string $state): ?string => $state ? '#'.substr($state, 0, 8) : null)
                     ->tooltip(fn (?string $state): ?string => $state)
                     ->placeholder('—'),
+                Tables\Columns\TextColumn::make('access_state')
+                    ->label('Доступ')
+                    ->badge()
+                    ->state(fn (PaymentPromise $r): string => Payment::query()
+                        ->where('linked_promise_id', $r->id)
+                        ->where('is_conditional', true)
+                        ->exists() ? 'open' : 'closed')
+                    ->formatStateUsing(fn (string $state): string => $state === 'open' ? 'открыт' : '—')
+                    ->color(fn (string $state): string => $state === 'open' ? 'success' : 'gray'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создано')
                     ->date('d.m.Y')
@@ -156,6 +167,15 @@ class PaymentPromisesRelationManager extends RelationManager
                                     ->numeric()
                                     ->required()
                                     ->minValue(1),
+                                Forms\Components\TextInput::make('block_from')
+                                    ->label('Откр. с блока №')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->helperText('Заполните оба поля, чтобы открыть доступ к диапазону при сохранении плана.'),
+                                Forms\Components\TextInput::make('block_to')
+                                    ->label('по №')
+                                    ->numeric()
+                                    ->minValue(1),
                             ])
                             ->columns(2)
                             ->minItems(2)
@@ -176,16 +196,47 @@ class PaymentPromisesRelationManager extends RelationManager
                             return;
                         }
 
-                        app(InstallmentPlanCreator::class)->create(
+                        $schedule = array_values($data['schedule'] ?? []);
+                        $result = app(InstallmentPlanCreator::class)->create(
                             $user,
                             $course,
-                            array_values($data['schedule'] ?? []),
+                            array_map(fn ($row) => [
+                                'promised_at' => $row['promised_at'],
+                                'amount' => $row['amount'],
+                            ], $schedule),
                             isset($data['note']) && trim((string) $data['note']) !== '' ? $data['note'] : null,
                         );
 
+                        $grantedTotal = 0;
+                        $granter = app(ConditionalAccessGranter::class);
+                        foreach ($result['promises'] as $i => $promise) {
+                            $row = $schedule[$i] ?? null;
+                            if ($row === null) {
+                                continue;
+                            }
+                            $from = $row['block_from'] ?? null;
+                            $to = $row['block_to'] ?? null;
+                            if ($from === null || $from === '' || $to === null || $to === '') {
+                                continue;
+                            }
+                            $from = (int) $from;
+                            $to = (int) $to;
+                            if ($from > $to) {
+                                [$from, $to] = [$to, $from];
+                            }
+                            $blocks = range($from, $to);
+                            $granter->grantForPromise($promise, ConditionalAccessGranter::MODE_BLOCKS, $blocks);
+                            $grantedTotal += count($blocks);
+                        }
+
+                        $body = 'Создано платежей: '.count($result['promises']);
+                        if ($grantedTotal > 0) {
+                            $body .= ". Открыт доступ к {$grantedTotal} блоку(ам).";
+                        }
+
                         Notification::make()
                             ->title('Рассрочка создана')
-                            ->body('Создано платежей: '.count($data['schedule'] ?? []))
+                            ->body($body)
                             ->success()
                             ->send();
                     }),
@@ -249,6 +300,51 @@ class PaymentPromisesRelationManager extends RelationManager
                         ]);
                         Notification::make()->title('Договорённость отменена')->warning()->send();
                     }),
+                Tables\Actions\Action::make('grant_access')
+                    ->label('Открыть доступ')
+                    ->icon('heroicon-o-lock-open')
+                    ->color('info')
+                    ->visible(fn (PaymentPromise $r) => $r->status === PaymentPromise::STATUS_ACTIVE
+                        && ! app(ConditionalAccessGranter::class)->hasActiveGrant($r))
+                    ->modalHeading('Открыть доступ под обещание')
+                    ->form([
+                        Forms\Components\Radio::make('access_mode')
+                            ->label('Что открыть')
+                            ->options([
+                                ConditionalAccessGranter::MODE_FULL => 'Весь курс',
+                                ConditionalAccessGranter::MODE_BLOCKS => 'Конкретные блоки',
+                            ])
+                            ->default(ConditionalAccessGranter::MODE_BLOCKS)
+                            ->inline()
+                            ->live(),
+                        Forms\Components\TextInput::make('access_blocks')
+                            ->label('Номера блоков (через запятую или диапазон 1-3)')
+                            ->placeholder('5, 6, 7')
+                            ->visible(fn (Forms\Get $get): bool => $get('access_mode') === ConditionalAccessGranter::MODE_BLOCKS),
+                    ])
+                    ->action(function (PaymentPromise $r, array $data): void {
+                        $mode = (string) ($data['access_mode'] ?? ConditionalAccessGranter::MODE_BLOCKS);
+                        $blocks = $mode === ConditionalAccessGranter::MODE_BLOCKS
+                            ? self::parseBlockNumbers((string) ($data['access_blocks'] ?? ''))
+                            : [];
+                        app(ConditionalAccessGranter::class)->grantForPromise($r, $mode, $blocks);
+                        Notification::make()->title('Доступ открыт')->success()->send();
+                    }),
+                Tables\Actions\Action::make('revoke_access')
+                    ->label('Отозвать доступ')
+                    ->icon('heroicon-o-lock-closed')
+                    ->color('danger')
+                    ->visible(fn (PaymentPromise $r) => app(ConditionalAccessGranter::class)->hasActiveGrant($r))
+                    ->requiresConfirmation()
+                    ->modalDescription('Все conditional-платежи по этому обещанию будут удалены. Студент потеряет доступ к открытым под обещание блокам.')
+                    ->action(function (PaymentPromise $r): void {
+                        $n = app(ConditionalAccessGranter::class)->revokeForPromise($r);
+                        Notification::make()
+                            ->title('Доступ отозван')
+                            ->body("Удалено платежей: {$n}")
+                            ->warning()
+                            ->send();
+                    }),
                 Tables\Actions\Action::make('cancel_installment')
                     ->label('Отменить всю рассрочку')
                     ->icon('heroicon-o-x-mark')
@@ -268,5 +364,34 @@ class PaymentPromisesRelationManager extends RelationManager
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
+    }
+
+    /**
+     * Парсит строку «5, 6, 7» / «1-3, 5» в массив номеров блоков.
+     *
+     * @return list<int>
+     */
+    public static function parseBlockNumbers(string $input): array
+    {
+        $result = [];
+        foreach (preg_split('/\s*,\s*/', trim($input)) ?: [] as $chunk) {
+            if ($chunk === '') {
+                continue;
+            }
+            if (preg_match('/^(\d+)\s*-\s*(\d+)$/', $chunk, $m)) {
+                $from = (int) $m[1];
+                $to = (int) $m[2];
+                if ($from > $to) {
+                    [$from, $to] = [$to, $from];
+                }
+                for ($n = $from; $n <= $to; $n++) {
+                    $result[] = $n;
+                }
+            } elseif (ctype_digit($chunk)) {
+                $result[] = (int) $chunk;
+            }
+        }
+
+        return array_values(array_unique($result));
     }
 }

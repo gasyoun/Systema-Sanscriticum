@@ -131,7 +131,7 @@ class DebtorsReport
     }
 
     /**
-     * @return array<int, string>  course_id => title
+     * @return array<int, string> course_id => title
      */
     public function courseTitles(): array
     {
@@ -155,6 +155,8 @@ class DebtorsReport
         $nullIntCast = DB::connection()->getDriverName() === 'sqlite' ? 'INTEGER' : 'SIGNED';
 
         // A: not_renewed — есть хотя бы один paid Payment, но ни один не покрывает ref_number.
+        // Conditional платежи (доступ под обещание) НЕ считаются «настоящей» оплатой —
+        // иначе должник исчезнет из списка сразу после открытия доступа в кредит.
         $notRenewedSql = "
             SELECT
                 p.user_id          AS user_id,
@@ -165,6 +167,7 @@ class DebtorsReport
             FROM payments p
             INNER JOIN ({$refSql}) AS ref ON ref.course_id = p.course_id
             WHERE p.status IN ({$paidIn})
+              AND p.is_conditional = 0
             GROUP BY p.user_id, p.course_id, ref.ref_number
             HAVING SUM(CASE WHEN (
                     (p.start_block IS NULL AND p.end_block IS NULL)
@@ -174,7 +177,8 @@ class DebtorsReport
                 ) THEN 1 ELSE 0 END) = 0
         ";
 
-        // B: no_payment — юзер в course-группе, но paid Payment отсутствует.
+        // B: no_payment — юзер в course-группе, но реальный paid Payment отсутствует
+        // (conditional платежи не учитываем).
         $noPaymentSql = "
             SELECT
                 gu.user_id                                  AS user_id,
@@ -190,6 +194,7 @@ class DebtorsReport
                 WHERE p2.user_id = gu.user_id
                   AND p2.course_id = cg.course_id
                   AND p2.status IN ({$paidIn})
+                  AND p2.is_conditional = 0
             )
             GROUP BY gu.user_id, cg.course_id, ref.ref_number
         ";

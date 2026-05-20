@@ -29,6 +29,7 @@ class StudentDebtsService
         $paidCourseIds = Payment::query()
             ->where('user_id', $user->id)
             ->whereIn('status', self::PAID_STATUSES)
+            ->where('is_conditional', false)
             ->pluck('course_id')
             ->unique()
             ->values();
@@ -57,6 +58,7 @@ class StudentDebtsService
         $paymentsByCourse = Payment::query()
             ->where('user_id', $user->id)
             ->whereIn('status', self::PAID_STATUSES)
+            ->where('is_conditional', false)
             ->whereIn('course_id', $courses->keys())
             ->get(['course_id', 'start_block', 'end_block'])
             ->groupBy('course_id');
