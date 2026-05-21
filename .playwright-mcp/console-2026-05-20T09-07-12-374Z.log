@@ -1,9 +1,0 @@
-[   46250ms] [ERROR] Access to script at 'http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0' from origin 'http://127.0.0.1:8000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:8000/admin:0
-[   46250ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0:0
-[   46246ms] Failed to fetch dynamically imported module: http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0
-[   46287ms] [ERROR] Access to script at 'http://localhost:8000/js/filament/widgets/components/stats-overview/stat/chart.js?v=3.3.48.0' from origin 'http://127.0.0.1:8000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:8000/admin:0
-[   46287ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/js/filament/widgets/components/stats-overview/stat/chart.js?v=3.3.48.0:0
-[   46284ms] Failed to fetch dynamically imported module: http://localhost:8000/js/filament/widgets/components/stats-overview/stat/chart.js?v=3.3.48.0
-[   46369ms] [ERROR] Access to script at 'http://localhost:8000/js/filament/widgets/components/chart.js?v=3.3.48.0' from origin 'http://127.0.0.1:8000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:8000/admin:0
-[   46370ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/js/filament/widgets/components/chart.js?v=3.3.48.0:0
-[   46365ms] Failed to fetch dynamically imported module: http://localhost:8000/js/filament/widgets/components/chart.js?v=3.3.48.0

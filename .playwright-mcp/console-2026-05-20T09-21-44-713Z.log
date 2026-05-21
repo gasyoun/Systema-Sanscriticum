@@ -1,3 +1,0 @@
-[     698ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8000/admin/users/620/edit:0
-[57465764ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ http://localhost:8000/livewire/update:0
-[57475005ms] [ERROR] Failed to load resource: the server responded with a status of 419 (unknown status) @ http://localhost:8000/livewire/update:0
