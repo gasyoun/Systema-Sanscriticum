@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\DebtorsReport;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Сводный виджет в шапке страницы «Должники»: позволяет менеджеру одним взглядом
@@ -26,41 +27,56 @@ class DebtorsTotalWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $report = app(DebtorsReport::class);
-        $totals = $report->totalDebtForQuery($report->query());
+        // Тяжёлый отчёт кэшируется на 60 секунд — статистика «общий долг»
+        // не обязана быть real-time. Виджет рендерится и на /admin/debtors,
+        // и на дашборде (auto-discover), без кэша = двойной удар по БД.
+        // Сбрасывать кэш точечно не пытаемся — TTL короткий.
+        $cached = Cache::remember(
+            'debtors_total_widget.stats.v1',
+            now()->addSeconds(60),
+            function (): array {
+                $report = app(DebtorsReport::class);
+                $totals = $report->totalDebtForQuery($report->query());
 
-        $sum = number_format($totals['amount'], 0, '.', ' ').' ₽';
-        $approxBadge = $totals['missing'] > 0 ? ' (часть «≈»)' : '';
+                return [
+                    'pairs' => $totals['pairs'],
+                    'by_course_count' => count($totals['by_course']),
+                    'amount' => $totals['amount'],
+                    'missing' => $totals['missing'],
+                    'overdue_promises' => PaymentPromise::query()
+                        ->where('status', PaymentPromise::STATUS_ACTIVE)
+                        ->whereDate('promised_at', '<', now()->toDateString())
+                        ->count(),
+                    'unreliable_count' => User::query()->where('is_unreliable', true)->count(),
+                ];
+            }
+        );
 
-        $overduePromises = PaymentPromise::query()
-            ->where('status', PaymentPromise::STATUS_ACTIVE)
-            ->whereDate('promised_at', '<', now()->toDateString())
-            ->count();
-
-        $unreliableCount = User::query()->where('is_unreliable', true)->count();
+        $sum = number_format($cached['amount'], 0, '.', ' ').' ₽';
+        $approxBadge = $cached['missing'] > 0 ? ' (часть «≈»)' : '';
 
         return [
-            Stat::make('Должников (пар user×курс)', (string) $totals['pairs'])
-                ->description('Курсы суммарно: '.count($totals['by_course']))
+            Stat::make('Должников (пар user×курс)', (string) $cached['pairs'])
+                ->description('Курсы суммарно: '.$cached['by_course_count'])
                 ->descriptionIcon('heroicon-m-users')
-                ->color($totals['pairs'] > 0 ? 'warning' : 'success'),
+                ->color($cached['pairs'] > 0 ? 'warning' : 'success'),
 
             Stat::make('Общий долг', $sum.$approxBadge)
-                ->description($totals['missing'] > 0
+                ->description($cached['missing'] > 0
                     ? 'У части пар нет точного тарифа — оценено по средней цене'
                     : 'Все тарифы определены точно')
                 ->descriptionIcon('heroicon-m-banknotes')
-                ->color($totals['amount'] >= 50000 ? 'danger' : 'warning'),
+                ->color($cached['amount'] >= 50000 ? 'danger' : 'warning'),
 
-            Stat::make('Просроченных обещаний', (string) $overduePromises)
+            Stat::make('Просроченных обещаний', (string) $cached['overdue_promises'])
                 ->description('Активные promises, дата уже прошла')
                 ->descriptionIcon('heroicon-m-clock')
-                ->color($overduePromises > 0 ? 'danger' : 'success'),
+                ->color($cached['overdue_promises'] > 0 ? 'danger' : 'success'),
 
-            Stat::make('Неблагонадёжных', (string) $unreliableCount)
+            Stat::make('Неблагонадёжных', (string) $cached['unreliable_count'])
                 ->description('С флагом is_unreliable')
                 ->descriptionIcon('heroicon-m-flag')
-                ->color($unreliableCount > 0 ? 'warning' : 'gray'),
+                ->color($cached['unreliable_count'] > 0 ? 'warning' : 'gray'),
         ];
     }
 }
