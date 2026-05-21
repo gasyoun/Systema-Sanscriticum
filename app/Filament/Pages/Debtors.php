@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Exports\DebtorsExporter;
 use App\Filament\Resources\UserResource;
+use App\Filament\Widgets\DebtorsTotalWidget;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\CourseBlock;
@@ -81,68 +82,104 @@ class Debtors extends Page implements HasTable
             // Один юзер может встречаться по нескольким курсам — ключ строки
             // должен быть составной, иначе Filament схлопнет дубли.
             ->paginated([25, 50, 100])
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(25)
+            ->striped()
+            ->groups([
+                Tables\Grouping\Group::make('course_id')
+                    ->label('Курс')
+                    ->getTitleFromRecordUsing(fn (Model $r): string => $courseTitles[$r->course_id] ?? '—')
+                    ->collapsible(),
+            ])
+            ->defaultGroup('course_id')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Студент')
-                    ->description(fn (Model $r) => trim(($r->email ?? '').' · #'.$r->id))
-                    ->weight('bold')
-                    ->color('primary')
-                    ->searchable(['name', 'email', 'phone'])
-                    ->wrap()
-                    ->action($this->viewUserCardAction()),
-
-                Tables\Columns\TextColumn::make('course_id')
-                    ->label('Курс')
-                    ->getStateUsing(fn (Model $r) => $courseTitles[$r->course_id] ?? '—')
-                    ->sortable()
-                    ->wrap(),
-
-                Tables\Columns\TextColumn::make('ref_block_number')
-                    ->label('№ блока')
-                    ->badge()
-                    ->color('gray')
-                    ->sortable()
-                    ->alignCenter(),
-
-                Tables\Columns\TextColumn::make('block_dates')
-                    ->label('Период блока')
-                    ->getStateUsing(function (Model $r) use ($blocksLookup): string {
-                        $block = $blocksLookup[$r->course_id.':'.$r->ref_block_number] ?? null;
-                        if (! $block instanceof CourseBlock || ! $block->starts_at || ! $block->ends_at) {
-                            return '—';
+                    ->description(function (Model $r): string {
+                        $bits = [];
+                        if ((bool) $r->is_unreliable) {
+                            $bits[] = '🚩';
+                        }
+                        if (! empty($r->telegram_id)) {
+                            $bits[] = 'TG';
+                        }
+                        if (! empty($r->vk_id)) {
+                            $bits[] = 'VK';
+                        }
+                        if (! empty($r->max_user_id)) {
+                            $bits[] = 'Max';
+                        }
+                        if (! empty($r->phone)) {
+                            $bits[] = '📞';
+                        }
+                        if (! empty($r->instagram)) {
+                            $bits[] = 'IG';
+                        }
+                        if (! empty($r->facebook)) {
+                            $bits[] = 'FB';
+                        }
+                        $bits[] = '#'.$r->id;
+                        if (! empty($r->last_activity_at)) {
+                            $dt = $r->last_activity_at instanceof \Carbon\CarbonInterface
+                                ? $r->last_activity_at
+                                : \Illuminate\Support\Carbon::parse($r->last_activity_at);
+                            $bits[] = 'был '.$dt->diffForHumans();
                         }
 
-                        return $block->starts_at->format('d.m').' – '.$block->ends_at->format('d.m.Y');
-                    }),
-
-                Tables\Columns\TextColumn::make('debt_type')
-                    ->label('Тип долга')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'not_renewed' => 'Не продлил',
-                        'no_payment' => 'Без оплат',
-                        default => '—',
+                        return implode(' · ', $bits);
                     })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'not_renewed' => 'warning',
-                        'no_payment' => 'danger',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('debt_blocks')
-                    ->label('В долгу')
-                    ->getStateUsing(fn (Model $r): string => self::debtBlocksFormatted(
-                        (int) $r->id,
-                        (int) $r->course_id,
-                        (int) $r->ref_block_number,
-                    ))
+                    ->weight('medium')
+                    ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
+                    ->color('primary')
                     ->wrap()
-                    ->tooltip('Все начавшиеся блоки курса, не покрытые ни одним paid-платежом'),
+                    ->width('33%')
+                    ->tooltip(fn (Model $r): ?string => $r->is_unreliable && ! empty($r->unreliable_reason)
+                        ? '🚩 Неблагонадёжный: '.$r->unreliable_reason
+                        : null)
+                    ->searchable(['name', 'email', 'phone', 'max_user_id', 'instagram', 'facebook'])
+                    ->action($this->viewUserCardAction()),
+
+                Tables\Columns\TextColumn::make('ref_block_number')
+                    ->label('Блок')
+                    ->formatStateUsing(fn ($state): string => '№'.$state)
+                    ->description(function (Model $r) use ($blocksLookup, $report): ?string {
+                        $block = $blocksLookup[$r->course_id.':'.$r->ref_block_number] ?? null;
+                        $lines = [];
+                        if ($block instanceof CourseBlock && $block->starts_at && $block->ends_at) {
+                            $lines[] = $block->starts_at->format('d.m').' – '.$block->ends_at->format('d.m.Y');
+                        }
+                        $overdue = $report->daysOverdueFor((int) $r->course_id, (int) $r->ref_block_number);
+                        if ($overdue > 0) {
+                            $lines[] = DebtorsReport::formatOverdue($overdue);
+                        }
+
+                        return empty($lines) ? null : implode(' · ', $lines);
+                    })
+                    ->sortable()
+                    ->alignCenter()
+                    ->width('17%'),
+
+                Tables\Columns\TextColumn::make('course_user_status')
+                    ->label('Статус обучения')
+                    ->badge()
+                    ->placeholder('—')
+                    ->color(fn (?string $state): string => match ($state) {
+                        'Записался', 'Вернулся', 'Выпускник' => 'success',
+                        'Рассрочка', 'Приостановка', 'Льготник' => 'warning',
+                        'Покинул', 'Исключен' => 'danger',
+                        default => 'gray',
+                    })
+                    ->description(fn (Model $r): ?string => $r->course_user_left_after_block
+                        ? 'после блока №'.((int) $r->course_user_left_after_block)
+                        : null)
+                    ->toggleable()
+                    ->width('14%'),
 
                 Tables\Columns\TextColumn::make('debt_amount')
-                    ->label('Сумма долга')
+                    ->label('Долг')
                     ->alignRight()
+                    ->weight('bold')
+                    ->wrap()
+                    ->width('25%')
                     ->getStateUsing(function (Model $r) use ($report): string {
                         $info = self::debtAmountInfo($r, $report);
                         if ($info['amount'] === null) {
@@ -151,6 +188,25 @@ class Debtors extends Page implements HasTable
                         $formatted = number_format($info['amount'], 0, '.', ' ').' ₽';
 
                         return $info['missing'] > 0 ? '≈ '.$formatted : $formatted;
+                    })
+                    ->description(function (Model $r): string {
+                        $type = match ($r->debt_type) {
+                            'not_renewed' => 'Не продлил',
+                            'no_payment' => 'Без оплат',
+                            default => '—',
+                        };
+                        $blocks = self::debtBlocksFormatted(
+                            (int) $r->id,
+                            (int) $r->course_id,
+                            (int) $r->ref_block_number,
+                        );
+
+                        return $type.' · '.$blocks;
+                    })
+                    ->color(function (Model $r) use ($report): string {
+                        $info = self::debtAmountInfo($r, $report);
+
+                        return ($info['amount'] ?? 0) >= 10000 ? 'danger' : 'warning';
                     })
                     ->tooltip(function (Model $r) use ($report): ?string {
                         $info = self::debtAmountInfo($r, $report);
@@ -162,16 +218,12 @@ class Debtors extends Page implements HasTable
                         }
 
                         return null;
-                    })
-                    ->color(function (Model $r) use ($report): string {
-                        $info = self::debtAmountInfo($r, $report);
-
-                        return ($info['amount'] ?? 0) >= 10000 ? 'danger' : 'warning';
                     }),
 
                 Tables\Columns\TextColumn::make('promise')
                     ->label('Обещание')
                     ->badge()
+                    ->width('17%')
                     ->getStateUsing(function (Model $r) use ($report): ?string {
                         $promise = $report->promiseFor((int) $r->id, (int) $r->course_id);
                         if (! $promise) {
@@ -207,6 +259,7 @@ class Debtors extends Page implements HasTable
 
                 Tables\Columns\TextColumn::make('last_payment_id')
                     ->label('Последняя оплата')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(function (Model $r): string {
                         if (! $r->last_payment_id) {
                             return '—';
@@ -232,31 +285,6 @@ class Debtors extends Page implements HasTable
                         return self::formatPaidBlocks($p->start_block, $p->end_block);
                     })
                     ->tooltip('Дата, сумма и блок(и) последнего успешного платежа за курс'),
-
-                Tables\Columns\IconColumn::make('telegram_id')
-                    ->label('TG')
-                    ->boolean()
-                    ->alignCenter(),
-
-                Tables\Columns\IconColumn::make('vk_id')
-                    ->label('VK')
-                    ->boolean()
-                    ->alignCenter(),
-
-                Tables\Columns\TextColumn::make('last_activity_at')
-                    ->label('Активность')
-                    ->since()
-                    ->placeholder('—')
-                    ->color(function ($state): string {
-                        if (! $state) {
-                            return 'gray';
-                        }
-                        $dt = $state instanceof \Carbon\CarbonInterface
-                            ? $state
-                            : \Illuminate\Support\Carbon::parse($state);
-
-                        return $dt->gt(now()->subDays(7)) ? 'success' : 'gray';
-                    }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course_id')
@@ -289,6 +317,52 @@ class Debtors extends Page implements HasTable
                     ->label('Есть VK')
                     ->query(fn ($query) => $query->whereNotNull('users.vk_id')),
 
+                Tables\Filters\Filter::make('has_max')
+                    ->label('Есть Max')
+                    ->query(fn ($query) => $query->whereNotNull('users.max_user_id')),
+
+                Tables\Filters\Filter::make('has_phone')
+                    ->label('Есть телефон')
+                    ->query(fn ($query) => $query->whereNotNull('users.phone')),
+
+                Tables\Filters\Filter::make('has_email')
+                    ->label('Есть email')
+                    ->query(fn ($query) => $query->whereNotNull('users.email')),
+
+                Tables\Filters\Filter::make('has_instagram')
+                    ->label('Есть Instagram')
+                    ->query(fn ($query) => $query->whereNotNull('users.instagram')),
+
+                Tables\Filters\Filter::make('has_facebook')
+                    ->label('Есть Facebook')
+                    ->query(fn ($query) => $query->whereNotNull('users.facebook')),
+
+                Tables\Filters\SelectFilter::make('course_user_status')
+                    ->label('Статус обучения')
+                    ->multiple()
+                    ->options([
+                        'Записался' => 'Записался',
+                        'Рассрочка' => 'Рассрочка',
+                        'Приостановка' => 'Приостановка',
+                        'Вернулся' => 'Вернулся',
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (! empty($data['values'])) {
+                            $query->whereIn('d.course_user_status', $data['values']);
+                        }
+                    }),
+
+                Tables\Filters\TernaryFilter::make('is_unreliable')
+                    ->label('Неблагонадёжные')
+                    ->placeholder('Все')
+                    ->trueLabel('Только 🚩')
+                    ->falseLabel('Скрыть 🚩')
+                    ->queries(
+                        true: fn ($query) => $query->where('users.is_unreliable', true),
+                        false: fn ($query) => $query->where('users.is_unreliable', false),
+                        blank: fn ($query) => $query,
+                    ),
+
                 Tables\Filters\TernaryFilter::make('with_active_promise')
                     ->label('Обещание оплатить')
                     ->placeholder('Все')
@@ -313,8 +387,15 @@ class Debtors extends Page implements HasTable
                     ),
             ])
             ->actions([
-                $this->promiseAction(),
-                $this->installmentAction(),
+                Tables\Actions\ActionGroup::make([
+                    $this->quickConfirmAction(),
+                    $this->quickReminderAction(),
+                    $this->promiseAction(),
+                    $this->installmentAction(),
+                    $this->markUnreliableAction(),
+                    $this->clearUnreliableAction(),
+                    $this->openCardAction(),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -324,7 +405,7 @@ class Debtors extends Page implements HasTable
                         ->label('Экспорт'),
                 ]),
             ])
-            ->defaultSort('d.course_id', 'asc')
+            ->defaultSort('users.name', 'asc')
             ->emptyStateHeading('Должников не найдено')
             ->emptyStateDescription('Либо нет активных курсов с reference-блоком, либо все студенты платежами покрыты.');
     }
@@ -470,6 +551,7 @@ class Debtors extends Page implements HasTable
             ->label(fn (Model $r): string => $this->existingActivePromise($r) ? 'Обещание' : 'Договориться')
             ->icon('heroicon-o-hand-raised')
             ->color(fn (Model $r): string => $this->existingActivePromise($r) ? 'warning' : 'primary')
+            ->visible(fn (Model $r): bool => ! (bool) $r->is_unreliable)
             ->modalHeading(fn (Model $r): string => 'Договорённость по оплате — '.($r->name ?: $r->email))
             ->fillForm(function (Model $r): array {
                 $existing = $this->existingActivePromise($r);
@@ -704,6 +786,7 @@ class Debtors extends Page implements HasTable
             ->label('Рассрочка')
             ->icon('heroicon-o-banknotes')
             ->color('info')
+            ->visible(fn (Model $r): bool => ! (bool) $r->is_unreliable)
             ->modalHeading(fn (Model $r): string => 'Рассрочка по оплате — '.($r->name ?: $r->email))
             ->modalDescription('Каждая строка — отдельное обещание оплаты. Все строки объединяются в один план рассрочки.')
             ->modalWidth('2xl')
@@ -824,6 +907,173 @@ class Debtors extends Page implements HasTable
                     ->success()
                     ->send();
             });
+    }
+
+    private function quickConfirmAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('quick_confirm')
+            ->label('Подтвердить оплату')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->visible(fn (Model $r): bool => $this->existingActivePromise($r) !== null)
+            ->modalHeading(fn (Model $r): string => 'Подтверждение оплаты — '.($r->name ?: $r->email))
+            ->modalDescription('Будет создан Payment, покрывающий указанные блоки. Обещание закроется как выполненное.')
+            ->fillForm(function (Model $r): array {
+                $existing = $this->existingActivePromise($r);
+                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+                $info = app(DebtorsReport::class)->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
+
+                return [
+                    'amount' => $existing?->amount !== null ? (float) $existing->amount : $info['amount'],
+                    'start_block' => ! empty($blocks) ? min($blocks) : (int) $r->ref_block_number,
+                    'end_block' => ! empty($blocks) ? max($blocks) : (int) $r->ref_block_number,
+                    'transaction_id' => $existing ? 'promise_#'.$existing->id : '',
+                    'silent' => false,
+                ];
+            })
+            ->form([
+                Forms\Components\TextInput::make('amount')
+                    ->label('Сумма (₽)')->numeric()->required()->minValue(1),
+                Forms\Components\Grid::make(2)->schema([
+                    Forms\Components\TextInput::make('start_block')
+                        ->label('Блок с №')->numeric()->required()->minValue(1),
+                    Forms\Components\TextInput::make('end_block')
+                        ->label('по №')->numeric()->required()->minValue(1),
+                ]),
+                Forms\Components\TextInput::make('transaction_id')
+                    ->label('Идентификатор транзакции')->maxLength(255),
+                Forms\Components\Toggle::make('silent')
+                    ->label('Не уведомлять студента в TG')
+                    ->helperText('Включите, если фиксируете факт оплаты задним числом.'),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $existing = $this->existingActivePromise($r);
+                if (! $existing) {
+                    Notification::make()->title('Активного обещания нет')->danger()->send();
+
+                    return;
+                }
+                app(PromiseFulfillment::class)->fulfil($existing, $data, (bool) ($data['silent'] ?? false));
+                Notification::make()->title('Платёж создан, обещание закрыто')->success()->send();
+            });
+    }
+
+    private function quickReminderAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('quick_reminder')
+            ->label('Напомнить в TG/VK')
+            ->icon('heroicon-o-paper-airplane')
+            ->color('warning')
+            ->visible(fn (Model $r): bool => ! empty($r->telegram_id) || ! empty($r->vk_id))
+            ->modalHeading(fn (Model $r): string => 'Напоминание — '.($r->name ?: $r->email))
+            ->fillForm(fn (Model $r): array => [
+                'to_telegram' => ! empty($r->telegram_id),
+                'to_vk' => ! empty($r->vk_id),
+                'text' => "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт, а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите блок в личном кабинете.\n\nПерейти к оплате: ".url('/login'),
+            ])
+            ->form([
+                Forms\Components\Textarea::make('text')
+                    ->label('Текст напоминания')->rows(7)->required()
+                    ->helperText('Плейсхолдеры: {name}, {course}, {block}.'),
+                Forms\Components\Toggle::make('to_telegram')->label('Telegram'),
+                Forms\Components\Toggle::make('to_vk')->label('VK'),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $titles = app(DebtorsReport::class)->courseTitles();
+                $user = User::find($r->id);
+                if (! $user) {
+                    Notification::make()->title('Студент не найден')->danger()->send();
+
+                    return;
+                }
+                $hasTg = (bool) ($data['to_telegram'] ?? false) && ! empty($user->telegram_id);
+                $hasVk = (bool) ($data['to_vk'] ?? false) && ! empty($user->vk_id);
+                if (! $hasTg && ! $hasVk) {
+                    Notification::make()->title('Нет каналов для отправки')->danger()->send();
+
+                    return;
+                }
+                $rendered = strtr((string) $data['text'], [
+                    '{name}' => $user->name ?: 'Друг',
+                    '{course}' => $titles[$r->course_id] ?? '',
+                    '{block}' => (string) $r->ref_block_number,
+                ]);
+                SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
+                Notification::make()->title('Поставлено в очередь')->success()->send();
+            });
+    }
+
+    private function openCardAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('open_card')
+            ->label('Карточка студента')
+            ->icon('heroicon-o-arrow-top-right-on-square')
+            ->url(fn (Model $r): string => UserResource::getUrl('edit', ['record' => $r->id]))
+            ->openUrlInNewTab();
+    }
+
+    private function markUnreliableAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('mark_unreliable')
+            ->label('🚩 Отметить как неблагонадёжного')
+            ->icon('heroicon-o-flag')
+            ->color('danger')
+            ->visible(fn (Model $r): bool => ! (bool) $r->is_unreliable)
+            ->modalHeading(fn (Model $r): string => 'Неблагонадёжный — '.($r->name ?: $r->email))
+            ->modalDescription('Студенту перестанут действовать скидки лояльности, action’ы «Обещание» и «Рассрочка» исчезнут, conditional-доступ будет недоступен. Флаг автоматически не снимается.')
+            ->form([
+                Forms\Components\Textarea::make('reason')
+                    ->label('Причина (обязательно)')
+                    ->rows(3)
+                    ->required()
+                    ->placeholder('Например: «3 раза подряд срывал обещания оплаты без предупреждения».'),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $user = User::find($r->id);
+                if (! $user) {
+                    Notification::make()->title('Студент не найден')->danger()->send();
+
+                    return;
+                }
+                $user->markUnreliable((string) $data['reason'], auth()->user(), auto: false);
+                Notification::make()
+                    ->title('Флаг выставлен')
+                    ->body('Привилегии loyalty, обещания и conditional-доступ отключены.')
+                    ->warning()
+                    ->send();
+            });
+    }
+
+    private function clearUnreliableAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('clear_unreliable')
+            ->label('Снять флаг неблагонадёжности')
+            ->icon('heroicon-o-shield-check')
+            ->color('success')
+            ->visible(fn (Model $r): bool => (bool) $r->is_unreliable)
+            ->requiresConfirmation()
+            ->modalDescription(fn (Model $r): string => trim(
+                'Восстановит loyalty-скидку и доступ к обещаниям/рассрочке. '
+                .($r->unreliable_reason ? 'Текущая причина: «'.$r->unreliable_reason.'».' : '')
+                .($r->discipline_improved_since
+                    ? ' Поведение улучшилось с '.$r->discipline_improved_since->format('m.Y').'.'
+                    : '')
+            ))
+            ->action(function (Model $r): void {
+                $user = User::find($r->id);
+                if (! $user) {
+                    Notification::make()->title('Студент не найден')->danger()->send();
+
+                    return;
+                }
+                $user->clearUnreliable(auth()->user());
+                Notification::make()->title('Привилегии восстановлены')->success()->send();
+            });
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [DebtorsTotalWidget::class];
     }
 
     private function existingActivePromise(Model $r): ?PaymentPromise

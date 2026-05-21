@@ -1,0 +1,1395 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of SUPERADMIN" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - heading "Должники" [level=1] [ref=e26]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e32]:
+                - generic [ref=e36]:
+                  - generic [ref=e37]: Group by
+                  - combobox "Group by" [ref=e40]:
+                    - option "Group by" [selected]
+                    - option "Курс"
+                - generic [ref=e41]:
+                  - generic [ref=e42]:
+                    - generic [ref=e43]: Search
+                    - generic [ref=e44]:
+                      - img [ref=e46]
+                      - searchbox "Search" [ref=e49]
+                  - button "Filter 0" [ref=e52] [cursor=pointer]:
+                    - generic [ref=e53]: Filter
+                    - img [ref=e54]
+                    - generic [ref=e59]: "0"
+                  - button "Toggle columns" [ref=e62] [cursor=pointer]:
+                    - generic [ref=e63]: Toggle columns
+                    - img [ref=e64]
+              - table [ref=e67]:
+                - rowgroup [ref=e68]:
+                  - row "Select/deselect all items for bulk actions. Студент Блок Долг Обещание Actions" [ref=e69]:
+                    - columnheader "Select/deselect all items for bulk actions." [ref=e70]:
+                      - generic [ref=e72]:
+                        - checkbox "Select/deselect all items for bulk actions." [ref=e73]
+                        - generic [ref=e74]: Select/deselect all items for bulk actions.
+                    - columnheader "Студент" [ref=e75]:
+                      - generic [ref=e77]: Студент
+                    - columnheader "Блок" [ref=e78]:
+                      - button "Блок" [ref=e79] [cursor=pointer]:
+                        - generic [ref=e80]: Блок
+                        - img [ref=e81]
+                    - columnheader "Долг" [ref=e83]:
+                      - generic [ref=e85]: Долг
+                    - columnheader "Обещание" [ref=e86]:
+                      - generic [ref=e88]: Обещание
+                    - columnheader "Actions" [ref=e89]
+                - rowgroup [ref=e90]:
+                  - 'row "Select/deselect group Синтаксис санскрита for bulk actions. Курс: Синтаксис санскрита Курс: Синтаксис санскрита" [ref=e91]':
+                    - cell "Select/deselect group Синтаксис санскрита for bulk actions." [ref=e92]:
+                      - generic [ref=e94]:
+                        - checkbox "Select/deselect group Синтаксис санскрита for bulk actions." [ref=e95]
+                        - generic [ref=e96]: Select/deselect group Синтаксис санскрита for bulk actions.
+                    - 'cell "Курс: Синтаксис санскрита Курс: Синтаксис санскрита" [ref=e97]':
+                      - generic [ref=e98] [cursor=pointer]:
+                        - 'heading "Курс: Синтаксис санскрита" [level=4] [ref=e100]'
+                        - 'button "Курс: Синтаксис санскрита" [ref=e101]':
+                          - generic [ref=e102]: "Курс: Синтаксис санскрита"
+                          - img [ref=e103]
+                  - 'row "Select/deselect item 2 for bulk actions. SUPERADMIN #2 №62 26.04 – 07.06.2026 292 800 ₽ Не продлил · №2–62" [ref=e105]':
+                    - cell "Select/deselect item 2 for bulk actions." [ref=e106]:
+                      - generic [ref=e108]:
+                        - checkbox "Select/deselect item 2 for bulk actions." [ref=e109]
+                        - generic [ref=e110]: Select/deselect item 2 for bulk actions.
+                    - 'cell "SUPERADMIN #2" [ref=e111]':
+                      - 'button "SUPERADMIN #2" [ref=e113] [cursor=pointer]':
+                        - generic [ref=e114]:
+                          - generic [ref=e118]: SUPERADMIN
+                          - paragraph [ref=e119]: "#2"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e120]:
+                      - generic [ref=e123]:
+                        - generic [ref=e127]: №62
+                        - paragraph [ref=e128]: 26.04 – 07.06.2026
+                    - cell "292 800 ₽ Не продлил · №2–62" [ref=e129]:
+                      - generic [ref=e132]:
+                        - generic [ref=e136]: 292 800 ₽
+                        - paragraph [ref=e137]: Не продлил · №2–62
+                    - cell [ref=e138]
+                    - cell [ref=e142]:
+                      - button [ref=e147] [cursor=pointer]:
+                        - img [ref=e148]
+                  - 'row "Select/deselect item 601 for bulk actions. Андреева Диана Андреевна, Сочи #601 №62 26.04 – 07.06.2026 264 000 ₽ Не продлил · №1–50, №58–62" [ref=e150]':
+                    - cell "Select/deselect item 601 for bulk actions." [ref=e151]:
+                      - generic [ref=e153]:
+                        - checkbox "Select/deselect item 601 for bulk actions." [ref=e154]
+                        - generic [ref=e155]: Select/deselect item 601 for bulk actions.
+                    - 'cell "Андреева Диана Андреевна, Сочи #601" [ref=e156]':
+                      - 'button "Андреева Диана Андреевна, Сочи #601" [ref=e158] [cursor=pointer]':
+                        - generic [ref=e159]:
+                          - generic [ref=e163]: Андреева Диана Андреевна, Сочи
+                          - paragraph [ref=e164]: "#601"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e165]:
+                      - generic [ref=e168]:
+                        - generic [ref=e172]: №62
+                        - paragraph [ref=e173]: 26.04 – 07.06.2026
+                    - cell "264 000 ₽ Не продлил · №1–50, №58–62" [ref=e174]:
+                      - generic [ref=e177]:
+                        - generic [ref=e181]: 264 000 ₽
+                        - paragraph [ref=e182]: Не продлил · №1–50, №58–62
+                    - cell [ref=e183]
+                    - cell [ref=e187]:
+                      - button [ref=e192] [cursor=pointer]:
+                        - img [ref=e193]
+                  - 'row "Select/deselect item 712 for bulk actions. Артеменко Анатолий Григорьевич, Одесса #712 №62 26.04 – 07.06.2026 230 400 ₽ Не продлил · №1–35, №44–45, №52–62" [ref=e195]':
+                    - cell "Select/deselect item 712 for bulk actions." [ref=e196]:
+                      - generic [ref=e198]:
+                        - checkbox "Select/deselect item 712 for bulk actions." [ref=e199]
+                        - generic [ref=e200]: Select/deselect item 712 for bulk actions.
+                    - 'cell "Артеменко Анатолий Григорьевич, Одесса #712" [ref=e201]':
+                      - 'button "Артеменко Анатолий Григорьевич, Одесса #712" [ref=e203] [cursor=pointer]':
+                        - generic [ref=e204]:
+                          - generic [ref=e208]: Артеменко Анатолий Григорьевич, Одесса
+                          - paragraph [ref=e209]: "#712"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e210]:
+                      - generic [ref=e213]:
+                        - generic [ref=e217]: №62
+                        - paragraph [ref=e218]: 26.04 – 07.06.2026
+                    - cell "230 400 ₽ Не продлил · №1–35, №44–45, №52–62" [ref=e219]:
+                      - generic [ref=e222]:
+                        - generic [ref=e226]: 230 400 ₽
+                        - paragraph [ref=e227]: Не продлил · №1–35, №44–45, №52–62
+                    - cell [ref=e228]
+                    - cell [ref=e232]:
+                      - button [ref=e237] [cursor=pointer]:
+                        - img [ref=e238]
+                  - 'row "Select/deselect item 736 for bulk actions. Витман Елена #736 №62 26.04 – 07.06.2026 283 200 ₽ Не продлил · №1–40, №44–62" [ref=e240]':
+                    - cell "Select/deselect item 736 for bulk actions." [ref=e241]:
+                      - generic [ref=e243]:
+                        - checkbox "Select/deselect item 736 for bulk actions." [ref=e244]
+                        - generic [ref=e245]: Select/deselect item 736 for bulk actions.
+                    - 'cell "Витман Елена #736" [ref=e246]':
+                      - 'button "Витман Елена #736" [ref=e248] [cursor=pointer]':
+                        - generic [ref=e249]:
+                          - generic [ref=e253]: Витман Елена
+                          - paragraph [ref=e254]: "#736"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e255]:
+                      - generic [ref=e258]:
+                        - generic [ref=e262]: №62
+                        - paragraph [ref=e263]: 26.04 – 07.06.2026
+                    - cell "283 200 ₽ Не продлил · №1–40, №44–62" [ref=e264]:
+                      - generic [ref=e267]:
+                        - generic [ref=e271]: 283 200 ₽
+                        - paragraph [ref=e272]: Не продлил · №1–40, №44–62
+                    - cell [ref=e273]
+                    - cell [ref=e277]:
+                      - button [ref=e282] [cursor=pointer]:
+                        - img [ref=e283]
+                  - 'row "Select/deselect item 770 for bulk actions. Г. Мария Олеговна, Москва #770 №62 26.04 – 07.06.2026 230 400 ₽ Не продлил · №1–47, №62" [ref=e285]':
+                    - cell "Select/deselect item 770 for bulk actions." [ref=e286]:
+                      - generic [ref=e288]:
+                        - checkbox "Select/deselect item 770 for bulk actions." [ref=e289]
+                        - generic [ref=e290]: Select/deselect item 770 for bulk actions.
+                    - 'cell "Г. Мария Олеговна, Москва #770" [ref=e291]':
+                      - 'button "Г. Мария Олеговна, Москва #770" [ref=e293] [cursor=pointer]':
+                        - generic [ref=e294]:
+                          - generic [ref=e298]: Г. Мария Олеговна, Москва
+                          - paragraph [ref=e299]: "#770"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e300]:
+                      - generic [ref=e303]:
+                        - generic [ref=e307]: №62
+                        - paragraph [ref=e308]: 26.04 – 07.06.2026
+                    - cell "230 400 ₽ Не продлил · №1–47, №62" [ref=e309]:
+                      - generic [ref=e312]:
+                        - generic [ref=e316]: 230 400 ₽
+                        - paragraph [ref=e317]: Не продлил · №1–47, №62
+                    - cell [ref=e318]
+                    - cell [ref=e322]:
+                      - button [ref=e327] [cursor=pointer]:
+                        - img [ref=e328]
+                  - 'row "Select/deselect item 775 for bulk actions. Гусяцкая Полина Андреевна, Москва #775 №62 26.04 – 07.06.2026 273 600 ₽ Не продлил · №1–50, №54, №57–62" [ref=e330]':
+                    - cell "Select/deselect item 775 for bulk actions." [ref=e331]:
+                      - generic [ref=e333]:
+                        - checkbox "Select/deselect item 775 for bulk actions." [ref=e334]
+                        - generic [ref=e335]: Select/deselect item 775 for bulk actions.
+                    - 'cell "Гусяцкая Полина Андреевна, Москва #775" [ref=e336]':
+                      - 'button "Гусяцкая Полина Андреевна, Москва #775" [ref=e338] [cursor=pointer]':
+                        - generic [ref=e339]:
+                          - generic [ref=e343]: Гусяцкая Полина Андреевна, Москва
+                          - paragraph [ref=e344]: "#775"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e345]:
+                      - generic [ref=e348]:
+                        - generic [ref=e352]: №62
+                        - paragraph [ref=e353]: 26.04 – 07.06.2026
+                    - cell "273 600 ₽ Не продлил · №1–50, №54, №57–62" [ref=e354]:
+                      - generic [ref=e357]:
+                        - generic [ref=e361]: 273 600 ₽
+                        - paragraph [ref=e362]: Не продлил · №1–50, №54, №57–62
+                    - cell [ref=e363]
+                    - cell [ref=e367]:
+                      - button [ref=e372] [cursor=pointer]:
+                        - img [ref=e373]
+                  - 'row "Select/deselect item 1125 for bulk actions. Драчук Андрей, Тюмень #1125 №62 26.04 – 07.06.2026 288 000 ₽ Не продлил · №1–57, №60–62" [ref=e375]':
+                    - cell "Select/deselect item 1125 for bulk actions." [ref=e376]:
+                      - generic [ref=e378]:
+                        - checkbox "Select/deselect item 1125 for bulk actions." [ref=e379]
+                        - generic [ref=e380]: Select/deselect item 1125 for bulk actions.
+                    - 'cell "Драчук Андрей, Тюмень #1125" [ref=e381]':
+                      - 'button "Драчук Андрей, Тюмень #1125" [ref=e383] [cursor=pointer]':
+                        - generic [ref=e384]:
+                          - generic [ref=e388]: Драчук Андрей, Тюмень
+                          - paragraph [ref=e389]: "#1125"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e390]:
+                      - generic [ref=e393]:
+                        - generic [ref=e397]: №62
+                        - paragraph [ref=e398]: 26.04 – 07.06.2026
+                    - cell "288 000 ₽ Не продлил · №1–57, №60–62" [ref=e399]:
+                      - generic [ref=e402]:
+                        - generic [ref=e406]: 288 000 ₽
+                        - paragraph [ref=e407]: Не продлил · №1–57, №60–62
+                    - cell [ref=e408]
+                    - cell [ref=e412]:
+                      - button [ref=e417] [cursor=pointer]:
+                        - img [ref=e418]
+                  - 'row "Select/deselect item 761 for bulk actions. Дуванова Екатерина, Москва #761 №62 26.04 – 07.06.2026 220 800 ₽ Не продлил · №1–36, №44–45, №55–62" [ref=e420]':
+                    - cell "Select/deselect item 761 for bulk actions." [ref=e421]:
+                      - generic [ref=e423]:
+                        - checkbox "Select/deselect item 761 for bulk actions." [ref=e424]
+                        - generic [ref=e425]: Select/deselect item 761 for bulk actions.
+                    - 'cell "Дуванова Екатерина, Москва #761" [ref=e426]':
+                      - 'button "Дуванова Екатерина, Москва #761" [ref=e428] [cursor=pointer]':
+                        - generic [ref=e429]:
+                          - generic [ref=e433]: Дуванова Екатерина, Москва
+                          - paragraph [ref=e434]: "#761"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e435]:
+                      - generic [ref=e438]:
+                        - generic [ref=e442]: №62
+                        - paragraph [ref=e443]: 26.04 – 07.06.2026
+                    - cell "220 800 ₽ Не продлил · №1–36, №44–45, №55–62" [ref=e444]:
+                      - generic [ref=e447]:
+                        - generic [ref=e451]: 220 800 ₽
+                        - paragraph [ref=e452]: Не продлил · №1–36, №44–45, №55–62
+                    - cell [ref=e453]
+                    - cell [ref=e457]:
+                      - button [ref=e462] [cursor=pointer]:
+                        - img [ref=e463]
+                  - 'row "Select/deselect item 765 for bulk actions. Емельянова Христина Игоревна #765 №62 26.04 – 07.06.2026 192 000 ₽ Не продлил · №1–36, №44–45, №61–62" [ref=e465]':
+                    - cell "Select/deselect item 765 for bulk actions." [ref=e466]:
+                      - generic [ref=e468]:
+                        - checkbox "Select/deselect item 765 for bulk actions." [ref=e469]
+                        - generic [ref=e470]: Select/deselect item 765 for bulk actions.
+                    - 'cell "Емельянова Христина Игоревна #765" [ref=e471]':
+                      - 'button "Емельянова Христина Игоревна #765" [ref=e473] [cursor=pointer]':
+                        - generic [ref=e474]:
+                          - generic [ref=e478]: Емельянова Христина Игоревна
+                          - paragraph [ref=e479]: "#765"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e480]:
+                      - generic [ref=e483]:
+                        - generic [ref=e487]: №62
+                        - paragraph [ref=e488]: 26.04 – 07.06.2026
+                    - cell "192 000 ₽ Не продлил · №1–36, №44–45, №61–62" [ref=e489]:
+                      - generic [ref=e492]:
+                        - generic [ref=e496]: 192 000 ₽
+                        - paragraph [ref=e497]: Не продлил · №1–36, №44–45, №61–62
+                    - cell [ref=e498]
+                    - cell [ref=e502]:
+                      - button [ref=e507] [cursor=pointer]:
+                        - img [ref=e508]
+                  - 'row "Select/deselect item 934 for bulk actions. Жукова Ольга Владимировна, Москва #934 №62 26.04 – 07.06.2026 288 000 ₽ Не продлил · №1–57, №60–62" [ref=e510]':
+                    - cell "Select/deselect item 934 for bulk actions." [ref=e511]:
+                      - generic [ref=e513]:
+                        - checkbox "Select/deselect item 934 for bulk actions." [ref=e514]
+                        - generic [ref=e515]: Select/deselect item 934 for bulk actions.
+                    - 'cell "Жукова Ольга Владимировна, Москва #934" [ref=e516]':
+                      - 'button "Жукова Ольга Владимировна, Москва #934" [ref=e518] [cursor=pointer]':
+                        - generic [ref=e519]:
+                          - generic [ref=e523]: Жукова Ольга Владимировна, Москва
+                          - paragraph [ref=e524]: "#934"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e525]:
+                      - generic [ref=e528]:
+                        - generic [ref=e532]: №62
+                        - paragraph [ref=e533]: 26.04 – 07.06.2026
+                    - cell "288 000 ₽ Не продлил · №1–57, №60–62" [ref=e534]:
+                      - generic [ref=e537]:
+                        - generic [ref=e541]: 288 000 ₽
+                        - paragraph [ref=e542]: Не продлил · №1–57, №60–62
+                    - cell [ref=e543]
+                    - cell [ref=e547]:
+                      - button [ref=e552] [cursor=pointer]:
+                        - img [ref=e553]
+                  - 'row "Select/deselect item 767 for bulk actions. З. Татьяна Сергеевна (Падмавати) #767 №62 26.04 – 07.06.2026 288 000 ₽ Не продлил · №1–41, №44–62" [ref=e555]':
+                    - cell "Select/deselect item 767 for bulk actions." [ref=e556]:
+                      - generic [ref=e558]:
+                        - checkbox "Select/deselect item 767 for bulk actions." [ref=e559]
+                        - generic [ref=e560]: Select/deselect item 767 for bulk actions.
+                    - 'cell "З. Татьяна Сергеевна (Падмавати) #767" [ref=e561]':
+                      - 'button "З. Татьяна Сергеевна (Падмавати) #767" [ref=e563] [cursor=pointer]':
+                        - generic [ref=e564]:
+                          - generic [ref=e568]: З. Татьяна Сергеевна (Падмавати)
+                          - paragraph [ref=e569]: "#767"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e570]:
+                      - generic [ref=e573]:
+                        - generic [ref=e577]: №62
+                        - paragraph [ref=e578]: 26.04 – 07.06.2026
+                    - cell "288 000 ₽ Не продлил · №1–41, №44–62" [ref=e579]:
+                      - generic [ref=e582]:
+                        - generic [ref=e586]: 288 000 ₽
+                        - paragraph [ref=e587]: Не продлил · №1–41, №44–62
+                    - cell [ref=e588]
+                    - cell [ref=e592]:
+                      - button [ref=e597] [cursor=pointer]:
+                        - img [ref=e598]
+                  - 'row "Select/deselect item 769 for bulk actions. Золотарева Елена #769 №62 26.04 – 07.06.2026 292 800 ₽ Не продлил · №1–45, №47–62" [ref=e600]':
+                    - cell "Select/deselect item 769 for bulk actions." [ref=e601]:
+                      - generic [ref=e603]:
+                        - checkbox "Select/deselect item 769 for bulk actions." [ref=e604]
+                        - generic [ref=e605]: Select/deselect item 769 for bulk actions.
+                    - 'cell "Золотарева Елена #769" [ref=e606]':
+                      - 'button "Золотарева Елена #769" [ref=e608] [cursor=pointer]':
+                        - generic [ref=e609]:
+                          - generic [ref=e613]: Золотарева Елена
+                          - paragraph [ref=e614]: "#769"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e615]:
+                      - generic [ref=e618]:
+                        - generic [ref=e622]: №62
+                        - paragraph [ref=e623]: 26.04 – 07.06.2026
+                    - cell "292 800 ₽ Не продлил · №1–45, №47–62" [ref=e624]:
+                      - generic [ref=e627]:
+                        - generic [ref=e631]: 292 800 ₽
+                        - paragraph [ref=e632]: Не продлил · №1–45, №47–62
+                    - cell [ref=e633]
+                    - cell [ref=e637]:
+                      - button [ref=e642] [cursor=pointer]:
+                        - img [ref=e643]
+                  - 'row "Select/deselect item 837 for bulk actions. Ионцева Мария #837 №62 26.04 – 07.06.2026 259 200 ₽ Не продлил · №1–30, №32–50, №53–55, №61–62" [ref=e645]':
+                    - cell "Select/deselect item 837 for bulk actions." [ref=e646]:
+                      - generic [ref=e648]:
+                        - checkbox "Select/deselect item 837 for bulk actions." [ref=e649]
+                        - generic [ref=e650]: Select/deselect item 837 for bulk actions.
+                    - 'cell "Ионцева Мария #837" [ref=e651]':
+                      - 'button "Ионцева Мария #837" [ref=e653] [cursor=pointer]':
+                        - generic [ref=e654]:
+                          - generic [ref=e658]: Ионцева Мария
+                          - paragraph [ref=e659]: "#837"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e660]:
+                      - generic [ref=e663]:
+                        - generic [ref=e667]: №62
+                        - paragraph [ref=e668]: 26.04 – 07.06.2026
+                    - cell "259 200 ₽ Не продлил · №1–30, №32–50, №53–55, №61–62" [ref=e669]:
+                      - generic [ref=e672]:
+                        - generic [ref=e676]: 259 200 ₽
+                        - paragraph [ref=e677]: Не продлил · №1–30, №32–50, №53–55, №61–62
+                    - cell [ref=e678]
+                    - cell [ref=e682]:
+                      - button [ref=e687] [cursor=pointer]:
+                        - img [ref=e688]
+                  - 'row "Select/deselect item 615 for bulk actions. Ишимбаев Марсель Венерович #615 №62 26.04 – 07.06.2026 254 400 ₽ Не продлил · №1–36, №44–45, №48–62" [ref=e690]':
+                    - cell "Select/deselect item 615 for bulk actions." [ref=e691]:
+                      - generic [ref=e693]:
+                        - checkbox "Select/deselect item 615 for bulk actions." [ref=e694]
+                        - generic [ref=e695]: Select/deselect item 615 for bulk actions.
+                    - 'cell "Ишимбаев Марсель Венерович #615" [ref=e696]':
+                      - 'button "Ишимбаев Марсель Венерович #615" [ref=e698] [cursor=pointer]':
+                        - generic [ref=e699]:
+                          - generic [ref=e703]: Ишимбаев Марсель Венерович
+                          - paragraph [ref=e704]: "#615"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e705]:
+                      - generic [ref=e708]:
+                        - generic [ref=e712]: №62
+                        - paragraph [ref=e713]: 26.04 – 07.06.2026
+                    - cell "254 400 ₽ Не продлил · №1–36, №44–45, №48–62" [ref=e714]:
+                      - generic [ref=e717]:
+                        - generic [ref=e721]: 254 400 ₽
+                        - paragraph [ref=e722]: Не продлил · №1–36, №44–45, №48–62
+                    - cell [ref=e723]
+                    - cell [ref=e727]:
+                      - button [ref=e732] [cursor=pointer]:
+                        - img [ref=e733]
+                  - 'row "Select/deselect item 764 for bulk actions. Климов Сергей Александрович #764 №62 26.04 – 07.06.2026 264 000 ₽ Не продлил · №1–36, №44–62" [ref=e735]':
+                    - cell "Select/deselect item 764 for bulk actions." [ref=e736]:
+                      - generic [ref=e738]:
+                        - checkbox "Select/deselect item 764 for bulk actions." [ref=e739]
+                        - generic [ref=e740]: Select/deselect item 764 for bulk actions.
+                    - 'cell "Климов Сергей Александрович #764" [ref=e741]':
+                      - 'button "Климов Сергей Александрович #764" [ref=e743] [cursor=pointer]':
+                        - generic [ref=e744]:
+                          - generic [ref=e748]: Климов Сергей Александрович
+                          - paragraph [ref=e749]: "#764"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e750]:
+                      - generic [ref=e753]:
+                        - generic [ref=e757]: №62
+                        - paragraph [ref=e758]: 26.04 – 07.06.2026
+                    - cell "264 000 ₽ Не продлил · №1–36, №44–62" [ref=e759]:
+                      - generic [ref=e762]:
+                        - generic [ref=e766]: 264 000 ₽
+                        - paragraph [ref=e767]: Не продлил · №1–36, №44–62
+                    - cell [ref=e768]
+                    - cell [ref=e772]:
+                      - button [ref=e777] [cursor=pointer]:
+                        - img [ref=e778]
+                  - 'row "Select/deselect item 550 for bulk actions. Ковальчук Ирина #550 №62 26.04 – 07.06.2026 264 000 ₽ Не продлил · №1–45, №53–62" [ref=e780]':
+                    - cell "Select/deselect item 550 for bulk actions." [ref=e781]:
+                      - generic [ref=e783]:
+                        - checkbox "Select/deselect item 550 for bulk actions." [ref=e784]
+                        - generic [ref=e785]: Select/deselect item 550 for bulk actions.
+                    - 'cell "Ковальчук Ирина #550" [ref=e786]':
+                      - 'button "Ковальчук Ирина #550" [ref=e788] [cursor=pointer]':
+                        - generic [ref=e789]:
+                          - generic [ref=e793]: Ковальчук Ирина
+                          - paragraph [ref=e794]: "#550"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e795]:
+                      - generic [ref=e798]:
+                        - generic [ref=e802]: №62
+                        - paragraph [ref=e803]: 26.04 – 07.06.2026
+                    - cell "264 000 ₽ Не продлил · №1–45, №53–62" [ref=e804]:
+                      - generic [ref=e807]:
+                        - generic [ref=e811]: 264 000 ₽
+                        - paragraph [ref=e812]: Не продлил · №1–45, №53–62
+                    - cell [ref=e813]
+                    - cell [ref=e817]:
+                      - button [ref=e822] [cursor=pointer]:
+                        - img [ref=e823]
+                  - 'row "Select/deselect item 759 for bulk actions. Константинова Анна Владимировна #759 №62 26.04 – 07.06.2026 192 000 ₽ Не продлил · №1–36, №44–45, №52, №62" [ref=e825]':
+                    - cell "Select/deselect item 759 for bulk actions." [ref=e826]:
+                      - generic [ref=e828]:
+                        - checkbox "Select/deselect item 759 for bulk actions." [ref=e829]
+                        - generic [ref=e830]: Select/deselect item 759 for bulk actions.
+                    - 'cell "Константинова Анна Владимировна #759" [ref=e831]':
+                      - 'button "Константинова Анна Владимировна #759" [ref=e833] [cursor=pointer]':
+                        - generic [ref=e834]:
+                          - generic [ref=e838]: Константинова Анна Владимировна
+                          - paragraph [ref=e839]: "#759"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e840]:
+                      - generic [ref=e843]:
+                        - generic [ref=e847]: №62
+                        - paragraph [ref=e848]: 26.04 – 07.06.2026
+                    - cell "192 000 ₽ Не продлил · №1–36, №44–45, №52, №62" [ref=e849]:
+                      - generic [ref=e852]:
+                        - generic [ref=e856]: 192 000 ₽
+                        - paragraph [ref=e857]: Не продлил · №1–36, №44–45, №52, №62
+                    - cell [ref=e858]
+                    - cell [ref=e862]:
+                      - button [ref=e867] [cursor=pointer]:
+                        - img [ref=e868]
+                  - 'row "Select/deselect item 409 for bulk actions. Литвиненко Ольга Андреевна #409 №62 26.04 – 07.06.2026 254 400 ₽ Не продлил · №1–49, №52–54, №62" [ref=e870]':
+                    - cell "Select/deselect item 409 for bulk actions." [ref=e871]:
+                      - generic [ref=e873]:
+                        - checkbox "Select/deselect item 409 for bulk actions." [ref=e874]
+                        - generic [ref=e875]: Select/deselect item 409 for bulk actions.
+                    - 'cell "Литвиненко Ольга Андреевна #409" [ref=e876]':
+                      - 'button "Литвиненко Ольга Андреевна #409" [ref=e878] [cursor=pointer]':
+                        - generic [ref=e879]:
+                          - generic [ref=e883]: Литвиненко Ольга Андреевна
+                          - paragraph [ref=e884]: "#409"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e885]:
+                      - generic [ref=e888]:
+                        - generic [ref=e892]: №62
+                        - paragraph [ref=e893]: 26.04 – 07.06.2026
+                    - cell "254 400 ₽ Не продлил · №1–49, №52–54, №62" [ref=e894]:
+                      - generic [ref=e897]:
+                        - generic [ref=e901]: 254 400 ₽
+                        - paragraph [ref=e902]: Не продлил · №1–49, №52–54, №62
+                    - cell [ref=e903]
+                    - cell [ref=e907]:
+                      - button [ref=e912] [cursor=pointer]:
+                        - img [ref=e913]
+                  - 'row "Select/deselect item 869 for bulk actions. Лобанова Ирина Юрьевна, Екатеринбург #869 №62 26.04 – 07.06.2026 278 400 ₽ Не продлил · №1–51, №56–62" [ref=e915]':
+                    - cell "Select/deselect item 869 for bulk actions." [ref=e916]:
+                      - generic [ref=e918]:
+                        - checkbox "Select/deselect item 869 for bulk actions." [ref=e919]
+                        - generic [ref=e920]: Select/deselect item 869 for bulk actions.
+                    - 'cell "Лобанова Ирина Юрьевна, Екатеринбург #869" [ref=e921]':
+                      - 'button "Лобанова Ирина Юрьевна, Екатеринбург #869" [ref=e923] [cursor=pointer]':
+                        - generic [ref=e924]:
+                          - generic [ref=e928]: Лобанова Ирина Юрьевна, Екатеринбург
+                          - paragraph [ref=e929]: "#869"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e930]:
+                      - generic [ref=e933]:
+                        - generic [ref=e937]: №62
+                        - paragraph [ref=e938]: 26.04 – 07.06.2026
+                    - cell "278 400 ₽ Не продлил · №1–51, №56–62" [ref=e939]:
+                      - generic [ref=e942]:
+                        - generic [ref=e946]: 278 400 ₽
+                        - paragraph [ref=e947]: Не продлил · №1–51, №56–62
+                    - cell [ref=e948]
+                    - cell [ref=e952]:
+                      - button [ref=e957] [cursor=pointer]:
+                        - img [ref=e958]
+                  - 'row "Select/deselect item 774 for bulk actions. Лучина Татьяна Владимировна #774 №62 26.04 – 07.06.2026 273 600 ₽ Не продлил · №1–50, №56–62" [ref=e960]':
+                    - cell "Select/deselect item 774 for bulk actions." [ref=e961]:
+                      - generic [ref=e963]:
+                        - checkbox "Select/deselect item 774 for bulk actions." [ref=e964]
+                        - generic [ref=e965]: Select/deselect item 774 for bulk actions.
+                    - 'cell "Лучина Татьяна Владимировна #774" [ref=e966]':
+                      - 'button "Лучина Татьяна Владимировна #774" [ref=e968] [cursor=pointer]':
+                        - generic [ref=e969]:
+                          - generic [ref=e973]: Лучина Татьяна Владимировна
+                          - paragraph [ref=e974]: "#774"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e975]:
+                      - generic [ref=e978]:
+                        - generic [ref=e982]: №62
+                        - paragraph [ref=e983]: 26.04 – 07.06.2026
+                    - cell "273 600 ₽ Не продлил · №1–50, №56–62" [ref=e984]:
+                      - generic [ref=e987]:
+                        - generic [ref=e991]: 273 600 ₽
+                        - paragraph [ref=e992]: Не продлил · №1–50, №56–62
+                    - cell [ref=e993]
+                    - cell [ref=e997]:
+                      - button [ref=e1002] [cursor=pointer]:
+                        - img [ref=e1003]
+                  - 'row "Select/deselect item 1118 for bulk actions. Магдалинский Сергей Викторович, СПБ #1118 №62 26.04 – 07.06.2026 268 800 ₽ Не продлил · №1–55, №62" [ref=e1005]':
+                    - cell "Select/deselect item 1118 for bulk actions." [ref=e1006]:
+                      - generic [ref=e1008]:
+                        - checkbox "Select/deselect item 1118 for bulk actions." [ref=e1009]
+                        - generic [ref=e1010]: Select/deselect item 1118 for bulk actions.
+                    - 'cell "Магдалинский Сергей Викторович, СПБ #1118" [ref=e1011]':
+                      - 'button "Магдалинский Сергей Викторович, СПБ #1118" [ref=e1013] [cursor=pointer]':
+                        - generic [ref=e1014]:
+                          - generic [ref=e1018]: Магдалинский Сергей Викторович, СПБ
+                          - paragraph [ref=e1019]: "#1118"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1020]:
+                      - generic [ref=e1023]:
+                        - generic [ref=e1027]: №62
+                        - paragraph [ref=e1028]: 26.04 – 07.06.2026
+                    - cell "268 800 ₽ Не продлил · №1–55, №62" [ref=e1029]:
+                      - generic [ref=e1032]:
+                        - generic [ref=e1036]: 268 800 ₽
+                        - paragraph [ref=e1037]: Не продлил · №1–55, №62
+                    - cell [ref=e1038]
+                    - cell [ref=e1042]:
+                      - button [ref=e1047] [cursor=pointer]:
+                        - img [ref=e1048]
+                  - 'row "Select/deselect item 768 for bulk actions. Майд Яна #768 №62 26.04 – 07.06.2026 216 000 ₽ Не продлил · №1–41, №44–45, №50, №62" [ref=e1050]':
+                    - cell "Select/deselect item 768 for bulk actions." [ref=e1051]:
+                      - generic [ref=e1053]:
+                        - checkbox "Select/deselect item 768 for bulk actions." [ref=e1054]
+                        - generic [ref=e1055]: Select/deselect item 768 for bulk actions.
+                    - 'cell "Майд Яна #768" [ref=e1056]':
+                      - 'button "Майд Яна #768" [ref=e1058] [cursor=pointer]':
+                        - generic [ref=e1059]:
+                          - generic [ref=e1063]: Майд Яна
+                          - paragraph [ref=e1064]: "#768"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1065]:
+                      - generic [ref=e1068]:
+                        - generic [ref=e1072]: №62
+                        - paragraph [ref=e1073]: 26.04 – 07.06.2026
+                    - cell "216 000 ₽ Не продлил · №1–41, №44–45, №50, №62" [ref=e1074]:
+                      - generic [ref=e1077]:
+                        - generic [ref=e1081]: 216 000 ₽
+                        - paragraph [ref=e1082]: Не продлил · №1–41, №44–45, №50, №62
+                    - cell [ref=e1083]
+                    - cell [ref=e1087]:
+                      - button [ref=e1092] [cursor=pointer]:
+                        - img [ref=e1093]
+                  - 'row "Select/deselect item 739 for bulk actions. Майер Людмила #739 №62 26.04 – 07.06.2026 264 000 ₽ Не продлил · №1–40, №44–45, №50–62" [ref=e1095]':
+                    - cell "Select/deselect item 739 for bulk actions." [ref=e1096]:
+                      - generic [ref=e1098]:
+                        - checkbox "Select/deselect item 739 for bulk actions." [ref=e1099]
+                        - generic [ref=e1100]: Select/deselect item 739 for bulk actions.
+                    - 'cell "Майер Людмила #739" [ref=e1101]':
+                      - 'button "Майер Людмила #739" [ref=e1103] [cursor=pointer]':
+                        - generic [ref=e1104]:
+                          - generic [ref=e1108]: Майер Людмила
+                          - paragraph [ref=e1109]: "#739"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1110]:
+                      - generic [ref=e1113]:
+                        - generic [ref=e1117]: №62
+                        - paragraph [ref=e1118]: 26.04 – 07.06.2026
+                    - cell "264 000 ₽ Не продлил · №1–40, №44–45, №50–62" [ref=e1119]:
+                      - generic [ref=e1122]:
+                        - generic [ref=e1126]: 264 000 ₽
+                        - paragraph [ref=e1127]: Не продлил · №1–40, №44–45, №50–62
+                    - cell [ref=e1128]
+                    - cell [ref=e1132]:
+                      - button [ref=e1137] [cursor=pointer]:
+                        - img [ref=e1138]
+                  - 'row "Select/deselect item 629 for bulk actions. Макаров Олег Юрьевич, Москва #629 №62 26.04 – 07.06.2026 168 000 ₽ Не продлил · №21–45, №53–62 до 27.06.2026" [ref=e1140]':
+                    - cell "Select/deselect item 629 for bulk actions." [ref=e1141]:
+                      - generic [ref=e1143]:
+                        - checkbox "Select/deselect item 629 for bulk actions." [ref=e1144]
+                        - generic [ref=e1145]: Select/deselect item 629 for bulk actions.
+                    - 'cell "Макаров Олег Юрьевич, Москва #629" [ref=e1146]':
+                      - 'button "Макаров Олег Юрьевич, Москва #629" [ref=e1148] [cursor=pointer]':
+                        - generic [ref=e1149]:
+                          - generic [ref=e1153]: Макаров Олег Юрьевич, Москва
+                          - paragraph [ref=e1154]: "#629"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1155]:
+                      - generic [ref=e1158]:
+                        - generic [ref=e1162]: №62
+                        - paragraph [ref=e1163]: 26.04 – 07.06.2026
+                    - cell "168 000 ₽ Не продлил · №21–45, №53–62" [ref=e1164]:
+                      - generic [ref=e1167]:
+                        - generic [ref=e1171]: 168 000 ₽
+                        - paragraph [ref=e1172]: Не продлил · №21–45, №53–62
+                    - cell "до 27.06.2026" [ref=e1173]:
+                      - generic [ref=e1181]: до 27.06.2026
+                    - cell [ref=e1182]:
+                      - button [ref=e1187] [cursor=pointer]:
+                        - img [ref=e1188]
+                  - 'row "Select/deselect item 933 for bulk actions. Назаревская Татьяна Анатольевна, Москва #933 №62 26.04 – 07.06.2026 259 200 ₽ Не продлил · №1–30, №32–53, №61–62" [ref=e1190]':
+                    - cell "Select/deselect item 933 for bulk actions." [ref=e1191]:
+                      - generic [ref=e1193]:
+                        - checkbox "Select/deselect item 933 for bulk actions." [ref=e1194]
+                        - generic [ref=e1195]: Select/deselect item 933 for bulk actions.
+                    - 'cell "Назаревская Татьяна Анатольевна, Москва #933" [ref=e1196]':
+                      - 'button "Назаревская Татьяна Анатольевна, Москва #933" [ref=e1198] [cursor=pointer]':
+                        - generic [ref=e1199]:
+                          - generic [ref=e1203]: Назаревская Татьяна Анатольевна, Москва
+                          - paragraph [ref=e1204]: "#933"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1205]:
+                      - generic [ref=e1208]:
+                        - generic [ref=e1212]: №62
+                        - paragraph [ref=e1213]: 26.04 – 07.06.2026
+                    - cell "259 200 ₽ Не продлил · №1–30, №32–53, №61–62" [ref=e1214]:
+                      - generic [ref=e1217]:
+                        - generic [ref=e1221]: 259 200 ₽
+                        - paragraph [ref=e1222]: Не продлил · №1–30, №32–53, №61–62
+                    - cell [ref=e1223]
+                    - cell [ref=e1227]:
+                      - button [ref=e1232] [cursor=pointer]:
+                        - img [ref=e1233]
+                  - 'row "Select/deselect item 404 for bulk actions. Нафиева Ирина Васильевна, Москва #404 №62 26.04 – 07.06.2026 278 400 ₽ Не продлил · №1–35, №40–62" [ref=e1235]':
+                    - cell "Select/deselect item 404 for bulk actions." [ref=e1236]:
+                      - generic [ref=e1238]:
+                        - checkbox "Select/deselect item 404 for bulk actions." [ref=e1239]
+                        - generic [ref=e1240]: Select/deselect item 404 for bulk actions.
+                    - 'cell "Нафиева Ирина Васильевна, Москва #404" [ref=e1241]':
+                      - 'button "Нафиева Ирина Васильевна, Москва #404" [ref=e1243] [cursor=pointer]':
+                        - generic [ref=e1244]:
+                          - generic [ref=e1248]: Нафиева Ирина Васильевна, Москва
+                          - paragraph [ref=e1249]: "#404"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1250]:
+                      - generic [ref=e1253]:
+                        - generic [ref=e1257]: №62
+                        - paragraph [ref=e1258]: 26.04 – 07.06.2026
+                    - cell "278 400 ₽ Не продлил · №1–35, №40–62" [ref=e1259]:
+                      - generic [ref=e1262]:
+                        - generic [ref=e1266]: 278 400 ₽
+                        - paragraph [ref=e1267]: Не продлил · №1–35, №40–62
+                    - cell [ref=e1268]
+                    - cell [ref=e1272]:
+                      - button [ref=e1277] [cursor=pointer]:
+                        - img [ref=e1278]
+                  - 'row "Select/deselect item 383 for bulk actions. Новикова Ольга #383 №62 26.04 – 07.06.2026 230 400 ₽ Не продлил · №1–36, №44–45, №52, №54–62" [ref=e1280]':
+                    - cell "Select/deselect item 383 for bulk actions." [ref=e1281]:
+                      - generic [ref=e1283]:
+                        - checkbox "Select/deselect item 383 for bulk actions." [ref=e1284]
+                        - generic [ref=e1285]: Select/deselect item 383 for bulk actions.
+                    - 'cell "Новикова Ольга #383" [ref=e1286]':
+                      - 'button "Новикова Ольга #383" [ref=e1288] [cursor=pointer]':
+                        - generic [ref=e1289]:
+                          - generic [ref=e1293]: Новикова Ольга
+                          - paragraph [ref=e1294]: "#383"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1295]:
+                      - generic [ref=e1298]:
+                        - generic [ref=e1302]: №62
+                        - paragraph [ref=e1303]: 26.04 – 07.06.2026
+                    - cell "230 400 ₽ Не продлил · №1–36, №44–45, №52, №54–62" [ref=e1304]:
+                      - generic [ref=e1307]:
+                        - generic [ref=e1311]: 230 400 ₽
+                        - paragraph [ref=e1312]: Не продлил · №1–36, №44–45, №52, №54–62
+                    - cell [ref=e1313]
+                    - cell [ref=e1317]:
+                      - button [ref=e1322] [cursor=pointer]:
+                        - img [ref=e1323]
+                  - 'row "Select/deselect item 773 for bulk actions. Павлишин Сергей Анатольевич #773 №62 26.04 – 07.06.2026 292 800 ₽ Не продлил · №1–50, №52–62" [ref=e1325]':
+                    - cell "Select/deselect item 773 for bulk actions." [ref=e1326]:
+                      - generic [ref=e1328]:
+                        - checkbox "Select/deselect item 773 for bulk actions." [ref=e1329]
+                        - generic [ref=e1330]: Select/deselect item 773 for bulk actions.
+                    - 'cell "Павлишин Сергей Анатольевич #773" [ref=e1331]':
+                      - 'button "Павлишин Сергей Анатольевич #773" [ref=e1333] [cursor=pointer]':
+                        - generic [ref=e1334]:
+                          - generic [ref=e1338]: Павлишин Сергей Анатольевич
+                          - paragraph [ref=e1339]: "#773"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1340]:
+                      - generic [ref=e1343]:
+                        - generic [ref=e1347]: №62
+                        - paragraph [ref=e1348]: 26.04 – 07.06.2026
+                    - cell "292 800 ₽ Не продлил · №1–50, №52–62" [ref=e1349]:
+                      - generic [ref=e1352]:
+                        - generic [ref=e1356]: 292 800 ₽
+                        - paragraph [ref=e1357]: Не продлил · №1–50, №52–62
+                    - cell [ref=e1358]
+                    - cell [ref=e1362]:
+                      - button [ref=e1367] [cursor=pointer]:
+                        - img [ref=e1368]
+                  - 'row "Select/deselect item 762 for bulk actions. Собака Оксана #762 №62 26.04 – 07.06.2026 220 800 ₽ Не продлил · №1–36, №53–62" [ref=e1370]':
+                    - cell "Select/deselect item 762 for bulk actions." [ref=e1371]:
+                      - generic [ref=e1373]:
+                        - checkbox "Select/deselect item 762 for bulk actions." [ref=e1374]
+                        - generic [ref=e1375]: Select/deselect item 762 for bulk actions.
+                    - 'cell "Собака Оксана #762" [ref=e1376]':
+                      - 'button "Собака Оксана #762" [ref=e1378] [cursor=pointer]':
+                        - generic [ref=e1379]:
+                          - generic [ref=e1383]: Собака Оксана
+                          - paragraph [ref=e1384]: "#762"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1385]:
+                      - generic [ref=e1388]:
+                        - generic [ref=e1392]: №62
+                        - paragraph [ref=e1393]: 26.04 – 07.06.2026
+                    - cell "220 800 ₽ Не продлил · №1–36, №53–62" [ref=e1394]:
+                      - generic [ref=e1397]:
+                        - generic [ref=e1401]: 220 800 ₽
+                        - paragraph [ref=e1402]: Не продлил · №1–36, №53–62
+                    - cell [ref=e1403]
+                    - cell [ref=e1407]:
+                      - button [ref=e1412] [cursor=pointer]:
+                        - img [ref=e1413]
+                  - 'row "Select/deselect item 758 for bulk actions. Топорков Алексей Сергеевич #758 №62 26.04 – 07.06.2026 187 200 ₽ Не продлил · №1–36, №44–45, №62" [ref=e1415]':
+                    - cell "Select/deselect item 758 for bulk actions." [ref=e1416]:
+                      - generic [ref=e1418]:
+                        - checkbox "Select/deselect item 758 for bulk actions." [ref=e1419]
+                        - generic [ref=e1420]: Select/deselect item 758 for bulk actions.
+                    - 'cell "Топорков Алексей Сергеевич #758" [ref=e1421]':
+                      - 'button "Топорков Алексей Сергеевич #758" [ref=e1423] [cursor=pointer]':
+                        - generic [ref=e1424]:
+                          - generic [ref=e1428]: Топорков Алексей Сергеевич
+                          - paragraph [ref=e1429]: "#758"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1430]:
+                      - generic [ref=e1433]:
+                        - generic [ref=e1437]: №62
+                        - paragraph [ref=e1438]: 26.04 – 07.06.2026
+                    - cell "187 200 ₽ Не продлил · №1–36, №44–45, №62" [ref=e1439]:
+                      - generic [ref=e1442]:
+                        - generic [ref=e1446]: 187 200 ₽
+                        - paragraph [ref=e1447]: Не продлил · №1–36, №44–45, №62
+                    - cell [ref=e1448]
+                    - cell [ref=e1452]:
+                      - button [ref=e1457] [cursor=pointer]:
+                        - img [ref=e1458]
+                  - 'row "Select/deselect item 771 for bulk actions. Хасанов Марат Шайхулович #771 №62 26.04 – 07.06.2026 288 000 ₽ Не продлил · №1–49, №52–62" [ref=e1460]':
+                    - cell "Select/deselect item 771 for bulk actions." [ref=e1461]:
+                      - generic [ref=e1463]:
+                        - checkbox "Select/deselect item 771 for bulk actions." [ref=e1464]
+                        - generic [ref=e1465]: Select/deselect item 771 for bulk actions.
+                    - 'cell "Хасанов Марат Шайхулович #771" [ref=e1466]':
+                      - 'button "Хасанов Марат Шайхулович #771" [ref=e1468] [cursor=pointer]':
+                        - generic [ref=e1469]:
+                          - generic [ref=e1473]: Хасанов Марат Шайхулович
+                          - paragraph [ref=e1474]: "#771"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1475]:
+                      - generic [ref=e1478]:
+                        - generic [ref=e1482]: №62
+                        - paragraph [ref=e1483]: 26.04 – 07.06.2026
+                    - cell "288 000 ₽ Не продлил · №1–49, №52–62" [ref=e1484]:
+                      - generic [ref=e1487]:
+                        - generic [ref=e1491]: 288 000 ₽
+                        - paragraph [ref=e1492]: Не продлил · №1–49, №52–62
+                    - cell [ref=e1493]
+                    - cell [ref=e1497]:
+                      - button [ref=e1502] [cursor=pointer]:
+                        - img [ref=e1503]
+                  - 'row "Select/deselect item 763 for bulk actions. Ц. Алексей Владимирович #763 №62 26.04 – 07.06.2026 196 800 ₽ Не продлил · №1–36, №44–45, №58, №60, №62" [ref=e1505]':
+                    - cell "Select/deselect item 763 for bulk actions." [ref=e1506]:
+                      - generic [ref=e1508]:
+                        - checkbox "Select/deselect item 763 for bulk actions." [ref=e1509]
+                        - generic [ref=e1510]: Select/deselect item 763 for bulk actions.
+                    - 'cell "Ц. Алексей Владимирович #763" [ref=e1511]':
+                      - 'button "Ц. Алексей Владимирович #763" [ref=e1513] [cursor=pointer]':
+                        - generic [ref=e1514]:
+                          - generic [ref=e1518]: Ц. Алексей Владимирович
+                          - paragraph [ref=e1519]: "#763"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1520]:
+                      - generic [ref=e1523]:
+                        - generic [ref=e1527]: №62
+                        - paragraph [ref=e1528]: 26.04 – 07.06.2026
+                    - cell "196 800 ₽ Не продлил · №1–36, №44–45, №58, №60, №62" [ref=e1529]:
+                      - generic [ref=e1532]:
+                        - generic [ref=e1536]: 196 800 ₽
+                        - paragraph [ref=e1537]: Не продлил · №1–36, №44–45, №58, №60, №62
+                    - cell [ref=e1538]
+                    - cell [ref=e1542]:
+                      - button [ref=e1547] [cursor=pointer]:
+                        - img [ref=e1548]
+                  - 'row "Select/deselect item 766 for bulk actions. Черухин Денис Анатольевич #766 №62 26.04 – 07.06.2026 244 800 ₽ Не продлил · №1–36, №44–45, №49–50, №52–62" [ref=e1550]':
+                    - cell "Select/deselect item 766 for bulk actions." [ref=e1551]:
+                      - generic [ref=e1553]:
+                        - checkbox "Select/deselect item 766 for bulk actions." [ref=e1554]
+                        - generic [ref=e1555]: Select/deselect item 766 for bulk actions.
+                    - 'cell "Черухин Денис Анатольевич #766" [ref=e1556]':
+                      - 'button "Черухин Денис Анатольевич #766" [ref=e1558] [cursor=pointer]':
+                        - generic [ref=e1559]:
+                          - generic [ref=e1563]: Черухин Денис Анатольевич
+                          - paragraph [ref=e1564]: "#766"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1565]:
+                      - generic [ref=e1568]:
+                        - generic [ref=e1572]: №62
+                        - paragraph [ref=e1573]: 26.04 – 07.06.2026
+                    - cell "244 800 ₽ Не продлил · №1–36, №44–45, №49–50, №52–62" [ref=e1574]:
+                      - generic [ref=e1577]:
+                        - generic [ref=e1581]: 244 800 ₽
+                        - paragraph [ref=e1582]: Не продлил · №1–36, №44–45, №49–50, №52–62
+                    - cell [ref=e1583]
+                    - cell [ref=e1587]:
+                      - button [ref=e1592] [cursor=pointer]:
+                        - img [ref=e1593]
+                  - 'row "Select/deselect item 776 for bulk actions. Шевченко Алексей Владимирович, Москва #776 №62 26.04 – 07.06.2026 254 400 ₽ Не продлил · №1–50, №55, №57, №62" [ref=e1595]':
+                    - cell "Select/deselect item 776 for bulk actions." [ref=e1596]:
+                      - generic [ref=e1598]:
+                        - checkbox "Select/deselect item 776 for bulk actions." [ref=e1599]
+                        - generic [ref=e1600]: Select/deselect item 776 for bulk actions.
+                    - 'cell "Шевченко Алексей Владимирович, Москва #776" [ref=e1601]':
+                      - 'button "Шевченко Алексей Владимирович, Москва #776" [ref=e1603] [cursor=pointer]':
+                        - generic [ref=e1604]:
+                          - generic [ref=e1608]: Шевченко Алексей Владимирович, Москва
+                          - paragraph [ref=e1609]: "#776"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1610]:
+                      - generic [ref=e1613]:
+                        - generic [ref=e1617]: №62
+                        - paragraph [ref=e1618]: 26.04 – 07.06.2026
+                    - cell "254 400 ₽ Не продлил · №1–50, №55, №57, №62" [ref=e1619]:
+                      - generic [ref=e1622]:
+                        - generic [ref=e1626]: 254 400 ₽
+                        - paragraph [ref=e1627]: Не продлил · №1–50, №55, №57, №62
+                    - cell [ref=e1628]
+                    - cell [ref=e1632]:
+                      - button [ref=e1637] [cursor=pointer]:
+                        - img [ref=e1638]
+                  - 'row "Select/deselect item 772 for bulk actions. Шелковников Александр Юрьевич #772 №62 26.04 – 07.06.2026 278 400 ₽ Не продлил · №1–50, №55–62" [ref=e1640]':
+                    - cell "Select/deselect item 772 for bulk actions." [ref=e1641]:
+                      - generic [ref=e1643]:
+                        - checkbox "Select/deselect item 772 for bulk actions." [ref=e1644]
+                        - generic [ref=e1645]: Select/deselect item 772 for bulk actions.
+                    - 'cell "Шелковников Александр Юрьевич #772" [ref=e1646]':
+                      - 'button "Шелковников Александр Юрьевич #772" [ref=e1648] [cursor=pointer]':
+                        - generic [ref=e1649]:
+                          - generic [ref=e1653]: Шелковников Александр Юрьевич
+                          - paragraph [ref=e1654]: "#772"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1655]:
+                      - generic [ref=e1658]:
+                        - generic [ref=e1662]: №62
+                        - paragraph [ref=e1663]: 26.04 – 07.06.2026
+                    - cell "278 400 ₽ Не продлил · №1–50, №55–62" [ref=e1664]:
+                      - generic [ref=e1667]:
+                        - generic [ref=e1671]: 278 400 ₽
+                        - paragraph [ref=e1672]: Не продлил · №1–50, №55–62
+                    - cell [ref=e1673]
+                    - cell [ref=e1677]:
+                      - button [ref=e1682] [cursor=pointer]:
+                        - img [ref=e1683]
+                  - 'row "Select/deselect item 760 for bulk actions. Шруогинис Дариус #760 №62 26.04 – 07.06.2026 230 400 ₽ Не продлил · №1–35, №44–45, №52–62" [ref=e1685]':
+                    - cell "Select/deselect item 760 for bulk actions." [ref=e1686]:
+                      - generic [ref=e1688]:
+                        - checkbox "Select/deselect item 760 for bulk actions." [ref=e1689]
+                        - generic [ref=e1690]: Select/deselect item 760 for bulk actions.
+                    - 'cell "Шруогинис Дариус #760" [ref=e1691]':
+                      - 'button "Шруогинис Дариус #760" [ref=e1693] [cursor=pointer]':
+                        - generic [ref=e1694]:
+                          - generic [ref=e1698]: Шруогинис Дариус
+                          - paragraph [ref=e1699]: "#760"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1700]:
+                      - generic [ref=e1703]:
+                        - generic [ref=e1707]: №62
+                        - paragraph [ref=e1708]: 26.04 – 07.06.2026
+                    - cell "230 400 ₽ Не продлил · №1–35, №44–45, №52–62" [ref=e1709]:
+                      - generic [ref=e1712]:
+                        - generic [ref=e1716]: 230 400 ₽
+                        - paragraph [ref=e1717]: Не продлил · №1–35, №44–45, №52–62
+                    - cell [ref=e1718]
+                    - cell [ref=e1722]:
+                      - button [ref=e1727] [cursor=pointer]:
+                        - img [ref=e1728]
+                  - 'row "Select/deselect item 378 for bulk actions. Юдинцев Аркадий, Израиль #378 №62 26.04 – 07.06.2026 259 200 ₽ Не продлил · №1–45, №54–62" [ref=e1730]':
+                    - cell "Select/deselect item 378 for bulk actions." [ref=e1731]:
+                      - generic [ref=e1733]:
+                        - checkbox "Select/deselect item 378 for bulk actions." [ref=e1734]
+                        - generic [ref=e1735]: Select/deselect item 378 for bulk actions.
+                    - 'cell "Юдинцев Аркадий, Израиль #378" [ref=e1736]':
+                      - 'button "Юдинцев Аркадий, Израиль #378" [ref=e1738] [cursor=pointer]':
+                        - generic [ref=e1739]:
+                          - generic [ref=e1743]: Юдинцев Аркадий, Израиль
+                          - paragraph [ref=e1744]: "#378"
+                    - cell "№62 26.04 – 07.06.2026" [ref=e1745]:
+                      - generic [ref=e1748]:
+                        - generic [ref=e1752]: №62
+                        - paragraph [ref=e1753]: 26.04 – 07.06.2026
+                    - cell "259 200 ₽ Не продлил · №1–45, №54–62" [ref=e1754]:
+                      - generic [ref=e1757]:
+                        - generic [ref=e1761]: 259 200 ₽
+                        - paragraph [ref=e1762]: Не продлил · №1–45, №54–62
+                    - cell [ref=e1763]
+                    - cell [ref=e1767]:
+                      - button [ref=e1772] [cursor=pointer]:
+                        - img [ref=e1773]
+                  - 'row "Select/deselect group Грамматика по Кочергиной гр.42 for bulk actions. Курс: Грамматика по Кочергиной гр.42 Курс: Грамматика по Кочергиной гр.42" [ref=e1775]':
+                    - cell "Select/deselect group Грамматика по Кочергиной гр.42 for bulk actions." [ref=e1776]:
+                      - generic [ref=e1778]:
+                        - checkbox "Select/deselect group Грамматика по Кочергиной гр.42 for bulk actions." [ref=e1779]
+                        - generic [ref=e1780]: Select/deselect group Грамматика по Кочергиной гр.42 for bulk actions.
+                    - 'cell "Курс: Грамматика по Кочергиной гр.42 Курс: Грамматика по Кочергиной гр.42" [ref=e1781]':
+                      - generic [ref=e1782] [cursor=pointer]:
+                        - 'heading "Курс: Грамматика по Кочергиной гр.42" [level=4] [ref=e1784]'
+                        - 'button "Курс: Грамматика по Кочергиной гр.42" [ref=e1785]':
+                          - generic [ref=e1786]: "Курс: Грамматика по Кочергиной гр.42"
+                          - img [ref=e1787]
+                  - 'row "Select/deselect item 820 for bulk actions. Аджян Наталья Борисовна, Люберцы, Московская область #820 №22 16.05 – 06.06.2026 ≈ 6 000 ₽ Не продлил · №22" [ref=e1789]':
+                    - cell "Select/deselect item 820 for bulk actions." [ref=e1790]:
+                      - generic [ref=e1792]:
+                        - checkbox "Select/deselect item 820 for bulk actions." [ref=e1793]
+                        - generic [ref=e1794]: Select/deselect item 820 for bulk actions.
+                    - 'cell "Аджян Наталья Борисовна, Люберцы, Московская область #820" [ref=e1795]':
+                      - 'button "Аджян Наталья Борисовна, Люберцы, Московская область #820" [ref=e1797] [cursor=pointer]':
+                        - generic [ref=e1798]:
+                          - generic [ref=e1802]: Аджян Наталья Борисовна, Люберцы, Московская область
+                          - paragraph [ref=e1803]: "#820"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e1804]:
+                      - generic [ref=e1807]:
+                        - generic [ref=e1811]: №22
+                        - paragraph [ref=e1812]: 16.05 – 06.06.2026
+                    - cell "≈ 6 000 ₽ Не продлил · №22" [ref=e1813]:
+                      - generic [ref=e1816]:
+                        - generic [ref=e1820]: ≈ 6 000 ₽
+                        - paragraph [ref=e1821]: Не продлил · №22
+                    - cell [ref=e1822]
+                    - cell [ref=e1826]:
+                      - button [ref=e1831] [cursor=pointer]:
+                        - img [ref=e1832]
+                  - 'row "Select/deselect item 891 for bulk actions. Ангелина Традиция #891 №22 16.05 – 06.06.2026 ≈ 120 000 ₽ Не продлил · №3–22" [ref=e1834]':
+                    - cell "Select/deselect item 891 for bulk actions." [ref=e1835]:
+                      - generic [ref=e1837]:
+                        - checkbox "Select/deselect item 891 for bulk actions." [ref=e1838]
+                        - generic [ref=e1839]: Select/deselect item 891 for bulk actions.
+                    - 'cell "Ангелина Традиция #891" [ref=e1840]':
+                      - 'button "Ангелина Традиция #891" [ref=e1842] [cursor=pointer]':
+                        - generic [ref=e1843]:
+                          - generic [ref=e1847]: Ангелина Традиция
+                          - paragraph [ref=e1848]: "#891"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e1849]:
+                      - generic [ref=e1852]:
+                        - generic [ref=e1856]: №22
+                        - paragraph [ref=e1857]: 16.05 – 06.06.2026
+                    - cell "≈ 120 000 ₽ Не продлил · №3–22" [ref=e1858]:
+                      - generic [ref=e1861]:
+                        - generic [ref=e1865]: ≈ 120 000 ₽
+                        - paragraph [ref=e1866]: Не продлил · №3–22
+                    - cell [ref=e1867]
+                    - cell [ref=e1871]:
+                      - button [ref=e1876] [cursor=pointer]:
+                        - img [ref=e1877]
+                  - 'row "Select/deselect item 892 for bulk actions. Анисимович Николай, Белгород #892 №22 16.05 – 06.06.2026 ≈ 126 000 ₽ Не продлил · №2–22" [ref=e1879]':
+                    - cell "Select/deselect item 892 for bulk actions." [ref=e1880]:
+                      - generic [ref=e1882]:
+                        - checkbox "Select/deselect item 892 for bulk actions." [ref=e1883]
+                        - generic [ref=e1884]: Select/deselect item 892 for bulk actions.
+                    - 'cell "Анисимович Николай, Белгород #892" [ref=e1885]':
+                      - 'button "Анисимович Николай, Белгород #892" [ref=e1887] [cursor=pointer]':
+                        - generic [ref=e1888]:
+                          - generic [ref=e1892]: Анисимович Николай, Белгород
+                          - paragraph [ref=e1893]: "#892"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e1894]:
+                      - generic [ref=e1897]:
+                        - generic [ref=e1901]: №22
+                        - paragraph [ref=e1902]: 16.05 – 06.06.2026
+                    - cell "≈ 126 000 ₽ Не продлил · №2–22" [ref=e1903]:
+                      - generic [ref=e1906]:
+                        - generic [ref=e1910]: ≈ 126 000 ₽
+                        - paragraph [ref=e1911]: Не продлил · №2–22
+                    - cell [ref=e1912]
+                    - cell [ref=e1916]:
+                      - button [ref=e1921] [cursor=pointer]:
+                        - img [ref=e1922]
+                  - 'row "Select/deselect item 750 for bulk actions. Белошенко Константин, Торонто #750 №22 16.05 – 06.06.2026 ≈ 108 000 ₽ Не продлил · №5–22" [ref=e1924]':
+                    - cell "Select/deselect item 750 for bulk actions." [ref=e1925]:
+                      - generic [ref=e1927]:
+                        - checkbox "Select/deselect item 750 for bulk actions." [ref=e1928]
+                        - generic [ref=e1929]: Select/deselect item 750 for bulk actions.
+                    - 'cell "Белошенко Константин, Торонто #750" [ref=e1930]':
+                      - 'button "Белошенко Константин, Торонто #750" [ref=e1932] [cursor=pointer]':
+                        - generic [ref=e1933]:
+                          - generic [ref=e1937]: Белошенко Константин, Торонто
+                          - paragraph [ref=e1938]: "#750"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e1939]:
+                      - generic [ref=e1942]:
+                        - generic [ref=e1946]: №22
+                        - paragraph [ref=e1947]: 16.05 – 06.06.2026
+                    - cell "≈ 108 000 ₽ Не продлил · №5–22" [ref=e1948]:
+                      - generic [ref=e1951]:
+                        - generic [ref=e1955]: ≈ 108 000 ₽
+                        - paragraph [ref=e1956]: Не продлил · №5–22
+                    - cell [ref=e1957]
+                    - cell [ref=e1961]:
+                      - button [ref=e1966] [cursor=pointer]:
+                        - img [ref=e1967]
+                  - 'row "Select/deselect item 882 for bulk actions. Бенидзе Екатерина Георгиевна #882 №22 16.05 – 06.06.2026 ≈ 6 000 ₽ Не продлил · №22" [ref=e1969]':
+                    - cell "Select/deselect item 882 for bulk actions." [ref=e1970]:
+                      - generic [ref=e1972]:
+                        - checkbox "Select/deselect item 882 for bulk actions." [ref=e1973]
+                        - generic [ref=e1974]: Select/deselect item 882 for bulk actions.
+                    - 'cell "Бенидзе Екатерина Георгиевна #882" [ref=e1975]':
+                      - 'button "Бенидзе Екатерина Георгиевна #882" [ref=e1977] [cursor=pointer]':
+                        - generic [ref=e1978]:
+                          - generic [ref=e1982]: Бенидзе Екатерина Георгиевна
+                          - paragraph [ref=e1983]: "#882"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e1984]:
+                      - generic [ref=e1987]:
+                        - generic [ref=e1991]: №22
+                        - paragraph [ref=e1992]: 16.05 – 06.06.2026
+                    - cell "≈ 6 000 ₽ Не продлил · №22" [ref=e1993]:
+                      - generic [ref=e1996]:
+                        - generic [ref=e2000]: ≈ 6 000 ₽
+                        - paragraph [ref=e2001]: Не продлил · №22
+                    - cell [ref=e2002]
+                    - cell [ref=e2006]:
+                      - button [ref=e2011] [cursor=pointer]:
+                        - img [ref=e2012]
+                  - 'row "Select/deselect item 883 for bulk actions. Бенидзе Ирма Георгиевна, Севастополь #883 №22 16.05 – 06.06.2026 ≈ 6 000 ₽ Не продлил · №22" [ref=e2014]':
+                    - cell "Select/deselect item 883 for bulk actions." [ref=e2015]:
+                      - generic [ref=e2017]:
+                        - checkbox "Select/deselect item 883 for bulk actions." [ref=e2018]
+                        - generic [ref=e2019]: Select/deselect item 883 for bulk actions.
+                    - 'cell "Бенидзе Ирма Георгиевна, Севастополь #883" [ref=e2020]':
+                      - 'button "Бенидзе Ирма Георгиевна, Севастополь #883" [ref=e2022] [cursor=pointer]':
+                        - generic [ref=e2023]:
+                          - generic [ref=e2027]: Бенидзе Ирма Георгиевна, Севастополь
+                          - paragraph [ref=e2028]: "#883"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2029]:
+                      - generic [ref=e2032]:
+                        - generic [ref=e2036]: №22
+                        - paragraph [ref=e2037]: 16.05 – 06.06.2026
+                    - cell "≈ 6 000 ₽ Не продлил · №22" [ref=e2038]:
+                      - generic [ref=e2041]:
+                        - generic [ref=e2045]: ≈ 6 000 ₽
+                        - paragraph [ref=e2046]: Не продлил · №22
+                    - cell [ref=e2047]
+                    - cell [ref=e2051]:
+                      - button [ref=e2056] [cursor=pointer]:
+                        - img [ref=e2057]
+                  - 'row "Select/deselect item 405 for bulk actions. Болотов Алексей Константинович #405 №22 16.05 – 06.06.2026 ≈ 120 000 ₽ Не продлил · №3–22" [ref=e2059]':
+                    - cell "Select/deselect item 405 for bulk actions." [ref=e2060]:
+                      - generic [ref=e2062]:
+                        - checkbox "Select/deselect item 405 for bulk actions." [ref=e2063]
+                        - generic [ref=e2064]: Select/deselect item 405 for bulk actions.
+                    - 'cell "Болотов Алексей Константинович #405" [ref=e2065]':
+                      - 'button "Болотов Алексей Константинович #405" [ref=e2067] [cursor=pointer]':
+                        - generic [ref=e2068]:
+                          - generic [ref=e2072]: Болотов Алексей Константинович
+                          - paragraph [ref=e2073]: "#405"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2074]:
+                      - generic [ref=e2077]:
+                        - generic [ref=e2081]: №22
+                        - paragraph [ref=e2082]: 16.05 – 06.06.2026
+                    - cell "≈ 120 000 ₽ Не продлил · №3–22" [ref=e2083]:
+                      - generic [ref=e2086]:
+                        - generic [ref=e2090]: ≈ 120 000 ₽
+                        - paragraph [ref=e2091]: Не продлил · №3–22
+                    - cell [ref=e2092]
+                    - cell [ref=e2096]:
+                      - button [ref=e2101] [cursor=pointer]:
+                        - img [ref=e2102]
+                  - 'row "Select/deselect item 796 for bulk actions. Григорьева Марина Феликсовна, с. Сосновый Бор, Амурская область #796 №22 16.05 – 06.06.2026 ≈ 120 000 ₽ Не продлил · №3–22" [ref=e2104]':
+                    - cell "Select/deselect item 796 for bulk actions." [ref=e2105]:
+                      - generic [ref=e2107]:
+                        - checkbox "Select/deselect item 796 for bulk actions." [ref=e2108]
+                        - generic [ref=e2109]: Select/deselect item 796 for bulk actions.
+                    - 'cell "Григорьева Марина Феликсовна, с. Сосновый Бор, Амурская область #796" [ref=e2110]':
+                      - 'button "Григорьева Марина Феликсовна, с. Сосновый Бор, Амурская область #796" [ref=e2112] [cursor=pointer]':
+                        - generic [ref=e2113]:
+                          - generic [ref=e2117]: Григорьева Марина Феликсовна, с. Сосновый Бор, Амурская область
+                          - paragraph [ref=e2118]: "#796"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2119]:
+                      - generic [ref=e2122]:
+                        - generic [ref=e2126]: №22
+                        - paragraph [ref=e2127]: 16.05 – 06.06.2026
+                    - cell "≈ 120 000 ₽ Не продлил · №3–22" [ref=e2128]:
+                      - generic [ref=e2131]:
+                        - generic [ref=e2135]: ≈ 120 000 ₽
+                        - paragraph [ref=e2136]: Не продлил · №3–22
+                    - cell [ref=e2137]
+                    - cell [ref=e2141]:
+                      - button [ref=e2146] [cursor=pointer]:
+                        - img [ref=e2147]
+                  - 'row "Select/deselect item 893 for bulk actions. Данова Елена #893 №22 16.05 – 06.06.2026 ≈ 126 000 ₽ Не продлил · №2–22" [ref=e2149]':
+                    - cell "Select/deselect item 893 for bulk actions." [ref=e2150]:
+                      - generic [ref=e2152]:
+                        - checkbox "Select/deselect item 893 for bulk actions." [ref=e2153]
+                        - generic [ref=e2154]: Select/deselect item 893 for bulk actions.
+                    - 'cell "Данова Елена #893" [ref=e2155]':
+                      - 'button "Данова Елена #893" [ref=e2157] [cursor=pointer]':
+                        - generic [ref=e2158]:
+                          - generic [ref=e2162]: Данова Елена
+                          - paragraph [ref=e2163]: "#893"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2164]:
+                      - generic [ref=e2167]:
+                        - generic [ref=e2171]: №22
+                        - paragraph [ref=e2172]: 16.05 – 06.06.2026
+                    - cell "≈ 126 000 ₽ Не продлил · №2–22" [ref=e2173]:
+                      - generic [ref=e2176]:
+                        - generic [ref=e2180]: ≈ 126 000 ₽
+                        - paragraph [ref=e2181]: Не продлил · №2–22
+                    - cell [ref=e2182]
+                    - cell [ref=e2186]:
+                      - button [ref=e2191] [cursor=pointer]:
+                        - img [ref=e2192]
+                  - 'row "Select/deselect item 414 for bulk actions. Зайцева Светлана, Тюмень #414 №22 16.05 – 06.06.2026 ≈ 24 000 ₽ Не продлил · №1–2, №21–22" [ref=e2194]':
+                    - cell "Select/deselect item 414 for bulk actions." [ref=e2195]:
+                      - generic [ref=e2197]:
+                        - checkbox "Select/deselect item 414 for bulk actions." [ref=e2198]
+                        - generic [ref=e2199]: Select/deselect item 414 for bulk actions.
+                    - 'cell "Зайцева Светлана, Тюмень #414" [ref=e2200]':
+                      - 'button "Зайцева Светлана, Тюмень #414" [ref=e2202] [cursor=pointer]':
+                        - generic [ref=e2203]:
+                          - generic [ref=e2207]: Зайцева Светлана, Тюмень
+                          - paragraph [ref=e2208]: "#414"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2209]:
+                      - generic [ref=e2212]:
+                        - generic [ref=e2216]: №22
+                        - paragraph [ref=e2217]: 16.05 – 06.06.2026
+                    - cell "≈ 24 000 ₽ Не продлил · №1–2, №21–22" [ref=e2218]:
+                      - generic [ref=e2221]:
+                        - generic [ref=e2225]: ≈ 24 000 ₽
+                        - paragraph [ref=e2226]: Не продлил · №1–2, №21–22
+                    - cell [ref=e2227]
+                    - cell [ref=e2231]:
+                      - button [ref=e2236] [cursor=pointer]:
+                        - img [ref=e2237]
+                  - 'row "Select/deselect item 905 for bulk actions. Зверев Максим #905 №22 16.05 – 06.06.2026 ≈ 90 000 ₽ Не продлил · №1–14, №22" [ref=e2239]':
+                    - cell "Select/deselect item 905 for bulk actions." [ref=e2240]:
+                      - generic [ref=e2242]:
+                        - checkbox "Select/deselect item 905 for bulk actions." [ref=e2243]
+                        - generic [ref=e2244]: Select/deselect item 905 for bulk actions.
+                    - 'cell "Зверев Максим #905" [ref=e2245]':
+                      - 'button "Зверев Максим #905" [ref=e2247] [cursor=pointer]':
+                        - generic [ref=e2248]:
+                          - generic [ref=e2252]: Зверев Максим
+                          - paragraph [ref=e2253]: "#905"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2254]:
+                      - generic [ref=e2257]:
+                        - generic [ref=e2261]: №22
+                        - paragraph [ref=e2262]: 16.05 – 06.06.2026
+                    - cell "≈ 90 000 ₽ Не продлил · №1–14, №22" [ref=e2263]:
+                      - generic [ref=e2266]:
+                        - generic [ref=e2270]: ≈ 90 000 ₽
+                        - paragraph [ref=e2271]: Не продлил · №1–14, №22
+                    - cell [ref=e2272]
+                    - cell [ref=e2276]:
+                      - button [ref=e2281] [cursor=pointer]:
+                        - img [ref=e2282]
+                  - 'row "Select/deselect item 780 for bulk actions. Кирисенко Анна, Италия #780 №22 16.05 – 06.06.2026 ≈ 78 000 ₽ Не продлил · №10–22" [ref=e2284]':
+                    - cell "Select/deselect item 780 for bulk actions." [ref=e2285]:
+                      - generic [ref=e2287]:
+                        - checkbox "Select/deselect item 780 for bulk actions." [ref=e2288]
+                        - generic [ref=e2289]: Select/deselect item 780 for bulk actions.
+                    - 'cell "Кирисенко Анна, Италия #780" [ref=e2290]':
+                      - 'button "Кирисенко Анна, Италия #780" [ref=e2292] [cursor=pointer]':
+                        - generic [ref=e2293]:
+                          - generic [ref=e2297]: Кирисенко Анна, Италия
+                          - paragraph [ref=e2298]: "#780"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2299]:
+                      - generic [ref=e2302]:
+                        - generic [ref=e2306]: №22
+                        - paragraph [ref=e2307]: 16.05 – 06.06.2026
+                    - cell "≈ 78 000 ₽ Не продлил · №10–22" [ref=e2308]:
+                      - generic [ref=e2311]:
+                        - generic [ref=e2315]: ≈ 78 000 ₽
+                        - paragraph [ref=e2316]: Не продлил · №10–22
+                    - cell [ref=e2317]
+                    - cell [ref=e2321]:
+                      - button [ref=e2326] [cursor=pointer]:
+                        - img [ref=e2327]
+                  - 'row "Select/deselect item 897 for bulk actions. Климов Григорий #897 №22 16.05 – 06.06.2026 ≈ 126 000 ₽ Не продлил · №2–22" [ref=e2329]':
+                    - cell "Select/deselect item 897 for bulk actions." [ref=e2330]:
+                      - generic [ref=e2332]:
+                        - checkbox "Select/deselect item 897 for bulk actions." [ref=e2333]
+                        - generic [ref=e2334]: Select/deselect item 897 for bulk actions.
+                    - 'cell "Климов Григорий #897" [ref=e2335]':
+                      - 'button "Климов Григорий #897" [ref=e2337] [cursor=pointer]':
+                        - generic [ref=e2338]:
+                          - generic [ref=e2342]: Климов Григорий
+                          - paragraph [ref=e2343]: "#897"
+                    - cell "№22 16.05 – 06.06.2026" [ref=e2344]:
+                      - generic [ref=e2347]:
+                        - generic [ref=e2351]: №22
+                        - paragraph [ref=e2352]: 16.05 – 06.06.2026
+                    - cell "≈ 126 000 ₽ Не продлил · №2–22" [ref=e2353]:
+                      - generic [ref=e2356]:
+                        - generic [ref=e2360]: ≈ 126 000 ₽
+                        - paragraph [ref=e2361]: Не продлил · №2–22
+                    - cell [ref=e2362]
+                    - cell [ref=e2366]:
+                      - button [ref=e2371] [cursor=pointer]:
+                        - img [ref=e2372]
+              - navigation "Pagination navigation" [ref=e2374]:
+                - generic [ref=e2375]: Showing 1 to 50 of 363 results
+                - generic [ref=e2378]:
+                  - generic [ref=e2380]: Per page
+                  - combobox "Per page" [ref=e2382]:
+                    - option "25" [selected]
+                    - option "50"
+                    - option "100"
+                - list [ref=e2383]:
+                  - listitem [ref=e2384]:
+                    - button "Go to page 1" [ref=e2385] [cursor=pointer]:
+                      - generic [ref=e2386]: "1"
+                  - listitem [ref=e2387]:
+                    - button "Go to page 2" [ref=e2388] [cursor=pointer]:
+                      - generic [ref=e2389]: "2"
+                  - listitem [ref=e2390]:
+                    - button "Go to page 3" [ref=e2391] [cursor=pointer]:
+                      - generic [ref=e2392]: "3"
+                  - listitem [ref=e2393]:
+                    - button "Go to page 4" [ref=e2394] [cursor=pointer]:
+                      - generic [ref=e2395]: "4"
+                  - listitem [ref=e2396]:
+                    - button "..." [disabled] [ref=e2397]:
+                      - generic [ref=e2398]: ...
+                  - listitem [ref=e2399]:
+                    - button "Go to page 7" [ref=e2400] [cursor=pointer]:
+                      - generic [ref=e2401]: "7"
+                  - listitem [ref=e2402]:
+                    - button "Go to page 8" [ref=e2403] [cursor=pointer]:
+                      - generic [ref=e2404]: "8"
+                  - listitem [ref=e2405]:
+                    - button "Next" [ref=e2406] [cursor=pointer]:
+                      - img [ref=e2407]
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+    - complementary [ref=e2409]:
+      - link "Laravel" [ref=e2413] [cursor=pointer]:
+        - /url: http://localhost:8000/admin
+        - generic [ref=e2414]: Laravel
+      - navigation [ref=e2415]:
+        - list [ref=e2416]:
+          - listitem [ref=e2417]:
+            - list [ref=e2418]:
+              - listitem [ref=e2419]:
+                - link "Dashboard" [ref=e2420] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin
+                  - img [ref=e2421]
+                  - generic [ref=e2423]: Dashboard
+              - listitem [ref=e2424]:
+                - link "Чат с куратором" [ref=e2425] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/dialogs
+                  - img [ref=e2426]
+                  - generic [ref=e2428]: Чат с куратором
+              - listitem [ref=e2429]:
+                - link "Media" [ref=e2430] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/media
+                  - img [ref=e2431]
+                  - generic [ref=e2433]: Media
+              - listitem [ref=e2434]:
+                - link "Teachers" [ref=e2435] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/teachers
+                  - img [ref=e2436]
+                  - generic [ref=e2438]: Teachers
+          - listitem [ref=e2439]:
+            - generic [ref=e2440] [cursor=pointer]:
+              - generic [ref=e2441]: Блог
+              - button "Блог" [expanded] [ref=e2442]:
+                - generic [ref=e2443]: Блог
+                - img [ref=e2444]
+            - list [ref=e2446]:
+              - listitem [ref=e2447]:
+                - link "Рубрики статей" [ref=e2448] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/article-categories
+                  - img [ref=e2449]
+                  - generic [ref=e2451]: Рубрики статей
+              - listitem [ref=e2452]:
+                - link "Статьи 1" [ref=e2453] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/articles
+                  - img [ref=e2454]
+                  - generic [ref=e2456]: Статьи
+                  - generic [ref=e2460]: "1"
+          - listitem [ref=e2461]:
+            - generic [ref=e2462] [cursor=pointer]:
+              - generic [ref=e2463]: Обучение
+              - button "Обучение" [expanded] [ref=e2464]:
+                - generic [ref=e2465]: Обучение
+                - img [ref=e2466]
+            - list [ref=e2468]:
+              - listitem [ref=e2469]:
+                - link "Курсы" [ref=e2470] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/courses
+                  - img [ref=e2471]
+                  - generic [ref=e2473]: Курсы
+              - listitem [ref=e2474]:
+                - link "Категории курсов" [ref=e2475] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/categories
+                  - img [ref=e2476]
+                  - generic [ref=e2479]: Категории курсов
+              - listitem [ref=e2480]:
+                - link "Уроки" [ref=e2481] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/lessons
+                  - img [ref=e2482]
+                  - generic [ref=e2485]: Уроки
+              - listitem [ref=e2486]:
+                - link "Учебные группы" [ref=e2487] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/groups
+                  - img [ref=e2488]
+                  - generic [ref=e2490]: Учебные группы
+              - listitem [ref=e2491]:
+                - link "Расписание" [ref=e2492] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/schedules
+                  - img [ref=e2493]
+                  - generic [ref=e2495]: Расписание
+          - listitem [ref=e2496]:
+            - generic [ref=e2497] [cursor=pointer]:
+              - generic [ref=e2498]: Пользователи
+              - button "Пользователи" [expanded] [ref=e2499]:
+                - generic [ref=e2500]: Пользователи
+                - img [ref=e2501]
+            - list [ref=e2503]:
+              - listitem [ref=e2504]:
+                - link "Должники" [ref=e2505] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/debtors
+                  - img [ref=e2506]
+                  - generic [ref=e2508]: Должники
+              - listitem [ref=e2509]:
+                - link "Студенты" [ref=e2510] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/users
+                  - img [ref=e2511]
+                  - generic [ref=e2513]: Студенты
+              - listitem [ref=e2514]:
+                - link "Сертификаты" [ref=e2515] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/certificates
+                  - img [ref=e2516]
+                  - generic [ref=e2518]: Сертификаты
+          - listitem [ref=e2519]:
+            - generic [ref=e2520] [cursor=pointer]:
+              - generic [ref=e2521]: Продажи
+              - button "Продажи" [expanded] [ref=e2522]:
+                - generic [ref=e2523]: Продажи
+                - img [ref=e2524]
+            - list [ref=e2526]:
+              - listitem [ref=e2527]:
+                - link "Заявки (Лиды)" [ref=e2528] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/leads
+                  - img [ref=e2529]
+                  - generic [ref=e2531]: Заявки (Лиды)
+              - listitem [ref=e2532]:
+                - link "Финансы" [ref=e2533] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/payments
+                  - img [ref=e2534]
+                  - generic [ref=e2536]: Финансы
+              - listitem [ref=e2537]:
+                - link "Витрина курсов" [ref=e2538] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/shop-courses
+                  - img [ref=e2539]
+                  - generic [ref=e2541]: Витрина курсов
+              - listitem [ref=e2542]:
+                - link "Тарифы (Цены)" [ref=e2543] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/tariffs
+                  - img [ref=e2544]
+                  - generic [ref=e2547]: Тарифы (Цены)
+          - listitem [ref=e2548]:
+            - generic [ref=e2549] [cursor=pointer]:
+              - generic [ref=e2550]: Маркетинг
+              - button "Маркетинг" [expanded] [ref=e2551]:
+                - generic [ref=e2552]: Маркетинг
+                - img [ref=e2553]
+            - list [ref=e2555]:
+              - listitem [ref=e2556]:
+                - link "Глобальные настройки" [ref=e2557] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/marketing-settings
+                  - img [ref=e2558]
+                  - generic [ref=e2561]: Глобальные настройки
+              - listitem [ref=e2562]:
+                - link "Промокоды" [ref=e2563] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/promo-codes
+                  - img [ref=e2564]
+                  - generic [ref=e2566]: Промокоды
+              - listitem [ref=e2567]:
+                - link "Рассылки" [ref=e2568] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/announcements
+                  - img [ref=e2569]
+                  - generic [ref=e2571]: Рассылки
+              - listitem [ref=e2572]:
+                - link "Лендинги" [ref=e2573] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/landing-pages
+                  - img [ref=e2574]
+                  - generic [ref=e2576]: Лендинги
+          - listitem [ref=e2577]:
+            - generic [ref=e2578] [cursor=pointer]:
+              - generic [ref=e2579]: Допматериалы
+              - button "Допматериалы" [expanded] [ref=e2580]:
+                - generic [ref=e2581]: Допматериалы
+                - img [ref=e2582]
+            - list [ref=e2584]:
+              - listitem [ref=e2585]:
+                - link "Словари" [ref=e2586] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/dictionaries
+                  - img [ref=e2587]
+                  - generic [ref=e2589]: Словари
+              - listitem [ref=e2590]:
+                - link "Словарный Запас" [ref=e2591] [cursor=pointer]:
+                  - /url: http://localhost:8000/admin/dictionary-words
+                  - img [ref=e2592]
+                  - generic [ref=e2594]: Словарный Запас
+  - generic:
+    - status
+  - dialog

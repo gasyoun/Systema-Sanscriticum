@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => []])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -6,6 +6,8 @@
     $fullPurchased = in_array('full', $courseKeys, true);
     $fullTariff = $course->tariffs->where('type', '!=', 'block')->first();
     $blockTariff = $course->tariffs->where('type', 'block')->sortBy('price')->first();
+    $courseDepositAmount = (float) ($course->deposit_amount ?? 0);
+    $showDeposit = $deposit?->deposit_enabled && $courseDepositAmount > 0 && ! $hasAnyPurchased;
 @endphp
 
 <div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-[#E85C24]/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
@@ -176,6 +178,15 @@
                     Выбрать тариф
                     <i class="fas fa-arrow-right ml-2 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300"></i>
                 </a>
+
+                @if($showDeposit)
+                    <button type="button"
+                            onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($course->title), amount: {{ $courseDepositAmount }} } }))"
+                            class="mt-2 flex justify-center items-center w-full py-2.5 px-4 bg-transparent border border-[#E85C24]/40 hover:border-[#E85C24] hover:bg-[#E85C24]/10 text-[#E85C24] text-[11px] font-bold rounded-xl transition-all">
+                        <i class="fas fa-bookmark mr-2 text-[10px]"></i>
+                        Забронировать за {{ number_format($courseDepositAmount, 0, '.', ' ') }} ₽
+                    </button>
+                @endif
 
             @else
                 <div class="text-center bg-[#1F2636]/30 rounded-xl py-4 mt-2 border border-[#1F2636]/50">

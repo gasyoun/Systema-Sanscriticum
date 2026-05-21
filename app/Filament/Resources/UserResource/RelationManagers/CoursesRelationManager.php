@@ -34,7 +34,19 @@ class CoursesRelationManager extends RelationManager
                         'Исключен' => 'Исключен',
                     ])
                     ->default('Записался')
-                    ->required(),
+                    ->required()
+                    ->live(),
+
+                Forms\Components\TextInput::make('left_after_block')
+                    ->label('Блок выхода')
+                    ->numeric()
+                    ->minValue(1)
+                    ->visible(fn (Forms\Get $get): bool => in_array(
+                        $get('status'),
+                        ['Покинул', 'Исключен', 'Выпускник'],
+                        true,
+                    ))
+                    ->helperText('Номер блока этого курса, после которого студент вышел/был отчислен/выпустился. Долги по более поздним блокам не начисляются.'),
 
                 Forms\Components\Textarea::make('note')
                     ->label('Примечание (только по этому курсу)')
@@ -62,6 +74,12 @@ class CoursesRelationManager extends RelationManager
                         'Покинул', 'Исключен' => 'danger',
                         default => 'gray',
                     }),
+
+                Tables\Columns\TextColumn::make('left_after_block')
+                    ->label('Блок выхода')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state ? '№'.$state : null)
+                    ->getStateUsing(fn ($record) => $record->pivot?->left_after_block),
 
                 Tables\Columns\TextColumn::make('note')
                     ->label('Примечание')

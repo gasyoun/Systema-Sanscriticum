@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Jobs\SendTelegramMessageJob;
+use App\Models\Lesson;
+use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,6 +18,10 @@ class ConditionalAccessGranter
     public const MODE_FULL = 'full';
 
     public const MODE_BLOCKS = 'blocks';
+
+    public const MODE_LESSON = 'lesson';
+
+    public function __construct(private readonly RevocationNotifier $notifier) {}
 
     /**
      * Открыть доступ под обещание. Создаёт conditional Payments, не делая
@@ -37,6 +44,15 @@ class ConditionalAccessGranter
         array $blockNumbers = [],
     ): array {
         $this->validate($mode, $blockNumbers);
+
+        // «Неблагонадёжный» теряет право на новые conditional-доступы. Снять
+        // запрет = снять флаг вручную в Filament-карточке студента.
+        if ($promise->user instanceof User && $promise->user->isUnreliable()) {
+            throw ValidationException::withMessages([
+                'access' => 'Студент помечен как неблагонадёжный — conditional-доступ недоступен. '
+                    .'Снимите флаг в карточке студента, если хотите восстановить привилегии.',
+            ]);
+        }
 
         if ($this->hasActiveGrant($promise)) {
             throw ValidationException::withMessages([
@@ -98,6 +114,123 @@ class ConditionalAccessGranter
             ->where('linked_promise_id', $promise->id)
             ->where('is_conditional', true)
             ->exists();
+    }
+
+    /**
+     * Разовый доступ к одному уроку (не к блоку). Например: «первое занятие
+     * первого блока» обычно бесплатное в рекламных целях; если студент пропустил
+     * именно его, можно открыть ему вместо этого 2-е занятие 3-го блока.
+     * Идемпотентно: если активный grant уже есть — возвращаем существующий.
+     */
+    public function grantLesson(User $student, Lesson $lesson, ?User $by = null, ?string $reason = null): LessonAccessGrant
+    {
+        if ($student->isUnreliable()) {
+            throw ValidationException::withMessages([
+                'access' => 'Студент помечен как неблагонадёжный — разовый доступ к уроку недоступен. '
+                    .'Снимите флаг в карточке студента, чтобы восстановить привилегии.',
+            ]);
+        }
+
+        $existing = LessonAccessGrant::query()
+            ->where('user_id', $student->id)
+            ->where('lesson_id', $lesson->id)
+            ->active()
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $grant = LessonAccessGrant::create([
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'course_id' => $lesson->course_id,
+            'reason' => $reason,
+            'granted_by' => $by?->id,
+            'granted_at' => now(),
+        ]);
+
+        $this->notifyLessonOpened($student, $lesson);
+
+        return $grant;
+    }
+
+    /**
+     * Отозвать доступ + уведомить студента по всем каналам (TG/email/VK/Max).
+     * В отличие от revokeForPromise() — гарантирует отчёт по каналам и пишет
+     * лог рассылки в payment_promises.revocation_*.
+     *
+     * @return array{deleted:int, channels:array<string,string>}
+     */
+    public function revokeAndNotifyAllChannels(PaymentPromise $promise, ?User $by = null, ?string $reasonNote = null): array
+    {
+        $deleted = Payment::query()
+            ->where('linked_promise_id', $promise->id)
+            ->where('is_conditional', true)
+            ->delete();
+
+        $student = $promise->user;
+        $course = $promise->course;
+
+        $channels = ['telegram' => 'skipped:no_course', 'email' => 'skipped:no_course', 'vk' => 'skipped:no_course', 'max' => 'skipped:no_course'];
+        if ($student !== null && $course !== null) {
+            $channels = $this->notifier->notify($student, $course, $reasonNote);
+        }
+
+        $promise->forceFill([
+            'revocation_channels_sent' => $channels,
+            'revocation_notified_at' => now(),
+        ])->save();
+
+        return ['deleted' => $deleted, 'channels' => $channels];
+    }
+
+    /**
+     * Отозвать разовый доступ к уроку. Идемпотентно: повторный вызов на уже
+     * отозванном гранте ничего не делает (нет ни записи, ни уведомления).
+     */
+    public function revokeLesson(LessonAccessGrant $grant, ?User $by = null): void
+    {
+        if ($grant->revoked_at !== null) {
+            return;
+        }
+
+        $grant->forceFill([
+            'revoked_at' => now(),
+            'revoked_by' => $by?->id,
+        ])->save();
+
+        $this->notifyLessonRevoked($grant);
+    }
+
+    private function notifyLessonRevoked(LessonAccessGrant $grant): void
+    {
+        $student = $grant->user;
+        if (! $student || ! $student->telegram_id) {
+            return;
+        }
+
+        $title = (string) ($grant->lesson?->title ?? 'урок');
+        $text = "🔒 <b>Доступ к уроку закрыт</b>\n\n";
+        $text .= "Открытый ранее разовый доступ к уроку <b>«{$title}»</b> отозван.";
+
+        SendTelegramMessageJob::dispatch($student->id, $text);
+    }
+
+    private function notifyLessonOpened(User $student, Lesson $lesson): void
+    {
+        if (! $student->telegram_id) {
+            return;
+        }
+
+        $title = (string) ($lesson->title ?? 'урок');
+        $url = url('/login');
+
+        $text = "🔓 <b>Открыт доступ к уроку</b>\n\n";
+        $text .= "Намасте! Вам открыт разовый доступ к уроку <b>«{$title}»</b>.\n\n";
+        $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
+
+        SendTelegramMessageJob::dispatch($student->id, $text);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\LandingPage;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,7 +44,9 @@ class ShopController extends Controller
             'description' => 'Выберите курс и начните обучение',
         ]);
 
-        return view('shop.index', compact('courses', 'page', 'search', 'purchasedByCourse'));
+        $deposit = MarketingSetting::cached();
+
+        return view('shop.index', compact('courses', 'page', 'search', 'purchasedByCourse', 'deposit'));
     }
 
     // МЕТОД 2: Страница одного конкретного курса
@@ -81,6 +84,8 @@ class ShopController extends Controller
 
         $page = new LandingPage(['title' => $course->title]);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber'));
+        $deposit = MarketingSetting::cached();
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit'));
     }
 }

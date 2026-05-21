@@ -50,14 +50,23 @@ class Tariff extends Model
             return 0;
         }
 
+        // «Прана сгорает»: для неблагонадёжных студентов loyalty-скидка
+        // отключается до тех пор, пока менеджер не снимет флаг вручную.
+        if ($user instanceof \App\Models\User && $user->isUnreliable()) {
+            return 0;
+        }
+
         $marketing = \App\Models\MarketingSetting::first();
         if (! $marketing || ! $marketing->is_loyalty_active) {
             return 0;
         }
 
         // ЖЕЛЕЗОБЕТОННЫЙ ПОДСЧЕТ УНИКАЛЬНЫХ КУРСОВ (pluck + unique)
+        // Депозит (бронь) не считается «купленным курсом» для лояльности —
+        // иначе бронь курса фиктивно увеличивала бы скидку.
         $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
             ->whereIn('status', ['paid', 'success'])
+            ->where('tariff', '!=', 'deposit')
             ->where('created_at', '>=', now()->subYear()) // За последний год
             ->whereNotNull('course_id') // Исключаем системные платежи без курса
             ->pluck('course_id')
@@ -102,7 +111,21 @@ class Tariff extends Model
             $finalPrice -= $finalPrice * ($discountPercent / 100);
         }
 
-        // 2. АПГРЕЙД (доплата с учётом ранее купленных блоков) — управляется фича-флагом
+        // 2. Зачёт неизрасходованных депозитов (бронь курса). Изолированная логика,
+        //    НЕ под флагом upgrade_payments_enabled — старый upgrade-механизм
+        //    ниже не трогаем. max(0, ...) в конце страхует от отрицательной цены,
+        //    если депозит превышает стоимость блока.
+        if ($this->course_id) {
+            $depositCredit = \App\Models\Payment::query()
+                ->where('user_id', $user->id)
+                ->where('course_id', $this->course_id)
+                ->unconsumedDeposits()
+                ->sum('amount');
+
+            $finalPrice -= (float) $depositCredit;
+        }
+
+        // 3. АПГРЕЙД (доплата с учётом ранее купленных блоков) — управляется фича-флагом
         if (config('features.upgrade_payments_enabled', false)
             && $this->course_id
             && $this->type === 'full'

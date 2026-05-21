@@ -14,6 +14,7 @@ class MarketingSetting extends Model
 
     protected $fillable = [
         'is_loyalty_active',
+        'deposit_enabled',
         'bundle_2_discount',
         'bundle_3_discount',
         'wholesale_small_threshold',
@@ -50,6 +51,7 @@ class MarketingSetting extends Model
 
     protected $casts = [
         'is_loyalty_active' => 'boolean',
+        'deposit_enabled' => 'boolean',
         'bundle_2_discount' => 'integer',
         'bundle_3_discount' => 'integer',
         'wholesale_small_threshold' => 'integer',

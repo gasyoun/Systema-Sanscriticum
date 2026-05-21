@@ -1,0 +1,6 @@
+[    3444ms] [ERROR] Access to script at 'http://localhost:8000/js/filament/tables/components/table.js?v=3.3.48.0' from origin 'http://127.0.0.1:8000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:8000/admin/debtors:0
+[    3445ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/js/filament/tables/components/table.js?v=3.3.48.0:0
+[    3447ms] Failed to fetch dynamically imported module: http://localhost:8000/js/filament/tables/components/table.js?v=3.3.48.0
+[    3740ms] [ERROR] Access to script at 'http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0' from origin 'http://127.0.0.1:8000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:8000/admin/debtors:0
+[    3740ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0:0
+[    3741ms] Failed to fetch dynamically imported module: http://localhost:8000/js/filament/forms/components/file-upload.js?v=3.3.48.0

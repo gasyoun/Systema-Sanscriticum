@@ -38,6 +38,10 @@ class PaymentPromisesRelationManager extends RelationManager
                 ->label('Обещанная дата')
                 ->required()
                 ->native(false),
+            Forms\Components\DatePicker::make('actual_paid_at')
+                ->label('Факт. дата оплаты')
+                ->native(false)
+                ->helperText('Когда деньги реально пришли (если уже пришли). Может не совпадать с датой Payment-записи.'),
             Forms\Components\TextInput::make('amount')
                 ->label('Сумма (₽)')
                 ->numeric()
@@ -73,6 +77,11 @@ class PaymentPromisesRelationManager extends RelationManager
                     ->label('Дата')
                     ->date('d.m.Y')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('actual_paid_at')
+                    ->label('Факт. оплата')
+                    ->date('d.m.Y')
+                    ->placeholder('—')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Сумма')
                     ->formatStateUsing(fn ($state): string => $state !== null
@@ -158,7 +167,7 @@ class PaymentPromisesRelationManager extends RelationManager
                             ->label('График платежей')
                             ->schema([
                                 Forms\Components\DatePicker::make('promised_at')
-                                    ->label('Дата')
+                                    ->label('Обещанная дата')
                                     ->required()
                                     ->native(false)
                                     ->minDate(now()->subDays(1)),
@@ -167,15 +176,21 @@ class PaymentPromisesRelationManager extends RelationManager
                                     ->numeric()
                                     ->required()
                                     ->minValue(1),
-                                Forms\Components\TextInput::make('block_from')
-                                    ->label('Откр. с блока №')
-                                    ->numeric()
-                                    ->minValue(1)
-                                    ->helperText('Заполните оба поля, чтобы открыть доступ к диапазону при сохранении плана.'),
-                                Forms\Components\TextInput::make('block_to')
-                                    ->label('по №')
-                                    ->numeric()
-                                    ->minValue(1),
+                                Forms\Components\DatePicker::make('actual_paid_at')
+                                    ->label('Факт. дата (если уже пришли деньги)')
+                                    ->native(false)
+                                    ->helperText('Можно оставить пустым — менеджер заполнит позже.'),
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\TextInput::make('block_from')
+                                        ->label('Откр. с блока №')
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->helperText('Заполните оба, чтобы открыть диапазон при сохранении.'),
+                                    Forms\Components\TextInput::make('block_to')
+                                        ->label('по №')
+                                        ->numeric()
+                                        ->minValue(1),
+                                ]),
                             ])
                             ->columns(2)
                             ->minItems(2)
@@ -203,6 +218,7 @@ class PaymentPromisesRelationManager extends RelationManager
                             array_map(fn ($row) => [
                                 'promised_at' => $row['promised_at'],
                                 'amount' => $row['amount'],
+                                'actual_paid_at' => $row['actual_paid_at'] ?? null,
                             ], $schedule),
                             isset($data['note']) && trim((string) $data['note']) !== '' ? $data['note'] : null,
                         );
@@ -305,6 +321,7 @@ class PaymentPromisesRelationManager extends RelationManager
                     ->icon('heroicon-o-lock-open')
                     ->color('info')
                     ->visible(fn (PaymentPromise $r) => $r->status === PaymentPromise::STATUS_ACTIVE
+                        && ! ($r->user?->isUnreliable() ?? false)
                         && ! app(ConditionalAccessGranter::class)->hasActiveGrant($r))
                     ->modalHeading('Открыть доступ под обещание')
                     ->form([
@@ -336,12 +353,26 @@ class PaymentPromisesRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn (PaymentPromise $r) => app(ConditionalAccessGranter::class)->hasActiveGrant($r))
                     ->requiresConfirmation()
-                    ->modalDescription('Все conditional-платежи по этому обещанию будут удалены. Студент потеряет доступ к открытым под обещание блокам.')
-                    ->action(function (PaymentPromise $r): void {
-                        $n = app(ConditionalAccessGranter::class)->revokeForPromise($r);
+                    ->modalDescription('Все conditional-платежи будут удалены. Студент получит уведомление в TG, email, VK и Max — все каналы, по которым у нас есть его контакт.')
+                    ->form([
+                        Forms\Components\Textarea::make('reason_note')
+                            ->label('Комментарий для студента (необязательно)')
+                            ->rows(2),
+                    ])
+                    ->action(function (PaymentPromise $r, array $data): void {
+                        $result = app(ConditionalAccessGranter::class)->revokeAndNotifyAllChannels(
+                            $r,
+                            auth()->user(),
+                            ! empty($data['reason_note']) ? (string) $data['reason_note'] : null,
+                        );
+                        $channelsLine = implode(', ', array_map(
+                            fn ($ch, $st) => "{$ch}: {$st}",
+                            array_keys($result['channels']),
+                            $result['channels'],
+                        ));
                         Notification::make()
                             ->title('Доступ отозван')
-                            ->body("Удалено платежей: {$n}")
+                            ->body("Удалено платежей: {$result['deleted']}. Каналы — {$channelsLine}.")
                             ->warning()
                             ->send();
                     }),
