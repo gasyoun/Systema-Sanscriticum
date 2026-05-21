@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DepositController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PromoController;
@@ -138,6 +139,11 @@ Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
 Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
 Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
+
+// Депозит (бронь курса) — отдельный POST, тот же эквайринг.
+// Биндинг по slug — симметрично с /shop/course/{course:slug}.
+// ВАЖНО: строго до catch-all /{slug} ниже.
+Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])->name('deposit.create');
 
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])

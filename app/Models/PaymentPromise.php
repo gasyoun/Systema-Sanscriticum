@@ -26,6 +26,7 @@ class PaymentPromise extends Model
         'user_id',
         'course_id',
         'promised_at',
+        'actual_paid_at',
         'amount',
         'status',
         'note',
@@ -33,13 +34,18 @@ class PaymentPromise extends Model
         'cancelled_at',
         'fulfilled_payment_id',
         'installment_group_id',
+        'revocation_channels_sent',
+        'revocation_notified_at',
     ];
 
     protected $casts = [
         'promised_at' => 'date',
+        'actual_paid_at' => 'date',
         'amount' => 'decimal:2',
         'fulfilled_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'revocation_channels_sent' => 'array',
+        'revocation_notified_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -93,6 +99,11 @@ class PaymentPromise extends Model
     public function isPartOfInstallment(): bool
     {
         return $this->installment_group_id !== null;
+    }
+
+    public function markActualPaid(\DateTimeInterface $date): void
+    {
+        $this->forceFill(['actual_paid_at' => $date])->save();
     }
 
     /** @return Collection<int, self> */

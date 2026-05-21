@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Models\Schedule;
 use App\Services\CertificateService;
@@ -133,8 +134,9 @@ class StudentController extends Controller
 
         $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
+        $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
-        return view('student.course', compact('course', 'lessons', 'unlockedTariffs'));
+        return view('student.course', compact('course', 'lessons', 'unlockedTariffs', 'grantedLessonIds'));
     }
 
     /**
@@ -153,8 +155,10 @@ class StudentController extends Controller
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
 
-        // Проверяем наличие 'full' или конкретного 'block_X'
-        if (! $isFreeLesson && ! in_array('full', $unlockedTariffs) && ! in_array($requiredTariff, $unlockedTariffs)) {
+        // Разовый доступ к конкретному уроку — обход блок/full гейта.
+        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
+
+        if (! $isFreeLesson && ! $hasLessonGrant && ! in_array('full', $unlockedTariffs) && ! in_array($requiredTariff, $unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }

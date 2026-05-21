@@ -8,6 +8,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -156,18 +157,33 @@ class PaymentController extends Controller
             }
 
             // 7. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ
-            $response = Http::withToken(config('services.tochka.token'))
-                ->withHeaders(['Accept' => 'application/json'])
-                ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
-                    'Data' => [
-                        'customerCode' => config('services.tochka.customer_code'),
-                        'amount' => round((float) $finalPrice, 2),
-                        'purpose' => 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title,
-                        'paymentMode' => ['sbp', 'card'],
-                        'redirectUrl' => route('payment.success'),
-                        'failRedirectUrl' => route('payment.fail'),
-                    ],
+            try {
+                $response = Http::withToken(config('services.tochka.token'))
+                    ->withHeaders(['Accept' => 'application/json'])
+                    ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
+                        'Data' => [
+                            'customerCode' => config('services.tochka.customer_code'),
+                            'amount' => round((float) $finalPrice, 2),
+                            'purpose' => 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title,
+                            'paymentMode' => ['sbp', 'card'],
+                            'redirectUrl' => route('payment.success'),
+                            'failRedirectUrl' => route('payment.fail'),
+                        ],
+                    ]);
+            } catch (ConnectionException $e) {
+                // Сетевой сбой / TLS / DNS / timeout. Без catch Guzzle RequestException
+                // вылетит наружу из DB::transaction — пользователь увидит 500, а строка
+                // платежа откатится, и след попытки потеряется. Помечаем failed и
+                // возвращаем мягкую ошибку, чтобы юзер мог попробовать ещё раз.
+                $payment->update(['status' => 'failed']);
+
+                Log::error('Tochka недоступна', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage(),
                 ]);
+
+                return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+            }
 
             // 8. ОБРАБАТЫВАЕМ ОТВЕТ
             if ($response->successful() && isset($response['Data']['paymentLink'])) {

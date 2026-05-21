@@ -1,0 +1,2237 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - generic [ref=e5429]:
+            - button "Open notifications" [ref=e5431] [cursor=pointer]:
+              - generic [ref=e5432]: Open notifications
+              - img [ref=e5433]
+            - dialog
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of SUPERADMIN" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - heading "Должники" [level=1] [ref=e26]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e33]:
+                - generic [ref=e34]:
+                  - generic [ref=e35]: Search
+                  - generic [ref=e36]:
+                    - img [ref=e38]
+                    - searchbox "Search" [ref=e41]
+                - button "Filter 0" [ref=e44] [cursor=pointer]:
+                  - generic [ref=e45]: Filter
+                  - img [ref=e46]
+                  - generic [ref=e51]: "0"
+              - table [ref=e53]:
+                - rowgroup [ref=e54]:
+                  - row "Select/deselect all items for bulk actions. Студент Курс № блока Период блока Тип долга В долгу Сумма долга Обещание Последняя оплата TG VK Активность Actions" [ref=e55]:
+                    - columnheader "Select/deselect all items for bulk actions." [ref=e56]:
+                      - generic [ref=e58]:
+                        - checkbox "Select/deselect all items for bulk actions." [ref=e59]
+                        - generic [ref=e60]: Select/deselect all items for bulk actions.
+                    - columnheader "Студент" [ref=e61]:
+                      - generic [ref=e63]: Студент
+                    - columnheader "Курс" [ref=e64]:
+                      - button "Курс" [ref=e65] [cursor=pointer]:
+                        - generic [ref=e66]: Курс
+                        - img [ref=e67]
+                    - columnheader "№ блока" [ref=e69]:
+                      - button "№ блока" [ref=e70] [cursor=pointer]:
+                        - generic [ref=e71]: № блока
+                        - img [ref=e72]
+                    - columnheader "Период блока" [ref=e74]:
+                      - generic [ref=e76]: Период блока
+                    - columnheader "Тип долга" [ref=e77]:
+                      - generic [ref=e79]: Тип долга
+                    - columnheader "В долгу" [ref=e80]:
+                      - generic [ref=e82]: В долгу
+                    - columnheader "Сумма долга" [ref=e83]:
+                      - generic [ref=e85]: Сумма долга
+                    - columnheader "Обещание" [ref=e86]:
+                      - generic [ref=e88]: Обещание
+                    - columnheader "Последняя оплата" [ref=e89]:
+                      - generic [ref=e91]: Последняя оплата
+                    - columnheader "TG" [ref=e92]:
+                      - generic [ref=e94]: TG
+                    - columnheader "VK" [ref=e95]:
+                      - generic [ref=e97]: VK
+                    - columnheader "Активность" [ref=e98]:
+                      - generic [ref=e100]: Активность
+                    - columnheader "Actions" [ref=e101]
+                - rowgroup [ref=e102]:
+                  - 'row "Select/deselect item 601 for bulk actions. Андреева Диана Андреевна, Сочи dandreeva898@gmail.com · #601 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №58–62 264 000 ₽ 11.11.2025 · 4 800 ₽ блок №57 — Договориться Рассрочка" [ref=e103]':
+                    - cell "Select/deselect item 601 for bulk actions." [ref=e104]:
+                      - generic [ref=e106]:
+                        - checkbox "Select/deselect item 601 for bulk actions." [ref=e107]
+                        - generic [ref=e108]: Select/deselect item 601 for bulk actions.
+                    - 'cell "Андреева Диана Андреевна, Сочи dandreeva898@gmail.com · #601" [ref=e109]':
+                      - 'button "Андреева Диана Андреевна, Сочи dandreeva898@gmail.com · #601" [ref=e111] [cursor=pointer]':
+                        - generic [ref=e112]:
+                          - generic [ref=e116]: Андреева Диана Андреевна, Сочи
+                          - paragraph [ref=e117]: "dandreeva898@gmail.com · #601"
+                    - cell "Синтаксис санскрита" [ref=e118]:
+                      - generic [ref=e125]: Синтаксис санскрита
+                    - cell "62" [ref=e126]:
+                      - generic [ref=e134]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e135]:
+                      - generic [ref=e142]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e143]:
+                      - generic [ref=e151]: Не продлил
+                    - cell "№1–50, №58–62" [ref=e152]:
+                      - generic [ref=e159]: №1–50, №58–62
+                    - cell "264 000 ₽" [ref=e160]:
+                      - generic [ref=e167]: 264 000 ₽
+                    - cell [ref=e168]
+                    - cell "11.11.2025 · 4 800 ₽ блок №57" [ref=e172]:
+                      - generic [ref=e175]:
+                        - generic [ref=e179]: 11.11.2025 · 4 800 ₽
+                        - paragraph [ref=e180]: блок №57
+                    - cell [ref=e181]
+                    - cell [ref=e185]
+                    - cell "—" [ref=e189]:
+                      - generic [ref=e193]: —
+                    - cell "Договориться Рассрочка" [ref=e194]:
+                      - generic [ref=e196]:
+                        - button "Договориться" [ref=e197] [cursor=pointer]:
+                          - img [ref=e198]
+                          - generic [ref=e200]: Договориться
+                        - button "Рассрочка" [ref=e201] [cursor=pointer]:
+                          - img [ref=e202]
+                          - generic [ref=e204]: Рассрочка
+                  - 'row "Select/deselect item 761 for bulk actions. Дуванова Екатерина, Москва duvanova-ekaterina-moskva_1668@no-email.com · #761 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №55–62 220 800 ₽ 03.09.2025 · 4 800 ₽ блок №54 — Договориться Рассрочка" [ref=e205]':
+                    - cell "Select/deselect item 761 for bulk actions." [ref=e206]:
+                      - generic [ref=e208]:
+                        - checkbox "Select/deselect item 761 for bulk actions." [ref=e209]
+                        - generic [ref=e210]: Select/deselect item 761 for bulk actions.
+                    - 'cell "Дуванова Екатерина, Москва duvanova-ekaterina-moskva_1668@no-email.com · #761" [ref=e211]':
+                      - 'button "Дуванова Екатерина, Москва duvanova-ekaterina-moskva_1668@no-email.com · #761" [ref=e213] [cursor=pointer]':
+                        - generic [ref=e214]:
+                          - generic [ref=e218]: Дуванова Екатерина, Москва
+                          - paragraph [ref=e219]: "duvanova-ekaterina-moskva_1668@no-email.com · #761"
+                    - cell "Синтаксис санскрита" [ref=e220]:
+                      - generic [ref=e227]: Синтаксис санскрита
+                    - cell "62" [ref=e228]:
+                      - generic [ref=e236]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e237]:
+                      - generic [ref=e244]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e245]:
+                      - generic [ref=e253]: Не продлил
+                    - cell "№1–36, №44–45, №55–62" [ref=e254]:
+                      - generic [ref=e261]: №1–36, №44–45, №55–62
+                    - cell "220 800 ₽" [ref=e262]:
+                      - generic [ref=e269]: 220 800 ₽
+                    - cell [ref=e270]
+                    - cell "03.09.2025 · 4 800 ₽ блок №54" [ref=e274]:
+                      - generic [ref=e277]:
+                        - generic [ref=e281]: 03.09.2025 · 4 800 ₽
+                        - paragraph [ref=e282]: блок №54
+                    - cell [ref=e283]
+                    - cell [ref=e287]
+                    - cell "—" [ref=e291]:
+                      - generic [ref=e295]: —
+                    - cell "Договориться Рассрочка" [ref=e296]:
+                      - generic [ref=e298]:
+                        - button "Договориться" [ref=e299] [cursor=pointer]:
+                          - img [ref=e300]
+                          - generic [ref=e302]: Договориться
+                        - button "Рассрочка" [ref=e303] [cursor=pointer]:
+                          - img [ref=e304]
+                          - generic [ref=e306]: Рассрочка
+                  - 'row "Select/deselect item 775 for bulk actions. Гусяцкая Полина Андреевна, Москва gusiackaia-polina-andreevna-moskva_4013@no-email.com · #775 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №54, №57–62 273 600 ₽ 26.10.2025 · 4 800 ₽ блок №56 — Договориться Рассрочка" [ref=e307]':
+                    - cell "Select/deselect item 775 for bulk actions." [ref=e308]:
+                      - generic [ref=e310]:
+                        - checkbox "Select/deselect item 775 for bulk actions." [ref=e311]
+                        - generic [ref=e312]: Select/deselect item 775 for bulk actions.
+                    - 'cell "Гусяцкая Полина Андреевна, Москва gusiackaia-polina-andreevna-moskva_4013@no-email.com · #775" [ref=e313]':
+                      - 'button "Гусяцкая Полина Андреевна, Москва gusiackaia-polina-andreevna-moskva_4013@no-email.com · #775" [ref=e315] [cursor=pointer]':
+                        - generic [ref=e316]:
+                          - generic [ref=e320]: Гусяцкая Полина Андреевна, Москва
+                          - paragraph [ref=e321]: "gusiackaia-polina-andreevna-moskva_4013@no-email.com · #775"
+                    - cell "Синтаксис санскрита" [ref=e322]:
+                      - generic [ref=e329]: Синтаксис санскрита
+                    - cell "62" [ref=e330]:
+                      - generic [ref=e338]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e339]:
+                      - generic [ref=e346]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e347]:
+                      - generic [ref=e355]: Не продлил
+                    - cell "№1–50, №54, №57–62" [ref=e356]:
+                      - generic [ref=e363]: №1–50, №54, №57–62
+                    - cell "273 600 ₽" [ref=e364]:
+                      - generic [ref=e371]: 273 600 ₽
+                    - cell [ref=e372]
+                    - cell "26.10.2025 · 4 800 ₽ блок №56" [ref=e376]:
+                      - generic [ref=e379]:
+                        - generic [ref=e383]: 26.10.2025 · 4 800 ₽
+                        - paragraph [ref=e384]: блок №56
+                    - cell [ref=e385]
+                    - cell [ref=e389]
+                    - cell "—" [ref=e393]:
+                      - generic [ref=e397]: —
+                    - cell "Договориться Рассрочка" [ref=e398]:
+                      - generic [ref=e400]:
+                        - button "Договориться" [ref=e401] [cursor=pointer]:
+                          - img [ref=e402]
+                          - generic [ref=e404]: Договориться
+                        - button "Рассрочка" [ref=e405] [cursor=pointer]:
+                          - img [ref=e406]
+                          - generic [ref=e408]: Рассрочка
+                  - 'row "Select/deselect item 758 for bulk actions. Топорков Алексей Сергеевич toporkov-aleksei-sergeevic_3952@no-email.com · #758 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №62 187 200 ₽ 20.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e409]':
+                    - cell "Select/deselect item 758 for bulk actions." [ref=e410]:
+                      - generic [ref=e412]:
+                        - checkbox "Select/deselect item 758 for bulk actions." [ref=e413]
+                        - generic [ref=e414]: Select/deselect item 758 for bulk actions.
+                    - 'cell "Топорков Алексей Сергеевич toporkov-aleksei-sergeevic_3952@no-email.com · #758" [ref=e415]':
+                      - 'button "Топорков Алексей Сергеевич toporkov-aleksei-sergeevic_3952@no-email.com · #758" [ref=e417] [cursor=pointer]':
+                        - generic [ref=e418]:
+                          - generic [ref=e422]: Топорков Алексей Сергеевич
+                          - paragraph [ref=e423]: "toporkov-aleksei-sergeevic_3952@no-email.com · #758"
+                    - cell "Синтаксис санскрита" [ref=e424]:
+                      - generic [ref=e431]: Синтаксис санскрита
+                    - cell "62" [ref=e432]:
+                      - generic [ref=e440]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e441]:
+                      - generic [ref=e448]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e449]:
+                      - generic [ref=e457]: Не продлил
+                    - cell "№1–36, №44–45, №62" [ref=e458]:
+                      - generic [ref=e465]: №1–36, №44–45, №62
+                    - cell "187 200 ₽" [ref=e466]:
+                      - generic [ref=e473]: 187 200 ₽
+                    - cell [ref=e474]
+                    - cell "20.04.2026 · 4 800 ₽ блок №61" [ref=e478]:
+                      - generic [ref=e481]:
+                        - generic [ref=e485]: 20.04.2026 · 4 800 ₽
+                        - paragraph [ref=e486]: блок №61
+                    - cell [ref=e487]
+                    - cell [ref=e491]
+                    - cell "—" [ref=e495]:
+                      - generic [ref=e499]: —
+                    - cell "Договориться Рассрочка" [ref=e500]:
+                      - generic [ref=e502]:
+                        - button "Договориться" [ref=e503] [cursor=pointer]:
+                          - img [ref=e504]
+                          - generic [ref=e506]: Договориться
+                        - button "Рассрочка" [ref=e507] [cursor=pointer]:
+                          - img [ref=e508]
+                          - generic [ref=e510]: Рассрочка
+                  - 'row "Select/deselect item 837 for bulk actions. Ионцева Мария ionceva-mariia_4457@no-email.com · #837 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–30, №32–50, №53–55, №61–62 259 200 ₽ 13.04.2026 · 4 800 ₽ блок №31 — Договориться Рассрочка" [ref=e511]':
+                    - cell "Select/deselect item 837 for bulk actions." [ref=e512]:
+                      - generic [ref=e514]:
+                        - checkbox "Select/deselect item 837 for bulk actions." [ref=e515]
+                        - generic [ref=e516]: Select/deselect item 837 for bulk actions.
+                    - 'cell "Ионцева Мария ionceva-mariia_4457@no-email.com · #837" [ref=e517]':
+                      - 'button "Ионцева Мария ionceva-mariia_4457@no-email.com · #837" [ref=e519] [cursor=pointer]':
+                        - generic [ref=e520]:
+                          - generic [ref=e524]: Ионцева Мария
+                          - paragraph [ref=e525]: "ionceva-mariia_4457@no-email.com · #837"
+                    - cell "Синтаксис санскрита" [ref=e526]:
+                      - generic [ref=e533]: Синтаксис санскрита
+                    - cell "62" [ref=e534]:
+                      - generic [ref=e542]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e543]:
+                      - generic [ref=e550]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e551]:
+                      - generic [ref=e559]: Не продлил
+                    - cell "№1–30, №32–50, №53–55, №61–62" [ref=e560]:
+                      - generic [ref=e567]: №1–30, №32–50, №53–55, №61–62
+                    - cell "259 200 ₽" [ref=e568]:
+                      - generic [ref=e575]: 259 200 ₽
+                    - cell [ref=e576]
+                    - cell "13.04.2026 · 4 800 ₽ блок №31" [ref=e580]:
+                      - generic [ref=e583]:
+                        - generic [ref=e587]: 13.04.2026 · 4 800 ₽
+                        - paragraph [ref=e588]: блок №31
+                    - cell [ref=e589]
+                    - cell [ref=e593]
+                    - cell "—" [ref=e597]:
+                      - generic [ref=e601]: —
+                    - cell "Договориться Рассрочка" [ref=e602]:
+                      - generic [ref=e604]:
+                        - button "Договориться" [ref=e605] [cursor=pointer]:
+                          - img [ref=e606]
+                          - generic [ref=e608]: Договориться
+                        - button "Рассрочка" [ref=e609] [cursor=pointer]:
+                          - img [ref=e610]
+                          - generic [ref=e612]: Рассрочка
+                  - 'row "Select/deselect item 771 for bulk actions. Хасанов Марат Шайхулович xasanov-marat-saixulovic_4538@no-email.com · #771 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–49, №52–62 288 000 ₽ 01.06.2025 · 4 800 ₽ блок №51 — Договориться Рассрочка" [ref=e613]':
+                    - cell "Select/deselect item 771 for bulk actions." [ref=e614]:
+                      - generic [ref=e616]:
+                        - checkbox "Select/deselect item 771 for bulk actions." [ref=e617]
+                        - generic [ref=e618]: Select/deselect item 771 for bulk actions.
+                    - 'cell "Хасанов Марат Шайхулович xasanov-marat-saixulovic_4538@no-email.com · #771" [ref=e619]':
+                      - 'button "Хасанов Марат Шайхулович xasanov-marat-saixulovic_4538@no-email.com · #771" [ref=e621] [cursor=pointer]':
+                        - generic [ref=e622]:
+                          - generic [ref=e626]: Хасанов Марат Шайхулович
+                          - paragraph [ref=e627]: "xasanov-marat-saixulovic_4538@no-email.com · #771"
+                    - cell "Синтаксис санскрита" [ref=e628]:
+                      - generic [ref=e635]: Синтаксис санскрита
+                    - cell "62" [ref=e636]:
+                      - generic [ref=e644]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e645]:
+                      - generic [ref=e652]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e653]:
+                      - generic [ref=e661]: Не продлил
+                    - cell "№1–49, №52–62" [ref=e662]:
+                      - generic [ref=e669]: №1–49, №52–62
+                    - cell "288 000 ₽" [ref=e670]:
+                      - generic [ref=e677]: 288 000 ₽
+                    - cell [ref=e678]
+                    - cell "01.06.2025 · 4 800 ₽ блок №51" [ref=e682]:
+                      - generic [ref=e685]:
+                        - generic [ref=e689]: 01.06.2025 · 4 800 ₽
+                        - paragraph [ref=e690]: блок №51
+                    - cell [ref=e691]
+                    - cell [ref=e695]
+                    - cell "—" [ref=e699]:
+                      - generic [ref=e703]: —
+                    - cell "Договориться Рассрочка" [ref=e704]:
+                      - generic [ref=e706]:
+                        - button "Договориться" [ref=e707] [cursor=pointer]:
+                          - img [ref=e708]
+                          - generic [ref=e710]: Договориться
+                        - button "Рассрочка" [ref=e711] [cursor=pointer]:
+                          - img [ref=e712]
+                          - generic [ref=e714]: Рассрочка
+                  - 'row "Select/deselect item 933 for bulk actions. Назаревская Татьяна Анатольевна, Москва tvoya.priroda@yandex.ru · #933 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–30, №32–53, №61–62 259 200 ₽ 13.04.2026 · 4 800 ₽ блок №31 — Договориться Рассрочка" [ref=e715]':
+                    - cell "Select/deselect item 933 for bulk actions." [ref=e716]:
+                      - generic [ref=e718]:
+                        - checkbox "Select/deselect item 933 for bulk actions." [ref=e719]
+                        - generic [ref=e720]: Select/deselect item 933 for bulk actions.
+                    - 'cell "Назаревская Татьяна Анатольевна, Москва tvoya.priroda@yandex.ru · #933" [ref=e721]':
+                      - 'button "Назаревская Татьяна Анатольевна, Москва tvoya.priroda@yandex.ru · #933" [ref=e723] [cursor=pointer]':
+                        - generic [ref=e724]:
+                          - generic [ref=e728]: Назаревская Татьяна Анатольевна, Москва
+                          - paragraph [ref=e729]: "tvoya.priroda@yandex.ru · #933"
+                    - cell "Синтаксис санскрита" [ref=e730]:
+                      - generic [ref=e737]: Синтаксис санскрита
+                    - cell "62" [ref=e738]:
+                      - generic [ref=e746]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e747]:
+                      - generic [ref=e754]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e755]:
+                      - generic [ref=e763]: Не продлил
+                    - cell "№1–30, №32–53, №61–62" [ref=e764]:
+                      - generic [ref=e771]: №1–30, №32–53, №61–62
+                    - cell "259 200 ₽" [ref=e772]:
+                      - generic [ref=e779]: 259 200 ₽
+                    - cell [ref=e780]
+                    - cell "13.04.2026 · 4 800 ₽ блок №31" [ref=e784]:
+                      - generic [ref=e787]:
+                        - generic [ref=e791]: 13.04.2026 · 4 800 ₽
+                        - paragraph [ref=e792]: блок №31
+                    - cell [ref=e793]
+                    - cell [ref=e797]
+                    - cell "—" [ref=e801]:
+                      - generic [ref=e805]: —
+                    - cell "Договориться Рассрочка" [ref=e806]:
+                      - generic [ref=e808]:
+                        - button "Договориться" [ref=e809] [cursor=pointer]:
+                          - img [ref=e810]
+                          - generic [ref=e812]: Договориться
+                        - button "Рассрочка" [ref=e813] [cursor=pointer]:
+                          - img [ref=e814]
+                          - generic [ref=e816]: Рассрочка
+                  - 'row "Select/deselect item 768 for bulk actions. Майд Яна maid-iana_7183@no-email.com · #768 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–41, №44–45, №50, №62 216 000 ₽ 23.03.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e817]':
+                    - cell "Select/deselect item 768 for bulk actions." [ref=e818]:
+                      - generic [ref=e820]:
+                        - checkbox "Select/deselect item 768 for bulk actions." [ref=e821]
+                        - generic [ref=e822]: Select/deselect item 768 for bulk actions.
+                    - 'cell "Майд Яна maid-iana_7183@no-email.com · #768" [ref=e823]':
+                      - 'button "Майд Яна maid-iana_7183@no-email.com · #768" [ref=e825] [cursor=pointer]':
+                        - generic [ref=e826]:
+                          - generic [ref=e830]: Майд Яна
+                          - paragraph [ref=e831]: "maid-iana_7183@no-email.com · #768"
+                    - cell "Синтаксис санскрита" [ref=e832]:
+                      - generic [ref=e839]: Синтаксис санскрита
+                    - cell "62" [ref=e840]:
+                      - generic [ref=e848]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e849]:
+                      - generic [ref=e856]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e857]:
+                      - generic [ref=e865]: Не продлил
+                    - cell "№1–41, №44–45, №50, №62" [ref=e866]:
+                      - generic [ref=e873]: №1–41, №44–45, №50, №62
+                    - cell "216 000 ₽" [ref=e874]:
+                      - generic [ref=e881]: 216 000 ₽
+                    - cell [ref=e882]
+                    - cell "23.03.2026 · 4 800 ₽ блок №61" [ref=e886]:
+                      - generic [ref=e889]:
+                        - generic [ref=e893]: 23.03.2026 · 4 800 ₽
+                        - paragraph [ref=e894]: блок №61
+                    - cell [ref=e895]
+                    - cell [ref=e899]
+                    - cell "—" [ref=e903]:
+                      - generic [ref=e907]: —
+                    - cell "Договориться Рассрочка" [ref=e908]:
+                      - generic [ref=e910]:
+                        - button "Договориться" [ref=e911] [cursor=pointer]:
+                          - img [ref=e912]
+                          - generic [ref=e914]: Договориться
+                        - button "Рассрочка" [ref=e915] [cursor=pointer]:
+                          - img [ref=e916]
+                          - generic [ref=e918]: Рассрочка
+                  - 'row "Select/deselect item 765 for bulk actions. Емельянова Христина Игоревна emelianova-xristina-igorevna_3666@no-email.com · #765 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №61–62 192 000 ₽ 13.04.2026 · 4 800 ₽ блок №60 — Договориться Рассрочка" [ref=e919]':
+                    - cell "Select/deselect item 765 for bulk actions." [ref=e920]:
+                      - generic [ref=e922]:
+                        - checkbox "Select/deselect item 765 for bulk actions." [ref=e923]
+                        - generic [ref=e924]: Select/deselect item 765 for bulk actions.
+                    - 'cell "Емельянова Христина Игоревна emelianova-xristina-igorevna_3666@no-email.com · #765" [ref=e925]':
+                      - 'button "Емельянова Христина Игоревна emelianova-xristina-igorevna_3666@no-email.com · #765" [ref=e927] [cursor=pointer]':
+                        - generic [ref=e928]:
+                          - generic [ref=e932]: Емельянова Христина Игоревна
+                          - paragraph [ref=e933]: "emelianova-xristina-igorevna_3666@no-email.com · #765"
+                    - cell "Синтаксис санскрита" [ref=e934]:
+                      - generic [ref=e941]: Синтаксис санскрита
+                    - cell "62" [ref=e942]:
+                      - generic [ref=e950]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e951]:
+                      - generic [ref=e958]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e959]:
+                      - generic [ref=e967]: Не продлил
+                    - cell "№1–36, №44–45, №61–62" [ref=e968]:
+                      - generic [ref=e975]: №1–36, №44–45, №61–62
+                    - cell "192 000 ₽" [ref=e976]:
+                      - generic [ref=e983]: 192 000 ₽
+                    - cell [ref=e984]
+                    - cell "13.04.2026 · 4 800 ₽ блок №60" [ref=e988]:
+                      - generic [ref=e991]:
+                        - generic [ref=e995]: 13.04.2026 · 4 800 ₽
+                        - paragraph [ref=e996]: блок №60
+                    - cell [ref=e997]
+                    - cell [ref=e1001]
+                    - cell "—" [ref=e1005]:
+                      - generic [ref=e1009]: —
+                    - cell "Договориться Рассрочка" [ref=e1010]:
+                      - generic [ref=e1012]:
+                        - button "Договориться" [ref=e1013] [cursor=pointer]:
+                          - img [ref=e1014]
+                          - generic [ref=e1016]: Договориться
+                        - button "Рассрочка" [ref=e1017] [cursor=pointer]:
+                          - img [ref=e1018]
+                          - generic [ref=e1020]: Рассрочка
+                  - 'row "Select/deselect item 1125 for bulk actions. Драчук Андрей, Тюмень andrey0410@mail.ru · #1125 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–57, №60–62 288 000 ₽ 15.02.2026 · 4 800 ₽ блок №59 — Договориться Рассрочка" [ref=e1021]':
+                    - cell "Select/deselect item 1125 for bulk actions." [ref=e1022]:
+                      - generic [ref=e1024]:
+                        - checkbox "Select/deselect item 1125 for bulk actions." [ref=e1025]
+                        - generic [ref=e1026]: Select/deselect item 1125 for bulk actions.
+                    - 'cell "Драчук Андрей, Тюмень andrey0410@mail.ru · #1125" [ref=e1027]':
+                      - 'button "Драчук Андрей, Тюмень andrey0410@mail.ru · #1125" [ref=e1029] [cursor=pointer]':
+                        - generic [ref=e1030]:
+                          - generic [ref=e1034]: Драчук Андрей, Тюмень
+                          - paragraph [ref=e1035]: "andrey0410@mail.ru · #1125"
+                    - cell "Синтаксис санскрита" [ref=e1036]:
+                      - generic [ref=e1043]: Синтаксис санскрита
+                    - cell "62" [ref=e1044]:
+                      - generic [ref=e1052]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1053]:
+                      - generic [ref=e1060]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1061]:
+                      - generic [ref=e1069]: Не продлил
+                    - cell "№1–57, №60–62" [ref=e1070]:
+                      - generic [ref=e1077]: №1–57, №60–62
+                    - cell "288 000 ₽" [ref=e1078]:
+                      - generic [ref=e1085]: 288 000 ₽
+                    - cell [ref=e1086]
+                    - cell "15.02.2026 · 4 800 ₽ блок №59" [ref=e1090]:
+                      - generic [ref=e1093]:
+                        - generic [ref=e1097]: 15.02.2026 · 4 800 ₽
+                        - paragraph [ref=e1098]: блок №59
+                    - cell [ref=e1099]
+                    - cell [ref=e1103]
+                    - cell "—" [ref=e1107]:
+                      - generic [ref=e1111]: —
+                    - cell "Договориться Рассрочка" [ref=e1112]:
+                      - generic [ref=e1114]:
+                        - button "Договориться" [ref=e1115] [cursor=pointer]:
+                          - img [ref=e1116]
+                          - generic [ref=e1118]: Договориться
+                        - button "Рассрочка" [ref=e1119] [cursor=pointer]:
+                          - img [ref=e1120]
+                          - generic [ref=e1122]: Рассрочка
+                  - 'row "Select/deselect item 2 for bulk actions. SUPERADMIN pe4kinsmart@gmail.com · #2 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №2–62 292 800 ₽ 17.05.2026 · 1 000 ₽ блок №1 — Договориться Рассрочка" [ref=e1123]':
+                    - cell "Select/deselect item 2 for bulk actions." [ref=e1124]:
+                      - generic [ref=e1126]:
+                        - checkbox "Select/deselect item 2 for bulk actions." [ref=e1127]
+                        - generic [ref=e1128]: Select/deselect item 2 for bulk actions.
+                    - 'cell "SUPERADMIN pe4kinsmart@gmail.com · #2" [ref=e1129]':
+                      - 'button "SUPERADMIN pe4kinsmart@gmail.com · #2" [ref=e1131] [cursor=pointer]':
+                        - generic [ref=e1132]:
+                          - generic [ref=e1136]: SUPERADMIN
+                          - paragraph [ref=e1137]: "pe4kinsmart@gmail.com · #2"
+                    - cell "Синтаксис санскрита" [ref=e1138]:
+                      - generic [ref=e1145]: Синтаксис санскрита
+                    - cell "62" [ref=e1146]:
+                      - generic [ref=e1154]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1155]:
+                      - generic [ref=e1162]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1163]:
+                      - generic [ref=e1171]: Не продлил
+                    - cell "№2–62" [ref=e1172]:
+                      - generic [ref=e1179]: №2–62
+                    - cell "292 800 ₽" [ref=e1180]:
+                      - generic [ref=e1187]: 292 800 ₽
+                    - cell [ref=e1188]
+                    - cell "17.05.2026 · 1 000 ₽ блок №1" [ref=e1192]:
+                      - generic [ref=e1195]:
+                        - generic [ref=e1199]: 17.05.2026 · 1 000 ₽
+                        - paragraph [ref=e1200]: блок №1
+                    - cell [ref=e1201]
+                    - cell [ref=e1205]
+                    - cell "—" [ref=e1209]:
+                      - generic [ref=e1213]: —
+                    - cell "Договориться Рассрочка" [ref=e1214]:
+                      - generic [ref=e1216]:
+                        - button "Договориться" [ref=e1217] [cursor=pointer]:
+                          - img [ref=e1218]
+                          - generic [ref=e1220]: Договориться
+                        - button "Рассрочка" [ref=e1221] [cursor=pointer]:
+                          - img [ref=e1222]
+                          - generic [ref=e1224]: Рассрочка
+                  - 'row "Select/deselect item 404 for bulk actions. Нафиева Ирина Васильевна, Москва inafieva@mail.ru · #404 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–35, №40–62 278 400 ₽ 18.02.2024 · 0 ₽ блок №39 — Договориться Рассрочка" [ref=e1225]':
+                    - cell "Select/deselect item 404 for bulk actions." [ref=e1226]:
+                      - generic [ref=e1228]:
+                        - checkbox "Select/deselect item 404 for bulk actions." [ref=e1229]
+                        - generic [ref=e1230]: Select/deselect item 404 for bulk actions.
+                    - 'cell "Нафиева Ирина Васильевна, Москва inafieva@mail.ru · #404" [ref=e1231]':
+                      - 'button "Нафиева Ирина Васильевна, Москва inafieva@mail.ru · #404" [ref=e1233] [cursor=pointer]':
+                        - generic [ref=e1234]:
+                          - generic [ref=e1238]: Нафиева Ирина Васильевна, Москва
+                          - paragraph [ref=e1239]: "inafieva@mail.ru · #404"
+                    - cell "Синтаксис санскрита" [ref=e1240]:
+                      - generic [ref=e1247]: Синтаксис санскрита
+                    - cell "62" [ref=e1248]:
+                      - generic [ref=e1256]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1257]:
+                      - generic [ref=e1264]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1265]:
+                      - generic [ref=e1273]: Не продлил
+                    - cell "№1–35, №40–62" [ref=e1274]:
+                      - generic [ref=e1281]: №1–35, №40–62
+                    - cell "278 400 ₽" [ref=e1282]:
+                      - generic [ref=e1289]: 278 400 ₽
+                    - cell [ref=e1290]
+                    - cell "18.02.2024 · 0 ₽ блок №39" [ref=e1294]:
+                      - generic [ref=e1297]:
+                        - generic [ref=e1301]: 18.02.2024 · 0 ₽
+                        - paragraph [ref=e1302]: блок №39
+                    - cell [ref=e1303]
+                    - cell [ref=e1307]
+                    - cell "—" [ref=e1311]:
+                      - generic [ref=e1315]: —
+                    - cell "Договориться Рассрочка" [ref=e1316]:
+                      - generic [ref=e1318]:
+                        - button "Договориться" [ref=e1319] [cursor=pointer]:
+                          - img [ref=e1320]
+                          - generic [ref=e1322]: Договориться
+                        - button "Рассрочка" [ref=e1323] [cursor=pointer]:
+                          - img [ref=e1324]
+                          - generic [ref=e1326]: Рассрочка
+                  - 'row "Select/deselect item 762 for bulk actions. Собака Оксана osobaka999@gmail.com · #762 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №53–62 220 800 ₽ 06.07.2025 · 4 800 ₽ блок №52 — Договориться Рассрочка" [ref=e1327]':
+                    - cell "Select/deselect item 762 for bulk actions." [ref=e1328]:
+                      - generic [ref=e1330]:
+                        - checkbox "Select/deselect item 762 for bulk actions." [ref=e1331]
+                        - generic [ref=e1332]: Select/deselect item 762 for bulk actions.
+                    - 'cell "Собака Оксана osobaka999@gmail.com · #762" [ref=e1333]':
+                      - 'button "Собака Оксана osobaka999@gmail.com · #762" [ref=e1335] [cursor=pointer]':
+                        - generic [ref=e1336]:
+                          - generic [ref=e1340]: Собака Оксана
+                          - paragraph [ref=e1341]: "osobaka999@gmail.com · #762"
+                    - cell "Синтаксис санскрита" [ref=e1342]:
+                      - generic [ref=e1349]: Синтаксис санскрита
+                    - cell "62" [ref=e1350]:
+                      - generic [ref=e1358]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1359]:
+                      - generic [ref=e1366]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1367]:
+                      - generic [ref=e1375]: Не продлил
+                    - cell "№1–36, №53–62" [ref=e1376]:
+                      - generic [ref=e1383]: №1–36, №53–62
+                    - cell "220 800 ₽" [ref=e1384]:
+                      - generic [ref=e1391]: 220 800 ₽
+                    - cell [ref=e1392]
+                    - cell "06.07.2025 · 4 800 ₽ блок №52" [ref=e1396]:
+                      - generic [ref=e1399]:
+                        - generic [ref=e1403]: 06.07.2025 · 4 800 ₽
+                        - paragraph [ref=e1404]: блок №52
+                    - cell [ref=e1405]
+                    - cell [ref=e1409]
+                    - cell "—" [ref=e1413]:
+                      - generic [ref=e1417]: —
+                    - cell "Договориться Рассрочка" [ref=e1418]:
+                      - generic [ref=e1420]:
+                        - button "Договориться" [ref=e1421] [cursor=pointer]:
+                          - img [ref=e1422]
+                          - generic [ref=e1424]: Договориться
+                        - button "Рассрочка" [ref=e1425] [cursor=pointer]:
+                          - img [ref=e1426]
+                          - generic [ref=e1428]: Рассрочка
+                  - 'row "Select/deselect item 776 for bulk actions. Шевченко Алексей Владимирович, Москва 672493@gmail.com · #776 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №55, №57, №62 254 400 ₽ 12.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e1429]':
+                    - cell "Select/deselect item 776 for bulk actions." [ref=e1430]:
+                      - generic [ref=e1432]:
+                        - checkbox "Select/deselect item 776 for bulk actions." [ref=e1433]
+                        - generic [ref=e1434]: Select/deselect item 776 for bulk actions.
+                    - 'cell "Шевченко Алексей Владимирович, Москва 672493@gmail.com · #776" [ref=e1435]':
+                      - 'button "Шевченко Алексей Владимирович, Москва 672493@gmail.com · #776" [ref=e1437] [cursor=pointer]':
+                        - generic [ref=e1438]:
+                          - generic [ref=e1442]: Шевченко Алексей Владимирович, Москва
+                          - paragraph [ref=e1443]: "672493@gmail.com · #776"
+                    - cell "Синтаксис санскрита" [ref=e1444]:
+                      - generic [ref=e1451]: Синтаксис санскрита
+                    - cell "62" [ref=e1452]:
+                      - generic [ref=e1460]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1461]:
+                      - generic [ref=e1468]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1469]:
+                      - generic [ref=e1477]: Не продлил
+                    - cell "№1–50, №55, №57, №62" [ref=e1478]:
+                      - generic [ref=e1485]: №1–50, №55, №57, №62
+                    - cell "254 400 ₽" [ref=e1486]:
+                      - generic [ref=e1493]: 254 400 ₽
+                    - cell [ref=e1494]
+                    - cell "12.04.2026 · 4 800 ₽ блок №61" [ref=e1498]:
+                      - generic [ref=e1501]:
+                        - generic [ref=e1505]: 12.04.2026 · 4 800 ₽
+                        - paragraph [ref=e1506]: блок №61
+                    - cell [ref=e1507]
+                    - cell [ref=e1511]
+                    - cell "—" [ref=e1515]:
+                      - generic [ref=e1519]: —
+                    - cell "Договориться Рассрочка" [ref=e1520]:
+                      - generic [ref=e1522]:
+                        - button "Договориться" [ref=e1523] [cursor=pointer]:
+                          - img [ref=e1524]
+                          - generic [ref=e1526]: Договориться
+                        - button "Рассрочка" [ref=e1527] [cursor=pointer]:
+                          - img [ref=e1528]
+                          - generic [ref=e1530]: Рассрочка
+                  - 'row "Select/deselect item 869 for bulk actions. Лобанова Ирина Юрьевна, Екатеринбург nifontovaiy@mail.ru · #869 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–51, №56–62 278 400 ₽ 18.09.2025 · 4 800 ₽ блок №55 — Договориться Рассрочка" [ref=e1531]':
+                    - cell "Select/deselect item 869 for bulk actions." [ref=e1532]:
+                      - generic [ref=e1534]:
+                        - checkbox "Select/deselect item 869 for bulk actions." [ref=e1535]
+                        - generic [ref=e1536]: Select/deselect item 869 for bulk actions.
+                    - 'cell "Лобанова Ирина Юрьевна, Екатеринбург nifontovaiy@mail.ru · #869" [ref=e1537]':
+                      - 'button "Лобанова Ирина Юрьевна, Екатеринбург nifontovaiy@mail.ru · #869" [ref=e1539] [cursor=pointer]':
+                        - generic [ref=e1540]:
+                          - generic [ref=e1544]: Лобанова Ирина Юрьевна, Екатеринбург
+                          - paragraph [ref=e1545]: "nifontovaiy@mail.ru · #869"
+                    - cell "Синтаксис санскрита" [ref=e1546]:
+                      - generic [ref=e1553]: Синтаксис санскрита
+                    - cell "62" [ref=e1554]:
+                      - generic [ref=e1562]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1563]:
+                      - generic [ref=e1570]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1571]:
+                      - generic [ref=e1579]: Не продлил
+                    - cell "№1–51, №56–62" [ref=e1580]:
+                      - generic [ref=e1587]: №1–51, №56–62
+                    - cell "278 400 ₽" [ref=e1588]:
+                      - generic [ref=e1595]: 278 400 ₽
+                    - cell [ref=e1596]
+                    - cell "18.09.2025 · 4 800 ₽ блок №55" [ref=e1600]:
+                      - generic [ref=e1603]:
+                        - generic [ref=e1607]: 18.09.2025 · 4 800 ₽
+                        - paragraph [ref=e1608]: блок №55
+                    - cell [ref=e1609]
+                    - cell [ref=e1613]
+                    - cell "—" [ref=e1617]:
+                      - generic [ref=e1621]: —
+                    - cell "Договориться Рассрочка" [ref=e1622]:
+                      - generic [ref=e1624]:
+                        - button "Договориться" [ref=e1625] [cursor=pointer]:
+                          - img [ref=e1626]
+                          - generic [ref=e1628]: Договориться
+                        - button "Рассрочка" [ref=e1629] [cursor=pointer]:
+                          - img [ref=e1630]
+                          - generic [ref=e1632]: Рассрочка
+                  - 'row "Select/deselect item 759 for bulk actions. Константинова Анна Владимировна konstantinova-anna-vladimirovna_7323@no-email.com · #759 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №52, №62 192 000 ₽ 20.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e1633]':
+                    - cell "Select/deselect item 759 for bulk actions." [ref=e1634]:
+                      - generic [ref=e1636]:
+                        - checkbox "Select/deselect item 759 for bulk actions." [ref=e1637]
+                        - generic [ref=e1638]: Select/deselect item 759 for bulk actions.
+                    - 'cell "Константинова Анна Владимировна konstantinova-anna-vladimirovna_7323@no-email.com · #759" [ref=e1639]':
+                      - 'button "Константинова Анна Владимировна konstantinova-anna-vladimirovna_7323@no-email.com · #759" [ref=e1641] [cursor=pointer]':
+                        - generic [ref=e1642]:
+                          - generic [ref=e1646]: Константинова Анна Владимировна
+                          - paragraph [ref=e1647]: "konstantinova-anna-vladimirovna_7323@no-email.com · #759"
+                    - cell "Синтаксис санскрита" [ref=e1648]:
+                      - generic [ref=e1655]: Синтаксис санскрита
+                    - cell "62" [ref=e1656]:
+                      - generic [ref=e1664]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1665]:
+                      - generic [ref=e1672]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1673]:
+                      - generic [ref=e1681]: Не продлил
+                    - cell "№1–36, №44–45, №52, №62" [ref=e1682]:
+                      - generic [ref=e1689]: №1–36, №44–45, №52, №62
+                    - cell "192 000 ₽" [ref=e1690]:
+                      - generic [ref=e1697]: 192 000 ₽
+                    - cell [ref=e1698]
+                    - cell "20.04.2026 · 4 800 ₽ блок №61" [ref=e1702]:
+                      - generic [ref=e1705]:
+                        - generic [ref=e1709]: 20.04.2026 · 4 800 ₽
+                        - paragraph [ref=e1710]: блок №61
+                    - cell [ref=e1711]
+                    - cell [ref=e1715]
+                    - cell "—" [ref=e1719]:
+                      - generic [ref=e1723]: —
+                    - cell "Договориться Рассрочка" [ref=e1724]:
+                      - generic [ref=e1726]:
+                        - button "Договориться" [ref=e1727] [cursor=pointer]:
+                          - img [ref=e1728]
+                          - generic [ref=e1730]: Договориться
+                        - button "Рассрочка" [ref=e1731] [cursor=pointer]:
+                          - img [ref=e1732]
+                          - generic [ref=e1734]: Рассрочка
+                  - 'row "Select/deselect item 934 for bulk actions. Жукова Ольга Владимировна, Москва olgzh@yahoo.com · #934 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–57, №60–62 288 000 ₽ 03.02.2026 · 2 400 ₽ блок №59 — Договориться Рассрочка" [ref=e1735]':
+                    - cell "Select/deselect item 934 for bulk actions." [ref=e1736]:
+                      - generic [ref=e1738]:
+                        - checkbox "Select/deselect item 934 for bulk actions." [ref=e1739]
+                        - generic [ref=e1740]: Select/deselect item 934 for bulk actions.
+                    - 'cell "Жукова Ольга Владимировна, Москва olgzh@yahoo.com · #934" [ref=e1741]':
+                      - 'button "Жукова Ольга Владимировна, Москва olgzh@yahoo.com · #934" [ref=e1743] [cursor=pointer]':
+                        - generic [ref=e1744]:
+                          - generic [ref=e1748]: Жукова Ольга Владимировна, Москва
+                          - paragraph [ref=e1749]: "olgzh@yahoo.com · #934"
+                    - cell "Синтаксис санскрита" [ref=e1750]:
+                      - generic [ref=e1757]: Синтаксис санскрита
+                    - cell "62" [ref=e1758]:
+                      - generic [ref=e1766]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1767]:
+                      - generic [ref=e1774]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1775]:
+                      - generic [ref=e1783]: Не продлил
+                    - cell "№1–57, №60–62" [ref=e1784]:
+                      - generic [ref=e1791]: №1–57, №60–62
+                    - cell "288 000 ₽" [ref=e1792]:
+                      - generic [ref=e1799]: 288 000 ₽
+                    - cell [ref=e1800]
+                    - cell "03.02.2026 · 2 400 ₽ блок №59" [ref=e1804]:
+                      - generic [ref=e1807]:
+                        - generic [ref=e1811]: 03.02.2026 · 2 400 ₽
+                        - paragraph [ref=e1812]: блок №59
+                    - cell [ref=e1813]
+                    - cell [ref=e1817]
+                    - cell "—" [ref=e1821]:
+                      - generic [ref=e1825]: —
+                    - cell "Договориться Рассрочка" [ref=e1826]:
+                      - generic [ref=e1828]:
+                        - button "Договориться" [ref=e1829] [cursor=pointer]:
+                          - img [ref=e1830]
+                          - generic [ref=e1832]: Договориться
+                        - button "Рассрочка" [ref=e1833] [cursor=pointer]:
+                          - img [ref=e1834]
+                          - generic [ref=e1836]: Рассрочка
+                  - 'row "Select/deselect item 1118 for bulk actions. Магдалинский Сергей Викторович, СПБ magd@dieta18.ru · #1118 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–55, №62 268 800 ₽ 27.03.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e1837]':
+                    - cell "Select/deselect item 1118 for bulk actions." [ref=e1838]:
+                      - generic [ref=e1840]:
+                        - checkbox "Select/deselect item 1118 for bulk actions." [ref=e1841]
+                        - generic [ref=e1842]: Select/deselect item 1118 for bulk actions.
+                    - 'cell "Магдалинский Сергей Викторович, СПБ magd@dieta18.ru · #1118" [ref=e1843]':
+                      - 'button "Магдалинский Сергей Викторович, СПБ magd@dieta18.ru · #1118" [ref=e1845] [cursor=pointer]':
+                        - generic [ref=e1846]:
+                          - generic [ref=e1850]: Магдалинский Сергей Викторович, СПБ
+                          - paragraph [ref=e1851]: "magd@dieta18.ru · #1118"
+                    - cell "Синтаксис санскрита" [ref=e1852]:
+                      - generic [ref=e1859]: Синтаксис санскрита
+                    - cell "62" [ref=e1860]:
+                      - generic [ref=e1868]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1869]:
+                      - generic [ref=e1876]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1877]:
+                      - generic [ref=e1885]: Не продлил
+                    - cell "№1–55, №62" [ref=e1886]:
+                      - generic [ref=e1893]: №1–55, №62
+                    - cell "268 800 ₽" [ref=e1894]:
+                      - generic [ref=e1901]: 268 800 ₽
+                    - cell [ref=e1902]
+                    - cell "27.03.2026 · 4 800 ₽ блок №61" [ref=e1906]:
+                      - generic [ref=e1909]:
+                        - generic [ref=e1913]: 27.03.2026 · 4 800 ₽
+                        - paragraph [ref=e1914]: блок №61
+                    - cell [ref=e1915]
+                    - cell [ref=e1919]
+                    - cell "—" [ref=e1923]:
+                      - generic [ref=e1927]: —
+                    - cell "Договориться Рассрочка" [ref=e1928]:
+                      - generic [ref=e1930]:
+                        - button "Договориться" [ref=e1931] [cursor=pointer]:
+                          - img [ref=e1932]
+                          - generic [ref=e1934]: Договориться
+                        - button "Рассрочка" [ref=e1935] [cursor=pointer]:
+                          - img [ref=e1936]
+                          - generic [ref=e1938]: Рассрочка
+                  - 'row "Select/deselect item 383 for bulk actions. Новикова Ольга Onovikov@yahoo.com · #383 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №52, №54–62 230 400 ₽ 05.08.2025 · 4 800 ₽ блок №53 — Договориться Рассрочка" [ref=e1939]':
+                    - cell "Select/deselect item 383 for bulk actions." [ref=e1940]:
+                      - generic [ref=e1942]:
+                        - checkbox "Select/deselect item 383 for bulk actions." [ref=e1943]
+                        - generic [ref=e1944]: Select/deselect item 383 for bulk actions.
+                    - 'cell "Новикова Ольга Onovikov@yahoo.com · #383" [ref=e1945]':
+                      - 'button "Новикова Ольга Onovikov@yahoo.com · #383" [ref=e1947] [cursor=pointer]':
+                        - generic [ref=e1948]:
+                          - generic [ref=e1952]: Новикова Ольга
+                          - paragraph [ref=e1953]: "Onovikov@yahoo.com · #383"
+                    - cell "Синтаксис санскрита" [ref=e1954]:
+                      - generic [ref=e1961]: Синтаксис санскрита
+                    - cell "62" [ref=e1962]:
+                      - generic [ref=e1970]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e1971]:
+                      - generic [ref=e1978]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e1979]:
+                      - generic [ref=e1987]: Не продлил
+                    - cell "№1–36, №44–45, №52, №54–62" [ref=e1988]:
+                      - generic [ref=e1995]: №1–36, №44–45, №52, №54–62
+                    - cell "230 400 ₽" [ref=e1996]:
+                      - generic [ref=e2003]: 230 400 ₽
+                    - cell [ref=e2004]
+                    - cell "05.08.2025 · 4 800 ₽ блок №53" [ref=e2008]:
+                      - generic [ref=e2011]:
+                        - generic [ref=e2015]: 05.08.2025 · 4 800 ₽
+                        - paragraph [ref=e2016]: блок №53
+                    - cell [ref=e2017]
+                    - cell [ref=e2021]
+                    - cell "—" [ref=e2025]:
+                      - generic [ref=e2029]: —
+                    - cell "Договориться Рассрочка" [ref=e2030]:
+                      - generic [ref=e2032]:
+                        - button "Договориться" [ref=e2033] [cursor=pointer]:
+                          - img [ref=e2034]
+                          - generic [ref=e2036]: Договориться
+                        - button "Рассрочка" [ref=e2037] [cursor=pointer]:
+                          - img [ref=e2038]
+                          - generic [ref=e2040]: Рассрочка
+                  - 'row "Select/deselect item 772 for bulk actions. Шелковников Александр Юрьевич yche8a2@yandex.ru · #772 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №55–62 278 400 ₽ 29.08.2025 · 4 800 ₽ блок №54 — Договориться Рассрочка" [ref=e2041]':
+                    - cell "Select/deselect item 772 for bulk actions." [ref=e2042]:
+                      - generic [ref=e2044]:
+                        - checkbox "Select/deselect item 772 for bulk actions." [ref=e2045]
+                        - generic [ref=e2046]: Select/deselect item 772 for bulk actions.
+                    - 'cell "Шелковников Александр Юрьевич yche8a2@yandex.ru · #772" [ref=e2047]':
+                      - 'button "Шелковников Александр Юрьевич yche8a2@yandex.ru · #772" [ref=e2049] [cursor=pointer]':
+                        - generic [ref=e2050]:
+                          - generic [ref=e2054]: Шелковников Александр Юрьевич
+                          - paragraph [ref=e2055]: "yche8a2@yandex.ru · #772"
+                    - cell "Синтаксис санскрита" [ref=e2056]:
+                      - generic [ref=e2063]: Синтаксис санскрита
+                    - cell "62" [ref=e2064]:
+                      - generic [ref=e2072]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2073]:
+                      - generic [ref=e2080]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2081]:
+                      - generic [ref=e2089]: Не продлил
+                    - cell "№1–50, №55–62" [ref=e2090]:
+                      - generic [ref=e2097]: №1–50, №55–62
+                    - cell "278 400 ₽" [ref=e2098]:
+                      - generic [ref=e2105]: 278 400 ₽
+                    - cell [ref=e2106]
+                    - cell "29.08.2025 · 4 800 ₽ блок №54" [ref=e2110]:
+                      - generic [ref=e2113]:
+                        - generic [ref=e2117]: 29.08.2025 · 4 800 ₽
+                        - paragraph [ref=e2118]: блок №54
+                    - cell [ref=e2119]
+                    - cell [ref=e2123]
+                    - cell "—" [ref=e2127]:
+                      - generic [ref=e2131]: —
+                    - cell "Договориться Рассрочка" [ref=e2132]:
+                      - generic [ref=e2134]:
+                        - button "Договориться" [ref=e2135] [cursor=pointer]:
+                          - img [ref=e2136]
+                          - generic [ref=e2138]: Договориться
+                        - button "Рассрочка" [ref=e2139] [cursor=pointer]:
+                          - img [ref=e2140]
+                          - generic [ref=e2142]: Рассрочка
+                  - 'row "Select/deselect item 769 for bulk actions. Золотарева Елена zolotareva-elena_2986@no-email.com · #769 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–45, №47–62 292 800 ₽ 22.09.2024 · 4 000 ₽ блок №46 — Договориться Рассрочка" [ref=e2143]':
+                    - cell "Select/deselect item 769 for bulk actions." [ref=e2144]:
+                      - generic [ref=e2146]:
+                        - checkbox "Select/deselect item 769 for bulk actions." [ref=e2147]
+                        - generic [ref=e2148]: Select/deselect item 769 for bulk actions.
+                    - 'cell "Золотарева Елена zolotareva-elena_2986@no-email.com · #769" [ref=e2149]':
+                      - 'button "Золотарева Елена zolotareva-elena_2986@no-email.com · #769" [ref=e2151] [cursor=pointer]':
+                        - generic [ref=e2152]:
+                          - generic [ref=e2156]: Золотарева Елена
+                          - paragraph [ref=e2157]: "zolotareva-elena_2986@no-email.com · #769"
+                    - cell "Синтаксис санскрита" [ref=e2158]:
+                      - generic [ref=e2165]: Синтаксис санскрита
+                    - cell "62" [ref=e2166]:
+                      - generic [ref=e2174]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2175]:
+                      - generic [ref=e2182]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2183]:
+                      - generic [ref=e2191]: Не продлил
+                    - cell "№1–45, №47–62" [ref=e2192]:
+                      - generic [ref=e2199]: №1–45, №47–62
+                    - cell "292 800 ₽" [ref=e2200]:
+                      - generic [ref=e2207]: 292 800 ₽
+                    - cell [ref=e2208]
+                    - cell "22.09.2024 · 4 000 ₽ блок №46" [ref=e2212]:
+                      - generic [ref=e2215]:
+                        - generic [ref=e2219]: 22.09.2024 · 4 000 ₽
+                        - paragraph [ref=e2220]: блок №46
+                    - cell [ref=e2221]
+                    - cell [ref=e2225]
+                    - cell "—" [ref=e2229]:
+                      - generic [ref=e2233]: —
+                    - cell "Договориться Рассрочка" [ref=e2234]:
+                      - generic [ref=e2236]:
+                        - button "Договориться" [ref=e2237] [cursor=pointer]:
+                          - img [ref=e2238]
+                          - generic [ref=e2240]: Договориться
+                        - button "Рассрочка" [ref=e2241] [cursor=pointer]:
+                          - img [ref=e2242]
+                          - generic [ref=e2244]: Рассрочка
+                  - 'row "Select/deselect item 712 for bulk actions. Артеменко Анатолий Григорьевич, Одесса artemenko-anatolii-grigorevic-odessa_2025@no-email.com · #712 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–35, №44–45, №52–62 230 400 ₽ 09.06.2025 · 0 ₽ блок №51 — Договориться Рассрочка" [ref=e2245]':
+                    - cell "Select/deselect item 712 for bulk actions." [ref=e2246]:
+                      - generic [ref=e2248]:
+                        - checkbox "Select/deselect item 712 for bulk actions." [ref=e2249]
+                        - generic [ref=e2250]: Select/deselect item 712 for bulk actions.
+                    - 'cell "Артеменко Анатолий Григорьевич, Одесса artemenko-anatolii-grigorevic-odessa_2025@no-email.com · #712" [ref=e2251]':
+                      - 'button "Артеменко Анатолий Григорьевич, Одесса artemenko-anatolii-grigorevic-odessa_2025@no-email.com · #712" [ref=e2253] [cursor=pointer]':
+                        - generic [ref=e2254]:
+                          - generic [ref=e2258]: Артеменко Анатолий Григорьевич, Одесса
+                          - paragraph [ref=e2259]: "artemenko-anatolii-grigorevic-odessa_2025@no-email.com · #712"
+                    - cell "Синтаксис санскрита" [ref=e2260]:
+                      - generic [ref=e2267]: Синтаксис санскрита
+                    - cell "62" [ref=e2268]:
+                      - generic [ref=e2276]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2277]:
+                      - generic [ref=e2284]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2285]:
+                      - generic [ref=e2293]: Не продлил
+                    - cell "№1–35, №44–45, №52–62" [ref=e2294]:
+                      - generic [ref=e2301]: №1–35, №44–45, №52–62
+                    - cell "230 400 ₽" [ref=e2302]:
+                      - generic [ref=e2309]: 230 400 ₽
+                    - cell [ref=e2310]
+                    - cell "09.06.2025 · 0 ₽ блок №51" [ref=e2314]:
+                      - generic [ref=e2317]:
+                        - generic [ref=e2321]: 09.06.2025 · 0 ₽
+                        - paragraph [ref=e2322]: блок №51
+                    - cell [ref=e2323]
+                    - cell [ref=e2327]
+                    - cell "—" [ref=e2331]:
+                      - generic [ref=e2335]: —
+                    - cell "Договориться Рассрочка" [ref=e2336]:
+                      - generic [ref=e2338]:
+                        - button "Договориться" [ref=e2339] [cursor=pointer]:
+                          - img [ref=e2340]
+                          - generic [ref=e2342]: Договориться
+                        - button "Рассрочка" [ref=e2343] [cursor=pointer]:
+                          - img [ref=e2344]
+                          - generic [ref=e2346]: Рассрочка
+                  - 'row "Select/deselect item 766 for bulk actions. Черухин Денис Анатольевич ceruxin-denis-anatolevic_6575@no-email.com · #766 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №49–50, №52–62 244 800 ₽ 08.06.2025 · 0 ₽ блок №51 — Договориться Рассрочка" [ref=e2347]':
+                    - cell "Select/deselect item 766 for bulk actions." [ref=e2348]:
+                      - generic [ref=e2350]:
+                        - checkbox "Select/deselect item 766 for bulk actions." [ref=e2351]
+                        - generic [ref=e2352]: Select/deselect item 766 for bulk actions.
+                    - 'cell "Черухин Денис Анатольевич ceruxin-denis-anatolevic_6575@no-email.com · #766" [ref=e2353]':
+                      - 'button "Черухин Денис Анатольевич ceruxin-denis-anatolevic_6575@no-email.com · #766" [ref=e2355] [cursor=pointer]':
+                        - generic [ref=e2356]:
+                          - generic [ref=e2360]: Черухин Денис Анатольевич
+                          - paragraph [ref=e2361]: "ceruxin-denis-anatolevic_6575@no-email.com · #766"
+                    - cell "Синтаксис санскрита" [ref=e2362]:
+                      - generic [ref=e2369]: Синтаксис санскрита
+                    - cell "62" [ref=e2370]:
+                      - generic [ref=e2378]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2379]:
+                      - generic [ref=e2386]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2387]:
+                      - generic [ref=e2395]: Не продлил
+                    - cell "№1–36, №44–45, №49–50, №52–62" [ref=e2396]:
+                      - generic [ref=e2403]: №1–36, №44–45, №49–50, №52–62
+                    - cell "244 800 ₽" [ref=e2404]:
+                      - generic [ref=e2411]: 244 800 ₽
+                    - cell [ref=e2412]
+                    - cell "08.06.2025 · 0 ₽ блок №51" [ref=e2416]:
+                      - generic [ref=e2419]:
+                        - generic [ref=e2423]: 08.06.2025 · 0 ₽
+                        - paragraph [ref=e2424]: блок №51
+                    - cell [ref=e2425]
+                    - cell [ref=e2429]
+                    - cell "—" [ref=e2433]:
+                      - generic [ref=e2437]: —
+                    - cell "Договориться Рассрочка" [ref=e2438]:
+                      - generic [ref=e2440]:
+                        - button "Договориться" [ref=e2441] [cursor=pointer]:
+                          - img [ref=e2442]
+                          - generic [ref=e2444]: Договориться
+                        - button "Рассрочка" [ref=e2445] [cursor=pointer]:
+                          - img [ref=e2446]
+                          - generic [ref=e2448]: Рассрочка
+                  - 'row "Select/deselect item 378 for bulk actions. Юдинцев Аркадий, Израиль ayuden@gmail.com · #378 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–45, №54–62 259 200 ₽ 16.08.2025 · 4 800 ₽ блок №53 — Договориться Рассрочка" [ref=e2449]':
+                    - cell "Select/deselect item 378 for bulk actions." [ref=e2450]:
+                      - generic [ref=e2452]:
+                        - checkbox "Select/deselect item 378 for bulk actions." [ref=e2453]
+                        - generic [ref=e2454]: Select/deselect item 378 for bulk actions.
+                    - 'cell "Юдинцев Аркадий, Израиль ayuden@gmail.com · #378" [ref=e2455]':
+                      - 'button "Юдинцев Аркадий, Израиль ayuden@gmail.com · #378" [ref=e2457] [cursor=pointer]':
+                        - generic [ref=e2458]:
+                          - generic [ref=e2462]: Юдинцев Аркадий, Израиль
+                          - paragraph [ref=e2463]: "ayuden@gmail.com · #378"
+                    - cell "Синтаксис санскрита" [ref=e2464]:
+                      - generic [ref=e2471]: Синтаксис санскрита
+                    - cell "62" [ref=e2472]:
+                      - generic [ref=e2480]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2481]:
+                      - generic [ref=e2488]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2489]:
+                      - generic [ref=e2497]: Не продлил
+                    - cell "№1–45, №54–62" [ref=e2498]:
+                      - generic [ref=e2505]: №1–45, №54–62
+                    - cell "259 200 ₽" [ref=e2506]:
+                      - generic [ref=e2513]: 259 200 ₽
+                    - cell [ref=e2514]
+                    - cell "16.08.2025 · 4 800 ₽ блок №53" [ref=e2518]:
+                      - generic [ref=e2521]:
+                        - generic [ref=e2525]: 16.08.2025 · 4 800 ₽
+                        - paragraph [ref=e2526]: блок №53
+                    - cell [ref=e2527]
+                    - cell [ref=e2531]
+                    - cell "—" [ref=e2535]:
+                      - generic [ref=e2539]: —
+                    - cell "Договориться Рассрочка" [ref=e2540]:
+                      - generic [ref=e2542]:
+                        - button "Договориться" [ref=e2543] [cursor=pointer]:
+                          - img [ref=e2544]
+                          - generic [ref=e2546]: Договориться
+                        - button "Рассрочка" [ref=e2547] [cursor=pointer]:
+                          - img [ref=e2548]
+                          - generic [ref=e2550]: Рассрочка
+                  - 'row "Select/deselect item 629 for bulk actions. Макаров Олег Юрьевич, Москва omakarovs@gmail.com · #629 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №21–45, №53–62 168 000 ₽ до 27.06.2026 20.05.2026 · 88 000 ₽ блоки №1–20 — Обещание Рассрочка" [ref=e2551]':
+                    - cell "Select/deselect item 629 for bulk actions." [ref=e2552]:
+                      - generic [ref=e2554]:
+                        - checkbox "Select/deselect item 629 for bulk actions." [ref=e2555]
+                        - generic [ref=e2556]: Select/deselect item 629 for bulk actions.
+                    - 'cell "Макаров Олег Юрьевич, Москва omakarovs@gmail.com · #629" [ref=e2557]':
+                      - 'button "Макаров Олег Юрьевич, Москва omakarovs@gmail.com · #629" [ref=e2559] [cursor=pointer]':
+                        - generic [ref=e2560]:
+                          - generic [ref=e2564]: Макаров Олег Юрьевич, Москва
+                          - paragraph [ref=e2565]: "omakarovs@gmail.com · #629"
+                    - cell "Синтаксис санскрита" [ref=e2566]:
+                      - generic [ref=e2573]: Синтаксис санскрита
+                    - cell "62" [ref=e2574]:
+                      - generic [ref=e2582]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2583]:
+                      - generic [ref=e2590]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2591]:
+                      - generic [ref=e2599]: Не продлил
+                    - cell "№21–45, №53–62" [ref=e2600]:
+                      - generic [ref=e2607]: №21–45, №53–62
+                    - cell "168 000 ₽" [ref=e2608]:
+                      - generic [ref=e2615]: 168 000 ₽
+                    - cell "до 27.06.2026" [ref=e2616]:
+                      - generic [ref=e2624]: до 27.06.2026
+                    - cell "20.05.2026 · 88 000 ₽ блоки №1–20" [ref=e2625]:
+                      - generic [ref=e2628]:
+                        - generic [ref=e2632]: 20.05.2026 · 88 000 ₽
+                        - paragraph [ref=e2633]: блоки №1–20
+                    - cell [ref=e2634]
+                    - cell [ref=e2638]
+                    - cell "—" [ref=e2642]:
+                      - generic [ref=e2646]: —
+                    - cell "Обещание Рассрочка" [ref=e2647]:
+                      - generic [ref=e2649]:
+                        - button "Обещание" [ref=e2650] [cursor=pointer]:
+                          - img [ref=e2651]
+                          - generic [ref=e2653]: Обещание
+                        - button "Рассрочка" [ref=e2654] [cursor=pointer]:
+                          - img [ref=e2655]
+                          - generic [ref=e2657]: Рассрочка
+                  - 'row "Select/deselect item 763 for bulk actions. Ц. Алексей Владимирович c-aleksei-vladimirovic_5985@no-email.com · #763 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №58, №60, №62 196 800 ₽ 14.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e2658]':
+                    - cell "Select/deselect item 763 for bulk actions." [ref=e2659]:
+                      - generic [ref=e2661]:
+                        - checkbox "Select/deselect item 763 for bulk actions." [ref=e2662]
+                        - generic [ref=e2663]: Select/deselect item 763 for bulk actions.
+                    - 'cell "Ц. Алексей Владимирович c-aleksei-vladimirovic_5985@no-email.com · #763" [ref=e2664]':
+                      - 'button "Ц. Алексей Владимирович c-aleksei-vladimirovic_5985@no-email.com · #763" [ref=e2666] [cursor=pointer]':
+                        - generic [ref=e2667]:
+                          - generic [ref=e2671]: Ц. Алексей Владимирович
+                          - paragraph [ref=e2672]: "c-aleksei-vladimirovic_5985@no-email.com · #763"
+                    - cell "Синтаксис санскрита" [ref=e2673]:
+                      - generic [ref=e2680]: Синтаксис санскрита
+                    - cell "62" [ref=e2681]:
+                      - generic [ref=e2689]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2690]:
+                      - generic [ref=e2697]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2698]:
+                      - generic [ref=e2706]: Не продлил
+                    - cell "№1–36, №44–45, №58, №60, №62" [ref=e2707]:
+                      - generic [ref=e2714]: №1–36, №44–45, №58, №60, №62
+                    - cell "196 800 ₽" [ref=e2715]:
+                      - generic [ref=e2722]: 196 800 ₽
+                    - cell [ref=e2723]
+                    - cell "14.04.2026 · 4 800 ₽ блок №61" [ref=e2727]:
+                      - generic [ref=e2730]:
+                        - generic [ref=e2734]: 14.04.2026 · 4 800 ₽
+                        - paragraph [ref=e2735]: блок №61
+                    - cell [ref=e2736]
+                    - cell [ref=e2740]
+                    - cell "—" [ref=e2744]:
+                      - generic [ref=e2748]: —
+                    - cell "Договориться Рассрочка" [ref=e2749]:
+                      - generic [ref=e2751]:
+                        - button "Договориться" [ref=e2752] [cursor=pointer]:
+                          - img [ref=e2753]
+                          - generic [ref=e2755]: Договориться
+                        - button "Рассрочка" [ref=e2756] [cursor=pointer]:
+                          - img [ref=e2757]
+                          - generic [ref=e2759]: Рассрочка
+                  - 'row "Select/deselect item 739 for bulk actions. Майер Людмила lvsharova@comcast.net · #739 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–40, №44–45, №50–62 264 000 ₽ 23.12.2024 · 4 000 ₽ блок №49 — Договориться Рассрочка" [ref=e2760]':
+                    - cell "Select/deselect item 739 for bulk actions." [ref=e2761]:
+                      - generic [ref=e2763]:
+                        - checkbox "Select/deselect item 739 for bulk actions." [ref=e2764]
+                        - generic [ref=e2765]: Select/deselect item 739 for bulk actions.
+                    - 'cell "Майер Людмила lvsharova@comcast.net · #739" [ref=e2766]':
+                      - 'button "Майер Людмила lvsharova@comcast.net · #739" [ref=e2768] [cursor=pointer]':
+                        - generic [ref=e2769]:
+                          - generic [ref=e2773]: Майер Людмила
+                          - paragraph [ref=e2774]: "lvsharova@comcast.net · #739"
+                    - cell "Синтаксис санскрита" [ref=e2775]:
+                      - generic [ref=e2782]: Синтаксис санскрита
+                    - cell "62" [ref=e2783]:
+                      - generic [ref=e2791]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2792]:
+                      - generic [ref=e2799]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2800]:
+                      - generic [ref=e2808]: Не продлил
+                    - cell "№1–40, №44–45, №50–62" [ref=e2809]:
+                      - generic [ref=e2816]: №1–40, №44–45, №50–62
+                    - cell "264 000 ₽" [ref=e2817]:
+                      - generic [ref=e2824]: 264 000 ₽
+                    - cell [ref=e2825]
+                    - cell "23.12.2024 · 4 000 ₽ блок №49" [ref=e2829]:
+                      - generic [ref=e2832]:
+                        - generic [ref=e2836]: 23.12.2024 · 4 000 ₽
+                        - paragraph [ref=e2837]: блок №49
+                    - cell [ref=e2838]
+                    - cell [ref=e2842]
+                    - cell "—" [ref=e2846]:
+                      - generic [ref=e2850]: —
+                    - cell "Договориться Рассрочка" [ref=e2851]:
+                      - generic [ref=e2853]:
+                        - button "Договориться" [ref=e2854] [cursor=pointer]:
+                          - img [ref=e2855]
+                          - generic [ref=e2857]: Договориться
+                        - button "Рассрочка" [ref=e2858] [cursor=pointer]:
+                          - img [ref=e2859]
+                          - generic [ref=e2861]: Рассрочка
+                  - 'row "Select/deselect item 760 for bulk actions. Шруогинис Дариус sruoginis-darius_8046@no-email.com · #760 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–35, №44–45, №52–62 230 400 ₽ 19.01.2025 · 4 000 ₽ блок №51 — Договориться Рассрочка" [ref=e2862]':
+                    - cell "Select/deselect item 760 for bulk actions." [ref=e2863]:
+                      - generic [ref=e2865]:
+                        - checkbox "Select/deselect item 760 for bulk actions." [ref=e2866]
+                        - generic [ref=e2867]: Select/deselect item 760 for bulk actions.
+                    - 'cell "Шруогинис Дариус sruoginis-darius_8046@no-email.com · #760" [ref=e2868]':
+                      - 'button "Шруогинис Дариус sruoginis-darius_8046@no-email.com · #760" [ref=e2870] [cursor=pointer]':
+                        - generic [ref=e2871]:
+                          - generic [ref=e2875]: Шруогинис Дариус
+                          - paragraph [ref=e2876]: "sruoginis-darius_8046@no-email.com · #760"
+                    - cell "Синтаксис санскрита" [ref=e2877]:
+                      - generic [ref=e2884]: Синтаксис санскрита
+                    - cell "62" [ref=e2885]:
+                      - generic [ref=e2893]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2894]:
+                      - generic [ref=e2901]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e2902]:
+                      - generic [ref=e2910]: Не продлил
+                    - cell "№1–35, №44–45, №52–62" [ref=e2911]:
+                      - generic [ref=e2918]: №1–35, №44–45, №52–62
+                    - cell "230 400 ₽" [ref=e2919]:
+                      - generic [ref=e2926]: 230 400 ₽
+                    - cell [ref=e2927]
+                    - cell "19.01.2025 · 4 000 ₽ блок №51" [ref=e2931]:
+                      - generic [ref=e2934]:
+                        - generic [ref=e2938]: 19.01.2025 · 4 000 ₽
+                        - paragraph [ref=e2939]: блок №51
+                    - cell [ref=e2940]
+                    - cell [ref=e2944]
+                    - cell "—" [ref=e2948]:
+                      - generic [ref=e2952]: —
+                    - cell "Договориться Рассрочка" [ref=e2953]:
+                      - generic [ref=e2955]:
+                        - button "Договориться" [ref=e2956] [cursor=pointer]:
+                          - img [ref=e2957]
+                          - generic [ref=e2959]: Договориться
+                        - button "Рассрочка" [ref=e2960] [cursor=pointer]:
+                          - img [ref=e2961]
+                          - generic [ref=e2963]: Рассрочка
+                  - 'row "Select/deselect item 774 for bulk actions. Лучина Татьяна Владимировна luchina.tv@gmail.com · #774 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №56–62 273 600 ₽ 28.09.2025 · 4 800 ₽ блок №55 — Договориться Рассрочка" [ref=e2964]':
+                    - cell "Select/deselect item 774 for bulk actions." [ref=e2965]:
+                      - generic [ref=e2967]:
+                        - checkbox "Select/deselect item 774 for bulk actions." [ref=e2968]
+                        - generic [ref=e2969]: Select/deselect item 774 for bulk actions.
+                    - 'cell "Лучина Татьяна Владимировна luchina.tv@gmail.com · #774" [ref=e2970]':
+                      - 'button "Лучина Татьяна Владимировна luchina.tv@gmail.com · #774" [ref=e2972] [cursor=pointer]':
+                        - generic [ref=e2973]:
+                          - generic [ref=e2977]: Лучина Татьяна Владимировна
+                          - paragraph [ref=e2978]: "luchina.tv@gmail.com · #774"
+                    - cell "Синтаксис санскрита" [ref=e2979]:
+                      - generic [ref=e2986]: Синтаксис санскрита
+                    - cell "62" [ref=e2987]:
+                      - generic [ref=e2995]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e2996]:
+                      - generic [ref=e3003]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3004]:
+                      - generic [ref=e3012]: Не продлил
+                    - cell "№1–50, №56–62" [ref=e3013]:
+                      - generic [ref=e3020]: №1–50, №56–62
+                    - cell "273 600 ₽" [ref=e3021]:
+                      - generic [ref=e3028]: 273 600 ₽
+                    - cell [ref=e3029]
+                    - cell "28.09.2025 · 4 800 ₽ блок №55" [ref=e3033]:
+                      - generic [ref=e3036]:
+                        - generic [ref=e3040]: 28.09.2025 · 4 800 ₽
+                        - paragraph [ref=e3041]: блок №55
+                    - cell [ref=e3042]
+                    - cell [ref=e3046]
+                    - cell "—" [ref=e3050]:
+                      - generic [ref=e3054]: —
+                    - cell "Договориться Рассрочка" [ref=e3055]:
+                      - generic [ref=e3057]:
+                        - button "Договориться" [ref=e3058] [cursor=pointer]:
+                          - img [ref=e3059]
+                          - generic [ref=e3061]: Договориться
+                        - button "Рассрочка" [ref=e3062] [cursor=pointer]:
+                          - img [ref=e3063]
+                          - generic [ref=e3065]: Рассрочка
+                  - 'row "Select/deselect item 736 for bulk actions. Витман Елена vitman-elena_8142@no-email.com · #736 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–40, №44–62 283 200 ₽ 07.07.2024 · 4 000 ₽ блок №43 — Договориться Рассрочка" [ref=e3066]':
+                    - cell "Select/deselect item 736 for bulk actions." [ref=e3067]:
+                      - generic [ref=e3069]:
+                        - checkbox "Select/deselect item 736 for bulk actions." [ref=e3070]
+                        - generic [ref=e3071]: Select/deselect item 736 for bulk actions.
+                    - 'cell "Витман Елена vitman-elena_8142@no-email.com · #736" [ref=e3072]':
+                      - 'button "Витман Елена vitman-elena_8142@no-email.com · #736" [ref=e3074] [cursor=pointer]':
+                        - generic [ref=e3075]:
+                          - generic [ref=e3079]: Витман Елена
+                          - paragraph [ref=e3080]: "vitman-elena_8142@no-email.com · #736"
+                    - cell "Синтаксис санскрита" [ref=e3081]:
+                      - generic [ref=e3088]: Синтаксис санскрита
+                    - cell "62" [ref=e3089]:
+                      - generic [ref=e3097]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3098]:
+                      - generic [ref=e3105]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3106]:
+                      - generic [ref=e3114]: Не продлил
+                    - cell "№1–40, №44–62" [ref=e3115]:
+                      - generic [ref=e3122]: №1–40, №44–62
+                    - cell "283 200 ₽" [ref=e3123]:
+                      - generic [ref=e3130]: 283 200 ₽
+                    - cell [ref=e3131]
+                    - cell "07.07.2024 · 4 000 ₽ блок №43" [ref=e3135]:
+                      - generic [ref=e3138]:
+                        - generic [ref=e3142]: 07.07.2024 · 4 000 ₽
+                        - paragraph [ref=e3143]: блок №43
+                    - cell [ref=e3144]
+                    - cell [ref=e3148]
+                    - cell "—" [ref=e3152]:
+                      - generic [ref=e3156]: —
+                    - cell "Договориться Рассрочка" [ref=e3157]:
+                      - generic [ref=e3159]:
+                        - button "Договориться" [ref=e3160] [cursor=pointer]:
+                          - img [ref=e3161]
+                          - generic [ref=e3163]: Договориться
+                        - button "Рассрочка" [ref=e3164] [cursor=pointer]:
+                          - img [ref=e3165]
+                          - generic [ref=e3167]: Рассрочка
+                  - 'row "Select/deselect item 773 for bulk actions. Павлишин Сергей Анатольевич pavlisin-sergei-anatolevic_4203@no-email.com · #773 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–50, №52–62 292 800 ₽ 16.05.2025 · 5 800 ₽ блок №51 — Договориться Рассрочка" [ref=e3168]':
+                    - cell "Select/deselect item 773 for bulk actions." [ref=e3169]:
+                      - generic [ref=e3171]:
+                        - checkbox "Select/deselect item 773 for bulk actions." [ref=e3172]
+                        - generic [ref=e3173]: Select/deselect item 773 for bulk actions.
+                    - 'cell "Павлишин Сергей Анатольевич pavlisin-sergei-anatolevic_4203@no-email.com · #773" [ref=e3174]':
+                      - 'button "Павлишин Сергей Анатольевич pavlisin-sergei-anatolevic_4203@no-email.com · #773" [ref=e3176] [cursor=pointer]':
+                        - generic [ref=e3177]:
+                          - generic [ref=e3181]: Павлишин Сергей Анатольевич
+                          - paragraph [ref=e3182]: "pavlisin-sergei-anatolevic_4203@no-email.com · #773"
+                    - cell "Синтаксис санскрита" [ref=e3183]:
+                      - generic [ref=e3190]: Синтаксис санскрита
+                    - cell "62" [ref=e3191]:
+                      - generic [ref=e3199]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3200]:
+                      - generic [ref=e3207]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3208]:
+                      - generic [ref=e3216]: Не продлил
+                    - cell "№1–50, №52–62" [ref=e3217]:
+                      - generic [ref=e3224]: №1–50, №52–62
+                    - cell "292 800 ₽" [ref=e3225]:
+                      - generic [ref=e3232]: 292 800 ₽
+                    - cell [ref=e3233]
+                    - cell "16.05.2025 · 5 800 ₽ блок №51" [ref=e3237]:
+                      - generic [ref=e3240]:
+                        - generic [ref=e3244]: 16.05.2025 · 5 800 ₽
+                        - paragraph [ref=e3245]: блок №51
+                    - cell [ref=e3246]
+                    - cell [ref=e3250]
+                    - cell "—" [ref=e3254]:
+                      - generic [ref=e3258]: —
+                    - cell "Договориться Рассрочка" [ref=e3259]:
+                      - generic [ref=e3261]:
+                        - button "Договориться" [ref=e3262] [cursor=pointer]:
+                          - img [ref=e3263]
+                          - generic [ref=e3265]: Договориться
+                        - button "Рассрочка" [ref=e3266] [cursor=pointer]:
+                          - img [ref=e3267]
+                          - generic [ref=e3269]: Рассрочка
+                  - 'row "Select/deselect item 615 for bulk actions. Ишимбаев Марсель Венерович isimbaev-marsel-venerovic_1819@no-email.com · #615 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–45, №48–62 254 400 ₽ 31.10.2024 · 4 000 ₽ блок №47 — Договориться Рассрочка" [ref=e3270]':
+                    - cell "Select/deselect item 615 for bulk actions." [ref=e3271]:
+                      - generic [ref=e3273]:
+                        - checkbox "Select/deselect item 615 for bulk actions." [ref=e3274]
+                        - generic [ref=e3275]: Select/deselect item 615 for bulk actions.
+                    - 'cell "Ишимбаев Марсель Венерович isimbaev-marsel-venerovic_1819@no-email.com · #615" [ref=e3276]':
+                      - 'button "Ишимбаев Марсель Венерович isimbaev-marsel-venerovic_1819@no-email.com · #615" [ref=e3278] [cursor=pointer]':
+                        - generic [ref=e3279]:
+                          - generic [ref=e3283]: Ишимбаев Марсель Венерович
+                          - paragraph [ref=e3284]: "isimbaev-marsel-venerovic_1819@no-email.com · #615"
+                    - cell "Синтаксис санскрита" [ref=e3285]:
+                      - generic [ref=e3292]: Синтаксис санскрита
+                    - cell "62" [ref=e3293]:
+                      - generic [ref=e3301]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3302]:
+                      - generic [ref=e3309]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3310]:
+                      - generic [ref=e3318]: Не продлил
+                    - cell "№1–36, №44–45, №48–62" [ref=e3319]:
+                      - generic [ref=e3326]: №1–36, №44–45, №48–62
+                    - cell "254 400 ₽" [ref=e3327]:
+                      - generic [ref=e3334]: 254 400 ₽
+                    - cell [ref=e3335]
+                    - cell "31.10.2024 · 4 000 ₽ блок №47" [ref=e3339]:
+                      - generic [ref=e3342]:
+                        - generic [ref=e3346]: 31.10.2024 · 4 000 ₽
+                        - paragraph [ref=e3347]: блок №47
+                    - cell [ref=e3348]
+                    - cell [ref=e3352]
+                    - cell "—" [ref=e3356]:
+                      - generic [ref=e3360]: —
+                    - cell "Договориться Рассрочка" [ref=e3361]:
+                      - generic [ref=e3363]:
+                        - button "Договориться" [ref=e3364] [cursor=pointer]:
+                          - img [ref=e3365]
+                          - generic [ref=e3367]: Договориться
+                        - button "Рассрочка" [ref=e3368] [cursor=pointer]:
+                          - img [ref=e3369]
+                          - generic [ref=e3371]: Рассрочка
+                  - 'row "Select/deselect item 770 for bulk actions. Г. Мария Олеговна, Москва g-mariia-olegovna-moskva_1241@no-email.com · #770 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–47, №62 230 400 ₽ 12.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e3372]':
+                    - cell "Select/deselect item 770 for bulk actions." [ref=e3373]:
+                      - generic [ref=e3375]:
+                        - checkbox "Select/deselect item 770 for bulk actions." [ref=e3376]
+                        - generic [ref=e3377]: Select/deselect item 770 for bulk actions.
+                    - 'cell "Г. Мария Олеговна, Москва g-mariia-olegovna-moskva_1241@no-email.com · #770" [ref=e3378]':
+                      - 'button "Г. Мария Олеговна, Москва g-mariia-olegovna-moskva_1241@no-email.com · #770" [ref=e3380] [cursor=pointer]':
+                        - generic [ref=e3381]:
+                          - generic [ref=e3385]: Г. Мария Олеговна, Москва
+                          - paragraph [ref=e3386]: "g-mariia-olegovna-moskva_1241@no-email.com · #770"
+                    - cell "Синтаксис санскрита" [ref=e3387]:
+                      - generic [ref=e3394]: Синтаксис санскрита
+                    - cell "62" [ref=e3395]:
+                      - generic [ref=e3403]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3404]:
+                      - generic [ref=e3411]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3412]:
+                      - generic [ref=e3420]: Не продлил
+                    - cell "№1–47, №62" [ref=e3421]:
+                      - generic [ref=e3428]: №1–47, №62
+                    - cell "230 400 ₽" [ref=e3429]:
+                      - generic [ref=e3436]: 230 400 ₽
+                    - cell [ref=e3437]
+                    - cell "12.04.2026 · 4 800 ₽ блок №61" [ref=e3441]:
+                      - generic [ref=e3444]:
+                        - generic [ref=e3448]: 12.04.2026 · 4 800 ₽
+                        - paragraph [ref=e3449]: блок №61
+                    - cell [ref=e3450]
+                    - cell [ref=e3454]
+                    - cell "—" [ref=e3458]:
+                      - generic [ref=e3462]: —
+                    - cell "Договориться Рассрочка" [ref=e3463]:
+                      - generic [ref=e3465]:
+                        - button "Договориться" [ref=e3466] [cursor=pointer]:
+                          - img [ref=e3467]
+                          - generic [ref=e3469]: Договориться
+                        - button "Рассрочка" [ref=e3470] [cursor=pointer]:
+                          - img [ref=e3471]
+                          - generic [ref=e3473]: Рассрочка
+                  - 'row "Select/deselect item 409 for bulk actions. Литвиненко Ольга Андреевна litvinenko-olga-andreevna_8287@no-email.com · #409 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–49, №52–54, №62 254 400 ₽ 05.04.2026 · 4 800 ₽ блок №61 — Договориться Рассрочка" [ref=e3474]':
+                    - cell "Select/deselect item 409 for bulk actions." [ref=e3475]:
+                      - generic [ref=e3477]:
+                        - checkbox "Select/deselect item 409 for bulk actions." [ref=e3478]
+                        - generic [ref=e3479]: Select/deselect item 409 for bulk actions.
+                    - 'cell "Литвиненко Ольга Андреевна litvinenko-olga-andreevna_8287@no-email.com · #409" [ref=e3480]':
+                      - 'button "Литвиненко Ольга Андреевна litvinenko-olga-andreevna_8287@no-email.com · #409" [ref=e3482] [cursor=pointer]':
+                        - generic [ref=e3483]:
+                          - generic [ref=e3487]: Литвиненко Ольга Андреевна
+                          - paragraph [ref=e3488]: "litvinenko-olga-andreevna_8287@no-email.com · #409"
+                    - cell "Синтаксис санскрита" [ref=e3489]:
+                      - generic [ref=e3496]: Синтаксис санскрита
+                    - cell "62" [ref=e3497]:
+                      - generic [ref=e3505]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3506]:
+                      - generic [ref=e3513]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3514]:
+                      - generic [ref=e3522]: Не продлил
+                    - cell "№1–49, №52–54, №62" [ref=e3523]:
+                      - generic [ref=e3530]: №1–49, №52–54, №62
+                    - cell "254 400 ₽" [ref=e3531]:
+                      - generic [ref=e3538]: 254 400 ₽
+                    - cell [ref=e3539]
+                    - cell "05.04.2026 · 4 800 ₽ блок №61" [ref=e3543]:
+                      - generic [ref=e3546]:
+                        - generic [ref=e3550]: 05.04.2026 · 4 800 ₽
+                        - paragraph [ref=e3551]: блок №61
+                    - cell [ref=e3552]
+                    - cell [ref=e3556]
+                    - cell "—" [ref=e3560]:
+                      - generic [ref=e3564]: —
+                    - cell "Договориться Рассрочка" [ref=e3565]:
+                      - generic [ref=e3567]:
+                        - button "Договориться" [ref=e3568] [cursor=pointer]:
+                          - img [ref=e3569]
+                          - generic [ref=e3571]: Договориться
+                        - button "Рассрочка" [ref=e3572] [cursor=pointer]:
+                          - img [ref=e3573]
+                          - generic [ref=e3575]: Рассрочка
+                  - 'row "Select/deselect item 550 for bulk actions. Ковальчук Ирина kovalchukirina999@gmail.com · #550 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–45, №53–62 264 000 ₽ 06.07.2025 · 4 800 ₽ блок №52 — Договориться Рассрочка" [ref=e3576]':
+                    - cell "Select/deselect item 550 for bulk actions." [ref=e3577]:
+                      - generic [ref=e3579]:
+                        - checkbox "Select/deselect item 550 for bulk actions." [ref=e3580]
+                        - generic [ref=e3581]: Select/deselect item 550 for bulk actions.
+                    - 'cell "Ковальчук Ирина kovalchukirina999@gmail.com · #550" [ref=e3582]':
+                      - 'button "Ковальчук Ирина kovalchukirina999@gmail.com · #550" [ref=e3584] [cursor=pointer]':
+                        - generic [ref=e3585]:
+                          - generic [ref=e3589]: Ковальчук Ирина
+                          - paragraph [ref=e3590]: "kovalchukirina999@gmail.com · #550"
+                    - cell "Синтаксис санскрита" [ref=e3591]:
+                      - generic [ref=e3598]: Синтаксис санскрита
+                    - cell "62" [ref=e3599]:
+                      - generic [ref=e3607]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3608]:
+                      - generic [ref=e3615]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3616]:
+                      - generic [ref=e3624]: Не продлил
+                    - cell "№1–45, №53–62" [ref=e3625]:
+                      - generic [ref=e3632]: №1–45, №53–62
+                    - cell "264 000 ₽" [ref=e3633]:
+                      - generic [ref=e3640]: 264 000 ₽
+                    - cell [ref=e3641]
+                    - cell "06.07.2025 · 4 800 ₽ блок №52" [ref=e3645]:
+                      - generic [ref=e3648]:
+                        - generic [ref=e3652]: 06.07.2025 · 4 800 ₽
+                        - paragraph [ref=e3653]: блок №52
+                    - cell [ref=e3654]
+                    - cell [ref=e3658]
+                    - cell "—" [ref=e3662]:
+                      - generic [ref=e3666]: —
+                    - cell "Договориться Рассрочка" [ref=e3667]:
+                      - generic [ref=e3669]:
+                        - button "Договориться" [ref=e3670] [cursor=pointer]:
+                          - img [ref=e3671]
+                          - generic [ref=e3673]: Договориться
+                        - button "Рассрочка" [ref=e3674] [cursor=pointer]:
+                          - img [ref=e3675]
+                          - generic [ref=e3677]: Рассрочка
+                  - 'row "Select/deselect item 767 for bulk actions. З. Татьяна Сергеевна (Падмавати) z-tatiana-sergeevna-padmavati_6566@no-email.com · #767 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–41, №44–62 288 000 ₽ 07.07.2024 · 4 000 ₽ блок №43 — Договориться Рассрочка" [ref=e3678]':
+                    - cell "Select/deselect item 767 for bulk actions." [ref=e3679]:
+                      - generic [ref=e3681]:
+                        - checkbox "Select/deselect item 767 for bulk actions." [ref=e3682]
+                        - generic [ref=e3683]: Select/deselect item 767 for bulk actions.
+                    - 'cell "З. Татьяна Сергеевна (Падмавати) z-tatiana-sergeevna-padmavati_6566@no-email.com · #767" [ref=e3684]':
+                      - 'button "З. Татьяна Сергеевна (Падмавати) z-tatiana-sergeevna-padmavati_6566@no-email.com · #767" [ref=e3686] [cursor=pointer]':
+                        - generic [ref=e3687]:
+                          - generic [ref=e3691]: З. Татьяна Сергеевна (Падмавати)
+                          - paragraph [ref=e3692]: "z-tatiana-sergeevna-padmavati_6566@no-email.com · #767"
+                    - cell "Синтаксис санскрита" [ref=e3693]:
+                      - generic [ref=e3700]: Синтаксис санскрита
+                    - cell "62" [ref=e3701]:
+                      - generic [ref=e3709]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3710]:
+                      - generic [ref=e3717]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3718]:
+                      - generic [ref=e3726]: Не продлил
+                    - cell "№1–41, №44–62" [ref=e3727]:
+                      - generic [ref=e3734]: №1–41, №44–62
+                    - cell "288 000 ₽" [ref=e3735]:
+                      - generic [ref=e3742]: 288 000 ₽
+                    - cell [ref=e3743]
+                    - cell "07.07.2024 · 4 000 ₽ блок №43" [ref=e3747]:
+                      - generic [ref=e3750]:
+                        - generic [ref=e3754]: 07.07.2024 · 4 000 ₽
+                        - paragraph [ref=e3755]: блок №43
+                    - cell [ref=e3756]
+                    - cell [ref=e3760]
+                    - cell "—" [ref=e3764]:
+                      - generic [ref=e3768]: —
+                    - cell "Договориться Рассрочка" [ref=e3769]:
+                      - generic [ref=e3771]:
+                        - button "Договориться" [ref=e3772] [cursor=pointer]:
+                          - img [ref=e3773]
+                          - generic [ref=e3775]: Договориться
+                        - button "Рассрочка" [ref=e3776] [cursor=pointer]:
+                          - img [ref=e3777]
+                          - generic [ref=e3779]: Рассрочка
+                  - 'row "Select/deselect item 764 for bulk actions. Климов Сергей Александрович klimov-sergei-aleksandrovic_3956@no-email.com · #764 Синтаксис санскрита 62 26.04 – 07.06.2026 Не продлил №1–36, №44–62 264 000 ₽ 15.07.2024 · 4 000 ₽ блок №43 — Договориться Рассрочка" [ref=e3780]':
+                    - cell "Select/deselect item 764 for bulk actions." [ref=e3781]:
+                      - generic [ref=e3783]:
+                        - checkbox "Select/deselect item 764 for bulk actions." [ref=e3784]
+                        - generic [ref=e3785]: Select/deselect item 764 for bulk actions.
+                    - 'cell "Климов Сергей Александрович klimov-sergei-aleksandrovic_3956@no-email.com · #764" [ref=e3786]':
+                      - 'button "Климов Сергей Александрович klimov-sergei-aleksandrovic_3956@no-email.com · #764" [ref=e3788] [cursor=pointer]':
+                        - generic [ref=e3789]:
+                          - generic [ref=e3793]: Климов Сергей Александрович
+                          - paragraph [ref=e3794]: "klimov-sergei-aleksandrovic_3956@no-email.com · #764"
+                    - cell "Синтаксис санскрита" [ref=e3795]:
+                      - generic [ref=e3802]: Синтаксис санскрита
+                    - cell "62" [ref=e3803]:
+                      - generic [ref=e3811]: "62"
+                    - cell "26.04 – 07.06.2026" [ref=e3812]:
+                      - generic [ref=e3819]: 26.04 – 07.06.2026
+                    - cell "Не продлил" [ref=e3820]:
+                      - generic [ref=e3828]: Не продлил
+                    - cell "№1–36, №44–62" [ref=e3829]:
+                      - generic [ref=e3836]: №1–36, №44–62
+                    - cell "264 000 ₽" [ref=e3837]:
+                      - generic [ref=e3844]: 264 000 ₽
+                    - cell [ref=e3845]
+                    - cell "15.07.2024 · 4 000 ₽ блок №43" [ref=e3849]:
+                      - generic [ref=e3852]:
+                        - generic [ref=e3856]: 15.07.2024 · 4 000 ₽
+                        - paragraph [ref=e3857]: блок №43
+                    - cell [ref=e3858]
+                    - cell [ref=e3862]
+                    - cell "—" [ref=e3866]:
+                      - generic [ref=e3870]: —
+                    - cell "Договориться Рассрочка" [ref=e3871]:
+                      - generic [ref=e3873]:
+                        - button "Договориться" [ref=e3874] [cursor=pointer]:
+                          - img [ref=e3875]
+                          - generic [ref=e3877]: Договориться
+                        - button "Рассрочка" [ref=e3878] [cursor=pointer]:
+                          - img [ref=e3879]
+                          - generic [ref=e3881]: Рассрочка
+                  - 'row "Select/deselect item 742 for bulk actions. Шатова Наталия Ивановна, Москва satova-nataliia-ivanovna-moskva_3903@no-email.com · #742 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №3–22 ≈ 120 000 ₽ 30.03.2024 · 6 000 ₽ блок №2 — Договориться Рассрочка" [ref=e3882]':
+                    - cell "Select/deselect item 742 for bulk actions." [ref=e3883]:
+                      - generic [ref=e3885]:
+                        - checkbox "Select/deselect item 742 for bulk actions." [ref=e3886]
+                        - generic [ref=e3887]: Select/deselect item 742 for bulk actions.
+                    - 'cell "Шатова Наталия Ивановна, Москва satova-nataliia-ivanovna-moskva_3903@no-email.com · #742" [ref=e3888]':
+                      - 'button "Шатова Наталия Ивановна, Москва satova-nataliia-ivanovna-moskva_3903@no-email.com · #742" [ref=e3890] [cursor=pointer]':
+                        - generic [ref=e3891]:
+                          - generic [ref=e3895]: Шатова Наталия Ивановна, Москва
+                          - paragraph [ref=e3896]: "satova-nataliia-ivanovna-moskva_3903@no-email.com · #742"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e3897]:
+                      - generic [ref=e3904]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e3905]:
+                      - generic [ref=e3913]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e3914]:
+                      - generic [ref=e3921]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e3922]:
+                      - generic [ref=e3930]: Не продлил
+                    - cell "№3–22" [ref=e3931]:
+                      - generic [ref=e3938]: №3–22
+                    - cell "≈ 120 000 ₽" [ref=e3939]:
+                      - generic [ref=e3946]: ≈ 120 000 ₽
+                    - cell [ref=e3947]
+                    - cell "30.03.2024 · 6 000 ₽ блок №2" [ref=e3951]:
+                      - generic [ref=e3954]:
+                        - generic [ref=e3958]: 30.03.2024 · 6 000 ₽
+                        - paragraph [ref=e3959]: блок №2
+                    - cell [ref=e3960]
+                    - cell [ref=e3964]
+                    - cell "—" [ref=e3968]:
+                      - generic [ref=e3972]: —
+                    - cell "Договориться Рассрочка" [ref=e3973]:
+                      - generic [ref=e3975]:
+                        - button "Договориться" [ref=e3976] [cursor=pointer]:
+                          - img [ref=e3977]
+                          - generic [ref=e3979]: Договориться
+                        - button "Рассрочка" [ref=e3980] [cursor=pointer]:
+                          - img [ref=e3981]
+                          - generic [ref=e3983]: Рассрочка
+                  - 'row "Select/deselect item 858 for bulk actions. Мочалов Дмитрий Николаевич, Ростов-на-Дону mocalov-dmitrii-nikolaevic-rostov-na-donu_8585@no-email.com · #858 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №7–22 ≈ 96 000 ₽ 09.10.2024 · 6 000 ₽ блок №6 — Договориться Рассрочка" [ref=e3984]':
+                    - cell "Select/deselect item 858 for bulk actions." [ref=e3985]:
+                      - generic [ref=e3987]:
+                        - checkbox "Select/deselect item 858 for bulk actions." [ref=e3988]
+                        - generic [ref=e3989]: Select/deselect item 858 for bulk actions.
+                    - 'cell "Мочалов Дмитрий Николаевич, Ростов-на-Дону mocalov-dmitrii-nikolaevic-rostov-na-donu_8585@no-email.com · #858" [ref=e3990]':
+                      - 'button "Мочалов Дмитрий Николаевич, Ростов-на-Дону mocalov-dmitrii-nikolaevic-rostov-na-donu_8585@no-email.com · #858" [ref=e3992] [cursor=pointer]':
+                        - generic [ref=e3993]:
+                          - generic [ref=e3997]: Мочалов Дмитрий Николаевич, Ростов-на-Дону
+                          - paragraph [ref=e3998]: "mocalov-dmitrii-nikolaevic-rostov-na-donu_8585@no-email.com · #858"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e3999]:
+                      - generic [ref=e4006]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4007]:
+                      - generic [ref=e4015]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4016]:
+                      - generic [ref=e4023]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4024]:
+                      - generic [ref=e4032]: Не продлил
+                    - cell "№7–22" [ref=e4033]:
+                      - generic [ref=e4040]: №7–22
+                    - cell "≈ 96 000 ₽" [ref=e4041]:
+                      - generic [ref=e4048]: ≈ 96 000 ₽
+                    - cell [ref=e4049]
+                    - cell "09.10.2024 · 6 000 ₽ блок №6" [ref=e4053]:
+                      - generic [ref=e4056]:
+                        - generic [ref=e4060]: 09.10.2024 · 6 000 ₽
+                        - paragraph [ref=e4061]: блок №6
+                    - cell [ref=e4062]
+                    - cell [ref=e4066]
+                    - cell "—" [ref=e4070]:
+                      - generic [ref=e4074]: —
+                    - cell "Договориться Рассрочка" [ref=e4075]:
+                      - generic [ref=e4077]:
+                        - button "Договориться" [ref=e4078] [cursor=pointer]:
+                          - img [ref=e4079]
+                          - generic [ref=e4081]: Договориться
+                        - button "Рассрочка" [ref=e4082] [cursor=pointer]:
+                          - img [ref=e4083]
+                          - generic [ref=e4085]: Рассрочка
+                  - 'row "Select/deselect item 889 for bulk actions. Прудникова Яна Игоревна, Новосибирск prudnikova-iana-igorevna-novosibirsk_7237@no-email.com · #889 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №3–22 ≈ 120 000 ₽ 20.04.2024 · 6 000 ₽ блок №2 — Договориться Рассрочка" [ref=e4086]':
+                    - cell "Select/deselect item 889 for bulk actions." [ref=e4087]:
+                      - generic [ref=e4089]:
+                        - checkbox "Select/deselect item 889 for bulk actions." [ref=e4090]
+                        - generic [ref=e4091]: Select/deselect item 889 for bulk actions.
+                    - 'cell "Прудникова Яна Игоревна, Новосибирск prudnikova-iana-igorevna-novosibirsk_7237@no-email.com · #889" [ref=e4092]':
+                      - 'button "Прудникова Яна Игоревна, Новосибирск prudnikova-iana-igorevna-novosibirsk_7237@no-email.com · #889" [ref=e4094] [cursor=pointer]':
+                        - generic [ref=e4095]:
+                          - generic [ref=e4099]: Прудникова Яна Игоревна, Новосибирск
+                          - paragraph [ref=e4100]: "prudnikova-iana-igorevna-novosibirsk_7237@no-email.com · #889"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4101]:
+                      - generic [ref=e4108]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4109]:
+                      - generic [ref=e4117]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4118]:
+                      - generic [ref=e4125]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4126]:
+                      - generic [ref=e4134]: Не продлил
+                    - cell "№3–22" [ref=e4135]:
+                      - generic [ref=e4142]: №3–22
+                    - cell "≈ 120 000 ₽" [ref=e4143]:
+                      - generic [ref=e4150]: ≈ 120 000 ₽
+                    - cell [ref=e4151]
+                    - cell "20.04.2024 · 6 000 ₽ блок №2" [ref=e4155]:
+                      - generic [ref=e4158]:
+                        - generic [ref=e4162]: 20.04.2024 · 6 000 ₽
+                        - paragraph [ref=e4163]: блок №2
+                    - cell [ref=e4164]
+                    - cell [ref=e4168]
+                    - cell "—" [ref=e4172]:
+                      - generic [ref=e4176]: —
+                    - cell "Договориться Рассрочка" [ref=e4177]:
+                      - generic [ref=e4179]:
+                        - button "Договориться" [ref=e4180] [cursor=pointer]:
+                          - img [ref=e4181]
+                          - generic [ref=e4183]: Договориться
+                        - button "Рассрочка" [ref=e4184] [cursor=pointer]:
+                          - img [ref=e4185]
+                          - generic [ref=e4187]: Рассрочка
+                  - 'row "Select/deselect item 886 for bulk actions. Малых-Бахтина Мария Павловна malyx-baxtina-mariia-pavlovna_5479@no-email.com · #886 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №15–22 ≈ 48 000 ₽ 07.06.2025 · 0 ₽ блок №14 — Договориться Рассрочка" [ref=e4188]':
+                    - cell "Select/deselect item 886 for bulk actions." [ref=e4189]:
+                      - generic [ref=e4191]:
+                        - checkbox "Select/deselect item 886 for bulk actions." [ref=e4192]
+                        - generic [ref=e4193]: Select/deselect item 886 for bulk actions.
+                    - 'cell "Малых-Бахтина Мария Павловна malyx-baxtina-mariia-pavlovna_5479@no-email.com · #886" [ref=e4194]':
+                      - 'button "Малых-Бахтина Мария Павловна malyx-baxtina-mariia-pavlovna_5479@no-email.com · #886" [ref=e4196] [cursor=pointer]':
+                        - generic [ref=e4197]:
+                          - generic [ref=e4201]: Малых-Бахтина Мария Павловна
+                          - paragraph [ref=e4202]: "malyx-baxtina-mariia-pavlovna_5479@no-email.com · #886"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4203]:
+                      - generic [ref=e4210]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4211]:
+                      - generic [ref=e4219]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4220]:
+                      - generic [ref=e4227]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4228]:
+                      - generic [ref=e4236]: Не продлил
+                    - cell "№15–22" [ref=e4237]:
+                      - generic [ref=e4244]: №15–22
+                    - cell "≈ 48 000 ₽" [ref=e4245]:
+                      - generic [ref=e4252]: ≈ 48 000 ₽
+                    - cell [ref=e4253]
+                    - cell "07.06.2025 · 0 ₽ блок №14" [ref=e4257]:
+                      - generic [ref=e4260]:
+                        - generic [ref=e4264]: 07.06.2025 · 0 ₽
+                        - paragraph [ref=e4265]: блок №14
+                    - cell [ref=e4266]
+                    - cell [ref=e4270]
+                    - cell "—" [ref=e4274]:
+                      - generic [ref=e4278]: —
+                    - cell "Договориться Рассрочка" [ref=e4279]:
+                      - generic [ref=e4281]:
+                        - button "Договориться" [ref=e4282] [cursor=pointer]:
+                          - img [ref=e4283]
+                          - generic [ref=e4285]: Договориться
+                        - button "Рассрочка" [ref=e4286] [cursor=pointer]:
+                          - img [ref=e4287]
+                          - generic [ref=e4289]: Рассрочка
+                  - 'row "Select/deselect item 398 for bulk actions. Сурикова-Вознесенская Ксения, Московская область surikova-voznesenskaia-kseniia-moskovskaia-oblast_4072@no-email.com · #398 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №5–22 ≈ 108 000 ₽ 02.03.2024 · 0 ₽ блок №4 — Договориться Рассрочка" [ref=e4290]':
+                    - cell "Select/deselect item 398 for bulk actions." [ref=e4291]:
+                      - generic [ref=e4293]:
+                        - checkbox "Select/deselect item 398 for bulk actions." [ref=e4294]
+                        - generic [ref=e4295]: Select/deselect item 398 for bulk actions.
+                    - 'cell "Сурикова-Вознесенская Ксения, Московская область surikova-voznesenskaia-kseniia-moskovskaia-oblast_4072@no-email.com · #398" [ref=e4296]':
+                      - 'button "Сурикова-Вознесенская Ксения, Московская область surikova-voznesenskaia-kseniia-moskovskaia-oblast_4072@no-email.com · #398" [ref=e4298] [cursor=pointer]':
+                        - generic [ref=e4299]:
+                          - generic [ref=e4303]: Сурикова-Вознесенская Ксения, Московская область
+                          - paragraph [ref=e4304]: "surikova-voznesenskaia-kseniia-moskovskaia-oblast_4072@no-email.com · #398"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4305]:
+                      - generic [ref=e4312]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4313]:
+                      - generic [ref=e4321]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4322]:
+                      - generic [ref=e4329]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4330]:
+                      - generic [ref=e4338]: Не продлил
+                    - cell "№5–22" [ref=e4339]:
+                      - generic [ref=e4346]: №5–22
+                    - cell "≈ 108 000 ₽" [ref=e4347]:
+                      - generic [ref=e4354]: ≈ 108 000 ₽
+                    - cell [ref=e4355]
+                    - cell "02.03.2024 · 0 ₽ блок №4" [ref=e4359]:
+                      - generic [ref=e4362]:
+                        - generic [ref=e4366]: 02.03.2024 · 0 ₽
+                        - paragraph [ref=e4367]: блок №4
+                    - cell [ref=e4368]
+                    - cell [ref=e4372]
+                    - cell "—" [ref=e4376]:
+                      - generic [ref=e4380]: —
+                    - cell "Договориться Рассрочка" [ref=e4381]:
+                      - generic [ref=e4383]:
+                        - button "Договориться" [ref=e4384] [cursor=pointer]:
+                          - img [ref=e4385]
+                          - generic [ref=e4387]: Договориться
+                        - button "Рассрочка" [ref=e4388] [cursor=pointer]:
+                          - img [ref=e4389]
+                          - generic [ref=e4391]: Рассрочка
+                  - 'row "Select/deselect item 734 for bulk actions. Ковальчук Анатолий, Швеция kovalcuk-anatolii-sveciia_4342@no-email.com · #734 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №1–5, №11–14, №18–22 ≈ 84 000 ₽ 04.11.2025 · 6 000 ₽ блок №17 — Договориться Рассрочка" [ref=e4392]':
+                    - cell "Select/deselect item 734 for bulk actions." [ref=e4393]:
+                      - generic [ref=e4395]:
+                        - checkbox "Select/deselect item 734 for bulk actions." [ref=e4396]
+                        - generic [ref=e4397]: Select/deselect item 734 for bulk actions.
+                    - 'cell "Ковальчук Анатолий, Швеция kovalcuk-anatolii-sveciia_4342@no-email.com · #734" [ref=e4398]':
+                      - 'button "Ковальчук Анатолий, Швеция kovalcuk-anatolii-sveciia_4342@no-email.com · #734" [ref=e4400] [cursor=pointer]':
+                        - generic [ref=e4401]:
+                          - generic [ref=e4405]: Ковальчук Анатолий, Швеция
+                          - paragraph [ref=e4406]: "kovalcuk-anatolii-sveciia_4342@no-email.com · #734"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4407]:
+                      - generic [ref=e4414]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4415]:
+                      - generic [ref=e4423]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4424]:
+                      - generic [ref=e4431]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4432]:
+                      - generic [ref=e4440]: Не продлил
+                    - cell "№1–5, №11–14, №18–22" [ref=e4441]:
+                      - generic [ref=e4448]: №1–5, №11–14, №18–22
+                    - cell "≈ 84 000 ₽" [ref=e4449]:
+                      - generic [ref=e4456]: ≈ 84 000 ₽
+                    - cell [ref=e4457]
+                    - cell "04.11.2025 · 6 000 ₽ блок №17" [ref=e4461]:
+                      - generic [ref=e4464]:
+                        - generic [ref=e4468]: 04.11.2025 · 6 000 ₽
+                        - paragraph [ref=e4469]: блок №17
+                    - cell [ref=e4470]
+                    - cell [ref=e4474]
+                    - cell "—" [ref=e4478]:
+                      - generic [ref=e4482]: —
+                    - cell "Договориться Рассрочка" [ref=e4483]:
+                      - generic [ref=e4485]:
+                        - button "Договориться" [ref=e4486] [cursor=pointer]:
+                          - img [ref=e4487]
+                          - generic [ref=e4489]: Договориться
+                        - button "Рассрочка" [ref=e4490] [cursor=pointer]:
+                          - img [ref=e4491]
+                          - generic [ref=e4493]: Рассрочка
+                  - 'row "Select/deselect item 751 for bulk actions. Слюнченко Михаил Fridrih-81@mail.ru · #751 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №5–22 ≈ 108 000 ₽ 22.05.2024 · 6 000 ₽ блок №4 — Договориться Рассрочка" [ref=e4494]':
+                    - cell "Select/deselect item 751 for bulk actions." [ref=e4495]:
+                      - generic [ref=e4497]:
+                        - checkbox "Select/deselect item 751 for bulk actions." [ref=e4498]
+                        - generic [ref=e4499]: Select/deselect item 751 for bulk actions.
+                    - 'cell "Слюнченко Михаил Fridrih-81@mail.ru · #751" [ref=e4500]':
+                      - 'button "Слюнченко Михаил Fridrih-81@mail.ru · #751" [ref=e4502] [cursor=pointer]':
+                        - generic [ref=e4503]:
+                          - generic [ref=e4507]: Слюнченко Михаил
+                          - paragraph [ref=e4508]: "Fridrih-81@mail.ru · #751"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4509]:
+                      - generic [ref=e4516]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4517]:
+                      - generic [ref=e4525]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4526]:
+                      - generic [ref=e4533]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4534]:
+                      - generic [ref=e4542]: Не продлил
+                    - cell "№5–22" [ref=e4543]:
+                      - generic [ref=e4550]: №5–22
+                    - cell "≈ 108 000 ₽" [ref=e4551]:
+                      - generic [ref=e4558]: ≈ 108 000 ₽
+                    - cell [ref=e4559]
+                    - cell "22.05.2024 · 6 000 ₽ блок №4" [ref=e4563]:
+                      - generic [ref=e4566]:
+                        - generic [ref=e4570]: 22.05.2024 · 6 000 ₽
+                        - paragraph [ref=e4571]: блок №4
+                    - cell [ref=e4572]
+                    - cell [ref=e4576]
+                    - cell "—" [ref=e4580]:
+                      - generic [ref=e4584]: —
+                    - cell "Договориться Рассрочка" [ref=e4585]:
+                      - generic [ref=e4587]:
+                        - button "Договориться" [ref=e4588] [cursor=pointer]:
+                          - img [ref=e4589]
+                          - generic [ref=e4591]: Договориться
+                        - button "Рассрочка" [ref=e4592] [cursor=pointer]:
+                          - img [ref=e4593]
+                          - generic [ref=e4595]: Рассрочка
+                  - 'row "Select/deselect item 883 for bulk actions. Бенидзе Ирма Георгиевна, Севастополь Irmabenidze@mail.ru · #883 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №22 ≈ 6 000 ₽ 18.04.2026 · 6 000 ₽ блок №21 — Договориться Рассрочка" [ref=e4596]':
+                    - cell "Select/deselect item 883 for bulk actions." [ref=e4597]:
+                      - generic [ref=e4599]:
+                        - checkbox "Select/deselect item 883 for bulk actions." [ref=e4600]
+                        - generic [ref=e4601]: Select/deselect item 883 for bulk actions.
+                    - 'cell "Бенидзе Ирма Георгиевна, Севастополь Irmabenidze@mail.ru · #883" [ref=e4602]':
+                      - 'button "Бенидзе Ирма Георгиевна, Севастополь Irmabenidze@mail.ru · #883" [ref=e4604] [cursor=pointer]':
+                        - generic [ref=e4605]:
+                          - generic [ref=e4609]: Бенидзе Ирма Георгиевна, Севастополь
+                          - paragraph [ref=e4610]: "Irmabenidze@mail.ru · #883"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4611]:
+                      - generic [ref=e4618]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4619]:
+                      - generic [ref=e4627]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4628]:
+                      - generic [ref=e4635]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4636]:
+                      - generic [ref=e4644]: Не продлил
+                    - cell "№22" [ref=e4645]:
+                      - generic [ref=e4652]: №22
+                    - cell "≈ 6 000 ₽" [ref=e4653]:
+                      - generic [ref=e4660]: ≈ 6 000 ₽
+                    - cell [ref=e4661]
+                    - cell "18.04.2026 · 6 000 ₽ блок №21" [ref=e4665]:
+                      - generic [ref=e4668]:
+                        - generic [ref=e4672]: 18.04.2026 · 6 000 ₽
+                        - paragraph [ref=e4673]: блок №21
+                    - cell [ref=e4674]
+                    - cell [ref=e4678]
+                    - cell "—" [ref=e4682]:
+                      - generic [ref=e4686]: —
+                    - cell "Договориться Рассрочка" [ref=e4687]:
+                      - generic [ref=e4689]:
+                        - button "Договориться" [ref=e4690] [cursor=pointer]:
+                          - img [ref=e4691]
+                          - generic [ref=e4693]: Договориться
+                        - button "Рассрочка" [ref=e4694] [cursor=pointer]:
+                          - img [ref=e4695]
+                          - generic [ref=e4697]: Рассрочка
+                  - 'row "Select/deselect item 898 for bulk actions. Ксения, Австралия kseniia-avstraliia_8361@no-email.com · #898 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №4–22 ≈ 114 000 ₽ 27.04.2024 · 6 000 ₽ блок №3 — Договориться Рассрочка" [ref=e4698]':
+                    - cell "Select/deselect item 898 for bulk actions." [ref=e4699]:
+                      - generic [ref=e4701]:
+                        - checkbox "Select/deselect item 898 for bulk actions." [ref=e4702]
+                        - generic [ref=e4703]: Select/deselect item 898 for bulk actions.
+                    - 'cell "Ксения, Австралия kseniia-avstraliia_8361@no-email.com · #898" [ref=e4704]':
+                      - 'button "Ксения, Австралия kseniia-avstraliia_8361@no-email.com · #898" [ref=e4706] [cursor=pointer]':
+                        - generic [ref=e4707]:
+                          - generic [ref=e4711]: Ксения, Австралия
+                          - paragraph [ref=e4712]: "kseniia-avstraliia_8361@no-email.com · #898"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4713]:
+                      - generic [ref=e4720]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4721]:
+                      - generic [ref=e4729]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4730]:
+                      - generic [ref=e4737]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4738]:
+                      - generic [ref=e4746]: Не продлил
+                    - cell "№4–22" [ref=e4747]:
+                      - generic [ref=e4754]: №4–22
+                    - cell "≈ 114 000 ₽" [ref=e4755]:
+                      - generic [ref=e4762]: ≈ 114 000 ₽
+                    - cell [ref=e4763]
+                    - cell "27.04.2024 · 6 000 ₽ блок №3" [ref=e4767]:
+                      - generic [ref=e4770]:
+                        - generic [ref=e4774]: 27.04.2024 · 6 000 ₽
+                        - paragraph [ref=e4775]: блок №3
+                    - cell [ref=e4776]
+                    - cell [ref=e4780]
+                    - cell "—" [ref=e4784]:
+                      - generic [ref=e4788]: —
+                    - cell "Договориться Рассрочка" [ref=e4789]:
+                      - generic [ref=e4791]:
+                        - button "Договориться" [ref=e4792] [cursor=pointer]:
+                          - img [ref=e4793]
+                          - generic [ref=e4795]: Договориться
+                        - button "Рассрочка" [ref=e4796] [cursor=pointer]:
+                          - img [ref=e4797]
+                          - generic [ref=e4799]: Рассрочка
+                  - 'row "Select/deselect item 748 for bulk actions. Соколова Евгения, Озерск sokolovae.yu@gmail.com · #748 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №1–4, №8–22 ≈ 114 000 ₽ 05.11.2024 · 6 000 ₽ блок №7 — Договориться Рассрочка" [ref=e4800]':
+                    - cell "Select/deselect item 748 for bulk actions." [ref=e4801]:
+                      - generic [ref=e4803]:
+                        - checkbox "Select/deselect item 748 for bulk actions." [ref=e4804]
+                        - generic [ref=e4805]: Select/deselect item 748 for bulk actions.
+                    - 'cell "Соколова Евгения, Озерск sokolovae.yu@gmail.com · #748" [ref=e4806]':
+                      - 'button "Соколова Евгения, Озерск sokolovae.yu@gmail.com · #748" [ref=e4808] [cursor=pointer]':
+                        - generic [ref=e4809]:
+                          - generic [ref=e4813]: Соколова Евгения, Озерск
+                          - paragraph [ref=e4814]: "sokolovae.yu@gmail.com · #748"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4815]:
+                      - generic [ref=e4822]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4823]:
+                      - generic [ref=e4831]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4832]:
+                      - generic [ref=e4839]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4840]:
+                      - generic [ref=e4848]: Не продлил
+                    - cell "№1–4, №8–22" [ref=e4849]:
+                      - generic [ref=e4856]: №1–4, №8–22
+                    - cell "≈ 114 000 ₽" [ref=e4857]:
+                      - generic [ref=e4864]: ≈ 114 000 ₽
+                    - cell [ref=e4865]
+                    - cell "05.11.2024 · 6 000 ₽ блок №7" [ref=e4869]:
+                      - generic [ref=e4872]:
+                        - generic [ref=e4876]: 05.11.2024 · 6 000 ₽
+                        - paragraph [ref=e4877]: блок №7
+                    - cell [ref=e4878]
+                    - cell [ref=e4882]
+                    - cell "—" [ref=e4886]:
+                      - generic [ref=e4890]: —
+                    - cell "Договориться Рассрочка" [ref=e4891]:
+                      - generic [ref=e4893]:
+                        - button "Договориться" [ref=e4894] [cursor=pointer]:
+                          - img [ref=e4895]
+                          - generic [ref=e4897]: Договориться
+                        - button "Рассрочка" [ref=e4898] [cursor=pointer]:
+                          - img [ref=e4899]
+                          - generic [ref=e4901]: Рассрочка
+                  - 'row "Select/deselect item 873 for bulk actions. Мустафина Венера Анваровна, Вена mustafina-venera-anvarovna-vena_2962@no-email.com · #873 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №4–22 ≈ 114 000 ₽ 12.04.2024 · 6 000 ₽ блок №3 — Договориться Рассрочка" [ref=e4902]':
+                    - cell "Select/deselect item 873 for bulk actions." [ref=e4903]:
+                      - generic [ref=e4905]:
+                        - checkbox "Select/deselect item 873 for bulk actions." [ref=e4906]
+                        - generic [ref=e4907]: Select/deselect item 873 for bulk actions.
+                    - 'cell "Мустафина Венера Анваровна, Вена mustafina-venera-anvarovna-vena_2962@no-email.com · #873" [ref=e4908]':
+                      - 'button "Мустафина Венера Анваровна, Вена mustafina-venera-anvarovna-vena_2962@no-email.com · #873" [ref=e4910] [cursor=pointer]':
+                        - generic [ref=e4911]:
+                          - generic [ref=e4915]: Мустафина Венера Анваровна, Вена
+                          - paragraph [ref=e4916]: "mustafina-venera-anvarovna-vena_2962@no-email.com · #873"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e4917]:
+                      - generic [ref=e4924]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e4925]:
+                      - generic [ref=e4933]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e4934]:
+                      - generic [ref=e4941]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e4942]:
+                      - generic [ref=e4950]: Не продлил
+                    - cell "№4–22" [ref=e4951]:
+                      - generic [ref=e4958]: №4–22
+                    - cell "≈ 114 000 ₽" [ref=e4959]:
+                      - generic [ref=e4966]: ≈ 114 000 ₽
+                    - cell [ref=e4967]
+                    - cell "12.04.2024 · 6 000 ₽ блок №3" [ref=e4971]:
+                      - generic [ref=e4974]:
+                        - generic [ref=e4978]: 12.04.2024 · 6 000 ₽
+                        - paragraph [ref=e4979]: блок №3
+                    - cell [ref=e4980]
+                    - cell [ref=e4984]
+                    - cell "—" [ref=e4988]:
+                      - generic [ref=e4992]: —
+                    - cell "Договориться Рассрочка" [ref=e4993]:
+                      - generic [ref=e4995]:
+                        - button "Договориться" [ref=e4996] [cursor=pointer]:
+                          - img [ref=e4997]
+                          - generic [ref=e4999]: Договориться
+                        - button "Рассрочка" [ref=e5000] [cursor=pointer]:
+                          - img [ref=e5001]
+                          - generic [ref=e5003]: Рассрочка
+                  - 'row "Select/deselect item 896 for bulk actions. Такада Алла, Токио takada-alla-tokio_2709@no-email.com · #896 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №3–22 ≈ 120 000 ₽ 20.03.2024 · 6 000 ₽ блок №2 — Договориться Рассрочка" [ref=e5004]':
+                    - cell "Select/deselect item 896 for bulk actions." [ref=e5005]:
+                      - generic [ref=e5007]:
+                        - checkbox "Select/deselect item 896 for bulk actions." [ref=e5008]
+                        - generic [ref=e5009]: Select/deselect item 896 for bulk actions.
+                    - 'cell "Такада Алла, Токио takada-alla-tokio_2709@no-email.com · #896" [ref=e5010]':
+                      - 'button "Такада Алла, Токио takada-alla-tokio_2709@no-email.com · #896" [ref=e5012] [cursor=pointer]':
+                        - generic [ref=e5013]:
+                          - generic [ref=e5017]: Такада Алла, Токио
+                          - paragraph [ref=e5018]: "takada-alla-tokio_2709@no-email.com · #896"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e5019]:
+                      - generic [ref=e5026]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e5027]:
+                      - generic [ref=e5035]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e5036]:
+                      - generic [ref=e5043]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e5044]:
+                      - generic [ref=e5052]: Не продлил
+                    - cell "№3–22" [ref=e5053]:
+                      - generic [ref=e5060]: №3–22
+                    - cell "≈ 120 000 ₽" [ref=e5061]:
+                      - generic [ref=e5068]: ≈ 120 000 ₽
+                    - cell [ref=e5069]
+                    - cell "20.03.2024 · 6 000 ₽ блок №2" [ref=e5073]:
+                      - generic [ref=e5076]:
+                        - generic [ref=e5080]: 20.03.2024 · 6 000 ₽
+                        - paragraph [ref=e5081]: блок №2
+                    - cell [ref=e5082]
+                    - cell [ref=e5086]
+                    - cell "—" [ref=e5090]:
+                      - generic [ref=e5094]: —
+                    - cell "Договориться Рассрочка" [ref=e5095]:
+                      - generic [ref=e5097]:
+                        - button "Договориться" [ref=e5098] [cursor=pointer]:
+                          - img [ref=e5099]
+                          - generic [ref=e5101]: Договориться
+                        - button "Рассрочка" [ref=e5102] [cursor=pointer]:
+                          - img [ref=e5103]
+                          - generic [ref=e5105]: Рассрочка
+                  - 'row "Select/deselect item 631 for bulk actions. Ядрышникова Маргарита, СПБ MGYadryshnikova@mail.ru · #631 Грамматика по Кочергиной гр.42 22 16.05 – 06.06.2026 Не продлил №22 ≈ 6 000 ₽ 13.04.2026 · 6 000 ₽ блок №21 — Договориться Рассрочка" [ref=e5106]':
+                    - cell "Select/deselect item 631 for bulk actions." [ref=e5107]:
+                      - generic [ref=e5109]:
+                        - checkbox "Select/deselect item 631 for bulk actions." [ref=e5110]
+                        - generic [ref=e5111]: Select/deselect item 631 for bulk actions.
+                    - 'cell "Ядрышникова Маргарита, СПБ MGYadryshnikova@mail.ru · #631" [ref=e5112]':
+                      - 'button "Ядрышникова Маргарита, СПБ MGYadryshnikova@mail.ru · #631" [ref=e5114] [cursor=pointer]':
+                        - generic [ref=e5115]:
+                          - generic [ref=e5119]: Ядрышникова Маргарита, СПБ
+                          - paragraph [ref=e5120]: "MGYadryshnikova@mail.ru · #631"
+                    - cell "Грамматика по Кочергиной гр.42" [ref=e5121]:
+                      - generic [ref=e5128]: Грамматика по Кочергиной гр.42
+                    - cell "22" [ref=e5129]:
+                      - generic [ref=e5137]: "22"
+                    - cell "16.05 – 06.06.2026" [ref=e5138]:
+                      - generic [ref=e5145]: 16.05 – 06.06.2026
+                    - cell "Не продлил" [ref=e5146]:
+                      - generic [ref=e5154]: Не продлил
+                    - cell "№22" [ref=e5155]:
+                      - generic [ref=e5162]: №22
+                    - cell "≈ 6 000 ₽" [ref=e5163]:
+                      - generic [ref=e5170]: ≈ 6 000 ₽
+                    - cell [ref=e5171]
+                    - cell "13.04.2026 · 6 000 ₽ блок №21" [ref=e5175]:
+                      - generic [ref=e5178]:
+                        - generic [ref=e5182]: 13.04.2026 · 6 000 ₽
+                        - paragraph [ref=e5183]: блок №21
+                    - cell [ref=e5184]
+                    - cell [ref=e5188]
+                    - cell "—" [ref=e5192]:
+                      - generic [ref=e5196]: —
+                    - cell "Договориться Рассрочка" [ref=e5197]:
+                      - generic [ref=e5199]:
+                        - button "Договориться" [ref=e5200] [cursor=pointer]:
+                          - img [ref=e5201]
+                          - generic [ref=e5203]: Договориться
+                        - button "Рассрочка" [ref=e5204] [cursor=pointer]:
+                          - img [ref=e5205]
+                          - generic [ref=e5207]: Рассрочка
+              - navigation "Pagination navigation" [ref=e5208]:
+                - generic [ref=e5209]: Showing 1 to 50 of 363 results
+                - generic [ref=e5212]:
+                  - generic [ref=e5214]: Per page
+                  - combobox "Per page" [ref=e5216]:
+                    - option "25" [selected]
+                    - option "50"
+                    - option "100"
+                - list [ref=e5217]:
+                  - listitem [ref=e5218]:
+                    - button "Go to page 1" [ref=e5219] [cursor=pointer]:
+                      - generic [ref=e5220]: "1"
+                  - listitem [ref=e5221]:
+                    - button "Go to page 2" [ref=e5222] [cursor=pointer]:
+                      - generic [ref=e5223]: "2"
+                  - listitem [ref=e5224]:
+                    - button "Go to page 3" [ref=e5225] [cursor=pointer]:
+                      - generic [ref=e5226]: "3"
+                  - listitem [ref=e5227]:
+                    - button "Go to page 4" [ref=e5228] [cursor=pointer]:
+                      - generic [ref=e5229]: "4"
+                  - listitem [ref=e5230]:
+                    - button "..." [disabled] [ref=e5231]:
+                      - generic [ref=e5232]: ...
+                  - listitem [ref=e5233]:
+                    - button "Go to page 7" [ref=e5234] [cursor=pointer]:
+                      - generic [ref=e5235]: "7"
+                  - listitem [ref=e5236]:
+                    - button "Go to page 8" [ref=e5237] [cursor=pointer]:
+                      - generic [ref=e5238]: "8"
+                  - listitem [ref=e5239]:
+                    - button "Next" [ref=e5240] [cursor=pointer]:
+                      - img [ref=e5241]
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+    - complementary [ref=e5243]:
+      - link "Laravel" [ref=e5247] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/admin
+        - generic [ref=e5248]: Laravel
+      - navigation [ref=e5249]:
+        - list [ref=e5250]:
+          - listitem [ref=e5251]:
+            - list [ref=e5252]:
+              - listitem [ref=e5253]:
+                - link "Dashboard" [ref=e5254] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin
+                  - img [ref=e5255]
+                  - generic [ref=e5257]: Dashboard
+              - listitem [ref=e5258]:
+                - link "Чат с куратором" [ref=e5259] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/dialogs
+                  - img [ref=e5260]
+                  - generic [ref=e5262]: Чат с куратором
+              - listitem [ref=e5263]:
+                - link "Media" [ref=e5264] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/media
+                  - img [ref=e5265]
+                  - generic [ref=e5267]: Media
+              - listitem [ref=e5268]:
+                - link "Teachers" [ref=e5269] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/teachers
+                  - img [ref=e5270]
+                  - generic [ref=e5272]: Teachers
+          - listitem [ref=e5273]:
+            - generic [ref=e5274] [cursor=pointer]:
+              - generic [ref=e5275]: Блог
+              - button "Блог" [expanded] [ref=e5276]:
+                - generic [ref=e5277]: Блог
+                - img [ref=e5278]
+            - list [ref=e5280]:
+              - listitem [ref=e5281]:
+                - link "Рубрики статей" [ref=e5282] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/article-categories
+                  - img [ref=e5283]
+                  - generic [ref=e5285]: Рубрики статей
+              - listitem [ref=e5286]:
+                - link "Статьи 1" [ref=e5287] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/articles
+                  - img [ref=e5288]
+                  - generic [ref=e5290]: Статьи
+                  - generic [ref=e5294]: "1"
+          - listitem [ref=e5295]:
+            - generic [ref=e5296] [cursor=pointer]:
+              - generic [ref=e5297]: Обучение
+              - button "Обучение" [expanded] [ref=e5298]:
+                - generic [ref=e5299]: Обучение
+                - img [ref=e5300]
+            - list [ref=e5302]:
+              - listitem [ref=e5303]:
+                - link "Курсы" [ref=e5304] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/courses
+                  - img [ref=e5305]
+                  - generic [ref=e5307]: Курсы
+              - listitem [ref=e5308]:
+                - link "Категории курсов" [ref=e5309] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/categories
+                  - img [ref=e5310]
+                  - generic [ref=e5313]: Категории курсов
+              - listitem [ref=e5314]:
+                - link "Уроки" [ref=e5315] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/lessons
+                  - img [ref=e5316]
+                  - generic [ref=e5319]: Уроки
+              - listitem [ref=e5320]:
+                - link "Учебные группы" [ref=e5321] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/groups
+                  - img [ref=e5322]
+                  - generic [ref=e5324]: Учебные группы
+              - listitem [ref=e5325]:
+                - link "Расписание" [ref=e5326] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/schedules
+                  - img [ref=e5327]
+                  - generic [ref=e5329]: Расписание
+          - listitem [ref=e5330]:
+            - generic [ref=e5331] [cursor=pointer]:
+              - generic [ref=e5332]: Пользователи
+              - button "Пользователи" [expanded] [ref=e5333]:
+                - generic [ref=e5334]: Пользователи
+                - img [ref=e5335]
+            - list [ref=e5337]:
+              - listitem [ref=e5338]:
+                - link "Должники" [ref=e5339] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/debtors
+                  - img [ref=e5340]
+                  - generic [ref=e5342]: Должники
+              - listitem [ref=e5343]:
+                - link "Студенты" [ref=e5344] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/users
+                  - img [ref=e5345]
+                  - generic [ref=e5347]: Студенты
+              - listitem [ref=e5348]:
+                - link "Сертификаты" [ref=e5349] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/certificates
+                  - img [ref=e5350]
+                  - generic [ref=e5352]: Сертификаты
+          - listitem [ref=e5353]:
+            - generic [ref=e5354] [cursor=pointer]:
+              - generic [ref=e5355]: Продажи
+              - button "Продажи" [expanded] [ref=e5356]:
+                - generic [ref=e5357]: Продажи
+                - img [ref=e5358]
+            - list [ref=e5360]:
+              - listitem [ref=e5361]:
+                - link "Заявки (Лиды)" [ref=e5362] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/leads
+                  - img [ref=e5363]
+                  - generic [ref=e5365]: Заявки (Лиды)
+              - listitem [ref=e5366]:
+                - link "Финансы" [ref=e5367] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/payments
+                  - img [ref=e5368]
+                  - generic [ref=e5370]: Финансы
+              - listitem [ref=e5371]:
+                - link "Витрина курсов" [ref=e5372] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/shop-courses
+                  - img [ref=e5373]
+                  - generic [ref=e5375]: Витрина курсов
+              - listitem [ref=e5376]:
+                - link "Тарифы (Цены)" [ref=e5377] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/tariffs
+                  - img [ref=e5378]
+                  - generic [ref=e5381]: Тарифы (Цены)
+          - listitem [ref=e5382]:
+            - generic [ref=e5383] [cursor=pointer]:
+              - generic [ref=e5384]: Маркетинг
+              - button "Маркетинг" [expanded] [ref=e5385]:
+                - generic [ref=e5386]: Маркетинг
+                - img [ref=e5387]
+            - list [ref=e5389]:
+              - listitem [ref=e5390]:
+                - link "Глобальные настройки" [ref=e5391] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/marketing-settings
+                  - img [ref=e5392]
+                  - generic [ref=e5395]: Глобальные настройки
+              - listitem [ref=e5396]:
+                - link "Промокоды" [ref=e5397] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/promo-codes
+                  - img [ref=e5398]
+                  - generic [ref=e5400]: Промокоды
+              - listitem [ref=e5401]:
+                - link "Рассылки" [ref=e5402] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/announcements
+                  - img [ref=e5403]
+                  - generic [ref=e5405]: Рассылки
+              - listitem [ref=e5406]:
+                - link "Лендинги" [ref=e5407] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/landing-pages
+                  - img [ref=e5408]
+                  - generic [ref=e5410]: Лендинги
+          - listitem [ref=e5411]:
+            - generic [ref=e5412] [cursor=pointer]:
+              - generic [ref=e5413]: Допматериалы
+              - button "Допматериалы" [expanded] [ref=e5414]:
+                - generic [ref=e5415]: Допматериалы
+                - img [ref=e5416]
+            - list [ref=e5418]:
+              - listitem [ref=e5419]:
+                - link "Словари" [ref=e5420] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/dictionaries
+                  - img [ref=e5421]
+                  - generic [ref=e5423]: Словари
+              - listitem [ref=e5424]:
+                - link "Словарный Запас" [ref=e5425] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8000/admin/dictionary-words
+                  - img [ref=e5426]
+                  - generic [ref=e5428]: Словарный Запас
+  - generic:
+    - status
+  - dialog

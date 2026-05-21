@@ -6,6 +6,7 @@ namespace App\Livewire\Shop;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
 use Illuminate\Contracts\View\View;
@@ -163,6 +164,7 @@ class CourseCatalog extends Component
             'totalCount' => $totalCount,
             'hasMore' => $hasMore,
             'purchasedByCourse' => $purchasedByCourse,
+            'deposit' => MarketingSetting::cached(),
         ]);
     }
 }

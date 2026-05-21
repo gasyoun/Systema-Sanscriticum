@@ -117,6 +117,40 @@
                 @include('partials.guest-purchase-warning', ['variant' => 'dark'])
             </div>
 
+            {{-- ───── CTA: Забронировать курс (предоплата зачтётся в тариф) ───── --}}
+            @php
+                $courseDepositAmount = (float) ($course->deposit_amount ?? 0);
+                $showDepositCta = ($deposit ?? null)?->deposit_enabled
+                    && $courseDepositAmount > 0
+                    && empty($purchasedKeys);
+            @endphp
+            @if($showDepositCta)
+                @php
+                    $depositAmountLabel = number_format($courseDepositAmount, 0, '.', ' ');
+                @endphp
+                <div class="mb-8 max-w-3xl rounded-2xl border border-[#E85C24]/30 bg-gradient-to-r from-[#E85C24]/10 to-transparent p-5 lg:p-6 flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="flex-1">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-[#E85C24] mb-1.5">
+                            <i class="fas fa-bookmark mr-1"></i> Начните погружение не дожидаясь старта
+                        </div>
+                        <h3 class="text-lg lg:text-xl font-bold text-white mb-1">
+                            Забронируйте место за {{ $depositAmountLabel }} ₽
+                        </h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            После предоплаты вы сразу получаете доступ к <span class="text-white font-semibold">открытым занятиям всей школы</span> —
+                            начните погружение прямо сейчас. Сумма <span class="text-[#E85C24] font-bold">{{ $depositAmountLabel }} ₽</span>
+                            будет зачтена в стоимость тарифа этого курса при последующей оплате.
+                        </p>
+                    </div>
+                    <button type="button"
+                            onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($course->title), amount: {{ $courseDepositAmount }} } }))"
+                            class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                        <i class="fas fa-bookmark mr-2 text-xs"></i>
+                        Забронировать
+                    </button>
+                </div>
+            @endif
+
             @php
                 $fullTariffs = $course->tariffs->where('type', '!=', 'block');
                 $blockTariffs = $course->tariffs->where('type', 'block')->sortBy('block_number')->values();
@@ -342,4 +376,6 @@
 
     </div>
 </div>
+
+@include('partials.deposit-modal', ['deposit' => $deposit])
 @endsection

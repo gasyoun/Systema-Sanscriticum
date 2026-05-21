@@ -18,6 +18,14 @@ class DebtorsReport
 {
     private const PAID_STATUSES = ['paid', 'success'];
 
+    /**
+     * Статусы в course_user, при которых пара (user, course) НЕ должна
+     * попадать в список должников: студент либо завершил курс, либо вышел
+     * из него, либо учится бесплатно (льготник). Их можно ставить как
+     * вручную в карточке студента, так и через массовый импорт.
+     */
+    private const NON_DEBT_STATUSES = ['Покинул', 'Исключен', 'Льготник', 'Выпускник'];
+
     /** @var Collection<int, CourseBlock>|null  course_id => reference CourseBlock */
     private ?Collection $referenceBlocksCache = null;
 
@@ -111,6 +119,8 @@ class DebtorsReport
                 'd.ref_block_number',
                 'd.debt_type',
                 'd.last_payment_id',
+                'd.course_user_status',
+                'd.course_user_left_after_block',
             ]);
     }
 
@@ -154,6 +164,12 @@ class DebtorsReport
         $paidIn = implode(',', array_fill(0, count(self::PAID_STATUSES), '?'));
         $nullIntCast = DB::connection()->getDriverName() === 'sqlite' ? 'INTEGER' : 'SIGNED';
 
+        // course_user-фильтр: исключаем пары с «терминальными» статусами
+        // (Покинул/Исключен/Льготник/Выпускник). Льготник учится бесплатно,
+        // остальные три — фактически больше не учатся. Если в course_user
+        // вообще нет записи (NULL после LEFT JOIN) — пара остаётся в долге.
+        $nonDebtIn = implode(',', array_fill(0, count(self::NON_DEBT_STATUSES), '?'));
+
         // A: not_renewed — есть хотя бы один paid Payment, но ни один не покрывает ref_number.
         // Conditional платежи (доступ под обещание) НЕ считаются «настоящей» оплатой —
         // иначе должник исчезнет из списка сразу после открытия доступа в кредит.
@@ -163,11 +179,15 @@ class DebtorsReport
                 p.course_id        AS course_id,
                 ref.ref_number     AS ref_block_number,
                 ?                  AS debt_type,
-                MAX(p.id)          AS last_payment_id
+                MAX(p.id)          AS last_payment_id,
+                MAX(cu.status)     AS course_user_status,
+                MAX(cu.left_after_block) AS course_user_left_after_block
             FROM payments p
             INNER JOIN ({$refSql}) AS ref ON ref.course_id = p.course_id
+            LEFT JOIN course_user cu ON cu.user_id = p.user_id AND cu.course_id = p.course_id
             WHERE p.status IN ({$paidIn})
               AND p.is_conditional = 0
+              AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY p.user_id, p.course_id, ref.ref_number
             HAVING SUM(CASE WHEN (
                     (p.start_block IS NULL AND p.end_block IS NULL)
@@ -185,10 +205,13 @@ class DebtorsReport
                 cg.course_id                                AS course_id,
                 ref.ref_number                              AS ref_block_number,
                 ?                                           AS debt_type,
-                CAST(NULL AS {$nullIntCast})                AS last_payment_id
+                CAST(NULL AS {$nullIntCast})                AS last_payment_id,
+                MAX(cu.status)                              AS course_user_status,
+                MAX(cu.left_after_block)                    AS course_user_left_after_block
             FROM group_user gu
             INNER JOIN course_group cg ON cg.group_id = gu.group_id
             INNER JOIN ({$refSql}) AS ref ON ref.course_id = cg.course_id
+            LEFT JOIN course_user cu ON cu.user_id = gu.user_id AND cu.course_id = cg.course_id
             WHERE NOT EXISTS (
                 SELECT 1 FROM payments p2
                 WHERE p2.user_id = gu.user_id
@@ -196,6 +219,7 @@ class DebtorsReport
                   AND p2.status IN ({$paidIn})
                   AND p2.is_conditional = 0
             )
+              AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY gu.user_id, cg.course_id, ref.ref_number
         ";
 
@@ -203,9 +227,11 @@ class DebtorsReport
             ['not_renewed'],
             $refBindings,
             self::PAID_STATUSES,
+            self::NON_DEBT_STATUSES,
             ['no_payment'],
             $refBindings,
             self::PAID_STATUSES,
+            self::NON_DEBT_STATUSES,
         );
 
         return [$notRenewedSql.' UNION ALL '.$noPaymentSql, $bindings];
@@ -419,6 +445,96 @@ class DebtorsReport
         $ranges[] = $start === $prev ? "№{$start}" : "№{$start}–{$prev}";
 
         return implode(', ', $ranges);
+    }
+
+    /**
+     * Дни просрочки относительно начала reference-блока. Если now < starts_at
+     * (блок ещё не начался — мы попали в список как «ближайший предстоящий»),
+     * просрочки нет: возвращаем 0. Дата отсутствует → тоже 0.
+     */
+    public function daysOverdueFor(int $courseId, int $refBlockNumber): int
+    {
+        $block = $this->referenceBlocks()->get($courseId);
+        if (! $block instanceof CourseBlock || ! $block->starts_at) {
+            return 0;
+        }
+
+        $start = $block->starts_at instanceof Carbon
+            ? $block->starts_at
+            : Carbon::parse($block->starts_at);
+
+        if ($start->isFuture()) {
+            return 0;
+        }
+
+        return (int) $start->startOfDay()->diffInDays(Carbon::now()->startOfDay());
+    }
+
+    /**
+     * Человекочитаемая просрочка: «просрочено 5 дн» / «просрочено 3 нед».
+     * Граница недель — 14 дней (две полные недели), иначе цифра по дням
+     * больше похожа на «дня три», но без склонения, поэтому оставляем сокращение.
+     */
+    public static function formatOverdue(int $days): string
+    {
+        if ($days <= 0) {
+            return '';
+        }
+
+        if ($days >= 14) {
+            $weeks = (int) floor($days / 7);
+
+            return "просрочено {$weeks} нед";
+        }
+
+        return "просрочено {$days} дн";
+    }
+
+    /**
+     * Тотал по результату Filament-запроса:
+     *   amount  — сумма всех долгов
+     *   missing — сколько пар имели хотя бы один блок «по средней цене»
+     *   by_course — карта course_id → сумма
+     *   pairs   — сколько пар (user, course) учтено
+     *
+     * @return array{amount: float, missing: int, by_course: array<int, float>, pairs: int}
+     */
+    public function totalDebtForQuery(Builder $query): array
+    {
+        $clone = (clone $query)->limit(5000);
+
+        $totalAmount = 0.0;
+        $totalMissing = 0;
+        $byCourse = [];
+        $pairs = 0;
+
+        foreach ($clone->get() as $row) {
+            $userId = (int) $row->id;
+            $courseId = (int) $row->course_id;
+            $refNumber = (int) $row->ref_block_number;
+
+            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber);
+            $user = User::find($userId);
+            if (! $user) {
+                continue;
+            }
+
+            $info = $this->computeDebtAmount($user, $courseId, $blocks);
+            $amount = (float) ($info['amount'] ?? 0);
+            $totalAmount += $amount;
+            if ($info['missing_tariffs'] > 0) {
+                $totalMissing++;
+            }
+            $byCourse[$courseId] = ($byCourse[$courseId] ?? 0.0) + $amount;
+            $pairs++;
+        }
+
+        return [
+            'amount' => $totalAmount,
+            'missing' => $totalMissing,
+            'by_course' => $byCourse,
+            'pairs' => $pairs,
+        ];
     }
 
     /**

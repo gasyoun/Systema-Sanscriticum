@@ -17,6 +17,7 @@ class Lead extends Model
         'email',            // <--- Важно: Добавили Email
         'social',
         'is_promo_agreed',
+        'converted_at',
 
         // Аналитика (UTM метки) - теперь они будут сохраняться
         'utm_source',
@@ -44,11 +45,19 @@ class Lead extends Model
     protected $casts = [
         'magnet_delivered_at' => 'datetime',
         'is_promo_agreed' => 'boolean',
+        'converted_at' => 'datetime',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)
     public function landingPage()
     {
         return $this->belongsTo(LandingPage::class);
+    }
+
+    public function markConverted(): void
+    {
+        if (is_null($this->converted_at)) {
+            $this->updateQuietly(['converted_at' => now()]);
+        }
     }
 }

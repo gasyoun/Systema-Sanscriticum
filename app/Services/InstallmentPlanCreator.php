@@ -25,7 +25,7 @@ class InstallmentPlanCreator
      * даты — это нужно вызывающему, чтобы привязать к каждой строке расписания
      * дополнительные действия (например, открытие доступа к блокам).
      *
-     * @param  list<array{promised_at: string|\DateTimeInterface, amount: numeric}>  $schedule
+     * @param  list<array{promised_at: string|\DateTimeInterface, amount: numeric, actual_paid_at?: string|\DateTimeInterface|null}>  $schedule
      * @return array{group_id: string, promises: list<PaymentPromise>}
      */
     public function create(User $user, Course $course, array $schedule, ?string $note = null): array
@@ -41,6 +41,7 @@ class InstallmentPlanCreator
                     'user_id' => $user->id,
                     'course_id' => $course->id,
                     'promised_at' => $row['promised_at'],
+                    'actual_paid_at' => $row['actual_paid_at'] ?? null,
                     'amount' => $row['amount'],
                     'status' => PaymentPromise::STATUS_ACTIVE,
                     'note' => $note,
@@ -72,8 +73,8 @@ class InstallmentPlanCreator
     }
 
     /**
-     * @param  list<array{promised_at: mixed, amount: mixed}>  $schedule
-     * @return list<array{promised_at: CarbonImmutable, amount: float}>
+     * @param  list<array{promised_at: mixed, amount: mixed, actual_paid_at?: mixed}>  $schedule
+     * @return list<array{promised_at: CarbonImmutable, amount: float, actual_paid_at: ?CarbonImmutable}>
      */
     private function normalizeSchedule(array $schedule): array
     {
@@ -87,6 +88,7 @@ class InstallmentPlanCreator
         foreach ($schedule as $i => $row) {
             $rawDate = $row['promised_at'] ?? null;
             $rawAmount = $row['amount'] ?? null;
+            $rawActual = $row['actual_paid_at'] ?? null;
 
             if (empty($rawDate)) {
                 throw ValidationException::withMessages([
@@ -102,6 +104,9 @@ class InstallmentPlanCreator
             $rows[] = [
                 'promised_at' => CarbonImmutable::parse($rawDate)->startOfDay(),
                 'amount' => (float) $rawAmount,
+                'actual_paid_at' => ! empty($rawActual)
+                    ? CarbonImmutable::parse($rawActual)->startOfDay()
+                    : null,
             ];
         }
 
