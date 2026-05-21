@@ -35,6 +35,15 @@ class DebtorsReport
     /** @var array<string, PaymentPromise|null>  "user_id:course_id" => активный/просроченный promise */
     private array $promiseCache = [];
 
+    /** @var array<string, float>  "user_id:course_id" => сумма неизрасходованных депозитов */
+    private array $depositCreditCache = [];
+
+    /** @var array<int, int>  user_id => discount percent (0..100) */
+    private array $discountPercentCache = [];
+
+    /** @var array<int, User>  user_id => User (batch-preloaded для totalDebtForQuery) */
+    private array $usersByIdCache = [];
+
     /**
      * Reference-блок для каждого активного курса:
      * 1) `is_current=true`; 2) текущий по датам (now ∈ [starts_at; ends_at]);
@@ -266,7 +275,7 @@ class DebtorsReport
         foreach ($debtBlockNumbers as $n) {
             $tariff = $tariffs[$n] ?? null;
             if ($tariff !== null) {
-                $amount += (float) $tariff->calculateFinalPriceForUser($user);
+                $amount += $this->priceForUserCached($tariff, $user);
                 $found++;
 
                 continue;
@@ -286,6 +295,33 @@ class DebtorsReport
     }
 
     /**
+     * Версия Tariff::calculateFinalPriceForUser, переиспользующая кэши
+     * этого DebtorsReport: loyalty-процент уже посчитан раз на user,
+     * сумма депозитов — раз на пару (user, course). Это убирает
+     * самый болезненный N+1 на странице должников.
+     *
+     * Логика идентична `Tariff::calculateFinalPriceForUser` — только
+     * подставлены кэшированные значения. upgrade-ветка отключена
+     * фича-флагом и сюда не тянется намеренно: на странице должников
+     * она бы только всё запутала.
+     */
+    private function priceForUserCached(Tariff $tariff, User $user): float
+    {
+        $finalPrice = (float) $tariff->price;
+
+        $discountPercent = $this->discountPercentForUser($user);
+        if ($discountPercent > 0) {
+            $finalPrice -= $finalPrice * ($discountPercent / 100);
+        }
+
+        if ($tariff->course_id) {
+            $finalPrice -= $this->depositCreditFor((int) $user->id, (int) $tariff->course_id);
+        }
+
+        return max(0.0, $finalPrice);
+    }
+
+    /**
      * Оценка цены за блок, когда точного block-тарифа нет:
      *   - среднее по существующим block-тарифам курса (если есть);
      *   - иначе full-тариф курса делённый на число CourseBlock'ов курса.
@@ -296,7 +332,7 @@ class DebtorsReport
     {
         if (! empty($blockTariffs)) {
             $prices = array_map(
-                fn (Tariff $t) => (float) $t->calculateFinalPriceForUser($user),
+                fn (Tariff $t) => $this->priceForUserCached($t, $user),
                 $blockTariffs,
             );
 
@@ -317,7 +353,7 @@ class DebtorsReport
             return null;
         }
 
-        return (float) $fullTariff->calculateFinalPriceForUser($user) / $totalBlocks;
+        return $this->priceForUserCached($fullTariff, $user) / $totalBlocks;
     }
 
     /**
@@ -497,27 +533,57 @@ class DebtorsReport
      *   by_course — карта course_id → сумма
      *   pairs   — сколько пар (user, course) учтено
      *
+     * Производительность: 200 пар × ~3 блока × ~4 SELECT (loyalty, deposits,
+     * marketing_setting × N) — это легко 2000+ запросов. Поэтому:
+     *   1) Users грузим одним whereIn вместо User::find в цикле.
+     *   2) Loyalty-процент считаем один раз на user (а не на каждый блок).
+     *   3) Сумму депозитов считаем один раз на пару (user, course).
+     * Эти кэши лежат на самом объекте DebtorsReport — он создаётся свежий
+     * на каждый HTTP-запрос, так что stale-данных между запросами не будет.
+     *
      * @return array{amount: float, missing: int, by_course: array<int, float>, pairs: int}
      */
     public function totalDebtForQuery(Builder $query): array
     {
         $clone = (clone $query)->limit(5000);
+        $rows = $clone->get();
+
+        // Шаг 1. Batch-load всех юзеров одним whereIn (раньше N+1 через User::find).
+        $userIds = $rows->pluck('id')->map(fn ($id) => (int) $id)->unique()->all();
+        if (! empty($userIds)) {
+            $missing = array_diff($userIds, array_keys($this->usersByIdCache));
+            if (! empty($missing)) {
+                $fetched = User::query()->whereIn('id', $missing)->get();
+                foreach ($fetched as $u) {
+                    $this->usersByIdCache[(int) $u->id] = $u;
+                }
+            }
+        }
+
+        // Шаг 2. Предсосчитать loyalty-процент один раз на user.
+        foreach ($userIds as $uid) {
+            $this->discountPercentForUser($this->usersByIdCache[$uid] ?? null);
+        }
+
+        // Шаг 3. Предсосчитать сумму депозитов одним запросом на все пары.
+        $this->preloadDepositCredits($rows);
 
         $totalAmount = 0.0;
         $totalMissing = 0;
         $byCourse = [];
         $pairs = 0;
 
-        foreach ($clone->get() as $row) {
+        foreach ($rows as $row) {
             $userId = (int) $row->id;
             $courseId = (int) $row->course_id;
             $refNumber = (int) $row->ref_block_number;
 
-            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber);
-            $user = User::find($userId);
+            $user = $this->usersByIdCache[$userId] ?? null;
             if (! $user) {
                 continue;
             }
+
+            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber);
 
             $info = $this->computeDebtAmount($user, $courseId, $blocks);
             $amount = (float) ($info['amount'] ?? 0);
@@ -535,6 +601,92 @@ class DebtorsReport
             'by_course' => $byCourse,
             'pairs' => $pairs,
         ];
+    }
+
+    /**
+     * Memoized-обёртка над Tariff::getDiscountPercentForUser — считает один
+     * раз на user_id внутри текущего DebtorsReport. Сама по себе процедура
+     * включает SELECT по marketing_settings + GROUP BY по payments;
+     * на странице должников эта пара запросов иначе бьётся сотни раз.
+     */
+    public function discountPercentForUser(?User $user): int
+    {
+        if (! $user) {
+            return 0;
+        }
+
+        $key = (int) $user->id;
+        if (array_key_exists($key, $this->discountPercentCache)) {
+            return $this->discountPercentCache[$key];
+        }
+
+        // Используем «технический» Tariff для вызова метода — конкретный
+        // course_id здесь не важен, метод смотрит только на user.
+        $stub = new Tariff;
+        $pct = $stub->getDiscountPercentForUser($user);
+
+        return $this->discountPercentCache[$key] = (int) $pct;
+    }
+
+    /**
+     * Сумма неизрасходованных депозитов user×course — кэшируется. Если
+     * передан список пар, грузим их батчем одним SQL'ом (group by).
+     *
+     * @param  iterable<object{id:int|string, course_id:int|string}>  $rows
+     */
+    public function preloadDepositCredits(iterable $rows): void
+    {
+        $byUser = [];
+        foreach ($rows as $r) {
+            $uid = (int) $r->id;
+            $cid = (int) $r->course_id;
+            $byUser[$uid][$cid] = true;
+        }
+        if (empty($byUser)) {
+            return;
+        }
+
+        $userIds = array_keys($byUser);
+        $courseIds = array_unique(array_merge(...array_map('array_keys', array_values($byUser))));
+
+        $sums = \App\Models\Payment::query()
+            ->whereIn('user_id', $userIds)
+            ->whereIn('course_id', $courseIds)
+            ->unconsumedDeposits()
+            ->groupBy('user_id', 'course_id')
+            ->selectRaw('user_id, course_id, SUM(amount) AS total')
+            ->get();
+
+        foreach ($sums as $s) {
+            $key = ((int) $s->user_id).':'.((int) $s->course_id);
+            $this->depositCreditCache[$key] = (float) $s->total;
+        }
+
+        // Записать 0 для пар, по которым депозитов нет, чтобы не лезть в БД повторно.
+        foreach ($byUser as $uid => $courses) {
+            foreach (array_keys($courses) as $cid) {
+                $key = $uid.':'.$cid;
+                if (! array_key_exists($key, $this->depositCreditCache)) {
+                    $this->depositCreditCache[$key] = 0.0;
+                }
+            }
+        }
+    }
+
+    public function depositCreditFor(int $userId, int $courseId): float
+    {
+        $key = $userId.':'.$courseId;
+        if (array_key_exists($key, $this->depositCreditCache)) {
+            return $this->depositCreditCache[$key];
+        }
+
+        $sum = (float) \App\Models\Payment::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->unconsumedDeposits()
+            ->sum('amount');
+
+        return $this->depositCreditCache[$key] = $sum;
     }
 
     /**

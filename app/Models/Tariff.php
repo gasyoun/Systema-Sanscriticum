@@ -56,7 +56,11 @@ class Tariff extends Model
             return 0;
         }
 
-        $marketing = \App\Models\MarketingSetting::first();
+        // cached() — кэширует синглтон в Cache::rememberForever c авто-сбросом
+        // на saved/deleted. На странице «Должники» этот метод дёргается сотни раз
+        // (по одному вызову на каждый блок каждой пары user×курс), и без кэша
+        // мы бы делали столько же SELECT'ов по marketing_settings.
+        $marketing = \App\Models\MarketingSetting::cached();
         if (! $marketing || ! $marketing->is_loyalty_active) {
             return 0;
         }
