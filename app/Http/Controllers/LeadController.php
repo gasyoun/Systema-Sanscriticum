@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Services\Leads\LeadFlashBuilder;
+use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\SocialChannelParser;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -52,22 +53,21 @@ class LeadController extends Controller
             $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;
         }
 
-        $isDuplicate = false;
+        $existing = null;
         if (! empty($data['landing_page_id'])) {
-            $isDuplicate = Lead::where('email', $data['email'])
+            $existing = Lead::where('email', $data['email'])
                 ->where('landing_page_id', $data['landing_page_id'])
-                ->exists();
+                ->first();
         } elseif (! empty($data['source_article_slug'])) {
-            $isDuplicate = Lead::where('email', $data['email'])
+            $existing = Lead::where('email', $data['email'])
                 ->where('source_article_slug', $data['source_article_slug'])
-                ->exists();
+                ->first();
         }
 
-        if ($isDuplicate) {
-            return redirect()->route('thank.you')->with([
-                'is_duplicate' => true,
-                'duplicate_email' => $data['email'],
-            ]);
+        if ($existing) {
+            return redirect()->route('thank.you')->with(
+                $this->buildDuplicateFlash($existing)
+            );
         }
 
         $lead = Lead::create($data);
@@ -139,6 +139,34 @@ class LeadController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Flash для дубликата заявки. Если у оригинального Lead есть magnet_channel/token —
+     * строим deep-link исходного канала, чтобы юзер вернулся туда же, где получил магнит.
+     * Иначе — отдаём только базовые поля, шаблон сам деградирует на хардкод-кнопку Telegram.
+     */
+    private function buildDuplicateFlash(Lead $existing): array
+    {
+        $flash = [
+            'is_duplicate' => true,
+            'duplicate_email' => $existing->email,
+        ];
+
+        if (! $existing->magnet_channel || ! $existing->magnet_token) {
+            return $flash;
+        }
+
+        $manager = app(DeliveryChannelManager::class);
+        if (! $manager->has($existing->magnet_channel)) {
+            return $flash;
+        }
+
+        $flash['duplicate_channel'] = $existing->magnet_channel;
+        $flash['duplicate_deep_link'] = $manager->get($existing->magnet_channel)
+            ->buildDeepLink($existing->magnet_token);
+
+        return $flash;
     }
 
     /**
