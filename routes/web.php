@@ -132,7 +132,13 @@ Route::get('/force-download/{file}', function (string $file) {
 
 // --- ОТПРАВКА ФОРМЫ ---
 Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
-Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
+Route::get('/thank-you', function () {
+    // Переносим flash на следующий request, чтобы F5 на странице
+    // не сбрасывал состояние (дубликат vs новая заявка) и кнопки магнита.
+    session()->reflash();
+
+    return view('promo.thankyou');
+})->name('thank.you');
 
 // --- РОУТЫ ДЛЯ ТОЧКА БАНКА ---
 // Перенес их выше роута-перехватчика {slug} для безопасности
