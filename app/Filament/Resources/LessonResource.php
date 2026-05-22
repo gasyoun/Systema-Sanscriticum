@@ -240,6 +240,41 @@ class LessonResource extends Resource
                     ->falseColor('gray'),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('course_id')
+                    ->label('Курс')
+                    ->relationship(
+                        name: 'course',
+                        titleAttribute: 'title',
+                        modifyQueryUsing: function (Builder $query) {
+                            // Зеркалим scope из form()->course_id и getEloquentQuery():
+                            // учитель видит в выпадашке фильтра только свои курсы,
+                            // потому что Filament не применяет getEloquentQuery() к опциям фильтра.
+                            $user = auth()->user();
+                            if ($user && $user->isTeacher()) {
+                                if (! $user->teacher_id) {
+                                    $query->whereRaw('1 = 0');
+                                } else {
+                                    $query->where('teacher_id', $user->teacher_id);
+                                }
+                            }
+                        },
+                    )
+                    ->searchable()
+                    ->preload(),
+
+                Tables\Filters\SelectFilter::make('block_number')
+                    ->label('Блок')
+                    ->options(function () {
+                        return static::getEloquentQuery()
+                            ->select('block_number')
+                            ->distinct()
+                            ->orderBy('block_number')
+                            ->pluck('block_number')
+                            ->mapWithKeys(fn ($n) => [$n => "Блок {$n}"])
+                            ->all();
+                    })
+                    ->searchable(),
+
                 Tables\Filters\TernaryFilter::make('is_free')
                     ->label('Открытость')
                     ->trueLabel('Только открытые')
