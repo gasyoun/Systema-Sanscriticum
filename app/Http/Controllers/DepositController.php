@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 final class DepositController extends Controller
 {
@@ -32,9 +33,13 @@ final class DepositController extends Controller
             'Бронь для этого курса сейчас недоступна.'
         );
 
-        return DB::transaction(function () use ($request, $course, $amount): RedirectResponse {
-            $user = $this->resolveUser($request);
+        // Резолв пользователя — вне транзакции, может бросить ValidationException
+        // (например, гость указал email уже существующего аккаунта).
+        $user = $this->resolveUser($request);
 
+        // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
+        // commit, иначе медленный/упавший эквайринг держит row-lock на payments.
+        $payment = DB::transaction(function () use ($user, $course, $amount): Payment {
             // Lead-матчинг по email — берём самого свежего непомеченного.
             // Помечается converted_at только при `paid`-вебхуке через PaymentObserver-цепочку
             // (см. Payment::processDeposit + Lead::markConverted), а не здесь, иначе
@@ -44,7 +49,7 @@ final class DepositController extends Controller
                 ->latest()
                 ->first();
 
-            $payment = Payment::create([
+            return Payment::create([
                 'user_id' => $user->id,
                 'lead_id' => $lead?->id,
                 'course_id' => $course->id,
@@ -54,57 +59,67 @@ final class DepositController extends Controller
                 'start_block' => null,
                 'end_block' => null,
             ]);
+        });
 
-            // Purpose должен включать «Заказ №{id} | ...» — иначе вебхук Tochka
-            // (см. WebhookController::handleTochkaWebhook, regex /Заказ №(\d+)/)
-            // не найдёт платёж и депозит навсегда останется в pending.
-            $purpose = 'Заказ №'.$payment->id.' | Бронь курса «'.$course->title.'» — предоплата';
+        // Purpose должен включать «Заказ №{id} | ...» — иначе вебхук Tochka
+        // (см. WebhookController::handleTochkaWebhook, regex /Заказ №(\d+)/)
+        // не найдёт платёж и депозит навсегда останется в pending.
+        $purpose = 'Заказ №'.$payment->id.' | Бронь курса «'.$course->title.'» — предоплата';
 
-            try {
-                $response = Http::withToken(config('services.tochka.token'))
-                    ->withHeaders(['Accept' => 'application/json'])
-                    ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
-                        'Data' => [
-                            'customerCode' => config('services.tochka.customer_code'),
-                            'amount' => round($amount, 2),
-                            'purpose' => $purpose,
-                            'paymentMode' => ['sbp', 'card'],
-                            'redirectUrl' => route('payment.success'),
-                            'failRedirectUrl' => route('payment.fail'),
-                        ],
-                    ]);
-            } catch (ConnectionException $e) {
-                // Сетевой сбой / TLS / DNS / timeout — payment остаётся, но в failed,
-                // чтобы был след попытки. Без catch Guzzle бросает RequestException
-                // наружу из DB::transaction → 500 и потерянная строка платежа.
-                $payment->update(['status' => 'failed']);
-
-                Log::error('Tochka недоступна (deposit)', [
-                    'payment_id' => $payment->id,
-                    'error' => $e->getMessage(),
+        try {
+            $response = Http::withToken(config('services.tochka.token'))
+                ->withHeaders(['Accept' => 'application/json'])
+                ->connectTimeout(5)
+                ->timeout(15)
+                ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
+                    'Data' => [
+                        'customerCode' => config('services.tochka.customer_code'),
+                        'amount' => round($amount, 2),
+                        'purpose' => $purpose,
+                        'paymentMode' => ['sbp', 'card'],
+                        'redirectUrl' => route('payment.success'),
+                        'failRedirectUrl' => route('payment.fail'),
+                    ],
                 ]);
-
-                return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
-            }
-
-            if ($response->successful() && isset($response['Data']['paymentLink'])) {
-                $payment->update(['transaction_id' => $response['Data']['paymentLinkId']]);
-
-                return redirect()->away($response['Data']['paymentLink']);
-            }
-
+        } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
 
-            Log::error('Ошибка Точка Эквайринг (deposit)', [
+            Log::error('Tochka недоступна (deposit)', [
                 'payment_id' => $payment->id,
-                'status' => $response->status(),
-                'body' => $response->json(),
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
-        });
+        }
+
+        if ($response->successful() && isset($response['Data']['paymentLink'])) {
+            $payment->update(['transaction_id' => $response['Data']['paymentLinkId']]);
+
+            return redirect()->away($response['Data']['paymentLink']);
+        }
+
+        $payment->update(['status' => 'failed']);
+
+        Log::error('Ошибка Точка Эквайринг (deposit)', [
+            'payment_id' => $payment->id,
+            'status' => $response->status(),
+            'body' => $response->json(),
+        ]);
+
+        return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
     }
 
+    /**
+     * Возвращает пользователя для оформления депозита.
+     *
+     * Залогиненный — берём текущего. Гость с НОВЫМ email — создаём аккаунт и
+     * логиним (риска takeover нет, владелец сам только что ввёл email).
+     *
+     * Гость, указавший СУЩЕСТВУЮЩИЙ email — отказ. Раньше здесь стоял
+     * auth()->login($existing) без проверки пароля, что давало классический
+     * account takeover: кто угодно мог залогиниться в чужой кабинет, указав
+     * чужой email в публичной депозит-форме.
+     */
     private function resolveUser(StoreDepositRequest $request): User
     {
         if (auth()->check()) {
@@ -113,9 +128,9 @@ final class DepositController extends Controller
 
         $existing = User::where('email', $request->input('email'))->first();
         if ($existing) {
-            auth()->login($existing);
-
-            return $existing;
+            throw ValidationException::withMessages([
+                'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите бронь оттуда.',
+            ]);
         }
 
         $user = User::create([

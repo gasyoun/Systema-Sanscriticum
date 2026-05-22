@@ -143,7 +143,11 @@ Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.f
 // Депозит (бронь курса) — отдельный POST, тот же эквайринг.
 // Биндинг по slug — симметрично с /shop/course/{course:slug}.
 // ВАЖНО: строго до catch-all /{slug} ниже.
-Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])->name('deposit.create');
+// throttle:5,1 — публичный эндпоинт, защита от ботов, которые иначе могли бы
+// насоздавать pending-платежей на чужие email со скоростью сети.
+Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])
+    ->middleware('throttle:5,1')
+    ->name('deposit.create');
 
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])
