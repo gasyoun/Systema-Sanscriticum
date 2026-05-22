@@ -54,15 +54,22 @@ class ConditionalAccessGranter
             ]);
         }
 
-        if ($this->hasActiveGrant($promise)) {
-            throw ValidationException::withMessages([
-                'access' => 'Доступ под это обещание уже открыт. Сначала отзовите его.',
-            ]);
-        }
-
         $payments = [];
 
         DB::transaction(function () use ($promise, $mode, $blockNumbers, &$payments): void {
+            // Эксклюзивный лок на сам promise — вторая параллельная транзакция
+            // («два менеджера одновременно нажали Открыть») будет ждать, и когда
+            // войдёт сюда, увидит уже созданные conditional Payments и упадёт
+            // на проверке дубля ниже. Без лока проверка hasActiveGrant и
+            // последующий INSERT не атомарны → плодились бы дубли.
+            PaymentPromise::query()->whereKey($promise->id)->lockForUpdate()->first();
+
+            if ($this->hasActiveGrant($promise)) {
+                throw ValidationException::withMessages([
+                    'access' => 'Доступ под это обещание уже открыт. Сначала отзовите его.',
+                ]);
+            }
+
             if ($mode === self::MODE_FULL) {
                 $payments[] = $this->createConditionalPayment($promise, 'full', null, null);
             } else {
@@ -131,28 +138,43 @@ class ConditionalAccessGranter
             ]);
         }
 
-        $existing = LessonAccessGrant::query()
-            ->where('user_id', $student->id)
-            ->where('lesson_id', $lesson->id)
-            ->active()
-            ->first();
+        $grant = DB::transaction(function () use ($student, $lesson, $by, $reason): array {
+            // Лок на самого студента — вторая параллельная транзакция с тем
+            // же (user, lesson) зайдёт сюда после первой и увидит уже
+            // созданный grant. Без лока INSERT мог бы продублироваться
+            // (UNIQUE на (user_id, lesson_id, active) в schema нет —
+            // partial-unique сложно держать кросс-СУБД).
+            User::query()->whereKey($student->id)->lockForUpdate()->first();
 
-        if ($existing) {
-            return $existing;
+            $existing = LessonAccessGrant::query()
+                ->where('user_id', $student->id)
+                ->where('lesson_id', $lesson->id)
+                ->active()
+                ->first();
+
+            if ($existing) {
+                return ['grant' => $existing, 'created' => false];
+            }
+
+            $created = LessonAccessGrant::create([
+                'user_id' => $student->id,
+                'lesson_id' => $lesson->id,
+                'course_id' => $lesson->course_id,
+                'reason' => $reason,
+                'granted_by' => $by?->id,
+                'granted_at' => now(),
+            ]);
+
+            return ['grant' => $created, 'created' => true];
+        });
+
+        // Уведомление шлём только при реальном создании — повторный вызов
+        // на существующий активный grant не должен спамить студента.
+        if ($grant['created']) {
+            $this->notifyLessonOpened($student, $lesson);
         }
 
-        $grant = LessonAccessGrant::create([
-            'user_id' => $student->id,
-            'lesson_id' => $lesson->id,
-            'course_id' => $lesson->course_id,
-            'reason' => $reason,
-            'granted_by' => $by?->id,
-            'granted_at' => now(),
-        ]);
-
-        $this->notifyLessonOpened($student, $lesson);
-
-        return $grant;
+        return $grant['grant'];
     }
 
     /**
