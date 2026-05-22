@@ -248,14 +248,18 @@ class DebtorsReport
 
     /**
      * Сумма долга по списку неоплаченных блоков курса.
-     * Использует `Tariff::calculateFinalPriceForUser()` (учёт loyalty-скидки).
      *
      * Алгоритм:
-     *   1) Для каждого номера блока ищется точный block-тариф.
-     *   2) Если его нет — используется fallback-цена: средняя по существующим
-     *      block-тарифам курса; если их нет — full-тариф / число блоков курса.
-     *   3) Каждый блок, оценённый по fallback'у, считается «приблизительным» —
-     *      `missing_tariffs` инкрементируется, сумма помечается «≈» в UI.
+     *   1) Для каждого номера блока ищется точный block-тариф; считается цена
+     *      С УЧЁТОМ loyalty-скидки (но БЕЗ зачёта депозита).
+     *   2) Если block-тарифа нет — используется fallback-цена: средняя по
+     *      существующим block-тарифам курса; если их нет — full-тариф / число
+     *      CourseBlock'ов. Каждый блок без точного тарифа отмечается в
+     *      `missing_tariffs` (UI показывает «≈»).
+     *   3) Депозит (если есть) — зачитывается ОДИН РАЗ против итоговой суммы.
+     *      Раньше депозит вычитался из цены каждого блока по отдельности, и
+     *      депозит в 5000 при долге за 3 блока по 2000 «съедал» долг полностью
+     *      (3 × max(0, 2000 − 5000) = 0), занижая отчёт должников.
      *
      * @param  list<int>  $debtBlockNumbers
      * @return array{amount: ?float, missing_tariffs: int}
@@ -269,53 +273,52 @@ class DebtorsReport
         $tariffs = $this->blockTariffsFor($courseId);
         $fallbackPrice = $this->fallbackBlockPriceFor($courseId, $user, $tariffs);
 
-        $amount = 0.0;
+        $gross = 0.0;
         $found = 0;
         $missing = 0;
         foreach ($debtBlockNumbers as $n) {
             $tariff = $tariffs[$n] ?? null;
             if ($tariff !== null) {
-                $amount += $this->priceForUserCached($tariff, $user);
+                $gross += $this->priceWithLoyaltyForUser($tariff, $user);
                 $found++;
 
                 continue;
             }
             if ($fallbackPrice !== null) {
-                $amount += $fallbackPrice;
+                $gross += $fallbackPrice;
             }
             $missing++;
         }
 
         $hasAnyValue = $found > 0 || ($missing > 0 && $fallbackPrice !== null);
+        if (! $hasAnyValue) {
+            return ['amount' => null, 'missing_tariffs' => $missing];
+        }
+
+        // Депозит зачитывается одним блоком против итога — это разовая
+        // предоплата, а не скидка на каждую позицию.
+        $depositCredit = $this->depositCreditFor((int) $user->id, $courseId);
 
         return [
-            'amount' => $hasAnyValue ? $amount : null,
+            'amount' => max(0.0, $gross - $depositCredit),
             'missing_tariffs' => $missing,
         ];
     }
 
     /**
-     * Версия Tariff::calculateFinalPriceForUser, переиспользующая кэши
-     * этого DebtorsReport: loyalty-процент уже посчитан раз на user,
-     * сумма депозитов — раз на пару (user, course). Это убирает
-     * самый болезненный N+1 на странице должников.
-     *
-     * Логика идентична `Tariff::calculateFinalPriceForUser` — только
-     * подставлены кэшированные значения. upgrade-ветка отключена
-     * фича-флагом и сюда не тянется намеренно: на странице должников
-     * она бы только всё запутала.
+     * Цена тарифа с учётом ТОЛЬКО loyalty-скидки. Сознательно НЕ вычитает
+     * депозит — депозит применяется один раз к итоговой сумме долга в
+     * `computeDebtAmount`, а здесь функцию вызывают и для подсчёта средней
+     * (`fallbackBlockPriceFor`), и для каждого блока. Применять депозит
+     * на этом уровне = вычитать его N раз.
      */
-    private function priceForUserCached(Tariff $tariff, User $user): float
+    private function priceWithLoyaltyForUser(Tariff $tariff, User $user): float
     {
         $finalPrice = (float) $tariff->price;
 
         $discountPercent = $this->discountPercentForUser($user);
         if ($discountPercent > 0) {
             $finalPrice -= $finalPrice * ($discountPercent / 100);
-        }
-
-        if ($tariff->course_id) {
-            $finalPrice -= $this->depositCreditFor((int) $user->id, (int) $tariff->course_id);
         }
 
         return max(0.0, $finalPrice);
@@ -326,13 +329,15 @@ class DebtorsReport
      *   - среднее по существующим block-тарифам курса (если есть);
      *   - иначе full-тариф курса делённый на число CourseBlock'ов курса.
      *
+     * Без зачёта депозита — депозит применяется один раз в computeDebtAmount.
+     *
      * @param  array<int, Tariff>  $blockTariffs
      */
     private function fallbackBlockPriceFor(int $courseId, User $user, array $blockTariffs): ?float
     {
         if (! empty($blockTariffs)) {
             $prices = array_map(
-                fn (Tariff $t) => $this->priceForUserCached($t, $user),
+                fn (Tariff $t) => $this->priceWithLoyaltyForUser($t, $user),
                 $blockTariffs,
             );
 
@@ -353,7 +358,7 @@ class DebtorsReport
             return null;
         }
 
-        return $this->priceForUserCached($fullTariff, $user) / $totalBlocks;
+        return $this->priceWithLoyaltyForUser($fullTariff, $user) / $totalBlocks;
     }
 
     /**
