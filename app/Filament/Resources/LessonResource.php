@@ -158,6 +158,15 @@ class LessonResource extends Resource
                     ->label('Открытый урок / вебинар')
                     ->helperText('Доступен любому залогиненному студенту без покупки курса. Уроки появятся в кабинете в разделе «Открытые уроки».')
                     ->onColor('success')
+                    ->live()
+                    ->columnSpanFull(),
+
+                Forms\Components\Toggle::make('show_on_main')
+                    ->label('Показывать на главной странице')
+                    ->helperText('Если включено — карточка урока появится в карусели «Открытые занятия» на витрине сайта. Требует включённого «Открытый урок».')
+                    ->onColor('success')
+                    ->disabled(fn (Forms\Get $get) => ! $get('is_free'))
+                    ->dehydrated()
                     ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('topic')
@@ -238,6 +247,15 @@ class LessonResource extends Resource
                     ->falseIcon('heroicon-o-lock-closed')
                     ->trueColor('success')
                     ->falseColor('gray'),
+
+                Tables\Columns\IconColumn::make('show_on_main')
+                    ->label('На главной')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-star')
+                    ->falseIcon('heroicon-o-minus')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course_id')
