@@ -1,18 +1,32 @@
 @props([
     'lessons' => null,
-    'title' => 'Открытые занятия',
+    'title' => 'Бесплатные беседы вокруг санскрита',
     'subtitle' => 'Бесплатные уроки и записи вебинаров. Посмотрите прямо здесь — без перехода на YouTube.',
 ])
 
 @php
     $lessons = $lessons ?? collect();
+
+    // Форматирует duration_seconds в "h:mm:ss" или "m:ss". Null/0 → null (бейдж не показывается).
+    $fmtDuration = static function (?int $s): ?string {
+        if ($s === null || $s <= 0) {
+            return null;
+        }
+        $h = intdiv($s, 3600);
+        $m = intdiv($s % 3600, 60);
+        $sec = $s % 60;
+        return $h > 0
+            ? sprintf('%d:%02d:%02d', $h, $m, $sec)
+            : sprintf('%d:%02d', $m, $sec);
+    };
 @endphp
 
 @if($lessons && $lessons->count() > 0)
     @php
         // Готовим карточки. На каждый урок собираем список доступных плееров
-        // (YouTube и/или RuTube). Если оба — модалка сначала покажет выбор.
-        $cards = $lessons->map(function ($lesson) {
+        // (YouTube и/или RuTube). Если оба — модалка сначала покажет выбор
+        // (или, если ранее уже выбирали — сразу открывает запомненный).
+        $cards = $lessons->values()->map(function ($lesson) use ($fmtDuration) {
             $options = [];
 
             if ($lesson->youtube_url && ($e = \App\Support\VideoEmbed::embed($lesson->youtube_url))) {
@@ -34,13 +48,16 @@
             $posterSrc = $lesson->youtube_url ?: $lesson->video_url ?: $lesson->rutube_url;
 
             return [
-                'id'      => $lesson->id,
-                'title'   => $lesson->title,
-                'course'  => $lesson->course?->title,
-                'options' => $options,
-                'poster'  => \App\Support\VideoEmbed::poster($posterSrc),
+                'id'       => $lesson->id,
+                'title'    => $lesson->title,
+                'course'   => $lesson->course?->title,
+                'options'  => $options,
+                'poster'   => \App\Support\VideoEmbed::poster($posterSrc),
+                'duration' => $fmtDuration($lesson->duration_seconds),
             ];
-        })->filter()->values();
+        })->filter()->values()
+          // Нумерация считается ПОСЛЕ фильтрации — чтобы карточки без распознанных ссылок не оставляли «дыры».
+          ->map(fn ($card, $i) => $card + ['number' => $i + 1]);
 
         if ($cards->isEmpty()) {
             // Все ролики без распознанной ссылки — лучше не рендерить пустую секцию.
@@ -60,19 +77,40 @@
                 chooserOptions: [],
                 slide: 0,
                 pages: {{ $pageCount }},
+                /* Запоминаем выбор плеера на год — на повторное открытие сразу запускаем нужный без диалога. */
+                cookieName: 'preferredVideoPlatform',
+                getPref() {
+                    /* split вместо regex — чтобы не плодить экранирование \\\\s в Blade-атрибуте. */
+                    const prefix = this.cookieName + '=';
+                    const pair = document.cookie.split(';').map(s => s.trim()).find(s => s.startsWith(prefix));
+                    return pair ? decodeURIComponent(pair.substring(prefix.length)) : null;
+                },
+                savePref(platform) {
+                    const d = new Date();
+                    d.setTime(d.getTime() + 365 * 24 * 60 * 60 * 1000);
+                    document.cookie = this.cookieName + '=' + encodeURIComponent(platform) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+                },
                 open(options) {
                     if (!options || options.length === 0) return;
                     if (options.length === 1) {
                         this.embedUrl = options[0].embed;
                         this.chooserOptions = [];
                     } else {
-                        this.chooserOptions = options;
-                        this.embedUrl = '';
+                        const pref = this.getPref();
+                        const match = pref ? options.find(o => o.platform === pref) : null;
+                        if (match) {
+                            this.embedUrl = match.embed;
+                            this.chooserOptions = [];
+                        } else {
+                            this.chooserOptions = options;
+                            this.embedUrl = '';
+                        }
                     }
                     this.videoOpen = true;
                 },
-                pick(embed) {
-                    this.embedUrl = embed;
+                pick(opt) {
+                    this.savePref(opt.platform);
+                    this.embedUrl = opt.embed;
                     this.chooserOptions = [];
                 },
                 close() {
@@ -142,14 +180,26 @@
                                             </div>
                                         @endif
 
-                                        {{-- Play-кнопка по центру --}}
-                                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                                        {{-- Play-кнопка по центру; затемнение только на hover, чтобы постер был ярким. --}}
+                                        <div class="absolute inset-0 flex items-center justify-center bg-transparent group-hover:bg-black/30 transition-colors">
                                             <span class="w-14 h-14 rounded-full bg-[#E85C24] flex items-center justify-center shadow-[0_0_25px_rgba(232,92,36,0.55)] transform transition-transform group-hover:scale-110">
                                                 <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z"/>
                                                 </svg>
                                             </span>
                                         </div>
+
+                                        {{-- Бейдж порядкового номера (#1 — самая свежая беседа). --}}
+                                        <span class="absolute top-2 left-2 px-2 py-0.5 text-xs font-bold text-white bg-black/70 backdrop-blur-sm rounded-md">
+                                            #{{ $card['number'] }}
+                                        </span>
+
+                                        {{-- Бейдж длительности — только если админ её заполнил. --}}
+                                        @if($card['duration'])
+                                            <span class="absolute bottom-2 right-2 px-2 py-0.5 text-xs font-semibold text-white bg-black/70 backdrop-blur-sm rounded-md tabular-nums">
+                                                {{ $card['duration'] }}
+                                            </span>
+                                        @endif
                                     </div>
 
                                     <div class="p-4 md:p-5 flex flex-col flex-grow">
@@ -220,7 +270,7 @@
                         <div class="flex flex-wrap items-center justify-center gap-2">
                             <template x-for="opt in chooserOptions" :key="opt.platform">
                                 <button type="button"
-                                        x-on:click="pick(opt.embed)"
+                                        x-on:click="pick(opt)"
                                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all duration-150 hover:brightness-110 active:scale-95"
                                         :style="{
                                             backgroundColor: opt.platform === 'youtube' ? '#FF0000' : (opt.platform === 'rutube' ? '#000000' : '#E85C24'),
