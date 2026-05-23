@@ -25,6 +25,8 @@ class Course extends Model
         'teacher_id',
         'salary_type',
         'salary_value',
+        // Сумма депозита («забронировать») для этого курса; null = бронь не предлагается.
+        'deposit_amount',
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
         'format',
@@ -46,6 +48,7 @@ class Course extends Model
         'is_visible' => 'boolean',
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
+        'deposit_amount' => 'decimal:2',
     ];
 
     public function teacher()
@@ -93,7 +96,7 @@ class Course extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot('status', 'note')
+            ->withPivot('status', 'note', 'left_after_block')
             ->withTimestamps();
     }
 }

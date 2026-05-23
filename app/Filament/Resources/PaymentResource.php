@@ -72,6 +72,7 @@ class PaymentResource extends Resource
                         ->options(function () {
                             $options = [
                                 'full' => 'Весь курс целиком',
+                                'deposit' => '📌 Бронь курса (предоплата)',
                                 'Расход' => '💸 Системный расход / Возврат',
                             ];
 
@@ -166,6 +167,14 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->description(function (Payment $record) {
+                        if ($record->tariff === 'deposit') {
+                            $consumed = $record->deposit_consumed_at
+                                ? ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y')
+                                : '';
+
+                            return '📌 Бронь курса (предоплата)'.$consumed;
+                        }
+
                         $start = (int) $record->start_block;
                         $end = (int) $record->end_block;
 
@@ -231,6 +240,17 @@ class PaymentResource extends Resource
                         'paid' => 'Оплачено',
                         'canceled' => 'Отменено',
                     ]),
+
+                Tables\Filters\TernaryFilter::make('is_deposit')
+                    ->label('Только брони (депозиты)')
+                    ->placeholder('Все транзакции')
+                    ->trueLabel('Только брони')
+                    ->falseLabel('Без броней')
+                    ->queries(
+                        true: fn ($query) => $query->where('tariff', 'deposit'),
+                        false: fn ($query) => $query->where('tariff', '!=', 'deposit'),
+                        blank: fn ($query) => $query,
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->iconButton(),

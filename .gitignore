@@ -25,3 +25,7 @@ yarn-error.log
 BUGS_REPORT.md
 SECURITY_AUDIT*.md
 ULTRAREVIEW_REPORT.md
+
+# Артефакты Playwright MCP-сессий и временные скриншоты вёрстки
+.playwright-mcp/
+debtors-*.png
