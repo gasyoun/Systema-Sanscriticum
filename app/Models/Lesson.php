@@ -29,6 +29,7 @@ class Lesson extends Model
         'block_number',
         'transcript_file',
         'flash_cards',
+        'duration_seconds',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
@@ -40,6 +41,7 @@ class Lesson extends Model
         'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
+        'duration_seconds' => 'integer',
     ];
 
     protected static function booted(): void
