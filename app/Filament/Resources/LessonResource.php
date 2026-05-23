@@ -163,10 +163,41 @@ class LessonResource extends Resource
 
                 Forms\Components\Toggle::make('show_on_main')
                     ->label('Показывать на главной странице')
-                    ->helperText('Если включено — карточка урока появится в карусели «Открытые занятия» на витрине сайта. Требует включённого «Открытый урок».')
+                    ->helperText('Если включено — карточка урока появится в карусели «Бесплатные беседы вокруг санскрита» на витрине сайта. Требует включённого «Открытый урок».')
                     ->onColor('success')
                     ->disabled(fn (Forms\Get $get) => ! $get('is_free'))
                     ->dehydrated()
+                    ->columnSpanFull(),
+
+                Forms\Components\TextInput::make('duration_seconds')
+                    ->label('Длительность видео')
+                    ->placeholder('1:23:45  /  12:34  /  754')
+                    ->helperText('Опционально. Бейдж на карточке в карусели на главной. Поддерживается hh:mm:ss, mm:ss или просто секунды.')
+                    ->dehydrateStateUsing(function (?string $state): ?int {
+                        if ($state === null || trim($state) === '') {
+                            return null;
+                        }
+                        $s = trim($state);
+                        if (ctype_digit($s)) {
+                            $n = (int) $s;
+                            return $n > 0 ? $n : null;
+                        }
+                        $parts = array_reverse(array_map('intval', explode(':', $s)));
+                        $seconds = ($parts[0] ?? 0) + ($parts[1] ?? 0) * 60 + ($parts[2] ?? 0) * 3600;
+                        return $seconds > 0 ? $seconds : null;
+                    })
+                    ->formatStateUsing(function ($state): string {
+                        if ($state === null || $state === '') {
+                            return '';
+                        }
+                        $s = (int) $state;
+                        $h = intdiv($s, 3600);
+                        $m = intdiv($s % 3600, 60);
+                        $sec = $s % 60;
+                        return $h > 0
+                            ? sprintf('%d:%02d:%02d', $h, $m, $sec)
+                            : sprintf('%d:%02d', $m, $sec);
+                    })
                     ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('topic')
