@@ -29,6 +29,9 @@ class User extends Authenticatable implements FilamentUser
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_auth_token',   // <-- Добавили для Telegram
         'vk_id',
+        'max_user_id',
+        'instagram',
+        'facebook',
         // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
         'phone',
         'global_status',
@@ -40,6 +43,13 @@ class User extends Authenticatable implements FilamentUser
         'total_time_spent',
         'total_lessons_opened',
         'prana_balance',
+        // Надёжность: блокирует loyalty-скидку, обещания и conditional-доступ.
+        'is_unreliable',
+        'unreliable_reason',
+        'unreliable_marked_at',
+        'unreliable_marked_by',
+        'unreliable_auto',
+        'discipline_improved_since',
     ];
 
     protected $hidden = [
@@ -60,7 +70,52 @@ class User extends Authenticatable implements FilamentUser
             'total_time_spent' => 'integer',
             'total_lessons_opened' => 'integer',
             'prana_balance' => 'integer',
+            'is_unreliable' => 'boolean',
+            'unreliable_auto' => 'boolean',
+            'unreliable_marked_at' => 'datetime',
+            'discipline_improved_since' => 'date',
         ];
+    }
+
+    public function isUnreliable(): bool
+    {
+        return (bool) $this->is_unreliable;
+    }
+
+    public function scopeUnreliable($query)
+    {
+        return $query->where('is_unreliable', true);
+    }
+
+    /**
+     * Поднять флаг неблагонадёжности. `$auto=true` означает срабатывание
+     * UnreliabilityAuditor по порогу просрочек; ручной marker оставляет $auto=false
+     * — это нужно, чтобы при последующем «снять флаг» не было сомнений, кто его
+     * выставил. Discipline_improved_since сбрасываем: новый отсчёт начнётся
+     * после того, как поведение фактически исправится.
+     */
+    public function markUnreliable(string $reason, ?self $by = null, bool $auto = false): void
+    {
+        $this->forceFill([
+            'is_unreliable' => true,
+            'unreliable_reason' => $reason,
+            'unreliable_marked_at' => now(),
+            'unreliable_marked_by' => $by?->id,
+            'unreliable_auto' => $auto,
+            'discipline_improved_since' => null,
+        ])->save();
+    }
+
+    public function clearUnreliable(?self $by = null): void
+    {
+        $this->forceFill([
+            'is_unreliable' => false,
+            'unreliable_reason' => null,
+            'unreliable_marked_at' => null,
+            'unreliable_marked_by' => $by?->id,
+            'unreliable_auto' => false,
+            'discipline_improved_since' => null,
+        ])->save();
     }
 
     // ==========================================
@@ -178,7 +233,7 @@ class User extends Authenticatable implements FilamentUser
     public function courses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class)
-            ->withPivot('status', 'note')
+            ->withPivot('status', 'note', 'left_after_block')
             ->withTimestamps();
     }
 
@@ -304,6 +359,16 @@ class User extends Authenticatable implements FilamentUser
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class);
+    }
+
+    public function paymentPromises(): HasMany
+    {
+        return $this->hasMany(PaymentPromise::class);
+    }
+
+    public function lessonAccessGrants(): HasMany
+    {
+        return $this->hasMany(LessonAccessGrant::class)->orderByDesc('granted_at');
     }
 
     /**

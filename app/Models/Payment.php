@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,15 +14,25 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
+        'lead_id',
         'course_id',
         'amount',
         'prana_spent',
         'tariff',
+        'deposit_consumed_at',
         'status',
         'transaction_id',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
         'start_block',
         'end_block',
+        // --- Conditional access под обещание/рассрочку ---
+        'is_conditional',
+        'linked_promise_id',
+    ];
+
+    protected $casts = [
+        'is_conditional' => 'boolean',
+        'deposit_consumed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -34,6 +45,41 @@ class Payment extends Model
         return $this->belongsTo(Course::class);
     }
 
+    public function linkedPromise(): BelongsTo
+    {
+        return $this->belongsTo(PaymentPromise::class, 'linked_promise_id');
+    }
+
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
+    public function isDeposit(): bool
+    {
+        return $this->tariff === 'deposit';
+    }
+
+    /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
+    public function scopeReal(Builder $query): Builder
+    {
+        return $query->where('is_conditional', false);
+    }
+
+    public function scopeConditional(Builder $query): Builder
+    {
+        return $query->where('is_conditional', true);
+    }
+
+    /** Депозиты, реально оплаченные и ещё не зачтённые в стоимость тарифа. */
+    public function scopeUnconsumedDeposits(Builder $query): Builder
+    {
+        return $query
+            ->where('tariff', 'deposit')
+            ->whereNull('deposit_consumed_at')
+            ->whereIn('status', ['paid', 'success']);
+    }
+
     // ==========================================
     // АВТОМАТИЗАЦИЯ ПРИ СОЗДАНИИ ИЛИ ИЗМЕНЕНИИ
     // ==========================================
@@ -42,22 +88,44 @@ class Payment extends Model
         // 1. Срабатывает при СОЗДАНИИ нового платежа
         static::created(function (Payment $payment) {
             // Ловим и 'success', и 'paid' (в зависимости от того, как сохраняет админка)
-            if (in_array($payment->status, ['success', 'paid'])) {
-                $payment->processSuccessfulPayment();
+            if (in_array($payment->status, ['success', 'paid'], true)) {
+                self::fireOnPaid($payment);
             }
         });
 
         // 2. Срабатывает при ИЗМЕНЕНИИ существующего платежа
         static::updated(function (Payment $payment) {
-            if ($payment->isDirty('status') && in_array($payment->status, ['success', 'paid'])) {
-                $payment->processSuccessfulPayment();
+            if ($payment->isDirty('status') && in_array($payment->status, ['success', 'paid'], true)) {
+                self::fireOnPaid($payment);
             }
 
             // Откатываем списанную прану, если оплата сорвалась.
-            if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'cancelled'])) {
+            if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'cancelled'], true)) {
                 $payment->refundPranaIfSpent();
             }
         });
+    }
+
+    /**
+     * Депозит и обычная оплата идут разными путями: депозит НЕ открывает
+     * доступ к группам, обычная оплата дополнительно гасит ранее
+     * оплаченные депозиты по тому же курсу.
+     */
+    private static function fireOnPaid(Payment $payment): void
+    {
+        if ($payment->isDeposit()) {
+            $payment->processDeposit();
+
+            return;
+        }
+
+        $payment->processSuccessfulPayment();
+
+        // Conditional access под обещание — реальных денег нет,
+        // депозит гасить не за что.
+        if (! $payment->is_conditional) {
+            $payment->consumeDepositsForCourse();
+        }
     }
 
     // ==========================================
@@ -67,23 +135,94 @@ class Payment extends Model
     {
         \Illuminate\Support\Facades\DB::transaction(function () {
             $this->grantAccess();
-            $this->sendWelcomeEmailIfNeeded();
-            $this->awardPranaForPurchase();
+
+            // Для conditional Payment (доступ под обещание) пропускаем
+            // welcome-email и начисление праны — деньги не пришли,
+            // не дарим бонусы и не флудим письмами.
+            if (! $this->is_conditional) {
+                $this->sendWelcomeEmailIfNeeded();
+                $this->awardPranaForPurchase();
+            }
         });
 
-        // Telegram-уведомление — через очередь, чтобы не держать row-lock webhook'а
-        // во время синхронного HTTP-вызова к api.telegram.org.
-        if ($this->user_id) {
-            $courseName = $this->course->title ?? 'Обучающий материал';
-            $url = url('/login');
+        if (! $this->user_id) {
+            return;
+        }
 
+        // Telegram — через очередь, чтобы не держать row-lock webhook'а
+        // во время синхронного HTTP-вызова к api.telegram.org.
+        $courseName = $this->course->title ?? 'Обучающий материал';
+        $url = url('/login');
+
+        if ($this->is_conditional) {
+            $scope = $this->tariff === 'full'
+                ? 'полный курс'
+                : 'блок '.preg_replace('/[^\d]+/', '', (string) $this->tariff);
+
+            $promise = $this->linkedPromise;
+            $deadline = $promise?->promised_at?->format('d.m.Y');
+
+            $text = "📅 <b>Доступ открыт по договорённости</b>\n\n";
+            $text .= "Намасте! Открыт {$scope} курса <b>«{$courseName}»</b> ";
+            $text .= $deadline ? "до <b>{$deadline}</b>." : 'до согласованного срока.';
+            $text .= "\n\n<a href='{$url}'>Перейти в личный кабинет</a>";
+        } else {
             $text = "🎉 <b>Оплата успешно получена!</b>\n\n";
             $text .= "Намасте! Ваш доступ к курсу <b>«{$courseName}»</b> открыт.\n\n";
             $text .= "Можете приступать к занятиям прямо сейчас:\n";
             $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
-
-            \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
         }
+
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    // ==========================================
+    // ДЕПОЗИТ (бронь курса) — отдельный путь
+    // ==========================================
+    public function processDeposit(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            // НЕ вызываем grantAccess: депозит не открывает платные уроки.
+            // Открытые уроки уже доступны любому залогиненному пользователю.
+            $this->sendWelcomeEmailIfNeeded();
+
+            $this->lead?->markConverted();
+        });
+
+        if (! $this->user_id) {
+            return;
+        }
+
+        $courseName = $this->course->title ?? 'курс';
+        $url = url('/login');
+
+        $text = "📌 <b>Бронь курса принята</b>\n\n";
+        $text .= "Намасте! Мы получили предоплату за курс <b>«{$courseName}»</b>. ";
+        $text .= 'Сумма зачтётся при оплате полного тарифа.';
+        $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
+
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    /**
+     * Гасит все ранее оплаченные и ещё не зачтённые депозиты по тому же
+     * курсу, что и текущий «реальный» платёж. updateQuietly — чтобы не
+     * перезапустить booted-хуки и не зациклить обсёрвер.
+     */
+    public function consumeDepositsForCourse(): void
+    {
+        if (! $this->course_id) {
+            return;
+        }
+
+        self::query()
+            ->where('user_id', $this->user_id)
+            ->where('course_id', $this->course_id)
+            ->unconsumedDeposits()
+            ->get()
+            ->each(fn (self $deposit) => $deposit->updateQuietly([
+                'deposit_consumed_at' => now(),
+            ]));
     }
 
     // ==========================================
@@ -173,6 +312,12 @@ class Payment extends Model
         if (! $student) {
             \Illuminate\Support\Facades\Log::error('Студент не найден для платежа ID: '.$this->id);
 
+            return;
+        }
+
+        // Админам welcome-письмо с генерируемым паролем не нужно —
+        // у них уже есть свой пароль, перезапись его сломает доступ.
+        if ($student->is_admin) {
             return;
         }
 

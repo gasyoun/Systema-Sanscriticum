@@ -84,6 +84,30 @@ final class MaxDeliveryChannel implements DeliveryChannel
         }
     }
 
+    /**
+     * Отправить простое текстовое сообщение в Max. Используется уведомлениями
+     * (например, об отзыве conditional-доступа) — отдельно от lead-магнита,
+     * который грузит файл через sendDocument.
+     */
+    public function sendText(string $userIdInChannel, string $text): void
+    {
+        if ($this->token === '' || $userIdInChannel === '') {
+            throw new RuntimeException('Max sendText: token or recipient is empty');
+        }
+
+        $response = Http::withToken($this->token)
+            ->post(self::API_BASE.'/messages', [
+                'recipient' => ['user_id' => $userIdInChannel],
+                'text' => $text,
+            ])
+            ->json();
+
+        if (! empty($response['error'])) {
+            Log::error('Max sendText failed', ['response' => $response]);
+            throw new RuntimeException('Max message error: '.($response['message'] ?? 'unknown'));
+        }
+    }
+
     public function setWebhook(string $url): void
     {
         $response = Http::withToken($this->token)
