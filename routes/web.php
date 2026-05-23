@@ -43,7 +43,6 @@ Route::get('/', function () {
     $openLessons = \App\Models\Lesson::shownOnMain()
         ->with('course:id,slug,title')
         ->latest('lesson_date')
-        ->limit(9)
         ->get();
 
     return view('main', compact('landings', 'openLessons'));
