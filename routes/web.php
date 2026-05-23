@@ -38,7 +38,15 @@ Route::get('/', function () {
     // Берем только опубликованные курсы, по 9 на страницу
     $landings = LandingPage::where('is_active', true)->paginate(9);
 
-    return view('main', compact('landings'));
+    // Открытые занятия для витринной карусели: отобраны вручную через флаг show_on_main
+    // (фильтрация is_free + is_published сидит в Lesson::scopeShownOnMain).
+    $openLessons = \App\Models\Lesson::shownOnMain()
+        ->with('course:id,slug,title')
+        ->latest('lesson_date')
+        ->limit(9)
+        ->get();
+
+    return view('main', compact('landings', 'openLessons'));
 });
 
 // Витрина магазина курсов
