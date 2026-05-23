@@ -25,6 +25,7 @@ class Lesson extends Model
         'group_id',
         'is_published',
         'is_free',
+        'show_on_main',
         'block_number',
         'transcript_file',
         'flash_cards',
@@ -36,6 +37,7 @@ class Lesson extends Model
         'flash_cards' => 'array',
         'is_published' => 'boolean',
         'is_free' => 'boolean',
+        'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
     ];
@@ -70,5 +72,12 @@ class Lesson extends Model
     public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_free', true);
+    }
+
+    public function scopeShownOnMain(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('show_on_main', true)
+            ->where('is_free', true)
+            ->where('is_published', true);
     }
 }
