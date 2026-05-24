@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use App\Services\Schedule\ScheduleGenerator;
+use App\Support\RoleGate;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
@@ -43,6 +44,7 @@ class ListSchedules extends ListRecords
                 ->label('Сгенерировать поток')
                 ->icon('heroicon-o-arrow-path-rounded-square')
                 ->color('success')
+                ->visible(fn (): bool => RoleGate::adminOnly())
                 ->modalHeading('Генератор расписания')
                 ->modalDescription('Создаёт серию занятий по выбранным дням недели с учётом пропусков и переносов.')
                 ->modalWidth('5xl')
