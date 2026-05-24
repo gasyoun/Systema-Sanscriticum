@@ -43,6 +43,7 @@ return [
 
     'n8n' => [
         'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
+        'schedule_sheet_webhook' => env('N8N_SCHEDULE_SHEET_WEBHOOK'),
     ],
 
     'telegram' => [
