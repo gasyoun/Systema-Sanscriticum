@@ -2,20 +2,80 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Schedule;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ScheduleResource extends Resource
 {
-    use AdminOnly;
-
     protected static ?string $model = Schedule::class;
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        if (RoleGate::any(Roles::ADMIN)) {
+            return true;
+        }
+        // Учитель может создавать события только при заполненном teacher_id —
+        // иначе скоуп по course_id даст 1=0 и сохранение всё равно упадёт.
+        $user = auth()->user();
+
+        return $user?->isTeacher() === true && $user->teacher_id !== null;
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+
+        return $user->isTeacher()
+            && $user->teacher_id
+            && optional($record->course)->teacher_id === $user->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canEdit($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher()) {
+            if (! $user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('course', function (Builder $q) use ($user): void {
+                    $q->where('teacher_id', $user->teacher_id);
+                });
+            }
+        }
+
+        return $query;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar'; // <-- Иконка календаря
 
@@ -62,6 +122,45 @@ class ScheduleResource extends Resource
 
                 Forms\Components\Section::make('Настройки')
                     ->schema([
+                        Forms\Components\Select::make('course_id')
+                            ->label('Курс')
+                            ->relationship(
+                                name: 'course',
+                                titleAttribute: 'title',
+                                modifyQueryUsing: function (Builder $query): void {
+                                    // Учитель видит в селекте только свои курсы; админ — все.
+                                    // Учителю без teacher_id вообще ничего не показываем.
+                                    $user = auth()->user();
+                                    if ($user && $user->isTeacher()) {
+                                        if (! $user->teacher_id) {
+                                            $query->whereRaw('1 = 0');
+                                        } else {
+                                            $query->where('teacher_id', $user->teacher_id);
+                                        }
+                                    }
+                                },
+                            )
+                            // Серверная валидация: relationship-Select по умолчанию не накладывает
+                            // where на Rule::exists, поэтому учитель мог бы через POST передать
+                            // чужой course_id. Дополняем явным правилом по teacher_id.
+                            ->rule(function () {
+                                $user = auth()->user();
+                                if ($user?->isTeacher() && $user->teacher_id) {
+                                    return \Illuminate\Validation\Rule::exists('courses', 'id')
+                                        ->where('teacher_id', $user->teacher_id);
+                                }
+                                if ($user?->isTeacher() && ! $user->teacher_id) {
+                                    return \Illuminate\Validation\Rule::in([]);
+                                }
+
+                                return null;
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Без привязки')
+                            ->required(fn (): bool => (bool) auth()->user()?->isTeacher())
+                            ->helperText('Преподаватель видит и правит только события своих курсов.'),
+
                         Forms\Components\Select::make('group_id')
                             ->relationship('group', 'name')
                             ->label('Для группы (Пусто = для всех)')
@@ -83,11 +182,17 @@ class ScheduleResource extends Resource
             ->defaultPaginationPageOption(50)
             ->striped()
             ->groups([
+                // Группируем по календарному дню вручную (без ->date()): Filament при ->date()
+                // прогоняет заголовок группы через Carbon::parse(), а наш заголовок —
+                // локализованная строка («сбт, 06 июня»), которую Carbon распарсить не может.
                 Tables\Grouping\Group::make('start')
                     ->label('Дата')
-                    ->date()
                     ->titlePrefixedWithLabel(false)
+                    ->getKeyFromRecordUsing(fn (Schedule $r): ?string => $r->start?->toDateString())
                     ->getTitleFromRecordUsing(fn (Schedule $r): string => self::humanizeDateHeader($r->start))
+                    ->groupQueryUsing(fn (Builder $query) => $query->groupByRaw('date(start)'))
+                    ->orderQueryUsing(fn (Builder $query, string $direction) => $query->orderBy('start', $direction))
+                    ->scopeQueryByKeyUsing(fn (Builder $query, string $key) => $query->whereDate('start', $key))
                     ->collapsible(),
             ])
             ->defaultGroup('start')
