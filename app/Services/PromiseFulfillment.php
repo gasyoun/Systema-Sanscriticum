@@ -54,7 +54,7 @@ class PromiseFulfillment
             if ($silent) {
                 /** @var Payment $payment */
                 $payment = Payment::withoutEvents(fn () => Payment::create($payload));
-                $this->runSilentHooks($payment);
+                $this->runSilentHooks($payment, $promise);
             } else {
                 $payment = Payment::create($payload);
             }
@@ -86,7 +86,7 @@ class PromiseFulfillment
      * Тихие хуки: только то, что должно случиться без шума для студента.
      * НЕ вызываем TG-уведомление и welcomeEmail.
      */
-    private function runSilentHooks(Payment $payment): void
+    private function runSilentHooks(Payment $payment, PaymentPromise $promise): void
     {
         $payment->grantAccess();
         $payment->awardPranaForPurchase();
@@ -94,5 +94,10 @@ class PromiseFulfillment
         if ((float) $payment->amount > 0 && in_array($payment->status, ['paid', 'success'], true)) {
             SendPaymentToSheetJob::dispatch($payment->id, 'create');
         }
+
+        // Silent: студенту не пишем, но кураторов уведомляем — для них это
+        // штатное событие «обещание закрыто оплатой». В не-silent режиме
+        // уведомление шлёт Payment::processSuccessfulPayment (paymentPaid).
+        app(CuratorNotifier::class)->promiseFulfilled($promise, $payment);
     }
 }

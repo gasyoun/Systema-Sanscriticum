@@ -1,0 +1,148 @@
+{
+  "name": "Расписание → Google Таблица (sheet_sync)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedule-sheet-sync",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -260,
+        0
+      ],
+      "webhookId": "schedule-sheet-sync"
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "ВСТАВЬТЕ_ССЫЛКУ_НА_ТАБЛИЦУ"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Расписание",
+          "cachedResultName": "Расписание"
+        },
+        "clear": "wholeSheet",
+        "keepFirstRow": true
+      },
+      "id": "22222222-2222-2222-2222-222222222222",
+      "name": "Очистить лист",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -40,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Берём снимок расписания напрямую из вебхука (он переживает шаг \"Очистить лист\").\n// body.schedules приходит из ListSchedules::syncToSheet() в Laravel.\nconst body = $('Webhook').first().json.body ?? {};\nconst schedules = Array.isArray(body.schedules) ? body.schedules : [];\n\nreturn schedules.map((s, i) => ({\n  json: {\n    '№': i + 1,\n    'Дата': s.date ?? '',\n    'День недели': s.weekday ?? '',\n    'Время': s.time ?? '',\n    'Занятие': s.title ?? '',\n    'Группа': s.group ?? '',\n    'Курс': s.course ?? '',\n    'Ссылка': s.link ?? '',\n  },\n}));"
+      },
+      "id": "33333333-3333-3333-3333-333333333333",
+      "name": "Собрать строки",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "ВСТАВЬТЕ_ССЫЛКУ_НА_ТАБЛИЦУ"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Расписание",
+          "cachedResultName": "Расписание"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "44444444-4444-4444-4444-444444444444",
+      "name": "Записать строки",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Очистить лист",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Очистить лист": {
+      "main": [
+        [
+          {
+            "node": "Собрать строки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать строки": {
+      "main": [
+        [
+          {
+            "node": "Записать строки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

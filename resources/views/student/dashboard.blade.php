@@ -396,13 +396,54 @@
                         </p>
                     @endif
 
-                    @if($debt->promise_active)
+                    @if($debt->has_arrangement && $debt->is_installment)
+                        {{-- Рассрочка: полный график платежей с отметками статуса --}}
+                        <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
+                            <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                <span><i class="fas fa-list-ol mr-1"></i>Рассрочка</span>
+                                @if($debt->overdue_count > 0)
+                                    <span class="text-red-600 normal-case">{{ $debt->overdue_count }} просроч.</span>
+                                @endif
+                            </div>
+                            <div class="space-y-1">
+                                @foreach($debt->promises as $p)
+                                    @php $paid = $p->isPaid(); $late = $p->isOverdueOrExpired(); @endphp
+                                    <div class="flex items-center justify-between text-[11px] leading-snug">
+                                        <span class="flex items-center gap-1.5">
+                                            @if($paid)
+                                                <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
+                                            @elseif($late)
+                                                <i class="fas fa-exclamation-circle text-red-500 text-[10px]"></i>
+                                            @else
+                                                <i class="far fa-circle text-gray-400 text-[10px]"></i>
+                                            @endif
+                                            <span class="{{ $paid ? 'text-gray-400 line-through' : ($late ? 'text-red-700 font-semibold' : 'text-gray-700') }}">
+                                                {{ $p->promised_at?->format('d.m.Y') }}
+                                            </span>
+                                        </span>
+                                        @if($p->amount)
+                                            <span class="{{ $paid ? 'text-gray-400 line-through' : ($late ? 'text-red-700 font-bold' : 'text-gray-800 font-semibold') }}">
+                                                {{ number_format((float) $p->amount, 0, '.', ' ') }} ₽
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($debt->plan_remaining)
+                                <div class="mt-1.5 pt-1.5 border-t border-gray-200/70 flex items-center justify-between text-[11px]">
+                                    <span class="text-gray-500">Осталось внести</span>
+                                    <span class="font-extrabold text-gray-900">{{ number_format($debt->plan_remaining, 0, '.', ' ') }} ₽</span>
+                                </div>
+                            @endif
+                        </div>
+                    @elseif($debt->has_arrangement)
+                        {{-- Одиночное обещание оплаты --}}
                         <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
                             <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
-                                <i class="fas fa-handshake mr-1"></i>Договорённость
+                                <i class="fas {{ $debt->promise_overdue ? 'fa-clock' : 'fa-handshake' }} mr-1"></i>{{ $debt->promise_overdue ? 'Срок оплаты прошёл' : 'Договорённость' }}
                             </div>
                             <div class="text-xs font-semibold text-gray-800 leading-snug">
-                                Оплата до {{ $debt->promise->promised_at->format('d.m.Y') }}
+                                Оплата до {{ $debt->promise->promised_at?->format('d.m.Y') }}
                                 @if($debt->promise->amount)
                                     · {{ number_format((float) $debt->promise->amount, 0, '.', ' ') }} ₽
                                 @endif
@@ -412,9 +453,10 @@
                             @endif
                         </div>
                     @else
+                        {{-- Долг без договорённости (не продлил) --}}
                         <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
                             <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
-                                {{ $debt->promise_overdue ? 'Срок договорённости прошёл · ' : 'Не оплачено · ' }}{{ count($debt->debt_block_numbers) }} бл.
+                                Не оплачено · {{ count($debt->debt_block_numbers) }} бл.
                             </div>
                             <div class="text-xs font-semibold text-gray-800 leading-snug">
                                 {{ $debt->debt_label }}
