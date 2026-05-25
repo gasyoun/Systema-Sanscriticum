@@ -48,6 +48,18 @@ class PaymentPromise extends Model
         'revocation_notified_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        // Уведомляем кураторов о новом одиночном обещании. Строки рассрочки
+        // (installment_group_id != null) шлёт InstallmentPlanCreator одним
+        // общим сообщением — здесь их пропускаем, чтобы не плодить N штук.
+        static::created(function (self $promise): void {
+            if ($promise->installment_group_id === null) {
+                app(\App\Services\CuratorNotifier::class)->promiseCreated($promise);
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -94,6 +106,31 @@ class PaymentPromise extends Model
         return $this->status === self::STATUS_ACTIVE
             && $this->promised_at !== null
             && $this->promised_at->lt(now()->startOfDay());
+    }
+
+    /**
+     * Непогашенная договорённость: ещё ждём денег. Это активные обещания и
+     * те, что демон `promises:expire` уже перевёл в expired (срок прошёл, но
+     * долг никуда не делся).
+     */
+    public function isUnmet(): bool
+    {
+        return in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_EXPIRED], true);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === self::STATUS_FULFILLED;
+    }
+
+    /**
+     * Просрочено для целей отображения: либо уже помечено expired демоном,
+     * либо ещё active, но обещанная дата прошла (окно до ближайшего прогона
+     * `promises:expire`).
+     */
+    public function isOverdueOrExpired(): bool
+    {
+        return $this->status === self::STATUS_EXPIRED || $this->isOverdue();
     }
 
     public function isPartOfInstallment(): bool
