@@ -52,6 +52,8 @@ class InstallmentPlanCreator
             return $out;
         });
 
+        app(CuratorNotifier::class)->installmentCreated($user, $course, $created, $note);
+
         return ['group_id' => $groupId, 'promises' => $created];
     }
 
@@ -63,13 +65,23 @@ class InstallmentPlanCreator
      */
     public function cancelGroup(string $groupId): int
     {
-        return PaymentPromise::query()
+        // Представитель плана для контекста уведомления (студент/курс) —
+        // берём до bulk-update, т.к. сам update событий модели не вызывает.
+        $sample = PaymentPromise::query()->inGroup($groupId)->first();
+
+        $count = PaymentPromise::query()
             ->inGroup($groupId)
             ->where('status', PaymentPromise::STATUS_ACTIVE)
             ->update([
                 'status' => PaymentPromise::STATUS_CANCELLED,
                 'cancelled_at' => now(),
             ]);
+
+        if ($count > 0 && $sample !== null) {
+            app(CuratorNotifier::class)->installmentCancelled($sample, $count);
+        }
+
+        return $count;
     }
 
     /**

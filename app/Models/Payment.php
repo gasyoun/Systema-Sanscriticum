@@ -145,6 +145,12 @@ class Payment extends Model
             }
         });
 
+        // Уведомление кураторам — только по реальным (не conditional) оплатам.
+        // Conditional-доступ под обещание уведомляется в ConditionalAccessGranter.
+        if (! $this->is_conditional) {
+            app(\App\Services\CuratorNotifier::class)->paymentPaid($this);
+        }
+
         if (! $this->user_id) {
             return;
         }
@@ -188,6 +194,9 @@ class Payment extends Model
 
             $this->lead?->markConverted();
         });
+
+        // Уведомление кураторам о брони (депозите).
+        app(\App\Services\CuratorNotifier::class)->depositReceived($this);
 
         if (! $this->user_id) {
             return;
