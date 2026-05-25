@@ -43,12 +43,16 @@ return [
 
     'n8n' => [
         'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
+        'schedule_sheet_webhook' => env('N8N_SCHEDULE_SHEET_WEBHOOK'),
     ],
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
+        // Чат кураторов: общий group chat, куда добавлен основной бот.
+        // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
+        'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
     ],
 
     'vk' => [

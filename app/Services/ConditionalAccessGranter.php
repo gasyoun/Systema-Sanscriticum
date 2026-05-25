@@ -89,6 +89,7 @@ class ConditionalAccessGranter
         });
 
         $this->notifyOpened($promise, $mode, $blockNumbers);
+        app(CuratorNotifier::class)->conditionalAccessGranted($promise, $mode, $blockNumbers);
 
         return array_map(fn (Payment $p) => $p->id, $payments);
     }

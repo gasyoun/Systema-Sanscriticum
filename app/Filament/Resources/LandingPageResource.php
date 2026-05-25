@@ -246,6 +246,54 @@ class LandingPageResource extends Resource
                                                 TextInput::make('button_text')
                                                     ->label('Текст кнопки')
                                                     ->default('Оставить заявку'),
+
+                                                Repeater::make('badges')
+                                                    ->label('Плашки под кнопкой')
+                                                    ->schema([
+                                                        TextInput::make('text')->label('Текст плашки')->required(),
+                                                    ])
+                                                    ->grid(3)
+                                                    ->maxItems(4)
+                                                    ->default([
+                                                        ['text' => 'Старт потока скоро'],
+                                                        ['text' => 'Места ограничены'],
+                                                        ['text' => 'Онлайн формат'],
+                                                    ]),
+                                            ]),
+
+                                        // --- ФОРМА ЗАЯВКИ (тексты полей) ---
+                                        Section::make('Форма заявки')
+                                            ->collapsed()
+                                            ->schema([
+                                                TextInput::make('form_title')
+                                                    ->label('Заголовок над формой')
+                                                    ->default('Записаться на курс'),
+
+                                                TextInput::make('submit_text')
+                                                    ->label('Текст кнопки отправки')
+                                                    ->default('Записаться')
+                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.'),
+
+                                                Fieldset::make('Подписи и плейсхолдеры полей')
+                                                    ->schema([
+                                                        TextInput::make('label_name')->label('Подпись «Имя»')->default('Ваше имя'),
+                                                        TextInput::make('ph_name')->label('Плейсхолдер «Имя»')->default('Имя и фамилия'),
+
+                                                        TextInput::make('label_contact')->label('Подпись «Телефон»')->default('Телефон'),
+                                                        TextInput::make('ph_contact')->label('Плейсхолдер «Телефон»')->default('+7 999 000-00-00'),
+
+                                                        TextInput::make('label_email')->label('Подпись «Email»')->default('Email'),
+                                                        TextInput::make('ph_email')->label('Плейсхолдер «Email»')->default('mail@example.com'),
+
+                                                        TextInput::make('label_social')->label('Подпись «Соцсеть»')->default('Telegram / VK / Instagram'),
+                                                        TextInput::make('ph_social')->label('Плейсхолдер «Соцсеть»')->default('@username или ссылка'),
+                                                    ])->columns(2),
+
+                                                Textarea::make('social_gift_note')
+                                                    ->label('Подарок за соцсеть (над полем «Соцсеть»)')
+                                                    ->rows(2)
+                                                    ->default('Заполните это поле — и мы пришлём вам подарок в указанный мессенджер 🎁')
+                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.'),
                                             ]),
 
                                         // --- НАСТРОЙКИ ДИЗАЙНА ---

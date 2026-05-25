@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Services\ConditionalAccessGranter;
+use App\Services\CuratorNotifier;
 use App\Services\DebtorsReport;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
@@ -314,6 +315,7 @@ class PaymentPromisesRelationManager extends RelationManager
                             'status' => PaymentPromise::STATUS_CANCELLED,
                             'cancelled_at' => now(),
                         ]);
+                        app(CuratorNotifier::class)->promiseCancelled($r);
                         Notification::make()->title('Договорённость отменена')->warning()->send();
                     }),
                 Tables\Actions\Action::make('grant_access')

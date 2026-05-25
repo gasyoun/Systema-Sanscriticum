@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use App\Services\Schedule\ScheduleGenerator;
+use App\Support\RoleGate;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
@@ -43,6 +44,7 @@ class ListSchedules extends ListRecords
                 ->label('Сгенерировать поток')
                 ->icon('heroicon-o-arrow-path-rounded-square')
                 ->color('success')
+                ->visible(fn (): bool => RoleGate::adminOnly())
                 ->modalHeading('Генератор расписания')
                 ->modalDescription('Создаёт серию занятий по выбранным дням недели с учётом пропусков и переносов.')
                 ->modalWidth('5xl')
@@ -202,10 +204,97 @@ class ListSchedules extends ListRecords
                 }),
 
             // ==========================================
+            // ВЫГРУЗКА В GOOGLE ТАБЛИЦУ (через n8n, только админ)
+            // ==========================================
+            Actions\Action::make('sync_to_sheet')
+                ->label('Выгрузить в Google Таблицу')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn (): bool => RoleGate::adminOnly())
+                ->requiresConfirmation()
+                ->modalHeading('Выгрузить расписание в Google Таблицу')
+                ->modalDescription('Лист будет перезаписан текущим расписанием из БД. Данные идут только в одну сторону: БД → таблица.')
+                ->modalSubmitActionLabel('Выгрузить')
+                ->action(function (): void {
+                    $this->syncToSheet();
+                }),
+
+            // ==========================================
             // СУЩЕСТВУЮЩИЙ: МАССОВЫЙ ПЕРЕНОС
             // ==========================================
             // (оставлено как было — блок shift_schedule не трогаем)
         ];
+    }
+
+    /**
+     * Полная выгрузка текущего расписания в n8n-вебхук (тот пишет в Google-лист).
+     * Строго одностороннее: БД → таблица. Обратно ничего не читаем.
+     */
+    private function syncToSheet(): void
+    {
+        $url = config('services.n8n.schedule_sheet_webhook');
+
+        if (empty($url)) {
+            Notification::make()
+                ->title('Webhook не настроен')
+                ->body('Укажите N8N_SCHEDULE_SHEET_WEBHOOK в окружении.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $rows = Schedule::query()
+            ->with(['group', 'course'])
+            ->orderBy('start')
+            ->get()
+            ->map(fn (Schedule $s): array => [
+                'id' => $s->id,
+                'date' => $s->start?->format('d.m.Y'),
+                'weekday' => $s->start?->translatedFormat('l'),
+                'time' => $s->end
+                    ? $s->start?->format('H:i').' – '.$s->end->format('H:i')
+                    : $s->start?->format('H:i'),
+                'title' => $s->title,
+                'group' => $s->group?->name ?? 'Все',
+                'course' => $s->course?->title ?? '',
+                'link' => $s->link,
+            ])
+            ->all();
+
+        try {
+            $response = Http::timeout(10)->post($url, [
+                'action' => 'sheet_sync',
+                'generated_at' => now()->format('d.m.Y H:i'),
+                'schedules' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Schedule sheet sync failed: '.$e->getMessage());
+
+            Notification::make()
+                ->title('Ошибка выгрузки')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if (! $response->successful()) {
+            Notification::make()
+                ->title('Ошибка выгрузки')
+                ->body('n8n вернул статус '.$response->status())
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Готово')
+            ->body('Выгружено событий: '.count($rows))
+            ->success()
+            ->send();
     }
 
     /**
