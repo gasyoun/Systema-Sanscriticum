@@ -52,37 +52,32 @@
                 {{-- Кнопка --}}
                 <div class="transform transition-all duration-700 delay-500 translate-y-8 opacity-0"
                      :class="loaded ? '!translate-y-0 !opacity-100' : ''">
-                    <a href="#order-form-anchor" 
-                       class="group relative inline-flex items-center justify-center bg-[#E3122C] text-white font-bold text-lg uppercase tracking-wider py-5 px-16 rounded-2xl shadow-xl shadow-red-500/30 overflow-hidden transition-all duration-300 hover:shadow-red-500/50 hover:-translate-y-1">
+                    <button type="button" @click.prevent="$dispatch('open-order-form')"
+                       class="group relative inline-flex items-center justify-center text-white font-bold text-lg uppercase tracking-wider py-5 px-16 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                       style="background: linear-gradient(135deg, #E85C24 0%, #f0733b 100%); box-shadow: 0 12px 35px rgba(232,92,36,.35), 0 4px 12px rgba(232,92,36,.2);">
                         <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                         <span class="relative z-10">{{ $data['button_text'] ?? 'Записаться сейчас' }}</span>
-                    </a>
+                    </button>
                 </div>
 
                 {{-- Гарантии --}}
                 <div class="transform transition-all duration-700 delay-700 translate-y-8 opacity-0"
                      :class="loaded ? '!translate-y-0 !opacity-100' : ''">
                     <div class="mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm font-bold text-gray-400 uppercase tracking-wide">
-                        
-                        <div class="flex items-center gap-2 group cursor-default transition-colors hover:text-gray-600">
-                            <div class="w-2 h-2 rounded-full bg-green-500 group-hover:scale-125 transition-transform duration-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-                            <span>Старт потока скоро</span>
-                        </div>
-
-                        <div class="hidden md:block w-1 h-1 rounded-full bg-gray-200"></div>
-
-                        <div class="flex items-center gap-2 group cursor-default transition-colors hover:text-gray-600">
-                            <div class="w-2 h-2 rounded-full bg-green-500 group-hover:scale-125 transition-transform duration-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-                            <span>Места ограничены</span>
-                        </div>
-
-                        <div class="hidden md:block w-1 h-1 rounded-full bg-gray-200"></div>
-
-                        <div class="flex items-center gap-2 group cursor-default transition-colors hover:text-gray-600">
-                            <div class="w-2 h-2 rounded-full bg-green-500 group-hover:scale-125 transition-transform duration-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-                            <span>Онлайн формат</span>
-                        </div>
-
+                        @php
+                            $badges = !empty($data['badges'])
+                                ? collect($data['badges'])->pluck('text')->filter()->values()->all()
+                                : ['Старт потока скоро', 'Места ограничены', 'Онлайн формат'];
+                        @endphp
+                        @foreach($badges as $badge)
+                            <div class="flex items-center gap-2 group cursor-default transition-colors hover:text-gray-600">
+                                <div class="w-2 h-2 rounded-full bg-green-500 group-hover:scale-125 transition-transform duration-300 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                                <span>{{ $badge }}</span>
+                            </div>
+                            @if(!$loop->last)
+                                <div class="hidden md:block w-1 h-1 rounded-full bg-gray-200"></div>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
             </div>
