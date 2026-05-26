@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Lead;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\Messaging\TelegramDeliveryChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -36,7 +37,7 @@ final class SendLeadMagnet implements ShouldQueue
 
     public function handle(DeliveryChannelManager $channels): void
     {
-        $lead = Lead::with('landingPage')->find($this->leadId);
+        $lead = Lead::with('landingPage.bot')->find($this->leadId);
 
         if (! $lead) {
             Log::warning("SendLeadMagnet: Lead #{$this->leadId} not found");
@@ -94,7 +95,17 @@ final class SendLeadMagnet implements ShouldQueue
         // Строим «человеческое» имя из lead_magnet_title (если есть) + расширения исходника.
         $displayName = $this->buildDisplayName($landing->lead_magnet_title, $filePath);
 
-        $channels->get($channelName)->sendDocument($userId, $filePath, $caption, $displayName);
+        // Для telegram, если у лендинга свой бот — отдаём файл его токеном
+        // (юзер разговаривает именно с ним), иначе глобальным из MarketingSetting.
+        $channel = $channels->get($channelName);
+        if ($channelName === 'telegram' && $channel instanceof TelegramDeliveryChannel) {
+            $bot = $landing->bot;
+            if ($bot && $bot->isUsable()) {
+                $channel = $channel->usingCredentials($bot->tg_bot_token, $bot->tg_bot_username);
+            }
+        }
+
+        $channel->sendDocument($userId, $filePath, $caption, $displayName);
 
         $lead->update(['magnet_delivered_at' => now()]);
 

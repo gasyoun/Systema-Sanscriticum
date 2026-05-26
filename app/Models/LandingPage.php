@@ -74,6 +74,12 @@ class LandingPage extends Model
         return $this->hasMany(Lead::class);
     }
 
+    // Отдельный Telegram-бот лид-магнита этого лендинга (архитектура «свой бот на лендинг»).
+    public function bot()
+    {
+        return $this->hasOne(LandingBot::class);
+    }
+
     // ==========================================
     // УМНЫЕ ПОЛЯ ДЛЯ ВИТРИНЫ (АКСЕССОРЫ)
     // ==========================================
