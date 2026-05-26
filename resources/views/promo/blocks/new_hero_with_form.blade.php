@@ -247,7 +247,7 @@
             left-0 right-0 bottom-0 h-[85vh] lg:h-auto"
      :class="window.innerWidth >= 1024 ? 'translate-y-0 lg:-translate-y-1/2' : (isMobileFormOpen ? 'translate-y-0' : 'translate-y-full')">
  
-    <div class="bg-white border border-gray-200 rounded-t-[2rem] lg:rounded-[2rem] p-6 lg:p-8 shadow-2xl h-full lg:h-auto flex flex-col"
+    <div class="bg-white border border-gray-200 rounded-t-[2rem] lg:rounded-[2rem] p-5 lg:p-6 shadow-2xl h-full lg:h-auto flex flex-col"
          x-data="{ agreedForm: false, agreedPromo: false }">
  
         <div class="lg:hidden flex justify-center pb-4 shrink-0 cursor-pointer" @click="isMobileFormOpen = false">
@@ -256,13 +256,13 @@
  
         <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
             <h3 class="text-xl lg:text-2xl font-extrabold text-gray-900 mb-1 text-center">{{ $data['form_title'] ?? 'Записаться на курс' }}</h3>
-            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-6 text-center">Оставьте заявку, и мы свяжемся с вами в Telegram.</p>
+            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-4 text-center">Оставьте заявку, и мы свяжемся с вами в Telegram.</p>
  
             @if(session('success'))
                 <div class="p-3 mb-5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-center font-bold text-sm">{{ session('success') }}</div>
             @endif
  
-            <form action="{{ route('leads.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('leads.store') }}" method="POST" class="space-y-3">
                 @csrf
                 @php
                     $landingId = '';
@@ -281,23 +281,23 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">{{ $data['label_name'] ?? 'Ваше имя' }}</label>
                     <input type="text" id="hero-name-input" name="name" required placeholder="{{ $data['ph_name'] ?? 'Имя и фамилия' }}"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">{{ $data['label_contact'] ?? 'Телефон' }}</label>
                     <input type="text" name="contact" required placeholder="{{ $data['ph_contact'] ?? '+7 999 000-00-00' }}"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">{{ $data['label_email'] ?? 'Email' }}</label>
                     <input type="email" name="email" required placeholder="{{ $data['ph_email'] ?? 'mail@example.com' }}"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
                 </div>
                 
                 <div>
     @if(!empty($data['social_gift_note']))
-        <div class="flex items-start gap-2 mb-2 px-3 py-2 rounded-xl bg-[#E85C24]/5 border border-[#E85C24]/15">
-            <span class="text-base leading-none mt-0.5">🎁</span>
+        <div class="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-[#E85C24]/5 border border-[#E85C24]/15">
+            <span class="text-base leading-none">🎁</span>
             <span class="text-[11px] leading-snug text-[#d04a15] font-semibold">{{ $data['social_gift_note'] }}</span>
         </div>
     @endif
@@ -308,11 +308,11 @@
     <input type="text" name="social" placeholder="{{ $data['ph_social'] ?? '@username или ссылка' }}"
            maxlength="255"
            value="{{ old('social') }}"
-           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
 </div>
  
-                <div class="space-y-2.5 pt-1">
-                    <label class="flex items-start gap-3 text-left p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
+                <div class="space-y-2 pt-0">
+                    <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
                             <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
                         </div>
@@ -320,7 +320,7 @@
                             Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
                         </div>
                     </label>
-                    <label class="flex items-start gap-3 text-left p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
+                    <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
                             <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
                         </div>
@@ -333,7 +333,7 @@
                 <button type="submit"
                         :disabled="!agreedForm"
                         :class="agreedForm ? 'bg-[#E85C24] hover:bg-[#d04a15] transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
-                        class="w-full font-extrabold py-3.5 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-2">
+                        class="w-full font-extrabold py-3 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-1">
                     {{ $data['submit_text'] ?? $data['button_text'] ?? 'ЗАПИСАТЬСЯ' }}
                 </button>
             </form>
