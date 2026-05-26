@@ -15,61 +15,60 @@
 
         @if(!empty($data['items']))
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12 lg:gap-x-8 lg:gap-y-16 max-w-7xl mx-auto mt-10">
-            
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-7 max-w-7xl mx-auto">
+
             @foreach($data['items'] as $item)
                 @php
                     $isWide = $item['is_wide'] ?? false;
                     $hasDescription = !empty($item['description']);
+
+                    // Иконка из медиатеки: Curator хранит ID — резолвим в URL.
+                    // Поддерживаем и legacy-путь (например promo/icon.svg).
+                    $rawIcon = $item['icon'] ?? null;
+                    $iconUrl = null;
+                    if ($rawIcon) {
+                        $iconUrl = is_numeric($rawIcon)
+                            ? \Awcodes\Curator\Models\Media::find($rawIcon)?->url
+                            : asset('storage/' . ltrim($rawIcon, '/'));
+                    }
                 @endphp
 
                 {{-- КАРТОЧКА --}}
-                <div class="relative bg-white rounded-[2.5rem] p-8 md:p-10 pt-14 md:pt-16 shadow-[0_5px_25px_rgba(0,0,0,0.03)] border border-gray-100 hover:shadow-[0_30px_60px_rgba(232,92,36,0.1)] hover:border-[#E85C24]/20 transition-all duration-500 group flex flex-col justify-between
+                <div class="relative bg-white rounded-3xl p-7 md:p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_22px_45px_rgba(232,92,36,0.12)] hover:border-[#E85C24]/20 hover:-translate-y-1 transition-all duration-500 group overflow-hidden flex flex-col
                             {{ $isWide ? 'lg:col-span-2' : 'lg:col-span-1' }}">
-                    
-                    {{-- ГИПЕР-ИКОНКА --}}
-                    <div class="absolute -top-10 left-8 md:-top-12 md:left-10 w-20 h-20 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-[2rem] bg-white shadow-[0_15px_35px_rgba(0,0,0,0.1)] border border-gray-50 flex items-center justify-center group-hover:-translate-y-3 group-hover:shadow-[0_20px_40px_rgba(232,92,36,0.25)] transition-all duration-500 z-10 overflow-hidden">
-                        
-                        <div class="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white pointer-events-none"></div>
 
-                        @if(!empty($item['icon']))
-                            <img src="{{ Storage::url($item['icon']) }}" alt="" class="relative z-10 w-12 h-12 md:w-14 md:h-14 object-contain group-hover:scale-110 transition-transform duration-500">
+                    {{-- НОМЕР (крупный, бледно-оранжевый) --}}
+                    <span class="absolute top-5 right-6 text-5xl md:text-6xl font-extrabold leading-none tabular-nums text-[#E85C24]/10 group-hover:text-[#E85C24]/25 transition-colors duration-500 select-none pointer-events-none">
+                        {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
+                    </span>
+
+                    {{-- ИКОНКА-ЧИП --}}
+                    <div class="relative z-10 w-14 h-14 md:w-16 md:h-16 mb-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/70 ring-1 ring-orange-100 flex items-center justify-center group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-500 overflow-hidden">
+                        @if($iconUrl)
+                            <img src="{{ $iconUrl }}" alt="" class="w-8 h-8 md:w-9 md:h-9 object-contain">
                         @else
-                            <div class="relative z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-orange-50 text-[#E85C24] flex items-center justify-center">
-                                <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            </div>
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         @endif
                     </div>
 
                     {{-- КОНТЕНТ --}}
-                    <div class="relative z-0">
+                    <div class="relative z-10">
                         @if(!empty($item['title']))
-                            <h3 class="text-lg md:text-xl font-bold text-[#101010] leading-tight group-hover:text-[#E85C24] transition-colors tracking-tight">
+                            <h3 class="text-lg md:text-xl font-bold text-[#101010] leading-snug tracking-tight group-hover:text-[#E85C24] transition-colors">
                                 {{ $item['title'] }}
                             </h3>
                         @endif
 
                         {{-- Описание выводится только если оно есть --}}
                         @if($hasDescription)
-                            <p class="mt-3 text-gray-500 text-sm md:text-base leading-relaxed opacity-90">
+                            <p class="mt-2.5 text-gray-500 text-sm md:text-base leading-relaxed">
                                 {{ $item['description'] }}
                             </p>
                         @endif
                     </div>
 
-                    {{-- ФУТЕР КАРТОЧКИ --}}
-                    <div class="mt-8 flex items-center justify-between border-t border-gray-50 pt-5">
-                        {{-- Надпись Skill выводится только если есть описание, иначе скрываем --}}
-                        @if($hasDescription)
-                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 group-hover:text-[#E85C24]/40 transition-colors">Skill</span>
-                        @else
-                            <span class="block"></span> {{-- Пустой блок для сохранения justify-between --}}
-                        @endif
-
-                        <div class="text-[#E85C24] opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </div>
-                    </div>
+                    {{-- Тонкая оранжевая линия-акцент снизу, появляется на hover --}}
+                    <div class="mt-6 h-0.5 w-10 rounded-full bg-[#E85C24]/20 group-hover:w-16 group-hover:bg-[#E85C24]/60 transition-all duration-500"></div>
 
                 </div>
             @endforeach
