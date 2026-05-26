@@ -871,7 +871,7 @@ class LandingPageResource extends Resource
                 // === 3.6 БОТ ЛИД-МАГНИТА (свой бот на лендинг → n8n) ===
                 Section::make('🤖 Бот лид-магнита (Telegram → n8n)')
                     ->description('Отдельный Telegram-бот этого лендинга. Laravel отдаёт магнит и трекает выдачу, остальные апдейты форвардит в n8n (анкета + прогрев). Заполните токен — бот сохранится.')
-                    ->relationship('bot', condition: fn (?array $state): bool => filled($state['tg_bot_token'] ?? null))
+                    ->relationship('bot', condition: fn (?array $state): bool => filled($state['tg_bot_token'] ?? null) || filled($state['vk_n8n_forward_url'] ?? null))
                     ->collapsible()
                     ->collapsed()
                     ->schema([
@@ -904,6 +904,18 @@ class LandingPageResource extends Resource
                             ->disabled()
                             ->dehydrated(false)
                             ->helperText('Часть URL вебхука: <APP_URL>/api/webhooks/telegram-magnet/<этот ключ>'),
+
+                        Fieldset::make('VK (одно сообщество на все лендинги — креды в «Маркетинг»)')
+                            ->schema([
+                                Toggle::make('vk_is_active')
+                                    ->label('Пересылать VK-сообщения этого лендинга в n8n')
+                                    ->default(false),
+                                TextInput::make('vk_n8n_forward_url')
+                                    ->label('VK: URL ноды Webhook в n8n')
+                                    ->url()
+                                    ->maxLength(500)
+                                    ->helperText('Лид VK привязывается к лендингу по ref deep-link (vk.me/<сообщество>?ref=<token>). Сюда форвардятся его сообщения для анкеты/прогрева. Креды самого VK-сообщества — в настройках «Маркетинг».'),
+                            ])->columns(1),
                     ]),
 
                 // === 4. LEGACY (СТАРЫЕ ПОЛЯ) ===

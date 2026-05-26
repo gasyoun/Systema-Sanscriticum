@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\LandingBot;
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,63 +27,79 @@ final class ProcessVkMagnetCallback implements ShouldQueue
 
     public function handle(): void
     {
-        if (($this->event['type'] ?? '') !== 'message_new') {
-            return;
-        }
+        $type = $this->event['type'] ?? '';
 
-        $msg = $this->event['object']['message'] ?? [];
-        $userId = $msg['from_id'] ?? null;
+        // Поддерживаем входящее сообщение и нажатие кнопки (для VK-анкеты в n8n).
+        [$userId, $token] = match ($type) {
+            'message_new' => $this->fromMessageNew(),
+            'message_event' => [$this->event['object']['user_id'] ?? null, null],
+            default => [null, null],
+        };
 
         if (! $userId) {
             return;
         }
 
-        // VK передаёт ?ref=TOKEN из deep-link'а как ОТДЕЛЬНОЕ поле message.ref
-        // (а не внутри JSON-payload, как ошибочно предполагал старый код).
-        // Документация: https://dev.vk.com/api/community-events/json-schema → message.ref/ref_source
-        // Поле появляется только в самом первом сообщении после перехода по реф-ссылке.
+        // 1) Выдача магнита по ref-токену (только первое сообщение после deep-link).
+        $refLead = null;
+        if ($token) {
+            $refLead = Lead::where('magnet_token', $token)->first();
+            if ($refLead) {
+                if (! $refLead->vk_user_id) {
+                    $refLead->update(['vk_user_id' => $userId]);
+                }
+                SendLeadMagnet::dispatch($refLead->id);
+            } else {
+                Log::warning('VK: unknown magnet_token', ['token' => $token]);
+            }
+        }
+
+        // 2) Форвард в n8n по лендингу лида (анкета/прогрев).
+        // Лендинг: с ref — из ref-лида; иначе — последний лид по vk_user_id.
+        // Безрефных без привязки к лендингу — игнорируем (не форвардим).
+        $lead = $refLead ?: Lead::where('vk_user_id', $userId)->latest('id')->first();
+
+        if (! $lead || ! $lead->landing_page_id) {
+            Log::info('VK callback: лид/лендинг не найден — форвард пропущен', ['vk_user_id' => $userId]);
+
+            return;
+        }
+
+        $bot = LandingBot::where('landing_page_id', $lead->landing_page_id)->first();
+
+        if ($bot && $bot->isVkForwardEnabled()) {
+            ForwardUpdateToN8n::dispatch($bot->vk_n8n_forward_url, $this->event);
+        }
+    }
+
+    /**
+     * Достаёт user_id и magnet-токен из события message_new.
+     *
+     * @return array{0: int|string|null, 1: string|null}
+     */
+    private function fromMessageNew(): array
+    {
+        $msg = $this->event['object']['message'] ?? [];
+        $userId = $msg['from_id'] ?? null;
+
+        // VK передаёт ?ref=TOKEN из deep-link'а как отдельное поле message.ref
+        // (появляется только в самом первом сообщении после перехода по реф-ссылке).
         $token = $msg['ref'] ?? null;
 
-        // На всякий случай — старая логика payload (если бот когда-нибудь начнёт
-        // отправлять InlineKeyboard с payload {"token": "..."}).
+        // Подстраховка: payload InlineKeyboard {"token": "..."} / {"ref": "..."}.
         if (! $token && ! empty($msg['payload'])) {
-            $decoded = json_decode($msg['payload'], true);
+            $decoded = json_decode((string) $msg['payload'], true);
             $token = $decoded['token'] ?? $decoded['ref'] ?? null;
         }
 
-        // Fallback — юзер мог ввести токен текстом. Токены строго 12 символов
-        // (см. LeadController::attachMagnet → Str::random(12)).
+        // Fallback — юзер мог ввести токен текстом (строго 12 символов, см. attachMagnet).
         if (! $token) {
-            $text = trim($msg['text'] ?? '');
+            $text = trim((string) ($msg['text'] ?? ''));
             if (preg_match('/^[a-zA-Z0-9]{12}$/', $text)) {
                 $token = $text;
             }
         }
 
-        if (! $token) {
-            Log::info('VK callback: no token in message', [
-                'user_id' => $userId,
-                'msg_keys' => array_keys($msg),
-                'text' => $msg['text'] ?? null,
-                'has_ref' => isset($msg['ref']),
-                'has_payload' => isset($msg['payload']),
-            ]);
-
-            return;
-        }
-
-        $lead = Lead::where('magnet_token', $token)->first();
-
-        if (! $lead) {
-            Log::warning('VK: unknown magnet_token', ['token' => $token]);
-
-            return;
-        }
-
-        if (! $lead->vk_user_id) {
-            $lead->update(['vk_user_id' => $userId]);
-        }
-
-        SendLeadMagnet::dispatch($lead->id);
+        return [$userId, $token];
     }
 }
