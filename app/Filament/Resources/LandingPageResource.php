@@ -92,6 +92,19 @@ class LandingPageResource extends Resource
                                         TextInput::make('button_text')
                                             ->label('Текст кнопки')
                                             ->default('Записаться'),
+
+                                        Repeater::make('badges')
+                                            ->label('Плашки под кнопкой')
+                                            ->schema([
+                                                TextInput::make('text')->label('Текст плашки')->required(),
+                                            ])
+                                            ->grid(3)
+                                            ->maxItems(4)
+                                            ->default([
+                                                ['text' => 'Старт потока скоро'],
+                                                ['text' => 'Места ограничены'],
+                                                ['text' => 'Онлайн формат'],
+                                            ]),
                                     ]),
 
                                 // 2. VIDEO
