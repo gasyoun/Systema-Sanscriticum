@@ -67,21 +67,25 @@ final class LeadFlashBuilder
     private function applyMagnetDeepLink(array &$flash, Lead $lead, ?LandingPage $landing): void
     {
         $marketing = MarketingSetting::cached();
-        if (! $marketing) {
-            return;
-        }
 
         // Кнопки показываем только для тех каналов, у которых заполнен и
         // username, и token — иначе юзер уйдёт в бот, который не сможет
         // ответить (token нужен для sendDocument).
-        $configured = $marketing->configuredChannels();
-        if (empty($configured)) {
-            return;
+        $deepLinks = [];
+        foreach ($marketing?->configuredChannels() ?? [] as $channelName) {
+            $deepLinks[$channelName] = $this->channels->get($channelName)->buildDeepLink($lead->magnet_token);
         }
 
-        $deepLinks = [];
-        foreach ($configured as $channelName) {
-            $deepLinks[$channelName] = $this->channels->get($channelName)->buildDeepLink($lead->magnet_token);
+        // «Свой бот на лендинг»: telegram deep-link строим по username бота
+        // лендинга (перекрывая глобальный). Работает и когда глобальный telegram
+        // вообще не настроен — главное, что у лендинга есть свой бот.
+        $bot = $landing?->bot;
+        if ($bot && $bot->isUsable()) {
+            $deepLinks['telegram'] = $bot->deepLink($lead->magnet_token);
+        }
+
+        if (empty($deepLinks)) {
+            return;
         }
 
         $flash['magnet_deep_links'] = $deepLinks;
@@ -90,7 +94,7 @@ final class LeadFlashBuilder
 
         // В redirect-режиме сохраняем авто-редирект в канал лида.
         // В page-режиме redirect_url не ставим — юзер выбирает кнопкой.
-        $deliveryMode = $marketing->magnet_delivery_mode ?? 'redirect';
+        $deliveryMode = $marketing?->magnet_delivery_mode ?? 'redirect';
         if ($deliveryMode === 'redirect' && isset($deepLinks[$lead->magnet_channel])) {
             $flash['redirect_url'] = $deepLinks[$lead->magnet_channel];
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\LandingBot;
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,12 +21,22 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
 
     public function __construct(
         public readonly array $update,
+        public readonly ?int $landingBotId = null,
     ) {
         $this->onQueue('webhooks');
     }
 
     public function handle(): void
     {
+        // Per-bot режим: форвардим ЛЮБОЙ апдейт в n8n (анкета/прогрев), включая
+        // callback_query (у него нет ['message'], поэтому делаем это до раннего return).
+        if ($this->landingBotId !== null) {
+            $bot = LandingBot::find($this->landingBotId);
+            if ($bot && ! empty($bot->n8n_forward_url)) {
+                ForwardUpdateToN8n::dispatch($bot->n8n_forward_url, $this->update);
+            }
+        }
+
         $message = $this->update['message'] ?? null;
         if (! $message) {
             return;
