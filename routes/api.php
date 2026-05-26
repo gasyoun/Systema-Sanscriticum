@@ -35,6 +35,12 @@ Route::post('/webhooks/telegram-magnet', [\App\Http\Controllers\Webhooks\Telegra
     ->middleware('verify.tg.magnet')
     ->name('webhook.magnet.telegram');
 
+// Per-bot: свой бот на каждый лендинг. {webhookKey} резолвит LandingBot,
+// secret сверяется в middleware. Апдейты форвардятся в n8n (анкета/прогрев).
+Route::post('/webhooks/telegram-magnet/{webhookKey}', [\App\Http\Controllers\Webhooks\TelegramMagnetWebhookController::class, 'handlePerBot'])
+    ->middleware('verify.tg.magnet')
+    ->name('webhook.magnet.telegram.bot');
+
 Route::post('/webhooks/vk-magnet', [\App\Http\Controllers\Webhooks\VkMagnetCallbackController::class, 'handle'])
     ->middleware('verify.vk.magnet')
     ->name('webhook.magnet.vk');

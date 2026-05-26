@@ -868,6 +868,44 @@ class LandingPageResource extends Resource
                             ->visible(fn ($get) => (bool) $get('lead_magnet_enabled')),
                     ]),
 
+                // === 3.6 БОТ ЛИД-МАГНИТА (свой бот на лендинг → n8n) ===
+                Section::make('🤖 Бот лид-магнита (Telegram → n8n)')
+                    ->description('Отдельный Telegram-бот этого лендинга. Laravel отдаёт магнит и трекает выдачу, остальные апдейты форвардит в n8n (анкета + прогрев). Заполните токен — бот сохранится.')
+                    ->relationship('bot', condition: fn (?array $state): bool => filled($state['tg_bot_token'] ?? null))
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Toggle::make('is_active')
+                            ->label('Бот активен')
+                            ->default(true),
+                        TextInput::make('tg_bot_username')
+                            ->label('Username бота (без @)')
+                            ->placeholder('my_landing_bot')
+                            ->maxLength(100),
+                        TextInput::make('tg_bot_token')
+                            ->label('Bot Token')
+                            ->password()
+                            ->revealable()
+                            ->placeholder('Получить у @BotFather')
+                            ->maxLength(255),
+                        TextInput::make('tg_webhook_secret')
+                            ->label('Webhook Secret (случайная строка 32+ символов)')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->helperText('Та же строка ставится в Telegram setWebhook. После заполнения запусти на проде: php artisan telegram:set-magnet-webhook <slug>'),
+                        TextInput::make('n8n_forward_url')
+                            ->label('URL ноды Webhook в n8n')
+                            ->url()
+                            ->maxLength(500)
+                            ->helperText('Сюда форвардятся апдейты для анкеты/прогрева. В n8n замени Telegram Trigger на ноду Webhook и вставь её URL.'),
+                        TextInput::make('webhook_key')
+                            ->label('Webhook key (генерируется автоматически)')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Часть URL вебхука: <APP_URL>/api/webhooks/telegram-magnet/<этот ключ>'),
+                    ]),
+
                 // === 4. LEGACY (СТАРЫЕ ПОЛЯ) ===
                 Section::make('Старые настройки (Legacy)')
                     ->collapsed()

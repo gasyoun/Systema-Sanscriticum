@@ -28,6 +28,25 @@ final class TelegramDeliveryChannel implements DeliveryChannel
         return 'telegram';
     }
 
+    /**
+     * Возвращает клон канала с креденшелами конкретного бота лендинга.
+     * Нужно для архитектуры «свой бот на лендинг»: магнит отдаётся тем ботом,
+     * с которым юзер реально разговаривает, а не глобальным из MarketingSetting.
+     */
+    public function usingCredentials(?string $token, ?string $username): self
+    {
+        $clone = clone $this;
+
+        if (! empty($token)) {
+            $clone->token = $token;
+        }
+        if ($username !== null) {
+            $clone->botUsername = $username;
+        }
+
+        return $clone;
+    }
+
     public function buildDeepLink(string $token): string
     {
         return "https://t.me/{$this->botUsername}?start={$token}";
@@ -62,13 +81,17 @@ final class TelegramDeliveryChannel implements DeliveryChannel
         }
     }
 
-    public function setWebhook(string $url, string $secret): void
+    /**
+     * @param  list<string>  $allowedUpdates  Боту с n8n-анкетой нужны и callback_query
+     *                                        (inline-кнопки), иначе они молча не работают.
+     */
+    public function setWebhook(string $url, string $secret, array $allowedUpdates = ['message']): void
     {
         $response = Http::post("https://api.telegram.org/bot{$this->token}/setWebhook", [
             'url' => $url,
             'secret_token' => $secret,
             'max_connections' => 40,
-            'allowed_updates' => ['message'],
+            'allowed_updates' => $allowedUpdates,
         ]);
 
         if (! ($response->json('ok') ?? false)) {
