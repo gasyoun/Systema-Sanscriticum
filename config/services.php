@@ -53,6 +53,9 @@ return [
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
         'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
+        // Чат маркетологов: group chat для уведомлений о новых лидах.
+        // Пусто → уведомления о лидах отключены (см. App\Services\LeadNotifier).
+        'marketers_chat_id' => env('TELEGRAM_MARKETERS_CHAT_ID'),
     ],
 
     'vk' => [

@@ -82,6 +82,9 @@ class LeadController extends Controller
             $this->attachMagnet($lead, $landing, $validated['social'] ?? null);
         }
 
+        // Уведомление маркетологам в Telegram (no-op, если чат не настроен).
+        app(\App\Services\LeadNotifier::class)->newLead($lead);
+
         return redirect()->route('thank.you')
             ->with($flashBuilder->build($lead, $landing, $validated));
     }
