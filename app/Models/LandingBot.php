@@ -27,10 +27,13 @@ class LandingBot extends Model
         'tg_bot_token',
         'tg_webhook_secret',
         'n8n_forward_url',
+        'vk_is_active',
+        'vk_n8n_forward_url',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'vk_is_active' => 'boolean',
         'tg_bot_token' => 'encrypted',
         'tg_webhook_secret' => 'encrypted',
     ];
@@ -68,5 +71,11 @@ class LandingBot extends Model
     public function deepLink(string $token): string
     {
         return "https://t.me/{$this->tg_bot_username}?start={$token}";
+    }
+
+    /** Настроен ли форвард VK-событий этого лендинга в n8n. */
+    public function isVkForwardEnabled(): bool
+    {
+        return $this->vk_is_active && ! empty($this->vk_n8n_forward_url);
     }
 }
