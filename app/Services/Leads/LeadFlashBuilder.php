@@ -88,6 +88,15 @@ final class LeadFlashBuilder
             return;
         }
 
+        // Показываем ТОЛЬКО канал, который студент указал в форме (magnet_channel) — чтобы он
+        // не ушёл в чужую кнопку и не потерял токен. VK отдаёт ref лишь в первом сообщении
+        // нового диалога (см. ProcessVkMagnetCallback), поэтому telegram-лид, нажавший VK,
+        // остаётся без выдачи. Если его канал недоставляем (например, указал VK, а VK-бот
+        // не настроен) — деградируем на все каналы, чтобы дать хоть один рабочий путь.
+        if (isset($deepLinks[$lead->magnet_channel])) {
+            $deepLinks = [$lead->magnet_channel => $deepLinks[$lead->magnet_channel]];
+        }
+
         $flash['magnet_deep_links'] = $deepLinks;
         $flash['magnet_title'] = $landing?->lead_magnet_title;
         $flash['magnet_channel'] = $lead->magnet_channel;

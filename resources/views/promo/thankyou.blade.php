@@ -153,8 +153,13 @@
         <p class="text-xl text-gray-300 mb-10 leading-relaxed">
             Спасибо! Мы уже получили ваши данные.<br>
             @if($hasMagnet && $magnetTitle)
-                Выберите удобный мессенджер, куда прислать
-                <strong class="text-white">«{{ $magnetTitle }}»</strong>:
+                @if(count($deepLinks) === 1)
+                    Нажмите кнопку ниже, чтобы получить
+                    <strong class="text-white">«{{ $magnetTitle }}»</strong>:
+                @else
+                    Выберите удобный мессенджер, куда прислать
+                    <strong class="text-white">«{{ $magnetTitle }}»</strong>:
+                @endif
             @elseif($hasAutoRedirect)
                 Сейчас вы будете перенаправлены в наш Telegram-канал…
             @else
@@ -163,7 +168,8 @@
         </p>
 
         @if($hasMagnet)
-            {{-- Кнопки для всех настроенных каналов. Юзер выбирает сам. --}}
+            {{-- Обычно одна кнопка — канал, который студент указал в форме (см. LeadFlashBuilder).
+                 Несколько появляются только в fallback, когда его канал не настроен. --}}
             <div class="flex flex-wrap justify-center gap-3 mb-2">
                 @foreach($deepLinks as $channel => $url)
                     @php $meta = $channelMeta[$channel] ?? null; @endphp

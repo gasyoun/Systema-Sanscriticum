@@ -60,9 +60,9 @@ class LeadFlashBuilderTest extends TestCase
     }
 
     /** @test */
-    public function magnet_in_redirect_mode_sets_redirect_to_lead_channel_and_lists_all_buttons(): void
+    public function magnet_in_redirect_mode_shows_only_lead_channel_button(): void
     {
-        // Все три канала полностью настроены — должны вылезти все три кнопки.
+        // Все три канала настроены, но студент указал Telegram — показываем только его.
         MarketingSetting::create([
             'magnet_delivery_mode' => 'redirect',
             'tg_bot_username' => 'magnetbot',
@@ -88,15 +88,12 @@ class LeadFlashBuilderTest extends TestCase
 
         $flash = $this->builder()->build($lead, $landing, []);
 
-        // redirect_url теперь указывает на канал лида (Telegram).
+        // redirect_url указывает на канал лида (Telegram).
         $this->assertSame('https://t.me/magnetbot?start=TOK123', $flash['redirect_url']);
 
-        // Все три кнопки доступны — юзер может выбрать другой канал, если редирект не сработал.
-        $this->assertArrayHasKey('magnet_deep_links', $flash);
-        $this->assertCount(3, $flash['magnet_deep_links']);
+        // Только кнопка указанного канала — чужие (VK/Max) скрыты, чтобы юзер не потерял токен.
+        $this->assertSame(['telegram'], array_keys($flash['magnet_deep_links']));
         $this->assertSame('https://t.me/magnetbot?start=TOK123', $flash['magnet_deep_links']['telegram']);
-        $this->assertStringContainsString('TOK123', $flash['magnet_deep_links']['vk']);
-        $this->assertStringContainsString('TOK123', $flash['magnet_deep_links']['max']);
 
         $this->assertSame('PDF', $flash['magnet_title']);
         $this->assertSame('telegram', $flash['magnet_channel']);
@@ -131,8 +128,9 @@ class LeadFlashBuilderTest extends TestCase
     }
 
     /** @test */
-    public function all_three_channels_appear_when_fully_configured(): void
+    public function only_lead_channel_shown_even_when_all_configured(): void
     {
+        // Все три настроены, студент указал VK — на странице только VK-кнопка.
         MarketingSetting::create([
             'magnet_delivery_mode' => 'page',
             'tg_bot_username' => 'tgbot', 'tg_bot_token' => 't',
@@ -147,12 +145,39 @@ class LeadFlashBuilderTest extends TestCase
         $lead = Lead::create([
             'landing_page_id' => $landing->id,
             'name' => 'X', 'contact' => '+1', 'email' => 'x@x.com',
-            'magnet_token' => 'TOK', 'magnet_channel' => 'telegram',
+            'magnet_token' => 'TOK', 'magnet_channel' => 'vk',
         ]);
 
         $flash = $this->builder()->build($lead, $landing, []);
 
-        $this->assertSame(['telegram', 'vk', 'max'], array_keys($flash['magnet_deep_links']));
+        $this->assertSame(['vk'], array_keys($flash['magnet_deep_links']));
+    }
+
+    /** @test */
+    public function falls_back_to_all_channels_when_lead_channel_not_deliverable(): void
+    {
+        // Студент указал Max, но Max-бот не настроен (только TG+VK). Чтобы не оставить
+        // человека без единой кнопки — деградируем на все доставляемые каналы.
+        MarketingSetting::create([
+            'magnet_delivery_mode' => 'page',
+            'tg_bot_username' => 'tgbot', 'tg_bot_token' => 't',
+            'vk_group_screen_name' => 'vkgroup', 'vk_access_token' => 'v',
+            // max_* не заданы
+        ]);
+
+        $landing = LandingPage::create([
+            'title' => 'L', 'slug' => 'l-'.uniqid(),
+            'lead_magnet_enabled' => true, 'lead_magnet_file_path' => 'm/x.pdf',
+        ]);
+        $lead = Lead::create([
+            'landing_page_id' => $landing->id,
+            'name' => 'X', 'contact' => '+1', 'email' => 'x@x.com',
+            'magnet_token' => 'TOK', 'magnet_channel' => 'max',
+        ]);
+
+        $flash = $this->builder()->build($lead, $landing, []);
+
+        $this->assertSame(['telegram', 'vk'], array_keys($flash['magnet_deep_links']));
     }
 
     /** @test */
