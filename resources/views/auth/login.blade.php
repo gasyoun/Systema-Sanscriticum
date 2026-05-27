@@ -68,7 +68,7 @@
         
         <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center">
             <p class="text-xs text-gray-500">
-                Забыли пароль? <a href="https://t.me/pe4kin" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">Напишите куратору</a>
+                Забыли пароль? <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">Напишите куратору</a>
             </p>
         </div>
     </div>
