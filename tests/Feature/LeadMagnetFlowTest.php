@@ -139,11 +139,13 @@ class LeadMagnetFlowTest extends TestCase
 
         $lead = Lead::latest('id')->first();
 
+        // Студент указал VK → показываем только VK-кнопку, Telegram скрыт
+        // (иначе юзер ушёл бы в TG и потерял бы VK-ref). См. LeadFlashBuilder.
         $resp->assertRedirect()
             ->assertSessionHas('magnet_deep_links', function ($links) use ($lead) {
                 return is_array($links)
-                    && ($links['vk'] ?? null) === "https://vk.me/test_group?ref={$lead->magnet_token}"
-                    && ($links['telegram'] ?? null) === "https://t.me/test_magnet_bot?start={$lead->magnet_token}";
+                    && array_keys($links) === ['vk']
+                    && $links['vk'] === "https://vk.me/test_group?ref={$lead->magnet_token}";
             })
             ->assertSessionMissing('redirect_url'); // в page-режиме redirect_url не ставится
     }
