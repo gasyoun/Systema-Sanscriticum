@@ -35,6 +35,10 @@ return [
         'url' => env('TOCHKA_API_URL', 'https://enter.tochka.com/uapi/acquiring/v1.0'),
         'token' => env('TOCHKA_API_TOKEN'),
         'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
+        // Фискализация (Create Payment Operation With Receipt). Реквизиты merchant-specific —
+        // подтвердить у бухгалтера/в кабинете Точки до боевой проверки.
+        'tax_system_code' => env('TOCHKA_TAX_SYSTEM_CODE'), // СНО: usn_income | usn_income_outcome | osn | patent | ...
+        'vat_type' => env('TOCHKA_VAT_TYPE', 'none'),       // ставка НДС позиции; в чеке «не облагается» → none
     ],
 
     'lesson_sync' => [
