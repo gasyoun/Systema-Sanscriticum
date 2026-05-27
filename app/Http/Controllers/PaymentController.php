@@ -6,18 +6,18 @@ use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    public function createPayment(Request $request, PranaService $prana)
+    public function createPayment(Request $request, PranaService $prana, TochkaPaymentService $tochka)
     {
         $rules = [
             'tariff_id' => 'required|exists:tariffs,id',
@@ -31,7 +31,7 @@ class PaymentController extends Controller
 
         $request->validate($rules);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana) {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana, $tochka) {
 
             // 2. ПОЛУЧАЕМ ИЛИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ
             if (auth()->check()) {
@@ -156,20 +156,16 @@ class PaymentController extends Controller
                     ->with('success', 'Доступ к курсу успешно открыт!');
             }
 
-            // 7. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ
+            // 7. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ (с фискализацией — чек уйдёт на email студента)
+            $purpose = 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
+
             try {
-                $response = Http::withToken(config('services.tochka.token'))
-                    ->withHeaders(['Accept' => 'application/json'])
-                    ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
-                        'Data' => [
-                            'customerCode' => config('services.tochka.customer_code'),
-                            'amount' => round((float) $finalPrice, 2),
-                            'purpose' => 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title,
-                            'paymentMode' => ['sbp', 'card'],
-                            'redirectUrl' => route('payment.success'),
-                            'failRedirectUrl' => route('payment.fail'),
-                        ],
-                    ]);
+                $response = $tochka->createPaymentWithReceipt(
+                    user: $user,
+                    amount: (float) $finalPrice,
+                    purpose: $purpose,
+                    itemName: ($tariff->course->title ?? 'Курс').' — '.$tariff->title,
+                );
             } catch (ConnectionException $e) {
                 // Сетевой сбой / TLS / DNS / timeout. Без catch Guzzle RequestException
                 // вылетит наружу из DB::transaction — пользователь увидит 500, а строка

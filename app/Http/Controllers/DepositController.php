@@ -10,18 +10,18 @@ use App\Models\Lead;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 final class DepositController extends Controller
 {
-    public function create(StoreDepositRequest $request, Course $course): RedirectResponse
+    public function create(StoreDepositRequest $request, Course $course, TochkaPaymentService $tochka): RedirectResponse
     {
         $settings = MarketingSetting::cached();
         $amount = (float) $course->deposit_amount;
@@ -67,20 +67,16 @@ final class DepositController extends Controller
         $purpose = 'Заказ №'.$payment->id.' | Бронь курса «'.$course->title.'» — предоплата';
 
         try {
-            $response = Http::withToken(config('services.tochka.token'))
-                ->withHeaders(['Accept' => 'application/json'])
-                ->connectTimeout(5)
-                ->timeout(15)
-                ->post('https://enter.tochka.com/uapi/acquiring/v1.0/payments', [
-                    'Data' => [
-                        'customerCode' => config('services.tochka.customer_code'),
-                        'amount' => round($amount, 2),
-                        'purpose' => $purpose,
-                        'paymentMode' => ['sbp', 'card'],
-                        'redirectUrl' => route('payment.success'),
-                        'failRedirectUrl' => route('payment.fail'),
-                    ],
-                ]);
+            // Бронь — это предоплата: paymentMethod=prepayment, paymentObject=payment (аванс/платёж).
+            // TODO(бухгалтерия): подтвердить признаки расчёта для предоплаты по 54-ФЗ.
+            $response = $tochka->createPaymentWithReceipt(
+                user: $user,
+                amount: $amount,
+                purpose: $purpose,
+                itemName: 'Бронь курса «'.$course->title.'»',
+                paymentMethod: 'prepayment',
+                paymentObject: 'payment',
+            );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
 
