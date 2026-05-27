@@ -48,7 +48,7 @@ final class ProcessVkMagnetCallback implements ShouldQueue
                 if (! $refLead->vk_user_id) {
                     $refLead->update(['vk_user_id' => $userId]);
                 }
-                SendLeadMagnet::dispatch($refLead->id);
+                SendLeadMagnet::dispatch($refLead->id, 'vk');
             } else {
                 Log::warning('VK: unknown magnet_token', ['token' => $token]);
             }
