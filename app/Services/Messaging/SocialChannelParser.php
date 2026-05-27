@@ -34,7 +34,9 @@ final class SocialChannelParser
         }
 
         // --- VK ---
-        if (preg_match('~(?:https?://)?(?:www\.)?vk\.com/([\w.]{1,32})~i', $value, $m)) {
+        // VK работает и на vk.com, и на vk.ru (последний — основной для РФ).
+        // www./m.-префиксы тоже учитываем — мобильные ссылки приходят с m.vk.com.
+        if (preg_match('~(?:https?://)?(?:www\.|m\.)?vk\.(?:com|ru)/([\w.]{1,32})~i', $value, $m)) {
             return ['channel' => 'vk', 'handle' => $m[1]];
         }
         if (preg_match('/^vk[:\s]+([\w.]{1,32})$/i', $value, $m)) {
