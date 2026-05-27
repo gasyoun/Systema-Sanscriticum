@@ -75,6 +75,6 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             $lead->update(['telegram_chat_id' => $chatId]);
         }
 
-        SendLeadMagnet::dispatch($lead->id);
+        SendLeadMagnet::dispatch($lead->id, 'telegram');
     }
 }

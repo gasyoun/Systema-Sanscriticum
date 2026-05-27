@@ -80,6 +80,22 @@ class SocialChannelParserTest extends TestCase
     }
 
     /** @test */
+    public function vk_ru_domain_and_mobile_subdomain(): void
+    {
+        // Реальный кейс Lead Елены: vk.ru-ссылка раньше не распознавалась
+        // и канал ошибочно падал в telegram-fallback.
+        $this->assertSame(
+            ['channel' => 'vk', 'handle' => 'id453633563'],
+            $this->parser->parse('https://vk.ru/id453633563')
+        );
+
+        $this->assertSame(
+            ['channel' => 'vk', 'handle' => 'durov'],
+            $this->parser->parse('https://m.vk.com/durov')
+        );
+    }
+
+    /** @test */
     public function vk_shortform(): void
     {
         $this->assertSame(

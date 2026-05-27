@@ -160,6 +160,36 @@ class SendLeadMagnetJobTest extends TestCase
     }
 
     /** @test */
+    public function delivers_via_actual_channel_overriding_stale_magnet_channel(): void
+    {
+        // Сценарий Lead #179: при сабмите зафиксировали magnet_channel='telegram'
+        // (telegram_chat_id так и остался null), но юзер пришёл в VK — VK-вебхук
+        // записал vk_user_id и задиспатчил с channel='vk'. Доставляем в VK,
+        // а не падаем в «no user_id in telegram».
+        Http::fake([
+            'api.vk.com/method/docs.getMessagesUploadServer*' => Http::response([
+                'response' => ['upload_url' => 'https://upload.example/vk'],
+            ]),
+            'upload.example/vk' => Http::response(['file' => 'fake-file-token']),
+            'api.vk.com/method/docs.save*' => Http::response([
+                'response' => ['doc' => ['id' => 111, 'owner_id' => -222]],
+            ]),
+            'api.vk.com/method/messages.send*' => Http::response(['response' => 1]),
+        ]);
+
+        $lead = $this->makeLeadWithMagnet('telegram', tgChatId: null, vkUserId: 555);
+
+        (new SendLeadMagnet($lead->id, 'vk'))->handle(app(DeliveryChannelManager::class));
+
+        $fresh = $lead->fresh();
+        $this->assertNotNull($fresh->magnet_delivered_at);
+        // magnet_channel перепривязан к фактическому каналу доставки.
+        $this->assertSame('vk', $fresh->magnet_channel);
+        Http::assertSent(fn ($req) => str_contains($req->url(), 'messages.send'));
+        Http::assertNotSent(fn ($req) => str_contains($req->url(), 'api.telegram.org'));
+    }
+
+    /** @test */
     public function skips_when_file_missing_on_disk(): void
     {
         Http::fake();
