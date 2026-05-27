@@ -31,6 +31,7 @@ final class SendLeadMagnet implements ShouldQueue
 
     public function __construct(
         public readonly int $leadId,
+        public readonly ?string $channel = null,
     ) {
         $this->onQueue('webhooks');
     }
@@ -60,7 +61,11 @@ final class SendLeadMagnet implements ShouldQueue
             return;
         }
 
-        $channelName = $lead->magnet_channel;
+        // Доставляем через канал, которым юзер реально воспользовался (передаёт
+        // webhook-джоба), а не через зафиксированный при сабмите magnet_channel.
+        // Иначе кросс-канальный заход (форма → telegram, юзер пришёл в VK) даёт
+        // «no user_id», хотя id нужного канала у нас уже есть.
+        $channelName = $this->channel ?? $lead->magnet_channel;
         if (! $channelName || ! $channels->has($channelName)) {
             Log::warning("SendLeadMagnet: unknown channel '{$channelName}' for Lead #{$this->leadId}");
 
@@ -107,7 +112,12 @@ final class SendLeadMagnet implements ShouldQueue
 
         $channel->sendDocument($userId, $filePath, $caption, $displayName);
 
-        $lead->update(['magnet_delivered_at' => now()]);
+        // Перепривязываем magnet_channel к фактическому каналу: на будущее
+        // (duplicate-flash deep-link) лид указывает туда, где он реально получил файл.
+        $lead->update([
+            'magnet_delivered_at' => now(),
+            'magnet_channel' => $channelName,
+        ]);
 
         Log::info("SendLeadMagnet: delivered to Lead #{$this->leadId} via {$channelName}");
     }

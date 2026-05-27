@@ -68,6 +68,6 @@ final class ProcessMaxMagnetUpdate implements ShouldQueue
             $lead->update(['max_user_id' => $userId]);
         }
 
-        SendLeadMagnet::dispatch($lead->id);
+        SendLeadMagnet::dispatch($lead->id, 'max');
     }
 }
