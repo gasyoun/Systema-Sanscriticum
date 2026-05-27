@@ -191,6 +191,46 @@ class DepositTest extends TestCase
             'После paid-вебхука Lead с тем же email должен быть помечен converted_at.');
     }
 
+    /** @test */
+    public function deposit_creates_fiscal_payment_with_buyer_email(): void
+    {
+        MarketingSetting::create(['deposit_enabled' => true]);
+        config([
+            'services.tochka.tax_system_code' => 'usn_income',
+            'services.tochka.vat_type' => 'none',
+        ]);
+
+        $course = Course::factory()->create(['deposit_amount' => 1500, 'title' => 'Тестовый курс']);
+
+        Http::fake([
+            'enter.tochka.com/*' => Http::response([
+                'Data' => [
+                    'paymentLink' => 'https://pay.tochka.com/redirect/xyz',
+                    'paymentLinkId' => 'tochka_tx_777',
+                ],
+            ], 200),
+        ]);
+
+        $this->post(route('deposit.create', $course->slug), [
+            'name' => 'Пётр',
+            'email' => 'petr@example.test',
+        ])->assertRedirect('https://pay.tochka.com/redirect/xyz');
+
+        // Платёж создаётся фискальным методом с контактом покупателя — чтобы чек ушёл студенту.
+        Http::assertSent(function ($request) {
+            $data = $request->data()['Data'] ?? [];
+            $item = $data['Items'][0] ?? [];
+
+            return str_contains($request->url(), '/payments_with_receipt')
+                && ($data['Client']['email'] ?? null) === 'petr@example.test'
+                && ($data['taxSystemCode'] ?? null) === 'usn_income'
+                && count($data['Items'] ?? []) === 1
+                && (float) ($item['amount'] ?? 0) === 1500.0
+                && ($item['vatType'] ?? null) === 'none'
+                && ($item['paymentMethod'] ?? null) === 'prepayment';
+        });
+    }
+
     /**
      * Дублируем тот же фильтр, что в Tariff::getDiscountPercentForUser, и проверяем
      * подсчёт уникальных курсов. Прямой ассерт на сам метод требовал бы
