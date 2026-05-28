@@ -60,6 +60,9 @@ return [
         // Чат маркетологов: group chat для уведомлений о новых лидах.
         // Пусто → уведомления о лидах отключены (см. App\Services\LeadNotifier).
         'marketers_chat_id' => env('TELEGRAM_MARKETERS_CHAT_ID'),
+        // Чат онбординга: куда падают «первый вход в кабинет» + еженедельная сводка
+        // по не зашедшим. Пусто → отключено (см. App\Services\OnboardingNotifier).
+        'onboarding_chat_id' => env('TELEGRAM_ONBOARDING_CHAT_ID'),
     ],
 
     'vk' => [
