@@ -53,6 +53,12 @@ jobs:
       - name: Run migrations
         run: php artisan migrate --force --no-interaction
 
+      - name: Stub Vite manifest for tests
+        # @vite() in views throws Vite\Exceptions\ManifestNotFoundException if
+        # public/build/manifest.json doesn't exist, causing 500 in feature tests.
+        # The manifest is not needed for logic tests — an empty JSON is enough.
+        run: mkdir -p public/build && echo '{}' > public/build/manifest.json
+
       - name: Laravel Pint format check
         run: ./vendor/bin/pint --test
         continue-on-error: true
