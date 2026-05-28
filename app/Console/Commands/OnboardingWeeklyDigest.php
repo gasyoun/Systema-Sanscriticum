@@ -16,13 +16,19 @@ final class OnboardingWeeklyDigest extends Command
 
     public function handle(OnboardingNotifier $notifier): int
     {
-        // «С доступом» = состоит хотя бы в одной группе (PaymentObserver::grantAccess
-        // добавляет в группу при оплате). Админов не считаем — это не студенты.
+        // «Должен зайти» = студенту реально выслали доступ И у него рабочий email.
+        // Признак «доступ выслан» — штамп «[Доступ отправлен: …]» в note, который
+        // ставит bulk-action отправки доступа в UserResource (а его фильтр
+        // `access_sent` использует тот же LIKE). Реальный email — не заглушка
+        // @no-email.com и не пустой (на момент штампа адрес уже прошёл валидацию).
         $base = User::query()
             ->where('is_admin', false)
-            ->whereHas('groups');
+            ->where('note', 'like', '%[Доступ отправлен%')
+            ->whereNotNull('email')
+            ->where('email', '<>', '')
+            ->where('email', 'not like', '%@no-email.com');
 
-        $withAccess = (clone $base)->count();
+        $accessSent = (clone $base)->count();
         $notEntered = (clone $base)->where('login_count', 0)->count();
 
         $sample = (clone $base)
@@ -31,9 +37,9 @@ final class OnboardingWeeklyDigest extends Command
             ->limit(15)
             ->get(['id', 'name', 'email', 'phone', 'telegram_id']);
 
-        $notifier->notEnteredDigest($withAccess, $notEntered, $sample);
+        $notifier->notEnteredDigest($accessSent, $notEntered, $sample);
 
-        $this->info("Онбординг-сводка: {$notEntered} из {$withAccess} не заходили.");
+        $this->info("Онбординг-сводка: {$notEntered} из {$accessSent} не заходили.");
 
         return self::SUCCESS;
     }

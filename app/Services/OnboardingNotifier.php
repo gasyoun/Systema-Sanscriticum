@@ -43,14 +43,14 @@ class OnboardingNotifier
     /**
      * @param  Collection<int, User>  $sample  до ~15 не зашедших — для прозвона
      */
-    public function notEnteredDigest(int $withAccess, int $notEntered, Collection $sample): void
+    public function notEnteredDigest(int $accessSent, int $notEntered, Collection $sample): void
     {
-        $percent = $withAccess > 0 ? (int) round($notEntered / $withAccess * 100) : 0;
+        $percent = $accessSent > 0 ? (int) round($notEntered / $accessSent * 100) : 0;
 
         $lines = [
             '📊 <b>Не зашли в кабинет</b>',
             '',
-            'С доступом (оплатили / в группе): <b>'.$withAccess.'</b>',
+            'Доступ выслан (реальный email): <b>'.$accessSent.'</b>',
             'Из них ни разу не входили: <b>'.$notEntered.'</b> (<b>'.$percent.'%</b>)',
         ];
 
