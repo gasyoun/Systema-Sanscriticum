@@ -24,3 +24,7 @@ yarn-error.log
 # Внутренние security-аудиты и заметки — не коммитятся в репозиторий
 BUGS_REPORT.md
 SECURITY_AUDIT*.md
+
+# audit sidecars
+.contributing_old.md
+.contributing_audit.txt
