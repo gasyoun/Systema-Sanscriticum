@@ -28,6 +28,8 @@ class Payment extends Model
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
         'linked_promise_id',
+        // Дата платежа задаётся вручную при создании из админки.
+        'created_at',
     ];
 
     protected $casts = [
