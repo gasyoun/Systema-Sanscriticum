@@ -58,11 +58,11 @@ class ArticleViewTracker
 
         // 5. Пишем в БД (Observer сам инкрементит views_count)
         ArticleView::create([
-            'article_id'   => $article->id,
+            'article_id' => $article->id,
             'visitor_hash' => $visitorHash,
-            'ip'           => $request->ip(),
-            'referrer'     => $this->truncate($request->headers->get('referer'), 500),
-            'user_agent'   => $this->truncate($userAgent, 500),
+            'ip' => $request->ip(),
+            'referrer' => $this->truncate($request->headers->get('referer'), 500),
+            'user_agent' => $this->truncate($userAgent, 500),
         ]);
 
         // 6. Ставим дедуп-метку в кеш
@@ -109,7 +109,7 @@ class ArticleViewTracker
      */
     private function buildVisitorHash(Request $request): string
     {
-        $dailySalt = hash('sha256', config('app.key') . now()->toDateString());
+        $dailySalt = hash('sha256', config('app.key').now()->toDateString());
 
         return hash('sha256', implode('|', [
             $request->ip() ?? 'unknown',

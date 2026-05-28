@@ -2,32 +2,86 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tariff;
 use App\Models\LandingPage;
-use App\Models\PromoCode; // Не забываем импортировать модель!
+use App\Models\PromoCode;
+use App\Models\Tariff; // Не забываем импортировать модель!
+use App\Services\Prana\PranaService;
+use App\Services\Prana\PranaSettings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
-    public function show(Tariff $tariff)
+    public function show(Tariff $tariff, PranaService $prana)
     {
-        if (!$tariff->is_active) {
+        if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
         }
 
         $tariff->load('course');
         $page = $tariff->course ? LandingPage::where('slug', $tariff->course->slug)->first() : new LandingPage(['title' => 'Оформление заказа']);
 
+        $state = $this->computeState($tariff, $prana);
+
+        return view('checkout.show', array_merge([
+            'tariff' => $tariff,
+            'page' => $page,
+        ], $state));
+    }
+
+    // Применить промокод (поддерживает AJAX: возвращает JSON c пересчитанным состоянием)
+    public function applyPromo(Request $request, Tariff $tariff, PranaService $prana)
+    {
+        $request->validate(['code' => 'required|string']);
+
+        $code = mb_strtoupper(trim($request->code));
+        $promo = PromoCode::where('code', $code)->first();
+
+        if (! $promo || ! $promo->isValid()) {
+            $message = 'Промокод не найден или истек срок его действия.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['ok' => false, 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        session()->put('promo_code', $promo->code);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->stateJson($tariff, $prana, 'Промокод успешно применён!');
+        }
+
+        return back()->with('success', 'Промокод успешно применен!');
+    }
+
+    // Снять промокод
+    public function removePromo(Request $request, Tariff $tariff, PranaService $prana)
+    {
+        session()->forget('promo_code');
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->stateJson($tariff, $prana, 'Промокод снят.');
+        }
+
+        return back();
+    }
+
+    /**
+     * Возвращает текущее состояние чекаута: цену с учётом всех скидок,
+     * информацию о промокоде, лояльности и пране. Используется и в show(),
+     * и в JSON-ответах AJAX-эндпоинтов.
+     */
+    private function computeState(Tariff $tariff, PranaService $prana): array
+    {
         $user = auth()->user();
-        
-        // --- ДАННЫЕ ПРОГРАММЫ ЛОЯЛЬНОСТИ (ДЛЯ ВЫВОДА В ШАБЛОНЕ) ---
+
         $isLoyal = false;
         $loyaltyPercent = 0;
-        
+
         if ($user) {
             $marketing = \App\Models\MarketingSetting::first();
             if ($marketing && $marketing->is_loyalty_active) {
-                // Проверяем, есть ли у пользователя успешные оплаты
                 $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)->where('status', 'paid')->exists();
                 if ($hasAnyPaid) {
                     $isLoyal = true;
@@ -36,55 +90,63 @@ class CheckoutController extends Controller
             }
         }
 
-        // Базовая цена (уже с учетом скидки лояльности и скидки за прошлые покупки)
+        $basePrice = (float) $tariff->price;
         $finalPrice = $tariff->calculateFinalPriceForUser($user);
+        $loyaltyDiscount = max(0.0, $basePrice - $finalPrice);
 
-        // --- МАГИЯ ПРОМОКОДОВ ---
         $appliedPromo = null;
-        $discountAmount = 0;
+        $discountAmount = 0.0;
 
-        // Если в сессии есть промокод
         if (session()->has('promo_code')) {
             $promo = PromoCode::where('code', session('promo_code'))->first();
-            
-            // Проверяем, жив ли он еще (вдруг он истек, пока юзер думал)
             if ($promo && $promo->isValid()) {
                 $appliedPromo = $promo;
-                // Считаем новую цену от $finalPrice
                 $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
                 $discountAmount = $finalPrice - $priceWithPromo;
                 $finalPrice = $priceWithPromo;
             } else {
-                // Код "протух" — выкидываем его из сессии
                 session()->forget('promo_code');
             }
         }
 
-        // ВАЖНО: Добавили isLoyal и loyaltyPercent в передачу шаблону!
-        return view('checkout.show', compact('tariff', 'finalPrice', 'page', 'appliedPromo', 'discountAmount', 'isLoyal', 'loyaltyPercent'));
+        return [
+            'finalPrice' => $finalPrice,
+            'basePrice' => $basePrice,
+            'loyaltyDiscount' => $loyaltyDiscount,
+            'appliedPromo' => $appliedPromo,
+            'discountAmount' => $discountAmount,
+            'isLoyal' => $isLoyal,
+            'loyaltyPercent' => $loyaltyPercent,
+            'pranaBalance' => $user ? $prana->balance($user) : 0,
+            'pranaMaxSpend' => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
+            'pranaRate' => PranaSettings::rate(),
+            'pranaSharePct' => (int) round(PranaSettings::maxShare() * 100),
+        ];
     }
 
-    // Метод: Применить промокод
-    public function applyPromo(Request $request, Tariff $tariff)
+    private function stateJson(Tariff $tariff, PranaService $prana, string $message = ''): JsonResponse
     {
-        $request->validate(['code' => 'required|string']);
+        $s = $this->computeState($tariff, $prana);
 
-        $code = mb_strtoupper(trim($request->code));
-        $promo = PromoCode::where('code', $code)->first();
-
-        if (!$promo || !$promo->isValid()) {
-            return back()->with('error', 'Промокод не найден или истек срок его действия.');
-        }
-
-        // Записываем код в сессию
-        session()->put('promo_code', $promo->code);
-        return back()->with('success', 'Промокод успешно применен!');
-    }
-
-    // Метод: Удалить промокод (если юзер передумал)
-    public function removePromo(Tariff $tariff)
-    {
-        session()->forget('promo_code');
-        return back();
+        return response()->json([
+            'ok' => true,
+            'message' => $message,
+            'state' => [
+                'finalPrice' => (int) round($s['finalPrice']),
+                'basePrice' => (int) round($s['basePrice']),
+                'loyaltyDiscount' => (int) round($s['loyaltyDiscount']),
+                'discountAmount' => (int) round($s['discountAmount']),
+                'pranaMaxSpend' => (int) $s['pranaMaxSpend'],
+                'pranaRate' => (int) $s['pranaRate'],
+                'pranaSharePct' => (int) $s['pranaSharePct'],
+                'appliedPromo' => $s['appliedPromo'] ? [
+                    'code' => $s['appliedPromo']->code,
+                    'type' => $s['appliedPromo']->type,
+                    'value' => (float) $s['appliedPromo']->value,
+                ] : null,
+                'isLoyal' => $s['isLoyal'],
+                'loyaltyPercent' => (int) $s['loyaltyPercent'],
+            ],
+        ]);
     }
 }

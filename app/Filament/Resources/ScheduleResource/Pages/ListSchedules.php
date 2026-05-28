@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use App\Services\Schedule\ScheduleGenerator;
+use App\Support\RoleGate;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
@@ -43,6 +44,7 @@ class ListSchedules extends ListRecords
                 ->label('Сгенерировать поток')
                 ->icon('heroicon-o-arrow-path-rounded-square')
                 ->color('success')
+                ->visible(fn (): bool => RoleGate::adminOnly())
                 ->modalHeading('Генератор расписания')
                 ->modalDescription('Создаёт серию занятий по выбранным дням недели с учётом пропусков и переносов.')
                 ->modalWidth('5xl')
@@ -152,10 +154,10 @@ class ListSchedules extends ListRecords
                                 ->default('{TITLE} (#{N}, {DATE}) | {BN}-е занятие {BLOCK}-го блока')
                                 ->helperText(new \Illuminate\Support\HtmlString(
                                     'Доступные плейсхолдеры: '
-                                    . '<code>{N}</code> <code>{DATE}</code> <code>{TITLE}</code> '
-                                    . '<code>{BLOCK}</code> <code>{BN}</code>. '
-                                    . 'Разделитель <code>|</code> режет результат на части: '
-                                    . '<b>Название</b> | <b>Описание</b> | <b>Тег</b>.'
+                                    .'<code>{N}</code> <code>{DATE}</code> <code>{TITLE}</code> '
+                                    .'<code>{BLOCK}</code> <code>{BN}</code>. '
+                                    .'Разделитель <code>|</code> режет результат на части: '
+                                    .'<b>Название</b> | <b>Описание</b> | <b>Тег</b>.'
                                 )),
                         ]),
 
@@ -202,10 +204,97 @@ class ListSchedules extends ListRecords
                 }),
 
             // ==========================================
+            // ВЫГРУЗКА В GOOGLE ТАБЛИЦУ (через n8n, только админ)
+            // ==========================================
+            Actions\Action::make('sync_to_sheet')
+                ->label('Выгрузить в Google Таблицу')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->visible(fn (): bool => RoleGate::adminOnly())
+                ->requiresConfirmation()
+                ->modalHeading('Выгрузить расписание в Google Таблицу')
+                ->modalDescription('Лист будет перезаписан текущим расписанием из БД. Данные идут только в одну сторону: БД → таблица.')
+                ->modalSubmitActionLabel('Выгрузить')
+                ->action(function (): void {
+                    $this->syncToSheet();
+                }),
+
+            // ==========================================
             // СУЩЕСТВУЮЩИЙ: МАССОВЫЙ ПЕРЕНОС
             // ==========================================
             // (оставлено как было — блок shift_schedule не трогаем)
         ];
+    }
+
+    /**
+     * Полная выгрузка текущего расписания в n8n-вебхук (тот пишет в Google-лист).
+     * Строго одностороннее: БД → таблица. Обратно ничего не читаем.
+     */
+    private function syncToSheet(): void
+    {
+        $url = config('services.n8n.schedule_sheet_webhook');
+
+        if (empty($url)) {
+            Notification::make()
+                ->title('Webhook не настроен')
+                ->body('Укажите N8N_SCHEDULE_SHEET_WEBHOOK в окружении.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $rows = Schedule::query()
+            ->with(['group', 'course'])
+            ->orderBy('start')
+            ->get()
+            ->map(fn (Schedule $s): array => [
+                'id' => $s->id,
+                'date' => $s->start?->format('d.m.Y'),
+                'weekday' => $s->start?->translatedFormat('l'),
+                'time' => $s->end
+                    ? $s->start?->format('H:i').' – '.$s->end->format('H:i')
+                    : $s->start?->format('H:i'),
+                'title' => $s->title,
+                'group' => $s->group?->name ?? 'Все',
+                'course' => $s->course?->title ?? '',
+                'link' => $s->link,
+            ])
+            ->all();
+
+        try {
+            $response = Http::timeout(10)->post($url, [
+                'action' => 'sheet_sync',
+                'generated_at' => now()->format('d.m.Y H:i'),
+                'schedules' => $rows,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Schedule sheet sync failed: '.$e->getMessage());
+
+            Notification::make()
+                ->title('Ошибка выгрузки')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if (! $response->successful()) {
+            Notification::make()
+                ->title('Ошибка выгрузки')
+                ->body('n8n вернул статус '.$response->status())
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Готово')
+            ->body('Выгружено событий: '.count($rows))
+            ->success()
+            ->send();
     }
 
     /**
@@ -219,25 +308,26 @@ class ListSchedules extends ListRecords
                 ->title('Не выбрано ни одного дня недели')
                 ->danger()
                 ->send();
+
             return;
         }
 
         $config = new GeneratorConfig(
-            groupId:           (int) $data['group_id'],
-            courseId:          !empty($data['course_id']) ? (int) $data['course_id'] : null,
-            title:             (string) $data['title'],
-            startDate:         Carbon::parse($data['start_date']),
-            startTime:         (string) $data['start_time'],
-            durationMinutes:   (int) $data['duration_minutes'],
-            totalLessons:      (int) $data['total'],
-            startNumber:       (int) $data['start_number'],
-            startLessonIndex:  (int) $data['start_lesson_index'],
-            weekdays:          $weekdays,
-            template:          (string) $data['template'],
-            skipDates:         collect($data['skip_dates'] ?? [])->pluck('date')->filter()->values()->all(),
-            addDates:          collect($data['add_dates']  ?? [])->pluck('date')->filter()->values()->all(),
-            link:              !empty($data['link']) ? (string) $data['link'] : null,
-            preserve:          (bool) ($data['preserve'] ?? true),
+            groupId: (int) $data['group_id'],
+            courseId: ! empty($data['course_id']) ? (int) $data['course_id'] : null,
+            title: (string) $data['title'],
+            startDate: Carbon::parse($data['start_date']),
+            startTime: (string) $data['start_time'],
+            durationMinutes: (int) $data['duration_minutes'],
+            totalLessons: (int) $data['total'],
+            startNumber: (int) $data['start_number'],
+            startLessonIndex: (int) $data['start_lesson_index'],
+            weekdays: $weekdays,
+            template: (string) $data['template'],
+            skipDates: collect($data['skip_dates'] ?? [])->pluck('date')->filter()->values()->all(),
+            addDates: collect($data['add_dates'] ?? [])->pluck('date')->filter()->values()->all(),
+            link: ! empty($data['link']) ? (string) $data['link'] : null,
+            preserve: (bool) ($data['preserve'] ?? true),
         );
 
         try {
@@ -255,6 +345,7 @@ class ListSchedules extends ListRecords
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -264,6 +355,7 @@ class ListSchedules extends ListRecords
                 ->body('Проверьте дни недели, пропуски и общее количество.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -285,19 +377,19 @@ class ListSchedules extends ListRecords
             Http::timeout(5)->post(
                 'https://context-ai.ru/webhook-test/6a4e0703-4059-47ba-8bad-c3c3d51447ff',
                 [
-                    'action'    => 'bulk_create',
+                    'action' => 'bulk_create',
                     'schedules' => $schedules->map(fn (Schedule $s) => [
-                        'id'          => $s->id,
-                        'title'       => $s->title,
-                        'start'       => $s->start->format('d.m.Y H:i'),
-                        'group'       => $s->group?->name ?? 'Все',
+                        'id' => $s->id,
+                        'title' => $s->title,
+                        'start' => $s->start->format('d.m.Y H:i'),
+                        'group' => $s->group?->name ?? 'Все',
                         'description' => $s->description,
-                        'link'        => $s->link,
+                        'link' => $s->link,
                     ])->all(),
                 ]
             );
         } catch (\Throwable $e) {
-            Log::error('Bulk n8n webhook error: ' . $e->getMessage());
+            Log::error('Bulk n8n webhook error: '.$e->getMessage());
         }
     }
 }

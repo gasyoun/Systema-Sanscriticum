@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('lessons', function (Blueprint $table) {
             // Добавляем только колонку для файлов
-            $table->json('attachments')->nullable(); 
+            $table->json('attachments')->nullable();
         });
     }
 

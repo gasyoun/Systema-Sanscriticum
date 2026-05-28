@@ -2,31 +2,36 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ShopCourseResource\Pages;
 use App\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
-use Illuminate\Support\Str;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Table;
 
 class ShopCourseResource extends Resource
 {
+    use AdminOnly;
+
     // Указываем ту же самую модель Course!
     protected static ?string $model = Course::class;
 
     // Настройки отображения в меню
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+
     protected static ?int $navigationSort = 90;
+
     protected static ?string $navigationGroup = 'Продажи';
+
     protected static ?string $navigationLabel = 'Витрина курсов';
+
     protected static ?string $modelLabel = 'Курс на витрине';
+
     protected static ?string $pluralModelLabel = 'Витрина';
-    
-    
 
     public static function form(Form $form): Form
     {
@@ -37,7 +42,7 @@ class ShopCourseResource extends Resource
                         Forms\Components\TextInput::make('title')
                             ->required()
                             ->label('Название курса'),
-                            
+
                         // НОВОЕ ПОЛЕ: Загрузка картинки с умным редактором
                         Forms\Components\FileUpload::make('image_path')
                             ->label('Обложка курса')
@@ -50,12 +55,12 @@ class ShopCourseResource extends Resource
                                 '1:1',
                             ]) // Добавляет кнопки фиксированных пропорций
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Textarea::make('description')
                             ->label('Описание')
                             ->rows(3)
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Toggle::make('is_visible')
                             ->label('Показывать на сайте')
                             ->onColor('success'),
@@ -81,7 +86,7 @@ class ShopCourseResource extends Resource
                             ->weight('bold')
                             ->size('xl')
                             ->searchable(),
-                            
+
                         // Slug (ссылка)
                         Tables\Columns\TextColumn::make('slug')
                             ->color('gray')
@@ -100,19 +105,19 @@ class ShopCourseResource extends Resource
                                 ->badge()
                                 ->color('info')
                                 ->icon('heroicon-m-document-text')
-                                ->formatStateUsing(fn ($state) => $state . ' уроков'),
-                                
+                                ->formatStateUsing(fn ($state) => $state.' уроков'),
+
                             Tables\Columns\TextColumn::make('hours_count')
                                 ->badge()
                                 ->color('warning')
                                 ->icon('heroicon-m-clock')
-                                ->formatStateUsing(fn ($state) => $state . ' часов'),
-                                
+                                ->formatStateUsing(fn ($state) => $state.' часов'),
+
                             Tables\Columns\IconColumn::make('is_visible')
                                 ->boolean()
                                 ->label('Видимость'),
                         ])->extraAttributes(['class' => 'mt-6']),
-                        
+
                     ])->space(1)->extraAttributes(['class' => 'p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow']),
                 ])->space(0),
             ])

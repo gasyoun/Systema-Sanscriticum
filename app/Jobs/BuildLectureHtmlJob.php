@@ -27,6 +27,7 @@ final class BuildLectureHtmlJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 1;
+
     public int $timeout = 120;
 
     public function __construct(public readonly int $draftId) {}
@@ -38,6 +39,7 @@ final class BuildLectureHtmlJob implements ShouldQueue
         $draft = LectureDraft::find($this->draftId);
         if ($draft === null) {
             Log::warning('BuildLectureHtmlJob: черновик не найден', ['id' => $this->draftId]);
+
             return;
         }
 
@@ -49,16 +51,16 @@ final class BuildLectureHtmlJob implements ShouldQueue
             $result = $client->render(absoluteWorkingDir: $absoluteWorkingDir);
 
             $draft->forceFill([
-                'status'           => LectureDraft::STATUS_BUILT,
+                'status' => LectureDraft::STATUS_BUILT,
                 'output_html_path' => $storage->relativePath($draft, $result['output'] ?? 'output/lecture.html'),
             ])->save();
         } catch (\Throwable $e) {
             Log::error('BuildLectureHtmlJob failed', [
                 'draft_id' => $draft->id,
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             $draft->forceFill([
-                'status'    => $previousStatus,
+                'status' => $previousStatus,
                 'error_log' => $e->getMessage(),
             ])->save();
             throw $e;

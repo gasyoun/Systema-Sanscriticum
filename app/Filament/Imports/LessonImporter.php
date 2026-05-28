@@ -3,10 +3,10 @@
 namespace App\Filament\Imports;
 
 use App\Models\Lesson;
+use Carbon\Carbon;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class LessonImporter extends Importer
@@ -23,7 +23,9 @@ class LessonImporter extends Importer
 
             ImportColumn::make('block_number')
                 ->requiredMapping()
-                ->numeric()
+                ->rules(['required', 'integer', 'min:1', 'max:200'])
+                ->castStateUsing(fn ($state): ?int => ($state === null || trim((string) $state) === '') ? null : (int) $state
+                )
                 ->label('Блок (просто цифра: 1, 2, 3 или 4)'),
 
             ImportColumn::make('title')
@@ -35,7 +37,9 @@ class LessonImporter extends Importer
                 ->label('Дата урока')
                 // Простой и надежный парсер, который не крашит систему
                 ->castStateUsing(function ($state): ?string {
-                    if (empty($state)) return now()->format('Y-m-d');
+                    if (empty($state)) {
+                        return now()->format('Y-m-d');
+                    }
                     try {
                         return Carbon::parse($state)->format('Y-m-d');
                     } catch (\Exception $e) {
@@ -62,8 +66,8 @@ class LessonImporter extends Importer
             'title' => $title,
         ]);
 
-        if (!$lesson->exists) {
-            $lesson->slug = Str::slug($title) . '-' . rand(10000, 99999);
+        if (! $lesson->exists) {
+            $lesson->slug = Str::slug($title).'-'.rand(10000, 99999);
         }
 
         return $lesson;
@@ -71,10 +75,10 @@ class LessonImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Импорт уроков завершен. Успешно загружено: ' . number_format($import->successful_rows) . '.';
+        $body = 'Импорт уроков завершен. Успешно загружено: '.number_format($import->successful_rows).'.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' Строк с ошибками: ' . number_format($failedRowsCount) . '. (Скачайте файл ошибок в уведомлениях!)';
+            $body .= ' Строк с ошибками: '.number_format($failedRowsCount).'. (Скачайте файл ошибок в уведомлениях!)';
         }
 
         return $body;

@@ -4,21 +4,85 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CourseResource\Pages;
 use App\Models\Course;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class CourseResource extends Resource
 {
     protected static ?string $model = Course::class;
 
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        // Учитель не создаёт курсы — только админ.
+        return RoleGate::adminOnly();
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+
+        // Учитель может редактировать только свой курс. Без teacher_id —
+        // никаких прав, иначе NULL === NULL пропустит orphan-курсы.
+        return $user->isTeacher()
+            && $user->teacher_id !== null
+            && $user->teacher_id === $record->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher()) {
+            // Учитель без teacher_id (после nullOnDelete каскада или
+            // misconfigured аккаунта) не должен видеть orphan-курсы.
+            if (! $user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('teacher_id', $user->teacher_id);
+            }
+        }
+
+        return $query;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
     protected static ?int $navigationSort = 10;
+
     protected static ?string $navigationGroup = 'Обучение';
+
     protected static ?string $navigationLabel = 'Курсы';
+
     protected static ?string $pluralModelLabel = 'Курсы';
 
     public static function form(Form $form): Form
@@ -37,8 +101,7 @@ class CourseResource extends Resource
                                     ->required()
                                     ->label('Название курса')
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => 
-                                        $operation === 'create' ? $set('slug', Str::slug($state)) : null
+                                    ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null
                                     ),
 
                                 Forms\Components\TextInput::make('slug')
@@ -48,10 +111,11 @@ class CourseResource extends Resource
                             ]),
 
                         // БЛОК 2: Описание
-                        Forms\Components\Textarea::make('description')
+                        TiptapEditor::make('description')
                             ->label('Описание')
+                            ->profile('simple')
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\TextInput::make('chat_url')
                             ->label('Ссылка на чат курса')
                             ->url()
@@ -77,6 +141,7 @@ class CourseResource extends Resource
                             ]),
 
                         // БЛОК 4: Доступ и Видимость
+                        // Только админ — учитель не должен раздавать доступ группам.
                         Forms\Components\Select::make('groups')
                             ->multiple()
                             ->relationship('groups', 'name')
@@ -84,7 +149,9 @@ class CourseResource extends Resource
                             ->searchable()
                             ->label('Доступ для групп')
                             ->helperText('Студенты из выбранных групп увидят этот курс у себя в кабинете.')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->visible(fn () => RoleGate::adminOnly())
+                            ->dehydrated(fn () => RoleGate::adminOnly()),
 
                         // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Объединили два свитча в сетку ---
                         Forms\Components\Grid::make(2)
@@ -100,63 +167,82 @@ class CourseResource extends Resource
                                     ->helperText('Курс участвует в программе лояльности (скидки за объем)')
                                     ->default(false)
                                     ->onColor('warning'), // Золотой цвет для выделения
-                                    
+
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Доступен студентам в ЛК')
                                     ->helperText('Если выключить — курс исчезнет из личных кабинетов студентов, даже если они его купили. Используйте для архивации.')
                                     ->default(true)
                                     ->onColor('success')
-                                    ->inline(false),    
+                                    ->inline(false),
                             ]),
 
                         // БЛОК: КАТЕГОРИИ И ФОРМАТ
-Forms\Components\Grid::make(2)
-    ->schema([
-        Forms\Components\Select::make('categories')
-            ->label('Категории')
-            ->multiple()
-            ->relationship('categories', 'name')
-            ->preload()
-            ->searchable()
-            ->createOptionForm([
-                // Создание категории прямо из формы курса — быстрый сценарий
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn ($state, Forms\Set $set) =>
-                        $set('slug', Str::slug($state))
-                    ),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
-                    ->unique('categories', 'slug'),
-                Forms\Components\TextInput::make('icon')
-                    ->placeholder('fa-om'),
-                Forms\Components\ColorPicker::make('color'),
-            ])
-            ->helperText('Курс может относиться к нескольким категориям (Философия, Лингвистика и т.д.)')
-            ->columnSpanFull(),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('categories')
+                                    ->label('Категории')
+                                    ->multiple()
+                                    ->relationship('categories', 'name')
+                                    ->preload()
+                                    ->searchable()
+                                    ->createOptionForm([
+                                        // Создание категории прямо из формы курса — быстрый сценарий
+                                        Forms\Components\TextInput::make('name')
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', Str::slug($state))
+                                            ),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->required()
+                                            ->unique('categories', 'slug'),
+                                        Forms\Components\TextInput::make('icon')
+                                            ->placeholder('fa-om'),
+                                        Forms\Components\ColorPicker::make('color'),
+                                    ])
+                                    ->helperText('Курс может относиться к нескольким категориям (Философия, Лингвистика и т.д.)')
+                                    ->columnSpanFull(),
 
-        Forms\Components\Radio::make('format')
-            ->label('Формат курса')
-            ->options([
-                'live'     => '🔴 Идёт сейчас (live-поток)',
-                'recorded' => '📼 В записи (доступен в любое время)',
-            ])
-            ->default('recorded')
-            ->required()
-            ->inline(false)
-            ->columnSpanFull(),
-    ]),    
+                                Forms\Components\Radio::make('format')
+                                    ->label('Формат курса')
+                                    ->options([
+                                        'live' => '🔴 Идёт сейчас (live-поток)',
+                                        'recorded' => '📼 В записи (доступен в любое время)',
+                                    ])
+                                    ->default('recorded')
+                                    ->required()
+                                    ->inline(false)
+                                    ->columnSpanFull(),
+                            ]),
                     ]),
-                    
+
+                // ==========================================
+                // БЛОК: ПРЕДОПЛАТА ЗА БРОНЬ
+                // ==========================================
+                Forms\Components\Section::make('📌 Предоплата за бронь курса')
+                    ->description('Сумма, за которую студент может «забронировать» этот курс. Будет зачтена при последующей оплате тарифа. Кнопка «Забронировать» показывается на витрине только если поле заполнено И глобальный тогл в маркетинг-настройках включён.')
+                    ->schema([
+                        Forms\Components\TextInput::make('deposit_amount')
+                            ->label('Сумма депозита, ₽')
+                            ->helperText('Пусто/0 — бронь для этого курса не предлагается, даже если глобально депозиты включены.')
+                            ->numeric()
+                            ->minValue(0)
+                            ->step('0.01')
+                            ->suffix('₽'),
+                    ])
+                    ->collapsible(),
+
                 // ==========================================
                 // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
                 // ==========================================
+                // canEdit() пускает учителя на свой курс (для правки контента),
+                // но teacher_id/salary_type/salary_value — admin-only: иначе
+                // учитель сможет переназначить курс или поднять себе ставку.
                 Forms\Components\Section::make('Преподаватель и Зарплата')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
                         Forms\Components\Select::make('teacher_id')
                             ->label('Преподаватель')
-                            ->relationship('teacher', 'name') 
+                            ->relationship('teacher', 'name')
                             ->searchable()
                             ->preload(),
 
@@ -179,15 +265,18 @@ Forms\Components\Grid::make(2)
                 // ==========================================
                 // БЛОК: ТАРИФЫ И ЦЕНЫ
                 // ==========================================
+                // Тарифы — admin-only: иначе учитель сможет переписать цену
+                // своего курса или включить/выключить тарифы.
                 Forms\Components\Section::make('Тарифы и цены')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->schema([
-                        Forms\Components\Repeater::make('tariffs') 
-                            ->relationship('tariffs') 
+                        Forms\Components\Repeater::make('tariffs')
+                            ->relationship('tariffs')
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->label('Название тарифа (например: Блок 1, Полный курс)')
                                     ->required(),
-                                    
+
                                 Forms\Components\Select::make('type')
                                     ->label('Тип доступа')
                                     ->options([
@@ -204,7 +293,7 @@ Forms\Components\Grid::make(2)
                                     ->label('Цена (₽)')
                                     ->numeric()
                                     ->required(),
-                                    
+
                                 Forms\Components\TextInput::make('old_price')
                                     ->label('Старая цена (₽)')
                                     ->numeric(),
@@ -232,7 +321,7 @@ Forms\Components\Grid::make(2)
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
                     ->sortable()
-                    ->description(fn (Course $record) => Str::limit($record->description, 50))
+                    ->description(fn (Course $record) => Str::limit(strip_tags($record->description ?? ''), 50))
                     ->label('Название'),
 
                 Tables\Columns\TextColumn::make('groups.name')
@@ -254,11 +343,11 @@ Forms\Components\Grid::make(2)
                 Tables\Columns\IconColumn::make('is_visible')
                     ->boolean()
                     ->label('Активен'),
-                    
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Активен в ЛК')
                     ->boolean()
-                    ->sortable(),    
+                    ->sortable(),
             ])
             ->filters([
                 // --- НОВЫЙ ФИЛЬТР ПО ФАКУЛЬТАТИВАМ ---

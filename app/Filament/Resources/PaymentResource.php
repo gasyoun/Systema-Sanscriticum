@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,10 +17,34 @@ class PaymentResource extends Resource
     protected static ?string $model = Payment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+
     protected static ?int $navigationSort = 80;
+
     protected static ?string $navigationGroup = 'Продажи';
+
     protected static ?string $navigationLabel = 'Финансы';
+
     protected static ?string $pluralModelLabel = 'Транзакции';
+
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canCreate(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
 
     public static function form(Form $form): Form
     {
@@ -44,20 +70,26 @@ class PaymentResource extends Resource
                     Forms\Components\Select::make('tariff')
                         ->label('Тариф (Доступ)')
                         ->options(function () {
-                            $options = ['full' => 'Весь курс целиком'];
+                            $options = [
+                                'full' => 'Весь курс целиком',
+                                'deposit' => '📌 Бронь курса (предоплата)',
+                                'Расход' => '💸 Системный расход / Возврат',
+                            ];
+
                             for ($i = 1; $i <= 100; $i++) {
                                 $startLesson = ($i - 1) * 4 + 1;
                                 $endLesson = $i * 4;
                                 $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
                             }
+
                             return $options;
                         })
                         ->searchable()
                         ->default('full')
                         ->required()
-                        ->live() 
+                        ->live()
                         ->afterStateUpdated(function ($state, callable $set) {
-                            if ($state === 'full') {
+                            if ($state === 'full' || $state === 'Расход') {
                                 $set('start_block', null);
                                 $set('end_block', null);
                             } elseif (str_starts_with($state ?? '', 'block_')) {
@@ -88,7 +120,16 @@ class PaymentResource extends Resource
                                 ->helperText('Пусто, если курс куплен целиком'),
                         ]),
 
-                    Forms\Components\Grid::make(2)->schema([
+                    Forms\Components\Grid::make(3)->schema([
+                        Forms\Components\DateTimePicker::make('created_at')
+                            ->label('Дата платежа')
+                            ->default(now())
+                            ->required()
+                            ->seconds(false)
+                            ->native(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->helperText('По умолчанию — текущий момент'),
+
                         Forms\Components\Select::make('status')
                             ->label('Статус')
                             ->options([
@@ -135,15 +176,29 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->description(function (Payment $record) {
-                        $start = (int)$record->start_block;
-                        $end = (int)$record->end_block;
-                        
+                        if ($record->tariff === 'deposit') {
+                            $consumed = $record->deposit_consumed_at
+                                ? ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y')
+                                : '';
+
+                            return '📌 Бронь курса (предоплата)'.$consumed;
+                        }
+
+                        $start = (int) $record->start_block;
+                        $end = (int) $record->end_block;
+
                         if ($start > 0) {
-                            if ($end <= 0 || $start === $end) return "Блок {$start}";
+                            if ($end <= 0 || $start === $end) {
+                                return "Блок {$start}";
+                            }
+
                             return "Блоки {$start} - {$end}";
                         }
-                        
-                        if ($record->tariff === 'Расход') return 'Технический расход';
+
+                        if ($record->tariff === 'Расход') {
+                            return 'Технический расход';
+                        }
+
                         return 'Весь курс';
                     }),
 
@@ -161,9 +216,9 @@ class PaymentResource extends Resource
                     ->label('Статус')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
-                        'paid', 'success' => 'success',     
-                        'pending' => 'warning',  
-                        'canceled' => 'danger',  
+                        'paid', 'success' => 'success',
+                        'pending' => 'warning',
+                        'canceled' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -194,6 +249,52 @@ class PaymentResource extends Resource
                         'paid' => 'Оплачено',
                         'canceled' => 'Отменено',
                     ]),
+
+                Tables\Filters\TernaryFilter::make('is_deposit')
+                    ->label('Только брони (депозиты)')
+                    ->placeholder('Все транзакции')
+                    ->trueLabel('Только брони')
+                    ->falseLabel('Без броней')
+                    ->queries(
+                        true: fn ($query) => $query->where('tariff', 'deposit'),
+                        false: fn ($query) => $query->where('tariff', '!=', 'deposit'),
+                        blank: fn ($query) => $query,
+                    ),
+
+                Tables\Filters\Filter::make('created_at')
+                    ->label('Период')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('С даты')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('По дату')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when(
+                                $data['from'] ?? null,
+                                fn ($q, $date) => $q->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'] ?? null,
+                                fn ($q, $date) => $q->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from'] ?? null) {
+                            $indicators[] = 'С '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                        }
+                        if ($data['until'] ?? null) {
+                            $indicators[] = 'По '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->iconButton(),
@@ -204,7 +305,7 @@ class PaymentResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
-            ->striped(); 
+            ->striped();
     }
 
     public static function getRelations(): array

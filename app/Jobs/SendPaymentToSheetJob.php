@@ -40,13 +40,13 @@ class SendPaymentToSheetJob implements ShouldQueue
         /** @var Payment|null $payment */
         $payment = Payment::with(['user', 'course'])->find($this->paymentId);
 
-        if (!$payment) {
+        if (! $payment) {
             // Удалили, пока задача висела в очереди — молча выходим
             return;
         }
 
         // Повторная защита на уровне job (вдруг статус откатили назад)
-        if ((float) $payment->amount <= 0 || !in_array($payment->status, ['paid', 'success'], true)) {
+        if ((float) $payment->amount <= 0 || ! in_array($payment->status, ['paid', 'success'], true)) {
             return;
         }
 
@@ -54,6 +54,7 @@ class SendPaymentToSheetJob implements ShouldQueue
 
         if (empty($webhookUrl)) {
             Log::warning('n8n payments webhook URL не задан в config/services.php');
+
             return;
         }
 
@@ -73,19 +74,19 @@ class SendPaymentToSheetJob implements ShouldQueue
     private function buildPayload(Payment $payment): array
     {
         return [
-            'action'         => $this->action,
-            'id'             => $payment->id,
-            'student'        => $payment->user?->name ?? 'Удалён',
-            'student_email'  => $payment->user?->email,
-            'course'         => $payment->course?->title ?? 'Курс удалён',
-            'start_block'    => $payment->start_block,
-            'end_block'      => $payment->end_block,
-            'amount'         => (float) $payment->amount,
-            'tariff'         => $payment->tariff,
-            'status'         => $payment->status,
+            'action' => $this->action,
+            'id' => $payment->id,
+            'student' => $payment->user?->name ?? 'Удалён',
+            'student_email' => $payment->user?->email,
+            'course' => $payment->course?->title ?? 'Курс удалён',
+            'start_block' => $payment->start_block,
+            'end_block' => $payment->end_block,
+            'amount' => (float) $payment->amount,
+            'tariff' => $payment->tariff,
+            'status' => $payment->status,
             'transaction_id' => $payment->transaction_id,
-            'paid_at'        => $payment->updated_at?->format('d.m.Y'),
-            'created_at'     => $payment->created_at?->format('d.m.Y H:i'),
+            'paid_at' => $payment->updated_at?->format('d.m.Y'),
+            'created_at' => $payment->created_at?->format('d.m.Y H:i'),
         ];
     }
 
@@ -96,8 +97,8 @@ class SendPaymentToSheetJob implements ShouldQueue
     {
         Log::error('SendPaymentToSheetJob провалился окончательно', [
             'payment_id' => $this->paymentId,
-            'action'     => $this->action,
-            'error'      => $exception->getMessage(),
+            'action' => $this->action,
+            'error' => $exception->getMessage(),
         ]);
     }
 }

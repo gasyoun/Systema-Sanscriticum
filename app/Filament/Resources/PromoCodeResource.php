@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\PromoCodeResource\Pages;
 use App\Models\PromoCode;
 use Filament\Forms;
@@ -12,15 +13,20 @@ use Filament\Tables\Table;
 
 class PromoCodeResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = PromoCode::class;
 
     // Иконка билетика/купона для меню
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
-    
+
     // Создадим отдельную группу в меню для будущих фишек
     protected static ?string $navigationGroup = 'Маркетинг';
+
     protected static ?string $navigationLabel = 'Промокоды';
+
     protected static ?string $modelLabel = 'Промокод';
+
     protected static ?string $pluralModelLabel = 'Промокоды';
 
     public static function form(Form $form): Form
@@ -94,16 +100,17 @@ class PromoCodeResource extends Resource
                 Tables\Columns\TextColumn::make('value')
                     ->label('Скидка')
                     ->formatStateUsing(function ($record) {
-                        return $record->type === 'percent' 
-                            ? $record->value . ' %' 
-                            : number_format($record->value, 0, '.', ' ') . ' ₽';
+                        return $record->type === 'percent'
+                            ? $record->value.' %'
+                            : number_format($record->value, 0, '.', ' ').' ₽';
                     }),
 
                 Tables\Columns\TextColumn::make('usage_limit')
                     ->label('Использовано')
                     ->formatStateUsing(function ($record) {
-                        $limit = $record->usage_limit ? ' из ' . $record->usage_limit : ' (безлимит)';
-                        return $record->used_count . $limit;
+                        $limit = $record->usage_limit ? ' из '.$record->usage_limit : ' (безлимит)';
+
+                        return $record->used_count.$limit;
                     }),
 
                 Tables\Columns\TextColumn::make('expires_at')

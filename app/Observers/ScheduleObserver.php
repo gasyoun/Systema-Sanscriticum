@@ -55,7 +55,7 @@ class ScheduleObserver
                 ]);
         } catch (\Exception $e) {
             // Логируем ошибку, но НЕ ЛОМАЕМ работу админки
-            Log::error('n8n webhook error: ' . $e->getMessage());
+            Log::error('n8n webhook error: '.$e->getMessage());
         }
     }
 }

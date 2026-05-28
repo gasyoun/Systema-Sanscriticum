@@ -8,15 +8,18 @@ use Illuminate\Support\Facades\DB;
 class RetentionChart extends ChartWidget
 {
     protected static ?string $heading = 'Доходимость уроков (Retention)';
+
     protected static ?int $sort = 4;
+
     protected static ?string $maxHeight = '300px';
-    
+
     public static function canView(): bool
     {
         return false; // Возвращаем false, и виджет полностью исчезает
     }
+
     // Растягиваем график на всю ширину страницы
-    protected int | string | array $columnSpan = 'full'; 
+    protected int|string|array $columnSpan = 'full';
 
     protected function getData(): array
     {
@@ -34,7 +37,7 @@ class RetentionChart extends ChartWidget
         foreach ($completions as $index => $item) {
             // Если у тебя в модели Lesson есть поле title, можно сделать запрос к ней.
             // Но для безопасности пока выводим просто порядковый номер урока.
-            $labels[] = 'Урок ' . ($index + 1); 
+            $labels[] = 'Урок '.($index + 1);
             $data[] = $item->users_count;
         }
 

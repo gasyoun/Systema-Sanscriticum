@@ -2,45 +2,51 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\LandingPageResource\Pages;
 use App\Models\LandingPage;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
+use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\Builder\Block;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\DatePicker; // <-- ДОБАВЛЕНО
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Form; // <-- ДОБАВЛЕНО
+use Filament\Resources\Resource;      // <-- ДОБАВЛЕНО
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\Builder\Block; // <-- ДОБАВЛЕНО
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\ColorPicker; // <-- ДОБАВЛЕНО
-use Filament\Forms\Components\Select;      // <-- ДОБАВЛЕНО
-use Awcodes\Curator\Components\Forms\CuratorPicker;
 
 class LandingPageResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LandingPage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?int $navigationSort = 130;
+
     protected static ?string $navigationGroup = 'Маркетинг';
+
     protected static ?string $navigationLabel = 'Лендинги';
+
     protected static ?string $pluralModelLabel = 'Лендинги';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                
+
                 // === 1. ОБЩИЕ НАСТРОЙКИ ===
                 Section::make('Основные настройки')
                     ->schema([
@@ -49,7 +55,7 @@ class LandingPageResource extends Resource
                             ->required(),
                         TextInput::make('slug')
                             ->label('URL адрес (slug)')
-                            ->prefix(config('app.url') . '/promo/')
+                            ->prefix(config('app.url').'/promo/')
                             ->required()
                             ->unique(ignoreRecord: true),
                         Toggle::make('is_active')
@@ -86,6 +92,19 @@ class LandingPageResource extends Resource
                                         TextInput::make('button_text')
                                             ->label('Текст кнопки')
                                             ->default('Записаться'),
+
+                                        Repeater::make('badges')
+                                            ->label('Плашки под кнопкой')
+                                            ->schema([
+                                                TextInput::make('text')->label('Текст плашки')->required(),
+                                            ])
+                                            ->grid(3)
+                                            ->maxItems(4)
+                                            ->default([
+                                                ['text' => 'Старт потока скоро'],
+                                                ['text' => 'Места ограничены'],
+                                                ['text' => 'Онлайн формат'],
+                                            ]),
                                     ]),
 
                                 // 2. VIDEO
@@ -110,7 +129,28 @@ class LandingPageResource extends Resource
                                                 Textarea::make('description')->label('Текст'),
                                             ])->grid(2),
                                     ]),
-                                    
+
+                                // 11.1. RECORDED COURSES (Мини-блок «Курсы в записи»)
+                                Builder\Block::make('recorded_courses_block')
+                                    ->label('11.1. Курсы в записи (слайдер по 6)')
+                                    ->icon('heroicon-m-rectangle-stack')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок блока')
+                                            ->default('Курсы в записи'),
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок')
+                                            ->default('Учитесь в своём темпе — записи лекций с пожизненным доступом.')
+                                            ->rows(2),
+                                        Select::make('variant')
+                                            ->label('Цветовая схема')
+                                            ->options([
+                                                'light' => 'Светлая (под тёплый фон лендинга)',
+                                                'dark' => 'Тёмная',
+                                            ])
+                                            ->default('light'),
+                                    ]),
+
                                 // 11. COURSES GRID (Сетка других курсов)
                                 Builder\Block::make('courses_grid')
                                     ->label('11. Сетка курсов (Светлая)')
@@ -119,46 +159,46 @@ class LandingPageResource extends Resource
                                         TextInput::make('title')
                                             ->label('Заголовок блока')
                                             ->default('Наши курсы'),
-                                            
+
                                         Textarea::make('subtitle')
                                             ->label('Подзаголовок')
                                             ->default('Выберите курс для начала обучения.')
                                             ->rows(2),
-                                            
+
                                         TextInput::make('limit')
                                             ->label('Сколько курсов показать?')
                                             ->numeric()
                                             ->default(6)
                                             ->helperText('Если курсов много, лучше ограничить их число (например, 3 или 6), чтобы не перегружать лендинг.'),
                                     ]),
-                                
+
                                 // 13. ABOUT PLATFORM (Светлая карточка)
-Builder\Block::make('about_platform_light')
-    ->label('13. Светлая карточка (О платформе/Дисклеймер)')
-    ->icon('heroicon-m-information-circle')
-    ->schema([
-        TextInput::make('title')
-            ->label('Заголовок')
-            ->default('О нашей платформе')
-            ->columnSpanFull(),
-                                            
-        RichEditor::make('content')
-            ->label('Текст')
-            ->toolbarButtons([
-                'bold', 
-                'italic', 
-                'strike', 
-                'link', 
-                'h2', 
-                'h3', 
-                'blockquote', 
-                'bulletList', 
-                'orderedList', 
-                'codeBlock'
-            ])
-            ->columnSpanFull() // Растягиваем редактор на всю ширину
-            ->default('<p>Все программы Общества ревнителей санскрита носят исключительно просветительский характер. Участие в них не ведёт к присвоению квалификации, профессии или получению документов об образовании.</p><p>Наша главная цель — популяризация санскрита, знакомство с богатым культурным и философским наследием Индии, а также создание сообщества единомышленников для совместного изучения этого древнего языка.</p><p>Наши лекторы — это индологи, востоковеды, филологи, философы, йоги с большим практическим опытом.</p><p>До встречи на занятиях!</p>'),
-    ]),    
+                                Builder\Block::make('about_platform_light')
+                                    ->label('13. Светлая карточка (О платформе/Дисклеймер)')
+                                    ->icon('heroicon-m-information-circle')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('О нашей платформе')
+                                            ->columnSpanFull(),
+
+                                        RichEditor::make('content')
+                                            ->label('Текст')
+                                            ->toolbarButtons([
+                                                'bold',
+                                                'italic',
+                                                'strike',
+                                                'link',
+                                                'h2',
+                                                'h3',
+                                                'blockquote',
+                                                'bulletList',
+                                                'orderedList',
+                                                'codeBlock',
+                                            ])
+                                            ->columnSpanFull() // Растягиваем редактор на всю ширину
+                                            ->default('<p>Все программы Общества ревнителей санскрита носят исключительно просветительский характер. Участие в них не ведёт к присвоению квалификации, профессии или получению документов об образовании.</p><p>Наша главная цель — популяризация санскрита, знакомство с богатым культурным и философским наследием Индии, а также создание сообщества единомышленников для совместного изучения этого древнего языка.</p><p>Наши лекторы — это индологи, востоковеды, филологи, философы, йоги с большим практическим опытом.</p><p>До встречи на занятиях!</p>'),
+                                    ]),
 
                                 // 4. RESULTS (Бенто-сетка)
                                 Builder\Block::make('results_block')
@@ -168,22 +208,22 @@ Builder\Block::make('about_platform_light')
                                         TextInput::make('title')
                                             ->label('Заголовок')
                                             ->default('Вот, что могут 90% наших учеников'),
-                                        
+
                                         Repeater::make('items')
                                             ->label('Карточки преимуществ')
                                             ->schema([
                                                 CuratorPicker::make('icon')
                                                     ->label('Иконка (желательно PNG/SVG)')
                                                     ->buttonLabel('Выбрать из медиатеки'),
-                                                
+
                                                 TextInput::make('title')
                                                     ->label('Заголовок карточки')
                                                     ->required(),
-                                                
+
                                                 Textarea::make('description')
                                                     ->label('Текст карточки')
                                                     ->rows(2),
-                                                
+
                                                 Toggle::make('is_wide')
                                                     ->label('Широкая карточка (на 2 колонки)')
                                                     ->default(false),
@@ -191,8 +231,8 @@ Builder\Block::make('about_platform_light')
                                             ->grid(2)
                                             ->defaultItems(3),
                                     ]),
-                                    
-                                    // ==============================================================
+
+                                // ==============================================================
                                 // 13. НОВЫЙ БЛОК: ГЛАВНЫЙ ЭКРАН СО СТИКИ ФОРМОЙ И КАСТОМИЗАЦИЕЙ
                                 // ==============================================================
                                 Builder\Block::make('new_hero_with_form')
@@ -205,20 +245,68 @@ Builder\Block::make('about_platform_light')
                                                 TextInput::make('subtitle')
                                                     ->label('Надзаголовок (Плашка)')
                                                     ->default('ОНЛАЙН-КУРС В 2-Х ЧАСТЯХ'),
-                                                    
+
                                                 Textarea::make('title')
                                                     ->label('Главный заголовок')
                                                     ->default('Название вашего невероятного курса')
                                                     ->rows(3),
-                                                    
+
                                                 Textarea::make('description')
                                                     ->label('Описание')
                                                     ->default('Из первых уст от топовых спикеров. Освойте новую профессию за 3 месяца и начните зарабатывать из любой точки мира.')
                                                     ->rows(3),
-                                                    
+
                                                 TextInput::make('button_text')
                                                     ->label('Текст кнопки')
                                                     ->default('Оставить заявку'),
+
+                                                Repeater::make('badges')
+                                                    ->label('Плашки под кнопкой')
+                                                    ->schema([
+                                                        TextInput::make('text')->label('Текст плашки')->required(),
+                                                    ])
+                                                    ->grid(3)
+                                                    ->maxItems(4)
+                                                    ->default([
+                                                        ['text' => 'Старт потока скоро'],
+                                                        ['text' => 'Места ограничены'],
+                                                        ['text' => 'Онлайн формат'],
+                                                    ]),
+                                            ]),
+
+                                        // --- ФОРМА ЗАЯВКИ (тексты полей) ---
+                                        Section::make('Форма заявки')
+                                            ->collapsed()
+                                            ->schema([
+                                                TextInput::make('form_title')
+                                                    ->label('Заголовок над формой')
+                                                    ->default('Записаться на курс'),
+
+                                                TextInput::make('submit_text')
+                                                    ->label('Текст кнопки отправки')
+                                                    ->default('Записаться')
+                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.'),
+
+                                                Fieldset::make('Подписи и плейсхолдеры полей')
+                                                    ->schema([
+                                                        TextInput::make('label_name')->label('Подпись «Имя»')->default('Ваше имя'),
+                                                        TextInput::make('ph_name')->label('Плейсхолдер «Имя»')->default('Имя и фамилия'),
+
+                                                        TextInput::make('label_contact')->label('Подпись «Телефон»')->default('Телефон'),
+                                                        TextInput::make('ph_contact')->label('Плейсхолдер «Телефон»')->default('+7 999 000-00-00'),
+
+                                                        TextInput::make('label_email')->label('Подпись «Email»')->default('Email'),
+                                                        TextInput::make('ph_email')->label('Плейсхолдер «Email»')->default('mail@example.com'),
+
+                                                        TextInput::make('label_social')->label('Подпись «Соцсеть»')->default('Telegram / VK / Instagram'),
+                                                        TextInput::make('ph_social')->label('Плейсхолдер «Соцсеть»')->default('@username или ссылка'),
+                                                    ])->columns(2),
+
+                                                Textarea::make('social_gift_note')
+                                                    ->label('Подарок за соцсеть (над полем «Соцсеть»)')
+                                                    ->rows(2)
+                                                    ->default('Заполните это поле — и мы пришлём вам подарок в указанный мессенджер 🎁')
+                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.'),
                                             ]),
 
                                         // --- НАСТРОЙКИ ДИЗАЙНА ---
@@ -228,15 +316,15 @@ Builder\Block::make('about_platform_light')
                                                 ColorPicker::make('bg_color')
                                                     ->label('Цвет фона блока')
                                                     ->default('#FFFFFF'),
-                                                    
+
                                                 ColorPicker::make('form_bg_color')
                                                     ->label('Цвет фона формы')
                                                     ->default('#FFFFFF'),
-                                                    
+
                                                 ColorPicker::make('text_color')
                                                     ->label('Цвет заголовка')
                                                     ->default('#101010'),
-                                                    
+
                                                 ColorPicker::make('accent_color')
                                                     ->label('Цвет акцентов (Кнопки, выделения)')
                                                     ->default('#E3122C'),
@@ -247,7 +335,7 @@ Builder\Block::make('about_platform_light')
                                                         "'Nunito Sans', sans-serif" => 'Nunito Sans (Современный)',
                                                         "'Charis SIL', serif" => 'Charis SIL (С засечками)',
                                                         "'Inter', sans-serif" => 'Inter (Строгий)',
-                                                        "system-ui, sans-serif" => 'Системный шрифт',
+                                                        'system-ui, sans-serif' => 'Системный шрифт',
                                                     ])
                                                     ->default("'Nunito Sans', sans-serif"),
 
@@ -261,7 +349,7 @@ Builder\Block::make('about_platform_light')
                                                     ->default('text-5xl lg:text-6xl'),
                                             ])->columns(2),
                                     ]),
-                                    
+
                                 // ==============================================================
                                 // 14. БАННЕР-ПРИЗЫВ (Горизонтальный блок с кнопкой)
                                 // ==============================================================
@@ -272,45 +360,45 @@ Builder\Block::make('about_platform_light')
                                         TextInput::make('title')
                                             ->label('Заголовок')
                                             ->default('ВОПРОСЫ И ОТВЕТЫ А.В.ПАРИБКУ'),
-                                            
+
                                         Textarea::make('subtitle')
                                             ->label('Подзаголовок')
                                             ->default('Посмотрите вводное занятие, где Андрей Всеволодович более развернуто отвечает на вопросы о курсе →')
                                             ->rows(2),
-                                            
+
                                         TextInput::make('button_text')
                                             ->label('Текст кнопки')
                                             ->default('СМОТРЕТЬ'),
-                                            
+
                                         TextInput::make('button_url')
                                             ->label('Ссылка кнопки')
                                             ->default('#'),
-                                            
+
                                         Section::make('🎨 Настройки дизайна')
                                             ->collapsed()
                                             ->schema([
                                                 ColorPicker::make('bg_color')
                                                     ->label('Основной цвет фона')
                                                     ->default('#4b9b74'), // Зеленый цвет с вашего скриншота
-                                                    
+
                                                 CuratorPicker::make('bg_image')
-    ->label('Фоновое изображение (Облака/Узоры)')
-    ->helperText('Изображение будет наложено поверх цвета фона с полупрозрачностью')
-    ->buttonLabel('Выбрать фон'),
-                                                    
+                                                    ->label('Фоновое изображение (Облака/Узоры)')
+                                                    ->helperText('Изображение будет наложено поверх цвета фона с полупрозрачностью')
+                                                    ->buttonLabel('Выбрать фон'),
+
                                                 ColorPicker::make('text_color')
                                                     ->label('Цвет текста')
                                                     ->default('#ffffff'),
-                                                    
+
                                                 ColorPicker::make('button_bg_color')
                                                     ->label('Цвет фона кнопки')
                                                     ->default('#ffffff'),
-                                                    
+
                                                 ColorPicker::make('button_text_color')
                                                     ->label('Цвет текста кнопки')
                                                     ->default('#1E4633'), // Темно-зеленый текст на кнопке
                                             ])->columns(2),
-                                    ]),    
+                                    ]),
 
                                 // 5. PROGRAM
                                 Builder\Block::make('program_block')
@@ -341,110 +429,110 @@ Builder\Block::make('about_platform_light')
                                     ]),
 
                                 // 7. PRICE (Тарифы + Дефицит)
-Builder\Block::make('price_block')
-    ->label('7. Стоимость (Тарифы)')
-    ->icon('heroicon-m-currency-dollar')
-    ->schema([
-        TextInput::make('title')
-            ->label('Заголовок секции')
-            ->default('Выберите формат участия'),
-        
-        TextInput::make('subtitle')
-            ->label('Подзаголовок')
-            ->default('Доступна рассрочка'),
+                                Builder\Block::make('price_block')
+                                    ->label('7. Стоимость (Тарифы)')
+                                    ->icon('heroicon-m-currency-dollar')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок секции')
+                                            ->default('Выберите формат участия'),
 
-        // === СЮДА ПЕРЕНЕСЛИ НАСТРОЙКИ ДЕФИЦИТА ===
-        Section::make('Настройки дефицита (Таймер и Места)')
-            ->schema([
-                DateTimePicker::make('timer_end')
-                    ->label('Таймер до (Дата и время)')
-                    ->helperText('Если не заполнено — возьмется дата вебинара или +24 часа'),
-                
-                Grid::make(2)->schema([
-                    TextInput::make('seats_taken')
-                        ->label('Занято мест')
-                        ->numeric()
-                        ->default(16),
-                    TextInput::make('seats_total')
-                        ->label('Всего мест')
-                        ->numeric()
-                        ->default(20),
-                ]),
-            ])->collapsible(),
-        // ==========================================
+                                        TextInput::make('subtitle')
+                                            ->label('Подзаголовок')
+                                            ->default('Доступна рассрочка'),
 
-        Repeater::make('tariffs')
-            ->label('Карточки тарифов')
-            ->schema([
-                TextInput::make('name')->label('Название')->required(),
-                TextInput::make('price')->label('Цена')->required(),
-                TextInput::make('old_price')->label('Старая цена'),
-                RichEditor::make('features')->label('Список опций')->toolbarButtons(['bulletList', 'bold']),
-                Toggle::make('is_popular')->label('Хит продаж')->default(false),
-                TextInput::make('button_text')->label('Текст кнопки')->default('Записаться на курс'),
-            ])
-            ->grid(3)
-            ->defaultItems(3),
-    ]),
+                                        // === СЮДА ПЕРЕНЕСЛИ НАСТРОЙКИ ДЕФИЦИТА ===
+                                        Section::make('Настройки дефицита (Таймер и Места)')
+                                            ->schema([
+                                                DateTimePicker::make('timer_end')
+                                                    ->label('Таймер до (Дата и время)')
+                                                    ->helperText('Если не заполнено — возьмется дата вебинара или +24 часа'),
+
+                                                Grid::make(2)->schema([
+                                                    TextInput::make('seats_taken')
+                                                        ->label('Занято мест')
+                                                        ->numeric()
+                                                        ->default(16),
+                                                    TextInput::make('seats_total')
+                                                        ->label('Всего мест')
+                                                        ->numeric()
+                                                        ->default(20),
+                                                ]),
+                                            ])->collapsible(),
+                                        // ==========================================
+
+                                        Repeater::make('tariffs')
+                                            ->label('Карточки тарифов')
+                                            ->schema([
+                                                TextInput::make('name')->label('Название')->required(),
+                                                TextInput::make('price')->label('Цена')->required(),
+                                                TextInput::make('old_price')->label('Старая цена'),
+                                                RichEditor::make('features')->label('Список опций')->toolbarButtons(['bulletList', 'bold']),
+                                                Toggle::make('is_popular')->label('Хит продаж')->default(false),
+                                                TextInput::make('button_text')->label('Текст кнопки')->default('Записаться на курс'),
+                                            ])
+                                            ->grid(3)
+                                            ->defaultItems(3),
+                                    ]),
 
                                 // 8. REVIEWS (Отзывы + Скриншоты)
                                 Builder\Block::make('reviews_block')
-    ->label('8. Отзывы (Слайдер + Скриншоты)')
-    ->icon('heroicon-m-chat-bubble-left-right')
-    ->schema([
-        TextInput::make('title')
-            ->label('Заголовок')
-            ->default('Отзывы наших учеников'),
+                                    ->label('8. Отзывы (Слайдер + Скриншоты)')
+                                    ->icon('heroicon-m-chat-bubble-left-right')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Отзывы наших учеников'),
 
-        Repeater::make('reviews')
-            ->label('Список отзывов')
-            ->schema([
-                // 1. Блок с изображениями
-                Grid::make(2)->schema([
-                    FileUpload::make('avatar')
-                        ->label('Фото ученика')
-                        ->image()
-                        ->avatar()
-                        ->directory('promo'),
+                                        Repeater::make('reviews')
+                                            ->label('Список отзывов')
+                                            ->schema([
+                                                // 1. Блок с изображениями
+                                                Grid::make(2)->schema([
+                                                    FileUpload::make('avatar')
+                                                        ->label('Фото ученика')
+                                                        ->image()
+                                                        ->avatar()
+                                                        ->directory('promo'),
 
-                    CuratorPicker::make('images')
-    ->label('Скриншоты (переписка/результат)')
-    ->multiple() // Curator сам поймет, что нужно выбрать несколько!
-    ->buttonLabel('Добавить скриншоты'),
-                        
-                    TextInput::make('video_link')
-                        ->label('Ссылка на видеоотзыв (YouTube/Vimeo)')
-                        ->url() // проверяет, что ввели именно ссылку
-                        ->hint('Вставьте обычную ссылку на YouTube, и плеер сформируется автоматически.'),   
-                ]),
+                                                    CuratorPicker::make('images')
+                                                        ->label('Скриншоты (переписка/результат)')
+                                                        ->multiple() // Curator сам поймет, что нужно выбрать несколько!
+                                                        ->buttonLabel('Добавить скриншоты'),
 
-                // 2. Блок с данными
-                Grid::make(2)->schema([
-                    TextInput::make('name')
-                        ->label('Имя')
-                        ->required(),
+                                                    TextInput::make('video_link')
+                                                        ->label('Ссылка на видеоотзыв (YouTube/Vimeo)')
+                                                        ->url() // проверяет, что ввели именно ссылку
+                                                        ->hint('Вставьте обычную ссылку на YouTube, и плеер сформируется автоматически.'),
+                                                ]),
 
-                    TextInput::make('date')
-                        ->label('Дата')
-                        ->placeholder('20.09.2024'),
-                ]),
+                                                // 2. Блок с данными
+                                                Grid::make(2)->schema([
+                                                    TextInput::make('name')
+                                                        ->label('Имя')
+                                                        ->required(),
 
-                // 3. НОВОЕ ПОЛЕ: Ссылка на контакт
-                TextInput::make('contact_link')
-                    ->label('Ссылка на связь (VK/TG)')
-                    ->placeholder('https://vk.com/username')
-                    ->url() // Проверка, что введена именно ссылка
-                    ->prefixIcon('heroicon-m-link'),
+                                                    TextInput::make('date')
+                                                        ->label('Дата')
+                                                        ->placeholder('20.09.2024'),
+                                                ]),
 
-                Textarea::make('text')
-                    ->label('Текст отзыва')
-                    ->rows(3)
-                    ->required()
-                    ->columnSpanFull(), // Растянуть на всю ширину
-            ])
-            ->grid(2)
-            ->defaultItems(3),
-    ]),
+                                                // 3. НОВОЕ ПОЛЕ: Ссылка на контакт
+                                                TextInput::make('contact_link')
+                                                    ->label('Ссылка на связь (VK/TG)')
+                                                    ->placeholder('https://vk.com/username')
+                                                    ->url() // Проверка, что введена именно ссылка
+                                                    ->prefixIcon('heroicon-m-link'),
+
+                                                Textarea::make('text')
+                                                    ->label('Текст отзыва')
+                                                    ->rows(3)
+                                                    ->required()
+                                                    ->columnSpanFull(), // Растянуть на всю ширину
+                                            ])
+                                            ->grid(2)
+                                            ->defaultItems(3),
+                                    ]),
 
                                 // 9. FORM (С ДЕФИЦИТОМ)
                                 Builder\Block::make('form_block')
@@ -462,46 +550,46 @@ Builder\Block::make('price_block')
                                                     ->label('Текст кнопки')
                                                     ->default('Записаться'),
                                             ]),
-                                        
+
                                     ]),
-                                    Builder\Block::make('team_block')
-    ->label('9. Команда (Плитка преподавателей)')
-    ->icon('heroicon-m-users') // Иконка группы людей
-    ->schema([
-        // Общие настройки блока
-        TextInput::make('title')
-            ->label('Заголовок блока')
-            ->default('Преподаватели курса'),
-            
-        TextInput::make('subtitle')
-            ->label('Подзаголовок (необязательно)')
-            ->placeholder('Опытные наставники, которые приведут вас к результату'),
+                                Builder\Block::make('team_block')
+                                    ->label('9. Команда (Плитка преподавателей)')
+                                    ->icon('heroicon-m-users') // Иконка группы людей
+                                    ->schema([
+                                        // Общие настройки блока
+                                        TextInput::make('title')
+                                            ->label('Заголовок блока')
+                                            ->default('Преподаватели курса'),
 
-        // Список преподавателей
-        Repeater::make('items')
-            ->label('Список преподавателей')
-            ->schema([
-                CuratorPicker::make('image')
-    ->label('Фото')
-    ->required()
-    ->buttonLabel('Выбрать фото'),
+                                        TextInput::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->placeholder('Опытные наставники, которые приведут вас к результату'),
 
-                TextInput::make('name')
-                    ->label('Имя Фамилия')
-                    ->required()
-                    ->placeholder('Иван Иванов'),
+                                        // Список преподавателей
+                                        Repeater::make('items')
+                                            ->label('Список преподавателей')
+                                            ->schema([
+                                                CuratorPicker::make('image')
+                                                    ->label('Фото')
+                                                    ->required()
+                                                    ->buttonLabel('Выбрать фото'),
 
-                TextInput::make('role')
-                    ->label('Роль / Специализация')
-                    ->placeholder('Эксперт по грамматике'),
+                                                TextInput::make('name')
+                                                    ->label('Имя Фамилия')
+                                                    ->required()
+                                                    ->placeholder('Иван Иванов'),
 
-                RichEditor::make('description')
-                    ->label('Краткое описание')
-                    ->placeholder('10 лет опыта, автор 5 книг...'),
-            ])
-            ->grid(4) // В админке показывать по 4 в ряд
-            ->defaultItems(4),
-    ]),
+                                                TextInput::make('role')
+                                                    ->label('Роль / Специализация')
+                                                    ->placeholder('Эксперт по грамматике'),
+
+                                                RichEditor::make('description')
+                                                    ->label('Краткое описание')
+                                                    ->placeholder('10 лет опыта, автор 5 книг...'),
+                                            ])
+                                            ->grid(4) // В админке показывать по 4 в ряд
+                                            ->defaultItems(4),
+                                    ]),
                                 // 10. INSTRUCTOR (Преподаватель - НОВЫЙ БЛОК)
                                 Builder\Block::make('instructor_block')
                                     ->label('10. Блок "О преподавателе"')
@@ -515,23 +603,23 @@ Builder\Block::make('price_block')
                                                         ->size('xs')
                                                         ->buttonLabel('Выбрать фото')
                                                         ->columnSpan(1),
-                                                    
+
                                                     Grid::make(1)->schema([
                                                         TextInput::make('name')
                                                             ->label('Имя Фамилия')
                                                             ->required(),
-                                                        
+
                                                         TextInput::make('role')
                                                             ->label('Должность / Статус')
                                                             ->default('Автор курса'),
                                                     ])->columnSpan(2),
                                                 ]),
-                                                
+
                                                 RichEditor::make('bio')
                                                     ->label('Биография / Описание')
                                                     ->toolbarButtons(['bold', 'bulletList', 'italic']),
                                             ]),
-                                        
+
                                         Repeater::make('stats')
                                             ->label('Факты в цифрах (под именем)')
                                             ->schema([
@@ -540,7 +628,7 @@ Builder\Block::make('price_block')
                                             ])
                                             ->grid(3)
                                             ->defaultItems(3),
-                                            
+
                                         // === НАЧАЛО: ПУБЛИКАЦИИ ===
                                         Repeater::make('publications')
                                             ->label('Публикации и книги')
@@ -551,17 +639,17 @@ Builder\Block::make('price_block')
                                                         ->size('xs')
                                                         ->buttonLabel('Выбрать обложку')
                                                         ->columnSpan(1),
-                                                    
+
                                                     Grid::make(1)->schema([
                                                         TextInput::make('title')
                                                             ->label('Название книги/статьи')
                                                             ->required()
                                                             ->maxLength(255),
-                                                        
+
                                                         TextInput::make('type')
                                                             ->label('Тип (например: Монография, Статья)')
                                                             ->maxLength(50),
-                                                        
+
                                                         TextInput::make('url')
                                                             ->label('Ссылка (если есть)')
                                                             ->url()
@@ -571,191 +659,281 @@ Builder\Block::make('price_block')
                                             ])
                                             ->collapsed()
                                             ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
-                                        // === КОНЕЦ: ПУБЛИКАЦИИ ===  
+                                        // === КОНЕЦ: ПУБЛИКАЦИИ ===
                                     ]),
-                                    
-                                    // 16. TRIAL BLOCK (Пробное занятие)
-Builder\Block::make('trial_block')
-    ->label('16. Блок "Сомневаетесь?" (Пробный урок)')
-    ->icon('heroicon-m-hand-raised')
-    ->schema([
-        TextInput::make('title')
-            ->label('Заголовок')
-            ->default('Сомневаетесь, что у вас получится?'),
-        
-        Textarea::make('description')
-            ->label('Текст описания')
-            ->rows(4)
-            ->default('Мы понимаем. Начинать новое всегда волнительно. Поэтому приглашаем вас на бесплатное пробное занятие — без обязательств и оплаты. Вы познакомитесь с преподавателем, попробуете свои силы и поймёте, насколько это комфортно именно для вас. Если не зайдет — останетесь при своём, ничего не потеряв.'),
-        
-        TextInput::make('button_text')
-            ->label('Текст кнопки')
-            ->default('Да, хочу попробовать'),
-        
-        // --- НОВЫЕ ПОЛЯ ДЛЯ НАСТРОЙКИ МОДАЛКИ ---
-        \Filament\Forms\Components\Fieldset::make('Настройки всплывающей формы')
-            ->schema([
-                TextInput::make('modal_title')
-                    ->label('Заголовок формы')
-                    ->default('Запись на пробный урок')
-                    ->columnSpanFull(),
-                    
-                TextInput::make('modal_text')
-                    ->label('Текст-подсказка под заголовком')
-                    ->default('Оставьте контакты, и мы согласуем удобное время.')
-                    ->columnSpanFull(),
 
-                TextInput::make('form_name')
-                    ->label('Скрытая метка формы (увидите в Excel/CRM)')
-                    ->default('Бесплатное пробное занятие')
-                    ->required()
-                    ->columnSpanFull(),
-            ]),
+                                // 16. TRIAL BLOCK (Пробное занятие)
+                                Builder\Block::make('trial_block')
+                                    ->label('16. Блок "Сомневаетесь?" (Пробный урок)')
+                                    ->icon('heroicon-m-hand-raised')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Сомневаетесь, что у вас получится?'),
 
-        Section::make('🎨 Дизайн')
-            ->collapsed()
-            ->schema([
-                ColorPicker::make('bg_color')->label('Цвет фона')->default('#FFFFFF'),
-                ColorPicker::make('text_color')->label('Цвет текста')->default('#101010'),
-                ColorPicker::make('button_bg')->label('Цвет кнопки')->default('#E85C24'),
-            ])->columns(3),
-    ]),
-    
-    
-                                    // 14. FAQ (Частые вопросы)
-Builder\Block::make('faq_block')
-    ->label('14. FAQ (Частые вопросы)')
-    ->icon('heroicon-m-question-mark-circle')
-    ->schema([
-        TextInput::make('title')
-            ->label('Заголовок блока')
-            ->default('Частые вопросы')
-            ->required(),
+                                        Textarea::make('description')
+                                            ->label('Текст описания')
+                                            ->rows(4)
+                                            ->default('Мы понимаем. Начинать новое всегда волнительно. Поэтому приглашаем вас на бесплатное пробное занятие — без обязательств и оплаты. Вы познакомитесь с преподавателем, попробуете свои силы и поймёте, насколько это комфортно именно для вас. Если не зайдет — останетесь при своём, ничего не потеряв.'),
 
-        Textarea::make('subtitle')
-            ->label('Подзаголовок (опционально)')
-            ->placeholder('Собрали ответы на самые популярные вопросы о курсе')
-            ->rows(2),
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки')
+                                            ->default('Да, хочу попробовать'),
 
-        Repeater::make('items')
-            ->label('Вопросы и ответы')
-            ->schema([
-                TextInput::make('question')
-                    ->label('Вопрос')
-                    ->required()
-                    ->maxLength(255),
+                                        // --- НОВЫЕ ПОЛЯ ДЛЯ НАСТРОЙКИ МОДАЛКИ ---
+                                        \Filament\Forms\Components\Fieldset::make('Настройки всплывающей формы')
+                                            ->schema([
+                                                TextInput::make('modal_title')
+                                                    ->label('Заголовок формы')
+                                                    ->default('Запись на пробный урок')
+                                                    ->columnSpanFull(),
 
-                RichEditor::make('answer')
-                    ->label('Ответ')
-                    ->required()
-                    ->toolbarButtons([
-                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
-                    ]),
-            ])
-            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
-            ->collapsible()
-            ->collapsed()
-            ->reorderableWithButtons()
-            ->cloneable()
-            ->minItems(1)
-            ->defaultItems(3),
-    ]),
-                                    
-                                    // 15. херо - НОВЫЙ БЛОК)
-                                    Block::make('new_paribok_hero')
-    ->label('Главный экран (Спец. дизайн)')
-    ->icon('heroicon-o-star')
-    ->schema([
-        // --- 1. КОНТЕНТ ---
-        FileUpload::make('logo_image')
-            ->label('Логотип (image-2.png)')
-            ->directory('landing-blocks')
-            ->image(),
-            
-        TextInput::make('super_title')
-            ->label('Надзаголовок (Организатор)')
-            ->default('Общество ревнителей санскрита'),
-            
-        Textarea::make('title')
-            ->label('Главный заголовок')
-            ->default("Разбор Йога-сутр\nПатанджали\nс А.В.Парибком")
-            ->rows(3),
-            
-        TextInput::make('badge_top')
-            ->label('Плашка 1 (Текст 1)')
-            ->default('ОНЛАЙН-КУРС'),
-            
-        TextInput::make('badge_bottom')
-            ->label('Плашка 1 (Текст 2)')
-            ->default('В 2-х ЧАСТЯХ'),
-            
-        TextInput::make('orange_badge')
-            ->label('Оранжевая плашка (Даты)')
-            ->default('Вторая часть стартовала с 4 октября 2025'),
-            
-        Textarea::make('description')
-            ->label('Описание (Из первых уст...)')
-            ->default('Из первых уст от востоковеда с мировым именем и йога с 60-летним стажем!')
-            ->rows(3),
+                                                TextInput::make('modal_text')
+                                                    ->label('Текст-подсказка под заголовком')
+                                                    ->default('Оставьте контакты, и мы согласуем удобное время.')
+                                                    ->columnSpanFull(),
 
-        // --- 2. ДИЗАЙН И ФОНЫ ---
-        Section::make('🎨 Фоны и Дизайн')
-            ->description('Загрузите слои из Figma и настройте цвета')
-            ->collapsed()
-            ->schema([
-                FileUpload::make('bg_image')
-                    ->label('Задний фон (bg.png)')
-                    ->directory('landing-blocks')
-                    ->image(),
-                    
-                FileUpload::make('clouds_image')
-                    ->label('Слой облаков (clouds.png)')
-                    ->directory('landing-blocks')
-                    ->image(),
-                    
-                FileUpload::make('speaker_image')
-                    ->label('Фото спикера (image.png)')
-                    ->directory('landing-blocks')
-                    ->image(),
-                    
-                ColorPicker::make('text_color')
-                    ->label('Цвет основного текста')
-                    ->default('#07191e'), // Точный цвет из вашей Figma
-                    
-                ColorPicker::make('accent_color')
-                    ->label('Цвет акцентов (оранжевый)')
-                    ->default('#E85C24'),
-            ])->columns(2),
-    ]),
+                                                TextInput::make('form_name')
+                                                    ->label('Скрытая метка формы (увидите в Excel/CRM)')
+                                                    ->default('Бесплатное пробное занятие')
+                                                    ->required()
+                                                    ->columnSpanFull(),
+                                            ]),
+
+                                        Section::make('🎨 Дизайн')
+                                            ->collapsed()
+                                            ->schema([
+                                                ColorPicker::make('bg_color')->label('Цвет фона')->default('#FFFFFF'),
+                                                ColorPicker::make('text_color')->label('Цвет текста')->default('#101010'),
+                                                ColorPicker::make('button_bg')->label('Цвет кнопки')->default('#E85C24'),
+                                            ])->columns(3),
+                                    ]),
+
+                                // 14. FAQ (Частые вопросы)
+                                Builder\Block::make('faq_block')
+                                    ->label('14. FAQ (Частые вопросы)')
+                                    ->icon('heroicon-m-question-mark-circle')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок блока')
+                                            ->default('Частые вопросы')
+                                            ->required(),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок (опционально)')
+                                            ->placeholder('Собрали ответы на самые популярные вопросы о курсе')
+                                            ->rows(2),
+
+                                        Repeater::make('items')
+                                            ->label('Вопросы и ответы')
+                                            ->schema([
+                                                TextInput::make('question')
+                                                    ->label('Вопрос')
+                                                    ->required()
+                                                    ->maxLength(255),
+
+                                                RichEditor::make('answer')
+                                                    ->label('Ответ')
+                                                    ->required()
+                                                    ->toolbarButtons([
+                                                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                                                    ]),
+                                            ])
+                                            ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->minItems(1)
+                                            ->defaultItems(3),
+                                    ]),
+
+                                // 15. херо - НОВЫЙ БЛОК)
+                                Block::make('new_paribok_hero')
+                                    ->label('Главный экран (Спец. дизайн)')
+                                    ->icon('heroicon-o-star')
+                                    ->schema([
+                                        // --- 1. КОНТЕНТ ---
+                                        FileUpload::make('logo_image')
+                                            ->label('Логотип (image-2.png)')
+                                            ->directory('landing-blocks')
+                                            ->image(),
+
+                                        TextInput::make('super_title')
+                                            ->label('Надзаголовок (Организатор)')
+                                            ->default('Общество ревнителей санскрита'),
+
+                                        Textarea::make('title')
+                                            ->label('Главный заголовок')
+                                            ->default("Разбор Йога-сутр\nПатанджали\nс А.В.Парибком")
+                                            ->rows(3),
+
+                                        TextInput::make('badge_top')
+                                            ->label('Плашка 1 (Текст 1)')
+                                            ->default('ОНЛАЙН-КУРС'),
+
+                                        TextInput::make('badge_bottom')
+                                            ->label('Плашка 1 (Текст 2)')
+                                            ->default('В 2-х ЧАСТЯХ'),
+
+                                        TextInput::make('orange_badge')
+                                            ->label('Оранжевая плашка (Даты)')
+                                            ->default('Вторая часть стартовала с 4 октября 2025'),
+
+                                        Textarea::make('description')
+                                            ->label('Описание (Из первых уст...)')
+                                            ->default('Из первых уст от востоковеда с мировым именем и йога с 60-летним стажем!')
+                                            ->rows(3),
+
+                                        // --- 2. ДИЗАЙН И ФОНЫ ---
+                                        Section::make('🎨 Фоны и Дизайн')
+                                            ->description('Загрузите слои из Figma и настройте цвета')
+                                            ->collapsed()
+                                            ->schema([
+                                                FileUpload::make('bg_image')
+                                                    ->label('Задний фон (bg.png)')
+                                                    ->directory('landing-blocks')
+                                                    ->image(),
+
+                                                FileUpload::make('clouds_image')
+                                                    ->label('Слой облаков (clouds.png)')
+                                                    ->directory('landing-blocks')
+                                                    ->image(),
+
+                                                FileUpload::make('speaker_image')
+                                                    ->label('Фото спикера (image.png)')
+                                                    ->directory('landing-blocks')
+                                                    ->image(),
+
+                                                ColorPicker::make('text_color')
+                                                    ->label('Цвет основного текста')
+                                                    ->default('#07191e'), // Точный цвет из вашей Figma
+
+                                                ColorPicker::make('accent_color')
+                                                    ->label('Цвет акцентов (оранжевый)')
+                                                    ->default('#E85C24'),
+                                            ])->columns(2),
+                                    ]),
 
                             ])
                             ->collapsible()
-                            ->cloneable()
+                            ->cloneable(),
                     ]),
 
                 // === 3. АНАЛИТИКА ===
                 Section::make('Аналитика')
                     ->schema([
                         TextInput::make('yandex_metrika_id')->label('ID Яндекс.Метрики')->numeric(),
-                        TextInput::make('vk_pixel_id')->label('ID Пикселя VK')->numeric(),    
+                        TextInput::make('vk_pixel_id')->label('ID Пикселя VK')->numeric(),
+                    ]),
+
+                // === 3.5 LEAD MAGNET (файл-подарок после заявки) ===
+                Section::make('🎁 Lead Magnet')
+                    ->description('Файл, который бот автоматически пришлёт пользователю после заявки. Канал выбирается из поля social лида либо берётся дефолтный.')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Toggle::make('lead_magnet_enabled')
+                            ->label('Включить lead-magnet для этого лендинга')
+                            ->live(),
+                        FileUpload::make('lead_magnet_file_path')
+                            ->label('Файл (PDF / DOC / DOCX)')
+                            ->directory('magnets')
+                            ->disk('public')
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            ])
+                            ->maxSize(10240)
+                            ->visible(fn ($get) => (bool) $get('lead_magnet_enabled')),
+                        TextInput::make('lead_magnet_title')
+                            ->label('Название магнита')
+                            ->placeholder('Алфавит деванагари')
+                            ->maxLength(255)
+                            ->visible(fn ($get) => (bool) $get('lead_magnet_enabled')),
+                        Textarea::make('lead_magnet_caption')
+                            ->label('Подпись к файлу в боте')
+                            ->placeholder('Ваш бесплатный подарок — Алфавит деванагари. Приятного изучения!')
+                            ->rows(3)
+                            ->visible(fn ($get) => (bool) $get('lead_magnet_enabled')),
+                        Select::make('lead_magnet_default_channel')
+                            ->label('Дефолтный канал (если social не указан)')
+                            ->options([
+                                'telegram' => 'Telegram',
+                                'vk' => 'ВКонтакте',
+                                'max' => 'Max',
+                            ])
+                            ->default('telegram')
+                            ->visible(fn ($get) => (bool) $get('lead_magnet_enabled')),
+                    ]),
+
+                // === 3.6 БОТ ЛИД-МАГНИТА (свой бот на лендинг → n8n) ===
+                Section::make('🤖 Бот лид-магнита (Telegram → n8n)')
+                    ->description('Отдельный Telegram-бот этого лендинга. Laravel отдаёт магнит и трекает выдачу, остальные апдейты форвардит в n8n (анкета + прогрев). Заполните токен — бот сохранится.')
+                    ->relationship('bot', condition: fn (?array $state): bool => filled($state['tg_bot_token'] ?? null) || filled($state['vk_n8n_forward_url'] ?? null))
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Toggle::make('is_active')
+                            ->label('Бот активен')
+                            ->default(true),
+                        TextInput::make('tg_bot_username')
+                            ->label('Username бота (без @)')
+                            ->placeholder('my_landing_bot')
+                            ->maxLength(100),
+                        TextInput::make('tg_bot_token')
+                            ->label('Bot Token')
+                            ->password()
+                            ->revealable()
+                            ->placeholder('Получить у @BotFather')
+                            ->maxLength(255),
+                        TextInput::make('tg_webhook_secret')
+                            ->label('Webhook Secret (случайная строка 32+ символов)')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->helperText('Та же строка ставится в Telegram setWebhook. После заполнения запусти на проде: php artisan telegram:set-magnet-webhook <slug>'),
+                        TextInput::make('n8n_forward_url')
+                            ->label('URL ноды Webhook в n8n')
+                            ->url()
+                            ->maxLength(500)
+                            ->helperText('Сюда форвардятся апдейты для анкеты/прогрева. В n8n замени Telegram Trigger на ноду Webhook и вставь её URL.'),
+                        TextInput::make('webhook_key')
+                            ->label('Webhook key (генерируется автоматически)')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Часть URL вебхука: <APP_URL>/api/webhooks/telegram-magnet/<этот ключ>'),
+
+                        Fieldset::make('VK (одно сообщество на все лендинги — креды в «Маркетинг»)')
+                            ->schema([
+                                Toggle::make('vk_is_active')
+                                    ->label('Пересылать VK-сообщения этого лендинга в n8n')
+                                    ->default(false),
+                                TextInput::make('vk_n8n_forward_url')
+                                    ->label('VK: URL ноды Webhook в n8n')
+                                    ->url()
+                                    ->maxLength(500)
+                                    ->helperText('Лид VK привязывается к лендингу по ref deep-link (vk.me/<сообщество>?ref=<token>). Сюда форвардятся его сообщения для анкеты/прогрева. Креды самого VK-сообщества — в настройках «Маркетинг».'),
+                            ])->columns(1),
                     ]),
 
                 // === 4. LEGACY (СТАРЫЕ ПОЛЯ) ===
                 Section::make('Старые настройки (Legacy)')
-                    ->collapsed() 
+                    ->collapsed()
                     ->schema([
                         TextInput::make('subtitle')->default('Авторский курс'),
                         Textarea::make('hero_description')->rows(3),
                         TextInput::make('bullet_1'),
                         TextInput::make('bullet_2'),
                         TextInput::make('instructor_label'),
-                        TextInput::make('instructor_name'),    
+                        TextInput::make('instructor_name'),
                         DatePicker::make('webinar_date')->native(false)->displayFormat('d.m.Y'),
-                        TextInput::make('webinar_label')->default('Бесплатный вебинар'),    
+                        TextInput::make('webinar_label')->default('Бесплатный вебинар'),
                         TextInput::make('video_url'),
                         CuratorPicker::make('image_path')
-    ->label('Главное изображение')
-    ->buttonLabel('Медиатека'),
+                            ->label('Главное изображение')
+                            ->buttonLabel('Медиатека'),
                         RichEditor::make('description')->columnSpanFull(),
                         Grid::make(3)->schema([
                             Fieldset::make('Карточка 1')->schema([
@@ -774,17 +952,17 @@ Builder\Block::make('faq_block')
                         TextInput::make('button_text')->default('Записаться'),
                         TextInput::make('button_subtext'),
                         TextInput::make('telegram_url')
-    ->label('Ссылка на Telegram-канал (для блока на лендинге)')
-    ->helperText('Используется как ссылка "Подписаться на канал" в legacy-блоках. НЕ управляет редиректом после заявки.')
-    ->url()
-    ->maxLength(500),
+                            ->label('Ссылка на Telegram-канал (для блока на лендинге)')
+                            ->helperText('Используется как ссылка "Подписаться на канал" в legacy-блоках. НЕ управляет редиректом после заявки.')
+                            ->url()
+                            ->maxLength(500),
 
-TextInput::make('redirect_after_submit_url')
-    ->label('Редирект после отправки заявки (URL)')
-    ->helperText('Если заполнено — после страницы "Спасибо" пользователь автоматически перейдёт по этой ссылке (например, https://t.me/hindiruss). Цели в Метрику/VK успеют отстреляться. Оставь пустым, если редирект не нужен.')
-    ->url()
-    ->maxLength(500)
-    ->placeholder('https://t.me/hindiruss'),
+                        TextInput::make('redirect_after_submit_url')
+                            ->label('Редирект после отправки заявки (URL)')
+                            ->helperText('Если заполнено — после страницы "Спасибо" пользователь автоматически перейдёт по этой ссылке (например, https://t.me/hindiruss). Цели в Метрику/VK успеют отстреляться. Оставь пустым, если редирект не нужен.')
+                            ->url()
+                            ->maxLength(500)
+                            ->placeholder('https://t.me/hindiruss'),
                     ]),
             ]);
     }
@@ -803,7 +981,7 @@ TextInput::make('redirect_after_submit_url')
                 Tables\Actions\Action::make('open')
                     ->label('Открыть')
                     ->icon('heroicon-m-arrow-top-right-on-square')
-                    ->url(fn (LandingPage $record) => url('/promo/' . $record->slug))
+                    ->url(fn (LandingPage $record) => url('/promo/'.$record->slug))
                     ->openUrlInNewTab(),
             ])
             ->bulkActions([
@@ -813,7 +991,10 @@ TextInput::make('redirect_after_submit_url')
             ]);
     }
 
-    public static function getRelations(): array { return []; }
+    public static function getRelations(): array
+    {
+        return [];
+    }
 
     public static function getPages(): array
     {

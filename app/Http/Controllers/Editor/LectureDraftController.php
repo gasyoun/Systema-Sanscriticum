@@ -24,9 +24,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class LectureDraftController extends Controller
 {
-    public function __construct(private readonly LectureStorage $storage)
-    {
-    }
+    public function __construct(private readonly LectureStorage $storage) {}
 
     /**
      * Отдаёт HTML собранной лекции (iframe-friendly: same-origin).
@@ -40,22 +38,22 @@ class LectureDraftController extends Controller
         }
 
         $absolute = Storage::disk('local')->path($draft->output_html_path);
-        if (!is_file($absolute)) {
-            abort(404, 'Файл не найден на диске: ' . $absolute);
+        if (! is_file($absolute)) {
+            abort(404, 'Файл не найден на диске: '.$absolute);
         }
 
         $html = file_get_contents($absolute);
 
         // Подменяем относительные пути слайдов и стилей на абсолютные
-        $assetBase = url('/editor/lectures/' . $draft->id . '/asset');
+        $assetBase = url('/editor/lectures/'.$draft->id.'/asset');
         $stylesUrl = url('/lecture-styles/style.css');
-        $html = str_replace('src="./src/img/', 'src="' . $assetBase . '/slides/', $html);
-        $html = str_replace("src='./src/img/", "src='" . $assetBase . '/slides/', $html);
-        $html = preg_replace('#href="\./src/style\.css(\?[^"]*)?"#', 'href="' . $stylesUrl . '"', $html);
+        $html = str_replace('src="./src/img/', 'src="'.$assetBase.'/slides/', $html);
+        $html = str_replace("src='./src/img/", "src='".$assetBase.'/slides/', $html);
+        $html = preg_replace('#href="\./src/style\.css(\?[^"]*)?"#', 'href="'.$stylesUrl.'"', $html);
 
         // Конфиг + editor.js перед </head>
         $injection = $this->buildJsInjection($draft);
-        $html = preg_replace('/<\/head>/', $injection . '</head>', $html, 1);
+        $html = preg_replace('/<\/head>/', $injection.'</head>', $html, 1);
 
         return response($html, 200, [
             'Content-Type' => 'text/html; charset=utf-8',
@@ -72,12 +70,12 @@ class LectureDraftController extends Controller
         $this->authorizeAccess($draft);
 
         // Жёстко ограничиваем разрешённые подпапки
-        if (!preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path)) {
+        if (! preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path)) {
             abort(403, 'Запрещённый путь');
         }
 
         $abs = $this->storage->absolutePath($draft, $path);
-        if (!is_file($abs)) {
+        if (! is_file($abs)) {
             abort(404);
         }
 
@@ -109,14 +107,14 @@ class LectureDraftController extends Controller
             }
 
             return response()->json([
-                'ok'       => true,
-                'backup'   => basename($backupPath),
-                'rebuilt'  => $rebuilt,
-                'count'    => count($validated['patches']),
+                'ok' => true,
+                'backup' => basename($backupPath),
+                'rebuilt' => $rebuilt,
+                'count' => count($validated['patches']),
             ]);
         } catch (\Throwable $e) {
             return response()->json([
-                'ok'    => false,
+                'ok' => false,
                 'error' => $e->getMessage(),
             ], 422);
         }
@@ -128,10 +126,10 @@ class LectureDraftController extends Controller
         if ($user === null) {
             abort(401);
         }
-        if (!$user->is_admin && !$user->is_lecture_editor) {
+        if (! $user->is_admin && ! $user->is_lecture_editor) {
             abort(403, 'Нет прав редактора лекций');
         }
-        if (!$user->is_admin && $draft->created_by !== $user->id) {
+        if (! $user->is_admin && $draft->created_by !== $user->id) {
             abort(403, 'Чужой черновик');
         }
     }
@@ -139,7 +137,7 @@ class LectureDraftController extends Controller
     private function buildJsInjection(LectureDraft $draft): string
     {
         $patchUrl = route('editor.lecture.patch', $draft);
-        $assetBase = url('/editor/lectures/' . $draft->id . '/asset');
+        $assetBase = url('/editor/lectures/'.$draft->id.'/asset');
         $token = csrf_token();
         $editorJs = asset('lecture-editor.js');
 

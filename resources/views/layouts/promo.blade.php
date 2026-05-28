@@ -14,33 +14,19 @@
     <meta property="og:description" content="{{ Str::limit(strip_tags($page->description ?? 'Запишитесь на курс прямо сейчас!'), 150) }}"> 
 
     @php
-        // 1. Заглушка по умолчанию
-        $ogImage = asset('images/logo.png'); 
+        // OG-картинка берётся СТРОГО из «Главного изображения» (поле image_path
+        // в legacy-настройках лендинга). Curator хранит ID медиафайла, а не путь,
+        // поэтому резолвим его через Media — как во всех блоках конструктора.
+        // Заглушка-фолбэк, если изображение не задано или запись удалена из медиатеки.
+        $ogImage = asset('images/logo.png');
 
-        // 2. Если жестко задана обложка в настройках страницы
         if (!empty($page->image_path)) {
-            $ogImage = url(Storage::url($page->image_path));
-        }
-        // 3. Иначе ищем в блоках (Приоритет: Преподаватель -> Герой)
-        elseif (!empty($page->content) && is_array($page->content)) {
-            $heroImg = null;
-            $teacherImg = null;
+            $mainImg = is_numeric($page->image_path)
+                ? \Awcodes\Curator\Models\Media::find($page->image_path)?->url
+                : url(Storage::url($page->image_path));
 
-            // Пробегаем по всем блокам и запоминаем найденные картинки
-            foreach ($page->content as $block) {
-                if ($block['type'] === 'hero_block' && !empty($block['data']['image'])) {
-                    $heroImg = url(Storage::url($block['data']['image']));
-                }
-                if ($block['type'] === 'teacher_block' && !empty($block['data']['image'])) {
-                    $teacherImg = url(Storage::url($block['data']['image']));
-                }
-            }
-
-            // ЛОГИКА ПРИОРИТЕТА: Если нашли препода - берем его. Если нет - берем героя.
-            if ($teacherImg) {
-                $ogImage = $teacherImg;
-            } elseif ($heroImg) {
-                $ogImage = $heroImg;
+            if (!empty($mainImg)) {
+                $ogImage = $mainImg;
             }
         }
     @endphp
@@ -133,24 +119,7 @@
           }
       }">
 
-    {{-- === ПРИЛИПАЮЩАЯ ШАПКА ВО ВСЮ ШИРИНУ === --}}
-    {{-- Убрали mb-6 md:mb-10, чтобы следующий блок начинался сразу под шапкой --}}
-    <header class="sticky top-0 w-full z-50 bg-[#FAF8F5]/80 backdrop-blur-md shadow-sm border-b border-[#E85C24]/10 transition-all duration-300">
-        
-        <div class="container mx-auto px-4 py-2 md:py-3 flex justify-start">
-            
-            <a href="/" class="flex flex-col items-start group">
-                <img src="{{ asset('images/logo.png') }}" alt="Общество ревнителей санскрита" class="w-auto h-12 md:h-14 object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300 shrink-0">
-                
-                <span class="mt-1 text-base md:text-lg font-semibold text-[#333333] group-hover:text-[#E85C24] transition-colors duration-300 leading-none" 
-                      style="font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', 'Georgia', serif;">
-                    Общество ревнителей санскрита
-                </span>
-            </a>
-            
-        </div>
-    </header>
-    {{-- ========================= --}}
+    <x-public-header variant="light" :show-login="false" />
 
     {{-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ НАШИ БЛОКИ --}}
     @yield('content')

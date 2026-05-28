@@ -37,7 +37,7 @@ class PaymentObserver
             && in_array($payment->status, self::SUCCESS_STATUSES, true);
 
         // Если уже был paid и изменилось что-то значимое (сумма, блоки, курс)
-        $stillPaidAndChanged = !$payment->isDirty('status')
+        $stillPaidAndChanged = ! $payment->isDirty('status')
             && in_array($payment->status, self::SUCCESS_STATUSES, true)
             && $payment->isDirty(['amount', 'start_block', 'end_block', 'course_id', 'tariff']);
 
@@ -47,11 +47,15 @@ class PaymentObserver
     }
 
     /**
-     * Общий фильтр: только paid + положительная сумма (отсекаем расходы).
+     * Общий фильтр: только paid + положительная сумма + не conditional.
+     * Conditional-платежи под обещание/рассрочку не должны попадать
+     * в финансовый Google Sheet — это «доступ под честное слово»,
+     * не реальная транзакция.
      */
     private function isSyncable(Payment $payment): bool
     {
         return in_array($payment->status, self::SUCCESS_STATUSES, true)
-            && (float) $payment->amount > 0;
+            && (float) $payment->amount > 0
+            && ! $payment->is_conditional;
     }
 }

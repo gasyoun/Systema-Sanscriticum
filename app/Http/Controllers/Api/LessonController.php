@@ -16,20 +16,21 @@ class LessonController extends Controller
         // Проверка ключа (fail-closed)
         $secret = config('services.lesson_sync.secret');
 
-        if (empty($secret) || !hash_equals($secret, (string) $request->header('X-Secret-Key'))) {
+        if (empty($secret) || ! hash_equals($secret, (string) $request->header('X-Secret-Key'))) {
             Log::warning('Lesson sync: неавторизованный доступ', [
                 'ip' => $request->ip(),
             ]);
+
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $courses = $request->validate([
-            '*.id'           => 'required|integer',
-            '*.title'        => 'required|string|max:255',
-            '*.videoLinks'   => 'nullable|array',
-            '*.rutubeLinks'  => 'nullable|array',
+            '*.id' => 'required|integer',
+            '*.title' => 'required|string|max:255',
+            '*.videoLinks' => 'nullable|array',
+            '*.rutubeLinks' => 'nullable|array',
             '*.lessonTopics' => 'nullable|array',
-            '*.flashCards'   => 'nullable|array',
+            '*.flashCards' => 'nullable|array',
         ]);
 
         foreach ($courses as $course) {

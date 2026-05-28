@@ -13,15 +13,32 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('archives:cleanup --hours=24')
-             ->dailyAt('03:00');
-             
+            ->dailyAt('03:00');
+
+        // Перевод просроченных promises в статус expired — ночью.
+        $schedule->command('promises:expire')
+            ->dailyAt('03:30');
+
+        // Пересчёт авто-флага «неблагонадёжный» — после promises:expire,
+        // чтобы вновь просроченные обещания сразу учитывались в пороге.
+        $schedule->command('unreliable:recount')
+            ->dailyAt('03:45');
+
+        // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
+        $schedule->command('promises:remind-tomorrow')
+            ->dailyAt('09:00');
+
+        // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
+        $schedule->command('onboarding:weekly-digest')
+            ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
-    // Закрываем сессии, у которых нет heartbeat > 15 минут
-    $schedule->job(new \App\Jobs\CloseStaleSessionsJob())
-        ->everyFiveMinutes()
-        ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
-        ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
-        ->name('close-stale-sessions');  // имя для логов и блокировки     
+        // Закрываем сессии, у которых нет heartbeat > 15 минут
+        $schedule->job(new \App\Jobs\CloseStaleSessionsJob)
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
+            ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
+            ->name('close-stale-sessions');  // имя для логов и блокировки
     }
 
     /**

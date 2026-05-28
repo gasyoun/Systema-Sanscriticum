@@ -36,7 +36,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 2);
 
-        $html = $this->get('/shop/course/' . $course->slug)->getContent();
+        $html = $this->get('/shop/course/'.$course->slug)->getContent();
 
         $this->assertStringContainsString("tab: 'blocks'", $html);
     }
@@ -46,7 +46,7 @@ class CourseShowTest extends TestCase
     {
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: null);
 
-        $html = $this->get('/shop/course/' . $course->slug)->getContent();
+        $html = $this->get('/shop/course/'.$course->slug)->getContent();
 
         $this->assertStringContainsString("tab: 'full'", $html);
     }
@@ -57,7 +57,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 2);
 
-        $html = $this->get('/shop/course/' . $course->slug)->getContent();
+        $html = $this->get('/shop/course/'.$course->slug)->getContent();
 
         $this->assertStringContainsString('СЕЙЧАС ИДЁТ', $html);
     }
@@ -68,7 +68,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 3);
 
-        $html = $this->get('/shop/course/' . $course->slug)->getContent();
+        $html = $this->get('/shop/course/'.$course->slug)->getContent();
 
         // В разметке "БЛОК N" встречается у каждой карточки. Третий блок (актуальный)
         // должен идти раньше всех остальных в HTML.
@@ -84,7 +84,7 @@ class CourseShowTest extends TestCase
     {
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: null);
 
-        $html = $this->get('/shop/course/' . $course->slug)->getContent();
+        $html = $this->get('/shop/course/'.$course->slug)->getContent();
 
         preg_match_all('/БЛОК\s*(\d+)/u', $html, $matches);
         $orderedNumbers = array_values(array_unique($matches[1]));

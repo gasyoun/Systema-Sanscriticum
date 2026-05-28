@@ -3,23 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Общество ревнителей санскрита</title>
-    
+    @php
+        $siteName    = 'Общество ревнителей санскрита';
+        $pageTitle   = 'Общество ревнителей санскрита — курсы санскрита, индийской философии и текстов';
+        $description = 'Образовательная платформа для глубокого изучения санскрита, индийской философии и древних текстов. Онлайн-курсы, лекции, открытые занятия и сообщество единомышленников.';
+        $keywords    = 'санскрит, курсы санскрита, изучение санскрита онлайн, индийская философия, веды, упанишады, бхагавадгита, индология, деванагари';
+        $ogImage     = asset('images/og-main-preview.jpg');
+        $canonical   = url('/');
+    @endphp
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $description }}">
+    <meta name="keywords" content="{{ $keywords }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ $canonical }}">
+
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
-    
+
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ config('app.url') }}">
-    <meta property="og:title" content="Общество ревнителей санскрита">
-    <meta property="og:description" content="Платформа для глубокого изучения языка, философии и текстов.">
-    <meta property="og:image" content="{{ asset('images/og-main-preview.jpg') }}">
-    
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $description }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:alt" content="{{ $siteName }}">
+
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Общество ревнителей санскрита">
-    <meta name="twitter:description" content="Платформа для глубокого изучения языка, философии и текстов.">
-    <meta name="twitter:image" content="{{ asset('images/og-main-preview.jpg') }}">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $description }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }
@@ -49,12 +66,14 @@
         nav[role="navigation"] span[aria-current="page"] span { background-color: #E85C24 !important; border-color: #E85C24 !important; color: #fff !important; }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden pt-12 pb-20">
+<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden pb-20">
 
     <div class="fixed top-0 left-0 w-96 h-96 bg-[#E85C24] rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
     <div class="fixed bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
 
-    <div class="container mx-auto px-4 relative z-10 max-w-7xl">
+    <x-public-header variant="dark" />
+
+    <div class="container mx-auto px-4 relative z-10 max-w-7xl pt-10 md:pt-14">
         
         <div class="text-center mb-16">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">
@@ -144,6 +163,10 @@
             </div>
         @endif
 
+        {{-- Сквозной мини-блок «Курсы в записи» --}}
+        <div class="-mx-4 mt-16">
+            <x-courses-recorded-mini variant="dark" :courses="$recordedCoursesMini ?? null" />
+        </div>
 
         <div class="mt-24 bg-gray-800/40 border border-gray-700/60 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-xl">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#2AABEE] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
@@ -169,6 +192,12 @@
                     </div>
             </div>
         </div>
+
+        {{-- Карусель открытых занятий — последняя секция перед footer-CTA --}}
+        <div class="-mx-4 mt-16">
+            <x-open-lessons-carousel :lessons="$openLessons ?? null" />
+        </div>
+
         <div class="mt-20 pt-10 border-t border-gray-800 text-center flex flex-col items-center">
             <a href="https://t.me/+N4xQ6zHFepk5NmYy" target="_blank" class="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white rounded-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r from-[#2AABEE] to-[#0088cc] shadow-[0_0_15px_rgba(0,136,204,0.4)]">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 11.944 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.628 4.476-1.636z"/></svg>

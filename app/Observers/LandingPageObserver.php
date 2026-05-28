@@ -61,6 +61,6 @@ class LandingPageObserver
             return;
         }
 
-        Cache::forget(self::CACHE_KEY_PREFIX . $slug);
+        Cache::forget(self::CACHE_KEY_PREFIX.$slug);
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('announcements', function (Blueprint $table) {
             // Добавляем галочку для Telegram (по умолчанию выключена)
             $table->boolean('send_to_telegram')->default(false)->after('send_to_email');
-            
+
             // Добавляем галочку для VK (по умолчанию выключена)
             $table->boolean('send_to_vk')->default(false)->after('send_to_telegram');
         });

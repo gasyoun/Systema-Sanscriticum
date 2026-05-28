@@ -24,7 +24,7 @@ class ArticleViewObserver
     public function deleted(ArticleView $view): void
     {
         Article::whereKey($view->article_id)
-               ->where('views_count', '>', 0) // защита от ухода в минус
-               ->decrement('views_count');
+            ->where('views_count', '>', 0) // защита от ухода в минус
+            ->decrement('views_count');
     }
 }

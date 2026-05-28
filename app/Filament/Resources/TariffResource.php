@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TariffResource\Pages;
 use App\Models\Tariff;
 use Filament\Forms;
@@ -12,16 +13,23 @@ use Filament\Tables\Table;
 
 class TariffResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Tariff::class;
 
     // Иконка ценника для меню
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+
     protected static ?int $navigationSort = 100;
+
     protected static ?string $navigationGroup = 'Продажи';
+
     protected static ?string $navigationLabel = 'Тарифы (Цены)';
+
     protected static ?string $modelLabel = 'Тариф';
+
     protected static ?string $pluralModelLabel = 'Тарифы';
-    
+
     public static function form(Form $form): Form
     {
         return $form
@@ -65,7 +73,10 @@ class TariffResource extends Resource
                             ->visible(fn (Forms\Get $get) => $get('type') === 'block')
                             ->options(function (Forms\Get $get) {
                                 $courseId = $get('course_id');
-                                if (!$courseId) return [];
+                                if (! $courseId) {
+                                    return [];
+                                }
+
                                 return \App\Models\CourseBlock::where('course_id', $courseId)
                                     ->orderBy('number')
                                     ->get()
@@ -139,7 +150,7 @@ class TariffResource extends Resource
                     ->formatStateUsing(fn ($state) => $state ? "Блок $state" : '—')
                     ->badge()
                     ->color('info')
-                    ->sortable(),        
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('price')
                     ->label('Цена')

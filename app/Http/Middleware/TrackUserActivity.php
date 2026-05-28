@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Services\Activity\ActivityTracker;
+use App\Services\Prana\PranaService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,6 +28,7 @@ final class TrackUserActivity
 
     public function __construct(
         private readonly ActivityTracker $tracker,
+        private readonly PranaService $prana,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -42,41 +43,46 @@ final class TrackUserActivity
     }
 
     private function track(Request $request): void
-{
-    if (!Auth::check()) {
-        return;
-    }
-
-    $user = Auth::user();
-
-    if ($user->is_admin) {
-        return;
-    }
-
-    if ($request->is('api/heartbeat*')) {
-        return;
-    }
-
-    $userId = $user->id;
-    $throttleKey = "activity:throttled:{$userId}";
-
-    try {
-        $acquired = Redis::set($throttleKey, '1', 'EX', self::THROTTLE_SECONDS, 'NX');
-        
-        if (!$acquired) {
+    {
+        if (! Auth::check()) {
             return;
         }
 
-        $this->updateActivity($user->id, $request);
-    } catch (\Throwable $e) {
-        \Illuminate\Support\Facades\Log::warning('TrackUserActivity failed', [
-            'user_id' => $userId,
-            'error'   => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-        ]);
+        $user = Auth::user();
+
+        if ($user->is_admin) {
+            return;
+        }
+
+        if ($request->is('api/heartbeat*')) {
+            return;
+        }
+
+        $userId = $user->id;
+        $throttleKey = "activity:throttled:{$userId}";
+
+        try {
+            $acquired = Redis::set($throttleKey, '1', 'EX', self::THROTTLE_SECONDS, 'NX');
+
+            if (! $acquired) {
+                return;
+            }
+
+            $this->updateActivity($user->id, $request);
+
+            // Daily-login бонус — идемпотентен через source_id=YYYYMMDD.
+            // Дёшево попытаться раз в минуту: после первого успеха в день
+            // unique-индекс мгновенно отбивает остальные попытки.
+            $this->prana->awardDailyLogin($user);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('TrackUserActivity failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+        }
     }
-}
 
     /**
      * Обновляем last_activity_at в users и heartbeat в user_sessions.
@@ -104,7 +110,7 @@ final class TrackUserActivity
                 ->where('id', $sessionRecord->id)
                 ->update([
                     'last_heartbeat_at' => $now,
-                    'pages_viewed'      => $sessionRecord->pages_viewed + 1,
+                    'pages_viewed' => $sessionRecord->pages_viewed + 1,
                 ]);
         } else {
             // Edge case: юзер залогинен, но сессии нет (например, уже был залогинен

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\DictionaryResource\Pages;
 use App\Models\Dictionary;
 use Filament\Forms;
@@ -12,12 +13,17 @@ use Filament\Tables\Table;
 
 class DictionaryResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Dictionary::class;
 
     // Иконки и перевод для левого меню
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
     protected static ?string $navigationLabel = 'Словари';
+
     protected static ?string $pluralModelLabel = 'Словари';
+
     protected static ?string $navigationGroup = 'Допматериалы'; // Будет рядом со "Словами"
 
     public static function form(Form $form): Form
@@ -30,12 +36,12 @@ class DictionaryResource extends Resource
                             ->label('Название словаря')
                             ->required()
                             ->maxLength(255),
-                            
+
                         Forms\Components\Toggle::make('is_active')
                             ->label('Активен (виден студентам)')
                             ->default(true)
                             ->onColor('success'),
-                            
+
                         Forms\Components\Textarea::make('description')
                             ->label('Описание (необязательно)')
                             ->columnSpanFull(),
@@ -50,17 +56,17 @@ class DictionaryResource extends Resource
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID') // Тот самый ID, который нужен для CSV!
                     ->sortable()
-                    ->badge() 
+                    ->badge()
                     ->color('info'),
-                    
+
                 Tables\Columns\TextColumn::make('name') // Правильное название колонки!
                     ->label('Название')
                     ->searchable(),
-                    
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean(),
-                    
+
                 Tables\Columns\TextColumn::make('words_count')
                     ->counts('words') // Автоматически считает привязанные слова
                     ->label('Кол-во слов')

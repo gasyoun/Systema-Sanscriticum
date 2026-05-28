@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache; // Обязательно добавляем фасад Cache
 
 class PromoController extends Controller
@@ -18,6 +17,8 @@ class PromoController extends Controller
                 ->firstOrFail();
         });
 
-        return view('promo.show', compact('page'));
+        $useBuilder = ! empty($page->content) && is_array($page->content) && count($page->content) > 0;
+
+        return view($useBuilder ? 'promo.show' : 'promo.legacy', compact('page'));
     }
 }

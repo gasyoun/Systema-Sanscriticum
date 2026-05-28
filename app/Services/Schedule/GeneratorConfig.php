@@ -9,9 +9,9 @@ use Carbon\Carbon;
 final class GeneratorConfig
 {
     /**
-     * @param  array<int>     $weekdays   Carbon::SUNDAY=0 .. SATURDAY=6
+     * @param  array<int>  $weekdays  Carbon::SUNDAY=0 .. SATURDAY=6
      * @param  array<string>  $skipDates  Y-m-d
-     * @param  array<string>  $addDates   Y-m-d
+     * @param  array<string>  $addDates  Y-m-d
      */
     public function __construct(
         public readonly int $groupId,

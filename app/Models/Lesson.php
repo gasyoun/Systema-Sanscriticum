@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Lesson extends Model
 {
@@ -23,9 +25,11 @@ class Lesson extends Model
         'group_id',
         'is_published',
         'is_free',
+        'show_on_main',
         'block_number',
         'transcript_file',
         'flash_cards',
+        'duration_seconds',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
@@ -34,9 +38,33 @@ class Lesson extends Model
         'flash_cards' => 'array',
         'is_published' => 'boolean',
         'is_free' => 'boolean',
+        'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
+        'duration_seconds' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Lesson $lesson): void {
+            if ($lesson->block_number === null || $lesson->block_number === '') {
+                $key = 'lesson_block_null_log:'.($lesson->id ?? 'new');
+
+                if (Cache::add($key, 1, now()->addMinute())) {
+                    Log::warning(
+                        'Lesson::saving — block_number was null, fallback to 1',
+                        [
+                            'lesson_id' => $lesson->id,
+                            'user_id' => auth()->id(),
+                            'changes' => $lesson->getDirty(),
+                        ]
+                    );
+                }
+
+                $lesson->block_number = 1;
+            }
+        });
+    }
 
     public function course(): BelongsTo
     {
@@ -46,5 +74,12 @@ class Lesson extends Model
     public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_free', true);
+    }
+
+    public function scopeShownOnMain(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('show_on_main', true)
+            ->where('is_free', true)
+            ->where('is_published', true);
     }
 }

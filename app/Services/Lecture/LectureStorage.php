@@ -27,7 +27,7 @@ class LectureStorage
 
     public function workingDir(LectureDraft $draft): string
     {
-        return 'lectures/' . $draft->id;
+        return 'lectures/'.$draft->id;
     }
 
     public function absoluteWorkingDir(LectureDraft $draft): string
@@ -35,7 +35,7 @@ class LectureStorage
         $disk = Storage::disk(self::DISK);
         $path = $this->workingDir($draft);
 
-        if (!$disk->exists($path)) {
+        if (! $disk->exists($path)) {
             $disk->makeDirectory($path);
         }
 
@@ -48,16 +48,17 @@ class LectureStorage
     public function ensureRawDir(LectureDraft $draft): string
     {
         $disk = Storage::disk(self::DISK);
-        $rel = $this->workingDir($draft) . '/raw';
-        if (!$disk->exists($rel)) {
+        $rel = $this->workingDir($draft).'/raw';
+        if (! $disk->exists($rel)) {
             $disk->makeDirectory($rel);
         }
+
         return $disk->path($rel);
     }
 
     public function relativePath(LectureDraft $draft, string $sub): string
     {
-        return $this->workingDir($draft) . '/' . ltrim($sub, '/');
+        return $this->workingDir($draft).'/'.ltrim($sub, '/');
     }
 
     public function absolutePath(LectureDraft $draft, string $sub): string
@@ -68,9 +69,10 @@ class LectureStorage
     public function dataJsonAbsolute(LectureDraft $draft): string
     {
         $abs = $this->absolutePath($draft, 'data.json');
-        if (!is_file($abs)) {
+        if (! is_file($abs)) {
             throw new RuntimeException("data.json не существует: {$abs}");
         }
+
         return $abs;
     }
 

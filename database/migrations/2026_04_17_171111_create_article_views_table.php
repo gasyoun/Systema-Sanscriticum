@@ -14,8 +14,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('article_id')
-                  ->constrained('articles')
-                  ->cascadeOnDelete(); // удалили статью — ушли её просмотры
+                ->constrained('articles')
+                ->cascadeOnDelete(); // удалили статью — ушли её просмотры
 
             // sha256(ip + user_agent + daily_salt) — 64 hex chars
             $table->char('visitor_hash', 64);

@@ -5,9 +5,8 @@ namespace App\Filament\Resources\AnnouncementResource\Pages;
 use App\Filament\Resources\AnnouncementResource;
 use App\Mail\AnnouncementMail;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Mail;
 
 class CreateAnnouncement extends CreateRecord
 {
@@ -18,12 +17,12 @@ class CreateAnnouncement extends CreateRecord
         $announcement = $this->record;
 
         // Если НИ ОДНА галочка рассылки не стоит — просто сохраняем в кабинет и выходим
-        if (!$announcement->send_to_email && !$announcement->send_to_telegram && !$announcement->send_to_vk) {
+        if (! $announcement->send_to_email && ! $announcement->send_to_telegram && ! $announcement->send_to_vk) {
             return;
         }
 
         // Выбираем кому отправлять
-        if (empty($announcement->target_courses)) { 
+        if (empty($announcement->target_courses)) {
             $users = User::all();
         } else {
             // Ищем юзеров, у которых есть доступ к выбранным курсам (группам)
@@ -37,13 +36,12 @@ class CreateAnnouncement extends CreateRecord
 
         // Если админ заполнил кнопку — добавляем её в конец текста как обычную HTML-ссылку.
         // Наш умный Job сам превратит её в красивую ссылку для ТГ и ВК!
-        if (!empty($announcement->button_url) && !empty($announcement->button_text)) {
-            $rawContent .= '<br><br><a href="' . $announcement->button_url . '">' . $announcement->button_text . '</a>';
+        if (! empty($announcement->button_url) && ! empty($announcement->button_text)) {
+            $rawContent .= '<br><br><a href="'.$announcement->button_url.'">'.$announcement->button_text.'</a>';
         }
 
         // Собираем текст с заголовком (используем HTML-переносы <br>, Job их сам обработает)
-        $messageText = "<b>🔔 " . $announcement->title . "</b><br><br>" . $rawContent;
-
+        $messageText = '<b>🔔 '.$announcement->title.'</b><br><br>'.$rawContent;
 
         // === 2. ДОСТАЕМ КАРТИНКУ (Берем просто путь в системе) ===
         $imagePath = $announcement->image_path ?? null;
@@ -54,14 +52,14 @@ class CreateAnnouncement extends CreateRecord
             if ($announcement->send_to_email && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
                 Mail::to($user->email)->queue(new AnnouncementMail($announcement, $user));
             }
-            
+
             // 2. Отправляем в мессенджеры
             if ($announcement->send_to_telegram || $announcement->send_to_vk) {
                 // Передаем в Job сырой текст и ПУТЬ к картинке (не URL)
                 \App\Jobs\SendMessengerAlerts::dispatch(
-                    $user, 
-                    $messageText, 
-                    $announcement->send_to_telegram, 
+                    $user,
+                    $messageText,
+                    $announcement->send_to_telegram,
                     $announcement->send_to_vk,
                     $imagePath // Передаем путь
                 );
