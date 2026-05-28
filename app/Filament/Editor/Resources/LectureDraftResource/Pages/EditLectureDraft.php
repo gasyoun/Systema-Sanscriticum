@@ -7,7 +7,6 @@ namespace App\Filament\Editor\Resources\LectureDraftResource\Pages;
 use App\Filament\Editor\Resources\LectureDraftResource;
 use App\Jobs\BuildLectureHtmlJob;
 use App\Jobs\PreprocessLectureDraftJob;
-use App\Models\Course;
 use App\Models\LectureDraft;
 use App\Models\Lesson;
 use App\Services\Lecture\LectureAiClient;
@@ -152,6 +151,7 @@ class EditLectureDraft extends EditRecord
                             if ($draft->course_id) {
                                 $query->where('course_id', $draft->course_id);
                             }
+
                             return $query->pluck('title', 'id');
                         })
                         ->helperText('После публикации ссылка попадёт в transcript_file урока'),
@@ -178,7 +178,7 @@ class EditLectureDraft extends EditRecord
 
             Forms\Components\Placeholder::make('error_log_show')
                 ->label('Последняя ошибка')
-                ->visible(fn () => !empty($draft->error_log))
+                ->visible(fn () => ! empty($draft->error_log))
                 ->content(fn () => $draft->error_log),
 
             Forms\Components\Section::make('Метаданные лекции')
@@ -204,12 +204,12 @@ class EditLectureDraft extends EditRecord
     private function statusHint(LectureDraft $draft): string
     {
         return match ($draft->status) {
-            LectureDraft::STATUS_DRAFT         => '🟡 Черновик. Нажмите «Препроцесс», чтобы загрузить PDF слайдов и транскрипт.',
+            LectureDraft::STATUS_DRAFT => '🟡 Черновик. Нажмите «Препроцесс», чтобы загрузить PDF слайдов и транскрипт.',
             LectureDraft::STATUS_PREPROCESSING => '⏳ Препроцесс выполняется…',
-            LectureDraft::STATUS_EDITING       => '✍️ Препроцесс выполнен, но HTML ещё не собран. Нажмите «Собрать HTML», чтобы открыть редактор.',
-            LectureDraft::STATUS_BUILT         => '✅ HTML собран. Нажмите «Открыть редактор» — там можно править параграфы прямо в браузере и сохранять.',
-            LectureDraft::STATUS_PUBLISHED     => '🚀 Опубликовано. Доступно по адресу /lectures/' . $draft->slug . '/.',
-            default                            => $draft->status,
+            LectureDraft::STATUS_EDITING => '✍️ Препроцесс выполнен, но HTML ещё не собран. Нажмите «Собрать HTML», чтобы открыть редактор.',
+            LectureDraft::STATUS_BUILT => '✅ HTML собран. Нажмите «Открыть редактор» — там можно править параграфы прямо в браузере и сохранять.',
+            LectureDraft::STATUS_PUBLISHED => '🚀 Опубликовано. Доступно по адресу /lectures/'.$draft->slug.'/.',
+            default => $draft->status,
         };
     }
 
@@ -222,10 +222,11 @@ class EditLectureDraft extends EditRecord
         $rawDir = $storage->ensureRawDir($draft);
 
         $transcriptName = $this->moveUploadedFile($data['transcript'] ?? null, $rawDir);
-        $pdfName        = $this->moveUploadedFile($data['pdf'] ?? null, $rawDir);
+        $pdfName = $this->moveUploadedFile($data['pdf'] ?? null, $rawDir);
 
         if ($transcriptName === null) {
             Notification::make()->title('Не загружен транскрипт')->danger()->send();
+
             return;
         }
 
@@ -265,28 +266,28 @@ class EditLectureDraft extends EditRecord
             $absoluteWorkingDir = $storage->absoluteWorkingDir($draft);
 
             $result = match ($task) {
-                'structure'    => $client->structure($absoluteWorkingDir, $hint, apply: true),
-                'correct'      => $client->correct(
+                'structure' => $client->structure($absoluteWorkingDir, $hint, apply: true),
+                'correct' => $client->correct(
                     $absoluteWorkingDir,
                     $hint,
                     apply: true,
                     maxParagraphs: (int) ($extra['max_paragraphs'] ?? 0),
                 ),
                 'place_slides' => $client->placeSlides($absoluteWorkingDir, $hint, apply: true),
-                'timecodes'    => $client->verifyTimecodes($absoluteWorkingDir, $hint, apply: true),
-                default        => throw new \InvalidArgumentException("Неизвестная AI-задача: {$task}"),
+                'timecodes' => $client->verifyTimecodes($absoluteWorkingDir, $hint, apply: true),
+                default => throw new \InvalidArgumentException("Неизвестная AI-задача: {$task}"),
             };
 
             // После применения правок к data.json — пересобираем HTML
             BuildLectureHtmlJob::dispatchSync($draft->id);
 
             $body = $result['summary'] ?? 'Готово';
-            if (!empty($result['usage'])) {
+            if (! empty($result['usage'])) {
                 $u = $result['usage'];
                 $body .= sprintf("\nТокены: in=%d, out=%d", $u['input_tokens'] ?? 0, $u['output_tokens'] ?? 0);
             }
-            if (!empty($result['backup'])) {
-                $body .= "\nБэкап: " . $result['backup'];
+            if (! empty($result['backup'])) {
+                $body .= "\nБэкап: ".$result['backup'];
             }
 
             Notification::make()
@@ -331,7 +332,7 @@ class EditLectureDraft extends EditRecord
             $result = app(LecturePublisher::class)->publish($draft, $lessonId);
             Notification::make()
                 ->title('Лекция опубликована')
-                ->body('URL: ' . $result['public_url'])
+                ->body('URL: '.$result['public_url'])
                 ->success()
                 ->persistent()
                 ->send();
@@ -354,17 +355,17 @@ class EditLectureDraft extends EditRecord
 
         // FileUpload возвращает строку (одиночный файл) или массив
         $relativePath = is_array($value) ? array_values($value)[0] ?? null : $value;
-        if (!$relativePath) {
+        if (! $relativePath) {
             return null;
         }
 
         $disk = \Illuminate\Support\Facades\Storage::disk('local');
-        if (!$disk->exists($relativePath)) {
+        if (! $disk->exists($relativePath)) {
             throw new \RuntimeException("Загруженный файл не найден: {$relativePath}");
         }
 
         $basename = basename($relativePath);
-        $targetAbs = $rawDir . DIRECTORY_SEPARATOR . $basename;
+        $targetAbs = $rawDir.DIRECTORY_SEPARATOR.$basename;
 
         // Перенос (атомарный rename внутри одного диска)
         rename($disk->path($relativePath), $targetAbs);

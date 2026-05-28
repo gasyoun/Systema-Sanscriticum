@@ -2,130 +2,118 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lead;
 use App\Models\LandingPage;
+use App\Models\Lead;
+use App\Services\Leads\LeadFlashBuilder;
+use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\Messaging\SocialChannelParser;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LeadController extends Controller
 {
-    // =========================================================
-    // 1. МЕТОД СОХРАНЕНИЯ ЗАЯВКИ (БЕЗОПАСНЫЙ)
-    // =========================================================
-    public function store(Request $request)
+    public function store(Request $request, LeadFlashBuilder $flashBuilder)
     {
-        // 1. Валидация данных
+        // 0. Rate limit: 1 заявка / 5 сек / IP
+        $rlKey = 'lead-submit:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
         $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'contact'         => 'required|string',
-            'email'           => 'required|email',
-            'social'              => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
+            'contact' => 'required|string',
+            'email' => 'required|email',
+            'social' => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
-            'form_name'       => 'nullable|string',
-            'utm_source'      => 'nullable|string',
-            'utm_medium'      => 'nullable|string',
-            'utm_campaign'    => 'nullable|string',
-            'utm_content'     => 'nullable|string',
-            'utm_term'        => 'nullable|string',
-            'click_id'        => 'nullable|string',
-            'referrer'        => 'nullable|string',
+            'form_name' => 'nullable|string',
+            'utm_source' => 'nullable|string',
+            'utm_medium' => 'nullable|string',
+            'utm_campaign' => 'nullable|string',
+            'utm_content' => 'nullable|string',
+            'utm_term' => 'nullable|string',
+            'click_id' => 'nullable|string',
+            'referrer' => 'nullable|string',
             'is_promo_agreed' => 'nullable',
-            'source_article_id'   => 'nullable|integer',
+            'source_article_id' => 'nullable|integer',
             'source_article_slug' => 'nullable|string|max:255',
         ]);
 
-        // === ИСПРАВЛЕНИЕ УЯЗВИМОСТИ ===
-        // Берем ТОЛЬКО проверенные данные, отсекая любой хакерский мусор из запроса
+        // Берём только провалидированные поля — отсекаем mass-assignment мусор.
         $data = $validated;
-        
-        // Преобразуем чекбокс "on" в true/false
         $data['is_promo_agreed'] = $request->has('is_promo_agreed');
-        
-        // Добавляем технические данные (это безопасно, так как мы берем их из сервера, а не от юзера)
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
 
-        // === ИЗЯЩНЫЙ ХАК ===
-        // Если пришло имя формы, дописываем его в utm_content
-        if (!empty($data['form_name'])) {
+        if (! empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
-            $data['utm_content'] = '[' . $data['form_name'] . '] ' . $existingUtm;
+            $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;
         }
 
-        // 2. БЕЗОПАСНО сохраняем лид в базу
+        $existing = null;
+        if (! empty($data['landing_page_id'])) {
+            $existing = Lead::where('email', $data['email'])
+                ->where('landing_page_id', $data['landing_page_id'])
+                ->first();
+        } elseif (! empty($data['source_article_slug'])) {
+            $existing = Lead::where('email', $data['email'])
+                ->where('source_article_slug', $data['source_article_slug'])
+                ->first();
+        }
+
+        if ($existing) {
+            return redirect()->route('thank.you')->with(
+                $this->buildDuplicateFlash($existing)
+            );
+        }
+
         $lead = Lead::create($data);
 
-        // 3. --- ЛОГИКА ДЛЯ ПИКСЕЛЕЙ ---
         $landing = null;
-        if (!empty($data['landing_page_id'])) {
+        if (! empty($data['landing_page_id'])) {
             $landing = LandingPage::find($data['landing_page_id']);
         }
 
-        $flashData = [
-            'success' => 'Ваша заявка успешно отправлена! Менеджер свяжется с вами.',
-        ];
+        // Lead-magnet: если у лендинга включён магнит — привязываем токен и канал.
+        if ($landing && $landing->hasLeadMagnet()) {
+            $this->attachMagnet($lead, $landing, $validated['social'] ?? null);
+        }
 
-        if ($landing) {
-            if (!empty($landing->yandex_metrika_id)) {
-                $flashData['yandex_id'] = $landing->yandex_metrika_id;
-            }
-            if (!empty($landing->vk_pixel_id)) {
-                $flashData['vk_id'] = $landing->vk_pixel_id;
-            }
-            $flashData['conversion_event'] = 'lead'; 
-            
-            if (!empty($landing->redirect_after_submit_url)) {
-        $flashData['redirect_url'] = $landing->redirect_after_submit_url;
-    }
-        }
-        
-        // === Логика для лидов из блога ===
-if (empty($landing) && !empty($validated['source_article_id'])) {
-    $marketing = \App\Models\MarketingSetting::first();
-    
-    if ($marketing) {
-        if (!empty($marketing->blog_yandex_metrika_id)) {
-            $flashData['yandex_id'] = $marketing->blog_yandex_metrika_id;
-        }
-        if (!empty($marketing->blog_vk_pixel_id)) {
-            $flashData['vk_id'] = $marketing->blog_vk_pixel_id;
-        }
-        $flashData['conversion_event'] = 'lead_from_article';
-    }
-}
+        // Уведомление маркетологам в Telegram (no-op, если чат не настроен).
+        app(\App\Services\LeadNotifier::class)->newLead($lead);
 
-        // 4. Редирект на страницу спасибо
-        return redirect()->route('thank.you')->with($flashData);
+        return redirect()->route('thank.you')
+            ->with($flashBuilder->build($lead, $landing, $validated));
     }
 
-    // =========================================================
-    // 2. МЕТОД ЭКСПОРТА В EXCEL
-    // =========================================================
     public function export()
     {
-        // Отсекаем всех, кто не является администратором
-            abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');
-        
-        $fileName = 'leads_full_' . date('Y-m-d_H-i') . '.csv';
-        
+        abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');
+
+        $fileName = 'leads_full_'.date('Y-m-d_H-i').'.csv';
+
         $leads = Lead::with('landingPage')->latest()->get();
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = [
             'ID', 'Дата', 'Лендинг', 'Имя', 'Телефон', 'Email', 'Соц. сеть', 'Рассылка',
-            'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content (Форма)', // Изменил заголовок для наглядности
-            'UTM Term', 'Click ID', 'IP Адрес', 'Referrer', 'User Agent'
+            'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content (Форма)',
+            'UTM Term', 'Click ID', 'IP Адрес', 'Referrer', 'User Agent',
         ];
 
-        $callback = function() use($leads, $columns) {
+        $callback = function () use ($leads, $columns) {
             $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF"); 
+            fwrite($file, "\xEF\xBB\xBF");
             fputcsv($file, $columns, ';');
 
             foreach ($leads as $lead) {
@@ -141,7 +129,7 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
                     $lead->utm_source ?? '',
                     $lead->utm_medium ?? '',
                     $lead->utm_campaign ?? '',
-                    $lead->utm_content ?? '', // Сюда упадет [Форма: Пробное занятие]
+                    $lead->utm_content ?? '',
                     $lead->utm_term ?? '',
                     $lead->click_id ?? '',
                     $lead->ip_address ?? '',
@@ -154,5 +142,66 @@ if (empty($landing) && !empty($validated['source_article_id'])) {
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Flash для дубликата заявки. Если у оригинального Lead есть magnet_channel/token —
+     * строим deep-link исходного канала, чтобы юзер вернулся туда же, где получил магнит.
+     * Иначе — отдаём только базовые поля, шаблон сам деградирует на хардкод-кнопку Telegram.
+     */
+    private function buildDuplicateFlash(Lead $existing): array
+    {
+        $flash = [
+            'is_duplicate' => true,
+            'duplicate_email' => $existing->email,
+        ];
+
+        if (! $existing->magnet_channel || ! $existing->magnet_token) {
+            return $flash;
+        }
+
+        $manager = app(DeliveryChannelManager::class);
+        if (! $manager->has($existing->magnet_channel)) {
+            return $flash;
+        }
+
+        $flash['duplicate_channel'] = $existing->magnet_channel;
+        $flash['duplicate_deep_link'] = $manager->get($existing->magnet_channel)
+            ->buildDeepLink($existing->magnet_token);
+
+        return $flash;
+    }
+
+    /**
+     * Привязывает к лиду уникальный magnet_token и канал доставки.
+     * Канал = распознанный из social || дефолт лендинга.
+     */
+    private function attachMagnet(Lead $lead, LandingPage $landing, ?string $social): void
+    {
+        $parsed = app(SocialChannelParser::class)->parse($social);
+        // Telegram — конечный fallback: landing мог быть создан до миграции 2026_05_16_000002
+        // или сохранён через Filament с null в Select (поле visible-by-toggle не загружает default при edit).
+        $channel = $parsed['channel'] ?? $landing->lead_magnet_default_channel ?? 'telegram';
+
+        // Полагаемся на UNIQUE index magnet_token + retry на коллизии —
+        // do/while с exists() не атомарен. Коллизии при 62^12 практически невозможны,
+        // но 3 попытки страхуют любой край.
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            try {
+                $lead->update([
+                    'magnet_token' => Str::random(12),
+                    'magnet_channel' => $channel,
+                ]);
+
+                return;
+            } catch (QueryException $e) {
+                // 1062 (MySQL) / 23000 (SQLite) — duplicate key. Любая другая ошибка пробрасывается.
+                if ($e->getCode() !== '23000') {
+                    throw $e;
+                }
+            }
+        }
+
+        throw new \RuntimeException("Не удалось сгенерировать уникальный magnet_token для Lead #{$lead->id}");
     }
 }

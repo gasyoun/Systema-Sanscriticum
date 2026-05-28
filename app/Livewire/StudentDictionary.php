@@ -12,6 +12,7 @@ class StudentDictionary extends Component
     use WithPagination;
 
     public $search = '';
+
     public $dictionary_id = 'all';
 
     // Обновляем пагинацию при поиске
@@ -19,7 +20,7 @@ class StudentDictionary extends Component
     {
         $this->resetPage();
     }
-    
+
     public function updatingDictionaryId()
     {
         $this->resetPage();
@@ -38,10 +39,10 @@ class StudentDictionary extends Component
 
         if (trim($this->search)) {
             $words->where(function ($query) {
-                $query->where('devanagari', 'like', '%' . $this->search . '%')
-                      ->orWhere('iast', 'like', '%' . $this->search . '%')
-                      ->orWhere('cyrillic', 'like', '%' . $this->search . '%')
-                      ->orWhere('translation', 'like', '%' . $this->search . '%');
+                $query->where('devanagari', 'like', '%'.$this->search.'%')
+                    ->orWhere('iast', 'like', '%'.$this->search.'%')
+                    ->orWhere('cyrillic', 'like', '%'.$this->search.'%')
+                    ->orWhere('translation', 'like', '%'.$this->search.'%');
             });
         }
 

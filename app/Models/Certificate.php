@@ -23,9 +23,9 @@ class Certificate extends Model
         static::creating(function ($certificate) {
             // Генерация уникального номера сертификата
             if (empty($certificate->number)) {
-                $certificate->number = date('Y') . '-' . strtoupper(Str::random(5));
+                $certificate->number = date('Y').'-'.strtoupper(Str::random(5));
             }
-            
+
             // Автоматическая подстановка даты выдачи
             if (empty($certificate->issued_at)) {
                 $certificate->issued_at = now();

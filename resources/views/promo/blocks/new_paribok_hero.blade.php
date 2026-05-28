@@ -175,6 +175,14 @@
                         </div>
                     </div>
 
+                    {{-- Telegram / VK / Instagram (необязательное) --}}
+                    <div>
+                        <input type="text" name="social"
+                               placeholder="Telegram / VK / Instagram (необязательно)"
+                               maxlength="255" value="{{ old('social') }}"
+                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-[#E85C24] outline-none">
+                    </div>
+
                     {{-- Чекбоксы --}}
                     <div class="pt-2 pb-2 space-y-3">
                         <label class="flex items-start gap-3 cursor-pointer group">

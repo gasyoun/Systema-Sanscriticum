@@ -96,7 +96,7 @@ class BlocksRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('tariff.price')
                     ->label('Цена тарифа')
                     ->placeholder('— нет тарифа —')
-                    ->formatStateUsing(fn ($state) => $state ? number_format((float) $state, 0, '.', ' ') . ' ₽' : '—'),
+                    ->formatStateUsing(fn ($state) => $state ? number_format((float) $state, 0, '.', ' ').' ₽' : '—'),
 
                 Tables\Columns\ToggleColumn::make('is_current')
                     ->label('Override'),

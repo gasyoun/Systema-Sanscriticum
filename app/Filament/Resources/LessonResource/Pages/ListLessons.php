@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\LessonResource\Pages;
 
-use App\Filament\Resources\LessonResource;
-use App\Filament\Imports\LessonImporter; // <--- Добавили импорт класса
+use App\Filament\Imports\LessonImporter;
+use App\Filament\Resources\LessonResource; // <--- Добавили импорт класса
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -20,7 +20,7 @@ class ListLessons extends ListRecords
                 ->label('Импорт из Excel (CSV)')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('info'),
-                
+
             // Старая кнопка "Создать" (оставляем её)
             Actions\CreateAction::make(),
         ];

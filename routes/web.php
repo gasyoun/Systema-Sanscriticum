@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Models\Lead;
-use App\Models\LandingPage; 
-use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PromoController;
-use App\Http\Controllers\LeadController; 
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\DepositController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PromoController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TelegramController;
+use App\Models\LandingPage;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 /*
@@ -29,7 +29,7 @@ Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'remo
 
 // 1. РЕДИРЕКТ (чтобы старые ссылки работали)
 Route::get('/promo/{slug}', function ($slug) {
-    return redirect('/' . $slug, 301);
+    return redirect('/'.$slug, 301);
 });
 
 // --- ГЛАВНАЯ И АВТОРИЗАЦИЯ ---
@@ -38,7 +38,15 @@ Route::get('/promo/{slug}', function ($slug) {
 Route::get('/', function () {
     // Берем только опубликованные курсы, по 9 на страницу
     $landings = LandingPage::where('is_active', true)->paginate(9);
-    return view('main', compact('landings'));
+
+    // Открытые занятия для витринной карусели: отобраны вручную через флаг show_on_main
+    // (фильтрация is_free + is_published сидит в Lesson::scopeShownOnMain).
+    $openLessons = \App\Models\Lesson::shownOnMain()
+        ->with('course:id,slug,title')
+        ->latest('lesson_date')
+        ->get();
+
+    return view('main', compact('landings', 'openLessons'));
 });
 
 // Витрина магазина курсов
@@ -57,7 +65,7 @@ Route::post('/shop/login', [AuthController::class, 'shopLogin'])
 
 Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
     ->name('shop.logout');
-    
+
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════
@@ -71,12 +79,13 @@ Route::prefix('s')->name('articles.')->group(function () {
 
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
 Route::middleware(['auth', 'track.activity'])->group(function () {
-    
+
     Route::get('/home', function () {
         $user = auth()->user();
         if ($user->is_admin) {
             return redirect('/admin');
         }
+
         return redirect()->route('student.dashboard');
     })->name('home');
 
@@ -86,25 +95,25 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
-    
+
     Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');
     Route::get('/course/{slug}/lesson/{lessonId}', [StudentController::class, 'showLesson'])->name('student.lesson');
 
     Route::post('/course/{slug}/lesson/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
-        
+
     Route::get('/course/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
-    ->name('student.course.materials.download');
-    
+        ->name('student.course.materials.download');
+
     Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
-        
+
     Route::post('/api/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store'])
-        ->name('activity.heartbeat');    
+        ->name('activity.heartbeat');
 
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');
-        
+
     Route::get('/admin/leads/export', [LeadController::class, 'export'])
         ->middleware('admin')
         ->name('leads.export');
@@ -112,15 +121,14 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
 });
 
-
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---
 
 // БЕЗОПАСНОЕ СКАЧИВАНИЕ ФАЙЛОВ
 Route::get('/force-download/{file}', function (string $file) {
     $safeFileName = basename($file);
-    $path = $safeFileName; 
+    $path = $safeFileName;
 
-    if (!Storage::disk('public')->exists($path)) {
+    if (! Storage::disk('public')->exists($path)) {
         abort(404, 'Файл не найден.');
     }
 
@@ -129,11 +137,15 @@ Route::get('/force-download/{file}', function (string $file) {
 
 // Debug-маршрут удалён из production (см. BUGS_REPORT.md #1.1)
 
-
 // --- ОТПРАВКА ФОРМЫ ---
 Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
-Route::view('/thank-you', 'promo.thankyou')->name('thank.you');
+Route::get('/thank-you', function () {
+    // Переносим flash на следующий request, чтобы F5 на странице
+    // не сбрасывал состояние (дубликат vs новая заявка) и кнопки магнита.
+    session()->reflash();
 
+    return view('promo.thankyou');
+})->name('thank.you');
 
 // --- РОУТЫ ДЛЯ ТОЧКА БАНКА ---
 // Перенес их выше роута-перехватчика {slug} для безопасности
@@ -141,6 +153,14 @@ Route::post('/payment/create', [PaymentController::class, 'createPayment'])->nam
 Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
 
+// Депозит (бронь курса) — отдельный POST, тот же эквайринг.
+// Биндинг по slug — симметрично с /shop/course/{course:slug}.
+// ВАЖНО: строго до catch-all /{slug} ниже.
+// throttle:5,1 — публичный эндпоинт, защита от ботов, которые иначе могли бы
+// насоздавать pending-платежей на чужие email со скоростью сети.
+Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])
+    ->middleware('throttle:5,1')
+    ->name('deposit.create');
 
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])
@@ -156,6 +176,9 @@ Route::middleware(['web', 'auth'])
             ->name('patch');
     });
 
+// --- SITEMAP ДЛЯ ПОИСКОВЫХ РОБОТОВ ---
+// ВАЖНО: до catch-all /{slug}
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!

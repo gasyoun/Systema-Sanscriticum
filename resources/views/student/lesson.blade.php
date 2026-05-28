@@ -78,11 +78,16 @@
     }
 
     // --- ПАРСЕР ТАЙМКОДОВ ---
-    function formatTimecodes($text) {
-        if (!$text) return '';
-        $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
-        $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-[#E85C24]/10 text-[#E85C24] border border-[#E85C24]/30 hover:bg-[#E85C24] hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
-        return preg_replace($pattern, $replacement, $text);
+    // function_exists-guard: вью включается дважды в одном PHP-процессе (например,
+    // в нескольких тест-кейсах в рамках одного php artisan test), без guard'а
+    // получаем fatal «Cannot redeclare function formatTimecodes()».
+    if (!function_exists('formatTimecodes')) {
+        function formatTimecodes($text) {
+            if (!$text) return '';
+            $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
+            $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-[#E85C24]/10 text-[#E85C24] border border-[#E85C24]/30 hover:bg-[#E85C24] hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
+            return preg_replace($pattern, $replacement, $text);
+        }
     }
     
     $hasTranscript = !empty($transcriptSentences);

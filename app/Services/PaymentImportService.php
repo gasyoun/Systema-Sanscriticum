@@ -14,12 +14,12 @@ final class PaymentImportService
 {
     /** Поля БД, в которые мапим колонки. Ключ → human-label. */
     public const FIELDS = [
-        'user'           => 'Студент (поиск)',
-        'amount'         => 'Сумма',
-        'date'           => 'Дата оплаты',
-        'start_block'    => 'Блок: с (опц.)',
-        'end_block'      => 'Блок: по (опц.)',
-        'tariff'         => 'Тариф (опц.)',
+        'user' => 'Студент (поиск)',
+        'amount' => 'Сумма',
+        'date' => 'Дата оплаты',
+        'start_block' => 'Блок: с (опц.)',
+        'end_block' => 'Блок: по (опц.)',
+        'tariff' => 'Тариф (опц.)',
         'transaction_id' => 'Примечание (опц.)',
     ];
 
@@ -44,7 +44,7 @@ final class PaymentImportService
         $headers = [];
         foreach ($first->toArray() as $index => $value) {
             $letter = $this->indexToLetter((int) $index);
-            $label  = trim((string) $value);
+            $label = trim((string) $value);
             $headers[$letter] = $label !== '' ? "{$letter}: {$label}" : "{$letter}: (без названия)";
         }
 
@@ -59,6 +59,7 @@ final class PaymentImportService
     public function readPreview(string $absolutePath, int $limit = 3): array
     {
         $rows = Excel::toCollection(null, $absolutePath)->first() ?? collect();
+
         return $rows->slice(1, $limit)->values()->map->toArray()->toArray();
     }
 
@@ -102,12 +103,12 @@ final class PaymentImportService
         $rows = Excel::toCollection(null, $absolutePath)->first() ?? collect();
 
         $stats = [
-            'total_rows'    => 0,
-            'inserted'      => 0,
-            'duplicates'    => 0,
-            'no_user'       => 0,
-            'negative'      => 0,
-            'empty'         => 0,
+            'total_rows' => 0,
+            'inserted' => 0,
+            'duplicates' => 0,
+            'no_user' => 0,
+            'negative' => 0,
+            'empty' => 0,
             'missing_users' => [],
         ];
 
@@ -115,7 +116,11 @@ final class PaymentImportService
         $isFirst = true;
 
         foreach ($rows as $row) {
-            if ($isFirst) { $isFirst = false; continue; }
+            if ($isFirst) {
+                $isFirst = false;
+
+                continue;
+            }
 
             $stats['total_rows']++;
             $rowArr = $row->toArray();
@@ -123,16 +128,19 @@ final class PaymentImportService
             $studentKey = trim((string) $this->getCell($rowArr, $mapping['user']));
             if ($studentKey === '') {
                 $stats['empty']++;
+
                 continue;
             }
 
             $amount = $this->cleanNumber((string) $this->getCell($rowArr, $mapping['amount']));
             if ($amount < 0) {
                 $stats['negative']++;
+
                 continue;
             }
             if ($amount === 0.0) {
                 $stats['empty']++;
+
                 continue;
             }
 
@@ -142,6 +150,7 @@ final class PaymentImportService
                 if (! in_array($studentKey, $stats['missing_users'], true)) {
                     $stats['missing_users'][] = $studentKey;
                 }
+
                 continue;
             }
 
@@ -157,7 +166,10 @@ final class PaymentImportService
                 : '';
             $parsedDate = now();
             if ($dateRaw !== '') {
-                try { $parsedDate = Carbon::parse($dateRaw); } catch (\Throwable) {}
+                try {
+                    $parsedDate = Carbon::parse($dateRaw);
+                } catch (\Throwable) {
+                }
             }
 
             $tariffOverride = isset($mapping['tariff'])
@@ -168,14 +180,14 @@ final class PaymentImportService
                 : '';
 
             foreach ($this->buildPaymentRows(
-                userId:    $userId,
-                courseId:  $course->id,
-                amount:    $amount,
+                userId: $userId,
+                courseId: $course->id,
+                amount: $amount,
                 startBlock: $startBlock,
-                endBlock:   $endBlock,
-                date:       $parsedDate,
+                endBlock: $endBlock,
+                date: $parsedDate,
                 tariffOverride: $tariffOverride,
-                noteOverride:   $noteOverride,
+                noteOverride: $noteOverride,
             ) as $payment) {
                 $key = $this->dedupKey(
                     $payment['user_id'],
@@ -187,6 +199,7 @@ final class PaymentImportService
 
                 if (isset($existingKeys[$key])) {
                     $stats['duplicates']++;
+
                     continue;
                 }
 
@@ -222,6 +235,7 @@ final class PaymentImportService
         for ($i = 0, $len = strlen($letter); $i < $len; $i++) {
             $index = $index * 26 + (ord($letter[$i]) - ord('A') + 1);
         }
+
         return $index - 1;
     }
 
@@ -234,9 +248,10 @@ final class PaymentImportService
         $index++;
         while ($index > 0) {
             $mod = ($index - 1) % 26;
-            $letter = chr(65 + $mod) . $letter;
+            $letter = chr(65 + $mod).$letter;
             $index = (int) (($index - $mod) / 26);
         }
+
         return $letter;
     }
 
@@ -270,32 +285,32 @@ final class PaymentImportService
 
             for ($i = $startBlock; $i <= $endBlock; $i++) {
                 $rows[] = [
-                    'user_id'        => $userId,
-                    'course_id'      => $courseId,
-                    'amount'         => round($perBlock, 2),
-                    'tariff'         => $tariffOverride !== '' ? $tariffOverride : "block_{$i}",
-                    'status'         => 'paid',
-                    'start_block'    => $i,
-                    'end_block'      => $i,
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'amount' => round($perBlock, 2),
+                    'tariff' => $tariffOverride !== '' ? $tariffOverride : "block_{$i}",
+                    'status' => 'paid',
+                    'start_block' => $i,
+                    'end_block' => $i,
                     'transaction_id' => $blocksCount > 1
                         ? "{$note} (мульти-блок {$startBlock}-{$endBlock})"
                         : $note,
-                    'created_at'     => $date->copy(),
-                    'updated_at'     => $date->copy(),
+                    'created_at' => $date->copy(),
+                    'updated_at' => $date->copy(),
                 ];
             }
         } else {
             $rows[] = [
-                'user_id'        => $userId,
-                'course_id'      => $courseId,
-                'amount'         => $amount,
-                'tariff'         => $tariffOverride !== '' ? $tariffOverride : 'full',
-                'status'         => 'paid',
-                'start_block'    => null,
-                'end_block'      => null,
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'amount' => $amount,
+                'tariff' => $tariffOverride !== '' ? $tariffOverride : 'full',
+                'status' => 'paid',
+                'start_block' => null,
+                'end_block' => null,
                 'transaction_id' => $note,
-                'created_at'     => $date->copy(),
-                'updated_at'     => $date->copy(),
+                'created_at' => $date->copy(),
+                'updated_at' => $date->copy(),
             ];
         }
 
@@ -306,6 +321,7 @@ final class PaymentImportService
     {
         $value = str_replace(',', '.', trim($value));
         $value = preg_replace('/[^\d.-]/', '', $value);
+
         return $value === '' ? 0.0 : (float) $value;
     }
 

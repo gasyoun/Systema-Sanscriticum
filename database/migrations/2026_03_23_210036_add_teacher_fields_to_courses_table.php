@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('courses', function (Blueprint $table) {
             // Привязка к преподавателю (если препода удалят, у курса это поле станет null)
             $table->foreignId('teacher_id')->nullable()->constrained('teachers')->nullOnDelete();
-            
+
             // Финансовые настройки курса
             $table->string('salary_type')->nullable(); // percent, fix_per_student, fix_total
             $table->decimal('salary_value', 10, 2)->nullable(); // Сама ставка (например, 30.00 или 5000.00)

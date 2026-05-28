@@ -54,19 +54,19 @@ final class CloseStaleSessionsJob implements ShouldQueue
     public function handle(): void
     {
         $threshold = now()->subMinutes(self::STALE_AFTER_MINUTES);
-        
-        // DEBUG START
-    $found = UserSession::where('is_active', true)
-        ->where('last_heartbeat_at', '<', $threshold)
-        ->count();
-    \Illuminate\Support\Facades\Log::info('CloseStaleSessionsJob DEBUG', [
-        'threshold' => $threshold->toDateTimeString(),
-        'found_count' => $found,
-    ]);
-    // DEBUG END
 
-    $closedCount = 0;
-        
+        // DEBUG START
+        $found = UserSession::where('is_active', true)
+            ->where('last_heartbeat_at', '<', $threshold)
+            ->count();
+        \Illuminate\Support\Facades\Log::info('CloseStaleSessionsJob DEBUG', [
+            'threshold' => $threshold->toDateTimeString(),
+            'found_count' => $found,
+        ]);
+        // DEBUG END
+
+        $closedCount = 0;
+
         $closedCount = 0;
         $totalTimeAdded = 0;
 
@@ -89,10 +89,10 @@ final class CloseStaleSessionsJob implements ShouldQueue
                             DB::table('user_sessions')
                                 ->where('id', $session->id)
                                 ->update([
-                                    'ended_at'         => $endedAt,
+                                    'ended_at' => $endedAt,
                                     'duration_seconds' => $duration,
-                                    'is_active'        => false,
-                                    'updated_at'       => now(),
+                                    'is_active' => false,
+                                    'updated_at' => now(),
                                 ]);
 
                             // Накапливаем в профиль юзера
@@ -106,12 +106,12 @@ final class CloseStaleSessionsJob implements ShouldQueue
 
                             // Пишем событие таймаута
                             DB::table('activity_events')->insert([
-                                'user_id'    => $session->user_id,
+                                'user_id' => $session->user_id,
                                 'session_id' => $session->id,
                                 'event_type' => ActivityEvent::TYPE_SESSION_TIMEOUT,
                                 'event_data' => json_encode([
                                     'duration_seconds' => $duration,
-                                    'reason'           => 'stale_heartbeat',
+                                    'reason' => 'stale_heartbeat',
                                 ], JSON_UNESCAPED_UNICODE),
                                 'ip_address' => $session->ip_address,
                                 'created_at' => now(),
@@ -123,7 +123,7 @@ final class CloseStaleSessionsJob implements ShouldQueue
                         // Одна упавшая сессия не должна ломать весь батч
                         Log::warning('CloseStaleSessionsJob: failed to close session', [
                             'session_id' => $session->id,
-                            'error'      => $e->getMessage(),
+                            'error' => $e->getMessage(),
                         ]);
                     }
                 }
@@ -131,7 +131,7 @@ final class CloseStaleSessionsJob implements ShouldQueue
 
         if ($closedCount > 0) {
             Log::info('CloseStaleSessionsJob: closed sessions', [
-                'count'            => $closedCount,
+                'count' => $closedCount,
                 'total_time_added' => $totalTimeAdded,
             ]);
         }

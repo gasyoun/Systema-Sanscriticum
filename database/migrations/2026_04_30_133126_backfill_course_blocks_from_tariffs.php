@@ -20,7 +20,7 @@ return new class extends Migration
         $createdByCourseAndNumber = [];
 
         foreach ($blockTariffs as $tariff) {
-            $key = $tariff->course_id . ':' . $tariff->block_number;
+            $key = $tariff->course_id.':'.$tariff->block_number;
 
             if (isset($createdByCourseAndNumber[$key])) {
                 $blockId = $createdByCourseAndNumber[$key];
@@ -34,13 +34,13 @@ return new class extends Migration
                     $blockId = $existing;
                 } else {
                     $blockId = DB::table('course_blocks')->insertGetId([
-                        'course_id'   => $tariff->course_id,
-                        'number'      => $tariff->block_number,
-                        'title'       => $tariff->title,
+                        'course_id' => $tariff->course_id,
+                        'number' => $tariff->block_number,
+                        'title' => $tariff->title,
                         'description' => $tariff->description,
-                        'is_active'   => (bool) $tariff->is_active,
-                        'created_at'  => $now,
-                        'updated_at'  => $now,
+                        'is_active' => (bool) $tariff->is_active,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ]);
                 }
 

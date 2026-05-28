@@ -37,7 +37,7 @@
 
                         @if($lesson->lesson_date)
                             <span class="text-xs text-gray-400 font-medium whitespace-nowrap">
-                                {{ $lesson->lesson_date->translatedFormat('d MMM Y') }}
+                                {{ $lesson->lesson_date->translatedFormat('d F Y') }}
                             </span>
                         @endif
                     </div>

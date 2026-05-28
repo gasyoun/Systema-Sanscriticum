@@ -2,14 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Awcodes\Curator\Models\Media;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MigrateBuilderMedia extends Command
 {
     protected $signature = 'app:migrate-builder';
+
     protected $description = 'Перенос картинок из JSON-блоков конструктора в Curator';
 
     public function handle()
@@ -20,6 +21,7 @@ class MigrateBuilderMedia extends Command
 
         if ($pages->isEmpty()) {
             $this->info('Лендинги с контентом не найдены.');
+
             return;
         }
 
@@ -28,23 +30,28 @@ class MigrateBuilderMedia extends Command
 
         foreach ($pages as $page) {
             $content = json_decode($page->content, true);
-            
-            if (!is_array($content)) {
+
+            if (! is_array($content)) {
                 $bar->advance();
+
                 continue;
             }
 
             $updated = false;
 
             foreach ($content as &$block) {
-                if (!isset($block['type']) || !isset($block['data'])) continue;
+                if (! isset($block['type']) || ! isset($block['data'])) {
+                    continue;
+                }
 
                 $type = $block['type'];
                 $data = &$block['data'];
 
                 // УМНАЯ ФУНКЦИЯ: понимает и одиночные строки, и массивы путей (multiple)
                 $replaceImage = function (&$array, $key) use (&$updated) {
-                    if (empty($array[$key])) return;
+                    if (empty($array[$key])) {
+                        return;
+                    }
 
                     // Если это массив путей (например, скриншоты в отзывах)
                     if (is_array($array[$key])) {
@@ -56,13 +63,14 @@ class MigrateBuilderMedia extends Command
                                     // Curator принимает ID как строки в JSON, но можно и как числа. Оставим строку для совместимости.
                                     $newImages[] = (string) $mediaId;
                                     $updated = true;
+
                                     continue;
                                 }
                             }
                             $newImages[] = $path; // Если файла нет, оставляем как было
                         }
                         $array[$key] = $newImages;
-                    } 
+                    }
                     // Если это обычная строка (один файл)
                     elseif (is_string($array[$key])) {
                         $mediaId = $this->getOrCreateMedia($array[$key]);
@@ -116,7 +124,7 @@ class MigrateBuilderMedia extends Command
 
             if ($updated) {
                 DB::table('landing_pages')->where('id', $page->id)->update([
-                    'content' => json_encode($content, JSON_UNESCAPED_UNICODE)
+                    'content' => json_encode($content, JSON_UNESCAPED_UNICODE),
                 ]);
             }
 
@@ -130,14 +138,20 @@ class MigrateBuilderMedia extends Command
 
     private function getOrCreateMedia(?string $path)
     {
-        if (!$path || is_numeric($path)) return null; 
+        if (! $path || is_numeric($path)) {
+            return null;
+        }
 
         $cleanPath = str_replace(['/storage/', 'storage/'], '', $path);
 
-        if (!Storage::disk('public')->exists($cleanPath)) return null;
+        if (! Storage::disk('public')->exists($cleanPath)) {
+            return null;
+        }
 
         $existing = Media::where('path', $cleanPath)->first();
-        if ($existing) return $existing->id;
+        if ($existing) {
+            return $existing->id;
+        }
 
         try {
             $fullPath = Storage::disk('public')->path($cleanPath);
@@ -168,7 +182,8 @@ class MigrateBuilderMedia extends Command
 
             return $media->id;
         } catch (\Exception $e) {
-            \Log::error("Ошибка добавления {$cleanPath} в Curator: " . $e->getMessage());
+            \Log::error("Ошибка добавления {$cleanPath} в Curator: ".$e->getMessage());
+
             return null;
         }
     }

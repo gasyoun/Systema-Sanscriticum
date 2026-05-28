@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ArticleCategoryResource\Pages;
 use App\Models\ArticleCategory;
 use Filament\Forms;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class ArticleCategoryResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = ArticleCategory::class;
 
     // Иконка в сайдбаре Filament
@@ -21,11 +24,14 @@ class ArticleCategoryResource extends Resource
 
     // Группировка в сайдбаре — создадим новую группу "Блог"
     protected static ?string $navigationGroup = 'Блог';
+
     protected static ?int $navigationSort = 10; // выше, чем статьи
 
     // Человеческие подписи
     protected static ?string $navigationLabel = 'Рубрики статей';
+
     protected static ?string $modelLabel = 'Рубрика';
+
     protected static ?string $pluralModelLabel = 'Рубрики';
 
     public static function form(Form $form): Form
@@ -39,7 +45,7 @@ class ArticleCategoryResource extends Resource
                     ->live(onBlur: true) // при потере фокуса — обновит поле slug
                     ->afterStateUpdated(function (string $operation, ?string $state, Forms\Set $set): void {
                         // Автогенерация slug только при создании, чтобы не ломать уже работающие URL
-                        if ($operation === 'create' && !empty($state)) {
+                        if ($operation === 'create' && ! empty($state)) {
                             $set('slug', \Illuminate\Support\Str::slug($state));
                         }
                     }),
@@ -110,9 +116,9 @@ class ArticleCategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListArticleCategories::route('/'),
+            'index' => Pages\ListArticleCategories::route('/'),
             'create' => Pages\CreateArticleCategory::route('/create'),
-            'edit'   => Pages\EditArticleCategory::route('/{record}/edit'),
+            'edit' => Pages\EditArticleCategory::route('/{record}/edit'),
         ];
     }
 }

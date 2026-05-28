@@ -38,11 +38,11 @@ return new class extends Migration
             if (Schema::hasTable($tableName)) {
                 Schema::table($tableName, function (Blueprint $table) use ($tableName) {
                     // Защита: добавляем колонку, только если её там ещё нет
-                    if (!Schema::hasColumn($tableName, 'image_id')) {
+                    if (! Schema::hasColumn($tableName, 'image_id')) {
                         $table->foreignId('image_id')
-                              ->nullable()
-                              ->constrained('media') // Связываем с таблицей Curator
-                              ->nullOnDelete();      // Если картинку удалят, тут станет null (ничего не сломается)
+                            ->nullable()
+                            ->constrained('media') // Связываем с таблицей Curator
+                            ->nullOnDelete();      // Если картинку удалят, тут станет null (ничего не сломается)
                     }
                 });
             }

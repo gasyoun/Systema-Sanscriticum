@@ -172,6 +172,7 @@ return [
         App\Providers\Filament\LectureEditorPanelProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\BlogAnalyticsServiceProvider::class,
+        App\Providers\MessagingServiceProvider::class,
     ])->toArray(),
 
     /*

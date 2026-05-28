@@ -20,5 +20,7 @@
 
         @livewire('shop.course-catalog')
     </div>
+
+    @include('partials.deposit-modal', ['deposit' => $deposit])
 </div>
 @endsection

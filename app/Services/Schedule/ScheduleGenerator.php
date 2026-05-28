@@ -47,13 +47,13 @@ final class ScheduleGenerator
             }
 
             $skipSet = array_flip($config->skipDates);
-            $addSet  = array_flip($config->addDates);
+            $addSet = array_flip($config->addDates);
 
-            $created   = collect();
-            $count     = $config->startNumber;          // для {N}
+            $created = collect();
+            $count = $config->startNumber;          // для {N}
             $lessonIdx = $config->startLessonIndex;     // для {BLOCK}/{BN}
             $processed = 0;
-            $iter      = 0;
+            $iter = 0;
 
             // 3. Главный цикл: создаём через withoutEvents, чтобы Observer
             //    не дёргал n8n на каждое из 60+ событий
@@ -66,10 +66,10 @@ final class ScheduleGenerator
 
                     $iso = $calculationDate->format('Y-m-d');
                     $isTargetDay = in_array($calculationDate->dayOfWeek, $config->weekdays, true);
-                    $isAdd  = isset($addSet[$iso]);
+                    $isAdd = isset($addSet[$iso]);
                     $isSkip = isset($skipSet[$iso]);
 
-                    if (($isTargetDay || $isAdd) && !$isSkip) {
+                    if (($isTargetDay || $isAdd) && ! $isSkip) {
                         $start = $calculationDate->copy()
                             ->setTimeFromTimeString($config->startTime);
 
@@ -82,14 +82,14 @@ final class ScheduleGenerator
                         );
 
                         $schedule = Schedule::create([
-                            'title'       => $rendered['title'] !== '' ? $rendered['title'] : "Занятие #{$count}",
+                            'title' => $rendered['title'] !== '' ? $rendered['title'] : "Занятие #{$count}",
                             'description' => $rendered['description'],
-                            'link'        => $config->link,
-                            'start'       => $start,
-                            'end'         => $start->copy()->addMinutes($config->durationMinutes),
-                            'color'       => '#3788d8',
-                            'group_id'    => $config->groupId,
-                            'course_id'   => $config->courseId,
+                            'link' => $config->link,
+                            'start' => $start,
+                            'end' => $start->copy()->addMinutes($config->durationMinutes),
+                            'color' => '#3788d8',
+                            'group_id' => $config->groupId,
+                            'course_id' => $config->courseId,
                         ]);
 
                         $created->push($schedule);

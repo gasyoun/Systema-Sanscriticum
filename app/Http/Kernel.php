@@ -67,5 +67,9 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         // --- ТРЕКИНГ АКТИВНОСТИ СТУДЕНТОВ ---
         'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+        // --- LEAD-MAGNET WEBHOOKS ---
+        'verify.tg.magnet' => \App\Http\Middleware\VerifyTelegramMagnetWebhook::class,
+        'verify.vk.magnet' => \App\Http\Middleware\VerifyVkMagnetCallback::class,
+        'verify.max.magnet' => \App\Http\Middleware\VerifyMaxMagnetWebhook::class,
     ];
 }

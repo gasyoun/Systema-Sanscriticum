@@ -8,7 +8,6 @@ use App\Models\Group;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
-use Illuminate\Database\Eloquent\Builder;
 
 class GroupExporter extends Exporter
 {
@@ -53,10 +52,10 @@ class GroupExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Экспорт групп завершён, обработано ' . number_format($export->successful_rows) . ' записей.';
+        $body = 'Экспорт групп завершён, обработано '.number_format($export->successful_rows).' записей.';
 
         if ($failed = $export->getFailedRowsCount()) {
-            $body .= ' Не удалось экспортировать ' . number_format($failed) . ' строк.';
+            $body .= ' Не удалось экспортировать '.number_format($failed).' строк.';
         }
 
         return $body;

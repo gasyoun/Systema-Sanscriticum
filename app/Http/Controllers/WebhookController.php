@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Payment;
-use Illuminate\Support\Facades\Log;
-use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
-use Firebase\JWT\Key;
+use Firebase\JWT\JWT;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
@@ -32,9 +32,10 @@ class WebhookController extends Controller
                 $decoded = JWT::decode($jwt, $key);
             } catch (\UnexpectedValueException $e) {
                 Log::warning('Tochka webhook: невалидная подпись JWT', [
-                    'ip'    => $request->ip(),
+                    'ip' => $request->ip(),
                     'error' => $e->getMessage(),
                 ]);
+
                 return response('Invalid signature', 401);
             }
 
@@ -50,34 +51,44 @@ class WebhookController extends Controller
 
             if (! $paymentId) {
                 Log::info("Вебхук: В purpose нет номера заказа. Purpose: {$purpose}");
-                return response('OK', 200);
-            }
 
-            $payment = Payment::find($paymentId);
-
-            if (! $payment) {
-                Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
                 return response('OK', 200);
             }
 
             $successStatuses = ['paid', 'authorized', 'APPROVED', 'AUTHORIZED', 'captured', 'completed'];
+            $failureStatuses = ['rejected', 'canceled', 'failed'];
 
-            if (in_array($statusFromBank, $successStatuses, true)) {
-                if ($payment->status !== 'paid') {
-                    $payment->update(['status' => 'paid']);
-                    Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
+            // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
+            // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
+            DB::transaction(function () use ($paymentId, $statusFromBank, $successStatuses, $failureStatuses) {
+                $payment = Payment::lockForUpdate()->find($paymentId);
+
+                if (! $payment) {
+                    Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
+
+                    return;
                 }
-            } elseif (in_array($statusFromBank, ['rejected', 'canceled', 'failed'], true)) {
-                $payment->update(['status' => 'failed']);
-                Log::info("❌ ОТКАЗ: Заказ №{$payment->id} отменен банком.");
-            }
+
+                if (in_array($statusFromBank, $successStatuses, true)) {
+                    if ($payment->status !== 'paid') {
+                        $payment->update(['status' => 'paid']);
+                        Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
+                    }
+                } elseif (in_array($statusFromBank, $failureStatuses, true)) {
+                    if ($payment->status !== 'failed') {
+                        $payment->update(['status' => 'failed']);
+                        Log::info("❌ ОТКАЗ: Заказ №{$payment->id} отменен банком.");
+                    }
+                }
+            });
 
             return response('OK', 200);
 
         } catch (\Exception $e) {
-            Log::error('Ошибка Вебхука: ' . $e->getMessage(), [
+            Log::error('Ошибка Вебхука: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response('Server error', 500);
         }
     }

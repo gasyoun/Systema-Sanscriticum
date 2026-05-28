@@ -179,6 +179,7 @@
                     <x-shop.course-card
                         :course="$course"
                         :purchasedByCourse="$purchasedByCourse"
+                        :deposit="$deposit"
                         wire:key="course-{{ $course->id }}" />
                 @empty
                     <div class="col-span-full text-center py-20">

@@ -40,12 +40,12 @@ class CourseExporter extends Exporter
             ExportColumn::make('salary_type')
                 ->label('Схема ЗП')
                 ->formatStateUsing(fn (?string $state): string => match ($state) {
-                    'percent'           => 'Процент от продаж',
-                    'fix_per_student'   => 'Фикс за студента',
-                    'fix_total'         => 'Фикс за курс',
+                    'percent' => 'Процент от продаж',
+                    'fix_per_student' => 'Фикс за студента',
+                    'fix_total' => 'Фикс за курс',
                     'percent_per_block' => 'Процент с блока',
-                    'fix_per_block'     => 'Фикс за блок',
-                    default             => '—',
+                    'fix_per_block' => 'Фикс за блок',
+                    default => '—',
                 }),
 
             ExportColumn::make('salary_value')
@@ -73,10 +73,10 @@ class CourseExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Экспорт курсов завершён, обработано ' . number_format($export->successful_rows) . ' записей.';
+        $body = 'Экспорт курсов завершён, обработано '.number_format($export->successful_rows).' записей.';
 
         if ($failed = $export->getFailedRowsCount()) {
-            $body .= ' Не удалось экспортировать ' . number_format($failed) . ' строк.';
+            $body .= ' Не удалось экспортировать '.number_format($failed).' строк.';
         }
 
         return $body;

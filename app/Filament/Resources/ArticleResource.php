@@ -4,26 +4,33 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
-use Awcodes\Curator\Components\Forms\CuratorPicker;
 
 class ArticleResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Article::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationGroup = 'Блог';
+
     protected static ?int $navigationSort = 20; // ниже рубрик
 
     protected static ?string $navigationLabel = 'Статьи';
+
     protected static ?string $modelLabel = 'Статья';
+
     protected static ?string $pluralModelLabel = 'Статьи';
 
     // Количество записей в сайдбаре (опубликованные)
@@ -57,7 +64,7 @@ class ArticleResource extends Resource
                                         ->maxLength(255)
                                         ->live(onBlur: true)
                                         ->afterStateUpdated(function (string $operation, ?string $state, Forms\Set $set): void {
-                                            if ($operation === 'create' && !empty($state)) {
+                                            if ($operation === 'create' && ! empty($state)) {
                                                 $set('slug', Str::slug($state));
                                             }
                                         })
@@ -126,7 +133,7 @@ class ArticleResource extends Resource
                         ->schema([
                             Forms\Components\Section::make('HTML-разметка статьи')
                                 ->description(
-                                    'Вставьте содержимое <main class="article-body">...</main> из подготовленного HTML-файла. ' .
+                                    'Вставьте содержимое <main class="article-body">...</main> из подготовленного HTML-файла. '.
                                     'Только внутренность main — без шапки сайта, hero-секции и футера.'
                                 )
                                 ->schema([
@@ -140,64 +147,64 @@ class ArticleResource extends Resource
                                         ])
                                         ->columnSpanFull(),
                                 ]),
-                                
-                                // ══════════════════════════════════════════════════
-// КАРТИНКИ В СТАТЬЕ
-// ══════════════════════════════════════════════════
-Forms\Components\Section::make('Картинки в статье')
-    ->description('Выберите картинки из медиатеки. Под каждой будет готовый HTML-сниппет для копирования в поле "HTML-код статьи" выше.')
-    ->collapsible()
-    ->schema([
-        CuratorPicker::make('inline_images')
-            ->label('Картинки')
-            ->multiple()
-            ->relationship('inlineImages', 'id') // см. шаг C — связь many-to-many
-            ->buttonLabel('Открыть медиатеку')
-            ->color('primary')
-            ->size('md')
-            ->helperText('Можно выбрать несколько. После сохранения формы под каждой картинкой появится HTML-сниппет.')
-            ->columnSpanFull(),
 
-        // Сниппеты — рендерятся через blade-компонент
-        Forms\Components\Placeholder::make('snippets')
-    ->label('HTML-сниппеты для вставки')
-    ->content(function (?Article $record): \Illuminate\Support\HtmlString {
-        if (!$record || $record->inlineImages->isEmpty()) {
-            return new \Illuminate\Support\HtmlString(
-                '<div style="padding:16px; background:#f3f4f6; border-radius:8px; color:#6b7280; font-size:14px;">'
-                . 'Сохраните статью с выбранными картинками — здесь появятся готовые сниппеты для копирования.'
-                . '</div>'
-            );
-        }
+                            // ══════════════════════════════════════════════════
+                            // КАРТИНКИ В СТАТЬЕ
+                            // ══════════════════════════════════════════════════
+                            Forms\Components\Section::make('Картинки в статье')
+                                ->description('Выберите картинки из медиатеки. Под каждой будет готовый HTML-сниппет для копирования в поле "HTML-код статьи" выше.')
+                                ->collapsible()
+                                ->schema([
+                                    CuratorPicker::make('inline_images')
+                                        ->label('Картинки')
+                                        ->multiple()
+                                        ->relationship('inlineImages', 'id') // см. шаг C — связь many-to-many
+                                        ->buttonLabel('Открыть медиатеку')
+                                        ->color('primary')
+                                        ->size('md')
+                                        ->helperText('Можно выбрать несколько. После сохранения формы под каждой картинкой появится HTML-сниппет.')
+                                        ->columnSpanFull(),
 
-        $html = '<div style="display:flex; flex-direction:column; gap:14px;">';
+                                    // Сниппеты — рендерятся через blade-компонент
+                                    Forms\Components\Placeholder::make('snippets')
+                                        ->label('HTML-сниппеты для вставки')
+                                        ->content(function (?Article $record): \Illuminate\Support\HtmlString {
+                                            if (! $record || $record->inlineImages->isEmpty()) {
+                                                return new \Illuminate\Support\HtmlString(
+                                                    '<div style="padding:16px; background:#f3f4f6; border-radius:8px; color:#6b7280; font-size:14px;">'
+                                                    .'Сохраните статью с выбранными картинками — здесь появятся готовые сниппеты для копирования.'
+                                                    .'</div>'
+                                                );
+                                            }
 
-        foreach ($record->inlineImages as $img) {
-            $url = $img->url;
-            $alt = e($img->alt ?? $img->name ?? '');
-            $caption = e($img->caption ?? '');
+                                            $html = '<div style="display:flex; flex-direction:column; gap:14px;">';
 
-            // Сами сниппеты — экранируем для безопасного вывода в textarea
-            $simpleSnippet = sprintf('<img src="%s" alt="%s">', $url, $alt);
+                                            foreach ($record->inlineImages as $img) {
+                                                $url = $img->url;
+                                                $alt = e($img->alt ?? $img->name ?? '');
+                                                $caption = e($img->caption ?? '');
 
-            $figureSnippet = $caption
-                ? sprintf(
-                    "<figure class=\"article-figure\">\n    <img src=\"%s\" alt=\"%s\">\n    <figcaption>%s</figcaption>\n</figure>",
-                    $url, $alt, $caption
-                )
-                : sprintf(
-                    "<figure class=\"article-figure\">\n    <img src=\"%s\" alt=\"%s\">\n</figure>",
-                    $url, $alt
-                );
+                                                // Сами сниппеты — экранируем для безопасного вывода в textarea
+                                                $simpleSnippet = sprintf('<img src="%s" alt="%s">', $url, $alt);
 
-            // Экранируем HTML-теги, чтобы они показались как текст в <textarea>
-            $simpleEscaped = htmlspecialchars($simpleSnippet, ENT_QUOTES, 'UTF-8');
-            $figureEscaped = htmlspecialchars($figureSnippet, ENT_QUOTES, 'UTF-8');
+                                                $figureSnippet = $caption
+                                                    ? sprintf(
+                                                        "<figure class=\"article-figure\">\n    <img src=\"%s\" alt=\"%s\">\n    <figcaption>%s</figcaption>\n</figure>",
+                                                        $url, $alt, $caption
+                                                    )
+                                                    : sprintf(
+                                                        "<figure class=\"article-figure\">\n    <img src=\"%s\" alt=\"%s\">\n</figure>",
+                                                        $url, $alt
+                                                    );
 
-            $thumbUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
-            $cardId = 'snippet-' . $img->id;
+                                                // Экранируем HTML-теги, чтобы они показались как текст в <textarea>
+                                                $simpleEscaped = htmlspecialchars($simpleSnippet, ENT_QUOTES, 'UTF-8');
+                                                $figureEscaped = htmlspecialchars($figureSnippet, ENT_QUOTES, 'UTF-8');
 
-            $html .= <<<HTML
+                                                $thumbUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+                                                $cardId = 'snippet-'.$img->id;
+
+                                                $html .= <<<HTML
 <div style="display:grid; grid-template-columns:90px 1fr; gap:14px; padding:12px; background:#fff; border:1px solid #e5e7eb; border-radius:10px;">
     <div style="width:90px; height:90px; background:#f3f4f6; border-radius:8px; overflow:hidden; flex-shrink:0;">
         <img src="{$thumbUrl}" alt="" style="width:90px !important; height:90px !important; max-height:90px !important; object-fit:cover !important; display:block; margin:0 !important;">
@@ -220,10 +227,10 @@ Forms\Components\Section::make('Картинки в статье')
     </div>
 </div>
 HTML;
-        }
+                                            }
 
-        // Один обработчик через делегирование событий — работает для всех кнопок
-        $html .= <<<'HTML'
+                                            // Один обработчик через делегирование событий — работает для всех кнопок
+                                            $html .= <<<'HTML'
 </div>
 <script>
 (function(){
@@ -277,10 +284,10 @@ HTML;
 </script>
 HTML;
 
-        return new \Illuminate\Support\HtmlString($html);
-    })
-    ->columnSpanFull(),
-    ]),
+                                            return new \Illuminate\Support\HtmlString($html);
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
 
                             // Блок предпросмотра (рендерит body как HTML)
                             Forms\Components\Section::make('Предпросмотр')
@@ -291,8 +298,8 @@ HTML;
                                         ->label('')
                                         ->content(fn (Forms\Get $get) => new \Illuminate\Support\HtmlString(
                                             '<div class="prose max-w-none" style="padding: 16px; background: #fff; border-radius: 8px;">'
-                                            . ($get('body') ?: '<em style="color:#888">Пусто — начните вводить HTML в поле выше.</em>')
-                                            . '</div>'
+                                            .($get('body') ?: '<em style="color:#888">Пусто — начните вводить HTML в поле выше.</em>')
+                                            .'</div>'
                                         ))
                                         ->columnSpanFull(),
                                 ]),
@@ -340,50 +347,50 @@ HTML;
                                         ->helperText('Сниппет в выдаче Яндекса/Google. Оптимально: 140–160 символов.'),
                                 ]),
                         ]),
-                        
-                        // ── Вкладка 5: АНАЛИТИКА ──
-Forms\Components\Tabs\Tab::make('Аналитика')
-    ->icon('heroicon-o-chart-bar')
-    ->schema([
-        Forms\Components\Section::make('Счётчики аналитики')
-            ->description(
-                'ID счётчиков для этой статьи. Если оставить пустыми — будут использоваться дефолтные ID из глобальных настроек блога (если они там заданы).'
-            )
-            ->schema([
-                Forms\Components\TextInput::make('yandex_metrika_id')
-                    ->label('ID Яндекс.Метрики')
-                    ->placeholder('12345678')
-                    ->numeric()
-                    ->maxLength(20)
-                    ->helperText('Только цифры, без https://...'),
 
-                Forms\Components\TextInput::make('vk_pixel_id')
-                    ->label('ID VK Пикселя')
-                    ->placeholder('3000000')
-                    ->maxLength(20)
-                    ->helperText('Числовой ID или VK-RTRG-...'),
-            ])
-            ->columns(2),
+                    // ── Вкладка 5: АНАЛИТИКА ──
+                    Forms\Components\Tabs\Tab::make('Аналитика')
+                        ->icon('heroicon-o-chart-bar')
+                        ->schema([
+                            Forms\Components\Section::make('Счётчики аналитики')
+                                ->description(
+                                    'ID счётчиков для этой статьи. Если оставить пустыми — будут использоваться дефолтные ID из глобальных настроек блога (если они там заданы).'
+                                )
+                                ->schema([
+                                    Forms\Components\TextInput::make('yandex_metrika_id')
+                                        ->label('ID Яндекс.Метрики')
+                                        ->placeholder('12345678')
+                                        ->numeric()
+                                        ->maxLength(20)
+                                        ->helperText('Только цифры, без https://...'),
 
-        Forms\Components\Section::make('Цели для отслеживания')
-            ->description('Эти цели срабатывают автоматически на странице статьи. Создайте их в Яндекс.Метрике с такими же идентификаторами.')
-            ->collapsible()
-            ->collapsed()
-            ->schema([
-                Forms\Components\Placeholder::make('goals_list')
-                    ->label('')
-                    ->content(new \Illuminate\Support\HtmlString(
-                        '<div style="font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.8;">'
-                        . '<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_time_60s</code> — 60 секунд на странице</div>'
-                        . '<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_scroll_75</code> — доскроллил до 75% статьи</div>'
-                        . '<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_trial_modal_open</code> — открыл модалку записи</div>'
-                        . '<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_cta_click</code> — клик по CTA-кнопке</div>'
-                        . '<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_lead_form_submit</code> — отправил форму</div>'
-                        . '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb;"><code style="background:#dcfce7; padding:2px 8px; border-radius:4px; color:#166534; font-weight:bold;">lead_from_article</code> — <strong>главная конверсия</strong> (срабатывает на странице "Спасибо")</div>'
-                        . '</div>'
-                    )),
-            ]),
-    ]),
+                                    Forms\Components\TextInput::make('vk_pixel_id')
+                                        ->label('ID VK Пикселя')
+                                        ->placeholder('3000000')
+                                        ->maxLength(20)
+                                        ->helperText('Числовой ID или VK-RTRG-...'),
+                                ])
+                                ->columns(2),
+
+                            Forms\Components\Section::make('Цели для отслеживания')
+                                ->description('Эти цели срабатывают автоматически на странице статьи. Создайте их в Яндекс.Метрике с такими же идентификаторами.')
+                                ->collapsible()
+                                ->collapsed()
+                                ->schema([
+                                    Forms\Components\Placeholder::make('goals_list')
+                                        ->label('')
+                                        ->content(new \Illuminate\Support\HtmlString(
+                                            '<div style="font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.8;">'
+                                            .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_time_60s</code> — 60 секунд на странице</div>'
+                                            .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_scroll_75</code> — доскроллил до 75% статьи</div>'
+                                            .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_trial_modal_open</code> — открыл модалку записи</div>'
+                                            .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_cta_click</code> — клик по CTA-кнопке</div>'
+                                            .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_lead_form_submit</code> — отправил форму</div>'
+                                            .'<div style="margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb;"><code style="background:#dcfce7; padding:2px 8px; border-radius:4px; color:#166534; font-weight:bold;">lead_from_article</code> — <strong>главная конверсия</strong> (срабатывает на странице "Спасибо")</div>'
+                                            .'</div>'
+                                        )),
+                                ]),
+                        ]),
 
                     // ── Вкладка 5: СТАТИСТИКА (read-only) ──
                     Forms\Components\Tabs\Tab::make('Статистика')
@@ -486,7 +493,7 @@ Forms\Components\Tabs\Tab::make('Аналитика')
                 Tables\Actions\Action::make('view_live')
                     ->label('На сайте')
                     ->icon('heroicon-m-arrow-top-right-on-square')
-                    ->url(fn (Article $record): string => url('/s/' . $record->slug))
+                    ->url(fn (Article $record): string => url('/s/'.$record->slug))
                     ->openUrlInNewTab()
                     ->visible(fn (Article $record): bool => $record->is_published),
 
@@ -526,9 +533,9 @@ Forms\Components\Tabs\Tab::make('Аналитика')
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListArticles::route('/'),
+            'index' => Pages\ListArticles::route('/'),
             'create' => Pages\CreateArticle::route('/create'),
-            'edit'   => Pages\EditArticle::route('/{record}/edit'),
+            'edit' => Pages\EditArticle::route('/{record}/edit'),
         ];
     }
 }

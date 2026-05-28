@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TeacherResource\Pages;
 use App\Models\Teacher;
 use Filament\Forms\Form;
@@ -10,6 +11,8 @@ use Filament\Tables\Table;
 
 class TeacherResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = Teacher::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -25,12 +28,36 @@ class TeacherResource extends Resource
                             ->required()
                             ->maxLength(255),
                         \Filament\Forms\Components\TextInput::make('email')
+                            ->label('Email')
                             ->email()
+                            ->required(fn (string $operation) => $operation === 'create')
+                            ->helperText(fn (string $operation) => $operation === 'create'
+                                ? 'Будет логином преподавателя в админке.'
+                                : null)
                             ->maxLength(255),
                         \Filament\Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel(),
                     ])->columns(3),
+
+                \Filament\Forms\Components\Section::make('Аккаунт для входа в админку')
+                    ->description('Создаётся автоматически с ролью «Преподаватель». Email из блока выше будет логином.')
+                    ->schema([
+                        \Filament\Forms\Components\TextInput::make('account_password')
+                            ->label('Пароль')
+                            ->password()
+                            ->revealable()
+                            ->minLength(6)
+                            ->maxLength(255)
+                            ->required(fn (string $operation) => $operation === 'create')
+                            ->helperText(fn (string $operation) => $operation === 'create'
+                                ? 'Минимум 6 символов. Передайте его преподавателю любым удобным способом.'
+                                : 'Заполните, чтобы сбросить пароль преподавателя. Оставьте пустым — текущий пароль не изменится.')
+                            ->dehydrated(false),
+                    ])
+                    ->visible(fn (?\App\Models\Teacher $record, string $operation) => $operation === 'create' || ($record && $record->email)
+                    )
+                    ->columns(1),
 
                 \Filament\Forms\Components\Section::make('Соцсети и Реквизиты')
                     ->schema([
@@ -56,13 +83,13 @@ class TeacherResource extends Resource
                     ->label('Имя')
                     ->searchable()
                     ->sortable(),
-                
+
                 \Filament\Tables\Columns\TextColumn::make('telegram')
                     ->label('Telegram')
                     ->icon('heroicon-m-paper-airplane'),
 
                 \Filament\Tables\Columns\TextColumn::make('courses_count')
-                    ->counts('courses') 
+                    ->counts('courses')
                     ->label('Курсов')
                     ->badge()
                     ->color('info'),
@@ -71,9 +98,10 @@ class TeacherResource extends Resource
                 \Filament\Tables\Columns\TextColumn::make('balance')
                     ->label('К выплате (Баланс)')
                     ->state(function (\App\Models\Teacher $record) {
-                        $earned = $record->calculateEarnings(); 
-                        $paid = $record->payouts()->sum('amount'); 
-                        return number_format($earned - $paid, 0, '.', ' ') . ' ₽';
+                        $earned = $record->calculateEarnings();
+                        $paid = $record->payouts()->sum('amount');
+
+                        return number_format($earned - $paid, 0, '.', ' ').' ₽';
                     })
                     ->badge()
                     ->color(fn (string $state) => str_contains($state, '-') || $state === '0 ₽' ? 'success' : 'warning')
@@ -81,7 +109,7 @@ class TeacherResource extends Resource
                     ->action(
                         // ДЕЙСТВИЕ ПРИ КЛИКЕ: Открываем окно статистики и выплат
                         \Filament\Tables\Actions\Action::make('manage_finances')
-                            ->modalHeading(fn (\App\Models\Teacher $record) => 'Финансы: ' . $record->name)
+                            ->modalHeading(fn (\App\Models\Teacher $record) => 'Финансы: '.$record->name)
                             ->modalWidth('md')
                             ->form([
                                 // Интерактивная статистика с фильтрами
@@ -93,7 +121,7 @@ class TeacherResource extends Resource
                                                     ->label('От даты')
                                                     ->default(now()->startOfMonth())
                                                     ->live(),
-                                                    
+
                                                 \Filament\Forms\Components\DatePicker::make('filter_end')
                                                     ->label('До даты')
                                                     ->default(now()->endOfMonth())
@@ -106,14 +134,16 @@ class TeacherResource extends Resource
                                                 $start = $get('filter_start');
                                                 $end = $get('filter_end');
 
-                                                if (!$start || !$end) return 'Выберите даты';
+                                                if (! $start || ! $end) {
+                                                    return 'Выберите даты';
+                                                }
 
                                                 $earned = $record->calculateEarnings(
                                                     \Carbon\Carbon::parse($start)->startOfDay(),
                                                     \Carbon\Carbon::parse($end)->endOfDay()
                                                 );
 
-                                                return number_format($earned, 0, '.', ' ') . ' ₽';
+                                                return number_format($earned, 0, '.', ' ').' ₽';
                                             }),
                                     ]),
 
@@ -122,14 +152,12 @@ class TeacherResource extends Resource
                                     ->schema([
                                         \Filament\Forms\Components\Placeholder::make('total_stats')
                                             ->label('💰 Заработано за всё время:')
-                                            ->content(fn (\App\Models\Teacher $record) => 
-                                                number_format($record->calculateEarnings(), 0, '.', ' ') . ' ₽'
+                                            ->content(fn (\App\Models\Teacher $record) => number_format($record->calculateEarnings(), 0, '.', ' ').' ₽'
                                             ),
 
                                         \Filament\Forms\Components\Placeholder::make('paid_stats')
                                             ->label('✅ Уже выплачено вами:')
-                                            ->content(fn (\App\Models\Teacher $record) => 
-                                                number_format($record->payouts()->sum('amount'), 0, '.', ' ') . ' ₽'
+                                            ->content(fn (\App\Models\Teacher $record) => number_format($record->payouts()->sum('amount'), 0, '.', ' ').' ₽'
                                             ),
                                     ])->columns(2),
 
@@ -144,7 +172,7 @@ class TeacherResource extends Resource
                                         \Filament\Forms\Components\TextInput::make('comment')
                                             ->label('Комментарий (необязательно)')
                                             ->placeholder('Например: ЗП за март'),
-                                    ])
+                                    ]),
                             ])
                             // Что делаем, когда админ нажал "Сохранить"
                             ->action(function (\App\Models\Teacher $record, array $data) {

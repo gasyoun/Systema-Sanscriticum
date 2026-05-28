@@ -11,7 +11,7 @@ class Teacher extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio'
+        'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio',
     ];
 
     // Один преподаватель может вести много курсов
@@ -19,7 +19,7 @@ class Teacher extends Model
     {
         return $this->hasMany(Course::class);
     }
-    
+
     // ==========================================
     // АВТОМАТИЧЕСКИЙ РАСЧЕТ ЗАРПЛАТЫ ПРЕПОДАВАТЕЛЯ
     // ==========================================
@@ -44,12 +44,12 @@ class Teacher extends Model
             // Базовый запрос: только успешные оплаты
             $query = $course->payments()
                 ->whereIn('status', ['success', 'paid'])
-                ->where('amount', '>', 0); 
-            
+                ->where('amount', '>', 0);
+
             if ($startDate && $endDate) {
                 $query->whereBetween('payments.created_at', [$startDate, $endDate]);
             }
-            
+
             // Выгружаем оплаты
             $payments = $query->get();
 
@@ -58,7 +58,7 @@ class Teacher extends Model
             }
 
             // 1. КЛАССИЧЕСКИЕ МЕТРИКИ
-            $paymentsSum = $payments->sum('amount'); 
+            $paymentsSum = $payments->sum('amount');
             $uniqueStudentsCount = $payments->unique('user_id')->count();
 
             // ==========================================
@@ -69,15 +69,15 @@ class Teacher extends Model
                 ->whereNotNull('block_number')
                 ->where('block_number', '>', 0)
                 ->max('block_number');
-            
+
             // Если блоков нет (например, обычный курс), делим на 1, чтобы не было ошибки деления на ноль
-            $totalBlocksInCourse = $maxBlockNumber ?: 1; 
-            
+            $totalBlocksInCourse = $maxBlockNumber ?: 1;
+
             $blockRevenue = 0;
 
             foreach ($payments as $payment) {
                 // Используем поле tariff из таблицы payments
-                if ($payment->tariff === 'full') { 
+                if ($payment->tariff === 'full') {
                     // Если купили курс целиком, берем долю за 1 блок
                     $blockRevenue += ($payment->amount / $totalBlocksInCourse);
                 } else {

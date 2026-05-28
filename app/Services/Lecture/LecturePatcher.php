@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Lecture;
 
-use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -42,7 +41,7 @@ class LecturePatcher
 
         foreach ($patches as $i => $edit) {
             $sectionId = $edit['section_id'] ?? null;
-            if ($sectionId === null || !isset($byId[$sectionId])) {
+            if ($sectionId === null || ! isset($byId[$sectionId])) {
                 throw new InvalidArgumentException("patch[{$i}]: неизвестный section_id={$sectionId}");
             }
 
@@ -55,8 +54,9 @@ class LecturePatcher
             }
 
             // Правка заголовка секции
-            if ($field === 'title' && !isset($edit['block_index'])) {
+            if ($field === 'title' && ! isset($edit['block_index'])) {
                 $sections[$sIdx]['title'] = $value;
+
                 continue;
             }
 
@@ -65,7 +65,7 @@ class LecturePatcher
                 throw new InvalidArgumentException("patch[{$i}]: нужен block_index для field={$field}");
             }
 
-            if (!isset($sections[$sIdx]['content'][$blockIndex])) {
+            if (! isset($sections[$sIdx]['content'][$blockIndex])) {
                 throw new InvalidArgumentException("patch[{$i}]: нет блока {$blockIndex} в секции {$sectionId}");
             }
 
@@ -90,7 +90,7 @@ class LecturePatcher
                     if ($paraIndex === null) {
                         throw new InvalidArgumentException("patch[{$i}]: для text нужен para_index");
                     }
-                    if (!isset($block['paragraphs'][$paraIndex])) {
+                    if (! isset($block['paragraphs'][$paraIndex])) {
                         throw new InvalidArgumentException("patch[{$i}]: нет абзаца {$paraIndex}");
                     }
                     $block['paragraphs'][$paraIndex] = $value;
@@ -114,6 +114,7 @@ class LecturePatcher
         }
 
         $lecture['sections'] = $sections;
+
         return $lecture;
     }
 
@@ -123,7 +124,7 @@ class LecturePatcher
      */
     public function applyToFile(string $absoluteDataJsonPath, array $patches): string
     {
-        if (!is_file($absoluteDataJsonPath)) {
+        if (! is_file($absoluteDataJsonPath)) {
             throw new RuntimeException("data.json не найден: {$absoluteDataJsonPath}");
         }
 
@@ -133,16 +134,16 @@ class LecturePatcher
         }
 
         $lecture = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($lecture)) {
-            throw new RuntimeException("data.json содержит не-объект");
+        if (! is_array($lecture)) {
+            throw new RuntimeException('data.json содержит не-объект');
         }
 
         // Бэкап ДО изменений
-        $backupDir = dirname($absoluteDataJsonPath) . DIRECTORY_SEPARATOR . 'backups';
-        if (!is_dir($backupDir) && !mkdir($backupDir, 0775, true) && !is_dir($backupDir)) {
+        $backupDir = dirname($absoluteDataJsonPath).DIRECTORY_SEPARATOR.'backups';
+        if (! is_dir($backupDir) && ! mkdir($backupDir, 0775, true) && ! is_dir($backupDir)) {
             throw new RuntimeException("Не удалось создать {$backupDir}");
         }
-        $backupPath = $backupDir . DIRECTORY_SEPARATOR . date('Ymd_His') . '.json';
+        $backupPath = $backupDir.DIRECTORY_SEPARATOR.date('Ymd_His').'.json';
         file_put_contents($backupPath, $raw);
 
         $updated = $this->apply($lecture, $patches);
@@ -166,7 +167,7 @@ class LecturePatcher
         if ($paraIndex === null) {
             throw new InvalidArgumentException("patch[{$i}]: для speech нужен para_index");
         }
-        if (!isset($block['paragraphs'][$paraIndex])) {
+        if (! isset($block['paragraphs'][$paraIndex])) {
             throw new InvalidArgumentException("patch[{$i}]: нет абзаца {$paraIndex} в speech");
         }
 
@@ -184,7 +185,7 @@ class LecturePatcher
         $paraIndex = $edit['para_index'] ?? null;
         $value = $edit['value'];
 
-        if ($turnIndex === null || !isset($block['turns'][$turnIndex])) {
+        if ($turnIndex === null || ! isset($block['turns'][$turnIndex])) {
             throw new InvalidArgumentException("patch[{$i}]: нет turn {$turnIndex} в dialog");
         }
 
@@ -193,7 +194,7 @@ class LecturePatcher
         if ($paraIndex === null) {
             $turn['text'] = $value;
         } elseif (is_array($turn['text'] ?? null)) {
-            if (!array_key_exists($paraIndex, $turn['text'])) {
+            if (! array_key_exists($paraIndex, $turn['text'])) {
                 throw new InvalidArgumentException("patch[{$i}]: нет абзаца {$paraIndex} в реплике");
             }
             $turn['text'][$paraIndex] = $value;

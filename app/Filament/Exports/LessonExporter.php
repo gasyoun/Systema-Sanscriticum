@@ -24,10 +24,10 @@ class LessonExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Экспорт уроков завершен. Выгружено строк: ' . number_format($export->successful_rows) . '.';
+        $body = 'Экспорт уроков завершен. Выгружено строк: '.number_format($export->successful_rows).'.';
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' Строк с ошибками: ' . number_format($failedRowsCount) . '.';
+            $body .= ' Строк с ошибками: '.number_format($failedRowsCount).'.';
         }
 
         return $body;

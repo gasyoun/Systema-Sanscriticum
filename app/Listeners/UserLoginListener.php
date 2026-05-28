@@ -6,18 +6,20 @@ namespace App\Listeners;
 
 use App\Models\User;
 use App\Services\Activity\ActivityTracker;
+use App\Services\OnboardingNotifier;
 use Illuminate\Auth\Events\Login;
 
 final class UserLoginListener
 {
     public function __construct(
         private readonly ActivityTracker $tracker,
+        private readonly OnboardingNotifier $onboarding,
     ) {}
 
     public function handle(Login $event): void
     {
         // Трекаем только реальных пользователей нашей системы
-        if (!$event->user instanceof User) {
+        if (! $event->user instanceof User) {
             return;
         }
 
@@ -27,6 +29,14 @@ final class UserLoginListener
             return;
         }
 
+        // login_count берём ДО handleLogin (там он инкрементится). 0 → это
+        // самый первый вход студента; больше пинг не сработает.
+        $isFirstLogin = ((int) $event->user->login_count) === 0;
+
         $this->tracker->handleLogin($event->user, request());
+
+        if ($isFirstLogin) {
+            $this->onboarding->firstLogin($event->user);
+        }
     }
 }

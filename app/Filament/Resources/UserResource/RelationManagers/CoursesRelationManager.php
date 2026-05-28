@@ -11,9 +11,10 @@ use Filament\Tables\Table;
 class CoursesRelationManager extends RelationManager
 {
     protected static string $relationship = 'courses';
-    
+
     // Как таблица будет называться в интерфейсе
     protected static ?string $title = 'Обучается на курсах';
+
     protected static ?string $recordTitleAttribute = 'title';
 
     public function form(Form $form): Form
@@ -33,8 +34,20 @@ class CoursesRelationManager extends RelationManager
                         'Исключен' => 'Исключен',
                     ])
                     ->default('Записался')
-                    ->required(),
-                    
+                    ->required()
+                    ->live(),
+
+                Forms\Components\TextInput::make('left_after_block')
+                    ->label('Блок выхода')
+                    ->numeric()
+                    ->minValue(1)
+                    ->visible(fn (Forms\Get $get): bool => in_array(
+                        $get('status'),
+                        ['Покинул', 'Исключен', 'Выпускник'],
+                        true,
+                    ))
+                    ->helperText('Номер блока этого курса, после которого студент вышел/был отчислен/выпустился. Долги по более поздним блокам не начисляются.'),
+
                 Forms\Components\Textarea::make('note')
                     ->label('Примечание (только по этому курсу)')
                     ->maxLength(65535)
@@ -51,7 +64,7 @@ class CoursesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
@@ -61,7 +74,13 @@ class CoursesRelationManager extends RelationManager
                         'Покинул', 'Исключен' => 'danger',
                         default => 'gray',
                     }),
-                    
+
+                Tables\Columns\TextColumn::make('left_after_block')
+                    ->label('Блок выхода')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state ? '№'.$state : null)
+                    ->getStateUsing(fn ($record) => $record->pivot?->left_after_block),
+
                 Tables\Columns\TextColumn::make('note')
                     ->label('Примечание')
                     ->wrap() // Позволяет длинному тексту переноситься на новые строки
