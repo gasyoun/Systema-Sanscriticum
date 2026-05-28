@@ -28,6 +28,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('promises:remind-tomorrow')
             ->dailyAt('09:00');
 
+        // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
+        $schedule->command('onboarding:weekly-digest')
+            ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new \App\Jobs\CloseStaleSessionsJob)
