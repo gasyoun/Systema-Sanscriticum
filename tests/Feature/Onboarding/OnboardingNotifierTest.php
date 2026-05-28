@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Onboarding;
 
 use App\Jobs\SendTelegramChatMessageJob;
-use App\Models\Group;
 use App\Models\User;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,32 +69,37 @@ class OnboardingNotifierTest extends TestCase
     }
 
     /** @test */
-    public function weekly_digest_computes_percent_over_users_with_access(): void
+    public function weekly_digest_counts_only_real_email_with_access_sent(): void
     {
-        $group = Group::create(['name' => 'Группа A']);
+        $sent = "\n\n[Доступ отправлен: 01.05.2026 10:00]";
 
-        // 3 с доступом, не заходили
-        User::factory()->count(3)->create(['is_admin' => false, 'login_count' => 0])
-            ->each(fn (User $u) => $u->groups()->attach($group->id));
+        // 3 — доступ выслан, реальный email, не заходили
+        User::factory()->count(3)->create([
+            'is_admin' => false, 'login_count' => 0, 'note' => 'студент'.$sent,
+        ]);
 
-        // 1 с доступом, заходил
-        User::factory()->create(['is_admin' => false, 'login_count' => 5])
-            ->groups()->attach($group->id);
+        // 1 — доступ выслан, реальный email, заходил
+        User::factory()->create(['is_admin' => false, 'login_count' => 5, 'note' => 'ок'.$sent]);
 
-        // Без группы — не должен попасть в знаменатель
-        User::factory()->create(['is_admin' => false, 'login_count' => 0]);
+        // Доступ НЕ выслан (нет штампа) — исключается
+        User::factory()->create(['is_admin' => false, 'login_count' => 0, 'note' => 'просто заметка']);
 
-        // Админ в группе — исключается
-        User::factory()->create(['is_admin' => true, 'login_count' => 0])
-            ->groups()->attach($group->id);
+        // Доступ выслан, но email-заглушка @no-email.com — исключается
+        User::factory()->create([
+            'is_admin' => false, 'login_count' => 0,
+            'email' => 'ivan_1234@no-email.com', 'note' => 'импорт'.$sent,
+        ]);
+
+        // Админ со штампом — исключается
+        User::factory()->create(['is_admin' => true, 'login_count' => 0, 'note' => 'admin'.$sent]);
 
         $this->artisan('onboarding:weekly-digest')->assertSuccessful();
 
-        // withAccess = 4 (3 не зашли + 1 зашёл), notEntered = 3 → 75%
+        // accessSent = 4 (3 не зашли + 1 зашёл), notEntered = 3 → 75%
         Queue::assertPushed(SendTelegramChatMessageJob::class, function (SendTelegramChatMessageJob $job) {
             return $job->chatId === '-1009998887770'
                 && str_contains($job->text, 'Не зашли в кабинет')
-                && str_contains($job->text, '<b>4</b>')
+                && str_contains($job->text, 'Доступ выслан (реальный email): <b>4</b>')
                 && str_contains($job->text, '<b>3</b>')
                 && str_contains($job->text, '75%');
         });
