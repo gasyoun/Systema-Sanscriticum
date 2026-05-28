@@ -120,7 +120,16 @@ class PaymentResource extends Resource
                                 ->helperText('Пусто, если курс куплен целиком'),
                         ]),
 
-                    Forms\Components\Grid::make(2)->schema([
+                    Forms\Components\Grid::make(3)->schema([
+                        Forms\Components\DateTimePicker::make('created_at')
+                            ->label('Дата платежа')
+                            ->default(now())
+                            ->required()
+                            ->seconds(false)
+                            ->native(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->helperText('По умолчанию — текущий момент'),
+
                         Forms\Components\Select::make('status')
                             ->label('Статус')
                             ->options([
@@ -251,6 +260,41 @@ class PaymentResource extends Resource
                         false: fn ($query) => $query->where('tariff', '!=', 'deposit'),
                         blank: fn ($query) => $query,
                     ),
+
+                Tables\Filters\Filter::make('created_at')
+                    ->label('Период')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('С даты')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('По дату')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when(
+                                $data['from'] ?? null,
+                                fn ($q, $date) => $q->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'] ?? null,
+                                fn ($q, $date) => $q->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from'] ?? null) {
+                            $indicators[] = 'С '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                        }
+                        if ($data['until'] ?? null) {
+                            $indicators[] = 'По '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->iconButton(),
