@@ -35,6 +35,10 @@ return [
         'url' => env('TOCHKA_API_URL', 'https://enter.tochka.com/uapi/acquiring/v1.0'),
         'token' => env('TOCHKA_API_TOKEN'),
         'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
+        // merchantId торговой точки (15 цифр). Обязателен, если у ИП > 1 retailer'а в Точке,
+        // иначе банк сам выбирает первую попавшуюся — а от выбора зависит «адрес сайта» в чеке.
+        // Пусто → не передаём поле в payload (старое поведение для одной merchant'ы).
+        'merchant_id' => env('TOCHKA_MERCHANT_ID'),
         // Фискализация (Create Payment Operation With Receipt). Реквизиты merchant-specific —
         // подтвердить у бухгалтера/в кабинете Точки до боевой проверки.
         'tax_system_code' => env('TOCHKA_TAX_SYSTEM_CODE'), // СНО: usn_income | usn_income_outcome | osn | patent | ...

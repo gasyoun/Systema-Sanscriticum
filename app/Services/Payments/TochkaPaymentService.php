@@ -61,6 +61,14 @@ final class TochkaPaymentService
             ]],
         ];
 
+        // merchantId — обязателен, если у ИП > 1 торговой точки в Точке: без него банк
+        // сам выбирает retailer'а, а от него зависит «адрес сайта» в фискальном чеке.
+        // Пусто → не передаём поле (одна merchant'а у ИП — старое поведение).
+        $merchantId = config('services.tochka.merchant_id');
+        if (! empty($merchantId)) {
+            $data['merchantId'] = $merchantId;
+        }
+
         // СНО включаем только если задана в конфиге — иначе полагаемся на дефолт кассы.
         $taxSystemCode = config('services.tochka.tax_system_code');
         if (! empty($taxSystemCode)) {
