@@ -17,10 +17,20 @@
       "Bash(php -l database/migrations/2026_04_24_200000_add_missing_indexes.php)",
       "Bash(php -l database/migrations/2026_04_25_120100_drop_redundant_fk_indexes.php)",
       "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; $app = require '\\\\''bootstrap/app.php'\\\\''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); var_dump\\(Schema::hasColumn\\('\\\\''users'\\\\'', '\\\\''is_lecture_editor'\\\\''\\)\\);')",
-      "Bash(php -l app/Filament/Resources/UserResource/RelationManagers/PaymentPromisesRelationManager.php)",
-      "Bash(php -l app/Filament/Resources/UserResource.php)",
-      "mcp__playwright__browser_wait_for",
-      "mcp__playwright__browser_console_messages"
+      "Bash(Get-ChildItem -Path C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\Systema-Sanscriticum -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\Systema-Sanscriticum\\\\app\" -Recurse | Where-Object {$_.PSIsContainer} | Select-Object FullName | ForEach-Object {$_.FullName -replace [regex]::Escape\\(\"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\Systema-Sanscriticum\\\\\"\\), \"\"})",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\Systema-Sanscriticum\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\Systema-Sanscriticum\")",
+      "Bash(findstr /i \"prana\")",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git pull *)",
+      "Bash(git stash *)"
     ]
   },
   "enabledMcpjsonServers": [
