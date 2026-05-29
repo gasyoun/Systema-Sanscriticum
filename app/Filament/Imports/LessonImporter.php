@@ -61,10 +61,26 @@ class LessonImporter extends Importer
     public function resolveRecord(): ?Lesson
     {
         $title = $this->data['title'] ?? 'Без названия';
+        $youtube = $this->data['youtube_url'] ?? null;
+        $rutube = $this->data['rutube_url'] ?? null;
 
-        $lesson = Lesson::firstOrNew([
-            'title' => $title,
-        ]);
+        // ВАЖНО: дедуплицировать по title нельзя — в одном блоке легко встречаются
+        // несколько уроков с одинаковым названием (напр. два «Кочергина 10 (проверка)»).
+        // Поиск по title тихо перезаписывал бы соседний урок, и часть занятий «пропадала».
+        // Естественный уникальный ключ урока — ссылка на видео.
+        if (! empty($youtube)) {
+            $lesson = Lesson::firstOrNew(['youtube_url' => $youtube]);
+        } elseif (! empty($rutube)) {
+            $lesson = Lesson::firstOrNew(['rutube_url' => $rutube]);
+        } else {
+            // Видео нет — собираем составной ключ, чтобы одинаковые заголовки
+            // в разных блоках/датах оставались разными уроками.
+            $lesson = Lesson::firstOrNew([
+                'title' => $title,
+                'block_number' => $this->data['block_number'] ?? null,
+                'lesson_date' => $this->data['lesson_date'] ?? null,
+            ]);
+        }
 
         if (! $lesson->exists) {
             $lesson->slug = Str::slug($title).'-'.rand(10000, 99999);
