@@ -10,6 +10,15 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Импорт оплат через UI Filament. Курс здесь приходит готовым объектом-параметром
+ * (см. import()), поэтому сопоставление названий курсов тут не нужно.
+ *
+ * Нормализация «сырых» названий курсов к каноническим из админки выполняется в
+ * консольном импорте (App\Console\Commands\ImportAcademyData) через
+ * App\Support\CourseNameResolver. Если в этот сервис когда-нибудь добавят выбор
+ * курса по имени из файла — резолвер нужно подключить и сюда.
+ */
 final class PaymentImportService
 {
     /** Поля БД, в которые мапим колонки. Ключ → human-label. */

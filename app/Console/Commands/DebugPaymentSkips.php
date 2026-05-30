@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Course;
 use App\Models\User;
+use App\Support\CourseNameResolver;
 use Illuminate\Console\Command;
 
 class DebugPaymentSkips extends Command
@@ -27,6 +28,7 @@ class DebugPaymentSkips extends Command
         // Воспроизводим ТУ ЖЕ логику кэширования, что в ImportAcademyData
         $users = User::pluck('id', 'name')->toArray();
         $courses = Course::pluck('id', 'title')->toArray();
+        $resolver = app(CourseNameResolver::class);
 
         $this->info("Загружено в кэш: users={$this->count($users)}, courses={$this->count($courses)}");
 
@@ -51,7 +53,7 @@ class DebugPaymentSkips extends Command
             }
 
             $studentName = trim($row[1] ?? '');
-            $courseTitle = trim($row[2] ?? '');
+            $courseTitle = $resolver->resolve(trim($row[2] ?? ''));
             $amount = $cleanNumber($row[5] ?? '0');
 
             // Пустые строки и расходы скрипт и так пропустит корректно
