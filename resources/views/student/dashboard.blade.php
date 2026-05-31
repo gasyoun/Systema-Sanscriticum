@@ -309,9 +309,16 @@
                             <p class="text-xs font-medium text-gray-400 mt-0.5">Выдан {{ $cert->created_at->format('d.m.Y') }}</p>
                         </div>
 
-                        <a href="{{ route('student.certificate.download', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#E85C24] hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать PDF">
-                            <i class="fas fa-download text-sm"></i>
-                        </a>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="{{ route('student.certificate.download', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#E85C24] hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать PDF">
+                                <i class="fas fa-download text-sm"></i>
+                            </a>
+                            @if(\App\Services\CertificateService::jpegSupported())
+                                <a href="{{ route('student.certificate.download.jpg', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#E85C24] hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать JPG">
+                                    <i class="fas fa-image text-sm"></i>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
