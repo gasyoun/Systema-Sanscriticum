@@ -31,6 +31,28 @@
                         </div>
                     </div>
 
+                    @if($certificate->showsExamScores())
+                        <div class="pt-2 border-t border-[#1F2636]">
+                            <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">Результаты экзамена</div>
+                            <div class="space-y-1.5">
+                                @foreach(\App\Models\Certificate::EXAM_CRITERIA as $field => $crit)
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-400">{{ $crit['label'] }}</span>
+                                        <span class="font-semibold text-slate-200">
+                                            {{ \App\Models\Certificate::formatScore($certificate->$field) }} / {{ $crit['max'] }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                <div class="flex items-center justify-between text-sm pt-1.5 border-t border-[#1F2636]">
+                                    <span class="font-bold text-white">Итого</span>
+                                    <span class="font-bold text-[#E85C24]">
+                                        {{ \App\Models\Certificate::formatScore($certificate->examTotal()) }} / {{ \App\Models\Certificate::examTotalMax() }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-2 gap-4 pt-2 border-t border-[#1F2636]">
                         <div>
                             <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-1">Дата выдачи</div>
