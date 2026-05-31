@@ -16,9 +16,28 @@ class Certificate extends Model
         'student_name',
         'course_title',
         'template',
+        'score_clarity',
+        'score_letters',
+        'score_flow',
         'number',
         'file_path',
         'issued_at', // <-- ИСПРАВЛЕНО: добавлена буква 'd'
+    ];
+
+    protected $casts = [
+        'score_clarity' => 'float',
+        'score_letters' => 'float',
+        'score_flow' => 'float',
+    ];
+
+    /**
+     * Дисциплины экзамена: поле => подпись и максимум. Единый источник
+     * для формы, PDF и страницы верификации. Используется только для шаблона «Санка».
+     */
+    public const EXAM_CRITERIA = [
+        'score_clarity' => ['label' => 'Выразительность', 'max' => 20],
+        'score_letters' => ['label' => 'Дикция', 'max' => 5],
+        'score_flow' => ['label' => 'Плавность', 'max' => 5],
     ];
 
     /**
@@ -81,6 +100,58 @@ class Certificate extends Model
     public function displayCourseTitle(): string
     {
         return $this->course_title ?: ($this->course->title ?? '');
+    }
+
+    /**
+     * Заполнен ли хоть один балл экзамена.
+     */
+    public function hasExamScores(): bool
+    {
+        foreach (array_keys(self::EXAM_CRITERIA) as $field) {
+            if ($this->$field !== null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Показывать ли блок с баллами: только шаблон «Санка» и есть оценки.
+     */
+    public function showsExamScores(): bool
+    {
+        return $this->template === 'sanka' && $this->hasExamScores();
+    }
+
+    /**
+     * Итоговый балл = сумма по трём дисциплинам (макс. 30).
+     */
+    public function examTotal(): float
+    {
+        $sum = 0.0;
+        foreach (array_keys(self::EXAM_CRITERIA) as $field) {
+            $sum += (float) $this->$field;
+        }
+
+        return $sum;
+    }
+
+    public static function examTotalMax(): int
+    {
+        return array_sum(array_column(self::EXAM_CRITERIA, 'max'));
+    }
+
+    /**
+     * Балл без лишних нулей: 18.0 → «18», 4.5 → «4.5».
+     */
+    public static function formatScore($value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        return rtrim(rtrim(number_format((float) $value, 1, '.', ''), '0'), '.');
     }
 
     public function user()
