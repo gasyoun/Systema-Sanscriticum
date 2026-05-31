@@ -72,7 +72,26 @@ class CertificateResource extends Resource
                     ->label('Шаблон (роспись)')
                     ->options(\App\Models\Certificate::templateOptions())
                     ->default('gasuns')
-                    ->required(),
+                    ->required()
+                    ->live(),
+
+                // 5a. Баллы за экзамен — только для шаблона «Санка».
+                Forms\Components\Fieldset::make('Баллы за экзамен')
+                    ->visible(fn (Forms\Get $get) => $get('template') === 'sanka')
+                    ->columns(3)
+                    ->schema(
+                        collect(\App\Models\Certificate::EXAM_CRITERIA)
+                            ->map(fn (array $crit, string $field) => Forms\Components\TextInput::make($field)
+                                ->label($crit['label'])
+                                ->numeric()
+                                ->minValue(0)
+                                ->maxValue($crit['max'])
+                                ->step(0.5)
+                                ->suffix('/ '.$crit['max'])
+                            )
+                            ->values()
+                            ->all()
+                    ),
 
                 // 6. Путь к файлу (если загружаем вручную, но мы теперь генерируем их)
                 // Можно оставить необязательным или вообще скрыть, раз у нас автогенерация

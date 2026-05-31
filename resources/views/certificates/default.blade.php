@@ -77,6 +77,36 @@
             /* Больше никаких top: 580px */
         }
 
+        /* Баллы за экзамен (только шаблон «Санка») */
+        /* Компактный блок в чистой полосе между строкой про объём и подписью Санки,
+           слева (в одну колонку с остальным текстом), не доходя до фигуры Ганеши. */
+        .exam-scores {
+            position: absolute;
+            top: 575px;
+            left: 110px;
+            width: 470px;
+            font-size: 11px;
+            color: #444;
+        }
+        .exam-scores .line {
+            margin-bottom: 4px;
+        }
+        .exam-scores .crit {
+            white-space: nowrap;
+        }
+        .exam-scores .sep {
+            color: #bbb;
+            margin: 0 6px;
+        }
+        .exam-scores .val {
+            font-weight: bold;
+            color: #000;
+        }
+        .exam-scores .total {
+            font-size: 13px;
+            color: #222;
+        }
+
         /* QR-код */
         .qr-code {
             position: absolute;
@@ -119,6 +149,19 @@
         </div>
 
     </div>
+
+        @if($certificate->showsExamScores())
+            <div class="exam-scores">
+                <div class="line">
+                    @foreach(\App\Models\Certificate::EXAM_CRITERIA as $field => $crit)
+                        <span class="crit">{{ $crit['label'] }} <span class="val">{{ \App\Models\Certificate::formatScore($certificate->$field) }} / {{ $crit['max'] }}</span></span>@if(! $loop->last)<span class="sep">·</span>@endif
+                    @endforeach
+                </div>
+                <div class="line total">
+                    Итого: <span class="val">{{ \App\Models\Certificate::formatScore($certificate->examTotal()) }} / {{ \App\Models\Certificate::examTotalMax() }}</span>
+                </div>
+            </div>
+        @endif
 
         @if($qr_image)
             <img class="qr-code" src="{{ $qr_image }}">
