@@ -46,6 +46,7 @@ class CertificateService
         }
 
         $data = [
+            'certificate' => $certificate,
             'user' => $user,
             'course' => $course,
             'student_name' => $studentName,
