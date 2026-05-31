@@ -9,6 +9,8 @@ use App\Models\Course;
 use App\Models\Group;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords; // Подключаем нашу Job
 
@@ -30,7 +32,22 @@ class ListCertificates extends ListRecords
                         ->options(Course::pluck('title', 'id'))
                         ->required()
                         ->searchable()
-                        ->preload(),
+                        ->preload()
+                        ->live()
+                        // Подставляем название курса в редактируемое поле сертификата.
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            $set('course_title', Course::find($state)?->title);
+                        }),
+
+                    TextInput::make('course_title')
+                        ->label('Название курса в сертификате')
+                        ->helperText('Применится ко всем сертификатам группы. Символ | — перенос строки. Пусто — берётся из курса.'),
+
+                    Select::make('template')
+                        ->label('Шаблон (роспись)')
+                        ->options(Certificate::templateOptions())
+                        ->default('gasuns')
+                        ->required(),
 
                     Select::make('group_id')
                         ->label('Выберите группу студентов')
@@ -51,12 +68,24 @@ class ListCertificates extends ListRecords
                         return;
                     }
 
+                    $courseTitle = trim($data['course_title'] ?? '') ?: null;
+                    $template = $data['template'] ?? 'gasuns';
+
                     $count = 0;
                     foreach ($group->users as $user) {
-                        $cert = Certificate::firstOrCreate([
-                            'user_id' => $user->id,
-                            'course_id' => $courseId,
-                        ]);
+                        // Снимок ФИО/названия/шаблона проставляется только при создании
+                        // нового сертификата; существующие не трогаем.
+                        $cert = Certificate::firstOrCreate(
+                            [
+                                'user_id' => $user->id,
+                                'course_id' => $courseId,
+                            ],
+                            [
+                                'student_name' => $user->name,
+                                'course_title' => $courseTitle,
+                                'template' => $template,
+                            ]
+                        );
                         if ($cert->wasRecentlyCreated) {
                             $count++;
                         }
