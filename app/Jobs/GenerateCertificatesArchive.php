@@ -69,8 +69,16 @@ class GenerateCertificatesArchive implements ShouldQueue
             foreach ($certificates as $cert) {
                 try {
                     $pdf = $service->generatePdf($cert);
+                    $pdfData = $pdf->output();
                     $safeName = \Illuminate\Support\Str::slug($cert->user->name.'-'.$cert->course->title, '_');
-                    $zip->addFromString($safeName.'.pdf', $pdf->output());
+                    $zip->addFromString($safeName.'.pdf', $pdfData);
+
+                    // JPG-дубль рядом с PDF. Если на сервере нет imagick/ghostscript —
+                    // тихо кладём только PDF, архив не ломаем.
+                    try {
+                        $zip->addFromString($safeName.'.jpg', $service->pdfToJpeg($pdfData));
+                    } catch (\Throwable $e) {
+                    }
                 } catch (\Exception $e) {
                     // Игнорируем ошибки генерации одного файла, чтобы не сломать весь архив
                     continue;

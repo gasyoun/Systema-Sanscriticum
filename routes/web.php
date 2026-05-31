@@ -114,6 +114,9 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');
 
+    Route::get('/certificate/{id}/download/jpg', [StudentController::class, 'downloadCertificateImage'])
+        ->name('student.certificate.download.jpg');
+
     Route::get('/admin/leads/export', [LeadController::class, 'export'])
         ->middleware('admin')
         ->name('leads.export');
