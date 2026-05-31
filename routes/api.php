@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 use App\Http\Controllers\Api\LessonController;
 
 Route::post('/sync-lessons', [LessonController::class, 'sync']);
+Route::post('/lessons/from-zoom', [LessonController::class, 'storeFromZoom']);
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 
