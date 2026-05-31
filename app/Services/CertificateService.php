@@ -11,6 +11,11 @@ class CertificateService
         $user = $certificate->user;
         $course = $certificate->course;
 
+        // Снимок ФИО и названия курса с фолбэком на живые значения из профиля/курса.
+        // Старые сертификаты (без снимка) рендерятся как раньше.
+        $studentName = $certificate->displayStudentName();
+        $courseTitle = $certificate->displayCourseTitle();
+
         // 1. Номер и ссылка
         $certNumber = $certificate->number ?: str_pad($user->id, 8, '0', STR_PAD_LEFT);
         $verifyUrl = url('/verify/'.$certNumber);
@@ -34,7 +39,7 @@ class CertificateService
 
         // 3. Подготовка ФОНА (Base64) - чтобы картинка не пропадала
         $bgBase64 = '';
-        $bgPath = public_path('images/ganesha_clean.jpg');
+        $bgPath = $certificate->backgroundPath();
         if (file_exists($bgPath)) {
             $bgData = file_get_contents($bgPath);
             $bgBase64 = 'data:image/jpeg;base64,'.base64_encode($bgData);
@@ -43,6 +48,8 @@ class CertificateService
         $data = [
             'user' => $user,
             'course' => $course,
+            'student_name' => $studentName,
+            'course_title' => $courseTitle,
             'qr_image' => $qrImage,
             'bg_base64' => $bgBase64,
             'date' => $certificate->created_at->format('d.m.Y'),
