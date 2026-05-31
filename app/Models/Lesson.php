@@ -27,6 +27,7 @@ class Lesson extends Model
         'is_free',
         'show_on_main',
         'block_number',
+        'sort_order',
         'transcript_file',
         'flash_cards',
         'duration_seconds',
@@ -41,11 +42,21 @@ class Lesson extends Model
         'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
+        'sort_order' => 'integer',
         'duration_seconds' => 'integer',
     ];
 
     protected static function booted(): void
     {
+        // Новый урок (например, из обычной формы создания) встаёт в конец списка
+        // своего курса, а не на позицию 0 поверх существующих уроков.
+        static::creating(function (Lesson $lesson): void {
+            if (empty($lesson->sort_order) && $lesson->course_id) {
+                $maxSortOrder = static::where('course_id', $lesson->course_id)->max('sort_order');
+                $lesson->sort_order = (int) $maxSortOrder + 1;
+            }
+        });
+
         static::saving(function (Lesson $lesson): void {
             if ($lesson->block_number === null || $lesson->block_number === '') {
                 $key = 'lesson_block_null_log:'.($lesson->id ?? 'new');

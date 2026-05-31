@@ -180,10 +180,12 @@ class LessonResource extends Resource
                         $s = trim($state);
                         if (ctype_digit($s)) {
                             $n = (int) $s;
+
                             return $n > 0 ? $n : null;
                         }
                         $parts = array_reverse(array_map('intval', explode(':', $s)));
                         $seconds = ($parts[0] ?? 0) + ($parts[1] ?? 0) * 60 + ($parts[2] ?? 0) * 3600;
+
                         return $seconds > 0 ? $seconds : null;
                     })
                     ->formatStateUsing(function ($state): string {
@@ -194,6 +196,7 @@ class LessonResource extends Resource
                         $h = intdiv($s, 3600);
                         $m = intdiv($s % 3600, 60);
                         $sec = $s % 60;
+
                         return $h > 0
                             ? sprintf('%d:%02d:%02d', $h, $m, $sec)
                             : sprintf('%d:%02d', $m, $sec);
@@ -266,6 +269,11 @@ class LessonResource extends Resource
                     ->badge()
                     ->color('info')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('sort_order')
+                    ->label('Порядок')
+                    ->sortable()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('Урок')
@@ -341,7 +349,16 @@ class LessonResource extends Resource
                         ->label('Экспорт для файлов'),
                 ]),
             ])
-            ->defaultSort('lesson_date', 'asc');
+            // Перетаскивание доступно только когда в фильтре выбран конкретный курс —
+            // иначе Filament перенумеровал бы sort_order сразу по всем курсам и порядок
+            // размешался бы между ними.
+            ->reorderable(
+                'sort_order',
+                condition: fn ($livewire) => filled(
+                    data_get($livewire->getTableFilterState('course_id'), 'value')
+                ),
+            )
+            ->defaultSort(fn (Builder $query) => $query->orderBy('course_id')->orderBy('sort_order'));
     }
 
     public static function getRelations(): array
