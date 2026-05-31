@@ -125,8 +125,9 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
 
 // БЕЗОПАСНОЕ СКАЧИВАНИЕ ФАЙЛОВ
 Route::get('/force-download/{file}', function (string $file) {
-    $safeFileName = basename($file);
-    $path = $safeFileName;
+    $safeFileName = basename($file); // защита от path traversal
+    // Архивы сертификатов кладёт GenerateCertificatesArchive в подкаталог archives/.
+    $path = 'archives/'.$safeFileName;
 
     if (! Storage::disk('public')->exists($path)) {
         abort(404, 'Файл не найден.');
