@@ -132,7 +132,7 @@ class StudentController extends Controller
             })
             ->firstOrFail();
 
-        $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
+        $lessons = $course->lessons()->orderBy('sort_order')->orderBy('created_at')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
@@ -184,7 +184,7 @@ class StudentController extends Controller
         }
         // ==========================================
 
-        $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
+        $lessons = $course->lessons()->orderBy('sort_order')->orderBy('created_at')->get();
 
         $currentNote = null;
         // Заметка может быть сохранена ДО отметки «пройдено», поэтому читаем
