@@ -180,6 +180,11 @@ Route::middleware(['web', 'auth'])
 // ВАЖНО: до catch-all /{slug}
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+// --- ВЕРИФИКАЦИЯ СЕРТИФИКАТА (ссылка из QR-кода) ---
+// ВАЖНО: до catch-all /{slug}, публичный без auth.
+Route::get('/verify/{number}', [\App\Http\Controllers\CertificateVerificationController::class, 'show'])
+    ->name('certificate.verify');
+
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
