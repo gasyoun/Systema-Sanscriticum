@@ -415,6 +415,26 @@ class StudentController extends Controller
     }
 
     /**
+     * Скачивание сертификата картинкой (JPEG).
+     */
+    public function downloadCertificateImage($id, CertificateService $service)
+    {
+        $certificate = auth()->user()->certificates()->with('course')->findOrFail($id);
+
+        try {
+            $jpeg = $service->generateJpegBytes($certificate);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return response()->streamDownload(
+            fn () => print $jpeg,
+            'Certificate_'.$certificate->course->id.'.jpg',
+            ['Content-Type' => 'image/jpeg'],
+        );
+    }
+
+    /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Парсер ссылок видео ===
      */
     private function parseVideoId(?string $url, string $platform): ?string

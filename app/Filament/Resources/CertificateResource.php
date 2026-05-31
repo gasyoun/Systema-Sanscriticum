@@ -126,6 +126,15 @@ class CertificateResource extends Resource
                     ->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('jpg')
+                    ->label('JPG')
+                    ->icon('heroicon-o-photo')
+                    ->visible(fn () => \App\Services\CertificateService::jpegSupported())
+                    ->action(fn (Certificate $record) => response()->streamDownload(
+                        fn () => print app(\App\Services\CertificateService::class)->generateJpegBytes($record),
+                        'Certificate_'.$record->number.'.jpg',
+                        ['Content-Type' => 'image/jpeg'],
+                    )),
                 Tables\Actions\DeleteAction::make(), // Кнопка отзыва сертификата
             ]);
     }
