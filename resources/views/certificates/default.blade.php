@@ -33,7 +33,7 @@
             top: 320px;
             left: 110px;
             width: 650px;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             color: #000;
         }
@@ -104,14 +104,14 @@
     <div class="cert-container">
         <img class="bg-image" src="{{ $bg_base64 }}">
 
-        <div class="student-name">{{ $user->name }}</div>
+        <div class="student-name">{{ $student_name }}</div>
         
         <div class="action-text">успешно освоил(а) онлайн-курс</div>
 
         <div class="course-container">
         
         <div class="course-title">
-            {!! str_replace('|', '<br>', $course->title) !!}
+            {!! str_replace('|', '<br>', $course_title) !!}
         </div>
 
         <div class="hours-text">

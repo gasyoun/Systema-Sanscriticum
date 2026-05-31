@@ -37,7 +37,12 @@ class CertificateResource extends Resource
                     ->relationship('user', 'name') // Ищем по имени в таблице users
                     ->searchable()
                     ->preload()
-                    ->required(), // <--- ВАЖНО: Не даст сохранить без выбора
+                    ->required() // <--- ВАЖНО: Не даст сохранить без выбора
+                    ->live()
+                    // Подставляем ФИО из профиля в редактируемое поле сертификата.
+                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                        $set('student_name', \App\Models\User::find($state)?->name);
+                    }),
 
                 // 2. Выбор Курса (обязательно)
                 Forms\Components\Select::make('course_id')
@@ -45,9 +50,31 @@ class CertificateResource extends Resource
                     ->relationship('course', 'title') // Ищем по названию в таблице courses
                     ->searchable()
                     ->preload()
-                    ->required(), // <--- ВАЖНО
+                    ->required() // <--- ВАЖНО
+                    ->live()
+                    // Подставляем название курса в редактируемое поле сертификата.
+                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                        $set('course_title', \App\Models\Course::find($state)?->title);
+                    }),
 
-                // 3. Путь к файлу (если загружаем вручную, но мы теперь генерируем их)
+                // 3. ФИО, как оно будет напечатано в сертификате (по умолчанию из профиля).
+                Forms\Components\TextInput::make('student_name')
+                    ->label('ФИО в сертификате')
+                    ->helperText('Подставлено из профиля студента. Уберите лишнее — город, пометки.'),
+
+                // 4. Название курса, как оно будет напечатано в сертификате.
+                Forms\Components\TextInput::make('course_title')
+                    ->label('Название курса в сертификате')
+                    ->helperText('Подставлено из курса. Символ | — перенос строки.'),
+
+                // 5. Шаблон сертификата (роспись преподавателя).
+                Forms\Components\Select::make('template')
+                    ->label('Шаблон (роспись)')
+                    ->options(\App\Models\Certificate::templateOptions())
+                    ->default('gasuns')
+                    ->required(),
+
+                // 6. Путь к файлу (если загружаем вручную, но мы теперь генерируем их)
                 // Можно оставить необязательным или вообще скрыть, раз у нас автогенерация
                 Forms\Components\TextInput::make('file_path')
                     ->label('Путь к файлу (необязательно при автогенерации)')
@@ -67,6 +94,10 @@ class CertificateResource extends Resource
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('template')
+                    ->label('Шаблон')
+                    ->formatStateUsing(fn ($state) => Certificate::TEMPLATES[$state]['label'] ?? $state)
+                    ->badge(),
                 Tables\Columns\TextColumn::make('number')
                     ->label('Номер сертификата')
                     ->searchable(),
