@@ -1,0 +1,178 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Pages\LeadCost;
+
+use App\Models\DirectAdSpend;
+use App\Models\LandingPage;
+use App\Models\Lead;
+use App\Support\RoleGate;
+use App\Support\Roles;
+use Filament\Forms;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget;
+use Illuminate\Support\Carbon;
+
+class DirectAdSpendsTableWidget extends TableWidget
+{
+    protected static ?string $heading = 'Директ — бюджет по месяцам';
+
+    protected int|string|array $columnSpan = 'full';
+
+    protected static ?string $pollingInterval = null;
+
+    public static function canView(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(DirectAdSpend::query())
+            ->defaultSort('month', 'desc')
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('Добавить месяц')
+                    ->modalHeading('Бюджет за месяц')
+                    ->form($this->formSchema())
+                    ->after(fn () => $this->dispatch('leadCostUpdated')),
+            ])
+            ->columns([
+                Tables\Columns\TextColumn::make('month')
+                    ->label('Месяц')
+                    ->formatStateUsing(fn ($state): string => Carbon::parse($state)->translatedFormat('F Y'))
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('specialist_salary')
+                    ->label('Зарплата')
+                    ->money('RUB')
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->money('RUB')->label('Итого')),
+                Tables\Columns\TextColumn::make('ad_budget')
+                    ->label('Кабинет')
+                    ->money('RUB')
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->money('RUB')->label('Итого')),
+                Tables\Columns\TextColumn::make('budget_total')
+                    ->label('Итого бюджет')
+                    ->getStateUsing(fn (DirectAdSpend $record): float => $record->budgetTotal())
+                    ->money('RUB')
+                    ->weight('bold'),
+                Tables\Columns\TextColumn::make('leads_count')
+                    ->label('Лидов')
+                    ->getStateUsing(fn (DirectAdSpend $record): int => $record->leadsCount())
+                    ->alignRight(),
+                Tables\Columns\TextColumn::make('cost_per_lead')
+                    ->label('Стоимость лида')
+                    ->badge()
+                    ->getStateUsing(fn (DirectAdSpend $record): string => $record->costPerLead() === null
+                        ? '—'
+                        : self::money($record->costPerLead()))
+                    ->color(fn (DirectAdSpend $record): string => match (true) {
+                        $record->costPerLead() === null => 'gray',
+                        $record->costPerLead() >= 1000 => 'danger',
+                        $record->costPerLead() >= 500 => 'warning',
+                        default => 'success',
+                    }),
+                Tables\Columns\TextColumn::make('utm_source')
+                    ->label('Источник')
+                    ->placeholder('все')
+                    ->toggleable(),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    ->form($this->formSchema())
+                    ->after(fn () => $this->dispatch('leadCostUpdated')),
+                Tables\Actions\DeleteAction::make()
+                    ->after(fn () => $this->dispatch('leadCostUpdated')),
+            ])
+            ->emptyStateHeading('Пока нет месяцев')
+            ->emptyStateDescription('Добавьте бюджет по месяцу — лиды и стоимость лида посчитаются автоматически.');
+    }
+
+    /**
+     * @return array<int, \Filament\Forms\Components\Component>
+     */
+    private function formSchema(): array
+    {
+        return [
+            Forms\Components\Grid::make(2)->schema([
+                Forms\Components\DatePicker::make('month')
+                    ->label('Месяц')
+                    ->required()
+                    ->native(false)
+                    ->displayFormat('MM.Y')
+                    ->dehydrateStateUsing(fn ($state) => $state
+                        ? Carbon::parse($state)->startOfMonth()->toDateString()
+                        : $state)
+                    ->live(),
+                Forms\Components\Select::make('utm_source')
+                    ->label('Источник (необязательно)')
+                    ->options(fn () => self::utmSourceOptions())
+                    ->searchable()
+                    ->placeholder('Все источники')
+                    ->live(),
+                Forms\Components\TextInput::make('specialist_salary')
+                    ->label('Зарплата специалиста, ₽')
+                    ->numeric()->minValue(0)->default(0)->live(onBlur: true),
+                Forms\Components\TextInput::make('ad_budget')
+                    ->label('Пополнение кабинета Директа, ₽')
+                    ->numeric()->minValue(0)->default(0)->live(onBlur: true),
+                Forms\Components\Select::make('landing_page_id')
+                    ->label('Лендинг (необязательно)')
+                    ->options(fn () => LandingPage::orderBy('title')->pluck('title', 'id')->all())
+                    ->searchable()
+                    ->placeholder('Все лендинги')
+                    ->live(),
+                Forms\Components\Placeholder::make('leads_preview')
+                    ->label('Лидов за месяц')
+                    ->content(fn (Forms\Get $get): string => (string) self::leadsForState($get)),
+                Forms\Components\Placeholder::make('cost_preview')
+                    ->label('Стоимость лида')
+                    ->content(function (Forms\Get $get): string {
+                        $leads = self::leadsForState($get);
+                        if ($leads <= 0) {
+                            return '—';
+                        }
+
+                        return self::money(((float) $get('specialist_salary') + (float) $get('ad_budget')) / $leads);
+                    }),
+            ]),
+        ];
+    }
+
+    private static function leadsForState(Forms\Get $get): int
+    {
+        $month = $get('month');
+        if (empty($month)) {
+            return 0;
+        }
+        $m = Carbon::parse($month);
+
+        return Lead::countForPeriod(
+            $m->copy()->startOfMonth(),
+            $m->copy()->endOfMonth(),
+            $get('utm_source') ?: null,
+            $get('landing_page_id') ?: null,
+        );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function utmSourceOptions(): array
+    {
+        return Lead::query()
+            ->whereNotNull('utm_source')
+            ->where('utm_source', '!=', '')
+            ->distinct()
+            ->orderBy('utm_source')
+            ->pluck('utm_source', 'utm_source')
+            ->all();
+    }
+
+    private static function money(float $value): string
+    {
+        return number_format($value, 2, '.', ' ').' ₽';
+    }
+}
