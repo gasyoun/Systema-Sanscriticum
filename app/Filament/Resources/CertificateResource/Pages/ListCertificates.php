@@ -18,6 +18,22 @@ class ListCertificates extends ListRecords
 {
     protected static string $resource = CertificateResource::class;
 
+    /**
+     * Курсы для выпадашек массовой выдачи. Преподаватель видит только свои
+     * (по teacher_id); без teacher_id — пустой список. Админ — все курсы.
+     * Зеркалит scope формы и getEloquentQuery() в CertificateResource.
+     */
+    protected static function courseOptions(): array
+    {
+        $user = auth()->user();
+        $query = Course::query();
+        if ($user && $user->isTeacher()) {
+            $query->where('teacher_id', $user->teacher_id ?: 0);
+        }
+
+        return $query->orderBy('title')->pluck('title', 'id')->all();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -29,7 +45,7 @@ class ListCertificates extends ListRecords
                 ->form([
                     Select::make('course_id')
                         ->label('Выберите курс')
-                        ->options(Course::pluck('title', 'id'))
+                        ->options(static::courseOptions())
                         ->required()
                         ->searchable()
                         ->preload()
@@ -60,6 +76,23 @@ class ListCertificates extends ListRecords
                 ->action(function (array $data) {
                     $groupId = $data['group_id'];
                     $courseId = $data['course_id'];
+
+                    // Серверная защита: опции курса скрыты на фронте, но teacher
+                    // мог прислать чужой course_id через POST. Пропускаем только
+                    // свои курсы (зеркалит rule() в CertificateResource::form).
+                    $user = auth()->user();
+                    if ($user?->isTeacher()) {
+                        $owns = $user->teacher_id
+                            && Course::where('id', $courseId)
+                                ->where('teacher_id', $user->teacher_id)
+                                ->exists();
+                        if (! $owns) {
+                            Notification::make()->title('Этот курс не закреплён за вами')->danger()->send();
+
+                            return;
+                        }
+                    }
+
                     $group = Group::with('users')->find($groupId);
 
                     if (! $group || $group->users->isEmpty()) {
@@ -112,9 +145,16 @@ class ListCertificates extends ListRecords
                 ])
                 ->action(function (array $data) {
                     // === ЗАПУСКАЕМ ЗАДАЧУ В ФОН ===
+                    // Группа не привязана к курсу, поэтому преподавателю архив
+                    // фильтруется по его курсам (course.teacher_id) внутри джобы,
+                    // иначе в ZIP попали бы сертификаты чужих курсов тех же студентов.
+                    $user = auth()->user();
+                    $teacherId = $user?->isTeacher() ? ($user->teacher_id ?: 0) : null;
+
                     GenerateCertificatesArchive::dispatch(
                         $data['group_id'],
-                        auth()->id()
+                        auth()->id(),
+                        $teacherId
                     );
                     // ==============================
 
