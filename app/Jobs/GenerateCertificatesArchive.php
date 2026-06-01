@@ -52,8 +52,15 @@ class GenerateCertificatesArchive implements ShouldQueue
             return;
         }
 
+        // Архив именно ВЫБРАННОЙ группы: сертификаты её студентов И только по
+        // курсам этой группы. Без фильтра по курсам в архив попадали сертификаты
+        // других курсов тех же студентов (студент состоит в нескольких группах),
+        // из-за чего «выкачивалось всё».
         $userIds = $group->users->pluck('id');
+        $courseIds = $group->courses()->pluck('courses.id');
+
         $certificates = Certificate::whereIn('user_id', $userIds)
+            ->whereIn('course_id', $courseIds)
             ->when($this->teacherId !== null, function ($q) {
                 // Преподавателю — только сертификаты его курсов.
                 $q->whereHas('course', fn ($c) => $c->where('teacher_id', $this->teacherId));
@@ -62,6 +69,15 @@ class GenerateCertificatesArchive implements ShouldQueue
             ->get();
 
         if ($certificates->isEmpty()) {
+            // Молча не выходим: иначе админ ждёт «архив готов», который не придёт.
+            if ($recipient = User::find($this->adminUserId)) {
+                Notification::make()
+                    ->title('Архив пуст')
+                    ->warning()
+                    ->body("В группе «{$group->name}» нет сертификатов по её курсам. Проверьте, что группа привязана к курсу и сертификаты выданы.")
+                    ->sendToDatabase($recipient);
+            }
+
             return;
         }
 

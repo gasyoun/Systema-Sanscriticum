@@ -30,6 +30,12 @@ class Group extends Model
         return $this->belongsToMany(User::class);
     }
 
+    // Курсы, к которым привязана группа (тот же pivot, что в Course::groups()).
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_group');
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
