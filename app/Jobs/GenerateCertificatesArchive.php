@@ -26,10 +26,19 @@ class GenerateCertificatesArchive implements ShouldQueue
 
     protected $adminUserId;
 
-    public function __construct($groupId, $adminUserId)
+    protected $teacherId;
+
+    /**
+     * @param  int|null  $teacherId  Если задан — в архив попадут только сертификаты
+     *                               курсов этого преподавателя (course.teacher_id).
+     *                               0 = преподаватель без курсов → пустой архив.
+     *                               null = админ → без ограничения.
+     */
+    public function __construct($groupId, $adminUserId, $teacherId = null)
     {
         $this->groupId = $groupId;
         $this->adminUserId = $adminUserId;
+        $this->teacherId = $teacherId;
     }
 
     public function handle(): void
@@ -45,6 +54,10 @@ class GenerateCertificatesArchive implements ShouldQueue
 
         $userIds = $group->users->pluck('id');
         $certificates = Certificate::whereIn('user_id', $userIds)
+            ->when($this->teacherId !== null, function ($q) {
+                // Преподавателю — только сертификаты его курсов.
+                $q->whereHas('course', fn ($c) => $c->where('teacher_id', $this->teacherId));
+            })
             ->with(['user', 'course'])
             ->get();
 
