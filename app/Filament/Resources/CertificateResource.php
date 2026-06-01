@@ -2,20 +2,83 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CertificateResource extends Resource
 {
-    use AdminOnly;
-
     protected static ?string $model = Certificate::class;
+
+    // Доступ: админ — ко всем сертификатам; преподаватель — только к сертификатам
+    // своих курсов (через Certificate->course->teacher_id). Идиом повторяет
+    // LessonResource: scope в getEloquentQuery() + серверная валидация course_id.
+    public static function canViewAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canCreate(): bool
+    {
+        if (RoleGate::any(Roles::ADMIN)) {
+            return true;
+        }
+        // Преподаватель может выдавать сертификаты только при заполненном
+        // teacher_id — иначе scope course_id = 1=0 и сохранение всё равно упадёт.
+        $user = auth()->user();
+
+        return $user?->isTeacher() === true && $user->teacher_id !== null;
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->isAdminLike()) {
+            return true;
+        }
+
+        return $user->isTeacher()
+            && $user->teacher_id
+            && optional($record->course)->teacher_id === $user->teacher_id;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canEdit($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+        if ($user && $user->isTeacher()) {
+            if (! $user->teacher_id) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('course', function ($q) use ($user) {
+                    $q->where('teacher_id', $user->teacher_id);
+                });
+            }
+        }
+
+        return $query;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -47,7 +110,38 @@ class CertificateResource extends Resource
                 // 2. Выбор Курса (обязательно)
                 Forms\Components\Select::make('course_id')
                     ->label('Курс')
-                    ->relationship('course', 'title') // Ищем по названию в таблице courses
+                    ->relationship(
+                        name: 'course',
+                        titleAttribute: 'title', // Ищем по названию в таблице courses
+                        modifyQueryUsing: function (Builder $query) {
+                            // Преподаватель видит в селекте только свои курсы; админ — все.
+                            // Преподавателю без teacher_id вообще ничего не показываем.
+                            $user = auth()->user();
+                            if ($user && $user->isTeacher()) {
+                                if (! $user->teacher_id) {
+                                    $query->whereRaw('1 = 0');
+                                } else {
+                                    $query->where('teacher_id', $user->teacher_id);
+                                }
+                            }
+                        },
+                    )
+                    // Серверная валидация: Filament-default Rule::exists для relationship-Select
+                    // не накладывает where, поэтому преподаватель может через POST передать
+                    // чужой course_id. Дополняем явным правилом (зеркалим LessonResource).
+                    ->rule(function () {
+                        $user = auth()->user();
+                        if ($user?->isTeacher() && $user->teacher_id) {
+                            return \Illuminate\Validation\Rule::exists('courses', 'id')
+                                ->where('teacher_id', $user->teacher_id);
+                        }
+                        if ($user?->isTeacher() && ! $user->teacher_id) {
+                            // Преподаватель без teacher_id — никакой курс не валиден.
+                            return \Illuminate\Validation\Rule::in([]);
+                        }
+
+                        return null;
+                    })
                     ->searchable()
                     ->preload()
                     ->required() // <--- ВАЖНО
