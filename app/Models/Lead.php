@@ -60,4 +60,23 @@ class Lead extends Model
             $this->updateQuietly(['converted_at' => now()]);
         }
     }
+
+    /**
+     * Количество лидов за период с необязательными фильтрами по источнику/лендингу.
+     * Период включительно: с начала дня $start по конец дня $end.
+     */
+    public static function countForPeriod($start, $end, ?string $utmSource = null, $landingPageId = null): int
+    {
+        $start = \Illuminate\Support\Carbon::parse($start)->startOfDay();
+        $end = \Illuminate\Support\Carbon::parse($end)->endOfDay();
+        if ($end->lt($start)) {
+            return 0;
+        }
+
+        return static::query()
+            ->whereBetween('created_at', [$start, $end])
+            ->when($utmSource, fn ($q, $v) => $q->where('utm_source', $v))
+            ->when($landingPageId, fn ($q, $v) => $q->where('landing_page_id', $v))
+            ->count();
+    }
 }
