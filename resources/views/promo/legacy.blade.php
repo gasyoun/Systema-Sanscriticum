@@ -452,6 +452,7 @@
             <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-gray-500 hover:text-white underline transition-colors duration-300">
                 Политика конфиденциальности
             </button>
+            @include('partials.legal-requisites', ['class' => 'mt-4 text-[12px] text-gray-500'])
         </div>
     </footer>
 
