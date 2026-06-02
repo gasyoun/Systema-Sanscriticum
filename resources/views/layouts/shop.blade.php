@@ -159,6 +159,7 @@
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены
                     </p>
+                    @include('partials.legal-requisites', ['class' => 'text-[12px] text-slate-600 mt-1'])
                 </div>
 
                 <div class="flex items-center justify-center md:justify-end gap-2">
