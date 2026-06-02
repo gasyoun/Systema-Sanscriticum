@@ -5,31 +5,58 @@ declare(strict_types=1);
 namespace App\Filament\Pages\LeadCost;
 
 use App\Models\DirectAdSpend;
+use App\Support\LeadCostReport;
 use Filament\Widgets\ChartWidget;
 
 class LeadCostChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Стоимость лида по месяцам';
-
     protected static ?string $maxHeight = '260px';
 
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $pollingInterval = null;
 
+    public ?string $filter = 'month';
+
     protected $listeners = ['leadCostUpdated' => '$refresh'];
+
+    public function getHeading(): ?string
+    {
+        return $this->filter === 'week'
+            ? 'Стоимость лида по неделям'
+            : 'Стоимость лида по месяцам';
+    }
+
+    protected function getFilters(): ?array
+    {
+        return [
+            'month' => 'По месяцам',
+            'week' => 'По неделям',
+        ];
+    }
 
     protected function getData(): array
     {
-        $spends = DirectAdSpend::query()->orderBy('month')->get();
+        $start = DirectAdSpend::query()->min('starts_at');
+        $end = DirectAdSpend::query()->max('ends_at');
+
+        if (! $start || ! $end) {
+            return ['datasets' => [], 'labels' => []];
+        }
+
+        $buckets = LeadCostReport::buckets(
+            \Illuminate\Support\Carbon::parse($start),
+            \Illuminate\Support\Carbon::parse($end),
+            $this->filter ?? 'month',
+        );
 
         $labels = [];
         $cost = [];
         $budget = [];
-        foreach ($spends as $spend) {
-            $labels[] = $spend->month?->translatedFormat('M Y') ?? '—';
-            $cost[] = $spend->costPerLead() !== null ? round($spend->costPerLead(), 2) : null;
-            $budget[] = round($spend->budgetTotal(), 2);
+        foreach ($buckets as $bucket) {
+            $labels[] = $bucket['label'];
+            $cost[] = $bucket['cost'] !== null ? round($bucket['cost'], 2) : null;
+            $budget[] = round($bucket['budget'], 2);
         }
 
         return [
