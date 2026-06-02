@@ -212,6 +212,8 @@
             <p class="mt-6 text-sm text-gray-600">
                 &copy; {{ date('Y') }} Общество ревнителей санскрита. Все права защищены.
             </p>
+
+            @include('partials.legal-requisites', ['class' => 'mt-3 text-center text-[12px] text-gray-600'])
         </div>
 
     </div>

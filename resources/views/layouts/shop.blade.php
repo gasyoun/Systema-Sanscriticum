@@ -155,10 +155,13 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-3 text-sm">
-                    @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-[#E85C24] transition-colors'])
+                    <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
+                        @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-[#E85C24] transition-colors'])
+                    </div>
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены
                     </p>
+                    @include('partials.legal-requisites', ['class' => 'text-[12px] text-slate-600 mt-1'])
                 </div>
 
                 <div class="flex items-center justify-center md:justify-end gap-2">
