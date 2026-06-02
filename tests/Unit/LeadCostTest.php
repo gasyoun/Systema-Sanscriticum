@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\AdPostSpend;
 use App\Models\DirectAdSpend;
 use App\Models\Lead;
+use App\Support\LeadCostReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -42,7 +43,8 @@ class LeadCostTest extends TestCase
         $this->makeLead('2026-02-15');
 
         $spend = new DirectAdSpend([
-            'month' => '2026-02-01',
+            'starts_at' => '2026-02-01',
+            'ends_at' => '2026-02-28',
             'specialist_salary' => 30000,
             'ad_budget' => 10000,
         ]);
@@ -56,12 +58,90 @@ class LeadCostTest extends TestCase
     public function cost_per_lead_is_null_without_leads(): void
     {
         $spend = new DirectAdSpend([
-            'month' => '2026-05-01',
+            'starts_at' => '2026-05-01',
+            'ends_at' => '2026-05-31',
             'specialist_salary' => 1000,
             'ad_budget' => 0,
         ]);
 
         $this->assertNull($spend->costPerLead());
+    }
+
+    /** @test */
+    public function budget_for_window_is_prorated_by_days(): void
+    {
+        // Период 10 дней (01–10 марта вкл.), бюджет 1000.
+        $spend = new DirectAdSpend([
+            'starts_at' => '2026-03-01',
+            'ends_at' => '2026-03-10',
+            'specialist_salary' => 1000,
+            'ad_budget' => 0,
+        ]);
+
+        $this->assertSame(10, $spend->periodDays());
+
+        // Окно покрывает 5 из 10 дней → половина бюджета.
+        $this->assertSame(500.0, $spend->budgetForWindow(
+            Carbon::parse('2026-03-01'), Carbon::parse('2026-03-05')
+        ));
+
+        // Окно шире периода → полный бюджет.
+        $this->assertSame(1000.0, $spend->budgetForWindow(
+            Carbon::parse('2026-02-01'), Carbon::parse('2026-03-31')
+        ));
+
+        // Нет пересечения → 0.
+        $this->assertSame(0.0, $spend->budgetForWindow(
+            Carbon::parse('2026-04-01'), Carbon::parse('2026-04-30')
+        ));
+    }
+
+    /** @test */
+    public function report_buckets_split_budget_across_months_proportionally(): void
+    {
+        // Оплата на стыке месяцев: 22 марта – 10 апреля (20 дней), бюджет 2000 → 100 ₽/день.
+        // Март: 22–31 = 10 дней → 1000 ₽. Апрель: 1–10 = 10 дней → 1000 ₽.
+        DirectAdSpend::create([
+            'starts_at' => '2026-03-22',
+            'ends_at' => '2026-04-10',
+            'specialist_salary' => 2000,
+            'ad_budget' => 0,
+        ]);
+
+        $this->makeLead('2026-03-25'); // 1 лид в марте
+        $this->makeLead('2026-04-05'); // 1 лид в апреле
+        $this->makeLead('2026-04-08'); // 2-й лид в апреле
+
+        $buckets = LeadCostReport::buckets(
+            Carbon::parse('2026-03-22'),
+            Carbon::parse('2026-04-10'),
+            'month',
+        );
+
+        $this->assertCount(2, $buckets);
+
+        $this->assertSame(1000.0, round($buckets[0]['budget'], 2));
+        $this->assertSame(1, $buckets[0]['leads']);
+        $this->assertSame(1000.0, round($buckets[0]['cost'], 2));
+
+        $this->assertSame(1000.0, round($buckets[1]['budget'], 2));
+        $this->assertSame(2, $buckets[1]['leads']);
+        $this->assertSame(500.0, round($buckets[1]['cost'], 2));
+    }
+
+    /** @test */
+    public function report_cost_per_lead_is_null_without_leads(): void
+    {
+        DirectAdSpend::create([
+            'starts_at' => '2026-03-01',
+            'ends_at' => '2026-03-31',
+            'specialist_salary' => 5000,
+            'ad_budget' => 0,
+        ]);
+
+        $this->assertNull(LeadCostReport::costPerLead(
+            Carbon::parse('2026-03-01'), Carbon::parse('2026-03-31')
+        ));
     }
 
     /** @test */
