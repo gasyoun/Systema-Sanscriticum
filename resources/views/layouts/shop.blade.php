@@ -155,14 +155,7 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-3 text-sm">
-                    <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')"
-                            class="text-slate-400 hover:text-[#E85C24] transition-colors">
-                        Политика конфиденциальности
-                    </button>
-                    <button @click="viewDocument('Публичная оферта', '/docs/oferta.pdf')"
-                            class="text-slate-400 hover:text-[#E85C24] transition-colors">
-                        Публичная оферта
-                    </button>
+                    @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-[#E85C24] transition-colors'])
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены
                     </p>
@@ -235,6 +228,8 @@
 
     @stack('scripts')
 
-    @livewireScripts    
+    @livewireScripts
+
+    @include('partials.cookie-consent')
 </body>
 </html>

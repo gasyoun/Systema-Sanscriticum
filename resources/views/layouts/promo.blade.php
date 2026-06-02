@@ -147,21 +147,9 @@
                         Общество ревнителей санскрита
                     </div>
                     
-                    {{-- Документы (Ссылки с анимированным подчеркиванием) --}}
-                    <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-[13px] md:text-sm font-medium mb-4">
-                        <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" 
-                                class="relative text-gray-500 hover:text-[#E85C24] transition-colors duration-300 group">
-                            Политика конфиденциальности
-                            <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#E85C24] transition-all duration-300 group-hover:w-full"></span>
-                        </button>
-                        
-                        <span class="hidden sm:block text-gray-300 text-xs">•</span>
-                        
-                        <button @click="viewDocument('Договор оферты', '/docs/oferta.pdf')" 
-                                class="relative text-gray-500 hover:text-[#E85C24] transition-colors duration-300 group">
-                            Публичная оферта
-                            <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#E85C24] transition-all duration-300 group-hover:w-full"></span>
-                        </button>
+                    {{-- Документы --}}
+                    <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium mb-4">
+                        @include('partials.footer-docs', ['linkClass' => 'text-gray-500 hover:text-[#E85C24] transition-colors duration-300'])
                     </div>
 
                     {{-- Копирайт --}}
@@ -224,5 +212,7 @@
             }
         });
     </script>
+
+    @include('partials.cookie-consent')
 </body>
 </html>
