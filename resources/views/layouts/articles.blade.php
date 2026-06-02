@@ -140,6 +140,10 @@ window.sendGoal = function(goalName) {
                         <p class="text-gray-400 text-[13px] md:text-sm">
                             &copy; {{ date('Y') }} Все права защищены
                         </p>
+
+                        <div class="mt-3">
+                            @include('partials.legal-requisites', ['class' => 'text-gray-400 text-[12px] md:text-[13px]'])
+                        </div>
                     </div>
 
                     <div class="flex justify-center md:justify-end gap-4">

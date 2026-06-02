@@ -156,7 +156,12 @@
                     <p class="text-gray-400 text-[13px] md:text-sm">
                         &copy; {{ date('Y') }} Все права защищены
                     </p>
-                    
+
+                    {{-- Реквизиты ИП --}}
+                    <div class="mt-3">
+                        @include('partials.legal-requisites', ['class' => 'text-gray-400 text-[12px] md:text-[13px]'])
+                    </div>
+
                 </div>
 
                 {{-- 3. ПРАВАЯ КОЛОНКА: Соцсети (В фирменном стиле) --}}
