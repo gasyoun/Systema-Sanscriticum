@@ -35,6 +35,10 @@ class Payment extends Model
     protected $casts = [
         'is_conditional' => 'boolean',
         'deposit_consumed_at' => 'datetime',
+        // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
+        // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
+        'start_block' => 'integer',
+        'end_block' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -60,6 +64,15 @@ class Payment extends Model
     public function isDeposit(): bool
     {
         return $this->tariff === 'deposit';
+    }
+
+    /**
+     * Системный расход / возврат — чисто бухгалтерская запись (часто с
+     * отрицательной суммой). Не открывает доступ, не шлёт письма/уведомления.
+     */
+    public function isExpense(): bool
+    {
+        return $this->tariff === 'Расход';
     }
 
     /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
@@ -115,6 +128,12 @@ class Payment extends Model
      */
     private static function fireOnPaid(Payment $payment): void
     {
+        // Системный расход / возврат — только бухгалтерская строка.
+        // Никакого доступа, писем, праны, Telegram и уведомлений кураторам.
+        if ($payment->isExpense()) {
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
 

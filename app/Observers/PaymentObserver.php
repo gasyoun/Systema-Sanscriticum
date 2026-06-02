@@ -47,15 +47,19 @@ class PaymentObserver
     }
 
     /**
-     * Общий фильтр: только paid + положительная сумма + не conditional.
-     * Conditional-платежи под обещание/рассрочку не должны попадать
-     * в финансовый Google Sheet — это «доступ под честное слово»,
-     * не реальная транзакция.
+     * Общий фильтр для выгрузки в финансовый Google Sheet:
+     * - только paid/success;
+     * - не conditional (доступ «под честное слово» — не реальная транзакция);
+     * - либо положительный доход, либо системный расход/возврат.
+     *
+     * Расход обычно идёт с отрицательной суммой, поэтому его пропускаем
+     * по tariff (isExpense), а не по знаку — он должен попасть в таблицу
+     * как расход, а не отсеяться вместе с нулевыми промо-оплатами.
      */
     private function isSyncable(Payment $payment): bool
     {
         return in_array($payment->status, self::SUCCESS_STATUSES, true)
-            && (float) $payment->amount > 0
-            && ! $payment->is_conditional;
+            && ! $payment->is_conditional
+            && ((float) $payment->amount > 0 || $payment->isExpense());
     }
 }
