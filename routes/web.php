@@ -77,6 +77,12 @@ Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
 Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301));
 
 // ═══════════════════════════════════════════════════════════════
+// ПУБЛИЧНЫЕ ДОКУМЕНТЫ (оферта, политика, согласия) — до catch-all /{slug}
+// ═══════════════════════════════════════════════════════════════
+Route::get('/dokumenty/{slug}', [\App\Http\Controllers\DocController::class, 'show'])
+    ->name('docs.show');
+
+// ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════
 Route::prefix('s')->name('articles.')->group(function () {
