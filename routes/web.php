@@ -50,10 +50,16 @@ Route::get('/', function () {
 });
 
 // Витрина магазина курсов
-Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 
 // Страница одного курса
-Route::get('/shop/course/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
+Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
+
+// Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
+// Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
+// Специфичный /shop/course/* — ДО общего /shop, иначе общий перехватит.
+Route::get('/shop/course/{slug}', fn ($slug) => redirect()->route('shop.course.show', $slug, 301));
+Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -65,6 +71,10 @@ Route::post('/shop/login', [AuthController::class, 'shopLogin'])
 
 Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
     ->name('shop.logout');
+
+// Редирект со старого URL личного кабинета (вне auth-группы, чтобы старые
+// закладки работали; имя student.dashboard сохранено — путь сменился на /dvaram).
+Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301));
 
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
@@ -90,7 +100,7 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     })->name('home');
 
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
-    Route::get('/cabinet', [StudentController::class, 'dashboard'])->name('student.dashboard');
+    Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 
