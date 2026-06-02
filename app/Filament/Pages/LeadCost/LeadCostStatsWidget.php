@@ -6,6 +6,7 @@ namespace App\Filament\Pages\LeadCost;
 
 use App\Models\AdPostSpend;
 use App\Models\DirectAdSpend;
+use App\Models\Lead;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -19,11 +20,17 @@ class LeadCostStatsWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $directBudget = 0.0;
-        $directLeads = 0;
         foreach (DirectAdSpend::query()->get() as $spend) {
             $directBudget += $spend->budgetTotal();
-            $directLeads += $spend->leadsCount();
         }
+
+        // Лиды за всё время — по сплошному окну от первого до последнего периода,
+        // чтобы пересекающиеся периоды оплаты не считались дважды.
+        $minStart = DirectAdSpend::query()->min('starts_at');
+        $maxEnd = DirectAdSpend::query()->max('ends_at');
+        $directLeads = ($minStart && $maxEnd)
+            ? Lead::countForPeriod(\Illuminate\Support\Carbon::parse($minStart), \Illuminate\Support\Carbon::parse($maxEnd))
+            : 0;
         $avgCostPerLead = $directLeads > 0 ? $directBudget / $directLeads : null;
 
         $postBudget = (float) AdPostSpend::query()->sum('budget');

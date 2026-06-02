@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
 
 class DirectAdSpendsTableWidget extends TableWidget
 {
-    protected static ?string $heading = 'Директ — бюджет по месяцам';
+    protected static ?string $heading = 'Директ — бюджет по периодам';
 
     protected int|string|array $columnSpan = 'full';
 
@@ -32,19 +32,24 @@ class DirectAdSpendsTableWidget extends TableWidget
     {
         return $table
             ->query(DirectAdSpend::query())
-            ->defaultSort('month', 'desc')
+            ->defaultSort('starts_at', 'desc')
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('Добавить месяц')
-                    ->modalHeading('Бюджет за месяц')
+                    ->label('Добавить период')
+                    ->modalHeading('Бюджет за период')
                     ->form($this->formSchema())
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
             ])
             ->columns([
-                Tables\Columns\TextColumn::make('month')
-                    ->label('Месяц')
-                    ->formatStateUsing(fn ($state): string => Carbon::parse($state)->translatedFormat('F Y'))
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('period')
+                    ->label('Период')
+                    ->getStateUsing(fn (DirectAdSpend $record): string => $record->starts_at?->format('d.m.Y')
+                        .' – '.$record->ends_at?->format('d.m.Y'))
+                    ->sortable(query: fn ($query, string $direction) => $query->orderBy('starts_at', $direction)),
+                Tables\Columns\TextColumn::make('days')
+                    ->label('Дней')
+                    ->getStateUsing(fn (DirectAdSpend $record): int => $record->periodDays())
+                    ->alignRight(),
                 Tables\Columns\TextColumn::make('specialist_salary')
                     ->label('Зарплата')
                     ->money('RUB')
@@ -97,20 +102,20 @@ class DirectAdSpendsTableWidget extends TableWidget
     {
         return [
             Forms\Components\Grid::make(2)->schema([
-                Forms\Components\DatePicker::make('month')
-                    ->label('Месяц')
+                Forms\Components\DatePicker::make('starts_at')
+                    ->label('Период с')
                     ->required()
                     ->native(false)
-                    ->displayFormat('MM.Y')
-                    ->dehydrateStateUsing(fn ($state) => $state
-                        ? Carbon::parse($state)->startOfMonth()->toDateString()
-                        : $state)
+                    ->displayFormat('d.m.Y')
+                    ->default(now()->startOfMonth())
                     ->live(),
-                Forms\Components\Select::make('utm_source')
-                    ->label('Источник (необязательно)')
-                    ->options(fn () => self::utmSourceOptions())
-                    ->searchable()
-                    ->placeholder('Все источники')
+                Forms\Components\DatePicker::make('ends_at')
+                    ->label('по')
+                    ->required()
+                    ->native(false)
+                    ->displayFormat('d.m.Y')
+                    ->default(now())
+                    ->minDate(fn (Forms\Get $get) => $get('starts_at') ?: null)
                     ->live(),
                 Forms\Components\TextInput::make('specialist_salary')
                     ->label('Зарплата специалиста, ₽')
@@ -125,7 +130,7 @@ class DirectAdSpendsTableWidget extends TableWidget
                     ->placeholder('Все лендинги')
                     ->live(),
                 Forms\Components\Placeholder::make('leads_preview')
-                    ->label('Лидов за месяц')
+                    ->label('Лидов за период')
                     ->content(fn (Forms\Get $get): string => (string) self::leadsForState($get)),
                 Forms\Components\Placeholder::make('cost_preview')
                     ->label('Стоимость лида')
@@ -143,32 +148,18 @@ class DirectAdSpendsTableWidget extends TableWidget
 
     private static function leadsForState(Forms\Get $get): int
     {
-        $month = $get('month');
-        if (empty($month)) {
+        $from = $get('starts_at');
+        $to = $get('ends_at');
+        if (empty($from) || empty($to)) {
             return 0;
         }
-        $m = Carbon::parse($month);
 
         return Lead::countForPeriod(
-            $m->copy()->startOfMonth(),
-            $m->copy()->endOfMonth(),
+            Carbon::parse($from),
+            Carbon::parse($to),
             $get('utm_source') ?: null,
             $get('landing_page_id') ?: null,
         );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private static function utmSourceOptions(): array
-    {
-        return Lead::query()
-            ->whereNotNull('utm_source')
-            ->where('utm_source', '!=', '')
-            ->distinct()
-            ->orderBy('utm_source')
-            ->pluck('utm_source', 'utm_source')
-            ->all();
     }
 
     private static function money(float $value): string
