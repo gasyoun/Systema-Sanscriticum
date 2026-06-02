@@ -2,6 +2,7 @@ User-agent: *
 Disallow: /admin
 Disallow: /editor
 Disallow: /home
+Disallow: /dvaram
 Disallow: /cabinet
 Disallow: /calendar
 Disallow: /messages
