@@ -34,7 +34,7 @@ class AuthController extends Controller
             }
 
             // Если Студент -> в кабинет
-            return redirect()->intended('/cabinet');
+            return redirect()->intended(route('student.dashboard'));
         }
 
         // Если пароль не подошел

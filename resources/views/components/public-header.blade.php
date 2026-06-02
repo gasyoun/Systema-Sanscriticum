@@ -29,12 +29,12 @@
     $iconColor    = $isDark ? 'text-[#E85C24]' : 'text-[#E85C24]';
 
     $isHome  = request()->is('/');
-    $isShop  = request()->is('shop') || request()->is('shop/*');
+    $isShop  = request()->is('online') || request()->is('online/*');
     $isBlog  = request()->is('s') || request()->is('s/*');
 
-    $shopUrl     = \Illuminate\Support\Facades\Route::has('shop.index')      ? route('shop.index')      : '/shop';
+    $shopUrl     = \Illuminate\Support\Facades\Route::has('shop.index')      ? route('shop.index')      : '/online';
     $articlesUrl = \Illuminate\Support\Facades\Route::has('articles.index')  ? route('articles.index')  : '/s';
-    $cabinetUrl  = \Illuminate\Support\Facades\Route::has('student.dashboard') ? route('student.dashboard') : '/cabinet';
+    $cabinetUrl  = \Illuminate\Support\Facades\Route::has('student.dashboard') ? route('student.dashboard') : '/dvaram';
 @endphp
 
 <header class="sticky top-0 w-full z-40 backdrop-blur-md border-b {{ $headerBg }}">
