@@ -72,6 +72,20 @@ Route::post('/shop/login', [AuthController::class, 'shopLogin'])
 Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
     ->name('shop.logout');
 
+// --- ВОССТАНОВЛЕНИЕ ПАРОЛЯ (для незалогиненных) ---
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showRequestForm'])
+        ->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:5,1')
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])
+        ->middleware('throttle:5,1')
+        ->name('password.update');
+});
+
 // Редирект со старого URL личного кабинета (вне auth-группы, чтобы старые
 // закладки работали; имя student.dashboard сохранено — путь сменился на /dvaram).
 Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301));
@@ -138,6 +152,10 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
         ->name('leads.export');
 
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+
+    // Самостоятельная смена пароля студентом в кабинете
+    Route::post('/profile/password', [AuthController::class, 'updatePassword'])
+        ->name('student.password.update');
 });
 
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---

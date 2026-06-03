@@ -238,6 +238,17 @@ class User extends Authenticatable implements FilamentUser
     }
 
     // ==========================================
+    // ВОССТАНОВЛЕНИЕ ПАРОЛЯ
+    // ==========================================
+    // Переопределяем стандартное уведомление Laravel, чтобы письмо уходило
+    // на русском в фирменном оформлении (через очередь 'mailing').
+    public function sendPasswordResetNotification($token): void
+    {
+        \Illuminate\Support\Facades\Mail::to($this->email)
+            ->send(new \App\Mail\PasswordResetMail($this, $token));
+    }
+
+    // ==========================================
     // ОТПРАВКА УВЕДОМЛЕНИЙ В TELEGRAM (Умная)
     // ==========================================
     public function sendTelegramMessage($text, $imagePath = null)
