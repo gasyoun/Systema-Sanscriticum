@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
 {
@@ -84,6 +86,25 @@ class AuthController extends Controller
                 'email' => $user->email,
             ],
         ]);
+    }
+
+    /**
+     * Самостоятельная смена пароля студентом из кабинета.
+     * Проверяет текущий пароль, ставит новый.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+        ], [
+            'current_password.current_password' => 'Текущий пароль указан неверно.',
+        ]);
+
+        $user = $request->user();
+        $user->update(['password' => Hash::make($request->input('password'))]);
+
+        return back()->with('password_status', 'Пароль успешно изменён.');
     }
 
     /**
