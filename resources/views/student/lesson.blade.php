@@ -407,6 +407,11 @@
             </div>
         </div>
         @endif
+
+        {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
+        @if($lesson->homework_enabled)
+            @include('student.partials.homework')
+        @endif
     </div>
 
     {{-- ========================================== --}}
@@ -625,4 +630,5 @@
     </div>
 
 </div>
+
 @endsection

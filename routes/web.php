@@ -138,6 +138,12 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
 
+    // Домашние задания: сдача студентом + контролируемое скачивание файлов
+    Route::post('/course/{slug}/lesson/{lessonId}/homework', [\App\Http\Controllers\HomeworkController::class, 'store'])
+        ->name('student.homework.store');
+    Route::get('/homework/file/{file}', [\App\Http\Controllers\HomeworkController::class, 'download'])
+        ->name('homework.file.download');
+
     Route::post('/api/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store'])
         ->name('activity.heartbeat');
 
