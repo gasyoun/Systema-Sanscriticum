@@ -57,6 +57,8 @@ class CoursesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
+        $ownerId = $this->getOwnerRecord()->getKey();
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')
@@ -73,6 +75,26 @@ class CoursesRelationManager extends RelationManager
                         'Рассрочка', 'Приостановка', 'Льготник' => 'warning',
                         'Покинул', 'Исключен' => 'danger',
                         default => 'gray',
+                    })
+                    // Под бейджем — когда записался: дата первой реальной оплаты
+                    // курса. Для записей без оплаты (ручная/льготная) — дата
+                    // появления записи в системе. (pivot created_at у legacy =
+                    // дата импорта, поэтому опираемся на платёж.)
+                    ->description(function ($record) use ($ownerId): ?string {
+                        $firstPaid = \App\Models\Payment::query()
+                            ->where('user_id', $ownerId)
+                            ->where('course_id', $record->id)
+                            ->whereIn('status', ['paid', 'success'])
+                            ->where('amount', '>', 0)
+                            ->min('created_at');
+
+                        if ($firstPaid) {
+                            return 'записан '.\Illuminate\Support\Carbon::parse($firstPaid)->format('d.m.Y');
+                        }
+
+                        return $record->pivot?->created_at
+                            ? 'в системе с '.$record->pivot->created_at->format('d.m.Y')
+                            : null;
                     }),
 
                 Tables\Columns\TextColumn::make('left_after_block')
