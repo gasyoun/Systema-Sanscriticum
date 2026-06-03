@@ -242,6 +242,46 @@ class PaymentResource extends Resource
                     ->label('Фильтр по курсу')
                     ->relationship('course', 'title'),
 
+                // Кто оплатил конкретный блок (напр. 2-й). Комбинируется с
+                // фильтром по курсу выше. Включает поблочные покупки, чей
+                // диапазон содержит блок, И покупателей всего курса (full).
+                Tables\Filters\Filter::make('paid_block')
+                    ->label('Оплаченный блок')
+                    ->form([
+                        Forms\Components\TextInput::make('block')
+                            ->label('Блок №')
+                            ->numeric()
+                            ->minValue(1)
+                            ->placeholder('напр. 2')
+                            ->helperText('Для курса используйте «Фильтр по курсу» выше'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query->when($data['block'] ?? null, function ($q, $block) {
+                            $n = (int) $block;
+
+                            $q->whereIn('status', ['paid', 'success'])
+                                ->where(function ($q2) use ($n) {
+                                    $q2->where('tariff', 'full')              // весь курс
+                                        ->orWhere('tariff', 'block_'.$n)      // подстраховка для строк без диапазона
+                                        ->orWhere(fn ($q3) => $q3             // диапазон блоков содержит N
+                                            ->whereNotNull('start_block')
+                                            ->where('start_block', '<=', $n)
+                                            ->where(fn ($q4) => $q4
+                                                ->where('end_block', '>=', $n)
+                                                ->orWhere(fn ($q5) => $q5
+                                                    ->whereNull('end_block')
+                                                    ->where('start_block', $n))));
+                                });
+                        });
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        if (! ($data['block'] ?? null)) {
+                            return [];
+                        }
+
+                        return ['Оплачен блок №'.$data['block']];
+                    }),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Фильтр по статусу')
                     ->options([
