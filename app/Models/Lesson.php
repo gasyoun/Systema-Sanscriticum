@@ -31,6 +31,9 @@ class Lesson extends Model
         'transcript_file',
         'flash_cards',
         'duration_seconds',
+        'homework_enabled',
+        'homework_prompt',
+        'homework_attachments',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
@@ -44,6 +47,8 @@ class Lesson extends Model
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
         'sort_order' => 'integer',
         'duration_seconds' => 'integer',
+        'homework_enabled' => 'boolean',
+        'homework_attachments' => 'array',
     ];
 
     protected static function booted(): void
@@ -80,6 +85,11 @@ class Lesson extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function homeworkSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HomeworkSubmission::class);
     }
 
     public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
