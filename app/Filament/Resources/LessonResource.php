@@ -253,6 +253,36 @@ class LessonResource extends Resource
                     ->maxSize(102400) // Максимальный вес ОДНОГО файла - 100 МБ (102400 КБ)
                     ->columnSpanFull()
                     ->helperText('Загружайте PDF, аудиолекции (MP3) или дополнительные видео. Максимум 100 МБ на файл.'),
+
+                // --- ДОМАШНЕЕ ЗАДАНИЕ ---
+                Forms\Components\Section::make('Домашнее задание')
+                    ->description('Если включено — студент сможет сдать работу на этом уроке, а преподаватель проверит её в разделе «Домашние работы».')
+                    ->icon('heroicon-o-pencil-square')
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\Toggle::make('homework_enabled')
+                            ->label('Включить домашнее задание на этом уроке')
+                            ->live(),
+
+                        Forms\Components\Textarea::make('homework_prompt')
+                            ->label('Условие задания')
+                            ->rows(4)
+                            ->maxLength(10000)
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        Forms\Components\FileUpload::make('homework_attachments')
+                            ->label('Справочные файлы к заданию (необязательно)')
+                            ->multiple()
+                            ->directory('homework-prompts')
+                            ->preserveFilenames()
+                            ->downloadable()
+                            ->openable()
+                            ->maxSize(51200)
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

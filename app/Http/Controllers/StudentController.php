@@ -264,8 +264,17 @@ class StudentController extends Controller
         // ==========================================
         // ==========================================
 
+        // Домашняя работа этого студента по уроку (если задание включено)
+        $homeworkSubmission = null;
+        if ($lesson->homework_enabled) {
+            $homeworkSubmission = $user->homeworkSubmissions()
+                ->where('lesson_id', $lesson->id)
+                ->with(['comments.files', 'comments.author'])
+                ->first();
+        }
+
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission'));
     }
 
     /**
