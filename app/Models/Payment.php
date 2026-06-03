@@ -156,6 +156,7 @@ class Payment extends Model
     {
         \Illuminate\Support\Facades\DB::transaction(function () {
             $this->grantAccess();
+            $this->enrollInCourse();
 
             // Для conditional Payment (доступ под обещание) пропускаем
             // welcome-email и начисление праны — деньги не пришли,
@@ -294,6 +295,34 @@ class Payment extends Model
             "grantAccess: студент #{$user->id} ({$user->email}) добавлен в ".
             count($groupIds)." групп(у/ы) курса '{$course->title}'."
         );
+    }
+
+    // ==========================================
+    // АВТО-ЗАПИСЬ «ОБУЧАЕТСЯ НА КУРСАХ» (pivot course_user)
+    // ==========================================
+    // grantAccess() выдаёт доступ к урокам через группы. Этот метод дополнительно
+    // создаёт запись «Записался» в course_user, которую раньше ставили вручную
+    // («Записать на курс» в карточке студента). Существующую строку НЕ трогаем —
+    // чтобы не затереть ручной статус (Рассрочка / Льготник / Покинул / Выпускник).
+    public function enrollInCourse(): void
+    {
+        if (! $this->user_id || ! $this->course_id) {
+            return;
+        }
+
+        $already = $this->user->courses()
+            ->where('courses.id', $this->course_id)
+            ->exists();
+
+        if ($already) {
+            return;
+        }
+
+        // attach (НЕ syncWithoutDetaching: тот перезаписал бы pivot существующей
+        // пары). note по умолчанию остаётся null.
+        $this->user->courses()->attach($this->course_id, ['status' => 'Записался']);
+
+        Log::info("enrollInCourse: студент #{$this->user_id} записан на курс #{$this->course_id} (Записался).");
     }
 
     // ==========================================
