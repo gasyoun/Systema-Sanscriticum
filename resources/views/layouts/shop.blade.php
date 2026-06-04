@@ -36,8 +36,8 @@
     <header class="sticky top-0 w-full z-40 bg-[#0A0D14]/90 backdrop-blur-md border-b border-[#1F2636]">
         <div class="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center gap-4">
 
-            {{-- Логотип + бренд --}}
-            <a href="{{ route('shop.index') }}" class="flex items-center gap-3 group shrink-0">
+            {{-- Логотип + бренд → на главную сайта (не в магазин) --}}
+            <a href="{{ url('/') }}" class="flex items-center gap-3 group shrink-0">
                 <img src="{{ asset('images/logo.png') }}"
                      alt="Общество ревнителей санскрита"
                      class="w-auto h-10 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300">
