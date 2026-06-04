@@ -23,6 +23,12 @@ class Helpdesk extends Page
 
     protected static string $view = 'filament.pages.helpdesk';
 
+    // Скрываем пункт меню и блокируем роут для преподавателей.
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->isTeacher() !== true;
+    }
+
     public $activeUserId = null;
 
     public $newMessage = '';
