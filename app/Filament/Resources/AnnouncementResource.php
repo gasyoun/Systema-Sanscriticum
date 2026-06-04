@@ -96,6 +96,7 @@ class AnnouncementResource extends Resource
 
                         Forms\Components\Toggle::make('send_to_email')
                             ->label('Отправить на Email')
+                            ->helperText('Письмо уйдёт только студентам, давшим согласие на email-анонсы (галочка на чекауте). Telegram/VK этим согласием не ограничены.')
                             ->default(false),
 
                         // 👇 НОВЫЕ ГАЛОЧКИ ДЛЯ МЕССЕНДЖЕРОВ 👇
