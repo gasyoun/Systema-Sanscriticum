@@ -117,8 +117,16 @@ class UserResource extends Resource
                             ->default('Обычный студент')
                             ->required(),
 
-                        Forms\Components\Textarea::make('note')
+                        // Read-only превью примечания со ссылками-кликами (ВК и пр.).
+                        // Textarea ниже — для редактирования; здесь — для перехода по ссылкам.
+                        Forms\Components\Placeholder::make('note_preview')
                             ->label('Примечание куратора')
+                            ->columnSpanFull()
+                            ->visible(fn (string $operation, ?User $record): bool => $operation !== 'create' && filled($record?->note))
+                            ->content(fn (?User $record) => static::linkifyNote($record?->note)),
+
+                        Forms\Components\Textarea::make('note')
+                            ->label('Примечание куратора (редактирование)')
                             ->rows(3)
                             ->columnSpanFull(),
                     ])->columns(2),
@@ -189,6 +197,65 @@ class UserResource extends Resource
                     ->visible(fn (string $operation) => $operation !== 'create' && RoleGate::adminOnly())
                     ->columns(1),
             ]);
+    }
+
+    /**
+     * Рендерит примечание куратора с кликабельными ссылками.
+     * XSS-безопасно: сначала экранируем весь текст, затем вставляем только наши <a>.
+     */
+    protected static function linkifyNote(?string $note): \Illuminate\Support\HtmlString
+    {
+        $html = e((string) $note);
+
+        // Полные URL (http/https).
+        $html = preg_replace(
+            '~(https?://[^\s<]+)~i',
+            '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Голые vk.com/... без схемы. Лукбехайнд не даёт повторно линковать
+        // уже обёрнутый https://vk.com/... (перед vk стоит / или буква).
+        $html = preg_replace(
+            '~(?<![/\w])((?:www\.)?vk\.com/[^\s<]+)~i',
+            '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Email → mailto. Раньше телеграма, чтобы @домен почты не утёк в t.me-ссылку.
+        $html = preg_replace(
+            '~(?<![\w@/])([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)~',
+            '<a href="mailto:$1" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Telegram @handle → t.me. Лукбехайнд (?<![\w@/]) не трогает @ внутри почты
+        // (там перед @ стоит буква) и уже обёрнутых ссылок.
+        $html = preg_replace(
+            '~(?<![\w@/])@([A-Za-z0-9_]{4,32})~',
+            '<a href="https://t.me/$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">@$1</a>',
+            $html
+        );
+
+        // Телефон → tel:. Разделители без точки/двоеточия, чтобы не цеплять даты
+        // и штампы вроде «04.06.2026 14:30». Колбэк требует 10–15 цифр —
+        // отсекает короткие числа, суммы и порядковые номера.
+        $html = preg_replace_callback(
+            '~(?<![\d\w>])(\+?\d[\d\s()\-]{8,}\d)~',
+            function (array $m): string {
+                $digits = preg_replace('/\D/', '', $m[1]);
+                $len = strlen($digits);
+                if ($len < 10 || $len > 15) {
+                    return $m[1];
+                }
+                $tel = (str_starts_with($m[1], '+') ? '+' : '').$digits;
+
+                return '<a href="tel:'.$tel.'" class="text-primary-600 underline">'.$m[1].'</a>';
+            },
+            $html
+        );
+
+        return new \Illuminate\Support\HtmlString(nl2br($html));
     }
 
     public static function table(Table $table): Table
