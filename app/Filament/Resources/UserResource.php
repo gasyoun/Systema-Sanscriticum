@@ -315,6 +315,13 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn () => RoleGate::isSuperAdmin()),
 
+                Tables\Columns\IconColumn::make('wants_email_announcements')
+                    ->label('Анонсы на email')
+                    ->boolean()
+                    ->sortable()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('prana_balance')
                     ->label('Прана')
                     ->badge()
@@ -359,6 +366,13 @@ class UserResource extends Resource
                         }),
                         blank: fn (Builder $query) => $query,
                     ),
+                // --- Согласие на email-анонсы (галочка с чекаута) ---
+                Tables\Filters\TernaryFilter::make('wants_email_announcements')
+                    ->label('Согласие на email-анонсы')
+                    ->placeholder('Все студенты')
+                    ->trueLabel('Согласились на анонсы')
+                    ->falseLabel('Отказались от анонсов'),
+
                 // --- НОВЫЙ ФИЛЬТР ПО СТАТУСУ ---
                 Tables\Filters\SelectFilter::make('global_status')
                     ->label('Статус студента')
