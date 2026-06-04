@@ -26,7 +26,10 @@ class PaymentController extends Controller
 
         if (! auth()->check()) {
             $rules['name'] = 'required|string|max:255';
+            $rules['surname'] = 'required|string|max:255';
+            $rules['city'] = 'required|string|max:255';
             $rules['email'] = 'required|email|max:255';
+            $rules['wants_announcements'] = 'nullable|boolean';
         }
 
         $request->validate($rules);
@@ -42,10 +45,18 @@ class PaymentController extends Controller
                 if ($existingUser) {
                     $user = $existingUser;
                 } else {
+                    // Склейка ФИО+город прямо в name: «Фамилия Имя, Город»
+                    $fullName = trim($request->input('surname').' '.$request->input('name'));
+                    $city = trim((string) $request->input('city'));
+                    if ($city !== '') {
+                        $fullName .= ', '.$city;
+                    }
+
                     $user = User::create([
                         'email' => $request->input('email'),
-                        'name' => $request->input('name'),
+                        'name' => $fullName,
                         'password' => Hash::make(Str::random(12)),
+                        'wants_email_announcements' => $request->boolean('wants_announcements'),
                     ]);
                     auth()->login($user);
                 }
