@@ -440,6 +440,13 @@ class UserResource extends Resource
                     ->trueLabel('Согласились на анонсы')
                     ->falseLabel('Отказались от анонсов'),
 
+                // --- Состоит в группе (пул для разнесения по группам курса) ---
+                Tables\Filters\SelectFilter::make('group')
+                    ->label('Состоит в группе')
+                    ->relationship('groups', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 // --- НОВЫЙ ФИЛЬТР ПО СТАТУСУ ---
                 Tables\Filters\SelectFilter::make('global_status')
                     ->label('Статус студента')
@@ -665,6 +672,70 @@ class UserResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+
+                    // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
+                    // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
+                    // к целевой. Оплаты не трогаются (дублей Payment не возникает).
+                    Tables\Actions\BulkAction::make('move_to_group')
+                        ->label('Перенести в группу')
+                        ->icon('heroicon-o-user-group')
+                        ->color('warning')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->requiresConfirmation()
+                        ->modalHeading('Перенести выбранных в группу курса')
+                        ->modalDescription('Студентов отвяжут от остальных групп ЭТОГО курса и привяжут к выбранной. Группы других курсов и оплаты не затрагиваются.')
+                        ->modalSubmitActionLabel('Перенести')
+                        ->form([
+                            Forms\Components\Select::make('target_group_id')
+                                ->label('Целевая группа')
+                                ->options(\App\Models\Group::query()->orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->helperText('Курс определяется по выбранной группе.'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $group = \App\Models\Group::with('courses')->find($data['target_group_id']);
+
+                            if (! $group) {
+                                Notification::make()->title('Группа не найдена')->danger()->send();
+
+                                return;
+                            }
+
+                            $course = $group->courses->first();
+
+                            if (! $course) {
+                                Notification::make()
+                                    ->title('У группы нет курса')
+                                    ->body('Группа «'.$group->name.'» не привязана ни к одному курсу — перенос внутри курса невозможен.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            // Группы этого курса, кроме целевой — из них отвязываем.
+                            $siblingGroupIds = $course->groups()
+                                ->where('groups.id', '!=', $group->id)
+                                ->pluck('groups.id')
+                                ->all();
+
+                            $moved = 0;
+                            foreach ($records as $user) {
+                                if (! empty($siblingGroupIds)) {
+                                    $user->groups()->detach($siblingGroupIds);
+                                }
+                                $user->groups()->syncWithoutDetaching([$group->id]);
+                                $moved++;
+                            }
+
+                            Notification::make()
+                                ->title('Перенос завершён')
+                                ->body("Перенесено: {$moved} → группа «{$group->name}» (курс «{$course->title}»).")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
 
                     // --- НОВАЯ КНОПКА: МАССОВАЯ РАССЫЛКА ДОСТУПОВ ---
                     Tables\Actions\BulkAction::make('send_bulk_access')

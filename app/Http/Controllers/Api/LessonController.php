@@ -21,6 +21,9 @@ class LessonController extends Controller
         $courses = $request->validate([
             '*.id' => 'required|integer',
             '*.title' => 'required|string|max:255',
+            // Группа курса (для курсов, разнесённых на 2 потока). Необязательна:
+            // несплитнутый курс шлёт без неё → group_id = NULL (видно всем группам).
+            '*.group_id' => 'nullable|integer|exists:groups,id',
             '*.videoLinks' => 'nullable|array',
             '*.rutubeLinks' => 'nullable|array',
             '*.lessonTopics' => 'nullable|array',
@@ -30,6 +33,7 @@ class LessonController extends Controller
         foreach ($courses as $course) {
             $courseId = $course['id'];
             $title = $course['title'];
+            $groupId = $course['group_id'] ?? null;
 
             $dates = array_unique(array_merge(
                 array_keys($course['videoLinks'] ?? []),
@@ -37,8 +41,11 @@ class LessonController extends Controller
             ));
 
             foreach ($dates as $date) {
+                // Ключ включает group_id: иначе уроки двух групп на одну дату
+                // одного курса затирали бы друг друга. Eloquent корректно
+                // матчит group_id = NULL через IS NULL.
                 Lesson::updateOrCreate(
-                    ['course_id' => $courseId, 'lesson_date' => $date],
+                    ['course_id' => $courseId, 'group_id' => $groupId, 'lesson_date' => $date],
                     [
                         'title' => $title,
                         'video_url' => $course['videoLinks'][$date] ?? null,
@@ -66,6 +73,7 @@ class LessonController extends Controller
 
         $data = $request->validate([
             'course_id' => 'required|integer|exists:courses,id',
+            'group_id' => 'nullable|integer|exists:groups,id',
             'title' => 'required|string|max:255',
             'lesson_date' => 'required|date',
             'block_number' => 'nullable|integer|min:1',
@@ -91,15 +99,20 @@ class LessonController extends Controller
         // (Eloquent пишет date-каст как 'Y-m-d 00:00:00') не совпадёт и урок
         // продублируется при повторном прогоне того же исполнения.
         $lessonDate = \Illuminate\Support\Carbon::parse($data['lesson_date'])->toDateString();
+        $groupId = $data['group_id'] ?? null;
 
+        // Ключ идемпотентности включает group_id (для курсов, разнесённых на 2
+        // группы): where('group_id', null) Eloquent трактует как IS NULL.
         $lesson = Lesson::query()
             ->where('course_id', $data['course_id'])
+            ->where('group_id', $groupId)
             ->whereDate('lesson_date', $lessonDate)
             ->first();
 
         $wasCreated = $lesson === null;
         $lesson ??= new Lesson([
             'course_id' => $data['course_id'],
+            'group_id' => $groupId,
             'lesson_date' => $lessonDate,
         ]);
 
