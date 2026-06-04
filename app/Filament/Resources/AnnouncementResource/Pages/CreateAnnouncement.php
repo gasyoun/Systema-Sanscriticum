@@ -48,8 +48,8 @@ class CreateAnnouncement extends CreateRecord
 
         // === 3. РАСПРЕДЕЛЯЕМ ЗАДАЧИ ===
         foreach ($users as $user) {
-            // 1. Отправляем на Email
-            if ($announcement->send_to_email && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            // 1. Отправляем на Email — только тем, кто дал согласие на email-анонсы
+            if ($announcement->send_to_email && $user->wants_email_announcements && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
                 Mail::to($user->email)->queue(new AnnouncementMail($announcement, $user));
             }
 
