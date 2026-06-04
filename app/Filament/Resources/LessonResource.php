@@ -126,7 +126,25 @@ class LessonResource extends Resource
                         return null;
                     })
                     ->required()
+                    ->live()
                     ->label('Привязать к курсу'),
+
+                // Группа курса — для курсов, разнесённых на 2 потока.
+                // Пусто = урок виден всем группам курса (поведение по умолчанию).
+                Forms\Components\Select::make('group_id')
+                    ->label('Группа (для курсов из 2 потоков)')
+                    ->helperText('Пусто — урок виден всем группам курса. Выберите группу, чтобы урок видела только она.')
+                    ->options(function (Forms\Get $get): array {
+                        $courseId = $get('course_id');
+                        if (! $courseId) {
+                            return [];
+                        }
+
+                        return \App\Models\Course::find($courseId)
+                            ?->groups()->pluck('name', 'groups.id')->all() ?? [];
+                    })
+                    ->searchable()
+                    ->nullable(),
 
                 Forms\Components\TextInput::make('title')
                     ->required()

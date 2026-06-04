@@ -97,6 +97,33 @@ class Lesson extends Model
         return $query->where('is_free', true);
     }
 
+    /**
+     * Уроки, видимые студенту по членству в группах: без группы (group_id NULL —
+     * общие для всех групп курса) ИЛИ привязанные к группе студента. Нужно для
+     * курсов, разнесённых на 2 независимых потока.
+     */
+    public function scopeForUserGroups(\Illuminate\Database\Eloquent\Builder $query, $user): \Illuminate\Database\Eloquent\Builder
+    {
+        $groupIds = $user?->groups->pluck('id')->all() ?? [];
+
+        return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($groupIds) {
+            $q->whereNull('group_id');
+            if (! empty($groupIds)) {
+                $q->orWhereIn('group_id', $groupIds);
+            }
+        });
+    }
+
+    /** Доступен ли урок студенту по группе (NULL = всем; иначе — только своей группе). */
+    public function isVisibleToGroupsOf($user): bool
+    {
+        if ($this->group_id === null) {
+            return true;
+        }
+
+        return $user !== null && $user->groups->pluck('id')->contains($this->group_id);
+    }
+
     public function scopeShownOnMain(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('show_on_main', true)

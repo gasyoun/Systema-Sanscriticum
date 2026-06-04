@@ -132,7 +132,7 @@ class StudentController extends Controller
             })
             ->firstOrFail();
 
-        $lessons = $course->lessons()->orderBy('sort_order')->orderBy('created_at')->get();
+        $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
@@ -147,6 +147,12 @@ class StudentController extends Controller
         $user = auth()->user();
         $course = Course::where('slug', $courseSlug)->firstOrFail();
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+        // Урок другой группы курса (курс разнесён на 2 потока) — не показываем.
+        if (! $lesson->isVisibleToGroupsOf($user)) {
+            return redirect()->route('student.course', $course->slug)
+                ->with('error', 'Этот урок относится к другой группе курса.');
+        }
 
         // --- БЛОК ЗАЩИТЫ ДОСТУПА С УЧЕТОМ КОНКРЕТНОГО КУРСА ---
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $courseSlug);
@@ -184,7 +190,7 @@ class StudentController extends Controller
         }
         // ==========================================
 
-        $lessons = $course->lessons()->orderBy('sort_order')->orderBy('created_at')->get();
+        $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
 
         $currentNote = null;
         // Заметка может быть сохранена ДО отметки «пройдено», поэтому читаем
@@ -319,7 +325,9 @@ class StudentController extends Controller
                 ->exists();
 
             if ($userInCourseGroups) {
-                $totalLessons = $course->lessons()->count();
+                // Считаем только уроки, видимые этому студенту по его группе
+                // (для курсов из 2 потоков total у каждой группы свой).
+                $totalLessons = $course->lessons()->forUserGroups($user)->count();
                 $completedLessons = $user->completedLessons()
                     ->where('lessons.course_id', $course->id)
                     ->count();
@@ -368,6 +376,10 @@ class StudentController extends Controller
     {
         $course = Course::where('slug', $courseSlug)->firstOrFail();
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+
+        if (! $lesson->isVisibleToGroupsOf($user)) {
+            abort(403, 'Этот урок относится к другой группе курса.');
+        }
 
         if ($lesson->is_free) {
             return;
