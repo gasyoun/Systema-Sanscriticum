@@ -177,7 +177,14 @@ document.addEventListener('alpine:init', () => {
                                     <h4 class="text-base font-extrabold text-gray-900">Ваши данные для доступа</h4>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
-                                    <div class="sm:col-span-2">
+                                    <div class="sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Фамилия <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="surname" required minlength="2" placeholder="Например, Иванов"
+                                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                    </div>
+                                    <div class="sm:col-span-1">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Имя <span class="text-red-500">*</span>
                                         </label>
@@ -195,6 +202,20 @@ document.addEventListener('alpine:init', () => {
                                         <p class="mt-1.5 text-xs text-red-500 hidden peer-[&:not(:placeholder-shown):invalid]:block">
                                             <i class="fas fa-exclamation-circle mr-1"></i> Укажите корректный email
                                         </p>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Город <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="city" required placeholder="Например, Москва"
+                                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="flex items-start gap-3 cursor-pointer">
+                                            <input type="checkbox" name="wants_announcements" value="1" checked
+                                                   class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
+                                            <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
