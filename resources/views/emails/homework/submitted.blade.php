@@ -12,9 +12,9 @@
             <span style="font-size: 56px; color: #d35400; line-height: 1;">📝</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Новая работа на проверку</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">{{ $isResubmission ? 'Пересдача после доработки' : 'Новая работа на проверку' }}</h2>
 
-        <p style="font-size: 17px;">Студент <strong>{{ $submission->user->name ?? 'Студент' }}</strong> отправил домашнюю работу.</p>
+        <p style="font-size: 17px;">Студент <strong>{{ $submission->user->name ?? 'Студент' }}</strong> {{ $isResubmission ? 'прислал доработку' : 'прислал работу' }} по курсу <strong>«{{ $submission->course->title ?? '—' }}»</strong>.</p>
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 6px 0; font-size: 15px;"><strong>Курс:</strong> {{ $submission->course->title ?? '—' }}</p>

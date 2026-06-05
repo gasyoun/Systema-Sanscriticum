@@ -206,6 +206,11 @@ Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])
     ->middleware('throttle:5,1')
     ->name('deposit.create');
 
+// Пробное занятие — отдельный POST, тот же эквайринг. Строго до catch-all /{slug}.
+Route::post('/trial/{course:slug}', [\App\Http\Controllers\TrialController::class, 'create'])
+    ->middleware('throttle:5,1')
+    ->name('trial.create');
+
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])
     ->prefix('editor/lectures/{draft}')

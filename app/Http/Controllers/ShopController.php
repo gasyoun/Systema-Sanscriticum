@@ -86,6 +86,25 @@ class ShopController extends Controller
 
         $deposit = MarketingSetting::cached();
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit'));
+        // Кнопка «Купить пробное»: задана цена и предстоящее живое занятие, курс ещё
+        // не куплен, и (для залогиненного) нет активного гранта на урок-заготовку.
+        $course->loadMissing('trialSchedule');
+        $trialSession = $course->trialSchedule;
+        $showTrialCta = (float) $course->trial_price > 0
+            && $trialSession
+            && $trialSession->start
+            && $trialSession->start->isFuture()
+            && empty($purchasedKeys);
+
+        if ($showTrialCta && Auth::check() && $course->trial_lesson_id) {
+            $alreadyHasTrial = \App\Models\LessonAccessGrant::query()
+                ->where('user_id', Auth::id())
+                ->where('lesson_id', $course->trial_lesson_id)
+                ->active()
+                ->exists();
+            $showTrialCta = ! $alreadyHasTrial;
+        }
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta'));
     }
 }
