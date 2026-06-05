@@ -843,6 +843,7 @@ class UserResource extends Resource
             UserResource\RelationManagers\CoursesRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,
+            UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
     }
 
