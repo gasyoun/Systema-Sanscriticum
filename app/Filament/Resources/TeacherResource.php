@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TeacherResource\Pages;
 use App\Models\Teacher;
+use App\Models\User;
+use App\Services\TeacherAccountService;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -41,7 +43,7 @@ class TeacherResource extends Resource
                     ])->columns(3),
 
                 \Filament\Forms\Components\Section::make('Аккаунт для входа в админку')
-                    ->description('Создаётся автоматически с ролью «Преподаватель». Email из блока выше будет логином.')
+                    ->description('Создаётся автоматически с ролью «Преподаватель». Email из блока выше будет логином. После сохранения преподавателю уходит письмо-приглашение с доступами.')
                     ->schema([
                         \Filament\Forms\Components\TextInput::make('account_password')
                             ->label('Пароль')
@@ -51,8 +53,8 @@ class TeacherResource extends Resource
                             ->maxLength(255)
                             ->required(fn (string $operation) => $operation === 'create')
                             ->helperText(fn (string $operation) => $operation === 'create'
-                                ? 'Минимум 6 символов. Передайте его преподавателю любым удобным способом.'
-                                : 'Заполните, чтобы сбросить пароль преподавателя. Оставьте пустым — текущий пароль не изменится.')
+                                ? 'Минимум 6 символов. Будет отправлен преподавателю в письме-приглашении.'
+                                : 'Заполните, чтобы сбросить пароль — новый уйдёт преподавателю на почту. Оставьте пустым — текущий пароль не изменится.')
                             ->dehydrated(false),
                     ])
                     ->visible(fn (?\App\Models\Teacher $record, string $operation) => $operation === 'create' || ($record && $record->email)
@@ -93,6 +95,20 @@ class TeacherResource extends Resource
                     ->label('Курсов')
                     ->badge()
                     ->color('info'),
+
+                // Есть ли у карточки активный аккаунт для входа. Старые карточки,
+                // заведённые до авто-аккаунтов, висят без доступа — их видно по «нет».
+                \Filament\Tables\Columns\IconColumn::make('has_account')
+                    ->label('Доступ')
+                    ->state(fn (Teacher $record): bool => User::query()
+                        ->where('teacher_id', $record->id)
+                        ->orWhere('email', $record->email)
+                        ->exists())
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
 
                 // КОЛОНКА "БАЛАНС" С ВЫПАДАЮЩИМ ОКНОМ
                 \Filament\Tables\Columns\TextColumn::make('balance')
@@ -192,10 +208,69 @@ class TeacherResource extends Resource
                 //
             ])
             ->actions([
+                // Сгенерировать пароль и выслать приглашение. Работает и для старых
+                // карточек без аккаунта, и для сброса доступа существующему.
+                \Filament\Tables\Actions\Action::make('invite')
+                    ->label('Доступ')
+                    ->icon('heroicon-o-key')
+                    ->color('warning')
+                    ->visible(fn (Teacher $record): bool => filled($record->email))
+                    ->requiresConfirmation()
+                    ->modalHeading('Сгенерировать пароль и отправить приглашение?')
+                    ->modalDescription(fn (Teacher $record): string => 'Преподавателю '.$record->name.' ('.$record->email.') будет создан/обновлён аккаунт с новым паролем, а на почту уйдёт письмо со ссылкой на вход в панель.')
+                    ->modalSubmitActionLabel('Сгенерировать и отправить')
+                    ->action(function (Teacher $record): void {
+                        $user = app(TeacherAccountService::class)->resetPasswordAndInvite($record);
+
+                        if (! $user) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('У карточки не указан email')
+                                ->body('Добавьте email преподавателю, чтобы выслать доступ.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Приглашение отправлено')
+                            ->body('Новый пароль и ссылка на вход высланы на '.$user->email)
+                            ->success()
+                            ->send();
+                    }),
+
                 \Filament\Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 \Filament\Tables\Actions\BulkActionGroup::make([
+                    // Массовая выдача доступов: сгенерировать пароли и разослать
+                    // приглашения сразу нескольким преподавателям.
+                    \Filament\Tables\Actions\BulkAction::make('invite')
+                        ->label('Выдать доступ и выслать письмо')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Выдать доступ выбранным преподавателям?')
+                        ->modalDescription('Каждому из выбранных будет создан/обновлён аккаунт с новым паролем и отправлено письмо-приглашение. Карточки без email будут пропущены.')
+                        ->modalSubmitActionLabel('Сгенерировать и разослать')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                            $service = app(TeacherAccountService::class);
+                            $sent = 0;
+                            $skipped = 0;
+
+                            foreach ($records as $record) {
+                                /** @var Teacher $record */
+                                $service->resetPasswordAndInvite($record) ? $sent++ : $skipped++;
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Готово')
+                                ->body("Отправлено приглашений: {$sent}".($skipped > 0 ? " · Пропущено без email: {$skipped}" : ''))
+                                ->success()
+                                ->send();
+                        }),
+
                     \Filament\Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

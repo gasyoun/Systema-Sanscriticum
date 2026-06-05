@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TeacherResource\Pages;
 
 use App\Filament\Resources\TeacherResource;
+use App\Mail\TeacherInviteMail;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Support\Roles;
@@ -10,6 +11,8 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class EditTeacher extends EditRecord
 {
@@ -47,23 +50,34 @@ class EditTeacher extends EditRecord
         $user->role = Roles::TEACHER;
         $user->teacher_id = $teacher->id;
 
+        // Открытый пароль для письма — только когда реально задаём новый.
+        $plainPassword = null;
         if ($isNewUser || filled($password)) {
-            $user->password = Hash::make($password ?: \Illuminate\Support\Str::random(12));
+            $plainPassword = filled($password) ? (string) $password : Str::random(12);
+            $user->password = Hash::make($plainPassword);
         }
 
         $user->save();
 
+        // Письмо-приглашение шлём только при значимых событиях: создан аккаунт
+        // (миграция старой карточки) или админ задал/сбросил пароль. Иначе обычное
+        // сохранение карточки (правка био и т.п.) не должно слать письмо каждый раз.
+        if ($isNewUser || filled($password)) {
+            Mail::to($user->email)->send(new TeacherInviteMail($user, $plainPassword));
+        }
+
         if ($isNewUser) {
             Notification::make()
                 ->title('Создан аккаунт преподавателя')
-                ->body("Логин: {$email}. ".(filled($password)
+                ->body("Логин: {$email}. Письмо-приглашение отправлено. ".(filled($password)
                     ? 'Используется указанный вами пароль.'
-                    : 'Сгенерирован случайный пароль — задайте новый через эту же форму.'))
+                    : 'Сгенерирован случайный пароль и отправлен преподавателю в письме.'))
                 ->success()
                 ->send();
         } elseif (filled($password)) {
             Notification::make()
                 ->title('Пароль преподавателя обновлён')
+                ->body('Новый пароль отправлен преподавателю на почту.')
                 ->success()
                 ->send();
         }
