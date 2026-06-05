@@ -298,13 +298,31 @@ class Payment extends Model
             return;
         }
 
+        // Данные живого занятия (дата + Zoom) — из события расписания курса.
+        $schedule = $this->course?->trialSchedule;
+        $zoomLink = $schedule?->link;
+        $startsAt = $schedule?->start;
+
+        // Письмо со ссылкой на Zoom (если есть email и пользователь, и сама запись расписания).
+        if ($this->user && $this->user->email) {
+            \Illuminate\Support\Facades\Mail::to($this->user->email)
+                ->send(new \App\Mail\TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt));
+        }
+
         $courseName = $this->course->title ?? 'курс';
         $url = url('/login');
 
         $text = "🎟 <b>Пробное занятие оплачено</b>\n\n";
-        $text .= "Намасте! Доступ к пробному занятию курса <b>«{$courseName}»</b> открыт. ";
+        $text .= "Намасте! Вы записаны на живое занятие курса <b>«{$courseName}»</b>";
+        if ($startsAt) {
+            $text .= ' — '.$startsAt->translatedFormat('d F, H:i').' (МСК)';
+        }
+        $text .= ".\n";
+        if ($zoomLink) {
+            $text .= "\n🔗 <a href='{$zoomLink}'>Подключиться к Zoom</a>\n";
+        }
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
-        $text .= "\n\n<a href='{$url}'>Перейти в личный кабинет</a>";
+        $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
         \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
     }

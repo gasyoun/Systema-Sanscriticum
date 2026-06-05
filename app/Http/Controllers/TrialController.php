@@ -29,9 +29,10 @@ final class TrialController extends Controller
     {
         $amount = (float) $course->trial_price;
 
-        // Пробное доступно, только если задана цена И выбран урок.
+        // Пробное доступно, только если задана цена И выбрано живое занятие расписания
+        // (из него берётся дата и Zoom). trial_lesson_id (заготовку) поддерживает курс сам.
         abort_unless(
-            $amount > 0 && $course->trial_lesson_id,
+            $amount > 0 && $course->trial_schedule_id,
             403,
             'Пробное занятие для этого курса сейчас недоступно.'
         );
@@ -114,10 +115,18 @@ final class TrialController extends Controller
             ]);
         }
 
+        // Склейка ФИО+город прямо в name: «Фамилия Имя, Город» — как на чекауте.
+        $fullName = trim($request->input('surname').' '.$request->input('name'));
+        $city = trim((string) $request->input('city'));
+        if ($city !== '') {
+            $fullName .= ', '.$city;
+        }
+
         $user = User::create([
             'email' => $request->input('email'),
-            'name' => $request->input('name'),
+            'name' => $fullName,
             'password' => Hash::make(Str::random(12)),
+            'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
 
         auth()->login($user);

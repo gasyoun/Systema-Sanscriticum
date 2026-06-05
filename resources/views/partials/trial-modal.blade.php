@@ -6,6 +6,7 @@
         action: '',
         courseTitle: '',
         amount: 0,
+        sessionDate: '',
         get amountFormatted() {
             return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(this.amount);
         }
@@ -16,6 +17,7 @@
         action = $event.detail.action;
         courseTitle = $event.detail.title;
         amount = Number($event.detail.amount) || 0;
+        sessionDate = $event.detail.date || '';
         open = true;
      "
      x-on:keydown.escape.window="open = false"
@@ -43,35 +45,58 @@
             @csrf
 
             <p class="text-sm text-slate-400 leading-relaxed">
-                Пробное занятие курса <span class="font-bold text-white" x-text="courseTitle"></span>.
+                <span class="font-bold text-white">Живое занятие</span> курса
+                <span class="font-bold text-white" x-text="courseTitle"></span><span x-show="sessionDate"> — <span class="text-[#38BDF8] font-semibold" x-text="sessionDate"></span></span>.
                 Сумма <span class="font-bold text-[#38BDF8]"><span x-text="amountFormatted"></span> ₽</span>
                 будет зачтена в стоимость тарифа при последующей оплате.
             </p>
 
             <div class="rounded-xl border border-[#38BDF8]/30 bg-[#38BDF8]/10 p-3.5">
                 <div class="text-[10px] font-black uppercase tracking-widest text-[#38BDF8] mb-1.5">
-                    <i class="fas fa-door-open mr-1"></i> Доступ сразу после оплаты
+                    <i class="fas fa-broadcast-tower mr-1"></i> Это живой урок в Zoom
                 </div>
                 <p class="text-[13px] text-slate-300 leading-relaxed">
-                    Откроется <span class="font-semibold text-white">одно занятие</span> курса —
-                    посмотрите запись и оцените формат, прежде чем покупать целиком.
+                    Вы подключаетесь к занятию <span class="font-semibold text-white">вживую</span> — после оплаты пришлём
+                    ссылку на Zoom и время на email. <span class="font-semibold text-white">Запись</span> появится в личном
+                    кабинете уже после занятия.
                 </p>
             </div>
 
             @guest
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Имя</label>
-                    <input type="text" name="name" required maxlength="255"
-                           placeholder="Как к вам обращаться"
-                           class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Фамилия</label>
+                        <input type="text" name="surname" required minlength="2" maxlength="255"
+                               placeholder="Например, Иванов"
+                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Имя</label>
+                        <input type="text" name="name" required minlength="2" maxlength="255"
+                               placeholder="Например, Иван"
+                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email</label>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email <span class="text-slate-500 normal-case">(сюда придёт доступ)</span></label>
                     <input type="email" name="email" required maxlength="255"
                            placeholder="you@example.com"
                            class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
                 </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Город</label>
+                    <input type="text" name="city" required maxlength="255"
+                           placeholder="Например, Москва"
+                           class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
+                </div>
+
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" name="wants_announcements" value="1" checked
+                           class="mt-0.5 h-5 w-5 rounded border-[#1F2636] bg-[#0A0D14] text-[#38BDF8] focus:ring-[#38BDF8]">
+                    <span class="text-[13px] text-slate-400">Получать анонсы, новости и расписание на email</span>
+                </label>
 
                 <p class="text-[11px] text-slate-500 leading-relaxed">
                     После оплаты пришлём пароль на email — войдёте в личный кабинет и откроете пробное занятие.

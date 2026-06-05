@@ -235,7 +235,7 @@ class CourseResource extends Resource
                 // БЛОК: ПРОБНОЕ ЗАНЯТИЕ
                 // ==========================================
                 Forms\Components\Section::make('🎟 Пробное занятие')
-                    ->description('Платное пробное занятие с витрины. Кнопка «Купить пробное» показывается на странице курса, только если задана цена И выбран урок. Сумма зачтётся при покупке курса.')
+                    ->description('Платное пробное занятие с витрины: купивший попадает на выбранное живое занятие из расписания (Zoom-ссылка и дата берутся оттуда). На сохранении курса создаётся урок-заготовка — n8n позже дозальёт в неё запись. Кнопка показывается, только если задана цена И выбрано предстоящее событие. Сумма зачтётся при покупке курса.')
                     ->schema([
                         Forms\Components\TextInput::make('trial_price')
                             ->label('Цена пробного, ₽')
@@ -245,11 +245,19 @@ class CourseResource extends Resource
                             ->step('0.01')
                             ->suffix('₽'),
 
-                        Forms\Components\Select::make('trial_lesson_id')
-                            ->label('Какой урок открывается')
-                            ->helperText('Выберите урок этого курса, доступ к которому даёт покупка пробного.')
+                        Forms\Components\Select::make('trial_schedule_id')
+                            ->label('Живое занятие (из расписания)')
+                            ->helperText('Предстоящее событие расписания этого курса. Zoom-ссылка и дата берутся из него; группа события должна совпадать с той, что присылает n8n.')
                             ->options(fn (?\App\Models\Course $record): array => $record
-                                ? $record->lessons()->orderBy('sort_order')->orderBy('created_at')->pluck('title', 'id')->all()
+                                ? \App\Models\Schedule::query()
+                                    ->where('course_id', $record->id)
+                                    ->where('start', '>=', now())
+                                    ->orderBy('start')
+                                    ->get()
+                                    ->mapWithKeys(fn (\App\Models\Schedule $s) => [
+                                        $s->id => $s->start->format('d.m.Y H:i').' — '.$s->title,
+                                    ])
+                                    ->all()
                                 : [])
                             ->searchable()
                             ->preload()
