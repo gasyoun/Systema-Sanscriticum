@@ -104,6 +104,17 @@ class StudentController extends Controller
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
 
+        // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
+        // которым нет полного доступа по группам, но есть персональный grant на урок.
+        $trialLessons = LessonAccessGrant::query()
+            ->where('user_id', $user->id)
+            ->active()
+            ->whereNotIn('course_id', $courses->pluck('id')->all())
+            ->with(['lesson:id,course_id,title,lesson_date', 'course:id,slug,title'])
+            ->get()
+            ->filter(fn (LessonAccessGrant $g) => $g->lesson && $g->course)
+            ->values();
+
         return view('student.dashboard', compact(
             'courses',
             'certificates',
@@ -112,6 +123,7 @@ class StudentController extends Controller
             'pranaReasons',
             'debts',
             'debtsByCourseId',
+            'trialLessons',
         ));
     }
 
@@ -148,8 +160,13 @@ class StudentController extends Controller
         $course = Course::where('slug', $courseSlug)->firstOrFail();
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
-        // Урок другой группы курса (курс разнесён на 2 потока) — не показываем.
-        if (! $lesson->isVisibleToGroupsOf($user)) {
+        // Разовый доступ к конкретному уроку (например, оплаченное пробное занятие) —
+        // обход и блок/full гейта, и группового: явный grant на этот урок главнее.
+        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
+
+        // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
+        // если только нет персонального гранта именно на этот урок.
+        if (! $hasLessonGrant && ! $lesson->isVisibleToGroupsOf($user)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок относится к другой группе курса.');
         }
@@ -160,9 +177,6 @@ class StudentController extends Controller
 
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
-
-        // Разовый доступ к конкретному уроку — обход блок/full гейта.
-        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
 
         if (! $isFreeLesson && ! $hasLessonGrant && ! in_array('full', $unlockedTariffs) && ! in_array($requiredTariff, $unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
@@ -202,6 +216,19 @@ class StudentController extends Controller
 
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
         $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
+
+        // Запись ещё не залита (живое занятие только состоится — например, пробное).
+        // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
+        // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
+        $upcomingSession = null;
+        if (empty($youtubeId) && empty($rutubeId) && empty($lesson->video_url) && $lesson->lesson_date) {
+            $upcomingSession = \App\Models\Schedule::query()
+                ->where('course_id', $course->id)
+                ->where('group_id', $lesson->group_id)
+                ->whereDate('start', $lesson->lesson_date)
+                ->orderBy('start')
+                ->first();
+        }
 
         // ==========================================
         // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
@@ -280,7 +307,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession'));
     }
 
     /**

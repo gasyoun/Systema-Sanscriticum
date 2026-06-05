@@ -17,9 +17,9 @@
             'icon'        => 'text-[#38BDF8]',
             'text'        => 'text-white',
             'link'        => 'text-[#38BDF8] underline decoration-[#38BDF8]/40 hover:text-white hover:decoration-white',
-            'warn_wrap'   => 'bg-amber-500/10 border-amber-500/20',
-            'warn_label'  => 'text-amber-400',
-            'warn_text'   => 'text-slate-300',
+            'warn_wrap'   => 'bg-amber-500/15 border-2 border-amber-500/60 ring-1 ring-amber-500/30 shadow-lg shadow-amber-500/10',
+            'warn_label'  => 'text-amber-300',
+            'warn_text'   => 'text-red-400',
             'divider'     => 'border-[#1F2636]',
             'caption'     => 'text-slate-500',
             'btn_wrap'    => 'bg-[#0A0D14] border-[#1F2636] hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5',
@@ -33,9 +33,9 @@
             'icon'        => 'text-indigo-600',
             'text'        => 'text-gray-900',
             'link'        => 'text-indigo-600 underline decoration-indigo-300 hover:text-indigo-800 hover:decoration-indigo-800',
-            'warn_wrap'   => 'bg-amber-50 border-amber-200',
-            'warn_label'  => 'text-amber-700',
-            'warn_text'   => 'text-gray-600',
+            'warn_wrap'   => 'bg-amber-100 border-2 border-amber-400 ring-1 ring-amber-300/70 shadow-md shadow-amber-200/60',
+            'warn_label'  => 'text-amber-800',
+            'warn_text'   => 'text-red-700',
             'divider'     => 'border-gray-200',
             'caption'     => 'text-gray-400',
             'btn_wrap'    => 'bg-white border-gray-200 hover:border-indigo-400 hover:bg-indigo-50',
@@ -69,12 +69,12 @@
             </div>
 
             {{-- Важное предупреждение --}}
-            <div class="rounded-xl border {{ $t['warn_wrap'] }} px-4 py-3 mb-4">
-                <p class="text-[11px] font-extrabold uppercase tracking-widest {{ $t['warn_label'] }} mb-1.5">
-                    <i class="fas fa-exclamation-triangle mr-1"></i> Важно
+            <div class="rounded-xl {{ $t['warn_wrap'] }} px-5 py-4 mb-4">
+                <p class="flex items-center gap-2 text-sm font-extrabold uppercase tracking-widest {{ $t['warn_label'] }} mb-2">
+                    <i class="fas fa-exclamation-triangle text-base animate-pulse"></i> Важно
                 </p>
-                <p class="text-xs {{ $t['warn_text'] }} leading-relaxed">
-                    Если Вы раньше покупали наши курсы — не регистрируйтесь самостоятельно,
+                <p class="text-base sm:text-lg font-bold {{ $t['warn_text'] }} leading-relaxed">
+                    Если Вы раньше покупали наши курсы — <span class="underline decoration-2 underline-offset-2">не регистрируйтесь самостоятельно</span>,
                     напишите куратору. Он создаст аккаунт вручную, и все ваши доступы сохранятся.
                 </p>
             </div>

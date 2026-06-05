@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -27,6 +28,11 @@ class Course extends Model
         'salary_value',
         // Сумма депозита («забронировать») для этого курса; null = бронь не предлагается.
         'deposit_amount',
+        // Пробное занятие: цена, событие расписания (живое занятие) и служебная
+        // ссылка на урок-заготовку (синхронизируется автоматически на сохранении).
+        'trial_price',
+        'trial_lesson_id',
+        'trial_schedule_id',
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
         'format',
@@ -49,11 +55,79 @@ class Course extends Model
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
         'deposit_amount' => 'decimal:2',
+        'trial_price' => 'decimal:2',
     ];
 
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    // Урок-заготовка, который открывается при покупке пробного (синхронизируется
+    // из trial_schedule_id на сохранении курса).
+    public function trialLesson(): BelongsTo
+    {
+        return $this->belongsTo(Lesson::class, 'trial_lesson_id');
+    }
+
+    // Событие расписания (живое занятие), на которое попадает купивший пробное.
+    public function trialSchedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class, 'trial_schedule_id');
+    }
+
+    protected static function booted(): void
+    {
+        // После сохранения курса синхронизируем урок-заготовку под пробное занятие.
+        static::saved(function (self $course): void {
+            $course->syncTrialPlaceholderLesson();
+        });
+    }
+
+    /**
+     * Поддерживает урок-заготовку под выбранное событие расписания (trial_schedule_id):
+     * Lesson по ключу (course_id, group_id, lesson_date) — тому же, что использует n8n
+     * (LessonController::storeFromZoom), поэтому пришедшая позже запись дозальётся в неё,
+     * а LessonAccessGrant купивших пробное сохранится. trial_lesson_id указывает на неё.
+     */
+    public function syncTrialPlaceholderLesson(): void
+    {
+        // Пусто — пробное не настроено: чистим служебную ссылку, заготовку не трогаем.
+        if (! $this->trial_schedule_id) {
+            if ($this->trial_lesson_id !== null) {
+                $this->updateQuietly(['trial_lesson_id' => null]);
+            }
+
+            return;
+        }
+
+        $schedule = Schedule::find($this->trial_schedule_id);
+        if (! $schedule || ! $schedule->start) {
+            return;
+        }
+
+        // Ищем по тому же ключу, что и n8n. Если урок уже есть (в т.ч. с залитой
+        // записью) — не перетираем его поля, только привязываем trial_lesson_id.
+        $lesson = Lesson::where('course_id', $this->id)
+            ->where('group_id', $schedule->group_id)
+            ->whereDate('lesson_date', $schedule->start->toDateString())
+            ->first();
+
+        if (! $lesson) {
+            $lesson = Lesson::create([
+                'course_id' => $this->id,
+                'group_id' => $schedule->group_id,
+                'lesson_date' => $schedule->start->toDateString(),
+                'title' => $schedule->title ?: 'Пробное занятие',
+                'block_number' => $this->currentBlock()?->number ?? 1,
+                'is_published' => true,
+            ]);
+        }
+
+        if ($this->trial_lesson_id !== $lesson->id) {
+            // Quietly — иначе saved() зациклится.
+            $this->updateQuietly(['trial_lesson_id' => $lesson->id]);
+        }
     }
 
     // Связь: Один курс имеет много уроков

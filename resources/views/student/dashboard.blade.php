@@ -368,6 +368,38 @@
             @endforelse
         </div>
 
+        {{-- ПРОБНЫЕ ЗАНЯТИЯ (оплачено пробное / разовый доступ к уроку) --}}
+        @if(!empty($trialLessons) && $trialLessons->isNotEmpty())
+        <div class="mb-16">
+            <h3 class="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-graduation-cap text-[#38BDF8] mr-3"></i>Пробные занятия
+                <div class="ml-3 px-3 py-1 bg-sky-50 text-sky-600 text-sm font-bold rounded-full border border-sky-100">{{ $trialLessons->count() }}</div>
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($trialLessons as $grant)
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-[#38BDF8]/40 hover:shadow-[0_15px_35px_rgba(56,189,248,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col p-6">
+                        <span class="self-start px-2.5 py-1 bg-sky-50 text-sky-600 text-[10px] font-bold uppercase tracking-widest rounded border border-sky-100 mb-3">
+                            Пробное · {{ $grant->course->title }}
+                        </span>
+                        <h4 class="text-lg font-bold text-gray-900 mb-2 leading-snug line-clamp-2">
+                            {{ $grant->lesson->title }}
+                        </h4>
+                        @if($grant->lesson->lesson_date)
+                            <p class="text-gray-400 text-sm mb-4">{{ $grant->lesson->lesson_date->translatedFormat('d F Y') }}</p>
+                        @else
+                            <div class="mb-4"></div>
+                        @endif
+                        <a href="{{ route('student.lesson', [$grant->course->slug, $grant->lesson->id]) }}"
+                           class="mt-auto flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl hover:bg-[#38BDF8] hover:text-white transition-all duration-300">
+                            <span>Смотреть занятие</span>
+                            <i class="fas fa-arrow-right ml-2 text-xs opacity-50"></i>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- ДОСТИЖЕНИЯ (Сертификаты) --}}
         @if($certificates->isNotEmpty())
         <div class="mb-12">
