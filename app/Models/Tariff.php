@@ -66,11 +66,11 @@ class Tariff extends Model
         }
 
         // ЖЕЛЕЗОБЕТОННЫЙ ПОДСЧЕТ УНИКАЛЬНЫХ КУРСОВ (pluck + unique)
-        // Депозит (бронь) не считается «купленным курсом» для лояльности —
-        // иначе бронь курса фиктивно увеличивала бы скидку.
+        // Депозит (бронь) и пробное занятие не считаются «купленным курсом» для
+        // лояльности — иначе они фиктивно увеличивали бы скидку.
         $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
             ->whereIn('status', ['paid', 'success'])
-            ->where('tariff', '!=', 'deposit')
+            ->whereNotIn('tariff', ['deposit', 'trial'])
             ->where('created_at', '>=', now()->subYear()) // За последний год
             ->whereNotNull('course_id') // Исключаем системные платежи без курса
             ->pluck('course_id')
