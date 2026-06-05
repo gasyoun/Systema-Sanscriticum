@@ -31,6 +31,11 @@ class HomeworkService
                 'user_id' => $student->id,
                 'lesson_id' => $lesson->id,
             ]);
+            // Пересдача: работа уже возвращалась на доработку и студент шлёт её заново.
+            // Фиксируем до перезаписи статуса — после save() прежнее значение теряется.
+            $isResubmission = $submission->exists
+                && $submission->status === HomeworkSubmission::STATUS_NEEDS_REVISION;
+
             $submission->course_id = $lesson->course_id;
             $submission->status = $finalize
                 ? HomeworkSubmission::STATUS_SUBMITTED
@@ -48,7 +53,7 @@ class HomeworkService
             $this->attachFiles($comment, $files);
 
             if ($finalize) {
-                $this->notifyTeacher($submission);
+                $this->notifyTeacher($submission, $isResubmission);
             }
 
             return $submission;
@@ -110,7 +115,7 @@ class HomeworkService
         }
     }
 
-    private function notifyTeacher(HomeworkSubmission $submission): void
+    private function notifyTeacher(HomeworkSubmission $submission, bool $isResubmission = false): void
     {
         $email = $submission->course?->teacher?->email;
 
@@ -121,7 +126,7 @@ class HomeworkService
         }
 
         $reviewUrl = $this->reviewUrl($submission);
-        Mail::to($email)->send(new HomeworkSubmittedMail($submission, $reviewUrl));
+        Mail::to($email)->send(new HomeworkSubmittedMail($submission, $reviewUrl, $isResubmission));
     }
 
     private function notifyStudent(HomeworkSubmission $submission, HomeworkComment $review): void

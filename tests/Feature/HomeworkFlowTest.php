@@ -82,7 +82,15 @@ class HomeworkFlowTest extends TestCase
         $this->assertCount(1, $comment->files);
         Storage::disk('local')->assertExists($comment->files->first()->path);
 
-        Mail::assertQueued(HomeworkSubmittedMail::class, fn ($m) => $m->hasTo('teacher@example.test'));
+        Mail::assertQueued(HomeworkSubmittedMail::class, function ($m) use ($course, $student) {
+            $subject = $m->envelope()->subject;
+
+            return $m->hasTo('teacher@example.test')
+                && $m->isResubmission === false
+                && str_starts_with($subject, '📝')
+                && str_contains($subject, $course->title)
+                && str_contains($subject, $student->name);
+        });
     }
 
     /** @test */
@@ -155,6 +163,12 @@ class HomeworkFlowTest extends TestCase
             ['action' => 'submit', 'body' => 'v2 исправлено']
         )->assertRedirect();
         $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->fresh()->status);
+
+        // Письмо учителю о пересдаче помечено как доработка и тема начинается с 🔁
+        Mail::assertQueued(HomeworkSubmittedMail::class, function ($m) {
+            return $m->isResubmission === true
+                && str_starts_with($m->envelope()->subject, '🔁');
+        });
 
         // Принять
         $service->recordReview($submission->fresh(), $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Отлично');

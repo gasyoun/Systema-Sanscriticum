@@ -101,6 +101,25 @@ class AdminPanelProvider extends PanelProvider
                 // Прячем пункт «Media» из меню для преподавателей (роут добивает MediaPolicy).
                 CuratorPlugin::make()
                     ->registerNavigation(fn (): bool => auth()->user()?->isTeacher() !== true),
+
+                // Календарный режим расписания (Google-Calendar-like): месяц/неделя/день,
+                // drag&drop и создание кликом. Редактирование — через модалку формы Schedule.
+                \Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()
+                    ->selectable()   // выделение дат → создание события
+                    ->editable()     // перетаскивание/resize событий
+                    ->locale('ru')
+                    ->config([
+                        'firstDay' => 1, // неделя с понедельника
+                        'initialView' => 'dayGridMonth',
+                        'headerToolbar' => [
+                            'left' => 'prev,next today',
+                            'center' => 'title',
+                            'right' => 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                        ],
+                        'slotMinTime' => '06:00:00',
+                        'slotMaxTime' => '24:00:00',
+                        'nowIndicator' => true,
+                    ]),
             ])
             ->databaseNotifications() // Включаем колокольчик
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

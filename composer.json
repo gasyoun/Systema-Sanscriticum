@@ -19,6 +19,7 @@
         "laravel/tinker": "^2.8",
         "nelexa/zip": "^4.0",
         "pxlrbt/filament-excel": "^2.5",
+        "saade/filament-fullcalendar": "^3.0",
         "spatie/laravel-backup": "^8.8",
         "symfony/css-selector": "^6.4",
         "symfony/dom-crawler": "^6.4"
