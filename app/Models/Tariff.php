@@ -109,10 +109,19 @@ class Tariff extends Model
 
         $finalPrice = (float) $this->price;
 
-        // 1. Скидка лояльности / накопительная (оптовики) — остаётся включённой
-        $discountPercent = $this->getDiscountPercentForUser($user);
-        if ($discountPercent > 0) {
-            $finalPrice -= $finalPrice * ($discountPercent / 100);
+        // 1. Скидка. Персональная скидка студента на этот курс ИМЕЕТ ПРИОРИТЕТ и
+        //    применяется ВМЕСТО накопительной лояльности (не суммируется).
+        $individual = $this->course_id
+            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id)
+            : null;
+
+        if ($individual) {
+            $finalPrice = $individual->apply($finalPrice);
+        } else {
+            $discountPercent = $this->getDiscountPercentForUser($user);
+            if ($discountPercent > 0) {
+                $finalPrice -= $finalPrice * ($discountPercent / 100);
+            }
         }
 
         // 2. Зачёт неизрасходованных депозитов (бронь курса). Изолированная логика,

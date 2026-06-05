@@ -405,7 +405,17 @@ document.addEventListener('alpine:init', () => {
 
                             <div class="relative p-7 sm:p-8">
 
-                                @if(!empty($isLoyal) && $isLoyal && empty($appliedPromo))
+                                @if(!empty($isPersonal))
+                                    <div class="mb-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm">
+                                        <div class="bg-gradient-to-br from-[#38BDF8] to-[#2da4dd] text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-sky-900/30">
+                                            <i class="fas fa-user-tag text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-extrabold text-white">Персональная скидка</p>
+                                            <p class="text-xs text-indigo-200 mt-0.5 leading-relaxed">Применена к вашему аккаунту</p>
+                                        </div>
+                                    </div>
+                                @elseif(!empty($isLoyal) && $isLoyal && empty($appliedPromo))
                                     <div class="mb-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm">
                                         <div class="bg-gradient-to-br from-[#E85C24] to-[#d64e1c] text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-900/30">
                                             <i class="fas fa-crown text-sm"></i>
@@ -425,7 +435,13 @@ document.addEventListener('alpine:init', () => {
                                     </div>
 
                                     <div class="flex justify-between items-center text-amber-200" x-show="$store.checkout.loyaltyDiscount > 0">
-                                        <span class="flex items-center gap-1.5"><i class="fas fa-crown text-[10px]"></i> Скидка для своих</span>
+                                        <span class="flex items-center gap-1.5">
+                                            @if(!empty($isPersonal))
+                                                <i class="fas fa-user-tag text-[10px]"></i> Персональная скидка
+                                            @else
+                                                <i class="fas fa-crown text-[10px]"></i> Скидка для своих
+                                            @endif
+                                        </span>
                                         <span class="tabular-nums">−<span x-text="$store.checkout.format($store.checkout.loyaltyDiscount)"></span> ₽</span>
                                     </div>
 
