@@ -195,6 +195,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Group::class);
     }
 
+    // Персональные скидки студента на курсы.
+    public function individualDiscounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(StudentDiscount::class);
+    }
+
     /**
      * Реально пройденные уроки (is_completed=true). Используется и для
      * прогресс-баров в шаблонах, и для гейта повторного начисления праны.
