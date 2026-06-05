@@ -232,6 +232,33 @@ class CourseResource extends Resource
                     ->collapsible(),
 
                 // ==========================================
+                // БЛОК: ПРОБНОЕ ЗАНЯТИЕ
+                // ==========================================
+                Forms\Components\Section::make('🎟 Пробное занятие')
+                    ->description('Платное пробное занятие с витрины. Кнопка «Купить пробное» показывается на странице курса, только если задана цена И выбран урок. Сумма зачтётся при покупке курса.')
+                    ->schema([
+                        Forms\Components\TextInput::make('trial_price')
+                            ->label('Цена пробного, ₽')
+                            ->helperText('Пусто/0 — пробное занятие не продаётся.')
+                            ->numeric()
+                            ->minValue(0)
+                            ->step('0.01')
+                            ->suffix('₽'),
+
+                        Forms\Components\Select::make('trial_lesson_id')
+                            ->label('Какой урок открывается')
+                            ->helperText('Выберите урок этого курса, доступ к которому даёт покупка пробного.')
+                            ->options(fn (?\App\Models\Course $record): array => $record
+                                ? $record->lessons()->orderBy('sort_order')->orderBy('created_at')->pluck('title', 'id')->all()
+                                : [])
+                            ->searchable()
+                            ->preload()
+                            ->nullable(),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // ==========================================
                 // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
                 // ==========================================
                 // canEdit() пускает учителя на свой курс (для правки контента),

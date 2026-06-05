@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -27,6 +28,9 @@ class Course extends Model
         'salary_value',
         // Сумма депозита («забронировать») для этого курса; null = бронь не предлагается.
         'deposit_amount',
+        // Пробное занятие: цена и какой урок открывается при покупке.
+        'trial_price',
+        'trial_lesson_id',
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
         'format',
@@ -49,11 +53,18 @@ class Course extends Model
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
         'deposit_amount' => 'decimal:2',
+        'trial_price' => 'decimal:2',
     ];
 
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    // Урок, который открывается при покупке пробного занятия с витрины.
+    public function trialLesson(): BelongsTo
+    {
+        return $this->belongsTo(Lesson::class, 'trial_lesson_id');
     }
 
     // Связь: Один курс имеет много уроков

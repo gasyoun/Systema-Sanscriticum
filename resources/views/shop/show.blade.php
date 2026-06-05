@@ -151,6 +151,35 @@
                 </div>
             @endif
 
+            {{-- ───── CTA: Купить пробное занятие (сумма зачтётся в тариф) ───── --}}
+            @if(! empty($showTrialCta))
+                @php
+                    $trialAmount = (float) $course->trial_price;
+                    $trialAmountLabel = number_format($trialAmount, 0, '.', ' ');
+                @endphp
+                <div class="mb-8 max-w-3xl rounded-2xl border border-[#38BDF8]/30 bg-gradient-to-r from-[#38BDF8]/10 to-transparent p-5 lg:p-6 flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="flex-1">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-[#38BDF8] mb-1.5">
+                            <i class="fas fa-graduation-cap mr-1"></i> Попробуйте перед покупкой
+                        </div>
+                        <h3 class="text-lg lg:text-xl font-bold text-white mb-1">
+                            Пробное занятие за {{ $trialAmountLabel }} ₽
+                        </h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Оплатите одно занятие, чтобы оценить подачу и формат. Сумма
+                            <span class="text-[#38BDF8] font-bold">{{ $trialAmountLabel }} ₽</span>
+                            будет зачтена в стоимость тарифа этого курса при последующей оплате.
+                        </p>
+                    </div>
+                    <button type="button"
+                            onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ $trialAmount }} } }))"
+                            class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
+                        <i class="fas fa-graduation-cap mr-2 text-xs"></i>
+                        Купить пробное
+                    </button>
+                </div>
+            @endif
+
             @php
                 $fullTariffs = $course->tariffs->where('type', '!=', 'block');
                 $blockTariffs = $course->tariffs->where('type', 'block')->sortBy('block_number')->values();
@@ -378,4 +407,5 @@
 </div>
 
 @include('partials.deposit-modal', ['deposit' => $deposit])
+@include('partials.trial-modal')
 @endsection

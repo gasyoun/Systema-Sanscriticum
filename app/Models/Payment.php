@@ -66,6 +66,12 @@ class Payment extends Model
         return $this->tariff === 'deposit';
     }
 
+    /** Покупка пробного занятия с витрины — открывает доступ к одному уроку (не к курсу). */
+    public function isTrial(): bool
+    {
+        return $this->tariff === 'trial';
+    }
+
     /**
      * Системный расход / возврат — чисто бухгалтерская запись (часто с
      * отрицательной суммой). Не открывает доступ, не шлёт письма/уведомления.
@@ -86,11 +92,14 @@ class Payment extends Model
         return $query->where('is_conditional', true);
     }
 
-    /** Депозиты, реально оплаченные и ещё не зачтённые в стоимость тарифа. */
+    /**
+     * Реально оплаченные и ещё не зачтённые в стоимость тарифа суммы: и депозиты
+     * (бронь), и пробные занятия — обе засчитываются при последующей покупке курса.
+     */
     public function scopeUnconsumedDeposits(Builder $query): Builder
     {
         return $query
-            ->where('tariff', 'deposit')
+            ->whereIn('tariff', ['deposit', 'trial'])
             ->whereNull('deposit_consumed_at')
             ->whereIn('status', ['paid', 'success']);
     }
@@ -136,6 +145,13 @@ class Payment extends Model
 
         if ($payment->isDeposit()) {
             $payment->processDeposit();
+
+            return;
+        }
+
+        // Пробное занятие: открываем доступ к одному уроку, курс/группы не трогаем.
+        if ($payment->isTrial()) {
+            $payment->processTrial();
 
             return;
         }
@@ -231,6 +247,64 @@ class Payment extends Model
         $text .= "Намасте! Мы получили предоплату за курс <b>«{$courseName}»</b>. ";
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
+
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    // ==========================================
+    // ПРОБНОЕ ЗАНЯТИЕ — отдельный путь
+    // ==========================================
+    public function processTrial(): void
+    {
+        $lessonId = $this->course?->trial_lesson_id;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($lessonId) {
+            // Доступ к курсу/группам НЕ открываем — только разовый grant на пробный урок.
+            // Создаём напрямую (не через ConditionalAccessGranter::grantLesson), чтобы
+            // оплаченный доступ не блокировался флагом «неблагонадёжный» и не слал свой
+            // Telegram (своё подтверждение шлём ниже). Идемпотентно: дубль активного
+            // гранта на тот же урок не создаём (повторный paid-вебхук).
+            if ($lessonId) {
+                $exists = LessonAccessGrant::query()
+                    ->where('user_id', $this->user_id)
+                    ->where('lesson_id', $lessonId)
+                    ->active()
+                    ->exists();
+
+                if (! $exists) {
+                    LessonAccessGrant::create([
+                        'user_id' => $this->user_id,
+                        'lesson_id' => $lessonId,
+                        'course_id' => $this->course_id,
+                        'reason' => 'оплачено пробное занятие',
+                        'granted_at' => now(),
+                        // expires_at = null → доступ навсегда.
+                    ]);
+                }
+            } else {
+                Log::warning('Payment::processTrial — у курса не задан trial_lesson_id', [
+                    'payment_id' => $this->id,
+                    'course_id' => $this->course_id,
+                ]);
+            }
+
+            $this->sendWelcomeEmailIfNeeded();
+            $this->lead?->markConverted();
+        });
+
+        app(\App\Services\CuratorNotifier::class)->depositReceived($this);
+
+        if (! $this->user_id) {
+            return;
+        }
+
+        $courseName = $this->course->title ?? 'курс';
+        $url = url('/login');
+
+        $text = "🎟 <b>Пробное занятие оплачено</b>\n\n";
+        $text .= "Намасте! Доступ к пробному занятию курса <b>«{$courseName}»</b> открыт. ";
+        $text .= 'Сумма зачтётся при оплате полного тарифа.';
+        $text .= "\n\n<a href='{$url}'>Перейти в личный кабинет</a>";
 
         \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
