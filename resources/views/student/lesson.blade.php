@@ -211,11 +211,34 @@
                     </iframe>
                 @endif
 
-                <div x-show="player === 'none'" class="absolute inset-0 flex items-center justify-center bg-[#19191C]">
-                    <div class="text-center text-gray-600">
-                        <i class="fas fa-video-slash text-5xl mb-3 opacity-30"></i>
-                        <p class="text-sm font-medium">Видео недоступно</p>
-                    </div>
+                <div x-show="player === 'none'" class="absolute inset-0 flex items-center justify-center bg-[#19191C] px-6">
+                    @if(!empty($upcomingSession))
+                        {{-- Живое занятие ещё не прошло (например, оплаченное пробное): зовём в Zoom.
+                             После занятия n8n зальёт запись, и здесь появится видео. --}}
+                        <div class="text-center text-white max-w-md">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] text-[11px] font-bold uppercase tracking-widest mb-4">
+                                <i class="fas fa-broadcast-tower"></i> Живое занятие
+                            </div>
+                            <p class="text-lg font-bold mb-1">Занятие состоится</p>
+                            @if($upcomingSession->start)
+                                <p class="text-gray-300 mb-5">{{ $upcomingSession->start->translatedFormat('d F Y, H:i') }} (МСК)</p>
+                            @endif
+                            @if($upcomingSession->link)
+                                <a href="{{ $upcomingSession->link }}" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#38BDF8] hover:bg-[#2da4dd] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
+                                    <i class="fas fa-video"></i> Подключиться к Zoom
+                                </a>
+                                <p class="text-gray-500 text-xs mt-4">Запись появится здесь после занятия.</p>
+                            @else
+                                <p class="text-gray-400 text-sm">Ссылку на подключение пришлём дополнительно.</p>
+                            @endif
+                        </div>
+                    @else
+                        <div class="text-center text-gray-600">
+                            <i class="fas fa-video-slash text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm font-medium">Видео недоступно</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 

@@ -217,6 +217,19 @@ class StudentController extends Controller
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
         $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
 
+        // Запись ещё не залита (живое занятие только состоится — например, пробное).
+        // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
+        // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
+        $upcomingSession = null;
+        if (empty($youtubeId) && empty($rutubeId) && empty($lesson->video_url) && $lesson->lesson_date) {
+            $upcomingSession = \App\Models\Schedule::query()
+                ->where('course_id', $course->id)
+                ->where('group_id', $lesson->group_id)
+                ->whereDate('start', $lesson->lesson_date)
+                ->orderBy('start')
+                ->first();
+        }
+
         // ==========================================
         // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
         // ==========================================
@@ -294,7 +307,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession'));
     }
 
     /**
