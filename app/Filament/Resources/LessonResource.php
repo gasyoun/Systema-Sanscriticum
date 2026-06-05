@@ -109,6 +109,10 @@ class LessonResource extends Resource
                             }
                         },
                     )
+                    // Метка с ·#id + поиск: одноимённые курсы (когорты по годам) различимы
+                    // при создании/редактировании урока.
+                    ->getOptionLabelFromRecordUsing(fn (Course $record) => $record->title.' · #'.$record->id)
+                    ->searchable()
                     // Серверная валидация: Filament-default Rule::exists для relationship-Select
                     // не накладывает where, поэтому учитель может через POST передать чужой
                     // course_id и BelongsTo::associate его сохранит. Дополняем явным правилом.
@@ -345,25 +349,28 @@ class LessonResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                // Фильтр по course_id (без relationship): точное совпадение id, а не по
+                // названию. У преподавателя под похожими/одинаковыми title лежат разные
+                // курсы (когорты по годам) — поиск по названию выбирал не тот course_id.
+                // Метка опции содержит ·#id, поэтому одноимённые курсы различимы, а набор
+                // «56» матчит и название, и #56.
                 Tables\Filters\SelectFilter::make('course_id')
                     ->label('Курс')
-                    ->relationship(
-                        name: 'course',
-                        titleAttribute: 'title',
-                        modifyQueryUsing: function (Builder $query) {
-                            // Зеркалим scope из form()->course_id и getEloquentQuery():
-                            // учитель видит в выпадашке фильтра только свои курсы,
-                            // потому что Filament не применяет getEloquentQuery() к опциям фильтра.
-                            $user = auth()->user();
-                            if ($user && $user->isTeacher()) {
-                                if (! $user->teacher_id) {
-                                    $query->whereRaw('1 = 0');
-                                } else {
-                                    $query->where('teacher_id', $user->teacher_id);
-                                }
+                    ->options(function (): array {
+                        $q = Course::query()->orderBy('title');
+                        $user = auth()->user();
+                        if ($user && $user->isTeacher()) {
+                            // Учителю без teacher_id — пустой список (как и scope уроков).
+                            if (! $user->teacher_id) {
+                                return [];
                             }
-                        },
-                    )
+                            $q->where('teacher_id', $user->teacher_id);
+                        }
+
+                        return $q->get()
+                            ->mapWithKeys(fn (Course $c) => [$c->id => $c->title.' · #'.$c->id])
+                            ->all();
+                    })
                     ->searchable()
                     ->preload(),
 
