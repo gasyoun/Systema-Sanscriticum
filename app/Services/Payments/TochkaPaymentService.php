@@ -21,8 +21,8 @@ final class TochkaPaymentService
 {
     /**
      * @param  string  $itemName  Название позиции чека (курс/тариф).
-     * @param  string  $paymentMethod  Признак способа расчёта: full_payment (полная оплата) | prepayment (предоплата/бронь).
-     * @param  string  $paymentObject  Признак предмета расчёта: service (услуга) | payment (платёж/аванс для брони).
+     * @param  string  $paymentMethod  Признак способа расчёта (enum Точки): full_payment (полная оплата) | full_prepayment (предоплата/бронь).
+     * @param  string  $paymentObject  Признак предмета расчёта (enum Точки): goods | service | work. Для курсов/брони — service.
      *
      * @throws \Illuminate\Http\Client\ConnectionException Сетевой сбой — обрабатывает вызывающий код.
      */
