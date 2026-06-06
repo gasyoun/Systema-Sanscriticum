@@ -57,9 +57,8 @@
 @php
     // Считаем, есть ли вообще материалы хоть в одном доступном уроке
     $hasAnyMaterials = $lessons->contains(function ($lesson) use ($unlockedTariffs) {
-        $isUnlocked = in_array('full', $unlockedTariffs) 
-            || in_array('block_' . $lesson->block_number, $unlockedTariffs);
-        return $isUnlocked && !empty($lesson->attachments) && count($lesson->attachments) > 0;
+        return $lesson->isUnlockedBy($unlockedTariffs)
+            && !empty($lesson->attachments) && count($lesson->attachments) > 0;
     });
 @endphp
 
@@ -99,7 +98,7 @@
         @forelse($lessons as $index => $lesson)
             @php
                 // Проверка доступа
-                $isUnlocked = in_array('full', $unlockedTariffs) || in_array('block_' . $lesson->block_number, $unlockedTariffs);
+                $isUnlocked = $lesson->isUnlockedBy($unlockedTariffs);
                 $isCompleted = auth()->user()->completedLessons->contains($lesson->id);
             @endphp
 

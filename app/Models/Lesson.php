@@ -27,6 +27,7 @@ class Lesson extends Model
         'is_free',
         'show_on_main',
         'block_number',
+        'block_half',
         'sort_order',
         'transcript_file',
         'flash_cards',
@@ -45,6 +46,7 @@ class Lesson extends Model
         'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
+        'block_half' => 'integer',   // NULL = урок не делится; 1/2 = половина блока
         'sort_order' => 'integer',
         'duration_seconds' => 'integer',
         'homework_enabled' => 'boolean',
@@ -95,6 +97,29 @@ class Lesson extends Model
     public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_free', true);
+    }
+
+    /**
+     * Ключи тарифов, любой из которых открывает этот урок.
+     *  - 'full' и весь блок ('block_N') открывают урок всегда;
+     *  - если урок размечен на половину — его открывает и ключ половины ('block_N_hH').
+     * Неразбитый урок (block_half=null) доступен только по 'full' / 'block_N'.
+     */
+    public function unlockingKeys(): array
+    {
+        $keys = ['full', 'block_'.$this->block_number];
+
+        if ($this->block_half) {
+            $keys[] = 'block_'.$this->block_number.'_h'.$this->block_half;
+        }
+
+        return $keys;
+    }
+
+    /** Открыт ли урок при данном наборе оплаченных тарифов (ключей payments.tariff). */
+    public function isUnlockedBy(array $ownedKeys): bool
+    {
+        return (bool) array_intersect($this->unlockingKeys(), $ownedKeys);
     }
 
     /**
