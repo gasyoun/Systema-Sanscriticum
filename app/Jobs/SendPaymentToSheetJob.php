@@ -86,6 +86,9 @@ class SendPaymentToSheetJob implements ShouldQueue
             'end_block' => $payment->end_block,
             'amount' => (float) $payment->amount,
             'tariff' => $payment->tariff,
+            // Человекочитаемая пометка операции (бронь / пробное / блок / курс /
+            // расход) — та же, что в админке. Замапь в отдельную колонку в n8n.
+            'label' => $payment->operationLabel(),
             'status' => $payment->status,
             'transaction_id' => $payment->transaction_id,
             'paid_at' => $payment->updated_at?->format('d.m.Y'),
