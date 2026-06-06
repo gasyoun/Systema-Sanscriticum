@@ -227,7 +227,9 @@ class DepositTest extends TestCase
                 && count($data['Items'] ?? []) === 1
                 && (float) ($item['amount'] ?? 0) === 1500.0
                 && ($item['vatType'] ?? null) === 'none'
-                && ($item['paymentMethod'] ?? null) === 'prepayment';
+                // Предоплата услуги по enum Точки: full_prepayment + service.
+                && ($item['paymentMethod'] ?? null) === 'full_prepayment'
+                && ($item['paymentObject'] ?? null) === 'service';
         });
     }
 
