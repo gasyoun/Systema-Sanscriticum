@@ -68,6 +68,17 @@ class TariffResource extends Resource
                             ->required(fn (Forms\Get $get) => $get('type') === 'block')
                             ->helperText('Введите цифру (например: 1, 2, 3), чтобы система поняла, к каким именно урокам дать доступ после оплаты.'),
 
+                        // Продажа блока «по половинам»: половина открывает только свои уроки.
+                        Forms\Components\Select::make('block_half')
+                            ->label('Часть блока')
+                            ->options([
+                                1 => '1-я половина блока',
+                                2 => '2-я половина блока',
+                            ])
+                            ->placeholder('Весь блок целиком')
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'block')
+                            ->helperText('Оставьте пустым для тарифа на ВЕСЬ блок. Выберите половину, чтобы продавать часть блока — тогда уроки этой половины должны быть размечены тем же номером (поле «Половина блока» у уроков). Купивший целый блок получает обе половины; уплаченное за половину засчитывается при докупке целого блока.'),
+
                         Forms\Components\Select::make('course_block_id')
                             ->label('Сущность блока (даты, флаг «сейчас идёт»)')
                             ->visible(fn (Forms\Get $get) => $get('type') === 'block')
@@ -147,7 +158,9 @@ class TariffResource extends Resource
                 // КОЛОНКА БЛОКА ТЕПЕРЬ СТОИТ ОТДЕЛЬНО И ПРАВИЛЬНО
                 Tables\Columns\TextColumn::make('block_number')
                     ->label('Блок')
-                    ->formatStateUsing(fn ($state) => $state ? "Блок $state" : '—')
+                    ->formatStateUsing(fn ($state, Tariff $record) => $state
+                        ? 'Блок '.$state.($record->block_half ? ' · '.$record->block_half.'-я пол.' : '')
+                        : '—')
                     ->badge()
                     ->color('info')
                     ->sortable(),

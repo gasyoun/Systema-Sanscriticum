@@ -115,9 +115,10 @@ class PaymentController extends Controller
             $endBlock = null;
 
             if ($tariff->type === 'block') {
-                $tariffKey = 'block_'.$tariff->block_number;
+                // accessKey() даёт 'block_N' для целого блока и 'block_N_hH' для половины.
+                $tariffKey = $tariff->accessKey();
                 // 💡 Сохраняем номер блока — для отчётности в Google Sheets
-                // и чтобы администратор видел, за какой блок платят
+                // и чтобы администратор видел, за какой блок платят (для половины — тот же блок)
                 $startBlock = $tariff->block_number;
                 $endBlock = $tariff->block_number;
             }
