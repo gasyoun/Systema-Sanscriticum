@@ -67,15 +67,17 @@ final class DepositController extends Controller
         $purpose = 'Заказ №'.$payment->id.' | Бронь курса «'.$course->title.'» — предоплата';
 
         try {
-            // Бронь — это предоплата: paymentMethod=prepayment, paymentObject=payment (аванс/платёж).
-            // TODO(бухгалтерия): подтвердить признаки расчёта для предоплаты по 54-ФЗ.
+            // Бронь — это предоплата. Эндпоинт payments_with_receipt Точки принимает
+            // суженный набор: paymentMethod ∈ {full_payment, full_prepayment},
+            // paymentObject ∈ {goods, service, work}. Для предоплаты услуги —
+            // full_prepayment + service (значения prepayment/payment Точка отклоняет 400).
             $response = $tochka->createPaymentWithReceipt(
                 user: $user,
                 amount: $amount,
                 purpose: $purpose,
                 itemName: 'Бронь курса «'.$course->title.'»',
-                paymentMethod: 'prepayment',
-                paymentObject: 'payment',
+                paymentMethod: 'full_prepayment',
+                paymentObject: 'service',
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
