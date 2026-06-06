@@ -15,6 +15,7 @@ class Tariff extends Model
         'title',
         'type',
         'block_number',
+        'block_half',
         'course_block_id',
         'price',
         'old_price',
@@ -27,7 +28,25 @@ class Tariff extends Model
         'old_price' => 'decimal:2',
         'is_active' => 'boolean',
         'block_number' => 'integer',
+        'block_half' => 'integer', // NULL = весь блок; 1/2 = половина блока
     ];
+
+    /**
+     * Ключ доступа, записываемый в payments.tariff и сверяемый с Lesson::unlockingKeys().
+     *  - не-блочный тариф          → 'full'
+     *  - весь блок (block_half=null) → 'block_N'
+     *  - половина блока             → 'block_N_hH'
+     */
+    public function accessKey(): string
+    {
+        if ($this->type !== 'block') {
+            return 'full';
+        }
+
+        return $this->block_half
+            ? 'block_'.$this->block_number.'_h'.$this->block_half
+            : 'block_'.$this->block_number;
+    }
 
     public function course(): BelongsTo
     {
@@ -88,18 +107,13 @@ class Tariff extends Model
     }
 
     /**
-     * Расчет итоговой цены (использует процент из метода выше)
-     */
-    /**
      * Расчет итоговой цены для пользователя.
      *
      * Учитывает:
-     *  - скидку лояльности / накопительную (оптовики) — через getDiscountPercentForUser()
-     *
-     * НЕ учитывает (отключено через config('features.upgrade_payments_enabled')):
-     *  - "апгрейд" — вычитание сумм ранее оплаченных блоков при покупке полного курса.
-     *    Логика временно отключена: вызывала пересчёт в минус при повторных покупках
-     *    'full' и расхождение между витриной/чекаутом/эквайрингом.
+     *  - персональную скидку студента на курс ИЛИ скидку лояльности (не суммируются);
+     *  - зачёт неизрасходованных депозитов (бронь курса);
+     *  - зачёт при докупке: сумма уже оплаченного за то, что этот тариф «содержит»
+     *    (половины блока → при покупке целого блока; блоки → при покупке full).
      */
     public function calculateFinalPriceForUser($user): float
     {
@@ -124,10 +138,8 @@ class Tariff extends Model
             }
         }
 
-        // 2. Зачёт неизрасходованных депозитов (бронь курса). Изолированная логика,
-        //    НЕ под флагом upgrade_payments_enabled — старый upgrade-механизм
-        //    ниже не трогаем. max(0, ...) в конце страхует от отрицательной цены,
-        //    если депозит превышает стоимость блока.
+        // 2. Зачёт неизрасходованных депозитов (бронь курса). max(0, ...) в конце
+        //    страхует от отрицательной цены, если депозит превышает стоимость блока.
         if ($this->course_id) {
             $depositCredit = \App\Models\Payment::query()
                 ->where('user_id', $user->id)
@@ -138,25 +150,51 @@ class Tariff extends Model
             $finalPrice -= (float) $depositCredit;
         }
 
-        // 3. АПГРЕЙД (доплата с учётом ранее купленных блоков) — управляется фича-флагом
-        if (config('features.upgrade_payments_enabled', false)
-            && $this->course_id
-            && $this->type === 'full'
-        ) {
-            // ВНИМАНИЕ: текущая реализация некорректна — вычитает ВСЕ платежи по курсу,
-            // включая прошлые 'full'. Перед включением переписать на учёт только 'block_*'
-            // и реальной стоимости блока на момент перерасчёта.
-            $alreadyPaidAmount = \App\Models\Payment::query()
-                ->where('user_id', $user->id)
-                ->where('course_id', $this->course_id)
-                ->whereIn('status', ['paid', 'success'])
-                ->where('tariff', 'like', 'block_%') // защита: только блоки
-                ->sum('amount');
-
-            $finalPrice -= (float) $alreadyPaidAmount;
-        }
+        // 3. ЗАЧЁТ ПРИ ДОКУПКЕ: вычитаем уже оплаченное за то, что этот тариф «содержит».
+        $finalPrice -= $this->upgradeCreditForUser($user);
 
         return max(0, $finalPrice);
+    }
+
+    /**
+     * Зачёт при докупке: сумма уже оплаченного за тарифы, которые ПОЛНОСТЬЮ входят
+     * в покупаемый сейчас (строгое вложение, без самого себя), по тому же курсу.
+     *
+     *   full        ← все 'block_%' курса (целые блоки и половины);
+     *   block_N     ← 'block_N_h1', 'block_N_h2' (половины этого блока);
+     *   block_N_hH  ← ничего (половины не пересекаются).
+     *
+     * Так купивший половину при покупке целого блока платит цена_блока − уплаченное за
+     * половину, а две половины в сумме дают полную стоимость блока (зачёта между ними нет).
+     */
+    public function upgradeCreditForUser($user): float
+    {
+        if (! $user || ! $this->course_id || $this->type === 'vip' || $this->type === 'bundle') {
+            return 0.0;
+        }
+
+        $query = \App\Models\Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $this->course_id)
+            ->whereIn('status', ['paid', 'success']);
+
+        if ($this->type === 'block' && $this->block_half) {
+            // Половина блока ничего не содержит — зачёта нет.
+            return 0.0;
+        }
+
+        if ($this->type === 'block') {
+            // Целый блок содержит свои половины.
+            $query->whereIn('tariff', [
+                'block_'.$this->block_number.'_h1',
+                'block_'.$this->block_number.'_h2',
+            ]);
+        } else {
+            // 'full' содержит все блоки и половины курса.
+            $query->where('tariff', 'like', 'block_%');
+        }
+
+        return (float) $query->sum('amount');
     }
 
     /**
@@ -170,14 +208,10 @@ class Tariff extends Model
             return false;
         }
 
-        $tariffKey = $this->type === 'block'
-            ? 'block_'.$this->block_number
-            : 'full';
-
         return \App\Models\Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
-            ->where('tariff', $tariffKey)
+            ->where('tariff', $this->accessKey())
             ->whereIn('status', ['paid', 'success'])
             ->exists();
     }

@@ -171,6 +171,15 @@ class LessonResource extends Resource
                     ->searchable() // Добавил поиск, чтобы куратору было удобно искать 52-й блок, а не крутить список
                     ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
 
+                Forms\Components\Select::make('block_half')
+                    ->label('Половина блока (если блок продаётся по частям)')
+                    ->options([
+                        1 => '1-я половина',
+                        2 => '2-я половина',
+                    ])
+                    ->placeholder('Весь блок (не делится)')
+                    ->helperText('Заполняйте только если этот блок продаётся половинами. Тогда КАЖДОМУ уроку блока проставьте 1 или 2 — иначе урок останется доступен лишь по полному блоку. Пусто = урок входит в целый блок.'),
+
                 Forms\Components\DateTimePicker::make('lesson_date')
                     ->label('Дата и время урока')
                     ->required()
@@ -322,6 +331,13 @@ class LessonResource extends Resource
                     ->color('info')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('block_half')
+                    ->label('Половина')
+                    ->badge()
+                    ->color('warning')
+                    ->formatStateUsing(fn ($state) => $state ? $state.'-я половина' : '—')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Порядок')
                     ->sortable()
@@ -398,6 +414,26 @@ class LessonResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    // Массовая разметка половины блока: выделил уроки → задал 1 / 2 / весь блок.
+                    Tables\Actions\BulkAction::make('setBlockHalf')
+                        ->label('Проставить половину блока')
+                        ->icon('heroicon-o-scissors')
+                        ->form([
+                            Forms\Components\Select::make('block_half')
+                                ->label('Половина блока')
+                                ->options([
+                                    1 => '1-я половина',
+                                    2 => '2-я половина',
+                                ])
+                                ->placeholder('Весь блок (очистить)')
+                                ->helperText('Пусто = снять разметку (урок входит в целый блок).'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                            foreach ($records as $record) {
+                                $record->update(['block_half' => $data['block_half'] ?? null]);
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     // Добавляем кнопку массового экспорта:
                     \Filament\Tables\Actions\ExportBulkAction::make()
                         ->exporter(\App\Filament\Exports\LessonExporter::class)
