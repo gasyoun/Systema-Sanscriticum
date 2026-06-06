@@ -81,6 +81,48 @@ class Payment extends Model
         return $this->tariff === 'Расход';
     }
 
+    /**
+     * Человекочитаемая пометка операции — единый источник для админки
+     * (PaymentResource) и выгрузки в финансовую Google-таблицу
+     * (SendPaymentToSheetJob). Расшифровывает сырой ключ tariff.
+     */
+    public function operationLabel(): string
+    {
+        return match (true) {
+            $this->isDeposit() => '📌 Бронь курса (предоплата)',
+            $this->isTrial() => '🎟 Пробное занятие',
+            $this->isExpense() => '💸 Технический расход / возврат',
+            $this->tariff === 'full' => 'Весь курс',
+            default => $this->blockLabel(),
+        };
+    }
+
+    /** Подпись для поблочных тарифов: половина блока, диапазон или одиночный блок. */
+    private function blockLabel(): string
+    {
+        // Половина блока: block_N_h1 / block_N_h2
+        if (preg_match('/^block_(\d+)_h([12])$/', (string) $this->tariff, $m)) {
+            $half = $m[2] === '1' ? '1-я половина' : '2-я половина';
+
+            return "Блок {$m[1]} · {$half}";
+        }
+
+        // Диапазон блоков (импорт/ручное заполнение start_block/end_block)
+        $start = (int) $this->start_block;
+        $end = (int) $this->end_block;
+        if ($start > 0) {
+            return ($end <= 0 || $start === $end) ? "Блок {$start}" : "Блоки {$start}–{$end}";
+        }
+
+        // Одиночный блок: block_N
+        if (preg_match('/^block_(\d+)$/', (string) $this->tariff, $m)) {
+            return "Блок {$m[1]}";
+        }
+
+        // Неизвестный/прочий ключ (vip, bundle и т.п.) — отдаём как есть.
+        return $this->tariff ?: 'Весь курс';
+    }
+
     /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
     public function scopeReal(Builder $query): Builder
     {

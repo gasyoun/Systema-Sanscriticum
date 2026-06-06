@@ -73,6 +73,7 @@ class PaymentResource extends Resource
                             $options = [
                                 'full' => 'Весь курс целиком',
                                 'deposit' => '📌 Бронь курса (предоплата)',
+                                'trial' => '🎟 Пробное занятие',
                                 'Расход' => '💸 Системный расход / Возврат',
                             ];
 
@@ -176,30 +177,15 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->description(function (Payment $record) {
-                        if ($record->tariff === 'deposit') {
-                            $consumed = $record->deposit_consumed_at
-                                ? ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y')
-                                : '';
+                        // Единая пометка операции (Payment::operationLabel).
+                        // Для брони дополнительно показываем дату зачёта депозита.
+                        $label = $record->operationLabel();
 
-                            return '📌 Бронь курса (предоплата)'.$consumed;
+                        if ($record->tariff === 'deposit' && $record->deposit_consumed_at) {
+                            $label .= ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y');
                         }
 
-                        $start = (int) $record->start_block;
-                        $end = (int) $record->end_block;
-
-                        if ($start > 0) {
-                            if ($end <= 0 || $start === $end) {
-                                return "Блок {$start}";
-                            }
-
-                            return "Блоки {$start} - {$end}";
-                        }
-
-                        if ($record->tariff === 'Расход') {
-                            return 'Технический расход';
-                        }
-
-                        return 'Весь курс';
+                        return $label;
                     }),
 
                 // 4. СУММА
