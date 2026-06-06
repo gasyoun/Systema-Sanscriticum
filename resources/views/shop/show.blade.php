@@ -186,22 +186,31 @@
 
             @php
                 $fullTariffs = $course->tariffs->where('type', '!=', 'block');
-                $blockTariffs = $course->tariffs->where('type', 'block')->sortBy('block_number')->values();
+
+                // Группируем блочные тарифы по номеру блока: у одного блока может быть
+                // тариф на ВЕСЬ блок и/или тарифы-половины (block_half = 1/2).
+                $blockGroups = $course->tariffs->where('type', 'block')
+                    ->groupBy('block_number')
+                    ->map(fn ($items, $number) => [
+                        'number' => (int) $number,
+                        'whole'  => $items->whereNull('block_half')->first(),
+                        'halves' => $items->whereNotNull('block_half')->sortBy('block_half')->values(),
+                    ])
+                    ->sortBy('number')
+                    ->values();
 
                 // Поднимаем актуальный блок в начало, чтобы он был сразу виден
                 if (!empty($currentBlockNumber)) {
-                    $currentTariff = $blockTariffs->firstWhere('block_number', $currentBlockNumber);
-                    if ($currentTariff) {
-                        $rest = $blockTariffs->reject(fn ($t) => $t->block_number === $currentBlockNumber);
-                        $blockTariffs = collect([$currentTariff])->concat($rest)->values();
-                    }
+                    $blockGroups = $blockGroups
+                        ->sortByDesc(fn ($g) => $g['number'] === $currentBlockNumber)
+                        ->values();
                 }
             @endphp
 
             @if($course->tariffs->count() > 0)
 
                 {{-- Переключатель вкладок (если есть оба типа) --}}
-                @if($fullTariffs->count() > 0 && $blockTariffs->count() > 0)
+                @if($fullTariffs->count() > 0 && $blockGroups->count() > 0)
                     <div class="inline-flex bg-[#111622] border border-[#1F2636] rounded-xl p-1 mb-8">
                         <button @click="tab = 'full'"
                                 :class="tab === 'full' ? 'bg-[#1F2636] text-white shadow-md' : 'text-slate-500 hover:text-slate-300'"
@@ -296,17 +305,26 @@
                      x-transition:enter-end="opacity-100 translate-y-0"
                      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr" x-cloak>
 
-                    @foreach($blockTariffs as $tariff)
+                    @foreach($blockGroups as $group)
                         @php
-                            $tariffKey = 'block_' . $tariff->block_number;
-                            $isPurchased = in_array($tariffKey, $purchasedKeys, true);
-                            $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
-                            $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
-                            $defaultBlockTitle = 'Блок ' . $tariff->block_number;
-                            $hasCustomTitle = $tariff->title && trim($tariff->title) !== $defaultBlockTitle;
-                            $isCurrent = !$isPurchased && $tariff->block_number === ($currentBlockNumber ?? null);
+                            $number = $group['number'];
+                            $whole = $group['whole'];
+                            $halves = $group['halves'];
 
-                            if ($isPurchased) {
+                            $wholeKey = 'block_' . $number;
+                            $wholePurchased = in_array($wholeKey, $purchasedKeys, true);
+                            $anyHalfPurchased = $halves->contains(fn ($h) => in_array($h->accessKey(), $purchasedKeys, true));
+                            // «Перейти к блоку» доступно, если оплачен весь блок ИЛИ хотя бы одна половина.
+                            $blockAccessible = $wholePurchased || $anyHalfPurchased;
+
+                            $finalPrice = ($whole && auth()->check()) ? $whole->calculateFinalPriceForUser(auth()->user()) : ($whole->price ?? 0);
+                            $discountPercent = ($whole && auth()->check()) ? $whole->getDiscountPercentForUser(auth()->user()) : 0;
+
+                            $defaultBlockTitle = 'Блок ' . $number;
+                            $hasCustomTitle = $whole && $whole->title && trim($whole->title) !== $defaultBlockTitle;
+                            $isCurrent = !$wholePurchased && $number === ($currentBlockNumber ?? null);
+
+                            if ($wholePurchased) {
                                 $borderClasses = 'border-emerald-500/50';
                             } elseif ($isCurrent) {
                                 $borderClasses = 'border-[#E85C24] shadow-[0_0_0_1px_rgba(232,92,36,0.4),0_12px_40px_-12px_rgba(232,92,36,0.45)] hover:-translate-y-1';
@@ -330,51 +348,99 @@
                             <div class="flex justify-between items-start mb-3 gap-3">
                                 <div class="min-w-0 flex-1">
                                     <span class="inline-block text-[10px] font-black {{ $isCurrent ? 'text-[#E85C24] bg-[#E85C24]/10 border-[#E85C24]/30' : 'text-[#38BDF8] bg-[#38BDF8]/10 border-[#38BDF8]/20' }} px-2 py-1 rounded border {{ $hasCustomTitle ? 'mb-2' : '' }} tracking-widest uppercase">
-                                        БЛОК {{ $tariff->block_number }}
+                                        БЛОК {{ $number }}
                                     </span>
                                     @if($hasCustomTitle)
-                                        <h4 class="text-base font-bold text-white leading-tight">{{ $tariff->title }}</h4>
+                                        <h4 class="text-base font-bold text-white leading-tight">{{ $whole->title }}</h4>
                                     @endif
                                 </div>
 
-                                <div class="text-right whitespace-nowrap shrink-0">
-                                    @if($isPurchased)
-                                        <div class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2.5 py-1.5 rounded tracking-wider">
-                                            <i class="fas fa-check-circle"></i> Оплачено
-                                        </div>
-                                    @elseif($discountPercent > 0)
-                                        <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
-                                            {{ number_format($tariff->price, 0, '.', ' ') }} ₽
-                                        </div>
-                                        <div class="text-xl font-black text-[#38BDF8]">
-                                            {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
-                                        </div>
-                                        <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
-                                            -{{ $discountPercent }}%
-                                        </div>
-                                    @else
-                                        <div class="text-xl font-black text-white">
-                                            {{ number_format($tariff->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
-                                        </div>
-                                    @endif
-                                </div>
+                                @if($whole)
+                                    <div class="text-right whitespace-nowrap shrink-0">
+                                        @if($wholePurchased)
+                                            <div class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2.5 py-1.5 rounded tracking-wider">
+                                                <i class="fas fa-check-circle"></i> Оплачено
+                                            </div>
+                                        @elseif($discountPercent > 0 || $finalPrice < $whole->price)
+                                            <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
+                                                {{ number_format($whole->price, 0, '.', ' ') }} ₽
+                                            </div>
+                                            <div class="text-xl font-black text-[#38BDF8]">
+                                                {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
+                                            </div>
+                                            @if($discountPercent > 0)
+                                                <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
+                                                    -{{ $discountPercent }}%
+                                                </div>
+                                            @else
+                                                <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
+                                                    зачёт оплаченного
+                                                </div>
+                                            @endif
+                                        @else
+                                            <div class="text-xl font-black text-white">
+                                                {{ number_format($whole->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
 
-                            @if($tariff->description)
-                                <p class="text-xs text-slate-400 mb-4">{{ $tariff->description }}</p>
+                            @if($whole && $whole->description)
+                                <p class="text-xs text-slate-400 mb-4">{{ $whole->description }}</p>
+                            @endif
+
+                            {{-- Покупка половин блока (если такие тарифы заведены) --}}
+                            @if($halves->isNotEmpty())
+                                <div class="mb-4 pt-3 border-t border-[#1F2636]/80">
+                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                                        {{ $whole ? 'Или по половинам' : 'Доступно по половинам' }}
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach($halves as $half)
+                                            @php
+                                                $halfPurchased = in_array($half->accessKey(), $purchasedKeys, true);
+                                                $halfFinal = auth()->check() ? $half->calculateFinalPriceForUser(auth()->user()) : $half->price;
+                                                $halfLabel = ($half->title && trim($half->title) !== $defaultBlockTitle)
+                                                    ? $half->title
+                                                    : $half->block_half . '-я половина';
+                                            @endphp
+                                            <div class="flex items-center justify-between gap-2 bg-[#0F1420]/60 rounded-lg px-3 py-2">
+                                                <div class="min-w-0">
+                                                    <div class="text-xs font-semibold text-slate-200 truncate">{{ $halfLabel }}</div>
+                                                    @if($half->description)
+                                                        <div class="text-[11px] text-slate-500 truncate">{{ $half->description }}</div>
+                                                    @endif
+                                                </div>
+                                                <div class="shrink-0">
+                                                    @if($halfPurchased)
+                                                        <span class="inline-flex items-center gap-1 text-emerald-400 text-[11px] font-bold whitespace-nowrap">
+                                                            <i class="fas fa-check-circle"></i> Оплачено
+                                                        </span>
+                                                    @else
+                                                        <a href="{{ route('checkout.show', $half->id) }}"
+                                                           class="inline-flex items-center gap-2 bg-[#1F2636] hover:bg-[#38BDF8] hover:text-[#0A0D14] text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                                                            {{ number_format($halfFinal, 0, '.', ' ') }} ₽
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @endif
 
                             {{-- mt-auto прижимает кнопку к низу карточки в сетке --}}
                             <div class="mt-auto">
-                                @if($isPurchased)
+                                @if($blockAccessible)
                                     <a href="{{ route('student.course', $course->slug) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-bold rounded-lg hover:bg-emerald-500 hover:text-white transition-colors">
                                         <i class="fas fa-arrow-right mr-2"></i> Перейти к блоку
                                     </a>
-                                @else
-                                    <a href="{{ route('checkout.show', $tariff->id) }}"
+                                @elseif($whole)
+                                    <a href="{{ route('checkout.show', $whole->id) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-[#E85C24] hover:bg-[#d64e1c] text-white shadow-md shadow-[#E85C24]/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
-                                        Оплатить модуль
+                                        {{ $halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль' }}
                                     </a>
                                 @endif
                             </div>

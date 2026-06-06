@@ -114,9 +114,7 @@ class HomeworkController extends Controller
             ->pluck('tariff')
             ->toArray();
 
-        $required = 'block_'.$lesson->block_number;
-
-        if (! in_array('full', $unlocked, true) && ! in_array($required, $unlocked, true)) {
+        if (! $lesson->isUnlockedBy($unlocked)) {
             abort(403, 'Нет доступа к этому уроку.');
         }
     }

@@ -173,12 +173,11 @@ class StudentController extends Controller
 
         // --- БЛОК ЗАЩИТЫ ДОСТУПА С УЧЕТОМ КОНКРЕТНОГО КУРСА ---
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $courseSlug);
-        $requiredTariff = 'block_'.$lesson->block_number;
 
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
 
-        if (! $isFreeLesson && ! $hasLessonGrant && ! in_array('full', $unlockedTariffs) && ! in_array($requiredTariff, $unlockedTariffs)) {
+        if (! $isFreeLesson && ! $hasLessonGrant && ! $lesson->isUnlockedBy($unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }
@@ -413,9 +412,8 @@ class StudentController extends Controller
         }
 
         $unlocked = $this->getUserUnlockedTariffs($user->id, $courseSlug);
-        $required = 'block_'.$lesson->block_number;
 
-        if (! in_array('full', $unlocked, true) && ! in_array($required, $unlocked, true)) {
+        if (! $lesson->isUnlockedBy($unlocked)) {
             abort(403, 'Нет доступа к этому уроку.');
         }
     }
