@@ -437,6 +437,37 @@ class DebtorsReport
     }
 
     /**
+     * Нижняя граница долга — номер блока, С которого студент в потоке.
+     * Блоки до неё в долг не начисляются (присоединился в середине потока).
+     *
+     * Приоритет:
+     *   1) явно заданный course_user.joined_at_block (ручной ввод / импорт);
+     *   2) иначе — первый реально оплаченный блок (минимальный start_block
+     *      среди не-conditional оплат; NULL-границы = «весь курс» игнорируем,
+     *      такой платёж и так покрывает всё).
+     * NULL = границы нет (студент с потока / данных недостаточно) → долг
+     * считается с первого блока, как раньше.
+     *
+     * @param  iterable<object{start_block:?int}>  $payments  реальные paid-платежи пары
+     */
+    public static function debtFloor(?int $explicitJoinedBlock, iterable $payments): ?int
+    {
+        if ($explicitJoinedBlock !== null && $explicitJoinedBlock > 0) {
+            return $explicitJoinedBlock;
+        }
+
+        $min = null;
+        foreach ($payments as $p) {
+            $start = $p->start_block;
+            if ($start !== null && ($min === null || (int) $start < $min)) {
+                $min = (int) $start;
+            }
+        }
+
+        return $min;
+    }
+
+    /**
      * Покрывает ли paid Payment с границами (start, end) конкретный номер блока.
      * NULL-границы трактуются как «открытая сторона» — частный случай
      * (NULL,NULL) = «весь курс» (legacy/full-платежи).
