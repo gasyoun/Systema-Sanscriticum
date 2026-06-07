@@ -27,6 +27,10 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            // Левое меню — слайдер «открыл/закрыл»: на десктопе сворачивается
+            // в узкую полосу с кликабельными иконками (подписи всплывают при наведении),
+            // состояние запоминается в cookie.
+            ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 NavigationGroup::make()->label('Обучение'),
                 NavigationGroup::make()->label('Пользователи'),
@@ -63,10 +67,30 @@ class AdminPanelProvider extends PanelProvider
                         }
                         
                         /* Делаем так, чтобы *сама картинка* занимала весь свой контейнер без искажений */
-                        dialog img { 
-                            width: 100% !important; 
-                            height: 100% !important; 
+                        dialog img {
+                            width: 100% !important;
+                            height: 100% !important;
                             object-fit: contain !important; /* Keeps full image visible, respects aspect ratio */
+                        }
+
+                        /* 3. Масштаб блока таблицы: кнопки x1 / x1.5 / x2 ужимают саму таблицу,
+                           чтобы широкие таблицы целиком влезали на экран. Уровень общий для всех
+                           таблиц и запоминается в localStorage. */
+                        .fi-ta-content { overflow-x: auto; }
+                        .tbl-zoom {
+                            display: flex; align-items: center; gap: 4px;
+                            padding: 6px 12px;
+                        }
+                        .tbl-zoom-label { font-size: 12px; opacity: .6; margin-right: 2px; }
+                        .tbl-zoom-btn {
+                            font-size: 12px; line-height: 1; font-weight: 600;
+                            padding: 4px 9px; border-radius: 6px; cursor: pointer;
+                            border: 1px solid rgba(120,120,120,.35);
+                            background: transparent; color: inherit;
+                        }
+                        .tbl-zoom-btn:hover { background: rgba(120,120,120,.12); }
+                        .tbl-zoom-btn.tbl-zoom-active {
+                            background: rgb(245 158 11); border-color: rgb(245 158 11); color: #1c1917;
                         }
                     </style>
                     
@@ -88,6 +112,51 @@ class AdminPanelProvider extends PanelProvider
                                     }
                                 }, 150);
                             });
+                        });
+                    </script>
+
+                    <script>
+                        // Масштаб блока таблицы: x1 / x1.5 / x2 ужимают саму таблицу через CSS zoom.
+                        // Уровень общий для всех таблиц, хранится в localStorage и переживает Livewire-перерисовки.
+                        document.addEventListener("livewire:initialized", () => {
+                            const KEY = "fiTableZoom";
+                            // label — то, во сколько раз УМЕНЬШАЕМ; zoom — фактический коэффициент.
+                            const LEVELS = [
+                                { label: "x1",   zoom: 1 },
+                                { label: "x1.5", zoom: 1 / 1.5 },
+                                { label: "x2",   zoom: 0.5 },
+                            ];
+                            const current = () => parseFloat(localStorage.getItem(KEY)) || 1;
+
+                            const apply = () => {
+                                const z = current();
+                                document.querySelectorAll(".fi-ta-content").forEach((el) => { el.style.zoom = z; });
+                                document.querySelectorAll(".tbl-zoom-btn").forEach((b) => {
+                                    b.classList.toggle("tbl-zoom-active", Math.abs(parseFloat(b.dataset.zoom) - z) < 0.001);
+                                });
+                            };
+
+                            const inject = () => {
+                                document.querySelectorAll(".fi-ta").forEach((ta) => {
+                                    if (ta.querySelector(":scope > .tbl-zoom")) return;
+                                    const bar = document.createElement("div");
+                                    bar.className = "tbl-zoom";
+                                    bar.innerHTML = "<span class=\"tbl-zoom-label\">Масштаб таблицы:</span>" +
+                                        LEVELS.map((l) => "<button type=\"button\" class=\"tbl-zoom-btn\" data-zoom=\"" + l.zoom + "\">" + l.label + "</button>").join("");
+                                    bar.querySelectorAll(".tbl-zoom-btn").forEach((b) => {
+                                        b.addEventListener("click", () => {
+                                            localStorage.setItem(KEY, b.dataset.zoom);
+                                            apply();
+                                        });
+                                    });
+                                    ta.prepend(bar);
+                                });
+                                apply();
+                            };
+
+                            inject();
+                            // После каждой перерисовки Livewire (фильтры, пагинация, вкладки) — переустановить кнопки и масштаб.
+                            Livewire.hook("morph.updated", () => { inject(); });
                         });
                     </script>
                 ')
