@@ -30,6 +30,7 @@ class LectureEditorPanelProvider extends PanelProvider
         return $panel
             ->id('editor')
             ->path('editor')
+            ->sidebarCollapsibleOnDesktop()
             ->login()
             ->brandName('Конструктор лекций')
             ->colors([
