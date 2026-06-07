@@ -170,7 +170,7 @@ class Course extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot('status', 'note', 'left_after_block')
+            ->withPivot('status', 'note', 'left_after_block', 'joined_at_block')
             ->withTimestamps();
     }
 }

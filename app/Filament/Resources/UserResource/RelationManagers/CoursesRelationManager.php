@@ -37,6 +37,12 @@ class CoursesRelationManager extends RelationManager
                     ->required()
                     ->live(),
 
+                Forms\Components\TextInput::make('joined_at_block')
+                    ->label('Блок входа')
+                    ->numeric()
+                    ->minValue(1)
+                    ->helperText('Номер блока, С которого студент начал учиться (присоединился к потоку в середине). Долги за более ранние блоки не начисляются. Пусто = первый оплаченный блок.'),
+
                 Forms\Components\TextInput::make('left_after_block')
                     ->label('Блок выхода')
                     ->numeric()
@@ -96,6 +102,12 @@ class CoursesRelationManager extends RelationManager
                             ? 'в системе с '.$record->pivot->created_at->format('d.m.Y')
                             : null;
                     }),
+
+                Tables\Columns\TextColumn::make('joined_at_block')
+                    ->label('Блок входа')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state ? '№'.$state : null)
+                    ->getStateUsing(fn ($record) => $record->pivot?->joined_at_block),
 
                 Tables\Columns\TextColumn::make('left_after_block')
                     ->label('Блок выхода')

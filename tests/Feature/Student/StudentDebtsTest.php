@@ -168,6 +168,57 @@ class StudentDebtsTest extends TestCase
     }
 
     /** @test */
+    public function blocks_before_first_paid_block_are_not_counted_as_debt(): void
+    {
+        // Студент присоединился к потоку в середине: первый оплаченный блок №3.
+        // Блоки №1–2 (прошли до его прихода) НЕ должны попадать в долг.
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->create(['number' => 3]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 4]);
+
+        // Оплачен только блок №3; текущий блок №4 — не оплачен.
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 4000, 'tariff' => 'block_3', 'status' => 'paid',
+            'start_block' => 3, 'end_block' => 3,
+        ]);
+
+        $debt = app(StudentDebtsService::class)->forUser($user)->first();
+
+        $this->assertNotNull($debt);
+        $this->assertSame([4], $debt->debt_block_numbers, 'В долг попадает только №4; №1–2 (до входа) и №3 (оплачен) — нет.');
+    }
+
+    /** @test */
+    public function explicit_joined_at_block_overrides_first_paid_block(): void
+    {
+        // Явный «блок входа» №2 в course_user имеет приоритет над авто-границей.
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->create(['number' => 3]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 4]);
+
+        $user->courses()->attach($course->id, ['status' => 'Записался', 'joined_at_block' => 2]);
+
+        // Оплачен только блок №3.
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 4000, 'tariff' => 'block_3', 'status' => 'paid',
+            'start_block' => 3, 'end_block' => 3,
+        ]);
+
+        $debt = app(StudentDebtsService::class)->forUser($user)->first();
+
+        $this->assertNotNull($debt);
+        $this->assertSame([2, 4], $debt->debt_block_numbers, 'Граница №2: №1 исключён, №2 и №4 — долг, №3 оплачен.');
+    }
+
+    /** @test */
     public function fully_paid_course_without_arrangement_is_not_a_debt(): void
     {
         $user = User::factory()->create();
