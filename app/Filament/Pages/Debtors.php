@@ -46,6 +46,9 @@ class Debtors extends Page implements HasTable
     /** @var array<string, array{amount:?float, missing:int}>  ключ "{user_id}:{course_id}" */
     private static array $debtAmountCache = [];
 
+    /** @var array<string, ?int>  "{user_id}:{course_id}" => явный joined_at_block из course_user */
+    private static array $joinedAtBlockCache = [];
+
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
 
     protected static ?string $navigationLabel = 'Должники';
@@ -465,8 +468,24 @@ class Debtors extends Page implements HasTable
             ->where('is_conditional', false)
             ->get(['start_block', 'end_block']);
 
+        // Нижняя граница долга: студент мог присоединиться к потоку в середине —
+        // блоки до его «блока входа» (явный joined_at_block либо первый
+        // оплаченный) в долг не начисляются.
+        $explicitJoined = self::$joinedAtBlockCache[$payKey] ??= (function () use ($userId, $courseId): ?int {
+            $v = DB::table('course_user')
+                ->where('user_id', $userId)
+                ->where('course_id', $courseId)
+                ->value('joined_at_block');
+
+            return $v !== null ? (int) $v : null;
+        })();
+        $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
+
         $debt = [];
         foreach ($allBlocks as $n) {
+            if ($floor !== null && $n < $floor) {
+                continue;
+            }
             $covered = false;
             foreach ($payments as $p) {
                 if (DebtorsReport::paymentCovers($p->start_block, $p->end_block, $n)) {

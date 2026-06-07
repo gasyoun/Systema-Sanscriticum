@@ -81,6 +81,15 @@ class StudentDebtsService
             ->get(['course_id', 'start_block', 'end_block'])
             ->groupBy('course_id');
 
+        // Явный «блок входа» из course_user (joined_at_block) по каждому курсу —
+        // приоритетная нижняя граница долга. Если не задан, debtFloor берёт
+        // первый оплаченный блок.
+        $joinedByCourse = \Illuminate\Support\Facades\DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->whereIn('course_id', $courses->keys())
+            ->whereNotNull('joined_at_block')
+            ->pluck('joined_at_block', 'course_id');
+
         // Полный график договорённостей: активные/просроченные/выполненные —
         // выполненные нужны, чтобы показать рассрочку целиком («2 из 4 внесено»).
         // Отменённые исключаем. Сортировка по дате = порядок графика платежей.
@@ -133,7 +142,9 @@ class StudentDebtsService
                         break;
                     }
                 }
-                $debtNumbers = $this->debtBlockNumbers($blocks, $refNumber, $payments);
+                $explicitJoined = $joinedByCourse->get($courseId);
+                $explicitJoined = $explicitJoined !== null ? (int) $explicitJoined : null;
+                $debtNumbers = $this->debtBlockNumbers($blocks, $refNumber, $payments, $explicitJoined);
             }
 
             // Без договорённости курс — долг только по «не продлил»-логике:
@@ -217,12 +228,19 @@ class StudentDebtsService
      * @param  Collection<int, Payment>  $payments
      * @return list<int>
      */
-    private function debtBlockNumbers(Collection $blocks, int $refNumber, Collection $payments): array
+    private function debtBlockNumbers(Collection $blocks, int $refNumber, Collection $payments, ?int $explicitJoined = null): array
     {
+        // Нижняя граница: блоки до «блока входа» студента (присоединился к
+        // потоку в середине) в долг не идут. См. DebtorsReport::debtFloor.
+        $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
+
         $debt = [];
         foreach ($blocks as $block) {
             $n = (int) $block->number;
             if ($n > $refNumber) {
+                continue;
+            }
+            if ($floor !== null && $n < $floor) {
                 continue;
             }
             $covered = false;
