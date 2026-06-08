@@ -107,6 +107,37 @@ class Tariff extends Model
     }
 
     /**
+     * Итоговый процент скидки для подписи в UI. Персональная скидка студента
+     * (StudentDiscount) имеет приоритет над лояльностью — так же, как в
+     * calculateFinalPriceForUser. Для fixed-скидки считаем эквивалентный
+     * процент от цены тарифа. Не учитывает зачёты депозита/докупки — это не
+     * «скидка», а кредит.
+     */
+    public function effectiveDiscountPercentForUser($user): int
+    {
+        if (! $user) {
+            return 0;
+        }
+
+        $individual = $this->course_id
+            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
+            : null;
+
+        if ($individual) {
+            if ($individual->type === \App\Models\StudentDiscount::TYPE_PERCENT) {
+                return (int) round((float) $individual->value);
+            }
+
+            // fixed → доля от цены
+            return (float) $this->price > 0
+                ? (int) round((float) $individual->value / (float) $this->price * 100)
+                : 0;
+        }
+
+        return $this->getDiscountPercentForUser($user);
+    }
+
+    /**
      * Расчет итоговой цены для пользователя.
      *
      * Учитывает:
@@ -126,7 +157,7 @@ class Tariff extends Model
         // 1. Скидка. Персональная скидка студента на этот курс ИМЕЕТ ПРИОРИТЕТ и
         //    применяется ВМЕСТО накопительной лояльности (не суммируется).
         $individual = $this->course_id
-            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id)
+            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
             : null;
 
         if ($individual) {
@@ -190,7 +221,13 @@ class Tariff extends Model
                 'block_'.$this->block_number.'_h2',
             ]);
         } else {
-            // 'full' содержит все блоки и половины курса.
+            // 'full' содержит все блоки и половины курса. Зачёт уже оплаченных
+            // блоков в стоимость полного курса — за фича-флагом (пока выключен,
+            // включить, когда созреем). Половина→целый блок (выше) не зависит от него.
+            if (! config('features.full_course_block_credit', false)) {
+                return 0.0;
+            }
+
             $query->where('tariff', 'like', 'block_%');
         }
 

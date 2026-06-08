@@ -112,7 +112,7 @@
                     @if($fullTariff)
                         @php
                             $fullFinalPrice = auth()->check() ? $fullTariff->calculateFinalPriceForUser(auth()->user()) : $fullTariff->price;
-                            $fullDiscountPercent = auth()->check() ? $fullTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $fullDiscountPercent = auth()->check() ? $fullTariff->effectiveDiscountPercentForUser(auth()->user()) : 0;
                         @endphp
 
                         <div class="flex justify-between items-center">
@@ -126,8 +126,6 @@
                                         <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">-{{ $fullDiscountPercent }}%</span>
                                     @elseif($fullFinalPrice == 0)
                                         <span class="text-[9px] text-green-400 font-bold uppercase tracking-wide">Куплено</span>
-                                    @else
-                                        <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-wide">Апгрейд</span>
                                     @endif
                                 @else
                                     <span class="font-bold text-white text-sm">{{ number_format($fullTariff->price, 0, '.', ' ') }} ₽</span>
@@ -140,7 +138,7 @@
                     @if($blockTariff)
                         @php
                             $blockFinalPrice = auth()->check() ? $blockTariff->calculateFinalPriceForUser(auth()->user()) : $blockTariff->price;
-                            $blockDiscountPercent = auth()->check() ? $blockTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $blockDiscountPercent = auth()->check() ? $blockTariff->effectiveDiscountPercentForUser(auth()->user()) : 0;
                         @endphp
 
                         <div class="flex justify-between items-center">

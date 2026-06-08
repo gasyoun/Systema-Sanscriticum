@@ -126,6 +126,59 @@ class IndividualDiscountTest extends TestCase
     }
 
     /** @test */
+    public function block_specific_discount_overrides_course_wide_default(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        // Постоянная скидка 10% на все блоки + 20% именно на блок 2.
+        StudentDiscount::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'block_number' => null, 'type' => 'percent', 'value' => 10, 'is_active' => true,
+        ]);
+        StudentDiscount::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'block_number' => 2, 'type' => 'percent', 'value' => 20, 'is_active' => true,
+        ]);
+
+        $block1 = Tariff::create(['course_id' => $course->id, 'title' => 'Блок 1', 'type' => 'block', 'block_number' => 1, 'price' => 1000, 'is_active' => true]);
+        $block2 = Tariff::create(['course_id' => $course->id, 'title' => 'Блок 2', 'type' => 'block', 'block_number' => 2, 'price' => 1000, 'is_active' => true]);
+        $full = $this->tariff($course, 1000, 'full');
+
+        // Блок 2 — своя скидка 20% → 800.
+        $this->assertEquals(800.0, $block2->calculateFinalPriceForUser($user));
+        // Блок 1 — общая 10% → 900.
+        $this->assertEquals(900.0, $block1->calculateFinalPriceForUser($user));
+        // Весь курс (block_number null) — общая 10% → 900.
+        $this->assertEquals(900.0, $full->calculateFinalPriceForUser($user));
+    }
+
+    /** @test */
+    public function block_specific_discount_does_not_leak_to_other_blocks(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        // Только блок-специфичная скидка (без общей) — на блок 3.
+        StudentDiscount::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'block_number' => 3, 'type' => 'percent', 'value' => 50, 'is_active' => true,
+        ]);
+
+        $block1 = Tariff::create(['course_id' => $course->id, 'title' => 'Блок 1', 'type' => 'block', 'block_number' => 1, 'price' => 1000, 'is_active' => true]);
+        $block3 = Tariff::create(['course_id' => $course->id, 'title' => 'Блок 3', 'type' => 'block', 'block_number' => 3, 'price' => 1000, 'is_active' => true]);
+
+        // Блок 3 — 50% → 500; блок 1 — нет общей скидки → полная цена 1000.
+        $this->assertEquals(500.0, $block3->calculateFinalPriceForUser($user));
+        $this->assertEquals(1000.0, $block1->calculateFinalPriceForUser($user));
+
+        // activeFor с номером блока выбирает блок-специфичную, без него — null (общей нет).
+        $this->assertNotNull(StudentDiscount::activeFor($user->id, $course->id, 3));
+        $this->assertNull(StudentDiscount::activeFor($user->id, $course->id, 1));
+        $this->assertNull(StudentDiscount::activeFor($user->id, $course->id));
+    }
+
+    /** @test */
     public function active_for_scopes_by_user_and_course(): void
     {
         $user = User::factory()->create();

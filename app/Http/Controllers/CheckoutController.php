@@ -92,7 +92,7 @@ class CheckoutController extends Controller
 
         // Персональная скидка на курс имеет приоритет над лояльностью — для подписи в UI.
         $isPersonal = $user
-            && \App\Models\StudentDiscount::activeFor($user->id, $tariff->course_id) !== null;
+            && \App\Models\StudentDiscount::activeFor($user->id, $tariff->course_id, $tariff->block_number) !== null;
 
         $basePrice = (float) $tariff->price;
         $finalPrice = $tariff->calculateFinalPriceForUser($user);

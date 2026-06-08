@@ -30,6 +30,13 @@ class IndividualDiscountsRelationManager extends RelationManager
                     ->preload()
                     ->required(),
 
+                Forms\Components\TextInput::make('block_number')
+                    ->label('Блок')
+                    ->numeric()
+                    ->minValue(1)
+                    ->placeholder('все блоки')
+                    ->helperText('Пусто — постоянная скидка на все блоки курса. Номер — скидка только на этот блок (перебивает общую).'),
+
                 Forms\Components\Select::make('type')
                     ->label('Тип скидки')
                     ->options([
@@ -66,6 +73,12 @@ class IndividualDiscountsRelationManager extends RelationManager
                     ->label('Курс')
                     ->searchable()
                     ->weight('bold'),
+
+                Tables\Columns\TextColumn::make('block_number')
+                    ->label('Блок')
+                    ->badge()
+                    ->color('gray')
+                    ->formatStateUsing(fn ($state): string => $state ? 'Блок '.$state : 'Все блоки'),
 
                 Tables\Columns\TextColumn::make('type')
                     ->label('Тип')
