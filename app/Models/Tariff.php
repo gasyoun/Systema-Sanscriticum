@@ -107,6 +107,58 @@ class Tariff extends Model
     }
 
     /**
+     * Скидка (персональная или лояльность) для подписи в UI и пометки платежа.
+     * Персональная скидка студента имеет приоритет над лояльностью — как в
+     * calculateFinalPriceForUser. Учитывает ТОЛЬКО скидку, без зачётов
+     * депозита/докупки (это кредит, а не скидка).
+     *
+     * Возвращает ['percent' => ?int, 'amount' => float, 'label' => string]:
+     *  - percent-скидка/лояльность → percent + рублёвый эквивалент, label «-10%»;
+     *  - fixed-скидка → только рубли (не больше цены), percent = null, label «-1000 ₽»;
+     *  - нет скидки → percent null, amount 0, label ''.
+     *
+     * @return array{percent: ?int, amount: float, label: string}
+     */
+    public function discountInfoForUser($user): array
+    {
+        $none = ['percent' => null, 'amount' => 0.0, 'label' => ''];
+
+        if (! $user) {
+            return $none;
+        }
+
+        $price = (float) $this->price;
+
+        $individual = $this->course_id
+            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
+            : null;
+
+        // Fixed-скидка: осмысленны только рубли (капаем по цене), процент не выводим.
+        if ($individual && $individual->type === \App\Models\StudentDiscount::TYPE_FIXED) {
+            $amount = min((float) $individual->value, $price);
+
+            return $amount > 0
+                ? ['percent' => null, 'amount' => round($amount, 2), 'label' => '-'.number_format($amount, 0, '.', ' ').' ₽']
+                : $none;
+        }
+
+        // Percent-скидка (персональная) или лояльность.
+        $percent = $individual
+            ? (int) round((float) $individual->value)
+            : $this->getDiscountPercentForUser($user);
+
+        if ($percent <= 0) {
+            return $none;
+        }
+
+        return [
+            'percent' => $percent,
+            'amount' => round($price * $percent / 100, 2),
+            'label' => '-'.$percent.'%',
+        ];
+    }
+
+    /**
      * Расчет итоговой цены для пользователя.
      *
      * Учитывает:
@@ -126,7 +178,7 @@ class Tariff extends Model
         // 1. Скидка. Персональная скидка студента на этот курс ИМЕЕТ ПРИОРИТЕТ и
         //    применяется ВМЕСТО накопительной лояльности (не суммируется).
         $individual = $this->course_id
-            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id)
+            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
             : null;
 
         if ($individual) {
@@ -190,7 +242,13 @@ class Tariff extends Model
                 'block_'.$this->block_number.'_h2',
             ]);
         } else {
-            // 'full' содержит все блоки и половины курса.
+            // 'full' содержит все блоки и половины курса. Зачёт уже оплаченных
+            // блоков в стоимость полного курса — за фича-флагом (пока выключен,
+            // включить, когда созреем). Половина→целый блок (выше) не зависит от него.
+            if (! config('features.full_course_block_credit', false)) {
+                return 0.0;
+            }
+
             $query->where('tariff', 'like', 'block_%');
         }
 

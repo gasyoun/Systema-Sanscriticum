@@ -237,7 +237,7 @@
                             $tariffKey = $tariff->type === 'block' ? 'block_' . $tariff->block_number : 'full';
                             $isPurchased = in_array($tariffKey, $purchasedKeys, true);
                             $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
-                            $discountPercent = auth()->check() ? $tariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $discount = auth()->check() ? $tariff->discountInfoForUser(auth()->user()) : ['label' => ''];
                         @endphp
 
                         <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24] hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(232,92,36,0.35)]' }} transition-all duration-300 relative overflow-hidden group">
@@ -260,17 +260,22 @@
         <div class="text-sm text-slate-500 mt-1">
             Оплачено: {{ number_format($tariff->price, 0, '.', ' ') }} ₽
         </div>
-    @elseif($discountPercent > 0)
+    @elseif($finalPrice < $tariff->price)
         <div class="flex items-end gap-3 mb-1">
             <div class="text-4xl font-black text-[#38BDF8]">
                 {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
             </div>
-            <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                Скидка -{{ $discountPercent }}%
-            </span>
+            @if($discount['label'] !== '')
+                <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
+                    Скидка {{ $discount['label'] }}
+                </span>
+            @endif
         </div>
         <div class="text-slate-500 line-through text-lg font-medium decoration-slate-600/50">
             {{ number_format($tariff->price, 0, '.', ' ') }} ₽
+        </div>
+        <div class="text-[11px] text-emerald-400/80 font-bold uppercase tracking-wide mt-1">
+            Стоимость с учётом скидки
         </div>
     @else
         <div class="text-4xl font-black text-white">
@@ -318,7 +323,7 @@
                             $blockAccessible = $wholePurchased || $anyHalfPurchased;
 
                             $finalPrice = ($whole && auth()->check()) ? $whole->calculateFinalPriceForUser(auth()->user()) : ($whole->price ?? 0);
-                            $discountPercent = ($whole && auth()->check()) ? $whole->getDiscountPercentForUser(auth()->user()) : 0;
+                            $discount = ($whole && auth()->check()) ? $whole->discountInfoForUser(auth()->user()) : ['label' => ''];
 
                             $defaultBlockTitle = 'Блок ' . $number;
                             $hasCustomTitle = $whole && $whole->title && trim($whole->title) !== $defaultBlockTitle;
@@ -368,15 +373,9 @@
                                             <div class="text-xl font-black text-[#38BDF8]">
                                                 {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
                                             </div>
-                                            @if($discountPercent > 0)
-                                                <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
-                                                    -{{ $discountPercent }}%
-                                                </div>
-                                            @else
-                                                <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
-                                                    зачёт оплаченного
-                                                </div>
-                                            @endif
+                                            <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
+                                                Стоимость с учётом скидки@if($discount['label'] !== '') · {{ $discount['label'] }}@endif
+                                            </div>
                                         @else
                                             <div class="text-xl font-black text-white">
                                                 {{ number_format($whole->price, 0, '.', ' ') }} <span class="text-sm text-slate-500 font-medium">₽</span>

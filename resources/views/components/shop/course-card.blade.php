@@ -112,7 +112,7 @@
                     @if($fullTariff)
                         @php
                             $fullFinalPrice = auth()->check() ? $fullTariff->calculateFinalPriceForUser(auth()->user()) : $fullTariff->price;
-                            $fullDiscountPercent = auth()->check() ? $fullTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $fullDiscount = auth()->check() ? $fullTariff->discountInfoForUser(auth()->user()) : ['label' => ''];
                         @endphp
 
                         <div class="flex justify-between items-center">
@@ -122,12 +122,10 @@
                                     <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($fullTariff->price, 0, '.', ' ') }}</span>
                                     <span class="font-bold text-[#38BDF8] text-sm">{{ number_format($fullFinalPrice, 0, '.', ' ') }} ₽</span>
 
-                                    @if($fullDiscountPercent > 0)
-                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">-{{ $fullDiscountPercent }}%</span>
+                                    @if($fullDiscount['label'] !== '')
+                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">{{ $fullDiscount['label'] }}</span>
                                     @elseif($fullFinalPrice == 0)
                                         <span class="text-[9px] text-green-400 font-bold uppercase tracking-wide">Куплено</span>
-                                    @else
-                                        <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-wide">Апгрейд</span>
                                     @endif
                                 @else
                                     <span class="font-bold text-white text-sm">{{ number_format($fullTariff->price, 0, '.', ' ') }} ₽</span>
@@ -140,7 +138,7 @@
                     @if($blockTariff)
                         @php
                             $blockFinalPrice = auth()->check() ? $blockTariff->calculateFinalPriceForUser(auth()->user()) : $blockTariff->price;
-                            $blockDiscountPercent = auth()->check() ? $blockTariff->getDiscountPercentForUser(auth()->user()) : 0;
+                            $blockDiscount = auth()->check() ? $blockTariff->discountInfoForUser(auth()->user()) : ['label' => ''];
                         @endphp
 
                         <div class="flex justify-between items-center">
@@ -150,8 +148,8 @@
                                     <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($blockTariff->price, 0, '.', ' ') }}</span>
                                     <span class="font-bold text-[#38BDF8] text-sm">{{ number_format($blockFinalPrice, 0, '.', ' ') }} ₽</span>
 
-                                    @if($blockDiscountPercent > 0)
-                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">-{{ $blockDiscountPercent }}%</span>
+                                    @if($blockDiscount['label'] !== '')
+                                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wide">{{ $blockDiscount['label'] }}</span>
                                     @endif
                                     <span class="text-[10px] text-slate-500 font-normal">/ блок</span>
                                 @else
