@@ -73,22 +73,28 @@ class AdminPanelProvider extends PanelProvider
                             object-fit: contain !important; /* Keeps full image visible, respects aspect ratio */
                         }
 
-                        /* 3. Масштаб блока таблицы: кнопки x1 / x1.5 / x2 ужимают саму таблицу,
-                           чтобы широкие таблицы целиком влезали на экран. Уровень общий для всех
-                           таблиц и запоминается в localStorage. */
-                        .fi-ta-content { overflow-x: auto; }
+                        /* 3. Масштаб таблиц: кнопки x1 / x1.5 / x2 ужимают таблицы, чтобы широкие
+                           целиком влезали на экран. Зум задаётся ОДНОЙ CSS-переменной на :root —
+                           так все таблицы (в т.ч. дорисованные Livewire) масштабируются сами.
+                           ВАЖНО: контрол живёт вне DOM Livewire и НЕ вставляет узлы в .fi-ta и НЕ
+                           ставит inline-style на элементы Livewire — иначе морфинг ломается и
+                           модалки (создание платежа и пр.) самопроизвольно закрываются. */
+                        .fi-ta-content { overflow-x: auto; zoom: var(--fi-tbl-zoom, 1); }
                         .tbl-zoom {
+                            position: fixed; left: 12px; bottom: 12px; z-index: 30;
                             display: flex; align-items: center; gap: 4px;
-                            padding: 6px 12px;
+                            padding: 5px 8px; border-radius: 9px;
+                            background: rgba(20,24,34,.92); border: 1px solid rgba(120,120,120,.3);
+                            box-shadow: 0 4px 14px rgba(0,0,0,.35); backdrop-filter: blur(4px);
                         }
-                        .tbl-zoom-label { font-size: 12px; opacity: .6; margin-right: 2px; }
+                        .tbl-zoom-label { font-size: 11px; opacity: .55; margin-right: 2px; }
                         .tbl-zoom-btn {
                             font-size: 12px; line-height: 1; font-weight: 600;
                             padding: 4px 9px; border-radius: 6px; cursor: pointer;
                             border: 1px solid rgba(120,120,120,.35);
-                            background: transparent; color: inherit;
+                            background: transparent; color: #e5e7eb;
                         }
-                        .tbl-zoom-btn:hover { background: rgba(120,120,120,.12); }
+                        .tbl-zoom-btn:hover { background: rgba(120,120,120,.18); }
                         .tbl-zoom-btn.tbl-zoom-active {
                             background: rgb(245 158 11); border-color: rgb(245 158 11); color: #1c1917;
                         }
@@ -116,11 +122,12 @@ class AdminPanelProvider extends PanelProvider
                     </script>
 
                     <script>
-                        // Масштаб блока таблицы: x1 / x1.5 / x2 ужимают саму таблицу через CSS zoom.
-                        // Уровень общий для всех таблиц, хранится в localStorage и переживает Livewire-перерисовки.
+                        // Масштаб таблиц: x1 / x1.5 / x2 через CSS-переменную --fi-tbl-zoom на :root.
+                        // Контрол — один фиксированный блок в body (вне корней Livewire). DOM таблиц
+                        // не трогаем вовсе, поэтому Livewire-морфинг и модалки не страдают.
                         document.addEventListener("livewire:initialized", () => {
                             const KEY = "fiTableZoom";
-                            // label — то, во сколько раз УМЕНЬШАЕМ; zoom — фактический коэффициент.
+                            // label — во сколько раз УМЕНЬШАЕМ; zoom — фактический коэффициент.
                             const LEVELS = [
                                 { label: "x1",   zoom: 1 },
                                 { label: "x1.5", zoom: 1 / 1.5 },
@@ -130,33 +137,30 @@ class AdminPanelProvider extends PanelProvider
 
                             const apply = () => {
                                 const z = current();
-                                document.querySelectorAll(".fi-ta-content").forEach((el) => { el.style.zoom = z; });
+                                document.documentElement.style.setProperty("--fi-tbl-zoom", z);
                                 document.querySelectorAll(".tbl-zoom-btn").forEach((b) => {
                                     b.classList.toggle("tbl-zoom-active", Math.abs(parseFloat(b.dataset.zoom) - z) < 0.001);
                                 });
                             };
 
-                            const inject = () => {
-                                document.querySelectorAll(".fi-ta").forEach((ta) => {
-                                    if (ta.querySelector(":scope > .tbl-zoom")) return;
-                                    const bar = document.createElement("div");
-                                    bar.className = "tbl-zoom";
-                                    bar.innerHTML = "<span class=\"tbl-zoom-label\">Масштаб таблицы:</span>" +
-                                        LEVELS.map((l) => "<button type=\"button\" class=\"tbl-zoom-btn\" data-zoom=\"" + l.zoom + "\">" + l.label + "</button>").join("");
-                                    bar.querySelectorAll(".tbl-zoom-btn").forEach((b) => {
-                                        b.addEventListener("click", () => {
-                                            localStorage.setItem(KEY, b.dataset.zoom);
-                                            apply();
-                                        });
+                            // Контрол показываем только если на странице есть таблицы; вставляем один
+                            // раз в body. Панель без SPA — навигация перезагружает страницу, так что
+                            // проверки на каждом переходе достаточно.
+                            if (document.querySelector(".fi-ta") && !document.querySelector(".tbl-zoom")) {
+                                const bar = document.createElement("div");
+                                bar.className = "tbl-zoom";
+                                bar.innerHTML = "<span class=\"tbl-zoom-label\">Масштаб таблиц:</span>" +
+                                    LEVELS.map((l) => "<button type=\"button\" class=\"tbl-zoom-btn\" data-zoom=\"" + l.zoom + "\">" + l.label + "</button>").join("");
+                                bar.querySelectorAll(".tbl-zoom-btn").forEach((b) => {
+                                    b.addEventListener("click", () => {
+                                        localStorage.setItem(KEY, b.dataset.zoom);
+                                        apply();
                                     });
-                                    ta.prepend(bar);
                                 });
-                                apply();
-                            };
+                                document.body.appendChild(bar);
+                            }
 
-                            inject();
-                            // После каждой перерисовки Livewire (фильтры, пагинация, вкладки) — переустановить кнопки и масштаб.
-                            Livewire.hook("morph.updated", () => { inject(); });
+                            apply();
                         });
                     </script>
                 ')
