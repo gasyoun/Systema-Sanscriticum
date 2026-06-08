@@ -67,6 +67,10 @@ class PaymentController extends Controller
             // 3. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
             $finalPrice = $tariff->calculateFinalPriceForUser($user);
 
+            // Фиксируем процент скидки (персональная/лояльность) для пометки в
+            // админке и выгрузке в Google Sheet. Промокод/прана — отдельно.
+            $discountPercent = $tariff->effectiveDiscountPercentForUser($user);
+
             // Применяем промокод
             $promo = null;
             if (session()->has('promo_code')) {
@@ -128,6 +132,7 @@ class PaymentController extends Controller
                 'user_id' => $user->id,
                 'course_id' => $tariff->course->id ?? null,
                 'amount' => $finalPrice,
+                'discount_percent' => $discountPercent > 0 ? $discountPercent : null,
                 'prana_spent' => $pranaToSpend,
                 'tariff' => $tariffKey,
                 'status' => 'pending',

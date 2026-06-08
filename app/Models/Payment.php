@@ -17,6 +17,7 @@ class Payment extends Model
         'lead_id',
         'course_id',
         'amount',
+        'discount_percent',
         'prana_spent',
         'tariff',
         'deposit_consumed_at',
@@ -34,6 +35,7 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'discount_percent' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
@@ -79,6 +81,12 @@ class Payment extends Model
     public function isExpense(): bool
     {
         return $this->tariff === 'Расход';
+    }
+
+    /** Платёж прошёл со скидкой (персональной или лояльности). */
+    public function hasDiscount(): bool
+    {
+        return (float) $this->discount_percent > 0;
     }
 
     /**

@@ -85,6 +85,10 @@ class SendPaymentToSheetJob implements ShouldQueue
             'start_block' => $payment->start_block,
             'end_block' => $payment->end_block,
             'amount' => (float) $payment->amount,
+            // Скидка (персональная/лояльность): процент + человекочитаемая пометка.
+            // Замапь в отдельные колонки в n8n. Пусто/0 — без скидки.
+            'discount_percent' => (float) $payment->discount_percent,
+            'discount_label' => $payment->hasDiscount() ? 'Скидка -'.(int) $payment->discount_percent.'%' : '',
             'tariff' => $payment->tariff,
             // Человекочитаемая пометка операции (бронь / пробное / блок / курс /
             // расход) — та же, что в админке. Замапь в отдельную колонку в n8n.

@@ -119,6 +119,14 @@ class PaymentResource extends Resource
                                 ->label('По блок №')
                                 ->numeric()
                                 ->helperText('Пусто, если курс куплен целиком'),
+
+                            Forms\Components\TextInput::make('discount_percent')
+                                ->label('Скидка, %')
+                                ->numeric()
+                                ->minValue(0)
+                                ->maxValue(100)
+                                ->suffix('%')
+                                ->helperText('Пометка «по скидке». Заполняется автоматически при покупке со скидкой.'),
                         ]),
 
                     Forms\Components\Grid::make(3)->schema([
@@ -196,6 +204,14 @@ class PaymentResource extends Resource
                     ->weight(\Filament\Support\Enums\FontWeight::ExtraBold)
                     ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
                     ->alignment(\Filament\Support\Enums\Alignment::End),
+
+                // Пометка «по скидке»: бейдж «-X%», если платёж прошёл со скидкой.
+                Tables\Columns\TextColumn::make('discount_percent')
+                    ->label('Скидка')
+                    ->badge()
+                    ->color('success')
+                    ->formatStateUsing(fn ($state): ?string => $state > 0 ? '-'.(int) $state.'%' : null)
+                    ->alignment(\Filament\Support\Enums\Alignment::Center),
 
                 // 5. СТАТУС
                 Tables\Columns\TextColumn::make('status')
