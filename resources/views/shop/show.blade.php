@@ -366,7 +366,7 @@
                                             <div class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2.5 py-1.5 rounded tracking-wider">
                                                 <i class="fas fa-check-circle"></i> Оплачено
                                             </div>
-                                        @elseif($discountPercent > 0 || $finalPrice < $whole->price)
+                                        @elseif($discount['label'] !== '' || $finalPrice < $whole->price)
                                             <div class="text-slate-500 line-through text-xs font-medium mb-0.5 decoration-slate-600/50">
                                                 {{ number_format($whole->price, 0, '.', ' ') }} ₽
                                             </div>
