@@ -176,9 +176,18 @@
             {{-- Заголовок --}}
             <div class="transform transition-all duration-700 delay-200 translate-y-8 opacity-0 w-full"
                  :class="loaded ? '!translate-y-0 !opacity-100' : ''">
+                @php
+                    // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
+                    // e() экранирует ДО вставки span — тег служебный, контент безопасен.
+                    $titleHtml = preg_replace(
+                        '/\*(.+?)\*/u',
+                        '<span style="color:var(--accent);">$1</span>',
+                        e($data['title'] ?? 'Название курса')
+                    );
+                @endphp
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-8 leading-[1.08] tracking-tight max-w-5xl"
                     style="color:var(--text-primary);">
-                    {{ $data['title'] ?? 'Название курса' }}
+                    {!! $titleHtml !!}
                 </h1>
             </div>
  

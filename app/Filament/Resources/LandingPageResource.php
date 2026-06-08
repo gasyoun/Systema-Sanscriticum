@@ -249,7 +249,8 @@ class LandingPageResource extends Resource
                                                 Textarea::make('title')
                                                     ->label('Главный заголовок')
                                                     ->default('Название вашего невероятного курса')
-                                                    ->rows(3),
+                                                    ->rows(3)
+                                                    ->helperText('Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: Санскрит и *вебинар* 17 июня.'),
 
                                                 Textarea::make('description')
                                                     ->label('Описание')
