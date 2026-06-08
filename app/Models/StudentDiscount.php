@@ -22,6 +22,7 @@ class StudentDiscount extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'block_number',
         'type',
         'value',
         'is_active',
@@ -31,6 +32,7 @@ class StudentDiscount extends Model
     protected $casts = [
         'value' => 'decimal:2',
         'is_active' => 'boolean',
+        'block_number' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -43,17 +45,39 @@ class StudentDiscount extends Model
         return $this->belongsTo(Course::class);
     }
 
-    /** Активная персональная скидка для пары (студент, курс) или null. */
-    public static function activeFor(?int $userId, ?int $courseId): ?self
+    /**
+     * Активная персональная скидка для (студент, курс) с учётом блока.
+     *
+     * Приоритет: скидка, заданная именно для $blockNumber, перебивает общую.
+     * Если блок-специфичной нет (или $blockNumber не задан — напр. тариф «весь
+     * курс»), берётся постоянная скидка на все блоки (block_number IS NULL).
+     */
+    public static function activeFor(?int $userId, ?int $courseId, ?int $blockNumber = null): ?self
     {
         if (! $userId || ! $courseId) {
             return null;
         }
 
-        return self::query()
+        $base = self::query()
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
-            ->where('is_active', true)
+            ->where('is_active', true);
+
+        // Блок-специфичная скидка перебивает общую для этого блока.
+        if ($blockNumber !== null) {
+            $blockSpecific = (clone $base)
+                ->where('block_number', $blockNumber)
+                ->latest('id')
+                ->first();
+
+            if ($blockSpecific) {
+                return $blockSpecific;
+            }
+        }
+
+        // Постоянная скидка на все блоки.
+        return $base
+            ->whereNull('block_number')
             ->latest('id')
             ->first();
     }
