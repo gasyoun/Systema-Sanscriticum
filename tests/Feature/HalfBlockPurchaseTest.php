@@ -129,6 +129,9 @@ class HalfBlockPurchaseTest extends TestCase
     /** @test */
     public function full_course_price_credits_all_paid_blocks_and_halves(): void
     {
+        // Зачёт блоков в полный курс — за фича-флагом; здесь проверяем включённое поведение.
+        config(['features.full_course_block_credit' => true]);
+
         $course = $this->course();
         $user = User::factory()->create();
         $this->pay($user, $course, 'block_1_h1', 2500);
@@ -141,6 +144,31 @@ class HalfBlockPurchaseTest extends TestCase
 
         // 12000 − (2500 + 4800) = 4700
         $this->assertSame(4700.0, $fullTariff->calculateFinalPriceForUser($user));
+    }
+
+    /** @test */
+    public function full_course_does_not_credit_paid_blocks_when_flag_off(): void
+    {
+        // Дефолт: флаг выключен → уже купленные блоки НЕ вычитаются из полного курса.
+        config(['features.full_course_block_credit' => false]);
+
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1_h1', 2500);
+        $this->pay($user, $course, 'block_2', 4800);
+
+        $fullTariff = Tariff::factory()->create([
+            'course_id' => $course->id,
+            'price' => 12000,
+        ]);
+
+        // Зачёта нет → полная цена.
+        $this->assertSame(0.0, $fullTariff->upgradeCreditForUser($user));
+        $this->assertSame(12000.0, $fullTariff->calculateFinalPriceForUser($user));
+
+        // Зачёт «половина → целый блок» при этом продолжает работать.
+        $wholeBlock1 = Tariff::factory()->block(1)->create(['course_id' => $course->id, 'price' => 4800]);
+        $this->assertSame(2500.0, $wholeBlock1->upgradeCreditForUser($user));
     }
 
     /** @test */

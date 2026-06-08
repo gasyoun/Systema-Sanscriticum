@@ -17,6 +17,8 @@ class Payment extends Model
         'lead_id',
         'course_id',
         'amount',
+        'discount_percent',
+        'discount_amount',
         'prana_spent',
         'tariff',
         'deposit_consumed_at',
@@ -34,6 +36,8 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
@@ -79,6 +83,29 @@ class Payment extends Model
     public function isExpense(): bool
     {
         return $this->tariff === 'Расход';
+    }
+
+    /** Платёж прошёл со скидкой (персональной или лояльности). */
+    public function hasDiscount(): bool
+    {
+        return (float) $this->discount_percent > 0 || (float) $this->discount_amount > 0;
+    }
+
+    /**
+     * Короткая подпись скидки: «-10%» для процентной, «-1000 ₽» для фиксированной,
+     * '' если скидки нет. Источник для бейджа в админке и выгрузки в Google Sheet.
+     */
+    public function discountLabel(): string
+    {
+        if ((float) $this->discount_percent > 0) {
+            return '-'.(int) $this->discount_percent.'%';
+        }
+
+        if ((float) $this->discount_amount > 0) {
+            return '-'.number_format((float) $this->discount_amount, 0, '.', ' ').' ₽';
+        }
+
+        return '';
     }
 
     /**
