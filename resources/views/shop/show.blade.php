@@ -237,7 +237,7 @@
                             $tariffKey = $tariff->type === 'block' ? 'block_' . $tariff->block_number : 'full';
                             $isPurchased = in_array($tariffKey, $purchasedKeys, true);
                             $finalPrice = auth()->check() ? $tariff->calculateFinalPriceForUser(auth()->user()) : $tariff->price;
-                            $discountPercent = auth()->check() ? $tariff->effectiveDiscountPercentForUser(auth()->user()) : 0;
+                            $discount = auth()->check() ? $tariff->discountInfoForUser(auth()->user()) : ['label' => ''];
                         @endphp
 
                         <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24] hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(232,92,36,0.35)]' }} transition-all duration-300 relative overflow-hidden group">
@@ -265,9 +265,9 @@
             <div class="text-4xl font-black text-[#38BDF8]">
                 {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-xl text-[#38BDF8]/70 font-medium">₽</span>
             </div>
-            @if($discountPercent > 0)
+            @if($discount['label'] !== '')
                 <span class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase px-2 py-1 rounded mb-1.5 tracking-wider">
-                    Скидка -{{ $discountPercent }}%
+                    Скидка {{ $discount['label'] }}
                 </span>
             @endif
         </div>
@@ -323,7 +323,7 @@
                             $blockAccessible = $wholePurchased || $anyHalfPurchased;
 
                             $finalPrice = ($whole && auth()->check()) ? $whole->calculateFinalPriceForUser(auth()->user()) : ($whole->price ?? 0);
-                            $discountPercent = ($whole && auth()->check()) ? $whole->effectiveDiscountPercentForUser(auth()->user()) : 0;
+                            $discount = ($whole && auth()->check()) ? $whole->discountInfoForUser(auth()->user()) : ['label' => ''];
 
                             $defaultBlockTitle = 'Блок ' . $number;
                             $hasCustomTitle = $whole && $whole->title && trim($whole->title) !== $defaultBlockTitle;
@@ -374,7 +374,7 @@
                                                 {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
                                             </div>
                                             <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
-                                                Стоимость с учётом скидки@if($discountPercent > 0) · -{{ $discountPercent }}%@endif
+                                                Стоимость с учётом скидки@if($discount['label'] !== '') · {{ $discount['label'] }}@endif
                                             </div>
                                         @else
                                             <div class="text-xl font-black text-white">

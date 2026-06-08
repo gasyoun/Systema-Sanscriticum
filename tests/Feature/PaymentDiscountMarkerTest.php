@@ -25,16 +25,19 @@ class PaymentDiscountMarkerTest extends TestCase
     }
 
     /** @test */
-    public function has_discount_reflects_stored_percent(): void
+    public function has_discount_and_label_reflect_stored_values(): void
     {
-        $discounted = new Payment(['discount_percent' => 20]);
-        $this->assertTrue($discounted->hasDiscount());
+        $percent = new Payment(['discount_percent' => 20]);
+        $this->assertTrue($percent->hasDiscount());
+        $this->assertSame('-20%', $percent->discountLabel());
 
-        $plain = new Payment(['discount_percent' => null]);
+        $fixed = new Payment(['discount_percent' => null, 'discount_amount' => 1000]);
+        $this->assertTrue($fixed->hasDiscount());
+        $this->assertSame('-1 000 ₽', $fixed->discountLabel());
+
+        $plain = new Payment(['discount_percent' => null, 'discount_amount' => null]);
         $this->assertFalse($plain->hasDiscount());
-
-        $zero = new Payment(['discount_percent' => 0]);
-        $this->assertFalse($zero->hasDiscount());
+        $this->assertSame('', $plain->discountLabel());
     }
 
     /** @test */
@@ -60,8 +63,32 @@ class PaymentDiscountMarkerTest extends TestCase
         $ref->setAccessible(true);
         $payload = $ref->invoke($job, $payment->fresh());
 
-        $this->assertSame(10.0, $payload['discount_percent']);
-        $this->assertSame('Скидка -10%', $payload['discount_label']);
+        $this->assertSame('-10%', $payload['discount']);
+    }
+
+    /** @test */
+    public function sheet_payload_shows_fixed_discount_in_rubles(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        // Фиксированная скидка: процента нет, только рубли.
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 3800,
+            'discount_percent' => null,
+            'discount_amount' => 1000,
+            'tariff' => 'block_1',
+            'status' => 'paid',
+        ]);
+
+        $job = new SendPaymentToSheetJob($payment->id, 'create');
+        $ref = new \ReflectionMethod($job, 'buildPayload');
+        $ref->setAccessible(true);
+        $payload = $ref->invoke($job, $payment->fresh());
+
+        $this->assertSame('-1 000 ₽', $payload['discount']);
     }
 
     /** @test */
@@ -83,7 +110,6 @@ class PaymentDiscountMarkerTest extends TestCase
         $ref->setAccessible(true);
         $payload = $ref->invoke($job, $payment->fresh());
 
-        $this->assertSame(0.0, $payload['discount_percent']);
-        $this->assertSame('', $payload['discount_label']);
+        $this->assertSame('', $payload['discount']);
     }
 }

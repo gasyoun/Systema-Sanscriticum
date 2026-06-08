@@ -126,7 +126,14 @@ class PaymentResource extends Resource
                                 ->minValue(0)
                                 ->maxValue(100)
                                 ->suffix('%')
-                                ->helperText('Пометка «по скидке». Заполняется автоматически при покупке со скидкой.'),
+                                ->helperText('Процентная скидка. Заполняется автоматически при покупке.'),
+
+                            Forms\Components\TextInput::make('discount_amount')
+                                ->label('Скидка, ₽')
+                                ->numeric()
+                                ->minValue(0)
+                                ->suffix('₽')
+                                ->helperText('Сумма скидки (для фиксированной). При проценте — рублёвый эквивалент.'),
                         ]),
 
                     Forms\Components\Grid::make(3)->schema([
@@ -205,12 +212,12 @@ class PaymentResource extends Resource
                     ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
                     ->alignment(\Filament\Support\Enums\Alignment::End),
 
-                // Пометка «по скидке»: бейдж «-X%», если платёж прошёл со скидкой.
-                Tables\Columns\TextColumn::make('discount_percent')
+                // Пометка «по скидке»: бейдж «-10%» / «-1000 ₽», если платёж со скидкой.
+                Tables\Columns\TextColumn::make('discount')
                     ->label('Скидка')
                     ->badge()
                     ->color('success')
-                    ->formatStateUsing(fn ($state): ?string => $state > 0 ? '-'.(int) $state.'%' : null)
+                    ->getStateUsing(fn (Payment $record): ?string => $record->discountLabel() ?: null)
                     ->alignment(\Filament\Support\Enums\Alignment::Center),
 
                 // 5. СТАТУС

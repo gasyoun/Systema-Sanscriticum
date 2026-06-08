@@ -179,6 +179,47 @@ class IndividualDiscountTest extends TestCase
     }
 
     /** @test */
+    public function discount_info_returns_percent_and_ruble_equivalent(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        StudentDiscount::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'type' => 'percent', 'value' => 50, 'is_active' => true,
+        ]);
+        $tariff = $this->tariff($course, 1000);
+
+        $info = $tariff->discountInfoForUser($user);
+        $this->assertSame(50, $info['percent']);
+        $this->assertSame(500.0, $info['amount']);
+        $this->assertSame('-50%', $info['label']);
+    }
+
+    /** @test */
+    public function discount_info_returns_rubles_for_fixed_and_caps_at_price(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $tariff = $this->tariff($course, 1000);
+
+        // Фикс 800 ₽ → рубли, процента нет.
+        $d = StudentDiscount::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'type' => 'fixed', 'value' => 800, 'is_active' => true,
+        ]);
+        $info = $tariff->discountInfoForUser($user);
+        $this->assertNull($info['percent']);
+        $this->assertSame(800.0, $info['amount']);
+        $this->assertSame('-800 ₽', $info['label']);
+
+        // Фикс больше цены → капается по цене (не уходит в >100%).
+        $d->update(['value' => 5000]);
+        $info = $tariff->discountInfoForUser($user);
+        $this->assertSame(1000.0, $info['amount']);
+        $this->assertSame('-1 000 ₽', $info['label']);
+    }
+
+    /** @test */
     public function active_for_scopes_by_user_and_course(): void
     {
         $user = User::factory()->create();
