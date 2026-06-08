@@ -45,11 +45,11 @@ class SendPaymentToSheetJob implements ShouldQueue
             return;
         }
 
-        // Повторная защита на уровне job (вдруг статус откатили назад).
-        // Расход/возврат идёт с минусом, но в таблицу попасть должен —
-        // пропускаем его по tariff, а не по знаку суммы.
-        $isIncome = (float) $payment->amount > 0;
-        if ((! $isIncome && ! $payment->isExpense()) || ! in_array($payment->status, ['paid', 'success'], true)) {
+        // Повторная защита на уровне job (вдруг статус/признак откатили назад,
+        // пока задача висела в очереди). Зеркалит PaymentObserver::isSyncable():
+        // только paid/success и не «обещанный» доступ. Сумму не проверяем —
+        // нулевые оплаты и отрицательные расходы тоже должны попасть в таблицу.
+        if (! in_array($payment->status, ['paid', 'success'], true) || $payment->is_conditional) {
             return;
         }
 
