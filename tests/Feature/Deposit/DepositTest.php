@@ -88,6 +88,56 @@ class DepositTest extends TestCase
     }
 
     /** @test */
+    public function deposit_sends_booking_confirmation_email(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['chat_url' => 'https://t.me/course_chat']);
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        Mail::assertQueued(
+            \App\Mail\DepositReceivedMail::class,
+            fn ($mail) => $mail->hasTo($user->email) && $mail->course->chat_url === 'https://t.me/course_chat'
+        );
+    }
+
+    /** @test */
+    public function returning_student_gets_booking_email_without_welcome(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        // Первая оплата — welcome уже было отправлено ранее.
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        Mail::fake(); // сбрасываем — интересует только вторая (бронь)
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        // Повторному студенту welcome не шлём, а подтверждение брони — да.
+        Mail::assertNotQueued(StudentWelcomeMail::class);
+        Mail::assertQueued(\App\Mail\DepositReceivedMail::class, fn ($mail) => $mail->hasTo($user->email));
+    }
+
+    /** @test */
     public function deposit_deducted_once_from_full_tariff(): void
     {
         $user = User::factory()->create();

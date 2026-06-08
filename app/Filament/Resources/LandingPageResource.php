@@ -400,6 +400,85 @@ class LandingPageResource extends Resource
                                             ])->columns(2),
                                     ]),
 
+                                // 5.1. WEBINAR TOPICS (Темы, которые разбираются на вебинарах)
+                                Builder\Block::make('webinar_topics_block')
+                                    ->label('5.1. Темы вебинаров')
+                                    ->icon('heroicon-m-presentation-chart-bar')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Что разберём на вебинарах'),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->rows(2)
+                                            ->placeholder('Темы, которые мы обсудим в прямом эфире'),
+
+                                        Repeater::make('topics')
+                                            ->label('Темы')
+                                            ->schema([
+                                                TextInput::make('title')
+                                                    ->label('Тема')
+                                                    ->required(),
+                                                RichEditor::make('description')
+                                                    ->label('Краткое описание (необязательно)')
+                                                    ->toolbarButtons([
+                                                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                                                    ]),
+                                            ])
+                                            ->grid(2)
+                                            ->defaultItems(3)
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
+
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки (необязательно)')
+                                            ->placeholder('Записаться на вебинар')
+                                            ->helperText('Если пусто — кнопка не показывается. Кнопка открывает плавающую форму заявки.'),
+                                    ]),
+
+                                // 5.2. WEBINAR TOPICS — светлый «editorial»-вариант (строки с номерами)
+                                Builder\Block::make('webinar_topics_spotlight_block')
+                                    ->label('5.2. Темы вебинаров (строки с номерами)')
+                                    ->icon('heroicon-m-bolt')
+                                    ->schema([
+                                        TextInput::make('badge')
+                                            ->label('Плашка-надзаголовок')
+                                            ->default('В прямом эфире'),
+
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('О чём будем говорить'),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->rows(2)
+                                            ->placeholder('Каждая тема — отдельный разбор с ответами на ваши вопросы'),
+
+                                        Repeater::make('topics')
+                                            ->label('Темы')
+                                            ->schema([
+                                                TextInput::make('title')
+                                                    ->label('Тема')
+                                                    ->required(),
+                                                RichEditor::make('description')
+                                                    ->label('Краткое описание (необязательно)')
+                                                    ->toolbarButtons([
+                                                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                                                    ]),
+                                            ])
+                                            ->defaultItems(3)
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
+
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки (необязательно)')
+                                            ->placeholder('Занять место на вебинаре')
+                                            ->helperText('Если пусто — кнопка не показывается. Кнопка открывает плавающую форму заявки.'),
+                                    ]),
+
                                 // 5. PROGRAM
                                 Builder\Block::make('program_block')
                                     ->label('5. Программа курса')

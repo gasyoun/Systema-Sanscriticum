@@ -282,6 +282,13 @@ class Payment extends Model
             return;
         }
 
+        // E-mail-подтверждение брони (со ссылкой на чат курса). Telegram есть не
+        // у всех — без письма повторные студенты не получали бы по брони ничего.
+        if ($this->user && $this->user->email && $this->course) {
+            \Illuminate\Support\Facades\Mail::to($this->user->email)
+                ->send(new \App\Mail\DepositReceivedMail($this->user, $this->course));
+        }
+
         $courseName = $this->course->title ?? 'курс';
         $url = url('/login');
 
