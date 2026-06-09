@@ -49,3 +49,9 @@ Route::post('/webhooks/vk-magnet', [\App\Http\Controllers\Webhooks\VkMagnetCallb
 Route::post('/webhooks/max-magnet/{secret}', [\App\Http\Controllers\Webhooks\MaxMagnetWebhookController::class, 'handle'])
     ->middleware('verify.max.magnet')
     ->name('webhook.magnet.max');
+
+// «Лид дошёл до шага бота» — n8n зовёт при достижении именованного шага сценария.
+// Секрет в заголовке X-Webhook-Secret (services.n8n.lead_step_secret).
+Route::post('/webhooks/lead-step', [\App\Http\Controllers\Webhooks\LeadStepWebhookController::class, 'handle'])
+    ->middleware('verify.n8n.leadstep')
+    ->name('webhook.lead-step');

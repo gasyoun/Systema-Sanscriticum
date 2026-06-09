@@ -19,7 +19,7 @@
                     {{ $data['title'] ?? 'Записаться на курс' }}
                 </h3>
                 <p class="text-[#86868B] text-sm mb-8 text-center">
-                    Оставьте заявку, и мы свяжемся с вами в Telegram.
+                    {{ $data['subtitle'] ?? 'Оставьте заявку, и мы свяжемся с вами в Telegram.' }}
                 </p>
 
                 @if(session('success'))
