@@ -87,24 +87,35 @@
 
                 @foreach($data['reviews'] as $review)
                     @php
-                        // Источники плеера: YouTube / RuTube / legacy video_link. embed() и
-                        // poster() — общий помощник (как в карусели «беседы» на главной).
-                        $vYoutube = $review['youtube_link'] ?? null;
-                        $vRutube  = $review['rutube_link'] ?? null;
-                        $vGeneric = $review['video_link'] ?? $review['video'] ?? null;
+                        // Источники плеера: каждое заполненное поле → отдельная кнопка
+                        // выбора. Платформу определяем по URL (метка/цвет), дедуп по платформе.
+                        // embed()/poster() — общий помощник (как в карусели «беседы» на главной).
+                        $mk = function (?string $url) {
+                            if (! $url || ! ($e = \App\Support\VideoEmbed::embed($url))) {
+                                return null;
+                            }
+                            $p = \Illuminate\Support\Str::contains($url, 'youtu') ? 'youtube'
+                                : (\Illuminate\Support\Str::contains($url, 'rutube') ? 'rutube'
+                                : (\Illuminate\Support\Str::contains($url, ['vk.com', 'vkvideo']) ? 'vk' : 'video'));
+                            $labels = ['youtube' => 'YouTube', 'rutube' => 'RuTube', 'vk' => 'ВКонтакте', 'video' => 'Смотреть'];
+
+                            return ['platform' => $p, 'label' => $labels[$p], 'embed' => $e];
+                        };
 
                         $options = [];
-                        if ($vYoutube && ($e = \App\Support\VideoEmbed::embed($vYoutube))) {
-                            $options[] = ['platform' => 'youtube', 'label' => 'YouTube', 'embed' => $e];
+                        foreach ([
+                            $review['youtube_link'] ?? null,
+                            $review['rutube_link'] ?? null,
+                            $review['vk_link'] ?? null,
+                            $review['video_link'] ?? $review['video'] ?? null,
+                        ] as $u) {
+                            if ($opt = $mk($u)) {
+                                $options[$opt['platform']] = $opt; // ключ = платформа → дедуп
+                            }
                         }
-                        if ($vRutube && ($e = \App\Support\VideoEmbed::embed($vRutube))) {
-                            $options[] = ['platform' => 'rutube', 'label' => 'RuTube', 'embed' => $e];
-                        }
-                        if (empty($options) && $vGeneric && ($e = \App\Support\VideoEmbed::embed($vGeneric))) {
-                            $options[] = ['platform' => 'video', 'label' => 'Смотреть', 'embed' => $e];
-                        }
+                        $options = array_values($options);
 
-                        $poster = \App\Support\VideoEmbed::poster($vYoutube ?: $vGeneric);
+                        $poster = \App\Support\VideoEmbed::poster(($review['youtube_link'] ?? null) ?: ($review['video_link'] ?? null));
                     @endphp
 
                     <div class="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-[360px] snap-center pt-6">
@@ -288,14 +299,14 @@
             <template x-if="!embedUrl && chooserOptions.length > 0">
                 <div class="relative w-full max-w-sm bg-[#161b28] border border-gray-700/60 rounded-2xl p-5 shadow-2xl">
                     <h3 class="text-white text-base font-bold text-center mb-1">В каком плеере смотреть?</h3>
-                    <p class="text-gray-400 text-xs text-center mb-4">Доступно на двух платформах</p>
+                    <p class="text-gray-400 text-xs text-center mb-4">Выберите, где смотреть</p>
                     <div class="flex flex-wrap items-center justify-center gap-2">
                         <template x-for="opt in chooserOptions" :key="opt.platform">
                             <button type="button" x-on:click="pick(opt)"
                                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all duration-150 hover:brightness-110 active:scale-95"
                                     :style="{
-                                        backgroundColor: opt.platform === 'youtube' ? '#FF0000' : (opt.platform === 'rutube' ? '#000000' : '#E85C24'),
-                                        boxShadow: opt.platform === 'youtube' ? '0 4px 14px rgba(255,0,0,0.4)' : (opt.platform === 'rutube' ? '0 4px 14px rgba(0,0,0,0.6)' : 'none'),
+                                        backgroundColor: opt.platform === 'youtube' ? '#FF0000' : (opt.platform === 'rutube' ? '#000000' : (opt.platform === 'vk' ? '#0077FF' : '#E85C24')),
+                                        boxShadow: opt.platform === 'youtube' ? '0 4px 14px rgba(255,0,0,0.4)' : (opt.platform === 'rutube' ? '0 4px 14px rgba(0,0,0,0.6)' : (opt.platform === 'vk' ? '0 4px 14px rgba(0,119,255,0.4)' : 'none')),
                                         border: opt.platform === 'rutube' ? '1px solid rgba(255,255,255,0.15)' : 'none'
                                     }">
                                 <template x-if="opt.platform === 'youtube'">

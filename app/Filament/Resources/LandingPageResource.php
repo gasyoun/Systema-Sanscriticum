@@ -707,12 +707,17 @@ class LandingPageResource extends Resource
                                                     TextInput::make('rutube_link')
                                                         ->label('Видео на RuTube')
                                                         ->url()
-                                                        ->hint('Заполните обе платформы — при клике зритель выберет, где смотреть (выбор запомнится).'),
+                                                        ->hint('Поддерживаются и shorts (rutube.ru/shorts/…).'),
+
+                                                    TextInput::make('vk_link')
+                                                        ->label('Видео ВКонтакте')
+                                                        ->url()
+                                                        ->hint('Поддерживаются и клипы (vk.com/clip…). Заполните несколько платформ — при клике зритель выберет, где смотреть (выбор запомнится).'),
 
                                                     TextInput::make('video_link')
-                                                        ->label('Видео — другая ссылка (Vimeo/VK, запасное)')
+                                                        ->label('Видео — другая ссылка (Vimeo, запасное)')
                                                         ->url()
-                                                        ->hint('Используется, если не заполнены YouTube/RuTube выше.'),
+                                                        ->hint('Используется, если не заполнены поля выше.'),
                                                 ]),
 
                                                 // 2. Блок с данными
