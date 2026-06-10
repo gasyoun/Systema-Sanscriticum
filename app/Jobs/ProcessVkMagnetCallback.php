@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\LandingBot;
 use App\Models\Lead;
+use App\Services\Leads\LeadMagnetDispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -48,7 +49,7 @@ final class ProcessVkMagnetCallback implements ShouldQueue
                 if (! $refLead->vk_user_id) {
                     $refLead->update(['vk_user_id' => $userId]);
                 }
-                SendLeadMagnet::dispatch($refLead->id, 'vk');
+                LeadMagnetDispatcher::deliverOrDefer($refLead, 'vk');
             } else {
                 Log::warning('VK: unknown magnet_token', ['token' => $token]);
             }
