@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -92,6 +93,119 @@ class Lesson extends Model
     public function homeworkSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(HomeworkSubmission::class);
+    }
+
+    // ===================================================================
+    // МАТЕРИАЛЫ УРОКА — единый источник правды (для статистики/витрины).
+    // PHP-аксессоры используют колонки модели; query-скоупы дублируют ту
+    // же логику в SQL для фильтров/счётчиков (паритет проверяется тестом).
+    // ===================================================================
+
+    public function hasVideo(): bool
+    {
+        return filled($this->youtube_url) || filled($this->rutube_url) || filled($this->video_url);
+    }
+
+    public function attachmentsCount(): int
+    {
+        return is_array($this->attachments) ? count($this->attachments) : 0;
+    }
+
+    public function hasTranscript(): bool
+    {
+        return filled($this->transcript_file);
+    }
+
+    public function hasHomeworkMaterial(): bool
+    {
+        return (bool) $this->homework_enabled && filled($this->homework_prompt);
+    }
+
+    public function hasFlashcards(): bool
+    {
+        return is_array($this->flash_cards) && count($this->flash_cards) > 0;
+    }
+
+    /** Покрытие материалами = видео ИЛИ вложения ИЛИ транскрипт. ДЗ/флешкарты не учитываются. */
+    public function hasCoreMaterials(): bool
+    {
+        return $this->hasVideo() || $this->attachmentsCount() > 0 || $this->hasTranscript();
+    }
+
+    /** Разбивка вложений по типу: ['pdf' => 2, 'audio' => 1, ...]. */
+    public function attachmentTypes(): array
+    {
+        $map = [
+            'pdf' => ['pdf'],
+            'audio' => ['mp3', 'wav', 'm4a', 'ogg', 'aac'],
+            'video' => ['mp4', 'mov', 'webm', 'avi', 'mkv'],
+            'archive' => ['zip', 'rar', '7z'],
+            'doc' => ['doc', 'docx', 'rtf', 'txt'],
+        ];
+
+        $out = [];
+        foreach ((array) ($this->attachments ?? []) as $item) {
+            $path = is_array($item) ? ($item['path'] ?? $item['name'] ?? '') : (string) $item;
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $type = 'other';
+            foreach ($map as $t => $exts) {
+                if (in_array($ext, $exts, true)) {
+                    $type = $t;
+                    break;
+                }
+            }
+            $out[$type] = ($out[$type] ?? 0) + 1;
+        }
+
+        return $out;
+    }
+
+    public function scopeWithVideo(Builder $q): Builder
+    {
+        return $q->where(function (Builder $w) {
+            $w->whereRaw("COALESCE(youtube_url, '') <> ''")
+                ->orWhereRaw("COALESCE(rutube_url, '') <> ''")
+                ->orWhereRaw("COALESCE(video_url, '') <> ''");
+        });
+    }
+
+    public function scopeWithTranscript(Builder $q): Builder
+    {
+        return $q->whereRaw("COALESCE(transcript_file, '') <> ''");
+    }
+
+    public function scopeWithAttachments(Builder $q): Builder
+    {
+        // JSON-массив непустой. Портируемо: NULL исключаем, пустой массив '[]' отбрасываем.
+        return $q->whereNotNull('attachments')->whereRaw("attachments <> '[]'");
+    }
+
+    public function scopeWithFlashcards(Builder $q): Builder
+    {
+        return $q->whereNotNull('flash_cards')->whereRaw("flash_cards <> '[]'");
+    }
+
+    public function scopeWithHomework(Builder $q): Builder
+    {
+        return $q->where('homework_enabled', true)->whereRaw("COALESCE(homework_prompt, '') <> ''");
+    }
+
+    public function scopeWithCoreMaterials(Builder $q): Builder
+    {
+        return $q->where(function (Builder $w) {
+            $w->whereRaw("COALESCE(youtube_url, '') <> ''")
+                ->orWhereRaw("COALESCE(rutube_url, '') <> ''")
+                ->orWhereRaw("COALESCE(video_url, '') <> ''")
+                ->orWhereRaw("COALESCE(transcript_file, '') <> ''")
+                ->orWhere(function (Builder $a) {
+                    $a->whereNotNull('attachments')->whereRaw("attachments <> '[]'");
+                });
+        });
+    }
+
+    public function scopeWithoutCoreMaterials(Builder $q): Builder
+    {
+        return $q->whereNot(fn (Builder $w) => $w->withCoreMaterials());
     }
 
     public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
