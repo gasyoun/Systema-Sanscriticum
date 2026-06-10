@@ -39,6 +39,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
             ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
             ->name('close-stale-sessions');  // имя для логов и блокировки
+
+        // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
+        // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
+        $schedule->command('magnets:deliver-due')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('deliver-due-lead-magnets');
     }
 
     /**
