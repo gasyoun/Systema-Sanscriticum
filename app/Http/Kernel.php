@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'verify.tg.magnet' => \App\Http\Middleware\VerifyTelegramMagnetWebhook::class,
         'verify.vk.magnet' => \App\Http\Middleware\VerifyVkMagnetCallback::class,
         'verify.max.magnet' => \App\Http\Middleware\VerifyMaxMagnetWebhook::class,
+        'verify.n8n.leadstep' => \App\Http\Middleware\VerifyLeadStepWebhook::class,
     ];
 }

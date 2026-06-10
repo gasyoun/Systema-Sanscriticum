@@ -231,6 +231,7 @@ class Payment extends Model
         // депозит гасить не за что.
         if (! $payment->is_conditional) {
             $payment->consumeDepositsForCourse();
+            $payment->reconcileConditionalGrants();
         }
     }
 
@@ -422,6 +423,73 @@ class Payment extends Model
             ->each(fn (self $deposit) => $deposit->updateQuietly([
                 'deposit_consumed_at' => now(),
             ]));
+    }
+
+    /**
+     * Авто-сверка с conditional-доступом «под обещание». Когда приходит реальная
+     * оплата того, что раньше открыли под честное слово, перекрытые conditional
+     * Payments надо снять (иначе они дублируют блок и маскируют покупку в витрине),
+     * а связанное обещание — закрыть, если по нему больше не осталось открытых
+     * conditional-доступов.
+     *
+     * Соответствие тарифов — по containment-модели (как upgradeCreditForUser):
+     *   реальный 'full'    перекрывает любой conditional курса (full + block_%);
+     *   реальный 'block_N' перекрывает только conditional на тот же блок.
+     */
+    public function reconcileConditionalGrants(): void
+    {
+        if ($this->is_conditional || ! $this->user_id || ! $this->course_id) {
+            return;
+        }
+
+        $query = self::query()
+            ->conditional()
+            ->where('user_id', $this->user_id)
+            ->where('course_id', $this->course_id);
+
+        if ($this->tariff === 'full') {
+            $query->where(fn (Builder $q) => $q->where('tariff', 'full')->orWhere('tariff', 'like', 'block_%'));
+        } else {
+            $query->where('tariff', $this->tariff);
+        }
+
+        $conditionals = $query->get(['id', 'linked_promise_id']);
+        if ($conditionals->isEmpty()) {
+            return;
+        }
+
+        $promiseIds = $conditionals->pluck('linked_promise_id')->filter()->unique();
+
+        // Снимаем перекрытые conditional-платежи. Mass-delete не триггерит
+        // Eloquent-события — это намеренно: аудит/sheet-sync для «фантомных»
+        // нулевых платежей не нужны (как и в ConditionalAccessGranter::revoke).
+        self::query()->whereIn('id', $conditionals->pluck('id'))->delete();
+
+        // Закрываем обещание, если у него не осталось открытых conditional-доступов
+        // (full-обещание могло открыть несколько блоков — частичная оплата его не гасит).
+        foreach ($promiseIds as $promiseId) {
+            $promise = PaymentPromise::find($promiseId);
+
+            if (! $promise instanceof PaymentPromise || ! $promise->isUnmet()) {
+                continue;
+            }
+
+            $stillOpen = self::query()
+                ->conditional()
+                ->where('linked_promise_id', $promiseId)
+                ->exists();
+
+            if ($stillOpen) {
+                continue;
+            }
+
+            $promise->update([
+                'status' => PaymentPromise::STATUS_FULFILLED,
+                'fulfilled_at' => now(),
+                'fulfilled_payment_id' => $this->id,
+                'actual_paid_at' => now(),
+            ]);
+        }
     }
 
     // ==========================================

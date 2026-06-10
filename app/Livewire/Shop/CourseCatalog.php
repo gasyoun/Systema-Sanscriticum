@@ -150,6 +150,7 @@ class CourseCatalog extends Component
         $purchasedByCourse = [];
         if (Auth::check()) {
             $purchasedByCourse = Payment::query()
+                ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courses->pluck('id'))
                 ->whereIn('status', ['paid', 'success'])
