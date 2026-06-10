@@ -101,7 +101,8 @@ class LandingPageResource extends Resource
 
                                         TextInput::make('title')
                                             ->label('Заголовок (Оффер)')
-                                            ->required(),
+                                            ->required()
+                                            ->helperText('Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: *17 июня* — последний шанс.'),
 
                                         Textarea::make('description')
                                             ->label('Текст под заголовком')
@@ -123,6 +124,11 @@ class LandingPageResource extends Resource
                                                 ['text' => 'Места ограничены'],
                                                 ['text' => 'Онлайн формат'],
                                             ]),
+
+                                        TextInput::make('registered_note')
+                                            ->label('Соц. доказательство (в самом низу блока)')
+                                            ->placeholder('✅ Уже зарегистрировались 137 человек')
+                                            ->helperText('Строка под кнопкой и плашками. Очистите поле, чтобы скрыть.'),
                                     ]),
 
                                 // 2. VIDEO
@@ -329,6 +335,12 @@ class LandingPageResource extends Resource
                                                 TextInput::make('min_tg_placeholder')
                                                     ->label('Плейсхолдер поля Telegram')
                                                     ->default('@username')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_registered_note')
+                                                    ->label('Строка-счётчик под кнопкой')
+                                                    ->placeholder('✅ Уже зарегистрировались 137 человек')
+                                                    ->helperText('Соц. доказательство в самом низу формы. Очистите поле, чтобы скрыть.')
                                                     ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
 
                                                 // --- ЗАГОЛОВОК/ПОДЗАГОЛОВОК (общие для обоих вариантов) ---
