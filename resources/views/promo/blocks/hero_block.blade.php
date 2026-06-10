@@ -31,8 +31,17 @@
                 {{-- Заголовок (Остается слева) --}}
                 <div class="transform transition-all duration-700 delay-200 translate-y-8 opacity-0 w-full"
                      :class="loaded ? '!translate-y-0 !opacity-100' : ''">
+                    @php
+                        // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
+                        // e() экранирует ДО вставки span — тег служебный, контент безопасен.
+                        $titleHtml = nl2br(preg_replace(
+                            '/\*(.+?)\*/u',
+                            '<span style="color:#E85C24;">$1</span>',
+                            e($data['title'] ?? '')
+                        ));
+                    @endphp
                     <h1 class="text-4xl md:text-5xl font-extrabold text-[#101010] mb-8 leading-tight tracking-tight max-w-6xl">
-                        {{ $data['title'] }}
+                        {!! $titleHtml !!}
                     </h1>
                 </div>
                 
@@ -80,6 +89,21 @@
                         @endforeach
                     </div>
                 </div>
+
+                {{-- Соц. доказательство — парящий бейдж --}}
+                @if(!empty($data['registered_note']))
+                    <div class="transform transition-all duration-700 delay-1000 translate-y-8 opacity-0 w-full flex justify-center"
+                         :class="loaded ? '!translate-y-0 !opacity-100' : ''">
+                        <div class="mt-12 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-sm md:text-base font-semibold animate-float-fast"
+                             style="box-shadow: 0 8px 24px rgba(232,92,36,.20), 0 0 16px rgba(232,92,36,.14);">
+                            <span class="relative flex h-2.5 w-2.5 shrink-0">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                            </span>
+                            {{ $data['registered_note'] }}
+                        </div>
+                    </div>
+                @endif
             </div>
 
         </div>
