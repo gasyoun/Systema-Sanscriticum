@@ -9,11 +9,11 @@
 <div x-data="{ loaded: false, isMobileFormOpen: false }" 
      x-init="setTimeout(() => loaded = true, 100)"
      @open-order-form.window="
-         if (window.innerWidth < 1024) { 
-             isMobileFormOpen = true; 
-         } else { 
-             window.scrollTo({ top: 0, behavior: 'smooth' }); 
-             setTimeout(() => document.getElementById('hero-name-input').focus(), 300); 
+         if (window.innerWidth < 1024) {
+             isMobileFormOpen = true;
+         } else {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+             setTimeout(() => { const f = $el.querySelector('input[name=name], input[name=contact]'); if (f) f.focus(); }, 300);
          }
      ">
  
@@ -205,7 +205,7 @@
             {{-- CTA-кнопка --}}
             <div class="transform transition-all duration-700 delay-500 translate-y-8 opacity-0 w-full sm:w-auto"
                  :class="loaded ? '!translate-y-0 !opacity-100' : ''">
-                <button @click.prevent="window.innerWidth < 1024 ? isMobileFormOpen = true : document.querySelector('input[name=name]').focus()"
+                <button @click.prevent="$dispatch('open-order-form')"
                         class="btn-hero group relative w-full sm:w-auto inline-flex items-center justify-center text-white font-black text-sm uppercase tracking-[0.18em] py-5 px-12 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                         style="background: linear-gradient(135deg, var(--accent) 0%, #f0733b 100%); box-shadow: 0 12px 35px rgba(232,92,36,.35), 0 4px 12px rgba(232,92,36,.2);">
                     <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer rounded-2xl"></div>
