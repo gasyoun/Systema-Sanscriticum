@@ -331,21 +331,20 @@ class LandingPageResource extends Resource
                                                     ->default('@username')
                                                     ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
 
-                                                // --- ПОЛНЫЙ ВАРИАНТ ---
+                                                // --- ЗАГОЛОВОК/ПОДЗАГОЛОВОК (общие для обоих вариантов) ---
                                                 Textarea::make('form_title')
                                                     ->label('Заголовок над формой')
                                                     ->default('Записаться на курс')
                                                     ->rows(2)
-                                                    ->helperText('Enter — перенос строки.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
+                                                    ->helperText('Enter — перенос строки.'),
 
                                                 Textarea::make('form_subtitle')
                                                     ->label('Подзаголовок над формой')
                                                     ->default('Оставьте заявку, и мы свяжемся с вами в Telegram.')
                                                     ->rows(2)
-                                                    ->helperText('Enter — перенос строки.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
+                                                    ->helperText('Enter — перенос строки.'),
 
+                                                // --- ПОЛНЫЙ ВАРИАНТ ---
                                                 TextInput::make('submit_text')
                                                     ->label('Текст кнопки отправки')
                                                     ->default('Записаться')
