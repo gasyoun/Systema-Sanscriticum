@@ -62,6 +62,27 @@ class LandingPageResource extends Resource
                             ->default(true),
                     ]),
 
+                // === Шапка лендинга ===
+                Section::make('Шапка лендинга')
+                    ->description('По умолчанию в шапке меню сайта (Главная / Все курсы / Блог). Для вебинарного лендинга его можно скрыть и показать вместо него заметку-ссылку.')
+                    ->collapsed()
+                    ->schema([
+                        Toggle::make('hide_default_nav')
+                            ->label('Скрыть меню сайта (Главная / Все курсы / Блог)')
+                            ->live()
+                            ->default(false),
+                        TextInput::make('header_note_text')
+                            ->label('Заметка вместо меню')
+                            ->placeholder('Для участия нужен Zoom — скачать')
+                            ->helperText('Показывается в шапке вместо меню. Пусто → в шапке только логотип.')
+                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                        TextInput::make('header_note_url')
+                            ->label('Ссылка заметки')
+                            ->url()
+                            ->placeholder('https://zoom.us/download')
+                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                    ]),
+
                 // === Вебинар: письмо лиду + время выдачи лид-магнита ===
                 Section::make('Вебинар (письмо лиду и выдача лид-магнита)')
                     ->description('Дата/время вебинара управляют и письмом-приглашением (n8n зовёт /api/webhooks/lead-step), и моментом выдачи лид-магнита в боте — он уходит за N минут до старта.')
@@ -133,10 +154,24 @@ class LandingPageResource extends Resource
                                                 ['text' => 'Онлайн формат'],
                                             ]),
 
+                                        Toggle::make('registered_dynamic')
+                                            ->label('Считать регистрации автоматически')
+                                            ->helperText('N = стартовое число + реальные лиды этого лендинга. Текст «Ещё X мест» считается до ближайшей десятки.')
+                                            ->live()
+                                            ->default(false),
+
+                                        TextInput::make('registered_base')
+                                            ->label('Стартовое число регистраций')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->default(30)
+                                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('registered_dynamic')),
+
                                         TextInput::make('registered_note')
-                                            ->label('Соц. доказательство (в самом низу блока)')
+                                            ->label('Соц. доказательство (ручной текст)')
                                             ->placeholder('✅ Уже зарегистрировались 137 человек')
-                                            ->helperText('Строка под кнопкой и плашками. Очистите поле, чтобы скрыть.'),
+                                            ->helperText('Используется, когда автосчёт выключен. Очистите поле, чтобы скрыть плашку.')
+                                            ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('registered_dynamic')),
                                     ]),
 
                                 // 2. VIDEO
@@ -277,6 +312,11 @@ class LandingPageResource extends Resource
                                                 TextInput::make('subtitle')
                                                     ->label('Надзаголовок (Плашка)')
                                                     ->default('ОНЛАЙН-КУРС В 2-Х ЧАСТЯХ'),
+
+                                                Toggle::make('show_days_countdown')
+                                                    ->label('Плашка «Осталось N дней» (справа сверху, над формой)')
+                                                    ->helperText('Считается от даты вебинара. Появляется, только если до вебинара ещё есть время.')
+                                                    ->default(false),
 
                                                 Textarea::make('title')
                                                     ->label('Главный заголовок')
@@ -659,10 +699,20 @@ class LandingPageResource extends Resource
                                                         ->multiple() // Curator сам поймет, что нужно выбрать несколько!
                                                         ->buttonLabel('Добавить скриншоты'),
 
+                                                    TextInput::make('youtube_link')
+                                                        ->label('Видео на YouTube')
+                                                        ->url()
+                                                        ->hint('Обложка подтянется автоматически.'),
+
+                                                    TextInput::make('rutube_link')
+                                                        ->label('Видео на RuTube')
+                                                        ->url()
+                                                        ->hint('Заполните обе платформы — при клике зритель выберет, где смотреть (выбор запомнится).'),
+
                                                     TextInput::make('video_link')
-                                                        ->label('Ссылка на видеоотзыв (YouTube/Vimeo)')
-                                                        ->url() // проверяет, что ввели именно ссылку
-                                                        ->hint('Вставьте обычную ссылку на YouTube, и плеер сформируется автоматически.'),
+                                                        ->label('Видео — другая ссылка (Vimeo/VK, запасное)')
+                                                        ->url()
+                                                        ->hint('Используется, если не заполнены YouTube/RuTube выше.'),
                                                 ]),
 
                                                 // 2. Блок с данными

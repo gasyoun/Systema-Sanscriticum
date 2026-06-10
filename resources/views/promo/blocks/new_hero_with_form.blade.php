@@ -1,6 +1,11 @@
 @php
     $data = $block['data'] ?? [];
     $blockId = 'hero-form-' . uniqid();
+
+    // Счётчик «Осталось N дней» до вебинара (только если включён тогл и дата в будущем).
+    $daysLeft = (! empty($data['show_days_countdown']) && isset($page) && $page->webinar_date && $page->webinar_date->isFuture())
+        ? (int) ceil(now()->diffInHours($page->webinar_date, false) / 24)
+        : null;
 @endphp
  
 {{-- ============================================================== --}}
@@ -142,7 +147,21 @@
 {{-- 1. ГЛАВНЫЙ ЭКРАН                           --}}
 {{-- ========================================== --}}
 <section class="relative bg-[var(--surface-soft)] overflow-hidden pt-6 pb-14 lg:pt-14 lg:pb-20 grain-overlay">
- 
+
+    {{-- Счётчик дней до вебинара — на уровне надзаголовочной плашки, слева от формы --}}
+    @if($daysLeft !== null)
+        <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-[#E85C24]/20"
+             style="box-shadow: 0 4px 16px rgba(232,92,36,.12);">
+            <span class="relative flex h-2 w-2 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E85C24] opacity-60"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-[#E85C24]"></span>
+            </span>
+            <span class="text-[11px] md:text-xs font-extrabold uppercase tracking-wider text-[#E85C24] whitespace-nowrap">
+                Осталось {{ $daysLeft }} {{ \App\Support\Plural::ru($daysLeft, 'день', 'дня', 'дней') }}
+            </span>
+        </div>
+    @endif
+
     {{-- Фоновая точечная сетка --}}
     <div class="absolute inset-0 dot-grid opacity-60 pointer-events-none z-0"></div>
  
