@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\LandingBot;
 use App\Models\Lead;
+use App\Services\Leads\LeadMagnetDispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -75,6 +76,8 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             $lead->update(['telegram_chat_id' => $chatId]);
         }
 
-        SendLeadMagnet::dispatch($lead->id, 'telegram');
+        // Сразу, если у лендинга нет вебинара или окно [старт−offset; старт+грейс]
+        // уже открыто; иначе выдаст планировщик magnets:deliver-due.
+        LeadMagnetDispatcher::deliverOrDefer($lead, 'telegram');
     }
 }
