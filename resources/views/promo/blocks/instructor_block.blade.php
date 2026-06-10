@@ -133,16 +133,18 @@
                     {{-- Прокачанное описание (Bio) --}}
                     <style>
                         /* Премиальные стили для текста биографии */
+                        /* Первый абзац — мягкий «лид»: чуть крупнее и темнее, но НЕ жирная
+                           стена. Акценты внутри текста делаются через <strong> в редакторе. */
                         .premium-bio p:first-of-type {
-                            font-size: 1.25rem;
-                            line-height: 1.4;
-                            font-weight: 800;
-                            color: #101010;
-                            margin-bottom: 1.5rem;
+                            font-size: 1.125rem;
+                            line-height: 1.6;
+                            font-weight: 500;
+                            color: #1f2937; /* text-gray-800 */
+                            margin-bottom: 1.25rem;
                         }
                         @media (min-width: 768px) {
                             .premium-bio p:first-of-type {
-                                font-size: 1.5rem;
+                                font-size: 1.25rem;
                             }
                         }
                         .premium-bio p {
