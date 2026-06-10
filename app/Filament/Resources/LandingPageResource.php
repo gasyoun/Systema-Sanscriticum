@@ -337,12 +337,6 @@ class LandingPageResource extends Resource
                                                     ->default('@username')
                                                     ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
 
-                                                TextInput::make('min_registered_note')
-                                                    ->label('Строка-счётчик под кнопкой')
-                                                    ->placeholder('✅ Уже зарегистрировались 137 человек')
-                                                    ->helperText('Соц. доказательство в самом низу формы. Очистите поле, чтобы скрыть.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
-
                                                 // --- ЗАГОЛОВОК/ПОДЗАГОЛОВОК (общие для обоих вариантов) ---
                                                 Textarea::make('form_title')
                                                     ->label('Заголовок над формой')
