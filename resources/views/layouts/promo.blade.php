@@ -119,7 +119,10 @@
           }
       }">
 
-    <x-public-header variant="light" :show-login="false" />
+    <x-public-header variant="light" :show-login="false"
+        :show-nav="! (isset($page) && $page->hide_default_nav)"
+        :note-text="isset($page) ? $page->header_note_text : null"
+        :note-url="isset($page) ? $page->header_note_url : null" />
 
     {{-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ НАШИ БЛОКИ --}}
     @yield('content')
