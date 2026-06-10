@@ -179,11 +179,11 @@
                 @php
                     // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
                     // e() экранирует ДО вставки span — тег служебный, контент безопасен.
-                    $titleHtml = preg_replace(
+                    $titleHtml = nl2br(preg_replace(
                         '/\*(.+?)\*/u',
                         '<span style="color:var(--accent);">$1</span>',
                         e($data['title'] ?? 'Название курса')
-                    );
+                    ));
                 @endphp
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-8 leading-[1.08] tracking-tight max-w-5xl"
                     style="color:var(--text-primary);">
@@ -264,8 +264,8 @@
         </div>
  
         <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
-            <h3 class="text-xl lg:text-2xl font-extrabold text-gray-900 mb-1 text-center">{{ $data['form_title'] ?? 'Записаться на курс' }}</h3>
-            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-4 text-center">Оставьте заявку, и мы свяжемся с вами в Telegram.</p>
+            <h3 class="text-xl lg:text-2xl font-extrabold text-gray-900 mb-1 text-center">{!! nl2br(e($data['form_title'] ?? 'Записаться на курс')) !!}</h3>
+            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-4 text-center">{!! nl2br(e($data['form_subtitle'] ?? 'Оставьте заявку, и мы свяжемся с вами в Telegram.')) !!}</p>
  
             @if(session('success'))
                 <div class="p-3 mb-5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-center font-bold text-sm">{{ session('success') }}</div>
@@ -287,6 +287,36 @@
                 <input type="hidden" name="click_id"     class="analytics-field">
                 <input type="hidden" name="referrer"     class="analytics-field" value="{{ request()->headers->get('referer') }}">
  
+                @if(!empty($data['form_minimal']))
+                    {{-- ─── УПРОЩЁННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
+                    @php
+                        $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.';
+                        // {link} → кликабельная «политика конфиденциальности». e() экранирует
+                        // пользовательский текст ДО подстановки служебного span — XSS-safe.
+                        $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';
+                        $consentHtml = nl2br(str_replace('{link}', $privacyLink, e($consentRaw)));
+                    @endphp
+                    <div>
+                        <input type="text" name="contact" required placeholder="{{ $data['min_contact_placeholder'] ?? 'Телефон или email' }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                    </div>
+
+                    <button type="submit"
+                            class="w-full font-extrabold py-3.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 transition-all duration-300 text-sm uppercase tracking-wider">
+                        {{ $data['min_button_text'] ?? 'Занять бесплатное место →' }}
+                    </button>
+
+                    <p class="text-[11px] text-gray-400 leading-snug text-center px-1">{!! $consentHtml !!}</p>
+
+                    @if(!empty($data['min_tg_label']))
+                        <div class="pt-1">
+                            <label class="block text-[11px] leading-snug text-[#d04a15] font-semibold mb-1.5 px-1">{{ $data['min_tg_label'] }}</label>
+                            <input type="text" name="social" maxlength="255" value="{{ old('social') }}"
+                                   placeholder="{{ $data['min_tg_placeholder'] ?? '@username' }}"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                        </div>
+                    @endif
+                @else
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">{{ $data['label_name'] ?? 'Ваше имя' }}</label>
                     <input type="text" id="hero-name-input" name="name" required placeholder="{{ $data['ph_name'] ?? 'Имя и фамилия' }}"
@@ -345,6 +375,7 @@
                         class="w-full font-extrabold py-3 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-1">
                     {{ $data['submit_text'] ?? $data['button_text'] ?? 'ЗАПИСАТЬСЯ' }}
                 </button>
+                @endif
             </form>
         </div>
     </div>

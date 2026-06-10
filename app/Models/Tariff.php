@@ -190,17 +190,10 @@ class Tariff extends Model
             }
         }
 
-        // 2. Зачёт неизрасходованных депозитов (бронь курса). max(0, ...) в конце
-        //    страхует от отрицательной цены, если депозит превышает стоимость блока.
-        if ($this->course_id) {
-            $depositCredit = \App\Models\Payment::query()
-                ->where('user_id', $user->id)
-                ->where('course_id', $this->course_id)
-                ->unconsumedDeposits()
-                ->sum('amount');
-
-            $finalPrice -= (float) $depositCredit;
-        }
+        // 2. Зачёт неизрасходованной предоплаты (бронь курса / пробное занятие).
+        //    max(0, ...) в конце страхует от отрицательной цены, если предоплата
+        //    превышает стоимость блока.
+        $finalPrice -= $this->prepaidCreditForUser($user);
 
         // 3. ЗАЧЁТ ПРИ ДОКУПКЕ: вычитаем уже оплаченное за то, что этот тариф «содержит».
         $finalPrice -= $this->upgradeCreditForUser($user);
@@ -253,6 +246,67 @@ class Tariff extends Model
         }
 
         return (float) $query->sum('amount');
+    }
+
+    /**
+     * Зачёт неизрасходованной предоплаты по курсу: брони (deposit) и пробного
+     * занятия (trial) — обе суммы засчитываются в стоимость тарифа. Единый
+     * источник и для расчёта цены, и для подписи под ней.
+     */
+    public function prepaidCreditForUser($user): float
+    {
+        if (! $user || ! $this->course_id) {
+            return 0.0;
+        }
+
+        return (float) \App\Models\Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $this->course_id)
+            ->unconsumedDeposits()
+            ->sum('amount');
+    }
+
+    /**
+     * Подпись под итоговой ценой: объясняет, ПОЧЕМУ она ниже базовой. Источники
+     * снижения: скидка (персональная/лояльность), зачёт предоплаты (бронь/пробное),
+     * зачёт ранее оплаченного (докупка). Возвращает '' если цена не снижена —
+     * чтобы не писать «с учётом скидки», когда никакой скидки на самом деле нет.
+     */
+    public function priceReductionNoteForUser($user): string
+    {
+        if (! $user) {
+            return '';
+        }
+
+        $reasons = [];
+
+        if ((float) $this->discountInfoForUser($user)['amount'] > 0) {
+            $reasons[] = 'скидки';
+        }
+        if ($this->prepaidCreditForUser($user) > 0) {
+            $reasons[] = 'предоплаты';
+        }
+        if ($this->upgradeCreditForUser($user) > 0) {
+            $reasons[] = 'ранее оплаченного';
+        }
+
+        if (empty($reasons)) {
+            return '';
+        }
+
+        return 'Стоимость с учётом '.$this->humanJoinRu($reasons);
+    }
+
+    /** Перечисление по-русски: «a», «a и b», «a, b и c». */
+    private function humanJoinRu(array $items): string
+    {
+        if (count($items) <= 1) {
+            return (string) ($items[0] ?? '');
+        }
+
+        $last = array_pop($items);
+
+        return implode(', ', $items).' и '.$last;
     }
 
     /**

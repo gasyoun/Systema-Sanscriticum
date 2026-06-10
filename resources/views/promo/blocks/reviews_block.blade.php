@@ -159,9 +159,16 @@
                                 </div>
                             @endif
 
+                            {{-- КРУПНАЯ ЦИТАТА (акцент) --}}
+                            @if(!empty($review['quote']))
+                                <p class="relative z-10 mb-4 text-[#8A3D17] font-extrabold text-lg md:text-xl leading-snug tracking-tight">
+                                    «{{ $review['quote'] }}»
+                                </p>
+                            @endif
+
                             {{-- ТЕКСТ ОТЗЫВА --}}
                             @if(!empty($review['text']))
-                                <div class="relative mb-6 flex-grow" 
+                                <div class="relative mb-6 flex-grow"
                                      x-data="{ expanded: false, showButton: false }" 
                                      x-init="$nextTick(() => { showButton = $refs.textNode.scrollHeight > $refs.textNode.clientHeight })">
                                     

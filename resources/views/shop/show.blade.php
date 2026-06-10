@@ -275,7 +275,7 @@
             {{ number_format($tariff->price, 0, '.', ' ') }} ₽
         </div>
         <div class="text-[11px] text-emerald-400/80 font-bold uppercase tracking-wide mt-1">
-            Стоимость с учётом скидки
+            {{ $tariff->priceReductionNoteForUser(auth()->user()) }}
         </div>
     @else
         <div class="text-4xl font-black text-white">
@@ -374,7 +374,7 @@
                                                 {{ number_format($finalPrice, 0, '.', ' ') }} <span class="text-sm text-[#38BDF8]/70 font-medium">₽</span>
                                             </div>
                                             <div class="text-[10px] text-emerald-400 font-bold mt-1 tracking-wide uppercase">
-                                                Стоимость с учётом скидки@if($discount['label'] !== '') · {{ $discount['label'] }}@endif
+                                                {{ $whole->priceReductionNoteForUser(auth()->user()) }}@if($discount['label'] !== '') · {{ $discount['label'] }}@endif
                                             </div>
                                         @else
                                             <div class="text-xl font-black text-white">

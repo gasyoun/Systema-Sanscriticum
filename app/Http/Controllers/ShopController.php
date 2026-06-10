@@ -30,6 +30,7 @@ class ShopController extends Controller
             $courseIds = $courses->pluck('id')->all();
 
             $purchasedByCourse = Payment::query()
+                ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courseIds)
                 ->whereIn('status', ['paid', 'success'])
@@ -72,6 +73,7 @@ class ShopController extends Controller
         $purchasedKeys = [];
         if (Auth::check()) {
             $purchasedKeys = Payment::query()
+                ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->where('course_id', $course->id)
                 ->whereIn('status', ['paid', 'success'])

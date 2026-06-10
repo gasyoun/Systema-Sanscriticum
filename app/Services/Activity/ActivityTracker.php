@@ -29,32 +29,48 @@ final class ActivityTracker
      */
     public function startSession(User $user, Request $request): UserSession
     {
-        // Если уже есть активная сессия для этого laravel session_id — переиспользуем
         $laravelSessionId = $request->session()->getId();
-
-        $existing = UserSession::where('session_id', $laravelSessionId)
-            ->where('is_active', true)
-            ->first();
-
-        if ($existing) {
-            return $existing;
-        }
 
         $agent = new Agent;
         $agent->setUserAgent($request->userAgent() ?? '');
 
-        return UserSession::create([
+        $attributes = [
             'user_id' => $user->id,
             'session_id' => $laravelSessionId,
             'started_at' => now(),
             'last_heartbeat_at' => now(),
+            'ended_at' => null,
+            'duration_seconds' => 0,
+            'pages_viewed' => 0,
+            'lessons_viewed' => 0,
             'ip_address' => $request->ip(),
             'user_agent' => mb_substr($request->userAgent() ?? '', 0, 500),
             'device_type' => $this->detectDeviceType($agent),
             'browser' => mb_substr((string) $agent->browser(), 0, 50) ?: null,
             'os' => mb_substr((string) $agent->platform(), 0, 50) ?: null,
             'is_active' => true,
-        ]);
+        ];
+
+        // Ищем по session_id БЕЗ фильтра is_active. Колонка session_id уникальна,
+        // а CloseStaleSessionsJob/logout оставляют закрытую строку с тем же id;
+        // Laravel-кука живёт дольше — вернувшийся студент приходит с тем же
+        // session_id. Без этого INSERT упирался бы в unique (1062 Duplicate entry).
+        $existing = UserSession::where('session_id', $laravelSessionId)->first();
+
+        if ($existing) {
+            // Активная — идемпотентно возвращаем как есть.
+            if ($existing->is_active) {
+                return $existing;
+            }
+
+            // Закрытая — реактивируем под новый период активности. total_time_spent
+            // уже учтён при закрытии, поэтому сброс started_at не даёт двойного счёта.
+            $existing->forceFill($attributes)->save();
+
+            return $existing;
+        }
+
+        return UserSession::create($attributes);
     }
 
     /**

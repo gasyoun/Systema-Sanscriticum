@@ -55,18 +55,6 @@ final class CloseStaleSessionsJob implements ShouldQueue
     {
         $threshold = now()->subMinutes(self::STALE_AFTER_MINUTES);
 
-        // DEBUG START
-        $found = UserSession::where('is_active', true)
-            ->where('last_heartbeat_at', '<', $threshold)
-            ->count();
-        \Illuminate\Support\Facades\Log::info('CloseStaleSessionsJob DEBUG', [
-            'threshold' => $threshold->toDateTimeString(),
-            'found_count' => $found,
-        ]);
-        // DEBUG END
-
-        $closedCount = 0;
-
         $closedCount = 0;
         $totalTimeAdded = 0;
 

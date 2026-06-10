@@ -63,6 +63,24 @@ class LandingPageResource extends Resource
                             ->default(true),
                     ]),
 
+                // === Письмо лиду со ссылкой на вебинар (триггер — шаг бота из n8n) ===
+                Section::make('Письмо лиду со ссылкой на вебинар')
+                    ->description('Письмо с приглашением уходит, когда лид доходит до нужного шага бота (n8n зовёт /api/webhooks/lead-step). Если ссылка не указана — письмо не отправляется.')
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('webinar_url')
+                            ->label('Ссылка на вебинар (Zoom / трансляция)')
+                            ->url()
+                            ->helperText('Пусто → письмо не уходит. Дата и название берутся из полей ниже.'),
+                        DatePicker::make('webinar_date')
+                            ->label('Дата вебинара')
+                            ->native(false)
+                            ->displayFormat('d.m.Y'),
+                        TextInput::make('webinar_label')
+                            ->label('Название вебинара')
+                            ->default('Бесплатный вебинар'),
+                    ]),
+
                 // === 2. КОНСТРУКТОР (BUILDER) ===
                 Section::make('Конструктор Лендинга')
                     ->description('Собирайте страницу из блоков.')
@@ -250,7 +268,7 @@ class LandingPageResource extends Resource
                                                     ->label('Главный заголовок')
                                                     ->default('Название вашего невероятного курса')
                                                     ->rows(3)
-                                                    ->helperText('Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: Санскрит и *вебинар* 17 июня.'),
+                                                    ->helperText('Enter — перенос строки. Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: Санскрит и *вебинар* 17 июня.'),
 
                                                 Textarea::make('description')
                                                     ->label('Описание')
@@ -279,16 +297,63 @@ class LandingPageResource extends Resource
                                         Section::make('Форма заявки')
                                             ->collapsed()
                                             ->schema([
-                                                TextInput::make('form_title')
+                                                Toggle::make('form_minimal')
+                                                    ->label('Упрощённая форма (один контакт, без имени)')
+                                                    ->helperText('Минимум полей: одно поле «Телефон или email», один обязательный чекбокс согласия и опциональное поле Telegram для подарка. Имя соберём позже в боте.')
+                                                    ->default(false)
+                                                    ->live(),
+
+                                                // --- УПРОЩЁННЫЙ ВАРИАНТ ---
+                                                TextInput::make('min_contact_placeholder')
+                                                    ->label('Плейсхолдер поля контакта')
+                                                    ->default('Телефон или email')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_button_text')
+                                                    ->label('Текст кнопки')
+                                                    ->default('Занять бесплатное место →')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                Textarea::make('min_consent_note')
+                                                    ->label('Подпись под кнопкой')
+                                                    ->rows(2)
+                                                    ->default('Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.')
+                                                    ->helperText('{link} превратится в кликабельную «политику конфиденциальности». Enter — перенос строки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_tg_label')
+                                                    ->label('Подпись опционального поля Telegram')
+                                                    ->default('📩 Укажите Telegram — пришлём PDF «Алфавит деванагари» перед эфиром')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_tg_placeholder')
+                                                    ->label('Плейсхолдер поля Telegram')
+                                                    ->default('@username')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                // --- ПОЛНЫЙ ВАРИАНТ ---
+                                                Textarea::make('form_title')
                                                     ->label('Заголовок над формой')
-                                                    ->default('Записаться на курс'),
+                                                    ->default('Записаться на курс')
+                                                    ->rows(2)
+                                                    ->helperText('Enter — перенос строки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
+
+                                                Textarea::make('form_subtitle')
+                                                    ->label('Подзаголовок над формой')
+                                                    ->default('Оставьте заявку, и мы свяжемся с вами в Telegram.')
+                                                    ->rows(2)
+                                                    ->helperText('Enter — перенос строки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
 
                                                 TextInput::make('submit_text')
                                                     ->label('Текст кнопки отправки')
                                                     ->default('Записаться')
-                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.'),
+                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
 
                                                 Fieldset::make('Подписи и плейсхолдеры полей')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal'))
                                                     ->schema([
                                                         TextInput::make('label_name')->label('Подпись «Имя»')->default('Ваше имя'),
                                                         TextInput::make('ph_name')->label('Плейсхолдер «Имя»')->default('Имя и фамилия'),
@@ -307,7 +372,8 @@ class LandingPageResource extends Resource
                                                     ->label('Подарок за соцсеть (над полем «Соцсеть»)')
                                                     ->rows(2)
                                                     ->default('Заполните это поле — и мы пришлём вам подарок в указанный мессенджер 🎁')
-                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.'),
+                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
                                             ]),
 
                                         // --- НАСТРОЙКИ ДИЗАЙНА ---
@@ -604,6 +670,13 @@ class LandingPageResource extends Resource
                                                     ->url() // Проверка, что введена именно ссылка
                                                     ->prefixIcon('heroicon-m-link'),
 
+                                                Textarea::make('quote')
+                                                    ->label('Крупная цитата (показывается над текстом)')
+                                                    ->placeholder('Самая яркая фраза из отзыва в 1–2 строки')
+                                                    ->hint('Короткий акцент, который реально прочитают. Текст ниже — для тех, кто захочет подробностей.')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
+
                                                 Textarea::make('text')
                                                     ->label('Текст отзыва')
                                                     ->rows(3)
@@ -624,6 +697,9 @@ class LandingPageResource extends Resource
                                                 TextInput::make('title')
                                                     ->label('Заголовок формы')
                                                     ->default('Записаться на курс'),
+                                                TextInput::make('subtitle')
+                                                    ->label('Подзаголовок формы')
+                                                    ->default('Оставьте заявку, и мы свяжемся с вами в Telegram.'),
                                                 RichEditor::make('description')
                                                     ->label('Текст слева от формы (Описание)'),
                                                 TextInput::make('button_text')
@@ -1008,8 +1084,6 @@ class LandingPageResource extends Resource
                         TextInput::make('bullet_2'),
                         TextInput::make('instructor_label'),
                         TextInput::make('instructor_name'),
-                        DatePicker::make('webinar_date')->native(false)->displayFormat('d.m.Y'),
-                        TextInput::make('webinar_label')->default('Бесплатный вебинар'),
                         TextInput::make('video_url'),
                         CuratorPicker::make('image_path')
                             ->label('Главное изображение')

@@ -23,6 +23,7 @@ class LandingPage extends Model
         'instructor_name',
         'webinar_date',
         'webinar_label',
+        'webinar_url',
         'video_url',
         'description',
         'button_text',
