@@ -9,7 +9,6 @@ use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\DatePicker; // <-- ДОБАВЛЕНО
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
@@ -63,19 +62,28 @@ class LandingPageResource extends Resource
                             ->default(true),
                     ]),
 
-                // === Письмо лиду со ссылкой на вебинар (триггер — шаг бота из n8n) ===
-                Section::make('Письмо лиду со ссылкой на вебинар')
-                    ->description('Письмо с приглашением уходит, когда лид доходит до нужного шага бота (n8n зовёт /api/webhooks/lead-step). Если ссылка не указана — письмо не отправляется.')
+                // === Вебинар: письмо лиду + время выдачи лид-магнита ===
+                Section::make('Вебинар (письмо лиду и выдача лид-магнита)')
+                    ->description('Дата/время вебинара управляют и письмом-приглашением (n8n зовёт /api/webhooks/lead-step), и моментом выдачи лид-магнита в боте — он уходит за N минут до старта.')
                     ->collapsed()
                     ->schema([
                         TextInput::make('webinar_url')
                             ->label('Ссылка на вебинар (Zoom / трансляция)')
                             ->url()
                             ->helperText('Пусто → письмо не уходит. Дата и название берутся из полей ниже.'),
-                        DatePicker::make('webinar_date')
-                            ->label('Дата вебинара')
+                        DateTimePicker::make('webinar_date')
+                            ->label('Дата и время старта (МСК)')
                             ->native(false)
-                            ->displayFormat('d.m.Y'),
+                            ->seconds(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->helperText('Точное время старта. Лид-магнит выдаётся за указанное ниже число минут до него.'),
+                        TextInput::make('magnet_lead_minutes')
+                            ->label('Выдать лид-магнит за N минут до старта')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(60)
+                            ->suffix('мин')
+                            ->helperText('Если вебинар не задан — лид-магнит выдаётся сразу при запуске бота.'),
                         TextInput::make('webinar_label')
                             ->label('Название вебинара')
                             ->default('Бесплатный вебинар'),
