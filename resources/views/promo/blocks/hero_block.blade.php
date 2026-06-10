@@ -1,9 +1,21 @@
+@php
+    // Соц. доказательство: авто-счёт (база + реальные лиды) или ручной текст.
+    $registeredNote = null;
+    if (! empty($data['registered_dynamic']) && isset($page)) {
+        $regN = (int) ($data['registered_base'] ?? 0) + $page->leads()->count();
+        $spotsLeft = (intdiv($regN, 10) + 1) * 10 - $regN; // до ближайшей десятки
+        $registeredNote = 'Уже зарегистрировались '.$regN.' '.\App\Support\Plural::ru($regN, 'человек', 'человека', 'человек')
+            .'. Ещё '.$spotsLeft.' '.\App\Support\Plural::ru($spotsLeft, 'место', 'места', 'мест').' доступно';
+    } elseif (! empty($data['registered_note'])) {
+        $registeredNote = $data['registered_note'];
+    }
+@endphp
 <section class="relative bg-white overflow-hidden pt-4 pb-10 lg:pt-10 lg:pb-16" x-data="{ loaded: false }" x-init="setTimeout(() => loaded = true, 100)">
-    
+
     {{-- ДИНАМИЧЕСКИЙ ФОН --}}
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-orange-50/60 rounded-full blur-[120px] -z-20 pointer-events-none transition-transform duration-[3s]"
          :class="loaded ? 'scale-110 opacity-100' : 'scale-90 opacity-0'"></div>
-    
+
     <div class="absolute top-20 left-10 w-32 h-32 bg-yellow-100/50 rounded-full blur-3xl -z-10 animate-float-slow"></div>
     <div class="absolute bottom-20 right-10 w-48 h-48 bg-red-50/50 rounded-full blur-3xl -z-10 animate-float-fast"></div>
 
@@ -91,7 +103,7 @@
                 </div>
 
                 {{-- Соц. доказательство — парящий бейдж --}}
-                @if(!empty($data['registered_note']))
+                @if($registeredNote)
                     <div class="transform transition-all duration-700 delay-1000 translate-y-8 opacity-0 w-full flex justify-center"
                          :class="loaded ? '!translate-y-0 !opacity-100' : ''">
                         <div class="mt-12 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-sm md:text-base font-semibold animate-float-fast"
@@ -100,7 +112,7 @@
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                             </span>
-                            {{ $data['registered_note'] }}
+                            {{ $registeredNote }}
                         </div>
                     </div>
                 @endif

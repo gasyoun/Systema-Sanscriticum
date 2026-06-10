@@ -13,6 +13,9 @@ class LandingPage extends Model
         'title',
         'slug',
         'is_active',
+        'hide_default_nav',
+        'header_note_text',
+        'header_note_url',
 
         // --- ГЛАВНОЕ ИЗМЕНЕНИЕ: Разрешаем поле конструктора ---
         'content',
@@ -58,6 +61,7 @@ class LandingPage extends Model
         'webinar_date' => 'datetime', // точное время старта вебинара
         'magnet_lead_minutes' => 'integer',
         'is_active' => 'boolean',
+        'hide_default_nav' => 'boolean',
 
         // --- ВАЖНО: Превращаем JSON в массив ---
         'content' => 'array',
