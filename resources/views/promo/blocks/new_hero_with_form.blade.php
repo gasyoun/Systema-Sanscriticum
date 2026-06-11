@@ -316,7 +316,13 @@
                         $consentHtml = nl2br(str_replace('{link}', $privacyLink, e($consentRaw)));
                     @endphp
                     <div>
-                        <input type="text" name="contact" required placeholder="{{ $data['min_contact_placeholder'] ?? 'Телефон или email' }}"
+                        <input type="tel" name="contact" required placeholder="{{ $data['min_contact_placeholder'] ?? 'Телефон' }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                    </div>
+
+                    <div>
+                        <input type="email" name="email" required placeholder="{{ $data['min_email_placeholder'] ?? 'Email' }}"
+                               value="{{ old('email') }}"
                                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
                     </div>
 

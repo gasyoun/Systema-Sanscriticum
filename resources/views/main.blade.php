@@ -92,20 +92,14 @@
 </div>
 
         @if($landings->count() > 0)
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 @foreach($landings as $landing)
                     <a href="{{ url('/' . $landing->slug) }}" class="relative group block h-full transition-all duration-300 hover:-translate-y-1">
-                        
-                        @if($landing->webinar_label)
-                            <span class="absolute top-5 -left-3 sm:-left-4 z-20 bg-[#E85C24] text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md shadow-[0_5px_15px_rgba(232,92,36,0.5)]">
-                                {{ $landing->webinar_label }}
-                            </span>
-                        @endif
 
                         <div class="flex flex-col sm:flex-row items-stretch h-full w-full bg-[#161b28] border border-gray-700/60 rounded-2xl overflow-hidden group-hover:border-[#E85C24]/60 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)] transition-all duration-300">
                             
                             {{-- БЛОК ИЗОБРАЖЕНИЯ (Исправленный под Curator) --}}
-                            <div class="relative w-full sm:w-40 shrink-0 bg-gray-800 h-56 sm:h-auto overflow-hidden">
+                            <div class="relative w-full sm:w-64 shrink-0 bg-gray-800 h-56 sm:h-auto overflow-hidden">
                                 @php
                                     $rawImage = $landing->showcase_image ?? $landing->image_path;
                                     $imageUrl = null;
@@ -130,6 +124,11 @@
                             </div>
 
                             <div class="p-5 flex flex-col flex-grow relative z-10 bg-[#161b28]">
+                                @if($landing->webinar_label)
+                                    <span class="self-start max-w-full mb-3 bg-[#E85C24] text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md leading-tight shadow-[0_5px_15px_rgba(232,92,36,0.4)]">
+                                        {{ $landing->webinar_label }}
+                                    </span>
+                                @endif
                                 @if($landing->instructor_name)
                                     <p class="text-[#2AABEE] text-xs font-bold uppercase tracking-wider mb-1.5 pl-1 sm:pl-0">
                                         {{ $landing->instructor_name }}
