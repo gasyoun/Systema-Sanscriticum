@@ -990,6 +990,7 @@ class UserResource extends Resource
         return [
             // ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ: добавили UserResource\
             UserResource\RelationManagers\CoursesRelationManager::class,
+            UserResource\RelationManagers\PaymentsRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
