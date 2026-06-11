@@ -234,6 +234,13 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/verify/{number}', [\App\Http\Controllers\CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
 
+// --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
+// ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).
+// Ведёт на режим ПРОСМОТРА карточки; доступ под guard'ом Filament-панели admin.
+Route::get('/u/{user}', function (\App\Models\User $user) {
+    return redirect(\App\Filament\Resources\UserResource::getUrl('view', ['record' => $user]));
+})->whereNumber('user')->name('student.shortlink');
+
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
