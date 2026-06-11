@@ -8,6 +8,9 @@ use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -38,6 +41,11 @@ class UserResource extends Resource
     }
 
     public static function canCreate(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canView($record): bool
     {
         return RoleGate::adminOnly();
     }
@@ -258,6 +266,131 @@ class UserResource extends Resource
         return new \Illuminate\Support\HtmlString(nl2br($html));
     }
 
+    /**
+     * Read-only карточка студента (режим просмотра).
+     * Открывается по короткой ссылке /s/{id} — её вставляют в заметку Telegram-контакта.
+     */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfoSection::make('Студент')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Имя')
+                            ->weight('bold'),
+
+                        TextEntry::make('email')
+                            ->label('Email')
+                            ->copyable()
+                            ->copyMessage('Email скопирован'),
+
+                        TextEntry::make('phone')
+                            ->label('Телефон')
+                            ->icon('heroicon-m-phone')
+                            ->copyable()
+                            ->copyMessage('Телефон скопирован')
+                            ->placeholder('—'),
+
+                        TextEntry::make('global_status')
+                            ->label('Статус')
+                            ->badge()
+                            ->color(fn (?string $state): string => match ($state) {
+                                'VIP' => 'warning',
+                                'Техподдержка' => 'danger',
+                                'Занимается бесплатно' => 'info',
+                                'Бартер' => 'info',
+                                default => 'success',
+                            }),
+
+                        TextEntry::make('role')
+                            ->label('Роль')
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
+                            ->color(fn (?string $state): string => match ($state) {
+                                Roles::SUPER_ADMIN => 'danger',
+                                Roles::ADMIN => 'warning',
+                                Roles::TEACHER => 'info',
+                                Roles::MANAGER => 'primary',
+                                default => 'gray',
+                            })
+                            ->visible(fn () => RoleGate::adminOnly()),
+
+                        TextEntry::make('messengers')
+                            ->label('Мессенджеры')
+                            ->state(function (User $record): string {
+                                $tg = $record->telegram_id ? '✈ Telegram' : '';
+                                $vk = $record->vk_id ? '💬 VK' : '';
+                                $parts = array_filter([$tg, $vk]);
+
+                                return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
+                            }),
+                    ]),
+
+                InfoSection::make('Ссылка на карточку')
+                    ->description('Для заметки в Telegram-контакте: по клику открывает эту карточку.')
+                    ->schema([
+                        TextEntry::make('card_short_link')
+                            ->hiddenLabel()
+                            ->state(fn (User $record): string => url('/u/'.$record->id))
+                            ->copyable()
+                            ->copyableState(fn (User $record): string => url('/u/'.$record->id))
+                            ->copyMessage('Ссылка скопирована')
+                            ->columnSpanFull(),
+                    ]),
+
+                InfoSection::make('Примечание куратора')
+                    ->visible(fn (?User $record): bool => filled($record?->note))
+                    ->schema([
+                        TextEntry::make('note')
+                            ->hiddenLabel()
+                            ->html()
+                            ->state(fn (?User $record) => static::linkifyNote($record?->note))
+                            ->columnSpanFull(),
+                    ]),
+
+                InfoSection::make('Обучение и активность')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('groups.name')
+                            ->label('Программы / Доступы')
+                            ->badge()
+                            ->placeholder('—'),
+
+                        TextEntry::make('prana_balance')
+                            ->label('🪷 Прана')
+                            ->state(fn (?User $record) => $record
+                                ? number_format((int) $record->prana_balance, 0, '.', ' ').' праны'
+                                : '—')
+                            ->visible(fn () => RoleGate::adminOnly()),
+
+                        TextEntry::make('last_activity_at')
+                            ->label('Последний визит')
+                            ->formatStateUsing(fn ($state): string => $state === null
+                                ? 'Никогда'
+                                : \Carbon\Carbon::parse($state)->diffForHumans())
+                            ->tooltip(fn ($state): ?string => $state
+                                ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
+                                : null),
+
+                        TextEntry::make('activity_stats')
+                            ->label('Статистика')
+                            ->state(function (User $record): string {
+                                $lessons = (int) $record->total_lessons_opened;
+                                $seconds = (int) $record->total_time_spent;
+                                $visits = (int) $record->login_count;
+
+                                $hours = intdiv($seconds, 3600);
+                                $mins = intdiv($seconds % 3600, 60);
+                                $time = $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
+
+                                return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
+                            }),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -288,6 +421,18 @@ class UserResource extends Resource
 
                         return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
                     }),
+
+                // --- ССЫЛКА НА КАРТОЧКУ (копируется в заметку Telegram-контакта) ---
+                Tables\Columns\TextColumn::make('card_link')
+                    ->label('Ссылка')
+                    ->state('🔗 Копировать')
+                    ->badge()
+                    ->color('gray')
+                    ->copyable()
+                    ->copyableState(fn (User $record): string => url('/u/'.$record->id))
+                    ->copyMessage('Ссылка на карточку скопирована')
+                    ->copyMessageDuration(1500)
+                    ->toggleable(),
 
                 // --- КОЛОНКА 3: СТАТУС ---
                 Tables\Columns\TextColumn::make('global_status')
@@ -513,6 +658,10 @@ class UserResource extends Resource
 
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('Открыть карточку'),
+
                 Tables\Actions\EditAction::make()
                     ->iconButton()
                     ->tooltip('Редактировать'),
@@ -851,6 +1000,7 @@ class UserResource extends Resource
     {
         return [
             'index' => Pages\ListUsers::route('/'),
+            'view' => Pages\ViewUser::route('/{record}'),
             // --- ДОБАВЛЯЕМ МАРШРУТ ДЛЯ СОЗДАННОЙ СТРАНИЦЫ ---
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
