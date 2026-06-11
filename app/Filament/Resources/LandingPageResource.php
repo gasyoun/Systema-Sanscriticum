@@ -352,15 +352,20 @@ class LandingPageResource extends Resource
                                             ->collapsed()
                                             ->schema([
                                                 Toggle::make('form_minimal')
-                                                    ->label('Упрощённая форма (один контакт, без имени)')
-                                                    ->helperText('Минимум полей: одно поле «Телефон или email», один обязательный чекбокс согласия и опциональное поле Telegram для подарка. Имя соберём позже в боте.')
+                                                    ->label('Упрощённая форма (без имени)')
+                                                    ->helperText('Минимум полей: телефон и email, один обязательный чекбокс согласия и опциональное поле Telegram для подарка. Имя соберём позже в боте.')
                                                     ->default(false)
                                                     ->live(),
 
                                                 // --- УПРОЩЁННЫЙ ВАРИАНТ ---
                                                 TextInput::make('min_contact_placeholder')
-                                                    ->label('Плейсхолдер поля контакта')
-                                                    ->default('Телефон или email')
+                                                    ->label('Плейсхолдер поля телефона')
+                                                    ->default('Телефон')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_email_placeholder')
+                                                    ->label('Плейсхолдер поля email')
+                                                    ->default('Email')
                                                     ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
 
                                                 TextInput::make('min_button_text')
