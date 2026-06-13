@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 
 class StudentDebtsService
 {
-    private const PAID_STATUSES = ['paid', 'success'];
+    private const PAID_STATUSES = Payment::PAID_STATUSES;
 
     /**
      * Долги конкретного студента. В выборку попадают курсы, по которым:
