@@ -18,9 +18,11 @@ class CourseEarningsChart extends ChartWidget
 
     protected function getData(): array
     {
-        // Группируем успешные платежи по курсам через БД для скорости
+        // Группируем успешные платежи по курсам через БД для скорости.
+        // Выплаты ЗП преподавателям — бухгалтерский отток, не выручка курса.
         $payments = Payment::whereIn('status', ['success', 'paid'])
             ->whereNotNull('course_id')
+            ->where('tariff', '!=', 'salary_payout')
             ->select('course_id', DB::raw('SUM(amount) as total'))
             ->groupBy('course_id')
             ->with('course') // Подтягиваем названия курсов

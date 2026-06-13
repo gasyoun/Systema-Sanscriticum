@@ -54,11 +54,14 @@ class PaymentObserver
      * Сумму НЕ проверяем: нулевые оплаты (бесплатный доступ, 100% промокод,
      * студент, заведённый из таблицы с суммой 0) — тоже реальные операции и
      * должны попадать в таблицу. Расходы/возвраты идут с отрицательной суммой
-     * и тоже учитываются. Отсекаем только «обещанный» доступ (is_conditional).
+     * и тоже учитываются. Отсекаем «обещанный» доступ (is_conditional) и
+     * выплаты ЗП преподам (salary_payout) — это не студенческая оплата, у них
+     * свой учёт (отдельный лист — позже).
      */
     private function isSyncable(Payment $payment): bool
     {
         return in_array($payment->status, self::SUCCESS_STATUSES, true)
-            && ! $payment->is_conditional;
+            && ! $payment->is_conditional
+            && ! $payment->isSalaryPayout();
     }
 }

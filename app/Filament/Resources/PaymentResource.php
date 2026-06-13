@@ -46,6 +46,24 @@ class PaymentResource extends Resource
         return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
+    /**
+     * Месяцы для override начисления ЗП: от 12 вперёд (предоплата) до 30 назад
+     * (просрочка/исторические правки), формат YYYY-MM => «Июнь 2026».
+     *
+     * @return array<string, string>
+     */
+    public static function salaryRecognitionMonthOptions(): array
+    {
+        $options = [];
+        $cursor = now()->startOfMonth()->addMonths(12);
+        for ($i = 0; $i < 43; $i++) {
+            $options[$cursor->format('Y-m')] = $cursor->translatedFormat('F Y');
+            $cursor->subMonth();
+        }
+
+        return $options;
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -75,6 +93,7 @@ class PaymentResource extends Resource
                                 'deposit' => '📌 Бронь курса (предоплата)',
                                 'trial' => '🎟 Пробное занятие',
                                 'Расход' => '💸 Системный расход / Возврат',
+                                'salary_payout' => '👨‍🏫 Выплата преподавателю',
                             ];
 
                             for ($i = 1; $i <= 100; $i++) {
@@ -160,6 +179,13 @@ class PaymentResource extends Resource
                             ->label('ID транзакции (Банк / Расход)')
                             ->maxLength(255),
                     ]),
+
+                    Forms\Components\Select::make('salary_recognition_month')
+                        ->label('Месяц начисления ЗП (override)')
+                        ->options(self::salaryRecognitionMonthOptions())
+                        ->searchable()
+                        ->placeholder('Авто — по периодам блоков')
+                        ->helperText('Перекрывает авто-расчёт ЗП преподавателя: вся сумма попадёт в выбранный месяц. Пусто = авто-раскладка по оплаченным блокам.'),
                 ]),
             ]);
     }
