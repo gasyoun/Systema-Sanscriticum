@@ -10,27 +10,33 @@ class CleanCourseArchives extends Command
 {
     protected $signature = 'archives:cleanup {--hours=24 : Удалять архивы старше N часов}';
 
-    protected $description = 'Удаляет старые ZIP-архивы материалов курсов из storage/app/tmp/course-archives';
+    protected $description = 'Удаляет старые ZIP-архивы: материалы курсов (tmp/course-archives) и сертификаты группы (public/archives)';
 
     public function handle(): int
     {
-        $dir = storage_path('app/tmp/course-archives');
-
-        if (! is_dir($dir)) {
-            $this->info('Директория архивов не существует — нечего чистить.');
-
-            return self::SUCCESS;
-        }
+        // Два независимых каталога ZIP-архивов. Сертификатные архивы кладёт
+        // GenerateCertificatesArchive в public/archives и раньше не чистились —
+        // копились бессрочно. Чистим оба по одному порогу --hours.
+        $dirs = [
+            storage_path('app/tmp/course-archives'),
+            storage_path('app/public/archives'),
+        ];
 
         $threshold = now()->subHours((int) $this->option('hours'))->timestamp;
         $deleted = 0;
         $freedBytes = 0;
 
-        foreach (glob($dir.'/*.zip') as $file) {
-            if (filemtime($file) < $threshold) {
-                $freedBytes += filesize($file) ?: 0;
-                if (@unlink($file)) {
-                    $deleted++;
+        foreach ($dirs as $dir) {
+            if (! is_dir($dir)) {
+                continue;
+            }
+
+            foreach (glob($dir.'/*.zip') as $file) {
+                if (filemtime($file) < $threshold) {
+                    $freedBytes += filesize($file) ?: 0;
+                    if (@unlink($file)) {
+                        $deleted++;
+                    }
                 }
             }
         }

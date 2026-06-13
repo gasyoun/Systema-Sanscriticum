@@ -232,6 +232,41 @@ class CourseResource extends Resource
                     ->collapsible(),
 
                 // ==========================================
+                // БЛОК: ПРОБНОЕ ЗАНЯТИЕ
+                // ==========================================
+                Forms\Components\Section::make('🎟 Пробное занятие')
+                    ->description('Платное пробное занятие с витрины: купивший попадает на выбранное живое занятие из расписания (Zoom-ссылка и дата берутся оттуда). На сохранении курса создаётся урок-заготовка — n8n позже дозальёт в неё запись. Кнопка показывается, только если задана цена И выбрано предстоящее событие. Сумма зачтётся при покупке курса.')
+                    ->schema([
+                        Forms\Components\TextInput::make('trial_price')
+                            ->label('Цена пробного, ₽')
+                            ->helperText('Пусто/0 — пробное занятие не продаётся.')
+                            ->numeric()
+                            ->minValue(0)
+                            ->step('0.01')
+                            ->suffix('₽'),
+
+                        Forms\Components\Select::make('trial_schedule_id')
+                            ->label('Живое занятие (из расписания)')
+                            ->helperText('Предстоящее событие расписания этого курса. Zoom-ссылка и дата берутся из него; группа события должна совпадать с той, что присылает n8n.')
+                            ->options(fn (?\App\Models\Course $record): array => $record
+                                ? \App\Models\Schedule::query()
+                                    ->where('course_id', $record->id)
+                                    ->where('start', '>=', now())
+                                    ->orderBy('start')
+                                    ->get()
+                                    ->mapWithKeys(fn (\App\Models\Schedule $s) => [
+                                        $s->id => $s->start->format('d.m.Y H:i').' — '.$s->title,
+                                    ])
+                                    ->all()
+                                : [])
+                            ->searchable()
+                            ->preload()
+                            ->nullable(),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // ==========================================
                 // БЛОК: ПРЕПОДАВАТЕЛЬ И ЗАРПЛАТА
                 // ==========================================
                 // canEdit() пускает учителя на свой курс (для правки контента),

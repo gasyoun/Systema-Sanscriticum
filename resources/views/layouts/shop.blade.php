@@ -36,8 +36,8 @@
     <header class="sticky top-0 w-full z-40 bg-[#0A0D14]/90 backdrop-blur-md border-b border-[#1F2636]">
         <div class="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center gap-4">
 
-            {{-- Логотип + бренд --}}
-            <a href="{{ route('shop.index') }}" class="flex items-center gap-3 group shrink-0">
+            {{-- Логотип + бренд → на главную сайта (не в магазин) --}}
+            <a href="{{ url('/') }}" class="flex items-center gap-3 group shrink-0">
                 <img src="{{ asset('images/logo.png') }}"
                      alt="Общество ревнителей санскрита"
                      class="w-auto h-10 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300">
@@ -155,17 +155,13 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-3 text-sm">
-                    <button @click="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')"
-                            class="text-slate-400 hover:text-[#E85C24] transition-colors">
-                        Политика конфиденциальности
-                    </button>
-                    <button @click="viewDocument('Публичная оферта', '/docs/oferta.pdf')"
-                            class="text-slate-400 hover:text-[#E85C24] transition-colors">
-                        Публичная оферта
-                    </button>
+                    <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
+                        @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-[#E85C24] transition-colors'])
+                    </div>
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены
                     </p>
+                    @include('partials.legal-requisites', ['class' => 'text-[12px] text-slate-600 mt-1'])
                 </div>
 
                 <div class="flex items-center justify-center md:justify-end gap-2">
@@ -235,6 +231,8 @@
 
     @stack('scripts')
 
-    @livewireScripts    
+    @livewireScripts
+
+    @include('partials.cookie-consent')
 </body>
 </html>

@@ -13,7 +13,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        \Awcodes\Curator\Models\Media::class => \App\Policies\MediaPolicy::class,
     ];
 
     /**

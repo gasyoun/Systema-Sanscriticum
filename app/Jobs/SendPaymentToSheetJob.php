@@ -45,8 +45,11 @@ class SendPaymentToSheetJob implements ShouldQueue
             return;
         }
 
-        // Повторная защита на уровне job (вдруг статус откатили назад)
-        if ((float) $payment->amount <= 0 || ! in_array($payment->status, ['paid', 'success'], true)) {
+        // Повторная защита на уровне job (вдруг статус/признак откатили назад,
+        // пока задача висела в очереди). Зеркалит PaymentObserver::isSyncable():
+        // только paid/success и не «обещанный» доступ. Сумму не проверяем —
+        // нулевые оплаты и отрицательные расходы тоже должны попасть в таблицу.
+        if (! in_array($payment->status, ['paid', 'success'], true) || $payment->is_conditional) {
             return;
         }
 
@@ -82,7 +85,13 @@ class SendPaymentToSheetJob implements ShouldQueue
             'start_block' => $payment->start_block,
             'end_block' => $payment->end_block,
             'amount' => (float) $payment->amount,
+            // Скидка одной колонкой: «-10%» для процентной, «-1000 ₽» для
+            // фиксированной, пусто — без скидки. Замапь в одну колонку в n8n.
+            'discount' => $payment->discountLabel(),
             'tariff' => $payment->tariff,
+            // Человекочитаемая пометка операции (бронь / пробное / блок / курс /
+            // расход) — та же, что в админке. Замапь в отдельную колонку в n8n.
+            'label' => $payment->operationLabel(),
             'status' => $payment->status,
             'transaction_id' => $payment->transaction_id,
             'paid_at' => $payment->updated_at?->format('d.m.Y'),

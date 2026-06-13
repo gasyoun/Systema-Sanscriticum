@@ -89,89 +89,100 @@ class ScheduleResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Событие')
-                    ->schema([
-                        Forms\Components\TextInput::make('title')
-                            ->label('Название события')
-                            ->required()
-                            ->columnSpanFull(),
+        return $form->schema(static::formSchema());
+    }
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Описание / Ссылка')
-                            ->columnSpanFull(),
+    /**
+     * Схема формы события расписания. Вынесена отдельно, чтобы её переиспользовал
+     * календарный виджет (ScheduleCalendarWidget) для модалок создания/редактирования —
+     * та же валидация course_id по teacher_id, что и в обычной форме.
+     *
+     * @return array<int, \Filament\Forms\Components\Component>
+     */
+    public static function formSchema(): array
+    {
+        return [
+            Forms\Components\Section::make('Событие')
+                ->schema([
+                    Forms\Components\TextInput::make('title')
+                        ->label('Название события')
+                        ->required()
+                        ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('link')
-                            ->label('Ссылка на Zoom / Google Meet')
-                            ->placeholder('https://zoom.us/j/...')
-                            ->url()
-                            ->maxLength(1024)
-                            ->prefixIcon('heroicon-m-video-camera')
-                            ->columnSpanFull(),
+                    Forms\Components\Textarea::make('description')
+                        ->label('Описание / Ссылка')
+                        ->columnSpanFull(),
 
-                        Forms\Components\Grid::make(2)
-                            ->schema([
-                                Forms\Components\DateTimePicker::make('start')
-                                    ->label('Начало')
-                                    ->required(),
-                                Forms\Components\DateTimePicker::make('end')
-                                    ->label('Окончание (необязательно)'),
-                            ]),
-                    ]),
+                    Forms\Components\TextInput::make('link')
+                        ->label('Ссылка на Zoom / Google Meet')
+                        ->placeholder('https://zoom.us/j/...')
+                        ->url()
+                        ->maxLength(1024)
+                        ->prefixIcon('heroicon-m-video-camera')
+                        ->columnSpanFull(),
 
-                Forms\Components\Section::make('Настройки')
-                    ->schema([
-                        Forms\Components\Select::make('course_id')
-                            ->label('Курс')
-                            ->relationship(
-                                name: 'course',
-                                titleAttribute: 'title',
-                                modifyQueryUsing: function (Builder $query): void {
-                                    // Учитель видит в селекте только свои курсы; админ — все.
-                                    // Учителю без teacher_id вообще ничего не показываем.
-                                    $user = auth()->user();
-                                    if ($user && $user->isTeacher()) {
-                                        if (! $user->teacher_id) {
-                                            $query->whereRaw('1 = 0');
-                                        } else {
-                                            $query->where('teacher_id', $user->teacher_id);
-                                        }
-                                    }
-                                },
-                            )
-                            // Серверная валидация: relationship-Select по умолчанию не накладывает
-                            // where на Rule::exists, поэтому учитель мог бы через POST передать
-                            // чужой course_id. Дополняем явным правилом по teacher_id.
-                            ->rule(function () {
+                    Forms\Components\Grid::make(2)
+                        ->schema([
+                            Forms\Components\DateTimePicker::make('start')
+                                ->label('Начало')
+                                ->required(),
+                            Forms\Components\DateTimePicker::make('end')
+                                ->label('Окончание (необязательно)'),
+                        ]),
+                ]),
+
+            Forms\Components\Section::make('Настройки')
+                ->schema([
+                    Forms\Components\Select::make('course_id')
+                        ->label('Курс')
+                        ->relationship(
+                            name: 'course',
+                            titleAttribute: 'title',
+                            modifyQueryUsing: function (Builder $query): void {
+                                // Учитель видит в селекте только свои курсы; админ — все.
+                                // Учителю без teacher_id вообще ничего не показываем.
                                 $user = auth()->user();
-                                if ($user?->isTeacher() && $user->teacher_id) {
-                                    return \Illuminate\Validation\Rule::exists('courses', 'id')
-                                        ->where('teacher_id', $user->teacher_id);
+                                if ($user && $user->isTeacher()) {
+                                    if (! $user->teacher_id) {
+                                        $query->whereRaw('1 = 0');
+                                    } else {
+                                        $query->where('teacher_id', $user->teacher_id);
+                                    }
                                 }
-                                if ($user?->isTeacher() && ! $user->teacher_id) {
-                                    return \Illuminate\Validation\Rule::in([]);
-                                }
+                            },
+                        )
+                        // Серверная валидация: relationship-Select по умолчанию не накладывает
+                        // where на Rule::exists, поэтому учитель мог бы через POST передать
+                        // чужой course_id. Дополняем явным правилом по teacher_id.
+                        ->rule(function () {
+                            $user = auth()->user();
+                            if ($user?->isTeacher() && $user->teacher_id) {
+                                return \Illuminate\Validation\Rule::exists('courses', 'id')
+                                    ->where('teacher_id', $user->teacher_id);
+                            }
+                            if ($user?->isTeacher() && ! $user->teacher_id) {
+                                return \Illuminate\Validation\Rule::in([]);
+                            }
 
-                                return null;
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->placeholder('Без привязки')
-                            ->required(fn (): bool => (bool) auth()->user()?->isTeacher())
-                            ->helperText('Преподаватель видит и правит только события своих курсов.'),
+                            return null;
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->placeholder('Без привязки')
+                        ->required(fn (): bool => (bool) auth()->user()?->isTeacher())
+                        ->helperText('Преподаватель видит и правит только события своих курсов.'),
 
-                        Forms\Components\Select::make('group_id')
-                            ->relationship('group', 'name')
-                            ->label('Для группы (Пусто = для всех)')
-                            ->searchable()
-                            ->preload(),
+                    Forms\Components\Select::make('group_id')
+                        ->relationship('group', 'name')
+                        ->label('Для группы (Пусто = для всех)')
+                        ->searchable()
+                        ->preload(),
 
-                        Forms\Components\ColorPicker::make('color')
-                            ->label('Цвет метки')
-                            ->default('#3788d8'),
-                    ])->columns(2),
-            ]);
+                    Forms\Components\ColorPicker::make('color')
+                        ->label('Цвет метки')
+                        ->default('#3788d8'),
+                ])->columns(2),
+        ];
     }
 
     public static function table(Table $table): Table

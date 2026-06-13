@@ -22,6 +22,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'wants_email_announcements',
         'is_admin',
         'role',
         'teacher_id',
@@ -63,6 +64,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'wants_email_announcements' => 'boolean',
             'is_lecture_editor' => 'boolean',
             'last_login_at' => 'datetime',
             'last_activity_at' => 'datetime',
@@ -193,6 +195,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Group::class);
     }
 
+    // Персональные скидки студента на курсы.
+    public function individualDiscounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(StudentDiscount::class);
+    }
+
     /**
      * Реально пройденные уроки (is_completed=true). Используется и для
      * прогресс-баров в шаблонах, и для гейта повторного начисления праны.
@@ -224,6 +232,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Payment::class);
     }
 
+    public function homeworkSubmissions(): HasMany
+    {
+        return $this->hasMany(HomeworkSubmission::class);
+    }
+
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
@@ -233,8 +246,19 @@ class User extends Authenticatable implements FilamentUser
     public function courses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class)
-            ->withPivot('status', 'note', 'left_after_block')
+            ->withPivot('status', 'note', 'left_after_block', 'joined_at_block')
             ->withTimestamps();
+    }
+
+    // ==========================================
+    // ВОССТАНОВЛЕНИЕ ПАРОЛЯ
+    // ==========================================
+    // Переопределяем стандартное уведомление Laravel, чтобы письмо уходило
+    // на русском в фирменном оформлении (через очередь 'mailing').
+    public function sendPasswordResetNotification($token): void
+    {
+        \Illuminate\Support\Facades\Mail::to($this->email)
+            ->send(new \App\Mail\PasswordResetMail($this, $token));
     }
 
     // ==========================================

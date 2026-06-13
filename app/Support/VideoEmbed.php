@@ -70,7 +70,7 @@ final class VideoEmbed
 
     private static function youtubeId(string $url): ?string
     {
-        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $m)) {
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $m)) {
             return $m[1];
         }
 
@@ -79,10 +79,11 @@ final class VideoEmbed
 
     private static function rutubeId(string $url): ?string
     {
-        // Поддерживаем оба формата ссылок:
+        // Поддерживаем форматы ссылок:
         // - https://rutube.ru/video/{id}/
+        // - https://rutube.ru/shorts/{id}/
         // - https://rutube.ru/play/embed/{id}/?p=...
-        if (preg_match('/rutube\.ru\/(?:video|play\/embed)\/([a-zA-Z0-9_-]+)/i', $url, $m)) {
+        if (preg_match('/rutube\.ru\/(?:video|shorts|play\/embed)\/([a-zA-Z0-9_-]+)/i', $url, $m)) {
             return $m[1];
         }
 
@@ -92,7 +93,7 @@ final class VideoEmbed
     /** @return array{0:string,1:string}|null */
     private static function vkVideoIds(string $url): ?array
     {
-        if (preg_match('/vk\.com\/video(-?\d+)_(\d+)/i', $url, $m)) {
+        if (preg_match('/vk\.com\/(?:clip|video)(-?\d+)_(\d+)/i', $url, $m)) {
             return [$m[1], $m[2]];
         }
 

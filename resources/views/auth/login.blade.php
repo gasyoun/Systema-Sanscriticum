@@ -23,6 +23,12 @@
                 <p class="text-gray-500 text-sm">Войдите в личный кабинет ОРС</p>
             </div>
 
+            @if (session('status'))
+                <div class="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+                    {{ session('status') }}
+                </div>
+            @endif
+
             <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
                 @csrf
                 
@@ -66,9 +72,12 @@
             </form>
         </div>
         
-        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center">
+        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center space-y-1.5">
             <p class="text-xs text-gray-500">
-                Забыли пароль? <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">Напишите куратору</a>
+                Забыли пароль? <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-semibold transition-colors">Сбросить по email</a>
+            </p>
+            <p class="text-xs text-gray-400">
+                или <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">напишите куратору</a>
             </p>
         </div>
     </div>

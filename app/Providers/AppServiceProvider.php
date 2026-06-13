@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\LandingPageObserver;
+use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
@@ -62,6 +63,9 @@ class AppServiceProvider extends ServiceProvider
         ArticleView::observe(ArticleViewObserver::class);
 
         Payment::observe(PaymentObserver::class);
+
+        // Аудит финансовых операций (кто/что/когда правил платёж).
+        Payment::observe(PaymentAuditObserver::class);
 
         LandingPage::observe(LandingPageObserver::class);
 

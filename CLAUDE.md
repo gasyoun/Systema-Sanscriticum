@@ -53,11 +53,11 @@ There is **no manual group assignment**. The `PaymentObserver` (`app/Observers/P
 
 ### Block-Based Course Structure
 
-Courses have `CourseBlock` records (time-windowed sections with `starts_at`/`ends_at`). `Tariff` models can scope access to specific blocks. `Tariff::calculateFinalPriceForUser()` handles loyalty discounts (via `MarketingSetting`) and upgrade deductions (deducting what was already paid).
+Courses have `CourseBlock` records (time-windowed sections with `starts_at`/`ends_at`). `Tariff` models can scope access to specific blocks. Access is keyed by string tariff keys stored in `payments.tariff` and matched against lessons: `full`, `block_N` (whole block), and `block_N_hH` (half of a block, H ∈ {1,2}). A block can be sold "in halves": lessons carry `lesson.block_half` (1/2; null = not split), and `Tariff::accessKey()` / `Lesson::unlockingKeys()` / `Lesson::isUnlockedBy()` are the single source of truth for key generation and access checks. `Tariff::calculateFinalPriceForUser()` handles loyalty discounts (via `MarketingSetting`), deposit credits, and upgrade credit via `Tariff::upgradeCreditForUser()` (containment model: buying a whole block credits its already-paid halves; buying `full` credits all paid blocks/halves).
 
 ### Landing Page Builder
 
-`LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`. The feature flag `config('features.upgrade_payments_enabled')` disables upgrade payment flows in config.
+`LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
 
 ### Lecture Subsystem
 
@@ -107,6 +107,6 @@ LandingPage ──> JSON blocks
 ## Environment Notes
 
 - Timezone is hardcoded to `Europe/Moscow` in `config/app.php`
-- Feature flags in `config/features.php` (e.g., `upgrade_payments_enabled`)
+- Feature flags in `config/features.php`
 - Admin seeding credentials from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars
 - Force HTTPS is applied in `AppServiceProvider` for production

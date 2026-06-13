@@ -24,9 +24,12 @@ class LeadController extends Controller
         RateLimiter::hit($rlKey, 5);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            // name/email необязательны: упрощённая форма (один контакт, без имени)
+            // шлёт только contact. Полная форма по-прежнему отправляет все три
+            // (обязательность на ней держит HTML required).
+            'name' => 'nullable|string|max:255',
             'contact' => 'required|string',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'social' => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
             'form_name' => 'nullable|string',
@@ -48,18 +51,31 @@ class LeadController extends Controller
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
 
+        // Упрощённая форма шлёт один контакт. Если введён email — дублируем его в
+        // поле email (для дедупа и писем); телефон/ник остаётся только в contact.
+        if (empty($data['email']) && ! empty($data['contact']) && filter_var($data['contact'], FILTER_VALIDATE_EMAIL)) {
+            $data['email'] = $data['contact'];
+        }
+
         if (! empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
             $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;
         }
 
+        // Дедуп по email, если он есть; иначе (телефон-only лид) — по contact.
+        // Без этого where('email', null) в Laravel превращается в IS NULL и ловит
+        // любой другой безымянный лид того же лендинга как ложный дубль.
+        [$dupColumn, $dupValue] = ! empty($data['email'])
+            ? ['email', $data['email']]
+            : ['contact', $data['contact']];
+
         $existing = null;
         if (! empty($data['landing_page_id'])) {
-            $existing = Lead::where('email', $data['email'])
+            $existing = Lead::where($dupColumn, $dupValue)
                 ->where('landing_page_id', $data['landing_page_id'])
                 ->first();
         } elseif (! empty($data['source_article_slug'])) {
-            $existing = Lead::where('email', $data['email'])
+            $existing = Lead::where($dupColumn, $dupValue)
                 ->where('source_article_slug', $data['source_article_slug'])
                 ->first();
         }
@@ -81,6 +97,9 @@ class LeadController extends Controller
         if ($landing && $landing->hasLeadMagnet()) {
             $this->attachMagnet($lead, $landing, $validated['social'] ?? null);
         }
+
+        // Письмо со ссылкой на вебинар уходит НЕ здесь, а когда лид доходит до шага
+        // бота: n8n зовёт /api/webhooks/lead-step (см. LeadStepMailer 'webinar_invite').
 
         // Уведомление маркетологам в Telegram (no-op, если чат не настроен).
         app(\App\Services\LeadNotifier::class)->newLead($lead);

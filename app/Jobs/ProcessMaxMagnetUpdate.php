@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Lead;
+use App\Services\Leads\LeadMagnetDispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -68,6 +69,6 @@ final class ProcessMaxMagnetUpdate implements ShouldQueue
             $lead->update(['max_user_id' => $userId]);
         }
 
-        SendLeadMagnet::dispatch($lead->id, 'max');
+        LeadMagnetDispatcher::deliverOrDefer($lead, 'max');
     }
 }
