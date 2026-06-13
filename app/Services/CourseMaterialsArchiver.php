@@ -254,11 +254,7 @@ class CourseMaterialsArchiver
      */
     private function isLessonUnlocked($lesson, array $unlockedTariffs): bool
     {
-        if (in_array('full', $unlockedTariffs, true)) {
-            return true;
-        }
-
-        return in_array('block_'.$lesson->block_number, $unlockedTariffs, true);
+        return $lesson->isUnlockedBy($unlockedTariffs);
     }
 
     /**

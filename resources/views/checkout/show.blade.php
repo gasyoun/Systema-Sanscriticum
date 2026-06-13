@@ -177,7 +177,14 @@ document.addEventListener('alpine:init', () => {
                                     <h4 class="text-base font-extrabold text-gray-900">Ваши данные для доступа</h4>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
-                                    <div class="sm:col-span-2">
+                                    <div class="sm:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Фамилия <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="surname" required minlength="2" placeholder="Например, Иванов"
+                                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                    </div>
+                                    <div class="sm:col-span-1">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Имя <span class="text-red-500">*</span>
                                         </label>
@@ -195,6 +202,20 @@ document.addEventListener('alpine:init', () => {
                                         <p class="mt-1.5 text-xs text-red-500 hidden peer-[&:not(:placeholder-shown):invalid]:block">
                                             <i class="fas fa-exclamation-circle mr-1"></i> Укажите корректный email
                                         </p>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Город <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="city" required placeholder="Например, Москва"
+                                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="flex items-start gap-3 cursor-pointer">
+                                            <input type="checkbox" name="wants_announcements" value="1" checked
+                                                   class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
+                                            <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -384,7 +405,17 @@ document.addEventListener('alpine:init', () => {
 
                             <div class="relative p-7 sm:p-8">
 
-                                @if(!empty($isLoyal) && $isLoyal && empty($appliedPromo))
+                                @if(!empty($isPersonal))
+                                    <div class="mb-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm">
+                                        <div class="bg-gradient-to-br from-[#38BDF8] to-[#2da4dd] text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-sky-900/30">
+                                            <i class="fas fa-user-tag text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-extrabold text-white">Персональная скидка</p>
+                                            <p class="text-xs text-indigo-200 mt-0.5 leading-relaxed">Применена к вашему аккаунту</p>
+                                        </div>
+                                    </div>
+                                @elseif(!empty($isLoyal) && $isLoyal && empty($appliedPromo))
                                     <div class="mb-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm">
                                         <div class="bg-gradient-to-br from-[#E85C24] to-[#d64e1c] text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-900/30">
                                             <i class="fas fa-crown text-sm"></i>
@@ -404,7 +435,13 @@ document.addEventListener('alpine:init', () => {
                                     </div>
 
                                     <div class="flex justify-between items-center text-amber-200" x-show="$store.checkout.loyaltyDiscount > 0">
-                                        <span class="flex items-center gap-1.5"><i class="fas fa-crown text-[10px]"></i> Скидка для своих</span>
+                                        <span class="flex items-center gap-1.5">
+                                            @if(!empty($isPersonal))
+                                                <i class="fas fa-user-tag text-[10px]"></i> Персональная скидка
+                                            @else
+                                                <i class="fas fa-crown text-[10px]"></i> Скидка для своих
+                                            @endif
+                                        </span>
                                         <span class="tabular-nums">−<span x-text="$store.checkout.format($store.checkout.loyaltyDiscount)"></span> ₽</span>
                                     </div>
 

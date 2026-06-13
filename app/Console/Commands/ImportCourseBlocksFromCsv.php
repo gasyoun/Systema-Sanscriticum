@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Support\CourseNameResolver;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -166,6 +167,9 @@ class ImportCourseBlocksFromCsv extends Command
 
     private function resolveCourse(string $title): ?Course
     {
+        // Приводим название к каноническому (из админки) перед поиском курса.
+        $title = app(CourseNameResolver::class)->resolve($title);
+
         if (array_key_exists($title, $this->courseCache)) {
             return $this->courseCache[$title];
         }

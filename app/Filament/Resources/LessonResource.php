@@ -109,6 +109,10 @@ class LessonResource extends Resource
                             }
                         },
                     )
+                    // Метка с ·#id + поиск: одноимённые курсы (когорты по годам) различимы
+                    // при создании/редактировании урока.
+                    ->getOptionLabelFromRecordUsing(fn (Course $record) => $record->title.' · #'.$record->id)
+                    ->searchable()
                     // Серверная валидация: Filament-default Rule::exists для relationship-Select
                     // не накладывает where, поэтому учитель может через POST передать чужой
                     // course_id и BelongsTo::associate его сохранит. Дополняем явным правилом.
@@ -126,7 +130,25 @@ class LessonResource extends Resource
                         return null;
                     })
                     ->required()
+                    ->live()
                     ->label('Привязать к курсу'),
+
+                // Группа курса — для курсов, разнесённых на 2 потока.
+                // Пусто = урок виден всем группам курса (поведение по умолчанию).
+                Forms\Components\Select::make('group_id')
+                    ->label('Группа (для курсов из 2 потоков)')
+                    ->helperText('Пусто — урок виден всем группам курса. Выберите группу, чтобы урок видела только она.')
+                    ->options(function (Forms\Get $get): array {
+                        $courseId = $get('course_id');
+                        if (! $courseId) {
+                            return [];
+                        }
+
+                        return \App\Models\Course::find($courseId)
+                            ?->groups()->pluck('name', 'groups.id')->all() ?? [];
+                    })
+                    ->searchable()
+                    ->nullable(),
 
                 Forms\Components\TextInput::make('title')
                     ->required()
@@ -148,6 +170,15 @@ class LessonResource extends Resource
                     ->required()
                     ->searchable() // Добавил поиск, чтобы куратору было удобно искать 52-й блок, а не крутить список
                     ->helperText('Студенты увидят этот урок, только если оплатят этот блок (или весь курс целиком).'),
+
+                Forms\Components\Select::make('block_half')
+                    ->label('Половина блока (если блок продаётся по частям)')
+                    ->options([
+                        1 => '1-я половина',
+                        2 => '2-я половина',
+                    ])
+                    ->placeholder('Весь блок (не делится)')
+                    ->helperText('Заполняйте только если этот блок продаётся половинами. Тогда КАЖДОМУ уроку блока проставьте 1 или 2 — иначе урок останется доступен лишь по полному блоку. Пусто = урок входит в целый блок.'),
 
                 Forms\Components\DateTimePicker::make('lesson_date')
                     ->label('Дата и время урока')
@@ -180,10 +211,12 @@ class LessonResource extends Resource
                         $s = trim($state);
                         if (ctype_digit($s)) {
                             $n = (int) $s;
+
                             return $n > 0 ? $n : null;
                         }
                         $parts = array_reverse(array_map('intval', explode(':', $s)));
                         $seconds = ($parts[0] ?? 0) + ($parts[1] ?? 0) * 60 + ($parts[2] ?? 0) * 3600;
+
                         return $seconds > 0 ? $seconds : null;
                     })
                     ->formatStateUsing(function ($state): string {
@@ -194,6 +227,7 @@ class LessonResource extends Resource
                         $h = intdiv($s, 3600);
                         $m = intdiv($s % 3600, 60);
                         $sec = $s % 60;
+
                         return $h > 0
                             ? sprintf('%d:%02d:%02d', $h, $m, $sec)
                             : sprintf('%d:%02d', $m, $sec);
@@ -250,6 +284,36 @@ class LessonResource extends Resource
                     ->maxSize(102400) // Максимальный вес ОДНОГО файла - 100 МБ (102400 КБ)
                     ->columnSpanFull()
                     ->helperText('Загружайте PDF, аудиолекции (MP3) или дополнительные видео. Максимум 100 МБ на файл.'),
+
+                // --- ДОМАШНЕЕ ЗАДАНИЕ ---
+                Forms\Components\Section::make('Домашнее задание')
+                    ->description('Если включено — студент сможет сдать работу на этом уроке, а преподаватель проверит её в разделе «Домашние работы».')
+                    ->icon('heroicon-o-pencil-square')
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\Toggle::make('homework_enabled')
+                            ->label('Включить домашнее задание на этом уроке')
+                            ->live(),
+
+                        Forms\Components\Textarea::make('homework_prompt')
+                            ->label('Условие задания')
+                            ->rows(4)
+                            ->maxLength(10000)
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        Forms\Components\FileUpload::make('homework_attachments')
+                            ->label('Справочные файлы к заданию (необязательно)')
+                            ->multiple()
+                            ->directory('homework-prompts')
+                            ->preserveFilenames()
+                            ->downloadable()
+                            ->openable()
+                            ->maxSize(51200)
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -266,6 +330,18 @@ class LessonResource extends Resource
                     ->badge()
                     ->color('info')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('block_half')
+                    ->label('Половина')
+                    ->badge()
+                    ->color('warning')
+                    ->formatStateUsing(fn ($state) => $state ? $state.'-я половина' : '—')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('sort_order')
+                    ->label('Порядок')
+                    ->sortable()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('Урок')
@@ -289,25 +365,28 @@ class LessonResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                // Фильтр по course_id (без relationship): точное совпадение id, а не по
+                // названию. У преподавателя под похожими/одинаковыми title лежат разные
+                // курсы (когорты по годам) — поиск по названию выбирал не тот course_id.
+                // Метка опции содержит ·#id, поэтому одноимённые курсы различимы, а набор
+                // «56» матчит и название, и #56.
                 Tables\Filters\SelectFilter::make('course_id')
                     ->label('Курс')
-                    ->relationship(
-                        name: 'course',
-                        titleAttribute: 'title',
-                        modifyQueryUsing: function (Builder $query) {
-                            // Зеркалим scope из form()->course_id и getEloquentQuery():
-                            // учитель видит в выпадашке фильтра только свои курсы,
-                            // потому что Filament не применяет getEloquentQuery() к опциям фильтра.
-                            $user = auth()->user();
-                            if ($user && $user->isTeacher()) {
-                                if (! $user->teacher_id) {
-                                    $query->whereRaw('1 = 0');
-                                } else {
-                                    $query->where('teacher_id', $user->teacher_id);
-                                }
+                    ->options(function (): array {
+                        $q = Course::query()->orderBy('title');
+                        $user = auth()->user();
+                        if ($user && $user->isTeacher()) {
+                            // Учителю без teacher_id — пустой список (как и scope уроков).
+                            if (! $user->teacher_id) {
+                                return [];
                             }
-                        },
-                    )
+                            $q->where('teacher_id', $user->teacher_id);
+                        }
+
+                        return $q->get()
+                            ->mapWithKeys(fn (Course $c) => [$c->id => $c->title.' · #'.$c->id])
+                            ->all();
+                    })
                     ->searchable()
                     ->preload(),
 
@@ -335,13 +414,42 @@ class LessonResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    // Массовая разметка половины блока: выделил уроки → задал 1 / 2 / весь блок.
+                    Tables\Actions\BulkAction::make('setBlockHalf')
+                        ->label('Проставить половину блока')
+                        ->icon('heroicon-o-scissors')
+                        ->form([
+                            Forms\Components\Select::make('block_half')
+                                ->label('Половина блока')
+                                ->options([
+                                    1 => '1-я половина',
+                                    2 => '2-я половина',
+                                ])
+                                ->placeholder('Весь блок (очистить)')
+                                ->helperText('Пусто = снять разметку (урок входит в целый блок).'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                            foreach ($records as $record) {
+                                $record->update(['block_half' => $data['block_half'] ?? null]);
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     // Добавляем кнопку массового экспорта:
                     \Filament\Tables\Actions\ExportBulkAction::make()
                         ->exporter(\App\Filament\Exports\LessonExporter::class)
                         ->label('Экспорт для файлов'),
                 ]),
             ])
-            ->defaultSort('lesson_date', 'asc');
+            // Перетаскивание доступно только когда в фильтре выбран конкретный курс —
+            // иначе Filament перенумеровал бы sort_order сразу по всем курсам и порядок
+            // размешался бы между ними.
+            ->reorderable(
+                'sort_order',
+                condition: fn ($livewire) => filled(
+                    data_get($livewire->getTableFilterState('course_id'), 'value')
+                ),
+            )
+            ->defaultSort(fn (Builder $query) => $query->orderBy('course_id')->orderBy('sort_order'));
     }
 
     public static function getRelations(): array

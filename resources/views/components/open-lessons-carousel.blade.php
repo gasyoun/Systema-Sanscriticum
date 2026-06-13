@@ -68,6 +68,11 @@
         $chunks    = $cards->chunk($perPage)->values();
         $pageCount = $chunks->count();
         $hasSlider = $pageCount > 1;
+
+        // «Умный» слайдер: гостю доступны только первые $guestFreePages страниц
+        // карусели. Попытка листнуть дальше открывает модалку с приглашением войти.
+        $isAuthed       = auth()->check();
+        $guestFreePages = 2;
     @endphp
 
     <section class="py-12 md:py-16"
@@ -77,6 +82,53 @@
                 chooserOptions: [],
                 slide: 0,
                 pages: {{ $pageCount }},
+                /* Авторизация и лимит страниц для гостя. */
+                authed: {{ $isAuthed ? 'true' : 'false' }},
+                freePages: {{ $guestFreePages }},
+                authPromptOpen: false,
+                /* Сколько страниц реально доступно текущему пользователю. */
+                get maxSlide() { return this.authed ? this.pages : Math.min(this.freePages, this.pages) },
+                /* Есть ли заблокированные за авторизацией страницы. */
+                get hasLocked() { return !this.authed && this.pages > this.maxSlide },
+                requireAuth() {
+                    this.authPromptOpen = true;
+                    this.$nextTick(() => { if (this.$refs.authEmail) this.$refs.authEmail.focus() });
+                },
+                /* Встроенная форма входа (POST shop.login, как в shop-login-modal).
+                   CSRF-токен вшит в компонент — на главной нет meta[csrf-token]. */
+                authForm: { email: '', password: '', remember: false },
+                authLoading: false,
+                authError: null,
+                csrf: '{{ csrf_token() }}',
+                async submitLogin() {
+                    this.authLoading = true;
+                    this.authError = null;
+                    try {
+                        const res = await fetch(@js(route('shop.login')), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.csrf,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(this.authForm),
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok || !data.success) {
+                            this.authError = data.message
+                                || (data.errors && Object.values(data.errors)[0]?.[0])
+                                || 'Не удалось войти. Проверьте данные.';
+                            this.authLoading = false;
+                            return;
+                        }
+                        window.location.reload();
+                    } catch (e) {
+                        this.authError = 'Ошибка сети. Попробуйте ещё раз.';
+                        this.authLoading = false;
+                    }
+                },
                 /* Запоминаем выбор плеера на год — на повторное открытие сразу запускаем нужный без диалога. */
                 cookieName: 'preferredVideoPlatform',
                 getPref() {
@@ -118,10 +170,20 @@
                     this.embedUrl = '';
                     this.chooserOptions = [];
                 },
-                prev() { this.slide = (this.slide - 1 + this.pages) % this.pages },
-                next() { this.slide = (this.slide + 1) % this.pages }
+                /* Листание остаётся в пределах доступных страниц; на границе
+                   заблокированной зоны — модалка авторизации вместо перехода. */
+                prev() { this.slide = (this.slide - 1 + this.maxSlide) % this.maxSlide },
+                next() {
+                    if (this.slide + 1 < this.maxSlide) { this.slide++; return }
+                    if (this.hasLocked) { this.requireAuth(); return }
+                    this.slide = (this.slide + 1) % this.maxSlide;
+                },
+                goTo(i) {
+                    if (i < this.maxSlide) { this.slide = i; return }
+                    this.requireAuth();
+                }
              }"
-             @keydown.escape.window="close()">
+             @keydown.escape.window="close(); authPromptOpen = false">
 
         <div class="container mx-auto px-4 max-w-7xl">
 
@@ -223,10 +285,12 @@
                 <div class="flex items-center justify-center gap-2 mt-6">
                     @for($i = 0; $i < $pageCount; $i++)
                         <button type="button"
-                                @click="slide = {{ $i }}"
-                                aria-label="Страница {{ $i + 1 }}"
+                                @click="goTo({{ $i }})"
+                                x-bind:aria-label="{{ $i }} >= maxSlide ? 'Страница {{ $i + 1 }} — нужна авторизация' : 'Страница {{ $i + 1 }}'"
                                 class="h-2 rounded-full transition-all duration-300"
-                                x-bind:class="slide === {{ $i }} ? 'w-6 bg-[#E85C24]' : 'w-2 bg-gray-600/70'"></button>
+                                x-bind:class="slide === {{ $i }}
+                                    ? 'w-6 bg-[#E85C24]'
+                                    : ({{ $i }} >= maxSlide ? 'w-2 bg-gray-600/40 ring-1 ring-[#E85C24]/40' : 'w-2 bg-gray-600/70')"></button>
                     @endfor
                 </div>
             @endif
@@ -309,6 +373,94 @@
                     </div>
                 </template>
 
+            </div>
+        </template>
+
+        {{-- Модалка «нужна авторизация» — для гостей при попытке листать дальше. --}}
+        <template x-teleport="body">
+            <div x-show="authPromptOpen"
+                 style="display: none;"
+                 @click.self="authPromptOpen = false"
+                 class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#101010]/90 backdrop-blur-md p-4 sm:p-6"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+
+                <div class="relative w-full max-w-md bg-[#161b28] border border-gray-700/60 rounded-2xl p-6 sm:p-7 shadow-2xl"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+
+                    <button type="button"
+                            @click="authPromptOpen = false"
+                            aria-label="Закрыть"
+                            class="absolute top-3 right-3 w-9 h-9 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+
+                    <div class="text-center">
+                        <span class="mx-auto mb-4 flex w-14 h-14 items-center justify-center rounded-full bg-[#E85C24]/15 text-[#E85C24]">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </span>
+                        <h3 class="text-white text-lg font-extrabold mb-1.5">
+                            Войдите, чтобы смотреть дальше
+                        </h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-5">
+                            Первые беседы открыты всем. Остальные записи — после входа в кабинет.<br>
+                            <span class="text-red-500 font-bold">Важно!</span> Если вы раньше покупали наши курсы — не регистрируйтесь сами, напишите куратору, чтобы сохранить доступы.
+                        </p>
+                    </div>
+
+                    <form @submit.prevent="submitLogin" class="space-y-5 text-left">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Email</label>
+                            <input type="email" x-ref="authEmail" x-model="authForm.email" required autocomplete="email"
+                                   placeholder="you@example.com"
+                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Пароль</label>
+                            <input type="password" x-model="authForm.password" required autocomplete="current-password"
+                                   placeholder="••••••••"
+                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                        </div>
+
+                        <template x-if="authError">
+                            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3"
+                                 x-text="authError"></div>
+                        </template>
+
+                        <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
+                            <input type="checkbox" x-model="authForm.remember"
+                                   class="rounded border-gray-700/60 bg-[#0A0D14] text-[#E85C24] focus:ring-[#E85C24]">
+                            Запомнить меня
+                        </label>
+
+                        <button type="submit" x-bind:disabled="authLoading"
+                                class="w-full flex justify-center items-center py-3.5 px-4 bg-[#E85C24] hover:bg-[#d04a15] disabled:opacity-60 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                            <span x-show="!authLoading">Войти</span>
+                            <span x-show="authLoading" x-cloak>
+                                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="text-center text-xs text-slate-500 pt-1">
+                            Забыли пароль?
+                            <a href="{{ route('password.request') }}" class="text-[#38BDF8] hover:underline font-semibold">Сбросить по email</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </template>
 

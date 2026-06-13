@@ -59,10 +59,14 @@
                 </span>
             </button>
 
-            <div class="text-center text-xs text-slate-500 pt-2">
-                Забыли пароль? Напишите                 <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#38BDF8] hover:underline">
-                    Куратору Тг</a> или <a href="https://vk.me/event89658969" target="_blank" class="text-[#38BDF8] hover:underline">
-                    Куратору Вк</a>
+            <div class="text-center text-xs text-slate-500 pt-2 space-y-1">
+                <div>
+                    Забыли пароль? <a href="{{ route('password.request') }}" class="text-[#38BDF8] hover:underline font-semibold">Сбросить по email</a>
+                </div>
+                <div class="text-slate-600">
+                    или напишите <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#38BDF8] hover:underline">Куратору Тг</a> /
+                    <a href="https://vk.me/event89658969" target="_blank" class="text-[#38BDF8] hover:underline">Вк</a>
+                </div>
             </div>
         </form>
     </div>

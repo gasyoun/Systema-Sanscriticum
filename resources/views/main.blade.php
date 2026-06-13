@@ -92,20 +92,14 @@
 </div>
 
         @if($landings->count() > 0)
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 @foreach($landings as $landing)
                     <a href="{{ url('/' . $landing->slug) }}" class="relative group block h-full transition-all duration-300 hover:-translate-y-1">
-                        
-                        @if($landing->webinar_label)
-                            <span class="absolute top-5 -left-3 sm:-left-4 z-20 bg-[#E85C24] text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md shadow-[0_5px_15px_rgba(232,92,36,0.5)]">
-                                {{ $landing->webinar_label }}
-                            </span>
-                        @endif
 
                         <div class="flex flex-col sm:flex-row items-stretch h-full w-full bg-[#161b28] border border-gray-700/60 rounded-2xl overflow-hidden group-hover:border-[#E85C24]/60 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)] transition-all duration-300">
                             
                             {{-- БЛОК ИЗОБРАЖЕНИЯ (Исправленный под Curator) --}}
-                            <div class="relative w-full sm:w-40 shrink-0 bg-gray-800 h-56 sm:h-auto overflow-hidden">
+                            <div class="relative w-full sm:w-64 shrink-0 bg-gray-800 h-56 sm:h-auto overflow-hidden">
                                 @php
                                     $rawImage = $landing->showcase_image ?? $landing->image_path;
                                     $imageUrl = null;
@@ -130,6 +124,11 @@
                             </div>
 
                             <div class="p-5 flex flex-col flex-grow relative z-10 bg-[#161b28]">
+                                @if($landing->webinar_label)
+                                    <span class="self-start max-w-full mb-3 bg-[#E85C24] text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md leading-tight shadow-[0_5px_15px_rgba(232,92,36,0.4)]">
+                                        {{ $landing->webinar_label }}
+                                    </span>
+                                @endif
                                 @if($landing->instructor_name)
                                     <p class="text-[#2AABEE] text-xs font-bold uppercase tracking-wider mb-1.5 pl-1 sm:pl-0">
                                         {{ $landing->instructor_name }}
@@ -203,11 +202,21 @@
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 11.944 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.628 4.476-1.636z"/></svg>
                 Следить за новостями в Telegram
             </a>
-            <p class="mt-8 text-sm text-gray-600">
+
+            {{-- Документы --}}
+            <div class="mt-8 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
+                @include('partials.footer-docs', ['linkClass' => 'text-gray-400 hover:text-[#E85C24] transition-colors'])
+            </div>
+
+            <p class="mt-6 text-sm text-gray-600">
                 &copy; {{ date('Y') }} Общество ревнителей санскрита. Все права защищены.
             </p>
+
+            @include('partials.legal-requisites', ['class' => 'mt-3 text-center text-[12px] text-gray-600'])
         </div>
 
     </div>
+
+    @include('partials.cookie-consent')
 </body>
 </html>

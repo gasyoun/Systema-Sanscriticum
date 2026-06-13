@@ -73,6 +73,7 @@ class PaymentResource extends Resource
                             $options = [
                                 'full' => 'Весь курс целиком',
                                 'deposit' => '📌 Бронь курса (предоплата)',
+                                'trial' => '🎟 Пробное занятие',
                                 'Расход' => '💸 Системный расход / Возврат',
                             ];
 
@@ -118,6 +119,21 @@ class PaymentResource extends Resource
                                 ->label('По блок №')
                                 ->numeric()
                                 ->helperText('Пусто, если курс куплен целиком'),
+
+                            Forms\Components\TextInput::make('discount_percent')
+                                ->label('Скидка, %')
+                                ->numeric()
+                                ->minValue(0)
+                                ->maxValue(100)
+                                ->suffix('%')
+                                ->helperText('Процентная скидка. Заполняется автоматически при покупке.'),
+
+                            Forms\Components\TextInput::make('discount_amount')
+                                ->label('Скидка, ₽')
+                                ->numeric()
+                                ->minValue(0)
+                                ->suffix('₽')
+                                ->helperText('Сумма скидки (для фиксированной). При проценте — рублёвый эквивалент.'),
                         ]),
 
                     Forms\Components\Grid::make(3)->schema([
@@ -176,30 +192,15 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->wrap()
                     ->description(function (Payment $record) {
-                        if ($record->tariff === 'deposit') {
-                            $consumed = $record->deposit_consumed_at
-                                ? ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y')
-                                : '';
+                        // Единая пометка операции (Payment::operationLabel).
+                        // Для брони дополнительно показываем дату зачёта депозита.
+                        $label = $record->operationLabel();
 
-                            return '📌 Бронь курса (предоплата)'.$consumed;
+                        if ($record->tariff === 'deposit' && $record->deposit_consumed_at) {
+                            $label .= ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y');
                         }
 
-                        $start = (int) $record->start_block;
-                        $end = (int) $record->end_block;
-
-                        if ($start > 0) {
-                            if ($end <= 0 || $start === $end) {
-                                return "Блок {$start}";
-                            }
-
-                            return "Блоки {$start} - {$end}";
-                        }
-
-                        if ($record->tariff === 'Расход') {
-                            return 'Технический расход';
-                        }
-
-                        return 'Весь курс';
+                        return $label;
                     }),
 
                 // 4. СУММА
@@ -210,6 +211,14 @@ class PaymentResource extends Resource
                     ->weight(\Filament\Support\Enums\FontWeight::ExtraBold)
                     ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
                     ->alignment(\Filament\Support\Enums\Alignment::End),
+
+                // Пометка «по скидке»: бейдж «-10%» / «-1000 ₽», если платёж со скидкой.
+                Tables\Columns\TextColumn::make('discount')
+                    ->label('Скидка')
+                    ->badge()
+                    ->color('success')
+                    ->getStateUsing(fn (Payment $record): ?string => $record->discountLabel() ?: null)
+                    ->alignment(\Filament\Support\Enums\Alignment::Center),
 
                 // 5. СТАТУС
                 Tables\Columns\TextColumn::make('status')
@@ -241,6 +250,46 @@ class PaymentResource extends Resource
                 Tables\Filters\SelectFilter::make('course_id')
                     ->label('Фильтр по курсу')
                     ->relationship('course', 'title'),
+
+                // Кто оплатил конкретный блок (напр. 2-й). Комбинируется с
+                // фильтром по курсу выше. Включает поблочные покупки, чей
+                // диапазон содержит блок, И покупателей всего курса (full).
+                Tables\Filters\Filter::make('paid_block')
+                    ->label('Оплаченный блок')
+                    ->form([
+                        Forms\Components\TextInput::make('block')
+                            ->label('Блок №')
+                            ->numeric()
+                            ->minValue(1)
+                            ->placeholder('напр. 2')
+                            ->helperText('Для курса используйте «Фильтр по курсу» выше'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query->when($data['block'] ?? null, function ($q, $block) {
+                            $n = (int) $block;
+
+                            $q->whereIn('status', ['paid', 'success'])
+                                ->where(function ($q2) use ($n) {
+                                    $q2->where('tariff', 'full')              // весь курс
+                                        ->orWhere('tariff', 'block_'.$n)      // подстраховка для строк без диапазона
+                                        ->orWhere(fn ($q3) => $q3             // диапазон блоков содержит N
+                                            ->whereNotNull('start_block')
+                                            ->where('start_block', '<=', $n)
+                                            ->where(fn ($q4) => $q4
+                                                ->where('end_block', '>=', $n)
+                                                ->orWhere(fn ($q5) => $q5
+                                                    ->whereNull('end_block')
+                                                    ->where('start_block', $n))));
+                                });
+                        });
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        if (! ($data['block'] ?? null)) {
+                            return [];
+                        }
+
+                        return ['Оплачен блок №'.$data['block']];
+                    }),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Фильтр по статусу')

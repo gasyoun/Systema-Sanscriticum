@@ -104,6 +104,17 @@ class StudentController extends Controller
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
 
+        // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
+        // которым нет полного доступа по группам, но есть персональный grant на урок.
+        $trialLessons = LessonAccessGrant::query()
+            ->where('user_id', $user->id)
+            ->active()
+            ->whereNotIn('course_id', $courses->pluck('id')->all())
+            ->with(['lesson:id,course_id,title,lesson_date', 'course:id,slug,title'])
+            ->get()
+            ->filter(fn (LessonAccessGrant $g) => $g->lesson && $g->course)
+            ->values();
+
         return view('student.dashboard', compact(
             'courses',
             'certificates',
@@ -112,6 +123,7 @@ class StudentController extends Controller
             'pranaReasons',
             'debts',
             'debtsByCourseId',
+            'trialLessons',
         ));
     }
 
@@ -132,7 +144,7 @@ class StudentController extends Controller
             })
             ->firstOrFail();
 
-        $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
+        $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
@@ -148,17 +160,24 @@ class StudentController extends Controller
         $course = Course::where('slug', $courseSlug)->firstOrFail();
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
+        // Разовый доступ к конкретному уроку (например, оплаченное пробное занятие) —
+        // обход и блок/full гейта, и группового: явный grant на этот урок главнее.
+        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
+
+        // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
+        // если только нет персонального гранта именно на этот урок.
+        if (! $hasLessonGrant && ! $lesson->isVisibleToGroupsOf($user)) {
+            return redirect()->route('student.course', $course->slug)
+                ->with('error', 'Этот урок относится к другой группе курса.');
+        }
+
         // --- БЛОК ЗАЩИТЫ ДОСТУПА С УЧЕТОМ КОНКРЕТНОГО КУРСА ---
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $courseSlug);
-        $requiredTariff = 'block_'.$lesson->block_number;
 
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
 
-        // Разовый доступ к конкретному уроку — обход блок/full гейта.
-        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
-
-        if (! $isFreeLesson && ! $hasLessonGrant && ! in_array('full', $unlockedTariffs) && ! in_array($requiredTariff, $unlockedTariffs)) {
+        if (! $isFreeLesson && ! $hasLessonGrant && ! $lesson->isUnlockedBy($unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }
@@ -184,7 +203,7 @@ class StudentController extends Controller
         }
         // ==========================================
 
-        $lessons = $course->lessons()->orderBy('created_at', 'asc')->get();
+        $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
 
         $currentNote = null;
         // Заметка может быть сохранена ДО отметки «пройдено», поэтому читаем
@@ -196,6 +215,19 @@ class StudentController extends Controller
 
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
         $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
+
+        // Запись ещё не залита (живое занятие только состоится — например, пробное).
+        // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
+        // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
+        $upcomingSession = null;
+        if (empty($youtubeId) && empty($rutubeId) && empty($lesson->video_url) && $lesson->lesson_date) {
+            $upcomingSession = \App\Models\Schedule::query()
+                ->where('course_id', $course->id)
+                ->where('group_id', $lesson->group_id)
+                ->whereDate('start', $lesson->lesson_date)
+                ->orderBy('start')
+                ->first();
+        }
 
         // ==========================================
         // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
@@ -264,8 +296,17 @@ class StudentController extends Controller
         // ==========================================
         // ==========================================
 
+        // Домашняя работа этого студента по уроку (если задание включено)
+        $homeworkSubmission = null;
+        if ($lesson->homework_enabled) {
+            $homeworkSubmission = $user->homeworkSubmissions()
+                ->where('lesson_id', $lesson->id)
+                ->with(['comments.files', 'comments.author'])
+                ->first();
+        }
+
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession'));
     }
 
     /**
@@ -310,7 +351,9 @@ class StudentController extends Controller
                 ->exists();
 
             if ($userInCourseGroups) {
-                $totalLessons = $course->lessons()->count();
+                // Считаем только уроки, видимые этому студенту по его группе
+                // (для курсов из 2 потоков total у каждой группы свой).
+                $totalLessons = $course->lessons()->forUserGroups($user)->count();
                 $completedLessons = $user->completedLessons()
                     ->where('lessons.course_id', $course->id)
                     ->count();
@@ -360,14 +403,17 @@ class StudentController extends Controller
         $course = Course::where('slug', $courseSlug)->firstOrFail();
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
+        if (! $lesson->isVisibleToGroupsOf($user)) {
+            abort(403, 'Этот урок относится к другой группе курса.');
+        }
+
         if ($lesson->is_free) {
             return;
         }
 
         $unlocked = $this->getUserUnlockedTariffs($user->id, $courseSlug);
-        $required = 'block_'.$lesson->block_number;
 
-        if (! in_array('full', $unlocked, true) && ! in_array($required, $unlocked, true)) {
+        if (! $lesson->isUnlockedBy($unlocked)) {
             abort(403, 'Нет доступа к этому уроку.');
         }
     }
@@ -412,6 +458,26 @@ class StudentController extends Controller
         $pdf = $service->generatePdf($certificate);
 
         return $pdf->download('Certificate_'.$certificate->course->id.'.pdf');
+    }
+
+    /**
+     * Скачивание сертификата картинкой (JPEG).
+     */
+    public function downloadCertificateImage($id, CertificateService $service)
+    {
+        $certificate = auth()->user()->certificates()->with('course')->findOrFail($id);
+
+        try {
+            $jpeg = $service->generateJpegBytes($certificate);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return response()->streamDownload(
+            fn () => print $jpeg,
+            'Certificate_'.$certificate->course->id.'.jpg',
+            ['Content-Type' => 'image/jpeg'],
+        );
     }
 
     /**

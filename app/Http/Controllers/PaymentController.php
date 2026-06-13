@@ -26,7 +26,10 @@ class PaymentController extends Controller
 
         if (! auth()->check()) {
             $rules['name'] = 'required|string|max:255';
+            $rules['surname'] = 'required|string|max:255';
+            $rules['city'] = 'required|string|max:255';
             $rules['email'] = 'required|email|max:255';
+            $rules['wants_announcements'] = 'nullable|boolean';
         }
 
         $request->validate($rules);
@@ -42,10 +45,18 @@ class PaymentController extends Controller
                 if ($existingUser) {
                     $user = $existingUser;
                 } else {
+                    // Склейка ФИО+город прямо в name: «Фамилия Имя, Город»
+                    $fullName = trim($request->input('surname').' '.$request->input('name'));
+                    $city = trim((string) $request->input('city'));
+                    if ($city !== '') {
+                        $fullName .= ', '.$city;
+                    }
+
                     $user = User::create([
                         'email' => $request->input('email'),
-                        'name' => $request->input('name'),
+                        'name' => $fullName,
                         'password' => Hash::make(Str::random(12)),
+                        'wants_email_announcements' => $request->boolean('wants_announcements'),
                     ]);
                     auth()->login($user);
                 }
@@ -55,6 +66,11 @@ class PaymentController extends Controller
 
             // 3. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
             $finalPrice = $tariff->calculateFinalPriceForUser($user);
+
+            // Фиксируем скидку (персональная/лояльность) для пометки в админке и
+            // выгрузке в Google Sheet. fixed-скидка пишет только рубли, percent —
+            // и процент, и рублёвый эквивалент. Промокод/прана — отдельно.
+            $discount = $tariff->discountInfoForUser($user);
 
             // Применяем промокод
             $promo = null;
@@ -104,9 +120,10 @@ class PaymentController extends Controller
             $endBlock = null;
 
             if ($tariff->type === 'block') {
-                $tariffKey = 'block_'.$tariff->block_number;
+                // accessKey() даёт 'block_N' для целого блока и 'block_N_hH' для половины.
+                $tariffKey = $tariff->accessKey();
                 // 💡 Сохраняем номер блока — для отчётности в Google Sheets
-                // и чтобы администратор видел, за какой блок платят
+                // и чтобы администратор видел, за какой блок платят (для половины — тот же блок)
                 $startBlock = $tariff->block_number;
                 $endBlock = $tariff->block_number;
             }
@@ -116,6 +133,8 @@ class PaymentController extends Controller
                 'user_id' => $user->id,
                 'course_id' => $tariff->course->id ?? null,
                 'amount' => $finalPrice,
+                'discount_percent' => $discount['percent'],
+                'discount_amount' => $discount['amount'] > 0 ? $discount['amount'] : null,
                 'prana_spent' => $pranaToSpend,
                 'tariff' => $tariffKey,
                 'status' => 'pending',

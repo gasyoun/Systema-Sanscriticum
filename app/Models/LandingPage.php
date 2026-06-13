@@ -13,6 +13,9 @@ class LandingPage extends Model
         'title',
         'slug',
         'is_active',
+        'hide_default_nav',
+        'header_note_text',
+        'header_note_url',
 
         // --- ГЛАВНОЕ ИЗМЕНЕНИЕ: Разрешаем поле конструктора ---
         'content',
@@ -23,6 +26,8 @@ class LandingPage extends Model
         'instructor_name',
         'webinar_date',
         'webinar_label',
+        'webinar_url',
+        'magnet_lead_minutes',
         'video_url',
         'description',
         'button_text',
@@ -53,8 +58,10 @@ class LandingPage extends Model
     ];
 
     protected $casts = [
-        'webinar_date' => 'datetime', // Лучше использовать datetime
+        'webinar_date' => 'datetime', // точное время старта вебинара
+        'magnet_lead_minutes' => 'integer',
         'is_active' => 'boolean',
+        'hide_default_nav' => 'boolean',
 
         // --- ВАЖНО: Превращаем JSON в массив ---
         'content' => 'array',
@@ -63,9 +70,51 @@ class LandingPage extends Model
         'lead_magnet_enabled' => 'boolean',
     ];
 
+    /** Сколько ещё выдаём магнит ПОСЛЕ старта вебинара (опоздавшим). */
+    public const MAGNET_GRACE_AFTER_START_MINUTES = 120;
+
     public function hasLeadMagnet(): bool
     {
         return $this->lead_magnet_enabled && ! empty($this->lead_magnet_file_path);
+    }
+
+    /**
+     * У лендинга задан старт вебинара → лид-магнит выдаём не сразу, а в окне
+     * «за N минут до старта» (см. magnetLeadMinutes / isMagnetWindowOpen).
+     */
+    public function hasScheduledWebinar(): bool
+    {
+        return ! is_null($this->webinar_date);
+    }
+
+    /** За сколько минут до старта вебинара выдавать лид-магнит (дефолт 60). */
+    public function magnetLeadMinutes(): int
+    {
+        return $this->magnet_lead_minutes ?? 60;
+    }
+
+    /** Момент открытия окна выдачи магнита (старт − offset). null, если вебинар не задан. */
+    public function magnetWindowOpensAt(): ?\Illuminate\Support\Carbon
+    {
+        return $this->webinar_date?->copy()->subMinutes($this->magnetLeadMinutes());
+    }
+
+    /** Момент закрытия окна выдачи (старт + грейс). null, если вебинар не задан. */
+    public function magnetWindowClosesAt(): ?\Illuminate\Support\Carbon
+    {
+        return $this->webinar_date?->copy()->addMinutes(self::MAGNET_GRACE_AFTER_START_MINUTES);
+    }
+
+    /** Открыто ли сейчас окно выдачи: [старт − offset; старт + грейс] включительно. */
+    public function isMagnetWindowOpen(?\Illuminate\Support\Carbon $now = null): bool
+    {
+        if (! $this->hasScheduledWebinar()) {
+            return false;
+        }
+
+        $now ??= now();
+
+        return $now->betweenIncluded($this->magnetWindowOpensAt(), $this->magnetWindowClosesAt());
     }
 
     // Связь с лидами (если понадобится)

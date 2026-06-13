@@ -17,6 +17,8 @@ class Payment extends Model
         'lead_id',
         'course_id',
         'amount',
+        'discount_percent',
+        'discount_amount',
         'prana_spent',
         'tariff',
         'deposit_consumed_at',
@@ -34,7 +36,13 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'discount_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
+        // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
+        // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
+        'start_block' => 'integer',
+        'end_block' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -62,6 +70,86 @@ class Payment extends Model
         return $this->tariff === 'deposit';
     }
 
+    /** Покупка пробного занятия с витрины — открывает доступ к одному уроку (не к курсу). */
+    public function isTrial(): bool
+    {
+        return $this->tariff === 'trial';
+    }
+
+    /**
+     * Системный расход / возврат — чисто бухгалтерская запись (часто с
+     * отрицательной суммой). Не открывает доступ, не шлёт письма/уведомления.
+     */
+    public function isExpense(): bool
+    {
+        return $this->tariff === 'Расход';
+    }
+
+    /** Платёж прошёл со скидкой (персональной или лояльности). */
+    public function hasDiscount(): bool
+    {
+        return (float) $this->discount_percent > 0 || (float) $this->discount_amount > 0;
+    }
+
+    /**
+     * Короткая подпись скидки: «-10%» для процентной, «-1000 ₽» для фиксированной,
+     * '' если скидки нет. Источник для бейджа в админке и выгрузки в Google Sheet.
+     */
+    public function discountLabel(): string
+    {
+        if ((float) $this->discount_percent > 0) {
+            return '-'.(int) $this->discount_percent.'%';
+        }
+
+        if ((float) $this->discount_amount > 0) {
+            return '-'.number_format((float) $this->discount_amount, 0, '.', ' ').' ₽';
+        }
+
+        return '';
+    }
+
+    /**
+     * Человекочитаемая пометка операции — единый источник для админки
+     * (PaymentResource) и выгрузки в финансовую Google-таблицу
+     * (SendPaymentToSheetJob). Расшифровывает сырой ключ tariff.
+     */
+    public function operationLabel(): string
+    {
+        return match (true) {
+            $this->isDeposit() => '📌 Бронь курса (предоплата)',
+            $this->isTrial() => '🎟 Пробное занятие',
+            $this->isExpense() => '💸 Технический расход / возврат',
+            $this->tariff === 'full' => 'Весь курс',
+            default => $this->blockLabel(),
+        };
+    }
+
+    /** Подпись для поблочных тарифов: половина блока, диапазон или одиночный блок. */
+    private function blockLabel(): string
+    {
+        // Половина блока: block_N_h1 / block_N_h2
+        if (preg_match('/^block_(\d+)_h([12])$/', (string) $this->tariff, $m)) {
+            $half = $m[2] === '1' ? '1-я половина' : '2-я половина';
+
+            return "Блок {$m[1]} · {$half}";
+        }
+
+        // Диапазон блоков (импорт/ручное заполнение start_block/end_block)
+        $start = (int) $this->start_block;
+        $end = (int) $this->end_block;
+        if ($start > 0) {
+            return ($end <= 0 || $start === $end) ? "Блок {$start}" : "Блоки {$start}–{$end}";
+        }
+
+        // Одиночный блок: block_N
+        if (preg_match('/^block_(\d+)$/', (string) $this->tariff, $m)) {
+            return "Блок {$m[1]}";
+        }
+
+        // Неизвестный/прочий ключ (vip, bundle и т.п.) — отдаём как есть.
+        return $this->tariff ?: 'Весь курс';
+    }
+
     /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
     public function scopeReal(Builder $query): Builder
     {
@@ -73,11 +161,14 @@ class Payment extends Model
         return $query->where('is_conditional', true);
     }
 
-    /** Депозиты, реально оплаченные и ещё не зачтённые в стоимость тарифа. */
+    /**
+     * Реально оплаченные и ещё не зачтённые в стоимость тарифа суммы: и депозиты
+     * (бронь), и пробные занятия — обе засчитываются при последующей покупке курса.
+     */
     public function scopeUnconsumedDeposits(Builder $query): Builder
     {
         return $query
-            ->where('tariff', 'deposit')
+            ->whereIn('tariff', ['deposit', 'trial'])
             ->whereNull('deposit_consumed_at')
             ->whereIn('status', ['paid', 'success']);
     }
@@ -115,8 +206,21 @@ class Payment extends Model
      */
     private static function fireOnPaid(Payment $payment): void
     {
+        // Системный расход / возврат — только бухгалтерская строка.
+        // Никакого доступа, писем, праны, Telegram и уведомлений кураторам.
+        if ($payment->isExpense()) {
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
+
+            return;
+        }
+
+        // Пробное занятие: открываем доступ к одному уроку, курс/группы не трогаем.
+        if ($payment->isTrial()) {
+            $payment->processTrial();
 
             return;
         }
@@ -127,6 +231,7 @@ class Payment extends Model
         // депозит гасить не за что.
         if (! $payment->is_conditional) {
             $payment->consumeDepositsForCourse();
+            $payment->reconcileConditionalGrants();
         }
     }
 
@@ -137,6 +242,7 @@ class Payment extends Model
     {
         \Illuminate\Support\Facades\DB::transaction(function () {
             $this->grantAccess();
+            $this->enrollInCourse();
 
             // Для conditional Payment (доступ под обещание) пропускаем
             // welcome-email и начисление праны — деньги не пришли,
@@ -204,11 +310,94 @@ class Payment extends Model
             return;
         }
 
+        // E-mail-подтверждение брони (со ссылкой на чат курса). Telegram есть не
+        // у всех — без письма повторные студенты не получали бы по брони ничего.
+        if ($this->user && $this->user->email && $this->course) {
+            \Illuminate\Support\Facades\Mail::to($this->user->email)
+                ->send(new \App\Mail\DepositReceivedMail($this->user, $this->course));
+        }
+
         $courseName = $this->course->title ?? 'курс';
         $url = url('/login');
 
         $text = "📌 <b>Бронь курса принята</b>\n\n";
         $text .= "Намасте! Мы получили предоплату за курс <b>«{$courseName}»</b>. ";
+        $text .= 'Сумма зачтётся при оплате полного тарифа.';
+        $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
+
+        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    // ==========================================
+    // ПРОБНОЕ ЗАНЯТИЕ — отдельный путь
+    // ==========================================
+    public function processTrial(): void
+    {
+        $lessonId = $this->course?->trial_lesson_id;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($lessonId) {
+            // Доступ к курсу/группам НЕ открываем — только разовый grant на пробный урок.
+            // Создаём напрямую (не через ConditionalAccessGranter::grantLesson), чтобы
+            // оплаченный доступ не блокировался флагом «неблагонадёжный» и не слал свой
+            // Telegram (своё подтверждение шлём ниже). Идемпотентно: дубль активного
+            // гранта на тот же урок не создаём (повторный paid-вебхук).
+            if ($lessonId) {
+                $exists = LessonAccessGrant::query()
+                    ->where('user_id', $this->user_id)
+                    ->where('lesson_id', $lessonId)
+                    ->active()
+                    ->exists();
+
+                if (! $exists) {
+                    LessonAccessGrant::create([
+                        'user_id' => $this->user_id,
+                        'lesson_id' => $lessonId,
+                        'course_id' => $this->course_id,
+                        'reason' => 'оплачено пробное занятие',
+                        'granted_at' => now(),
+                        // expires_at = null → доступ навсегда.
+                    ]);
+                }
+            } else {
+                Log::warning('Payment::processTrial — у курса не задан trial_lesson_id', [
+                    'payment_id' => $this->id,
+                    'course_id' => $this->course_id,
+                ]);
+            }
+
+            $this->sendWelcomeEmailIfNeeded();
+            $this->lead?->markConverted();
+        });
+
+        app(\App\Services\CuratorNotifier::class)->depositReceived($this);
+
+        if (! $this->user_id) {
+            return;
+        }
+
+        // Данные живого занятия (дата + Zoom) — из события расписания курса.
+        $schedule = $this->course?->trialSchedule;
+        $zoomLink = $schedule?->link;
+        $startsAt = $schedule?->start;
+
+        // Письмо со ссылкой на Zoom (если есть email и пользователь, и сама запись расписания).
+        if ($this->user && $this->user->email) {
+            \Illuminate\Support\Facades\Mail::to($this->user->email)
+                ->send(new \App\Mail\TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt));
+        }
+
+        $courseName = $this->course->title ?? 'курс';
+        $url = url('/login');
+
+        $text = "🎟 <b>Пробное занятие оплачено</b>\n\n";
+        $text .= "Намасте! Вы записаны на живое занятие курса <b>«{$courseName}»</b>";
+        if ($startsAt) {
+            $text .= ' — '.$startsAt->translatedFormat('d F, H:i').' (МСК)';
+        }
+        $text .= ".\n";
+        if ($zoomLink) {
+            $text .= "\n🔗 <a href='{$zoomLink}'>Подключиться к Zoom</a>\n";
+        }
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
@@ -234,6 +423,73 @@ class Payment extends Model
             ->each(fn (self $deposit) => $deposit->updateQuietly([
                 'deposit_consumed_at' => now(),
             ]));
+    }
+
+    /**
+     * Авто-сверка с conditional-доступом «под обещание». Когда приходит реальная
+     * оплата того, что раньше открыли под честное слово, перекрытые conditional
+     * Payments надо снять (иначе они дублируют блок и маскируют покупку в витрине),
+     * а связанное обещание — закрыть, если по нему больше не осталось открытых
+     * conditional-доступов.
+     *
+     * Соответствие тарифов — по containment-модели (как upgradeCreditForUser):
+     *   реальный 'full'    перекрывает любой conditional курса (full + block_%);
+     *   реальный 'block_N' перекрывает только conditional на тот же блок.
+     */
+    public function reconcileConditionalGrants(): void
+    {
+        if ($this->is_conditional || ! $this->user_id || ! $this->course_id) {
+            return;
+        }
+
+        $query = self::query()
+            ->conditional()
+            ->where('user_id', $this->user_id)
+            ->where('course_id', $this->course_id);
+
+        if ($this->tariff === 'full') {
+            $query->where(fn (Builder $q) => $q->where('tariff', 'full')->orWhere('tariff', 'like', 'block_%'));
+        } else {
+            $query->where('tariff', $this->tariff);
+        }
+
+        $conditionals = $query->get(['id', 'linked_promise_id']);
+        if ($conditionals->isEmpty()) {
+            return;
+        }
+
+        $promiseIds = $conditionals->pluck('linked_promise_id')->filter()->unique();
+
+        // Снимаем перекрытые conditional-платежи. Mass-delete не триггерит
+        // Eloquent-события — это намеренно: аудит/sheet-sync для «фантомных»
+        // нулевых платежей не нужны (как и в ConditionalAccessGranter::revoke).
+        self::query()->whereIn('id', $conditionals->pluck('id'))->delete();
+
+        // Закрываем обещание, если у него не осталось открытых conditional-доступов
+        // (full-обещание могло открыть несколько блоков — частичная оплата его не гасит).
+        foreach ($promiseIds as $promiseId) {
+            $promise = PaymentPromise::find($promiseId);
+
+            if (! $promise instanceof PaymentPromise || ! $promise->isUnmet()) {
+                continue;
+            }
+
+            $stillOpen = self::query()
+                ->conditional()
+                ->where('linked_promise_id', $promiseId)
+                ->exists();
+
+            if ($stillOpen) {
+                continue;
+            }
+
+            $promise->update([
+                'status' => PaymentPromise::STATUS_FULFILLED,
+                'fulfilled_at' => now(),
+                'fulfilled_payment_id' => $this->id,
+                'actual_paid_at' => now(),
+            ]);
+        }
     }
 
     // ==========================================
@@ -275,6 +531,34 @@ class Payment extends Model
             "grantAccess: студент #{$user->id} ({$user->email}) добавлен в ".
             count($groupIds)." групп(у/ы) курса '{$course->title}'."
         );
+    }
+
+    // ==========================================
+    // АВТО-ЗАПИСЬ «ОБУЧАЕТСЯ НА КУРСАХ» (pivot course_user)
+    // ==========================================
+    // grantAccess() выдаёт доступ к урокам через группы. Этот метод дополнительно
+    // создаёт запись «Записался» в course_user, которую раньше ставили вручную
+    // («Записать на курс» в карточке студента). Существующую строку НЕ трогаем —
+    // чтобы не затереть ручной статус (Рассрочка / Льготник / Покинул / Выпускник).
+    public function enrollInCourse(): void
+    {
+        if (! $this->user_id || ! $this->course_id) {
+            return;
+        }
+
+        $already = $this->user->courses()
+            ->where('courses.id', $this->course_id)
+            ->exists();
+
+        if ($already) {
+            return;
+        }
+
+        // attach (НЕ syncWithoutDetaching: тот перезаписал бы pivot существующей
+        // пары). note по умолчанию остаётся null.
+        $this->user->courses()->attach($this->course_id, ['status' => 'Записался']);
+
+        Log::info("enrollInCourse: студент #{$this->user_id} записан на курс #{$this->course_id} (Записался).");
     }
 
     // ==========================================

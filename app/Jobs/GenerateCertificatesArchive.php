@@ -26,10 +26,19 @@ class GenerateCertificatesArchive implements ShouldQueue
 
     protected $adminUserId;
 
-    public function __construct($groupId, $adminUserId)
+    protected $teacherId;
+
+    /**
+     * @param  int|null  $teacherId  Если задан — в архив попадут только сертификаты
+     *                               курсов этого преподавателя (course.teacher_id).
+     *                               0 = преподаватель без курсов → пустой архив.
+     *                               null = админ → без ограничения.
+     */
+    public function __construct($groupId, $adminUserId, $teacherId = null)
     {
         $this->groupId = $groupId;
         $this->adminUserId = $adminUserId;
+        $this->teacherId = $teacherId;
     }
 
     public function handle(): void
@@ -43,12 +52,32 @@ class GenerateCertificatesArchive implements ShouldQueue
             return;
         }
 
+        // Архив именно ВЫБРАННОЙ группы: сертификаты её студентов И только по
+        // курсам этой группы. Без фильтра по курсам в архив попадали сертификаты
+        // других курсов тех же студентов (студент состоит в нескольких группах),
+        // из-за чего «выкачивалось всё».
         $userIds = $group->users->pluck('id');
+        $courseIds = $group->courses()->pluck('courses.id');
+
         $certificates = Certificate::whereIn('user_id', $userIds)
+            ->whereIn('course_id', $courseIds)
+            ->when($this->teacherId !== null, function ($q) {
+                // Преподавателю — только сертификаты его курсов.
+                $q->whereHas('course', fn ($c) => $c->where('teacher_id', $this->teacherId));
+            })
             ->with(['user', 'course'])
             ->get();
 
         if ($certificates->isEmpty()) {
+            // Молча не выходим: иначе админ ждёт «архив готов», который не придёт.
+            if ($recipient = User::find($this->adminUserId)) {
+                Notification::make()
+                    ->title('Архив пуст')
+                    ->warning()
+                    ->body("В группе «{$group->name}» нет сертификатов по её курсам. Проверьте, что группа привязана к курсу и сертификаты выданы.")
+                    ->sendToDatabase($recipient);
+            }
+
             return;
         }
 
@@ -69,8 +98,16 @@ class GenerateCertificatesArchive implements ShouldQueue
             foreach ($certificates as $cert) {
                 try {
                     $pdf = $service->generatePdf($cert);
+                    $pdfData = $pdf->output();
                     $safeName = \Illuminate\Support\Str::slug($cert->user->name.'-'.$cert->course->title, '_');
-                    $zip->addFromString($safeName.'.pdf', $pdf->output());
+                    $zip->addFromString($safeName.'.pdf', $pdfData);
+
+                    // JPG-дубль рядом с PDF. Если на сервере нет imagick/ghostscript —
+                    // тихо кладём только PDF, архив не ломаем.
+                    try {
+                        $zip->addFromString($safeName.'.jpg', $service->pdfToJpeg($pdfData));
+                    } catch (\Throwable $e) {
+                    }
                 } catch (\Exception $e) {
                     // Игнорируем ошибки генерации одного файла, чтобы не сломать весь архив
                     continue;

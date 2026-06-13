@@ -8,6 +8,9 @@ use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -38,6 +41,11 @@ class UserResource extends Resource
     }
 
     public static function canCreate(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function canView($record): bool
     {
         return RoleGate::adminOnly();
     }
@@ -117,8 +125,16 @@ class UserResource extends Resource
                             ->default('Обычный студент')
                             ->required(),
 
-                        Forms\Components\Textarea::make('note')
+                        // Read-only превью примечания со ссылками-кликами (ВК и пр.).
+                        // Textarea ниже — для редактирования; здесь — для перехода по ссылкам.
+                        Forms\Components\Placeholder::make('note_preview')
                             ->label('Примечание куратора')
+                            ->columnSpanFull()
+                            ->visible(fn (string $operation, ?User $record): bool => $operation !== 'create' && filled($record?->note))
+                            ->content(fn (?User $record) => static::linkifyNote($record?->note)),
+
+                        Forms\Components\Textarea::make('note')
+                            ->label('Примечание куратора (редактирование)')
                             ->rows(3)
                             ->columnSpanFull(),
                     ])->columns(2),
@@ -191,6 +207,190 @@ class UserResource extends Resource
             ]);
     }
 
+    /**
+     * Рендерит примечание куратора с кликабельными ссылками.
+     * XSS-безопасно: сначала экранируем весь текст, затем вставляем только наши <a>.
+     */
+    protected static function linkifyNote(?string $note): \Illuminate\Support\HtmlString
+    {
+        $html = e((string) $note);
+
+        // Полные URL (http/https).
+        $html = preg_replace(
+            '~(https?://[^\s<]+)~i',
+            '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Голые vk.com/... без схемы. Лукбехайнд не даёт повторно линковать
+        // уже обёрнутый https://vk.com/... (перед vk стоит / или буква).
+        $html = preg_replace(
+            '~(?<![/\w])((?:www\.)?vk\.com/[^\s<]+)~i',
+            '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Email → mailto. Раньше телеграма, чтобы @домен почты не утёк в t.me-ссылку.
+        $html = preg_replace(
+            '~(?<![\w@/])([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)~',
+            '<a href="mailto:$1" class="text-primary-600 underline">$1</a>',
+            $html
+        );
+
+        // Telegram @handle → t.me. Лукбехайнд (?<![\w@/]) не трогает @ внутри почты
+        // (там перед @ стоит буква) и уже обёрнутых ссылок.
+        $html = preg_replace(
+            '~(?<![\w@/])@([A-Za-z0-9_]{4,32})~',
+            '<a href="https://t.me/$1" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">@$1</a>',
+            $html
+        );
+
+        // Телефон → tel:. Разделители без точки/двоеточия, чтобы не цеплять даты
+        // и штампы вроде «04.06.2026 14:30». Колбэк требует 10–15 цифр —
+        // отсекает короткие числа, суммы и порядковые номера.
+        $html = preg_replace_callback(
+            '~(?<![\d\w>])(\+?\d[\d\s()\-]{8,}\d)~',
+            function (array $m): string {
+                $digits = preg_replace('/\D/', '', $m[1]);
+                $len = strlen($digits);
+                if ($len < 10 || $len > 15) {
+                    return $m[1];
+                }
+                $tel = (str_starts_with($m[1], '+') ? '+' : '').$digits;
+
+                return '<a href="tel:'.$tel.'" class="text-primary-600 underline">'.$m[1].'</a>';
+            },
+            $html
+        );
+
+        return new \Illuminate\Support\HtmlString(nl2br($html));
+    }
+
+    /**
+     * Read-only карточка студента (режим просмотра).
+     * Открывается по короткой ссылке /s/{id} — её вставляют в заметку Telegram-контакта.
+     */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfoSection::make('Студент')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Имя')
+                            ->weight('bold'),
+
+                        TextEntry::make('email')
+                            ->label('Email')
+                            ->copyable()
+                            ->copyMessage('Email скопирован'),
+
+                        TextEntry::make('phone')
+                            ->label('Телефон')
+                            ->icon('heroicon-m-phone')
+                            ->copyable()
+                            ->copyMessage('Телефон скопирован')
+                            ->placeholder('—'),
+
+                        TextEntry::make('global_status')
+                            ->label('Статус')
+                            ->badge()
+                            ->color(fn (?string $state): string => match ($state) {
+                                'VIP' => 'warning',
+                                'Техподдержка' => 'danger',
+                                'Занимается бесплатно' => 'info',
+                                'Бартер' => 'info',
+                                default => 'success',
+                            }),
+
+                        TextEntry::make('role')
+                            ->label('Роль')
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state) => Roles::all()[$state] ?? '—')
+                            ->color(fn (?string $state): string => match ($state) {
+                                Roles::SUPER_ADMIN => 'danger',
+                                Roles::ADMIN => 'warning',
+                                Roles::TEACHER => 'info',
+                                Roles::MANAGER => 'primary',
+                                default => 'gray',
+                            })
+                            ->visible(fn () => RoleGate::adminOnly()),
+
+                        TextEntry::make('messengers')
+                            ->label('Мессенджеры')
+                            ->state(function (User $record): string {
+                                $tg = $record->telegram_id ? '✈ Telegram' : '';
+                                $vk = $record->vk_id ? '💬 VK' : '';
+                                $parts = array_filter([$tg, $vk]);
+
+                                return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
+                            }),
+                    ]),
+
+                InfoSection::make('Ссылка на карточку')
+                    ->description('Для заметки в Telegram-контакте: по клику открывает эту карточку.')
+                    ->schema([
+                        TextEntry::make('card_short_link')
+                            ->hiddenLabel()
+                            ->state(fn (User $record): string => url('/u/'.$record->id))
+                            ->copyable()
+                            ->copyableState(fn (User $record): string => url('/u/'.$record->id))
+                            ->copyMessage('Ссылка скопирована')
+                            ->columnSpanFull(),
+                    ]),
+
+                InfoSection::make('Примечание куратора')
+                    ->visible(fn (?User $record): bool => filled($record?->note))
+                    ->schema([
+                        TextEntry::make('note')
+                            ->hiddenLabel()
+                            ->html()
+                            ->state(fn (?User $record) => static::linkifyNote($record?->note))
+                            ->columnSpanFull(),
+                    ]),
+
+                InfoSection::make('Обучение и активность')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('groups.name')
+                            ->label('Программы / Доступы')
+                            ->badge()
+                            ->placeholder('—'),
+
+                        TextEntry::make('prana_balance')
+                            ->label('🪷 Прана')
+                            ->state(fn (?User $record) => $record
+                                ? number_format((int) $record->prana_balance, 0, '.', ' ').' праны'
+                                : '—')
+                            ->visible(fn () => RoleGate::adminOnly()),
+
+                        TextEntry::make('last_activity_at')
+                            ->label('Последний визит')
+                            ->formatStateUsing(fn ($state): string => $state === null
+                                ? 'Никогда'
+                                : \Carbon\Carbon::parse($state)->diffForHumans())
+                            ->tooltip(fn ($state): ?string => $state
+                                ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
+                                : null),
+
+                        TextEntry::make('activity_stats')
+                            ->label('Статистика')
+                            ->state(function (User $record): string {
+                                $lessons = (int) $record->total_lessons_opened;
+                                $seconds = (int) $record->total_time_spent;
+                                $visits = (int) $record->login_count;
+
+                                $hours = intdiv($seconds, 3600);
+                                $mins = intdiv($seconds % 3600, 60);
+                                $time = $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
+
+                                return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
+                            }),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -221,6 +421,18 @@ class UserResource extends Resource
 
                         return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
                     }),
+
+                // --- ССЫЛКА НА КАРТОЧКУ (копируется в заметку Telegram-контакта) ---
+                Tables\Columns\TextColumn::make('card_link')
+                    ->label('Ссылка')
+                    ->state('🔗 Копировать')
+                    ->badge()
+                    ->color('gray')
+                    ->copyable()
+                    ->copyableState(fn (User $record): string => url('/u/'.$record->id))
+                    ->copyMessage('Ссылка на карточку скопирована')
+                    ->copyMessageDuration(1500)
+                    ->toggleable(),
 
                 // --- КОЛОНКА 3: СТАТУС ---
                 Tables\Columns\TextColumn::make('global_status')
@@ -315,6 +527,13 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn () => RoleGate::isSuperAdmin()),
 
+                Tables\Columns\IconColumn::make('wants_email_announcements')
+                    ->label('Анонсы на email')
+                    ->boolean()
+                    ->sortable()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('prana_balance')
                     ->label('Прана')
                     ->badge()
@@ -359,6 +578,20 @@ class UserResource extends Resource
                         }),
                         blank: fn (Builder $query) => $query,
                     ),
+                // --- Согласие на email-анонсы (галочка с чекаута) ---
+                Tables\Filters\TernaryFilter::make('wants_email_announcements')
+                    ->label('Согласие на email-анонсы')
+                    ->placeholder('Все студенты')
+                    ->trueLabel('Согласились на анонсы')
+                    ->falseLabel('Отказались от анонсов'),
+
+                // --- Состоит в группе (пул для разнесения по группам курса) ---
+                Tables\Filters\SelectFilter::make('group')
+                    ->label('Состоит в группе')
+                    ->relationship('groups', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 // --- НОВЫЙ ФИЛЬТР ПО СТАТУСУ ---
                 Tables\Filters\SelectFilter::make('global_status')
                     ->label('Статус студента')
@@ -425,6 +658,10 @@ class UserResource extends Resource
 
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('Открыть карточку'),
+
                 Tables\Actions\EditAction::make()
                     ->iconButton()
                     ->tooltip('Редактировать'),
@@ -585,6 +822,70 @@ class UserResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
 
+                    // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
+                    // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
+                    // к целевой. Оплаты не трогаются (дублей Payment не возникает).
+                    Tables\Actions\BulkAction::make('move_to_group')
+                        ->label('Перенести в группу')
+                        ->icon('heroicon-o-user-group')
+                        ->color('warning')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->requiresConfirmation()
+                        ->modalHeading('Перенести выбранных в группу курса')
+                        ->modalDescription('Студентов отвяжут от остальных групп ЭТОГО курса и привяжут к выбранной. Группы других курсов и оплаты не затрагиваются.')
+                        ->modalSubmitActionLabel('Перенести')
+                        ->form([
+                            Forms\Components\Select::make('target_group_id')
+                                ->label('Целевая группа')
+                                ->options(\App\Models\Group::query()->orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->helperText('Курс определяется по выбранной группе.'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $group = \App\Models\Group::with('courses')->find($data['target_group_id']);
+
+                            if (! $group) {
+                                Notification::make()->title('Группа не найдена')->danger()->send();
+
+                                return;
+                            }
+
+                            $course = $group->courses->first();
+
+                            if (! $course) {
+                                Notification::make()
+                                    ->title('У группы нет курса')
+                                    ->body('Группа «'.$group->name.'» не привязана ни к одному курсу — перенос внутри курса невозможен.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            // Группы этого курса, кроме целевой — из них отвязываем.
+                            $siblingGroupIds = $course->groups()
+                                ->where('groups.id', '!=', $group->id)
+                                ->pluck('groups.id')
+                                ->all();
+
+                            $moved = 0;
+                            foreach ($records as $user) {
+                                if (! empty($siblingGroupIds)) {
+                                    $user->groups()->detach($siblingGroupIds);
+                                }
+                                $user->groups()->syncWithoutDetaching([$group->id]);
+                                $moved++;
+                            }
+
+                            Notification::make()
+                                ->title('Перенос завершён')
+                                ->body("Перенесено: {$moved} → группа «{$group->name}» (курс «{$course->title}»).")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     // --- НОВАЯ КНОПКА: МАССОВАЯ РАССЫЛКА ДОСТУПОВ ---
                     Tables\Actions\BulkAction::make('send_bulk_access')
                         ->label('Разослать доступы')
@@ -689,8 +990,10 @@ class UserResource extends Resource
         return [
             // ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ: добавили UserResource\
             UserResource\RelationManagers\CoursesRelationManager::class,
+            UserResource\RelationManagers\PaymentsRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,
+            UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
     }
 
@@ -698,6 +1001,7 @@ class UserResource extends Resource
     {
         return [
             'index' => Pages\ListUsers::route('/'),
+            'view' => Pages\ViewUser::route('/{record}'),
             // --- ДОБАВЛЯЕМ МАРШРУТ ДЛЯ СОЗДАННОЙ СТРАНИЦЫ ---
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];

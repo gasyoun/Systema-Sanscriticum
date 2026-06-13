@@ -1,6 +1,11 @@
 @php
     $data = $block['data'] ?? [];
     $blockId = 'hero-form-' . uniqid();
+
+    // Счётчик «Осталось N дней» до вебинара (только если включён тогл и дата в будущем).
+    $daysLeft = (! empty($data['show_days_countdown']) && isset($page) && $page->webinar_date && $page->webinar_date->isFuture())
+        ? (int) ceil(now()->diffInHours($page->webinar_date, false) / 24)
+        : null;
 @endphp
  
 {{-- ============================================================== --}}
@@ -9,11 +14,11 @@
 <div x-data="{ loaded: false, isMobileFormOpen: false }" 
      x-init="setTimeout(() => loaded = true, 100)"
      @open-order-form.window="
-         if (window.innerWidth < 1024) { 
-             isMobileFormOpen = true; 
-         } else { 
-             window.scrollTo({ top: 0, behavior: 'smooth' }); 
-             setTimeout(() => document.getElementById('hero-name-input').focus(), 300); 
+         if (window.innerWidth < 1024) {
+             isMobileFormOpen = true;
+         } else {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+             setTimeout(() => { const f = $el.querySelector('input[name=name], input[name=contact]'); if (f) f.focus(); }, 300);
          }
      ">
  
@@ -142,7 +147,21 @@
 {{-- 1. ГЛАВНЫЙ ЭКРАН                           --}}
 {{-- ========================================== --}}
 <section class="relative bg-[var(--surface-soft)] overflow-hidden pt-6 pb-14 lg:pt-14 lg:pb-20 grain-overlay">
- 
+
+    {{-- Счётчик дней до вебинара — на уровне надзаголовочной плашки, слева от формы --}}
+    @if($daysLeft !== null)
+        <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-[#E85C24]/20"
+             style="box-shadow: 0 4px 16px rgba(232,92,36,.12);">
+            <span class="relative flex h-2 w-2 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E85C24] opacity-60"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-[#E85C24]"></span>
+            </span>
+            <span class="text-[11px] md:text-xs font-extrabold uppercase tracking-wider text-[#E85C24] whitespace-nowrap">
+                Осталось {{ $daysLeft }} {{ \App\Support\Plural::ru($daysLeft, 'день', 'дня', 'дней') }}
+            </span>
+        </div>
+    @endif
+
     {{-- Фоновая точечная сетка --}}
     <div class="absolute inset-0 dot-grid opacity-60 pointer-events-none z-0"></div>
  
@@ -176,9 +195,18 @@
             {{-- Заголовок --}}
             <div class="transform transition-all duration-700 delay-200 translate-y-8 opacity-0 w-full"
                  :class="loaded ? '!translate-y-0 !opacity-100' : ''">
+                @php
+                    // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
+                    // e() экранирует ДО вставки span — тег служебный, контент безопасен.
+                    $titleHtml = nl2br(preg_replace(
+                        '/\*(.+?)\*/u',
+                        '<span style="color:var(--accent);">$1</span>',
+                        e($data['title'] ?? 'Название курса')
+                    ));
+                @endphp
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-8 leading-[1.08] tracking-tight max-w-5xl"
                     style="color:var(--text-primary);">
-                    {{ $data['title'] ?? 'Название курса' }}
+                    {!! $titleHtml !!}
                 </h1>
             </div>
  
@@ -196,7 +224,7 @@
             {{-- CTA-кнопка --}}
             <div class="transform transition-all duration-700 delay-500 translate-y-8 opacity-0 w-full sm:w-auto"
                  :class="loaded ? '!translate-y-0 !opacity-100' : ''">
-                <button @click.prevent="window.innerWidth < 1024 ? isMobileFormOpen = true : document.querySelector('input[name=name]').focus()"
+                <button @click.prevent="$dispatch('open-order-form')"
                         class="btn-hero group relative w-full sm:w-auto inline-flex items-center justify-center text-white font-black text-sm uppercase tracking-[0.18em] py-5 px-12 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                         style="background: linear-gradient(135deg, var(--accent) 0%, #f0733b 100%); box-shadow: 0 12px 35px rgba(232,92,36,.35), 0 4px 12px rgba(232,92,36,.2);">
                     <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer rounded-2xl"></div>
@@ -255,8 +283,8 @@
         </div>
  
         <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
-            <h3 class="text-xl lg:text-2xl font-extrabold text-gray-900 mb-1 text-center">{{ $data['form_title'] ?? 'Записаться на курс' }}</h3>
-            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-4 text-center">Оставьте заявку, и мы свяжемся с вами в Telegram.</p>
+            <h3 class="text-xl lg:text-2xl font-extrabold text-gray-900 mb-1 text-center">{!! nl2br(e($data['form_title'] ?? 'Записаться на курс')) !!}</h3>
+            <p class="text-gray-500 font-medium text-xs lg:text-sm mb-4 text-center">{!! nl2br(e($data['form_subtitle'] ?? 'Оставьте заявку, и мы свяжемся с вами в Telegram.')) !!}</p>
  
             @if(session('success'))
                 <div class="p-3 mb-5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-center font-bold text-sm">{{ session('success') }}</div>
@@ -278,6 +306,42 @@
                 <input type="hidden" name="click_id"     class="analytics-field">
                 <input type="hidden" name="referrer"     class="analytics-field" value="{{ request()->headers->get('referer') }}">
  
+                @if(!empty($data['form_minimal']))
+                    {{-- ─── УПРОЩЁННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
+                    @php
+                        $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.';
+                        // {link} → кликабельная «политика конфиденциальности». e() экранирует
+                        // пользовательский текст ДО подстановки служебного span — XSS-safe.
+                        $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';
+                        $consentHtml = nl2br(str_replace('{link}', $privacyLink, e($consentRaw)));
+                    @endphp
+                    <div>
+                        <input type="tel" name="contact" required placeholder="{{ $data['min_contact_placeholder'] ?? 'Телефон' }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                    </div>
+
+                    <div>
+                        <input type="email" name="email" required placeholder="{{ $data['min_email_placeholder'] ?? 'Email' }}"
+                               value="{{ old('email') }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                    </div>
+
+                    <button type="submit"
+                            class="w-full font-extrabold py-3.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 transition-all duration-300 text-sm uppercase tracking-wider">
+                        {{ $data['min_button_text'] ?? 'Занять бесплатное место →' }}
+                    </button>
+
+                    <p class="text-[11px] text-gray-400 leading-snug text-center px-1">{!! $consentHtml !!}</p>
+
+                    @if(!empty($data['min_tg_label']))
+                        <div class="pt-1">
+                            <label class="block text-[11px] leading-snug text-[#d04a15] font-semibold mb-1.5 px-1">{{ $data['min_tg_label'] }}</label>
+                            <input type="text" name="social" maxlength="255" value="{{ old('social') }}"
+                                   placeholder="{{ $data['min_tg_placeholder'] ?? '@username' }}"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
+                        </div>
+                    @endif
+                @else
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">{{ $data['label_name'] ?? 'Ваше имя' }}</label>
                     <input type="text" id="hero-name-input" name="name" required placeholder="{{ $data['ph_name'] ?? 'Имя и фамилия' }}"
@@ -336,6 +400,7 @@
                         class="w-full font-extrabold py-3 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-1">
                     {{ $data['submit_text'] ?? $data['button_text'] ?? 'ЗАПИСАТЬСЯ' }}
                 </button>
+                @endif
             </form>
         </div>
     </div>

@@ -100,6 +100,10 @@ class ImportAcademyData extends Command
         $courses = \App\Models\Course::pluck('id', 'title')->toArray();
         $groups = \App\Models\Group::pluck('id', 'name')->toArray();
 
+        // Нормализатор названий курсов: приводит «сырые» имена из таблицы к
+        // каноническим из админки (database/data/course_aliases.csv).
+        $resolver = app(\App\Support\CourseNameResolver::class);
+
         $this->info('Загружаем set уже существующих Payments для защиты от дубликатов...');
         $makeKey = static function ($userId, $courseId, $tariff, $amount, $createdAt): string {
             $created = $createdAt instanceof \DateTimeInterface
@@ -156,6 +160,9 @@ class ImportAcademyData extends Command
             if (empty($studentName) || empty($courseTitle)) {
                 continue;
             }
+
+            // Приводим название курса к каноническому (из админки) ДО любых поисков.
+            $courseTitle = $resolver->resolve($courseTitle);
 
             $amount = $cleanNumber($row[5] ?? 0); // Колонка F: Оплата
             $startBlock = (int) $cleanNumber($row[3] ?? 0);

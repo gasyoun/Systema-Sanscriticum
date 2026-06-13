@@ -9,7 +9,6 @@ use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\DatePicker; // <-- ДОБАВЛЕНО
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
@@ -63,6 +62,54 @@ class LandingPageResource extends Resource
                             ->default(true),
                     ]),
 
+                // === Шапка лендинга ===
+                Section::make('Шапка лендинга')
+                    ->description('По умолчанию в шапке меню сайта (Главная / Все курсы / Блог). Для вебинарного лендинга его можно скрыть и показать вместо него заметку-ссылку.')
+                    ->collapsed()
+                    ->schema([
+                        Toggle::make('hide_default_nav')
+                            ->label('Скрыть меню сайта (Главная / Все курсы / Блог)')
+                            ->live()
+                            ->default(false),
+                        TextInput::make('header_note_text')
+                            ->label('Заметка вместо меню')
+                            ->placeholder('Для участия нужен Zoom — скачать')
+                            ->helperText('Показывается в шапке вместо меню. Пусто → в шапке только логотип.')
+                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                        TextInput::make('header_note_url')
+                            ->label('Ссылка заметки')
+                            ->url()
+                            ->placeholder('https://zoom.us/download')
+                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                    ]),
+
+                // === Вебинар: письмо лиду + время выдачи лид-магнита ===
+                Section::make('Вебинар (письмо лиду и выдача лид-магнита)')
+                    ->description('Дата/время вебинара управляют и письмом-приглашением (n8n зовёт /api/webhooks/lead-step), и моментом выдачи лид-магнита в боте — он уходит за N минут до старта.')
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('webinar_url')
+                            ->label('Ссылка на вебинар (Zoom / трансляция)')
+                            ->url()
+                            ->helperText('Пусто → письмо не уходит. Дата и название берутся из полей ниже.'),
+                        DateTimePicker::make('webinar_date')
+                            ->label('Дата и время старта (МСК)')
+                            ->native(false)
+                            ->seconds(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->helperText('Точное время старта. Лид-магнит выдаётся за указанное ниже число минут до него.'),
+                        TextInput::make('magnet_lead_minutes')
+                            ->label('Выдать лид-магнит за N минут до старта')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(60)
+                            ->suffix('мин')
+                            ->helperText('Если вебинар не задан — лид-магнит выдаётся сразу при запуске бота.'),
+                        TextInput::make('webinar_label')
+                            ->label('Название вебинара')
+                            ->default('Бесплатный вебинар'),
+                    ]),
+
                 // === 2. КОНСТРУКТОР (BUILDER) ===
                 Section::make('Конструктор Лендинга')
                     ->description('Собирайте страницу из блоков.')
@@ -83,7 +130,8 @@ class LandingPageResource extends Resource
 
                                         TextInput::make('title')
                                             ->label('Заголовок (Оффер)')
-                                            ->required(),
+                                            ->required()
+                                            ->helperText('Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: *17 июня* — последний шанс.'),
 
                                         Textarea::make('description')
                                             ->label('Текст под заголовком')
@@ -105,6 +153,25 @@ class LandingPageResource extends Resource
                                                 ['text' => 'Места ограничены'],
                                                 ['text' => 'Онлайн формат'],
                                             ]),
+
+                                        Toggle::make('registered_dynamic')
+                                            ->label('Считать регистрации автоматически')
+                                            ->helperText('N = стартовое число + реальные лиды этого лендинга. Текст «Ещё X мест» считается до ближайшей десятки.')
+                                            ->live()
+                                            ->default(false),
+
+                                        TextInput::make('registered_base')
+                                            ->label('Стартовое число регистраций')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->default(30)
+                                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('registered_dynamic')),
+
+                                        TextInput::make('registered_note')
+                                            ->label('Соц. доказательство (ручной текст)')
+                                            ->placeholder('✅ Уже зарегистрировались 137 человек')
+                                            ->helperText('Используется, когда автосчёт выключен. Очистите поле, чтобы скрыть плашку.')
+                                            ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('registered_dynamic')),
                                     ]),
 
                                 // 2. VIDEO
@@ -246,10 +313,16 @@ class LandingPageResource extends Resource
                                                     ->label('Надзаголовок (Плашка)')
                                                     ->default('ОНЛАЙН-КУРС В 2-Х ЧАСТЯХ'),
 
+                                                Toggle::make('show_days_countdown')
+                                                    ->label('Плашка «Осталось N дней» (справа сверху, над формой)')
+                                                    ->helperText('Считается от даты вебинара. Появляется, только если до вебинара ещё есть время.')
+                                                    ->default(false),
+
                                                 Textarea::make('title')
                                                     ->label('Главный заголовок')
                                                     ->default('Название вашего невероятного курса')
-                                                    ->rows(3),
+                                                    ->rows(3)
+                                                    ->helperText('Enter — перенос строки. Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: Санскрит и *вебинар* 17 июня.'),
 
                                                 Textarea::make('description')
                                                     ->label('Описание')
@@ -278,16 +351,67 @@ class LandingPageResource extends Resource
                                         Section::make('Форма заявки')
                                             ->collapsed()
                                             ->schema([
-                                                TextInput::make('form_title')
-                                                    ->label('Заголовок над формой')
-                                                    ->default('Записаться на курс'),
+                                                Toggle::make('form_minimal')
+                                                    ->label('Упрощённая форма (без имени)')
+                                                    ->helperText('Минимум полей: телефон и email, один обязательный чекбокс согласия и опциональное поле Telegram для подарка. Имя соберём позже в боте.')
+                                                    ->default(false)
+                                                    ->live(),
 
+                                                // --- УПРОЩЁННЫЙ ВАРИАНТ ---
+                                                TextInput::make('min_contact_placeholder')
+                                                    ->label('Плейсхолдер поля телефона')
+                                                    ->default('Телефон')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_email_placeholder')
+                                                    ->label('Плейсхолдер поля email')
+                                                    ->default('Email')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_button_text')
+                                                    ->label('Текст кнопки')
+                                                    ->default('Занять бесплатное место →')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                Textarea::make('min_consent_note')
+                                                    ->label('Подпись под кнопкой')
+                                                    ->rows(2)
+                                                    ->default('Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.')
+                                                    ->helperText('{link} превратится в кликабельную «политику конфиденциальности». Enter — перенос строки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_tg_label')
+                                                    ->label('Подпись опционального поля Telegram')
+                                                    ->default('📩 Укажите Telegram — пришлём PDF «Алфавит деванагари» перед эфиром')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                TextInput::make('min_tg_placeholder')
+                                                    ->label('Плейсхолдер поля Telegram')
+                                                    ->default('@username')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+
+                                                // --- ЗАГОЛОВОК/ПОДЗАГОЛОВОК (общие для обоих вариантов) ---
+                                                Textarea::make('form_title')
+                                                    ->label('Заголовок над формой')
+                                                    ->default('Записаться на курс')
+                                                    ->rows(2)
+                                                    ->helperText('Enter — перенос строки.'),
+
+                                                Textarea::make('form_subtitle')
+                                                    ->label('Подзаголовок над формой')
+                                                    ->default('Оставьте заявку, и мы свяжемся с вами в Telegram.')
+                                                    ->rows(2)
+                                                    ->helperText('Enter — перенос строки.'),
+
+                                                // --- ПОЛНЫЙ ВАРИАНТ ---
                                                 TextInput::make('submit_text')
                                                     ->label('Текст кнопки отправки')
                                                     ->default('Записаться')
-                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.'),
+                                                    ->helperText('Если пусто — возьмётся текст основной кнопки.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
 
                                                 Fieldset::make('Подписи и плейсхолдеры полей')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal'))
                                                     ->schema([
                                                         TextInput::make('label_name')->label('Подпись «Имя»')->default('Ваше имя'),
                                                         TextInput::make('ph_name')->label('Плейсхолдер «Имя»')->default('Имя и фамилия'),
@@ -306,7 +430,8 @@ class LandingPageResource extends Resource
                                                     ->label('Подарок за соцсеть (над полем «Соцсеть»)')
                                                     ->rows(2)
                                                     ->default('Заполните это поле — и мы пришлём вам подарок в указанный мессенджер 🎁')
-                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.'),
+                                                    ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.')
+                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
                                             ]),
 
                                         // --- НАСТРОЙКИ ДИЗАЙНА ---
@@ -398,6 +523,85 @@ class LandingPageResource extends Resource
                                                     ->label('Цвет текста кнопки')
                                                     ->default('#1E4633'), // Темно-зеленый текст на кнопке
                                             ])->columns(2),
+                                    ]),
+
+                                // 5.1. WEBINAR TOPICS (Темы, которые разбираются на вебинарах)
+                                Builder\Block::make('webinar_topics_block')
+                                    ->label('5.1. Темы вебинаров')
+                                    ->icon('heroicon-m-presentation-chart-bar')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Что разберём на вебинарах'),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->rows(2)
+                                            ->placeholder('Темы, которые мы обсудим в прямом эфире'),
+
+                                        Repeater::make('topics')
+                                            ->label('Темы')
+                                            ->schema([
+                                                TextInput::make('title')
+                                                    ->label('Тема')
+                                                    ->required(),
+                                                RichEditor::make('description')
+                                                    ->label('Краткое описание (необязательно)')
+                                                    ->toolbarButtons([
+                                                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                                                    ]),
+                                            ])
+                                            ->grid(2)
+                                            ->defaultItems(3)
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
+
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки (необязательно)')
+                                            ->placeholder('Записаться на вебинар')
+                                            ->helperText('Если пусто — кнопка не показывается. Кнопка открывает плавающую форму заявки.'),
+                                    ]),
+
+                                // 5.2. WEBINAR TOPICS — светлый «editorial»-вариант (строки с номерами)
+                                Builder\Block::make('webinar_topics_spotlight_block')
+                                    ->label('5.2. Темы вебинаров (строки с номерами)')
+                                    ->icon('heroicon-m-bolt')
+                                    ->schema([
+                                        TextInput::make('badge')
+                                            ->label('Плашка-надзаголовок')
+                                            ->default('В прямом эфире'),
+
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('О чём будем говорить'),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->rows(2)
+                                            ->placeholder('Каждая тема — отдельный разбор с ответами на ваши вопросы'),
+
+                                        Repeater::make('topics')
+                                            ->label('Темы')
+                                            ->schema([
+                                                TextInput::make('title')
+                                                    ->label('Тема')
+                                                    ->required(),
+                                                RichEditor::make('description')
+                                                    ->label('Краткое описание (необязательно)')
+                                                    ->toolbarButtons([
+                                                        'bold', 'italic', 'link', 'bulletList', 'orderedList', 'undo', 'redo',
+                                                    ]),
+                                            ])
+                                            ->defaultItems(3)
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
+
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки (необязательно)')
+                                            ->placeholder('Занять место на вебинаре')
+                                            ->helperText('Если пусто — кнопка не показывается. Кнопка открывает плавающую форму заявки.'),
                                     ]),
 
                                 // 5. PROGRAM
@@ -500,10 +704,25 @@ class LandingPageResource extends Resource
                                                         ->multiple() // Curator сам поймет, что нужно выбрать несколько!
                                                         ->buttonLabel('Добавить скриншоты'),
 
+                                                    TextInput::make('youtube_link')
+                                                        ->label('Видео на YouTube')
+                                                        ->url()
+                                                        ->hint('Обложка подтянется автоматически.'),
+
+                                                    TextInput::make('rutube_link')
+                                                        ->label('Видео на RuTube')
+                                                        ->url()
+                                                        ->hint('Поддерживаются и shorts (rutube.ru/shorts/…).'),
+
+                                                    TextInput::make('vk_link')
+                                                        ->label('Видео ВКонтакте')
+                                                        ->url()
+                                                        ->hint('Поддерживаются и клипы (vk.com/clip…). Заполните несколько платформ — при клике зритель выберет, где смотреть (выбор запомнится).'),
+
                                                     TextInput::make('video_link')
-                                                        ->label('Ссылка на видеоотзыв (YouTube/Vimeo)')
-                                                        ->url() // проверяет, что ввели именно ссылку
-                                                        ->hint('Вставьте обычную ссылку на YouTube, и плеер сформируется автоматически.'),
+                                                        ->label('Видео — другая ссылка (Vimeo, запасное)')
+                                                        ->url()
+                                                        ->hint('Используется, если не заполнены поля выше.'),
                                                 ]),
 
                                                 // 2. Блок с данными
@@ -523,6 +742,13 @@ class LandingPageResource extends Resource
                                                     ->placeholder('https://vk.com/username')
                                                     ->url() // Проверка, что введена именно ссылка
                                                     ->prefixIcon('heroicon-m-link'),
+
+                                                Textarea::make('quote')
+                                                    ->label('Крупная цитата (показывается над текстом)')
+                                                    ->placeholder('Самая яркая фраза из отзыва в 1–2 строки')
+                                                    ->hint('Короткий акцент, который реально прочитают. Текст ниже — для тех, кто захочет подробностей.')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
 
                                                 Textarea::make('text')
                                                     ->label('Текст отзыва')
@@ -544,6 +770,9 @@ class LandingPageResource extends Resource
                                                 TextInput::make('title')
                                                     ->label('Заголовок формы')
                                                     ->default('Записаться на курс'),
+                                                TextInput::make('subtitle')
+                                                    ->label('Подзаголовок формы')
+                                                    ->default('Оставьте заявку, и мы свяжемся с вами в Telegram.'),
                                                 RichEditor::make('description')
                                                     ->label('Текст слева от формы (Описание)'),
                                                 TextInput::make('button_text')
@@ -928,8 +1157,6 @@ class LandingPageResource extends Resource
                         TextInput::make('bullet_2'),
                         TextInput::make('instructor_label'),
                         TextInput::make('instructor_name'),
-                        DatePicker::make('webinar_date')->native(false)->displayFormat('d.m.Y'),
-                        TextInput::make('webinar_label')->default('Бесплатный вебинар'),
                         TextInput::make('video_url'),
                         CuratorPicker::make('image_path')
                             ->label('Главное изображение')

@@ -37,6 +37,12 @@ class CoursesRelationManager extends RelationManager
                     ->required()
                     ->live(),
 
+                Forms\Components\TextInput::make('joined_at_block')
+                    ->label('Блок входа')
+                    ->numeric()
+                    ->minValue(1)
+                    ->helperText('Номер блока, С которого студент начал учиться (присоединился к потоку в середине). Долги за более ранние блоки не начисляются. Пусто = первый оплаченный блок.'),
+
                 Forms\Components\TextInput::make('left_after_block')
                     ->label('Блок выхода')
                     ->numeric()
@@ -57,6 +63,8 @@ class CoursesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
+        $ownerId = $this->getOwnerRecord()->getKey();
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')
@@ -73,7 +81,33 @@ class CoursesRelationManager extends RelationManager
                         'Рассрочка', 'Приостановка', 'Льготник' => 'warning',
                         'Покинул', 'Исключен' => 'danger',
                         default => 'gray',
+                    })
+                    // Под бейджем — когда записался: дата первой реальной оплаты
+                    // курса. Для записей без оплаты (ручная/льготная) — дата
+                    // появления записи в системе. (pivot created_at у legacy =
+                    // дата импорта, поэтому опираемся на платёж.)
+                    ->description(function ($record) use ($ownerId): ?string {
+                        $firstPaid = \App\Models\Payment::query()
+                            ->where('user_id', $ownerId)
+                            ->where('course_id', $record->id)
+                            ->whereIn('status', ['paid', 'success'])
+                            ->where('amount', '>', 0)
+                            ->min('created_at');
+
+                        if ($firstPaid) {
+                            return 'записан '.\Illuminate\Support\Carbon::parse($firstPaid)->format('d.m.Y');
+                        }
+
+                        return $record->pivot?->created_at
+                            ? 'в системе с '.$record->pivot->created_at->format('d.m.Y')
+                            : null;
                     }),
+
+                Tables\Columns\TextColumn::make('joined_at_block')
+                    ->label('Блок входа')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state ? '№'.$state : null)
+                    ->getStateUsing(fn ($record) => $record->pivot?->joined_at_block),
 
                 Tables\Columns\TextColumn::make('left_after_block')
                     ->label('Блок выхода')

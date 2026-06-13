@@ -90,6 +90,10 @@ class CheckoutController extends Controller
             }
         }
 
+        // Персональная скидка на курс имеет приоритет над лояльностью — для подписи в UI.
+        $isPersonal = $user
+            && \App\Models\StudentDiscount::activeFor($user->id, $tariff->course_id, $tariff->block_number) !== null;
+
         $basePrice = (float) $tariff->price;
         $finalPrice = $tariff->calculateFinalPriceForUser($user);
         $loyaltyDiscount = max(0.0, $basePrice - $finalPrice);
@@ -117,6 +121,7 @@ class CheckoutController extends Controller
             'discountAmount' => $discountAmount,
             'isLoyal' => $isLoyal,
             'loyaltyPercent' => $loyaltyPercent,
+            'isPersonal' => $isPersonal,
             'pranaBalance' => $user ? $prana->balance($user) : 0,
             'pranaMaxSpend' => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
             'pranaRate' => PranaSettings::rate(),
@@ -146,6 +151,7 @@ class CheckoutController extends Controller
                 ] : null,
                 'isLoyal' => $s['isLoyal'],
                 'loyaltyPercent' => (int) $s['loyaltyPercent'],
+                'isPersonal' => $s['isPersonal'],
             ],
         ]);
     }

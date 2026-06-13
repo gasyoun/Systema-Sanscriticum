@@ -52,6 +52,9 @@ return [
     'n8n' => [
         'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
         'schedule_sheet_webhook' => env('N8N_SCHEDULE_SHEET_WEBHOOK'),
+        // Секрет для входящего вебхука «лид дошёл до шага бота» (POST /api/webhooks/lead-step).
+        // Пусто → эндпоинт всегда отвечает 403 (выключен).
+        'lead_step_secret' => env('N8N_LEAD_STEP_SECRET'),
     ],
 
     'telegram' => [
