@@ -74,5 +74,8 @@ class Kernel extends HttpKernel
         'verify.vk.magnet' => \App\Http\Middleware\VerifyVkMagnetCallback::class,
         'verify.max.magnet' => \App\Http\Middleware\VerifyMaxMagnetWebhook::class,
         'verify.n8n.leadstep' => \App\Http\Middleware\VerifyLeadStepWebhook::class,
+        // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
+        'verify.tg.bot' => \App\Http\Middleware\VerifyTelegramBotWebhook::class,
+        'verify.vk.bot' => \App\Http\Middleware\VerifyVkBotWebhook::class,
     ];
 }

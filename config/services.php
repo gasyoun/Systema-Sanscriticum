@@ -72,6 +72,9 @@ return [
         'student_bot_token' => env('STUDENT_TELEGRAM_BOT_TOKEN'),
         'student_bot_username' => env('STUDENT_TELEGRAM_BOT_USERNAME'),
 
+        // Секрет подписи легаси бот-вебхука (/api/telegram/webhook). Пусто →
+        // проверка отключена (см. App\Http\Middleware\VerifyTelegramBotWebhook).
+        'bot_webhook_secret' => env('TELEGRAM_BOT_WEBHOOK_SECRET'),
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
@@ -88,6 +91,9 @@ return [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),
         'confirm_code' => env('VK_CONFIRM_CODE'),
+        // Секрет VK callback (/api/vk-webhook). Пусто → проверка отключена
+        // (см. App\Http\Middleware\VerifyVkBotWebhook).
+        'callback_secret' => env('VK_CALLBACK_SECRET'),
     ],
 
     'yandex' => [
