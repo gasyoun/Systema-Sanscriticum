@@ -6,13 +6,7 @@ This repository does not currently publish versioned release notes. Entries use
 dated maintenance snapshots; keep upcoming work under [Unreleased] until it is
 ready for a dated entry.
 
-## [Unreleased]
-
-### Changed
-- Reserve this section for upcoming repository changes before the next dated
-  release or maintenance snapshot.
-
-## [2026-06-13] - Changelog baseline
+## [1.0.0] - 2026-06-13
 
 ### Added
 - Added this changelog so repository-level changes have a stable home.
