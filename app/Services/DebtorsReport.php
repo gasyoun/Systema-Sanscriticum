@@ -196,6 +196,7 @@ class DebtorsReport
             LEFT JOIN course_user cu ON cu.user_id = p.user_id AND cu.course_id = p.course_id
             WHERE p.status IN ({$paidIn})
               AND p.is_conditional = 0
+              AND p.tariff NOT IN ('Расход', 'salary_payout')
               AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY p.user_id, p.course_id, ref.ref_number
             HAVING SUM(CASE WHEN (
@@ -227,6 +228,7 @@ class DebtorsReport
                   AND p2.course_id = cg.course_id
                   AND p2.status IN ({$paidIn})
                   AND p2.is_conditional = 0
+                  AND p2.tariff NOT IN ('Расход', 'salary_payout')
             )
               AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY gu.user_id, cg.course_id, ref.ref_number

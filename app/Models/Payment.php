@@ -27,6 +27,8 @@ class Payment extends Model
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
         'start_block',
         'end_block',
+        // Ручной override месяца начисления ЗП (YYYY-MM); null = авто по блокам.
+        'salary_recognition_month',
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
         'linked_promise_id',
@@ -85,6 +87,16 @@ class Payment extends Model
         return $this->tariff === 'Расход';
     }
 
+    /**
+     * Выплата зарплаты преподавателю — бухгалтерская транзакция-отток
+     * (отрицательная сумма) на реальном курсе. Зеркало TeacherPayout в
+     * «Финансах». Не открывает доступ, не участвует в выручке/долгах/accrual.
+     */
+    public function isSalaryPayout(): bool
+    {
+        return $this->tariff === 'salary_payout';
+    }
+
     /** Платёж прошёл со скидкой (персональной или лояльности). */
     public function hasDiscount(): bool
     {
@@ -119,6 +131,7 @@ class Payment extends Model
             $this->isDeposit() => '📌 Бронь курса (предоплата)',
             $this->isTrial() => '🎟 Пробное занятие',
             $this->isExpense() => '💸 Технический расход / возврат',
+            $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -206,9 +219,9 @@ class Payment extends Model
      */
     private static function fireOnPaid(Payment $payment): void
     {
-        // Системный расход / возврат — только бухгалтерская строка.
-        // Никакого доступа, писем, праны, Telegram и уведомлений кураторам.
-        if ($payment->isExpense()) {
+        // Системный расход / возврат и выплата ЗП преподавателю — только
+        // бухгалтерская строка. Никакого доступа, писем, праны, Telegram.
+        if ($payment->isExpense() || $payment->isSalaryPayout()) {
             return;
         }
 
