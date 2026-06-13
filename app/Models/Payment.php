@@ -183,7 +183,7 @@ class Payment extends Model
         return $query
             ->whereIn('tariff', ['deposit', 'trial'])
             ->whereNull('deposit_consumed_at')
-            ->whereIn('status', ['paid', 'success']);
+            ->whereIn('status', self::PAID_STATUSES);
     }
 
     // ==========================================
@@ -194,14 +194,14 @@ class Payment extends Model
         // 1. Срабатывает при СОЗДАНИИ нового платежа
         static::created(function (Payment $payment) {
             // Ловим и 'success', и 'paid' (в зависимости от того, как сохраняет админка)
-            if (in_array($payment->status, ['success', 'paid'], true)) {
+            if (in_array($payment->status, self::PAID_STATUSES, true)) {
                 self::fireOnPaid($payment);
             }
         });
 
         // 2. Срабатывает при ИЗМЕНЕНИИ существующего платежа
         static::updated(function (Payment $payment) {
-            if ($payment->isDirty('status') && in_array($payment->status, ['success', 'paid'], true)) {
+            if ($payment->isDirty('status') && in_array($payment->status, self::PAID_STATUSES, true)) {
                 self::fireOnPaid($payment);
             }
 

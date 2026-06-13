@@ -11,9 +11,9 @@ class PaymentObserver
 {
     /**
      * Статусы, которые считаем успешной оплатой.
-     * Держим в одном месте, чтобы не плодить магические строки.
+     * Единый источник истины — Payment::PAID_STATUSES.
      */
-    private const SUCCESS_STATUSES = ['paid', 'success'];
+    private const SUCCESS_STATUSES = Payment::PAID_STATUSES;
 
     /**
      * Новая запись. Синкаем, только если она сразу создана как paid
