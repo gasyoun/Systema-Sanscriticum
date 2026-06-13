@@ -150,6 +150,19 @@ class Payment extends Model
         return $this->tariff ?: 'Весь курс';
     }
 
+    /**
+     * Канонический набор статусов «оплачено». Разные пути сохранения пишут
+     * либо 'paid', либо 'success' — оба означают доступ. Единый источник истины:
+     * НЕ дублировать литералы ['paid','success'] по коду (см. scopePaid).
+     */
+    public const PAID_STATUSES = ['paid', 'success'];
+
+    /** Оплаченные платежи — и 'paid', и 'success'. */
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::PAID_STATUSES);
+    }
+
     /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
     public function scopeReal(Builder $query): Builder
     {

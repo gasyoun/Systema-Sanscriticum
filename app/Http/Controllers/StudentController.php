@@ -32,10 +32,12 @@ class StudentController extends Controller
             return [];
         }
 
-        // 2. Ищем оплаченные тарифы строго по ID КУРСА, а не лендинга
+        // 2. Ищем оплаченные тарифы строго по ID КУРСА, а не лендинга.
+        //    Учитываем оба статуса оплаты ('paid' и 'success') — иначе урок
+        //    остаётся закрытым для success-платежей, хотя группа уже выдана.
         return Payment::where('user_id', $userId)
             ->where('course_id', $courseId)
-            ->where('status', 'paid')
+            ->paid()
             ->pluck('tariff')
             ->toArray();
     }
