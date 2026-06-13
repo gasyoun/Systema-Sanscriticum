@@ -73,12 +73,13 @@ class AdminPanelProvider extends PanelProvider
                             object-fit: contain !important; /* Keeps full image visible, respects aspect ratio */
                         }
 
-                        /* 3. Масштаб таблиц: кнопки x1 / x1.5 / x2 ужимают таблицы, чтобы широкие
-                           целиком влезали на экран. Зум задаётся ОДНОЙ CSS-переменной на :root —
-                           так все таблицы (в т.ч. дорисованные Livewire) масштабируются сами.
-                           ВАЖНО: контрол живёт вне DOM Livewire и НЕ вставляет узлы в .fi-ta и НЕ
-                           ставит inline-style на элементы Livewire — иначе морфинг ломается и
-                           модалки (создание платежа и пр.) самопроизвольно закрываются. */
+                        /* 3. Масштаб таблиц: кнопки x1 / x1.5 / x2 пропорционально ужимают
+                           таблицы через CSS zoom (одна переменная --fi-tbl-zoom на :root).
+                           Чтобы выпадающее меню действий (⋮) не «съезжало» под zoom, у него
+                           ОТКЛЮЧЁН teleport — переопределён вендор-шаблон
+                           resources/views/vendor/filament-actions/components/group.blade.php,
+                           так плашка рендерится ВНУТРИ масштабируемой таблицы и позиционируется
+                           в той же (zoom) системе координат, что и кнопка-триггер. */
                         .fi-ta-content { overflow-x: auto; zoom: var(--fi-tbl-zoom, 1); }
                         /* Плашка зума стоит НАД таблицей: absolute по координатам .fi-ta,
                            скроллится вместе со страницей. Остаётся в body (вне DOM Livewire),
