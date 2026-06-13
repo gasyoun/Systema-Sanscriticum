@@ -8,10 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // SQLite не поддерживает drop + add колонок в одном Schema::table:
+        // под dropColumn он пересоздаёт таблицу и теряет добавляемые колонки,
+        // из-за чего в тестовой SQLite-схеме отсутствовали wholesale_*-поля.
+        // Разносим на два независимых вызова — на MySQL поведение идентично.
         Schema::table('marketing_settings', function (Blueprint $table) {
             // Удаляем старую неактуальную колонку
             $table->dropColumn('loyalty_discount_percent');
+        });
 
+        Schema::table('marketing_settings', function (Blueprint $table) {
             // Добавляем новые колонки для умной лояльности
             $table->integer('bundle_2_discount')->default(10)->after('is_loyalty_active');
             $table->integer('bundle_3_discount')->default(15)->after('bundle_2_discount');
