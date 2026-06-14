@@ -338,6 +338,13 @@ class LessonResource extends Resource
                     ->formatStateUsing(fn ($state) => $state ? $state.'-я половина' : '—')
                     ->toggleable(),
 
+                Tables\Columns\TextColumn::make('group.name')
+                    ->label('Группа')
+                    ->badge()
+                    ->color('success')
+                    ->placeholder('Все группы')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Порядок')
                     ->sortable()
@@ -390,6 +397,35 @@ class LessonResource extends Resource
                     ->searchable()
                     ->preload(),
 
+                // Фильтр по группе курса. Нужен для перетаскивания порядка: reorder
+                // включается только когда выбраны курс И группа, чтобы перенумерация
+                // sort_order шла строго внутри одного потока. Sentinel 'none' = уроки
+                // без группы (одиночные курсы / общие уроки), иначе их нельзя выбрать.
+                Tables\Filters\SelectFilter::make('group_id')
+                    ->label('Группа')
+                    ->options(function ($livewire): array {
+                        $courseId = data_get($livewire->getTableFilterState('course_id'), 'value');
+                        $options = ['none' => 'Без группы (общие)'];
+                        if ($courseId) {
+                            $groups = Course::find($courseId)
+                                ?->groups()->pluck('name', 'groups.id')->all() ?? [];
+                            $options += $groups;
+                        }
+
+                        return $options;
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if ($value === 'none') {
+                            return $query->whereNull('group_id');
+                        }
+                        if (filled($value)) {
+                            return $query->where('group_id', $value);
+                        }
+
+                        return $query;
+                    }),
+
                 Tables\Filters\SelectFilter::make('block_number')
                     ->label('Блок')
                     ->options(function () {
@@ -440,16 +476,18 @@ class LessonResource extends Resource
                         ->label('Экспорт для файлов'),
                 ]),
             ])
-            // Перетаскивание доступно только когда в фильтре выбран конкретный курс —
-            // иначе Filament перенумеровал бы sort_order сразу по всем курсам и порядок
-            // размешался бы между ними.
+            // Перетаскивание доступно только когда в фильтре выбраны конкретные курс И группа —
+            // иначе Filament перенумеровал бы sort_order сразу по нескольким группам/курсам
+            // и порядок размешался бы между ними. Нумерация ведётся внутри одного потока.
             ->reorderable(
                 'sort_order',
-                condition: fn ($livewire) => filled(
-                    data_get($livewire->getTableFilterState('course_id'), 'value')
-                ),
+                condition: fn ($livewire) => filled(data_get($livewire->getTableFilterState('course_id'), 'value'))
+                    && filled(data_get($livewire->getTableFilterState('group_id'), 'value')),
             )
-            ->defaultSort(fn (Builder $query) => $query->orderBy('course_id')->orderBy('sort_order'));
+            ->defaultSort(fn (Builder $query) => $query
+                ->orderBy('course_id')
+                ->orderBy('group_id')
+                ->orderBy('sort_order'));
     }
 
     public static function getRelations(): array
