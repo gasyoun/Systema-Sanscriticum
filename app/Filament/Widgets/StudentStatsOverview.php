@@ -16,8 +16,11 @@ class StudentStatsOverview extends BaseWidget
         // Считаем только студентов (не админов)
         $studentsCount = User::where('is_admin', false)->count() ?: 1;
 
-        // Считаем все успешные платежи (как у тебя в модели: success или paid)
-        $totalRevenue = Payment::whereIn('status', ['success', 'paid'])->sum('amount');
+        // Считаем все успешные платежи (как у тебя в модели: success или paid).
+        // Исключаем выплаты ЗП преподавателям — это отток, а не выручка.
+        $totalRevenue = Payment::whereIn('status', ['success', 'paid'])
+            ->where('tariff', '!=', 'salary_payout')
+            ->sum('amount');
 
         // Считаем LTV
         $ltv = round($totalRevenue / $studentsCount);
