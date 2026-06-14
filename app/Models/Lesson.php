@@ -57,11 +57,18 @@ class Lesson extends Model
     protected static function booted(): void
     {
         // Новый урок (например, из обычной формы создания) встаёт в конец списка
-        // своего курса, а не на позицию 0 поверх существующих уроков.
+        // СВОЕЙ ГРУППЫ внутри курса, а не в конец всего курса. В сплит-курсах каждый
+        // урок привязан к группе, поэтому нумерация ведётся в пределах (course_id, group_id);
+        // group_id = NULL (одиночные курсы / общие уроки) — отдельный бакет.
         static::creating(function (Lesson $lesson): void {
             if (empty($lesson->sort_order) && $lesson->course_id) {
-                $maxSortOrder = static::where('course_id', $lesson->course_id)->max('sort_order');
-                $lesson->sort_order = (int) $maxSortOrder + 1;
+                $query = static::where('course_id', $lesson->course_id);
+                if ($lesson->group_id === null) {
+                    $query->whereNull('group_id');
+                } else {
+                    $query->where('group_id', $lesson->group_id);
+                }
+                $lesson->sort_order = (int) $query->max('sort_order') + 1;
             }
         });
 
@@ -88,6 +95,11 @@ class Lesson extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function homeworkSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
