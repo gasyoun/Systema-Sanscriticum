@@ -36,8 +36,11 @@ Route::get('/promo/{slug}', function ($slug) {
 
 // --- ИЗМЕНЕННЫЙ РОУТ ГЛАВНОЙ СТРАНИЦЫ (ВИТРИНА) ---
 Route::get('/', function () {
-    // Берем только опубликованные курсы, по 9 на страницу
-    $landings = LandingPage::where('is_active', true)->paginate(9);
+    // Берем только опубликованные курсы, по 9 на страницу.
+    // is_listed=false (например, страница записи вебинара) в витрину не попадает.
+    $landings = LandingPage::where('is_active', true)
+        ->where('is_listed', true)
+        ->paginate(9);
 
     // Открытые занятия для витринной карусели: отобраны вручную через флаг show_on_main
     // (фильтрация is_free + is_published сидит в Lesson::scopeShownOnMain).

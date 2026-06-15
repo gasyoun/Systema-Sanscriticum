@@ -60,6 +60,10 @@ class LandingPageResource extends Resource
                         Toggle::make('is_active')
                             ->label('Опубликовано')
                             ->default(true),
+                        Toggle::make('is_listed')
+                            ->label('Показывать в каталоге и блоке «Наши курсы»')
+                            ->helperText('Выключите для страницы записи вебинара — она останется доступной только по прямой ссылке.')
+                            ->default(true),
                     ]),
 
                 // === Шапка лендинга ===
@@ -180,7 +184,18 @@ class LandingPageResource extends Resource
                                     ->icon('heroicon-m-video-camera')
                                     ->schema([
                                         TextInput::make('title')->label('Заголовок'),
-                                        TextInput::make('video_url')->label('Ссылка на видео')->required(),
+                                        TextInput::make('vk_url')
+                                            ->label('ВК Видео')
+                                            ->helperText('Ссылка «Поделиться» или iframe-embed (vk.com/video_ext.php…).'),
+                                        TextInput::make('youtube_url')
+                                            ->label('YouTube')
+                                            ->helperText('Любая ссылка на ролик (watch / youtu.be / embed).'),
+                                        TextInput::make('rutube_url')
+                                            ->label('RuTube')
+                                            ->helperText('Ссылка на ролик RuTube (video / play/embed).'),
+                                        TextInput::make('video_url')
+                                            ->label('Прочий iframe (запасной)')
+                                            ->helperText('Необязательно. Готовая embed-ссылка для прочих хостингов (Kinescope и т.п.). Заполните хотя бы один источник.'),
                                     ]),
 
                                 // 3. AUDIENCE
@@ -1201,6 +1216,7 @@ class LandingPageResource extends Resource
                 Tables\Columns\TextColumn::make('title')->label('Заголовок'),
                 Tables\Columns\TextColumn::make('slug')->label('URL'),
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Активен'),
+                Tables\Columns\IconColumn::make('is_listed')->boolean()->label('В каталоге'),
             ])
             ->filters([])
             ->actions([
