@@ -12,10 +12,20 @@ use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
-    public function show(Tariff $tariff, PranaService $prana)
+    public function show(Request $request, Tariff $tariff, PranaService $prana)
     {
         if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
+        }
+
+        // Промокод из ссылки (?promo=CODE), например из блока «Выбор потока» на лендинге.
+        // Валидный код кладём в сессию — дальше его подхватит computeState() и страница
+        // отрисуется со скидкой на первом же рендере. Невалидный/чужой код просто игнорим.
+        if ($request->filled('promo')) {
+            $promo = PromoCode::where('code', $this->normalizeCode($request->query('promo')))->first();
+            if ($promo && $promo->isValid()) {
+                session()->put('promo_code', $promo->code);
+            }
         }
 
         $tariff->load('course');
@@ -34,7 +44,7 @@ class CheckoutController extends Controller
     {
         $request->validate(['code' => 'required|string']);
 
-        $code = mb_strtoupper(trim($request->code));
+        $code = $this->normalizeCode($request->code);
         $promo = PromoCode::where('code', $code)->first();
 
         if (! $promo || ! $promo->isValid()) {
@@ -65,6 +75,12 @@ class CheckoutController extends Controller
         }
 
         return back();
+    }
+
+    // Единый формат хранения кода промокода (верхний регистр, без пробелов по краям).
+    private function normalizeCode(string $code): string
+    {
+        return mb_strtoupper(trim($code));
     }
 
     /**
