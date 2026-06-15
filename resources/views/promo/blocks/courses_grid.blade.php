@@ -3,8 +3,10 @@
     $subtitle = $block['data']['subtitle'] ?? 'Выберите курс для начала обучения.';
     $perPage = $block['data']['limit'] ?? 6;
 
-    // Начинаем собирать запрос
-    $query = \App\Models\LandingPage::where('is_active', true);
+    // Начинаем собирать запрос.
+    // is_listed=false (страница записи и т.п.) в блок «Наши курсы» не показываем.
+    $query = \App\Models\LandingPage::where('is_active', true)
+        ->where('is_listed', true);
 
     // Исключаем текущий лендинг
     if (isset($page)) {
