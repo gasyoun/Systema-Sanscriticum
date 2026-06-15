@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\LandingPageResource\Pages;
 use App\Models\LandingPage;
+use App\Models\PromoCode;
+use App\Models\Tariff;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
@@ -692,6 +694,83 @@ class LandingPageResource extends Resource
                                             ])
                                             ->grid(3)
                                             ->defaultItems(3),
+                                    ]),
+
+                                // 7.1. ВЫБОР ПОТОКА (одна программа, разные дни/время → оплата тарифа со скидкой)
+                                Builder\Block::make('course_streams_block')
+                                    ->label('7.1. Выбор потока (разные дни/время → оплата)')
+                                    ->icon('heroicon-m-calendar-days')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок секции')
+                                            ->default('Выберите удобный поток'),
+
+                                        TextInput::make('subtitle')
+                                            ->label('Подзаголовок'),
+
+                                        // Таймер + счётчик мест (как в блоке тарифов)
+                                        Section::make('Настройки дефицита (Таймер и Места)')
+                                            ->schema([
+                                                DateTimePicker::make('timer_end')
+                                                    ->label('Таймер до (Дата и время)')
+                                                    ->helperText('Если не заполнено — возьмётся дата вебинара или +24 часа'),
+
+                                                Grid::make(2)->schema([
+                                                    TextInput::make('seats_taken')
+                                                        ->label('Занято мест')
+                                                        ->numeric()
+                                                        ->default(16),
+                                                    TextInput::make('seats_total')
+                                                        ->label('Всего мест')
+                                                        ->numeric()
+                                                        ->default(20),
+                                                ]),
+                                            ])->collapsible(),
+
+                                        Repeater::make('streams')
+                                            ->label('Потоки')
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Название потока')
+                                                    ->placeholder('Поток 1')
+                                                    ->required(),
+                                                TextInput::make('schedule')
+                                                    ->label('Дни и время занятий')
+                                                    ->placeholder('Пн/Ср 19:00')
+                                                    ->required(),
+                                                TextInput::make('start_note')
+                                                    ->label('Подпись (необязательно)')
+                                                    ->placeholder('Старт 1 сентября'),
+                                                Select::make('tariff_id')
+                                                    ->label('Тариф для оплаты')
+                                                    ->options(fn () => Tariff::query()
+                                                        ->with('course')
+                                                        ->where('is_active', true)
+                                                        ->get()
+                                                        ->mapWithKeys(fn (Tariff $t) => [
+                                                            $t->id => trim(($t->course?->title ? $t->course->title.' — ' : '').$t->title)
+                                                                .' ('.number_format((float) $t->price, 0, '', ' ').' ₽)',
+                                                        ]))
+                                                    ->searchable()
+                                                    ->required()
+                                                    ->helperText('Клик по потоку ведёт на оплату этого тарифа.'),
+                                                Select::make('promo_code')
+                                                    ->label('Промокод (скидка)')
+                                                    ->options(fn () => PromoCode::orderBy('code')->pluck('code', 'code'))
+                                                    ->searchable()
+                                                    ->helperText('Необязательно. Применится автоматически на странице оплаты.'),
+                                                TextInput::make('price')->label('Цена (для показа)'),
+                                                TextInput::make('old_price')->label('Старая цена (зачёркнутая)'),
+                                                RichEditor::make('features')
+                                                    ->label('Список опций')
+                                                    ->toolbarButtons(['bulletList', 'bold']),
+                                                Toggle::make('is_popular')->label('Выделить')->default(false),
+                                                TextInput::make('button_text')
+                                                    ->label('Текст кнопки')
+                                                    ->default('Выбрать поток'),
+                                            ])
+                                            ->grid(3)
+                                            ->defaultItems(2),
                                     ]),
 
                                 // 8. REVIEWS (Отзывы + Скриншоты)
