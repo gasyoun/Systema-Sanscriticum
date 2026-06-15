@@ -41,6 +41,7 @@ class SitemapController extends Controller
             ];
 
             LandingPage::where('is_active', true)
+                ->where('is_listed', true)
                 ->select(['slug', 'updated_at'])
                 ->orderBy('updated_at', 'desc')
                 ->chunk(500, function ($pages) use (&$urls) {

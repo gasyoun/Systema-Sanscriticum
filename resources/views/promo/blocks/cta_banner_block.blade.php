@@ -14,6 +14,10 @@
     $buttonBgColor = $data['button_bg_color'] ?? '#ffffff';
     $buttonTextColor = $data['button_text_color'] ?? '#1E4633';
 
+    // Якорная ссылка (#price, #streams и т.п.) — кнопка работает как обычный переход
+    // (скролл к блоку), без видео-попапа. scroll-smooth уже включён на <html>.
+    $isAnchor = !empty($buttonUrl) && \Illuminate\Support\Str::startsWith($buttonUrl, '#');
+
     // УМНЫЙ ПАРСЕР ССЫЛОК ДЛЯ ПЛЕЕРА
     $embedUrl = $buttonUrl;
     
@@ -64,7 +68,7 @@
             {{-- Кнопка с вызовом модального окна (@click.prevent) --}}
             <div class="relative z-10 shrink-0 w-full lg:w-auto mt-2 lg:mt-0">
                 <a href="{{ $buttonUrl }}"
-                   @click.prevent="videoOpen = true"
+                   @if(!$isAnchor) @click.prevent="videoOpen = true" @endif
                    class="flex items-center justify-center w-full lg:w-auto px-10 py-4 rounded-[14px] font-extrabold text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-1 active:translate-y-0 shadow-lg hover:shadow-xl group"
                    style="background-color: {{ $buttonBgColor }}; color: {{ $buttonTextColor }};">
                     <div class="w-2 h-2 rounded-full bg-current animate-pulse mr-3 opacity-70 group-hover:opacity-100"></div>
