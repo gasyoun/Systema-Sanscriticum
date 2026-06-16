@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PromoCode extends Model
 {
@@ -13,6 +14,7 @@ class PromoCode extends Model
         'code',
         'type',
         'value',
+        'course_id',
         'usage_limit',
         'used_count',
         'expires_at',
@@ -26,6 +28,35 @@ class PromoCode extends Model
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    // Курс, к которому привязан код. NULL = код общий.
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    // Применим ли код к данному курсу: общий код (course_id = null) — всегда,
+    // иначе курс тарифа должен совпасть с привязанным курсом.
+    public function appliesToCourse(?int $courseId): bool
+    {
+        return $this->course_id === null || (int) $this->course_id === (int) $courseId;
+    }
+
+    // Уже погашен этим пользователем? Правило «один человек — один раз»:
+    // код израсходован, когда у юзера есть ОПЛАЧЕННЫЙ платёж с этим кодом
+    // (зеркалит PaymentObserver::SUCCESS_STATUSES). Гость (null) — проверить
+    // нельзя, авторитетная проверка делается в PaymentController по резолвнутому юзеру.
+    public function redeemedByUser(?int $userId): bool
+    {
+        if ($userId === null) {
+            return false;
+        }
+
+        return Payment::where('promo_code_id', $this->id)
+            ->where('user_id', $userId)
+            ->whereIn('status', ['paid', 'success'])
+            ->exists();
+    }
 
     // Метод: Проверяет, можно ли применить этот код прямо сейчас
     public function isValid(): bool

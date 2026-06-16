@@ -57,6 +57,14 @@ class PromoCodeResource extends Resource
                             ->numeric()
                             ->helperText('Укажите число (например 20 для процентов, или 1000 для рублей).'),
 
+                        Forms\Components\Select::make('course_id')
+                            ->label('Привязать к курсу')
+                            ->relationship('course', 'title')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Оставьте пустым — код будет общим (для любого курса).'),
+
                         Forms\Components\TextInput::make('usage_limit')
                             ->label('Лимит активаций')
                             ->numeric()
@@ -104,6 +112,11 @@ class PromoCodeResource extends Resource
                             ? $record->value.' %'
                             : number_format($record->value, 0, '.', ' ').' ₽';
                     }),
+
+                Tables\Columns\TextColumn::make('course.title')
+                    ->label('Курс')
+                    ->placeholder('Все курсы')
+                    ->limit(30),
 
                 Tables\Columns\TextColumn::make('usage_limit')
                     ->label('Использовано')

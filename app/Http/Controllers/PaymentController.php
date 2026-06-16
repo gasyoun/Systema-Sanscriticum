@@ -79,7 +79,11 @@ class PaymentController extends Controller
                     ->lockForUpdate()
                     ->first();
 
-                if ($promo && $promo->isValid()) {
+                if ($promo
+                    && $promo->isValid()
+                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && ! $promo->redeemedByUser($user->id)
+                ) {
                     $finalPrice = $promo->calculateDiscountedPrice($finalPrice);
                 } else {
                     $promo = null;
@@ -132,6 +136,7 @@ class PaymentController extends Controller
             $payment = Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $tariff->course->id ?? null,
+                'promo_code_id' => $promo?->id,
                 'amount' => $finalPrice,
                 'discount_percent' => $discount['percent'],
                 'discount_amount' => $discount['amount'] > 0 ? $discount['amount'] : null,
