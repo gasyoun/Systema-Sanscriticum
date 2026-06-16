@@ -47,6 +47,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('deliver-due-lead-magnets');
+
+        // --- ПИСЬМО ЛИДАМ СО ССЫЛКОЙ НА ЗАПИСЬ ВЕБИНАРА ---
+        // Триггер — админ заполнил webinar_recording_url; команда сама отсечёт уже отправленных.
+        $schedule->command('webinar:deliver-recordings')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('deliver-webinar-recordings');
     }
 
     /**

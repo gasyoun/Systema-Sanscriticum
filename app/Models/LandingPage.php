@@ -28,6 +28,7 @@ class LandingPage extends Model
         'webinar_date',
         'webinar_label',
         'webinar_url',
+        'webinar_recording_url',
         'magnet_lead_minutes',
         'video_url',
         'description',
