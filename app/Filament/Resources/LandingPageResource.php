@@ -98,6 +98,10 @@ class LandingPageResource extends Resource
                             ->label('Ссылка на вебинар (Zoom / трансляция)')
                             ->url()
                             ->helperText('Пусто → письмо не уходит. Дата и название берутся из полей ниже.'),
+                        TextInput::make('webinar_recording_url')
+                            ->label('Ссылка на запись вебинара')
+                            ->url()
+                            ->helperText('Как заполните — лидам этого лендинга автоматически уйдёт письмо со ссылкой на запись (в течение 15 минут).'),
                         DateTimePicker::make('webinar_date')
                             ->label('Дата и время старта (МСК)')
                             ->native(false)
