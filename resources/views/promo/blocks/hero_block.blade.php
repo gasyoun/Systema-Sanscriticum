@@ -70,7 +70,8 @@
 
             {{-- 2. ИНТЕРАКТИВНАЯ ЧАСТЬ (ПО ЦЕНТРУ) --}}
             <div class="flex flex-col items-center text-center mt-4">
-                {{-- Кнопка --}}
+                {{-- Кнопка (отключаемая через тумблер «Показывать кнопку»; у старых лендингов ключа нет → показываем) --}}
+                @if($data['show_button'] ?? true)
                 <div class="transform transition-all duration-700 delay-500 translate-y-8 opacity-0"
                      :class="loaded ? '!translate-y-0 !opacity-100' : ''">
                     <button type="button" @click.prevent="$dispatch('open-order-form')"
@@ -80,6 +81,7 @@
                         <span class="relative z-10">{{ $data['button_text'] ?? 'Записаться сейчас' }}</span>
                     </button>
                 </div>
+                @endif
 
                 {{-- Гарантии --}}
                 <div class="transform transition-all duration-700 delay-700 translate-y-8 opacity-0"

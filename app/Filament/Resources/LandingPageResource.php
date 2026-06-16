@@ -147,9 +147,16 @@ class LandingPageResource extends Resource
                                             ->label('Текст под заголовком')
                                             ->rows(3),
 
+                                        Toggle::make('show_button')
+                                            ->label('Показывать кнопку')
+                                            ->helperText('Выключите, если на первом экране кнопка не нужна (например, заявка идёт ниже по странице).')
+                                            ->live()
+                                            ->default(true),
+
                                         TextInput::make('button_text')
                                             ->label('Текст кнопки')
-                                            ->default('Записаться'),
+                                            ->default('Записаться')
+                                            ->visible(fn (\Filament\Forms\Get $get): bool => $get('show_button') ?? true),
 
                                         Repeater::make('badges')
                                             ->label('Плашки под кнопкой')
