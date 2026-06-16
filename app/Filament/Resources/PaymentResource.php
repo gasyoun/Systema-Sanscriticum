@@ -246,6 +246,14 @@ class PaymentResource extends Resource
                     ->getStateUsing(fn (Payment $record): ?string => $record->discountLabel() ?: null)
                     ->alignment(\Filament\Support\Enums\Alignment::Center),
 
+                // Применённый промокод (если был). Скрыто по умолчанию — включается тумблером колонок.
+                Tables\Columns\TextColumn::make('promoCode.code')
+                    ->label('Промокод')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 // 5. СТАТУС
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')

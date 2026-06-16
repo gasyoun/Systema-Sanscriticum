@@ -89,4 +89,82 @@ class CheckoutPromoFromUrlTest extends TestCase
         $response->assertOk();
         $this->assertNull(session('promo_code'));
     }
+
+    /** @test */
+    public function course_bound_promo_applies_on_its_own_course(): void
+    {
+        $tariff = $this->tariff(12000);
+        PromoCode::create([
+            'code' => 'COURSEA',
+            'type' => 'percent',
+            'value' => 10,
+            'is_active' => true,
+            'course_id' => $tariff->course_id,
+        ]);
+
+        $response = $this->get("/checkout/{$tariff->id}?promo=COURSEA");
+
+        $response->assertOk();
+        $response->assertSee('10800', false); // 12000 − 10%
+        $this->assertSame('COURSEA', session('promo_code'));
+    }
+
+    /** @test */
+    public function course_bound_promo_in_url_is_ignored_on_other_course(): void
+    {
+        $tariff = $this->tariff(12000);
+        $otherCourse = Course::factory()->create();
+        PromoCode::create([
+            'code' => 'COURSEB',
+            'type' => 'percent',
+            'value' => 50,
+            'is_active' => true,
+            'course_id' => $otherCourse->id,
+        ]);
+
+        $response = $this->get("/checkout/{$tariff->id}?promo=COURSEB");
+
+        $response->assertOk();
+        $response->assertSee('12000', false); // полная цена, скидки нет
+        $this->assertNull(session('promo_code'));
+    }
+
+    /** @test */
+    public function apply_promo_rejects_code_bound_to_other_course(): void
+    {
+        $tariff = $this->tariff(12000);
+        $otherCourse = Course::factory()->create();
+        PromoCode::create([
+            'code' => 'COURSEB',
+            'type' => 'percent',
+            'value' => 50,
+            'is_active' => true,
+            'course_id' => $otherCourse->id,
+        ]);
+
+        $this->postJson("/checkout/{$tariff->id}/promo", ['code' => 'COURSEB'])
+            ->assertStatus(422)
+            ->assertJson(['ok' => false]);
+
+        $this->assertNull(session('promo_code'));
+    }
+
+    /** @test */
+    public function global_promo_applies_to_any_course(): void
+    {
+        $tariff = $this->tariff(12000);
+        PromoCode::create([
+            'code' => 'GLOBAL',
+            'type' => 'percent',
+            'value' => 25,
+            'is_active' => true,
+            'course_id' => null,
+        ]);
+
+        $this->postJson("/checkout/{$tariff->id}/promo", ['code' => 'GLOBAL'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertSame('GLOBAL', session('promo_code'));
+    }
 }
