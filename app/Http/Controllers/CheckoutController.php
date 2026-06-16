@@ -23,7 +23,11 @@ class CheckoutController extends Controller
         // отрисуется со скидкой на первом же рендере. Невалидный/чужой код просто игнорим.
         if ($request->filled('promo')) {
             $promo = PromoCode::where('code', $this->normalizeCode($request->query('promo')))->first();
-            if ($promo && $promo->isValid()) {
+            if ($promo
+                && $promo->isValid()
+                && $promo->appliesToCourse($tariff->course_id)
+                && ! $this->alreadyUsedByCurrentUser($promo)
+            ) {
                 session()->put('promo_code', $promo->code);
             }
         }
@@ -56,6 +60,27 @@ class CheckoutController extends Controller
             return back()->with('error', $message);
         }
 
+        // Код валиден, но привязан к другому курсу — на этом чекауте не применяем.
+        if (! $promo->appliesToCourse($tariff->course_id)) {
+            $message = 'Этот промокод действует только для другого курса.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['ok' => false, 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
+        // Один человек — один раз. Для гостя проверить нельзя (анонимен) —
+        // его поймает авторитетная проверка в PaymentController при оплате.
+        if ($this->alreadyUsedByCurrentUser($promo)) {
+            $message = 'Вы уже использовали этот промокод.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['ok' => false, 'message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
+        }
+
         session()->put('promo_code', $promo->code);
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -81,6 +106,13 @@ class CheckoutController extends Controller
     private function normalizeCode(string $code): string
     {
         return mb_strtoupper(trim($code));
+    }
+
+    // Правило «один человек — один раз»: применимо только к авторизованному юзеру.
+    // Гость анонимен — его проверяет PaymentController по резолвнутому аккаунту.
+    private function alreadyUsedByCurrentUser(PromoCode $promo): bool
+    {
+        return auth()->check() && $promo->redeemedByUser(auth()->id());
     }
 
     /**
@@ -120,10 +152,15 @@ class CheckoutController extends Controller
         if (session()->has('promo_code')) {
             $promo = PromoCode::where('code', session('promo_code'))->first();
             if ($promo && $promo->isValid()) {
-                $appliedPromo = $promo;
-                $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
-                $discountAmount = $finalPrice - $priceWithPromo;
-                $finalPrice = $priceWithPromo;
+                // Код валиден. Применяем, только если он подходит этому курсу
+                // И юзер его ещё не гасил (один человек — один раз). При несовпадении
+                // курса из сессии НЕ убираем — он может подойти на чекауте своего курса.
+                if ($promo->appliesToCourse($tariff->course_id) && ! $this->alreadyUsedByCurrentUser($promo)) {
+                    $appliedPromo = $promo;
+                    $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
+                    $discountAmount = $finalPrice - $priceWithPromo;
+                    $finalPrice = $priceWithPromo;
+                }
             } else {
                 session()->forget('promo_code');
             }

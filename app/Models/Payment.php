@@ -16,6 +16,7 @@ class Payment extends Model
         'user_id',
         'lead_id',
         'course_id',
+        'promo_code_id',
         'amount',
         'discount_percent',
         'discount_amount',
@@ -55,6 +56,11 @@ class Payment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 
     public function linkedPromise(): BelongsTo
