@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Leads;
 
 use App\Mail\LeadWebinarInviteMail;
+use App\Mail\LeadWebinarRecordingMail;
 use App\Models\Lead;
 use App\Models\LeadStepEmail;
 use Illuminate\Database\QueryException;
@@ -22,6 +23,7 @@ class LeadStepMailer
     /** Известные шаги. Неизвестный шаг → 'unknown_step', письмо не шлём. */
     public const STEPS = [
         'webinar_invite',
+        'webinar_recording',
     ];
 
     /**
@@ -71,6 +73,9 @@ class LeadStepMailer
         return match ($step) {
             'webinar_invite' => ($landing && ! empty($landing->webinar_url))
                 ? new LeadWebinarInviteMail($lead, $landing)
+                : null,
+            'webinar_recording' => ($landing && ! empty($landing->webinar_recording_url))
+                ? new LeadWebinarRecordingMail($lead, $landing)
                 : null,
             default => null,
         };

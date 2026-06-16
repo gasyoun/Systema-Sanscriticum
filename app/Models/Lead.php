@@ -54,6 +54,12 @@ class Lead extends Model
         return $this->belongsTo(LandingPage::class);
     }
 
+    // Пошаговые письма, отправленные лиду (идемпотентность LeadStepMailer).
+    public function stepEmails()
+    {
+        return $this->hasMany(LeadStepEmail::class);
+    }
+
     public function markConverted(): void
     {
         if (is_null($this->converted_at)) {
