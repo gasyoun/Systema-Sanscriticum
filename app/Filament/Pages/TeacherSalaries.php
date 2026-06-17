@@ -224,6 +224,13 @@ class TeacherSalaries extends Page implements HasTable
                     ->live(onBlur: true)
                     ->helperText('Фиксированная добавка к итогу, если расчёт не дотягивает до минимума. Идёт сверх формулы (без коэффициента и процента).'),
 
+                Forms\Components\TextInput::make('deduction')
+                    ->label('Удержание (₽)')
+                    ->numeric()
+                    ->default(0)
+                    ->live(onBlur: true)
+                    ->helperText('Фиксированный вычет из итога (штраф/аванс/корректировка). Вычитается из суммы как есть (без коэффициента и процента).'),
+
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
                     ->content(function (Forms\Get $get): string {
@@ -232,13 +239,17 @@ class TeacherSalaries extends Page implements HasTable
                         $pct = (float) ($get('teacher_percent') ?: 0);
                         $extrasTotal = $this->extrasTotal($get('extras') ?? []);
                         $surcharge = (float) ($get('surcharge') ?: 0);
+                        $deduction = (float) ($get('deduction') ?: 0);
 
-                        $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge);
+                        $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction);
                         $fmt = fn ($v) => number_format((float) $v, 0, '.', ' ');
 
                         $formula = "({$fmt($base)} × {$coef}%) × {$pct}% + {$fmt($extrasTotal)} × {$coef}%";
                         if ($surcharge != 0.0) {
                             $formula .= " + доплата {$fmt($surcharge)}";
+                        }
+                        if ($deduction != 0.0) {
+                            $formula .= " − удержание {$fmt(abs($deduction))}";
                         }
 
                         return $formula.' = '.$fmt($total).' ₽';
@@ -257,7 +268,8 @@ class TeacherSalaries extends Page implements HasTable
                 $extras = $data['extras'] ?? [];
                 $extrasTotal = $this->extrasTotal($extras);
                 $surcharge = (float) ($data['surcharge'] ?? 0);
-                $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge);
+                $deduction = (float) ($data['deduction'] ?? 0);
+                $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction);
 
                 $blockNumber = (int) $data['block_number'];
                 $courseId = (int) $data['course_id'];
@@ -273,7 +285,7 @@ class TeacherSalaries extends Page implements HasTable
                     ->first();
 
                 $comment = sprintf(
-                    'Блок %d%s: (%s × %s%%) × %s%% + %s × %s%%%s = %s ₽',
+                    'Блок %d%s: (%s × %s%%) × %s%% + %s × %s%%%s%s = %s ₽',
                     $blockNumber,
                     $course ? ' · '.$course->title : '',
                     number_format($base, 0, '.', ' '),
@@ -282,6 +294,7 @@ class TeacherSalaries extends Page implements HasTable
                     number_format($extrasTotal, 0, '.', ' '),
                     $coef,
                     $surcharge != 0.0 ? ' + доплата '.number_format($surcharge, 0, '.', ' ') : '',
+                    $deduction != 0.0 ? ' − удержание '.number_format(abs($deduction), 0, '.', ' ') : '',
                     number_format($total, 0, '.', ' '),
                 );
 
@@ -307,6 +320,7 @@ class TeacherSalaries extends Page implements HasTable
                         'extras' => array_values($extras),
                         'extras_total' => $extrasTotal,
                         'surcharge' => $surcharge,
+                        'deduction' => abs($deduction),
                         'total' => $total,
                         // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
                         'payments' => $detail['lines'],
