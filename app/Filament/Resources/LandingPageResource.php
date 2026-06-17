@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\LandingPageResource\Pages;
+use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\PromoCode;
 use App\Models\Tariff;
@@ -550,6 +551,67 @@ class LandingPageResource extends Resource
                                                 ColorPicker::make('button_text_color')
                                                     ->label('Цвет текста кнопки')
                                                     ->default('#1E4633'), // Темно-зеленый текст на кнопке
+                                            ])->columns(2),
+                                    ]),
+
+                                // ==============================================================
+                                // 14.1. КУРС ЗАВЕРШЁН — запись в продаже (кнопка → карточка курса)
+                                // ==============================================================
+                                Builder\Block::make('course_finished_block')
+                                    ->label('14.1. Курс завершён → запись в продаже')
+                                    ->icon('heroicon-o-archive-box')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Курс завершён'),
+
+                                        Textarea::make('subtitle')
+                                            ->label('Подзаголовок')
+                                            ->rows(3)
+                                            ->default('Повторный набор не планируется. Все лекции доступны в записи — учитесь в своём темпе с пожизненным доступом.'),
+
+                                        Repeater::make('badges')
+                                            ->label('Плашки-факты (необязательно)')
+                                            ->schema([
+                                                TextInput::make('text')->label('Текст плашки')->required(),
+                                            ])
+                                            ->grid(3)
+                                            ->maxItems(4)
+                                            ->default([
+                                                ['text' => 'Повтор не планируется'],
+                                                ['text' => 'Доступно в записи'],
+                                                ['text' => 'Пожизненный доступ'],
+                                            ]),
+
+                                        Select::make('course_id')
+                                            ->label('Курс (карточка для покупки)')
+                                            ->options(fn () => Course::query()
+                                                ->where('is_visible', true)
+                                                ->orderBy('title')
+                                                ->pluck('title', 'id'))
+                                            ->searchable()
+                                            ->required()
+                                            ->helperText('Клик по кнопке ведёт на карточку этого курса в витрине (/online/kursy/…), где можно купить запись.'),
+
+                                        TextInput::make('button_text')
+                                            ->label('Текст кнопки')
+                                            ->default('Купить запись курса'),
+
+                                        Section::make('🎨 Настройки дизайна')
+                                            ->collapsed()
+                                            ->schema([
+                                                ColorPicker::make('bg_color')
+                                                    ->label('Цвет фона')
+                                                    ->default('#101010'),
+                                                ColorPicker::make('text_color')
+                                                    ->label('Цвет текста')
+                                                    ->default('#ffffff'),
+                                                ColorPicker::make('button_bg_color')
+                                                    ->label('Цвет фона кнопки')
+                                                    ->default('#E85C24'),
+                                                ColorPicker::make('button_text_color')
+                                                    ->label('Цвет текста кнопки')
+                                                    ->default('#ffffff'),
                                             ])->columns(2),
                                     ]),
 
