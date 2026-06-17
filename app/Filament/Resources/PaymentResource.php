@@ -28,22 +28,22 @@ class PaymentResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
     public static function canCreate(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
     public static function canEdit($record): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
     public static function canDelete($record): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
     /**

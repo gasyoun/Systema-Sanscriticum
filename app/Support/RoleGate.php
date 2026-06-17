@@ -30,6 +30,15 @@ final class RoleGate
         return self::any(Roles::ADMIN);
     }
 
+    /**
+     * Доступ к выплатам/зарплатам: только бухгалтер и супер-админ.
+     * Обычный admin сюда НЕ проходит (в отличие от adminOnly()).
+     */
+    public static function accounting(): bool
+    {
+        return self::any(Roles::ACCOUNTANT);
+    }
+
     public static function isSuperAdmin(): bool
     {
         $user = auth()->user();
