@@ -397,10 +397,12 @@ class TeacherSalaryService
      * Допзанятия идут через коэффициент, но БЕЗ процента преподавателя.
      * Доплата — фиксированная добавка (когда расчёт не дотягивает до минимума),
      * прибавляется к итогу как есть (без коэффициента и процента).
+     * Удержание — фиксированный вычет из итога (штраф/аванс/корректировка),
+     * вычитается по модулю как есть (без коэффициента и процента).
      */
-    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0): float
+    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0): float
     {
-        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge, 2);
+        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction), 2);
     }
 
     /**

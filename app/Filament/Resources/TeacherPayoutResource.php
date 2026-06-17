@@ -89,6 +89,9 @@ class TeacherPayoutResource extends Resource
         if (! empty($b['surcharge'])) {
             $parts[] = 'доплата '.number_format((float) $b['surcharge'], 0, '.', ' ').' ₽';
         }
+        if (! empty($b['deduction'])) {
+            $parts[] = 'удержание −'.number_format((float) $b['deduction'], 0, '.', ' ').' ₽';
+        }
 
         return implode(' · ', $parts);
     }
