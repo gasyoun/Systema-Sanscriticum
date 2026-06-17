@@ -37,7 +37,9 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return RoleGate::adminOnly();
+        // Бухгалтер видит студентов для сверки (read-only): создание/правка/
+        // удаление остаются за админами — он не проходит adminOnly()/canEdit().
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT);
     }
 
     public static function canCreate(): bool
@@ -46,6 +48,14 @@ class UserResource extends Resource
     }
 
     public static function canView($record): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT);
+    }
+
+    // Массовое удаление студентов — только админам. Без этого override Filament
+    // отдаёт canDeleteAny()=true (нет UserPolicy), и DeleteBulkAction всплыл бы
+    // у бухгалтера, который видит список (canViewAny), но править/удалять не должен.
+    public static function canDeleteAny(): bool
     {
         return RoleGate::adminOnly();
     }
@@ -153,7 +163,9 @@ class UserResource extends Resource
                             ->options(function (?\Illuminate\Database\Eloquent\Model $record) {
                                 $all = Roles::all();
                                 if (! RoleGate::isSuperAdmin()) {
-                                    unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN]);
+                                    // Бухгалтер имеет доступ к выплатам, которого нет у обычного
+                                    // admin → выдавать эту роль может только супер-админ.
+                                    unset($all[Roles::SUPER_ADMIN], $all[Roles::ADMIN], $all[Roles::ACCOUNTANT]);
                                 }
                                 // Роль преподавателя выдаётся только через TeacherResource.
                                 // Если у записи она уже есть — оставляем её в списке как информационную.
@@ -169,7 +181,7 @@ class UserResource extends Resource
                             ->rule(function (?\Illuminate\Database\Eloquent\Model $record) {
                                 $allowed = RoleGate::isSuperAdmin()
                                     ? Roles::all()
-                                    : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN]));
+                                    : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN, Roles::ACCOUNTANT]));
                                 // TEACHER нельзя выдать через эту форму ни админу, ни супер-админу.
                                 unset($allowed[Roles::TEACHER]);
                                 $keys = array_keys($allowed);
@@ -313,6 +325,7 @@ class UserResource extends Resource
                                 Roles::ADMIN => 'warning',
                                 Roles::TEACHER => 'info',
                                 Roles::MANAGER => 'primary',
+                                Roles::ACCOUNTANT => 'success',
                                 default => 'gray',
                             })
                             ->visible(fn () => RoleGate::adminOnly()),
@@ -514,6 +527,7 @@ class UserResource extends Resource
                         Roles::ADMIN => 'warning',
                         Roles::TEACHER => 'info',
                         Roles::MANAGER => 'primary',
+                        Roles::ACCOUNTANT => 'success',
                         default => 'gray',
                     })
                     ->alignment('center')
@@ -757,6 +771,7 @@ class UserResource extends Resource
                     ->icon('heroicon-o-key')
                     ->color('warning')
                     ->tooltip('Сбросить и выслать пароль')
+                    ->visible(fn () => RoleGate::adminOnly())
                     ->requiresConfirmation()
                     ->modalHeading('Выслать новый пароль?')
                     ->modalDescription('Текущий пароль студента будет сброшен. Новый случайный пароль будет немедленно отправлен ему на почту.')
@@ -891,6 +906,7 @@ class UserResource extends Resource
                         ->label('Разослать доступы')
                         ->icon('heroicon-o-envelope')
                         ->color('success')
+                        ->visible(fn () => RoleGate::adminOnly())
                         ->requiresConfirmation()
                         ->modalHeading('Разослать доступы выбранным студентам?')
                         ->modalDescription('Система сгенерирует уникальные пароли и отправит письма. Студенты, которым доступ уже отправлялся (есть отметка в примечании), будут пропущены для защиты от спама.')

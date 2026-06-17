@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
+use App\Filament\Concerns\AccountingOnly;
 use App\Filament\Exports\TeacherPayoutsExporter;
 use App\Filament\Resources\TeacherPayoutResource\Pages;
 use App\Models\Course;
@@ -19,7 +19,7 @@ use Filament\Tables\Table;
 
 class TeacherPayoutResource extends Resource
 {
-    use AdminOnly;
+    use AccountingOnly;
 
     protected static ?string $model = TeacherPayout::class;
 
