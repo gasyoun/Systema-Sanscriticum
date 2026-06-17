@@ -52,12 +52,12 @@ class TeacherSalaries extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return RoleGate::adminOnly();
+        return RoleGate::accounting();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::adminOnly();
+        return RoleGate::accounting();
     }
 
     protected function getHeaderWidgets(): array
