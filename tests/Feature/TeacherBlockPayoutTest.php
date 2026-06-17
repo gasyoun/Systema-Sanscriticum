@@ -53,6 +53,15 @@ class TeacherBlockPayoutTest extends TestCase
     }
 
     /** @test */
+    public function block_payout_total_subtracts_flat_deduction_from_the_total(): void
+    {
+        // Удержание вычитается из итога как есть (без коэффициента и процента):
+        // 16008 − 1000 = 15008. Знак входного значения не важен.
+        $this->assertSame(15008.0, TeacherSalaryService::blockPayoutTotal(48000, 92, 30, 3000, 0, 1000));
+        $this->assertSame(15008.0, TeacherSalaryService::blockPayoutTotal(48000, 92, 30, 3000, 0, -1000));
+    }
+
+    /** @test */
     public function block_group_revenue_sums_only_that_groups_real_payments_for_the_block(): void
     {
         $teacher = Teacher::create(['name' => 'Екатерина']);
