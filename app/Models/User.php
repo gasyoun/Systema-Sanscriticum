@@ -127,7 +127,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return match ($panel->getId()) {
             'editor' => $this->isAdminLike() || (bool) $this->is_lecture_editor,
-            default => $this->isAdminLike() || $this->isTeacher() || $this->isManager(),
+            default => $this->isAdminLike() || $this->isTeacher() || $this->isManager() || $this->isAccountant(),
         };
     }
 
@@ -152,6 +152,11 @@ class User extends Authenticatable implements FilamentUser
     public function isManager(): bool
     {
         return $this->role === Roles::MANAGER;
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->role === Roles::ACCOUNTANT;
     }
 
     /**

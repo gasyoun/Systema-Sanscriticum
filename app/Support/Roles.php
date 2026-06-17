@@ -14,6 +14,8 @@ final class Roles
 
     public const MANAGER = 'manager';
 
+    public const ACCOUNTANT = 'accountant';
+
     /**
      * @return array<string,string> [code => human label]
      */
@@ -24,6 +26,7 @@ final class Roles
             self::ADMIN => 'Администратор',
             self::TEACHER => 'Преподаватель',
             self::MANAGER => 'Менеджер',
+            self::ACCOUNTANT => 'Бухгалтер',
         ];
     }
 
