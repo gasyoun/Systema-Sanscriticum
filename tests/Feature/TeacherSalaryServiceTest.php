@@ -53,7 +53,7 @@ class TeacherSalaryServiceTest extends TestCase
     }
 
     /** @test */
-    public function percent_excludes_deposit_trial_and_subtracts_returns(): void
+    public function percent_includes_deposit_trial_and_subtracts_returns(): void
     {
         [$teacher, $course] = $this->teacherWithCourse('percent', 10);
 
@@ -62,7 +62,7 @@ class TeacherSalaryServiceTest extends TestCase
 
         $this->pay($course, ['user_id' => $u1->id, 'amount' => 12000, 'tariff' => 'full']);
         $this->pay($course, ['user_id' => $u2->id, 'amount' => 4800, 'tariff' => 'block_1']);
-        // A1: депозит и пробное НЕ должны попасть в базу.
+        // A1: депозит (бронь) и пробное ТЕПЕРЬ входят в базу — реальные деньги курса.
         $this->pay($course, ['user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'deposit']);
         $this->pay($course, ['user_id' => $u2->id, 'amount' => 1000, 'tariff' => 'trial']);
         // A2: возврат уменьшает базу.
@@ -71,15 +71,15 @@ class TeacherSalaryServiceTest extends TestCase
         $break = $this->service->breakdownForTeacher($teacher);
         $row = $break['rows'][0];
 
-        // revenue — положительная выручка (без возвратов); возвраты отдельно.
-        $this->assertSame(16800.0, $row['revenue']);
+        // revenue — положительная выручка (без возвратов): 12000 + 4800 + 5000 + 1000.
+        $this->assertSame(22800.0, $row['revenue']);
         $this->assertSame(-2000.0, $row['returns']);
-        // Итог чистый: (16800 − 2000) * 10% = 1480
-        $this->assertSame(1480.0, $break['total']);
+        // Итог чистый: (22800 − 2000) * 10% = 2080
+        $this->assertSame(2080.0, $break['total']);
     }
 
     /** @test */
-    public function fix_per_student_counts_unique_real_students_only(): void
+    public function fix_per_student_counts_unique_students_including_deposits(): void
     {
         [$teacher, $course] = $this->teacherWithCourse('fix_per_student', 1000);
 
@@ -90,13 +90,13 @@ class TeacherSalaryServiceTest extends TestCase
         $this->pay($course, ['user_id' => $u1->id, 'amount' => 4800, 'tariff' => 'block_1']);
         $this->pay($course, ['user_id' => $u1->id, 'amount' => 4800, 'tariff' => 'block_2']); // тот же студент
         $this->pay($course, ['user_id' => $u2->id, 'amount' => 12000, 'tariff' => 'full']);
-        // депозит третьего студента не должен добавить его в счёт студентов
+        // Депозит (бронь) третьего студента теперь делает его реальным студентом курса.
         $this->pay($course, ['user_id' => $u3->id, 'amount' => 5000, 'tariff' => 'deposit']);
 
         $break = $this->service->breakdownForTeacher($teacher);
 
-        $this->assertSame(2, $break['rows'][0]['students']);
-        $this->assertSame(2000.0, $break['total']);
+        $this->assertSame(3, $break['rows'][0]['students']);
+        $this->assertSame(3000.0, $break['total']);
     }
 
     /** @test */
@@ -111,13 +111,25 @@ class TeacherSalaryServiceTest extends TestCase
     }
 
     /** @test */
-    public function fix_total_pays_nothing_without_real_payments(): void
+    public function fix_total_pays_for_deposit_only_now_that_it_is_revenue(): void
     {
         [$teacher, $course] = $this->teacherWithCourse('fix_total', 5000);
 
         $u1 = User::factory()->create();
-        // Только депозит — реальной оплаты курса нет.
+        // Депозит (бронь) теперь считается реальной выручкой курса → фикс начисляется.
         $this->pay($course, ['user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'deposit']);
+
+        $this->assertSame(5000.0, $this->service->breakdownForTeacher($teacher)['total']);
+    }
+
+    /** @test */
+    public function fix_total_pays_nothing_without_any_revenue(): void
+    {
+        [$teacher, $course] = $this->teacherWithCourse('fix_total', 5000);
+
+        $u1 = User::factory()->create();
+        // Только возврат — положительной выручки нет.
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => -2000, 'tariff' => 'Расход']);
 
         $this->assertSame(0.0, $this->service->breakdownForTeacher($teacher)['total']);
     }
