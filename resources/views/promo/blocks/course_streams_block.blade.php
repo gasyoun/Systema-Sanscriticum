@@ -103,14 +103,16 @@
         {{-- Карточки потоков --}}
         @php
             $count = $streams->count();
-            $gridClass = match ($count) {
-                1 => 'md:grid-cols-1 max-w-md',
-                2 => 'md:grid-cols-2 max-w-5xl',
-                default => 'md:grid-cols-3 max-w-7xl',
+            $gridClass = match (true) {
+                $count === 1 => 'sm:grid-cols-1 max-w-sm',
+                $count === 2 => 'sm:grid-cols-2 max-w-3xl',
+                $count === 3 => 'sm:grid-cols-2 lg:grid-cols-3 max-w-6xl',
+                $count === 4 => 'sm:grid-cols-2 lg:grid-cols-4 max-w-7xl',
+                default => 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 max-w-[1600px]',
             };
         @endphp
 
-        <div class="grid grid-cols-1 {{ $gridClass }} gap-6 lg:gap-8 mx-auto items-stretch">
+        <div class="grid grid-cols-1 {{ $gridClass }} gap-4 lg:gap-5 mx-auto items-stretch">
             @foreach($streams as $item)
                 @php
                     $isPopular = $item['is_popular'] ?? false;
@@ -120,10 +122,10 @@
                     }
                 @endphp
 
-                <div class="relative flex flex-col bg-white rounded-[2rem] transition-all duration-300 h-full
+                <div class="relative flex flex-col bg-white rounded-3xl transition-all duration-300 h-full
                             {{ $isPopular
-                                ? 'shadow-[0_20px_50px_rgba(232,92,36,0.15)] ring-2 ring-[#E85C24] md:-translate-y-4 z-10'
-                                : 'shadow-lg hover:shadow-2xl border border-gray-100 hover:-translate-y-2'
+                                ? 'shadow-[0_20px_50px_rgba(232,92,36,0.15)] ring-2 ring-[#E85C24] lg:-translate-y-2 z-10'
+                                : 'shadow-lg hover:shadow-2xl border border-gray-100 hover:-translate-y-1'
                             }}">
 
                     @if($isPopular)
@@ -133,33 +135,33 @@
                         </div>
                     @endif
 
-                    <div class="p-8 lg:p-10 flex flex-col h-full relative z-10">
+                    <div class="p-5 lg:p-6 flex flex-col h-full relative z-10">
 
                         {{-- Шапка потока --}}
-                        <div class="text-center mb-8 border-b border-gray-100 pb-8">
-                            <h3 class="text-xl font-black text-[#101010] uppercase tracking-wider mb-4 {{ $isPopular ? 'text-[#E85C24]' : '' }}">
+                        <div class="text-center mb-5 border-b border-gray-100 pb-5">
+                            <h3 class="text-base lg:text-lg font-black text-[#101010] uppercase tracking-wider mb-3 {{ $isPopular ? 'text-[#E85C24]' : '' }}">
                                 {{ $item['name'] ?? '' }}
                             </h3>
 
                             {{-- Расписание — ключевой акцент --}}
-                            <div class="inline-flex items-center gap-2 bg-orange-50 text-[#E85C24] font-extrabold text-lg px-5 py-3 rounded-2xl border border-orange-100">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div class="inline-flex items-center gap-1.5 bg-orange-50 text-[#E85C24] font-extrabold text-sm px-3.5 py-2 rounded-xl border border-orange-100">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span>{{ $item['schedule'] ?? '' }}</span>
                             </div>
 
                             @if(!empty($item['start_note']))
-                                <div class="text-sm text-gray-400 font-bold mt-3">{{ $item['start_note'] }}</div>
+                                <div class="text-xs text-gray-400 font-bold mt-2">{{ $item['start_note'] }}</div>
                             @endif
 
                             @if(!empty($item['price']) || !empty($item['old_price']))
-                                <div class="flex flex-col items-center justify-center mt-6">
+                                <div class="flex flex-col items-center justify-center mt-4">
                                     @if(!empty($item['old_price']))
-                                        <span class="text-sm font-bold text-gray-400 line-through decoration-red-500/50 mb-1">
+                                        <span class="text-xs font-bold text-gray-400 line-through decoration-red-500/50 mb-0.5">
                                             {{ $item['old_price'] }}
                                         </span>
                                     @endif
                                     @if(!empty($item['price']))
-                                        <span class="text-4xl lg:text-5xl font-black text-[#101010] tracking-tighter">
+                                        <span class="text-3xl lg:text-4xl font-black text-[#101010] tracking-tighter">
                                             {{ $item['price'] }}
                                         </span>
                                     @endif
@@ -169,11 +171,11 @@
 
                         {{-- Список опций --}}
                         @if(!empty($item['features']))
-                            <div class="mb-10 flex-grow text-gray-600 font-medium text-sm md:text-base
+                            <div class="mb-6 flex-grow text-gray-600 font-medium text-sm
                                         [&>ul]:list-none [&>ul]:p-0 [&>ul]:m-0 [&>ul]:divide-y [&>ul]:divide-gray-50
-                                        [&>ul>li]:relative [&>ul>li]:pl-8 [&>ul>li]:py-3
-                                        [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-3.5
-                                        [&>ul>li]:before:w-5 [&>ul>li]:before:h-5 [&>ul>li]:before:bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23E85C24%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%2220%206%209%2017%204%2012%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] [&>ul>li]:before:bg-no-repeat [&>ul>li]:before:bg-center">
+                                        [&>ul>li]:relative [&>ul>li]:pl-7 [&>ul>li]:py-2.5
+                                        [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-3
+                                        [&>ul>li]:before:w-4 [&>ul>li]:before:h-4 [&>ul>li]:before:bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23E85C24%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%2220%206%209%2017%204%2012%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] [&>ul>li]:before:bg-no-repeat [&>ul>li]:before:bg-center">
                                 {!! $item['features'] !!}
                             </div>
                         @else
@@ -183,7 +185,7 @@
                         {{-- Кнопка → оплата тарифа со скидкой --}}
                         <div class="mt-auto">
                             <a href="{{ $href }}"
-                               class="block w-full py-4 rounded-xl font-extrabold text-sm uppercase tracking-widest text-center transition-all duration-300
+                               class="block w-full py-3 rounded-xl font-extrabold text-xs uppercase tracking-widest text-center transition-all duration-300
                                       {{ $isPopular
                                          ? 'bg-[#E85C24] text-white hover:bg-[#d04a15] shadow-[0_8px_20px_rgba(232,92,36,0.3)] hover:-translate-y-0.5'
                                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:-translate-y-0.5'
