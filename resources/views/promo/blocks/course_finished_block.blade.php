@@ -8,7 +8,7 @@
     $badges = $data['badges'] ?? [];
 
     // Дизайн
-    $bgColor = $data['bg_color'] ?? '#1E4633';
+    $bgColor = $data['bg_color'] ?? '#101010';
     $textColor = $data['text_color'] ?? '#ffffff';
     $buttonBgColor = $data['button_bg_color'] ?? '#E85C24';
     $buttonTextColor = $data['button_text_color'] ?? '#ffffff';
