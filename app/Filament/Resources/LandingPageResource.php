@@ -602,7 +602,7 @@ class LandingPageResource extends Resource
                                             ->schema([
                                                 ColorPicker::make('bg_color')
                                                     ->label('Цвет фона')
-                                                    ->default('#1E4633'),
+                                                    ->default('#101010'),
                                                 ColorPicker::make('text_color')
                                                     ->label('Цвет текста')
                                                     ->default('#ffffff'),
