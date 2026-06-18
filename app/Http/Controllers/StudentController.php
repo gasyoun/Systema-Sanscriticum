@@ -12,9 +12,6 @@ use App\Services\CourseMaterialsArchiver;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use Illuminate\Http\Request;
-// --- ИМПОРТЫ ДОЛЖНЫ БЫТЬ ЗДЕСЬ, В САМОМ ВЕРХУ ---
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -232,69 +229,9 @@ class StudentController extends Controller
         // ==========================================
         // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
         // ==========================================
-        $transcriptSentences = [];
-
-        if (! empty($lesson->transcript_file)) {
-            $cacheKey = 'lesson_transcript_'.$lesson->id;
-
-            $transcriptSentences = Cache::rememberForever($cacheKey, function () use ($lesson) {
-                $sentences = [];
-
-                if (Storage::disk('public')->exists($lesson->transcript_file)) {
-                    $jsonContent = Storage::disk('public')->get($lesson->transcript_file);
-                    $data = json_decode($jsonContent, true);
-
-                    // БЕРЕМ ИМЕННО СЛОВА (WORDS), ТАК КАК ОНИ НА 100% ПОЛНЫЕ
-                    $words = $data['results']['channels'][0]['alternatives'][0]['words'] ?? [];
-                    $currentSentence = '';
-                    $sentenceStart = 0;
-                    $sentenceEnd = 0;
-
-                    foreach ($words as $wordData) {
-                        if (empty($currentSentence)) {
-                            $sentenceStart = $wordData['start'] ?? 0;
-                        }
-
-                        $word = $wordData['punctuated_word'] ?? $wordData['word'] ?? '';
-                        $currentSentence .= $word.' ';
-                        $sentenceEnd = $wordData['end'] ?? $sentenceStart;
-
-                        // Если слово кончается точкой/вопросом/восклицанием — закрываем предложение
-                        if (preg_match('/[.!?]$/', trim($word))) {
-                            $seconds = (int) $sentenceStart;
-                            $formattedTime = $seconds >= 3600 ? gmdate('H:i:s', $seconds) : gmdate('i:s', $seconds);
-
-                            $sentences[] = [
-                                'formatted_time' => $formattedTime,
-                                'start' => (float) $sentenceStart,
-                                'end' => (float) $sentenceEnd,
-                                'text' => trim($currentSentence),
-                                'safe_text' => mb_strtolower(htmlspecialchars(trim($currentSentence), ENT_QUOTES)),
-                            ];
-                            $currentSentence = '';
-                        }
-                    }
-
-                    // САМАЯ ВАЖНАЯ ЧАСТЬ: СОХРАНЯЕМ "ХВОСТ" ЛЕКЦИИ (даже если он без точки)
-                    if (! empty(trim($currentSentence))) {
-                        $seconds = (int) $sentenceStart;
-                        $formattedTime = $seconds >= 3600 ? gmdate('H:i:s', $seconds) : gmdate('i:s', $seconds);
-
-                        $sentences[] = [
-                            'formatted_time' => $formattedTime,
-                            'start' => (float) $sentenceStart,
-                            'end' => (float) $sentenceEnd,
-                            'text' => trim($currentSentence),
-                            'safe_text' => mb_strtolower(htmlspecialchars(trim($currentSentence), ENT_QUOTES)),
-                        ];
-                    }
-                }
-
-                return $sentences;
-            });
-        }
-        // ==========================================
-        // ==========================================
+        // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
+        // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
+        $transcriptSentences = \App\Support\TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
 
         // Домашняя работа этого студента по уроку (если задание включено)
         $homeworkSubmission = null;
