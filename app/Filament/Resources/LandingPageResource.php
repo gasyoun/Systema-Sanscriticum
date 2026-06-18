@@ -219,7 +219,8 @@ class LandingPageResource extends Resource
                                     ->schema([
                                         TextInput::make('title')
                                             ->label('Заголовок')
-                                            ->default('Стенограмма вебинара'),
+                                            ->default('Стенограмма вебинара')
+                                            ->helperText('Оберните слово в *звёздочки*, чтобы выделить его акцентным цветом. Пример: Стенограмма *вебинара*.'),
                                         TextInput::make('youtube_url')
                                             ->label('YouTube')
                                             ->helperText('Любая ссылка на ролик (watch / youtu.be / embed). Перемотка по тексту работает с YouTube и RuTube.'),
