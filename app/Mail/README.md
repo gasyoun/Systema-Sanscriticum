@@ -10,6 +10,14 @@ Mailable-классы для отправки email. Все письма ста�
 Содержит: имя пользователя, временный пароль (при автосоздании аккаунта), ссылку на кабинет.  
 Вызывается из `Payment::processSuccessfulPayment()`.
 
+## `CourseWelcomeMail`
+**Очередь**: `mailing`  
+**Шаблон**: `resources/views/emails/course/welcome.blade.php`
+
+Благодарность за **первую реальную оплату конкретного курса** (в т.ч. вернувшемуся студенту за 2-й/3-й курс — когда `StudentWelcomeMail` уже не сработает).  
+Содержит: приветствие, ссылку на чат курса (`Course::chat_url`, если задан), кнопку «В личный кабинет», строку поддержки.  
+Вызывается из `Payment::sendCourseWelcomeEmailIfFirstForCourse()` (внутри `processSuccessfulPayment()`).
+
 ## `AnnouncementMail`
 **Очередь**: `mailing`  
 **Шаблон**: `resources/views/emails/announcement.blade.php`
