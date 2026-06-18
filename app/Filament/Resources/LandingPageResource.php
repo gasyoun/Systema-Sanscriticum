@@ -212,6 +212,58 @@ class LandingPageResource extends Resource
                                             ->helperText('Необязательно. Готовая embed-ссылка для прочих хостингов (Kinescope и т.п.). Заполните хотя бы один источник.'),
                                     ]),
 
+                                // 2.1. WEBINAR TRANSCRIPT (Стенограмма вебинара + синхронизация с видео)
+                                Builder\Block::make('webinar_transcript_block')
+                                    ->label('2.1. Стенограмма вебинара (синхрон с видео)')
+                                    ->icon('heroicon-m-document-text')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Стенограмма вебинара'),
+                                        TextInput::make('youtube_url')
+                                            ->label('YouTube')
+                                            ->helperText('Любая ссылка на ролик (watch / youtu.be / embed). Перемотка по тексту работает с YouTube и RuTube.'),
+                                        TextInput::make('rutube_url')
+                                            ->label('RuTube')
+                                            ->helperText('Ссылка на ролик RuTube (video / play/embed).'),
+                                        FileUpload::make('transcript_file')
+                                            ->label('JSON-расшифровка')
+                                            ->disk('public')
+                                            ->directory('transcripts')
+                                            ->acceptedFileTypes(['application/json'])
+                                            ->helperText('JSON-расшифровка (формат Deepgram) — тот же файл, что у транскрипта урока. По нему строится кликабельная стенограмма с подсветкой.'),
+                                        Select::make('sync_source')
+                                            ->label('Стенограмма сделана с видео')
+                                            ->options([
+                                                'youtube' => 'YouTube',
+                                                'rutube' => 'RuTube',
+                                            ])
+                                            ->default('youtube')
+                                            ->helperText('Этот плеер откроется по умолчанию — у него таймкоды совпадают со стенограммой.'),
+                                        Textarea::make('chapters_text')
+                                            ->label('Главы списком (быстрый ввод)')
+                                            ->rows(8)
+                                            ->placeholder("00:00:00 Введение\n05:30 Тема 1\n1:02:15 Тема 2")
+                                            ->helperText('По одной главе в строке: сначала таймкод (m:ss или h:mm:ss), затем через пробел название. Удобно вставить готовый список целиком. Объединяется с главами ниже.'),
+                                        Repeater::make('chapters')
+                                            ->label('Главы по одной (необязательно)')
+                                            ->schema([
+                                                TextInput::make('time')
+                                                    ->label('Таймкод')
+                                                    ->placeholder('5:30 или 1:02:15')
+                                                    ->required(),
+                                                TextInput::make('title')
+                                                    ->label('Название главы')
+                                                    ->required(),
+                                            ])
+                                            ->grid(2)
+                                            ->reorderableWithButtons()
+                                            ->collapsed()
+                                            ->itemLabel(fn (array $state): ?string => trim(($state['time'] ?? '').' — '.($state['title'] ?? ''), ' —') ?: null)
+                                            ->addActionLabel('Добавить главу')
+                                            ->helperText('Необязательно. Если заполнить — справа от стенограммы появится навигация по главам (клик = перемотка).'),
+                                    ]),
+
                                 // 3. AUDIENCE
                                 Builder\Block::make('audience_block')
                                     ->label('3. Для кого этот курс')
