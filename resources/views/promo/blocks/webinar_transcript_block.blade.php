@@ -34,6 +34,9 @@
         ? $syncSource
         : ($rtId ? 'rutube' : ($ytId ? 'youtube' : 'none'));
 
+    // Ключ localStorage для запоминания позиции/плеера (привязан к конкретным видео).
+    $storageKey = 'wt-pos:'.md5(($ytId ?? '').'|'.($rtId ?? ''));
+
     // --- Главы (кликабельные таймкоды справа). Источники: список (быстрый ввод) + репитер. ---
     $rawChapters = [];
 
@@ -70,8 +73,12 @@
     <div class="container mx-auto px-4">
 
         @if(!empty($d['title']))
+        @php
+            // Подсветка: фрагменты в *звёздочках* красим акцентным цветом (как в hero-блоке).
+            $titleHtml = preg_replace('/\*(.+?)\*/u', '<span style="color:#E85C24;">$1</span>', e($d['title']));
+        @endphp
         <div class="text-center mb-5">
-            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">{{ $d['title'] }}</h2>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">{!! $titleHtml !!}</h2>
             <div class="w-24 h-1.5 bg-[#E85C24] mx-auto mt-4 rounded-full opacity-80"></div>
         </div>
         @endif
@@ -79,6 +86,7 @@
         <div class="max-w-6xl mx-auto"
              x-data="webinarTranscript({
                  player: '{{ $defaultPlayer }}',
+                 storageKey: '{{ $storageKey }}',
              })"
              x-init="init()">
 
@@ -118,10 +126,10 @@
 
             {{-- ГЛАВЫ (слева) --}}
             @if(!empty($chapters))
-            <div class="wt-aside order-1 w-full flex flex-col bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="bg-gray-50 p-4 border-b border-gray-100 shrink-0">
-                    <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">
-                        <i class="fas fa-list-ul mr-1 text-[#E85C24]"></i> Содержание
+            <div class="wt-aside order-1 w-full flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+                <div class="wt-head px-4 py-3 shrink-0">
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-white flex items-center gap-2">
+                        <i class="fas fa-list-ul"></i> Содержание
                     </p>
                 </div>
                 <div class="wt-scroll p-2 space-y-0.5 custom-scrollbar">
@@ -138,22 +146,24 @@
 
             {{-- СТЕНОГРАММА (справа) --}}
             @if(!empty($sentences))
-            <div class="order-2 flex-1 min-w-0 w-full flex flex-col bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="order-2 flex-1 min-w-0 w-full flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
 
-                <div class="bg-gray-50 p-4 flex flex-col gap-3 border-b border-gray-100 shrink-0">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">
-                            <i class="fas fa-align-left mr-1 text-[#E85C24]"></i> Стенограмма · навигация по видео
-                        </p>
-                        <button @click="autoScroll = !autoScroll"
-                                class="h-8 px-2.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-bold transition-colors shrink-0"
-                                :class="autoScroll ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'"
-                                title="Автопрокрутка: лента сама подсвечивает текущую фразу и прокручивается вслед за видео. Нажмите, чтобы включить или выключить.">
-                            <i class="fas fa-location-arrow text-xs" :class="{'animate-pulse': autoScroll}"></i>
-                            <span x-text="autoScroll ? 'Автопрокрутка вкл' : 'Автопрокрутка выкл'"></span>
-                        </button>
-                    </div>
+                {{-- Акцентная шапка --}}
+                <div class="wt-head px-4 py-3 flex items-center justify-between gap-3 shrink-0">
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-white flex items-center gap-2">
+                        <i class="fas fa-align-left"></i> Стенограмма
+                    </p>
+                    <button @click="autoScroll = !autoScroll"
+                            class="h-7 px-2.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-bold transition-colors shrink-0"
+                            :class="autoScroll ? 'bg-white text-[#E85C24] border-white' : 'bg-transparent text-white border-white hover:bg-white hover:text-[#E85C24]'"
+                            title="Автопрокрутка: лента сама подсвечивает текущую фразу и прокручивается вслед за видео. Нажмите, чтобы включить или выключить.">
+                        <i class="fas fa-location-arrow text-xs" :class="{'animate-pulse': autoScroll}"></i>
+                        <span x-text="autoScroll ? 'Автопрокрутка вкл' : 'Автопрокрутка выкл'"></span>
+                    </button>
+                </div>
 
+                {{-- Дисклеймер + поиск --}}
+                <div class="p-3 flex flex-col gap-2.5 border-b border-gray-100 shrink-0 bg-gray-50">
                     <p class="flex items-start gap-2 text-[12px] leading-snug text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                         <i class="fas fa-triangle-exclamation mt-0.5 shrink-0 text-amber-500"></i>
                         <span>Стенограмма создана автоматически и <strong>не выверена автором</strong> — возможны неточности и ошибки в распознавании.</span>
@@ -197,7 +207,8 @@
      фронта и подхвата произвольных классов из JS. Специфичность .transcript-line.is-active-sentence
      (0,2,0) перебивает базовые утилиты строки (0,1,0). --}}
 <style>
-    /* Раскладка задана здесь (не Tailwind-утилитами), чтобы не зависеть от пересборки фронта. */
+    /* Раскладка/акценты заданы здесь (не Tailwind-утилитами), чтобы не зависеть от пересборки фронта. */
+    .wt-head { background:linear-gradient(135deg,#E85C24 0%,#f5824a 100%); min-height:3.5rem; display:flex; align-items:center; }
     .wt-video { width:100%; aspect-ratio:16/9; }
     .wt-scroll { overflow-y:auto; max-height:60vh; }
     @media (min-width:1024px) {
@@ -221,6 +232,7 @@
     function webinarTranscript(cfg) {
         return {
             player: cfg.player,            // 'rutube' | 'youtube' | 'none'
+            storageKey: cfg.storageKey,
             currentTime: 0,
             autoScroll: true,
             searchQuery: '',
@@ -228,6 +240,9 @@
             activeEl: null,
             chapters: [],                  // [{el, start}]
             activeChapterEl: null,
+            pendingSeek: null,             // сохранённая позиция для восстановления после перезагрузки
+            resumeTries: 0,
+            lastSave: 0,
 
             iframeOf(name) {
                 if (name === 'rutube') return this.$refs.rtPlayer || null;
@@ -250,7 +265,37 @@
                 }
             },
 
+            // Сохранить позицию/плеер (с троттлингом, чтобы не писать на каждый тик).
+            persist(force = false) {
+                const now = Date.now();
+                if (!force && now - this.lastSave < 2000) return;
+                this.lastSave = now;
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify({ t: this.currentTime, player: this.player }));
+                } catch (e) {}
+            },
+
+            // Перемотать активный плеер на секунду sec БЕЗ запуска воспроизведения (для восстановления).
+            seekRaw(sec) {
+                const iframe = this.activeIframe();
+                if (!iframe || !iframe.contentWindow) return;
+                if (this.player === 'youtube') {
+                    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [sec, true] }), '*');
+                } else if (this.player === 'rutube') {
+                    iframe.contentWindow.postMessage(JSON.stringify({ type: 'player:setCurrentTime', data: { time: sec } }), '*');
+                }
+            },
+
             init() {
+                // Восстановление: вернуть выбранный плеер и позицию из прошлой сессии.
+                try {
+                    const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+                    if (saved) {
+                        if (saved.player && this.iframeOf(saved.player)) this.player = saved.player;
+                        if (saved.t > 1) this.pendingSeek = saved.t;
+                    }
+                } catch (e) {}
+
                 // Индексируем строки один раз (start берём из data-, end = start следующей строки).
                 const container = this.$refs.scrollContainer;
                 const nodes = container ? Array.from(container.querySelectorAll('.transcript-line')) : [];
@@ -269,6 +314,7 @@
                 // При переключении плеера ставим предыдущий на паузу (иначе скрытый продолжает играть).
                 this.$watch('player', (val, old) => {
                     if (old && old !== val) this.pause(old);
+                    this.persist(true);
                 });
 
                 window.addEventListener('message', (event) => {
@@ -306,7 +352,22 @@
 
             // Новая позиция плеера → найти активную строку и подсветить только её.
             onTime(t) {
+                // Восстановление позиции после перезагрузки: дожимаем перемотку,
+                // пока плеер не окажется около сохранённой секунды (или не выйдет лимит попыток).
+                if (this.pendingSeek != null) {
+                    if (Math.abs(t - this.pendingSeek) <= 2) {
+                        this.pendingSeek = null;          // достигли цели
+                    } else if (this.resumeTries < 10) {
+                        this.resumeTries++;
+                        this.seekRaw(this.pendingSeek);
+                        return;                           // ждём следующего тика
+                    } else {
+                        this.pendingSeek = null;          // сдаёмся
+                    }
+                }
+
                 this.currentTime = t;
+                this.persist();
                 let found = null;
                 for (const ln of this.lines) {
                     if (t >= ln.start && t < ln.end) { found = ln.el; break; }
