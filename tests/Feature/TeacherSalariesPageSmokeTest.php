@@ -10,6 +10,7 @@ use App\Models\CourseBlock;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -18,9 +19,9 @@ class TeacherSalariesPageSmokeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_salaries_dashboard_renders_for_admin(): void
+    public function test_salaries_dashboard_renders_for_accountant(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
 
         $teacher = Teacher::create(['name' => 'Иван Преподавалов']);
         Course::factory()->create([
@@ -29,14 +30,22 @@ class TeacherSalariesPageSmokeTest extends TestCase
             'salary_value' => 10,
         ]);
 
-        $this->actingAs($admin)->get('/admin/teacher-salaries')->assertSuccessful();
+        $this->actingAs($accountant)->get('/admin/teacher-salaries')->assertSuccessful();
     }
 
-    public function test_payouts_resource_renders_for_admin(): void
+    public function test_payouts_resource_renders_for_accountant(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
 
-        $this->actingAs($admin)->get('/admin/teacher-payouts')->assertSuccessful();
+        $this->actingAs($accountant)->get('/admin/teacher-payouts')->assertSuccessful();
+    }
+
+    public function test_regular_admin_cannot_access_salaries(): void
+    {
+        // После ввода роли «Бухгалтер» зарплаты/выплаты закрыты для обычного admin.
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+
+        $this->actingAs($admin)->get('/admin/teacher-salaries')->assertForbidden();
     }
 
     public function test_manager_cannot_access_salaries(): void
@@ -48,9 +57,9 @@ class TeacherSalariesPageSmokeTest extends TestCase
 
     public function test_widget_period_follows_the_table_filter(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
 
-        $component = Livewire::actingAs($admin)->test(TeacherSalaries::class);
+        $component = Livewire::actingAs($accountant)->test(TeacherSalaries::class);
         $component->set('tableFilters.period.value', '2026-03');
 
         // Период, прокидываемый в header-виджет, следует за фильтром таблицы.
@@ -59,7 +68,7 @@ class TeacherSalariesPageSmokeTest extends TestCase
 
     public function test_block_payout_calculator_records_payout(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
         $teacher = Teacher::create(['name' => 'Екатерина Костина']);
         $course = Course::factory()->create([
             'teacher_id' => $teacher->id,
@@ -68,7 +77,7 @@ class TeacherSalariesPageSmokeTest extends TestCase
         ]);
         CourseBlock::create(['course_id' => $course->id, 'number' => 5, 'is_active' => true]);
 
-        Livewire::actingAs($admin)
+        Livewire::actingAs($accountant)
             ->test(TeacherSalaries::class)
             ->callAction('block_payout', data: [
                 'teacher_id' => $teacher->id,

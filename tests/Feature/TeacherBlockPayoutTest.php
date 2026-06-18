@@ -87,14 +87,16 @@ class TeacherBlockPayoutTest extends TestCase
 
         // Шумы, которые НЕ должны попасть в базу:
         $this->pay($course, ['user_id' => $other->id, 'amount' => 6000, 'tariff' => 'block_5', 'start_block' => 5, 'end_block' => 5]); // другая группа
-        $this->pay($course, ['user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'deposit']); // депозит
         $this->pay($course, ['user_id' => $u2->id, 'amount' => 6000, 'tariff' => 'block_5', 'start_block' => 5, 'end_block' => 5, 'is_conditional' => true]); // под обещание
 
-        // 6000 + 6000 + (30000/5) = 18000
-        $this->assertSame(18000.0, $this->service->blockGroupRevenue($course->id, 5, $groupTue->id));
+        // Депозит u1 ТЕПЕРЬ входит: блоки пустые → разносится на все 5 блоков (5000/5 = 1000 на блок).
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'deposit']);
 
-        // По блоку 1 у вторника только доля full: 30000/5 = 6000.
-        $this->assertSame(6000.0, $this->service->blockGroupRevenue($course->id, 1, $groupTue->id));
+        // 6000 + 6000 + (30000/5) + (5000/5) = 19000
+        $this->assertSame(19000.0, $this->service->blockGroupRevenue($course->id, 5, $groupTue->id));
+
+        // По блоку 1 у вторника: доля full 30000/5 + доля депозита 5000/5 = 7000.
+        $this->assertSame(7000.0, $this->service->blockGroupRevenue($course->id, 1, $groupTue->id));
     }
 
     /** @test */

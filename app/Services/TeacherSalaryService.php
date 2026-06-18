@@ -19,7 +19,9 @@ use Illuminate\Support\Collection;
  *
  * Заменяет прежний Teacher::calculateEarnings (который остался тонкой обёрткой
  * ради back-compat) и исправляет его перекосы:
- *   A1 — депозиты/пробные/расходы НЕ входят в базу начисления;
+ *   A1 — депозиты (брони) и пробные ВХОДЯТ в базу (реальные деньги курса; при
+ *        покупке зачитываются в цену, полный платёж пишется за их вычетом — без
+ *        двойного счёта). В базу НЕ входят только возвраты и зеркала выплат;
  *   A2 — возвраты (tariff='Расход', отрицательная сумма) вычитаются из базы;
  *   A3 — флаг «брутто/нетто»: по умолчанию начисляем от фактически уплаченного.
  *
@@ -43,8 +45,13 @@ class TeacherSalaryService
 {
     private const PAID_STATUSES = ['paid', 'success'];
 
-    /** Тарифы, которые НЕ являются оплатой курса (A1). */
-    private const NON_REVENUE_TARIFFS = ['deposit', 'trial', 'Расход', 'salary_payout'];
+    /**
+     * Тарифы, которые НЕ являются выручкой курса: возвраты и зеркала выплат.
+     * Депозиты (брони) и пробные ВХОДЯТ в базу — это реальные деньги курса.
+     * Двойного счёта нет: при покупке курса депозит/пробное зачитываются в
+     * цену, и полный платёж пишется уже за их вычетом (Tariff::calculateFinalPriceForUser).
+     */
+    private const NON_REVENUE_TARIFFS = ['Расход', 'salary_payout'];
 
     private const EXPENSE_TARIFF = 'Расход';
 
@@ -305,7 +312,7 @@ class TeacherSalaryService
             $blockMonths = $this->blockMonthsFor($course->id);
 
             $payments = $this->coursePayments($course->id)
-                ->reject(fn (Payment $p) => in_array($p->tariff, ['deposit', 'trial'], true))
+                ->reject(fn (Payment $p) => in_array($p->tariff, self::NON_REVENUE_TARIFFS, true))
                 ->filter(function (Payment $p) use ($blockNumbers, $blockMonths, $start, $end) {
                     $months = array_keys($this->recognizedShares($p, (float) $p->amount, $blockNumbers, $blockMonths));
                     foreach ($months as $m) {
@@ -331,8 +338,9 @@ class TeacherSalaryService
      * Выручка одной группы за один блок — для калькулятора выплаты по блоку.
      * Сумма долей реальных платежей студентов группы, покрывающих этот блок:
      * блочный платёж (block_N) даёт всю сумму, full — долю amount/число_блоков
-     * (как в accrual). $groupId=null → все студенты курса. Исключаем
-     * deposit/trial/Расход/conditional.
+     * (как в accrual). $groupId=null → все студенты курса. Депозиты/пробные
+     * входят (блоки пустые → разносятся на все блоки курса, как full).
+     * Исключаем только возвраты (Расход), зеркала выплат и conditional.
      */
     public function blockGroupRevenue(int $courseId, int $blockNumber, ?int $groupId, array $opts = []): float
     {
