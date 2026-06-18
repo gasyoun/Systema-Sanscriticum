@@ -46,6 +46,6 @@ Upsert-запись в `lesson_views`: счётчик открытий, врем
 |---|---|---|
 | `default` | `GenerateCertificatesArchive`, `SendMessengerAlerts`, `SendPaymentToSheetJob`, `BuildLectureHtmlJob`, `PreprocessLectureDraftJob` | Средний |
 | `tracking` | `TrackLessonViewJob` | Низкий |
-| `mailing` | `StudentWelcomeMail`, `AnnouncementMail` | Средний |
+| `mailing` | `StudentWelcomeMail`, `CourseWelcomeMail`, `AnnouncementMail` | Средний |
 
 Настройки воркеров для каждой очереди — в `config/horizon.php`.
