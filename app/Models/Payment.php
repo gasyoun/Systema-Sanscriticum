@@ -268,6 +268,7 @@ class Payment extends Model
             // не дарим бонусы и не флудим письмами.
             if (! $this->is_conditional) {
                 $this->sendWelcomeEmailIfNeeded();
+                $this->sendCourseWelcomeEmailIfFirstForCourse();
                 $this->awardPranaForPurchase();
             }
         });
@@ -654,6 +655,42 @@ class Payment extends Model
             \Illuminate\Support\Facades\Log::info('Письмо успешно передано в почтовик!');
         } else {
             \Illuminate\Support\Facades\Log::warning("Письмо НЕ отправлено, так как это не первая оплата (счетчик: {$paymentsCount})");
+        }
+    }
+
+    // ==========================================
+    // БЛАГОДАРНОСТЬ ЗА ПЕРВУЮ ОПЛАТУ КОНКРЕТНОГО КУРСА
+    // ==========================================
+    // В отличие от sendWelcomeEmailIfNeeded() (первая оплата вообще, с паролем),
+    // это письмо уходит при первой реальной оплате ИМЕННО ЭТОГО курса — в т.ч.
+    // вернувшемуся студенту, берущему 2-й/3-й курс. Содержит ссылку на чат курса.
+    public function sendCourseWelcomeEmailIfFirstForCourse(): void
+    {
+        $student = $this->user;
+
+        if (! $student || ! $student->email || ! $this->course_id || ! $this->course) {
+            return;
+        }
+
+        // Тестовому админу курсовое письмо не шлём (как и welcome).
+        if ($student->is_admin) {
+            return;
+        }
+
+        // Реальные (доступо-открывающие) оплаты этого курса. Бронь/пробное/conditional
+        // не считаем. Текущий платёж уже сохранён как paid (fireOnPaid вызывается
+        // после save), поэтому === 1 означает «это первая оплата курса». При покупке
+        // block_1, затем block_2 того же курса письмо уйдёт лишь на первой.
+        $count = $student->payments()
+            ->where('course_id', $this->course_id)
+            ->whereIn('status', ['success', 'paid'])
+            ->where('is_conditional', false)
+            ->whereNotIn('tariff', ['deposit', 'trial'])
+            ->count();
+
+        if ($count === 1) {
+            \Illuminate\Support\Facades\Mail::to($student->email)
+                ->send(new \App\Mail\CourseWelcomeMail($student, $this->course));
         }
     }
 }
