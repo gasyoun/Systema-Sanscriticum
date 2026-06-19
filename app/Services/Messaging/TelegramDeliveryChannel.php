@@ -81,6 +81,28 @@ final class TelegramDeliveryChannel implements DeliveryChannel
         }
     }
 
+    public function sendMessage(string $userIdInChannel, string $text): void
+    {
+        if ($this->token === '' || $userIdInChannel === '') {
+            throw new RuntimeException('Telegram sendMessage: token or chat_id is empty');
+        }
+
+        $response = Http::post("https://api.telegram.org/bot{$this->token}/sendMessage", [
+            'chat_id' => $userIdInChannel,
+            'text' => $text,
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+        ]);
+
+        if (! $response->successful() || ! ($response->json('ok') ?? false)) {
+            Log::error('Telegram sendMessage failed', [
+                'chat_id' => $userIdInChannel,
+                'response' => $response->json(),
+            ]);
+            throw new RuntimeException('Telegram sendMessage error: '.$response->body());
+        }
+    }
+
     /**
      * @param  list<string>  $allowedUpdates  Боту с n8n-анкетой нужны и callback_query
      *                                        (inline-кнопки), иначе они молча не работают.
