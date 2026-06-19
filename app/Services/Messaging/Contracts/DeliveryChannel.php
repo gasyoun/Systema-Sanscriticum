@@ -20,4 +20,11 @@ interface DeliveryChannel
      * Кидает RuntimeException при ошибке — Job уйдёт в retry/failed.
      */
     public function sendDocument(string $userIdInChannel, string $filePath, string $caption, ?string $displayName = null): void;
+
+    /**
+     * Отправляет простое текстовое сообщение юзеру (без вложений).
+     * $userIdInChannel — chat_id (TG), user_id (VK/Max). $text — готовый текст
+     * (TG поддерживает HTML-разметку). Кидает RuntimeException при ошибке.
+     */
+    public function sendMessage(string $userIdInChannel, string $text): void;
 }

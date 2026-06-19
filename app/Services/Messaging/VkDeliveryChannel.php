@@ -100,4 +100,24 @@ final class VkDeliveryChannel implements DeliveryChannel
             throw new RuntimeException('VK messages.send error: '.json_encode($response['error']));
         }
     }
+
+    public function sendMessage(string $userIdInChannel, string $text): void
+    {
+        if ($this->accessToken === '' || $userIdInChannel === '') {
+            throw new RuntimeException('VK sendMessage: token or peer_id is empty');
+        }
+
+        $response = Http::asForm()->post('https://api.vk.com/method/messages.send', [
+            'peer_id' => $userIdInChannel,
+            'random_id' => random_int(1, 2_147_483_647),
+            'message' => $text,
+            'access_token' => $this->accessToken,
+            'v' => self::API_VERSION,
+        ])->json();
+
+        if (! empty($response['error'])) {
+            Log::error('VK messages.send (text) failed', ['response' => $response, 'user_id' => $userIdInChannel]);
+            throw new RuntimeException('VK messages.send error: '.json_encode($response['error']));
+        }
+    }
 }
