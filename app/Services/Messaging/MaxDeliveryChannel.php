@@ -84,6 +84,12 @@ final class MaxDeliveryChannel implements DeliveryChannel
         }
     }
 
+    public function sendMessage(string $userIdInChannel, string $text): void
+    {
+        // Max уже имеет sendText — переиспользуем, чтобы выполнить контракт DeliveryChannel.
+        $this->sendText($userIdInChannel, $text);
+    }
+
     /**
      * Отправить простое текстовое сообщение в Max. Используется уведомлениями
      * (например, об отзыве conditional-доступа) — отдельно от lead-магнита,

@@ -4,10 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
     use HasFactory;
+
+    /** Статусы воронки лида (единый источник для формы/колонки/фильтра). */
+    public const STATUSES = [
+        'new' => 'Новый',
+        'in_work' => 'В работе',
+        'qualified' => 'Квалифицирован',
+        'converted' => 'Конверсия',
+        'rejected' => 'Отказ',
+    ];
 
     protected $fillable = [
         // Основные данные
@@ -18,6 +29,11 @@ class Lead extends Model
         'social',
         'is_promo_agreed',
         'converted_at',
+
+        // Воронка (статус, ответственный, дата следующего контакта)
+        'status',
+        'assigned_to',
+        'next_contact_at',
 
         // Аналитика (UTM метки) - теперь они будут сохраняться
         'utm_source',
@@ -46,6 +62,7 @@ class Lead extends Model
         'magnet_delivered_at' => 'datetime',
         'is_promo_agreed' => 'boolean',
         'converted_at' => 'datetime',
+        'next_contact_at' => 'date',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)
@@ -60,10 +77,28 @@ class Lead extends Model
         return $this->hasMany(LeadStepEmail::class);
     }
 
+    // Ответственный за лид менеджер.
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    // История общения: заметки + автолог писем/сообщений.
+    public function notes(): HasMany
+    {
+        return $this->hasMany(LeadNote::class)->latest();
+    }
+
     public function markConverted(): void
     {
         if (is_null($this->converted_at)) {
-            $this->updateQuietly(['converted_at' => now()]);
+            // status переводим в «Конверсия» только если он ещё не финальный
+            // (менеджер мог вручную поставить «Отказ» — не перетираем).
+            $attrs = ['converted_at' => now()];
+            if (! in_array($this->status, ['converted', 'rejected'], true)) {
+                $attrs['status'] = 'converted';
+            }
+            $this->updateQuietly($attrs);
         }
     }
 
