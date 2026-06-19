@@ -47,6 +47,11 @@ class MarketingSetting extends Model
         'max_bot_username',
         'max_bot_token',
         'max_webhook_secret',
+
+        // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
+        'student_maintenance_enabled',
+        'student_maintenance_message',
+        'student_maintenance_secret',
     ];
 
     protected $casts = [
@@ -59,6 +64,7 @@ class MarketingSetting extends Model
         'wholesale_large_threshold' => 'integer',
         'wholesale_large_discount' => 'integer',
         'is_prana_active' => 'boolean',
+        'student_maintenance_enabled' => 'boolean',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',
