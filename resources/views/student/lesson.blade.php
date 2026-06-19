@@ -301,16 +301,7 @@
         <div class="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
 
             {{-- === КНОПКА: Чат курса (если URL задан в админке) === --}}
-            @if(!empty($course->chat_url))
-                <a href="{{ $course->chat_url }}" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   title="Чат курса"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-900 hover:bg-black text-white text-xs md:text-sm font-extrabold leading-none transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 uppercase tracking-wide">
-                    <i class="fas fa-users text-base"></i>
-                    <span class="hidden md:inline">Чат курса</span>
-                </a>
-            @endif
+            <x-course-chat-button :url="$course->chat_url" />
 
             {{-- === КНОПКА: Написать куратору (синяя, заметная) === --}}
             <a href="https://t.me/rusamskrtam" 

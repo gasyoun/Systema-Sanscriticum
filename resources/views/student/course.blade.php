@@ -52,7 +52,14 @@
                         </div>
                     </div>
                 </div>
-                
+
+                {{-- Кнопка: Чат курса (если URL задан в админке) --}}
+                @if(!empty($course->chat_url))
+                    <div class="mt-6 flex justify-end">
+                        <x-course-chat-button :url="$course->chat_url" />
+                    </div>
+                @endif
+
                 {{-- Кнопка скачать все материалы --}}
 @php
     // Считаем, есть ли вообще материалы хоть в одном доступном уроке
