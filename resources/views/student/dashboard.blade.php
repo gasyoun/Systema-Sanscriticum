@@ -354,6 +354,11 @@
                                 <span>@if($percent > 0) Продолжить @else Начать обучение @endif</span>
                                 <i class="fas fa-arrow-right ml-2 text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                             </a>
+
+                            {{-- Кнопка: Чат курса (если URL задан в админке) --}}
+                            @if(!empty($course->chat_url))
+                                <x-course-chat-button :url="$course->chat_url" class="w-full justify-center mt-2" />
+                            @endif
                         </div>
                     </div>
                 </div>
