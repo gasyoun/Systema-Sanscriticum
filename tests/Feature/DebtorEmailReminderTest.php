@@ -74,7 +74,7 @@ class DebtorEmailReminderTest extends TestCase
 
         Mail::assertQueued(DebtorReminderMail::class, function (DebtorReminderMail $mail) use ($debtor) {
             return $mail->hasTo($debtor->email)
-                && str_contains($mail->bodyText, route('student.course', 'test-course'));
+                && str_contains($mail->bodyText, route('shop.course.show', 'test-course'));
         });
         // Мессенджеры не трогаем, если каналы выключены.
         Queue::assertNotPushed(SendMessengerAlerts::class);

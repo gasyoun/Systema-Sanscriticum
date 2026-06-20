@@ -1376,7 +1376,7 @@ class Debtors extends Page implements HasTable
                         '{name}' => $record->name ?: 'Друг',
                         '{course}' => $courseTitles[$record->course_id] ?? '',
                         '{block}' => (string) $record->ref_block_number,
-                        '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
+                        '{pay_link}' => $slug ? route('shop.course.show', $slug) : url('/login'),
                     ];
                     $rendered = strtr($template, $replacements);
 
