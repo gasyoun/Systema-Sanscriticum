@@ -52,6 +52,9 @@ class MarketingSetting extends Model
         'student_maintenance_enabled',
         'student_maintenance_message',
         'student_maintenance_secret',
+
+        // --- ДОЛЖНИКИ ---
+        'debtors_notify_years',
     ];
 
     protected $casts = [
@@ -65,6 +68,7 @@ class MarketingSetting extends Model
         'wholesale_large_discount' => 'integer',
         'is_prana_active' => 'boolean',
         'student_maintenance_enabled' => 'boolean',
+        'debtors_notify_years' => 'array',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',
