@@ -37,7 +37,7 @@
                             /** @var \App\Models\Schedule $event */
                             $isLive = $event->isLive();
                             $start  = \Carbon\Carbon::parse($event->start);
-                            $end    = $event->end ? \Carbon\Carbon::parse($event->end) : $start->copy()->addHours(2);
+                            $end    = $event->end ? \Carbon\Carbon::parse($event->end) : $start->copy()->addHours(\App\Models\Schedule::DEFAULT_DURATION_HOURS);
                         @endphp
 
                         {{-- Карточка --}}
