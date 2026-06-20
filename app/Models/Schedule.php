@@ -13,6 +13,12 @@ class Schedule extends Model
 {
     use HasFactory;
 
+    /**
+     * Длительность занятия по умолчанию (часы), когда `end` не задан.
+     * Единый источник для isLive(), выборки расписания в кабинете и карточки.
+     */
+    public const DEFAULT_DURATION_HOURS = 2;
+
     protected $fillable = [
         'title',
         'description',
@@ -71,7 +77,7 @@ class Schedule extends Model
     public function isLive(): bool
     {
         $now = now();
-        $end = $this->end ?? $this->start->copy()->addHours(2);
+        $end = $this->end ?? $this->start->copy()->addHours(self::DEFAULT_DURATION_HOURS);
 
         return $now->between($this->start, $end);
     }

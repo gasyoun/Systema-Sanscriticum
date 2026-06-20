@@ -67,6 +67,8 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         // --- ТРЕКИНГ АКТИВНОСТИ СТУДЕНТОВ ---
         'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+        // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
+        'student.maintenance' => \App\Http\Middleware\StudentMaintenance::class,
         // --- LEAD-MAGNET WEBHOOKS ---
         'verify.tg.magnet' => \App\Http\Middleware\VerifyTelegramMagnetWebhook::class,
         'verify.vk.magnet' => \App\Http\Middleware\VerifyVkMagnetCallback::class,

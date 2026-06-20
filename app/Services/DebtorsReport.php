@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\MarketingSetting;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
@@ -26,6 +27,14 @@ class DebtorsReport
      */
     private const NON_DEBT_STATUSES = ['Покинул', 'Исключен', 'Льготник', 'Выпускник'];
 
+    /**
+     * Выбранные годы для «линзы» отчёта (год = год даты блока, starts_at).
+     * Пустой массив = все годы (поведение по умолчанию, как было раньше).
+     *
+     * @var list<int>
+     */
+    private array $years = [];
+
     /** @var Collection<int, CourseBlock>|null  course_id => reference CourseBlock */
     private ?Collection $referenceBlocksCache = null;
 
@@ -45,10 +54,99 @@ class DebtorsReport
     private array $usersByIdCache = [];
 
     /**
-     * Reference-блок для каждого активного курса:
-     * 1) `is_current=true`; 2) текущий по датам (now ∈ [starts_at; ends_at]);
-     * 3) ближайший предстоящий (`starts_at > now`).
-     * Курсы без подходящего блока в выборку не попадают.
+     * Включает «линзу» по годам: долги определяются только за указанные годы
+     * (год = год даты блока, course_blocks.starts_at). Пустой массив = все годы.
+     * Сбрасывает зависящие от линзы кэши. Fluent.
+     *
+     * @param  array<int|string>  $years
+     */
+    public function forYears(array $years): self
+    {
+        $normalized = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $years),
+            static fn (int $y) => $y > 0,
+        )));
+
+        if ($normalized === $this->years) {
+            return $this;
+        }
+
+        $this->years = $normalized;
+        $this->referenceBlocksCache = null;
+
+        return $this;
+    }
+
+    /**
+     * Текущая выборка годов линзы (пусто = все годы).
+     *
+     * @return list<int>
+     */
+    public function years(): array
+    {
+        return $this->years;
+    }
+
+    /**
+     * Глобально настроенный год для «Должников» (тумблеры на странице пишут его в
+     * MarketingSetting.debtors_notify_years). Единая точка чтения: страница
+     * восстанавливает выбор на mount, а будущая авто-рассылка должникам берёт
+     * год отсюда — `forYears(self::configuredYears())`. Пусто = все годы.
+     *
+     * @return list<int>
+     */
+    public static function configuredYears(): array
+    {
+        $years = MarketingSetting::cached()?->debtors_notify_years ?? [];
+        if (! is_array($years)) {
+            return [];
+        }
+
+        $norm = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $years),
+            static fn (int $y) => $y > 0,
+        )));
+        sort($norm);
+
+        return $norm;
+    }
+
+    /**
+     * Доступные для выбора годы — distinct из дат блоков активных курсов,
+     * по убыванию. Используется для рендера переключателей на странице.
+     *
+     * @return list<int>
+     */
+    public function availableYears(): array
+    {
+        $courseIds = Course::query()->where('is_active', true)->pluck('id');
+
+        return CourseBlock::query()
+            ->whereIn('course_id', $courseIds)
+            ->whereNotNull('starts_at')
+            ->get(['starts_at'])
+            ->map(fn (CourseBlock $b) => (int) $b->starts_at->year)
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Reference-блок (потолок долга) для каждого активного курса.
+     *
+     * Основная логика — последний уже НАЧАВШИЙСЯ датированный блок
+     * (`starts_at <= now`) в нужном диапазоне лет:
+     *   - активная год-линза ($this->years непусто) → блок с годом ∈ выбранным;
+     *   - пустая выборка («Все годы») → блок любого года = объединение всех лет.
+     * Так SQL-гейт «кто должник» считается за нужный год без правки самого SQL.
+     *
+     * Fallback ТОЛЬКО для пустой выборки и курсов без начавшегося датированного
+     * блока (курс без дат / ещё не стартовал), чтобы не терять по ним должников:
+     * 1) `is_current=true`; 2) текущий по датам; 3) ближайший предстоящий.
+     *
+     * Блоки без даты по году классифицировать нельзя → при активной год-линзе
+     * такие курсы выпадают (по пустой выборке — подхватываются fallback’ом).
      *
      * @return Collection<int, CourseBlock>
      */
@@ -70,6 +168,32 @@ class DebtorsReport
 
         $result = collect();
         foreach ($blocks as $courseId => $courseBlocks) {
+            // Reference по году: последний уже начавшийся блок с датой в нужном
+            // диапазоне. При активной линзе диапазон = выбранные годы; при пустой
+            // выборке («Все годы») диапазон не ограничен — берётся последний
+            // начавшийся датированный блок любого года (объединение всех лет).
+            $scoped = $courseBlocks
+                ->filter(fn (CourseBlock $b) => $b->starts_at !== null
+                    && $b->starts_at->lte($now)
+                    && (empty($this->years) || in_array((int) $b->starts_at->year, $this->years, true))
+                )
+                ->sortByDesc('starts_at')
+                ->first();
+            if ($scoped !== null) {
+                $result->put((int) $courseId, $scoped);
+
+                continue;
+            }
+
+            // Явно выбран год, но у курса нет начавшегося блока этого года — пропуск.
+            if (! empty($this->years)) {
+                continue;
+            }
+
+            // Пустая выборка + у курса нет ни одного начавшегося датированного
+            // блока (курс без дат / ещё не стартовал) → legacy-логика, чтобы не
+            // потерять должников по таким курсам: ручной флаг → текущий по датам
+            // → ближайший предстоящий.
             $manual = $courseBlocks->firstWhere('is_current', true);
             if ($manual !== null) {
                 $result->put((int) $courseId, $manual);
@@ -621,7 +745,7 @@ class DebtorsReport
                 continue;
             }
 
-            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber);
+            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber, $this->years);
 
             $info = $this->computeDebtAmount($user, $courseId, $blocks);
             $amount = (float) ($info['amount'] ?? 0);
