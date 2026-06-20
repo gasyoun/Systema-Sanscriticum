@@ -17,13 +17,13 @@ class DebtorsExporter extends Exporter
 {
     protected static ?string $model = User::class;
 
-    /** @var array<string, CourseBlock>|null */
-    private static ?array $blocksLookup = null;
+    /** @var array<string, array<string, CourseBlock>>  yearSig => (course:number => CourseBlock) */
+    private static array $blocksLookup = [];
 
     /** @var array<int, string>|null */
     private static ?array $courseTitles = null;
 
-    /** @var array<string, array{amount:?float, missing:int}> */
+    /** @var array<string, array{amount:?float, missing:int}>  ключ "{id}:{course}:{yearSig}" */
     private static array $debtAmountCache = [];
 
     /** @var array<string, PaymentPromise|null> */
@@ -45,11 +45,11 @@ class DebtorsExporter extends Exporter
 
             ExportColumn::make('block_starts_at')
                 ->label('Начало блока')
-                ->state(fn (User $r): ?string => self::block($r)?->starts_at?->format('d.m.Y')),
+                ->state(fn (User $r, array $options): ?string => self::block($r, $options['years'] ?? [])?->starts_at?->format('d.m.Y')),
 
             ExportColumn::make('block_ends_at')
                 ->label('Конец блока')
-                ->state(fn (User $r): ?string => self::block($r)?->ends_at?->format('d.m.Y')),
+                ->state(fn (User $r, array $options): ?string => self::block($r, $options['years'] ?? [])?->ends_at?->format('d.m.Y')),
 
             ExportColumn::make('debt_type')
                 ->label('Тип долга')
@@ -69,8 +69,8 @@ class DebtorsExporter extends Exporter
 
             ExportColumn::make('debt_amount')
                 ->label('Сумма долга, ₽')
-                ->state(function (User $r): ?string {
-                    $info = self::debtAmountInfo($r);
+                ->state(function (User $r, array $options): ?string {
+                    $info = self::debtAmountInfo($r, $options['years'] ?? []);
                     if ($info['amount'] === null) {
                         return null;
                     }
@@ -80,7 +80,7 @@ class DebtorsExporter extends Exporter
 
             ExportColumn::make('debt_amount_approximate')
                 ->label('Сумма приблизительная')
-                ->state(fn (User $r): string => self::debtAmountInfo($r)['missing'] > 0 ? 'да' : ''),
+                ->state(fn (User $r, array $options): string => self::debtAmountInfo($r, $options['years'] ?? [])['missing'] > 0 ? 'да' : ''),
 
             ExportColumn::make('promise_date')
                 ->label('Обещание: дата')
@@ -114,11 +114,29 @@ class DebtorsExporter extends Exporter
         return $body;
     }
 
-    private static function block(User $r): ?CourseBlock
+    /**
+     * @param  array<int|string>  $years
+     */
+    private static function block(User $r, array $years = []): ?CourseBlock
     {
-        $lookup = self::blocksLookup();
+        $lookup = self::blocksLookup($years);
 
         return $lookup[$r->course_id.':'.$r->ref_block_number] ?? null;
+    }
+
+    /**
+     * @param  array<int|string>  $years
+     * @return list<int>
+     */
+    private static function normalizeYears(array $years): array
+    {
+        $norm = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $years),
+            static fn (int $y) => $y > 0,
+        )));
+        sort($norm);
+
+        return $norm;
     }
 
     private static function lastPayment(User $r): ?Payment
@@ -131,11 +149,15 @@ class DebtorsExporter extends Exporter
     }
 
     /**
+     * @param  array<int|string>  $years
      * @return array<string, CourseBlock>
      */
-    private static function blocksLookup(): array
+    private static function blocksLookup(array $years = []): array
     {
-        return self::$blocksLookup ??= app(DebtorsReport::class)->blocksLookup();
+        $norm = self::normalizeYears($years);
+        $sig = empty($norm) ? 'all' : implode('-', $norm);
+
+        return self::$blocksLookup[$sig] ??= app(DebtorsReport::class)->forYears($norm)->blocksLookup();
     }
 
     /**
@@ -147,11 +169,14 @@ class DebtorsExporter extends Exporter
     }
 
     /**
+     * @param  array<int|string>  $years
      * @return array{amount:?float, missing:int}
      */
-    private static function debtAmountInfo(User $r): array
+    private static function debtAmountInfo(User $r, array $years = []): array
     {
-        $key = $r->id.':'.$r->course_id;
+        $norm = self::normalizeYears($years);
+        $sig = empty($norm) ? 'all' : implode('-', $norm);
+        $key = $r->id.':'.$r->course_id.':'.$sig;
         if (isset(self::$debtAmountCache[$key])) {
             return self::$debtAmountCache[$key];
         }
@@ -160,6 +185,7 @@ class DebtorsExporter extends Exporter
             (int) $r->id,
             (int) $r->course_id,
             (int) $r->ref_block_number,
+            $norm,
         );
         $info = app(DebtorsReport::class)->computeDebtAmount($r, (int) $r->course_id, $blocks);
 

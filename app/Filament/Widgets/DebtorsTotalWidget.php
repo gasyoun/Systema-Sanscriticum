@@ -10,6 +10,7 @@ use App\Services\DebtorsReport;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\On;
 
 /**
  * Сводный виджет в шапке страницы «Должники»: позволяет менеджеру одним взглядом
@@ -25,17 +26,46 @@ class DebtorsTotalWidget extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
+    /**
+     * Год-линза, прилетающая со страницы «Должники» (getWidgetData при монтаже +
+     * событие при переключении). Пусто = все годы. На дашборде (auto-discover,
+     * без страницы) остаётся пустым → тотал по всем годам, как раньше.
+     *
+     * @var list<int>
+     */
+    public array $years = [];
+
+    /**
+     * Реактивно подхватывает смену годов на странице (toggleYear → dispatch).
+     *
+     * @param  array<int|string>  $years
+     */
+    #[On('debtors-years-updated')]
+    public function updateYears(array $years): void
+    {
+        $this->years = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $years),
+            static fn (int $y) => $y > 0,
+        )));
+    }
+
     protected function getStats(): array
     {
+        $normYears = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $this->years),
+            static fn (int $y) => $y > 0,
+        )));
+        sort($normYears);
+        $yearSig = empty($normYears) ? 'all' : implode('-', $normYears);
         // Тяжёлый отчёт кэшируется на 60 секунд — статистика «общий долг»
         // не обязана быть real-time. Виджет рендерится и на /admin/debtors,
         // и на дашборде (auto-discover), без кэша = двойной удар по БД.
         // Сбрасывать кэш точечно не пытаемся — TTL короткий.
         $cached = Cache::remember(
-            'debtors_total_widget.stats.v1',
+            'debtors_total_widget.stats.v1.'.$yearSig,
             now()->addSeconds(60),
-            function (): array {
-                $report = app(DebtorsReport::class);
+            function () use ($normYears): array {
+                $report = app(DebtorsReport::class)->forYears($normYears);
                 $totals = $report->totalDebtForQuery($report->query());
 
                 return [
