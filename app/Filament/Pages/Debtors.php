@@ -8,6 +8,7 @@ use App\Filament\Exports\DebtorsExporter;
 use App\Filament\Resources\UserResource;
 use App\Filament\Widgets\DebtorsTotalWidget;
 use App\Jobs\SendMessengerAlerts;
+use App\Mail\DebtorReminderMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\MarketingSetting;
@@ -30,6 +31,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class Debtors extends Page implements HasTable
 {
@@ -1154,22 +1156,29 @@ class Debtors extends Page implements HasTable
     private function quickReminderAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('quick_reminder')
-            ->label('Напомнить в TG/VK')
+            ->label('Напомнить')
             ->icon('heroicon-o-paper-airplane')
             ->color('warning')
-            ->visible(fn (Model $r): bool => ! empty($r->telegram_id) || ! empty($r->vk_id))
+            ->visible(fn (Model $r): bool => ! empty($r->telegram_id) || ! empty($r->vk_id) || ! empty($r->email))
             ->modalHeading(fn (Model $r): string => 'Напоминание — '.($r->name ?: $r->email))
             ->fillForm(fn (Model $r): array => [
                 'to_telegram' => ! empty($r->telegram_id),
                 'to_vk' => ! empty($r->vk_id),
-                'text' => "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт, а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите блок в личном кабинете.\n\nПерейти к оплате: ".url('/login'),
+                'to_email' => ! empty($r->email),
+                'subject' => 'Напоминание об оплате — {course}',
+                'text' => "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт, а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите блок.\n\nОплатить курс: {pay_link}\nЛичный кабинет: ".url('/login'),
             ])
             ->form([
                 Forms\Components\Textarea::make('text')
-                    ->label('Текст напоминания')->rows(7)->required()
-                    ->helperText('Плейсхолдеры: {name}, {course}, {block}.'),
+                    ->label('Текст напоминания')->rows(8)->required()
+                    ->helperText('Плейсхолдеры: {name}, {course}, {block}, {pay_link}.'),
+                Forms\Components\TextInput::make('subject')
+                    ->label('Тема письма')
+                    ->visible(fn (Forms\Get $get): bool => (bool) $get('to_email'))
+                    ->helperText('Только для email. Плейсхолдеры тоже работают.'),
                 Forms\Components\Toggle::make('to_telegram')->label('Telegram'),
                 Forms\Components\Toggle::make('to_vk')->label('VK'),
+                Forms\Components\Toggle::make('to_email')->label('Email')->live(),
             ])
             ->action(function (Model $r, array $data): void {
                 $titles = app(DebtorsReport::class)->courseTitles();
@@ -1181,17 +1190,31 @@ class Debtors extends Page implements HasTable
                 }
                 $hasTg = (bool) ($data['to_telegram'] ?? false) && ! empty($user->telegram_id);
                 $hasVk = (bool) ($data['to_vk'] ?? false) && ! empty($user->vk_id);
-                if (! $hasTg && ! $hasVk) {
+                $hasEmail = (bool) ($data['to_email'] ?? false)
+                    && filter_var($user->email, FILTER_VALIDATE_EMAIL);
+                if (! $hasTg && ! $hasVk && ! $hasEmail) {
                     Notification::make()->title('Нет каналов для отправки')->danger()->send();
 
                     return;
                 }
-                $rendered = strtr((string) $data['text'], [
+
+                $slug = Course::query()->whereKey($r->course_id)->value('slug');
+                $replacements = [
                     '{name}' => $user->name ?: 'Друг',
                     '{course}' => $titles[$r->course_id] ?? '',
                     '{block}' => (string) $r->ref_block_number,
-                ]);
-                SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
+                    '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
+                ];
+                $rendered = strtr((string) $data['text'], $replacements);
+
+                if ($hasTg || $hasVk) {
+                    SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
+                }
+                if ($hasEmail) {
+                    $subject = strtr((string) ($data['subject'] ?? 'Напоминание об оплате'), $replacements);
+                    Mail::to($user->email)->queue(new DebtorReminderMail($subject, $rendered, $user->name));
+                }
+
                 Notification::make()->title('Поставлено в очередь')->success()->send();
             });
     }
@@ -1293,57 +1316,84 @@ class Debtors extends Page implements HasTable
     private function sendReminderBulkAction(): Tables\Actions\BulkAction
     {
         return Tables\Actions\BulkAction::make('send_reminder')
-            ->label('Напомнить в TG/VK')
+            ->label('Напомнить')
             ->icon('heroicon-o-paper-airplane')
             ->color('warning')
             ->modalHeading('Рассылка напоминания должникам')
-            ->modalDescription('Доступные плейсхолдеры: {name}, {course}, {block}. Сообщение отправится в Telegram и/или VK — куда у студента привязан аккаунт.')
+            ->modalDescription('Плейсхолдеры: {name}, {course}, {block}, {pay_link}. Уйдёт в выбранные каналы — куда у студента есть аккаунт/почта.')
             ->form([
                 Forms\Components\Textarea::make('text')
                     ->label('Текст напоминания')
-                    ->rows(7)
+                    ->rows(8)
                     ->required()
-                    ->default("Намасте, {name}!\n\nНапоминаем: блок №{block} курса «{course}» уже идёт, а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите блок в личном кабинете.\n\nПерейти к оплате: ".url('/login')),
+                    ->default("Намасте, {name}!\n\nНапоминаем: блок №{block} курса «{course}» уже идёт, а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите блок.\n\nОплатить курс: {pay_link}\nЛичный кабинет: ".url('/login')),
+                Forms\Components\TextInput::make('subject')
+                    ->label('Тема письма')
+                    ->default('Напоминание об оплате — {course}')
+                    ->visible(fn (Forms\Get $get): bool => (bool) $get('to_email'))
+                    ->helperText('Только для email. Плейсхолдеры тоже работают.'),
                 Forms\Components\Toggle::make('to_telegram')
                     ->label('Telegram')
                     ->default(true),
                 Forms\Components\Toggle::make('to_vk')
                     ->label('VK')
                     ->default(true),
+                Forms\Components\Toggle::make('to_email')
+                    ->label('Email')
+                    ->default(true)
+                    ->live(),
             ])
             ->action(function (Collection $records, array $data) {
                 $report = app(DebtorsReport::class);
                 $courseTitles = $report->courseTitles();
+                // Карта course_id → slug для прямой ссылки на курс {pay_link}.
+                $courseSlugs = Course::query()
+                    ->whereIn('id', $records->pluck('course_id')->unique()->all())
+                    ->pluck('slug', 'id');
                 $toTelegram = (bool) ($data['to_telegram'] ?? true);
                 $toVk = (bool) ($data['to_vk'] ?? true);
+                $toEmail = (bool) ($data['to_email'] ?? true);
                 $template = (string) $data['text'];
+                $subjectTemplate = (string) ($data['subject'] ?? 'Напоминание об оплате');
 
-                $sent = 0;
+                $sentMsg = 0;   // TG/VK
+                $sentEmail = 0;
                 $noChannel = 0;
 
                 foreach ($records as $record) {
                     /** @var User $record */
                     $hasTg = $toTelegram && ! empty($record->telegram_id);
                     $hasVk = $toVk && ! empty($record->vk_id);
-                    if (! $hasTg && ! $hasVk) {
+                    $hasEmail = $toEmail && filter_var($record->email, FILTER_VALIDATE_EMAIL);
+                    if (! $hasTg && ! $hasVk && ! $hasEmail) {
                         $noChannel++;
 
                         continue;
                     }
 
-                    $rendered = strtr($template, [
+                    $slug = $courseSlugs[$record->course_id] ?? null;
+                    $replacements = [
                         '{name}' => $record->name ?: 'Друг',
                         '{course}' => $courseTitles[$record->course_id] ?? '',
                         '{block}' => (string) $record->ref_block_number,
-                    ]);
+                        '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
+                    ];
+                    $rendered = strtr($template, $replacements);
 
-                    SendMessengerAlerts::dispatch($record, $rendered, $hasTg, $hasVk);
-                    $sent++;
+                    if ($hasTg || $hasVk) {
+                        SendMessengerAlerts::dispatch($record, $rendered, $hasTg, $hasVk);
+                        $sentMsg++;
+                    }
+                    if ($hasEmail) {
+                        $subject = strtr($subjectTemplate, $replacements);
+                        Mail::to($record->email)->queue(new DebtorReminderMail($subject, $rendered, $record->name));
+                        $sentEmail++;
+                    }
                 }
 
                 Notification::make()
                     ->title('Очередь поставлена')
-                    ->body("Отправлено в очередь: {$sent}. Без TG/VK: {$noChannel}.")
+                    ->body("В очередь: TG/VK — {$sentMsg}, email — {$sentEmail}. Без каналов: {$noChannel}.")
                     ->success()
                     ->send();
             })
