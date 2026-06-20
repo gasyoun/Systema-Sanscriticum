@@ -41,6 +41,34 @@ class MarketingSettingResource extends Resource
     {
         return $form
             ->schema([
+                // --- БЛОК: Техобслуживание кабинета ---
+                Forms\Components\Section::make('🛠 Техобслуживание кабинета')
+                    ->description('Студенты увидят заглушку. Админка, редактор, вебхуки и витрина продолжают работать. Применяется сразу после сохранения.')
+                    ->schema([
+                        Forms\Components\Toggle::make('student_maintenance_enabled')
+                            ->label('Кабинет на техобслуживании')
+                            ->helperText('Обычные студенты получат страницу «техобслуживание». Админы проходят всегда.')
+                            ->default(false),
+
+                        Forms\Components\Textarea::make('student_maintenance_message')
+                            ->label('Текст заглушки')
+                            ->rows(3)
+                            ->placeholder('Скоро вернёмся 🙏 Идут технические работы — кабинет ненадолго недоступен.')
+                            ->helperText('Если пусто — покажем текст по умолчанию.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('student_maintenance_secret')
+                            ->label('Токен обхода (для QA)')
+                            ->helperText('Ссылка для проверки под студентом: /maintenance-bypass/{токен}. Пусто = обход по ссылке выключен.')
+                            ->suffixAction(
+                                Forms\Components\Actions\Action::make('genSecret')
+                                    ->icon('heroicon-m-arrow-path')
+                                    ->tooltip('Сгенерировать токен')
+                                    ->action(fn (Forms\Set $set) => $set('student_maintenance_secret', \Illuminate\Support\Str::random(32)))
+                            ),
+                    ])
+                    ->collapsible(),
+
                 // --- БЛОК 1: Главный рубильник ---
                 Forms\Components\Section::make('Общий статус лояльности')
                     ->schema([

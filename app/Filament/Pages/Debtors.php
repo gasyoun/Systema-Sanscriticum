@@ -10,6 +10,7 @@ use App\Filament\Widgets\DebtorsTotalWidget;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
@@ -34,16 +35,37 @@ class Debtors extends Page implements HasTable
 {
     use InteractsWithTable;
 
+    /**
+     * Выбранные годы «линзы»: долги определяются только за эти годы (год = год
+     * даты блока). Пусто = все годы. Запоминается ГЛОБАЛЬНО в
+     * MarketingSetting.debtors_notify_years — восстанавливается при возврате на
+     * страницу (mount) и пишется при каждом переключении (toggleYear). Та же
+     * настройка позже питает авто-рассылку должникам за выбранный год.
+     *
+     * @var list<int>
+     */
+    public array $selectedYears = [];
+
+    public function mount(): void
+    {
+        $this->selectedYears = self::normalizeYears(
+            MarketingSetting::cached()?->debtors_notify_years ?? []
+        );
+    }
+
     /** @var array<int, Payment|null> */
     private static array $paymentCache = [];
 
-    /** @var array<string, list<int>>  ключ "{course_id}:{ref}" */
+    /** @var array<string, list<int>>  ключ "{course_id}:{ref}:{yearSig}" */
     private static array $courseBlockNumbersCache = [];
+
+    /** @var array<int, array<int, int>>  course_id => [block_number => year] (по starts_at) */
+    private static array $blockYearsCache = [];
 
     /** @var array<string, \Illuminate\Database\Eloquent\Collection<int, Payment>>  ключ "{user_id}:{course_id}" */
     private static array $userCoursePaymentsCache = [];
 
-    /** @var array<string, array{amount:?float, missing:int}>  ключ "{user_id}:{course_id}" */
+    /** @var array<string, array{amount:?float, missing:int}>  ключ "{user_id}:{course_id}:{yearSig}" */
     private static array $debtAmountCache = [];
 
     /** @var array<string, ?int>  "{user_id}:{course_id}" => явный joined_at_block из course_user */
@@ -71,15 +93,120 @@ class Debtors extends Page implements HasTable
         return RoleGate::adminOnly();
     }
 
+    /**
+     * Доступные годы для переключателей (по убыванию). Отдаётся в blade.
+     *
+     * @return list<int>
+     */
+    public function getYearOptions(): array
+    {
+        return app(DebtorsReport::class)->availableYears();
+    }
+
+    /**
+     * Переключить год в выборке линзы. Пустая выборка = все годы.
+     */
+    public function toggleYear(int $year): void
+    {
+        if (in_array($year, $this->selectedYears, true)) {
+            $this->selectedYears = array_values(array_filter(
+                $this->selectedYears,
+                static fn (int $y) => $y !== $year,
+            ));
+        } else {
+            $this->selectedYears[] = $year;
+            sort($this->selectedYears);
+        }
+
+        // Глобально запоминаем выбор: страница восстановит его при возврате, а
+        // будущая авто-рассылка возьмёт этот же год. saved() в MarketingSetting
+        // сбрасывает кэш singleton'а.
+        $setting = MarketingSetting::first() ?? new MarketingSetting;
+        $setting->debtors_notify_years = $this->selectedYears;
+        $setting->save();
+
+        // Год влияет на сам query таблицы, но это не «родная» табличная сила
+        // (поиск/фильтр/сортировка/страница), поэтому Filament не сбрасывает
+        // кэш строк сам — таблица показывала бы прошлую выборку до перещёлка
+        // пагинации. Сбрасываем на 1-ю страницу и чистим кэш строк вручную.
+        // Плюс сбрасываем мемо отчёта: Filament на boot (ещё со старым
+        // selectedYears) уже мог построить report()/blocksLookup() для bulk-
+        // состояния — без сброса повторный query взял бы прошлогоднюю выборку.
+        $this->reportMemo = null;
+        $this->blocksLookupMemo = null;
+        $this->resetPage();
+        $this->flushCachedTableRecords();
+
+        // Реактивно обновляем тотал-виджет в шапке (он — отдельный Livewire-компонент).
+        $this->dispatch('debtors-years-updated', years: $this->selectedYears);
+    }
+
+    /**
+     * Нормализованная сигнатура годов для ключей кэшей (пусто = «all»).
+     *
+     * @param  array<int|string>|null  $years
+     */
+    private static function yearSignature(?array $years): string
+    {
+        $norm = self::normalizeYears($years);
+
+        return empty($norm) ? 'all' : implode('-', $norm);
+    }
+
+    /**
+     * @param  array<int|string>|null  $years
+     * @return list<int>
+     */
+    private static function normalizeYears(?array $years): array
+    {
+        if (empty($years)) {
+            return [];
+        }
+
+        $norm = array_values(array_unique(array_filter(
+            array_map(static fn ($y) => (int) $y, $years),
+            static fn (int $y) => $y > 0,
+        )));
+        sort($norm);
+
+        return $norm;
+    }
+
+    /**
+     * Год-aware отчёт под ТЕКУЩУЮ выборку годов. Важно: строится лениво (на
+     * рендере, уже после экшена toggleYear), а не на boot таблицы — иначе query
+     * собирался бы со старым значением selectedYears и список не обновлялся бы
+     * до перещёлка пагинации. Мемоизация в рамках одного запроса безопасна:
+     * selectedYears после экшена не меняется.
+     */
+    private ?DebtorsReport $reportMemo = null;
+
+    /** @var array<string, CourseBlock>|null */
+    private ?array $blocksLookupMemo = null;
+
+    private function report(): DebtorsReport
+    {
+        return $this->reportMemo ??= app(DebtorsReport::class)->forYears($this->selectedYears);
+    }
+
+    /**
+     * @return array<string, CourseBlock>
+     */
+    private function blocksLookup(): array
+    {
+        return $this->blocksLookupMemo ??= $this->report()->blocksLookup();
+    }
+
     public function table(Table $table): Table
     {
-        $report = app(DebtorsReport::class);
-        $blocksLookup = $report->blocksLookup();
-        $courseTitles = $report->courseTitles();
-        $debtors = $this;
+        // Внимание: НЕ вызывать здесь report()/blocksLookup() — table() исполняется
+        // на boot, до экшена toggleYear. Год-зависимое читаем лениво в замыканиях
+        // через $this->report() / $this->selectedYears. courseTitles для опций
+        // фильтра и подписей групп берём по «всем годам» (надмножество, стабильно).
+        $courseTitles = app(DebtorsReport::class)->courseTitles();
 
         return $table
-            ->query($report->query())
+            ->query(fn () => $this->report()->query())
             ->recordTitleAttribute('name')
             ->recordTitle(fn (Model $r) => $r->name ?: $r->email)
             // Один юзер может встречаться по нескольким курсам — ключ строки
@@ -144,13 +271,13 @@ class Debtors extends Page implements HasTable
                 Tables\Columns\TextColumn::make('ref_block_number')
                     ->label('Блок')
                     ->formatStateUsing(fn ($state): string => '№'.$state)
-                    ->description(function (Model $r) use ($blocksLookup, $report): ?string {
-                        $block = $blocksLookup[$r->course_id.':'.$r->ref_block_number] ?? null;
+                    ->description(function (Model $r): ?string {
+                        $block = $this->blocksLookup()[$r->course_id.':'.$r->ref_block_number] ?? null;
                         $lines = [];
                         if ($block instanceof CourseBlock && $block->starts_at && $block->ends_at) {
                             $lines[] = $block->starts_at->format('d.m').' – '.$block->ends_at->format('d.m.Y');
                         }
-                        $overdue = $report->daysOverdueFor((int) $r->course_id, (int) $r->ref_block_number);
+                        $overdue = $this->report()->daysOverdueFor((int) $r->course_id, (int) $r->ref_block_number);
                         if ($overdue > 0) {
                             $lines[] = DebtorsReport::formatOverdue($overdue);
                         }
@@ -183,8 +310,8 @@ class Debtors extends Page implements HasTable
                     ->weight('bold')
                     ->wrap()
                     ->width('25%')
-                    ->getStateUsing(function (Model $r) use ($report): string {
-                        $info = self::debtAmountInfo($r, $report);
+                    ->getStateUsing(function (Model $r): string {
+                        $info = self::debtAmountInfo($r, $this->report(), $this->selectedYears);
                         if ($info['amount'] === null) {
                             return '—';
                         }
@@ -202,17 +329,18 @@ class Debtors extends Page implements HasTable
                             (int) $r->id,
                             (int) $r->course_id,
                             (int) $r->ref_block_number,
+                            $this->selectedYears,
                         );
 
                         return $type.' · '.$blocks;
                     })
-                    ->color(function (Model $r) use ($report): string {
-                        $info = self::debtAmountInfo($r, $report);
+                    ->color(function (Model $r): string {
+                        $info = self::debtAmountInfo($r, $this->report(), $this->selectedYears);
 
                         return ($info['amount'] ?? 0) >= 10000 ? 'danger' : 'warning';
                     })
-                    ->tooltip(function (Model $r) use ($report): ?string {
-                        $info = self::debtAmountInfo($r, $report);
+                    ->tooltip(function (Model $r): ?string {
+                        $info = self::debtAmountInfo($r, $this->report(), $this->selectedYears);
                         if ($info['amount'] === null) {
                             return 'У курса нет ни block-, ни full-тарифа — заведите тарифы в админке.';
                         }
@@ -227,8 +355,8 @@ class Debtors extends Page implements HasTable
                     ->label('Обещание')
                     ->badge()
                     ->width('17%')
-                    ->getStateUsing(function (Model $r) use ($report): ?string {
-                        $promise = $report->promiseFor((int) $r->id, (int) $r->course_id);
+                    ->getStateUsing(function (Model $r): ?string {
+                        $promise = $this->report()->promiseFor((int) $r->id, (int) $r->course_id);
                         if (! $promise) {
                             return null;
                         }
@@ -236,16 +364,16 @@ class Debtors extends Page implements HasTable
 
                         return $promise->isOverdue() ? "просрочено {$date}" : "до {$date}";
                     })
-                    ->color(function (Model $r) use ($report): string {
-                        $promise = $report->promiseFor((int) $r->id, (int) $r->course_id);
+                    ->color(function (Model $r): string {
+                        $promise = $this->report()->promiseFor((int) $r->id, (int) $r->course_id);
                         if (! $promise) {
                             return 'gray';
                         }
 
                         return $promise->isOverdue() ? 'danger' : 'warning';
                     })
-                    ->tooltip(function (Model $r) use ($report): ?string {
-                        $promise = $report->promiseFor((int) $r->id, (int) $r->course_id);
+                    ->tooltip(function (Model $r): ?string {
+                        $promise = $this->report()->promiseFor((int) $r->id, (int) $r->course_id);
                         if (! $promise) {
                             return null;
                         }
@@ -405,6 +533,7 @@ class Debtors extends Page implements HasTable
                     $this->sendReminderBulkAction(),
                     Tables\Actions\ExportBulkAction::make()
                         ->exporter(DebtorsExporter::class)
+                        ->options(fn (): array => ['years' => $this->selectedYears])
                         ->label('Экспорт'),
                 ]),
             ])
@@ -414,16 +543,17 @@ class Debtors extends Page implements HasTable
     }
 
     /**
+     * @param  array<int|string>  $years
      * @return array{amount:?float, missing:int}
      */
-    private static function debtAmountInfo(Model $r, DebtorsReport $report): array
+    private static function debtAmountInfo(Model $r, DebtorsReport $report, array $years = []): array
     {
-        $key = $r->id.':'.$r->course_id;
+        $key = $r->id.':'.$r->course_id.':'.self::yearSignature($years);
         if (isset(self::$debtAmountCache[$key])) {
             return self::$debtAmountCache[$key];
         }
 
-        $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+        $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number, $years);
         $info = $report->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
 
         return self::$debtAmountCache[$key] = [
@@ -432,9 +562,12 @@ class Debtors extends Page implements HasTable
         ];
     }
 
-    private static function debtBlocksFormatted(int $userId, int $courseId, int $refNumber): string
+    /**
+     * @param  array<int|string>  $years
+     */
+    private static function debtBlocksFormatted(int $userId, int $courseId, int $refNumber, array $years = []): string
     {
-        $numbers = self::debtBlocks($userId, $courseId, $refNumber);
+        $numbers = self::debtBlocks($userId, $courseId, $refNumber, $years);
         if (empty($numbers)) {
             return '—';
         }
@@ -443,18 +576,20 @@ class Debtors extends Page implements HasTable
     }
 
     /**
+     * Неоплаченные блоки пары (user, course) ≤ reference, ≥ floor входа.
+     * При активной год-линзе ($years непусто) дополнительно ограничивается
+     * блоками, чья дата (starts_at) попадает в выбранные годы.
+     *
+     * @param  array<int|string>|null  $years
      * @return list<int>
      */
-    public static function debtBlocks(int $userId, int $courseId, int $refNumber): array
+    public static function debtBlocks(int $userId, int $courseId, int $refNumber, ?array $years = null): array
     {
-        $blockKey = $courseId.':'.$refNumber;
-        $allBlocks = self::$courseBlockNumbersCache[$blockKey] ??= CourseBlock::query()
-            ->where('course_id', $courseId)
-            ->where('number', '<=', $refNumber)
-            ->orderBy('number')
-            ->pluck('number')
-            ->map(fn ($n) => (int) $n)
-            ->all();
+        $years = self::normalizeYears($years);
+        $yearSig = self::yearSignature($years);
+
+        $blockKey = $courseId.':'.$refNumber.':'.$yearSig;
+        $allBlocks = self::$courseBlockNumbersCache[$blockKey] ??= self::candidateBlockNumbers($courseId, $refNumber, $years);
 
         if (empty($allBlocks)) {
             return [];
@@ -499,6 +634,45 @@ class Debtors extends Page implements HasTable
         }
 
         return $debt;
+    }
+
+    /**
+     * Кандидаты для подсчёта долга: номера блоков курса ≤ reference. При
+     * активной год-линзе ($years непусто) оставляем только блоки, чья дата
+     * (starts_at) попадает в выбранные годы (блоки без даты отбрасываются).
+     *
+     * @param  list<int>  $years
+     * @return list<int>
+     */
+    private static function candidateBlockNumbers(int $courseId, int $refNumber, array $years): array
+    {
+        if (empty($years)) {
+            return CourseBlock::query()
+                ->where('course_id', $courseId)
+                ->where('number', '<=', $refNumber)
+                ->orderBy('number')
+                ->pluck('number')
+                ->map(fn ($n) => (int) $n)
+                ->all();
+        }
+
+        $byYear = self::$blockYearsCache[$courseId] ??= CourseBlock::query()
+            ->where('course_id', $courseId)
+            ->whereNotNull('starts_at')
+            ->orderBy('number')
+            ->get(['number', 'starts_at'])
+            ->mapWithKeys(fn (CourseBlock $b) => [(int) $b->number => (int) $b->starts_at->year])
+            ->all();
+
+        $result = [];
+        foreach ($byYear as $number => $year) {
+            if ($number <= $refNumber && in_array($year, $years, true)) {
+                $result[] = $number;
+            }
+        }
+        sort($result);
+
+        return $result;
     }
 
     private static function formatPaidBlocks(?int $start, ?int $end): string
@@ -670,7 +844,7 @@ class Debtors extends Page implements HasTable
                         ->modalHeading('Подтверждение оплаты по обещанию')
                         ->modalDescription('Будет создан Payment, покрывающий указанные блоки. Обещание закроется как выполненное.')
                         ->fillForm(function () use ($r, $existing): array {
-                            $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+                            $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number, $this->selectedYears);
                             $info = app(DebtorsReport::class)->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
 
                             return [
@@ -810,7 +984,7 @@ class Debtors extends Page implements HasTable
             ->modalDescription('Каждая строка — отдельное обещание оплаты. Все строки объединяются в один план рассрочки.')
             ->modalWidth('2xl')
             ->fillForm(function (Model $r): array {
-                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number, $this->selectedYears);
                 $info = app(DebtorsReport::class)->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
                 $totalDebt = $info['amount'] !== null ? (float) $info['amount'] : null;
 
@@ -939,7 +1113,7 @@ class Debtors extends Page implements HasTable
             ->modalDescription('Будет создан Payment, покрывающий указанные блоки. Обещание закроется как выполненное.')
             ->fillForm(function (Model $r): array {
                 $existing = $this->existingActivePromise($r);
-                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number);
+                $blocks = self::debtBlocks((int) $r->id, (int) $r->course_id, (int) $r->ref_block_number, $this->selectedYears);
                 $info = app(DebtorsReport::class)->computeDebtAmount(User::find($r->id), (int) $r->course_id, $blocks);
 
                 return [
@@ -1093,6 +1267,18 @@ class Debtors extends Page implements HasTable
     protected function getHeaderWidgets(): array
     {
         return [DebtorsTotalWidget::class];
+    }
+
+    /**
+     * Прокидывает начальную год-линзу в header-виджет при монтаже (важно для
+     * состояния, восстановленного из query-string). Дальнейшие переключения —
+     * через событие debtors-years-updated в toggleYear().
+     *
+     * @return array<string, mixed>
+     */
+    public function getWidgetData(): array
+    {
+        return ['years' => $this->selectedYears];
     }
 
     private function existingActivePromise(Model $r): ?PaymentPromise

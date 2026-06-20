@@ -112,8 +112,21 @@ Route::prefix('s')->name('articles.')->group(function () {
         ->name('show');
 });
 
+// --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
+Route::get('/maintenance-bypass/{secret}', function (string $secret) {
+    $s = \App\Models\MarketingSetting::cached();
+    abort_unless(
+        $s && filled($s->student_maintenance_secret)
+            && hash_equals((string) $s->student_maintenance_secret, $secret),
+        404
+    );
+
+    return redirect()->route('student.dashboard')
+        ->cookie('student_maintenance_bypass', $secret, 60 * 24 * 7); // неделя
+})->middleware('auth')->name('maintenance.bypass');
+
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
-Route::middleware(['auth', 'track.activity'])->group(function () {
+Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(function () {
 
     Route::get('/home', function () {
         $user = auth()->user();

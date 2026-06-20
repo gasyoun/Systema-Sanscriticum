@@ -52,7 +52,17 @@ class StudentController extends Controller
                 $query->whereIn('group_id', $groupIds)
                     ->orWhereNull('group_id');
             })
-            ->where('start', '>=', now())
+            ->where(function ($query) {
+                // Карточка живёт, пока занятие не закончилось: по end, а для
+                // записей без end — DEFAULT_DURATION_HOURS от старта (как в
+                // Schedule::isLive() и в самой карточке). Иначе карточка со
+                // ссылкой исчезала ровно в момент начала идущего занятия.
+                $query->where('end', '>=', now())
+                    ->orWhere(function ($q) {
+                        $q->whereNull('end')
+                            ->where('start', '>=', now()->subHours(Schedule::DEFAULT_DURATION_HOURS));
+                    });
+            })
             ->orderBy('start', 'asc')
             ->get();
 
