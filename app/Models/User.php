@@ -275,7 +275,10 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        $token = env('TELEGRAM_BOT_TOKEN');
+        // Личные уведомления студенту шлёт бот кабинета (привязка к нему же).
+        // Фолбэк на основной бот, если отдельный не задан.
+        $token = config('services.telegram.student_bot_token')
+            ?: config('services.telegram.bot_token');
 
         try {
             // Находим физический путь к картинке

@@ -60,6 +60,14 @@ return [
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+
+        // Отдельный бот ДЛЯ СТУДЕНЧЕСКОГО КАБИНЕТА: привязка аккаунта, ИИ-куратор
+        // и личные уведомления студенту. Заведён отдельно, потому что основной
+        // бот занят в служебных чатах (кураторы/маркетологи/онбординг).
+        // Пусто → используется основной бот выше (обратная совместимость).
+        'student_bot_token' => env('STUDENT_TELEGRAM_BOT_TOKEN'),
+        'student_bot_username' => env('STUDENT_TELEGRAM_BOT_USERNAME'),
+
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
