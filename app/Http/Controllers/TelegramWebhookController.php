@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Services\Bot\CuratorAi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http; // Добавили для переключения на человека
@@ -116,75 +117,24 @@ class TelegramWebhookController extends Controller
 
         $this->sendMessage($chatId, '⏳ <i>Изучаю манускрипты...</i>');
 
-        try {
-            $folderId = config('services.yandex.folder_id');
-            $apiKey = config('services.yandex.api_key');
-            $agentId = config('services.yandex.agent_id');
+        // Вопрос студента уже сохранён в ChatMessage выше — он попадёт в историю
+        // последним. Думает единый сервис (DeepSeek через OpenRouter).
+        $answer = app(CuratorAi::class)->reply($user, $question);
 
-            // ==========================================
-            // МАГИЯ ПАМЯТИ: Формируем единый текст диалога
-            // ==========================================
-            // Берем последние 10 сообщений (этого хватит для контекста)
-            $dbHistory = ChatMessage::where('user_id', $user->id)
-                ->orderBy('id', 'desc')
-                ->take(10)
-                ->get()
-                ->reverse();
+        if ($answer === null) {
+            $this->sendMessage($chatId, "Мои чакры перегружены 🧘‍♂️. Пожалуйста, напишите 'позови куратора', и вам ответит человек.");
 
-            // Склеиваем историю в один текст
-            $dialogueText = "История диалога:\n";
-            foreach ($dbHistory as $msg) {
-                // Поскольку вопрос пользователя мы УЖЕ сохранили в базу на Шаге 1,
-                // он тоже попадет сюда в самый конец текста.
-                $roleName = ($msg->role === 'user') ? 'Студент' : 'ИИ-Куратор';
-                $dialogueText .= "{$roleName}: {$msg->text}\n";
-            }
-
-            // НОВЫЙ RESPONSES API ЯНДЕКСА
-            $response = Http::withHeaders([
-                'Authorization' => 'Api-Key '.$apiKey, // Вернули Api-Key!
-                'OpenAI-Project' => $folderId,
-                'Content-Type' => 'application/json',
-            ])->timeout(45)->post('https://ai.api.cloud.yandex.net/v1/responses', [
-                'prompt' => [
-                    'id' => $agentId, // Передаем голый ID, как в curl
-                ],
-                'input' => $dialogueText, // Отправляем весь диалог целиком
-            ]);
-
-            if ($response->successful()) {
-                // === УМНЫЙ ПОИСК ОТВЕТА В МАССИВЕ YANDEX ===
-                $outputs = $response->json('output') ?? [];
-                $aiAnswer = null;
-
-                // Перебираем все шаги ответа с конца (финальный текст всегда в конце)
-                foreach (array_reverse($outputs) as $step) {
-                    if (isset($step['type']) && $step['type'] === 'message' && isset($step['content'][0]['text'])) {
-                        $aiAnswer = $step['content'][0]['text'];
-                        break; // Нашли текст - выходим из цикла!
-                    }
-                }
-
-                $aiAnswer = $aiAnswer ?? 'Ответ не найден.';
-                // ==========================================
-
-                // СОХРАНЯЕМ ОТВЕТ БОТА В БАЗУ
-                ChatMessage::create([
-                    'user_id' => $user->id,
-                    'role' => 'bot',
-                    'text' => $aiAnswer,
-                    'is_read' => true,
-                ]);
-
-                $this->sendMessage($chatId, $aiAnswer);
-            } else {
-                Log::error('Ошибка Yandex Responses API: '.$response->body());
-                $this->sendMessage($chatId, "Мои чакры перегружены 🧘‍♂️. Пожалуйста, напишите 'позови куратора', и вам ответит человек.");
-            }
-        } catch (\Exception $e) {
-            Log::error('Сбой связи с Yandex: '.$e->getMessage());
-            $this->sendMessage($chatId, 'Связь со вселенной прервалась. Позовите куратора.');
+            return;
         }
+
+        ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'bot',
+            'text' => $answer,
+            'is_read' => true,
+        ]);
+
+        $this->sendMessage($chatId, $answer);
     }
 
     // ==========================================
