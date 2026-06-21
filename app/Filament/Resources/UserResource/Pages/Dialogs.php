@@ -91,8 +91,11 @@ class Dialogs extends Page
             'is_read' => true,
         ]);
 
-        // 2. Отправляем в Telegram студенту через API
-        $token = env('TELEGRAM_BOT_TOKEN');
+        // 2. Отправляем в Telegram студенту через API.
+        // Тем же ботом, в котором студент звал куратора (бот кабинета),
+        // с фолбэком на основной, если отдельный студбот не задан.
+        $token = config('services.telegram.student_bot_token')
+            ?: config('services.telegram.bot_token');
         $chatId = $user->telegram_id;
 
         Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
