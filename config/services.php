@@ -84,6 +84,14 @@ return [
         'agent_id' => env('YANDEX_AGENT_ID'),
     ],
 
+    // «Мозги» ИИ-куратора TG/VK. OpenRouter — OpenAI-совместимый шлюз; модель
+    // по умолчанию DeepSeek V3 (быстро/дёшево, контекст ~64k). См.
+    // App\Services\Bot\CuratorAi.
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
+    ],
+
     'admin' => [
         'email' => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
         'password' => env('ADMIN_PASSWORD'),
