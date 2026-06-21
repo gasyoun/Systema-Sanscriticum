@@ -103,8 +103,9 @@ class Helpdesk extends Page
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
         // ==========================================
         if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
-            // Если пауза стоит в Telegram
-            $token = env('TELEGRAM_BOT_TOKEN');
+            // Если пауза стоит в Telegram — отвечаем ботом кабинета (фолбэк на основной)
+            $token = config('services.telegram.student_bot_token')
+                ?: config('services.telegram.bot_token');
             \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $user->telegram_id,
                 'text' => $this->newMessage,
@@ -136,7 +137,8 @@ class Helpdesk extends Page
             // Сбрасываем кэш и уведомляем, если диалог был в ТГ
             if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
                 \Illuminate\Support\Facades\Cache::forget("chat_human_{$user->telegram_id}");
-                $token = env('TELEGRAM_BOT_TOKEN');
+                $token = config('services.telegram.student_bot_token')
+                    ?: config('services.telegram.bot_token');
                 \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $user->telegram_id,
                     'text' => '🤖 Куратор завершил диалог. Я снова с вами! Чем я могу помочь?',
