@@ -608,14 +608,17 @@ class Debtors extends Page implements HasTable
         // Нижняя граница долга: студент мог присоединиться к потоку в середине —
         // блоки до его «блока входа» (явный joined_at_block либо первый
         // оплаченный) в долг не начисляются.
-        $explicitJoined = self::$joinedAtBlockCache[$payKey] ??= (function () use ($userId, $courseId): ?int {
+        // array_key_exists, а не `??=`: легитимное значение кэша — null (у пары
+        // нет joined_at_block). `??=` считал бы null «непрогретым» и бил бы
+        // запрос на каждую такую пару заново (N+1 на сводке должников).
+        if (! array_key_exists($payKey, self::$joinedAtBlockCache)) {
             $v = DB::table('course_user')
                 ->where('user_id', $userId)
                 ->where('course_id', $courseId)
                 ->value('joined_at_block');
-
-            return $v !== null ? (int) $v : null;
-        })();
+            self::$joinedAtBlockCache[$payKey] = $v !== null ? (int) $v : null;
+        }
+        $explicitJoined = self::$joinedAtBlockCache[$payKey];
         $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
 
         $debt = [];
@@ -636,6 +639,72 @@ class Debtors extends Page implements HasTable
         }
 
         return $debt;
+    }
+
+    /**
+     * Батч-прогрев кэшей платежей и joined_at_block сразу по всем парам
+     * (user, course). Без него debtBlocks() лениво бьёт 2 запроса на КАЖДУЮ
+     * уникальную пару — на сводке по всем должникам это сотни запросов
+     * (≈2 × число пар). Вызывается из DebtorsReport::totalDebtForQuery перед
+     * циклом: два whereIn-запроса вместо N+1.
+     *
+     * @param  iterable<object{id:int|string, course_id:int|string}>  $rows
+     */
+    public static function preloadPairCaches(iterable $rows): void
+    {
+        $userIds = [];
+        $courseIds = [];
+        $pairs = [];
+        foreach ($rows as $r) {
+            $uid = (int) $r->id;
+            $cid = (int) $r->course_id;
+            $userIds[$uid] = true;
+            $courseIds[$cid] = true;
+            $pairs[$uid.':'.$cid] = true;
+        }
+        if (empty($pairs)) {
+            return;
+        }
+
+        $userIds = array_keys($userIds);
+        $courseIds = array_keys($courseIds);
+
+        // Только пары, ещё не лежащие в кэше (debtBlocks мог прогреть часть при
+        // рендере строк таблицы) — иначе бы перетёрли уже посчитанное.
+        $missing = array_filter(
+            array_keys($pairs),
+            fn (string $k) => ! array_key_exists($k, self::$userCoursePaymentsCache),
+        );
+        if (empty($missing)) {
+            return;
+        }
+
+        // 1) Платежи всех нужных пар одним запросом.
+        $payments = Payment::query()
+            ->whereIn('user_id', $userIds)
+            ->whereIn('course_id', $courseIds)
+            ->whereIn('status', ['paid', 'success'])
+            ->where('is_conditional', false)
+            ->get(['user_id', 'course_id', 'start_block', 'end_block'])
+            ->groupBy(fn (Payment $p) => ((int) $p->user_id).':'.((int) $p->course_id));
+
+        // 2) joined_at_block всех нужных пар одним запросом.
+        $joined = DB::table('course_user')
+            ->whereIn('user_id', $userIds)
+            ->whereIn('course_id', $courseIds)
+            ->whereNotNull('joined_at_block')
+            ->get(['user_id', 'course_id', 'joined_at_block'])
+            ->keyBy(fn ($r) => ((int) $r->user_id).':'.((int) $r->course_id));
+
+        // Заполняем кэш для каждой запрошенной пары, включая пары без платежей /
+        // без joined_at_block (пустая коллекция / null), чтобы debtBlocks по
+        // ним не сходил повторно в БД через `??=`.
+        foreach ($missing as $key) {
+            self::$userCoursePaymentsCache[$key] = $payments->get($key, new Collection);
+            self::$joinedAtBlockCache[$key] = isset($joined[$key])
+                ? (int) $joined[$key]->joined_at_block
+                : null;
+        }
     }
 
     /**
