@@ -69,6 +69,16 @@ class MarketingSettingResource extends Resource
                     ])
                     ->collapsible(),
 
+                Forms\Components\Section::make('🤖 Боты-кураторы в кабинете')
+                    ->description('Показывать ли студентам блоки привязки Telegram- и ВК-ботов на главной кабинета. После привязки бот отвечает на вопросы по обучению (ИИ-куратор).')
+                    ->schema([
+                        Forms\Components\Toggle::make('student_bots_enabled')
+                            ->label('Показывать блоки привязки ботов')
+                            ->helperText('Выключено — блоки скрыты. Включите, когда боты настроены и готовы к работе.')
+                            ->default(false),
+                    ])
+                    ->collapsible(),
+
                 // --- БЛОК 1: Главный рубильник ---
                 Forms\Components\Section::make('Общий статус лояльности')
                     ->schema([
