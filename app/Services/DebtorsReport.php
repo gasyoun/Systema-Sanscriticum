@@ -41,6 +41,9 @@ class DebtorsReport
     /** @var array<int, array<int, Tariff>>  course_id => [block_number => block-Tariff] */
     private array $blockTariffsCache = [];
 
+    /** @var array<int, array{tariff: Tariff, blocks: int}|null>  course_id => fallback-база (full-тариф + число блоков) */
+    private array $fallbackBaseCache = [];
+
     /** @var array<string, PaymentPromise|null>  "user_id:course_id" => активный/просроченный promise */
     private array $promiseCache = [];
 
@@ -470,21 +473,31 @@ class DebtorsReport
             return array_sum($prices) / count($prices);
         }
 
-        $fullTariff = Tariff::query()
-            ->where('course_id', $courseId)
-            ->where('type', 'full')
-            ->where('is_active', true)
-            ->first();
-        if (! $fullTariff) {
+        // full-тариф и число блоков зависят только от курса — кэшируем по
+        // courseId. Иначе на сводке должников курсы без block-тарифов давали
+        // по 2 запроса (тариф + count) на КАЖДУЮ пару (user, course).
+        if (! array_key_exists($courseId, $this->fallbackBaseCache)) {
+            $fullTariff = Tariff::query()
+                ->where('course_id', $courseId)
+                ->where('type', 'full')
+                ->where('is_active', true)
+                ->first();
+
+            $totalBlocks = $fullTariff
+                ? CourseBlock::query()->where('course_id', $courseId)->count()
+                : 0;
+
+            $this->fallbackBaseCache[$courseId] = ($fullTariff && $totalBlocks > 0)
+                ? ['tariff' => $fullTariff, 'blocks' => $totalBlocks]
+                : null;
+        }
+
+        $base = $this->fallbackBaseCache[$courseId];
+        if ($base === null) {
             return null;
         }
 
-        $totalBlocks = CourseBlock::query()->where('course_id', $courseId)->count();
-        if ($totalBlocks <= 0) {
-            return null;
-        }
-
-        return $this->priceWithLoyaltyForUser($fullTariff, $user) / $totalBlocks;
+        return $this->priceWithLoyaltyForUser($base['tariff'], $user) / $base['blocks'];
     }
 
     /**
@@ -729,6 +742,10 @@ class DebtorsReport
 
         // Шаг 3. Предсосчитать сумму депозитов одним запросом на все пары.
         $this->preloadDepositCredits($rows);
+
+        // Шаг 4. Прогреть кэши платежей и joined_at_block для debtBlocks() —
+        // двумя whereIn-запросами вместо 2×N+1 (по 2 запроса на каждую пару).
+        \App\Filament\Pages\Debtors::preloadPairCaches($rows);
 
         $totalAmount = 0.0;
         $totalMissing = 0;
