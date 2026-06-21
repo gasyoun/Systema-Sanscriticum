@@ -146,12 +146,18 @@
     
     {{-- ========================================== --}}
     {{-- БЛОКИ БОТОВ (В ОДИН РЯД)                   --}}
-    {{-- Видимость управляется тумблером в админке   --}}
-    {{-- (MarketingSetting → «Боты-кураторы»).       --}}
+    {{-- Видимость каждого блока — отдельный тумблер  --}}
+    {{-- в админке (MarketingSetting → «Боты-кураторы»)--}}
     {{-- ========================================== --}}
-    @if(\App\Models\MarketingSetting::cached()?->student_bots_enabled)
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        
+    @php
+        $marketingSettings = \App\Models\MarketingSetting::cached();
+        $showTelegramBot = (bool) $marketingSettings?->student_telegram_bot_enabled;
+        $showVkBot = (bool) $marketingSettings?->student_vk_bot_enabled;
+    @endphp
+    @if($showTelegramBot || $showVkBot)
+    <div class="grid grid-cols-1 {{ ($showTelegramBot && $showVkBot) ? 'lg:grid-cols-2' : '' }} gap-6 mb-8">
+
+        @if($showTelegramBot)
         {{-- УМНЫЙ БЛОК TELEGRAM --}}
         <div class="h-full bg-white rounded-2xl p-5 md:p-6 border border-blue-50 shadow-[0_4px_20px_rgba(2,132,199,0.06)] flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 relative overflow-hidden">
             {{-- Декоративный фон --}}
@@ -181,7 +187,9 @@
                 </a>
             @endif
         </div>
+        @endif
 
+        @if($showVkBot)
         {{-- УМНЫЙ БЛОК ВК --}}
         <div class="h-full bg-white rounded-2xl p-5 md:p-6 border border-blue-50 shadow-[0_4px_20px_rgba(0,119,255,0.06)] flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 relative overflow-hidden">
             {{-- Декоративный фон (VK Blue) --}}
@@ -211,7 +219,8 @@
                 </a>
             @endif
         </div>
-        
+        @endif
+
     </div>
     @endif
 

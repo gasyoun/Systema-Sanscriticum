@@ -54,7 +54,8 @@ class MarketingSetting extends Model
         'student_maintenance_secret',
 
         // --- БОТЫ-КУРАТОРЫ В КАБИНЕТЕ ---
-        'student_bots_enabled',
+        'student_telegram_bot_enabled',
+        'student_vk_bot_enabled',
 
         // --- ДОЛЖНИКИ ---
         'debtors_notify_years',
@@ -71,7 +72,8 @@ class MarketingSetting extends Model
         'wholesale_large_discount' => 'integer',
         'is_prana_active' => 'boolean',
         'student_maintenance_enabled' => 'boolean',
-        'student_bots_enabled' => 'boolean',
+        'student_telegram_bot_enabled' => 'boolean',
+        'student_vk_bot_enabled' => 'boolean',
         'debtors_notify_years' => 'array',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',

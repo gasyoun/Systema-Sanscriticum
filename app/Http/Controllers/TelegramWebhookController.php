@@ -153,6 +153,17 @@ class TelegramWebhookController extends Controller
 
         if (! $response->successful()) {
             Log::error('Telegram API error', ['status' => $response->status(), 'body' => $response->body()]);
+
+            // Чаще всего это ошибка парсинга HTML (модель прислала кривой тег или
+            // одиночный «<»). Не теряем сообщение — досылаем как обычный текст.
+            $fallback = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            ]);
+
+            if (! $fallback->successful()) {
+                Log::error('Telegram API error (plain fallback)', ['status' => $fallback->status(), 'body' => $fallback->body()]);
+            }
         }
     }
 
