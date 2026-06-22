@@ -34,11 +34,13 @@ class TeacherSalariesTotalWidget extends BaseWidget
         $returnsPeriod = 0.0;
         $paidPeriod = 0.0;
         $balance = 0.0;
+        $advances = 0.0;
         foreach ($summary as $row) {
             $earnedGross += $row['earned_period_gross'];
             $returnsPeriod += $row['returns_period'];
             $paidPeriod += $row['paid_period'];
             $balance += max(0.0, $row['balance']);
+            $advances += $row['advances_outstanding'] ?? 0.0;
         }
 
         $month = Carbon::parse($periodMonth.'-01')->translatedFormat('F Y');
@@ -61,6 +63,11 @@ class TeacherSalariesTotalWidget extends BaseWidget
                 ->description('Начислено всего − выплачено всего, по всем преподам')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color($balance > 0 ? 'warning' : 'success'),
+
+            Stat::make('Авансы (не зачтены)', number_format($advances, 0, '.', ' ').' ₽')
+                ->description('Выданы деньгами, но ещё не зачтены в счёт ЗП')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color($advances > 0 ? 'warning' : 'gray'),
         ];
     }
 }
