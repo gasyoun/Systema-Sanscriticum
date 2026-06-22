@@ -21,7 +21,7 @@ class HelpdeskStudentInfoTest extends TestCase
     public function test_student_info_modal_opens_with_payments_promises_and_discounts(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
-        $student = User::factory()->create(['name' => 'Студент Тест']);
+        $student = User::factory()->create(['name' => 'Студент Тест', 'last_activity_at' => now()->subMinutes(2)]);
         $course = Course::factory()->create(['title' => 'Курс Альфа']);
 
         Payment::withoutEvents(fn () => Payment::create([

@@ -461,7 +461,12 @@ class User extends Authenticatable implements FilamentUser
      */
     public function isOnline(): bool
     {
-        return $this->last_activity_at !== null
-            && $this->last_activity_at->gt(now()->subMinutes(5));
+        if (! $this->last_activity_at) {
+            return false;
+        }
+
+        // Carbon::parse устойчив к строке: на проде метод casts() не применяется
+        // (Laravel 10.50), поэтому last_activity_at может прийти строкой, а не Carbon.
+        return \Illuminate\Support\Carbon::parse($this->last_activity_at)->gt(now()->subMinutes(5));
     }
 }
