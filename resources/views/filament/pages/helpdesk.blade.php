@@ -217,7 +217,14 @@
                 {{-- Шапка открытого чата --}}
                 <div class="chat-header">
                     <div>
-                        <div style="font-weight: bold; font-size: 16px; color: #111827;">{{ $activeUser->name ?? 'Студент' }}</div>
+                        {{-- Имя кликабельно: открывает модалку с инфо о студенте --}}
+                        <button type="button" wire:click="openStudentInfo"
+                                title="Открыть карточку студента"
+                                style="background: none; border: none; padding: 0; cursor: pointer; font-weight: bold; font-size: 16px; color: #111827; display: inline-flex; align-items: center; gap: 6px;"
+                                onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                            {{ $activeUser->name ?? 'Студент' }}
+                            <svg style="width: 15px; height: 15px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
                         <div style="font-size: 12px; color: #16a34a; font-weight: 500;">● Telegram подключен</div>
                     </div>
                     
@@ -286,6 +293,11 @@
             @endif
         </div>
     </div>
+
+    {{-- Модалка с инфо о студенте (оплаты, обещания, рассрочки, скидки) --}}
+    @if($infoUserId && $this->studentInfo)
+        @include('filament.pages.partials.student-info-modal', ['info' => $this->studentInfo])
+    @endif
 
     <script>
         function scrollToBottom() {
