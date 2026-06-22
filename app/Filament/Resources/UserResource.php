@@ -101,6 +101,12 @@ class UserResource extends Resource
                             ->required()
                             ->maxLength(255),
 
+                        Forms\Components\TextInput::make('curator_display_name')
+                            ->label('Псевдоним куратора (виден студентам)')
+                            ->maxLength(255)
+                            ->placeholder('Напр.: куратор Маша')
+                            ->helperText('Подставляется перед ответами студенту в чате. Пусто = настоящее имя.'),
+
                         Forms\Components\TextInput::make('email')
                             ->label('Email')
                             ->email()
