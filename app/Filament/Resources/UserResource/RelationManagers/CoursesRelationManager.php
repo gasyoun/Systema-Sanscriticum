@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
+use App\Support\CourseNoteBlockParser;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -144,6 +146,75 @@ class CoursesRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
+                // Распознать блоки входа/выхода из текста примечания и проставить
+                // их в пустые колонки. Парсер лишь предлагает — админ сверяет с
+                // исходным текстом и подтверждает (формат примечаний произвольный).
+                Tables\Actions\Action::make('blocksFromNote')
+                    ->label('Блоки из примечания')
+                    ->icon('heroicon-m-sparkles')
+                    ->iconButton()
+                    ->tooltip('Распознать блоки входа/выхода из примечания')
+                    ->visible(fn ($record): bool => filled($record->pivot?->note)
+                        && (blank($record->pivot?->joined_at_block) || blank($record->pivot?->left_after_block)))
+                    ->fillForm(function ($record): array {
+                        $parsed = CourseNoteBlockParser::parse($record->pivot?->note);
+
+                        return [
+                            // Подставляем распознанное только в пустые колонки.
+                            'joined_at_block' => $record->pivot?->joined_at_block ?? $parsed['entry'],
+                            'left_after_block' => $record->pivot?->left_after_block ?? $parsed['exit'],
+                        ];
+                    })
+                    ->form(fn ($record): array => [
+                        Forms\Components\Placeholder::make('note_preview')
+                            ->label('Текст примечания')
+                            ->content($record->pivot?->note),
+                        Forms\Components\TextInput::make('joined_at_block')
+                            ->label('Блок входа')
+                            ->numeric()
+                            ->minValue(1)
+                            ->disabled(filled($record->pivot?->joined_at_block))
+                            ->helperText(filled($record->pivot?->joined_at_block) ? 'Уже заполнено — не меняем.' : 'Распознано из примечания, можно поправить.'),
+                        Forms\Components\TextInput::make('left_after_block')
+                            ->label('Блок выхода')
+                            ->numeric()
+                            ->minValue(1)
+                            ->disabled(filled($record->pivot?->left_after_block))
+                            ->helperText(filled($record->pivot?->left_after_block) ? 'Уже заполнено — не меняем.' : 'Распознано из примечания, можно поправить.'),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $payload = [];
+
+                        // Пишем только в реально пустые колонки (политика «только пустые»).
+                        if (blank($record->pivot?->joined_at_block) && filled($data['joined_at_block'] ?? null)) {
+                            $payload['joined_at_block'] = (int) $data['joined_at_block'];
+                        }
+                        if (blank($record->pivot?->left_after_block) && filled($data['left_after_block'] ?? null)) {
+                            $payload['left_after_block'] = (int) $data['left_after_block'];
+                        }
+
+                        if (empty($payload)) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Нечего проставлять')
+                                ->body('Блоки не распознаны или уже заполнены.')
+                                ->send();
+
+                            return;
+                        }
+
+                        $this->getOwnerRecord()->courses()->updateExistingPivot($record->id, $payload);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Блоки проставлены')
+                            ->body(collect([
+                                isset($payload['joined_at_block']) ? 'вход № '.$payload['joined_at_block'] : null,
+                                isset($payload['left_after_block']) ? 'выход № '.$payload['left_after_block'] : null,
+                            ])->filter()->implode(', '))
+                            ->send();
+                    }),
+
                 Tables\Actions\EditAction::make()
                     ->label('Изменить статус')
                     ->iconButton()
@@ -154,9 +225,98 @@ class CoursesRelationManager extends RelationManager
                     ->tooltip('Удалить с курса'),
             ])
             ->bulkActions([
+                // Массовая простановка блоков из примечаний по выделенным строкам:
+                // модалка со сравнительной таблицей (было → распознано → станет),
+                // запись только в пустые колонки. Прощёлкивать каждую строку по
+                // отдельности не нужно.
+                Tables\Actions\BulkAction::make('blocksFromNoteBulk')
+                    ->label('Блоки из примечаний')
+                    ->icon('heroicon-m-sparkles')
+                    ->color('warning')
+                    ->modalHeading('Распознанные блоки из примечаний')
+                    ->modalWidth('5xl')
+                    ->modalSubmitActionLabel('Проставить пустые')
+                    ->deselectRecordsAfterCompletion()
+                    ->modalContent(fn (\Illuminate\Support\Collection $records) => view(
+                        'filament.user-courses.blocks-preview',
+                        ['rows' => $this->buildBlockPreview($records)],
+                    ))
+                    ->action(function (\Illuminate\Support\Collection $records): void {
+                        $setEntry = 0;
+                        $setExit = 0;
+                        $skipped = 0;
+
+                        foreach ($records as $record) {
+                            // Парсим заново — состоянию модалки не доверяем.
+                            $parsed = CourseNoteBlockParser::parse($record->pivot?->note);
+                            $payload = [];
+
+                            if (blank($record->pivot?->joined_at_block) && filled($parsed['entry'])) {
+                                $payload['joined_at_block'] = $parsed['entry'];
+                            }
+                            if (blank($record->pivot?->left_after_block) && filled($parsed['exit'])) {
+                                $payload['left_after_block'] = $parsed['exit'];
+                            }
+
+                            if (empty($payload)) {
+                                $skipped++;
+
+                                continue;
+                            }
+
+                            $this->getOwnerRecord()->courses()->updateExistingPivot($record->id, $payload);
+                            $setEntry += isset($payload['joined_at_block']) ? 1 : 0;
+                            $setExit += isset($payload['left_after_block']) ? 1 : 0;
+                        }
+
+                        if ($setEntry === 0 && $setExit === 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Нечего проставлять')
+                                ->body('По выделенным строкам блоки не распознаны или уже заполнены.')
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->success()
+                            ->title('Блоки проставлены')
+                            ->body("Вход: {$setEntry}, выход: {$setExit}. Пропущено строк: {$skipped}.")
+                            ->send();
+                    }),
+
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DetachBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Строки сравнительной таблицы для модалки массовой простановки: текущие
+     * значения блоков vs распознанные из примечания vs что реально проставится
+     * (только в пустые колонки).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Course>  $records
+     * @return list<array<string, mixed>>
+     */
+    private function buildBlockPreview(\Illuminate\Support\Collection $records): array
+    {
+        return $records->map(function ($record): array {
+            $parsed = CourseNoteBlockParser::parse($record->pivot?->note);
+            $currentEntry = $record->pivot?->joined_at_block;
+            $currentExit = $record->pivot?->left_after_block;
+
+            return [
+                'title' => $record->title,
+                'note' => $record->pivot?->note,
+                'current_entry' => $currentEntry,
+                'current_exit' => $currentExit,
+                'parsed_entry' => $parsed['entry'],
+                'parsed_exit' => $parsed['exit'],
+                'will_set_entry' => blank($currentEntry) && filled($parsed['entry']),
+                'will_set_exit' => blank($currentExit) && filled($parsed['exit']),
+            ];
+        })->all();
     }
 }
