@@ -2,16 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TeacherPayout extends Model
 {
+    /** Тип выплаты: обычная выплата. */
+    public const TYPE_REGULAR = 'regular';
+
+    /** Тип выплаты: аванс (висит как «не зачтён», пока не зачтут при полной оплате). */
+    public const TYPE_ADVANCE = 'advance';
+
     protected $fillable = [
         'teacher_id',
         'amount',
+        'type',
         'comment',
         'paid_at',
+        'settled_at',
+        'settled_by',
         'period_month',
         'course_id',
         'salary_type',
@@ -24,8 +34,32 @@ class TeacherPayout extends Model
         'amount' => 'decimal:2',
         'salary_value' => 'decimal:2',
         'paid_at' => 'date',
+        'settled_at' => 'datetime',
         'breakdown' => 'array',
     ];
+
+    /** Это аванс? */
+    public function isAdvance(): bool
+    {
+        return $this->type === self::TYPE_ADVANCE;
+    }
+
+    /** Аванс зачтён? */
+    public function isSettled(): bool
+    {
+        return $this->settled_at !== null;
+    }
+
+    public function scopeAdvances(Builder $query): Builder
+    {
+        return $query->where('type', self::TYPE_ADVANCE);
+    }
+
+    /** Непогашенные авансы — деньги выданы, но к ЗП ещё не зачтены. */
+    public function scopeUnsettledAdvances(Builder $query): Builder
+    {
+        return $query->where('type', self::TYPE_ADVANCE)->whereNull('settled_at');
+    }
 
     protected static function booted(): void
     {

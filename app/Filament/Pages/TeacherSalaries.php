@@ -12,6 +12,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\SalaryClosedPeriod;
 use App\Models\Teacher;
+use App\Models\TeacherPayout;
 use App\Services\TeacherPayoutPoster;
 use App\Services\TeacherSalaryService;
 use App\Support\RoleGate;
@@ -414,6 +415,7 @@ class TeacherSalaries extends Page implements HasTable
             'earned_all_time' => 0.0,
             'paid_all_time' => 0.0,
             'balance' => 0.0,
+            'advances_outstanding' => 0.0,
         ];
     }
 
@@ -528,6 +530,14 @@ class TeacherSalaries extends Page implements HasTable
                     ->getStateUsing(fn (Model $r): string => $this->money($this->salaryFor((int) $r->id)['balance']))
                     ->color(fn (Model $r): string => $this->salaryFor((int) $r->id)['balance'] > 0 ? 'warning' : 'success'),
 
+                Tables\Columns\TextColumn::make('advances_outstanding')
+                    ->label('Авансы (не зачтены)')
+                    ->alignRight()
+                    ->toggleable()
+                    ->getStateUsing(fn (Model $r): string => $this->money($this->salaryFor((int) $r->id)['advances_outstanding']))
+                    ->color(fn (Model $r): string => ($this->salaryFor((int) $r->id)['advances_outstanding'] ?? 0) > 0 ? 'warning' : 'gray')
+                    ->tooltip('Деньги выданы авансом, но ещё не зачтены в счёт ЗП. Зачёт — при записи выплаты.'),
+
                 Tables\Columns\IconColumn::make('period_closed')
                     ->label('Месяц закрыт')
                     ->alignCenter()
@@ -553,6 +563,7 @@ class TeacherSalaries extends Page implements HasTable
                 Tables\Actions\ActionGroup::make([
                     $this->breakdownAction(),
                     $this->recordPayoutAction(),
+                    $this->issueAdvanceAction(),
                     $this->toggleCloseAction(),
                     $this->openCardAction(),
                 ]),
@@ -599,11 +610,20 @@ class TeacherSalaries extends Page implements HasTable
             ->icon('heroicon-o-plus-circle')
             ->color('primary')
             ->modalHeading(fn (Model $r): string => 'Выплата: '.$r->name)
-            ->fillForm(fn (): array => [
-                'paid_at' => now()->toDateString(),
-                'period_month' => $this->resolvePeriod(),
-                'post_to_finance' => true,
-            ])
+            ->fillForm(function (Model $r): array {
+                $s = $this->salaryFor((int) $r->id);
+                $advances = (float) ($s['advances_outstanding'] ?? 0);
+
+                return [
+                    'paid_at' => now()->toDateString(),
+                    'period_month' => $this->resolvePeriod(),
+                    'post_to_finance' => true,
+                    // По умолчанию зачитываем непогашенный аванс и предлагаем доплату
+                    // = остаток − аванс (аванс уже выдан деньгами ранее).
+                    'settle_advances' => $advances > 0,
+                    'amount' => max(0, round((float) ($s['balance'] ?? 0) - $advances, 2)),
+                ];
+            })
             ->form([
                 Forms\Components\TextInput::make('amount')
                     ->label('Сумма выплаты (₽)')
@@ -629,6 +649,10 @@ class TeacherSalaries extends Page implements HasTable
                     ->label('Комментарий')
                     ->rows(2)
                     ->placeholder('Например: ЗП за март'),
+                Forms\Components\Toggle::make('settle_advances')
+                    ->label(fn (Model $r): string => 'Зачесть аванс ('.$this->money($this->salaryFor((int) $r->id)['advances_outstanding'] ?? 0).')')
+                    ->helperText('Пометит ранее выданные авансы зачтёнными. Сумма выше — доплата (остаток за вычетом аванса).')
+                    ->visible(fn (Model $r): bool => ($this->salaryFor((int) $r->id)['advances_outstanding'] ?? 0) > 0),
                 Forms\Components\Toggle::make('post_to_finance')
                     ->label('Провести в Финансах')
                     ->default(true)
@@ -639,6 +663,7 @@ class TeacherSalaries extends Page implements HasTable
 
                 $payout = Teacher::find($r->id)?->payouts()->create([
                     'amount' => $data['amount'],
+                    'type' => TeacherPayout::TYPE_REGULAR,
                     'paid_at' => $data['paid_at'],
                     'period_month' => $data['period_month'] ?? null,
                     'course_id' => $course?->id,
@@ -651,8 +676,70 @@ class TeacherSalaries extends Page implements HasTable
                     app(TeacherPayoutPoster::class)->post($payout);
                 }
 
+                // Зачёт авансов: помечаем непогашенные авансы преподавателя зачтёнными.
+                if (! empty($data['settle_advances'])) {
+                    TeacherPayout::query()
+                        ->where('teacher_id', $r->id)
+                        ->unsettledAdvances()
+                        ->update(['settled_at' => now(), 'settled_by' => auth()->id()]);
+                }
+
                 Notification::make()
                     ->title('Выплата записана')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
+     * Выдать аванс: реальные деньги уходят (проводятся в «Финансы»), но к ЗП
+     * аванс не зачтён — висит как «не зачтён», пока не зачтут при полной выплате.
+     */
+    private function issueAdvanceAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('issue_advance')
+            ->label('Выдать аванс')
+            ->icon('heroicon-o-banknotes')
+            ->color('warning')
+            ->modalHeading(fn (Model $r): string => 'Аванс: '.$r->name)
+            ->fillForm(fn (): array => [
+                'paid_at' => now()->toDateString(),
+                'post_to_finance' => true,
+            ])
+            ->form([
+                Forms\Components\TextInput::make('amount')
+                    ->label('Сумма аванса (₽)')
+                    ->numeric()
+                    ->required()
+                    ->minValue(1),
+                Forms\Components\DatePicker::make('paid_at')
+                    ->label('Дата выдачи')
+                    ->native(false)
+                    ->required(),
+                Forms\Components\Textarea::make('comment')
+                    ->label('Комментарий')
+                    ->rows(2)
+                    ->placeholder('Например: аванс в счёт ЗП за июнь'),
+                Forms\Components\Toggle::make('post_to_finance')
+                    ->label('Провести в Финансах')
+                    ->default(true)
+                    ->helperText('Создаст транзакцию-отток в «Финансах» (реальные деньги выданы).'),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $payout = Teacher::find($r->id)?->payouts()->create([
+                    'amount' => $data['amount'],
+                    'type' => TeacherPayout::TYPE_ADVANCE,
+                    'paid_at' => $data['paid_at'],
+                    'comment' => $data['comment'] ?? null,
+                ]);
+
+                if ($payout && ($data['post_to_finance'] ?? true)) {
+                    app(TeacherPayoutPoster::class)->post($payout);
+                }
+
+                Notification::make()
+                    ->title('Аванс выдан')
+                    ->body('Аванс висит как «не зачтён» — зачтите его при записи полной выплаты.')
                     ->success()
                     ->send();
             });

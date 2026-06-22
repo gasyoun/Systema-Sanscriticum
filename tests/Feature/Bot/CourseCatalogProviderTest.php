@@ -81,6 +81,7 @@ class CourseCatalogProviderTest extends TestCase
     public function test_block_dates_render_when_present(): void
     {
         $course = Course::factory()->create(['title' => 'Курс с датами']);
+        Tariff::factory()->block(1)->create(['course_id' => $course->id, 'price' => 6000]);
         CourseBlock::factory()->withDates(now()->setDate(2026, 2, 1), now()->setDate(2026, 5, 30))
             ->create(['course_id' => $course->id, 'number' => 1]);
 
@@ -88,5 +89,25 @@ class CourseCatalogProviderTest extends TestCase
 
         $this->assertStringContainsString('01.02.2026', $md);
         $this->assertStringContainsString('30.05.2026', $md);
+    }
+
+    public function test_block_count_comes_from_tariffs_not_course_blocks(): void
+    {
+        // Витрина показывает блоки по тарифам (block_number). Бот должен называть
+        // то же число, даже если записей CourseBlock меньше/нет (как у хинди:
+        // 10 тарифов-блоков, но не 10 CourseBlock).
+        $course = Course::factory()->create(['title' => 'Грамматика хинди гр. 1']);
+        for ($i = 1; $i <= 10; $i++) {
+            Tariff::factory()->block($i)->create(['course_id' => $course->id, 'price' => 6000]);
+        }
+        // CourseBlock-ов всего 4 — раньше бот называл бы «Блоков: 4».
+        for ($i = 1; $i <= 4; $i++) {
+            CourseBlock::factory()->create(['course_id' => $course->id, 'number' => $i]);
+        }
+
+        $md = app(CourseCatalogProvider::class)->markdown();
+
+        $this->assertStringContainsString('Блоков: 10', $md);
+        $this->assertStringNotContainsString('Блоков: 4', $md);
     }
 }
