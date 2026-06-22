@@ -43,6 +43,16 @@ class CourseCatalogProviderTest extends TestCase
         $this->assertStringContainsString('4 800 ₽ за блок', $md); // блоки одной цены — сжато
     }
 
+    public function test_catalog_includes_real_course_payment_url(): void
+    {
+        config(['app.url' => 'https://samskrte.ru']);
+        Course::factory()->create(['title' => 'Курс со ссылкой', 'slug' => 'kurs-so-ssylkoj']);
+
+        $md = app(CourseCatalogProvider::class)->markdown();
+
+        $this->assertStringContainsString('Страница курса и оплата: https://samskrte.ru/online/kursy/kurs-so-ssylkoj', $md);
+    }
+
     public function test_hidden_or_inactive_courses_are_excluded(): void
     {
         Course::factory()->create(['title' => 'Видимый курс']);
