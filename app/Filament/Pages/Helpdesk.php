@@ -33,6 +33,9 @@ class Helpdesk extends Page
 
     public $newMessage = '';
 
+    /** Чья карточка открыта в модалке инфо (null = закрыта). */
+    public $infoUserId = null;
+
     public $usersWithChats = []; // Вернули []
 
     public $messages = [];       // Вернули []
@@ -73,6 +76,7 @@ class Helpdesk extends Page
     {
         if ($this->activeUserId) {
             $this->messages = ChatMessage::where('user_id', $this->activeUserId)
+                ->with('answeredBy:id,name')
                 ->orderBy('created_at', 'asc')
                 ->get()
                 ->all(); // <--- И ЗДЕСЬ ТОЖЕ
@@ -91,16 +95,21 @@ class Helpdesk extends Page
 
         $user = \App\Models\User::find($this->activeUserId);
 
-        // Сохраняем ответ куратора в базу данных
+        $curator = auth()->user();
+        $alias = $curator?->curatorDisplayName() ?? 'Куратор';
+
+        // Сохраняем ответ куратора в базу данных (кто ответил — answered_by).
         \App\Models\ChatMessage::create([
             'user_id' => $user->id,
-            'role' => 'admin',
+            'role' => 'curator',
+            'answered_by' => $curator?->id,
             'text' => $this->newMessage,
             'is_read' => true,
         ]);
 
         // ==========================================
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
+        // Студенту подписываем сообщение псевдонимом куратора (бэйдж).
         // ==========================================
         if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
             // Если пауза стоит в Telegram — отвечаем ботом кабинета (фолбэк на основной)
@@ -108,7 +117,7 @@ class Helpdesk extends Page
                 ?: config('services.telegram.bot_token');
             \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $user->telegram_id,
-                'text' => $this->newMessage,
+                'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
                 'parse_mode' => 'HTML',
             ]);
         } elseif ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}")) {
@@ -117,7 +126,7 @@ class Helpdesk extends Page
                 'access_token' => env('VK_BOT_TOKEN'),
                 'v' => '5.131',
                 'user_id' => $user->vk_id,
-                'message' => $this->newMessage,
+                'message' => '👨‍🏫 '.$alias.':'."\n".$this->newMessage,
                 'random_id' => rand(100000, 999999999),
             ]);
         }
@@ -168,5 +177,52 @@ class Helpdesk extends Page
 
             $this->loadMessages();
         }
+    }
+
+    // ==========================================
+    // МОДАЛКА «ИНФО О СТУДЕНТЕ» (по клику на имя в шапке чата)
+    // ==========================================
+    public function openStudentInfo()
+    {
+        $this->infoUserId = $this->activeUserId;
+    }
+
+    public function closeStudentInfo()
+    {
+        $this->infoUserId = null;
+    }
+
+    /**
+     * Данные для модалки: основное, оплаты, обещания/рассрочки, скидки.
+     * Грузится по требованию (только когда модалка открыта).
+     */
+    public function getStudentInfoProperty(): ?array
+    {
+        if (! $this->infoUserId) {
+            return null;
+        }
+
+        $user = User::find($this->infoUserId);
+        if (! $user) {
+            return null;
+        }
+
+        $payments = $user->payments()->real()->with('course')->latest()->limit(8)->get();
+
+        return [
+            'user' => $user,
+            'payments' => $payments,
+            'payments_count' => $user->payments()->real()->count(),
+            'payments_total' => (float) $user->payments()->real()->sum('amount'),
+            'promises' => $user->paymentPromises()
+                ->with('course')
+                ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+                ->orderBy('promised_at')
+                ->get(),
+            'discounts' => $user->individualDiscounts()
+                ->where('is_active', true)
+                ->with('course')
+                ->get(),
+        ];
     }
 }
