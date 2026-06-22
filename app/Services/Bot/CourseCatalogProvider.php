@@ -79,6 +79,10 @@ class CourseCatalogProvider
 
             $lines[] = '- '.$this->priceLine($course->tariffs);
 
+            if ($url = $this->courseUrl($course)) {
+                $lines[] = '- Страница курса и оплата: '.$url;
+            }
+
             $lines[] = '';
         }
 
@@ -185,5 +189,19 @@ class CourseCatalogProvider
     private function rub($price): string
     {
         return number_format((float) $price, 0, '.', ' ').' ₽';
+    }
+
+    /**
+     * Абсолютная ссылка на публичную страницу курса (там же — выбор блока и
+     * оплата). Базу берём из app.url, а не из request: каталог кэшируется, а
+     * строится в контексте входящего webhook'а — host у запроса чужой.
+     */
+    private function courseUrl(Course $course): ?string
+    {
+        if (empty($course->slug)) {
+            return null;
+        }
+
+        return rtrim((string) config('app.url'), '/').route('shop.course.show', $course->slug, false);
     }
 }
