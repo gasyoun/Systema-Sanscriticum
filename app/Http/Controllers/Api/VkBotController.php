@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\TelegramFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -143,10 +144,10 @@ class VkBotController extends Controller
     // Отправка в ВК
     private function sendVkMessage($vkId, $text)
     {
-        // ВК не понимает HTML-разметку: ИИ-куратор форматирует под Telegram
-        // (<b>/<i>), поэтому здесь снимаем теги и раскрываем сущности — эмодзи
-        // и текст остаются, голые <b> у студента не всплывают.
-        $text = html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // ВК не понимает разметку: ИИ-куратор форматирует под Telegram, причём
+        // нередко в Markdown. Приводим к плоскому тексту — уходят и «**»/«###»,
+        // и голые <b>; остаются текст и эмодзи.
+        $text = TelegramFormatter::toPlain((string) $text);
 
         // ДОБАВЛЕНО asForm() - чтобы ВК понял наш токен!
         $response = Http::asForm()->post('https://api.vk.com/method/messages.send', [
