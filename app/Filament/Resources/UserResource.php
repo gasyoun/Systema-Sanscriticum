@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\CourseNoteBlockParser;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -837,6 +838,26 @@ class UserResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
 
+                    // --- ПРОСТАНОВКА БЛОКОВ ВХОДА/ВЫХОДА ИЗ ПРИМЕЧАНИЙ ---
+                    // По выделенным студентам разбираем примечания во всех их курсах
+                    // и проставляем распознанные блоки в пустые колонки. Модалка —
+                    // сравнительная таблица (было → распознано → станет). То же, что
+                    // в карточке студента, но сразу по многим студентам из списка.
+                    Tables\Actions\BulkAction::make('blocksFromNoteBulk')
+                        ->label('Блоки из примечаний')
+                        ->icon('heroicon-m-sparkles')
+                        ->color('warning')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->modalHeading('Распознанные блоки из примечаний')
+                        ->modalWidth('6xl')
+                        ->modalSubmitActionLabel('Проставить пустые')
+                        ->deselectRecordsAfterCompletion()
+                        ->modalContent(fn (\Illuminate\Database\Eloquent\Collection $records) => view(
+                            'filament.user-courses.blocks-preview-students',
+                            ['rows' => self::buildBlocksPreviewForUsers($records)],
+                        ))
+                        ->action(fn (\Illuminate\Database\Eloquent\Collection $records) => self::applyBlocksFromNotesForUsers($records)),
+
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
                     // к целевой. Оплаты не трогаются (дублей Payment не возникает).
@@ -999,6 +1020,100 @@ class UserResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
+    }
+
+    /**
+     * Строки сравнительной таблицы для массовой простановки блоков по студентам:
+     * по каждому выделенному студенту — все его курсы с текущими/распознанными
+     * блоками и тем, что реально проставится (только в пустые колонки).
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $users
+     * @return list<array<string, mixed>>
+     */
+    public static function buildBlocksPreviewForUsers(\Illuminate\Database\Eloquent\Collection $users): array
+    {
+        $users->loadMissing('courses');
+        $rows = [];
+
+        foreach ($users as $user) {
+            foreach ($user->courses as $course) {
+                $parsed = CourseNoteBlockParser::parse($course->pivot?->note);
+                $currentEntry = $course->pivot?->joined_at_block;
+                $currentExit = $course->pivot?->left_after_block;
+
+                // Курсы без примечания и без распознанного — в таблицу не тащим.
+                if (blank($course->pivot?->note)) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'student' => $user->name,
+                    'title' => $course->title,
+                    'note' => $course->pivot?->note,
+                    'current_entry' => $currentEntry,
+                    'current_exit' => $currentExit,
+                    'parsed_entry' => $parsed['entry'],
+                    'parsed_exit' => $parsed['exit'],
+                    'will_set_entry' => blank($currentEntry) && filled($parsed['entry']),
+                    'will_set_exit' => blank($currentExit) && filled($parsed['exit']),
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Применяет распознанные блоки по всем курсам выделенных студентов — только в
+     * пустые колонки. Шлёт сводку-нотификацию.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $users
+     */
+    public static function applyBlocksFromNotesForUsers(\Illuminate\Database\Eloquent\Collection $users): void
+    {
+        $users->loadMissing('courses');
+        $setEntry = 0;
+        $setExit = 0;
+        $touchedStudents = [];
+
+        foreach ($users as $user) {
+            foreach ($user->courses as $course) {
+                $parsed = CourseNoteBlockParser::parse($course->pivot?->note);
+                $payload = [];
+
+                if (blank($course->pivot?->joined_at_block) && filled($parsed['entry'])) {
+                    $payload['joined_at_block'] = $parsed['entry'];
+                }
+                if (blank($course->pivot?->left_after_block) && filled($parsed['exit'])) {
+                    $payload['left_after_block'] = $parsed['exit'];
+                }
+
+                if (empty($payload)) {
+                    continue;
+                }
+
+                $user->courses()->updateExistingPivot($course->id, $payload);
+                $setEntry += isset($payload['joined_at_block']) ? 1 : 0;
+                $setExit += isset($payload['left_after_block']) ? 1 : 0;
+                $touchedStudents[$user->id] = true;
+            }
+        }
+
+        if ($setEntry === 0 && $setExit === 0) {
+            Notification::make()
+                ->warning()
+                ->title('Нечего проставлять')
+                ->body('По выделенным студентам блоки не распознаны или уже заполнены.')
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->success()
+            ->title('Блоки проставлены')
+            ->body('Студентов затронуто: '.count($touchedStudents).". Вход: {$setEntry}, выход: {$setExit}.")
+            ->send();
     }
 
     public static function getRelations(): array
