@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\TelegramFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http; // Добавили для переключения на человека
@@ -144,6 +145,10 @@ class TelegramWebhookController extends Controller
     {
         $token = config('services.telegram.student_bot_token')
             ?: config('services.telegram.bot_token');
+
+        // Нормализуем разметку: модель часто шлёт Markdown (###, **) вместо
+        // Telegram-HTML — конвертер приводит всё к валидным тегам.
+        $text = TelegramFormatter::toHtml((string) $text);
 
         $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
