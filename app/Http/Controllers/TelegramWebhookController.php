@@ -92,7 +92,7 @@ class TelegramWebhookController extends Controller
                 $alertMessage = "🔴 <b>Новое сообщение от {$safeName}:</b>\n\n<i>{$safeQuestion}</i>\n\n";
                 $alertMessage .= "👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
 
-                $this->sendAdminAlert($adminId, $alertMessage);
+                $this->sendAdminAlert($alertMessage);
             }
 
             return;
@@ -109,7 +109,7 @@ class TelegramWebhookController extends Controller
                     $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
                     $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
                     $safeQuestion = htmlspecialchars($question, ENT_QUOTES, 'UTF-8');
-                    $this->sendAdminAlert($adminId, "🔔 <b>СТУДЕНТ ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeQuestion}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
+                    $this->sendAdminAlert("🔔 <b>СТУДЕНТ ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeQuestion}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
                 }
 
                 return;
@@ -175,19 +175,35 @@ class TelegramWebhookController extends Controller
     // ==========================================
     // Алерт куратору-админу — ВСЕГДА основным ботом: админ сидит в служебных
     // чатах основного бота и может не запускать бота кабинета.
+    // ADMIN_TELEGRAM_ID может содержать несколько ID через запятую — шлём всем.
     // ==========================================
-    private function sendAdminAlert($chatId, $text)
+    private function sendAdminAlert($text)
     {
         $token = config('services.telegram.bot_token');
 
-        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => 'HTML',
-        ]);
+        foreach ($this->adminChatIds() as $chatId) {
+            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'parse_mode' => 'HTML',
+            ]);
 
-        if (! $response->successful()) {
-            Log::error('Telegram admin alert error', ['status' => $response->status(), 'body' => $response->body()]);
+            if (! $response->successful()) {
+                Log::error('Telegram admin alert error', ['chat_id' => $chatId, 'status' => $response->status(), 'body' => $response->body()]);
+            }
         }
+    }
+
+    /**
+     * Список ID кураторов-админов из ADMIN_TELEGRAM_ID (несколько — через запятую).
+     *
+     * @return list<string>
+     */
+    private function adminChatIds(): array
+    {
+        return array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) config('services.telegram.admin_id')),
+        )));
     }
 }
