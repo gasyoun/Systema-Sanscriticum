@@ -59,6 +59,7 @@ class CuratorWebhookTest extends TestCase
         $this->assertStringNotContainsString('1234567890', $prompt);   // фейковый ИНН из галлюцинации
         $this->assertStringNotContainsString('40702810', $prompt);     // фейковый счёт
         $this->assertStringNotContainsString('общим реквизитам', $prompt);
+        $this->assertStringNotContainsString('maru_plk', $prompt);     // бывший куратор, убран
     }
 
     public function test_telegram_webhook_answers_via_openrouter_and_saves_reply(): void
