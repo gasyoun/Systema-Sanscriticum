@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Bot;
 
-use App\Models\ChatMessage;
 use App\Models\Course;
-use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Bot\BotKnowledgeBase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,6 +42,23 @@ class CuratorWebhookTest extends TestCase
         $this->assertStringContainsString('База знаний (FAQ', $prompt);              // FAQ
         $this->assertStringContainsString('Каталог курсов', $prompt);               // catalog
         $this->assertStringContainsString('Тестовый Курс Альфа', $prompt);          // live data
+    }
+
+    public function test_system_prompt_hardened_against_hallucinated_payment_details(): void
+    {
+        $prompt = app(BotKnowledgeBase::class)->systemPrompt('как оплатить');
+
+        // Анти-галлюцинационные формулировки в персоне.
+        $this->assertStringContainsString('единственные источники истины', $prompt);
+        $this->assertStringContainsString('НИКОГДА не выдумывай', $prompt);
+        $this->assertStringContainsString('ИНН', $prompt);
+        $this->assertStringContainsString('PayPal gasyoun@gmail.com', $prompt);
+
+        // FAQ описывает реальные способы оплаты и НЕ содержит выдуманных реквизитов.
+        $this->assertStringContainsString('gasyoun@gmail.com', $prompt);
+        $this->assertStringNotContainsString('1234567890', $prompt);   // фейковый ИНН из галлюцинации
+        $this->assertStringNotContainsString('40702810', $prompt);     // фейковый счёт
+        $this->assertStringNotContainsString('общим реквизитам', $prompt);
     }
 
     public function test_telegram_webhook_answers_via_openrouter_and_saves_reply(): void
