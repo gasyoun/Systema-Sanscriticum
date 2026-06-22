@@ -69,6 +69,7 @@ class Dialogs extends Page
     {
         if ($this->activeUserId) {
             $this->messages = ChatMessage::where('user_id', $this->activeUserId)
+                ->with('answeredBy:id,name')
                 ->orderBy('created_at', 'asc') // Старые сверху, новые снизу
                 ->get();
         }
@@ -83,10 +84,14 @@ class Dialogs extends Page
 
         $user = User::find($this->activeUserId);
 
-        // 1. Сохраняем твой ответ в базу
+        $curator = auth()->user();
+        $alias = $curator?->curatorDisplayName() ?? 'Куратор';
+
+        // 1. Сохраняем твой ответ в базу (кто ответил — answered_by).
         ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'curator',
+            'answered_by' => $curator?->id,
             'text' => $this->newMessage,
             'is_read' => true,
         ]);
@@ -94,13 +99,14 @@ class Dialogs extends Page
         // 2. Отправляем в Telegram студенту через API.
         // Тем же ботом, в котором студент звал куратора (бот кабинета),
         // с фолбэком на основной, если отдельный студбот не задан.
+        // Подписываем сообщение псевдонимом куратора (бэйдж).
         $token = config('services.telegram.student_bot_token')
             ?: config('services.telegram.bot_token');
         $chatId = $user->telegram_id;
 
         Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
-            'text' => "👨‍🏫 <b>Куратор:</b>\n".$this->newMessage,
+            'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
             'parse_mode' => 'HTML',
         ]);
 

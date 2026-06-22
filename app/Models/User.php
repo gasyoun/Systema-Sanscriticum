@@ -20,6 +20,7 @@ class User extends Authenticatable implements FilamentUser
 
     protected $fillable = [
         'name',
+        'curator_display_name',
         'email',
         'password',
         'wants_email_announcements',
@@ -82,6 +83,17 @@ class User extends Authenticatable implements FilamentUser
     public function isUnreliable(): bool
     {
         return (bool) $this->is_unreliable;
+    }
+
+    /**
+     * Имя куратора, которое видит студент при ответе в чате: псевдоним, если задан,
+     * иначе ФИО.
+     */
+    public function curatorDisplayName(): string
+    {
+        $alias = trim((string) $this->curator_display_name);
+
+        return $alias !== '' ? $alias : (string) $this->name;
     }
 
     public function scopeUnreliable($query)

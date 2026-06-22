@@ -55,9 +55,9 @@
                         }}">
                             <div class="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70 flex justify-between gap-4">
                                 <span>
-                                    {{ $message->role === 'user' ? 'Студент' : ($message->role === 'bot' ? '🤖 ИИ-Куратор' : '👨‍🏫 Вы (Куратор)') }}
+                                    {{ $message->role === 'user' ? 'Студент' : ($message->role === 'bot' ? '🤖 ИИ-Куратор' : '👨‍🏫 '.($message->answeredBy?->name ?? 'Куратор')) }}
                                 </span>
-                                <span>{{ $message->created_at->format('H:i') }}</span>
+                                <span title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</span>
                             </div>
                             <div class="text-sm leading-relaxed whitespace-pre-wrap">{!! nl2br(e($message->text)) !!}</div>
                         </div>

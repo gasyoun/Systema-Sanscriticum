@@ -73,6 +73,7 @@ class Helpdesk extends Page
     {
         if ($this->activeUserId) {
             $this->messages = ChatMessage::where('user_id', $this->activeUserId)
+                ->with('answeredBy:id,name')
                 ->orderBy('created_at', 'asc')
                 ->get()
                 ->all(); // <--- И ЗДЕСЬ ТОЖЕ
@@ -91,16 +92,21 @@ class Helpdesk extends Page
 
         $user = \App\Models\User::find($this->activeUserId);
 
-        // Сохраняем ответ куратора в базу данных
+        $curator = auth()->user();
+        $alias = $curator?->curatorDisplayName() ?? 'Куратор';
+
+        // Сохраняем ответ куратора в базу данных (кто ответил — answered_by).
         \App\Models\ChatMessage::create([
             'user_id' => $user->id,
-            'role' => 'admin',
+            'role' => 'curator',
+            'answered_by' => $curator?->id,
             'text' => $this->newMessage,
             'is_read' => true,
         ]);
 
         // ==========================================
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
+        // Студенту подписываем сообщение псевдонимом куратора (бэйдж).
         // ==========================================
         if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
             // Если пауза стоит в Telegram — отвечаем ботом кабинета (фолбэк на основной)
@@ -108,7 +114,7 @@ class Helpdesk extends Page
                 ?: config('services.telegram.bot_token');
             \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $user->telegram_id,
-                'text' => $this->newMessage,
+                'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
                 'parse_mode' => 'HTML',
             ]);
         } elseif ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}")) {
@@ -117,7 +123,7 @@ class Helpdesk extends Page
                 'access_token' => env('VK_BOT_TOKEN'),
                 'v' => '5.131',
                 'user_id' => $user->vk_id,
-                'message' => $this->newMessage,
+                'message' => '👨‍🏫 '.$alias.':'."\n".$this->newMessage,
                 'random_id' => rand(100000, 999999999),
             ]);
         }

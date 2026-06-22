@@ -236,20 +236,26 @@
                         @php
                             $isUser = $message->role === 'user';
                             $isBot = $message->role === 'bot';
-                            $isCurator = $message->role === 'curator';
-                            
-                            $wrapperClass = $isCurator ? 'curator' : 'user';
+                            // Человеческий ответ — всё, что не студент и не ИИ
+                            // (curator и легаси-admin).
+                            $isHuman = ! $isUser && ! $isBot;
+
+                            $wrapperClass = $isHuman ? 'curator' : 'user';
                             $bubbleClass = $isUser ? 'user-bubble' : ($isBot ? 'bot-bubble' : 'curator-bubble');
-                            $senderName = $isUser ? 'Студент' : ($isBot ? 'ИИ-Куратор' : 'Вы (Куратор)');
+                            // Для человеческого ответа — настоящее имя ответившего
+                            // (кто отвечал), фолбэк «Куратор» для легаси без answered_by.
+                            $senderName = $isUser
+                                ? 'Студент'
+                                : ($isBot ? 'ИИ-Куратор' : ($message->answeredBy?->name ?? 'Куратор'));
                         @endphp
-                        
+
                         <div class="msg-wrapper {{ $wrapperClass }}">
                             <div class="msg-content">
                                 <div class="msg-sender">{{ $senderName }}</div>
                                 <div class="msg-bubble {{ $bubbleClass }}">
                                     {!! nl2br(e($message->text)) !!}
                                 </div>
-                                <div class="msg-time">{{ $message->created_at->format('H:i') }}</div>
+                                <div class="msg-time" title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</div>
                             </div>
                         </div>
                     @empty
