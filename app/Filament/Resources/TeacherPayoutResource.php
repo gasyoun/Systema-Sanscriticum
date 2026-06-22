@@ -163,6 +163,14 @@ class TeacherPayoutResource extends Resource
                     ->money('RUB')
                     ->sortable()
                     ->weight('bold'),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Тип')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state === TeacherPayout::TYPE_ADVANCE ? 'Аванс' : 'Выплата')
+                    ->color(fn (?string $state): string => $state === TeacherPayout::TYPE_ADVANCE ? 'warning' : 'gray')
+                    ->description(fn (TeacherPayout $r): ?string => $r->isAdvance()
+                        ? ($r->isSettled() ? 'зачтён '.$r->settled_at->format('d.m.Y') : 'не зачтён')
+                        : null),
                 Tables\Columns\TextColumn::make('paid_at')
                     ->label('Дата выплаты')
                     ->date('d.m.Y')

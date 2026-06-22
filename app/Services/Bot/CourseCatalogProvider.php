@@ -73,7 +73,7 @@ class CourseCatalogProvider
 
             $lines[] = '- Формат: '.($course->isLive() ? 'живые занятия (онлайн)' : 'видеозаписи');
 
-            if ($blocksLine = $this->blocksLine($course->blocks)) {
+            if ($blocksLine = $this->blocksLine($course)) {
                 $lines[] = '- '.$blocksLine;
             }
 
@@ -113,16 +113,27 @@ class CourseCatalogProvider
     }
 
     /**
-     * @param  iterable<CourseBlock>  $blocks
+     * Строка «Блоков: N (даты …)».
+     *
+     * Количество блоков считаем по блочным ТАРИФАМ (distinct block_number) — это
+     * ровно то, что студент видит и покупает на витрине («Выберите вариант
+     * участия»). Раньше считали записи CourseBlock (временны́е секции) — другая
+     * таблица, которая для некоторых курсов расходится с числом тарифов, и бот
+     * называл неверное число блоков. Даты по-прежнему берём из CourseBlock.
      */
-    private function blocksLine(iterable $blocks): ?string
+    private function blocksLine(Course $course): ?string
     {
-        $blocks = collect($blocks);
-        $count = $blocks->count();
+        $count = collect($course->tariffs)
+            ->filter(fn (Tariff $t) => $t->type === 'block' && $t->block_number !== null)
+            ->pluck('block_number')
+            ->unique()
+            ->count();
+
         if ($count === 0) {
             return null;
         }
 
+        $blocks = collect($course->blocks);
         $starts = $blocks->pluck('starts_at')->filter();
         $ends = $blocks->pluck('ends_at')->filter();
 

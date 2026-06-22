@@ -253,13 +253,23 @@ class TeacherSalaryService
 
         $teachers = Teacher::query()->with('courses')->get();
 
+        // «Выплачено» = обычные выплаты + уже зачтённые авансы. Непогашенный аванс
+        // (type=advance, settled_at IS NULL) деньги выданы, но к ЗП ещё не зачтён —
+        // в «выплачено»/balance НЕ идёт, считается отдельно (advancesOutstanding).
+        $excludeUnsettledAdvances = function ($q) {
+            $q->where('type', '!=', TeacherPayout::TYPE_ADVANCE)
+                ->orWhereNotNull('settled_at');
+        };
+
         // Сумма всех выплат и выплат за период — батчем по всем преподам.
         $paidAllTime = TeacherPayout::query()
+            ->where($excludeUnsettledAdvances)
             ->selectRaw('teacher_id, SUM(amount) AS total')
             ->groupBy('teacher_id')
             ->pluck('total', 'teacher_id');
 
         $paidPeriod = TeacherPayout::query()
+            ->where($excludeUnsettledAdvances)
             ->selectRaw('teacher_id, SUM(amount) AS total')
             ->where(function ($q) use ($periodMonth, $start, $end) {
                 $q->where('period_month', $periodMonth)
@@ -268,6 +278,13 @@ class TeacherSalaryService
                             ->whereBetween('paid_at', [$start->toDateString(), $end->toDateString()]);
                     });
             })
+            ->groupBy('teacher_id')
+            ->pluck('total', 'teacher_id');
+
+        // Непогашенные авансы — отдельной величиной (деньги выданы, к ЗП не зачтены).
+        $advancesOutstanding = TeacherPayout::query()
+            ->unsettledAdvances()
+            ->selectRaw('teacher_id, SUM(amount) AS total')
             ->groupBy('teacher_id')
             ->pluck('total', 'teacher_id');
 
@@ -288,6 +305,7 @@ class TeacherSalaryService
                 'paid_period' => round((float) ($paidPeriod[$teacher->id] ?? 0), 2),
                 'paid_all_time' => round($paidAll, 2),
                 'balance' => round($earnedAll - $paidAll, 2),
+                'advances_outstanding' => round((float) ($advancesOutstanding[$teacher->id] ?? 0), 2),
             ];
         }
 
