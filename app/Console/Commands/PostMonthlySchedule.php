@@ -116,7 +116,11 @@ class PostMonthlySchedule extends Command
             $path = 'monthly/schedule-'.now()->format('Y-m').'.jpg';
             Storage::disk('public')->put($path, $jpeg);
 
-            return Storage::disk('public')->url($path);
+            // Cache-busting: Telegram кэширует sendPhoto по URL и при повторной
+            // отправке того же URL отдаёт старую копию (имя файла фиксированное
+            // на месяц). Хэш содержимого меняет URL при смене картинки → TG
+            // перекачивает свежую. VK байты и так качает заново.
+            return Storage::disk('public')->url($path).'?v='.substr(md5($jpeg), 0, 10);
         } catch (\Throwable $e) {
             Log::error('PostMonthlySchedule: не удалось сгенерировать JPG: '.$e->getMessage());
 
