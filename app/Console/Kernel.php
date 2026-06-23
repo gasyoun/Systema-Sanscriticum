@@ -28,6 +28,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('promises:remind-tomorrow')
             ->dailyAt('09:00');
 
+        // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
+        // Окно и дедуп — внутри команды (reminded_at).
+        $schedule->command('classes:remind-upcoming')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('remind-upcoming-classes');
+
         // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК

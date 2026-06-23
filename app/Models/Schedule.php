@@ -28,12 +28,25 @@ class Schedule extends Model
         'color',
         'group_id',
         'course_id',
+        'reminded_at',
     ];
 
     protected $casts = [
         'start' => 'datetime',
         'end' => 'datetime',
+        'reminded_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        // Перенос занятия (смена start) — снимаем отметку о напоминании,
+        // чтобы classes:remind-upcoming напомнил студентам заново к новому времени.
+        static::updating(function (self $schedule): void {
+            if ($schedule->isDirty('start')) {
+                $schedule->reminded_at = null;
+            }
+        });
+    }
 
     public function group(): BelongsTo
     {
