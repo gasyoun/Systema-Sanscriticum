@@ -101,18 +101,11 @@ class PostMonthlySchedule extends Command
         }
 
         try {
-            // Высота холста — под фактический контент, чтобы постер был ОДНОЙ
-            // страницей (иначе DomPDF пагинирует, а JPG берёт только стр. 0) и
-            // снизу не зиял пустой провал. Строка с расписанием выше, без — ниже.
-            $rowsHeight = 0;
-            foreach ($courses as $c) {
-                $rowsHeight += empty($c['schedule']) ? 60 : 86;
-            }
-            $canvasHeight = 300 + $rowsHeight; // шапка + разделитель + футер
+            $canvasHeight = $this->estimateCanvasHeight($courses);
 
             $pdf = Pdf::loadView('promo.monthly-schedule-card', [
                 'courses' => $courses,
-                'month' => mb_convert_case(now()->translatedFormat('F Y'), MB_CASE_TITLE, 'UTF-8'),
+                'month' => mb_convert_case(now()->locale('ru')->translatedFormat('F Y'), MB_CASE_TITLE, 'UTF-8'),
                 'site' => preg_replace('~^https?://~', '', rtrim((string) config('app.url'), '/')),
                 'canvasHeight' => $canvasHeight,
                 'logoBase64' => $this->logoBase64(),
@@ -129,6 +122,39 @@ class PostMonthlySchedule extends Command
 
             return null;
         }
+    }
+
+    /**
+     * Высота холста под фактический контент, чтобы постер был ОДНОЙ страницей
+     * (иначе DomPDF пагинирует, а JPG берёт только стр. 0) и снизу не зиял
+     * провал. Учитываем перенос длинных названий: DejaVu в DomPDF шире
+     * экранного шрифта, поэтому считаем строки по длине «название — препод».
+     *
+     * @param  list<array{title:string, teacher:?string, schedule:?string, url:?string}>  $courses
+     */
+    private function estimateCanvasHeight(array $courses): int
+    {
+        $height = 250; // шапка (лого + заголовок) + разделитель + футер + поля
+
+        // Ширина текстовой колонки в px (1100 − поля − маркер).
+        $textWidth = 1100 - 2 * 56 - 26;
+
+        foreach ($courses as $c) {
+            // Оценка ширины строки: название кеглем 20 (bold), препод — 16.
+            // Коэффициент 0.58/0.55 — средняя ширина глифа DejaVu (em).
+            $px = mb_strlen($c['title']) * 20 * 0.58;
+            if (! empty($c['teacher'])) {
+                $px += mb_strlen(' — '.$c['teacher']) * 16 * 0.55;
+            }
+            $lines = max(1, (int) ceil($px / $textWidth));
+
+            $height += 24 + $lines * 28;          // отступы строки + строки названия
+            if (! empty($c['schedule'])) {
+                $height += 22;                    // строка расписания
+            }
+        }
+
+        return $height;
     }
 
     /**

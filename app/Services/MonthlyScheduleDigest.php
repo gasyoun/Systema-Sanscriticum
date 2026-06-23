@@ -138,7 +138,7 @@ class MonthlyScheduleDigest
             ->groupBy('course_id')
             ->map(function (Collection $rows): string {
                 return $rows
-                    ->map(fn (Schedule $s) => ucfirst($s->start->translatedFormat('l')).' '.$s->start->format('H:i'))
+                    ->map(fn (Schedule $s) => ucfirst($s->start->locale('ru')->translatedFormat('l')).' '.$s->start->format('H:i'))
                     ->unique()
                     ->implode(', ');
             })
