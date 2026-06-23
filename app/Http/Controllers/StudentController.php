@@ -81,6 +81,26 @@ class StudentController extends Controller
     }
 
     /**
+     * Отвязка мессенджера от аккаунта (кнопка «Отвязать» в кабинете).
+     *
+     * Обнуляем id — кабинет снова покажет «Подключить», а исходящие уведомления
+     * (User::sendTelegramMessage / sendVkMessage) перестанут уходить (некуда).
+     * Сам чат с ботом в мессенджере при этом не закрывается — это нативный Stop.
+     */
+    public function disconnectMessenger(Request $request, string $channel)
+    {
+        $user = $request->user();
+
+        if ($channel === 'telegram') {
+            $user->update(['telegram_id' => null, 'telegram_auth_token' => null]);
+        } else { // 'vk' — единственный другой вариант (ограничено в роуте whereIn)
+            $user->update(['vk_id' => null]);
+        }
+
+        return back()->with('bot_status', 'Бот отвязан — уведомления по учёбе больше не приходят. Подключить заново можно в любой момент.');
+    }
+
+    /**
      * Главная панель (Мои курсы)
      */
     public function dashboard()
