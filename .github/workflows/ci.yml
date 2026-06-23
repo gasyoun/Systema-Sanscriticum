@@ -1,0 +1,116 @@
+name: CI
+
+# Systema Sanscriticum — Laravel 10 / PHP 8.1 / Vite + Tailwind.
+# phpunit.xml already sets DB_CONNECTION=sqlite DB_DATABASE=:memory: for tests.
+# Two jobs run in parallel: PHP tests + frontend build.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php-tests:
+    name: PHP ${{ matrix.php }} — tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.1", "8.2"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v5
+        with:
+          path: vendor
+          key: php-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: php-${{ matrix.php }}-
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Set up environment
+        run: |
+          cp .env.example .env
+          # Override to SQLite for CI (phpunit.xml already does this for tests,
+          # but artisan commands before the test run need a DB too)
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=\/tmp\/ci.sqlite/' .env
+          php artisan key:generate
+
+      - name: Run migrations
+        run: php artisan migrate --force --no-interaction
+
+      - name: Stub Vite manifest for tests
+        # @vite() in views throws ManifestNotFoundException (→ 500) if
+        # public/build/manifest.json is absent or missing required entry keys.
+        # Stub manifest with the two app entrypoints satisfies the Vite plugin
+        # without requiring an actual frontend build.
+        run: |
+          mkdir -p public/build/assets
+          cat > public/build/manifest.json << 'JSON'
+          {
+            "resources/css/app.css": { "file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true },
+            "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true }
+          }
+          JSON
+          touch public/build/assets/app.css public/build/assets/app.js
+
+      - name: Laravel Pint format check
+        run: ./vendor/bin/pint --test
+        continue-on-error: true
+
+      - name: PHPUnit tests
+        # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it
+        run: php artisan test
+
+  frontend-build:
+    name: Frontend build (Vite + Tailwind)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Vite build
+        run: npm run build
+
+  yaml-lint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - run: |
+          python -c "
+          import sys, glob, yaml
+          fail = 0
+          for f in glob.glob('**/*.yml', recursive=True) + glob.glob('**/*.yaml', recursive=True):
+              if any(x in f for x in ['.git', 'vendor/', 'node_modules/']): continue
+              try:
+                  yaml.safe_load(open(f, encoding='utf-8'))
+              except yaml.YAMLError as e:
+                  print(f'::error file={f}::{e}'); fail = 1
+          sys.exit(fail)
+          "

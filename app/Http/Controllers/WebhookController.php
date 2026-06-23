@@ -25,7 +25,10 @@ class WebhookController extends Controller
             $jwt = $request->getContent();
 
             // ========== ВЕРИФИКАЦИЯ ПОДПИСИ RS256 ==========
-            $jwk = json_decode(self::TOCHKA_PUBLIC_KEY, true, 512, JSON_THROW_ON_ERROR);
+            // Ключ можно переопределить через config (services.tochka.webhook_public_key)
+            // — нужно для тестов; в проде fallback на зашитый публичный ключ Точки.
+            $publicKey = config('services.tochka.webhook_public_key') ?: self::TOCHKA_PUBLIC_KEY;
+            $jwk = json_decode($publicKey, true, 512, JSON_THROW_ON_ERROR);
             $key = JWK::parseKey($jwk, 'RS256');
 
             try {
