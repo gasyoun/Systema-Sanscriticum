@@ -25,11 +25,24 @@ class StudentStatsOverview extends BaseWidget
         // Считаем LTV
         $ltv = round($totalRevenue / $studentsCount);
 
+        // Подключили бота (TG или VK) — среди студентов (не админов).
+        $botConnected = User::where('is_admin', false)
+            ->where(function ($q) {
+                $q->whereNotNull('telegram_id')->orWhereNotNull('vk_id');
+            })
+            ->count();
+        $botPercent = round($botConnected / $studentsCount * 100);
+
         return [
             Stat::make('Всего студентов', $studentsCount)
                 ->description('Зарегистрированных учеников')
                 ->descriptionIcon('heroicon-m-users')
                 ->color('success'),
+
+            Stat::make('Подключили бота', $botConnected.' из '.$studentsCount)
+                ->description($botPercent.'% студентов в TG/VK')
+                ->descriptionIcon('heroicon-m-chat-bubble-left-right')
+                ->color($botPercent >= 50 ? 'success' : 'warning'),
 
             Stat::make('Общая выручка', number_format($totalRevenue, 0, '.', ' ').' ₽')
                 ->description('Успешные оплаты')

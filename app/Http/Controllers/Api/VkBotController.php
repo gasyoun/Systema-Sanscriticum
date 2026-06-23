@@ -57,7 +57,7 @@ class VkBotController extends Controller
                 // Полное решение — одноразовый неугадываемый токен вместо сырого
                 // user id (как telegram_auth_token) + подпись вебхука; см. .ai_state.md.
                 if ($candidate && ! $candidate->vk_id) {
-                    $candidate->update(['vk_id' => $vkId]);
+                    $candidate->update(['vk_id' => $vkId, 'vk_connected_at' => now()]);
                     $user = $candidate;
                     $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
 
