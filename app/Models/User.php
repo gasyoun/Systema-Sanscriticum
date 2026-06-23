@@ -30,7 +30,9 @@ class User extends Authenticatable implements FilamentUser
         'is_lecture_editor',
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_auth_token',   // <-- Добавили для Telegram
+        'telegram_connected_at', // когда привязал TG-бота
         'vk_id',
+        'vk_connected_at',       // когда привязал ВК-бота
         'max_user_id',
         'instagram',
         'facebook',
@@ -69,6 +71,8 @@ class User extends Authenticatable implements FilamentUser
             'is_lecture_editor' => 'boolean',
             'last_login_at' => 'datetime',
             'last_activity_at' => 'datetime',
+            'telegram_connected_at' => 'datetime',
+            'vk_connected_at' => 'datetime',
             'login_count' => 'integer',
             'total_time_spent' => 'integer',
             'total_lessons_opened' => 'integer',
