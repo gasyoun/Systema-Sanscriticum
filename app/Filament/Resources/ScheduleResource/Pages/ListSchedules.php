@@ -220,6 +220,29 @@ class ListSchedules extends ListRecords
                 }),
 
             // ==========================================
+            // РУЧНОЙ ПОСТ «СЕЙЧАС ИДУТ КУРСЫ» В ВК/ТГ (через n8n)
+            // ==========================================
+            Actions\Action::make('post_monthly_schedule')
+                ->label('📣 Опубликовать в соцсети')
+                ->icon('heroicon-o-megaphone')
+                ->color('warning')
+                ->visible(fn (): bool => RoleGate::adminOnly())
+                ->requiresConfirmation()
+                ->modalHeading('Опубликовать «сейчас идут курсы» в ВК и Telegram')
+                ->modalDescription('Соберём курсы этого месяца, текст и картинку и отправим в n8n (он постит в сообщество ВК и канал ТГ). Тот же пост уходит автоматически 1-го числа.')
+                ->modalSubmitActionLabel('Опубликовать')
+                ->action(function (): void {
+                    $code = \Illuminate\Support\Facades\Artisan::call('schedule:post-monthly');
+                    $output = trim(\Illuminate\Support\Facades\Artisan::output());
+
+                    \Filament\Notifications\Notification::make()
+                        ->title($code === 0 ? 'Отправлено' : 'Ошибка публикации')
+                        ->body($output !== '' ? $output : 'Готово.')
+                        ->{$code === 0 ? 'success' : 'danger'}()
+                        ->send();
+                }),
+
+            // ==========================================
             // СУЩЕСТВУЮЩИЙ: МАССОВЫЙ ПЕРЕНОС
             // ==========================================
             // (оставлено как было — блок shift_schedule не трогаем)
