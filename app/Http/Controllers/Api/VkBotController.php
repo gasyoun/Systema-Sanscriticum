@@ -50,9 +50,15 @@ class VkBotController extends Controller
 
             // Если перешел по кнопке с сайта
             if (! $user && $ref) {
-                $user = User::find($ref);
-                if ($user) {
-                    $user->update(['vk_id' => $vkId]);
+                $candidate = User::find($ref);
+                // Защита от перехвата аккаунта: привязываем VK ТОЛЬКО к ещё не
+                // привязанному аккаунту. Иначе ($candidate->vk_id уже задан) это
+                // перезапись чужой привязки по угадываемому id из тела вебхука.
+                // Полное решение — одноразовый неугадываемый токен вместо сырого
+                // user id (как telegram_auth_token) + подпись вебхука; см. .ai_state.md.
+                if ($candidate && ! $candidate->vk_id) {
+                    $candidate->update(['vk_id' => $vkId]);
+                    $user = $candidate;
                     $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
 
                     return response('ok', 200);

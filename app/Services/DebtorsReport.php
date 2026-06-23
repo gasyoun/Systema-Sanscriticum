@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class DebtorsReport
 {
-    private const PAID_STATUSES = ['paid', 'success'];
+    private const PAID_STATUSES = \App\Models\Payment::PAID_STATUSES;
 
     /**
      * Статусы в course_user, при которых пара (user, course) НЕ должна

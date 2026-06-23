@@ -130,7 +130,7 @@ class CheckoutController extends Controller
         if ($user) {
             $marketing = \App\Models\MarketingSetting::first();
             if ($marketing && $marketing->is_loyalty_active) {
-                $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)->where('status', 'paid')->exists();
+                $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)->paid()->exists();
                 if ($hasAnyPaid) {
                     $isLoyal = true;
                     $loyaltyPercent = $marketing->loyalty_discount_percent;

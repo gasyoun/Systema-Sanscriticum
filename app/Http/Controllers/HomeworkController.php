@@ -110,7 +110,7 @@ class HomeworkController extends Controller
 
         $unlocked = Payment::where('user_id', $user->id)
             ->where('course_id', $course->id)
-            ->where('status', 'paid')
+            ->paid()
             ->pluck('tariff')
             ->toArray();
 
