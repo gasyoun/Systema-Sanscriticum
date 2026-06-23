@@ -33,6 +33,15 @@ class PostMonthlySchedule extends Command
         if ($this->option('dry')) {
             $this->line($textTg);
             $this->newLine();
+
+            // Рендерим картинку и в dry — чтобы доводить дизайн без публикации.
+            $imageUrl = $this->renderImage($courses);
+            if ($imageUrl) {
+                $this->info('JPG: '.$imageUrl);
+            } else {
+                $this->warn('JPG не сгенерирован (imagick/ghostscript недоступны).');
+            }
+
             $this->info('DRY-режим: курсов '.count($courses).', отправка пропущена.');
 
             return self::SUCCESS;
@@ -92,11 +101,22 @@ class PostMonthlySchedule extends Command
         }
 
         try {
+            // Высота холста — под фактический контент, чтобы постер был ОДНОЙ
+            // страницей (иначе DomPDF пагинирует, а JPG берёт только стр. 0) и
+            // снизу не зиял пустой провал. Строка с расписанием выше, без — ниже.
+            $rowsHeight = 0;
+            foreach ($courses as $c) {
+                $rowsHeight += empty($c['schedule']) ? 60 : 86;
+            }
+            $canvasHeight = 300 + $rowsHeight; // шапка + разделитель + футер
+
             $pdf = Pdf::loadView('promo.monthly-schedule-card', [
                 'courses' => $courses,
                 'month' => mb_convert_case(now()->translatedFormat('F Y'), MB_CASE_TITLE, 'UTF-8'),
                 'site' => preg_replace('~^https?://~', '', rtrim((string) config('app.url'), '/')),
-            ])->setPaper([0, 0, 1100, 770]);
+                'canvasHeight' => $canvasHeight,
+                'logoBase64' => $this->logoBase64(),
+            ])->setPaper([0, 0, 1100, $canvasHeight]);
 
             $jpeg = app(CertificateService::class)->pdfToJpeg($pdf->output(), dpi: 150);
 
@@ -109,5 +129,19 @@ class PostMonthlySchedule extends Command
 
             return null;
         }
+    }
+
+    /**
+     * Логотип ОРС в data-URI для встраивания в DomPDF (как фон сертификата).
+     * Null, если файла нет — тогда карточка рендерится без лого.
+     */
+    private function logoBase64(): ?string
+    {
+        $path = public_path('images/logo.png');
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return 'data:image/png;base64,'.base64_encode((string) file_get_contents($path));
     }
 }
