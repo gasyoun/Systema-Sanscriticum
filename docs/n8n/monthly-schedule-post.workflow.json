@@ -1,0 +1,152 @@
+{
+  "name": "Ежемесячный пост курсов → ВК + Telegram (monthly_schedule_post)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "monthly-schedule-post",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-360, 200],
+      "webhookId": "monthly-schedule-post"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/botREPLACE_TG_BOT_TOKEN/sendPhoto",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"@REPLACE_TG_CHANNEL\",\n  \"photo\": \"{{ $json.body.image_url }}\",\n  \"caption\": {{ JSON.stringify($json.body.text_tg) }},\n  \"parse_mode\": \"HTML\"\n}",
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000002",
+      "name": "Telegram: sendPhoto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/photos.getWallUploadServer",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "group_id", "value": "REPLACE_VK_GROUP_ID" },
+            { "name": "access_token", "value": "REPLACE_VK_GROUP_TOKEN" },
+            { "name": "v", "value": "5.131" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000003",
+      "name": "VK: getWallUploadServer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 380]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook').item.json.body.image_url }}",
+        "options": { "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } } }
+      },
+      "id": "10000000-0000-0000-0000-000000000004",
+      "name": "VK: скачать картинку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [160, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('VK: getWallUploadServer').item.json.response.upload_url }}",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "parameterType": "formBinaryData", "name": "photo", "inputDataFieldName": "data" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000005",
+      "name": "VK: upload photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 380]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/photos.saveWallPhoto",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "group_id", "value": "REPLACE_VK_GROUP_ID" },
+            { "name": "access_token", "value": "REPLACE_VK_GROUP_TOKEN" },
+            { "name": "v", "value": "5.131" },
+            { "name": "server", "value": "={{ $json.server }}" },
+            { "name": "photo", "value": "={{ $json.photo }}" },
+            { "name": "hash", "value": "={{ $json.hash }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000006",
+      "name": "VK: saveWallPhoto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 380]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/wall.post",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "owner_id", "value": "-REPLACE_VK_GROUP_ID" },
+            { "name": "from_group", "value": "1" },
+            { "name": "access_token", "value": "REPLACE_VK_GROUP_TOKEN" },
+            { "name": "v", "value": "5.131" },
+            { "name": "message", "value": "={{ $('Webhook').item.json.body.text_vk }}" },
+            { "name": "attachments", "value": "=photo{{ $json.response[0].owner_id }}_{{ $json.response[0].id }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-0000-0000-000000000007",
+      "name": "VK: wall.post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 380]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Telegram: sendPhoto", "type": "main", "index": 0 },
+          { "node": "VK: getWallUploadServer", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "VK: getWallUploadServer": {
+      "main": [[{ "node": "VK: скачать картинку", "type": "main", "index": 0 }]]
+    },
+    "VK: скачать картинку": {
+      "main": [[{ "node": "VK: upload photo", "type": "main", "index": 0 }]]
+    },
+    "VK: upload photo": {
+      "main": [[{ "node": "VK: saveWallPhoto", "type": "main", "index": 0 }]]
+    },
+    "VK: saveWallPhoto": {
+      "main": [[{ "node": "VK: wall.post", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
