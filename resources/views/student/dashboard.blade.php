@@ -197,8 +197,9 @@
                         <p class="text-sm text-gray-500 font-medium mb-3">Бот пишет <span class="font-bold text-gray-700">только по делу</span> — никаких рекламных рассылок.</p>
                         <ul class="space-y-1.5 text-sm text-gray-600">
                             <li class="flex items-start gap-2"><i class="fas fa-bolt text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Доступ к урокам — сразу после оплаты, без ожидания</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учёбе круглосуточно</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-bell text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Напоминания о занятиях и сроках оплат</span></li>
-                            <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы куратора прямо в Telegram</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы живого куратора прямо в Telegram</span></li>
                         </ul>
                         <p class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
                             <i class="fas fa-shield-halved"></i>
@@ -248,8 +249,9 @@
                         <p class="text-sm text-gray-500 font-medium mb-3">Бот пишет <span class="font-bold text-gray-700">только по делу</span> — никаких рекламных рассылок.</p>
                         <ul class="space-y-1.5 text-sm text-gray-600">
                             <li class="flex items-start gap-2"><i class="fas fa-bolt text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Доступ к урокам — сразу после оплаты, без ожидания</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учёбе круглосуточно</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-bell text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Напоминания о занятиях и сроках оплат</span></li>
-                            <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы куратора прямо во ВКонтакте</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы живого куратора прямо во ВКонтакте</span></li>
                         </ul>
                         <p class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
                             <i class="fas fa-shield-halved"></i>
