@@ -55,6 +55,10 @@ return [
         // Секрет для входящего вебхука «лид дошёл до шага бота» (POST /api/webhooks/lead-step).
         // Пусто → эндпоинт всегда отвечает 403 (выключен).
         'lead_step_secret' => env('N8N_LEAD_STEP_SECRET'),
+        // Ежемесячный пост «сейчас идут курсы» в ВК/ТГ: Laravel шлёт готовый
+        // payload в этот n8n-вебхук, n8n постит. Секрет уходит в X-Webhook-Secret.
+        'monthly_schedule_webhook' => env('N8N_MONTHLY_SCHEDULE_WEBHOOK'),
+        'monthly_schedule_secret' => env('N8N_MONTHLY_SCHEDULE_SECRET'),
     ],
 
     'telegram' => [

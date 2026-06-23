@@ -54,6 +54,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
 
+        // Ежемесячный пост «сейчас идут курсы» в ВК/ТГ (через n8n-вебхук).
+        $schedule->command('schedule:post-monthly')
+            ->monthlyOn(1, '10:00') // 1-е число месяца, 10:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('post-monthly-schedule');
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new \App\Jobs\CloseStaleSessionsJob)
