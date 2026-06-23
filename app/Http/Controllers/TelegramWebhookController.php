@@ -36,6 +36,7 @@ class TelegramWebhookController extends Controller
                     $user->update([
                         'telegram_id' => $chatId,
                         'telegram_auth_token' => null,
+                        'telegram_connected_at' => now(),
                     ]);
 
                     $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!\n\nНапишите <b>«мои группы»</b>, чтобы увидеть свои группы и расписание.");

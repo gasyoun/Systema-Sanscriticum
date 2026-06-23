@@ -33,6 +33,15 @@ class Kernel extends ConsoleKernel
         $schedule->command('promises:remind-tomorrow')
             ->dailyAt($paymentTime);
 
+        // Авто-напоминания должникам (просрочка / не продлил / блок за N дней до
+        // начала). Гейт, окно, каналы и шаблон — внутри команды (MarketingSetting),
+        // дедуп по cadence. Тот же утренний слот, что и напоминание об оплатах.
+        $schedule->command('debts:remind')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('remind-debtors');
+
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).
         $schedule->command('classes:remind-upcoming')

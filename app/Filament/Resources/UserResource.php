@@ -340,8 +340,11 @@ class UserResource extends Resource
                         TextEntry::make('messengers')
                             ->label('Мессенджеры')
                             ->state(function (User $record): string {
-                                $tg = $record->telegram_id ? '✈ Telegram' : '';
-                                $vk = $record->vk_id ? '💬 VK' : '';
+                                $fmt = fn ($d): string => $d
+                                    ? ' (с '.\Carbon\Carbon::parse($d)->format('d.m.Y').')'
+                                    : '';
+                                $tg = $record->telegram_id ? '✈ Telegram'.$fmt($record->telegram_connected_at) : '';
+                                $vk = $record->vk_id ? '💬 VK'.$fmt($record->vk_connected_at) : '';
                                 $parts = array_filter([$tg, $vk]);
 
                                 return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
@@ -453,6 +456,25 @@ class UserResource extends Resource
                     ->copyMessage('Ссылка на карточку скопирована')
                     ->copyMessageDuration(1500)
                     ->toggleable(),
+
+                // --- ПОДКЛЮЧЕНИЕ БОТА (скрыто по умолчанию; для сортировки/аналитики) ---
+                Tables\Columns\TextColumn::make('telegram_connected_at')
+                    ->label('Подключил TG')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state
+                        ? \Carbon\Carbon::parse($state)->format('d.m.Y H:i')
+                        : null),
+
+                Tables\Columns\TextColumn::make('vk_connected_at')
+                    ->label('Подключил VK')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): ?string => $state
+                        ? \Carbon\Carbon::parse($state)->format('d.m.Y H:i')
+                        : null),
 
                 // --- КОЛОНКА 3: СТАТУС ---
                 Tables\Columns\TextColumn::make('global_status')
