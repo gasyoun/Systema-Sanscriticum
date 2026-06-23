@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Console\Commands;
+
+use App\Services\CertificateService;
+use App\Services\MonthlyScheduleDigest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+class PostMonthlySchedule extends Command
+{
+    protected $signature = 'schedule:post-monthly {--dry : Собрать и показать текст, без отправки}';
+
+    protected $description = 'Ежемесячный пост «сейчас идут курсы» (текст + JPG) в n8n-вебхук → ВК/ТГ.';
+
+    public function handle(MonthlyScheduleDigest $digest): int
+    {
+        $courses = $digest->courses();
+        if ($courses === []) {
+            $this->info('В этом месяце нет идущих курсов — пост не формируем.');
+
+            return self::SUCCESS;
+        }
+
+        $textTg = $digest->textTelegram();
+        $textVk = $digest->textVk();
+
+        if ($this->option('dry')) {
+            $this->line($textTg);
+            $this->newLine();
+            $this->info('DRY-режим: курсов '.count($courses).', отправка пропущена.');
+
+            return self::SUCCESS;
+        }
+
+        $imageUrl = $this->renderImage($courses);
+
+        $webhook = config('services.n8n.monthly_schedule_webhook');
+        if (empty($webhook)) {
+            Log::warning('PostMonthlySchedule: N8N_MONTHLY_SCHEDULE_WEBHOOK не задан — пропуск.');
+            $this->warn('Вебхук n8n не настроен (N8N_MONTHLY_SCHEDULE_WEBHOOK) — отправка пропущена.');
+
+            return self::SUCCESS;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'X-Webhook-Secret' => (string) config('services.n8n.monthly_schedule_secret'),
+            ])->timeout(15)->post($webhook, [
+                'action' => 'monthly_schedule_post',
+                'generated_at' => now()->format('d.m.Y H:i'),
+                'text_tg' => $textTg,
+                'text_vk' => $textVk,
+                'image_url' => $imageUrl,
+                'courses' => $courses,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('PostMonthlySchedule: n8n вернул '.$response->status(), ['body' => $response->body()]);
+                $this->error('n8n вернул статус '.$response->status());
+
+                return self::FAILURE;
+            }
+        } catch (\Throwable $e) {
+            Log::error('PostMonthlySchedule: сбой отправки в n8n: '.$e->getMessage());
+            $this->error('Сбой отправки: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
+
+        $this->info('Пост отправлен в n8n: курсов '.count($courses).($imageUrl ? ', с картинкой.' : ', без картинки (imagick недоступен).'));
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Рендер карточки в JPG через тот же пайплайн, что у сертификатов
+     * (Blade → DomPDF → Imagick). Возвращает публичный URL или null, если
+     * imagick/ghostscript недоступны — тогда постим только текст.
+     *
+     * @param  list<array{title:string, teacher:?string, schedule:?string, url:?string}>  $courses
+     */
+    private function renderImage(array $courses): ?string
+    {
+        if (! CertificateService::jpegSupported()) {
+            return null;
+        }
+
+        try {
+            $pdf = Pdf::loadView('promo.monthly-schedule-card', [
+                'courses' => $courses,
+                'month' => mb_convert_case(now()->translatedFormat('F Y'), MB_CASE_TITLE, 'UTF-8'),
+                'site' => preg_replace('~^https?://~', '', rtrim((string) config('app.url'), '/')),
+            ])->setPaper([0, 0, 1100, 770]);
+
+            $jpeg = app(CertificateService::class)->pdfToJpeg($pdf->output(), dpi: 150);
+
+            $path = 'monthly/schedule-'.now()->format('Y-m').'.jpg';
+            Storage::disk('public')->put($path, $jpeg);
+
+            return Storage::disk('public')->url($path);
+        } catch (\Throwable $e) {
+            Log::error('PostMonthlySchedule: не удалось сгенерировать JPG: '.$e->getMessage());
+
+            return null;
+        }
+    }
+}
