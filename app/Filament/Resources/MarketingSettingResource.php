@@ -88,12 +88,27 @@ class MarketingSettingResource extends Resource
                     ->schema([
                         Forms\Components\Toggle::make('payment_reminders_enabled')
                             ->label('Напоминания о сроках оплаты')
-                            ->helperText('Ежедневно в 09:00 — студентам, у кого завтра срок по обещанию/рассрочке (promises:remind-tomorrow). Выключено — не шлём.')
+                            ->helperText('Студентам, у кого завтра срок по обещанию/рассрочке (promises:remind-tomorrow). Время — в поле ниже. Выключено — не шлём.')
                             ->default(true),
+                        Forms\Components\TimePicker::make('payment_reminder_time')
+                            ->label('Время рассылки об оплатах (МСК)')
+                            ->seconds(false)
+                            ->format('H:i')
+                            ->displayFormat('H:i')
+                            ->default('09:00')
+                            ->helperText('Час ежедневной рассылки напоминаний об оплате.'),
                         Forms\Components\Toggle::make('class_reminders_enabled')
                             ->label('Напоминания о занятиях')
-                            ->helperText('За ~60 мин до занятия из расписания — студентам группы/курса со ссылкой (classes:remind-upcoming). Выключено — не шлём.')
+                            ->helperText('Студентам группы/курса со ссылкой перед занятием из расписания (classes:remind-upcoming). За сколько минут — в поле ниже. Выключено — не шлём.')
                             ->default(true),
+                        Forms\Components\TextInput::make('class_reminder_lead_minutes')
+                            ->label('Напоминать о занятии за, мин')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(1440)
+                            ->suffix('мин')
+                            ->default(60)
+                            ->helperText('За сколько минут до начала занятия слать пуш (1–1440).'),
                     ])
                     ->collapsible(),
 
