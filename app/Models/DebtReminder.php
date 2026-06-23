@@ -15,6 +15,7 @@ class DebtReminder extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'block_number',
         'sent_at',
     ];
 
