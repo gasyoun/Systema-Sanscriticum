@@ -91,14 +91,21 @@ class CertificateService
 
         $im = new \Imagick;
         $im->setResolution($dpi, $dpi);   // ДО readImageBlob — задаёт чёткость растра
-        $im->readImageBlob($pdfData);     // сертификат — одна страница A4 landscape
-        $im->setIteratorIndex(0);
-        $im->setImageBackgroundColor('white');
-        $im = $im->flattenImages();       // убрать прозрачность → белый фон
-        $im->setImageFormat('jpeg');
-        $im->setImageCompressionQuality($quality);
+        $im->readImageBlob($pdfData);     // PDF может быть многостраничным
 
-        $blob = $im->getImageBlob();
+        // Берём ТОЛЬКО первую страницу. Раньше тут был flattenImages(), который
+        // схлопывал ВСЕ страницы поверх друг друга — и многостраничный постер
+        // (карточка расписания) превращался в «кашу» из последней страницы.
+        // Для сертификата (одна страница A4) поведение не меняется.
+        $im->setIteratorIndex(0);
+        $page = $im->getImage();
+        $page->setImageBackgroundColor('white');
+        $page = $page->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN); // прозрачность → белый
+        $page->setImageFormat('jpeg');
+        $page->setImageCompressionQuality($quality);
+
+        $blob = $page->getImageBlob();
+        $page->clear();
         $im->clear();
 
         return $blob;
