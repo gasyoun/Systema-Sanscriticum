@@ -13,36 +13,34 @@
             width: 1100px;
             height: {{ $canvasHeight }}px;
         }
-        .card { position: relative; height: {{ $canvasHeight }}px; padding: 64px; }
+        .card { position: relative; min-height: {{ $canvasHeight }}px; padding: 52px 56px 36px; }
 
         /* Фирменный «якорь» — оранжевая полоса по верхней кромке */
-        .topbar { position: absolute; top: 0; left: 0; right: 0; height: 10px; background: #E85C24; }
+        .topbar { position: absolute; top: 0; left: 0; right: 0; height: 9px; background: #E85C24; }
 
         /* Шапка: лого слева, заголовок справа — таблицей (надёжно в DomPDF) */
-        .head { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .head { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
         .head td { vertical-align: middle; }
-        .logo { height: 104px; }
+        .logo { height: 80px; }
         .head .title-cell { text-align: right; }
         .eyebrow {
-            color: #E85C24; font-size: 16px; font-weight: bold;
+            color: #E85C24; font-size: 14px; font-weight: bold;
             letter-spacing: 2px; text-transform: uppercase;
         }
-        h1 { font-size: 46px; line-height: 1.05; margin: 4px 0 2px; color: #101010; }
-        .month { font-size: 24px; color: #6b7280; }
+        h1 { font-size: 38px; line-height: 1.05; margin: 2px 0 2px; color: #101010; }
+        .month { font-size: 19px; color: #6b7280; }
 
-        .rule { height: 3px; background: #E85C24; width: 88px; border-radius: 3px; margin: 22px 0 6px; }
+        .rule { height: 3px; background: #E85C24; width: 74px; border-radius: 3px; margin: 18px 0 2px; }
 
-        .course { padding: 16px 0; border-bottom: 1px solid #e7e2d8; }
-        .course:last-of-type { border-bottom: none; }
-        .c-title { font-size: 25px; font-weight: bold; color: #101010; }
-        .c-teacher { font-size: 20px; color: #E85C24; font-weight: bold; }
-        .c-sched { font-size: 18px; color: #4b5563; margin-top: 5px; }
+        .course { padding: 12px 0; border-bottom: 1px solid #e7e2d8; }
+        .c-title { font-size: 20px; font-weight: bold; color: #101010; line-height: 1.3; }
+        .c-teacher { font-size: 16px; color: #E85C24; font-weight: bold; }
+        .c-sched { font-size: 15px; color: #4b5563; margin-top: 3px; }
         .dot { color: #E85C24; }
 
         .footer {
-            position: absolute; left: 64px; right: 64px; bottom: 40px;
-            padding-top: 18px; border-top: 1px solid #e7e2d8;
-            font-size: 17px; color: #6b7280;
+            margin-top: 16px; padding-top: 14px; border-top: 1px solid #e7e2d8;
+            font-size: 15px; color: #6b7280;
         }
     </style>
 </head>
