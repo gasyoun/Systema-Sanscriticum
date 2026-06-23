@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Group;
 use App\Models\MarketingSetting;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -85,6 +86,42 @@ class DebtorAutoReminderTest extends TestCase
 
         Queue::assertNothingPushed();
         $this->assertDatabaseCount('debt_reminders', 0);
+    }
+
+    /** @test */
+    public function it_reminds_about_upcoming_unpaid_block_even_if_current_is_paid(): void
+    {
+        Queue::fake();
+        // Блок 1 уже шёл (оплачен студентом), блок 2 стартует через 5 дней (не оплачен).
+        CourseBlock::factory()->for($this->course)
+            ->withDates(now()->subDays(30), now()->subDay())->create(['number' => 1]);
+        CourseBlock::factory()->for($this->course)
+            ->withDates(now()->addDays(5), now()->addDays(35))->create(['number' => 2]);
+
+        $student = $this->makeDebtor(['telegram_id' => '555010']);
+        Payment::create([
+            'user_id' => $student->id,
+            'course_id' => $this->course->id,
+            'amount' => 5000,
+            'tariff' => 'block_1',
+            'start_block' => 1,
+            'end_block' => 1,
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]);
+
+        $this->enable(); // lead=7 → блок 2 (через 5 дней) в окне
+
+        $this->artisan('debts:remind')->assertSuccessful();
+
+        // Ушло ровно одно напоминание — про блок 2 (по блоку 1 студент оплачен).
+        Queue::assertPushed(SendMessengerAlerts::class, 1);
+        Queue::assertPushed(SendMessengerAlerts::class, fn ($job) => $job->user->is($student));
+        $this->assertDatabaseHas('debt_reminders', [
+            'user_id' => $student->id,
+            'course_id' => $this->course->id,
+            'block_number' => 2,
+        ]);
     }
 
     /** @test */
