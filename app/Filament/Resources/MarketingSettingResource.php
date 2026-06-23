@@ -109,6 +109,38 @@ class MarketingSettingResource extends Resource
                             ->suffix('мин')
                             ->default(60)
                             ->helperText('За сколько минут до начала занятия слать пуш (1–1440).'),
+
+                        Forms\Components\Toggle::make('debt_reminders_enabled')
+                            ->label('Напоминания должникам')
+                            ->helperText('Авто-рассылка должникам (просрочка / не продлил / блок скоро начнётся) по TG/VK/email. Каждому — не чаще раза в N дней. Выключено — не шлём.')
+                            ->default(false)
+                            ->live(),
+                        Forms\Components\TextInput::make('debt_reminder_lead_days')
+                            ->label('Напоминать о блоке за, дней до начала')
+                            ->numeric()->minValue(0)->maxValue(60)->suffix('дн')->default(7)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\TextInput::make('debt_reminder_cadence_days')
+                            ->label('Не чаще раза в, дней')
+                            ->numeric()->minValue(1)->maxValue(60)->suffix('дн')->default(7)
+                            ->helperText('Анти-спам: повтор одному студенту по курсу не раньше.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Toggle::make('debt_reminder_to_telegram')->label('Канал: Telegram')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Toggle::make('debt_reminder_to_vk')->label('Канал: VK')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Toggle::make('debt_reminder_to_email')->label('Канал: Email')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\TextInput::make('debt_reminder_subject')
+                            ->label('Тема письма (email)')
+                            ->placeholder(\App\Services\DebtorReminderDispatcher::DEFAULT_SUBJECT)
+                            ->helperText('Плейсхолдеры: {name}, {course}, {block}, {pay_link}.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Textarea::make('debt_reminder_text')
+                            ->label('Текст напоминания')
+                            ->rows(6)
+                            ->placeholder(\App\Services\DebtorReminderDispatcher::DEFAULT_TEXT)
+                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры: {name}, {course}, {block}, {pay_link}.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                     ])
                     ->collapsible(),
 

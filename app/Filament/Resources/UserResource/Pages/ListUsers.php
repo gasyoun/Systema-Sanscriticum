@@ -2,16 +2,19 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Filament\Exports\ConnectedBotUsersExporter;
 use App\Filament\Resources\UserResource;
 use App\Models\Group;
 use App\Models\User;
 use Filament\Actions;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\FileUpload;
-// Добавляем специальный класс для кнопок внутри форм:
 use Filament\Forms\Components\Select;
+// Добавляем специальный класс для кнопок внутри форм:
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -118,6 +121,18 @@ class ListUsers extends ListRecords
                         ->success()
                         ->send();
                 }),
+
+            Actions\ExportAction::make('exportConnectedBot')
+                ->label('Экспорт подключивших бота')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->exporter(ConnectedBotUsersExporter::class)
+                ->formats([ExportFormat::Csv])
+                ->fileName(fn () => 'bot-connected-'.now()->format('Y-m-d_H-i-s'))
+                // Только студенты, реально подключившие TG или VK.
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                    ->where('is_admin', false)
+                    ->where(fn (Builder $q) => $q->whereNotNull('telegram_id')->orWhereNotNull('vk_id'))),
 
             Actions\CreateAction::make(),
         ];
