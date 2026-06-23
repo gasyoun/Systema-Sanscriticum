@@ -1250,38 +1250,28 @@ class Debtors extends Page implements HasTable
                 Forms\Components\Toggle::make('to_email')->label('Email')->live(),
             ])
             ->action(function (Model $r, array $data): void {
-                $titles = app(DebtorsReport::class)->courseTitles();
                 $user = User::find($r->id);
                 if (! $user) {
                     Notification::make()->title('Студент не найден')->danger()->send();
 
                     return;
                 }
-                $hasTg = (bool) ($data['to_telegram'] ?? false) && ! empty($user->telegram_id);
-                $hasVk = (bool) ($data['to_vk'] ?? false) && ! empty($user->vk_id);
-                $hasEmail = (bool) ($data['to_email'] ?? false)
-                    && filter_var($user->email, FILTER_VALIDATE_EMAIL);
-                if (! $hasTg && ! $hasVk && ! $hasEmail) {
+
+                $ok = app(\App\Services\DebtorReminderDispatcher::class)->send(
+                    $user,
+                    (int) $r->course_id,
+                    $r->ref_block_number !== null ? (int) $r->ref_block_number : null,
+                    (string) $data['text'],
+                    (string) ($data['subject'] ?? 'Напоминание об оплате'),
+                    (bool) ($data['to_telegram'] ?? false),
+                    (bool) ($data['to_vk'] ?? false),
+                    (bool) ($data['to_email'] ?? false),
+                );
+
+                if (! $ok) {
                     Notification::make()->title('Нет каналов для отправки')->danger()->send();
 
                     return;
-                }
-
-                $slug = Course::query()->whereKey($r->course_id)->value('slug');
-                $replacements = [
-                    '{name}' => $user->name ?: 'Друг',
-                    '{course}' => $titles[$r->course_id] ?? '',
-                    '{block}' => (string) $r->ref_block_number,
-                    '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
-                ];
-                $rendered = strtr((string) $data['text'], $replacements);
-
-                if ($hasTg || $hasVk) {
-                    SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
-                }
-                if ($hasEmail) {
-                    $subject = strtr((string) ($data['subject'] ?? 'Напоминание об оплате'), $replacements);
-                    Mail::to($user->email)->queue(new DebtorReminderMail($subject, $rendered, $user->name));
                 }
 
                 Notification::make()->title('Поставлено в очередь')->success()->send();
