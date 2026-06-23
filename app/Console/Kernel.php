@@ -25,8 +25,13 @@ class Kernel extends ConsoleKernel
             ->dailyAt('03:45');
 
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
+        // Время редактируется в админке (MarketingSetting); schedule() читается
+        // на каждый schedule:run, поэтому смена подхватывается без деплоя.
+        // Защитный фолбэк на 09:00 — чтобы битое значение не уронило schedule:run.
+        $paymentTime = \App\Models\MarketingSetting::cached()?->payment_reminder_time;
+        $paymentTime = preg_match('/^\d{1,2}:\d{2}$/', (string) $paymentTime) ? $paymentTime : '09:00';
         $schedule->command('promises:remind-tomorrow')
-            ->dailyAt('09:00');
+            ->dailyAt($paymentTime);
 
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).

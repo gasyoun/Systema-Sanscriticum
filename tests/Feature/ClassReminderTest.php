@@ -147,6 +147,46 @@ class ClassReminderTest extends TestCase
     }
 
     /** @test */
+    public function it_uses_lead_minutes_from_settings(): void
+    {
+        Queue::fake();
+        // Окно расширено настройкой до 120 мин — занятие через 90 мин попадает.
+        MarketingSetting::create(['class_reminder_lead_minutes' => 120]);
+
+        $group = Group::create(['name' => 'Окно 120']);
+        $student = $this->studentInGroup($group);
+
+        Schedule::create([
+            'title' => 'Через 90 минут',
+            'group_id' => $group->id,
+            'start' => now()->addMinutes(90),
+        ]);
+
+        $this->artisan('classes:remind-upcoming')->assertSuccessful();
+
+        Queue::assertPushed(SendMessengerAlerts::class, fn ($job) => $job->user->is($student));
+    }
+
+    /** @test */
+    public function default_lead_window_excludes_class_in_90_minutes(): void
+    {
+        Queue::fake();
+        // Без настройки — дефолт 60 мин: занятие через 90 мин НЕ попадает.
+        $group = Group::create(['name' => 'Дефолт 60']);
+        $this->studentInGroup($group);
+
+        Schedule::create([
+            'title' => 'Через 90 минут',
+            'group_id' => $group->id,
+            'start' => now()->addMinutes(90),
+        ]);
+
+        $this->artisan('classes:remind-upcoming')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+    }
+
+    /** @test */
     public function rescheduling_a_class_re_arms_the_reminder(): void
     {
         $group = Group::create(['name' => 'Перенос']);

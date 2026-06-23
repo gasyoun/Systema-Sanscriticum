@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RemindUpcomingClasses extends Command
 {
-    protected $signature = 'classes:remind-upcoming {--minutes=60 : За сколько минут до старта напоминать}';
+    protected $signature = 'classes:remind-upcoming {--minutes= : За сколько минут до старта напоминать (по умолчанию — из настроек админки)}';
 
     protected $description = 'Шлёт студентам напоминание в TG/VK о скором занятии (по Schedule), один раз на событие.';
 
@@ -27,7 +27,11 @@ class RemindUpcomingClasses extends Command
             return self::SUCCESS;
         }
 
-        $lead = max(1, (int) $this->option('minutes'));
+        // Окно: явная опция --minutes перекрывает; иначе — значение из настроек (дефолт 60).
+        $lead = $this->option('minutes') !== null
+            ? (int) $this->option('minutes')
+            : (int) ($settings?->class_reminder_lead_minutes ?? 60);
+        $lead = max(1, $lead);
 
         // Занятия, стартующие в ближайшие $lead минут и ещё не напомненные.
         $schedules = Schedule::query()
