@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\SendMessengerAlerts;
+use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -18,6 +19,14 @@ class RemindUpcomingClasses extends Command
 
     public function handle(): int
     {
+        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включённым.
+        $settings = MarketingSetting::cached();
+        if ($settings && ! $settings->class_reminders_enabled) {
+            $this->info('Напоминания о занятиях отключены в настройках — пропуск.');
+
+            return self::SUCCESS;
+        }
+
         $lead = max(1, (int) $this->option('minutes'));
 
         // Занятия, стартующие в ближайшие $lead минут и ещё не напомненные.

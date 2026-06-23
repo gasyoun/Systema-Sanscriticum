@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\SendTelegramMessageJob;
+use App\Models\MarketingSetting;
 use App\Models\PaymentPromise;
 use Illuminate\Console\Command;
 
@@ -16,6 +17,14 @@ class RemindPaymentPromisesTomorrow extends Command
 
     public function handle(): int
     {
+        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включённым.
+        $settings = MarketingSetting::cached();
+        if ($settings && ! $settings->payment_reminders_enabled) {
+            $this->info('Напоминания о сроках оплаты отключены в настройках — пропуск.');
+
+            return self::SUCCESS;
+        }
+
         $tomorrow = now()->addDay()->toDateString();
 
         $promises = PaymentPromise::query()

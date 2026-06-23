@@ -83,6 +83,20 @@ class MarketingSettingResource extends Resource
                     ])
                     ->collapsible(),
 
+                Forms\Components\Section::make('🔔 Авто-уведомления студентам')
+                    ->description('Проактивные пуши студентам в Telegram/VK (по расписанию). Не влияют на ответы ИИ-куратора и личные уведомления об оплатах/доступах — только на массовые напоминания ниже.')
+                    ->schema([
+                        Forms\Components\Toggle::make('payment_reminders_enabled')
+                            ->label('Напоминания о сроках оплаты')
+                            ->helperText('Ежедневно в 09:00 — студентам, у кого завтра срок по обещанию/рассрочке (promises:remind-tomorrow). Выключено — не шлём.')
+                            ->default(true),
+                        Forms\Components\Toggle::make('class_reminders_enabled')
+                            ->label('Напоминания о занятиях')
+                            ->helperText('За ~60 мин до занятия из расписания — студентам группы/курса со ссылкой (classes:remind-upcoming). Выключено — не шлём.')
+                            ->default(true),
+                    ])
+                    ->collapsible(),
+
                 // --- БЛОК 1: Главный рубильник ---
                 Forms\Components\Section::make('Общий статус лояльности')
                     ->schema([

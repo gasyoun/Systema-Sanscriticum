@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -123,6 +124,26 @@ class ClassReminderTest extends TestCase
         $this->artisan('classes:remind-upcoming')->assertSuccessful();
 
         Queue::assertPushed(SendMessengerAlerts::class, fn ($job) => $job->user->is($student));
+    }
+
+    /** @test */
+    public function it_does_not_remind_when_disabled_in_settings(): void
+    {
+        Queue::fake();
+        MarketingSetting::create(['class_reminders_enabled' => false]);
+
+        $group = Group::create(['name' => 'Выключено']);
+        $this->studentInGroup($group);
+
+        Schedule::create([
+            'title' => 'Занятие',
+            'group_id' => $group->id,
+            'start' => now()->addMinutes(30),
+        ]);
+
+        $this->artisan('classes:remind-upcoming')->assertSuccessful();
+
+        Queue::assertNothingPushed();
     }
 
     /** @test */
