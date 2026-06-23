@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -58,7 +59,7 @@ class VkBotController extends Controller
                 if ($candidate && ! $candidate->vk_id) {
                     $candidate->update(['vk_id' => $vkId]);
                     $user = $candidate;
-                    $this->sendVkMessage($vkId, '✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь. Чем могу помочь?');
+                    $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
 
                     return response('ok', 200);
                 }
@@ -79,6 +80,22 @@ class VkBotController extends Controller
                 'text' => $text,
                 'is_read' => false,
             ]);
+
+            // SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ.
+            if (app(StudentSelfService::class)->matchesGroupsIntent($text)) {
+                $summary = app(StudentSelfService::class)->groupsSummary($user);
+
+                ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'bot',
+                    'text' => $summary,
+                    'is_read' => true,
+                ]);
+
+                $this->sendVkMessage($vkId, $summary);
+
+                return response('ok', 200);
+            }
 
             // ПРОВЕРКА: Если бот на паузе (отвечает человек)
             if (Cache::has("chat_human_vk_{$vkId}")) {

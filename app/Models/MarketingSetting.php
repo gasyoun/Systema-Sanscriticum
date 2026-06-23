@@ -57,6 +57,10 @@ class MarketingSetting extends Model
         'student_telegram_bot_enabled',
         'student_vk_bot_enabled',
 
+        // --- АВТО-УВЕДОМЛЕНИЯ СТУДЕНТАМ (TG/VK) ---
+        'payment_reminders_enabled',
+        'class_reminders_enabled',
+
         // --- ДОЛЖНИКИ ---
         'debtors_notify_years',
     ];
@@ -74,6 +78,8 @@ class MarketingSetting extends Model
         'student_maintenance_enabled' => 'boolean',
         'student_telegram_bot_enabled' => 'boolean',
         'student_vk_bot_enabled' => 'boolean',
+        'payment_reminders_enabled' => 'boolean',
+        'class_reminders_enabled' => 'boolean',
         'debtors_notify_years' => 'array',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',

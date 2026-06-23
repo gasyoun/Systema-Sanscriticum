@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -37,7 +38,7 @@ class TelegramWebhookController extends Controller
                         'telegram_auth_token' => null,
                     ]);
 
-                    $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!");
+                    $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!\n\nНапишите <b>«мои группы»</b>, чтобы увидеть свои группы и расписание.");
                 } else {
                     $this->sendMessage($chatId, 'Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.');
                 }
@@ -81,6 +82,23 @@ class TelegramWebhookController extends Controller
             'text' => $question,
             'is_read' => false, // Куратор это еще не видел
         ]);
+
+        // 1.5. SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ (личные данные
+        // ИИ выдумывать не вправе). Мгновенный ответ даже в режиме человека.
+        if (app(StudentSelfService::class)->matchesGroupsIntent($question)) {
+            $summary = app(StudentSelfService::class)->groupsSummary($user);
+
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+            ]);
+
+            $this->sendMessage($chatId, $summary);
+
+            return;
+        }
 
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
