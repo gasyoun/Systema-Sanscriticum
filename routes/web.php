@@ -175,6 +175,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
 
+    // Отвязка мессенджера (TG/VK) из кабинета — кнопка «Отвязать»
+    Route::post('/profile/messenger/{channel}/disconnect', [StudentController::class, 'disconnectMessenger'])
+        ->whereIn('channel', ['telegram', 'vk'])
+        ->name('student.messenger.disconnect');
+
     // Самостоятельная смена пароля студентом в кабинете
     Route::post('/profile/password', [AuthController::class, 'updatePassword'])
         ->name('student.password.update');
