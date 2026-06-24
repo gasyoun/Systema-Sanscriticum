@@ -144,6 +144,10 @@ class StudentController extends Controller
             ->filter(fn (LessonAccessGrant $g) => $g->lesson && $g->course)
             ->values();
 
+        // Чеклист первых шагов (P0-онбординг). Карточку показываем, пока не все
+        // шаги выполнены — см. partial onboarding-checklist.
+        $onboarding = \App\Support\OnboardingChecklist::for($user);
+
         return view('student.dashboard', compact(
             'courses',
             'certificates',
@@ -153,6 +157,7 @@ class StudentController extends Controller
             'debts',
             'debtsByCourseId',
             'trialLessons',
+            'onboarding',
         ));
     }
 
