@@ -708,6 +708,16 @@ class UserResource extends Resource
                     ->label('Есть ВК-бот')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('vk_id')),
 
+                // Сегмент «застрявшие» — та же логика, что в дашборд-виджете
+                // (неактивен 14+ дн / ДЗ на доработке без пересдачи). Удобно как
+                // адресат для рассылки «вернись к учёбе».
+                Tables\Filters\Filter::make('stuck')
+                    ->label('Застрявшие (неактив./ДЗ висит)')
+                    ->query(fn (Builder $query): Builder => $query->whereIn(
+                        'id', \App\Services\StuckStudentsReport::query()->select('users.id')
+                    ))
+                    ->indicator('Застрявшие'),
+
                 // --- ФИЛЬТРЫ ПО АКТИВНОСТИ ---
 
                 Tables\Filters\Filter::make('online_now')
@@ -1004,6 +1014,62 @@ class UserResource extends Resource
                         })
                         ->deselectRecordsAfterCompletion(),
 
+                    // --- СЕГМЕНТНАЯ РАССЫЛКА В МЕССЕНДЖЕРЫ ---
+                    // Сегмент = выбранные студенты (отфильтрованные фильтрами выше:
+                    // группа/курс/застрявшие/неактивные…). Превью охвата + отправка
+                    // через очередь (SendMessengerAlerts сам форматирует TG/VK).
+                    Tables\Actions\BulkAction::make('send_messenger')
+                        ->label('Написать в TG/VK')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('info')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->modalHeading('Сообщение выбранным студентам')
+                        ->modalSubmitActionLabel('Отправить')
+                        ->modalContent(fn (\Illuminate\Database\Eloquent\Collection $records) => view(
+                            'filament.users.messenger-reach',
+                            self::messengerReach($records),
+                        ))
+                        ->form([
+                            Forms\Components\Textarea::make('message')
+                                ->label('Текст сообщения')
+                                ->required()
+                                ->rows(5)
+                                ->maxLength(4000)
+                                ->helperText('Можно с переносами строк. HTML-ссылки <a href> превратятся в кликабельные/текстовые автоматически.'),
+                            Forms\Components\Toggle::make('to_telegram')->label('В Telegram')->default(true),
+                            Forms\Components\Toggle::make('to_vk')->label('В VK')->default(true),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $toTg = (bool) ($data['to_telegram'] ?? false);
+                            $toVk = (bool) ($data['to_vk'] ?? false);
+
+                            if (! $toTg && ! $toVk) {
+                                Notification::make()->warning()->title('Не выбран ни один канал')->send();
+
+                                return;
+                            }
+
+                            $sent = 0;
+                            $skipped = 0;
+                            foreach ($records as $user) {
+                                $reachable = ($toTg && $user->telegram_id) || ($toVk && $user->vk_id);
+                                if (! $reachable) {
+                                    $skipped++;
+
+                                    continue;
+                                }
+                                \App\Jobs\SendMessengerAlerts::dispatch($user, $data['message'], $toTg, $toVk);
+                                $sent++;
+                            }
+
+                            Notification::make()
+                                ->success()
+                                ->title('Рассылка поставлена в очередь')
+                                ->body("Отправляется: {$sent}. Пропущено (нет привязанного мессенджера): {$skipped}.")
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     // --- НОВАЯ КНОПКА: МАССОВАЯ РАССЫЛКА ДОСТУПОВ ---
                     Tables\Actions\BulkAction::make('send_bulk_access')
                         ->label('Разослать доступы')
@@ -1196,6 +1262,22 @@ class UserResource extends Resource
             ->title('Блоки проставлены')
             ->body('Студентов затронуто: '.count($touchedStudents).". Вход: {$setEntry}, выход: {$setExit}.")
             ->send();
+    }
+
+    /**
+     * Охват рассылки по выбранным студентам — для превью в модалке.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $records
+     * @return array{total: int, tg: int, vk: int, reachable: int}
+     */
+    public static function messengerReach(\Illuminate\Database\Eloquent\Collection $records): array
+    {
+        return [
+            'total' => $records->count(),
+            'tg' => $records->filter(fn ($u) => filled($u->telegram_id))->count(),
+            'vk' => $records->filter(fn ($u) => filled($u->vk_id))->count(),
+            'reachable' => $records->filter(fn ($u) => filled($u->telegram_id) || filled($u->vk_id))->count(),
+        ];
     }
 
     public static function getRelations(): array
