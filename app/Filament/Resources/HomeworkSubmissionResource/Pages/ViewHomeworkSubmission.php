@@ -7,7 +7,6 @@ use App\Models\HomeworkSubmission;
 use App\Services\HomeworkService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -63,7 +62,7 @@ class ViewHomeworkSubmission extends ViewRecord
                 ->color('success')
                 ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
                 ->form([
-                    Textarea::make('body')->label('Комментарий студенту (необязательно)')->rows(4),
+                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_ACCEPTED, bodyRequired: false),
                     $this->feedbackFilesField(),
                 ])
                 ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_ACCEPTED, $data)),
@@ -74,7 +73,7 @@ class ViewHomeworkSubmission extends ViewRecord
                 ->color('danger')
                 ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
                 ->form([
-                    Textarea::make('body')->label('Что нужно исправить')->rows(4)->required(),
+                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_NEEDS_REVISION, bodyRequired: true),
                     $this->feedbackFilesField(),
                 ])
                 ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_NEEDS_REVISION, $data)),
