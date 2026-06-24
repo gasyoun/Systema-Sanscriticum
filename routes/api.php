@@ -24,9 +24,11 @@ use App\Http\Controllers\Api\LessonController;
 Route::post('/sync-lessons', [LessonController::class, 'sync']);
 Route::post('/lessons/from-zoom', [LessonController::class, 'storeFromZoom']);
 
-Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
+    ->middleware('verify.tg.bot');
 
-Route::post('/vk-webhook', [\App\Http\Controllers\Api\VkBotController::class, 'handle']);
+Route::post('/vk-webhook', [\App\Http\Controllers\Api\VkBotController::class, 'handle'])
+    ->middleware('verify.vk.bot');
 
 Route::post('/webhooks/tochka', [WebhookController::class, 'handleTochkaWebhook']);
 
