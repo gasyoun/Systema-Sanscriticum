@@ -425,6 +425,14 @@
         {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
         @if($lesson->homework_enabled)
             @include('student.partials.homework')
+        @else
+            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или ещё нет. --}}
+            <section class="font-nunito">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
+                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
+                </div>
+            </section>
         @endif
     </div>
 

@@ -148,6 +148,16 @@ class StudentController extends Controller
         // шаги выполнены — см. partial onboarding-checklist.
         $onboarding = \App\Support\OnboardingChecklist::for($user);
 
+        // Ответы преподавателя, требующие действия студента (работа возвращена на
+        // доработку) — чтобы он узнал сразу в кабинете, а не только из письма.
+        $homeworkAlerts = $user->homeworkSubmissions()
+            ->where('status', \App\Models\HomeworkSubmission::STATUS_NEEDS_REVISION)
+            ->with(['lesson:id,course_id,title', 'course:id,slug,title'])
+            ->latest('reviewed_at')
+            ->get()
+            ->filter(fn ($s) => $s->lesson && $s->course)
+            ->values();
+
         return view('student.dashboard', compact(
             'courses',
             'certificates',
@@ -158,6 +168,7 @@ class StudentController extends Controller
             'debtsByCourseId',
             'trialLessons',
             'onboarding',
+            'homeworkAlerts',
         ));
     }
 

@@ -72,7 +72,7 @@ class HomeworkService
         ?string $body,
         array $files = [],
     ): HomeworkComment {
-        return DB::transaction(function () use ($submission, $reviewer, $newStatus, $body, $files) {
+        $comment = DB::transaction(function () use ($submission, $reviewer, $newStatus, $body, $files) {
             $role = $reviewer->is_admin
                 ? HomeworkComment::ROLE_ADMIN
                 : HomeworkComment::ROLE_TEACHER;
@@ -97,6 +97,52 @@ class HomeworkService
 
             return $comment;
         });
+
+        // Пуш в мессенджеры — после коммита: это синхронный HTTP, его нельзя
+        // держать внутри транзакции. Письмо (notifyStudent) уходит в очередь.
+        $this->pushReviewToMessengers($submission, $comment);
+
+        return $comment;
+    }
+
+    /**
+     * Мгновенно уведомить студента в привязанный мессенджер о вердикте по ДЗ.
+     * Письмо уходит отдельно (notifyStudent); здесь — Telegram/VK, чтобы студент
+     * узнал сразу, а не только из почты.
+     */
+    private function pushReviewToMessengers(HomeworkSubmission $submission, HomeworkComment $review): void
+    {
+        $user = $submission->user;
+        if (! $user || (! $user->telegram_id && ! $user->vk_id)) {
+            return;
+        }
+
+        $accepted = $submission->status === HomeworkSubmission::STATUS_ACCEPTED;
+        $lessonTitle = $submission->lesson?->title;
+        $where = $lessonTitle ? " «{$lessonTitle}»" : '';
+
+        $lessonUrl = url('/login');
+        if ($submission->course && $submission->lesson) {
+            $lessonUrl = route('student.lesson', [$submission->course->slug, $submission->lesson_id]);
+        }
+
+        $text = $accepted
+            ? "✅ Ваша домашняя работа{$where} принята! Поздравляем 🎉\n{$lessonUrl}"
+            : "✍️ Преподаватель вернул работу{$where} на доработку. Откройте урок и посмотрите комментарии:\n{$lessonUrl}";
+
+        try {
+            if ($user->telegram_id) {
+                $user->sendTelegramMessage($text);
+            }
+            if ($user->vk_id) {
+                $user->sendVkMessage($text);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Homework review push failed', [
+                'submission_id' => $submission->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
