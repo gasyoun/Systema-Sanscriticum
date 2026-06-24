@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Course;
+use App\Models\HomeworkSubmission;
 use App\Models\User;
 use App\Support\CourseNoteBlockParser;
 use App\Support\RoleGate;
@@ -11,6 +13,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -411,7 +414,58 @@ class UserResource extends Resource
                                 return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
                             }),
                     ]),
+
+                // Прогресс по урокам (% пройдено) и сводка ДЗ — куратору, чтобы видеть,
+                // где студент застрял, не выходя из карточки.
+                InfoSection::make('Прогресс обучения')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->schema([
+                        ViewEntry::make('learning_progress')
+                            ->hiddenLabel()
+                            ->view('filament.user.learning-progress')
+                            ->columnSpanFull(),
+                    ]),
             ]);
+    }
+
+    /**
+     * Прогресс студента для карточки куратора: процент пройденных уроков по каждому
+     * курсу (та же формула, что в кабинете — completedLessons / уроки группы) и
+     * сводка домашних работ по статусам.
+     *
+     * @return array{courses: list<array{title: string, completed: int, total: int, percent: int}>, homework: array{submitted: int, needs_revision: int, accepted: int}}
+     */
+    public static function learningProgress(User $record): array
+    {
+        $record->loadMissing('courses');
+
+        $courses = $record->courses->map(function (Course $course) use ($record): array {
+            $total = $course->lessons()->forUserGroups($record)->count();
+            $completed = $record->completedLessons()
+                ->where('lessons.course_id', $course->id)
+                ->count();
+
+            return [
+                'title' => (string) $course->title,
+                'completed' => $completed,
+                'total' => $total,
+                'percent' => $total > 0 ? (int) round($completed / $total * 100) : 0,
+            ];
+        })->values()->all();
+
+        $counts = $record->homeworkSubmissions()
+            ->selectRaw('status, count(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
+
+        return [
+            'courses' => $courses,
+            'homework' => [
+                'submitted' => (int) ($counts[HomeworkSubmission::STATUS_SUBMITTED] ?? 0),
+                'needs_revision' => (int) ($counts[HomeworkSubmission::STATUS_NEEDS_REVISION] ?? 0),
+                'accepted' => (int) ($counts[HomeworkSubmission::STATUS_ACCEPTED] ?? 0),
+            ],
+        ];
     }
 
     public static function table(Table $table): Table
