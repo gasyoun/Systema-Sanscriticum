@@ -239,6 +239,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
                 \App\Filament\Widgets\StudentStatsOverview::class,
+                \App\Filament\Widgets\StuckStudentsWidget::class,
                 \App\Filament\Widgets\UpcomingPromisesWidget::class,
                 \App\Filament\Widgets\CourseEarningsChart::class,
                 \App\Filament\Widgets\SalesFunnelChart::class,
