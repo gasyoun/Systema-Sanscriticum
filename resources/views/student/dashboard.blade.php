@@ -19,6 +19,8 @@
         </button>
     </div>
 
+    @include('student.partials.onboarding-checklist')
+
     @if (session('password_status'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
              class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
