@@ -9,6 +9,10 @@
         default => null,
     };
     $hwRefFiles = is_array($lesson->homework_attachments) ? $lesson->homework_attachments : [];
+    // ДЗ «включено», но преподаватель ещё не сформулировал условие и студент
+    // ничего не сдавал → показываем «скоро», форму прячем (иначе студент видит
+    // форму отправки без самого задания и не понимает, что делать).
+    $awaitingPrompt = ! filled($lesson->homework_prompt) && ! $homeworkSubmission;
 @endphp
 <section class="font-nunito">
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6">
@@ -21,7 +25,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Домашнее задание</h3>
-                    <p class="hidden sm:block text-[13px] text-gray-500">Выполните задание и отправьте на проверку</p>
+                    <p class="hidden sm:block text-[13px] text-gray-500">{{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}</p>
                 </div>
             </div>
             @if($hwBadge)
@@ -100,7 +104,12 @@
         @endif
 
         {{-- Форма сдачи / статус --}}
-        @if($hwEditable)
+        @if($awaitingPrompt)
+            <div class="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+                <i class="fas fa-hourglass-start text-amber-500 shrink-0"></i>
+                <p class="text-[13px] text-amber-800"><span class="font-bold">Задание ещё не задано.</span> Преподаватель скоро выложит условие — загляните позже.</p>
+            </div>
+        @elseif($hwEditable)
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
                   x-data="{ files: [] }">
                 @csrf
