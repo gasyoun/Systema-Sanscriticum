@@ -44,20 +44,25 @@ class VkBotController extends Controller
 
             $vkId = (int) $vkId;
             $text = is_string($messageObj['text'] ?? null) ? $messageObj['text'] : '';
-            $ref = $messageObj['ref'] ?? null; // ID студента из ссылки vk.me
+            // Одноразовый токен привязки из ссылки vk.me (VkController::connect).
+            // Раньше тут был сырой user id → IDOR-перехват чужого аккаунта.
+            $ref = is_string($messageObj['ref'] ?? null) ? $messageObj['ref'] : null;
 
             $user = User::where('vk_id', $vkId)->first();
 
             // Если перешел по кнопке с сайта
             if (! $user && $ref) {
-                $candidate = User::find($ref);
+                // Ищем по неугадываемому токену, а не по id. Токен одноразовый —
+                // гасим сразу после привязки, чтобы ссылку нельзя было переиспользовать.
+                $candidate = User::where('vk_auth_token', $ref)->first();
                 // Защита от перехвата аккаунта: привязываем VK ТОЛЬКО к ещё не
-                // привязанному аккаунту. Иначе ($candidate->vk_id уже задан) это
-                // перезапись чужой привязки по угадываемому id из тела вебхука.
-                // Полное решение — одноразовый неугадываемый токен вместо сырого
-                // user id (как telegram_auth_token) + подпись вебхука; см. .ai_state.md.
+                // привязанному аккаунту (на случай гонки/повторной отправки токена).
                 if ($candidate && ! $candidate->vk_id) {
-                    $candidate->update(['vk_id' => $vkId, 'vk_connected_at' => now()]);
+                    $candidate->update([
+                        'vk_id' => $vkId,
+                        'vk_connected_at' => now(),
+                        'vk_auth_token' => null,
+                    ]);
                     $user = $candidate;
                     $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
 
