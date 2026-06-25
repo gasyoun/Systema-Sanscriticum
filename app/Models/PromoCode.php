@@ -54,7 +54,7 @@ class PromoCode extends Model
 
         return Payment::where('promo_code_id', $this->id)
             ->where('user_id', $userId)
-            ->whereIn('status', ['paid', 'success'])
+            ->paid()
             ->exists();
     }
 

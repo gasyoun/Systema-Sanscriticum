@@ -91,7 +91,7 @@ class PromiseFulfillment
         $payment->grantAccess();
         $payment->awardPranaForPurchase();
 
-        if ((float) $payment->amount > 0 && in_array($payment->status, ['paid', 'success'], true)) {
+        if ((float) $payment->amount > 0 && in_array($payment->status, Payment::PAID_STATUSES, true)) {
             SendPaymentToSheetJob::dispatch($payment->id, 'create');
         }
 

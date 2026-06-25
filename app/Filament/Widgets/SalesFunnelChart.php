@@ -22,7 +22,7 @@ class SalesFunnelChart extends ChartWidget
     protected function getData(): array
     {
         $leadsCount = Lead::count();
-        $salesCount = Payment::whereIn('status', ['success', 'paid'])->count();
+        $salesCount = Payment::paid()->count();
 
         return [
             'datasets' => [

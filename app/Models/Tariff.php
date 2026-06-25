@@ -88,7 +88,7 @@ class Tariff extends Model
         // Депозит (бронь), пробное, расходы и выплаты ЗП не считаются «купленным
         // курсом» для лояльности — иначе они фиктивно увеличивали бы скидку.
         $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
-            ->whereIn('status', ['paid', 'success'])
+            ->paid()
             ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout'])
             ->where('created_at', '>=', now()->subYear()) // За последний год
             ->whereNotNull('course_id') // Исключаем системные платежи без курса
@@ -221,7 +221,7 @@ class Tariff extends Model
         $query = \App\Models\Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
-            ->whereIn('status', ['paid', 'success']);
+            ->paid();
 
         if ($this->type === 'block' && $this->block_half) {
             // Половина блока ничего не содержит — зачёта нет.
@@ -324,7 +324,7 @@ class Tariff extends Model
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->where('tariff', $this->accessKey())
-            ->whereIn('status', ['paid', 'success'])
+            ->paid()
             ->exists();
     }
 }

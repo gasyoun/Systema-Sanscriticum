@@ -650,7 +650,7 @@ class Payment extends Model
         }
 
         // Считаем успешные оплаты
-        $paymentsCount = $student->payments()->whereIn('status', ['success', 'paid'])->count();
+        $paymentsCount = $student->payments()->paid()->count();
 
         // Пишем в лог, сколько оплат нашла система
         \Illuminate\Support\Facades\Log::info("Попытка отправки письма. Студент: {$student->email}. Найдено успешных оплат: {$paymentsCount}");
@@ -696,8 +696,8 @@ class Payment extends Model
         // block_1, затем block_2 того же курса письмо уйдёт лишь на первой.
         $count = $student->payments()
             ->where('course_id', $this->course_id)
-            ->whereIn('status', ['success', 'paid'])
-            ->where('is_conditional', false)
+            ->paid()
+            ->real()
             ->whereNotIn('tariff', ['deposit', 'trial'])
             ->count();
 
