@@ -49,6 +49,19 @@ class Course extends Model
         return $this->format === 'live';
     }
 
+    /**
+     * Человекочитаемый лейбл формата для панели «Коротко о курсе».
+     * Значения совпадают с CourseResource (Radio 'format'): live | recorded.
+     */
+    public function formatLabel(): ?string
+    {
+        return match ($this->format) {
+            'live' => 'Live-поток',
+            'recorded' => 'В записи',
+            default => null,
+        };
+    }
+
     /** Курс считается новинкой, если создан за последние 30 дней. */
     public function isNew(): bool
     {

@@ -86,17 +86,67 @@
     {{-- ═════════════════ ОСНОВНОЙ КОНТЕНТ (одна широкая колонка) ═════════════════ --}}
     <div class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {{-- ───── 1. О КУРСЕ ───── --}}
+        {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
+        @php
+            // Даты проведения курса — диапазон по блокам (если у них проставлены сроки).
+            $datedBlocks = $course->blocks->filter(fn ($b) => $b->starts_at);
+            $courseStart = $datedBlocks->min('starts_at');
+            $courseEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+
+            // Строки панели «Коротко о курсе» — собираем только заполненные.
+            $facts = collect([
+                $course->teacher
+                    ? ['icon' => 'fas fa-user', 'label' => 'Преподаватель', 'value' => $course->teacher->name]
+                    : null,
+                $course->formatLabel()
+                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->formatLabel()]
+                    : null,
+                $course->lessons_count
+                    ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' лекций']
+                    : null,
+                $course->hours_count
+                    ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $course->hours_count.' часов']
+                    : null,
+                $courseStart
+                    ? ['icon' => 'far fa-calendar-alt', 'label' => 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
+                    : null,
+            ])->filter()->values();
+        @endphp
         <section class="mb-16 lg:mb-20">
             <h2 class="text-3xl font-bold text-white mb-8">О курсе</h2>
-            
-            <div class="prose prose-invert prose-lg prose-slate max-w-none">
-                @if($course->description)
-                    <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
-                        {!! $course->description !!}
-                    </div>
-                @else
-                    <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
+
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+                {{-- Левая колонка: текстовое описание --}}
+                <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
+                    @if($course->description)
+                        <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
+                            {!! $course->description !!}
+                        </div>
+                    @else
+                        <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
+                    @endif
+                </div>
+
+                {{-- Правая колонка: структурированная панель фактов --}}
+                @if($facts->isNotEmpty())
+                    <aside class="w-full lg:w-80 shrink-0 lg:sticky lg:top-28">
+                        <div class="rounded-2xl bg-[#111622] border border-[#1F2636] p-6">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">Коротко о курсе</h3>
+                            <dl class="space-y-4">
+                                @foreach($facts as $fact)
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-[#1F2636] flex items-center justify-center shrink-0">
+                                            <i class="{{ $fact['icon'] }} text-indigo-400 text-xs"></i>
+                                        </div>
+                                        <div class="flex flex-col min-w-0">
+                                            <dt class="text-[11px] font-bold uppercase tracking-wider text-slate-500">{{ $fact['label'] }}</dt>
+                                            <dd class="text-sm font-bold text-white">{{ $fact['value'] }}</dd>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        </div>
+                    </aside>
                 @endif
             </div>
         </section>
