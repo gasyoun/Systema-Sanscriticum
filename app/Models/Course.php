@@ -49,6 +49,13 @@ class Course extends Model
         return $this->format === 'live';
     }
 
+    /** Курс считается новинкой, если создан за последние 30 дней. */
+    public function isNew(): bool
+    {
+        return $this->created_at !== null
+            && $this->created_at->gt(now()->subDays(30));
+    }
+
     // Подсказываем Laravel типы данных для переключателей
     protected $casts = [
         'is_visible' => 'boolean',
