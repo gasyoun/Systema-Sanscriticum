@@ -34,7 +34,12 @@ class MobileApiTest extends TestCase
     /** @test */
     public function login_returns_a_token_and_user(): void
     {
-        $user = User::factory()->create(['email' => 'a@example.test', 'password' => Hash::make('secret123')]);
+        $user = User::factory()->create([
+            'email' => 'a@example.test',
+            'password' => Hash::make('secret123'),
+            'telegram_auth_token' => 'tg-secret',
+            'vk_auth_token' => 'vk-secret',
+        ]);
 
         $this->postJson('/api/v1/auth/login', [
             'email' => 'a@example.test',
@@ -46,6 +51,22 @@ class MobileApiTest extends TestCase
             ->assertJsonPath('user.id', $user->id);
 
         $this->assertDatabaseHas('personal_access_tokens', ['tokenable_id' => $user->id, 'name' => 'iPhone']);
+    }
+
+    /** @test */
+    public function default_sanctum_user_response_hides_bind_tokens(): void
+    {
+        $user = User::factory()->create([
+            'telegram_auth_token' => 'tg-secret',
+            'vk_auth_token' => 'vk-secret',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/user')->assertOk();
+
+        $response->assertJsonMissingPath('telegram_auth_token');
+        $response->assertJsonMissingPath('vk_auth_token');
     }
 
     /** @test */

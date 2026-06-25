@@ -61,6 +61,8 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'telegram_auth_token',
+        'vk_auth_token',
     ];
 
     protected function casts(): array

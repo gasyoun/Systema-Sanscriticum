@@ -37,6 +37,13 @@ class CourseCatalog extends Component
     /** Размер порции при подгрузке */
     public int $perPage = 24;
 
+    /**
+     * Подсказки «Часто ищут» под строкой поиска. Подбираются под слова,
+     * реально встречающиеся в названиях курсов (LIKE по title), чтобы клик
+     * не приводил к пустой выдаче.
+     */
+    public array $popularSearches = ['Грамматика', 'Санскрит', 'Хинди', 'Бхагавад-гита', 'Кочергина'];
+
     /** Сколько курсов сейчас показано */
     public int $loadedCount = 24;
 
@@ -138,6 +145,13 @@ class CourseCatalog extends Component
         // Общее количество подходящих под фильтр — для счётчика и определения "есть ли ещё"
         $totalCount = $this->baseQuery()->count();
 
+        // Итоги по секциям (формату) на ВСЮ отфильтрованную выдачу — для заголовков
+        // «Идут сейчас N» / «В записи N», даже если подгружена лишь часть порции.
+        $sectionTotals = $this->baseQuery()
+            ->selectRaw("COALESCE(NULLIF(format, ''), 'other') as fmt, COUNT(*) as c")
+            ->groupBy('fmt')
+            ->pluck('c', 'fmt');
+
         // Защита от случая, когда фильтр сильно сократил выдачу,
         // а loadedCount остался большим — отдадим в шаблон корректный лимит
         $effectiveLimit = min($this->loadedCount, $totalCount);
@@ -170,6 +184,7 @@ class CourseCatalog extends Component
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
             'totalCount' => $totalCount,
+            'sectionTotals' => $sectionTotals,
             'hasMore' => $hasMore,
             'purchasedByCourse' => $purchasedByCourse,
             'deposit' => MarketingSetting::cached(),

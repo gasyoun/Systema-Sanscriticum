@@ -37,15 +37,16 @@ class BotConnectionTrackingTest extends TestCase
 
     public function test_vk_binding_records_connected_at(): void
     {
-        $user = User::factory()->create(['vk_id' => null]);
+        $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => 'vk-bind-token']);
 
         $this->postJson('/api/vk-webhook', [
             'type' => 'message_new',
-            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => (string) $user->id]],
+            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => 'vk-bind-token']],
         ])->assertOk();
 
         $fresh = $user->fresh();
         $this->assertSame(888002, (int) $fresh->vk_id);
         $this->assertNotNull($fresh->vk_connected_at);
+        $this->assertNull($fresh->vk_auth_token);
     }
 }

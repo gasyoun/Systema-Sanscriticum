@@ -101,6 +101,33 @@ class VkAuthTokenLinkingTest extends TestCase
     }
 
     /** @test */
+    public function burned_token_replay_does_not_overwrite_existing_binding(): void
+    {
+        $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => 'tok_replay']);
+
+        $this->vkWebhook(111, 'tok_replay')->assertOk();
+        $this->vkWebhook(999, 'tok_replay')->assertOk();
+
+        $user->refresh();
+        $this->assertSame(111, (int) $user->vk_id);
+        $this->assertNull($user->vk_auth_token);
+    }
+
+    /** @test */
+    public function bind_tokens_are_hidden_from_user_serialization(): void
+    {
+        $user = User::factory()->create([
+            'telegram_auth_token' => 'tg-secret',
+            'vk_auth_token' => 'vk-secret',
+        ]);
+
+        $payload = $user->toArray();
+
+        $this->assertArrayNotHasKey('telegram_auth_token', $payload);
+        $this->assertArrayNotHasKey('vk_auth_token', $payload);
+    }
+
+    /** @test */
     public function disconnect_clears_the_auth_token(): void
     {
         $user = User::factory()->create(['vk_id' => 222, 'vk_auth_token' => 'tok_left_over']);

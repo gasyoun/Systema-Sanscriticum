@@ -52,21 +52,24 @@ class VkBotController extends Controller
 
             // Если перешел по кнопке с сайта
             if (! $user && $ref) {
-                // Ищем по неугадываемому токену, а не по id. Токен одноразовый —
-                // гасим сразу после привязки, чтобы ссылку нельзя было переиспользовать.
-                $candidate = User::where('vk_auth_token', $ref)->first();
-                // Защита от перехвата аккаунта: привязываем VK ТОЛЬКО к ещё не
-                // привязанному аккаунту (на случай гонки/повторной отправки токена).
-                if ($candidate && ! $candidate->vk_id) {
-                    $candidate->update([
-                        'vk_id' => $vkId,
-                        'vk_connected_at' => now(),
-                        'vk_auth_token' => null,
-                    ]);
-                    $user = $candidate;
-                    $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
+                $candidateId = User::where('vk_auth_token', $ref)->value('id');
 
-                    return response('ok', 200);
+                if ($candidateId) {
+                    $bound = User::whereKey($candidateId)
+                        ->where('vk_auth_token', $ref)
+                        ->whereNull('vk_id')
+                        ->update([
+                            'vk_id' => $vkId,
+                            'vk_connected_at' => now(),
+                            'vk_auth_token' => null,
+                        ]);
+
+                    if ($bound === 1) {
+                        $user = User::find($candidateId);
+                        $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
+
+                        return response('ok', 200);
+                    }
                 }
             }
 

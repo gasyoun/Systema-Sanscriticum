@@ -24,6 +24,20 @@
                 </button>
             @endif
         </div>
+
+        {{-- Подсказки «Часто ищут» --}}
+        @if(! empty($popularSearches) && $search === '')
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm">
+                <span class="text-slate-500">Часто ищут:</span>
+                @foreach($popularSearches as $term)
+                    <button type="button"
+                            wire:click="$set('search', '{{ $term }}')"
+                            class="text-slate-300 hover:text-[#E85C24] underline-offset-4 hover:underline transition-colors cursor-pointer">
+                        {{ $term }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     {{-- ============================================ --}}
@@ -152,16 +166,40 @@
         </div>
 
         <div wire:loading.class="opacity-50" wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
-             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 transition-opacity">
+             class="space-y-12 transition-opacity">
 
-            @forelse($courses as $course)
-                <x-shop.course-card
-                    :course="$course"
-                    :purchasedByCourse="$purchasedByCourse"
-                    :deposit="$deposit"
-                    wire:key="course-{{ $course->id }}" />
+            @php
+                // Заголовки секций по формату курса
+                $sectionLabels = ['live' => 'Идут сейчас', 'recorded' => 'В записи', 'other' => 'Другие курсы'];
+                // Группируем подгруженную порцию; порядок секций фиксирован
+                $grouped = $courses->groupBy(fn ($c) => $c->format ?: 'other');
+                $orderedKeys = collect(['live', 'recorded', 'other'])
+                    ->merge($grouped->keys())
+                    ->unique()
+                    ->filter(fn ($k) => $grouped->has($k));
+            @endphp
+
+            @forelse($orderedKeys as $key)
+                <section wire:key="section-{{ $key }}">
+                    <div class="flex items-baseline gap-3 mb-6">
+                        <h2 class="text-2xl font-extrabold text-white">
+                            {{ $sectionLabels[$key] ?? 'Курсы' }}
+                        </h2>
+                        <span class="text-xl font-bold text-slate-500">{{ $sectionTotals[$key] ?? $grouped[$key]->count() }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                        @foreach($grouped[$key] as $course)
+                            <x-shop.course-card
+                                :course="$course"
+                                :purchasedByCourse="$purchasedByCourse"
+                                :deposit="$deposit"
+                                wire:key="course-{{ $course->id }}" />
+                        @endforeach
+                    </div>
+                </section>
             @empty
-                <div class="col-span-full text-center py-20">
+                <div class="text-center py-20">
                     <i class="fas fa-moon text-5xl text-slate-700 mb-4"></i>
                     @if($this->hasActiveFilters)
                         <h3 class="text-2xl font-bold text-white mb-2">Ничего не найдено</h3>
