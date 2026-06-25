@@ -94,7 +94,7 @@ class StudentController extends Controller
         if ($channel === 'telegram') {
             $user->update(['telegram_id' => null, 'telegram_auth_token' => null]);
         } else { // 'vk' — единственный другой вариант (ограничено в роуте whereIn)
-            $user->update(['vk_id' => null]);
+            $user->update(['vk_id' => null, 'vk_auth_token' => null]);
         }
 
         return back()->with('bot_status', 'Бот отвязан — уведомления по учёбе больше не приходят. Подключить заново можно в любой момент.');
