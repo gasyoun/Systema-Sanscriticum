@@ -20,7 +20,7 @@ class CourseEarningsChart extends ChartWidget
     {
         // Группируем успешные платежи по курсам через БД для скорости.
         // Выплаты ЗП преподавателям — бухгалтерский отток, не выручка курса.
-        $payments = Payment::whereIn('status', ['success', 'paid'])
+        $payments = Payment::paid()
             ->whereNotNull('course_id')
             ->where('tariff', '!=', 'salary_payout')
             ->select('course_id', DB::raw('SUM(amount) as total'))

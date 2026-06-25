@@ -33,7 +33,7 @@ class ShopController extends Controller
                 ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courseIds)
-                ->whereIn('status', ['paid', 'success'])
+                ->paid()
                 ->get(['course_id', 'tariff'])
                 ->groupBy('course_id')
                 ->map(fn ($rows) => $rows->pluck('tariff')->filter()->unique()->values()->all())
@@ -76,7 +76,7 @@ class ShopController extends Controller
                 ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->where('course_id', $course->id)
-                ->whereIn('status', ['paid', 'success'])
+                ->paid()
                 ->pluck('tariff')
                 ->filter()
                 ->unique()

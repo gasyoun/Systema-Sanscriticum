@@ -92,7 +92,7 @@ class CoursesRelationManager extends RelationManager
                         $firstPaid = \App\Models\Payment::query()
                             ->where('user_id', $ownerId)
                             ->where('course_id', $record->id)
-                            ->whereIn('status', ['paid', 'success'])
+                            ->paid()
                             ->where('amount', '>', 0)
                             ->min('created_at');
 

@@ -153,7 +153,7 @@ class CourseCatalog extends Component
                 ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courses->pluck('id'))
-                ->whereIn('status', ['paid', 'success'])
+                ->paid()
                 ->get(['course_id', 'tariff'])
                 ->groupBy('course_id')
                 ->map(fn ($rows) => $rows->pluck('tariff')->filter()->unique()->values()->all())

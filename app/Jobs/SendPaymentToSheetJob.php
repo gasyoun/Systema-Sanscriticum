@@ -49,7 +49,7 @@ class SendPaymentToSheetJob implements ShouldQueue
         // пока задача висела в очереди). Зеркалит PaymentObserver::isSyncable():
         // только paid/success и не «обещанный» доступ. Сумму не проверяем —
         // нулевые оплаты и отрицательные расходы тоже должны попасть в таблицу.
-        if (! in_array($payment->status, ['paid', 'success'], true) || $payment->is_conditional) {
+        if (! in_array($payment->status, Payment::PAID_STATUSES, true) || $payment->is_conditional) {
             return;
         }
 

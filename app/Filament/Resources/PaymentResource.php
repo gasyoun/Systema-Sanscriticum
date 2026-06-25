@@ -302,7 +302,7 @@ class PaymentResource extends Resource
                         return $query->when($data['block'] ?? null, function ($q, $block) {
                             $n = (int) $block;
 
-                            $q->whereIn('status', ['paid', 'success'])
+                            $q->paid()
                                 ->where(function ($q2) use ($n) {
                                     $q2->where('tariff', 'full')              // весь курс
                                         ->orWhere('tariff', 'block_'.$n)      // подстраховка для строк без диапазона
