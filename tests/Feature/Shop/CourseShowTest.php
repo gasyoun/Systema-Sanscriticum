@@ -209,6 +209,46 @@ class CourseShowTest extends TestCase
             ->assertSee('май 2028');
     }
 
+    /** @test */
+    public function schedule_session_shows_enroll_cta_for_a_guest(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'cta-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Занятие 1',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'end' => Carbon::parse('2026-06-28 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Записаться')
+            ->assertSee('href="#tariffs"', false);
+    }
+
+    /** @test */
+    public function trial_session_shows_buy_trial_cta(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'cta-trial-course']);
+        Tariff::factory()->for($course)->create();
+
+        $session = Schedule::create([
+            'title' => 'Пробное занятие',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'course_id' => $course->id,
+        ]);
+        // Делает этот сеанс пробным: цена + ссылка на событие расписания.
+        $course->update(['trial_price' => 1000, 'trial_schedule_id' => $session->id]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Купить пробное');
+    }
+
     /** Создать курс с N блок-тарифами + опционально пометить один блок текущим. */
     private function makeCourseWithBlocks(int $blocks, ?int $currentBlockNumber): Course
     {

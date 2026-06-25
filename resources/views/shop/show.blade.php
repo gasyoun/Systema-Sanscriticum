@@ -197,6 +197,36 @@
                                             <i class="far fa-clock mr-1"></i>{{ $session->start->format('H:i') }}@if($session->end)–{{ $session->end->format('H:i') }}@endif
                                         </span>
                                     </div>
+
+                                    {{-- CTA: билет на сеанс --}}
+                                    @php
+                                        // Пробное — единственный «билет на один сеанс» в этой модели:
+                                        // покупается отдельно через trial.create. Для записавшихся со
+                                        // ссылкой — прямой вход; для остальных — переход к тарифам.
+                                        $isTrialSession = $course->trial_schedule_id
+                                            && (int) $course->trial_schedule_id === (int) $session->id;
+                                        $enrolled = ! empty($purchasedKeys);
+                                    @endphp
+                                    @if($isTrialSession && ! empty($showTrialCta))
+                                        <button type="button"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ (float) $course->trial_price }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
+                                                class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-xs font-bold transition-all whitespace-nowrap">
+                                            <i class="fas fa-graduation-cap text-[11px]"></i>
+                                            Купить пробное
+                                        </button>
+                                    @elseif($enrolled && $session->link)
+                                        <a href="{{ $session->link }}" target="_blank" rel="noopener"
+                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#E85C24] hover:bg-[#d64e1c] text-white text-xs font-bold transition-all whitespace-nowrap">
+                                            <i class="fas fa-video text-[11px]"></i>
+                                            Подключиться
+                                        </a>
+                                    @else
+                                        <a href="#tariffs"
+                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#1F2636] hover:bg-[#2A344A] text-white text-xs font-bold transition-all whitespace-nowrap border border-[#2A344A]">
+                                            Записаться
+                                            <i class="fas fa-arrow-right text-[10px]"></i>
+                                        </a>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
