@@ -70,6 +70,25 @@ class EditLectureDraft extends EditRecord
                 ->requiresConfirmation()
                 ->action(fn () => $this->runBuild()),
 
+            Actions\Action::make('restore_backup')
+                ->label('Откатить к бэкапу')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->color('gray')
+                ->visible(fn () => ! $draft->isProcessing()
+                    && in_array($draft->status, [LectureDraft::STATUS_EDITING, LectureDraft::STATUS_BUILT], true)
+                    && count(app(LectureStorage::class)->listBackups($draft)) > 0)
+                ->form([
+                    Forms\Components\Select::make('backup_file')
+                        ->label('Версия для отката')
+                        ->required()
+                        ->options(fn () => collect(app(LectureStorage::class)->listBackups($draft))
+                            ->mapWithKeys(fn (array $b) => [$b['file'] => $b['label']])
+                            ->all())
+                        ->helperText('Текущее состояние будет сохранено отдельным бэкапом перед откатом'),
+                ])
+                ->requiresConfirmation()
+                ->action(fn (array $data) => $this->runRestore((string) $data['backup_file'])),
+
             Actions\ActionGroup::make([
                 Actions\Action::make('ai_structure')
                     ->label('🤖 Разбить на разделы')
@@ -307,6 +326,35 @@ class EditLectureDraft extends EditRecord
 
         Notification::make()
             ->title('Сборка поставлена в очередь')
+            ->body('Страница обновится автоматически по завершении.')
+            ->success()
+            ->send();
+
+        $this->refreshFormData(['status', 'error_log', 'output_html_path', 'meta']);
+    }
+
+    /**
+     * Откат data.json к выбранному бэкапу + пересборка HTML. Текущее состояние
+     * бэкапится перед откатом (LectureStorage::restoreBackup) — откат обратим.
+     */
+    private function runRestore(string $backupFile): void
+    {
+        /** @var LectureDraft $draft */
+        $draft = $this->getRecord();
+
+        try {
+            app(LectureStorage::class)->restoreBackup($draft, $backupFile);
+        } catch (\Throwable $e) {
+            Notification::make()->title('Не удалось откатить')->body($e->getMessage())->danger()->persistent()->send();
+
+            return;
+        }
+
+        $draft->markProcessing('Сборка HTML после отката');
+        BuildLectureHtmlJob::dispatch($draft->id, ownsProcessing: true);
+
+        Notification::make()
+            ->title('Откат применён, идёт пересборка')
             ->body('Страница обновится автоматически по завершении.')
             ->success()
             ->send();

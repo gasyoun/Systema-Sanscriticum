@@ -27,8 +27,17 @@ class LectureProcessingWidget extends Widget
     /** Был ли черновик в обработке на прошлом поле — чтобы поймать момент завершения. */
     public bool $wasProcessing = false;
 
+    public function mount(): void
+    {
+        // Берём advisory-лок сразу при открытии — чтобы другие редакторы увидели
+        // «редактирует X» не дожидаясь первого поллинга.
+        $this->heartbeat();
+    }
+
     public function refreshStatus(): void
     {
+        $this->heartbeat();
+
         $draft = $this->freshDraft();
         if ($draft === null) {
             return;
@@ -50,13 +59,28 @@ class LectureProcessingWidget extends Widget
     protected function getViewData(): array
     {
         $draft = $this->freshDraft();
+        $me = auth()->id();
+        $lock = $draft?->activeLock();
+        $lockedByOther = $draft !== null && $me !== null && $draft->isLockedByOther((int) $me);
 
         return [
             'isProcessing' => $draft?->isProcessing() ?? false,
             'label' => $draft?->processingLabel(),
             'startedAt' => $draft?->processingStartedAt(),
             'lastAi' => $draft?->meta['last_ai'] ?? null,
+            'lockedByOther' => $lockedByOther,
+            'lockName' => $lockedByOther ? ($lock['name'] ?? 'другой редактор') : null,
         ];
+    }
+
+    /** Обновляет advisory-лок для текущего пользователя (если не держит другой). */
+    private function heartbeat(): void
+    {
+        $draft = $this->freshDraft();
+        $user = auth()->user();
+        if ($draft !== null && $user !== null) {
+            $draft->heartbeatLock($user->id, (string) $user->name);
+        }
     }
 
     private function freshDraft(): ?LectureDraft
