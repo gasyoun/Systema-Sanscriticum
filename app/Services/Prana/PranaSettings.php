@@ -79,6 +79,49 @@ final class PranaSettings
         return $out;
     }
 
+    /**
+     * Ранг по накопленной пране (lifetime). Возвращает текущий ранг и прогресс
+     * к следующему (next=null, прогресс=100 для максимального).
+     *
+     * @return array{key: string, name: string, min: int, lifetime: int, next_name: ?string, next_min: ?int, progress: int}
+     */
+    public static function rankFor(int $lifetime): array
+    {
+        $ranks = config('prana.ranks', []);
+        $lifetime = max(0, $lifetime);
+
+        $current = $ranks[0] ?? ['key' => 'sishya', 'name' => 'Śiṣya', 'min' => 0];
+        $next = null;
+
+        foreach ($ranks as $i => $rank) {
+            if ($lifetime >= (int) $rank['min']) {
+                $current = $rank;
+                $next = $ranks[$i + 1] ?? null;
+            } else {
+                break;
+            }
+        }
+
+        if ($next === null) {
+            $progress = 100;
+        } else {
+            $span = (int) $next['min'] - (int) $current['min'];
+            $progress = $span > 0
+                ? (int) round(($lifetime - (int) $current['min']) / $span * 100)
+                : 0;
+        }
+
+        return [
+            'key' => (string) $current['key'],
+            'name' => (string) $current['name'],
+            'min' => (int) $current['min'],
+            'lifetime' => $lifetime,
+            'next_name' => $next['name'] ?? null,
+            'next_min' => isset($next['min']) ? (int) $next['min'] : null,
+            'progress' => max(0, min(100, $progress)),
+        ];
+    }
+
     public static function flush(): void
     {
         self::$cached = null;

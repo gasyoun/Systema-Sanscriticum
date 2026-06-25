@@ -411,6 +411,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(SocialAccount::class);
     }
 
+    /**
+     * Ранг студента по накопленной пране (lifetime_prana) + прогресс к следующему.
+     *
+     * @return array{key: string, name: string, min: int, lifetime: int, next_name: ?string, next_min: ?int, progress: int}
+     */
+    public function pranaRank(): array
+    {
+        return \App\Services\Prana\PranaSettings::rankFor((int) ($this->lifetime_prana ?? 0));
+    }
+
     // --- РЕФЕРАЛЬНАЯ ПРОГРАММА ---
 
     /** Кто пригласил этого студента. */
