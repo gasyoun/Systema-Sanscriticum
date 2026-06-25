@@ -66,6 +66,11 @@ class ShopController extends Controller
             'teacher', // подгружаем преподавателя одним запросом
         ]);
 
+        // Блок «Расписание»: ближайшие занятия курса, сгруппированные по месяцу
+        // («Июнь 2026» → [занятия]). Пустая группировка — секция просто не выводится.
+        $scheduleGroups = $course->upcomingSchedules()
+            ->groupBy(fn ($s) => $s->start->translatedFormat('F Y'));
+
         $currentBlock = $course->currentBlock();
         $currentBlockNumber = $currentBlock?->number;
 
@@ -107,6 +112,6 @@ class ShopController extends Controller
             $showTrialCta = ! $alreadyHasTrial;
         }
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'scheduleGroups'));
     }
 }

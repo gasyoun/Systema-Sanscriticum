@@ -180,4 +180,37 @@ class Course extends Model
             ->withPivot('status', 'note', 'left_after_block', 'joined_at_block')
             ->withTimestamps();
     }
+
+    /**
+     * Ближайшие занятия курса для публичной страницы (блок «Расписание»).
+     *
+     * Зеркалит выборку из кабинета (StudentController::calendar): занятие
+     * относится к курсу либо напрямую (`course_id`), либо через любую из его
+     * групп (`group_id`). «Будущее» считается по `end`, а для записей без
+     * `end` — от `start` минус DEFAULT_DURATION_HOURS, как в Schedule::isLive(),
+     * чтобы идущее сейчас занятие не пропадало из списка ровно в момент старта.
+     */
+    public function upcomingSchedules(int $limit = 24): \Illuminate\Database\Eloquent\Collection
+    {
+        $groupIds = $this->groups()->pluck('groups.id');
+
+        return Schedule::query()
+            ->where(function ($q) use ($groupIds) {
+                $q->where('course_id', $this->id);
+
+                if ($groupIds->isNotEmpty()) {
+                    $q->orWhereIn('group_id', $groupIds);
+                }
+            })
+            ->where(function ($q) {
+                $q->where('end', '>=', now())
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('end')
+                            ->where('start', '>=', now()->subHours(Schedule::DEFAULT_DURATION_HOURS));
+                    });
+            })
+            ->orderBy('start')
+            ->limit($limit)
+            ->get();
+    }
 }

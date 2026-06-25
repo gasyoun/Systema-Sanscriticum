@@ -4,6 +4,8 @@ namespace Tests\Feature\Shop;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\Group;
+use App\Models\Schedule;
 use App\Models\Tariff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -90,6 +92,79 @@ class CourseShowTest extends TestCase
         $orderedNumbers = array_values(array_unique($matches[1]));
 
         $this->assertSame(['1', '2', '3', '4'], $orderedNumbers);
+    }
+
+    /** @test */
+    public function schedule_section_lists_upcoming_session_for_the_course(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Вводное занятие',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'end' => Carbon::parse('2026-06-28 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Расписание')
+            ->assertSee('Вводное занятие')
+            ->assertSee('20:00–22:00');
+    }
+
+    /** @test */
+    public function schedule_section_includes_sessions_linked_through_a_group(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'sched-group-course']);
+        Tariff::factory()->for($course)->create();
+        $group = Group::create(['name' => 'Поток 1']);
+        $course->groups()->attach($group);
+
+        Schedule::create([
+            'title' => 'Занятие группы',
+            'start' => Carbon::parse('2026-07-01 18:00:00'),
+            'end' => Carbon::parse('2026-07-01 20:00:00'),
+            'group_id' => $group->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Занятие группы');
+    }
+
+    /** @test */
+    public function past_sessions_are_not_shown(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'past-sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Прошедшее занятие',
+            'start' => Carbon::parse('2026-06-20 20:00:00'),
+            'end' => Carbon::parse('2026-06-20 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertDontSee('Прошедшее занятие');
+    }
+
+    /** @test */
+    public function schedule_section_is_hidden_when_course_has_no_sessions(): void
+    {
+        $course = Course::factory()->create(['slug' => 'no-sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+
+        // Заголовок секции расписания не должен появляться без занятий.
+        $this->assertStringNotContainsString('id="schedule"', $html);
     }
 
     /** Создать курс с N блок-тарифами + опционально пометить один блок текущим. */
