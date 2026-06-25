@@ -101,6 +101,61 @@
             </div>
         </section>
 
+        {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
+        @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
+        <section id="schedule" class="mb-16 lg:mb-20">
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-3xl font-bold text-white">Расписание</h2>
+                <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
+            </div>
+
+            <div class="space-y-10">
+                @foreach($scheduleGroups as $month => $sessions)
+                    <div>
+                        {{-- Пилюля месяца --}}
+                        <div class="mb-5">
+                            <span class="inline-block bg-[#111622] text-[#E85C24] text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full border border-[#E85C24]/30">
+                                {{ $month }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            @foreach($sessions as $session)
+                                <div class="relative flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
+                                    {{-- Дата-бейдж: число + месяц --}}
+                                    <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636]">
+                                        <span class="text-2xl font-extrabold text-white leading-none">{{ $session->start->translatedFormat('j') }}</span>
+                                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{{ $session->start->translatedFormat('M') }}</span>
+                                    </div>
+
+                                    {{-- Описание сеанса --}}
+                                    <div class="flex flex-col min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                                {{ $session->start->translatedFormat('l') }}
+                                            </span>
+                                            @if($session->isLive())
+                                                <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Идёт сейчас
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-base font-bold text-white truncate">
+                                            {{ $session->title ?: $course->title }}
+                                        </span>
+                                        <span class="text-sm font-bold text-indigo-400 mt-1">
+                                            <i class="far fa-clock mr-1"></i>{{ $session->start->format('H:i') }}@if($session->end)–{{ $session->end->format('H:i') }}@endif
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php
             $hasCurrentBlock = !empty($currentBlockNumber);
