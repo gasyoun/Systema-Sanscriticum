@@ -165,6 +165,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/api/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store'])
         ->name('activity.heartbeat');
 
+    // P2P-перевод праны другому студенту (подарок).
+    Route::post('/prana/transfer', [\App\Http\Controllers\PranaTransferController::class, 'transfer'])
+        ->middleware('throttle:20,1')
+        ->name('student.prana.transfer');
+
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');
 
