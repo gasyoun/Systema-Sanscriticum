@@ -37,15 +37,19 @@ class BotConnectionTrackingTest extends TestCase
 
     public function test_vk_binding_records_connected_at(): void
     {
-        $user = User::factory()->create(['vk_id' => null]);
+        // Привязка идёт по одноразовому токену (vk_auth_token), а не по сырому
+        // user id — это закрытый VK-IDOR (см. VkController::connect / PR #173).
+        $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => 'vktok123']);
 
         $this->postJson('/api/vk-webhook', [
             'type' => 'message_new',
-            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => (string) $user->id]],
+            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => 'vktok123']],
         ])->assertOk();
 
         $fresh = $user->fresh();
         $this->assertSame(888002, (int) $fresh->vk_id);
         $this->assertNotNull($fresh->vk_connected_at);
+        // Токен одноразовый — гасится сразу после привязки.
+        $this->assertNull($fresh->vk_auth_token);
     }
 }
