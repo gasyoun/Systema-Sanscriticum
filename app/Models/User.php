@@ -405,6 +405,40 @@ class User extends Authenticatable implements FilamentUser
     // ==========================================
     // СВЯЗЬ С ЧАТОМ (ДЛЯ HELPDESK)
     // ==========================================
+    // --- РЕФЕРАЛЬНАЯ ПРОГРАММА ---
+
+    /** Кто пригласил этого студента. */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    /** Кого пригласил этот студент. */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    /** Реферальный код студента — генерируется лениво при первом обращении. */
+    public function referralCode(): string
+    {
+        if (blank($this->referral_code)) {
+            do {
+                $code = strtoupper(\Illuminate\Support\Str::random(8));
+            } while (static::where('referral_code', $code)->exists());
+
+            $this->forceFill(['referral_code' => $code])->save();
+        }
+
+        return $this->referral_code;
+    }
+
+    /** Публичная ссылка-приглашение. */
+    public function referralLink(): string
+    {
+        return url('/?ref='.$this->referralCode());
+    }
+
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class);

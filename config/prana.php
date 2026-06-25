@@ -15,6 +15,7 @@ return [
         'open_lesson_view' => 20,
         'daily_login' => 5,
         'payment_success' => 50,
+        'referral' => 100,
     ],
 
     // Человекочитаемые подписи для истории и «как заработать».
@@ -24,6 +25,7 @@ return [
         'open_lesson_view' => 'Просмотр открытого урока',
         'daily_login' => 'Ежедневный вход',
         'payment_success' => 'Покупка курса',
+        'referral' => 'Приглашённый друг оплатил курс',
         'spent_on_purchase' => 'Списано при оплате',
         'refund_failed' => 'Возврат за несостоявшуюся оплату',
         'admin_grant' => 'Начислено администратором',
