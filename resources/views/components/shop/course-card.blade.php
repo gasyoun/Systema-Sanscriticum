@@ -71,11 +71,15 @@
             @if($course->categories->isNotEmpty())
                 <div class="flex flex-wrap gap-1.5 mb-3">
                     @foreach($course->categories as $cat)
-                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
-                              @style(['background-color: ' . $cat->color . '20; color: ' . $cat->color => $cat->color])
-                              @class(['bg-[#1F2636] text-slate-300' => !$cat->color])>
+                        {{-- Клик по тегу фильтрует каталог по этой категории (ловит родительский Livewire-компонент) --}}
+                        <button type="button"
+                                wire:click.stop="toggleCategory({{ $cat->id }})"
+                                title="Показать курсы темы «{{ $cat->name }}»"
+                                class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75"
+                                @style(['background-color: ' . $cat->color . '20; color: ' . $cat->color => $cat->color])
+                                @class(['bg-[#1F2636] text-slate-300' => !$cat->color])>
                             {{ $cat->name }}
-                        </span>
+                        </button>
                     @endforeach
                 </div>
             @endif
