@@ -54,6 +54,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
 
+        // Сгорание (decay) тратимой праны у давно неактивных студентов — еженедельно,
+        // в ночное окно. Команда сама пропускает прогон, если decay выключен
+        // (config prana.decay.enabled=false, дефолт), так что повесить безопасно:
+        // включение делается флагом PRANA_DECAY_ENABLED без правки расписания.
+        $schedule->command('prana:decay')
+            ->weeklyOn(1, '04:00') // понедельник 04:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('prana-decay');
+
         // Ежемесячный пост «сейчас идут курсы» в ВК/ТГ (через n8n-вебхук).
         $schedule->command('schedule:post-monthly')
             ->monthlyOn(1, '10:00') // 1-е число месяца, 10:00 МСК
