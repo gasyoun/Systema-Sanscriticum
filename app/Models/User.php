@@ -405,6 +405,12 @@ class User extends Authenticatable implements FilamentUser
     // ==========================================
     // СВЯЗЬ С ЧАТОМ (ДЛЯ HELPDESK)
     // ==========================================
+    /** Привязанные внешние OAuth-аккаунты (Google/VK/Yandex). */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
     // --- РЕФЕРАЛЬНАЯ ПРОГРАММА ---
 
     /** Кто пригласил этого студента. */

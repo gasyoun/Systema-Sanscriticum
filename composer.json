@@ -16,6 +16,7 @@
         "laravel/framework": "^10.10",
         "laravel/horizon": "^5.46",
         "laravel/sanctum": "^3.3",
+        "laravel/socialite": "^5.11",
         "laravel/tinker": "^2.8",
         "nelexa/zip": "^4.0",
         "pxlrbt/filament-excel": "^2.5",
