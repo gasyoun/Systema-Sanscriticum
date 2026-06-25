@@ -24,6 +24,11 @@ class PaymentObserver
         if ($this->isSyncable($payment)) {
             SendPaymentToSheetJob::dispatch($payment->id, 'create');
         }
+
+        // Платёж сразу создан как paid → наградить пригласившего (если есть).
+        if (in_array($payment->status, self::SUCCESS_STATUSES, true)) {
+            app(\App\Services\ReferralService::class)->rewardForPayment($payment);
+        }
     }
 
     /**
@@ -43,6 +48,11 @@ class PaymentObserver
 
         if (($justBecamePaid || $stillPaidAndChanged) && $this->isSyncable($payment)) {
             SendPaymentToSheetJob::dispatch($payment->id, 'update');
+        }
+
+        // Основной кейс: вебхук Точки перевёл платёж в paid → награда рефереру.
+        if ($justBecamePaid) {
+            app(\App\Services\ReferralService::class)->rewardForPayment($payment);
         }
     }
 
