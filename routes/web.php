@@ -10,6 +10,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\VkController;
 use App\Models\LandingPage;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -181,6 +182,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('leads.export');
 
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+
+    // Привязка VK через одноразовый токен (вместо сырого ?ref={user_id}) — см. VkController.
+    Route::get('/vk/connect', [VkController::class, 'connect'])->name('vk.connect');
 
     // Отвязка мессенджера (TG/VK) из кабинета — кнопка «Отвязать»
     Route::post('/profile/messenger/{channel}/disconnect', [StudentController::class, 'disconnectMessenger'])

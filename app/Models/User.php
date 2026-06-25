@@ -33,6 +33,7 @@ class User extends Authenticatable implements FilamentUser
         'telegram_auth_token',   // <-- Добавили для Telegram
         'telegram_connected_at', // когда привязал TG-бота
         'vk_id',
+        'vk_auth_token',         // одноразовый токен привязки VK (см. VkController::connect)
         'vk_connected_at',       // когда привязал ВК-бота
         'max_user_id',
         'instagram',
