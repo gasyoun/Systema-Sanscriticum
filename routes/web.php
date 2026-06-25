@@ -264,6 +264,14 @@ Route::get('/u/{user}', function (\App\Models\User $user) {
     return redirect(\App\Filament\Resources\UserResource::getUrl('view', ['record' => $user]));
 })->whereNumber('user')->name('student.shortlink');
 
+// --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ---
+// ВАЖНО: до catch-all /{slug}. Провайдер включается заданием client_id в .env,
+// иначе redirect/callback отдают 404 (см. SocialAuthService::isEnabled).
+Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])
+    ->name('social.redirect');
+Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])
+    ->name('social.callback');
+
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

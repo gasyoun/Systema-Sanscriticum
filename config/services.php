@@ -123,4 +123,24 @@ return [
         'ai_timeout' => (int) env('LECTURE_BUILDER_AI_TIMEOUT', 600),
     ],
 
+    // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===
+    // Кнопка провайдера показывается, только если задан его client_id (см.
+    // App\Services\SocialAuthService::enabledProviders). Секреты — в .env.
+    // VK и Yandex требуют community-драйверов socialiteproviders/*.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+    'vkontakte' => [
+        'client_id' => env('VK_CLIENT_ID'),
+        'client_secret' => env('VK_CLIENT_SECRET'),
+        'redirect' => env('VK_REDIRECT_URI', '/auth/vkontakte/callback'),
+    ],
+    'yandex' => [
+        'client_id' => env('YANDEX_CLIENT_ID'),
+        'client_secret' => env('YANDEX_CLIENT_SECRET'),
+        'redirect' => env('YANDEX_REDIRECT_URI', '/auth/yandex/callback'),
+    ],
+
 ];
