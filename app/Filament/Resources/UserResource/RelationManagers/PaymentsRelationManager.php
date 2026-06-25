@@ -111,7 +111,7 @@ class PaymentsRelationManager extends RelationManager
                         return $query->when($data['block'] ?? null, function ($q, $block) {
                             $n = (int) $block;
 
-                            $q->whereIn('status', ['paid', 'success'])
+                            $q->paid()
                                 ->where(function ($q2) use ($n) {
                                     $q2->where('tariff', 'full')
                                         ->orWhere('tariff', 'block_'.$n)

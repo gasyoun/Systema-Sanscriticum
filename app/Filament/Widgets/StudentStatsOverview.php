@@ -18,7 +18,7 @@ class StudentStatsOverview extends BaseWidget
 
         // Считаем все успешные платежи (как у тебя в модели: success или paid).
         // Исключаем выплаты ЗП преподавателям — это отток, а не выручка.
-        $totalRevenue = Payment::whereIn('status', ['success', 'paid'])
+        $totalRevenue = Payment::paid()
             ->where('tariff', '!=', 'salary_payout')
             ->sum('amount');
 

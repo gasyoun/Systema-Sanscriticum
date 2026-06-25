@@ -43,8 +43,6 @@ use Illuminate\Support\Collection;
  */
 class TeacherSalaryService
 {
-    private const PAID_STATUSES = ['paid', 'success'];
-
     /**
      * Тарифы, которые НЕ являются выручкой курса: возвраты и зеркала выплат.
      * Депозиты (брони) и пробные ВХОДЯТ в базу — это реальные деньги курса.
@@ -379,8 +377,8 @@ class TeacherSalaryService
         $query = Payment::query()
             ->with('user:id,name')
             ->where('course_id', $courseId)
-            ->whereIn('status', self::PAID_STATUSES)
-            ->where('is_conditional', false)
+            ->paid()
+            ->real()
             ->whereNotIn('tariff', self::NON_REVENUE_TARIFFS)
             ->where('amount', '>', 0);
 
@@ -722,8 +720,8 @@ class TeacherSalaryService
     {
         return $this->coursePaymentsCache[$courseId] ??= Payment::query()
             ->where('course_id', $courseId)
-            ->whereIn('status', self::PAID_STATUSES)
-            ->where('is_conditional', false)
+            ->paid()
+            ->real()
             ->get();
     }
 

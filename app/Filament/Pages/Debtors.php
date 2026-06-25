@@ -601,8 +601,8 @@ class Debtors extends Page implements HasTable
         $payments = self::$userCoursePaymentsCache[$payKey] ??= Payment::query()
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
-            ->whereIn('status', ['paid', 'success'])
-            ->where('is_conditional', false)
+            ->paid()
+            ->real()
             ->get(['start_block', 'end_block']);
 
         // Нижняя граница долга: студент мог присоединиться к потоку в середине —
@@ -683,8 +683,8 @@ class Debtors extends Page implements HasTable
         $payments = Payment::query()
             ->whereIn('user_id', $userIds)
             ->whereIn('course_id', $courseIds)
-            ->whereIn('status', ['paid', 'success'])
-            ->where('is_conditional', false)
+            ->paid()
+            ->real()
             ->get(['user_id', 'course_id', 'start_block', 'end_block'])
             ->groupBy(fn (Payment $p) => ((int) $p->user_id).':'.((int) $p->course_id));
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Payment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +22,7 @@ class BackfillCourseEnrollments extends Command
         // Депозиты и системные расходы доступ не открывают — исключаем по tariff
         // (см. Payment::isDeposit() / isExpense()).
         $pairs = DB::table('payments')
-            ->whereIn('status', ['paid', 'success'])
+            ->whereIn('status', Payment::PAID_STATUSES)
             ->whereNotIn('tariff', ['deposit', 'Расход'])
             ->whereNotNull('user_id')
             ->whereNotNull('course_id')
