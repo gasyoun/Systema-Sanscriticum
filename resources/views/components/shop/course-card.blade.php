@@ -24,7 +24,21 @@
                  class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
         @else
-            <i class="fas fa-om text-6xl text-slate-700/30 group-hover/img:scale-110 transition-transform duration-500"></i>
+            {{-- Типографская обложка-фолбэк: градиент по цвету категории + имя преподавателя + название --}}
+            @php $coverColor = $course->categories->first()?->color ?: '#E85C24'; @endphp
+            <div class="absolute inset-0 p-5 flex flex-col group-hover/img:scale-[1.03] transition-transform duration-500"
+                 @style(['background-image: linear-gradient(135deg, ' . $coverColor . 'E6 0%, #0A0D14 92%)'])>
+                {{-- лёгкий ॐ-водяной знак --}}
+                <i class="fas fa-om absolute -right-4 -bottom-5 text-[7rem] text-white/5 pointer-events-none"></i>
+                {{-- преподаватель сверху (с отступом справа под бейдж формата) --}}
+                <span class="relative pr-24 text-[10px] font-black uppercase tracking-widest text-white/70 line-clamp-1">
+                    {{ $course->teacher?->name ?? 'Онлайн-программа' }}
+                </span>
+                {{-- название крупно, по центру, с отступом снизу под мета-бейджи --}}
+                <div class="relative flex-grow flex items-center pb-10">
+                    <span class="text-2xl font-extrabold text-white leading-tight line-clamp-3">{{ $course->title }}</span>
+                </div>
+            </div>
         @endif
 
         {{-- Бейдж формата (live / recorded) --}}
