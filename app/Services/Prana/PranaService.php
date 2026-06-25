@@ -47,7 +47,10 @@ class PranaService
                     'meta' => $meta ?: null,
                 ]);
 
+                // Начисление пополняет и тратимый кошелёк, и накопительный
+                // lifetime (для рангов — он тратами не уменьшается).
                 DB::table('users')->where('id', $user->id)->increment('prana_balance', $amount);
+                DB::table('users')->where('id', $user->id)->increment('lifetime_prana', $amount);
 
                 return true;
             });
@@ -214,6 +217,12 @@ class PranaService
             ]);
 
             DB::table('users')->where('id', $user->id)->update(['prana_balance' => $next]);
+
+            // Начисление админом тоже «заработано» → растит lifetime. Списание
+            // (delta<0) ранг не понижает — lifetime не трогаем.
+            if ($delta > 0) {
+                DB::table('users')->where('id', $user->id)->increment('lifetime_prana', $delta);
+            }
 
             return $next;
         });
