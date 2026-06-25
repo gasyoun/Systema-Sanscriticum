@@ -7,6 +7,7 @@ use App\Models\CourseBlock;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\Tariff;
+use App\Models\Teacher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -165,6 +166,47 @@ class CourseShowTest extends TestCase
 
         // Заголовок секции расписания не должен появляться без занятий.
         $this->assertStringNotContainsString('id="schedule"', $html);
+    }
+
+    /** @test */
+    public function about_panel_shows_teacher_format_and_counts(): void
+    {
+        $teacher = Teacher::create(['name' => 'Иван Толчельников']);
+        $course = Course::factory()->live()->create([
+            'slug' => 'about-course',
+            'teacher_id' => $teacher->id,
+            'lessons_count' => 12,
+            'hours_count' => 10,
+        ]);
+        Tariff::factory()->for($course)->create();
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Коротко о курсе')
+            ->assertSee('Иван Толчельников')
+            ->assertSee('Live-поток')
+            ->assertSee('12 лекций')
+            ->assertSee('10 часов');
+    }
+
+    /** @test */
+    public function about_panel_shows_course_date_range_from_blocks(): void
+    {
+        $course = Course::factory()->create(['slug' => 'dated-course']);
+        Tariff::factory()->for($course)->create();
+
+        CourseBlock::factory()->for($course)
+            ->withDates(Carbon::parse('2026-07-01'), Carbon::parse('2026-08-31'))
+            ->create(['number' => 1]);
+        CourseBlock::factory()->for($course)
+            ->withDates(Carbon::parse('2028-04-01'), Carbon::parse('2028-05-31'))
+            ->create(['number' => 2]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Даты проведения')
+            ->assertSee('июль 2026')
+            ->assertSee('май 2028');
     }
 
     /** Создать курс с N блок-тарифами + опционально пометить один блок текущим. */
