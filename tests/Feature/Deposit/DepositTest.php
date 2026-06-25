@@ -319,7 +319,7 @@ class DepositTest extends TestCase
 
         $count = Payment::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', ['paid', 'success'])
+            ->paid()
             ->where('tariff', '!=', 'deposit')
             ->where('created_at', '>=', now()->subYear())
             ->whereNotNull('course_id')
