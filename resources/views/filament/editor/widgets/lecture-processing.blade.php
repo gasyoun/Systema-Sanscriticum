@@ -1,4 +1,14 @@
-<div wire:poll.4s="refreshStatus">
+<div wire:poll.4s="refreshStatus" class="space-y-2">
+    @if ($lockedByOther)
+        <div class="flex items-center gap-3 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300">
+            <x-filament::icon icon="heroicon-o-lock-closed" class="h-5 w-5 shrink-0" />
+            <div class="text-sm leading-snug">
+                <span class="font-semibold">Сейчас редактирует: {{ $lockName }}</span>
+                <div class="text-xs text-rose-600/80 dark:text-rose-400/70">Изменения могут конфликтовать — лучше дождаться, пока коллега закончит (блокировка снимается автоматически после простоя).</div>
+            </div>
+        </div>
+    @endif
+
     @if ($isProcessing)
         <div class="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300">
             <x-filament::loading-indicator class="h-5 w-5 shrink-0" />
