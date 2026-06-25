@@ -159,6 +159,7 @@
                     :course="$course"
                     :purchasedByCourse="$purchasedByCourse"
                     :deposit="$deposit"
+                    :categoryIds="$categoryIds"
                     wire:key="course-{{ $course->id }}" />
             @empty
                 <div class="col-span-full text-center py-20">

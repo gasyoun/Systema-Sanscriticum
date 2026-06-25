@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => []])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -85,13 +85,24 @@
             @if($course->categories->isNotEmpty())
                 <div class="flex flex-wrap gap-1.5 mb-3">
                     @foreach($course->categories as $cat)
+                        @php $catActive = in_array($cat->id, $categoryIds, true); @endphp
                         {{-- Клик по тегу фильтрует каталог по этой категории (ловит родительский Livewire-компонент) --}}
+                        {{-- Активный тег (категория уже в фильтре) — заливка цветом, иначе полупрозрачный фон --}}
                         <button type="button"
                                 wire:click.stop="toggleCategory({{ $cat->id }})"
-                                title="Показать курсы темы «{{ $cat->name }}»"
-                                class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75"
-                                @style(['background-color: ' . $cat->color . '20; color: ' . $cat->color => $cat->color])
-                                @class(['bg-[#1F2636] text-slate-300' => !$cat->color])>
+                                title="{{ $catActive ? 'Убрать фильтр по теме' : 'Показать курсы темы' }} «{{ $cat->name }}»"
+                                @class([
+                                    'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75',
+                                    'ring-1 ring-inset ring-white/20' => $catActive,
+                                    'bg-[#E85C24] text-white' => $catActive && !$cat->color,
+                                    'bg-[#1F2636] text-slate-300' => !$catActive && !$cat->color,
+                                ])
+                                @if($cat->color)
+                                    @style([
+                                        'background-color: ' . $cat->color . '; color: #fff' => $catActive,
+                                        'background-color: ' . $cat->color . '20; color: ' . $cat->color => !$catActive,
+                                    ])
+                                @endif>
                             {{ $cat->name }}
                         </button>
                     @endforeach
