@@ -68,6 +68,13 @@ class CourseCatalog extends Component
         $this->resetLoaded();
     }
 
+    /** Сбросить только категории — для чипа «Все» в ленте категорий */
+    public function resetCategories(): void
+    {
+        $this->categoryIds = [];
+        $this->resetLoaded();
+    }
+
     /** Подгрузить следующую порцию */
     public function loadMore(): void
     {
