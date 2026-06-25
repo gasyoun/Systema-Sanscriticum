@@ -87,4 +87,53 @@ class LectureDraft extends Model
     {
         return 'lectures/'.$this->id;
     }
+
+    // ==========================================
+    // ФОНОВАЯ ОБРАБОТКА (Phase A — async pipeline)
+    // ==========================================
+    // Длинные шаги (препроцесс, сборка, ИИ) ушли в очередь. Признак «идёт
+    // фоновая задача» держим в meta — без миграции и без раздувания enum status.
+    // Источник истины для блокировки кнопок и баннера «выполняется».
+
+    /** Идёт ли сейчас фоновая задача по этому черновику. */
+    public function isProcessing(): bool
+    {
+        return ! empty($this->meta['processing']['label'] ?? null);
+    }
+
+    /** Человекочитаемая метка текущей фоновой задачи (или null). */
+    public function processingLabel(): ?string
+    {
+        return $this->meta['processing']['label'] ?? null;
+    }
+
+    /** Когда стартовала текущая фоновая задача (ISO-строка или null). */
+    public function processingStartedAt(): ?string
+    {
+        return $this->meta['processing']['started_at'] ?? null;
+    }
+
+    /** Пометить черновик как «идёт фоновая задача X». Вызывается из экшена перед dispatch. */
+    public function markProcessing(string $label): void
+    {
+        $meta = $this->meta ?? [];
+        $meta['processing'] = ['label' => $label, 'started_at' => now()->toIso8601String()];
+        $this->forceFill(['meta' => $meta])->save();
+    }
+
+    /** Снять признак фоновой задачи. Вызывается джобой в finally (успех или ошибка). */
+    public function clearProcessing(): void
+    {
+        $meta = $this->meta ?? [];
+        unset($meta['processing']);
+        $this->forceFill(['meta' => $meta])->save();
+    }
+
+    /** Сохранить краткий итог последнего прогона ИИ для показа в редакторе. */
+    public function recordAiResult(string $summary): void
+    {
+        $meta = $this->meta ?? [];
+        $meta['last_ai'] = ['summary' => $summary, 'at' => now()->toIso8601String()];
+        $this->forceFill(['meta' => $meta])->save();
+    }
 }
