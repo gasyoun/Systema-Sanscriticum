@@ -58,6 +58,12 @@ class PaymentController extends Controller
                         'password' => Hash::make(Str::random(12)),
                         'wants_email_announcements' => $request->boolean('wants_announcements'),
                     ]);
+
+                    // Реферал: привязываем нового студента к пригласившему по коду
+                    // (из формы или сохранённого в сессии при переходе по ссылке).
+                    app(\App\Services\ReferralService::class)
+                        ->attachReferrer($user, $request->input('ref') ?: session('ref'));
+
                     auth()->login($user);
                 }
             }

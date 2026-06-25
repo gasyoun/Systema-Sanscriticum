@@ -695,6 +695,8 @@
          x-transition:enter-start="opacity-0 translate-y-4"
          x-transition:enter-end="opacity-100 translate-y-0">
 
+        @include('student.partials.referral')
+
         @php
             $balance = (int) (auth()->user()->prana_balance ?? 0);
             $rate    = \App\Services\Prana\PranaSettings::rate();
