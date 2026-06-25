@@ -7,9 +7,9 @@ namespace App\Filament\Editor\Resources\LectureDraftResource\Pages;
 use App\Filament\Editor\Resources\LectureDraftResource;
 use App\Jobs\BuildLectureHtmlJob;
 use App\Jobs\PreprocessLectureDraftJob;
+use App\Jobs\RunLectureAiJob;
 use App\Models\LectureDraft;
 use App\Models\Lesson;
-use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LecturePublisher;
 use App\Services\Lecture\LectureStorage;
 use Filament\Actions;
@@ -22,6 +22,13 @@ class EditLectureDraft extends EditRecord
 {
     protected static string $resource = LectureDraftResource::class;
 
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Editor\Widgets\LectureProcessingWidget::class,
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         /** @var LectureDraft $draft */
@@ -32,7 +39,7 @@ class EditLectureDraft extends EditRecord
                 ->label('Препроцесс (PDF + транскрипт)')
                 ->icon('heroicon-o-arrow-path')
                 ->color('warning')
-                ->visible(fn () => in_array($draft->status, [
+                ->visible(fn () => ! $draft->isProcessing() && in_array($draft->status, [
                     LectureDraft::STATUS_DRAFT,
                     LectureDraft::STATUS_EDITING,
                 ], true))
@@ -59,7 +66,7 @@ class EditLectureDraft extends EditRecord
                 ->label('Собрать HTML')
                 ->icon('heroicon-o-cog-6-tooth')
                 ->color('info')
-                ->visible(fn () => $draft->status === LectureDraft::STATUS_EDITING)
+                ->visible(fn () => ! $draft->isProcessing() && $draft->status === LectureDraft::STATUS_EDITING)
                 ->requiresConfirmation()
                 ->action(fn () => $this->runBuild()),
 
@@ -121,7 +128,7 @@ class EditLectureDraft extends EditRecord
                 ->icon('heroicon-o-sparkles')
                 ->color('warning')
                 ->button()
-                ->visible(fn () => in_array($draft->status, [
+                ->visible(fn () => ! $draft->isProcessing() && in_array($draft->status, [
                     LectureDraft::STATUS_EDITING,
                     LectureDraft::STATUS_BUILT,
                 ], true)),
@@ -140,7 +147,7 @@ class EditLectureDraft extends EditRecord
                 ->label('Опубликовать')
                 ->icon('heroicon-o-rocket-launch')
                 ->color('success')
-                ->visible(fn () => $draft->status === LectureDraft::STATUS_BUILT)
+                ->visible(fn () => ! $draft->isProcessing() && $draft->status === LectureDraft::STATUS_BUILT)
                 ->form([
                     Forms\Components\Select::make('lesson_id')
                         ->label('Привязать к уроку')
@@ -203,6 +210,10 @@ class EditLectureDraft extends EditRecord
 
     private function statusHint(LectureDraft $draft): string
     {
+        if ($draft->isProcessing()) {
+            return '⏳ Идёт фоновая задача: '.$draft->processingLabel().'. Кнопки заблокированы до завершения; страница обновится сама.';
+        }
+
         return match ($draft->status) {
             LectureDraft::STATUS_DRAFT => '🟡 Черновик. Нажмите «Препроцесс», чтобы загрузить PDF слайдов и транскрипт.',
             LectureDraft::STATUS_PREPROCESSING => '⏳ Препроцесс выполняется…',
@@ -232,80 +243,58 @@ class EditLectureDraft extends EditRecord
 
         $lessonNumber = (int) ($draft->meta['lesson_number'] ?? 1);
 
-        try {
-            PreprocessLectureDraftJob::dispatchSync(
-                draftId: $draft->id,
-                rawTranscriptName: $transcriptName,
-                rawPdfName: $pdfName,
-                lessonNumber: $lessonNumber,
-            );
-            // Первая сборка HTML сразу же — чтобы у редактора было что смотреть
-            BuildLectureHtmlJob::dispatchSync($draft->id);
-            Notification::make()->title('Готово: препроцесс + первая сборка')->success()->send();
-        } catch (\Throwable $e) {
-            Notification::make()->title('Ошибка препроцесса')->body($e->getMessage())->danger()->persistent()->send();
-        }
+        // Препроцесс + первая сборка идут в очередь (могут быть долгими). Помечаем
+        // черновик «в обработке» — кнопки блокируются, баннер-виджет поллит статус.
+        $draft->markProcessing('Препроцесс и первая сборка');
+        PreprocessLectureDraftJob::dispatch(
+            draftId: $draft->id,
+            rawTranscriptName: $transcriptName,
+            rawPdfName: $pdfName,
+            lessonNumber: $lessonNumber,
+        );
 
-        $this->refreshFormData(['status', 'error_log', 'data_json_path', 'slides_dir', 'output_html_path']);
+        Notification::make()
+            ->title('Препроцесс поставлен в очередь')
+            ->body('Страница обновится автоматически, когда обработка завершится.')
+            ->success()
+            ->send();
+
+        $this->refreshFormData(['status', 'error_log', 'data_json_path', 'slides_dir', 'output_html_path', 'meta']);
     }
 
     /**
-     * Запускает одну из 4 AI-задач через lecture-builder.
+     * Ставит одну из 4 AI-задач в очередь (lecture-builder + пересборка HTML).
      *
-     * После успеха автоматически ребилдит HTML, чтобы редактор увидел изменения.
-     * Все правки бэкапятся на стороне Python-сервиса в backups/{ts}_ai.json.
+     * Раньше выполнялось синхронно в запросе («полный прогон ~103 абзацев = долго
+     * и дорого»). Теперь — `RunLectureAiJob` в очереди `lectures`; итог прогона
+     * редактор увидит в баннере после автообновления страницы (meta.last_ai).
      */
     private function runAi(string $task, string $hint, array $extra = []): void
     {
         /** @var LectureDraft $draft */
         $draft = $this->getRecord();
-        $storage = app(LectureStorage::class);
-        $client = app(LectureAiClient::class);
 
-        try {
-            $absoluteWorkingDir = $storage->absoluteWorkingDir($draft);
+        $draft->markProcessing('ИИ: '.$this->aiTaskLabel($task));
+        RunLectureAiJob::dispatch($draft->id, $task, $hint, $extra);
 
-            $result = match ($task) {
-                'structure' => $client->structure($absoluteWorkingDir, $hint, apply: true),
-                'correct' => $client->correct(
-                    $absoluteWorkingDir,
-                    $hint,
-                    apply: true,
-                    maxParagraphs: (int) ($extra['max_paragraphs'] ?? 0),
-                ),
-                'place_slides' => $client->placeSlides($absoluteWorkingDir, $hint, apply: true),
-                'timecodes' => $client->verifyTimecodes($absoluteWorkingDir, $hint, apply: true),
-                default => throw new \InvalidArgumentException("Неизвестная AI-задача: {$task}"),
-            };
+        Notification::make()
+            ->title('Задача ИИ поставлена в очередь')
+            ->body('Это может занять время. Страница обновится автоматически по завершении.')
+            ->success()
+            ->send();
 
-            // После применения правок к data.json — пересобираем HTML
-            BuildLectureHtmlJob::dispatchSync($draft->id);
+        $this->refreshFormData(['status', 'error_log', 'output_html_path', 'meta']);
+    }
 
-            $body = $result['summary'] ?? 'Готово';
-            if (! empty($result['usage'])) {
-                $u = $result['usage'];
-                $body .= sprintf("\nТокены: in=%d, out=%d", $u['input_tokens'] ?? 0, $u['output_tokens'] ?? 0);
-            }
-            if (! empty($result['backup'])) {
-                $body .= "\nБэкап: ".$result['backup'];
-            }
-
-            Notification::make()
-                ->title('ИИ применил правки')
-                ->body($body)
-                ->success()
-                ->persistent()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Ошибка ИИ')
-                ->body($e->getMessage())
-                ->danger()
-                ->persistent()
-                ->send();
-        }
-
-        $this->refreshFormData(['status', 'error_log', 'output_html_path']);
+    private function aiTaskLabel(string $task): string
+    {
+        return match ($task) {
+            'structure' => 'разбивка на разделы',
+            'correct' => 'корректура текста',
+            'place_slides' => 'расстановка слайдов',
+            'timecodes' => 'сверка таймкодов',
+            default => $task,
+        };
     }
 
     private function runBuild(): void
@@ -313,14 +302,16 @@ class EditLectureDraft extends EditRecord
         /** @var LectureDraft $draft */
         $draft = $this->getRecord();
 
-        try {
-            BuildLectureHtmlJob::dispatchSync($draft->id);
-            Notification::make()->title('HTML собран')->success()->send();
-        } catch (\Throwable $e) {
-            Notification::make()->title('Ошибка сборки')->body($e->getMessage())->danger()->persistent()->send();
-        }
+        $draft->markProcessing('Сборка HTML');
+        BuildLectureHtmlJob::dispatch($draft->id, ownsProcessing: true);
 
-        $this->refreshFormData(['status', 'error_log', 'output_html_path']);
+        Notification::make()
+            ->title('Сборка поставлена в очередь')
+            ->body('Страница обновится автоматически по завершении.')
+            ->success()
+            ->send();
+
+        $this->refreshFormData(['status', 'error_log', 'output_html_path', 'meta']);
     }
 
     private function runPublish(int $lessonId): void

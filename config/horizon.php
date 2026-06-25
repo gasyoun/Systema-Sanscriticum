@@ -235,6 +235,19 @@ return [
                 'memory' => 128,
                 'nice' => 0,
             ],
+            // Длинные лекционные задачи (препроцесс/сборка/ИИ до ~15 мин) — отдельный
+            // супервизор, чтобы не блокировать быстрые джобы default-очереди.
+            'supervisor-lectures' => [
+                'connection' => 'redis',
+                'queue' => ['lectures'],
+                'balance' => 'simple',
+                'minProcesses' => 1,
+                'maxProcesses' => 2,
+                'tries' => 1,
+                'timeout' => 960,
+                'memory' => 256,
+                'nice' => 0,
+            ],
             'supervisor-webhooks' => [
                 'connection' => 'redis',
                 'queue' => ['webhooks'],
@@ -256,6 +269,16 @@ return [
                 'tries' => 1,
                 'timeout' => 600,
                 'memory' => 128,
+            ],
+            'supervisor-lectures' => [
+                'connection' => 'redis',
+                'queue' => ['lectures'],
+                'balance' => 'simple',
+                'minProcesses' => 1,
+                'maxProcesses' => 1,
+                'tries' => 1,
+                'timeout' => 960,
+                'memory' => 256,
             ],
             'supervisor-webhooks' => [
                 'connection' => 'redis',
