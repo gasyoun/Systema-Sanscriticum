@@ -167,6 +167,113 @@ class PranaService
     }
 
     /**
+     * P2P-перевод тратимой праны между студентами (подарок). Списывает у
+     * отправителя, зачисляет получателю — оба только balance, lifetime/ранг НЕ
+     * меняется (иначе ранги фармились бы перекидыванием). Соблюдает дневные лимиты.
+     *
+     * @throws \RuntimeException при ошибке валидации/баланса/лимита
+     */
+    public function transfer(User $from, User $to, int $amount): void
+    {
+        if ($amount <= 0) {
+            throw new \RuntimeException('Сумма перевода должна быть положительной.');
+        }
+        if ($from->id === $to->id) {
+            throw new \RuntimeException('Нельзя перевести прану самому себе.');
+        }
+
+        $dailyTotal = (int) config('prana.daily_p2p_limit', 30);
+        $dailyPerUser = (int) config('prana.daily_p2p_per_user_limit', 10);
+
+        DB::transaction(function () use ($from, $to, $amount, $dailyTotal, $dailyPerUser) {
+            $current = (int) DB::table('users')->where('id', $from->id)->lockForUpdate()->value('prana_balance');
+            if ($current < $amount) {
+                throw new \RuntimeException("Недостаточно праны: запрошено {$amount}, доступно {$current}.");
+            }
+
+            // Дневные лимиты считаем по уже отправленному сегодня (p2p_sent — отрицательные).
+            $sentToday = (int) abs(PranaTransaction::query()
+                ->where('user_id', $from->id)
+                ->where('reason', 'p2p_sent')
+                ->whereDate('created_at', now()->toDateString())
+                ->sum('amount'));
+            if ($sentToday + $amount > $dailyTotal) {
+                throw new \RuntimeException("Дневной лимит перевода — {$dailyTotal} праны.");
+            }
+
+            $sentToSameToday = (int) abs(PranaTransaction::query()
+                ->where('user_id', $from->id)
+                ->where('reason', 'p2p_sent')
+                ->where('source_type', $to->getMorphClass())
+                ->where('source_id', $to->getKey())
+                ->whereDate('created_at', now()->toDateString())
+                ->sum('amount'));
+            if ($sentToSameToday + $amount > $dailyPerUser) {
+                throw new \RuntimeException("Одному студенту — не более {$dailyPerUser} праны в день.");
+            }
+
+            // Отправитель: balance−, lifetime не трогаем.
+            PranaTransaction::create([
+                'user_id' => $from->id, 'amount' => -$amount, 'reason' => 'p2p_sent',
+                'source_type' => $to->getMorphClass(), 'source_id' => $to->getKey(),
+                'meta' => ['to_user_id' => $to->id],
+            ]);
+            DB::table('users')->where('id', $from->id)->decrement('prana_balance', $amount);
+
+            // Получатель: balance+, lifetime НЕ растёт (это не его заработок).
+            PranaTransaction::create([
+                'user_id' => $to->id, 'amount' => $amount, 'reason' => 'p2p_received',
+                'source_type' => $from->getMorphClass(), 'source_id' => $from->getKey(),
+                'meta' => ['from_user_id' => $from->id],
+            ]);
+            DB::table('users')->where('id', $to->id)->increment('prana_balance', $amount);
+        });
+    }
+
+    /**
+     * Сгорание праны за бездействие: у студентов, неактивных N+ дней, сжигается
+     * процент тратимого баланса. lifetime/ранг не затрагивается. Возвращает число
+     * затронутых студентов. Управляется config('prana.decay').
+     */
+    public function decayInactive(): int
+    {
+        $cfg = config('prana.decay', []);
+        if (empty($cfg['enabled'])) {
+            return 0;
+        }
+
+        $cutoff = now()->subDays((int) ($cfg['inactive_days'] ?? 30));
+        $percent = max(1, min(100, (int) ($cfg['percent'] ?? 10)));
+
+        $users = User::query()
+            ->where('prana_balance', '>', 0)
+            ->where(function ($q) use ($cutoff) {
+                $q->whereNull('last_activity_at')->orWhere('last_activity_at', '<', $cutoff);
+            })
+            ->whereNotNull('last_login_at')
+            ->get(['id', 'prana_balance']);
+
+        $affected = 0;
+        foreach ($users as $u) {
+            $burn = (int) floor((int) $u->prana_balance * $percent / 100);
+            if ($burn <= 0) {
+                continue;
+            }
+
+            DB::transaction(function () use ($u, $burn) {
+                PranaTransaction::create([
+                    'user_id' => $u->id, 'amount' => -$burn, 'reason' => 'decay',
+                    'source_type' => null, 'source_id' => null, 'meta' => null,
+                ]);
+                DB::table('users')->where('id', $u->id)->decrement('prana_balance', $burn);
+            });
+            $affected++;
+        }
+
+        return $affected;
+    }
+
+    /**
      * Ручное начисление/списание праны администратором.
      * В отличие от award()/spend() — не зависит от PranaSettings::isActive(),
      * не использует source-идемпотентность (каждый клик админа — отдельная запись)

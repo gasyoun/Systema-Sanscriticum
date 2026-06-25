@@ -8,6 +8,18 @@ return [
     // которую можно покрыть праной.
     'max_share_of_price' => 0.30,
 
+    // P2P-перевод праны между студентами (тратимый balance; ранг/lifetime не растёт).
+    'daily_p2p_limit' => (int) env('PRANA_DAILY_P2P_LIMIT', 30),          // всего в день
+    'daily_p2p_per_user_limit' => (int) env('PRANA_DAILY_P2P_PER_USER', 10), // одному получателю в день
+
+    // Сгорание (decay) тратимого баланса за бездействие. По умолчанию ВЫКЛЮЧЕНО —
+    // включается осознанно, т.к. списывает прану у студентов.
+    'decay' => [
+        'enabled' => (bool) env('PRANA_DECAY_ENABLED', false),
+        'inactive_days' => (int) env('PRANA_DECAY_INACTIVE_DAYS', 30), // неактивен N+ дней
+        'percent' => (int) env('PRANA_DECAY_PERCENT', 10),             // сжечь % баланса за прогон
+    ],
+
     // Сколько начислять за разные виды активности.
     'rewards' => [
         'lesson_complete' => 10,
@@ -41,5 +53,8 @@ return [
         'refund_failed' => 'Возврат за несостоявшуюся оплату',
         'admin_grant' => 'Начислено администратором',
         'admin_deduct' => 'Списано администратором',
+        'p2p_sent' => 'Подарок другому студенту',
+        'p2p_received' => 'Подарок от студента',
+        'decay' => 'Сгорело за бездействие',
     ],
 ];

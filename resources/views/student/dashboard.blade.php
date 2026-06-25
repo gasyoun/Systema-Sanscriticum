@@ -697,6 +697,8 @@
 
         @include('student.partials.prana-rank')
 
+        @include('student.partials.prana-transfer')
+
         @include('student.partials.referral')
 
         @php
