@@ -110,13 +110,28 @@ class StudentController extends Controller
 
         // БЫЛО: where('is_visible', true) — ломало доступ при скрытии с витрины
         // СТАЛО: фильтруем по is_active (видимость в ЛК)
-        // lessons:id,course_id — eager-load для прогресс-бара в карточках курсов (без этого N+1).
+        // Уроки тянем упорядоченными (sort_order→created_at) с group_id/title —
+        // нужно и для прогресс-бара, и для «следующего урока» в карточке (без N+1).
         $courses = Course::where('is_active', true)
             ->whereHas('groups', function ($query) use ($userGroupIds) {
                 $query->whereIn('groups.id', $userGroupIds);
             })
-            ->with(['lessons:id,course_id'])
+            ->with(['lessons' => function ($query) {
+                $query->select('id', 'course_id', 'title', 'group_id', 'sort_order', 'created_at')
+                    ->orderBy('sort_order')
+                    ->orderBy('created_at');
+            }])
             ->get();
+
+        // «Следующий урок» для карточки курса: первый по порядку доступный студенту
+        // (по группе) и ещё не пройденный урок. null = всё пройдено либо доступных нет.
+        $completedLessonIds = $user->completedLessons->pluck('id')->all();
+        $nextLessonByCourseId = $courses->mapWithKeys(fn (Course $course) => [
+            $course->id => $course->lessons->first(
+                fn (Lesson $lesson) => $lesson->isVisibleToGroupsOf($user)
+                    && ! in_array($lesson->id, $completedLessonIds, true)
+            ),
+        ]);
 
         $certificates = $user->certificates()
             ->with('course')
@@ -160,6 +175,7 @@ class StudentController extends Controller
 
         return view('student.dashboard', compact(
             'courses',
+            'nextLessonByCourseId',
             'certificates',
             'pranaTransactions',
             'pranaRewards',

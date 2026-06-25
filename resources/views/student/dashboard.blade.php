@@ -370,6 +370,7 @@
                             $totalLessons = $course->lessons->count();
                             $completedLessons = auth()->user()->completedLessons->whereIn('id', $course->lessons->pluck('id'))->count();
                             $percent = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+                            $nextLesson = ($nextLessonByCourseId ?? collect())->get($course->id);
                         @endphp
 
                         {{-- Блок прогресса прижат к низу карточки благодаря mt-auto --}}
@@ -380,9 +381,27 @@
                                 <span class="text-sm font-extrabold text-gray-800">{{ $percent }}%</span>
                             </div>
                             
-                            <div class="bg-gray-100 rounded-full h-1.5 w-full overflow-hidden mb-5">
+                            <div class="bg-gray-100 rounded-full h-1.5 w-full overflow-hidden mb-3">
                                 <div class="bg-[#E85C24] h-full rounded-full transition-all duration-1000 relative" style="width: {{ $percent }}%"></div>
                             </div>
+
+                            {{-- Подсказка «следующий урок»: куда ведёт кнопка. При 100% — курс пройден. --}}
+                            @if($nextLesson)
+                                <div class="flex items-start gap-1.5 mb-4 text-xs text-gray-500 leading-snug">
+                                    <i class="fas fa-play-circle text-[#E85C24]/70 mt-0.5 shrink-0"></i>
+                                    <span class="line-clamp-1">
+                                        <span class="text-gray-400">{{ $percent > 0 ? 'Следующий урок:' : 'Первый урок:' }}</span>
+                                        <span class="font-semibold text-gray-700">{{ $nextLesson->title }}</span>
+                                    </span>
+                                </div>
+                            @elseif($totalLessons > 0)
+                                <div class="flex items-center gap-1.5 mb-4 text-xs text-emerald-600 font-semibold">
+                                    <i class="fas fa-check-circle shrink-0"></i>
+                                    <span>Все уроки пройдены</span>
+                                </div>
+                            @else
+                                <div class="mb-4"></div>
+                            @endif
 
                             {{-- Баннер: при активном обещании показываем нейтральный, иначе оранжевый «долг» --}}
                             @if($debt = $debtsByCourseId->get($course->id))
@@ -418,9 +437,10 @@
                                 @endif
                             @endif
 
-                            {{-- Кнопка --}}
-                            <a href="{{ route('student.course', $course->slug) }}" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
-                                <span>@if($percent > 0) Продолжить @else Начать обучение @endif</span>
+                            {{-- Кнопка: при наличии следующего урока ведём прямо в него,
+                                 иначе (всё пройдено / нет уроков) — на страницу курса. --}}
+                            <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
+                                <span>@if($nextLesson)@if($percent > 0) Продолжить @else Начать обучение @endif @else К курсу @endif</span>
                                 <i class="fas fa-arrow-right ml-2 text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                             </a>
 
