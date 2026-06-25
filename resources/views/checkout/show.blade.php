@@ -96,6 +96,59 @@ document.addEventListener('alpine:init', () => {
         },
     });
 });
+
+// ── Анти-419: держим CSRF-токен свежим ──────────────────────────────────
+// Сессия-файл могла истечь/собраться GC, пока студент думал над оплатой;
+// на сабмите его пере-аутентифицирует remember-me кука в НОВУЮ сессию с НОВЫМ
+// токеном, а форма всё ещё несёт старый _token → 419. Поэтому перед реальной
+// отправкой подтягиваем токен текущей живой сессии. Плюс обновляем токен при
+// возврате страницы из bfcache («Назад»).
+(function () {
+    const meta = () => document.querySelector('meta[name=csrf-token]');
+
+    function applyToken(token) {
+        if (!token) return;
+        const m = meta();
+        if (m) m.content = token;
+        document.querySelectorAll('input[name=_token]').forEach((i) => { i.value = token; });
+    }
+
+    async function fetchToken() {
+        const r = await fetch(@json(route('csrf.token')), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
+        const data = await r.json();
+        return data.token;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('checkout-form');
+        if (!form) return;
+        const btn = document.querySelector('button[form="checkout-form"]');
+        let refreshed = false;
+
+        form.addEventListener('submit', async function (e) {
+            if (refreshed) return; // второй проход — отправляем по-настоящему
+            e.preventDefault();
+            if (btn) { btn.disabled = true; btn.classList.add('opacity-70', 'cursor-wait'); }
+            try {
+                applyToken(await fetchToken());
+            } catch (_) {
+                // сеть недоступна — токен мог и не протухнуть, всё равно пробуем отправить
+            }
+            refreshed = true;
+            form.submit();
+        });
+    });
+
+    // Возврат из bfcache: страница со старым токеном — обновим
+    window.addEventListener('pageshow', function (e) {
+        if (!e.persisted) return;
+        fetchToken().then(applyToken).catch(() => {});
+    });
+})();
 </script>
 <style>
     .checkout-slider {
@@ -159,6 +212,13 @@ document.addEventListener('alpine:init', () => {
                 </a>
             </div>
         @else
+            @if(session('error'))
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-medium flex items-start gap-2">
+                    <i class="fas fa-exclamation-circle mt-0.5"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
             <div x-data class="grid grid-cols-1 md:grid-cols-12 md:gap-x-10 lg:gap-x-14">
 
                 {{-- ════════════════ ЛЕВАЯ КОЛОНКА ════════════════ --}}

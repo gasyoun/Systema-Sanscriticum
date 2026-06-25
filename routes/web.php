@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Storage;
 |--------------------------------------------------------------------------
 */
 
+// Свежий CSRF-токен (анти-419 на чекауте: форма подтягивает токен текущей сессии перед сабмитом)
+Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))->name('csrf.token');
+
 // Страница оформления заказа (Checkout)
 Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('checkout.show');
 
