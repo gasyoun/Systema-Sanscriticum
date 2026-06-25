@@ -19,6 +19,23 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// === МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Sanctum personal access tokens) ===
+Route::prefix('v1')->group(function () {
+    // Публичный логин (выдаёт токен). Троттлим — публичный приём пароля.
+    Route::post('/auth/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])
+        ->middleware('throttle:10,1')
+        ->name('api.auth.login');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/auth/me', [\App\Http\Controllers\Api\AuthController::class, 'me'])->name('api.auth.me');
+        Route::post('/auth/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout'])->name('api.auth.logout');
+
+        Route::get('/courses', [\App\Http\Controllers\Api\CabinetController::class, 'courses'])->name('api.courses');
+        Route::get('/courses/{slug}/lessons', [\App\Http\Controllers\Api\CabinetController::class, 'lessons'])->name('api.courses.lessons');
+    });
+});
+
 use App\Http\Controllers\Api\LessonController;
 
 Route::post('/sync-lessons', [LessonController::class, 'sync']);
