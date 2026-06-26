@@ -414,7 +414,13 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   `recording.completed` → урок, посещаемость по `participant_joined/left` →
   `webinar_attendances` → секция в `TeacherAnalytics`. Включается кредами Zoom-приложения.
 
-### ⏳ Осталось (P3 / следующая волна)
+### ✅ P3 / следующая волна — закрыто
+
+Весь агент-доступный бэклог доставлен. Остаётся только **включение на проде**
+(не код): креды Zoom (OAuth + Event Subscription) и VK/Yandex (social-auth),
+секреты бот-вебхуков, миграции, Horizon-воркер на очереди `lectures`, флаги
+`PRANA_DECAY_ENABLED` / `REFERRAL_CREDIT_AMOUNT`, наполнение магазина праны
+админом. Подробности — в `Uprava/GTD_NEXT_ACTIONS.md` (раздел `@DO`).
 
 - [x] **P3 · Мобильная адаптация кабинета** — аудит показал, что кабинет уже
   адаптивен (нет горизонтального оверфлоу на 375px на дашборде, плеере урока,
@@ -434,12 +440,11 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   `socialiteproviders/vkontakte`+`/yandex` + listener `SocialiteWasCalled` в
   `EventServiceProvider`; драйверы резолвятся и строят OAuth-URL (тест). Остаётся
   завести client_id/secret VK/Yandex в `.env`.
-- [~] **`lecture-ui` template под редактор v2** — [x] `template.html.j2` теперь
-  рендерит абзацы, созданные редактором (split_para / add-block, без ключа `t`),
-  без падения сборки (`{% if para.t is defined and ... %}`); pytest-тест в
-  `lecture-ui/tests/`. _Dialog-реплики не нужны: пайплайн собирает `speech`-блоки
-  (makejson2), не dialog._ [ ] осталось (in-repo): UI «добавить блок» —
-  `LecturePatcher` op `insert_block` + кнопка в `lecture-editor.js`.
+- [x] **Редактор лекций v2 — Phase B завершён + template-фикс** (#209, #210) —
+  `template.html.j2` рендерит абзацы редактора без ключа `t` (#209), и добавлен
+  **add-block** (`LecturePatcher` op `insert_block` + кнопка «＋» в `lecture-editor.js`,
+  #210). Phase B полностью: move / delete / split / merge / add-block. _Dialog-разметка
+  не нужна — пайплайн собирает `speech`-блоки (makejson2)._
 
 ### ✅ Решённые развилки
 
