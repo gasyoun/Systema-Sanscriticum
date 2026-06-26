@@ -3,6 +3,7 @@
         $funnel = $this->funnel();
         $daily = $this->dailyOpens();
         $progress = $this->studentProgress();
+        $webinars = $this->webinarAttendance();
         $maxOpen = max(1, max($daily ?: [0]));
         $completionRate = $funnel['opened'] > 0
             ? round($funnel['completed_any'] / $funnel['opened'] * 100)
@@ -93,4 +94,41 @@
             </div>
         @endif
     </x-filament::section>
+
+    {{-- Посещаемость вебинаров (Zoom participant-вебхуки) --}}
+    @if ($webinars->isNotEmpty())
+        <x-filament::section>
+            <x-slot name="heading">Посещаемость вебинаров</x-slot>
+            <x-slot name="description">Кто и сколько был на онлайн-занятиях (по данным Zoom).</x-slot>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-gray-500 border-b border-gray-200 dark:border-white/10">
+                            <th class="py-2 pr-4">Вебинар</th>
+                            <th class="py-2 pr-4">Дата</th>
+                            <th class="py-2 pr-4">Участников</th>
+                            <th class="py-2 pr-4">Из них студентов</th>
+                            <th class="py-2">Ср. длительность</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($webinars as $w)
+                            <tr class="border-b border-gray-100 dark:border-white/5">
+                                <td class="py-2 pr-4 font-medium">{{ $w['title'] }}</td>
+                                <td class="py-2 pr-4 text-gray-500">
+                                    {{ $w['start'] ? \Illuminate\Support\Carbon::parse($w['start'])->format('d.m.Y H:i') : '—' }}
+                                </td>
+                                <td class="py-2 pr-4 tabular-nums font-semibold">{{ $w['attendees'] }}</td>
+                                <td class="py-2 pr-4 tabular-nums text-gray-500">{{ $w['known'] }}</td>
+                                <td class="py-2 tabular-nums text-gray-500">
+                                    {{ $w['avg_minutes'] !== null ? $w['avg_minutes'] . ' мин' : '—' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </x-filament::section>
+    @endif
 </x-filament-panels::page>
