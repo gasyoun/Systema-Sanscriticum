@@ -496,7 +496,7 @@
       <div class="dialog-text">
         {% for para in block.paragraphs %}
         {%- set ns.para_n = ns.para_n + 1 %}
-        <p id="p{{ para.dg_ref if para.dg_ref is defined else ns.para_n }}" data-para-index="{{ loop.index0 }}">{% if para.t is not none %}<a class="para-timecode" href="?t={{ para.t }}" data-t="{{ para.t }}" title="{{ para.t | seconds_to_ts }}">▶</a> {% endif %}<span class="para-text">{{ para.text }}</span></p>
+        <p id="p{{ para.dg_ref if para.dg_ref is defined else ns.para_n }}" data-para-index="{{ loop.index0 }}">{% if para.t is defined and para.t is not none %}<a class="para-timecode" href="?t={{ para.t }}" data-t="{{ para.t }}" title="{{ para.t | seconds_to_ts }}">▶</a> {% endif %}<span class="para-text">{{ para.text }}</span></p>
         {% endfor %}
       </div>
     </div>
