@@ -729,6 +729,8 @@
 
         @include('student.partials.prana-rank')
 
+        @include('student.partials.prana-streak')
+
         @include('student.partials.prana-badges')
 
         @include('student.partials.prana-leaderboard')

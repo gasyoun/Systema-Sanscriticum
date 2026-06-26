@@ -50,6 +50,8 @@ class User extends Authenticatable implements FilamentUser
         'total_lessons_opened',
         'prana_balance',
         'referral_credit',
+        'streak_days',
+        'streak_last_day',
         // Надёжность: блокирует loyalty-скидку, обещания и conditional-доступ.
         'is_unreliable',
         'unreliable_reason',

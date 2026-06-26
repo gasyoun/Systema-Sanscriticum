@@ -74,6 +74,9 @@ final class TrackUserActivity
             // Дёшево попытаться раз в минуту: после первого успеха в день
             // unique-индекс мгновенно отбивает остальные попытки.
             $this->prana->awardDailyLogin($user);
+
+            // Серия активных дней (streak) — обновляется раз в день (guard внутри touch()).
+            app(\App\Services\StreakService::class)->touch($user);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('TrackUserActivity failed', [
                 'user_id' => $userId,
