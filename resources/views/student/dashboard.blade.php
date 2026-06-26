@@ -108,13 +108,14 @@
     {{-- ========================================== --}}
 {{-- УВЕДОМЛЕНИЕ О НАПОЛНЕНИИ КАБИНЕТА          --}}
 {{-- ========================================== --}}
-<div x-data="{ 
+<div x-data="{
         show: localStorage.getItem('cabinet_notice_v1') !== 'dismissed',
-        dismiss() { 
-            this.show = false; 
-            localStorage.setItem('cabinet_notice_v1', 'dismissed'); 
+        expanded: false,
+        dismiss() {
+            this.show = false;
+            localStorage.setItem('cabinet_notice_v1', 'dismissed');
         }
-     }" 
+     }"
      x-show="show"
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0 -translate-y-2"
@@ -138,12 +139,18 @@
             <h3 class="text-base md:text-lg font-extrabold text-gray-900 mb-1.5 leading-tight">
                 Кабинет находится на стадии наполнения
             </h3>
-            <p class="text-sm text-gray-600 leading-relaxed">
-                Уважаемые студенты! В данный момент мы активно работаем над загрузкой всех материалов. 
-                Некоторые ваши курсы могут быть временно недоступны, а в открытых курсах часть уроков 
-                ещё может загружаться. Приносим искренние извинения за временные неудобства — 
+            {{-- На мобиле текст свёрнут (line-clamp-2) с тумблером «Подробнее»;
+                 на sm+ всегда показан целиком, экономит вертикаль на телефоне. --}}
+            <p class="text-sm text-gray-600 leading-relaxed"
+               :class="expanded ? '' : 'line-clamp-2 sm:line-clamp-none'">
+                Уважаемые студенты! В данный момент мы активно работаем над загрузкой всех материалов.
+                Некоторые ваши курсы могут быть временно недоступны, а в открытых курсах часть уроков
+                ещё может загружаться. Приносим искренние извинения за временные неудобства —
                 все материалы появятся в ближайшее время.
             </p>
+            <button type="button" @click="expanded = !expanded"
+                    class="sm:hidden mt-1 text-xs font-bold text-[#E85C24] hover:underline"
+                    x-text="expanded ? 'Свернуть' : 'Подробнее'"></button>
         </div>
         
         {{-- Кнопка закрытия --}}
@@ -277,8 +284,11 @@
     @endif
 
     {{-- НАВИГАЦИЯ ПО ВКЛАДКАМ (Премиум стиль) --}}
-    <div class="flex space-x-6 border-b border-gray-200 mb-10 overflow-x-auto custom-scrollbar">
-        <button @click="activeTab = 'courses'" 
+    {{-- relative + right-edge fade: на узких экранах подсказывает, что вкладки
+         (Прана, Поддержка) скроллятся по горизонтали. --}}
+    <div class="relative mb-10">
+    <div class="flex space-x-6 border-b border-gray-200 overflow-x-auto custom-scrollbar">
+        <button @click="activeTab = 'courses'"
                 :class="activeTab === 'courses' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-graduation-cap mr-2"></i>Мои курсы
@@ -318,6 +328,8 @@
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-headset mr-2"></i>Поддержка
         </button>
+    </div>
+        <div class="pointer-events-none absolute top-0 right-0 bottom-px w-12 bg-gradient-to-l from-[#F4F1EA] to-transparent sm:hidden"></div>
     </div>
 
     {{-- ========================================== --}}
