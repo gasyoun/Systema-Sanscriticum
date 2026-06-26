@@ -118,4 +118,35 @@ class LoyaltyDiscountTest extends TestCase
 
         $this->assertSame(0, $this->percentFor($user));
     }
+
+    /** @test */
+    public function unreliable_student_gets_no_loyalty_discount(): void
+    {
+        // «Прана сгорает»: неблагонадёжному студенту loyalty-скидка отключается,
+        // даже если он перешагнул порог. Снять может только менеджер вручную.
+        $this->loyalty(true);
+        $user = User::factory()->create(['is_unreliable' => true]);
+        $this->payCourses($user, 4); // заведомо выше large-порога (4)
+
+        $this->assertTrue($user->fresh()->isUnreliable());
+        $this->assertSame(0, $this->percentFor($user));
+
+        // После снятия флага скидка восстанавливается на том же наборе оплат.
+        $user->clearUnreliable();
+        $this->assertSame(20, $this->percentFor($user));
+    }
+
+    /** @test */
+    public function discount_is_ignored_for_payments_older_than_a_year(): void
+    {
+        // Порог окна лояльности — последний год: оплаты старше года не считаются.
+        $this->loyalty(true);
+        $user = User::factory()->create();
+        $this->payCourses($user, 4);
+
+        // Состарим все платежи на 13 месяцев — счёт уникальных курсов в окне = 0.
+        Payment::where('user_id', $user->id)->update(['created_at' => now()->subMonths(13)]);
+
+        $this->assertSame(0, $this->percentFor($user));
+    }
 }
