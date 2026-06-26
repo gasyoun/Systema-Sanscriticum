@@ -174,6 +174,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('throttle:20,1')
         ->name('student.prana.transfer');
 
+    // Магазин праны: покупка перка за прану.
+    Route::post('/prana/redeem/{perk}', [\App\Http\Controllers\PranaShopController::class, 'redeem'])
+        ->middleware('throttle:20,1')
+        ->name('student.prana.redeem');
+
     Route::get('/certificate/{id}/download', [StudentController::class, 'downloadCertificate'])
         ->name('student.certificate.download');
 

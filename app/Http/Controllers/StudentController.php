@@ -149,6 +149,10 @@ class StudentController extends Controller
         $pranaLeaderboard = \App\Support\PranaLeaderboard::rows(10, $user->id);
         // Бейджи (достижения) — вычисляются из сигналов прогресса/праны.
         $badges = \App\Support\Badges::for($user);
+        // Магазин праны (spend-sink): активные перки + последние покупки студента.
+        $pranaPerks = \App\Models\PranaPerk::shownInShop()->get();
+        $pranaRedemptions = \App\Models\PranaRedemption::where('user_id', $user->id)
+            ->latest()->limit(5)->get();
 
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
@@ -186,6 +190,8 @@ class StudentController extends Controller
             'pranaRewards',
             'pranaLeaderboard',
             'badges',
+            'pranaPerks',
+            'pranaRedemptions',
             'pranaReasons',
             'debts',
             'debtsByCourseId',
