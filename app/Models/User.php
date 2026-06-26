@@ -66,28 +66,30 @@ class User extends Authenticatable implements FilamentUser
         'remember_token',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
-            'wants_email_announcements' => 'boolean',
-            'is_lecture_editor' => 'boolean',
-            'last_login_at' => 'datetime',
-            'last_activity_at' => 'datetime',
-            'telegram_connected_at' => 'datetime',
-            'vk_connected_at' => 'datetime',
-            'login_count' => 'integer',
-            'total_time_spent' => 'integer',
-            'total_lessons_opened' => 'integer',
-            'prana_balance' => 'integer',
-            'is_unreliable' => 'boolean',
-            'unreliable_auto' => 'boolean',
-            'unreliable_marked_at' => 'datetime',
-            'discipline_improved_since' => 'date',
-        ];
-    }
+    // ВАЖНО: это ДОЛЖНО быть свойство `$casts`, а не метод `casts()`.
+    // Метод `casts()` появился только в Laravel 11 — на Laravel 10 (этот проект,
+    // 10.50.x) Eloquent читает исключительно свойство `$casts` (см. HasAttributes::getCasts),
+    // поэтому метод молча игнорировался и НИ ОДИН каст не применялся (datetime приходили
+    // строками, is_admin — строкой, password не хешировался кастом и т.п.).
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_admin' => 'boolean',
+        'wants_email_announcements' => 'boolean',
+        'is_lecture_editor' => 'boolean',
+        'last_login_at' => 'datetime',
+        'last_activity_at' => 'datetime',
+        'telegram_connected_at' => 'datetime',
+        'vk_connected_at' => 'datetime',
+        'login_count' => 'integer',
+        'total_time_spent' => 'integer',
+        'total_lessons_opened' => 'integer',
+        'prana_balance' => 'integer',
+        'is_unreliable' => 'boolean',
+        'unreliable_auto' => 'boolean',
+        'unreliable_marked_at' => 'datetime',
+        'discipline_improved_since' => 'date',
+    ];
 
     public function isUnreliable(): bool
     {
@@ -524,8 +526,8 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        // Carbon::parse устойчив к строке: на проде метод casts() не применяется
-        // (Laravel 10.50), поэтому last_activity_at может прийти строкой, а не Carbon.
+        // last_activity_at теперь кастуется в Carbon (см. $casts); parse оставлен
+        // как дешёвая защита на случай сырой строки — Carbon::parse(Carbon) идемпотентен.
         return \Illuminate\Support\Carbon::parse($this->last_activity_at)->gt(now()->subMinutes(5));
     }
 }
