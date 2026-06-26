@@ -64,7 +64,18 @@ class ShopController extends Controller
             'tariffs.block',
             'blocks',
             'teacher', // подгружаем преподавателя одним запросом
+            // Для блока «Программа курса»: только опубликованные уроки, по порядку.
+            'lessons' => fn ($query) => $query
+                ->where('is_published', true)
+                ->select(['id', 'course_id', 'title', 'block_number', 'sort_order'])
+                ->orderBy('block_number')
+                ->orderBy('sort_order')
+                ->orderBy('id'),
         ]);
+
+        // Блок «Программа курса»: уроки, сгруппированные по номеру блока (для
+        // аккордеона). Пусто — секция не выводится.
+        $lessonsByBlock = $course->lessons->groupBy('block_number');
 
         // Блок «Расписание»: ближайшие занятия курса, сгруппированные по месяцу
         // («Июнь 2026» → [занятия]). Пустая группировка — секция просто не выводится.
@@ -112,6 +123,6 @@ class ShopController extends Controller
             $showTrialCta = ! $alreadyHasTrial;
         }
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'scheduleGroups'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'scheduleGroups', 'lessonsByBlock'));
     }
 }
