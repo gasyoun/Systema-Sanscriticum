@@ -64,6 +64,11 @@ class Schedule extends Model
         return $this->belongsTo(Course::class);
     }
 
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WebinarAttendance::class);
+    }
+
     /**
      * Умная отдача ссылки: сначала колонка `link`,
      * затем fallback на парсинг из description (для старых записей).

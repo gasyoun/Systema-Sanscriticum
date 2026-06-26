@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\Schedule;
+use App\Models\User;
+use App\Models\WebinarAttendance;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -46,6 +48,10 @@ class ZoomWebhookController extends Controller
 
         if ($event === 'recording.completed') {
             return $this->handleRecordingCompleted($request);
+        }
+
+        if ($event === 'meeting.participant_joined' || $event === 'meeting.participant_left') {
+            return $this->handleParticipant($request, $event);
         }
 
         // Прочие события подтверждаем 200, чтобы Zoom не уходил в ретраи.
@@ -121,6 +127,62 @@ class ZoomWebhookController extends Controller
         ]);
 
         return response()->json(['status' => 'ok', 'schedule_id' => $schedule->id, 'lesson_id' => $lessonId]);
+    }
+
+    /**
+     * Посещаемость: участник зашёл/вышел. Одна строка на сессию участия
+     * (schedule_id + participant_uuid), идемпотентно. Студент сопоставляется по
+     * email (если Zoom его прислал), иначе остаётся гостем (user_id = NULL).
+     */
+    private function handleParticipant(Request $request, string $event): JsonResponse
+    {
+        $object = (array) $request->input('payload.object', []);
+        $meetingId = isset($object['id']) ? (string) $object['id'] : '';
+
+        /** @var Schedule|null $schedule */
+        $schedule = $meetingId !== '' ? Schedule::where('zoom_meeting_id', $meetingId)->first() : null;
+        if ($schedule === null) {
+            return response()->json(['status' => 'ignored', 'reason' => 'schedule not found']);
+        }
+
+        $p = (array) ($object['participant'] ?? []);
+
+        // participant_uuid стабилен на одно подключение; фолбэк — user_id|join_time.
+        $uuid = (string) ($p['participant_uuid'] ?? '');
+        if ($uuid === '') {
+            $uuid = (string) ($p['user_id'] ?? '').'|'.(string) ($p['join_time'] ?? '');
+        }
+        if (trim($uuid, '|') === '') {
+            return response()->json(['status' => 'ignored', 'reason' => 'no participant key']);
+        }
+
+        $email = ! empty($p['email']) ? (string) $p['email'] : null;
+        $user = $email ? User::where('email', $email)->first() : null;
+
+        $values = [
+            'user_id' => $user?->id,
+            'name' => $p['user_name'] ?? null,
+            'email' => $email,
+        ];
+        if ($event === 'meeting.participant_joined') {
+            $values['joined_at'] = $this->parseTime($p['join_time'] ?? null);
+        } else {
+            $values['left_at'] = $this->parseTime($p['leave_time'] ?? null);
+            $values['duration_seconds'] = isset($p['duration']) ? (int) $p['duration'] : null;
+        }
+
+        WebinarAttendance::updateOrCreate(
+            ['schedule_id' => $schedule->id, 'zoom_participant_uuid' => $uuid],
+            // null-значения не затирают уже записанное (join не сбрасывает left, и наоборот).
+            array_filter($values, fn ($v) => $v !== null),
+        );
+
+        return response()->json(['status' => 'ok', 'schedule_id' => $schedule->id, 'event' => $event]);
+    }
+
+    private function parseTime(?string $time): ?string
+    {
+        return $time ? Carbon::parse($time)->toDateTimeString() : null;
     }
 
     /** Предпочитаем общую share_url встречи, иначе play_url первого MP4-файла. */
