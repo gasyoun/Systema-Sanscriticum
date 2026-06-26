@@ -35,6 +35,12 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Lecture\LectureAiClient::class,
             fn () => \App\Services\Lecture\LectureAiClient::fromConfig(),
         );
+        // bind (не singleton): креды читаются из config на момент резолва —
+        // важно для тестов, где config('services.zoom.*') ставится в setUp.
+        $this->app->bind(
+            \App\Services\Zoom\ZoomService::class,
+            fn () => \App\Services\Zoom\ZoomService::fromConfig(),
+        );
     }
 
     /**

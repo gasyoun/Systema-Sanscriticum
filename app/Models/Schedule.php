@@ -29,6 +29,9 @@ class Schedule extends Model
         'group_id',
         'course_id',
         'reminded_at',
+        'zoom_meeting_id',
+        'zoom_join_url',
+        'zoom_start_url',
     ];
 
     protected $casts = [
@@ -93,5 +96,19 @@ class Schedule extends Model
         $end = $this->end ?? $this->start->copy()->addHours(self::DEFAULT_DURATION_HOURS);
 
         return $now->between($this->start, $end);
+    }
+
+    /** Привязана ли автосозданная Zoom-встреча. */
+    public function hasZoomMeeting(): bool
+    {
+        return ! empty($this->zoom_meeting_id);
+    }
+
+    /** Длительность в минутах (по end либо дефолту) — для создания Zoom-встречи. */
+    public function durationMinutes(): int
+    {
+        $end = $this->end ?? $this->start->copy()->addHours(self::DEFAULT_DURATION_HOURS);
+
+        return max(1, $this->start->diffInMinutes($end));
     }
 }
