@@ -3,7 +3,8 @@
     $me = auth()->user();
     $referralLink = $me->referralLink();
     $invited = $me->referrals()->count();
-    $reward = (int) \App\Services\Prana\PranaSettings::reward(\App\Services\ReferralService::REWARD_REASON);
+    $reward = (int) config('referral.credit_amount', 500);
+    $credit = (float) ($me->referral_credit ?? 0);
 @endphp
 
 <div class="mb-6 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-5 md:p-6 shadow-sm"
@@ -16,10 +17,18 @@
             <h3 class="text-lg font-extrabold text-[#101010]">Приглашайте друзей</h3>
             <p class="text-gray-500 text-sm">
                 Поделитесь ссылкой. Когда друг оплатит курс, вам начислят
-                <span class="font-bold text-[#E85C24]">{{ $reward }} праны</span>.
+                <span class="font-bold text-[#E85C24]">{{ number_format($reward, 0, '.', ' ') }} ₽</span>
+                на счёт — они автоматически спишутся в счёт вашей следующей покупки.
             </p>
         </div>
     </div>
+
+    @if($credit > 0)
+        <div class="mb-4 flex items-center justify-between gap-3 rounded-xl bg-white border border-emerald-200 px-4 py-3">
+            <span class="text-sm text-gray-600">Ваш реферальный кредит</span>
+            <span class="text-lg font-extrabold text-emerald-600 tabular-nums">{{ number_format($credit, 0, '.', ' ') }} ₽</span>
+        </div>
+    @endif
 
     <div class="flex flex-col sm:flex-row gap-2">
         <input type="text" readonly value="{{ $referralLink }}"
