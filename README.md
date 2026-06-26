@@ -430,8 +430,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   магазин праны (#207, admin-defined spend-sink: каталог перков в Filament →
   студент тратит прану → заявка, админ исполняет). Полный стек: ранги · streak ·
   бейджи · лидерборд · P2P · реферальный кредит · магазин.
-- [ ] **Follow-up · VK / Yandex socialite-драйверы** — community-пакеты
-  `socialiteproviders/*` + listener (Google уже работает).
+- [x] **VK / Yandex socialite-драйверы** — community-пакеты
+  `socialiteproviders/vkontakte`+`/yandex` + listener `SocialiteWasCalled` в
+  `EventServiceProvider`; драйверы резолвятся и строят OAuth-URL (тест). Остаётся
+  завести client_id/secret VK/Yandex в `.env`.
 - [ ] **Кросс-репо · разметка доп. блоков в `lecture-ui`** — `template.html.j2`
   (Python) под add-block / редактирование dialog-реплик из редактора v2 (Phase B).
 
