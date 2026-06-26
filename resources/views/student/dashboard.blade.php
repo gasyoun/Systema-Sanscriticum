@@ -733,6 +733,8 @@
 
         @include('student.partials.prana-badges')
 
+        @include('student.partials.prana-shop')
+
         @include('student.partials.prana-leaderboard')
 
         @include('student.partials.prana-transfer')
