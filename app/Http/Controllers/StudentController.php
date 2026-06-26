@@ -147,6 +147,8 @@ class StudentController extends Controller
 
         // Таблица лидеров по накопленной пране (геймификация).
         $pranaLeaderboard = \App\Support\PranaLeaderboard::rows(10, $user->id);
+        // Бейджи (достижения) — вычисляются из сигналов прогресса/праны.
+        $badges = \App\Support\Badges::for($user);
 
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
@@ -183,6 +185,7 @@ class StudentController extends Controller
             'pranaTransactions',
             'pranaRewards',
             'pranaLeaderboard',
+            'badges',
             'pranaReasons',
             'debts',
             'debtsByCourseId',
