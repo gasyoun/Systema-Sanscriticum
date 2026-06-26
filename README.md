@@ -434,8 +434,12 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   `socialiteproviders/vkontakte`+`/yandex` + listener `SocialiteWasCalled` в
   `EventServiceProvider`; драйверы резолвятся и строят OAuth-URL (тест). Остаётся
   завести client_id/secret VK/Yandex в `.env`.
-- [ ] **Кросс-репо · разметка доп. блоков в `lecture-ui`** — `template.html.j2`
-  (Python) под add-block / редактирование dialog-реплик из редактора v2 (Phase B).
+- [~] **`lecture-ui` template под редактор v2** — [x] `template.html.j2` теперь
+  рендерит абзацы, созданные редактором (split_para / add-block, без ключа `t`),
+  без падения сборки (`{% if para.t is defined and ... %}`); pytest-тест в
+  `lecture-ui/tests/`. _Dialog-реплики не нужны: пайплайн собирает `speech`-блоки
+  (makejson2), не dialog._ [ ] осталось (in-repo): UI «добавить блок» —
+  `LecturePatcher` op `insert_block` + кнопка в `lecture-editor.js`.
 
 ### ✅ Решённые развилки
 
