@@ -69,4 +69,9 @@ class TeacherAnalytics extends Page
     {
         return $this->analytics()->studentProgress();
     }
+
+    public function webinarAttendance(): Collection
+    {
+        return $this->analytics()->webinarAttendance();
+    }
 }
