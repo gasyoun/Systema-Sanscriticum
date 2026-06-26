@@ -151,6 +151,84 @@
             </div>
         </section>
 
+        {{-- ───── 1.2 ПРОГРАММА КУРСА (аккордеон по блокам) ───── --}}
+        @php
+            // Русская плюрализация «занятий».
+            $pluralLessons = function (int $n): string {
+                $mod10 = $n % 10;
+                $mod100 = $n % 100;
+                if ($mod10 === 1 && $mod100 !== 11) {
+                    return 'занятие';
+                }
+                if (in_array($mod10, [2, 3, 4], true) && ! in_array($mod100, [12, 13, 14], true)) {
+                    return 'занятия';
+                }
+
+                return 'занятий';
+            };
+
+            // Секция нужна только если у блоков есть содержимое (название, даты или уроки),
+            // иначе это дублировало бы список тарифов «БЛОК N».
+            $hasProgram = $course->blocks->contains(fn ($b) => filled($b->title)
+                || $b->starts_at
+                || ($lessonsByBlock[$b->number] ?? collect())->isNotEmpty());
+        @endphp
+        @if($hasProgram)
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: null }">
+            <h2 class="text-3xl font-bold text-white mb-8">Программа курса</h2>
+
+            <div class="space-y-3">
+                @foreach($course->blocks as $block)
+                    @php $blockLessons = $lessonsByBlock[$block->number] ?? collect(); @endphp
+                    <div class="rounded-2xl bg-[#111622] border border-[#1F2636] overflow-hidden">
+                        <button type="button"
+                                @click="open === {{ $block->number }} ? open = null : open = {{ $block->number }}"
+                                class="w-full flex items-center gap-4 p-5 text-left hover:bg-[#1A2235] transition-colors">
+                            <span class="flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636] text-base font-extrabold text-white">
+                                {{ $block->number }}
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-base font-bold text-white">{{ $block->title ?: 'Блок '.$block->number }}</span>
+                                    @if($block->is_current)
+                                        <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Сейчас идёт
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-xs font-bold text-slate-500 mt-1">
+                                    @if($block->starts_at)
+                                        {{ $block->starts_at->translatedFormat('F Y') }}@if($block->ends_at && $block->ends_at->format('Y-m') !== $block->starts_at->format('Y-m')) – {{ $block->ends_at->translatedFormat('F Y') }}@endif
+                                        @if($blockLessons->isNotEmpty()) · @endif
+                                    @endif
+                                    @if($blockLessons->isNotEmpty()){{ $blockLessons->count() }} {{ $pluralLessons($blockLessons->count()) }}@endif
+                                </div>
+                            </div>
+                            @if($blockLessons->isNotEmpty())
+                                <i class="fas fa-chevron-down text-slate-500 text-sm transition-transform"
+                                   :class="open === {{ $block->number }} ? 'rotate-180' : ''"></i>
+                            @endif
+                        </button>
+
+                        @if($blockLessons->isNotEmpty())
+                            <div x-show="open === {{ $block->number }}" x-transition style="display:none"
+                                 class="border-t border-[#1F2636]">
+                                <ol class="px-5 py-4 space-y-2">
+                                    @foreach($blockLessons as $i => $lesson)
+                                        <li class="flex gap-3 text-sm text-slate-300">
+                                            <span class="text-slate-600 font-bold shrink-0">{{ $i + 1 }}.</span>
+                                            <span>{{ $lesson->title }}</span>
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
         <section id="schedule" class="mb-16 lg:mb-20">
@@ -169,9 +247,10 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Карусель: горизонтальная прокрутка со snap (свайп на тач, скролл на десктопе) --}}
+                        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-1 px-1 [scrollbar-color:#1F2636_transparent] [scrollbar-width:thin]">
                             @foreach($sessions as $session)
-                                <div class="relative flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
+                                <div class="relative snap-start shrink-0 w-[340px] max-w-[85vw] flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
                                     {{-- Дата-бейдж: число + месяц --}}
                                     <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636]">
                                         <span class="text-2xl font-extrabold text-white leading-none">{{ $session->start->translatedFormat('j') }}</span>

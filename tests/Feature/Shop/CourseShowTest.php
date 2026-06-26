@@ -5,9 +5,12 @@ namespace Tests\Feature\Shop;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Group;
+use App\Models\Lesson;
+use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\Tariff;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -247,6 +250,61 @@ class CourseShowTest extends TestCase
         $this->get('/online/kursy/'.$course->slug)
             ->assertOk()
             ->assertSee('Купить пробное');
+    }
+
+    /** @test */
+    public function enrolled_student_sees_join_link_for_a_session(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['slug' => 'join-course']);
+        $group = Group::create(['name' => 'Поток 1']);
+        $course->groups()->attach($group);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Занятие со ссылкой',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'link' => 'https://zoom.us/j/999',
+            'course_id' => $course->id,
+        ]);
+
+        // Оплаченный тариф → студент записан (PaymentObserver привяжет к группе).
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 16500,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Подключиться')
+            ->assertSee('https://zoom.us/j/999', false);
+    }
+
+    /** @test */
+    public function program_section_lists_blocks_with_lessons(): void
+    {
+        $course = Course::factory()->create(['slug' => 'program-course']);
+        Tariff::factory()->for($course)->create();
+
+        CourseBlock::factory()->for($course)->create(['number' => 1, 'title' => 'Деванагари']);
+        Lesson::factory()->for($course)->create([
+            'title' => 'Урок про алфавит', 'block_number' => 1, 'sort_order' => 1, 'is_published' => true,
+        ]);
+        Lesson::factory()->for($course)->unpublished()->create([
+            'title' => 'Чёрновик урока', 'block_number' => 1, 'sort_order' => 2,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Программа курса')
+            ->assertSee('Деванагари')
+            ->assertSee('Урок про алфавит')
+            ->assertDontSee('Чёрновик урока');
     }
 
     /** Создать курс с N блок-тарифами + опционально пометить один блок текущим. */
