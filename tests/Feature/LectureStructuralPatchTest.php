@@ -68,6 +68,25 @@ class LectureStructuralPatchTest extends TestCase
     }
 
     /** @test */
+    public function insert_block_op_adds_a_block_on_disk(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $draft = $this->draftWithData();
+
+        $this->actingAs($admin)
+            ->postJson(route('editor.lecture.patch', $draft), [
+                'patches' => [['section_id' => 's1', 'op' => 'insert_block', 'block_index' => 0]],
+                'rebuild' => false,
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $content = $this->dataOnDisk($draft)['sections'][0]['content'];
+        $this->assertCount(4, $content); // было 3
+        $this->assertSame('speech', $content[1]['type']);
+    }
+
+    /** @test */
     public function invalid_op_returns_422(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

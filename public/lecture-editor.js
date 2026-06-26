@@ -304,6 +304,8 @@
                     sendOp({ section_id: sectionId, op: 'delete_block', block_index: blockIndex });
                 }
             }));
+            bar.appendChild(makeOpButton('＋', 'Добавить блок ниже', () =>
+                sendOp({ section_id: sectionId, op: 'insert_block', block_index: blockIndex })));
 
             block.style.position = block.style.position || 'relative';
             block.appendChild(bar);

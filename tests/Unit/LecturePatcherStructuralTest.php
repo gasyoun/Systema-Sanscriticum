@@ -131,6 +131,34 @@ class LecturePatcherStructuralTest extends TestCase
     }
 
     /** @test */
+    public function insert_block_adds_empty_speech_block_after_index(): void
+    {
+        $out = $this->patcher->apply($this->lecture(), [
+            ['section_id' => 's1', 'op' => 'insert_block', 'block_index' => 0],
+        ]);
+
+        $content = $this->content($out);
+        $this->assertCount(4, $content); // было 3 → стало 4
+        // Новый блок — speech с одним абзацем-плейсхолдером, сразу после блока 0.
+        $this->assertSame('speech', $content[1]['type']);
+        $this->assertStringContainsString('Новый абзац', $content[1]['paragraphs'][0]['text']);
+        // Прежний figure (был на 1) сдвинулся на 2.
+        $this->assertSame('figure', $content[2]['type']);
+    }
+
+    /** @test */
+    public function inserted_paragraph_has_no_timecode_key(): void
+    {
+        // Совместимость с lecture-ui template-фиксом (#209): новый абзац без `t`.
+        $out = $this->patcher->apply($this->lecture(), [
+            ['section_id' => 's1', 'op' => 'insert_block', 'block_index' => 2],
+        ]);
+
+        $newPara = $this->content($out)[3]['paragraphs'][0];
+        $this->assertArrayNotHasKey('t', $newPara);
+    }
+
+    /** @test */
     public function unknown_op_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
