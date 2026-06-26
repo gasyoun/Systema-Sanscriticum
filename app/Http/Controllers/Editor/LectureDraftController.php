@@ -95,7 +95,7 @@ class LectureDraftController extends Controller
         $validated = $request->validate([
             'patches' => 'required|array',
             'patches.*.section_id' => 'required|string',
-            'patches.*.op' => 'sometimes|string|in:move_block,delete_block,split_para,merge_para',
+            'patches.*.op' => 'sometimes|string|in:move_block,delete_block,split_para,merge_para,insert_block',
             'patches.*.value' => 'sometimes|string',
             'patches.*.field' => 'sometimes|string',
             'patches.*.block_index' => 'sometimes|integer',

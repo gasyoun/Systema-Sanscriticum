@@ -251,6 +251,16 @@ class LecturePatcher
                 $content[$idx] = $this->mergeParagraph($content[$idx], $edit, $i);
                 break;
 
+            case 'insert_block':
+                // Новый пустой speech-блок ПОСЛЕ указанного. Абзац-плейсхолдер без
+                // таймкода (шаблон рендерит его корректно — см. lecture-ui fix #209).
+                $after = $this->blockIndex($content, $edit, $i);
+                array_splice($content, $after + 1, 0, [[
+                    'type' => 'speech',
+                    'paragraphs' => [['text' => 'Новый абзац — отредактируйте текст.']],
+                ]]);
+                break;
+
             default:
                 throw new InvalidArgumentException("patch[{$i}]: неизвестная структурная операция op={$op}");
         }
