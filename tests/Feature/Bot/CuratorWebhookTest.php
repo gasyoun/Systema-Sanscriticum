@@ -62,6 +62,25 @@ class CuratorWebhookTest extends TestCase
         $this->assertStringNotContainsString('maru_plk', $prompt);     // бывший куратор, убран
     }
 
+    public function test_system_prompt_carries_soft_hybrid_sales_guidance(): void
+    {
+        $prompt = app(BotKnowledgeBase::class)->systemPrompt('дорого, не уверен');
+
+        // Гибрид: ровно один мягкий следующий шаг из win/loss (рассрочка / свой темп /
+        // пробное занятие) — то, что давало положительный лифт.
+        $this->assertStringContainsString('РОВНО ОДИН', $prompt);
+        $this->assertStringContainsString('рассрочка', $prompt);
+        $this->assertStringContainsString('свой темп', $prompt);
+        $this->assertStringContainsString('пробное', $prompt);
+
+        // Анти-давление: срочность и соц-доказательство давали отрицательный лифт —
+        // персона должна прямо их запрещать, а жёсткую продажу/торг эскалировать человеку.
+        $this->assertStringContainsString('искусственную срочность', $prompt);
+        $this->assertStringContainsString('социальным доказательством', $prompt);
+        $this->assertStringContainsString('Жёсткую продажу', $prompt);
+        $this->assertStringContainsString('позови куратора', $prompt);
+    }
+
     public function test_telegram_webhook_answers_via_openrouter_and_saves_reply(): void
     {
         $user = User::factory()->create(['telegram_id' => 999111, 'name' => 'Студент']);
