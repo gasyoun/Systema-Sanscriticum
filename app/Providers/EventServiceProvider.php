@@ -26,6 +26,15 @@ class EventServiceProvider extends ServiceProvider
         \Illuminate\Auth\Events\Logout::class => [
             \App\Listeners\UserLogoutListener::class,
         ],
+
+        // --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ: community-драйверы Socialite ---
+        // Google идёт из коробки в laravel/socialite; VK и Yandex регистрируются
+        // через событие SocialiteWasCalled (socialiteproviders/*). Конфиг —
+        // services.vkontakte / services.yandex.
+        \SocialiteProviders\Manager\SocialiteWasCalled::class => [
+            \SocialiteProviders\VKontakte\VKontakteExtendSocialite::class.'@handle',
+            \SocialiteProviders\Yandex\YandexExtendSocialite::class.'@handle',
+        ],
     ];
 
     /**
