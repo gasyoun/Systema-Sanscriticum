@@ -251,6 +251,16 @@ class ScheduleResource extends Resource
                     ->color(fn (?string $state): string => $state ? 'primary' : 'gray')
                     ->formatStateUsing(fn (?string $state): string => $state ?? 'Для всех')
                     ->icon(fn (?string $state): string => $state ? 'heroicon-m-user-group' : 'heroicon-m-globe-alt'),
+
+                // Посещаемость вебинара (Zoom participant-вебхуки, Фаза 3).
+                Tables\Columns\TextColumn::make('attendances_count')
+                    ->label('Участников')
+                    ->counts('attendances')
+                    ->badge()
+                    ->color('success')
+                    ->icon('heroicon-m-users')
+                    ->toggleable()
+                    ->placeholder('—'),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('time_range')
