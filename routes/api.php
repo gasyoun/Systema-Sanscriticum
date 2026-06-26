@@ -49,6 +49,11 @@ Route::post('/vk-webhook', [\App\Http\Controllers\Api\VkBotController::class, 'h
 
 Route::post('/webhooks/tochka', [WebhookController::class, 'handleTochkaWebhook']);
 
+// Zoom Event Subscription: запись вебинара готова (recording.completed) +
+// проверка URL. Подпись (x-zm-signature) проверяется внутри контроллера.
+Route::post('/webhooks/zoom', [\App\Http\Controllers\Webhooks\ZoomWebhookController::class, 'handle'])
+    ->name('webhook.zoom');
+
 // === LEAD MAGNET WEBHOOKS ===
 // Отдельные эндпоинты от существующих /telegram/webhook и /vk-webhook (те — для user-уведомлений).
 Route::post('/webhooks/telegram-magnet', [\App\Http\Controllers\Webhooks\TelegramMagnetWebhookController::class, 'handle'])
