@@ -34,19 +34,12 @@ class CourseCatalog extends Component
     #[Url(as: 'format', except: '')]
     public string $format = '';
 
-    /** Размер порции при подгрузке */
-    public int $perPage = 24;
-
-    /** Сколько курсов сейчас показано */
-    public int $loadedCount = 24;
-
-    /** Изменилось ли что-то из фильтров — сбрасываем счётчик */
-    public function updating(string $name): void
-    {
-        if (in_array($name, ['search', 'teacherId', 'format'], true)) {
-            $this->resetLoaded();
-        }
-    }
+    /**
+     * Подсказки «Часто ищут» под строкой поиска. Подбираются под слова,
+     * реально встречающиеся в названиях курсов (LIKE по title), чтобы клик
+     * не приводил к пустой выдаче.
+     */
+    public array $popularSearches = ['Грамматика', 'Санскрит', 'Хинди', 'Бхагавад-гита', 'Кочергина'];
 
     public function toggleCategory(int $id): void
     {
@@ -58,32 +51,17 @@ class CourseCatalog extends Component
             unset($this->categoryIds[$key]);
             $this->categoryIds = array_values($this->categoryIds);
         }
-
-        $this->resetLoaded();
     }
 
     public function resetFilters(): void
     {
         $this->reset(['search', 'categoryIds', 'teacherId', 'format']);
-        $this->resetLoaded();
     }
 
     /** Сбросить только категории — для чипа «Все» в ленте категорий */
     public function resetCategories(): void
     {
         $this->categoryIds = [];
-        $this->resetLoaded();
-    }
-
-    /** Подгрузить следующую порцию */
-    public function loadMore(): void
-    {
-        $this->loadedCount += $this->perPage;
-    }
-
-    private function resetLoaded(): void
-    {
-        $this->loadedCount = $this->perPage;
     }
 
     /** Базовый запрос с применёнными фильтрами — переиспользуется для count и для выборки */
@@ -135,13 +113,8 @@ class CourseCatalog extends Component
 
     public function render(): View
     {
-        // Общее количество подходящих под фильтр — для счётчика и определения "есть ли ещё"
-        $totalCount = $this->baseQuery()->count();
-
-        // Защита от случая, когда фильтр сильно сократил выдачу,
-        // а loadedCount остался большим — отдадим в шаблон корректный лимит
-        $effectiveLimit = min($this->loadedCount, $totalCount);
-
+        // Каталог отдаётся целиком (как у online.synchronize.ru) — без догрузки порциями.
+        // При нескольких сотнях курсов это всё ещё один лёгкий запрос.
         $courses = $this->baseQuery()
             ->with([
                 'tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price'),
@@ -149,10 +122,14 @@ class CourseCatalog extends Component
                 'categories:id,name,slug,color,icon',
             ])
             ->latest('id')
-            ->limit($this->loadedCount)
             ->get();
 
-        $hasMore = $totalCount > $courses->count();
+        $totalCount = $courses->count();
+
+        // Итоги по секциям (формату) для заголовков «Идут сейчас N» / «В записи N».
+        $sectionTotals = $courses
+            ->groupBy(fn ($c) => $c->format ?: 'other')
+            ->map->count();
 
         $purchasedByCourse = [];
         if (Auth::check()) {
@@ -170,7 +147,7 @@ class CourseCatalog extends Component
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
             'totalCount' => $totalCount,
-            'hasMore' => $hasMore,
+            'sectionTotals' => $sectionTotals,
             'purchasedByCourse' => $purchasedByCourse,
             'deposit' => MarketingSetting::cached(),
         ]);

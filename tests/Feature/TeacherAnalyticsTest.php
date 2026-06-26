@@ -8,8 +8,10 @@ use App\Filament\Pages\TeacherAnalytics as TeacherAnalyticsPage;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonView;
+use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Models\WebinarAttendance;
 use App\Services\TeacherAnalytics;
 use App\Support\Roles;
 use Filament\Facades\Filament;
@@ -97,6 +99,46 @@ class TeacherAnalyticsTest extends TestCase
         $this->assertSame(2, $daily[now()->toDateString()]);
         $this->assertSame(1, $daily[now()->subDays(3)->toDateString()]);
         $this->assertCount(30, $daily);
+    }
+
+    private function attend(Schedule $schedule, string $uuid, ?int $userId, ?int $durationSeconds = null): void
+    {
+        WebinarAttendance::create([
+            'schedule_id' => $schedule->id,
+            'user_id' => $userId,
+            'zoom_participant_uuid' => $uuid,
+            'name' => 'P-'.$uuid,
+            'joined_at' => now(),
+            'duration_seconds' => $durationSeconds,
+        ]);
+    }
+
+    /** @test */
+    public function webinar_attendance_aggregates_and_is_scoped_to_teacher(): void
+    {
+        $teacher = Teacher::create(['name' => 'T', 'email' => 'wa@example.test']);
+        $course = Course::factory()->create(['teacher_id' => $teacher->id]);
+        $webinar = Schedule::create(['title' => 'Вебинар 1', 'start' => now()->subDay(), 'course_id' => $course->id]);
+
+        $student = User::factory()->create();
+        $this->attend($webinar, 'u-student-a', $student->id, 3600);  // студент
+        $this->attend($webinar, 'u-student-a2', $student->id, 600);  // он же, второе подключение
+        $this->attend($webinar, 'u-guest', null, 1800);             // гость
+
+        // Чужой преподаватель — не должен попасть в выборку.
+        $other = Teacher::create(['name' => 'O', 'email' => 'o@example.test']);
+        $otherCourse = Course::factory()->create(['teacher_id' => $other->id]);
+        $otherWebinar = Schedule::create(['title' => 'Чужой', 'start' => now(), 'course_id' => $otherCourse->id]);
+        $this->attend($otherWebinar, 'x', User::factory()->create()->id);
+
+        $rows = TeacherAnalytics::for($teacher->id)->webinarAttendance();
+
+        $this->assertCount(1, $rows); // только вебинар своего курса
+        $row = $rows->first();
+        $this->assertSame('Вебинар 1', $row['title']);
+        $this->assertSame(2, $row['attendees']); // студент (дедуп по user_id) + гость
+        $this->assertSame(1, $row['known']);     // один сопоставленный студент
+        $this->assertSame(33, $row['avg_minutes']); // (3600+600+1800)/3 = 2000с = 33 мин
     }
 
     /** @test */

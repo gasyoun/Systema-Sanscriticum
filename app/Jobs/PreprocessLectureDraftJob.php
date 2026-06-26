@@ -36,7 +36,10 @@ final class PreprocessLectureDraftJob implements ShouldQueue
         public readonly string $rawTranscriptName,
         public readonly ?string $rawPdfName,
         public readonly int $lessonNumber,
-    ) {}
+    ) {
+        // Очередь длинных лекционных задач (отдельный Horizon-супервизор).
+        $this->onQueue('lectures');
+    }
 
     public function handle(
         LectureStorage $storage,
@@ -70,6 +73,10 @@ final class PreprocessLectureDraftJob implements ShouldQueue
                 'data_json_path' => $storage->relativePath($draft, $result['data_json'] ?? 'data.json'),
                 'slides_dir' => $storage->relativePath($draft, 'slides'),
             ])->save();
+
+            // Первая сборка HTML сразу же — чтобы у редактора было что смотреть.
+            // Выполняем на этом же воркере (inline), процессинг-флаг держит эта джоба.
+            BuildLectureHtmlJob::dispatchSync($draft->id);
         } catch (\Throwable $e) {
             Log::error('PreprocessLectureDraftJob failed', [
                 'draft_id' => $draft->id,
@@ -80,6 +87,8 @@ final class PreprocessLectureDraftJob implements ShouldQueue
                 'error_log' => $e->getMessage(),
             ])->save();
             throw $e;
+        } finally {
+            $draft->clearProcessing();
         }
     }
 }

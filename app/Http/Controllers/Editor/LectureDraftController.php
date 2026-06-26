@@ -89,10 +89,20 @@ class LectureDraftController extends Controller
     {
         $this->authorizeAccess($draft);
 
+        // Лёгкая валидация формы; смысловые проверки (тип блока, границы индексов,
+        // имя структурной операции) делает LecturePatcher и кидает 422 при ошибке.
+        // `op` присутствует у структурных правок (Phase B), `value` — у правок полей.
         $validated = $request->validate([
             'patches' => 'required|array',
             'patches.*.section_id' => 'required|string',
-            'patches.*.value' => 'required|string',
+            'patches.*.op' => 'sometimes|string|in:move_block,delete_block,split_para,merge_para',
+            'patches.*.value' => 'sometimes|string',
+            'patches.*.field' => 'sometimes|string',
+            'patches.*.block_index' => 'sometimes|integer',
+            'patches.*.to_index' => 'sometimes|integer',
+            'patches.*.turn_index' => 'sometimes|integer',
+            'patches.*.para_index' => 'sometimes|integer',
+            'patches.*.offset' => 'sometimes|integer',
             'rebuild' => 'sometimes|boolean',
         ]);
 

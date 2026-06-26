@@ -4,7 +4,13 @@ namespace Tests\Feature\Shop;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\Group;
+use App\Models\Lesson;
+use App\Models\Payment;
+use App\Models\Schedule;
 use App\Models\Tariff;
+use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -90,6 +96,215 @@ class CourseShowTest extends TestCase
         $orderedNumbers = array_values(array_unique($matches[1]));
 
         $this->assertSame(['1', '2', '3', '4'], $orderedNumbers);
+    }
+
+    /** @test */
+    public function schedule_section_lists_upcoming_session_for_the_course(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Вводное занятие',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'end' => Carbon::parse('2026-06-28 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Расписание')
+            ->assertSee('Вводное занятие')
+            ->assertSee('20:00–22:00');
+    }
+
+    /** @test */
+    public function schedule_section_includes_sessions_linked_through_a_group(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'sched-group-course']);
+        Tariff::factory()->for($course)->create();
+        $group = Group::create(['name' => 'Поток 1']);
+        $course->groups()->attach($group);
+
+        Schedule::create([
+            'title' => 'Занятие группы',
+            'start' => Carbon::parse('2026-07-01 18:00:00'),
+            'end' => Carbon::parse('2026-07-01 20:00:00'),
+            'group_id' => $group->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Занятие группы');
+    }
+
+    /** @test */
+    public function past_sessions_are_not_shown(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'past-sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Прошедшее занятие',
+            'start' => Carbon::parse('2026-06-20 20:00:00'),
+            'end' => Carbon::parse('2026-06-20 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertDontSee('Прошедшее занятие');
+    }
+
+    /** @test */
+    public function schedule_section_is_hidden_when_course_has_no_sessions(): void
+    {
+        $course = Course::factory()->create(['slug' => 'no-sched-course']);
+        Tariff::factory()->for($course)->create();
+
+        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+
+        // Заголовок секции расписания не должен появляться без занятий.
+        $this->assertStringNotContainsString('id="schedule"', $html);
+    }
+
+    /** @test */
+    public function about_panel_shows_teacher_format_and_counts(): void
+    {
+        $teacher = Teacher::create(['name' => 'Иван Толчельников']);
+        $course = Course::factory()->live()->create([
+            'slug' => 'about-course',
+            'teacher_id' => $teacher->id,
+            'lessons_count' => 12,
+            'hours_count' => 10,
+        ]);
+        Tariff::factory()->for($course)->create();
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Коротко о курсе')
+            ->assertSee('Иван Толчельников')
+            ->assertSee('Live-поток')
+            ->assertSee('12 лекций')
+            ->assertSee('10 часов');
+    }
+
+    /** @test */
+    public function about_panel_shows_course_date_range_from_blocks(): void
+    {
+        $course = Course::factory()->create(['slug' => 'dated-course']);
+        Tariff::factory()->for($course)->create();
+
+        CourseBlock::factory()->for($course)
+            ->withDates(Carbon::parse('2026-07-01'), Carbon::parse('2026-08-31'))
+            ->create(['number' => 1]);
+        CourseBlock::factory()->for($course)
+            ->withDates(Carbon::parse('2028-04-01'), Carbon::parse('2028-05-31'))
+            ->create(['number' => 2]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Даты проведения')
+            ->assertSee('июль 2026')
+            ->assertSee('май 2028');
+    }
+
+    /** @test */
+    public function schedule_session_shows_enroll_cta_for_a_guest(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'cta-course']);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Занятие 1',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'end' => Carbon::parse('2026-06-28 22:00:00'),
+            'course_id' => $course->id,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Записаться')
+            ->assertSee('href="#tariffs"', false);
+    }
+
+    /** @test */
+    public function trial_session_shows_buy_trial_cta(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $course = Course::factory()->create(['slug' => 'cta-trial-course']);
+        Tariff::factory()->for($course)->create();
+
+        $session = Schedule::create([
+            'title' => 'Пробное занятие',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'course_id' => $course->id,
+        ]);
+        // Делает этот сеанс пробным: цена + ссылка на событие расписания.
+        $course->update(['trial_price' => 1000, 'trial_schedule_id' => $session->id]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Купить пробное');
+    }
+
+    /** @test */
+    public function enrolled_student_sees_join_link_for_a_session(): void
+    {
+        Carbon::setTestNow('2026-06-25 12:00:00');
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['slug' => 'join-course']);
+        $group = Group::create(['name' => 'Поток 1']);
+        $course->groups()->attach($group);
+        Tariff::factory()->for($course)->create();
+
+        Schedule::create([
+            'title' => 'Занятие со ссылкой',
+            'start' => Carbon::parse('2026-06-28 20:00:00'),
+            'link' => 'https://zoom.us/j/999',
+            'course_id' => $course->id,
+        ]);
+
+        // Оплаченный тариф → студент записан (PaymentObserver привяжет к группе).
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 16500,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Подключиться')
+            ->assertSee('https://zoom.us/j/999', false);
+    }
+
+    /** @test */
+    public function program_section_lists_blocks_with_lessons(): void
+    {
+        $course = Course::factory()->create(['slug' => 'program-course']);
+        Tariff::factory()->for($course)->create();
+
+        CourseBlock::factory()->for($course)->create(['number' => 1, 'title' => 'Деванагари']);
+        Lesson::factory()->for($course)->create([
+            'title' => 'Урок про алфавит', 'block_number' => 1, 'sort_order' => 1, 'is_published' => true,
+        ]);
+        Lesson::factory()->for($course)->unpublished()->create([
+            'title' => 'Чёрновик урока', 'block_number' => 1, 'sort_order' => 2,
+        ]);
+
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('Программа курса')
+            ->assertSee('Деванагари')
+            ->assertSee('Урок про алфавит')
+            ->assertDontSee('Чёрновик урока');
     }
 
     /** Создать курс с N блок-тарифами + опционально пометить один блок текущим. */

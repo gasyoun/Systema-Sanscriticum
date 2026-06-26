@@ -87,4 +87,112 @@ class LectureDraft extends Model
     {
         return 'lectures/'.$this->id;
     }
+
+    // ==========================================
+    // ФОНОВАЯ ОБРАБОТКА (Phase A — async pipeline)
+    // ==========================================
+    // Длинные шаги (препроцесс, сборка, ИИ) ушли в очередь. Признак «идёт
+    // фоновая задача» держим в meta — без миграции и без раздувания enum status.
+    // Источник истины для блокировки кнопок и баннера «выполняется».
+
+    /** Идёт ли сейчас фоновая задача по этому черновику. */
+    public function isProcessing(): bool
+    {
+        return ! empty($this->meta['processing']['label'] ?? null);
+    }
+
+    /** Человекочитаемая метка текущей фоновой задачи (или null). */
+    public function processingLabel(): ?string
+    {
+        return $this->meta['processing']['label'] ?? null;
+    }
+
+    /** Когда стартовала текущая фоновая задача (ISO-строка или null). */
+    public function processingStartedAt(): ?string
+    {
+        return $this->meta['processing']['started_at'] ?? null;
+    }
+
+    /** Пометить черновик как «идёт фоновая задача X». Вызывается из экшена перед dispatch. */
+    public function markProcessing(string $label): void
+    {
+        $meta = $this->meta ?? [];
+        $meta['processing'] = ['label' => $label, 'started_at' => now()->toIso8601String()];
+        $this->forceFill(['meta' => $meta])->save();
+    }
+
+    /** Снять признак фоновой задачи. Вызывается джобой в finally (успех или ошибка). */
+    public function clearProcessing(): void
+    {
+        $meta = $this->meta ?? [];
+        unset($meta['processing']);
+        $this->forceFill(['meta' => $meta])->save();
+    }
+
+    /** Сохранить краткий итог последнего прогона ИИ для показа в редакторе. */
+    public function recordAiResult(string $summary): void
+    {
+        $meta = $this->meta ?? [];
+        $meta['last_ai'] = ['summary' => $summary, 'at' => now()->toIso8601String()];
+        $this->forceFill(['meta' => $meta])->save();
+    }
+
+    // ==========================================
+    // ADVISORY-ЛОК РЕДАКТИРОВАНИЯ (Phase C)
+    // ==========================================
+    // Мягкая блокировка: показываем «редактирует X», но не запрещаем жёстко.
+    // Хартбит шлёт поллинг-виджет редактора; без хартбита лок «протухает» за TTL,
+    // поэтому закрытая вкладка освобождает черновик автоматически.
+
+    /** Сколько секунд лок считается активным без обновления (хартбита). */
+    public const LOCK_TTL_SECONDS = 120;
+
+    /** Текущий активный лок (или null, если свободен/протух). */
+    public function activeLock(): ?array
+    {
+        $lock = $this->meta['lock'] ?? null;
+        if (! is_array($lock) || empty($lock['at'])) {
+            return null;
+        }
+
+        $age = now()->diffInSeconds(\Illuminate\Support\Carbon::parse($lock['at']), absolute: true);
+
+        return $age <= self::LOCK_TTL_SECONDS ? $lock : null;
+    }
+
+    /** Заблокирован ли черновик активно другим пользователем. */
+    public function isLockedByOther(int $userId): bool
+    {
+        $lock = $this->activeLock();
+
+        return $lock !== null && (int) ($lock['user_id'] ?? 0) !== $userId;
+    }
+
+    /**
+     * Взять/обновить лок. Возвращает true, если черновик теперь за нами
+     * (свободен/протух/уже наш), false — если активно держит другой.
+     */
+    public function heartbeatLock(int $userId, string $userName): bool
+    {
+        if ($this->isLockedByOther($userId)) {
+            return false;
+        }
+
+        $meta = $this->meta ?? [];
+        $meta['lock'] = ['user_id' => $userId, 'name' => $userName, 'at' => now()->toIso8601String()];
+        $this->forceFill(['meta' => $meta])->save();
+
+        return true;
+    }
+
+    /** Снять свой лок (на чужой не влияет). */
+    public function releaseLock(int $userId): void
+    {
+        $lock = $this->meta['lock'] ?? null;
+        if (is_array($lock) && (int) ($lock['user_id'] ?? 0) === $userId) {
+            $meta = $this->meta ?? [];
+            unset($meta['lock']);
+            $this->forceFill(['meta' => $meta])->save();
+        }
+    }
 }
