@@ -66,45 +66,49 @@ class ReferralProgramTest extends TestCase
     }
 
     /** @test */
-    public function referrer_is_rewarded_prana_on_referred_first_payment(): void
+    public function referrer_is_rewarded_credit_on_referred_first_payment(): void
     {
+        config(['referral.credit_amount' => 500]);
         $referrer = User::factory()->create();
         $referred = User::factory()->create(['referred_by' => $referrer->id]);
 
         $this->paidPayment($referred); // observer.created() → reward
 
-        $this->assertDatabaseHas('prana_transactions', [
-            'user_id' => $referrer->id,
-            'reason' => ReferralService::REWARD_REASON,
+        $this->assertDatabaseHas('referral_rewards', [
+            'referrer_id' => $referrer->id,
+            'referred_id' => $referred->id,
+            'amount' => '500.00',
         ]);
-        $this->assertSame(100, (int) $referrer->fresh()->prana_balance);
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
     }
 
     /** @test */
     public function reward_is_granted_only_once_per_referred_student(): void
     {
+        config(['referral.credit_amount' => 500]);
         $referrer = User::factory()->create();
         $referred = User::factory()->create(['referred_by' => $referrer->id]);
 
         $this->paidPayment($referred);
         $this->paidPayment($referred); // вторая оплата того же приглашённого
 
-        $this->assertSame(1, \App\Models\PranaTransaction::where('reason', ReferralService::REWARD_REASON)->count());
-        $this->assertSame(100, (int) $referrer->fresh()->prana_balance);
+        $this->assertSame(1, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
     }
 
     /** @test */
     public function reward_fires_on_pending_to_paid_transition(): void
     {
+        config(['referral.credit_amount' => 500]);
         $referrer = User::factory()->create();
         $referred = User::factory()->create(['referred_by' => $referrer->id]);
 
         $payment = $this->paidPayment($referred, 'pending');
-        $this->assertSame(0, (int) $referrer->fresh()->prana_balance);
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
 
         $payment->update(['status' => 'paid']); // observer.updated() → reward
 
-        $this->assertSame(100, (int) $referrer->fresh()->prana_balance);
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
     }
 
     /** @test */
@@ -113,7 +117,7 @@ class ReferralProgramTest extends TestCase
         $student = User::factory()->create(['referred_by' => null]);
         $this->paidPayment($student);
 
-        $this->assertSame(0, \App\Models\PranaTransaction::where('reason', ReferralService::REWARD_REASON)->count());
+        $this->assertSame(0, \App\Models\ReferralReward::count());
     }
 
     /** @test */

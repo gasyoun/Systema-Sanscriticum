@@ -6,20 +6,23 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\PranaTransaction;
+use App\Models\ReferralReward;
 use App\Models\User;
-use App\Services\Prana\PranaService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Реферальная программа: приглашённый студент привязывается к пригласившему по
  * коду, и когда приглашённый ВПЕРВЫЕ оплачивает курс — пригласившему начисляется
- * прана (reason 'referral'). Награда за приглашённого выдаётся ровно один раз.
+ * денежный кредит на `referral_credit` (зачитывается в следующую покупку).
+ * Награда за приглашённого выдаётся ровно один раз.
+ *
+ * Раньше наградой была прана; теперь — реальный кредит (config('referral.credit_amount')).
  */
 class ReferralService
 {
+    /** Reason старых прана-наград — оставлен для idempotency-гейта при миграции. */
     public const REWARD_REASON = 'referral';
-
-    public function __construct(private PranaService $prana) {}
 
     /**
      * Привязать нового студента к пригласившему по коду. Идемпотентно и безопасно:
@@ -42,9 +45,9 @@ class ReferralService
     }
 
     /**
-     * Начислить пригласившему прану за первую оплату приглашённого. Вызывается из
-     * PaymentObserver при переходе платежа в paid. Награда — один раз на каждого
-     * приглашённого студента (гейт по наличию транзакции с source = студент).
+     * Начислить пригласившему денежный кредит за первую оплату приглашённого.
+     * Вызывается из PaymentObserver при переходе платежа в paid. Награда — ровно
+     * один раз на каждого приглашённого студента.
      */
     public function rewardForPayment(Payment $payment): void
     {
@@ -62,22 +65,27 @@ class ReferralService
             return;
         }
 
-        // Уже награждали за этого приглашённого? (source = приглашённый студент)
-        $already = PranaTransaction::query()
-            ->where('reason', self::REWARD_REASON)
-            ->where('source_type', $referred->getMorphClass())
-            ->where('source_id', $referred->getKey())
-            ->exists();
+        if ($this->alreadyRewarded($referred)) {
+            return;
+        }
 
-        if ($already) {
+        $amount = (float) config('referral.credit_amount', 500);
+        if ($amount <= 0) {
             return;
         }
 
         try {
-            $this->prana->award($referrer, self::REWARD_REASON, $referred, meta: [
-                'referred_user_id' => $referred->id,
-                'payment_id' => $payment->id,
-            ]);
+            DB::transaction(function () use ($referrer, $referred, $payment, $amount): void {
+                // unique(referred_id): гонка двух платежей не задвоит награду.
+                $reward = ReferralReward::firstOrCreate(
+                    ['referred_id' => $referred->id],
+                    ['referrer_id' => $referrer->id, 'payment_id' => $payment->id, 'amount' => $amount],
+                );
+
+                if ($reward->wasRecentlyCreated) {
+                    $referrer->increment('referral_credit', $amount);
+                }
+            });
         } catch (\Throwable $e) {
             // Награда не должна ломать оплату.
             Log::warning('ReferralService::rewardForPayment failed', [
@@ -85,5 +93,23 @@ class ReferralService
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Уже награждён за этого приглашённого? Учитываем и новые денежные награды, и
+     * старые прана-награды — чтобы при переходе на кредит не наградить дважды тех,
+     * кого уже наградили праной.
+     */
+    private function alreadyRewarded(User $referred): bool
+    {
+        if (ReferralReward::where('referred_id', $referred->id)->exists()) {
+            return true;
+        }
+
+        return PranaTransaction::query()
+            ->where('reason', self::REWARD_REASON)
+            ->where('source_type', $referred->getMorphClass())
+            ->where('source_id', $referred->getKey())
+            ->exists();
     }
 }
