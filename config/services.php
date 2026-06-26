@@ -132,6 +132,10 @@ return [
         'client_id' => env('ZOOM_CLIENT_ID'),
         'client_secret' => env('ZOOM_CLIENT_SECRET'),
         'timeout' => (int) env('ZOOM_TIMEOUT', 30),
+        // Secret Token из настроек Event Subscriptions приложения. Подписывает
+        // вебхуки (`recording.completed`) и проверку URL. Пусто → проверка
+        // подписи выключена (только для локалки; на проде задать ОБЯЗАТЕЛЬНО).
+        'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
     ],
 
     // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===

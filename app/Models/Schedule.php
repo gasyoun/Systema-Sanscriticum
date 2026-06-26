@@ -32,12 +32,15 @@ class Schedule extends Model
         'zoom_meeting_id',
         'zoom_join_url',
         'zoom_start_url',
+        'zoom_recording_url',
+        'zoom_recording_received_at',
     ];
 
     protected $casts = [
         'start' => 'datetime',
         'end' => 'datetime',
         'reminded_at' => 'datetime',
+        'zoom_recording_received_at' => 'datetime',
     ];
 
     protected static function booted(): void
