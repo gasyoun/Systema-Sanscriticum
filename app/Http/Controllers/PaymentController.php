@@ -124,6 +124,17 @@ class PaymentController extends Controller
                 $pranaToSpend = 0;
             }
 
+            // --- РЕФЕРАЛЬНЫЙ КРЕДИТ: авто-зачёт остатка из кошелька покупателя ---
+            // Это собственные заработанные деньги студента — применяем автоматически,
+            // сколько нужно (но не больше остатка цены). Списываем в той же транзакции;
+            // при срыве оплаты Payment::refundReferralCreditIfApplied() вернёт обратно.
+            $referralCreditApplied = 0.0;
+            $availableCredit = (float) ($user->referral_credit ?? 0);
+            if ($availableCredit > 0 && $finalPrice > 0) {
+                $referralCreditApplied = min($availableCredit, $finalPrice);
+                $finalPrice = max(0, $finalPrice - $referralCreditApplied);
+            }
+
             // --- ОПРЕДЕЛЯЕМ КЛЮЧ ДЛЯ ДОСТУПА И НОМЕРА БЛОКОВ ---
             $tariffKey = $tariff->type;
             $startBlock = null;
@@ -147,11 +158,17 @@ class PaymentController extends Controller
                 'discount_percent' => $discount['percent'],
                 'discount_amount' => $discount['amount'] > 0 ? $discount['amount'] : null,
                 'prana_spent' => $pranaToSpend,
+                'referral_credit_applied' => $referralCreditApplied > 0 ? $referralCreditApplied : null,
                 'tariff' => $tariffKey,
                 'status' => 'pending',
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
             ]);
+
+            // Списываем реферальный кредит ровно сейчас, в той же транзакции (как прану).
+            if ($referralCreditApplied > 0) {
+                $user->decrement('referral_credit', $referralCreditApplied);
+            }
 
             // Списываем прану ровно сейчас, в той же транзакции — потом, если оплата
             // не пройдёт, наблюдатель Payment::updated вернёт её через refundPranaIfSpent().
