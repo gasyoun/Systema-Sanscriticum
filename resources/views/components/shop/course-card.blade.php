@@ -30,14 +30,27 @@
                  @style(['background-image: linear-gradient(135deg, ' . $coverColor . 'E6 0%, #0A0D14 92%)'])>
                 {{-- лёгкий ॐ-водяной знак --}}
                 <i class="fas fa-om absolute -right-4 -bottom-5 text-[7rem] text-white/5 pointer-events-none"></i>
-                {{-- преподаватель сверху (с отступом справа под бейдж формата) --}}
-                <span class="relative pr-24 text-[10px] font-black uppercase tracking-widest text-white/70 line-clamp-1">
+                {{-- преподаватель сверху (отступ справа под бейдж формата, слева — под «Новинку») --}}
+                <span @class([
+                        'relative pr-24 text-[10px] font-black uppercase tracking-widest text-white/70 line-clamp-1',
+                        'pl-24' => $course->isNew(),
+                    ])>
                     {{ $course->teacher?->name ?? 'Онлайн-программа' }}
                 </span>
                 {{-- название крупно, по центру, с отступом снизу под мета-бейджи --}}
                 <div class="relative flex-grow flex items-center pb-10">
                     <span class="text-2xl font-extrabold text-white leading-tight line-clamp-3">{{ $course->title }}</span>
                 </div>
+            </div>
+        @endif
+
+        {{-- Бейдж «Новинка» (курс создан недавно) --}}
+        @if($course->isNew())
+            <div class="absolute top-3 left-3 z-20">
+                <span class="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(16,185,129,0.5)] tracking-wider">
+                    <i class="fas fa-star text-[9px]"></i>
+                    Новинка
+                </span>
             </div>
         @endif
 

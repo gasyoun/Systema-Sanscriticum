@@ -118,4 +118,38 @@ class TeacherAnalytics
             ->sortBy('percent')
             ->values();
     }
+
+    /**
+     * Посещаемость вебинаров (из webinar_attendances, Zoom participant-вебхуки):
+     * по одной строке на вебинар-занятие курсов преподавателя, новые сверху.
+     * `attendees` — уникальные участники (студент по user_id, гость по uuid-сессии),
+     * `known` — из них сопоставленные студенты, `avg_minutes` — средняя длительность.
+     *
+     * @return Collection<int, array{schedule_id: int, title: string, start: ?string, attendees: int, known: int, avg_minutes: ?int}>
+     */
+    public function webinarAttendance(int $limit = 20): Collection
+    {
+        $courseIds = $this->courseIds();
+
+        return \App\Models\WebinarAttendance::query()
+            ->join('schedules', 'schedules.id', '=', 'webinar_attendances.schedule_id')
+            ->whereIn('schedules.course_id', $courseIds)
+            ->groupBy('schedules.id', 'schedules.title', 'schedules.start')
+            ->selectRaw('schedules.id as schedule_id, schedules.title as title, schedules.start as start')
+            // COALESCE(user_id, uuid): студент дедуплицируется по user_id, гость — по сессии.
+            ->selectRaw('COUNT(DISTINCT COALESCE(webinar_attendances.user_id, webinar_attendances.zoom_participant_uuid)) as attendees')
+            ->selectRaw('COUNT(DISTINCT webinar_attendances.user_id) as known') // NULL-гости не считаются
+            ->selectRaw('AVG(webinar_attendances.duration_seconds) as avg_dur')
+            ->orderByDesc('schedules.start')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row): array => [
+                'schedule_id' => (int) $row->schedule_id,
+                'title' => (string) $row->title,
+                'start' => $row->start ? Carbon::parse($row->start)->toDateTimeString() : null,
+                'attendees' => (int) $row->attendees,
+                'known' => (int) $row->known,
+                'avg_minutes' => $row->avg_dur ? (int) round($row->avg_dur / 60) : null,
+            ]);
+    }
 }

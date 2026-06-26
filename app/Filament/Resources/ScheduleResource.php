@@ -121,6 +121,16 @@ class ScheduleResource extends Resource
                         ->prefixIcon('heroicon-m-video-camera')
                         ->columnSpanFull(),
 
+                    // Хост-ссылка автосозданной Zoom-встречи (только для запуска
+                    // преподавателем; студентам уходит join_url через `link`).
+                    Forms\Components\TextInput::make('zoom_start_url')
+                        ->label('Zoom: ссылка хоста (start_url)')
+                        ->helperText('Открывайте ЭТУ ссылку как ведущий — она запускает встречу. Студентам не давать.')
+                        ->prefixIcon('heroicon-m-key')
+                        ->readOnly()
+                        ->columnSpanFull()
+                        ->visible(fn (?Schedule $record): bool => $record?->hasZoomMeeting() ?? false),
+
                     Forms\Components\Grid::make(2)
                         ->schema([
                             Forms\Components\DateTimePicker::make('start')
@@ -241,6 +251,16 @@ class ScheduleResource extends Resource
                     ->color(fn (?string $state): string => $state ? 'primary' : 'gray')
                     ->formatStateUsing(fn (?string $state): string => $state ?? 'Для всех')
                     ->icon(fn (?string $state): string => $state ? 'heroicon-m-user-group' : 'heroicon-m-globe-alt'),
+
+                // Посещаемость вебинара (Zoom participant-вебхуки, Фаза 3).
+                Tables\Columns\TextColumn::make('attendances_count')
+                    ->label('Участников')
+                    ->counts('attendances')
+                    ->badge()
+                    ->color('success')
+                    ->icon('heroicon-m-users')
+                    ->toggleable()
+                    ->placeholder('—'),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('time_range')
@@ -276,6 +296,60 @@ class ScheduleResource extends Resource
                     ->url(fn (Schedule $r): ?string => $r->link)
                     ->openUrlInNewTab()
                     ->visible(fn (Schedule $r): bool => ! empty($r->link)),
+
+                // Запись вебинара (прилетела Zoom-вебхуком recording.completed).
+                Tables\Actions\Action::make('open_recording')
+                    ->label('')
+                    ->tooltip('Открыть запись вебинара')
+                    ->icon('heroicon-o-film')
+                    ->color('gray')
+                    ->url(fn (Schedule $r): ?string => $r->zoom_recording_url)
+                    ->openUrlInNewTab()
+                    ->visible(fn (Schedule $r): bool => ! empty($r->zoom_recording_url)),
+
+                // Автосоздание Zoom-встречи (Server-to-Server OAuth, #78). Видна,
+                // только если креды заданы и встреча ещё не создана. join_url
+                // кладётся и в `link` — кабинет сразу покажет «Подключиться».
+                Tables\Actions\Action::make('create_zoom')
+                    ->label('')
+                    ->tooltip('Создать Zoom-встречу')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Создать Zoom-встречу')
+                    ->modalDescription(fn (Schedule $r): string => "«{$r->title}», начало {$r->start?->format('d.m.Y H:i')}. Ссылка для подключения попадёт в расписание кабинета.")
+                    ->visible(fn (Schedule $r): bool => ! $r->hasZoomMeeting()
+                        && $r->start !== null
+                        && app(\App\Services\Zoom\ZoomService::class)->isConfigured())
+                    ->action(function (Schedule $r): void {
+                        try {
+                            $meeting = app(\App\Services\Zoom\ZoomService::class)->createMeeting(
+                                topic: $r->title,
+                                start: $r->start,
+                                durationMinutes: $r->durationMinutes(),
+                                agenda: $r->description,
+                            );
+                        } catch (\Throwable $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Не удалось создать Zoom-встречу')
+                                ->body($e->getMessage())
+                                ->danger()->persistent()->send();
+
+                            return;
+                        }
+
+                        $r->forceFill([
+                            'zoom_meeting_id' => $meeting['id'],
+                            'zoom_join_url' => $meeting['join_url'],
+                            'zoom_start_url' => $meeting['start_url'],
+                            'link' => $meeting['join_url'], // переиспользуем кнопку «Подключиться»
+                        ])->save();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Zoom-встреча создана')
+                            ->body('Ссылка для студентов добавлена в расписание. Хост-ссылка (start_url) сохранена для запуска.')
+                            ->success()->send();
+                    }),
 
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),

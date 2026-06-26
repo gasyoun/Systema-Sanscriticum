@@ -21,6 +21,7 @@ class Payment extends Model
         'discount_percent',
         'discount_amount',
         'prana_spent',
+        'referral_credit_applied',
         'tariff',
         'deposit_consumed_at',
         'status',
@@ -41,6 +42,7 @@ class Payment extends Model
         'is_conditional' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'referral_credit_applied' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
@@ -224,9 +226,10 @@ class Payment extends Model
                 self::fireOnPaid($payment);
             }
 
-            // Откатываем списанную прану, если оплата сорвалась.
+            // Откатываем списанную прану и зачтённый реферальный кредит, если оплата сорвалась.
             if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'cancelled'], true)) {
                 $payment->refundPranaIfSpent();
+                $payment->refundReferralCreditIfApplied();
             }
         });
     }
@@ -628,6 +631,22 @@ class Payment extends Model
             'refund_failed',
             $this,
         );
+    }
+
+    /**
+     * Вернуть зачтённый реферальный кредит в кошелёк, если оплата сорвалась.
+     * Зеркалит refundPranaIfSpent(). Идемпотентно: обнуляем applied после возврата,
+     * чтобы повторный failed→cancelled не вернул кредит дважды.
+     */
+    public function refundReferralCreditIfApplied(): void
+    {
+        $applied = (float) ($this->referral_credit_applied ?? 0);
+        if (! $this->user || $applied <= 0) {
+            return;
+        }
+
+        $this->user->increment('referral_credit', $applied);
+        $this->updateQuietly(['referral_credit_applied' => 0]);
     }
 
     // ==========================================

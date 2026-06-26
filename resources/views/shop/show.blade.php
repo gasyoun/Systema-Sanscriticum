@@ -86,20 +86,234 @@
     {{-- ═════════════════ ОСНОВНОЙ КОНТЕНТ (одна широкая колонка) ═════════════════ --}}
     <div class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {{-- ───── 1. О КУРСЕ ───── --}}
+        {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
+        @php
+            // Даты проведения курса — диапазон по блокам (если у них проставлены сроки).
+            $datedBlocks = $course->blocks->filter(fn ($b) => $b->starts_at);
+            $courseStart = $datedBlocks->min('starts_at');
+            $courseEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+
+            // Строки панели «Коротко о курсе» — собираем только заполненные.
+            $facts = collect([
+                $course->teacher
+                    ? ['icon' => 'fas fa-user', 'label' => 'Преподаватель', 'value' => $course->teacher->name]
+                    : null,
+                $course->formatLabel()
+                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->formatLabel()]
+                    : null,
+                $course->lessons_count
+                    ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' лекций']
+                    : null,
+                $course->hours_count
+                    ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $course->hours_count.' часов']
+                    : null,
+                $courseStart
+                    ? ['icon' => 'far fa-calendar-alt', 'label' => 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
+                    : null,
+            ])->filter()->values();
+        @endphp
         <section class="mb-16 lg:mb-20">
             <h2 class="text-3xl font-bold text-white mb-8">О курсе</h2>
-            
-            <div class="prose prose-invert prose-lg prose-slate max-w-none">
-                @if($course->description)
-                    <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
-                        {!! $course->description !!}
-                    </div>
-                @else
-                    <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
+
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+                {{-- Левая колонка: текстовое описание --}}
+                <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
+                    @if($course->description)
+                        <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
+                            {!! $course->description !!}
+                        </div>
+                    @else
+                        <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
+                    @endif
+                </div>
+
+                {{-- Правая колонка: структурированная панель фактов --}}
+                @if($facts->isNotEmpty())
+                    <aside class="w-full lg:w-80 shrink-0 lg:sticky lg:top-28">
+                        <div class="rounded-2xl bg-[#111622] border border-[#1F2636] p-6">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">Коротко о курсе</h3>
+                            <dl class="space-y-4">
+                                @foreach($facts as $fact)
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-[#1F2636] flex items-center justify-center shrink-0">
+                                            <i class="{{ $fact['icon'] }} text-indigo-400 text-xs"></i>
+                                        </div>
+                                        <div class="flex flex-col min-w-0">
+                                            <dt class="text-[11px] font-bold uppercase tracking-wider text-slate-500">{{ $fact['label'] }}</dt>
+                                            <dd class="text-sm font-bold text-white">{{ $fact['value'] }}</dd>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        </div>
+                    </aside>
                 @endif
             </div>
         </section>
+
+        {{-- ───── 1.2 ПРОГРАММА КУРСА (аккордеон по блокам) ───── --}}
+        @php
+            // Русская плюрализация «занятий».
+            $pluralLessons = function (int $n): string {
+                $mod10 = $n % 10;
+                $mod100 = $n % 100;
+                if ($mod10 === 1 && $mod100 !== 11) {
+                    return 'занятие';
+                }
+                if (in_array($mod10, [2, 3, 4], true) && ! in_array($mod100, [12, 13, 14], true)) {
+                    return 'занятия';
+                }
+
+                return 'занятий';
+            };
+
+            // Секция нужна только если у блоков есть содержимое (название, даты или уроки),
+            // иначе это дублировало бы список тарифов «БЛОК N».
+            $hasProgram = $course->blocks->contains(fn ($b) => filled($b->title)
+                || $b->starts_at
+                || ($lessonsByBlock[$b->number] ?? collect())->isNotEmpty());
+        @endphp
+        @if($hasProgram)
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: null }">
+            <h2 class="text-3xl font-bold text-white mb-8">Программа курса</h2>
+
+            <div class="space-y-3">
+                @foreach($course->blocks as $block)
+                    @php $blockLessons = $lessonsByBlock[$block->number] ?? collect(); @endphp
+                    <div class="rounded-2xl bg-[#111622] border border-[#1F2636] overflow-hidden">
+                        <button type="button"
+                                @click="open === {{ $block->number }} ? open = null : open = {{ $block->number }}"
+                                class="w-full flex items-center gap-4 p-5 text-left hover:bg-[#1A2235] transition-colors">
+                            <span class="flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636] text-base font-extrabold text-white">
+                                {{ $block->number }}
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-base font-bold text-white">{{ $block->title ?: 'Блок '.$block->number }}</span>
+                                    @if($block->is_current)
+                                        <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Сейчас идёт
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-xs font-bold text-slate-500 mt-1">
+                                    @if($block->starts_at)
+                                        {{ $block->starts_at->translatedFormat('F Y') }}@if($block->ends_at && $block->ends_at->format('Y-m') !== $block->starts_at->format('Y-m')) – {{ $block->ends_at->translatedFormat('F Y') }}@endif
+                                        @if($blockLessons->isNotEmpty()) · @endif
+                                    @endif
+                                    @if($blockLessons->isNotEmpty()){{ $blockLessons->count() }} {{ $pluralLessons($blockLessons->count()) }}@endif
+                                </div>
+                            </div>
+                            @if($blockLessons->isNotEmpty())
+                                <i class="fas fa-chevron-down text-slate-500 text-sm transition-transform"
+                                   :class="open === {{ $block->number }} ? 'rotate-180' : ''"></i>
+                            @endif
+                        </button>
+
+                        @if($blockLessons->isNotEmpty())
+                            <div x-show="open === {{ $block->number }}" x-transition style="display:none"
+                                 class="border-t border-[#1F2636]">
+                                <ol class="px-5 py-4 space-y-2">
+                                    @foreach($blockLessons as $i => $lesson)
+                                        <li class="flex gap-3 text-sm text-slate-300">
+                                            <span class="text-slate-600 font-bold shrink-0">{{ $i + 1 }}.</span>
+                                            <span>{{ $lesson->title }}</span>
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
+        {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
+        @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
+        <section id="schedule" class="mb-16 lg:mb-20">
+            <div class="flex items-center gap-4 mb-8">
+                <h2 class="text-3xl font-bold text-white">Расписание</h2>
+                <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
+            </div>
+
+            <div class="space-y-10">
+                @foreach($scheduleGroups as $month => $sessions)
+                    <div>
+                        {{-- Пилюля месяца --}}
+                        <div class="mb-5">
+                            <span class="inline-block bg-[#111622] text-[#E85C24] text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full border border-[#E85C24]/30">
+                                {{ $month }}
+                            </span>
+                        </div>
+
+                        {{-- Карусель: горизонтальная прокрутка со snap (свайп на тач, скролл на десктопе) --}}
+                        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-1 px-1 [scrollbar-color:#1F2636_transparent] [scrollbar-width:thin]">
+                            @foreach($sessions as $session)
+                                <div class="relative snap-start shrink-0 w-[340px] max-w-[85vw] flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
+                                    {{-- Дата-бейдж: число + месяц --}}
+                                    <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636]">
+                                        <span class="text-2xl font-extrabold text-white leading-none">{{ $session->start->translatedFormat('j') }}</span>
+                                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{{ $session->start->translatedFormat('M') }}</span>
+                                    </div>
+
+                                    {{-- Описание сеанса --}}
+                                    <div class="flex flex-col min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                                {{ $session->start->translatedFormat('l') }}
+                                            </span>
+                                            @if($session->isLive())
+                                                <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Идёт сейчас
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-base font-bold text-white truncate">
+                                            {{ $session->title ?: $course->title }}
+                                        </span>
+                                        <span class="text-sm font-bold text-indigo-400 mt-1">
+                                            <i class="far fa-clock mr-1"></i>{{ $session->start->format('H:i') }}@if($session->end)–{{ $session->end->format('H:i') }}@endif
+                                        </span>
+                                    </div>
+
+                                    {{-- CTA: билет на сеанс --}}
+                                    @php
+                                        // Пробное — единственный «билет на один сеанс» в этой модели:
+                                        // покупается отдельно через trial.create. Для записавшихся со
+                                        // ссылкой — прямой вход; для остальных — переход к тарифам.
+                                        $isTrialSession = $course->trial_schedule_id
+                                            && (int) $course->trial_schedule_id === (int) $session->id;
+                                        $enrolled = ! empty($purchasedKeys);
+                                    @endphp
+                                    @if($isTrialSession && ! empty($showTrialCta))
+                                        <button type="button"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ (float) $course->trial_price }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
+                                                class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-xs font-bold transition-all whitespace-nowrap">
+                                            <i class="fas fa-graduation-cap text-[11px]"></i>
+                                            Купить пробное
+                                        </button>
+                                    @elseif($enrolled && $session->link)
+                                        <a href="{{ $session->link }}" target="_blank" rel="noopener"
+                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#E85C24] hover:bg-[#d64e1c] text-white text-xs font-bold transition-all whitespace-nowrap">
+                                            <i class="fas fa-video text-[11px]"></i>
+                                            Подключиться
+                                        </a>
+                                    @else
+                                        <a href="#tariffs"
+                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#1F2636] hover:bg-[#2A344A] text-white text-xs font-bold transition-all whitespace-nowrap border border-[#2A344A]">
+                                            Записаться
+                                            <i class="fas fa-arrow-right text-[10px]"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
 
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php

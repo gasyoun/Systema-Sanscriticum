@@ -145,6 +145,9 @@ class StudentController extends Controller
         $pranaRewards = PranaSettings::allRewards();
         $pranaReasons = config('prana.reasons', []);
 
+        // Таблица лидеров по накопленной пране (геймификация).
+        $pranaLeaderboard = \App\Support\PranaLeaderboard::rows(10, $user->id);
+
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
 
@@ -179,6 +182,7 @@ class StudentController extends Controller
             'certificates',
             'pranaTransactions',
             'pranaRewards',
+            'pranaLeaderboard',
             'pranaReasons',
             'debts',
             'debtsByCourseId',

@@ -24,6 +24,20 @@
                 </button>
             @endif
         </div>
+
+        {{-- Подсказки «Часто ищут» --}}
+        @if(! empty($popularSearches) && $search === '')
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm">
+                <span class="text-slate-500">Часто ищут:</span>
+                @foreach($popularSearches as $term)
+                    <button type="button"
+                            wire:click="$set('search', '{{ $term }}')"
+                            class="text-slate-300 hover:text-[#E85C24] underline-offset-4 hover:underline transition-colors cursor-pointer">
+                        {{ $term }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     {{-- ============================================ --}}
@@ -135,34 +149,52 @@
     </div>
 
     {{-- ============================================ --}}
-    {{-- РЕЗУЛЬТАТЫ                                      --}}
+    {{-- РЕЗУЛЬТАТЫ (сгруппированы по секциям)          --}}
     {{-- ============================================ --}}
     <div>
-        {{-- Счётчик результатов + индикатор перерасчёта фильтров --}}
-        <div class="flex items-center justify-between mb-6">
-            <div class="text-sm text-slate-500">
-                Показано: <span class="text-white font-bold">{{ $courses->count() }}</span>
-                из <span class="text-white font-bold">{{ $totalCount }}</span>
-            </div>
-            <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
-                 class="flex items-center gap-2 text-xs text-slate-400">
-                <i class="fas fa-spinner fa-spin text-[#E85C24]"></i>
-                Обновляем...
-            </div>
+        {{-- Индикатор перерасчёта фильтров --}}
+        <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
+             class="flex items-center gap-2 text-xs text-slate-400 mb-6">
+            <i class="fas fa-spinner fa-spin text-[#E85C24]"></i>
+            Обновляем...
         </div>
 
         <div wire:loading.class="opacity-50" wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
-             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 transition-opacity">
+             class="space-y-12 transition-opacity">
 
-            @forelse($courses as $course)
-                <x-shop.course-card
-                    :course="$course"
-                    :purchasedByCourse="$purchasedByCourse"
-                    :deposit="$deposit"
-                    :categoryIds="$categoryIds"
-                    wire:key="course-{{ $course->id }}" />
+            @php
+                // Заголовки секций по формату курса
+                $sectionLabels = ['live' => 'Идут сейчас', 'recorded' => 'В записи', 'other' => 'Другие курсы'];
+                // Группируем всю выдачу; порядок секций фиксирован
+                $grouped = $courses->groupBy(fn ($c) => $c->format ?: 'other');
+                $orderedKeys = collect(['live', 'recorded', 'other'])
+                    ->merge($grouped->keys())
+                    ->unique()
+                    ->filter(fn ($k) => $grouped->has($k));
+            @endphp
+
+            @forelse($orderedKeys as $key)
+                <section wire:key="section-{{ $key }}">
+                    <div class="flex items-baseline gap-3 mb-6">
+                        <h2 class="text-2xl font-extrabold text-white">
+                            {{ $sectionLabels[$key] ?? 'Курсы' }}
+                        </h2>
+                        <span class="text-xl font-bold text-slate-500">{{ $sectionTotals[$key] ?? $grouped[$key]->count() }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                        @foreach($grouped[$key] as $course)
+                            <x-shop.course-card
+                                :course="$course"
+                                :purchasedByCourse="$purchasedByCourse"
+                                :deposit="$deposit"
+                                :categoryIds="$categoryIds"
+                                wire:key="course-{{ $course->id }}" />
+                        @endforeach
+                    </div>
+                </section>
             @empty
-                <div class="col-span-full text-center py-20">
+                <div class="text-center py-20">
                     <i class="fas fa-moon text-5xl text-slate-700 mb-4"></i>
                     @if($this->hasActiveFilters)
                         <h3 class="text-2xl font-bold text-white mb-2">Ничего не найдено</h3>
@@ -179,72 +211,5 @@
                 </div>
             @endforelse
         </div>
-
-        {{-- ============================================ --}}
-        {{-- INFINITE SCROLL: SENTINEL + КНОПКА FALLBACK    --}}
-        {{-- ============================================ --}}
-        @if($hasMore)
-            <div
-                x-data="{
-                    observer: null,
-                    loading: false,
-                    init() {
-                        // Если IntersectionObserver не поддерживается — оставляем только кнопку
-                        if (!('IntersectionObserver' in window)) return;
-
-                        this.observer = new IntersectionObserver((entries) => {
-                            entries.forEach(entry => {
-                                if (entry.isIntersecting && !this.loading) {
-                                    this.loading = true;
-                                    @this.call('loadMore').finally(() => {
-                                        this.loading = false;
-                                    });
-                                }
-                            });
-                        }, {
-                            // Подгружаем заранее, когда сентинель ещё за 200px от viewport
-                            rootMargin: '200px',
-                            threshold: 0
-                        });
-
-                        this.observer.observe(this.$refs.sentinel);
-                    },
-                    destroy() {
-                        this.observer?.disconnect();
-                    }
-                }"
-                x-init="init()"
-                @destroy="destroy()"
-                class="mt-12 pt-8 border-t border-[#1F2636] flex flex-col items-center gap-4">
-
-                {{-- Лоадер --}}
-                <div wire:loading wire:target="loadMore" class="flex items-center gap-3 text-slate-400">
-                    <i class="fas fa-circle-notch fa-spin text-[#E85C24] text-lg"></i>
-                    <span class="text-sm font-semibold">Загружаем ещё...</span>
-                </div>
-
-                {{-- Кнопка-fallback (видна когда НЕ идёт загрузка) --}}
-                <button
-                    type="button"
-                    wire:click="loadMore"
-                    wire:loading.remove
-                    wire:target="loadMore"
-                    class="inline-flex items-center gap-2 bg-[#1F2636] hover:bg-[#2A344A] text-white text-sm font-bold px-8 py-3.5 rounded-xl transition-all hover:-translate-y-0.5">
-                    <i class="fas fa-chevron-down"></i>
-                    Показать ещё
-                </button>
-
-                {{-- Сентинель для IntersectionObserver --}}
-                <div x-ref="sentinel" class="h-1 w-full" aria-hidden="true"></div>
-            </div>
-        @elseif($courses->count() > $perPage)
-            {{-- Когда показали всё и было больше одной порции — приятный финал --}}
-            <div class="mt-12 pt-8 border-t border-[#1F2636] text-center">
-                <p class="text-sm text-slate-500">
-                    <i class="fas fa-check-circle text-emerald-500/70 mr-1.5"></i>
-                    Это все курсы, которые удалось найти
-                </p>
-            </div>
-        @endif
     </div>
 </div>

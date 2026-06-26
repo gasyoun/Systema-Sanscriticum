@@ -30,7 +30,18 @@ final class BuildLectureHtmlJob implements ShouldQueue
 
     public int $timeout = 120;
 
-    public function __construct(public readonly int $draftId) {}
+    /**
+     * @param  bool  $ownsProcessing  true — джоба сама снимает meta.processing в finally
+     *                                (запуск из экшена «Собрать HTML»). false (дефолт) — вызвана вложенно из
+     *                                Preprocess/AI-джобы, которая владеет флагом и снимет его сама.
+     */
+    public function __construct(
+        public readonly int $draftId,
+        public readonly bool $ownsProcessing = false,
+    ) {
+        // Очередь длинных лекционных задач (отдельный Horizon-супервизор).
+        $this->onQueue('lectures');
+    }
 
     public function handle(
         LectureStorage $storage,
@@ -64,6 +75,10 @@ final class BuildLectureHtmlJob implements ShouldQueue
                 'error_log' => $e->getMessage(),
             ])->save();
             throw $e;
+        } finally {
+            if ($this->ownsProcessing) {
+                $draft->clearProcessing();
+            }
         }
     }
 }

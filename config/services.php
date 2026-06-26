@@ -123,6 +123,21 @@ return [
         'ai_timeout' => (int) env('LECTURE_BUILDER_AI_TIMEOUT', 600),
     ],
 
+    // === ВЕБИНАРЫ ZOOM (Server-to-Server OAuth, issue #78) ===
+    // Все три значения создаёт владелец в Zoom Marketplace (S2S OAuth app);
+    // в коде секретов нет. Кнопка «Создать Zoom-встречу» в ScheduleResource
+    // показывается, только когда все три заданы (ZoomService::isConfigured()).
+    'zoom' => [
+        'account_id' => env('ZOOM_ACCOUNT_ID'),
+        'client_id' => env('ZOOM_CLIENT_ID'),
+        'client_secret' => env('ZOOM_CLIENT_SECRET'),
+        'timeout' => (int) env('ZOOM_TIMEOUT', 30),
+        // Secret Token из настроек Event Subscriptions приложения. Подписывает
+        // вебхуки (`recording.completed`) и проверку URL. Пусто → проверка
+        // подписи выключена (только для локалки; на проде задать ОБЯЗАТЕЛЬНО).
+        'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
+    ],
+
     // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===
     // Кнопка провайдера показывается, только если задан его client_id (см.
     // App\Services\SocialAuthService::enabledProviders). Секреты — в .env.
