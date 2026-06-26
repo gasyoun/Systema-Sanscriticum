@@ -287,6 +287,16 @@ class ScheduleResource extends Resource
                     ->openUrlInNewTab()
                     ->visible(fn (Schedule $r): bool => ! empty($r->link)),
 
+                // Запись вебинара (прилетела Zoom-вебхуком recording.completed).
+                Tables\Actions\Action::make('open_recording')
+                    ->label('')
+                    ->tooltip('Открыть запись вебинара')
+                    ->icon('heroicon-o-film')
+                    ->color('gray')
+                    ->url(fn (Schedule $r): ?string => $r->zoom_recording_url)
+                    ->openUrlInNewTab()
+                    ->visible(fn (Schedule $r): bool => ! empty($r->zoom_recording_url)),
+
                 // Автосоздание Zoom-встречи (Server-to-Server OAuth, #78). Видна,
                 // только если креды заданы и встреча ещё не создана. join_url
                 // кладётся и в `link` — кабинет сразу покажет «Подключиться».
