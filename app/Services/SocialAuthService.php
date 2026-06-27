@@ -53,7 +53,7 @@ class SocialAuthService
             return $existing->user;
         }
 
-        $user = filled($email) ? User::where('email', $email)->first() : null;
+        $user = filled($email) ? User::where('email', User::normalizeEmail($email))->first() : null;
 
         if (! $user) {
             $user = User::create([

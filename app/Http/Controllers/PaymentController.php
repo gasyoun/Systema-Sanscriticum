@@ -40,7 +40,7 @@ class PaymentController extends Controller
             if (auth()->check()) {
                 $user = auth()->user();
             } else {
-                $existingUser = User::where('email', $request->input('email'))->first();
+                $existingUser = User::where('email', User::normalizeEmail($request->input('email')))->first();
 
                 if ($existingUser) {
                     $user = $existingUser;

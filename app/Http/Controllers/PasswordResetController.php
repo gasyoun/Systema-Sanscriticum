@@ -17,22 +17,43 @@ class PasswordResetController extends Controller
         return view('auth.passwords.email');
     }
 
-    // Отправка письма со ссылкой на сброс
+    // Самопроверка email + отправка ссылки для входа.
+    //
+    // ОСОЗНАННЫЙ ВЫБОР ВЛАДЕЛЬЦА (онбординг старых студентов): в отличие от
+    // обычной анти-enumeration-практики, здесь МЫ ЯВНО говорим, найден ли email
+    // в базе. Цель — убрать промежуточный шаг «напишите нам в Telegram, мы
+    // проверим почту»: студент сам узнаёт, есть ли его адрес (тот, на который
+    // оформлял заказ), и сразу получает ссылку для входа. Это критично, когда
+    // Telegram в РФ работает плохо. Эндпоинт жёстко троттлится (throttle:5,1)
+    // для защиты от массового перебора.
     public function sendResetLink(Request $request)
     {
         $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        $email = \App\Models\User::normalizeEmail($request->input('email'));
 
-        // Не раскрываем, существует ли email: при любом исходе показываем
-        // нейтральное сообщение (кроме явного троттлинга).
+        // Плейсхолдер-адреса студентов без почты не считаем «найденными».
+        $exists = $email !== ''
+            && ! str_ends_with($email, '@no-email.com')
+            && \App\Models\User::where('email', $email)->exists();
+
+        if (! $exists) {
+            // Явно сообщаем: не нашли — и подсказываем, что делать дальше.
+            return back()
+                ->withInput($request->only('email'))
+                ->with('email_not_found', $email);
+        }
+
+        $status = Password::sendResetLink(['email' => $email]);
+
         if ($status === Password::RESET_THROTTLED) {
             return back()->withErrors(['email' => 'Слишком много попыток. Подождите минуту и попробуйте снова.']);
         }
 
-        return back()->with('status', 'Если такой email зарегистрирован, мы отправили на него ссылку для восстановления пароля. Проверьте почту (и папку «Спам»).');
+        // Нашли — ссылка для входа отправлена.
+        return back()->with('email_found', $email);
     }
 
     // Форма ввода нового пароля (по ссылке из письма)
@@ -52,6 +73,8 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', PasswordRule::min(8)],
         ]);
+
+        $request->merge(['email' => \App\Models\User::normalizeEmail($request->input('email'))]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),

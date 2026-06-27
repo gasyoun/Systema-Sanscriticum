@@ -18,13 +18,35 @@
                 <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-[#E85C24]/10 text-[#E85C24]">
                     <i class="fas fa-key text-2xl"></i>
                 </div>
-                <h2 class="text-3xl font-extrabold mb-2 text-gray-900">Забыли пароль?</h2>
-                <p class="text-gray-500 text-sm">Введите email — пришлём ссылку для восстановления</p>
+                <h2 class="text-3xl font-extrabold mb-2 text-gray-900">Вход в кабинет</h2>
+                <p class="text-gray-500 text-sm">Уже покупали курс? Введите email, на который оформляли
+                    заказ — мы проверим ваш аккаунт и пришлём ссылку для входа.</p>
             </div>
 
-            @if (session('status'))
-                <div class="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
-                    {{ session('status') }}
+            @if (session('email_found'))
+                {{-- Аккаунт найден — ссылка для входа отправлена. --}}
+                <div class="mb-6 bg-green-50 border border-green-200 text-green-800 text-sm rounded-xl px-4 py-4">
+                    <p class="font-bold mb-1"><i class="fas fa-check-circle mr-1"></i> Нашли ваш аккаунт!</p>
+                    <p>Мы отправили ссылку для входа на <span class="font-semibold">{{ session('email_found') }}</span>.
+                        Откройте письмо и задайте пароль. <span class="font-semibold">Проверьте папку «Спам»</span> —
+                        письмо может попасть туда.</p>
+                    <p class="mt-2 text-green-700/80 text-xs">Не пришло за 5 минут? Отправьте запрос ещё раз ниже
+                        или <a href="https://t.me/rusamskrtam" class="underline font-semibold">напишите куратору</a>.</p>
+                </div>
+            @endif
+
+            @if (session('email_not_found'))
+                {{-- Email не найден — объясняем, что делать, без тупика. --}}
+                <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-4">
+                    <p class="font-bold mb-1"><i class="fas fa-circle-question mr-1"></i> Не нашли этот email в базе</p>
+                    <p>Адреса <span class="font-semibold">{{ session('email_not_found') }}</span> у нас нет. Скорее всего:</p>
+                    <ul class="list-disc list-inside mt-1.5 space-y-0.5 text-amber-700">
+                        <li>заказ был оформлен на <span class="font-semibold">другой email</span> — попробуйте его;</li>
+                        <li>в адресе <span class="font-semibold">опечатка</span> — проверьте написание.</li>
+                    </ul>
+                    <p class="mt-2 text-amber-700/90 text-xs">Уверены, что почта верная?
+                        <a href="https://t.me/rusamskrtam" class="underline font-semibold">Напишите куратору в Telegram</a> —
+                        поможем найти ваш аккаунт.</p>
                 </div>
             @endif
 
@@ -51,7 +73,7 @@
                 <div class="pt-2">
                     <button type="submit"
                         class="w-full bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
-                        Отправить ссылку
+                        Проверить email и войти
                     </button>
                 </div>
             </form>
