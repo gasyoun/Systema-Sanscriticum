@@ -20,10 +20,10 @@ namespace App\Support;
  */
 final class CourseNameResolver
 {
-    /** @var array<string,string>|null  source_name => target_name (только rename) */
+    /** @var array<string,string>|null source_name => target_name (только rename) */
     private ?array $aliases = null;
 
-    /** @var array<int,string>|null  имена курсов с action=create_hidden */
+    /** @var array<int,string>|null имена курсов с action=create_hidden */
     private ?array $historical = null;
 
     public function __construct(private readonly ?string $csvPath = null) {}
