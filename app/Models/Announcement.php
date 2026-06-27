@@ -25,16 +25,17 @@ class Announcement extends Model
         'send_to_vk',
     ];
 
-    // 2. Настройка типов данных (как в твоей модели User)
-    protected function casts(): array
-    {
-        return [
-            'target_groups' => 'array',
-            'target_courses' => 'array',
-            'is_published' => 'boolean',
-            'send_to_email' => 'boolean',
-            'send_to_telegram' => 'boolean',
-            'send_to_vk' => 'boolean',
-        ];
-    }
+    // 2. Настройка типов данных.
+    // Свойство `$casts`, не метод `casts()`: метод поддерживается лишь с Laravel 11,
+    // а проект на Laravel 10 — иначе касты молча игнорируются (target_groups/target_courses
+    // приходили JSON-строкой → array_intersect в StudentController упал бы на не-пустом
+    // значении; спасал только guard empty()).
+    protected $casts = [
+        'target_groups' => 'array',
+        'target_courses' => 'array',
+        'is_published' => 'boolean',
+        'send_to_email' => 'boolean',
+        'send_to_telegram' => 'boolean',
+        'send_to_vk' => 'boolean',
+    ];
 }
