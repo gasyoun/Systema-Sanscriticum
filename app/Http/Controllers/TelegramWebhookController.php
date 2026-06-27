@@ -23,6 +23,8 @@ class TelegramWebhookController extends Controller
         if (isset($data['message']['text'])) {
             $chatId = $data['message']['chat']['id'];
             $text = $data['message']['text'];
+            // @username отправителя (необязателен в Telegram; может отсутствовать).
+            $fromUsername = $data['message']['from']['username'] ?? null;
 
             // Ловим команду /start с уникальным токеном (Deep Linking)
             if (str_starts_with($text, '/start ')) {
@@ -35,6 +37,7 @@ class TelegramWebhookController extends Controller
                     // Привязываем Telegram ID к студенту и удаляем временный токен
                     $user->update([
                         'telegram_id' => $chatId,
+                        'telegram_username' => User::normalizeTelegramUsername($fromUsername),
                         'telegram_auth_token' => null,
                         'telegram_connected_at' => now(),
                     ]);
@@ -56,6 +59,10 @@ class TelegramWebhookController extends Controller
                 $user = User::where('telegram_id', $chatId)->first();
 
                 if ($user) {
+                    // Бэкфилл @username для уже привязанных: ловим при любом
+                    // сообщении и обновляем, если он изменился (идемпотентно).
+                    $user->rememberTelegramUsername($fromUsername);
+
                     // Студент авторизован! Передаем вопрос ИИ-агенту
                     $this->processStudentQuestion($user, $text, $chatId);
                 } else {
