@@ -19,7 +19,7 @@ class PranaTransferController extends Controller
             'amount' => ['required', 'integer', 'min:1'],
         ]);
 
-        $to = User::where('email', $data['email'])->first();
+        $to = User::where('email', User::normalizeEmail($data['email']))->first();
         if (! $to) {
             return back()->with('prana_error', 'Студент с таким email не найден.');
         }

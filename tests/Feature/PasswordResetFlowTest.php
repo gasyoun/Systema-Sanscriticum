@@ -26,8 +26,10 @@ class PasswordResetFlowTest extends TestCase
             'password' => Hash::make('oldpassword'),
         ]);
 
+        // Самопроверка: найденный email явно подтверждается (email_found) +
+        // ссылка для входа отправляется. (Раньше был нейтральный 'status'.)
         $response = $this->post('/forgot-password', ['email' => $user->email]);
-        $response->assertSessionHas('status');
+        $response->assertSessionHas('email_found', 'reset@example.com');
 
         Mail::assertQueued(PasswordResetMail::class, function (PasswordResetMail $mail) use ($user) {
             return $mail->user->is($user)

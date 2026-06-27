@@ -74,12 +74,16 @@
             @include('auth.partials.social-buttons')
         </div>
 
-        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center space-y-1.5">
-            <p class="text-xs text-gray-500">
-                Забыли пароль? <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-semibold transition-colors">Сбросить по email</a>
+        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center space-y-2">
+            {{-- Главный путь для старых студентов: аккаунт уже создан при оплате,
+                 «регистрации» нет — вход по email заказа. --}}
+            <p class="text-sm text-gray-600">
+                Первый раз входите или не помните пароль?<br>
+                <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-bold transition-colors">Войдите по email заказа →</a>
             </p>
             <p class="text-xs text-gray-400">
-                или <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">напишите куратору</a>
+                Аккаунт создан автоматически при оплате — проверьте email сами, без обращения в поддержку.
+                Если не получается — <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">напишите куратору</a>.
             </p>
         </div>
     </div>
