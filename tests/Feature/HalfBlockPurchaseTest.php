@@ -188,4 +188,85 @@ class HalfBlockPurchaseTest extends TestCase
         $this->assertSame(0.0, $secondHalf->upgradeCreditForUser($user));
         $this->assertSame(2500.0, $secondHalf->calculateFinalPriceForUser($user));
     }
+
+    /** @test */
+    public function upgrade_credit_does_not_leak_across_courses(): void
+    {
+        // Половина, оплаченная на ДРУГОМ курсе, не засчитывается при покупке
+        // целого блока на этом курсе — зачёт строго по course_id.
+        $course = $this->course();
+        $other = Course::factory()->create(['slug' => 'other-course']);
+
+        $user = User::factory()->create();
+        $this->pay($user, $other, 'block_1_h1', 2500); // оплата на чужом курсе
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4800,
+        ]);
+
+        $this->assertSame(0.0, $wholeBlock1->upgradeCreditForUser($user));
+        $this->assertSame(4800.0, $wholeBlock1->calculateFinalPriceForUser($user));
+    }
+
+    /** @test */
+    public function upgrade_credit_ignores_non_paid_payments(): void
+    {
+        // Половина в статусе pending (не оплачена) не даёт зачёта — только paid().
+        $course = $this->course();
+        $user = User::factory()->create();
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 2500,
+            'tariff' => 'block_1_h1',
+            'status' => 'pending',
+        ]);
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4800,
+        ]);
+
+        $this->assertSame(0.0, $wholeBlock1->upgradeCreditForUser($user));
+    }
+
+    /** @test */
+    public function vip_and_bundle_tariffs_give_no_upgrade_credit(): void
+    {
+        // vip/bundle — самостоятельные продукты, не контейнеры блоков: зачёта нет,
+        // даже когда блоки этого курса уже оплачены.
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1', 4800);
+
+        foreach (['vip', 'bundle'] as $type) {
+            $tariff = Tariff::factory()->create([
+                'course_id' => $course->id,
+                'type' => $type,
+                'price' => 12000,
+            ]);
+
+            $this->assertSame(0.0, $tariff->upgradeCreditForUser($user), "type=$type");
+        }
+    }
+
+    /** @test */
+    public function credit_exceeding_price_floors_at_zero_not_negative(): void
+    {
+        // Зачёт за две оплаченные половины (2500+2500) превышает уценённую целым
+        // блоком цену — итог не уходит в минус, а упирается в 0 (free-access).
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1_h1', 2500);
+        $this->pay($user, $course, 'block_1_h2', 2500);
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4000, // дешевле суммы половин (5000) — кредит «перекрывает» цену
+        ]);
+
+        $this->assertSame(5000.0, $wholeBlock1->upgradeCreditForUser($user));
+        $this->assertSame(0.0, $wholeBlock1->calculateFinalPriceForUser($user));
+    }
 }
