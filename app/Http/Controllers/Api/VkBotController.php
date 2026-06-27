@@ -64,6 +64,8 @@ class VkBotController extends Controller
                         'vk_auth_token' => null,
                     ]);
                     $user = $candidate;
+                    // Подтягиваем аватарку из VK (в очереди, не тормозим вебхук).
+                    \App\Jobs\SyncUserAvatarJob::dispatch($user->id);
                     $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
 
                     return response('ok', 200);
