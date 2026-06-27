@@ -100,6 +100,11 @@ class PaymentResource extends Resource
                                 $startLesson = ($i - 1) * 4 + 1;
                                 $endLesson = $i * 4;
                                 $options["block_{$i}"] = "Блок {$i} (Занятия {$startLesson}-{$endLesson})";
+                                // Половины блока — тот же формат ключа, что у витрины
+                                // (Tariff::accessKey() → 'block_N_hH'). Доступ открывается
+                                // урокам с lesson.block_half = H внутри блока N.
+                                $options["block_{$i}_h1"] = "Блок {$i} — 1-я половина";
+                                $options["block_{$i}_h2"] = "Блок {$i} — 2-я половина";
                             }
 
                             return $options;
