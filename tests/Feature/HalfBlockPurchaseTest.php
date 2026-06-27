@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\PaymentResource\Pages\CreatePayment;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Support\Roles;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -169,6 +173,49 @@ class HalfBlockPurchaseTest extends TestCase
         // Зачёт «половина → целый блок» при этом продолжает работать.
         $wholeBlock1 = Tariff::factory()->block(1)->create(['course_id' => $course->id, 'price' => 4800]);
         $this->assertSame(2500.0, $wholeBlock1->upgradeCreditForUser($user));
+    }
+
+    /** @test */
+    public function admin_can_create_half_block_payment_that_opens_its_lessons(): void
+    {
+        $course = $this->course();
+        $student = User::factory()->create();
+        $h1 = $this->lesson($course, 1, 1);
+        $h2 = $this->lesson($course, 1, 2);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs(User::factory()->create(['role' => Roles::SUPER_ADMIN]));
+
+        // Половина блока выбирается в админке так же, как её пишет витрина:
+        // ключ block_N_hH, а start_block/end_block проставляются в N автоматически.
+        Livewire::test(CreatePayment::class)
+            ->fillForm([
+                'user_id' => $student->id,
+                'course_id' => $course->id,
+                'tariff' => 'block_1_h1',
+                'amount' => 2500,
+                'status' => 'paid',
+            ])
+            ->assertFormSet(['start_block' => 1, 'end_block' => 1])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('payments', [
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'tariff' => 'block_1_h1',
+            'start_block' => 1,
+            'end_block' => 1,
+            'status' => 'paid',
+        ]);
+
+        // Доступ: открыт только урок 1-й половины, вторая половина — нет.
+        $this->actingAs($student)
+            ->get(route('student.lesson', [$course->slug, $h1->id]))
+            ->assertOk();
+        $this->actingAs($student)
+            ->get(route('student.lesson', [$course->slug, $h2->id]))
+            ->assertRedirect(route('student.course', $course->slug));
     }
 
     /** @test */
