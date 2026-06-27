@@ -21,13 +21,16 @@ return [
     ],
 
     // Сколько начислять за разные виды активности.
+    // NB: ключа 'referral' здесь больше нет — награда за реферала переведена на
+    // денежный кредит (config('referral.credit_amount'), см. ReferralService).
+    // Метка 'referral' в 'reasons' ниже СОХРАНЕНА: ею подписываются исторические
+    // prana_transactions со старой прана-наградой (PranaTransaction::reasonLabel).
     'rewards' => [
         'lesson_complete' => 10,
         'course_complete' => 500,
         'open_lesson_view' => 20,
         'daily_login' => 5,
         'payment_success' => 50,
-        'referral' => 100,
     ],
 
     // Ранги по накопленной пране (lifetime_prana, тратами не уменьшается).
