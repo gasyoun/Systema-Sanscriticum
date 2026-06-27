@@ -21,9 +21,15 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Пароль ОБЯЗАН быть в defaults создания: иначе firstOrCreate вставляет
+        // строку без password, и на строгом NOT NULL (SQLite — локальные тесты,
+        // `migrate:fresh --seed`) падает «NOT NULL constraint failed: users.password».
+        // MySQL в нестрогом режиме молча подставлял '' и маскировал это. forceFill
+        // ниже всё равно пере-задаёт пароль/роль на КАЖДОМ прогоне (для существующего
+        // аккаунта), так что синхронизация ADMIN_PASSWORD сохраняется.
         $admin = User::firstOrCreate(
             ['email' => $email],
-            ['name' => 'Admin']
+            ['name' => 'Admin', 'password' => Hash::make($password), 'role' => Roles::SUPER_ADMIN]
         );
 
         // Синхронизируем пароль и роль при каждом запуске сидера:
