@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Roles;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 // --- УКАЗЫВАЕМ, ЧТО ЮЗЕР ИСПОЛЬЗУЕТ ИНТЕРФЕЙС FILAMENT ---
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -36,6 +37,8 @@ class User extends Authenticatable implements FilamentUser
         'vk_id',
         'vk_auth_token',         // одноразовый токен привязки VK (см. VkController::connect)
         'vk_connected_at',       // когда привязал ВК-бота
+        'avatar_path',           // путь к скачанной аватарке TG/VK (public-диск)
+        'avatar_synced_at',      // когда последний раз синхронизировали аватарку
         'max_user_id',
         'instagram',
         'facebook',
@@ -84,6 +87,7 @@ class User extends Authenticatable implements FilamentUser
         'last_activity_at' => 'datetime',
         'telegram_connected_at' => 'datetime',
         'vk_connected_at' => 'datetime',
+        'avatar_synced_at' => 'datetime',
         'login_count' => 'integer',
         'total_time_spent' => 'integer',
         'total_lessons_opened' => 'integer',
@@ -138,6 +142,26 @@ class User extends Authenticatable implements FilamentUser
         $username = ltrim(trim($username), '@');
 
         return $username === '' ? null : $username;
+    }
+
+    /**
+     * Публичный URL аватарки студента (скачанной из TG/VK) или null, если фото
+     * нет — тогда во вьюхах показываем инициал-кружок. Единый источник правды
+     * для всех мест отображения (helpdesk, карточка, Filament-аватар).
+     */
+    public function avatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path);
+    }
+
+    /** Filament подхватывает это для топбара/меню/таблиц (интерфейс HasAvatar). */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
     }
 
     /** Прямая ссылка на Telegram-профиль студента (или null, если @username не пойман). */
