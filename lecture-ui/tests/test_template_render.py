@@ -68,3 +68,32 @@ def test_block_of_only_editor_paragraphs_renders():
     assert "Новый абзац один" in html
     assert "Новый абзац два" in html
     assert html.count('class="para-timecode"') == 0
+
+
+def _lecture_blocks(blocks):
+    """Лекция с одной секцией и произвольным списком блоков (speech/figure)."""
+    lec = _lecture([])
+    lec["sections"][0]["content"] = blocks
+    return lec
+
+
+def _render_blocks(blocks) -> str:
+    return _env().get_template("template.html.j2").render(lecture=_lecture_blocks(blocks))
+
+
+def test_block_index_matches_position_for_speech_and_figure():
+    # Контракт кросс-репо: LecturePatcher (move/delete/insert_block) адресует блоки
+    # по data-block-index = позиции в section.content. Шаблон ДОЛЖЕН проставлять
+    # этот индекс на speech И figure, иначе структурное редактирование промахнётся.
+    html = _render_blocks([
+        {"type": "speech", "role": "host", "paragraphs": [{"text": "Блок 0"}]},
+        {"type": "figure", "_slide_number": 1, "src": "s1.jpg", "alt": "a", "caption": "Слайд"},
+        {"type": "speech", "role": "guest", "paragraphs": [{"text": "Блок 2"}]},
+    ])
+
+    # Индексы идут по порядку content и совпадают с позицией блока.
+    assert 'data-block-index="0" data-block-type="speech"' in html
+    assert 'data-block-index="1" data-block-type="figure"' in html
+    assert 'data-block-index="2" data-block-type="speech"' in html
+    # Ровно по одному индексу на блок — без дублей и пропусков.
+    assert html.count("data-block-index=") == 3
