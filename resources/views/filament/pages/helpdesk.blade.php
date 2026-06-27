@@ -192,7 +192,7 @@
             <div class="chat-list" wire:poll.10s="loadUsersList">
                 @forelse($usersWithChats as $chatUser)
                     <button wire:click="selectUser({{ $chatUser->id }})" class="chat-user-item {{ $activeUserId == $chatUser->id ? 'active' : '' }}">
-                        <div class="chat-avatar">{{ mb_substr($chatUser->name ?? 'С', 0, 1) }}</div>
+                        @include('partials.user-avatar', ['user' => $chatUser, 'size' => 40])
                         <div style="flex: 1; min-width: 0;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                                 <strong style="font-size: 14px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $chatUser->name }}</strong>
@@ -216,7 +216,9 @@
                 
                 {{-- Шапка открытого чата --}}
                 <div class="chat-header">
-                    <div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        @include('partials.user-avatar', ['user' => $activeUser, 'size' => 40])
+                        <div>
                         {{-- Имя кликабельно: открывает модалку с инфо о студенте --}}
                         <button type="button" wire:click="openStudentInfo"
                                 title="Открыть карточку студента"
@@ -226,8 +228,9 @@
                             <svg style="width: 15px; height: 15px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         </button>
                         <div style="font-size: 12px; color: #16a34a; font-weight: 500;">● Telegram подключен</div>
+                        </div>
                     </div>
-                    
+
                     {{-- Кнопка "Вернуть ИИ" (показывается только если бот на паузе) --}}
                     @if(\Illuminate\Support\Facades\Cache::has('chat_human_' . ($activeUser->telegram_id ?? '')) || \Illuminate\Support\Facades\Cache::has('chat_human_vk_' . ($activeUser->vk_id ?? '')))
                         <button wire:click="returnToBot" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); transition: 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">

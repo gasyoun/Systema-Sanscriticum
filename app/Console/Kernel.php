@@ -79,6 +79,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
             ->name('close-stale-sessions');  // имя для логов и блокировки
 
+        // --- ОБНОВЛЕНИЕ АВАТАРОК TG/VK ---
+        // Раз в неделю освежаем аватарки тех, кого не синхронизировали 7+ дней
+        // (или ни разу). Троттлинг внутри команды (--sleep) против rate-limit.
+        $schedule->command('avatars:sync --apply --stale-days=7 --limit=300 --sleep=120')
+            ->weeklyOn(2, '04:30') // вторник 04:30 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('sync-avatars');
+
         // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
         // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
         $schedule->command('magnets:deliver-due')

@@ -29,7 +29,9 @@
 
         {{-- Шапка --}}
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #e5e7eb;">
-            <div>
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+                @include('partials.user-avatar', ['user' => $u, 'size' => 52])
+                <div>
                 <div style="font-size: 18px; font-weight: 700; color: #111827;">{{ $u->name }}</div>
                 <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
                     @if($u->global_status)
@@ -41,6 +43,7 @@
                     @if($u->isOnline())
                         <span style="font-size: 11px; font-weight: 600; color: #16a34a;">● онлайн</span>
                     @endif
+                </div>
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
