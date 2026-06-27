@@ -43,6 +43,7 @@ class User extends Authenticatable implements FilamentUser
         'global_status',
         'note',
         'last_login_at',
+        'cabinet_invite_sent_at',
         'last_activity_at',
         'last_login_ip',
         'login_count',
@@ -78,6 +79,7 @@ class User extends Authenticatable implements FilamentUser
         'wants_email_announcements' => 'boolean',
         'is_lecture_editor' => 'boolean',
         'last_login_at' => 'datetime',
+        'cabinet_invite_sent_at' => 'datetime',
         'last_activity_at' => 'datetime',
         'telegram_connected_at' => 'datetime',
         'vk_connected_at' => 'datetime',
@@ -90,6 +92,36 @@ class User extends Authenticatable implements FilamentUser
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
     ];
+
+    /**
+     * Нормализация email — единый источник правды для идентичности.
+     *
+     * Доступ студента привязан к оплатам, оплаты — к email. Раньше сравнение шло
+     * по точной строке (`where('email', ...)`), поэтому `Anna@Mail.ru` и
+     * `anna@mail.ru` считались РАЗНЫМИ людьми: старый студент не мог войти и
+     * плодились дубли-сироты без курсов. Приводим к нижнему регистру + trim.
+     * Локальная часть формально регистрозависима по RFC, но на практике все
+     * провайдеры трактуют её регистронезависимо — лоуэркейс безопасен и стандартен.
+     *
+     * Мутатор ниже нормализует ВСЕ записи через Eloquent (create/update/fill/forceFill);
+     * на стороне ЧТЕНИЯ те же правила применяет `normalizeEmail()` перед запросом
+     * (login / сброс пароля / поиск на чекауте).
+     */
+    public static function normalizeEmail(?string $email): ?string
+    {
+        if ($email === null) {
+            return null;
+        }
+
+        $email = trim($email);
+
+        return $email === '' ? '' : mb_strtolower($email);
+    }
+
+    public function setEmailAttribute(?string $value): void
+    {
+        $this->attributes['email'] = self::normalizeEmail($value);
+    }
 
     public function isUnreliable(): bool
     {

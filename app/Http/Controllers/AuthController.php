@@ -25,6 +25,10 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        // Логин по нормализованному email: хранится lowercase+trim, поэтому и при
+        // входе приводим ввод к тому же виду (иначе «Anna@Mail.ru» не найдёт аккаунт).
+        $credentials['email'] = \App\Models\User::normalizeEmail($credentials['email']);
+
         // Попытка входа
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -66,6 +70,8 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $credentials['email'] = \App\Models\User::normalizeEmail($credentials['email']);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return response()->json([

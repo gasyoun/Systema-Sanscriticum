@@ -157,7 +157,7 @@ class ZoomWebhookController extends Controller
         }
 
         $email = ! empty($p['email']) ? (string) $p['email'] : null;
-        $user = $email ? User::where('email', $email)->first() : null;
+        $user = $email ? User::where('email', User::normalizeEmail($email))->first() : null;
 
         $values = [
             'user_id' => $user?->id,

@@ -108,7 +108,7 @@ final class TrialController extends Controller
             return auth()->user();
         }
 
-        $existing = User::where('email', $request->input('email'))->first();
+        $existing = User::where('email', User::normalizeEmail($request->input('email')))->first();
         if ($existing) {
             throw ValidationException::withMessages([
                 'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите пробное оттуда.',
