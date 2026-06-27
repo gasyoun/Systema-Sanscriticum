@@ -346,12 +346,25 @@ class UserResource extends Resource
                                 $fmt = fn ($d): string => $d
                                     ? ' (с '.\Carbon\Carbon::parse($d)->format('d.m.Y').')'
                                     : '';
-                                $tg = $record->telegram_id ? '✈ Telegram'.$fmt($record->telegram_connected_at) : '';
+                                $handle = $record->telegram_username ? ' @'.$record->telegram_username : '';
+                                $tg = $record->telegram_id ? '✈ Telegram'.$handle.$fmt($record->telegram_connected_at) : '';
                                 $vk = $record->vk_id ? '💬 VK'.$fmt($record->vk_connected_at) : '';
                                 $parts = array_filter([$tg, $vk]);
 
                                 return ! empty($parts) ? implode(' · ', $parts) : 'Нет мессенджеров';
                             }),
+
+                        TextEntry::make('telegram_username')
+                            ->label('Telegram @username')
+                            // Кликабельная ссылка на профиль; @username ловится ботом
+                            // при привязке/сообщении и может отсутствовать (его нет
+                            // у части пользователей Telegram).
+                            ->state(fn (User $record): string => $record->telegram_username
+                                ? '@'.$record->telegram_username
+                                : '—')
+                            ->url(fn (User $record): ?string => $record->telegramLink())
+                            ->openUrlInNewTab()
+                            ->visible(fn (User $record): bool => (bool) $record->telegram_id),
                     ]),
 
                 InfoSection::make('Ссылка на карточку')
@@ -492,7 +505,9 @@ class UserResource extends Resource
                     ->iconColor('gray')
                     ->placeholder('—')
                     ->description(function ($record): string {
-                        $tg = $record->telegram_id ? '✈ TG' : '';
+                        $tg = $record->telegram_id
+                            ? '✈ TG'.($record->telegram_username ? ' @'.$record->telegram_username : '')
+                            : '';
                         $vk = $record->vk_id ? '💬 VK' : '';
                         $parts = array_filter([$tg, $vk]);
 
@@ -510,6 +525,16 @@ class UserResource extends Resource
                     ->copyMessage('Ссылка на карточку скопирована')
                     ->copyMessageDuration(1500)
                     ->toggleable(),
+
+                // --- @USERNAME TG (скрыт по умолчанию; даёт поиск по @username) ---
+                Tables\Columns\TextColumn::make('telegram_username')
+                    ->label('TG @username')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state): string => $state ? '@'.$state : '—')
+                    ->url(fn (User $record): ?string => $record->telegramLink())
+                    ->openUrlInNewTab(),
 
                 // --- ПОДКЛЮЧЕНИЕ БОТА (скрыто по умолчанию; для сортировки/аналитики) ---
                 Tables\Columns\TextColumn::make('telegram_connected_at')

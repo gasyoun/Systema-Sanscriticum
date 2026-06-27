@@ -30,6 +30,7 @@ class User extends Authenticatable implements FilamentUser
         'teacher_id',
         'is_lecture_editor',
         'telegram_id',           // <-- Добавили для Telegram
+        'telegram_username',     // @username TG (без @); ловим при привязке/сообщении
         'telegram_auth_token',   // <-- Добавили для Telegram
         'telegram_connected_at', // когда привязал TG-бота
         'vk_id',
@@ -121,6 +122,46 @@ class User extends Authenticatable implements FilamentUser
     public function setEmailAttribute(?string $value): void
     {
         $this->attributes['email'] = self::normalizeEmail($value);
+    }
+
+    /**
+     * Нормализуем @username Telegram: убираем ведущий @ и пробелы.
+     * Регистр НЕ трогаем — Telegram трактует username регистронезависимо,
+     * но показываем как прислал клиент. Пустую строку считаем «нет username».
+     */
+    public static function normalizeTelegramUsername(?string $username): ?string
+    {
+        if ($username === null) {
+            return null;
+        }
+
+        $username = ltrim(trim($username), '@');
+
+        return $username === '' ? null : $username;
+    }
+
+    /** Прямая ссылка на Telegram-профиль студента (или null, если @username не пойман). */
+    public function telegramLink(): ?string
+    {
+        return $this->telegram_username ? 'https://t.me/'.$this->telegram_username : null;
+    }
+
+    /**
+     * Запомнить @username из входящего апдейта бота, если он изменился.
+     * Идемпотентно: ничего не пишет, когда username тот же или пустой.
+     * Возвращает true, если запись обновлена.
+     */
+    public function rememberTelegramUsername(?string $username): bool
+    {
+        $normalized = self::normalizeTelegramUsername($username);
+
+        if ($normalized === null || $normalized === $this->telegram_username) {
+            return false;
+        }
+
+        $this->forceFill(['telegram_username' => $normalized])->save();
+
+        return true;
     }
 
     public function isUnreliable(): bool
