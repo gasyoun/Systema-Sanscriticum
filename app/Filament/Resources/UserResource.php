@@ -481,10 +481,38 @@ class UserResource extends Resource
         ];
     }
 
+    /**
+     * SVG-«аватарка» с инициалом для тех, у кого нет фото из TG/VK.
+     * Возвращает data-URI (без внешних запросов), цвета — как у чат-кружка.
+     */
+    protected static function avatarInitialPlaceholder(?string $name): string
+    {
+        $initial = htmlspecialchars(mb_strtoupper(mb_substr($name ?: 'С', 0, 1)), ENT_QUOTES);
+        $svg = "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>"
+            ."<rect width='40' height='40' fill='#ffedd5'/>"
+            ."<text x='20' y='21' font-family='sans-serif' font-size='18' font-weight='bold' "
+            ."fill='#ea580c' text-anchor='middle' dominant-baseline='central'>{$initial}</text>"
+            .'</svg>';
+
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+                // --- АВАТАРКА ---
+                // Реальное фото из TG/VK (avatar_path в public-диске). Если фото нет —
+                // генерим SVG-кружок с инициалом в тех же цветах, что и в чате
+                // (data-URI, без внешних запросов). circular() обрезает по кругу.
+                Tables\Columns\ImageColumn::make('avatar_path')
+                    ->label('')
+                    ->circular()
+                    ->disk('public')
+                    ->size(40)
+                    ->defaultImageUrl(fn ($record): string => static::avatarInitialPlaceholder($record->name))
+                    ->extraImgAttributes(['loading' => 'lazy']),
+
                 // --- КОЛОНКА 1: СТУДЕНТ ---
                 // name основное, email и id — подписи под ним
                 Tables\Columns\TextColumn::make('name')
