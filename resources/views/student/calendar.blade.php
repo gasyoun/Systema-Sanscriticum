@@ -90,8 +90,9 @@
                             {{-- Кнопки действий --}}
                             <div class="mt-auto pt-4 border-t border-gray-50 space-y-2">
                                 @if($event->link)
-                                    {{-- Главная кнопка: На занятие --}}
-                                    <a href="{{ $event->link }}"
+                                    {{-- Главная кнопка: На занятие. Идём через трекинг-редирект
+                                         (учёт посещаемости), он 302-нет на настоящий Zoom-URL. --}}
+                                    <a href="{{ route('class.join', $event) }}"
                                        target="_blank"
                                        rel="noopener noreferrer"
                                        aria-label="Подключиться к занятию через Zoom"

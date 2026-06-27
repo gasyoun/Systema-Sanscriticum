@@ -119,17 +119,8 @@ class ScheduleResource extends Resource
                         ->url()
                         ->maxLength(1024)
                         ->prefixIcon('heroicon-m-video-camera')
+                        ->helperText('Обычно подставляется автоматически из единой Zoom-ссылки курса при генерации потока.')
                         ->columnSpanFull(),
-
-                    // Хост-ссылка автосозданной Zoom-встречи (только для запуска
-                    // преподавателем; студентам уходит join_url через `link`).
-                    Forms\Components\TextInput::make('zoom_start_url')
-                        ->label('Zoom: ссылка хоста (start_url)')
-                        ->helperText('Открывайте ЭТУ ссылку как ведущий — она запускает встречу. Студентам не давать.')
-                        ->prefixIcon('heroicon-m-key')
-                        ->readOnly()
-                        ->columnSpanFull()
-                        ->visible(fn (?Schedule $record): bool => $record?->hasZoomMeeting() ?? false),
 
                     Forms\Components\Grid::make(2)
                         ->schema([
@@ -307,49 +298,22 @@ class ScheduleResource extends Resource
                     ->openUrlInNewTab()
                     ->visible(fn (Schedule $r): bool => ! empty($r->zoom_recording_url)),
 
-                // Автосоздание Zoom-встречи (Server-to-Server OAuth, #78). Видна,
-                // только если креды заданы и встреча ещё не создана. join_url
-                // кладётся и в `link` — кабинет сразу покажет «Подключиться».
-                Tables\Actions\Action::make('create_zoom')
+                // Посещаемость занятия: ожидаемый ростер со статусами (пришёл /
+                // перешёл по ссылке / не был) + неопознанные гости Zoom.
+                Tables\Actions\Action::make('attendance')
                     ->label('')
-                    ->tooltip('Создать Zoom-встречу')
-                    ->icon('heroicon-o-plus-circle')
+                    ->tooltip('Посещаемость')
+                    ->icon('heroicon-o-clipboard-document-check')
                     ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Создать Zoom-встречу')
-                    ->modalDescription(fn (Schedule $r): string => "«{$r->title}», начало {$r->start?->format('d.m.Y H:i')}. Ссылка для подключения попадёт в расписание кабинета.")
-                    ->visible(fn (Schedule $r): bool => ! $r->hasZoomMeeting()
-                        && $r->start !== null
-                        && app(\App\Services\Zoom\ZoomService::class)->isConfigured())
-                    ->action(function (Schedule $r): void {
-                        try {
-                            $meeting = app(\App\Services\Zoom\ZoomService::class)->createMeeting(
-                                topic: $r->title,
-                                start: $r->start,
-                                durationMinutes: $r->durationMinutes(),
-                                agenda: $r->description,
-                            );
-                        } catch (\Throwable $e) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('Не удалось создать Zoom-встречу')
-                                ->body($e->getMessage())
-                                ->danger()->persistent()->send();
-
-                            return;
-                        }
-
-                        $r->forceFill([
-                            'zoom_meeting_id' => $meeting['id'],
-                            'zoom_join_url' => $meeting['join_url'],
-                            'zoom_start_url' => $meeting['start_url'],
-                            'link' => $meeting['join_url'], // переиспользуем кнопку «Подключиться»
-                        ])->save();
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Zoom-встреча создана')
-                            ->body('Ссылка для студентов добавлена в расписание. Хост-ссылка (start_url) сохранена для запуска.')
-                            ->success()->send();
-                    }),
+                    ->modalHeading(fn (Schedule $r): string => 'Посещаемость — '.$r->title)
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Закрыть')
+                    ->modalWidth('3xl')
+                    ->visible(fn (Schedule $r): bool => $r->group_id !== null || $r->course_id !== null)
+                    ->modalContent(fn (Schedule $r) => view('filament.schedule.attendance', [
+                        'schedule' => $r,
+                        'data' => app(\App\Services\ClassAttendanceService::class)->forSchedule($r),
+                    ])),
 
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),

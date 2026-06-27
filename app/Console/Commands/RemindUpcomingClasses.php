@@ -8,6 +8,7 @@ use App\Jobs\SendMessengerAlerts;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Services\ClassRoster;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -51,12 +52,12 @@ class RemindUpcomingClasses extends Command
                 continue;
             }
 
-            $text = $this->buildText($schedule);
-
             $sent = 0;
-            $audience->chunkById(200, function ($users) use ($text, &$sent): void {
+            $audience->chunkById(200, function ($users) use ($schedule, &$sent): void {
                 foreach ($users as $user) {
-                    SendMessengerAlerts::dispatch($user, $text);
+                    // Текст персональный: ссылка «Подключиться» подписана на этого
+                    // студента (учёт посещаемости через трекинг-редирект).
+                    SendMessengerAlerts::dispatch($user, $this->buildText($schedule, $user));
                     $sent++;
                 }
             });
@@ -75,28 +76,17 @@ class RemindUpcomingClasses extends Command
     }
 
     /**
-     * Кому слать по конкретному занятию. Только студенты с привязанным
-     * мессенджером (иначе SendMessengerAlerts всё равно no-op).
+     * Кому слать по конкретному занятию: ожидаемый ростер (ClassRoster) с фильтром
+     * по привязанному мессенджеру (иначе SendMessengerAlerts всё равно no-op).
      */
     private function audienceFor(Schedule $schedule): ?Builder
     {
-        $query = User::query()->where(function (Builder $q): void {
+        return ClassRoster::query($schedule)?->where(function (Builder $q): void {
             $q->whereNotNull('telegram_id')->orWhereNotNull('vk_id');
         });
-
-        if ($schedule->group_id) {
-            return $query->whereHas('groups', fn (Builder $q) => $q->where('groups.id', $schedule->group_id));
-        }
-
-        if ($schedule->course_id) {
-            // Студенты курса — через pivot course_group (Group::courses()).
-            return $query->whereHas('groups.courses', fn (Builder $q) => $q->where('courses.id', $schedule->course_id));
-        }
-
-        return null;
     }
 
-    private function buildText(Schedule $schedule): string
+    private function buildText(Schedule $schedule, User $user): string
     {
         $title = $schedule->title ?: 'Занятие';
         $time = $schedule->start->format('H:i');
@@ -104,7 +94,8 @@ class RemindUpcomingClasses extends Command
         $text = "🔔 <b>Скоро занятие</b>\n\n";
         $text .= "Намасте! Занятие <b>«{$title}»</b> начнётся сегодня в <b>{$time}</b> (МСК).";
 
-        if ($link = $schedule->link) {
+        // Подписанная трекинг-ссылка на этого студента (учёт посещаемости).
+        if ($link = $schedule->trackedJoinUrlFor($user, 'reminder')) {
             $text .= "\n\n<a href='{$link}'>Подключиться к занятию</a>";
         }
 

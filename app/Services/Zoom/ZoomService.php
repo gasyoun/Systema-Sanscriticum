@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Zoom;
 
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -42,51 +41,10 @@ class ZoomService
         );
     }
 
-    /** Заданы ли все креды (иначе кнопку создания встречи не показываем). */
+    /** Заданы ли все креды (иначе обращения к Zoom API не делаем). */
     public function isConfigured(): bool
     {
         return ! empty($this->accountId) && ! empty($this->clientId) && ! empty($this->clientSecret);
-    }
-
-    /**
-     * Создаёт запланированную встречу. Возвращает то, что нужно сохранить в Schedule.
-     *
-     * @return array{id: string, join_url: string, start_url: string}
-     */
-    public function createMeeting(
-        string $topic,
-        Carbon $start,
-        int $durationMinutes,
-        ?string $agenda = null,
-        ?string $timezone = null,
-    ): array {
-        $this->assertConfigured();
-
-        $response = $this->apiRequest()->post(self::API_BASE.'/users/me/meetings', [
-            'topic' => $topic,
-            'type' => 2, // scheduled meeting
-            'start_time' => $start->format('Y-m-d\TH:i:s'),
-            'duration' => max(1, $durationMinutes),
-            'timezone' => $timezone ?: config('app.timezone', 'Europe/Moscow'),
-            'agenda' => $agenda ? mb_substr($agenda, 0, 2000) : '',
-            'settings' => [
-                'join_before_host' => true,
-                'waiting_room' => false,
-                'approval_type' => 2, // no registration required
-            ],
-        ]);
-
-        $body = $response->json();
-        if (! $response->successful() || ! is_array($body) || empty($body['id'])) {
-            $msg = is_array($body) ? ($body['message'] ?? 'неизвестная ошибка') : 'не-JSON ответ';
-            throw new RuntimeException("Zoom: не удалось создать встречу (HTTP {$response->status()}): {$msg}");
-        }
-
-        return [
-            'id' => (string) $body['id'],
-            'join_url' => (string) ($body['join_url'] ?? ''),
-            'start_url' => (string) ($body['start_url'] ?? ''),
-        ];
     }
 
     /**
@@ -113,6 +71,62 @@ class ZoomService
 
             return $token;
         });
+    }
+
+    /**
+     * Прошедшие запуски recurring-встречи: [{uuid, start_time}, ...].
+     * При едином meeting_id каждый запуск имеет свой uuid — по нему привязываем
+     * посещаемость к конкретной дате занятия.
+     *
+     * @return array<int, array{uuid?: string, start_time?: string}>
+     */
+    public function pastMeetingInstances(string $meetingId): array
+    {
+        $response = $this->apiRequest()->get(self::API_BASE."/past_meetings/{$meetingId}/instances");
+
+        return $response->successful() ? (array) $response->json('meetings', []) : [];
+    }
+
+    /**
+     * Участники прошедшей встречи/запуска (Reports API), с пагинацией.
+     * $meetingUuid — uuid конкретного запуска (instances) либо meeting id.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function meetingParticipants(string $meetingUuid): array
+    {
+        $encoded = $this->encodeUuid($meetingUuid);
+        $participants = [];
+        $token = '';
+
+        do {
+            $response = $this->apiRequest()->get(
+                self::API_BASE."/report/meetings/{$encoded}/participants",
+                array_filter(['page_size' => 300, 'next_page_token' => $token ?: null]),
+            );
+
+            if (! $response->successful()) {
+                break;
+            }
+
+            $participants = array_merge($participants, (array) $response->json('participants', []));
+            $token = (string) $response->json('next_page_token', '');
+        } while ($token !== '');
+
+        return $participants;
+    }
+
+    /**
+     * Zoom требует ДВОЙНОГО url-кодирования UUID, если он начинается с '/' или
+     * содержит '//'. Иначе — одинарное.
+     */
+    private function encodeUuid(string $uuid): string
+    {
+        if (str_starts_with($uuid, '/') || str_contains($uuid, '//')) {
+            return rawurlencode(rawurlencode($uuid));
+        }
+
+        return rawurlencode($uuid);
     }
 
     private function apiRequest(): PendingRequest

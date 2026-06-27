@@ -88,6 +88,24 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('sync-avatars');
 
+        // --- УВЕДОМЛЕНИЕ ПРОПУСТИВШИМ ЗАНЯТИЕ (опт-ин) ---
+        // Гейт и задержка — внутри команды (MarketingSetting), дедуп по
+        // absent_notified_at. Окно проверяется часто, шлёт через N мин после конца.
+        $schedule->command('classes:notify-absent')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('notify-absent-students');
+
+        // --- СВЕРКА ПОСЕЩАЕМОСТИ ZOOM (страховка вебхука) ---
+        // Ночью догружаем участников прошедших занятий через Reports API — на
+        // случай пропущенных participant-вебхуков. Реалтайм покрывает вебхук.
+        $schedule->command('zoom:sync-attendance --days=2')
+            ->dailyAt('04:15')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('sync-zoom-attendance');
+
         // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
         // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
         $schedule->command('magnets:deliver-due')

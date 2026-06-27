@@ -281,6 +281,12 @@ Route::get('/u/{user}', function (\App\Models\User $user) {
     return redirect(\App\Filament\Resources\UserResource::getUrl('view', ['record' => $user]));
 })->whereNumber('user')->name('student.shortlink');
 
+// --- ТРЕКИНГ-РЕДИРЕКТ «ПОДКЛЮЧИТЬСЯ К ЗАНЯТИЮ» (учёт посещаемости) ---
+// ВАЖНО: до catch-all /{slug}. Публичный: кабинетная ссылка ловит юзера из сессии,
+// бот/напоминания приходят подписанным URL с user id (внутри JoinClassController).
+Route::get('/class/{schedule}/join', [\App\Http\Controllers\JoinClassController::class, 'join'])
+    ->whereNumber('schedule')->name('class.join');
+
 // --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ---
 // ВАЖНО: до catch-all /{slug}. Провайдер включается заданием client_id в .env,
 // иначе redirect/callback отдают 404 (см. SocialAuthService::isEnabled).

@@ -140,6 +140,9 @@ class TeacherAnalytics
             ->selectRaw('COUNT(DISTINCT COALESCE(webinar_attendances.user_id, webinar_attendances.zoom_participant_uuid)) as attendees')
             ->selectRaw('COUNT(DISTINCT webinar_attendances.user_id) as known') // NULL-гости не считаются
             ->selectRaw('AVG(webinar_attendances.duration_seconds) as avg_dur')
+            // Студенты, перешедшие по трекинг-ссылке (надёжная привязка, даже если
+            // Zoom не опознал их по email).
+            ->selectRaw('(SELECT COUNT(*) FROM schedule_join_clicks sjc WHERE sjc.schedule_id = schedules.id) as clicked')
             ->orderByDesc('schedules.start')
             ->limit($limit)
             ->get()
@@ -149,6 +152,7 @@ class TeacherAnalytics
                 'start' => $row->start ? Carbon::parse($row->start)->toDateTimeString() : null,
                 'attendees' => (int) $row->attendees,
                 'known' => (int) $row->known,
+                'clicked' => (int) $row->clicked,
                 'avg_minutes' => $row->avg_dur ? (int) round($row->avg_dur / 60) : null,
             ]);
     }

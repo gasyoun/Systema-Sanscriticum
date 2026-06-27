@@ -109,6 +109,7 @@
                             <th class="py-2 pr-4">Дата</th>
                             <th class="py-2 pr-4">Участников</th>
                             <th class="py-2 pr-4">Из них студентов</th>
+                            <th class="py-2 pr-4">Перешли по ссылке</th>
                             <th class="py-2">Ср. длительность</th>
                         </tr>
                     </thead>
@@ -121,6 +122,7 @@
                                 </td>
                                 <td class="py-2 pr-4 tabular-nums font-semibold">{{ $w['attendees'] }}</td>
                                 <td class="py-2 pr-4 tabular-nums text-gray-500">{{ $w['known'] }}</td>
+                                <td class="py-2 pr-4 tabular-nums text-gray-500">{{ $w['clicked'] }}</td>
                                 <td class="py-2 tabular-nums text-gray-500">
                                     {{ $w['avg_minutes'] !== null ? $w['avg_minutes'] . ' мин' : '—' }}
                                 </td>

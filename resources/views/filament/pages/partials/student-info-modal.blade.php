@@ -144,6 +144,34 @@
                 @endforelse
             </div>
 
+            {{-- Посещаемость занятий (Zoom / переход по ссылке) --}}
+            @isset($info['attendance'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Посещаемость занятий</div>
+                    @php
+                        $attBadge = fn ($s) => match ($s) {
+                            'present' => ['пришёл', '#16a34a', '#dcfce7'],
+                            'clicked' => ['по ссылке', '#b45309', '#fef3c7'],
+                            default => ['не был', '#6b7280', '#f3f4f6'],
+                        };
+                    @endphp
+                    @forelse($info['attendance'] as $row)
+                        @php [$st, $sc, $sbg] = $attBadge($row['status']); @endphp
+                        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
+                            <div style="min-width: 0;">
+                                <div style="color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $row['schedule']->title }}</div>
+                                <div style="color: #9ca3af; font-size: 11px;">{{ $row['schedule']->start?->format('d.m.Y H:i') }}{{ $row['minutes'] !== null ? ' · ' . $row['minutes'] . ' мин' : '' }}</div>
+                            </div>
+                            <div style="text-align: right; white-space: nowrap;">
+                                <span style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: {{ $sbg }}; color: {{ $sc }};">{{ $st }}</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div style="font-size: 13px; color: #9ca3af;">Занятий пока не было</div>
+                    @endforelse
+                </div>
+            @endisset
+
         </div>
     </div>
 </div>
