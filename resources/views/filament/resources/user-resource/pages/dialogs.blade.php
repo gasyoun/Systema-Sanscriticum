@@ -59,7 +59,7 @@
                                 </span>
                                 <span title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</span>
                             </div>
-                            <div class="text-sm leading-relaxed whitespace-pre-wrap">{!! nl2br(e($message->text)) !!}</div>
+                            <div class="text-sm leading-relaxed whitespace-pre-wrap">{!! $message->htmlForWeb() !!}</div>
                         </div>
                     @endforeach
                 </div>
