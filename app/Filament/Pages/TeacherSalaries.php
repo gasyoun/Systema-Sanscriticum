@@ -8,6 +8,7 @@ use App\Filament\Exports\TeacherSalariesExporter;
 use App\Filament\Resources\TeacherPayoutResource;
 use App\Filament\Resources\TeacherResource;
 use App\Filament\Widgets\TeacherSalariesTotalWidget;
+use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\SalaryClosedPeriod;
@@ -25,6 +26,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
 class TeacherSalaries extends Page implements HasTable
@@ -98,13 +100,22 @@ class TeacherSalaries extends Page implements HasTable
             ->modalSubmitActionLabel('Записать выплату')
             ->fillForm(fn (): array => ['coefficient' => 92, 'post_to_finance' => true])
             ->form([
+                // Снимок модели ЗП выбранного курса — управляет видимостью полей и формулой.
+                Forms\Components\Hidden::make('salary_type')->default('percent'),
+                // Валюта выплаты преподавателя (PayPal) — управляет блоком конвертации.
+                Forms\Components\Hidden::make('payout_currency'),
+
                 Forms\Components\Select::make('teacher_id')
                     ->label('Преподаватель')
                     ->options(fn () => Teacher::query()->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->required()
                     ->live()
-                    ->afterStateUpdated(fn (Forms\Set $set) => $set('course_id', null)),
+                    ->afterStateUpdated(function ($state, Forms\Set $set): void {
+                        $set('course_id', null);
+                        // Валюта выплаты преподавателя управляет блоком «Курс PayPal».
+                        $set('payout_currency', $state ? Teacher::find($state)?->payout_currency : null);
+                    }),
 
                 Forms\Components\Select::make('course_id')
                     ->label('Курс')
@@ -116,7 +127,18 @@ class TeacherSalaries extends Page implements HasTable
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set): void {
                         $course = $state ? Course::find($state) : null;
-                        $set('teacher_percent', $course?->salary_value);
+                        $type = (string) ($course?->salary_type ?: 'percent');
+                        $set('salary_type', $type);
+
+                        // Для фикс-моделей salary_value — это ставка в ₽, не процент.
+                        if ($this->isFixedModel($type)) {
+                            $set('fixed_rate', $course?->salary_value);
+                            $set('teacher_percent', null);
+                        } else {
+                            $set('teacher_percent', $course?->salary_value);
+                            $set('fixed_rate', null);
+                        }
+
                         $set('block_number', null);
                         $set('group_id', null);
                         $this->refreshBaseRevenue($get, $set);
@@ -173,26 +195,51 @@ class TeacherSalaries extends Page implements HasTable
                     }),
 
                 Forms\Components\Grid::make(3)->schema([
+                    // percent-модели: выручка за блок.
                     Forms\Components\TextInput::make('base_revenue')
                         ->label('Сумма за блок (₽)')
                         ->numeric()
-                        ->required()
+                        ->visible(fn (Forms\Get $get) => ! $this->isFixedModel($get('salary_type')))
+                        ->required(fn (Forms\Get $get) => ! $this->isFixedModel($get('salary_type')))
                         ->live(onBlur: true)
                         ->helperText('Авто по группе+блоку, можно поправить.'),
+
+                    // фикс-модели: ставка из курса (₽).
+                    Forms\Components\TextInput::make('fixed_rate')
+                        ->label(fn (Forms\Get $get) => match ($get('salary_type')) {
+                            'fix_per_student' => 'Ставка за студента (₽)',
+                            'fix_per_block' => 'Ставка за блок (₽)',
+                            'fix_total' => 'Ставка за курс (₽)',
+                            default => 'Ставка (₽)',
+                        })
+                        ->numeric()
+                        ->visible(fn (Forms\Get $get) => $this->isFixedModel($get('salary_type')))
+                        ->required(fn (Forms\Get $get) => $this->isFixedModel($get('salary_type')))
+                        ->live(onBlur: true)
+                        ->helperText('Из ставки курса.'),
+
+                    // только fix_per_student: число студентов блока/группы.
+                    Forms\Components\TextInput::make('student_count')
+                        ->label('Студентов')
+                        ->numeric()
+                        ->visible(fn (Forms\Get $get) => $get('salary_type') === 'fix_per_student')
+                        ->required(fn (Forms\Get $get) => $get('salary_type') === 'fix_per_student')
+                        ->live(onBlur: true)
+                        ->helperText('Авто по блоку+группе, можно поправить.'),
 
                     Forms\Components\TextInput::make('coefficient')
                         ->label('Коэффициент')
                         ->numeric()
-                        ->required()
                         ->suffix('%')
                         ->live(onBlur: true)
-                        ->helperText('Напр. 92 (минус ~8%).'),
+                        ->helperText('Необязательно. Пусто = 100%. Напр. 92 (минус ~8%).'),
 
                     Forms\Components\TextInput::make('teacher_percent')
                         ->label('Процент препода')
                         ->numeric()
-                        ->required()
                         ->suffix('%')
+                        ->visible(fn (Forms\Get $get) => ! $this->isFixedModel($get('salary_type')))
+                        ->required(fn (Forms\Get $get) => ! $this->isFixedModel($get('salary_type')))
                         ->live(onBlur: true)
                         ->helperText('Из ставки курса.'),
                 ]),
@@ -235,26 +282,53 @@ class TeacherSalaries extends Page implements HasTable
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
                     ->content(function (Forms\Get $get): string {
-                        $base = (float) ($get('base_revenue') ?: 0);
-                        $coef = (float) ($get('coefficient') ?: 0);
-                        $pct = (float) ($get('teacher_percent') ?: 0);
+                        $state = [
+                            'salary_type' => $get('salary_type'),
+                            'course_id' => $get('course_id'),
+                            'base_revenue' => $get('base_revenue'),
+                            'teacher_percent' => $get('teacher_percent'),
+                            'fixed_rate' => $get('fixed_rate'),
+                            'student_count' => $get('student_count'),
+                        ];
+                        ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($state);
+                        $coef = $this->normalizeCoef($get('coefficient'));
                         $extrasTotal = $this->extrasTotal($get('extras') ?? []);
                         $surcharge = (float) ($get('surcharge') ?: 0);
                         $deduction = (float) ($get('deduction') ?: 0);
 
                         $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction);
-                        $fmt = fn ($v) => number_format((float) $v, 0, '.', ' ');
 
-                        $formula = "({$fmt($base)} × {$coef}%) × {$pct}% + {$fmt($extrasTotal)} × {$coef}%";
-                        if ($surcharge != 0.0) {
-                            $formula .= " + доплата {$fmt($surcharge)}";
-                        }
-                        if ($deduction != 0.0) {
-                            $formula .= " − удержание {$fmt(abs($deduction))}";
-                        }
-
-                        return $formula.' = '.$fmt($total).' ₽';
+                        return $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction)
+                            .' = '.number_format($total, 0, '.', ' ').' ₽';
                     }),
+
+                // === Валютная конвертация (PayPal) — только если у преподавателя задана валюта ===
+                Forms\Components\TextInput::make('exchange_rate')
+                    ->label(fn (Forms\Get $get) => 'Курс PayPal (₽ за 1 '.TeacherPayout::currencySymbol($get('payout_currency')).')')
+                    ->numeric()
+                    ->visible(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->required(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->live(onBlur: true)
+                    ->helperText('Сколько рублей за 1 единицу валюты. Курс плавает — вводится при каждом расчёте.'),
+
+                Forms\Components\Placeholder::make('foreign_preview')
+                    ->label('Сумма в валюте')
+                    ->visible(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->content(function (Forms\Get $get): string {
+                        $rate = (float) ($get('exchange_rate') ?: 0);
+                        if ($rate <= 0) {
+                            return '— укажите курс';
+                        }
+                        $foreign = round($this->currentTotal($get) / $rate, 2);
+
+                        return number_format($foreign, 2, '.', ' ').' '.TeacherPayout::currencySymbol($get('payout_currency'));
+                    }),
+
+                Forms\Components\Toggle::make('email_report')
+                    ->label('Отправить отчёт преподавателю на почту')
+                    ->default(false)
+                    ->visible(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->helperText('Прозрачная расшифровка (студенты × ставка = ₽, курс, итог в валюте) уйдёт на email преподавателя.'),
 
                 Forms\Components\Toggle::make('post_to_finance')
                     ->label('Провести в Финансах')
@@ -263,9 +337,11 @@ class TeacherSalaries extends Page implements HasTable
             ])
             ->action(function (array $data): void {
                 $course = $data['course_id'] ? Course::find($data['course_id']) : null;
-                $base = (float) ($data['base_revenue'] ?? 0);
-                $coef = (float) ($data['coefficient'] ?? 0);
-                $pct = (float) ($data['teacher_percent'] ?? 0);
+                $salaryType = (string) ($data['salary_type'] ?? 'percent');
+                $isFixed = $this->isFixedModel($salaryType);
+
+                ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($data);
+                $coef = $this->normalizeCoef($data['coefficient'] ?? null);
                 $extras = $data['extras'] ?? [];
                 $extrasTotal = $this->extrasTotal($extras);
                 $surcharge = (float) ($data['surcharge'] ?? 0);
@@ -286,26 +362,36 @@ class TeacherSalaries extends Page implements HasTable
                     ->first();
 
                 $comment = sprintf(
-                    'Блок %d%s: (%s × %s%%) × %s%% + %s × %s%%%s%s = %s ₽',
+                    'Блок %d%s: %s = %s ₽',
                     $blockNumber,
                     $course ? ' · '.$course->title : '',
-                    number_format($base, 0, '.', ' '),
-                    $coef,
-                    $pct,
-                    number_format($extrasTotal, 0, '.', ' '),
-                    $coef,
-                    $surcharge != 0.0 ? ' + доплата '.number_format($surcharge, 0, '.', ' ') : '',
-                    $deduction != 0.0 ? ' − удержание '.number_format(abs($deduction), 0, '.', ' ') : '',
+                    $this->formulaText($data, $coef, $extrasTotal, $surcharge, $deduction),
                     number_format($total, 0, '.', ' '),
                 );
+
+                $fixedRate = (float) ($data['fixed_rate'] ?? 0);
+
+                // Число слушателей блока/группы — для прозрачного отчёта («X студентов»),
+                // независимо от модели ЗП. Для fix_per_student источник правды — ручной ввод.
+                $studentCount = $salaryType === 'fix_per_student'
+                    ? (int) ($data['student_count'] ?? 0)
+                    : collect($detail['lines'])->pluck('user_id')->unique()->count();
+
+                // Валютная конвертация (PayPal): курс введён вручную, сумма в валюте справочная.
+                $currency = $data['payout_currency'] ?: null;
+                $rate = (float) ($data['exchange_rate'] ?? 0);
+                $amountForeign = ($currency && $rate > 0) ? round($total / $rate, 2) : null;
 
                 $payout = Teacher::find($data['teacher_id'])?->payouts()->create([
                     'amount' => $total,
                     'paid_at' => now()->toDateString(),
                     'period_month' => $period,
                     'course_id' => $course?->id,
-                    'salary_type' => 'percent',
-                    'salary_value' => $pct,
+                    'salary_type' => $salaryType,
+                    'salary_value' => $isFixed ? $fixedRate : $pct,
+                    'payout_currency' => $amountForeign !== null ? $currency : null,
+                    'exchange_rate' => $amountForeign !== null ? $rate : null,
+                    'amount_foreign' => $amountForeign,
                     'comment' => $comment,
                     'breakdown' => [
                         'course_id' => $course?->id,
@@ -315,14 +401,20 @@ class TeacherSalaries extends Page implements HasTable
                             'starts_at' => $block?->starts_at?->toDateString(),
                             'ends_at' => $block?->ends_at?->toDateString(),
                         ],
+                        'salary_type' => $salaryType,
                         'base_revenue' => $base,
                         'coefficient' => $coef,
                         'teacher_percent' => $pct,
+                        'fixed_rate' => $isFixed ? $fixedRate : null,
+                        'student_count' => $studentCount,
                         'extras' => array_values($extras),
                         'extras_total' => $extrasTotal,
                         'surcharge' => $surcharge,
                         'deduction' => abs($deduction),
                         'total' => $total,
+                        'payout_currency' => $amountForeign !== null ? $currency : null,
+                        'exchange_rate' => $amountForeign !== null ? $rate : null,
+                        'amount_foreign' => $amountForeign,
                         // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
                         'payments' => $detail['lines'],
                         'payments_total' => $detail['total'],
@@ -333,9 +425,16 @@ class TeacherSalaries extends Page implements HasTable
                     app(TeacherPayoutPoster::class)->post($payout);
                 }
 
+                // Прозрачный отчёт преподавателю на почту (по галочке, только при конвертации).
+                $teacher = $payout?->teacher;
+                if ($payout && ($data['email_report'] ?? false) && $teacher?->email) {
+                    Mail::to($teacher->email)->queue(new TeacherPayoutReportMail($payout->id));
+                }
+
                 Notification::make()
                     ->title('Выплата записана')
-                    ->body('Итог: '.number_format($total, 0, '.', ' ').' ₽')
+                    ->body('Итог: '.number_format($total, 0, '.', ' ').' ₽'
+                        .($amountForeign !== null ? ' ≈ '.number_format($amountForeign, 2, '.', ' ').' '.TeacherPayout::currencySymbol($currency) : ''))
                     ->success()
                     ->send();
             });
@@ -354,10 +453,106 @@ class TeacherSalaries extends Page implements HasTable
         }
 
         $groupId = $get('group_id') ? (int) $get('group_id') : null;
-        $revenue = app(TeacherSalaryService::class)
-            ->blockGroupRevenue((int) $courseId, (int) $blockNumber, $groupId);
+        $detail = app(TeacherSalaryService::class)
+            ->blockGroupRevenueDetail((int) $courseId, (int) $blockNumber, $groupId);
 
-        $set('base_revenue', $revenue);
+        $set('base_revenue', $detail['total']);
+
+        // Для «фикс за студента» подставляем число студентов блока/группы.
+        if ($get('salary_type') === 'fix_per_student') {
+            $set('student_count', collect($detail['lines'])->pluck('user_id')->unique()->count());
+        }
+    }
+
+    /** Фикс-модели ЗП (ставка в ₽, без процента и без выручки). */
+    private function isFixedModel(?string $type): bool
+    {
+        return in_array($type, ['fix_per_block', 'fix_total', 'fix_per_student'], true);
+    }
+
+    /** Коэффициент: пусто ⇒ 100% (без скидки). */
+    private function normalizeCoef(mixed $raw): float
+    {
+        return ($raw === null || $raw === '') ? 100.0 : (float) $raw;
+    }
+
+    /** Текущий итог выплаты (₽) из состояния формы — для превью суммы в валюте. */
+    private function currentTotal(Forms\Get $get): float
+    {
+        $state = [
+            'salary_type' => $get('salary_type'),
+            'course_id' => $get('course_id'),
+            'base_revenue' => $get('base_revenue'),
+            'teacher_percent' => $get('teacher_percent'),
+            'fixed_rate' => $get('fixed_rate'),
+            'student_count' => $get('student_count'),
+        ];
+        ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($state);
+
+        return TeacherSalaryService::blockPayoutTotal(
+            $base,
+            $this->normalizeCoef($get('coefficient')),
+            $pct,
+            $this->extrasTotal($get('extras') ?? []),
+            (float) ($get('surcharge') ?: 0),
+            (float) ($get('deduction') ?: 0),
+        );
+    }
+
+    /**
+     * Эффективные база и процент для blockPayoutTotal по модели ЗП курса.
+     * Фикс-модели сводятся к pct=100 и базе из ставки (× студентов / ÷ блоки).
+     *
+     * @param  array<string, mixed>  $s  состояние формы
+     * @return array{base: float, pct: float}
+     */
+    private function effectiveBaseAndPct(array $s): array
+    {
+        $type = (string) ($s['salary_type'] ?? 'percent');
+        $rate = (float) ($s['fixed_rate'] ?? 0);
+
+        return match ($type) {
+            'fix_per_student' => ['base' => $rate * (float) ($s['student_count'] ?? 0), 'pct' => 100.0],
+            'fix_per_block' => ['base' => $rate, 'pct' => 100.0],
+            'fix_total' => ['base' => $rate / max(1, $this->courseBlockCount((int) ($s['course_id'] ?? 0))), 'pct' => 100.0],
+            default => ['base' => (float) ($s['base_revenue'] ?? 0), 'pct' => (float) ($s['teacher_percent'] ?? 0)],
+        };
+    }
+
+    private function courseBlockCount(int $courseId): int
+    {
+        return $courseId ? CourseBlock::where('course_id', $courseId)->count() : 0;
+    }
+
+    /**
+     * Текст формулы для превью и комментария — по модели ЗП.
+     *
+     * @param  array<string, mixed>  $s  состояние формы
+     */
+    private function formulaText(array $s, float $coef, float $extrasTotal, float $surcharge, float $deduction): string
+    {
+        $fmt = fn ($v) => number_format((float) $v, 0, '.', ' ');
+        $type = (string) ($s['salary_type'] ?? 'percent');
+        $coefPart = $coef != 100.0 ? " × {$fmt($coef)}%" : '';
+
+        $core = match ($type) {
+            'fix_per_student' => "{$fmt($s['fixed_rate'] ?? 0)} ₽ × {$fmt($s['student_count'] ?? 0)} студ.{$coefPart}",
+            'fix_per_block' => "{$fmt($s['fixed_rate'] ?? 0)} ₽{$coefPart}",
+            'fix_total' => "{$fmt($s['fixed_rate'] ?? 0)} ₽ ÷ блоки{$coefPart}",
+            default => "({$fmt($s['base_revenue'] ?? 0)} × {$fmt($coef)}%) × {$fmt($s['teacher_percent'] ?? 0)}%",
+        };
+
+        if ($extrasTotal != 0.0) {
+            $core .= " + {$fmt($extrasTotal)} × {$fmt($coef)}%";
+        }
+        if ($surcharge != 0.0) {
+            $core .= " + доплата {$fmt($surcharge)}";
+        }
+        if ($deduction != 0.0) {
+            $core .= " − удержание {$fmt(abs($deduction))}";
+        }
+
+        return $core;
     }
 
     /**

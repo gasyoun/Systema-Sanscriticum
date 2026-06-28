@@ -12,6 +12,8 @@ class Teacher extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio',
+        // Валюта выплаты через PayPal (EUR/USD); null = только ₽.
+        'payout_currency',
     ];
 
     // Один преподаватель может вести много курсов

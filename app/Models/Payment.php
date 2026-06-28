@@ -152,6 +152,28 @@ class Payment extends Model
     }
 
     /**
+     * Открывает ли эта оплата доступ к блоку $block, половине $half (1|2).
+     * Зеркалит Lesson::unlockingKeys (full / весь блок / нужная половина) плюс
+     * диапазон start_block..end_block (импорт/ручное заполнение). Используется
+     * в отчёте «Участники по блокам» (CourseBlockParticipantsReport).
+     */
+    public function coversBlockHalf(int $block, int $half): bool
+    {
+        if (in_array($this->tariff, ['full', 'block_'.$block, 'block_'.$block.'_h'.$half], true)) {
+            return true;
+        }
+
+        $start = (int) $this->start_block;
+        if ($start > 0) {
+            $end = (int) $this->end_block ?: $start;
+
+            return $block >= $start && $block <= $end;
+        }
+
+        return false;
+    }
+
+    /**
      * Человекочитаемая пометка операции — единый источник для админки
      * (PaymentResource) и выгрузки в финансовую Google-таблицу
      * (SendPaymentToSheetJob). Расшифровывает сырой ключ tariff.

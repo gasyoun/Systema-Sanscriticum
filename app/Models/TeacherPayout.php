@@ -26,6 +26,10 @@ class TeacherPayout extends Model
         'course_id',
         'salary_type',
         'salary_value',
+        // Валютная конвертация (PayPal): снимок валюты, курса и суммы в валюте.
+        'payout_currency',
+        'exchange_rate',
+        'amount_foreign',
         'breakdown',
         'payment_id',
     ];
@@ -33,10 +37,32 @@ class TeacherPayout extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'salary_value' => 'decimal:2',
+        'exchange_rate' => 'decimal:4',
+        'amount_foreign' => 'decimal:2',
         'paid_at' => 'date',
         'settled_at' => 'datetime',
         'breakdown' => 'array',
     ];
+
+    /** Символ валюты выплаты. */
+    public static function currencySymbol(?string $currency): string
+    {
+        return match ($currency) {
+            'EUR' => '€',
+            'USD' => '$',
+            default => (string) $currency,
+        };
+    }
+
+    /** Подпись суммы в валюте, например «45.00 €». Пусто, если конвертации нет. */
+    public function foreignAmountLabel(): string
+    {
+        if ((float) $this->amount_foreign <= 0 || empty($this->payout_currency)) {
+            return '';
+        }
+
+        return number_format((float) $this->amount_foreign, 2, '.', ' ').' '.self::currencySymbol($this->payout_currency);
+    }
 
     /** Это аванс? */
     public function isAdvance(): bool
