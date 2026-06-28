@@ -105,9 +105,16 @@ class ClassAttendanceService
      */
     public function forGroup(Group $group, CarbonInterface $from, CarbonInterface $to): array
     {
+        // Занятия группы: привязанные к ней напрямую (group_id) либо к её курсам
+        // (course_id; group_id пуст) — зеркально ClassRoster::query.
+        $courseIds = $group->courses()->pluck('courses.id');
+
         $schedules = Schedule::query()
-            ->where('group_id', $group->id)
             ->whereBetween('start', [$from, $to])
+            ->where(function ($q) use ($group, $courseIds): void {
+                $q->where('group_id', $group->id)
+                    ->orWhere(fn ($q2) => $q2->whereNull('group_id')->whereIn('course_id', $courseIds));
+            })
             ->orderBy('start')
             ->get();
 
