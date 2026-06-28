@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Schedule;
 
+use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use Carbon\Carbon;
@@ -30,7 +31,11 @@ final class ScheduleGenerator
             ? $config->startDate->copy()
             : $today->copy();
 
-        return DB::transaction(function () use ($config, $today, $cutoff) {
+        // Ссылка занятия: явная из модалки, иначе единая Zoom-ссылка курса.
+        $link = $config->link
+            ?: ($config->courseId ? Course::find($config->courseId)?->zoom_link : null);
+
+        return DB::transaction(function () use ($config, $today, $cutoff, $link) {
             // 1. preserve: режем только будущие; иначе — всё по группе
             if ($config->preserve) {
                 Schedule::where('group_id', $config->groupId)
@@ -58,7 +63,7 @@ final class ScheduleGenerator
             // 3. Главный цикл: создаём через withoutEvents, чтобы Observer
             //    не дёргал n8n на каждое из 60+ событий
             Schedule::withoutEvents(function () use (
-                $config, &$calculationDate, &$count, &$lessonIdx,
+                $config, $link, &$calculationDate, &$count, &$lessonIdx,
                 &$processed, &$iter, $skipSet, $addSet, $created
             ) {
                 while ($processed < $config->totalLessons && $iter < self::SAFETY_LIMIT) {
@@ -84,7 +89,7 @@ final class ScheduleGenerator
                         $schedule = Schedule::create([
                             'title' => $rendered['title'] !== '' ? $rendered['title'] : "Занятие #{$count}",
                             'description' => $rendered['description'],
-                            'link' => $config->link,
+                            'link' => $link,
                             'start' => $start,
                             'end' => $start->copy()->addMinutes($config->durationMinutes),
                             'color' => '#3788d8',

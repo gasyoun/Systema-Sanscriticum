@@ -124,6 +124,15 @@ class CourseResource extends Resource
                             ->helperText('Универсальная ссылка на чат курса (VK, Telegram, Discord). Если пусто — кнопка в кабинете студента не показывается.')
                             ->columnSpanFull(),
 
+                        Forms\Components\TextInput::make('zoom_link')
+                            ->label('Zoom-ссылка курса (единая)')
+                            ->url()
+                            ->maxLength(1024)
+                            ->placeholder('https://us02web.zoom.us/j/000000000?pwd=...')
+                            ->prefixIcon('heroicon-m-video-camera')
+                            ->helperText('Постоянная ссылка на конференцию курса (создаётся вручную на zoom.us). Генератор расписания подставит её в каждое занятие; meeting_id для учёта посещаемости извлекается автоматически.')
+                            ->columnSpanFull(),
+
                         // БЛОК 3: Статистика
                         Forms\Components\Grid::make(2)
                             ->schema([

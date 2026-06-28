@@ -223,6 +223,8 @@ class Helpdesk extends Page
                 ->where('is_active', true)
                 ->with('course')
                 ->get(),
+            // Последние занятия с посещаемостью (Zoom/клик).
+            'attendance' => app(\App\Services\ClassAttendanceService::class)->forStudent($user, 8),
         ];
     }
 }

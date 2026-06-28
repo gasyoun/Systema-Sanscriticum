@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Webhooks;
 
-use App\Models\Course;
-use App\Models\Lesson;
-use App\Models\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Phase 2 (#78): Zoom-вебхук recording.completed → запись на Schedule + урок;
- * проверка подписи и URL-валидации.
+ * Zoom-вебхук (#78): URL-валидация эндпоинта и проверка подписи.
+ * Логику посещаемости проверяет ZoomAttendanceTest; запись→урок — у n8n.
  */
 class ZoomWebhookTest extends TestCase
 {
@@ -38,17 +35,16 @@ class ZoomWebhookTest extends TestCase
         return $this->call('POST', '/api/webhooks/zoom', [], [], [], $this->transformHeadersToServerVars($headers), $body);
     }
 
-    private function recordingPayload(string $meetingId, string $shareUrl = 'https://zoom.us/rec/share/abc'): array
+    /** Минимальный participant-пейлоад для неизвестной встречи (резолв не найдёт). */
+    private function participantPayload(string $meetingId = 'unknown'): array
     {
         return [
-            'event' => 'recording.completed',
+            'event' => 'meeting.participant_joined',
             'payload' => ['object' => [
                 'id' => $meetingId,
-                'topic' => 'Вебинар',
-                'share_url' => $shareUrl,
-                'recording_files' => [
-                    ['file_type' => 'MP4', 'play_url' => 'https://zoom.us/rec/play/mp4'],
-                ],
+                'uuid' => 'occ-xyz',
+                'start_time' => now()->toIso8601String(),
+                'participant' => ['participant_uuid' => 'p1', 'user_name' => 'Гость'],
             ]],
         ];
     }
@@ -69,71 +65,11 @@ class ZoomWebhookTest extends TestCase
     }
 
     /** @test */
-    public function recording_completed_attaches_recording_and_creates_lesson(): void
+    public function unknown_meeting_is_acknowledged(): void
     {
-        $course = Course::factory()->create();
-        $schedule = Schedule::create([
-            'title' => 'Занятие 3',
-            'start' => now()->subHour(),
-            'course_id' => $course->id,
-            'zoom_meeting_id' => '987654321',
-        ]);
-
-        $this->postZoom($this->recordingPayload('987654321'))
-            ->assertOk()
-            ->assertJson(['status' => 'ok', 'schedule_id' => $schedule->id]);
-
-        $schedule->refresh();
-        $this->assertSame('https://zoom.us/rec/share/abc', $schedule->zoom_recording_url);
-        $this->assertNotNull($schedule->zoom_recording_received_at);
-
-        $lesson = Lesson::where('course_id', $course->id)->first();
-        $this->assertNotNull($lesson);
-        $this->assertSame('https://zoom.us/rec/share/abc', $lesson->video_url);
-        $this->assertSame('Занятие 3', $lesson->title);
-    }
-
-    /** @test */
-    public function recording_completed_is_idempotent(): void
-    {
-        $course = Course::factory()->create();
-        Schedule::create([
-            'title' => 'Занятие', 'start' => now()->subHour(),
-            'course_id' => $course->id, 'zoom_meeting_id' => '111',
-        ]);
-
-        $this->postZoom($this->recordingPayload('111'))->assertOk();
-        $this->postZoom($this->recordingPayload('111'))->assertOk();
-
-        // Повторная доставка не плодит дубль урока.
-        $this->assertSame(1, Lesson::where('course_id', $course->id)->count());
-    }
-
-    /** @test */
-    public function falls_back_to_mp4_play_url_without_share_url(): void
-    {
-        $course = Course::factory()->create();
-        $schedule = Schedule::create([
-            'title' => 'Занятие', 'start' => now()->subHour(),
-            'course_id' => $course->id, 'zoom_meeting_id' => '222',
-        ]);
-
-        $payload = $this->recordingPayload('222');
-        unset($payload['payload']['object']['share_url']);
-
-        $this->postZoom($payload)->assertOk();
-
-        $this->assertSame('https://zoom.us/rec/play/mp4', $schedule->fresh()->zoom_recording_url);
-    }
-
-    /** @test */
-    public function unknown_meeting_is_acknowledged_without_lesson(): void
-    {
-        $this->postZoom($this->recordingPayload('does-not-exist'))
+        $this->postZoom($this->participantPayload('does-not-exist'))
             ->assertOk()
             ->assertJson(['status' => 'ignored']);
-
-        $this->assertSame(0, Lesson::count());
     }
 
     /** @test */
@@ -141,7 +77,7 @@ class ZoomWebhookTest extends TestCase
     {
         config(['services.zoom.webhook_secret' => self::SECRET]);
 
-        $body = json_encode($this->recordingPayload('111'));
+        $body = json_encode($this->participantPayload());
         $this->call('POST', '/api/webhooks/zoom', [], [], [], $this->transformHeadersToServerVars([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
@@ -153,21 +89,15 @@ class ZoomWebhookTest extends TestCase
     /** @test */
     public function missing_signature_is_rejected_when_secret_set(): void
     {
-        $this->postZoom($this->recordingPayload('111'), sign: false)
+        $this->postZoom($this->participantPayload(), sign: false)
             ->assertStatus(403);
     }
 
     /** @test */
     public function empty_secret_skips_signature_check(): void
     {
-        $course = Course::factory()->create();
-        Schedule::create([
-            'title' => 'Занятие', 'start' => now()->subHour(),
-            'course_id' => $course->id, 'zoom_meeting_id' => '333',
-        ]);
-
-        // Секрет пуст → подпись не нужна (локалка).
-        $this->postZoom($this->recordingPayload('333'), secret: '', sign: false)
+        // Секрет пуст → подпись не нужна (локалка); неизвестная встреча → ignored 200.
+        $this->postZoom($this->participantPayload('333'), secret: '', sign: false)
             ->assertOk();
     }
 }

@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 
 class Schedule extends Model
 {
@@ -29,7 +32,9 @@ class Schedule extends Model
         'group_id',
         'course_id',
         'reminded_at',
+        'absent_notified_at',
         'zoom_meeting_id',
+        'zoom_occurrence_uuid',
         'zoom_join_url',
         'zoom_start_url',
         'zoom_recording_url',
@@ -40,6 +45,7 @@ class Schedule extends Model
         'start' => 'datetime',
         'end' => 'datetime',
         'reminded_at' => 'datetime',
+        'absent_notified_at' => 'datetime',
         'zoom_recording_received_at' => 'datetime',
     ];
 
@@ -49,7 +55,9 @@ class Schedule extends Model
         // чтобы classes:remind-upcoming напомнил студентам заново к новому времени.
         static::updating(function (self $schedule): void {
             if ($schedule->isDirty('start')) {
+                // Перенос времени — напоминание и уведомление о пропуске шлём заново.
                 $schedule->reminded_at = null;
+                $schedule->absent_notified_at = null;
             }
         });
     }
@@ -64,9 +72,33 @@ class Schedule extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function attendances(): HasMany
     {
         return $this->hasMany(WebinarAttendance::class);
+    }
+
+    /** Клики по ссылке «Подключиться» (надёжная привязка студентов к занятию). */
+    public function joinClicks(): HasMany
+    {
+        return $this->hasMany(ScheduleJoinClick::class);
+    }
+
+    /**
+     * Трекинг-ссылка «Подключиться» для конкретного студента (для бота/напоминаний,
+     * где нет сессии): подписанный URL с user id, по которому JoinClassController
+     * запишет клик и редиректнет на настоящий Zoom-URL. null, если ссылки занятия нет.
+     */
+    public function trackedJoinUrlFor(User $user, string $source = 'reminder'): ?string
+    {
+        if (empty($this->link)) {
+            return null;
+        }
+
+        return URL::signedRoute('class.join', [
+            'schedule' => $this->id,
+            'u' => $user->id,
+            'source' => $source,
+        ]);
     }
 
     /**
@@ -93,6 +125,56 @@ class Schedule extends Model
                 return null;
             }
         );
+    }
+
+    /**
+     * Найти занятие, к которому относится событие Zoom, при единой ссылке курса
+     * (один meeting_id на все даты). Стратегия:
+     *  1) уже привязанный запуск по occurrence uuid;
+     *  2) курс по courses.zoom_meeting_id → занятие, в чьё окно попадает время
+     *     (иначе ближайшее в пределах ±12ч); привязываем uuid к нему;
+     *  3) legacy-фолбэк: занятие с этим meeting_id напрямую (старые ручные встречи).
+     *
+     * @param  string|\DateTimeInterface|null  $startTime  время запуска/участника
+     */
+    public static function resolveForZoomEvent(string $meetingId, ?string $occurrenceUuid, $startTime = null): ?self
+    {
+        if ($occurrenceUuid) {
+            $bound = static::where('zoom_occurrence_uuid', $occurrenceUuid)->first();
+            if ($bound) {
+                return $bound;
+            }
+        }
+
+        $when = $startTime ? Carbon::parse($startTime) : now();
+
+        $course = $meetingId !== '' ? Course::where('zoom_meeting_id', $meetingId)->first() : null;
+        if ($course) {
+            $candidates = static::where('course_id', $course->id)->whereNotNull('start')->get();
+
+            // Занятие, в чьё окно [start−30м; конец+30м] попадает время события.
+            $match = $candidates->first(function (self $s) use ($when): bool {
+                $end = $s->end ?? $s->start->copy()->addHours(self::DEFAULT_DURATION_HOURS);
+
+                return $when->betweenIncluded($s->start->copy()->subMinutes(30), $end->copy()->addMinutes(30));
+            });
+
+            // Иначе ближайшее по времени старта в пределах ±12 часов.
+            $match ??= $candidates
+                ->filter(fn (self $s): bool => $s->start->diffInSeconds($when) <= 12 * 3600)
+                ->sortBy(fn (self $s): int => $s->start->diffInSeconds($when))
+                ->first();
+
+            if ($match) {
+                if ($occurrenceUuid && ! $match->zoom_occurrence_uuid) {
+                    $match->forceFill(['zoom_occurrence_uuid' => $occurrenceUuid])->save();
+                }
+
+                return $match;
+            }
+        }
+
+        return $meetingId !== '' ? static::where('zoom_meeting_id', $meetingId)->first() : null;
     }
 
     /**

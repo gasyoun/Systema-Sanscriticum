@@ -224,7 +224,8 @@
                                 <p class="text-gray-300 mb-5">{{ $upcomingSession->start->translatedFormat('d F Y, H:i') }} (МСК)</p>
                             @endif
                             @if($upcomingSession->link)
-                                <a href="{{ $upcomingSession->link }}" target="_blank" rel="noopener noreferrer"
+                                {{-- Трекинг-редирект (учёт посещаемости) → настоящий Zoom-URL. --}}
+                                <a href="{{ route('class.join', $upcomingSession) }}" target="_blank" rel="noopener noreferrer"
                                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#38BDF8] hover:bg-[#2da4dd] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
                                     <i class="fas fa-video"></i> Подключиться к Zoom
                                 </a>

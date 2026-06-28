@@ -64,7 +64,7 @@ class StudentSelfService
      * Сводка по группам студента: название группы, курс(ы), ближайшее занятие.
      * Возвращает Telegram-HTML (для VK теги срежет TelegramFormatter::toPlain).
      */
-    public function groupsSummary(User $user): string
+    public function groupsSummary(User $user, string $source = 'telegram'): string
     {
         $groups = $user->groups()->with('courses')->get();
 
@@ -96,7 +96,9 @@ class StudentSelfService
             if ($next) {
                 $when = $next->start->format('d.m в H:i');
                 $lines[] = "   🔔 Ближайшее занятие: {$when} (МСК)";
-                if ($link = $next->link) {
+                // Трекинг-ссылка с подписью и user id — фиксирует переход для
+                // учёта посещаемости и редиректит на настоящий Zoom-URL.
+                if ($link = $next->trackedJoinUrlFor($user, $source)) {
                     $lines[] = "   <a href='{$link}'>Подключиться к занятию</a>";
                 }
             } else {

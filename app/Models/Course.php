@@ -19,6 +19,10 @@ class Course extends Model
         'image_path',
         'description',
         'chat_url',
+        // Единая постоянная ссылка на Zoom-конференцию курса; meeting_id из неё
+        // выводится автоматически (см. setZoomLinkAttribute) для резолва посещаемости.
+        'zoom_link',
+        'zoom_meeting_id',
         'is_visible',
         'is_active',
         'lessons_count',
@@ -41,6 +45,23 @@ class Course extends Model
     public function categories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_course');
+    }
+
+    /**
+     * При записи Zoom-ссылки автоматически вытаскиваем числовой meeting_id
+     * (.../j/{id} или .../my/{name} → null). Единый источник для резолва
+     * посещаемости — вебхук и Reports API приходят с этим id.
+     */
+    public function setZoomLinkAttribute(?string $value): void
+    {
+        $value = $value !== null ? trim($value) : null;
+        $this->attributes['zoom_link'] = $value !== '' ? $value : null;
+
+        if ($value && preg_match('~/j/(\d+)~', $value, $m)) {
+            $this->attributes['zoom_meeting_id'] = $m[1];
+        } elseif (empty($value)) {
+            $this->attributes['zoom_meeting_id'] = null;
+        }
     }
 
     // Хелпер для шаблонов — лейблы статуса
