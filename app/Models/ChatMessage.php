@@ -22,6 +22,27 @@ class ChatMessage extends Model
         'is_read' => 'boolean',
     ];
 
+    /**
+     * Безопасный HTML текста для web-чата (helpdesk). Сообщения бота приходят с
+     * Telegram-форматированием (<b>, <i>…); здесь экранируем всё, затем возвращаем
+     * как реальный HTML только простой whitelist тегов без атрибутов — чтобы
+     * «<b>Ваши группы</b>» рендерилось жирным, а не показывалось буквально.
+     */
+    public function htmlForWeb(): string
+    {
+        $escaped = e((string) $this->text);
+
+        foreach (['b', 'strong', 'i', 'em', 'u', 's', 'code', 'pre'] as $tag) {
+            $escaped = str_replace(
+                ['&lt;'.$tag.'&gt;', '&lt;/'.$tag.'&gt;'],
+                ['<'.$tag.'>', '</'.$tag.'>'],
+                $escaped,
+            );
+        }
+
+        return nl2br($escaped);
+    }
+
     // Сообщение принадлежит студенту
     public function user()
     {
