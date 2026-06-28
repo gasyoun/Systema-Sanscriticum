@@ -18,6 +18,9 @@ class Payment extends Model
         'course_id',
         'promo_code_id',
         'amount',
+        // Справочная сумма в валюте (USD/EUR) — только для отчёта, в расчётах не участвует.
+        'foreign_amount',
+        'foreign_currency',
         'discount_percent',
         'discount_amount',
         'prana_spent',
@@ -42,6 +45,7 @@ class Payment extends Model
         'is_conditional' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'foreign_amount' => 'decimal:2',
         'referral_credit_applied' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
@@ -126,6 +130,25 @@ class Payment extends Model
         }
 
         return '';
+    }
+
+    /**
+     * Подпись справочной валютной суммы для колонки «Примечание» отчёта,
+     * например «50 $» / «45 €». Пусто, если сумма не задана. В расчётах не участвует.
+     */
+    public function foreignAmountLabel(): string
+    {
+        if ((float) $this->foreign_amount <= 0 || empty($this->foreign_currency)) {
+            return '';
+        }
+
+        $symbol = match ($this->foreign_currency) {
+            'USD' => '$',
+            'EUR' => '€',
+            default => $this->foreign_currency,
+        };
+
+        return number_format((float) $this->foreign_amount, 2, '.', ' ').' '.$symbol;
     }
 
     /**
