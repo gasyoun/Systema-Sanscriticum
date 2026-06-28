@@ -57,9 +57,11 @@ class StudentGroupsInfoTest extends TestCase
             }
             $text = $request->data()['text'] ?? '';
 
+            // Ссылка теперь трекинговая (учёт посещаемости): /class/{id}/join, а не сырой Zoom-URL.
             return str_contains($text, 'Грамматика гр.58')
                 && str_contains($text, 'Грамматика по Кочергиной')
-                && str_contains($text, 'zoom.us/j/777');
+                && str_contains($text, '/class/')
+                && str_contains($text, '/join');
         });
 
         // ИИ не дёргали.

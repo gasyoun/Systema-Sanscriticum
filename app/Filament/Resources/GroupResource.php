@@ -76,6 +76,20 @@ class GroupResource extends Resource
                 //
             ])
             ->actions([
+                // Матрица посещаемости «студенты × занятия» за последние ~8 недель.
+                Tables\Actions\Action::make('attendance_matrix')
+                    ->label('Посещаемость')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('success')
+                    ->modalHeading(fn (Group $record): string => 'Посещаемость — '.$record->name)
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Закрыть')
+                    ->modalWidth('7xl')
+                    ->modalContent(fn (Group $record) => view('filament.group.attendance-matrix', [
+                        'group' => $record,
+                        'data' => app(\App\Services\ClassAttendanceService::class)
+                            ->forGroup($record, now()->subWeeks(8), now()),
+                    ])),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

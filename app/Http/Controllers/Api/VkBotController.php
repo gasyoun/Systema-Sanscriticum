@@ -90,7 +90,7 @@ class VkBotController extends Controller
 
             // SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ.
             if (app(StudentSelfService::class)->matchesGroupsIntent($text)) {
-                $summary = app(StudentSelfService::class)->groupsSummary($user);
+                $summary = app(StudentSelfService::class)->groupsSummary($user, 'vk');
 
                 ChatMessage::create([
                     'user_id' => $user->id,

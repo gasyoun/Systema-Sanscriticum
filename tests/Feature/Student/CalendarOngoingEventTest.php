@@ -33,7 +33,7 @@ class CalendarOngoingEventTest extends TestCase
         [$user, $group] = $this->studentInGroup();
 
         // (a) Идёт прямо сейчас: старт прошёл, конец впереди.
-        Schedule::create([
+        $ongoing = Schedule::create([
             'title' => 'Идущее занятие',
             'link' => 'https://zoom.us/j/ongoing',
             'start' => now()->subMinutes(30),
@@ -57,9 +57,10 @@ class CalendarOngoingEventTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('student.calendar'));
 
+        // Кнопка ведёт на трекинг-редирект (учёт посещаемости), а не на сырой Zoom-URL.
         $response->assertOk()
             ->assertSee('Идущее занятие')
-            ->assertSee('https://zoom.us/j/ongoing', escape: false)
+            ->assertSee(route('class.join', $ongoing), escape: false)
             ->assertSee('Будущее занятие')
             ->assertDontSee('Прошедшее занятие');
     }

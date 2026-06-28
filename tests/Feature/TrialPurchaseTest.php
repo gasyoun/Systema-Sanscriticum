@@ -153,10 +153,11 @@ class TrialPurchaseTest extends TestCase
             'amount' => 500, 'tariff' => 'trial', 'status' => 'paid',
         ]);
 
+        // Кнопка ведёт на трекинг-редирект (учёт посещаемости), а не на сырой Zoom-URL.
         $this->actingAs($buyer)
             ->get(route('student.lesson', [$course->slug, $course->trial_lesson_id]))
             ->assertOk()
-            ->assertSee(self::ZOOM)
+            ->assertSee(route('class.join', $course->trial_schedule_id), escape: false)
             ->assertSee('Подключиться к Zoom');
     }
 

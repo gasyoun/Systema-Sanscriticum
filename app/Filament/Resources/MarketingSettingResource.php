@@ -110,6 +110,19 @@ class MarketingSettingResource extends Resource
                             ->default(60)
                             ->helperText('За сколько минут до начала занятия слать пуш (1–1440).'),
 
+                        Forms\Components\Toggle::make('absent_notify_enabled')
+                            ->label('Уведомлять пропустивших занятие')
+                            ->helperText('После занятия писать в TG/VK тем, кто не пришёл и не переходил по ссылке (classes:notify-absent). Задержка — в поле ниже. По умолчанию выключено.')
+                            ->default(false),
+                        Forms\Components\TextInput::make('absent_notify_delay_minutes')
+                            ->label('Уведомлять об отсутствии через, мин после конца')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(1440)
+                            ->suffix('мин')
+                            ->default(30)
+                            ->helperText('Через сколько минут после конца занятия слать «вы пропустили» (0–1440).'),
+
                         Forms\Components\Toggle::make('debt_reminders_enabled')
                             ->label('Напоминания должникам')
                             ->helperText('Авто-рассылка должникам (просрочка / не продлил / блок скоро начнётся) по TG/VK/email. Каждому — не чаще раза в N дней. Выключено — не шлём.')
