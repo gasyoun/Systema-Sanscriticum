@@ -70,6 +70,11 @@ class TeacherResource extends Resource
                         \Filament\Forms\Components\Textarea::make('requisites')
                             ->label('Реквизиты для выплаты ЗП')
                             ->columnSpanFull(),
+                        \Filament\Forms\Components\Select::make('payout_currency')
+                            ->label('Валюта выплаты (PayPal)')
+                            ->options(['EUR' => 'Евро (€)', 'USD' => 'Доллары ($)'])
+                            ->placeholder('Рубли (по умолчанию)')
+                            ->helperText('Если задана — в расчёте ЗП появится поле «Курс PayPal» и сумма в валюте.'),
                         \Filament\Forms\Components\RichEditor::make('bio')
                             ->label('Биография / Регалии')
                             ->columnSpanFull(),
