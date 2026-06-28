@@ -160,6 +160,25 @@ class PaymentResource extends Resource
                                 ->helperText('Сумма скидки (для фиксированной). При проценте — рублёвый эквивалент.'),
                         ]),
 
+                    // Справочная сумма в валюте — параллельно рублёвой, только для отчёта
+                    // (колонка «Примечание» финансовой таблицы). В расчётах не участвует.
+                    Forms\Components\Grid::make(3)->schema([
+                        Forms\Components\TextInput::make('foreign_amount')
+                            ->label('Сумма в валюте')
+                            ->numeric()
+                            ->minValue(0)
+                            ->helperText('Справочно для отчёта. В расчётах (ЗП, доступы, скидки) не участвует.'),
+
+                        Forms\Components\Select::make('foreign_currency')
+                            ->label('Валюта')
+                            ->options([
+                                'USD' => 'Доллары ($)',
+                                'EUR' => 'Евро (€)',
+                            ])
+                            ->native(false)
+                            ->placeholder('—'),
+                    ]),
+
                     Forms\Components\Grid::make(3)->schema([
                         Forms\Components\DateTimePicker::make('created_at')
                             ->label('Дата платежа')

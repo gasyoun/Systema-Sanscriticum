@@ -89,6 +89,9 @@ class SendPaymentToSheetJob implements ShouldQueue
             // фиксированной, пусто — без скидки. Замапь в одну колонку в n8n.
             'discount' => $payment->discountLabel(),
             'tariff' => $payment->tariff,
+            // Справочная сумма в валюте (USD/EUR) — «50 $» / «45 €». Замапь в
+            // колонку «Примечание». В рублёвых расчётах не участвует.
+            'note' => $payment->foreignAmountLabel(),
             // Человекочитаемая пометка операции (бронь / пробное / блок / курс /
             // расход) — та же, что в админке. Замапь в отдельную колонку в n8n.
             'label' => $payment->operationLabel(),
