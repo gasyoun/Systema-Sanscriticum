@@ -263,7 +263,7 @@
                             <div class="msg-content">
                                 <div class="msg-sender">{{ $senderName }}</div>
                                 <div class="msg-bubble {{ $bubbleClass }}">
-                                    {!! nl2br(e($message->text)) !!}
+                                    {!! $message->htmlForWeb() !!}
                                 </div>
                                 <div class="msg-time" title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</div>
                             </div>
