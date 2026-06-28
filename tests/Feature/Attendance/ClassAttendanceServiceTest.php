@@ -101,4 +101,29 @@ class ClassAttendanceServiceTest extends TestCase
         $this->assertSame('present', $matrix['status'][$s1->id][$a->id]);
         $this->assertSame('clicked', $matrix['status'][$s1->id][$b->id]);
     }
+
+    /** @test */
+    public function for_group_includes_course_tied_schedules_without_group_id(): void
+    {
+        $course = \App\Models\Course::factory()->create();
+        $group = Group::create(['name' => 'Группа 4']);
+        $group->courses()->attach($course->id);
+        $student = User::factory()->create();
+        $group->users()->attach($student->id);
+
+        // Занятие привязано к курсу, group_id пуст (единая Zoom-ссылка курса).
+        $s = Schedule::create([
+            'title' => 'Созвон', 'start' => now()->subDay(),
+            'group_id' => null, 'course_id' => $course->id,
+        ]);
+        WebinarAttendance::create([
+            'schedule_id' => $s->id, 'user_id' => $student->id,
+            'zoom_participant_uuid' => 'ct1', 'joined_at' => now(),
+        ]);
+
+        $matrix = app(ClassAttendanceService::class)->forGroup($group, now()->subWeek(), now());
+
+        $this->assertCount(1, $matrix['schedules']);
+        $this->assertSame('present', $matrix['status'][$student->id][$s->id]);
+    }
 }
