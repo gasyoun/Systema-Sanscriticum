@@ -96,6 +96,14 @@ return [
         'onboarding_chat_id' => env('TELEGRAM_ONBOARDING_CHAT_ID'),
     ],
 
+    'telegram_support' => [
+        'enabled' => (bool) env('TELEGRAM_SUPPORT_ENABLED', false),
+        'api_id' => env('TELEGRAM_SUPPORT_API_ID'),
+        'api_hash' => env('TELEGRAM_SUPPORT_API_HASH'),
+        'session' => env('TELEGRAM_SUPPORT_SESSION', storage_path('app/telegram-support/session.madeline')),
+        'history_limit' => (int) env('TELEGRAM_SUPPORT_HISTORY_LIMIT', 50),
+    ],
+
     'vk' => [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),
