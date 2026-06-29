@@ -29,6 +29,7 @@ class TeacherPayout extends Model
         // Валютная конвертация (PayPal): снимок валюты, курса и суммы в валюте.
         'payout_currency',
         'exchange_rate',
+        'rate_date',
         'amount_foreign',
         'breakdown',
         'payment_id',
@@ -39,6 +40,7 @@ class TeacherPayout extends Model
         'salary_value' => 'decimal:2',
         'exchange_rate' => 'decimal:4',
         'amount_foreign' => 'decimal:2',
+        'rate_date' => 'date',
         'paid_at' => 'date',
         'settled_at' => 'datetime',
         'breakdown' => 'array',
