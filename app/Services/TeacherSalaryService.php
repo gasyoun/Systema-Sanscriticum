@@ -416,6 +416,41 @@ class TeacherSalaryService
     }
 
     /**
+     * Сколько льготников (бесплатный доступ) слушают блок: distinct студенты с
+     * реальным оплаченным платежом нулевой суммы (100% промокод / выданный
+     * бесплатный доступ), покрывающим этот блок. Параллель blockGroupRevenueDetail,
+     * где amount>0 = платные. $groupId=null → все студенты курса. Возвраты/зеркала
+     * выплат и conditional («под честное слово») исключены — это не льготники.
+     */
+    public function blockFreeStudentCount(int $courseId, int $blockNumber, ?int $groupId): int
+    {
+        $blockNumbers = $this->blockNumbersFor($courseId);
+
+        $query = Payment::query()
+            ->where('course_id', $courseId)
+            ->paid()
+            ->real()
+            ->whereNotIn('tariff', self::NON_REVENUE_TARIFFS)
+            ->where('amount', '=', 0);
+
+        if ($groupId !== null) {
+            $query->whereIn('user_id', function ($q) use ($groupId) {
+                $q->select('user_id')->from('group_user')->where('group_id', $groupId);
+            });
+        }
+
+        $userIds = [];
+        foreach ($query->get() as $p) {
+            $covered = $this->coveredBlockNumbers($p, $blockNumbers);
+            if (! empty($covered) && in_array($blockNumber, $covered, true)) {
+                $userIds[$p->user_id] = true;
+            }
+        }
+
+        return count($userIds);
+    }
+
+    /**
      * Итог выплаты по формуле калькулятора:
      *   (база × коэф%) × процент_препода% + допзанятия × коэф% + доплата.
      * Допзанятия идут через коэффициент, но БЕЗ процента преподавателя.

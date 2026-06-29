@@ -35,7 +35,15 @@
                                 <strong>№{{ $b['block_number'] ?? '—' }}</strong>@if ($payout?->course?->title) курса «<strong>{{ $payout->course->title }}</strong>»@endif@if ($period) ({{ $period }})@endif:</p>
 
                             @php
+                                // Денежная разбивка считается от числа слушателей, давшего сумму
+                                // (для fix_per_student — ручной ввод, иначе число платных).
                                 $students = (int) ($b['student_count'] ?? 0);
+                                // Состав слушателей блока: платные (оплата > 0) и льготники
+                                // (нулевая оплата). Для старых выплат без разбивки — фолбэк на
+                                // student_count (все считаем платными).
+                                $paidStudents = (int) ($b['paid_student_count'] ?? $b['student_count'] ?? 0);
+                                $freeStudents = (int) ($b['free_student_count'] ?? 0);
+                                $totalStudents = $paidStudents + $freeStudents;
                                 // За студента: для фикс-модели — оговорённая ставка, иначе выводим из
                                 // итога ÷ число слушателей, чтобы препод видел состав суммы.
                                 $perStudent = null;
@@ -46,11 +54,21 @@
                                 }
                             @endphp
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 15px; line-height: 1.6;">
-                                @if ($students > 0)
+                                @if ($totalStudents > 0)
                                     <tr>
-                                        <td style="padding: 6px 0; color: #555;">Слушателей в блоке</td>
-                                        <td style="padding: 6px 0; text-align: right; font-weight: bold;">{{ $students }}</td>
+                                        <td style="padding: 6px 0; color: #555;">Всего студентов</td>
+                                        <td style="padding: 6px 0; text-align: right; font-weight: bold;">{{ $totalStudents }}</td>
                                     </tr>
+                                    <tr>
+                                        <td style="padding: 4px 0 4px 16px; color: #777;">— платных</td>
+                                        <td style="padding: 4px 0; text-align: right;">{{ $paidStudents }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px 0 4px 16px; color: #777;">— льготников (бесплатно)</td>
+                                        <td style="padding: 4px 0; text-align: right;">{{ $freeStudents }}</td>
+                                    </tr>
+                                @endif
+                                @if ($students > 0)
                                     <tr>
                                         <td style="padding: 6px 0; color: #555;">За слушателя</td>
                                         <td style="padding: 6px 0; text-align: right;">{{ $money($perStudent) }}</td>
@@ -59,7 +77,8 @@
                                         <td style="padding: 6px 0; color: #555;">{{ $students }} × {{ $money($perStudent) }}</td>
                                         <td style="padding: 6px 0; text-align: right;">{{ $money($students * $perStudent) }}</td>
                                     </tr>
-                                @else
+                                @endif
+                                @if ($totalStudents === 0 && $students === 0)
                                     <tr>
                                         <td style="padding: 6px 0; color: #555;">Расчёт</td>
                                         <td style="padding: 6px 0; text-align: right;">{{ $payout?->comment }}</td>
