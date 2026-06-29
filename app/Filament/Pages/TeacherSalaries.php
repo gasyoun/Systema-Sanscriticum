@@ -281,6 +281,65 @@ class TeacherSalaries extends Page implements HasTable
                     ->live(onBlur: true)
                     ->helperText('Фиксированный вычет из итога (штраф/аванс/корректировка). Вычитается из суммы как есть (без коэффициента и процента).'),
 
+                // === Поздние оплаты прошлых блоков (по всем курсам преподавателя) ===
+                Forms\Components\Grid::make(2)
+                    ->visible(fn (Forms\Get $get) => filled($get('teacher_id')))
+                    ->schema([
+                        Forms\Components\Select::make('prior_filter_course')
+                            ->label('Фильтр: курс')
+                            ->placeholder('Все курсы')
+                            ->live()
+                            ->afterStateUpdated(fn (Forms\Set $set) => $set('prior_filter_block', null))
+                            ->options(function (Forms\Get $get): array {
+                                return collect($this->availablePriorBlockItems($get))
+                                    ->mapWithKeys(fn (array $i) => [$i['course_id'] => $i['course_title']])
+                                    ->all();
+                            }),
+
+                        Forms\Components\Select::make('prior_filter_block')
+                            ->label('Фильтр: блок')
+                            ->placeholder('Все блоки')
+                            ->live()
+                            ->options(function (Forms\Get $get): array {
+                                $courseFilter = $get('prior_filter_course');
+
+                                return collect($this->availablePriorBlockItems($get))
+                                    ->when($courseFilter, fn ($c) => $c->where('course_id', (int) $courseFilter))
+                                    ->mapWithKeys(fn (array $i) => [$i['block_number'] => 'Блок '.$i['block_number']])
+                                    ->all();
+                            }),
+                    ]),
+
+                Forms\Components\CheckboxList::make('prior_block_keys')
+                    ->label('Поздние оплаты прошлых блоков')
+                    ->visible(fn (Forms\Get $get) => filled($get('teacher_id')))
+                    ->live()
+                    ->columns(1)
+                    ->bulkToggleable()
+                    ->searchable()
+                    ->noSearchResultsMessage('Ничего не найдено.')
+                    ->searchPrompt('Поиск по студенту / курсу / блоку')
+                    ->options(function (Forms\Get $get): array {
+                        $courseFilter = $get('prior_filter_course');
+                        $blockFilter = $get('prior_filter_block');
+
+                        return collect($this->availablePriorBlockItems($get))
+                            ->when($courseFilter, fn ($c) => $c->where('course_id', (int) $courseFilter))
+                            ->when($blockFilter !== null && $blockFilter !== '', fn ($c) => $c->where('block_number', (int) $blockFilter))
+                            ->mapWithKeys(fn (array $i) => [
+                                $i['key'] => $i['course_title'].' · Блок '.$i['block_number'].' · '.$i['user_name']
+                                    .' — '.number_format($i['share'], 0, '.', ' ').' ₽ → '
+                                    .number_format($i['teacher_amount'], 0, '.', ' ').' ₽',
+                            ])->all();
+                    })
+                    ->helperText('Доли платежей прошлых блоков, ещё не вошедшие ни в одну выплату. '
+                        .'Сумма добавится к итогу по ставке своего курса. Выбранные сохраняются при смене фильтра.'),
+
+                Forms\Components\Placeholder::make('prior_blocks_preview')
+                    ->label('Добавлено с прошлых блоков')
+                    ->visible(fn (Forms\Get $get) => $this->priorBlocksTotal($get) > 0)
+                    ->content(fn (Forms\Get $get) => '+ '.number_format($this->priorBlocksTotal($get), 2, '.', ' ').' ₽'),
+
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
                     ->content(function (Forms\Get $get): string {
@@ -297,11 +356,16 @@ class TeacherSalaries extends Page implements HasTable
                         $extrasTotal = $this->extrasTotal($get('extras') ?? []);
                         $surcharge = (float) ($get('surcharge') ?: 0);
                         $deduction = (float) ($get('deduction') ?: 0);
+                        $priorBlocksTotal = $this->priorBlocksTotal($get);
 
-                        $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction);
+                        $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal);
 
-                        return $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction)
-                            .' = '.number_format($total, 0, '.', ' ').' ₽';
+                        $formula = $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction);
+                        if ($priorBlocksTotal > 0) {
+                            $formula .= ' + поздние оплаты '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽';
+                        }
+
+                        return $formula.' = '.number_format($total, 0, '.', ' ').' ₽';
                     }),
 
                 // === Валютная конвертация (PayPal) — только если у преподавателя задана валюта ===
@@ -365,7 +429,19 @@ class TeacherSalaries extends Page implements HasTable
                 $extrasTotal = $this->extrasTotal($extras);
                 $surcharge = (float) ($data['surcharge'] ?? 0);
                 $deduction = (float) ($data['deduction'] ?? 0);
-                $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction);
+
+                // Поздние оплаты прошлых блоков (по всем курсам препода): деривим заново
+                // по выбранным ключам, суммируем готовые рубли (% уже применён).
+                $priorItems = $this->selectedPriorBlockItems(
+                    $data['teacher_id'] ? (int) $data['teacher_id'] : null,
+                    $data['course_id'] ? (int) $data['course_id'] : null,
+                    $data['block_number'] ? (int) $data['block_number'] : null,
+                    (float) ($data['teacher_percent'] ?? 0),
+                    $data['prior_block_keys'] ?? [],
+                );
+                $priorBlocksTotal = round(array_sum(array_column($priorItems, 'teacher_amount')), 2);
+
+                $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal);
 
                 $blockNumber = (int) $data['block_number'];
                 $courseId = (int) $data['course_id'];
@@ -381,10 +457,13 @@ class TeacherSalaries extends Page implements HasTable
                     ->first();
 
                 $comment = sprintf(
-                    'Блок %d%s: %s = %s ₽',
+                    'Блок %d%s: %s%s = %s ₽',
                     $blockNumber,
                     $course ? ' · '.$course->title : '',
                     $this->formulaText($data, $coef, $extrasTotal, $surcharge, $deduction),
+                    $priorBlocksTotal > 0
+                        ? ' + поздние оплаты ('.count($priorItems).' шт.) '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
+                        : '',
                     number_format($total, 0, '.', ' '),
                 );
 
@@ -448,6 +527,9 @@ class TeacherSalaries extends Page implements HasTable
                         // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
                         'payments' => $detail['lines'],
                         'payments_total' => $detail['total'],
+                        // Поздние оплаты прошлых блоков, добавленные вручную (дедуп на будущее).
+                        'prior_blocks_paid' => $priorItems,
+                        'prior_blocks_total' => $priorBlocksTotal,
                     ],
                 ]);
 
@@ -565,7 +647,69 @@ class TeacherSalaries extends Page implements HasTable
             $this->extrasTotal($get('extras') ?? []),
             (float) ($get('surcharge') ?: 0),
             (float) ($get('deduction') ?: 0),
+            $this->priorBlocksTotal($get),
         );
+    }
+
+    /** Request-scoped мемо для availablePriorBlockPayments (несколько вызовов за рендер). */
+    private array $priorItemsMemo = [];
+
+    /**
+     * Доступные к добавлению поздние оплаты прошлых блоков по выбранному
+     * преподавателю (с учётом текущей пары курс+блок и процента из расчёта).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function priorBlockItems(?int $teacherId, ?int $courseId, ?int $blockNumber, float $percent): array
+    {
+        if (! $teacherId || ! ($teacher = Teacher::find($teacherId))) {
+            return [];
+        }
+
+        $memo = $teacherId.':'.$courseId.':'.$blockNumber.':'.$percent;
+
+        return $this->priorItemsMemo[$memo] ??= app(TeacherSalaryService::class)
+            ->availablePriorBlockPayments($teacher, $courseId, $blockNumber, $percent);
+    }
+
+    /** Полный список доступных поздних оплат по состоянию формы. */
+    private function availablePriorBlockItems(Forms\Get $get): array
+    {
+        return $this->priorBlockItems(
+            $get('teacher_id') ? (int) $get('teacher_id') : null,
+            $get('course_id') ? (int) $get('course_id') : null,
+            $get('block_number') ? (int) $get('block_number') : null,
+            (float) ($get('teacher_percent') ?: 0),
+        );
+    }
+
+    /** Выбранные элементы поздних оплат (деривим заново, не доверяя клиенту). */
+    private function selectedPriorBlockItems(?int $teacherId, ?int $courseId, ?int $blockNumber, float $percent, array $keys): array
+    {
+        if (empty($keys)) {
+            return [];
+        }
+
+        $selected = array_flip($keys);
+
+        return array_values(array_filter(
+            $this->priorBlockItems($teacherId, $courseId, $blockNumber, $percent),
+            fn (array $i) => isset($selected[$i['key']]),
+        ));
+    }
+
+    /** Сумма выбранных поздних оплат (₽, % уже применён) — для preview и currentTotal. */
+    private function priorBlocksTotal(Forms\Get $get): float
+    {
+        $items = $this->selectedPriorBlockItems(
+            $get('teacher_id') ? (int) $get('teacher_id') : null,
+            $get('course_id') ? (int) $get('course_id') : null,
+            $get('block_number') ? (int) $get('block_number') : null,
+            (float) ($get('teacher_percent') ?: 0),
+            $get('prior_block_keys') ?? [],
+        );
+
+        return round(array_sum(array_column($items, 'teacher_amount')), 2);
     }
 
     /**
