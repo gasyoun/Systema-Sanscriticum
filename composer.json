@@ -5,10 +5,11 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "awcodes/filament-curator": "^3.7",
         "awcodes/filament-tiptap-editor": "^3.5",
         "barryvdh/laravel-dompdf": "^2.0",
+        "danog/madelineproto": "^8.7",
         "filament/filament": "^3.0",
         "firebase/php-jwt": "^7.0",
         "guzzlehttp/guzzle": "^7.2",
@@ -74,7 +75,7 @@
         "sort-packages": true,
         "platform-check": false,
         "platform": {
-            "php": "8.1.2",
+            "php": "8.2.12",
             "ext-pcntl": "8.1.2",
             "ext-posix": "8.1.2"
         },
