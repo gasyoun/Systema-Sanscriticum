@@ -121,6 +121,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('deliver-webinar-recordings');
+
+        // Telegram support-account analytics. The command is a no-op unless
+        // TELEGRAM_SUPPORT_ENABLED=true and Telegram Client API credentials exist.
+        $schedule->command('telegram-support:sync')
+            ->everyMinute()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('telegram-support-sync');
     }
 
     /**
