@@ -74,7 +74,7 @@
 
                                 @if ($payout?->amount_foreign && $payout?->payout_currency)
                                     <tr>
-                                        <td style="padding: 6px 0; color: #555;">Курс PayPal</td>
+                                        <td style="padding: 6px 0; color: #555;">Курс PayPal@if ($payout?->rate_date) на {{ $payout->rate_date->format('d.m.Y') }}@endif</td>
                                         <td style="padding: 6px 0; text-align: right;">{{ rtrim(rtrim(number_format((float) $payout->exchange_rate, 4, '.', ' '), '0'), '.') }} ₽ / {{ $symbol }}</td>
                                     </tr>
                                     <tr>

@@ -14,6 +14,7 @@ use App\Models\CourseBlock;
 use App\Models\SalaryClosedPeriod;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Services\CurrencyRateProvider;
 use App\Services\TeacherPayoutPoster;
 use App\Services\TeacherSalaryService;
 use App\Support\RoleGate;
@@ -26,6 +27,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
@@ -303,13 +305,30 @@ class TeacherSalaries extends Page implements HasTable
                     }),
 
                 // === Валютная конвертация (PayPal) — только если у преподавателя задана валюта ===
+                Forms\Components\DatePicker::make('rate_date')
+                    ->label('Курс на дату')
+                    ->native(false)
+                    ->default(now())
+                    ->maxDate(now())
+                    ->visible(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->required(fn (Forms\Get $get) => ! empty($get('payout_currency')))
+                    ->live()
+                    ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) => $this->fillExchangeRate($get, $set))
+                    ->helperText('Дата, на которую берётся курс. По ней курс подтягивается автоматически.'),
+
                 Forms\Components\TextInput::make('exchange_rate')
                     ->label(fn (Forms\Get $get) => 'Курс PayPal (₽ за 1 '.TeacherPayout::currencySymbol($get('payout_currency')).')')
                     ->numeric()
                     ->visible(fn (Forms\Get $get) => ! empty($get('payout_currency')))
                     ->required(fn (Forms\Get $get) => ! empty($get('payout_currency')))
                     ->live(onBlur: true)
-                    ->helperText('Сколько рублей за 1 единицу валюты. Курс плавает — вводится при каждом расчёте.'),
+                    ->suffixAction(
+                        Forms\Components\Actions\Action::make('fetchRate')
+                            ->icon('heroicon-m-arrow-path')
+                            ->tooltip('Подтянуть курс на выбранную дату')
+                            ->action(fn (Forms\Get $get, Forms\Set $set) => $this->fillExchangeRate($get, $set, notify: true)),
+                    )
+                    ->helperText('Подтягивается с exchangerate.host на выбранную дату — можно поправить вручную.'),
 
                 Forms\Components\Placeholder::make('foreign_preview')
                     ->label('Сумма в валюте')
@@ -377,9 +396,10 @@ class TeacherSalaries extends Page implements HasTable
                     ? (int) ($data['student_count'] ?? 0)
                     : collect($detail['lines'])->pluck('user_id')->unique()->count();
 
-                // Валютная конвертация (PayPal): курс введён вручную, сумма в валюте справочная.
+                // Валютная конвертация (PayPal): курс на выбранную дату, сумма в валюте справочная.
                 $currency = $data['payout_currency'] ?: null;
                 $rate = (float) ($data['exchange_rate'] ?? 0);
+                $rateDate = $data['rate_date'] ?? null;
                 $amountForeign = ($currency && $rate > 0) ? round($total / $rate, 2) : null;
 
                 $payout = Teacher::find($data['teacher_id'])?->payouts()->create([
@@ -391,6 +411,7 @@ class TeacherSalaries extends Page implements HasTable
                     'salary_value' => $isFixed ? $fixedRate : $pct,
                     'payout_currency' => $amountForeign !== null ? $currency : null,
                     'exchange_rate' => $amountForeign !== null ? $rate : null,
+                    'rate_date' => $amountForeign !== null ? $rateDate : null,
                     'amount_foreign' => $amountForeign,
                     'comment' => $comment,
                     'breakdown' => [
@@ -414,6 +435,7 @@ class TeacherSalaries extends Page implements HasTable
                         'total' => $total,
                         'payout_currency' => $amountForeign !== null ? $currency : null,
                         'exchange_rate' => $amountForeign !== null ? $rate : null,
+                        'rate_date' => $amountForeign !== null ? $rateDate : null,
                         'amount_foreign' => $amountForeign,
                         // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
                         'payments' => $detail['lines'],
@@ -438,6 +460,45 @@ class TeacherSalaries extends Page implements HasTable
                     ->success()
                     ->send();
             });
+    }
+
+    /**
+     * Подтянуть курс PayPal на выбранную дату с exchangerate.host и записать в
+     * поле exchange_rate. Поле остаётся редактируемым. Если курс не получен
+     * (нет ключа / API недоступен / дата без данных) — оставляем как есть; при
+     * $notify (нажата кнопка «Подтянуть») показываем предупреждение.
+     */
+    private function fillExchangeRate(Forms\Get $get, Forms\Set $set, bool $notify = false): void
+    {
+        $currency = $get('payout_currency');
+        $date = $get('rate_date');
+
+        if (empty($currency) || empty($date)) {
+            return;
+        }
+
+        $rate = app(CurrencyRateProvider::class)->rublesPerUnit($currency, Carbon::parse($date));
+
+        if ($rate !== null) {
+            $set('exchange_rate', $rate);
+
+            if ($notify) {
+                Notification::make()
+                    ->title('Курс подтянут: '.$rate.' ₽ / '.TeacherPayout::currencySymbol($currency))
+                    ->success()
+                    ->send();
+            }
+
+            return;
+        }
+
+        if ($notify) {
+            Notification::make()
+                ->title('Не удалось получить курс')
+                ->body('Проверьте ключ exchangerate.host или введите курс вручную.')
+                ->warning()
+                ->send();
+        }
     }
 
     /**

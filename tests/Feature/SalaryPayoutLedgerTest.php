@@ -133,6 +133,30 @@ class SalaryPayoutLedgerTest extends TestCase
     }
 
     /** @test */
+    public function payout_stores_and_casts_rate_date(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create(['teacher_id' => $teacher->id]);
+
+        $payout = $teacher->payouts()->create([
+            'amount' => 16008,
+            'paid_at' => '2026-05-10',
+            'period_month' => '2026-05',
+            'course_id' => $course->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+            'payout_currency' => 'EUR',
+            'exchange_rate' => 100.0,
+            'rate_date' => '2026-05-08',
+            'amount_foreign' => 160.08,
+        ]);
+
+        $fresh = $payout->fresh();
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $fresh->rate_date);
+        $this->assertSame('2026-05-08', $fresh->rate_date->toDateString());
+    }
+
+    /** @test */
     public function deleting_payout_removes_linked_transaction(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
