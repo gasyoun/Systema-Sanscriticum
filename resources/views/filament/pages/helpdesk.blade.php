@@ -157,10 +157,16 @@
             border-radius: 8px;
             font-size: 14px;
             background: #f9fafb;
+            /* Фон поля всегда светлый — фиксируем тёмный текст, иначе в тёмной
+               теме Filament наследуется светлый цвет и набор не виден. */
+            color: #111827;
             resize: none;
             min-height: 46px;
             max-height: 120px;
             outline: none;
+        }
+        .chat-textarea::placeholder {
+            color: #9ca3af;
         }
         .chat-textarea:focus {
             border-color: #f97316;
