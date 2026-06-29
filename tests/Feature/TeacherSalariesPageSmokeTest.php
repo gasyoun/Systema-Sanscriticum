@@ -8,9 +8,11 @@ use App\Filament\Pages\TeacherSalaries;
 use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
+use App\Services\TeacherSalaryService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -270,5 +272,53 @@ class TeacherSalariesPageSmokeTest extends TestCase
         $this->assertNull($payout->payout_currency);
         $this->assertNull($payout->amount_foreign);
         Mail::assertNothingQueued();
+    }
+
+    public function test_block_payout_adds_selected_prior_block_payment_and_dedupes(): void
+    {
+        Mail::fake();
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true, 'starts_at' => '2026-02-01']);
+
+        // Поздняя оплата за блок 1 (блок 2 выручки не имеет).
+        $user = User::factory()->create();
+        $payment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+        ]));
+        $key = $course->id.':1:'.$payment->id;
+
+        Livewire::actingAs($accountant)
+            ->test(TeacherSalaries::class)
+            ->callAction('block_payout', data: [
+                'teacher_id' => $teacher->id,
+                'course_id' => $course->id,
+                'salary_type' => 'percent',
+                'block_number' => 2,
+                'group_id' => null,
+                'base_revenue' => 0,
+                'coefficient' => 100,
+                'teacher_percent' => 30,
+                'prior_block_keys' => [$key],
+            ])
+            ->assertHasNoActionErrors();
+
+        $payout = TeacherPayout::query()->where('teacher_id', $teacher->id)->first();
+        // База блока 2 = 0, плюс поздняя оплата 1000 × 30% = 300.
+        $this->assertEqualsWithDelta(300.0, (float) $payout->amount, 0.01);
+        $this->assertEqualsWithDelta(300.0, (float) ($payout->breakdown['prior_blocks_total'] ?? 0), 0.01);
+        $this->assertCount(1, $payout->breakdown['prior_blocks_paid'] ?? []);
+        $this->assertSame($payment->id, $payout->breakdown['prior_blocks_paid'][0]['payment_id']);
+
+        // Дедуп замкнут: повторно эта оплата больше не предлагается.
+        $this->assertCount(
+            0,
+            app(TeacherSalaryService::class)->availablePriorBlockPayments($teacher->fresh('courses'), $course->id, 2),
+        );
     }
 }

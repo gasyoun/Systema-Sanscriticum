@@ -228,6 +228,99 @@ class SalaryPayoutLedgerTest extends TestCase
     }
 
     /** @test */
+    public function available_prior_block_payments_lists_unpaid_share_with_teacher_amount(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true, 'starts_at' => '2026-02-01']);
+
+        $user = User::factory()->create(['name' => 'Аня']);
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+        ]));
+
+        // Считаем блок 2 — оплата за блок 1 должна предлагаться как поздняя.
+        $items = app(TeacherSalaryService::class)
+            ->availablePriorBlockPayments($teacher->fresh('courses'), $course->id, 2);
+
+        $this->assertCount(1, $items);
+        $this->assertSame(1, $items[0]['block_number']);
+        $this->assertEqualsWithDelta(1000.0, $items[0]['share'], 0.01);
+        $this->assertEqualsWithDelta(300.0, $items[0]['teacher_amount'], 0.01); // 1000 × 30%
+
+        // При расчёте самого блока 1 — он уже в base_revenue, не предлагаем.
+        $this->assertCount(
+            0,
+            app(TeacherSalaryService::class)->availablePriorBlockPayments($teacher->fresh('courses'), $course->id, 1),
+        );
+    }
+
+    /** @test */
+    public function available_prior_block_payments_excludes_already_paid_shares(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true, 'starts_at' => '2026-02-01']);
+
+        $user = User::factory()->create();
+        $payment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+        ]));
+
+        // Прошлая выплата за блок 1 уже включала этот платёж — дедуп через breakdown.payments.
+        $teacher->payouts()->create([
+            'amount' => 300, 'paid_at' => '2026-01-20', 'course_id' => $course->id,
+            'salary_type' => 'percent', 'salary_value' => 30,
+            'breakdown' => [
+                'course_id' => $course->id,
+                'block_number' => 1,
+                'payments' => [['payment_id' => $payment->id, 'user_id' => $user->id]],
+            ],
+        ]);
+
+        $this->assertCount(
+            0,
+            app(TeacherSalaryService::class)->availablePriorBlockPayments($teacher->fresh('courses'), $course->id, 2),
+        );
+    }
+
+    /** @test */
+    public function paid_share_keys_include_prior_blocks_paid_entries(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $teacher->payouts()->create([
+            'amount' => 300, 'paid_at' => '2026-02-20', 'salary_type' => 'percent', 'salary_value' => 30,
+            'breakdown' => [
+                'course_id' => 77, 'block_number' => 2,
+                'prior_blocks_paid' => [['course_id' => 55, 'block_number' => 1, 'payment_id' => 9, 'teacher_amount' => 300]],
+            ],
+        ]);
+
+        $keys = app(TeacherSalaryService::class)->paidShareKeys($teacher->fresh());
+
+        $this->assertArrayHasKey('55:1:9', $keys);
+    }
+
+    /** @test */
+    public function block_payout_total_adds_prior_blocks_term(): void
+    {
+        // (10000 × 100%) × 30% = 3000; + поздние 500 = 3500.
+        $this->assertEqualsWithDelta(
+            3500.0,
+            TeacherSalaryService::blockPayoutTotal(10000, 100, 30, 0, 0, 0, 500),
+            0.01,
+        );
+    }
+
+    /** @test */
     public function deleting_payout_removes_linked_transaction(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
