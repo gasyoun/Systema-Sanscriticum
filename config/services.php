@@ -49,6 +49,15 @@ return [
         'secret' => env('LESSON_SYNC_SECRET'),
     ],
 
+    // Курс валют для конвертации выплат преподавателям (PayPal, USD/EUR).
+    // exchangerate.host: бесплатный тариф, исторические курсы по дате, есть RUB
+    // (в отличие от ECB, который не публикует курс рубля с 01.03.2022).
+    // Пусто → авто-подтягивание выключено, курс вводится вручную
+    // (см. App\Services\CurrencyRateProvider).
+    'exchangerate' => [
+        'key' => env('EXCHANGERATE_HOST_KEY'),
+    ],
+
     'n8n' => [
         'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
         'schedule_sheet_webhook' => env('N8N_SCHEDULE_SHEET_WEBHOOK'),

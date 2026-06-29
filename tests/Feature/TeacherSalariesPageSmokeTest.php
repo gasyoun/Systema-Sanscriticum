@@ -225,6 +225,7 @@ class TeacherSalariesPageSmokeTest extends TestCase
                 'coefficient' => 92,
                 'teacher_percent' => 30,
                 'exchange_rate' => 100,
+                'rate_date' => '2026-05-08',
                 'email_report' => true,
             ])
             ->assertHasNoActionErrors();
@@ -234,6 +235,7 @@ class TeacherSalariesPageSmokeTest extends TestCase
         $this->assertSame('EUR', $payout->payout_currency);
         $this->assertEqualsWithDelta(100.0, (float) $payout->exchange_rate, 0.0001);
         $this->assertEqualsWithDelta(132.48, (float) $payout->amount_foreign, 0.01);
+        $this->assertSame('2026-05-08', $payout->rate_date->toDateString());
 
         Mail::assertQueued(TeacherPayoutReportMail::class, fn (TeacherPayoutReportMail $m) => $m->hasTo('kat@example.test'));
     }
