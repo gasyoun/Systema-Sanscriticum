@@ -6,7 +6,9 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\TelegramSupportAnalytics;
 use App\Models\SupportConversation;
+use App\Models\SupportResponderMapping;
 use App\Models\SupportTopicRule;
+use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
@@ -19,6 +21,29 @@ use Tests\TestCase;
 class TelegramSupportAnalyticsTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_sync_command_reports_unconfigured_and_missing_client_without_failing_scheduler(): void
+    {
+        config([
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => null,
+            'services.telegram_support.api_hash' => null,
+        ]);
+
+        $this->artisan('telegram-support:sync')
+            ->expectsOutput('Telegram support sync: unconfigured; synced=0')
+            ->assertExitCode(0);
+
+        config([
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => 'Missing\\MadelineProto\\Client',
+        ]);
+
+        $this->artisan('telegram-support:sync')
+            ->expectsOutput('Telegram support sync: missing_madelineproto; synced=0')
+            ->assertExitCode(0);
+    }
 
     public function test_sync_is_idempotent_and_builds_daily_support_metrics(): void
     {
@@ -33,6 +58,12 @@ class TelegramSupportAnalyticsTest extends TestCase
 
         $curator = User::factory()->create(['name' => 'Masha', 'role' => Roles::ADMIN]);
         $student = User::factory()->create(['telegram_id' => 5001]);
+        SupportResponderMapping::create([
+            'marker_label' => 'favicon:masha',
+            'user_id' => $curator->id,
+            'responder_type' => 'human',
+            'is_active' => true,
+        ]);
 
         $payload = [
             [
@@ -48,7 +79,6 @@ class TelegramSupportAnalyticsTest extends TestCase
                 'telegram_chat_id' => 1001,
                 'telegram_message_id' => 2,
                 'direction' => 'outgoing',
-                'responder_user_id' => $curator->id,
                 'responder_marker' => 'favicon:masha',
                 'text' => 'Здравствуйте, помогу с оплатой.',
                 'sent_at' => '2026-06-28 09:05:00',
@@ -102,6 +132,12 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame(1, $conversation->incoming_count);
         $this->assertSame(1, $conversation->outgoing_count);
         $this->assertSame(1, $conversation->human_reply_count);
+        $this->assertDatabaseHas('telegram_support_messages', [
+            'telegram_chat_id' => 1001,
+            'telegram_message_id' => 2,
+            'responder_user_id' => $curator->id,
+            'responder_type' => 'human',
+        ]);
         $this->assertSame(300, $conversation->first_response_seconds);
         $this->assertTrue($conversation->has_new_contact);
         $this->assertFalse($conversation->is_unanswered);
@@ -132,13 +168,20 @@ class TelegramSupportAnalyticsTest extends TestCase
     {
         config(['app.timezone' => 'Europe/Moscow']);
 
+        SupportTopicRule::create([
+            'category' => 'course',
+            'keywords' => ['курс'],
+            'priority' => 10,
+            'is_enabled' => true,
+        ]);
+
         app(TelegramSupportSyncService::class)->syncNormalizedMessages([
             [
                 'telegram_chat_id' => 2001,
                 'telegram_message_id' => 1,
                 'telegram_user_id' => 7001,
                 'direction' => 'incoming',
-                'text' => 'Есть вопрос',
+                'text' => 'Есть вопрос про курс',
                 'sent_at' => '2026-06-28 09:00:00',
             ],
             [
@@ -177,9 +220,103 @@ class TelegramSupportAnalyticsTest extends TestCase
         $component = Livewire::actingAs($admin)
             ->test(TelegramSupportAnalytics::class)
             ->set('selectedDate', '2026-06-28')
+            ->assertSee('course')
+            ->set('topic', 'course')
+            ->assertSee('Telegram chat 2001')
             ->set('onlyUnanswered', true);
 
         $this->assertCount(1, $component->instance()->conversations);
         $component->assertSee('Unanswered');
+    }
+
+    public function test_madelineproto_sync_uses_incremental_peer_cursor(): void
+    {
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            3001 => [
+                ['id' => 1, 'date' => strtotime('2026-06-28 09:00:00'), 'message' => 'Первое', 'peer_id' => 3001, 'from_id' => ['user_id' => 9001]],
+                ['id' => 2, 'date' => strtotime('2026-06-28 09:02:00'), 'message' => 'Ответ', 'peer_id' => 3001, 'out' => true],
+            ],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+
+        $first = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $first['status']);
+        $this->assertSame(2, $first['synced']);
+        $this->assertSame(2, TelegramSupportMessage::count());
+        $this->assertSame(0, FakeMadelineProtoClient::$lastHistoryRequests[0]['min_id']);
+
+        FakeMadelineProtoClient::$histories[3001][] = [
+            'id' => 3,
+            'date' => strtotime('2026-06-28 09:05:00'),
+            'message' => 'Новое',
+            'peer_id' => 3001,
+            'from_id' => ['user_id' => 9001],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+
+        $second = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $second['status']);
+        $this->assertSame(1, $second['synced']);
+        $this->assertSame(3, TelegramSupportMessage::count());
+        $this->assertSame(2, FakeMadelineProtoClient::$lastHistoryRequests[0]['min_id']);
+
+        $account = TelegramSupportAccount::where('name', 'support')->firstOrFail();
+        $this->assertSame(3, $account->sync_state['peers']['3001']['last_message_id']);
+    }
+}
+
+class FakeMadelineProtoClient
+{
+    /** @var array<int, array<int, array<string, mixed>>> */
+    public static array $histories = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public static array $lastHistoryRequests = [];
+
+    public object $messages;
+
+    public function __construct(string $session, array $settings)
+    {
+        $this->messages = new class
+        {
+            /**
+             * @param  array<string, mixed>  $params
+             * @return array<string, mixed>
+             */
+            public function getHistory(array $params): array
+            {
+                FakeMadelineProtoClient::$lastHistoryRequests[] = $params;
+                $peer = (int) $params['peer'];
+                $minId = (int) $params['min_id'];
+
+                return [
+                    'messages' => collect(FakeMadelineProtoClient::$histories[$peer] ?? [])
+                        ->filter(fn (array $message) => (int) $message['id'] > $minId)
+                        ->values()
+                        ->all(),
+                ];
+            }
+        };
+    }
+
+    public function start(): void {}
+
+    /**
+     * @return array<int>
+     */
+    public function getDialogIds(): array
+    {
+        return array_keys(self::$histories);
     }
 }

@@ -11,6 +11,8 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TelegramSupportSyncService
 {
@@ -21,23 +23,35 @@ class TelegramSupportSyncService
     public function sync(): array
     {
         if (! config('services.telegram_support.enabled')) {
+            Log::info('Telegram support sync skipped', ['status' => 'disabled']);
+
             return ['status' => 'disabled', 'synced' => 0];
         }
 
+        $account = $this->supportAccount();
+
         if (! config('services.telegram_support.api_id') || ! config('services.telegram_support.api_hash')) {
-            return ['status' => 'unconfigured', 'synced' => 0];
+            return $this->finish($account, ['status' => 'unconfigured', 'synced' => 0]);
         }
 
-        if (! class_exists(\danog\MadelineProto\API::class)) {
-            return ['status' => 'missing_madelineproto', 'synced' => 0];
+        $clientClass = (string) config('services.telegram_support.client_class');
+        if ($clientClass === '' || ! class_exists($clientClass)) {
+            return $this->finish($account, ['status' => 'missing_madelineproto', 'synced' => 0]);
         }
 
-        $messages = $this->fetchRecentMadelineMessages();
-        if ($messages === []) {
-            return ['status' => 'ok', 'synced' => 0, 'dates' => []];
-        }
+        try {
+            $messages = $this->fetchIncrementalMadelineMessages($account, $clientClass);
+            if ($messages === []) {
+                return $this->finish($account, ['status' => 'ok', 'synced' => 0, 'dates' => []], true, []);
+            }
 
-        return $this->syncNormalizedMessages($messages);
+            $result = $this->syncNormalizedMessages($messages, $account->name);
+            $this->updateSyncState($account->refresh(), $messages);
+
+            return $this->finish($account, $result, true, $messages);
+        } catch (Throwable $e) {
+            return $this->fail($account, $e);
+        }
     }
 
     /**
@@ -51,7 +65,6 @@ class TelegramSupportSyncService
                 'session_path' => config('services.telegram_support.session'),
                 'api_id' => config('services.telegram_support.api_id'),
                 'is_enabled' => (bool) config('services.telegram_support.enabled'),
-                'last_synced_at' => now(),
             ],
         );
 
@@ -144,7 +157,7 @@ class TelegramSupportSyncService
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function fetchRecentMadelineMessages(): array
+    private function fetchIncrementalMadelineMessages(TelegramSupportAccount $account, string $clientClass): array
     {
         $session = (string) config('services.telegram_support.session');
         $settings = [
@@ -154,14 +167,19 @@ class TelegramSupportSyncService
             ],
         ];
 
-        $client = new \danog\MadelineProto\API($session, $settings);
+        $client = new $clientClass($session, $settings);
         $client->start();
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
         $dialogs = $client->getDialogIds();
         $messages = [];
+        $peerState = $account->sync_state['peers'] ?? [];
 
         foreach ($dialogs as $peer) {
+            $peerId = $this->extractTelegramId($peer);
+            $cursor = $peerId ? ($peerState[(string) $peerId] ?? []) : [];
+            $minId = (int) ($cursor['last_message_id'] ?? 0);
+
             $history = $client->messages->getHistory([
                 'peer' => $peer,
                 'offset_id' => 0,
@@ -169,19 +187,25 @@ class TelegramSupportSyncService
                 'add_offset' => 0,
                 'limit' => $limit,
                 'max_id' => 0,
-                'min_id' => 0,
+                'min_id' => $minId,
                 'hash' => 0,
             ]);
 
             foreach (($history['messages'] ?? []) as $message) {
                 $normalized = $this->normalizeMadelineMessage($peer, $message);
-                if ($normalized !== null) {
+                if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
                     $messages[] = $normalized;
                 }
             }
         }
 
-        return $messages;
+        return collect($messages)
+            ->sortBy([
+                ['sent_at', 'asc'],
+                ['telegram_message_id', 'asc'],
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -212,6 +236,98 @@ class TelegramSupportSyncService
             'text' => $text,
             'sent_at' => CarbonImmutable::createFromTimestamp((int) $message['date'], config('app.timezone'))->toDateTimeString(),
             'raw_madeline' => $message,
+        ];
+    }
+
+    private function supportAccount(string $accountName = 'support'): TelegramSupportAccount
+    {
+        return TelegramSupportAccount::firstOrCreate(
+            ['name' => $accountName],
+            [
+                'session_path' => config('services.telegram_support.session'),
+                'api_id' => config('services.telegram_support.api_id'),
+                'is_enabled' => (bool) config('services.telegram_support.enabled'),
+            ],
+        );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $messages
+     */
+    private function updateSyncState(TelegramSupportAccount $account, array $messages): void
+    {
+        $state = $account->sync_state ?? [];
+        $state['peers'] ??= [];
+
+        foreach ($messages as $message) {
+            $peerKey = (string) $message['telegram_chat_id'];
+            $current = $state['peers'][$peerKey] ?? [];
+            $messageId = (int) $message['telegram_message_id'];
+
+            if ($messageId >= (int) ($current['last_message_id'] ?? 0)) {
+                $state['peers'][$peerKey] = [
+                    'last_message_id' => $messageId,
+                    'last_sent_at' => $message['sent_at'],
+                ];
+            }
+        }
+
+        $account->forceFill([
+            'sync_state' => $state,
+            'last_successful_sync_at' => now(),
+            'last_sync_error' => null,
+        ])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     * @param  array<int, array<string, mixed>>  $messages
+     * @return array<string, mixed>
+     */
+    private function finish(
+        TelegramSupportAccount $account,
+        array $result,
+        bool $successful = false,
+        array $messages = [],
+    ): array {
+        $account->forceFill([
+            'session_path' => config('services.telegram_support.session'),
+            'api_id' => config('services.telegram_support.api_id'),
+            'is_enabled' => (bool) config('services.telegram_support.enabled'),
+            'last_synced_at' => now(),
+            'last_successful_sync_at' => $successful ? now() : $account->last_successful_sync_at,
+            'last_sync_error' => $successful ? null : $account->last_sync_error,
+        ])->save();
+
+        Log::info('Telegram support sync finished', [
+            'status' => $result['status'] ?? 'unknown',
+            'synced' => $result['synced'] ?? 0,
+            'dates' => $result['dates'] ?? [],
+            'messages_seen' => count($messages),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fail(TelegramSupportAccount $account, Throwable $e): array
+    {
+        $account->forceFill([
+            'last_synced_at' => now(),
+            'last_sync_error' => $e->getMessage(),
+        ])->save();
+
+        Log::error('Telegram support sync failed', [
+            'error' => $e->getMessage(),
+            'exception' => $e::class,
+        ]);
+
+        return [
+            'status' => 'error',
+            'synced' => 0,
+            'error' => $e->getMessage(),
         ];
     }
 

@@ -35,7 +35,15 @@ class SyncTelegramSupport extends Command
             $result = $sync->sync();
         }
 
-        $this->info('Telegram support sync: '.$result['status'].'; synced='.$result['synced']);
+        $line = 'Telegram support sync: '.$result['status'].'; synced='.$result['synced'];
+        if (! empty($result['dates'])) {
+            $line .= '; dates='.implode(',', $result['dates']);
+        }
+        if (! empty($result['error'])) {
+            $line .= '; error='.$result['error'];
+        }
+
+        $this->info($line);
 
         return self::SUCCESS;
     }
