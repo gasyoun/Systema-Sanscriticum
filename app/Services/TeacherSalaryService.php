@@ -450,6 +450,126 @@ class TeacherSalaryService
         return count($userIds);
     }
 
+    /** percent-модели ЗП (доля выручки × %) — только для них работает picker поздних оплат. */
+    private const PERCENT_SALARY_TYPES = ['percent', 'percent_per_block'];
+
+    /**
+     * Множество уже выплаченных долей платежей в виде set ключей
+     * "{course_id}:{block_number}:{payment_id}" => true. Собирается из аудита всех
+     * выплат преподавателя: и из обычного состава блока (breakdown.payments под
+     * breakdown.course_id/block_number), и из ранее добавленных поздних оплат
+     * (breakdown.prior_blocks_paid). Используется, чтобы не предлагать и не
+     * задвоить уже оплаченное.
+     *
+     * @return array<string, true>
+     */
+    public function paidShareKeys(Teacher $teacher): array
+    {
+        $keys = [];
+
+        foreach ($teacher->payouts()->whereNotNull('breakdown')->get() as $payout) {
+            $b = $payout->breakdown ?? [];
+            $courseId = $b['course_id'] ?? null;
+            $block = $b['block_number'] ?? null;
+
+            if ($courseId !== null && $block !== null) {
+                foreach ($b['payments'] ?? [] as $line) {
+                    if (isset($line['payment_id'])) {
+                        $keys[$courseId.':'.$block.':'.$line['payment_id']] = true;
+                    }
+                }
+            }
+
+            foreach ($b['prior_blocks_paid'] ?? [] as $item) {
+                if (isset($item['course_id'], $item['block_number'], $item['payment_id'])) {
+                    $keys[$item['course_id'].':'.$item['block_number'].':'.$item['payment_id']] = true;
+                }
+            }
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Доли платежей с прошлых блоков всех percent-курсов преподавателя, которые
+     * ещё НЕ вошли ни в одну выплату — кандидаты на добавление в текущий расчёт.
+     * Исключаем: уже выплаченное (paidShareKeys), текущую пару (course, block) —
+     * она уже в base_revenue, и блоки, ещё не начавшиеся (starts_at в будущем).
+     *
+     * @return list<array{key:string,course_id:int,course_title:string,block_number:int,payment_id:int,user_id:int,user_name:string,amount:float,share:float,percent:float,teacher_amount:float}>
+     */
+    public function availablePriorBlockPayments(Teacher $teacher, ?int $excludeCourseId, ?int $excludeBlockNumber, float $fallbackPercent = 0.0): array
+    {
+        $paid = $this->paidShareKeys($teacher);
+        $today = Carbon::today()->toDateString();
+        $items = [];
+
+        foreach ($teacher->courses as $course) {
+            if (self::isTechnicalCourse($course) || ! in_array($course->salary_type, self::PERCENT_SALARY_TYPES, true)) {
+                continue;
+            }
+
+            // У курса процент может быть не задан (salary_value=0) — тогда берём
+            // процент из текущего расчёта (поле калькулятора).
+            $percent = (float) $course->salary_value ?: $fallbackPercent;
+            $blockNumbers = $this->blockNumbersFor($course->id);
+            // [number => 'Y-m-d'] для датированных блоков — чтобы отсечь ещё не начавшиеся.
+            $blockStarts = CourseBlock::query()
+                ->where('course_id', $course->id)
+                ->whereNotNull('starts_at')
+                ->get(['number', 'starts_at'])
+                ->mapWithKeys(fn (CourseBlock $cb) => [(int) $cb->number => $cb->starts_at->toDateString()])
+                ->all();
+
+            foreach ($this->coursePayments($course->id) as $p) {
+                if (in_array($p->tariff, self::NON_REVENUE_TARIFFS, true) || (float) $p->amount <= 0) {
+                    continue;
+                }
+
+                $covered = $this->coveredBlockNumbers($p, $blockNumbers);
+                if (empty($covered)) {
+                    continue;
+                }
+                $share = round($this->accrualAmount($p, false) / count($covered), 2);
+
+                foreach ($covered as $block) {
+                    // Текущая пара (курс, блок) уже учтена в base_revenue.
+                    if ($excludeCourseId === $course->id && $excludeBlockNumber === $block) {
+                        continue;
+                    }
+                    // Уже выплачено ранее.
+                    if (isset($paid[$course->id.':'.$block.':'.$p->id])) {
+                        continue;
+                    }
+                    // Блок ещё не начался (датированный будущий) — не «прошлый».
+                    $start = $blockStarts[$block] ?? null;
+                    if ($start !== null && $start > $today) {
+                        continue;
+                    }
+
+                    $items[] = [
+                        'key' => $course->id.':'.$block.':'.$p->id,
+                        'course_id' => $course->id,
+                        'course_title' => (string) $course->title,
+                        'block_number' => $block,
+                        'payment_id' => $p->id,
+                        'user_id' => (int) $p->user_id,
+                        'user_name' => $p->user?->name ?? ('#'.$p->user_id),
+                        'amount' => round((float) $p->amount, 2),
+                        'share' => $share,
+                        'percent' => $percent,
+                        'teacher_amount' => round($share * $percent / 100, 2),
+                    ];
+                }
+            }
+        }
+
+        usort($items, fn ($a, $b) => [$a['course_title'], $a['block_number'], $a['user_name']]
+            <=> [$b['course_title'], $b['block_number'], $b['user_name']]);
+
+        return $items;
+    }
+
     /**
      * Итог выплаты по формуле калькулятора:
      *   (база × коэф%) × процент_препода% + допзанятия × коэф% + доплата.
@@ -458,10 +578,12 @@ class TeacherSalaryService
      * прибавляется к итогу как есть (без коэффициента и процента).
      * Удержание — фиксированный вычет из итога (штраф/аванс/корректировка),
      * вычитается по модулю как есть (без коэффициента и процента).
+     * Поздние оплаты прошлых блоков — готовые рубли (% уже применён к доле
+     * платежа), прибавляются к итогу как есть (без коэффициента и процента).
      */
-    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0): float
+    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0, float $priorBlocksTotal = 0.0): float
     {
-        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction), 2);
+        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal, 2);
     }
 
     /**
@@ -755,6 +877,7 @@ class TeacherSalaryService
     {
         return $this->coursePaymentsCache[$courseId] ??= Payment::query()
             ->where('course_id', $courseId)
+            ->with('user:id,name')
             ->paid()
             ->real()
             ->get();

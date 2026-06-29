@@ -85,6 +85,23 @@
                                     </tr>
                                 @endif
 
+                                @php $priorBlocks = $b['prior_blocks_paid'] ?? []; @endphp
+                                @if (count($priorBlocks) > 0)
+                                    <tr>
+                                        <td colspan="2" style="padding: 12px 0 4px; color: #555; border-top: 1px solid #eee; font-weight: bold;">Поздние оплаты прошлых блоков</td>
+                                    </tr>
+                                    @foreach ($priorBlocks as $pb)
+                                        <tr>
+                                            <td style="padding: 4px 0 4px 16px; color: #777;">{{ $pb['course_title'] ?? '' }} · Блок {{ $pb['block_number'] ?? '' }} · {{ $pb['user_name'] ?? '' }}</td>
+                                            <td style="padding: 4px 0; text-align: right;">{{ $money($pb['teacher_amount'] ?? 0) }}</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr>
+                                        <td style="padding: 4px 0; color: #555;">Итого поздних оплат</td>
+                                        <td style="padding: 4px 0; text-align: right; font-weight: bold;">{{ $money($b['prior_blocks_total'] ?? 0) }}</td>
+                                    </tr>
+                                @endif
+
                                 <tr>
                                     <td style="padding: 12px 0 6px; color: #555; border-top: 1px solid #eee;">Итого в рублях</td>
                                     <td style="padding: 12px 0 6px; text-align: right; font-weight: bold; border-top: 1px solid #eee;">{{ $money($payout?->amount) }}</td>
