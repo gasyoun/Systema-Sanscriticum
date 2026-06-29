@@ -31,7 +31,6 @@
 
                     <tr>
                         <td style="padding: 36px 40px; color: #1A1A1A; font-size: 16px; line-height: 1.6;">
-                            <p style="margin: 0 0 16px;">Здравствуйте{{ $payout?->teacher?->name ? ', '.$payout->teacher->name : '' }}!</p>
                             <p style="margin: 0 0 20px;">Расчёт выплаты за блок
                                 <strong>№{{ $b['block_number'] ?? '—' }}</strong>@if ($payout?->course?->title) курса «<strong>{{ $payout->course->title }}</strong>»@endif@if ($period) ({{ $period }})@endif:</p>
 
