@@ -396,6 +396,12 @@ class TeacherSalaries extends Page implements HasTable
                     ? (int) ($data['student_count'] ?? 0)
                     : collect($detail['lines'])->pluck('user_id')->unique()->count();
 
+                // Состав слушателей для письма: платные (платёж > 0) и льготники
+                // (нулевая оплата). Считаем из платежей, независимо от модели ЗП.
+                $paidStudentCount = collect($detail['lines'])->pluck('user_id')->unique()->count();
+                $freeStudentCount = app(TeacherSalaryService::class)
+                    ->blockFreeStudentCount($courseId, $blockNumber, $groupId);
+
                 // Валютная конвертация (PayPal): курс на выбранную дату, сумма в валюте справочная.
                 $currency = $data['payout_currency'] ?: null;
                 $rate = (float) ($data['exchange_rate'] ?? 0);
@@ -428,6 +434,8 @@ class TeacherSalaries extends Page implements HasTable
                         'teacher_percent' => $pct,
                         'fixed_rate' => $isFixed ? $fixedRate : null,
                         'student_count' => $studentCount,
+                        'paid_student_count' => $paidStudentCount,
+                        'free_student_count' => $freeStudentCount,
                         'extras' => array_values($extras),
                         'extras_total' => $extrasTotal,
                         'surcharge' => $surcharge,

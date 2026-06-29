@@ -149,7 +149,12 @@ class SalaryPayoutLedgerTest extends TestCase
             'exchange_rate' => 100.0,
             'rate_date' => '2026-05-08',
             'amount_foreign' => 132.48,
-            'breakdown' => ['block_number' => 1, 'student_count' => 2],
+            'breakdown' => [
+                'block_number' => 1,
+                'student_count' => 2,
+                'paid_student_count' => 2,
+                'free_student_count' => 1,
+            ],
         ]);
 
         // render() компилирует blade — ловит ParseError (inline @if после слова).
@@ -157,6 +162,45 @@ class SalaryPayoutLedgerTest extends TestCase
 
         $this->assertStringContainsString('Курс PayPal на 08.05.2026', $html);
         $this->assertStringContainsString('132.48 €', $html);
+        $this->assertStringContainsString('Всего студентов', $html);
+        $this->assertStringContainsString('льготников', $html);
+        // Всего 3 = платных 2 + льготников 1.
+        $this->assertMatchesRegularExpression('/Всего студентов.*?3/s', $html);
+        $this->assertMatchesRegularExpression('/льготников.*?1/s', $html);
+    }
+
+    /** @test */
+    public function block_free_student_count_counts_only_zero_amount_real_payments(): void
+    {
+        $course = Course::factory()->create();
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true]);
+
+        Payment::withoutEvents(function () use ($course) {
+            $paid = User::factory()->create();
+            $free = User::factory()->create();
+            $promised = User::factory()->create();
+
+            // Платный — не льготник.
+            Payment::create([
+                'user_id' => $paid->id, 'course_id' => $course->id, 'amount' => 1000,
+                'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+            ]);
+            // Льготник — реальная нулевая оплата.
+            Payment::create([
+                'user_id' => $free->id, 'course_id' => $course->id, 'amount' => 0,
+                'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+            ]);
+            // Доступ «под честное слово» (conditional) — не льготник.
+            Payment::create([
+                'user_id' => $promised->id, 'course_id' => $course->id, 'amount' => 0,
+                'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+                'is_conditional' => true,
+            ]);
+        });
+
+        $free = app(TeacherSalaryService::class)->blockFreeStudentCount($course->id, 1, null);
+
+        $this->assertSame(1, $free);
     }
 
     /** @test */
