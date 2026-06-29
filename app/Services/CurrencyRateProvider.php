@@ -52,9 +52,14 @@ class CurrencyRateProvider
         // Курс за прошедший день неизменен — кэшируем надолго; за сегодня — на час.
         $ttl = $day < Carbon::today()->toDateString() ? now()->addDays(30) : now()->addHour();
 
-        return Cache::remember("fx:{$currency}:{$day}", $ttl, function () use ($currency, $day, $key): ?float {
+        // ВАЖНО: Redis-кэш отдаёт числовые значения строкой (RedisStore::unserialize:
+        // is_numeric → возвращает как есть), поэтому приводим к float, иначе ?float
+        // нарушается на cache-hit. Локальный array-кэш этого не делает.
+        $rate = Cache::remember("fx:{$currency}:{$day}", $ttl, function () use ($currency, $day, $key): ?float {
             return $this->fetch($currency, $day, (string) $key);
         });
+
+        return $rate === null ? null : (float) $rate;
     }
 
     /** Запрос к API и расчёт кросс-курса. Любая проблема → null (не кэшируется как число). */

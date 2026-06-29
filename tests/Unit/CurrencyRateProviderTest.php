@@ -53,6 +53,20 @@ class CurrencyRateProviderTest extends TestCase
     }
 
     /** @test */
+    public function returns_float_on_cache_hit_even_when_stored_as_numeric_string(): void
+    {
+        // Redis-кэш отдаёт числа строкой — воспроизводим, кладя строку в кэш.
+        Cache::put('fx:USD:2026-05-10', '90.0000', now()->addHour());
+        Http::fake(); // не должны ходить в сеть при попадании в кэш
+
+        $rate = app(CurrencyRateProvider::class)->rublesPerUnit('USD', Carbon::parse('2026-05-10'));
+
+        $this->assertIsFloat($rate);
+        $this->assertEqualsWithDelta(90.0, $rate, 0.0001);
+        Http::assertNothingSent();
+    }
+
+    /** @test */
     public function returns_null_when_api_reports_failure(): void
     {
         Http::fake([
