@@ -498,7 +498,7 @@ class TeacherSalaryService
      *
      * @return list<array{key:string,course_id:int,course_title:string,block_number:int,payment_id:int,user_id:int,user_name:string,amount:float,share:float,percent:float,teacher_amount:float}>
      */
-    public function availablePriorBlockPayments(Teacher $teacher, ?int $excludeCourseId, ?int $excludeBlockNumber): array
+    public function availablePriorBlockPayments(Teacher $teacher, ?int $excludeCourseId, ?int $excludeBlockNumber, float $fallbackPercent = 0.0): array
     {
         $paid = $this->paidShareKeys($teacher);
         $today = Carbon::today()->toDateString();
@@ -509,7 +509,9 @@ class TeacherSalaryService
                 continue;
             }
 
-            $percent = (float) $course->salary_value;
+            // У курса процент может быть не задан (salary_value=0) — тогда берём
+            // процент из текущего расчёта (поле калькулятора).
+            $percent = (float) $course->salary_value ?: $fallbackPercent;
             $blockNumbers = $this->blockNumbersFor($course->id);
             // [number => 'Y-m-d'] для датированных блоков — чтобы отсечь ещё не начавшиеся.
             $blockStarts = CourseBlock::query()

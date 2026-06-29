@@ -260,6 +260,31 @@ class SalaryPayoutLedgerTest extends TestCase
     }
 
     /** @test */
+    public function available_prior_block_payments_uses_fallback_percent_when_course_percent_is_zero(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        // salary_value = 0 — процент в курсе не задан, вводится в калькуляторе.
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 0,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true, 'starts_at' => '2026-02-01']);
+
+        $user = User::factory()->create();
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+        ]));
+
+        $items = app(TeacherSalaryService::class)
+            ->availablePriorBlockPayments($teacher->fresh('courses'), $course->id, 2, fallbackPercent: 25.0);
+
+        $this->assertCount(1, $items);
+        $this->assertEqualsWithDelta(25.0, $items[0]['percent'], 0.01);
+        $this->assertEqualsWithDelta(250.0, $items[0]['teacher_amount'], 0.01); // 1000 × 25%
+    }
+
+    /** @test */
     public function available_prior_block_payments_excludes_already_paid_shares(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
