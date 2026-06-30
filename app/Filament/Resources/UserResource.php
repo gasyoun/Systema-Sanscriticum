@@ -165,7 +165,13 @@ class UserResource extends Resource
                             ->label('Программы / Доступы')
                             ->multiple()
                             ->relationship('groups', 'name')
-                            ->preload(),
+                            ->preload()
+                            // ВНИМАНИЕ: снятие галочки здесь делает жёсткий detach
+                            // (sync удаляет строку group_user) → студент ТЕРЯЕТ доступ
+                            // к курсу в ЛК. Это инструмент выдачи/ОТЗЫВА доступа.
+                            // Для «больше не учится, но доступ сохранить» используйте
+                            // раздел «Группы (активный состав)» ниже (мягкий выход).
+                            ->helperText('⚠️ Снятие галочки ОТЗЫВАЕТ доступ к курсу (студент перестанет видеть его в кабинете). Если студент просто закончил/ушёл, но доступ к оплаченному нужно сохранить — не трогайте это поле, а используйте раздел «Группы (активный состав)» ниже.'),
 
                         Forms\Components\Select::make('role')
                             ->label('Роль в админке')
@@ -1338,6 +1344,7 @@ class UserResource extends Resource
         return [
             // ВОТ ЗДЕСЬ ИСПРАВЛЕНИЕ: добавили UserResource\
             UserResource\RelationManagers\CoursesRelationManager::class,
+            UserResource\RelationManagers\GroupsRelationManager::class,
             UserResource\RelationManagers\PaymentsRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,

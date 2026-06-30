@@ -81,7 +81,9 @@ class StudentGroupResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->withCount('users');
+        // Считаем только активный состав (вышедшие сохраняют доступ, но в счётчик
+        // «Учеников» не входят). Алиас сохраняет ключ колонки users_count.
+        $query = parent::getEloquentQuery()->withCount('activeUsers as users_count');
 
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {

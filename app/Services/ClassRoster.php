@@ -21,13 +21,15 @@ class ClassRoster
      */
     public static function query(Schedule $schedule): ?Builder
     {
+        // Только АКТИВНЫЙ состав: вышедшие/выпускники (group_user.left_at != null)
+        // сохраняют доступ к урокам, но в ожидаемый ростер занятия не входят.
         if ($schedule->group_id) {
-            return User::query()->whereHas('groups', fn (Builder $q) => $q->where('groups.id', $schedule->group_id));
+            return User::query()->whereHas('activeGroups', fn (Builder $q) => $q->where('groups.id', $schedule->group_id));
         }
 
         if ($schedule->course_id) {
-            // Студенты курса — через группы (pivot course_group, см. Group::courses()).
-            return User::query()->whereHas('groups.courses', fn (Builder $q) => $q->where('courses.id', $schedule->course_id));
+            // Студенты курса — через активные группы (pivot course_group, см. Group::courses()).
+            return User::query()->whereHas('activeGroups.courses', fn (Builder $q) => $q->where('courses.id', $schedule->course_id));
         }
 
         return null;

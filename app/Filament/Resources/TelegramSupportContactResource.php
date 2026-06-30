@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\TelegramSupport;
 use App\Filament\Resources\TelegramSupportContactResource\Pages;
 use App\Models\TelegramSupportContact;
 use App\Models\User;
@@ -15,13 +16,15 @@ class TelegramSupportContactResource extends Resource
 {
     protected static ?string $model = TelegramSupportContact::class;
 
+    protected static ?string $cluster = TelegramSupport::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
     protected static ?string $navigationGroup = 'Пользователи';
 
-    protected static ?string $navigationLabel = 'Telegram support contacts';
+    protected static ?string $navigationLabel = 'Контакты';
 
-    protected static ?int $navigationSort = 65;
+    protected static ?int $navigationSort = 20;
 
     public static function canAccess(): bool
     {
