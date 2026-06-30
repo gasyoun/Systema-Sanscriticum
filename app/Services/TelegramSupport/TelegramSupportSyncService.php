@@ -318,6 +318,9 @@ class TelegramSupportSyncService
             return null;
         }
         $telegramUserId = $this->extractTelegramId($message['from_id'] ?? null);
+        if (! $telegramUserId && empty($message['out']) && $this->isPrivatePeer($message['peer_id'] ?? $peer)) {
+            $telegramUserId = $chatId;
+        }
         $sender = $telegramUserId ? ($usersById[$telegramUserId] ?? null) : null;
 
         return [
@@ -331,6 +334,15 @@ class TelegramSupportSyncService
             'contact_username' => $sender['username'] ?? null,
             'raw_madeline' => $message,
         ];
+    }
+
+    private function isPrivatePeer(mixed $value): bool
+    {
+        if (is_int($value) || is_string($value)) {
+            return true;
+        }
+
+        return is_array($value) && isset($value['user_id']);
     }
 
     /**
@@ -546,6 +558,10 @@ class TelegramSupportSyncService
         $telegramUserId = Arr::get($payload, 'telegram_user_id');
 
         if (! $telegramUserId && $direction !== 'incoming') {
+            return null;
+        }
+
+        if (! $telegramUserId && empty($payload['contact_name']) && empty($payload['sender_name']) && empty($payload['contact_username']) && empty($payload['sender_username'])) {
             return null;
         }
 
