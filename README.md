@@ -378,6 +378,37 @@ Personal access tokens на `User` (`HasApiTokens`): `POST /api/v1/auth/login`
 `courses/{slug}/lessons` (флаги `locked` / `is_completed`). Та же логика доступа,
 что и в вебе: группы + оплаченные тарифы + grant.
 
+### 12. Telegram support analytics (`/admin/telegram-support-analytics`)
+
+Отдельный аналитический слой для **support-аккаунта Telegram**: импортирует
+сообщения через MadelineProto, нормализует их в `telegram_support_messages`,
+собирает дневные разговоры (`chat_id + date`), считает first-time contacts,
+unanswered, human/AI replies и топики по keyword-правилам.
+
+Команда:
+
+```bash
+php artisan telegram-support:sync
+php artisan telegram-support:sync --payload=storage/app/support-sample.json
+```
+
+В проде команда повешена в расписание (`telegram-support-sync`) и является no-op,
+пока `TELEGRAM_SUPPORT_ENABLED=false`. Для live-импорта нужны:
+`TELEGRAM_SUPPORT_API_ID`, `TELEGRAM_SUPPORT_API_HASH`,
+`TELEGRAM_SUPPORT_SESSION`, опционально лимиты `TELEGRAM_SUPPORT_HISTORY_LIMIT`,
+`TELEGRAM_SUPPORT_DIALOG_LIMIT`, `TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT`.
+
+Админка даёт:
+- страницу аналитики `/admin/telegram-support-analytics`;
+- CRUD keyword-топиков и responder-mapping;
+- ручную привязку Telegram support contact → `User`;
+- авто-привязку контактов по `telegram_id`, username и имени, когда это однозначно.
+
+Файлы: [TelegramSupportSyncService.php](app/Services/TelegramSupport/TelegramSupportSyncService.php),
+[SupportConversationAggregator.php](app/Services/TelegramSupport/SupportConversationAggregator.php),
+[TelegramSupportAnalytics.php](app/Filament/Pages/TelegramSupportAnalytics.php),
+[TelegramSupportContactResource.php](app/Filament/Resources/TelegramSupportContactResource.php).
+
 ---
 
 ## Интеграции и вебхуки
@@ -396,6 +427,11 @@ Personal access tokens на `User` (`HasApiTokens`): `POST /api/v1/auth/login`
 **Чат поддержки** реализован поверх мессенджеров: Telegram/VK-бот → лог
 `ChatMessage` → AI-автоответ с историей → передача куратору («позови куратора») →
 ответ из админ-панели Helpdesk/Dialogs.
+
+**Telegram support analytics** — не пользовательский бот и не вебхук, а импорт
+истории отдельного support-аккаунта через MadelineProto. Включается переменными
+`TELEGRAM_SUPPORT_*`; первый login/session выполняется вручную в терминале, дальше
+`telegram-support:sync` работает как cron-safe инкрементальный импорт.
 
 **Безопасность секретов.** Все webhook-секреты и bot-токены шифруются в БД через
 Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX секрет идёт
@@ -480,6 +516,11 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   расписания (Server-to-Server OAuth), автоимпорт записи по вебхуку
   `recording.completed` → урок, посещаемость по `participant_joined/left` →
   `webinar_attendances` → секция в `TeacherAnalytics`. Включается кредами Zoom-приложения.
+- [x] **Telegram support analytics** — импорт support-аккаунта через MadelineProto,
+  normalized storage, дневные conversation-агрегаты, keyword-топики, first-time /
+  unanswered / human-vs-AI метрики, Filament-страница аналитики и CRUD привязок
+  support contact → `User`. По умолчанию выключено флагом
+  `TELEGRAM_SUPPORT_ENABLED=false`.
 
 ### ✅ P3 / следующая волна — закрыто
 
@@ -487,7 +528,9 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 (не код): креды Zoom (OAuth + Event Subscription) и VK/Yandex (social-auth),
 секреты бот-вебхуков, миграции, Horizon-воркер на очереди `lectures`, флаги
 `PRANA_DECAY_ENABLED` / `REFERRAL_CREDIT_AMOUNT`, наполнение магазина праны
-админом. Подробности — в `Uprava/GTD_NEXT_ACTIONS.md` (раздел `@DO`).
+админом, live-login support-аккаунта Telegram и включение
+`TELEGRAM_SUPPORT_ENABLED=true`. Подробности — в `Uprava/GTD_NEXT_ACTIONS.md`
+(раздел `@DO`).
 
 - [x] **P3 · Мобильная адаптация кабинета** — аудит показал, что кабинет уже
   адаптивен (нет горизонтального оверфлоу на 375px на дашборде, плеере урока,
