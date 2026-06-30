@@ -27,6 +27,18 @@ class TelegramSupportAnalyticsTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Реальный путь синка инстанцирует danog\MadelineProto\Settings. Пакет —
+     * опциональная зависимость (нужен PHP >= 8.2.14, на проде 8.1 не ставится),
+     * поэтому без него эти тесты пропускаем.
+     */
+    private function skipWithoutMadelineProto(): void
+    {
+        if (! class_exists(\danog\MadelineProto\Settings::class)) {
+            $this->markTestSkipped('danog/madelineproto не установлен (опциональная зависимость).');
+        }
+    }
+
     public function test_sync_command_reports_unconfigured_and_missing_client_without_failing_scheduler(): void
     {
         config([
@@ -236,6 +248,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_uses_incremental_peer_cursor(): void
     {
+        $this->skipWithoutMadelineProto();
+
         config([
             'app.timezone' => 'Europe/Moscow',
             'services.telegram_support.enabled' => true,
@@ -285,6 +299,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_retries_once_after_auth_restart(): void
     {
+        $this->skipWithoutMadelineProto();
+
         config([
             'app.timezone' => 'Europe/Moscow',
             'services.telegram_support.enabled' => true,
@@ -314,6 +330,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_limits_dialogs_per_run_to_avoid_flooding(): void
     {
+        $this->skipWithoutMadelineProto();
+
         config([
             'app.timezone' => 'Europe/Moscow',
             'services.telegram_support.enabled' => true,
