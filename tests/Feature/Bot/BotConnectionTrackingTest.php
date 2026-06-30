@@ -76,6 +76,8 @@ class BotConnectionTrackingTest extends TestCase
     {
         $this->assertSame('foo', User::normalizeTelegramUsername('@foo'));
         $this->assertSame('foo', User::normalizeTelegramUsername(' foo '));
+        $this->assertSame('foo', User::normalizeTelegramUsername('https://t.me/foo/'));
+        $this->assertSame('foo', User::normalizeTelegramUsername('t.me/foo'));
         $this->assertNull(User::normalizeTelegramUsername(''));
         $this->assertNull(User::normalizeTelegramUsername(null));
     }

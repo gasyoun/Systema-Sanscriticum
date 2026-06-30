@@ -19,6 +19,7 @@ use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -475,17 +476,11 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame($student->id, $chat->refresh()->linked_user_id);
     }
 
-    public function test_auto_linker_matches_unique_telegram_username_from_user_note(): void
+    public function test_auto_linker_matches_unique_telegram_username_from_user_field(): void
     {
-        if (! Schema::hasColumn('users', 'note')) {
-            Schema::table('users', function ($table) {
-                $table->text('note')->nullable();
-            });
-        }
-
         $student = User::factory()->create([
             'name' => 'Username Student',
-            'note' => "Telegram: @known_student\nКомментарий: imported",
+            'telegram_username' => 'known_student',
         ]);
         $chat = TelegramSupportChat::create([
             'telegram_chat_id' => 6401,
@@ -504,7 +499,7 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame($student->id, $chat->refresh()->linked_user_id);
     }
 
-    public function test_auto_linker_matches_unique_full_name_when_username_is_unavailable(): void
+    public function test_auto_linker_does_not_match_by_full_name_without_telegram_identity(): void
     {
         $student = User::factory()->create(['name' => 'Exact Telegram Name']);
         $chat = TelegramSupportChat::create([
@@ -519,21 +514,15 @@ class TelegramSupportAnalyticsTest extends TestCase
 
         $result = app(TelegramSupportSyncService::class)->syncNormalizedMessages([]);
 
-        $this->assertSame(1, $result['auto_linked']);
-        $this->assertSame($student->id, $contact->refresh()->linked_user_id);
+        $this->assertSame(0, $result['auto_linked']);
+        $this->assertNull($contact->refresh()->linked_user_id);
     }
 
     public function test_madelineproto_sync_enriches_contacts_from_history_users_payload(): void
     {
-        if (! Schema::hasColumn('users', 'note')) {
-            Schema::table('users', function ($table) {
-                $table->text('note')->nullable();
-            });
-        }
-
         $student = User::factory()->create([
             'name' => 'History User',
-            'note' => 'Telegram: @history_user',
+            'telegram_username' => 'history_user',
         ]);
 
         config([
@@ -572,15 +561,9 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_backfills_existing_contact_profile_and_auto_links(): void
     {
-        if (! Schema::hasColumn('users', 'note')) {
-            Schema::table('users', function ($table) {
-                $table->text('note')->nullable();
-            });
-        }
-
         $student = User::factory()->create([
             'name' => 'Backfill Student',
-            'note' => 'Telegram: @backfill_student',
+            'telegram_username' => 'backfill_student',
         ]);
         $chat = TelegramSupportChat::create([
             'telegram_chat_id' => 6701,
@@ -619,6 +602,77 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame('backfill_student', $contact->username);
         $this->assertSame($student->id, $contact->linked_user_id);
         $this->assertSame($student->id, $chat->refresh()->linked_user_id);
+    }
+
+    public function test_import_students_writes_telegram_username_field_and_keeps_note_clean(): void
+    {
+        File::ensureDirectoryExists(storage_path('app/imports'));
+        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+            implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
+            implode(',', ['1', '', 'Import Student', '@imported_tg', '+79990000000', 'Import@Example.test', '', '', '', 'Обычный студент', '', 'Любит грамматику']),
+        ]));
+
+        $this->artisan('import:academy')
+            ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
+            ->assertExitCode(0);
+
+        $student = User::where('name', 'Import Student')->firstOrFail();
+        $this->assertSame('imported_tg', $student->telegram_username);
+        $this->assertSame('Комментарий: Любит грамматику', $student->note);
+        $this->assertStringNotContainsString('Telegram:', (string) $student->note);
+    }
+
+    public function test_import_students_does_not_overwrite_existing_telegram_username_with_blank_csv(): void
+    {
+        User::factory()->create([
+            'name' => 'Existing Student',
+            'email' => 'existing@example.test',
+            'telegram_username' => 'keep_me',
+        ]);
+
+        File::ensureDirectoryExists(storage_path('app/imports'));
+        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+            implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
+            implode(',', ['1', '', 'Existing Student', '', '+79990000001', 'existing@example.test', '', '', '', 'Обычный студент', '', 'Обновленная заметка']),
+        ]));
+
+        $this->artisan('import:academy')
+            ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
+            ->assertExitCode(0);
+
+        $student = User::where('name', 'Existing Student')->firstOrFail();
+        $this->assertSame('keep_me', $student->telegram_username);
+        $this->assertSame('Комментарий: Обновленная заметка', $student->note);
+    }
+
+    public function test_backfills_telegram_usernames_from_legacy_notes_without_changing_notes(): void
+    {
+        $user = User::factory()->create([
+            'telegram_username' => null,
+            'note' => "Telegram: @legacy_user\nКомментарий: оставить",
+        ]);
+
+        $this->artisan('telegram:backfill-usernames-from-notes --apply')
+            ->assertExitCode(0);
+
+        $fresh = $user->fresh();
+        $this->assertSame('legacy_user', $fresh->telegram_username);
+        $this->assertSame("Telegram: @legacy_user\nКомментарий: оставить", $fresh->note);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function academyImportChoices(): array
+    {
+        return [
+            '1. Преподаватели (готово)',
+            '2. Курсы, Тарифы и Группы (готово)',
+            '3. Блоки (пока пропустим)',
+            '4. Студенты (готово)',
+            '5. Оплаты и Доступы',
+            'Выход',
+        ];
     }
 }
 
