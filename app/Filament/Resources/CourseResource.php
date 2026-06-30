@@ -40,11 +40,10 @@ class CourseResource extends Resource
             return true;
         }
 
-        // Учитель может редактировать только свой курс. Без teacher_id —
-        // никаких прав, иначе NULL === NULL пропустит orphan-курсы.
+        // Учитель может редактировать курс, где он основной ИЛИ со-препод. Без
+        // teacher_id — никаких прав (isTaughtBy(null) === false).
         return $user->isTeacher()
-            && $user->teacher_id !== null
-            && $user->teacher_id === $record->teacher_id;
+            && $record->isTaughtBy($user->teacher_id);
     }
 
     public static function canDelete($record): bool
@@ -63,13 +62,9 @@ class CourseResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher()) {
-            // Учитель без teacher_id (после nullOnDelete каскада или
-            // misconfigured аккаунта) не должен видеть orphan-курсы.
-            if (! $user->teacher_id) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->where('teacher_id', $user->teacher_id);
-            }
+            // Курсы препода: основной ИЛИ со-препод. Без teacher_id — ничего
+            // (scopeForTeacher(null) → whereRaw('1=0')).
+            $query->forTeacher($user->teacher_id);
         }
 
         return $query;
@@ -304,6 +299,47 @@ class CourseResource extends Resource
                             ->label('Ставка (Цифра)')
                             ->numeric()
                             ->helperText('Например: 30 (для 30%) или 5000 (для 5000 руб)'),
+
+                        // Второй (и далее) преподаватель: полный доступ к курсу +
+                        // СВОИ условия ЗП. Начисление независимое — каждый от той же
+                        // выручки по своей ставке. Хранится в pivot course_teacher
+                        // (синхронизируется в CreateCourse/EditCourse).
+                        Forms\Components\Repeater::make('co_teachers')
+                            ->label('Второй преподаватель (доступ наравне + своя ЗП)')
+                            ->dehydrated(false)
+                            ->columnSpanFull()
+                            ->schema([
+                                Forms\Components\Select::make('teacher_id')
+                                    ->label('Преподаватель')
+                                    ->options(function (Forms\Get $get) {
+                                        $primary = $get('../../teacher_id');
+
+                                        return \App\Models\Teacher::query()
+                                            ->when($primary, fn ($q) => $q->whereKeyNot($primary))
+                                            ->orderBy('name')
+                                            ->pluck('name', 'id');
+                                    })
+                                    ->searchable()
+                                    ->required()
+                                    ->distinct(),
+                                Forms\Components\Select::make('salary_type')
+                                    ->label('Схема расчёта')
+                                    ->options([
+                                        'percent' => 'Процент от продаж всего курса (%)',
+                                        'fix_per_student' => 'Фикс за каждого студента (₽)',
+                                        'fix_total' => 'Фикс за весь курс (₽)',
+                                        'percent_per_block' => 'Процент с каждого блока (%)',
+                                        'fix_per_block' => 'Фикс за каждый блок (₽)',
+                                    ])
+                                    ->required(),
+                                Forms\Components\TextInput::make('salary_value')
+                                    ->label('Ставка (Цифра)')
+                                    ->numeric()
+                                    ->helperText('30 (для 30%) или 5000 (₽)'),
+                            ])
+                            ->columns(3)
+                            ->addActionLabel('Добавить преподавателя')
+                            ->defaultItems(0),
                     ])->columns(3),
 
                 // ==========================================
@@ -425,5 +461,26 @@ class CourseResource extends Resource
             'create' => Pages\CreateCourse::route('/create'),
             'edit' => Pages\EditCourse::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Синхронизировать со-преподавателей курса (pivot course_teacher) из строк
+     * репитера формы. Основного препода (course.teacher_id) в pivot не пишем.
+     * Вызывается из CreateCourse::afterCreate и EditCourse::afterSave.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public static function syncCoTeachers(\App\Models\Course $course, array $rows): void
+    {
+        $pivot = collect($rows)
+            ->filter(fn ($r) => ! empty($r['teacher_id']))
+            ->reject(fn ($r) => (int) $r['teacher_id'] === (int) $course->teacher_id)
+            ->mapWithKeys(fn ($r) => [(int) $r['teacher_id'] => [
+                'salary_type' => $r['salary_type'] ?? null,
+                'salary_value' => ($r['salary_value'] ?? '') !== '' ? $r['salary_value'] : null,
+            ]])
+            ->all();
+
+        $course->teachers()->sync($pivot);
     }
 }

@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Teacher extends Model
 {
@@ -16,10 +18,29 @@ class Teacher extends Model
         'payout_currency',
     ];
 
-    // Один преподаватель может вести много курсов
+    // Один преподаватель может вести много курсов (как ОСНОВНОЙ — teacher_id).
     public function courses(): HasMany
     {
         return $this->hasMany(Course::class);
+    }
+
+    /** Курсы, где преподаватель — со-препод (pivot course_teacher, со своими условиями ЗП). */
+    public function coTaughtCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_teacher')
+            ->withPivot(['salary_type', 'salary_value'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Все курсы преподавателя (основные + со-преподаваемые), без дублей. Для
+     * расчёта ЗП: по каждому берутся эффективные условия Course::salaryTermsFor().
+     *
+     * @return Collection<int, Course>
+     */
+    public function allTaughtCourses(): Collection
+    {
+        return $this->courses->merge($this->coTaughtCourses)->unique('id')->values();
     }
 
     // ==========================================

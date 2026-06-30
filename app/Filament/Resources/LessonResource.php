@@ -46,8 +46,7 @@ class LessonResource extends Resource
         }
 
         return $user->isTeacher()
-            && $user->teacher_id
-            && optional($record->course)->teacher_id === $user->teacher_id;
+            && optional($record->course)->isTaughtBy($user->teacher_id) === true;
     }
 
     public static function canDelete($record): bool
@@ -66,13 +65,7 @@ class LessonResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher()) {
-            if (! $user->teacher_id) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereHas('course', function ($q) use ($user) {
-                    $q->where('teacher_id', $user->teacher_id);
-                });
-            }
+            $query->whereHas('course', fn ($q) => $q->forTeacher($user->teacher_id));
         }
 
         return $query;
@@ -97,15 +90,11 @@ class LessonResource extends Resource
                         name: 'course',
                         titleAttribute: 'title',
                         modifyQueryUsing: function (Builder $query) {
-                            // Учитель видит в селекте только свои курсы; админ — все.
-                            // Учителю без teacher_id вообще ничего не показываем.
+                            // Учитель видит в селекте свои курсы (основной ИЛИ
+                            // со-препод); админ — все. Без teacher_id — пусто.
                             $user = auth()->user();
                             if ($user && $user->isTeacher()) {
-                                if (! $user->teacher_id) {
-                                    $query->whereRaw('1 = 0');
-                                } else {
-                                    $query->where('teacher_id', $user->teacher_id);
-                                }
+                                $query->forTeacher($user->teacher_id);
                             }
                         },
                     )
@@ -115,20 +104,8 @@ class LessonResource extends Resource
                     ->searchable()
                     // Серверная валидация: Filament-default Rule::exists для relationship-Select
                     // не накладывает where, поэтому учитель может через POST передать чужой
-                    // course_id и BelongsTo::associate его сохранит. Дополняем явным правилом.
-                    ->rule(function () {
-                        $user = auth()->user();
-                        if ($user?->isTeacher() && $user->teacher_id) {
-                            return \Illuminate\Validation\Rule::exists('courses', 'id')
-                                ->where('teacher_id', $user->teacher_id);
-                        }
-                        if ($user?->isTeacher() && ! $user->teacher_id) {
-                            // Учитель без teacher_id — никакой курс не валиден.
-                            return \Illuminate\Validation\Rule::in([]);
-                        }
-
-                        return null;
-                    })
+                    // course_id. Closure-правило учитывает и основного, и со-препода.
+                    ->rule(Course::teacherCourseValidationRule())
                     ->required()
                     ->live()
                     ->label('Привязать к курсу'),
@@ -383,11 +360,8 @@ class LessonResource extends Resource
                         $q = Course::query()->orderBy('title');
                         $user = auth()->user();
                         if ($user && $user->isTeacher()) {
-                            // Учителю без teacher_id — пустой список (как и scope уроков).
-                            if (! $user->teacher_id) {
-                                return [];
-                            }
-                            $q->where('teacher_id', $user->teacher_id);
+                            // Курсы препода: основной ИЛИ со-препод. Без teacher_id — пусто.
+                            $q->forTeacher($user->teacher_id);
                         }
 
                         return $q->get()
