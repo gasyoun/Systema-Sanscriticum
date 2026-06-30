@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Clusters\TelegramSupport;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
@@ -11,9 +12,13 @@ use Illuminate\Database\Eloquent\Collection;
 
 class TelegramSupportAnalytics extends Page
 {
+    protected static ?string $cluster = TelegramSupport::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
 
-    protected static ?string $navigationLabel = 'Telegram support';
+    protected static ?string $navigationLabel = 'Аналитика';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationGroup = 'Пользователи';
 

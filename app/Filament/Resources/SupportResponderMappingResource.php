@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\TelegramSupport;
 use App\Filament\Resources\SupportResponderMappingResource\Pages;
 use App\Models\SupportResponderMapping;
 use App\Models\User;
@@ -15,11 +16,15 @@ class SupportResponderMappingResource extends Resource
 {
     protected static ?string $model = SupportResponderMapping::class;
 
+    protected static ?string $cluster = TelegramSupport::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-identification';
 
     protected static ?string $navigationGroup = 'Пользователи';
 
-    protected static ?string $navigationLabel = 'Support responders';
+    protected static ?string $navigationLabel = 'Ответчики';
+
+    protected static ?int $navigationSort = 30;
 
     public static function canAccess(): bool
     {

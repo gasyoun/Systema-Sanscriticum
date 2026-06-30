@@ -231,6 +231,7 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications() // Включаем колокольчик
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 \App\Filament\Pages\Dashboard::class,
             ])
