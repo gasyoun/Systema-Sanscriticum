@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Pages\TelegramSupportAnalytics;
+use App\Filament\Resources\TelegramSupportContactResource;
+use App\Filament\Resources\TelegramSupportContactResource\Pages\EditTelegramSupportContact;
 use App\Models\SupportConversation;
 use App\Models\SupportResponderMapping;
 use App\Models\SupportTopicRule;
 use App\Models\TelegramSupportAccount;
+use App\Models\TelegramSupportChat;
+use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -333,6 +338,120 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame('ok', $result['status']);
         $this->assertSame(2, $result['synced']);
         $this->assertSame([5001, 5002], array_column(FakeMadelineProtoClient::$lastHistoryRequests, 'peer'));
+    }
+
+    public function test_sync_auto_links_contact_and_chat_when_user_telegram_id_matches(): void
+    {
+        config(['app.timezone' => 'Europe/Moscow']);
+
+        $student = User::factory()->create(['telegram_id' => 6001]);
+
+        app(TelegramSupportSyncService::class)->syncNormalizedMessages([
+            [
+                'telegram_chat_id' => 6001,
+                'telegram_message_id' => 1,
+                'telegram_user_id' => 6001,
+                'contact_name' => 'Known Student',
+                'direction' => 'incoming',
+                'text' => 'Здравствуйте',
+                'sent_at' => '2026-06-28 12:00:00',
+            ],
+        ]);
+
+        $chat = TelegramSupportChat::where('telegram_chat_id', 6001)->firstOrFail();
+        $contact = TelegramSupportContact::where('telegram_user_id', 6001)->firstOrFail();
+
+        $this->assertSame($student->id, $chat->linked_user_id);
+        $this->assertSame($student->id, $contact->linked_user_id);
+    }
+
+    public function test_sync_does_not_fail_without_users_telegram_id_column(): void
+    {
+        Schema::table('users', function ($table) {
+            $table->dropColumn('telegram_id');
+        });
+
+        $result = app(TelegramSupportSyncService::class)->syncNormalizedMessages([
+            [
+                'telegram_chat_id' => 6101,
+                'telegram_message_id' => 1,
+                'telegram_user_id' => 6101,
+                'direction' => 'incoming',
+                'text' => 'Без колонки telegram_id',
+                'sent_at' => '2026-06-28 12:10:00',
+            ],
+        ]);
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertDatabaseHas('telegram_support_chats', [
+            'telegram_chat_id' => 6101,
+            'linked_user_id' => null,
+        ]);
+    }
+
+    public function test_existing_manual_contact_link_is_not_overwritten_by_auto_link(): void
+    {
+        config(['app.timezone' => 'Europe/Moscow']);
+
+        $autoMatched = User::factory()->create(['telegram_id' => 6201]);
+        $manual = User::factory()->create(['telegram_id' => 6202]);
+
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 6201,
+            'linked_user_id' => $manual->id,
+            'type' => 'private',
+        ]);
+        TelegramSupportContact::create([
+            'telegram_user_id' => 6201,
+            'telegram_support_chat_id' => $chat->id,
+            'linked_user_id' => $manual->id,
+            'name' => 'Manual Link',
+        ]);
+
+        app(TelegramSupportSyncService::class)->syncNormalizedMessages([
+            [
+                'telegram_chat_id' => 6201,
+                'telegram_message_id' => 1,
+                'telegram_user_id' => 6201,
+                'direction' => 'incoming',
+                'text' => 'Не перетирать ручную связку',
+                'sent_at' => '2026-06-28 12:20:00',
+            ],
+        ]);
+
+        $this->assertSame($manual->id, $chat->refresh()->linked_user_id);
+        $this->assertSame(
+            $manual->id,
+            TelegramSupportContact::where('telegram_user_id', 6201)->firstOrFail()->linked_user_id
+        );
+        $this->assertNotSame($autoMatched->id, $chat->linked_user_id);
+    }
+
+    public function test_admin_can_manually_link_support_contact_to_user(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $student = User::factory()->create(['name' => 'Linked Student']);
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 6301,
+            'type' => 'private',
+        ]);
+        $contact = TelegramSupportContact::create([
+            'telegram_user_id' => 6301,
+            'telegram_support_chat_id' => $chat->id,
+            'name' => 'Unmatched Telegram',
+        ]);
+
+        $this->actingAs($admin);
+        $this->assertTrue(TelegramSupportContactResource::canAccess());
+
+        Livewire::actingAs($admin)
+            ->test(EditTelegramSupportContact::class, ['record' => $contact->getRouteKey()])
+            ->set('data.linked_user_id', $student->id)
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame($student->id, $contact->refresh()->linked_user_id);
+        $this->assertSame($student->id, $chat->refresh()->linked_user_id);
     }
 }
 

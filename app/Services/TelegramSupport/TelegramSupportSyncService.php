@@ -18,6 +18,8 @@ use Throwable;
 
 class TelegramSupportSyncService
 {
+    private static bool $loggedMissingTelegramIdColumn = false;
+
     public function __construct(
         private readonly SupportConversationAggregator $aggregator,
     ) {}
@@ -179,7 +181,16 @@ class TelegramSupportSyncService
 
     private function linkedUserFromTelegramId(mixed $telegramUserId): ?User
     {
-        if (! $telegramUserId || ! Schema::hasColumn('users', 'telegram_id')) {
+        if (! $telegramUserId) {
+            return null;
+        }
+
+        if (! Schema::hasColumn('users', 'telegram_id')) {
+            if (! self::$loggedMissingTelegramIdColumn) {
+                Log::warning('Telegram support auto-link disabled: users.telegram_id column is missing');
+                self::$loggedMissingTelegramIdColumn = true;
+            }
+
             return null;
         }
 

@@ -22,6 +22,20 @@ class TelegramSupportContact extends Model
         'first_inbound_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (self $contact): void {
+            if (! $contact->linked_user_id || ! $contact->telegram_support_chat_id) {
+                return;
+            }
+
+            $chat = $contact->chat;
+            if ($chat && $chat->linked_user_id !== $contact->linked_user_id) {
+                $chat->forceFill(['linked_user_id' => $contact->linked_user_id])->save();
+            }
+        });
+    }
+
     public function chat(): BelongsTo
     {
         return $this->belongsTo(TelegramSupportChat::class, 'telegram_support_chat_id');
