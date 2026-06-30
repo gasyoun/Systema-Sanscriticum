@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class TelegramSupportSyncService
@@ -122,9 +123,7 @@ class TelegramSupportSyncService
         $sentAt = CarbonImmutable::parse($payload['sent_at'] ?? now(), config('app.timezone'));
         $direction = (string) ($payload['direction'] ?? 'incoming');
         $telegramUserId = Arr::get($payload, 'telegram_user_id');
-        $linkedUser = $telegramUserId
-            ? User::where('telegram_id', (string) $telegramUserId)->orWhere('telegram_id', (int) $telegramUserId)->first()
-            : null;
+        $linkedUser = $this->linkedUserFromTelegramId($telegramUserId);
 
         $chat = TelegramSupportChat::firstOrNew(['telegram_chat_id' => $chatId]);
         $chat->fill([
@@ -176,6 +175,17 @@ class TelegramSupportSyncService
         }
 
         return $message;
+    }
+
+    private function linkedUserFromTelegramId(mixed $telegramUserId): ?User
+    {
+        if (! $telegramUserId || ! Schema::hasColumn('users', 'telegram_id')) {
+            return null;
+        }
+
+        return User::where('telegram_id', (string) $telegramUserId)
+            ->orWhere('telegram_id', (int) $telegramUserId)
+            ->first();
     }
 
     /**
@@ -251,8 +261,17 @@ class TelegramSupportSyncService
         $settings->getAppInfo()
             ->setApiId((int) config('services.telegram_support.api_id'))
             ->setApiHash((string) config('services.telegram_support.api_hash'));
+        $settings->getLogger()
+            ->setType($this->madelineLoggerClass()::FILE_LOGGER)
+            ->setExtra(storage_path('logs/madelineproto.log'))
+            ->setLevel($this->madelineLoggerClass()::LEVEL_WARNING);
 
         return $settings;
+    }
+
+    private function madelineLoggerClass(): string
+    {
+        return 'danog\\MadelineProto\\Logger';
     }
 
     /**
