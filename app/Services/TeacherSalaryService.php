@@ -65,8 +65,11 @@ class TeacherSalaryService
     /** @var array<int, Collection<int, Payment>>  course_id => все paid/non-conditional платежи */
     private array $coursePaymentsCache = [];
 
-    /** @var array<string, array<string, mixed>>  "course_id|opts" => помесячное начисление курса */
-    private array $courseAccrualCache = [];
+    /** @var array<string, array<string, mixed>>  "course_id|opts" => выручка курса (без условий препода) */
+    private array $courseRevenueCache = [];
+
+    /** @var array<string, array<string, mixed>>  "course_id|teacher_id|opts" => начисление пары (курс, препод) */
+    private array $teacherCourseAccrualCache = [];
 
     /** @var array<string, array<int, mixed>>  кэш сводки по ключу периода */
     private array $summaryCache = [];
@@ -117,12 +120,19 @@ class TeacherSalaryService
         $rows = [];
         $total = 0.0;
 
-        foreach ($teacher->courses as $course) {
+        foreach ($teacher->allTaughtCourses() as $course) {
             if (self::isTechnicalCourse($course)) {
                 continue;
             }
 
-            $data = $this->courseAccrual($course, $opts);
+            // Эффективные условия именно этого преподавателя на курсе (основной —
+            // с курса, со-препод — из pivot). null = курс ему не начисляется.
+            $terms = $course->salaryTermsFor((int) $teacher->id);
+            if ($terms === null) {
+                continue;
+            }
+
+            $data = $this->teacherCourseAccrual($course, (int) $teacher->id, $terms['type'], $terms['value'], $opts);
 
             $accrued = $this->windowSum($data['accrued'], $start, $end);
             $revenue = $this->windowSum($data['revenue'], $start, $end);
@@ -137,8 +147,8 @@ class TeacherSalaryService
             $rows[] = [
                 'course_id' => $course->id,
                 'title' => $course->title,
-                'salary_type' => $course->salary_type,
-                'salary_value' => (float) $course->salary_value,
+                'salary_type' => $terms['type'],
+                'salary_value' => (float) $terms['value'],
                 'students' => $students,
                 'revenue' => round($revenue, 2),
                 'returns' => round($returns, 2),
@@ -173,11 +183,15 @@ class TeacherSalaryService
         $gross = 0.0;
         $returns = 0.0;
 
-        foreach ($teacher->courses as $course) {
+        foreach ($teacher->allTaughtCourses() as $course) {
             if (self::isTechnicalCourse($course)) {
                 continue;
             }
-            $data = $this->courseAccrual($course, $opts);
+            $terms = $course->salaryTermsFor((int) $teacher->id);
+            if ($terms === null) {
+                continue;
+            }
+            $data = $this->teacherCourseAccrual($course, (int) $teacher->id, $terms['type'], $terms['value'], $opts);
             $net += $this->windowSum($data['accrued'], $start, $end);
             $gross += $this->windowSum($data['accrued_gross'], $start, $end);
             $returns += $this->windowSum($data['accrued_returns'], $start, $end);
@@ -201,12 +215,16 @@ class TeacherSalaryService
         }
 
         $lines = [];
-        foreach ($teacher->courses as $course) {
+        foreach ($teacher->allTaughtCourses() as $course) {
             if (self::isTechnicalCourse($course)) {
                 continue;
             }
-            $value = (float) $course->salary_value;
-            $isPercent = in_array($course->salary_type, ['percent', 'percent_per_block'], true);
+            $terms = $course->salaryTermsFor((int) $teacher->id);
+            if ($terms === null) {
+                continue;
+            }
+            $value = (float) $terms['value'];
+            $isPercent = in_array($terms['type'], ['percent', 'percent_per_block'], true);
 
             foreach ($this->coursePayments($course->id) as $p) {
                 if ($p->tariff !== self::EXPENSE_TARIFF) {
@@ -249,7 +267,7 @@ class TeacherSalaryService
 
         [$start, $end] = $this->monthBounds($periodMonth);
 
-        $teachers = Teacher::query()->with('courses')->get();
+        $teachers = Teacher::query()->with(['courses', 'coTaughtCourses'])->get();
 
         // «Выплачено» = обычные выплаты + уже зачтённые авансы. Непогашенный аванс
         // (type=advance, settled_at IS NULL) деньги выданы, но к ЗП ещё не зачтён —
@@ -295,7 +313,7 @@ class TeacherSalaryService
             $result[$teacher->id] = [
                 'teacher_id' => (int) $teacher->id,
                 'name' => (string) $teacher->name,
-                'courses_count' => $teacher->courses->count(),
+                'courses_count' => $teacher->allTaughtCourses()->count(),
                 'earned_period' => $period['net'],          // чистое (валовое + возвраты)
                 'earned_period_gross' => $period['gross'],   // только положительные начисления
                 'returns_period' => $period['returns'],      // эффект возвратов на ЗП (<=0)
@@ -319,8 +337,8 @@ class TeacherSalaryService
     public function paymentsForTeacher(Teacher $teacher, $start = null, $end = null): array
     {
         $byCourse = [];
-        foreach ($teacher->courses as $course) {
-            if (self::isTechnicalCourse($course)) {
+        foreach ($teacher->allTaughtCourses() as $course) {
+            if (self::isTechnicalCourse($course) || $course->salaryTermsFor((int) $teacher->id) === null) {
                 continue;
             }
 
@@ -504,14 +522,17 @@ class TeacherSalaryService
         $today = Carbon::today()->toDateString();
         $items = [];
 
-        foreach ($teacher->courses as $course) {
-            if (self::isTechnicalCourse($course) || ! in_array($course->salary_type, self::PERCENT_SALARY_TYPES, true)) {
+        foreach ($teacher->allTaughtCourses() as $course) {
+            $terms = $course->salaryTermsFor((int) $teacher->id);
+            if (self::isTechnicalCourse($course) || $terms === null
+                || ! in_array($terms['type'], self::PERCENT_SALARY_TYPES, true)) {
                 continue;
             }
 
             // У курса процент может быть не задан (salary_value=0) — тогда берём
-            // процент из текущего расчёта (поле калькулятора).
-            $percent = (float) $course->salary_value ?: $fallbackPercent;
+            // процент из текущего расчёта (поле калькулятора). Для со-препода —
+            // его процент из pivot.
+            $percent = (float) $terms['value'] ?: $fallbackPercent;
             $blockNumbers = $this->blockNumbersFor($course->id);
             // [number => 'Y-m-d'] для датированных блоков — чтобы отсечь ещё не начавшиеся.
             $blockStarts = CourseBlock::query()
@@ -590,23 +611,25 @@ class TeacherSalaryService
     }
 
     /**
-     * Помесячное начисление по курсу (независимо от окна запроса) — кэшируется.
+     * Помесячная ВЫРУЧКА курса (без условий препода) — кэшируется по курсу.
+     * Зависит только от платежей курса, поэтому переиспользуется для всех
+     * преподавателей курса (у каждого свои условия начисляются поверх).
      *
      * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
-     * @return array{accrued: array<string,float>, accrued_gross: array<string,float>, accrued_returns: array<string,float>, revenue: array<string,float>, returns: array<string,float>, students: array<int,string>}
+     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
      */
-    private function courseAccrual(Course $course, array $opts): array
+    private function courseRevenueData(Course $course, array $opts): array
     {
         $key = $course->id.'|'.json_encode($opts);
 
-        return $this->courseAccrualCache[$key] ??= $this->computeCourseAccrual($course, $opts);
+        return $this->courseRevenueCache[$key] ??= $this->computeCourseRevenue($course, $opts);
     }
 
     /**
      * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
-     * @return array{accrued: array<string,float>, accrued_gross: array<string,float>, accrued_returns: array<string,float>, revenue: array<string,float>, returns: array<string,float>, students: array<int,string>}
+     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
      */
-    private function computeCourseAccrual(Course $course, array $opts): array
+    private function computeCourseRevenue(Course $course, array $opts): array
     {
         $blockNumbers = $this->blockNumbersFor($course->id);
         $blockMonths = $this->blockMonthsFor($course->id);
@@ -646,8 +669,46 @@ class TeacherSalaryService
             }
         }
 
-        $type = (string) $course->salary_type;
-        $value = (float) $course->salary_value;
+        return [
+            'revenue' => $revenue,
+            'returnsByMonth' => $returnsByMonth,
+            'studentEarliest' => $studentEarliest,
+            'blockNumbers' => $blockNumbers,
+            'blockMonths' => $blockMonths,
+            'totalBlocks' => $totalBlocks,
+        ];
+    }
+
+    /**
+     * Помесячное начисление пары (курс, препод) по ЭФФЕКТИВНЫМ условиям препода
+     * ($type/$value из Course::salaryTermsFor). Ролл-форвард по закрытым месяцам
+     * ИМЕННО этого преподавателя. Кэш по course|teacher|opts.
+     *
+     * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
+     * @return array{accrued: array<string,float>, accrued_gross: array<string,float>, accrued_returns: array<string,float>, revenue: array<string,float>, returns: array<string,float>, students: array<int,string>}
+     */
+    private function teacherCourseAccrual(Course $course, int $teacherId, ?string $type, float $value, array $opts): array
+    {
+        $key = $course->id.'|'.$teacherId.'|'.json_encode($opts);
+
+        return $this->teacherCourseAccrualCache[$key] ??= $this->computeTeacherCourseAccrual($course, $teacherId, $type, $value, $opts);
+    }
+
+    /**
+     * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
+     * @return array{accrued: array<string,float>, accrued_gross: array<string,float>, accrued_returns: array<string,float>, revenue: array<string,float>, returns: array<string,float>, students: array<int,string>}
+     */
+    private function computeTeacherCourseAccrual(Course $course, int $teacherId, ?string $type, float $value, array $opts): array
+    {
+        $rev = $this->courseRevenueData($course, $opts);
+        $revenue = $rev['revenue'];
+        $returnsByMonth = $rev['returnsByMonth'];
+        $studentEarliest = $rev['studentEarliest'];
+        $blockNumbers = $rev['blockNumbers'];
+        $blockMonths = $rev['blockMonths'];
+        $totalBlocks = $rev['totalBlocks'];
+
+        $type = (string) $type;
         $accruedGross = [];
         $accruedReturns = [];
 
@@ -664,6 +725,7 @@ class TeacherSalaryService
                 break;
 
             case 'fix_per_block':
+                $real = $this->realPaymentsFor($course->id);
                 $fallback = $this->fallbackMonth($blockMonths, $real);
                 foreach ($blockNumbers as $n) {
                     $m = $blockMonths[$n] ?? $fallback;
@@ -674,6 +736,7 @@ class TeacherSalaryService
                 break;
 
             case 'fix_total':
+                $real = $this->realPaymentsFor($course->id);
                 if ($real->isNotEmpty()) {
                     $fallback = $this->fallbackMonth($blockMonths, $real);
                     $per = $value / $totalBlocks;
@@ -699,9 +762,9 @@ class TeacherSalaryService
             $accrued[$m] = ($accrued[$m] ?? 0.0) + $amt;
         }
 
-        // Ролл-форвард: всё, что попало в закрытый месяц преподавателя,
+        // Ролл-форвард: всё, что попало в закрытый месяц ЭТОГО преподавателя,
         // переносим в ближайший открытый (нельзя начислять в уже рассчитанный).
-        $closed = $this->closedMonthsFor((int) $course->teacher_id);
+        $closed = $this->closedMonthsFor($teacherId);
         if (! empty($closed)) {
             $accrued = $this->remapMonths($accrued, $closed);
             $accruedGross = $this->remapMonths($accruedGross, $closed);
@@ -719,6 +782,19 @@ class TeacherSalaryService
             'returns' => $returnsByMonth,
             'students' => $studentEarliest,
         ];
+    }
+
+    /**
+     * Реальные платежи курса (без не-выручки и нулей) — для фоллбэк-месяца
+     * фикс-схем. coursePayments кэшируется, фильтр дешёвый.
+     *
+     * @return \Illuminate\Support\Collection<int, Payment>
+     */
+    private function realPaymentsFor(int $courseId): Collection
+    {
+        return $this->coursePayments($courseId)->reject(
+            fn (Payment $p) => in_array($p->tariff, self::NON_REVENUE_TARIFFS, true) || (float) $p->amount <= 0
+        );
     }
 
     /**
