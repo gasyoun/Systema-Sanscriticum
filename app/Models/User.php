@@ -139,7 +139,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return null;
         }
 
-        $username = ltrim(trim($username), '@');
+        $username = trim($username);
+        $username = preg_replace('~^https?://t\.me/~i', '', $username) ?? $username;
+        $username = preg_replace('~^t\.me/~i', '', $username) ?? $username;
+        $username = ltrim($username, '@');
+        $username = trim($username, " \t\n\r\0\x0B/");
 
         return $username === '' ? null : $username;
     }

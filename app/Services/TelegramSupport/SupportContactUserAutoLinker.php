@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 class SupportContactUserAutoLinker
 {
@@ -17,11 +16,8 @@ class SupportContactUserAutoLinker
     /** @var array<string, User|null>|null */
     private ?array $usersByTelegramUsername = null;
 
-    /** @var array<string, User|null>|null */
-    private ?array $usersByNormalizedName = null;
-
     /**
-     * @return array{linked: int, by_telegram_id: int, by_username: int, by_name: int}
+     * @return array{linked: int, by_telegram_id: int, by_username: int}
      */
     public function linkUnlinkedContacts(): array
     {
@@ -29,7 +25,6 @@ class SupportContactUserAutoLinker
             'linked' => 0,
             'by_telegram_id' => 0,
             'by_username' => 0,
-            'by_name' => 0,
         ];
 
         TelegramSupportContact::query()
@@ -57,7 +52,7 @@ class SupportContactUserAutoLinker
     }
 
     /**
-     * @return array{user: User, source: 'by_telegram_id'|'by_username'|'by_name'}|null
+     * @return array{user: User, source: 'by_telegram_id'|'by_username'}|null
      */
     private function match(TelegramSupportContact $contact): ?array
     {
@@ -67,10 +62,6 @@ class SupportContactUserAutoLinker
 
         if ($user = $this->matchByUsername($contact)) {
             return ['user' => $user, 'source' => 'by_username'];
-        }
-
-        if ($user = $this->matchByName($contact)) {
-            return ['user' => $user, 'source' => 'by_name'];
         }
 
         return null;
@@ -87,7 +78,7 @@ class SupportContactUserAutoLinker
 
     private function matchByUsername(TelegramSupportContact $contact): ?User
     {
-        if (! $contact->username || ! Schema::hasColumn('users', 'note')) {
+        if (! $contact->username || ! Schema::hasColumn('users', 'telegram_username')) {
             return null;
         }
 
@@ -97,20 +88,6 @@ class SupportContactUserAutoLinker
         }
 
         return $this->usersByTelegramUsername()[$username] ?? null;
-    }
-
-    private function matchByName(TelegramSupportContact $contact): ?User
-    {
-        if (! $contact->name) {
-            return null;
-        }
-
-        $name = $this->normalizeName($contact->name);
-        if (substr_count($name, ' ') < 1) {
-            return null;
-        }
-
-        return $this->usersByNormalizedName()[$name] ?? null;
     }
 
     /**
@@ -146,87 +123,32 @@ class SupportContactUserAutoLinker
         }
 
         $this->usersByTelegramUsername = [];
-        if (! Schema::hasColumn('users', 'note')) {
+        if (! Schema::hasColumn('users', 'telegram_username')) {
             return $this->usersByTelegramUsername;
         }
 
         User::query()
-            ->whereNotNull('note')
+            ->whereNotNull('telegram_username')
             ->get()
             ->each(function (User $user): void {
-                foreach ($this->telegramUsernamesFromNote($user->note) as $username) {
-                    $this->usersByTelegramUsername[$username] = array_key_exists($username, $this->usersByTelegramUsername)
-                        ? null
-                        : $user;
+                $username = $this->normalizeTelegramUsername((string) $user->telegram_username);
+                if ($username === '') {
+                    return;
                 }
+
+                $this->usersByTelegramUsername[$username] = array_key_exists($username, $this->usersByTelegramUsername)
+                    ? null
+                    : $user;
             });
 
         return $this->usersByTelegramUsername;
     }
 
-    /**
-     * @return array<string, User|null>
-     */
-    private function usersByNormalizedName(): array
-    {
-        if ($this->usersByNormalizedName !== null) {
-            return $this->usersByNormalizedName;
-        }
-
-        $this->usersByNormalizedName = [];
-        User::query()
-            ->whereNotNull('name')
-            ->get()
-            ->each(function (User $user): void {
-                $name = $this->normalizeName($user->name);
-                if ($name === '' || substr_count($name, ' ') < 1) {
-                    return;
-                }
-
-                $this->usersByNormalizedName[$name] = array_key_exists($name, $this->usersByNormalizedName)
-                    ? null
-                    : $user;
-            });
-
-        return $this->usersByNormalizedName;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function telegramUsernamesFromNote(?string $note): array
-    {
-        if (! $note) {
-            return [];
-        }
-
-        preg_match_all('/(?:Telegram|TG|Телеграм)\s*:\s*([^\r\n,;]+)/iu', $note, $matches);
-
-        return collect($matches[1] ?? [])
-            ->map(fn (string $value): string => $this->normalizeTelegramUsername($value))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-    }
-
     private function normalizeTelegramUsername(string $value): string
     {
-        $value = Str::lower(trim($value));
-        $value = preg_replace('~^https?://t\.me/~', '', $value) ?? $value;
-        $value = preg_replace('~^t\.me/~', '', $value) ?? $value;
-        $value = ltrim($value, '@');
-        $value = trim($value);
+        $value = User::normalizeTelegramUsername($value) ?? '';
+        $value = mb_strtolower($value);
 
         return preg_replace('/[^a-z0-9_]/', '', $value) ?? '';
-    }
-
-    private function normalizeName(string $value): string
-    {
-        $value = Str::lower(trim($value));
-        $value = preg_replace('/[^\p{L}\p{N}\s-]+/u', ' ', $value) ?? $value;
-        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
-
-        return trim($value);
     }
 }

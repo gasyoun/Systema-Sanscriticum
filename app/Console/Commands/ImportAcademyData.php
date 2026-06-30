@@ -502,12 +502,10 @@ class ImportAcademyData extends Command
             $password = $existingUser ? $existingUser->password : Hash::make(Str::random(10));
 
             // ==========================================
-            // НОВОЕ: Умное склеивание примечания
+            // Telegram держим структурно, а note оставляем только для заметок.
             // ==========================================
+            $telegramUsername = User::normalizeTelegramUsername($telegram);
             $combinedNoteParts = [];
-            if (! empty($telegram)) {
-                $combinedNoteParts[] = 'Telegram: '.$telegram;
-            }
             if (! empty($vk)) {
                 $combinedNoteParts[] = 'VK: '.$vk;
             }
@@ -517,17 +515,22 @@ class ImportAcademyData extends Command
             // Склеиваем с переносом строки, если пусто - будет пустая строка
             $finalNote = implode("\n", $combinedNoteParts);
 
+            $attributes = [
+                'email' => $email,
+                'phone' => $phone,
+                'global_status' => $status,
+                'note' => $finalNote,
+                'password' => $password,
+            ];
+
+            if ($telegramUsername !== null) {
+                $attributes['telegram_username'] = $telegramUsername;
+            }
+
             // Сохраняем в базу (без автоматической отправки писем, так как мы обходим контроллеры!)
             User::updateOrCreate(
                 ['name' => $name], // Ищем строго по ФИО
-                [
-                    'email' => $email,
-                    'phone' => $phone,
-                    // Убрали telegram_id и vk_id, теперь всё лежит в note
-                    'global_status' => $status,
-                    'note' => $finalNote,
-                    'password' => $password,
-                ]
+                $attributes
             );
 
             $count++;
