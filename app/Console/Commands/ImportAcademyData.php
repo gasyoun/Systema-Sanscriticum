@@ -461,6 +461,7 @@ class ImportAcademyData extends Command
         $count = 0;
         $countEmailMatched = 0;
         $countEmailConflicts = 0;
+        $countUnsafeEmailMatches = 0;
         $firstRow = true;
 
         while (($row = fgetcsv($file, 10000, ',')) !== false) {
@@ -494,10 +495,27 @@ class ImportAcademyData extends Command
                 ? User::where('email', $email)->first()
                 : null;
 
-            $existingUser = $existingUserByName ?? $existingUserByEmail;
+            // Telegram держим структурно, а note оставляем только для заметок.
+            $telegramUsername = User::normalizeTelegramUsername($telegram);
+            $samePhone = $existingUserByEmail
+                && ! empty($phone)
+                && ! empty($existingUserByEmail->phone)
+                && $this->normalizePhone($phone) === $this->normalizePhone((string) $existingUserByEmail->phone);
+            $sameTelegram = $existingUserByEmail
+                && $telegramUsername !== null
+                && $existingUserByEmail->telegram_username !== null
+                && mb_strtolower($telegramUsername) === mb_strtolower((string) $existingUserByEmail->telegram_username);
+
+            $safeEmailMatch = $existingUserByEmail && ($samePhone || $sameTelegram);
+            $existingUser = $existingUserByName ?? ($safeEmailMatch ? $existingUserByEmail : null);
 
             if (! $existingUserByName && $existingUserByEmail) {
-                $countEmailMatched++;
+                if ($safeEmailMatch) {
+                    $countEmailMatched++;
+                } else {
+                    $email = '';
+                    $countUnsafeEmailMatches++;
+                }
             }
 
             if ($existingUserByName && $existingUserByEmail && $existingUserByName->isNot($existingUserByEmail)) {
@@ -519,9 +537,8 @@ class ImportAcademyData extends Command
             $password = $existingUser ? $existingUser->password : Hash::make(Str::random(10));
 
             // ==========================================
-            // Telegram держим структурно, а note оставляем только для заметок.
+            // Note оставляем только для заметок.
             // ==========================================
-            $telegramUsername = User::normalizeTelegramUsername($telegram);
             $combinedNoteParts = [];
             if (! empty($vk)) {
                 $combinedNoteParts[] = 'VK: '.$vk;
@@ -563,6 +580,14 @@ class ImportAcademyData extends Command
         if ($countEmailConflicts > 0) {
             $this->warn("⚠️ Конфликтов ФИО/email, где сохранён старый email записи по ФИО: {$countEmailConflicts}");
         }
+        if ($countUnsafeEmailMatches > 0) {
+            $this->warn("⚠️ Email уже был у другого ФИО без совпадения телефона/Telegram; создан отдельный профиль с placeholder email: {$countUnsafeEmailMatches}");
+        }
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        return preg_replace('/\D+/', '', $phone) ?? '';
     }
 
     // ==========================================

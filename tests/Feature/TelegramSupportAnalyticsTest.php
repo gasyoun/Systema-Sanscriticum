@@ -645,11 +645,12 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame('Комментарий: Обновленная заметка', $student->note);
     }
 
-    public function test_import_students_merges_by_existing_email_when_name_differs(): void
+    public function test_import_students_merges_by_existing_email_when_phone_confirms_identity(): void
     {
         $existing = User::factory()->create([
             'name' => 'Old Student Name',
             'email' => 'shared@example.test',
+            'phone' => '+7 999 000 00 02',
             'telegram_username' => 'old_username',
         ]);
 
@@ -668,6 +669,31 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame('Old Student Name', $fresh->name);
         $this->assertSame('shared@example.test', $fresh->email);
         $this->assertSame('new_username', $fresh->telegram_username);
+    }
+
+    public function test_import_students_does_not_merge_same_email_for_different_identity_without_confirming_signal(): void
+    {
+        User::factory()->create([
+            'name' => 'Existing Different Person',
+            'email' => 'shared@example.test',
+            'phone' => '+7 111 111 11 11',
+            'telegram_username' => 'existing_person',
+        ]);
+
+        File::ensureDirectoryExists(storage_path('app/imports'));
+        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+            implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
+            implode(',', ['1', '', 'Actually Other Person', '@other_person', '+79990000003', 'shared@example.test', '', '', '', 'Обычный студент', '', '']),
+        ]));
+
+        $this->artisan('import:academy')
+            ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
+            ->assertExitCode(0);
+
+        $this->assertDatabaseCount('users', 2);
+        $created = User::where('name', 'Actually Other Person')->firstOrFail();
+        $this->assertStringEndsWith('@no-email.com', $created->email);
+        $this->assertSame('other_person', $created->telegram_username);
     }
 
     public function test_backfills_telegram_usernames_from_legacy_notes_without_changing_notes(): void
