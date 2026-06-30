@@ -45,8 +45,7 @@ class ScheduleResource extends Resource
         }
 
         return $user->isTeacher()
-            && $user->teacher_id
-            && optional($record->course)->teacher_id === $user->teacher_id;
+            && optional($record->course)->isTaughtBy($user->teacher_id) === true;
     }
 
     public static function canDelete($record): bool
@@ -65,13 +64,7 @@ class ScheduleResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher()) {
-            if (! $user->teacher_id) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereHas('course', function (Builder $q) use ($user): void {
-                    $q->where('teacher_id', $user->teacher_id);
-                });
-            }
+            $query->whereHas('course', fn (Builder $q) => $q->forTeacher($user->teacher_id));
         }
 
         return $query;
@@ -140,33 +133,18 @@ class ScheduleResource extends Resource
                             name: 'course',
                             titleAttribute: 'title',
                             modifyQueryUsing: function (Builder $query): void {
-                                // Учитель видит в селекте только свои курсы; админ — все.
-                                // Учителю без teacher_id вообще ничего не показываем.
+                                // Учитель видит в селекте свои курсы (основной ИЛИ
+                                // со-препод); админ — все. Без teacher_id — пусто.
                                 $user = auth()->user();
                                 if ($user && $user->isTeacher()) {
-                                    if (! $user->teacher_id) {
-                                        $query->whereRaw('1 = 0');
-                                    } else {
-                                        $query->where('teacher_id', $user->teacher_id);
-                                    }
+                                    $query->forTeacher($user->teacher_id);
                                 }
                             },
                         )
                         // Серверная валидация: relationship-Select по умолчанию не накладывает
                         // where на Rule::exists, поэтому учитель мог бы через POST передать
                         // чужой course_id. Дополняем явным правилом по teacher_id.
-                        ->rule(function () {
-                            $user = auth()->user();
-                            if ($user?->isTeacher() && $user->teacher_id) {
-                                return \Illuminate\Validation\Rule::exists('courses', 'id')
-                                    ->where('teacher_id', $user->teacher_id);
-                            }
-                            if ($user?->isTeacher() && ! $user->teacher_id) {
-                                return \Illuminate\Validation\Rule::in([]);
-                            }
-
-                            return null;
-                        })
+                        ->rule(\App\Models\Course::teacherCourseValidationRule())
                         ->searchable()
                         ->preload()
                         ->placeholder('Без привязки')

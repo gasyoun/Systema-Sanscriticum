@@ -62,8 +62,8 @@ class GenerateCertificatesArchive implements ShouldQueue
         $certificates = Certificate::whereIn('user_id', $userIds)
             ->whereIn('course_id', $courseIds)
             ->when($this->teacherId !== null, function ($q) {
-                // Преподавателю — только сертификаты его курсов.
-                $q->whereHas('course', fn ($c) => $c->where('teacher_id', $this->teacherId));
+                // Преподавателю — только сертификаты его курсов (основной ИЛИ со-препод).
+                $q->whereHas('course', fn ($c) => $c->forTeacher($this->teacherId));
             })
             ->with(['user', 'course'])
             ->get();

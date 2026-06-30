@@ -77,7 +77,8 @@ class CourseCatalog extends Component
                 $q->whereHas('categories', fn ($qq) => $qq->whereIn('categories.id', $this->categoryIds)
                 );
             })
-            ->when($this->teacherId !== '', fn ($q) => $q->where('teacher_id', $this->teacherId))
+            // Фильтр по преподавателю включает курсы, где он основной ИЛИ со-препод.
+            ->when($this->teacherId !== '', fn ($q) => $q->forTeacher((int) $this->teacherId))
             ->when(in_array($this->format, ['live', 'recorded'], true),
                 fn ($q) => $q->where('format', $this->format)
             );
