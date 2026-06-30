@@ -333,12 +333,23 @@ class TeacherSalaries extends Page implements HasTable
                             ])->all();
                     })
                     ->helperText('Доли платежей прошлых блоков, ещё не вошедшие ни в одну выплату. '
-                        .'Сумма добавится к итогу по ставке своего курса. Выбранные сохраняются при смене фильтра.'),
+                        .'Сумма добавится к итогу по ставке своего курса × коэффициент блока. Выбранные сохраняются при смене фильтра.'),
 
                 Forms\Components\Placeholder::make('prior_blocks_preview')
                     ->label('Добавлено с прошлых блоков')
                     ->visible(fn (Forms\Get $get) => $this->priorBlocksTotal($get) > 0)
-                    ->content(fn (Forms\Get $get) => '+ '.number_format($this->priorBlocksTotal($get), 2, '.', ' ').' ₽'),
+                    // Эффективная сумма — уже через коэффициент текущего блока (как
+                    // основная выручка). При коэф ≠ 100 поясняем, из чего получилось.
+                    ->content(function (Forms\Get $get): string {
+                        $raw = $this->priorBlocksTotal($get);
+                        $coef = $this->normalizeCoef($get('coefficient'));
+                        $effective = round($raw * $coef / 100, 2);
+
+                        return '+ '.number_format($effective, 2, '.', ' ').' ₽'
+                            .($coef != 100.0
+                                ? ' (= '.number_format($raw, 0, '.', ' ').' × '.number_format($coef, 0, '.', ' ').'%)'
+                                : '');
+                    }),
 
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
@@ -362,7 +373,8 @@ class TeacherSalaries extends Page implements HasTable
 
                         $formula = $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction);
                         if ($priorBlocksTotal > 0) {
-                            $formula .= ' + поздние оплаты '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽';
+                            $formula .= ' + поздние оплаты '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
+                                .($coef != 100.0 ? ' × '.number_format($coef, 0, '.', ' ').'%' : '');
                         }
 
                         return $formula.' = '.number_format($total, 0, '.', ' ').' ₽';
@@ -463,6 +475,7 @@ class TeacherSalaries extends Page implements HasTable
                     $this->formulaText($data, $coef, $extrasTotal, $surcharge, $deduction),
                     $priorBlocksTotal > 0
                         ? ' + поздние оплаты ('.count($priorItems).' шт.) '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
+                            .($coef != 100.0 ? ' × '.number_format($coef, 0, '.', ' ').'%' : '')
                         : '',
                     number_format($total, 0, '.', ' '),
                 );

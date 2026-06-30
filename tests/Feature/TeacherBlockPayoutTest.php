@@ -62,6 +62,18 @@ class TeacherBlockPayoutTest extends TestCase
     }
 
     /** @test */
+    public function block_payout_total_runs_prior_block_payments_through_the_coefficient(): void
+    {
+        // Поздняя оплата идёт через коэффициент блока, как основная выручка:
+        // (30000 × 92%) × 30% + 1800 × 92% = 8280 + 1656 = 9936.
+        // (1800 = доля 6000 × процент своего курса 30%.)
+        $this->assertSame(9936.0, TeacherSalaryService::blockPayoutTotal(30000, 92, 30, 0, 0, 0, 1800));
+
+        // При коэффициенте 100% поведение прежнее — поздняя оплата как есть.
+        $this->assertSame(2300.0, TeacherSalaryService::blockPayoutTotal(0, 100, 30, 0, 0, 0, 2300));
+    }
+
+    /** @test */
     public function block_group_revenue_sums_only_that_groups_real_payments_for_the_block(): void
     {
         $teacher = Teacher::create(['name' => 'Екатерина']);
