@@ -22,6 +22,7 @@ class TelegramSupportSyncService
 
     public function __construct(
         private readonly SupportConversationAggregator $aggregator,
+        private readonly SupportContactUserAutoLinker $autoLinker,
     ) {}
 
     public function sync(): array
@@ -46,7 +47,14 @@ class TelegramSupportSyncService
         try {
             $messages = $this->fetchIncrementalMadelineMessagesWithRetry($account, $clientClass);
             if ($messages === []) {
-                return $this->finish($account, ['status' => 'ok', 'synced' => 0, 'dates' => []], true, []);
+                $linkResult = $this->autoLinker->linkUnlinkedContacts();
+
+                return $this->finish($account, [
+                    'status' => 'ok',
+                    'synced' => 0,
+                    'dates' => [],
+                    'auto_linked' => $linkResult['linked'],
+                ], true, []);
             }
 
             $result = $this->syncNormalizedMessages($messages, $account->name);
@@ -105,11 +113,13 @@ class TelegramSupportSyncService
         }
 
         $affectedDates->unique()->each(fn (string $date) => $this->aggregator->aggregateDate($date));
+        $linkResult = $this->autoLinker->linkUnlinkedContacts();
 
         return [
             'status' => 'ok',
             'synced' => $synced,
             'dates' => $affectedDates->unique()->values()->all(),
+            'auto_linked' => $linkResult['linked'],
         ];
     }
 
@@ -211,6 +221,7 @@ class TelegramSupportSyncService
 
         $client = new $clientClass($session, $settings);
         $client->start();
+        $this->backfillContactProfiles($client);
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
         $dialogs = $this->limitedDialogs($client->getDialogIds());
@@ -232,9 +243,10 @@ class TelegramSupportSyncService
                 'min_id' => $minId,
                 'hash' => 0,
             ]);
+            $usersById = $this->usersById($history['users'] ?? []);
 
             foreach (($history['messages'] ?? []) as $message) {
-                $normalized = $this->normalizeMadelineMessage($peer, $message);
+                $normalized = $this->normalizeMadelineMessage($peer, $message, $usersById);
                 if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
                     $messages[] = $normalized;
                 }
@@ -287,9 +299,10 @@ class TelegramSupportSyncService
 
     /**
      * @param  array<string, mixed>  $message
+     * @param  array<int, array<string, mixed>>  $usersById
      * @return array<string, mixed>|null
      */
-    private function normalizeMadelineMessage(mixed $peer, array $message): ?array
+    private function normalizeMadelineMessage(mixed $peer, array $message, array $usersById = []): ?array
     {
         if (! isset($message['id']) || ! isset($message['date'])) {
             return null;
@@ -304,16 +317,109 @@ class TelegramSupportSyncService
         if ($chatId === null) {
             return null;
         }
+        $telegramUserId = $this->extractTelegramId($message['from_id'] ?? null);
+        $sender = $telegramUserId ? ($usersById[$telegramUserId] ?? null) : null;
 
         return [
             'telegram_chat_id' => $chatId,
             'telegram_message_id' => (int) $message['id'],
-            'telegram_user_id' => $this->extractTelegramId($message['from_id'] ?? null),
+            'telegram_user_id' => $telegramUserId,
             'direction' => ! empty($message['out']) ? 'outgoing' : 'incoming',
             'text' => $text,
             'sent_at' => CarbonImmutable::createFromTimestamp((int) $message['date'], config('app.timezone'))->toDateTimeString(),
+            'contact_name' => $sender ? $this->displayName($sender) : null,
+            'contact_username' => $sender['username'] ?? null,
             'raw_madeline' => $message,
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $users
+     * @return array<int, array<string, mixed>>
+     */
+    private function usersById(array $users): array
+    {
+        $indexed = [];
+        foreach ($users as $user) {
+            if (isset($user['id'])) {
+                $indexed[(int) $user['id']] = $user;
+            }
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * @param  array<string, mixed>  $user
+     */
+    private function displayName(array $user): ?string
+    {
+        $name = trim(implode(' ', array_filter([
+            $user['first_name'] ?? null,
+            $user['last_name'] ?? null,
+        ])));
+
+        return $name !== '' ? $name : ($user['username'] ?? null);
+    }
+
+    private function backfillContactProfiles(mixed $client): void
+    {
+        if (! method_exists($client, 'getInfo')) {
+            return;
+        }
+
+        $limit = (int) config('services.telegram_support.profile_backfill_limit', 20);
+        if ($limit <= 0) {
+            return;
+        }
+
+        TelegramSupportContact::query()
+            ->whereNotNull('telegram_user_id')
+            ->where(function ($query) {
+                $query->whereNull('name')->orWhereNull('username');
+            })
+            ->orderBy('id')
+            ->limit($limit)
+            ->get()
+            ->each(function (TelegramSupportContact $contact) use ($client): void {
+                try {
+                    $profile = $this->extractUserProfile($client->getInfo((int) $contact->telegram_user_id));
+                } catch (Throwable $e) {
+                    Log::debug('Telegram support contact profile backfill skipped', [
+                        'telegram_user_id' => $contact->telegram_user_id,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return;
+                }
+
+                if (! $profile) {
+                    return;
+                }
+
+                $contact->fill([
+                    'name' => $contact->name ?: $this->displayName($profile),
+                    'username' => $contact->username ?: ($profile['username'] ?? null),
+                ])->save();
+            });
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function extractUserProfile(mixed $info): ?array
+    {
+        if (! is_array($info)) {
+            return null;
+        }
+
+        foreach (['User', 'user', 'Chat', 'chat'] as $key) {
+            if (isset($info[$key]) && is_array($info[$key])) {
+                return $info[$key];
+            }
+        }
+
+        return isset($info['id']) ? $info : null;
     }
 
     private function supportAccount(string $accountName = 'support'): TelegramSupportAccount

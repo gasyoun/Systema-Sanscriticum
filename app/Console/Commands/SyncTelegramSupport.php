@@ -39,6 +39,9 @@ class SyncTelegramSupport extends Command
         if (! empty($result['dates'])) {
             $line .= '; dates='.implode(',', $result['dates']);
         }
+        if (array_key_exists('auto_linked', $result)) {
+            $line .= '; auto_linked='.$result['auto_linked'];
+        }
         if (! empty($result['error'])) {
             $line .= '; error='.$result['error'];
         }
