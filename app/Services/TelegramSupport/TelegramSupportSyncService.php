@@ -11,6 +11,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -160,12 +161,9 @@ class TelegramSupportSyncService
     private function fetchIncrementalMadelineMessages(TelegramSupportAccount $account, string $clientClass): array
     {
         $session = (string) config('services.telegram_support.session');
-        $settings = [
-            'app_info' => [
-                'api_id' => (int) config('services.telegram_support.api_id'),
-                'api_hash' => (string) config('services.telegram_support.api_hash'),
-            ],
-        ];
+        File::ensureDirectoryExists(dirname(base_path($session)));
+
+        $settings = $this->madelineSettings();
 
         $client = new $clientClass($session, $settings);
         $client->start();
@@ -206,6 +204,17 @@ class TelegramSupportSyncService
             ])
             ->values()
             ->all();
+    }
+
+    private function madelineSettings(): object
+    {
+        $settingsClass = 'danog\\MadelineProto\\Settings';
+        $settings = new $settingsClass;
+        $settings->getAppInfo()
+            ->setApiId((int) config('services.telegram_support.api_id'))
+            ->setApiHash((string) config('services.telegram_support.api_hash'));
+
+        return $settings;
     }
 
     /**
