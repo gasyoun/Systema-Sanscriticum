@@ -29,18 +29,25 @@ php artisan --version
 
 ## 1. Установить PHP 8.3 + расширения (ppa:ondrej/php, Ubuntu)
 
-```bash
-add-apt-repository ppa:ondrej/php -y && apt update
-apt install -y php8.3 php8.3-fpm php8.3-cli \
-  php8.3-mbstring php8.3-xml php8.3-curl php8.3-zip php8.3-bcmath php8.3-intl \
-  php8.3-mysql php8.3-redis php8.3-gd php8.3-gmp php8.3-pcntl php8.3-posix
-```
-Сверить с `php -m` из шага 0 и доставить недостающее (напр. `php8.3-imagick`, если используется
-imagick, а не gd; `php8.3-soap`/`-exif`/`-igbinary` — по факту). Должны совпасть все расширения.
+Набор подобран под фактический `php -m` прода (8.1). PECL-расширения (imagick, redis, igbinary)
+ставятся отдельными пакетами — без них сломаются картинки и Redis-кэш (igbinary-сериализатор).
 
 ```bash
-php8.3 -m   # проверить, что набор не уже текущего
+add-apt-repository ppa:ondrej/php -y && apt update
+apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-common \
+  php8.3-mbstring php8.3-xml php8.3-xsl php8.3-curl php8.3-zip \
+  php8.3-bcmath php8.3-intl php8.3-mysql php8.3-gd php8.3-readline \
+  php8.3-redis php8.3-imagick php8.3-igbinary
 ```
+Бандл-расширения вашего прода (`ctype, exif, fileinfo, ftp, gettext, iconv, pcntl, posix, sockets,
+sodium, shmop, sysvmsg/sem/shm, calendar, ffi, filter, hash, json, openssl, tokenizer, zlib, Phar`)
+идут в `php8.3-common`/CLI — отдельные пакеты не нужны. `gmp` на проде НЕ установлен — не ставим.
+
+Сверка (набор 8.3 не должен быть уже 8.1):
+```bash
+diff <(php -m) <(php8.3 -m)
+```
+Любое расширение, оставшееся «только в 8.1», — доставить (`apt install php8.3-<ext>`).
 
 ## 2. Настройки php.ini (перенести из 8.1)
 
@@ -55,18 +62,28 @@ diff /etc/php/8.1/fpm/php.ini /etc/php/8.3/fpm/php.ini
 
 ## 3. Переключить CLI / FPM / nginx / Horizon
 
+Факт прода: nginx — ДВА сайта с сокетом 8.1 (`sites-available/sanskrit` строка 21 и `default`
+строка 21, путь `/var/run/php/php8.1-fpm.sock`); Horizon в supervisor использует «голый» `php`
+(`command=php /var/www/html/artisan horizon`).
+
 ```bash
 update-alternatives --set php /usr/bin/php8.3      # CLI → 8.3
 php -v                                              # проверить
 
 systemctl enable --now php8.3-fpm
-# nginx: в server-блоке заменить сокет на php8.3-fpm.sock
-#   fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+
+# nginx: заменить сокет в ОБОИХ сайтах (sanskrit обязательно; default — обновить или отключить).
+#   fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+sed -i 's#php8.1-fpm.sock#php8.3-fpm.sock#' /etc/nginx/sites-available/sanskrit /etc/nginx/sites-available/default
 nginx -t && systemctl reload nginx
 
-# Horizon: в /etc/supervisor/conf.d/*.conf заменить php8.1 → php8.3 в command=
-supervisorctl reread && supervisorctl update && supervisorctl restart all
+# Horizon: команда уже «php ...», поэтому после update-alternatives рестарт сам поднимет 8.3.
+supervisorctl restart all
 ```
+> ВАЖНО — путь приложения: supervisor указывает на `/var/www/html/artisan`, а в трейсах ошибок
+> фигурировал `/root/sanskrit-lms/...`. Перед апгрейдом подтвердить, какой каталог реально
+> обслуживает nginx (`root` в `sites-available/sanskrit`) и где крутится Horizon — все команды
+> деплоя/кэша (шаги 4, 6) выполнять именно в этом каталоге. Если это симлинк — ок, но проверить.
 
 ## 4. composer.json: убрать платформенную ложь (ТОЛЬКО на 8.3)
 
