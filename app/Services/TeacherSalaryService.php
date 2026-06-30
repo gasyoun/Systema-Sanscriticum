@@ -578,12 +578,15 @@ class TeacherSalaryService
      * прибавляется к итогу как есть (без коэффициента и процента).
      * Удержание — фиксированный вычет из итога (штраф/аванс/корректировка),
      * вычитается по модулю как есть (без коэффициента и процента).
-     * Поздние оплаты прошлых блоков — готовые рубли (% уже применён к доле
-     * платежа), прибавляются к итогу как есть (без коэффициента и процента).
+     * Поздние оплаты прошлых блоков идут ЧЕРЕЗ коэффициент текущего блока, как и
+     * основная выручка: $priorBlocksTotal — это сумма долей с уже применённым
+     * процентом своего курса (teacher_amount = доля × процент), а коэффициент
+     * домножается здесь, в единой точке. Т.е. поздняя оплата эквивалентна добавке
+     * к базе: (база + поздняя) × коэф × процент.
      */
     public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0, float $priorBlocksTotal = 0.0): float
     {
-        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal, 2);
+        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal * ($coef / 100), 2);
     }
 
     /**
