@@ -192,7 +192,7 @@ class TelegramSupportSyncService
         $client->start();
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
-        $dialogs = $client->getDialogIds();
+        $dialogs = $this->limitedDialogs($client->getDialogIds());
         $messages = [];
         $peerState = $account->sync_state['peers'] ?? [];
 
@@ -227,6 +227,21 @@ class TelegramSupportSyncService
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<int, mixed>  $dialogs
+     * @return array<int, mixed>
+     */
+    private function limitedDialogs(array $dialogs): array
+    {
+        $limit = (int) config('services.telegram_support.dialog_limit', 20);
+
+        if ($limit <= 0) {
+            return $dialogs;
+        }
+
+        return array_slice($dialogs, 0, $limit);
     }
 
     private function madelineSettings(): object

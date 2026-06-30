@@ -238,6 +238,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'services.telegram_support.api_hash' => 'hash',
             'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
             'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
         ]);
 
         FakeMadelineProtoClient::$histories = [
@@ -286,6 +287,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'services.telegram_support.api_hash' => 'hash',
             'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
             'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
         ]);
 
         FakeMadelineProtoClient::$histories = [
@@ -303,6 +305,34 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame(1, $result['synced']);
         $this->assertSame(2, FakeMadelineProtoClient::$startCalls);
         $this->assertSame(1, TelegramSupportMessage::count());
+    }
+
+    public function test_madelineproto_sync_limits_dialogs_per_run_to_avoid_flooding(): void
+    {
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 2,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            5001 => [['id' => 1, 'date' => strtotime('2026-06-28 11:00:00'), 'message' => 'Первый', 'peer_id' => 5001]],
+            5002 => [['id' => 1, 'date' => strtotime('2026-06-28 11:01:00'), 'message' => 'Второй', 'peer_id' => 5002]],
+            5003 => [['id' => 1, 'date' => strtotime('2026-06-28 11:02:00'), 'message' => 'Третий', 'peer_id' => 5003]],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = [];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(2, $result['synced']);
+        $this->assertSame([5001, 5002], array_column(FakeMadelineProtoClient::$lastHistoryRequests, 'peer'));
     }
 }
 
