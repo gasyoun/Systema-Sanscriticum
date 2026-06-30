@@ -247,6 +247,8 @@ class TelegramSupportAnalyticsTest extends TestCase
             ],
         ];
         FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = [];
+        FakeMadelineProtoClient::$startCalls = 0;
 
         $first = app(TelegramSupportSyncService::class)->sync();
 
@@ -274,6 +276,34 @@ class TelegramSupportAnalyticsTest extends TestCase
         $account = TelegramSupportAccount::where('name', 'support')->firstOrFail();
         $this->assertSame(3, $account->sync_state['peers']['3001']['last_message_id']);
     }
+
+    public function test_madelineproto_sync_retries_once_after_auth_restart(): void
+    {
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            4001 => [
+                ['id' => 1, 'date' => strtotime('2026-06-28 10:00:00'), 'message' => 'После рестарта', 'peer_id' => 4001, 'from_id' => ['user_id' => 9002]],
+            ],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = ['AUTH_RESTART'];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(1, $result['synced']);
+        $this->assertSame(2, FakeMadelineProtoClient::$startCalls);
+        $this->assertSame(1, TelegramSupportMessage::count());
+    }
 }
 
 class FakeMadelineProtoClient
@@ -283,6 +313,11 @@ class FakeMadelineProtoClient
 
     /** @var array<int, array<string, mixed>> */
     public static array $lastHistoryRequests = [];
+
+    /** @var array<int, string> */
+    public static array $startFailures = [];
+
+    public static int $startCalls = 0;
 
     public object $messages;
 
@@ -310,7 +345,14 @@ class FakeMadelineProtoClient
         };
     }
 
-    public function start(): void {}
+    public function start(): void
+    {
+        self::$startCalls++;
+
+        if (self::$startFailures !== []) {
+            throw new \RuntimeException(array_shift(self::$startFailures));
+        }
+    }
 
     /**
      * @return array<int>

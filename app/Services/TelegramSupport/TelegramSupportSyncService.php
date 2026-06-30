@@ -41,7 +41,7 @@ class TelegramSupportSyncService
         }
 
         try {
-            $messages = $this->fetchIncrementalMadelineMessages($account, $clientClass);
+            $messages = $this->fetchIncrementalMadelineMessagesWithRetry($account, $clientClass);
             if ($messages === []) {
                 return $this->finish($account, ['status' => 'ok', 'synced' => 0, 'dates' => []], true, []);
             }
@@ -53,6 +53,29 @@ class TelegramSupportSyncService
         } catch (Throwable $e) {
             return $this->fail($account, $e);
         }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchIncrementalMadelineMessagesWithRetry(TelegramSupportAccount $account, string $clientClass): array
+    {
+        try {
+            return $this->fetchIncrementalMadelineMessages($account, $clientClass);
+        } catch (Throwable $e) {
+            if (! $this->isMadelineAuthRestart($e)) {
+                throw $e;
+            }
+
+            Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
+
+            return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
+        }
+    }
+
+    private function isMadelineAuthRestart(Throwable $e): bool
+    {
+        return str_contains($e->getMessage(), 'AUTH_RESTART');
     }
 
     /**
