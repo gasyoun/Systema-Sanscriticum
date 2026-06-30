@@ -317,7 +317,33 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // ==========================================
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(Group::class);
+        // ВСЕ членства, включая «вышедших» (left_at != null). Это путь ДОСТУПА:
+        // dashboard/showCourse/forUserGroups гейтят курс по этой связи — поэтому
+        // «мягкий выход» из группы НЕ должен влиять на доступ к оплаченному.
+        return $this->belongsToMany(Group::class)
+            ->withPivot(['left_at', 'left_reason'])
+            ->withTimestamps();
+    }
+
+    /**
+     * «Активный состав» группы — только те членства, где студент не помечен
+     * вышедшим (left_at IS NULL). Этим питаются ростеры/напоминания/чаты, НЕ доступ.
+     */
+    public function activeGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class)
+            ->withPivot(['left_at', 'left_reason'])
+            ->withTimestamps()
+            ->wherePivotNull('left_at');
+    }
+
+    /** Архив: группы, из которых студент выведен (выпустился/ушёл/исключён/вручную). */
+    public function archivedGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class)
+            ->withPivot(['left_at', 'left_reason'])
+            ->withTimestamps()
+            ->wherePivotNotNull('left_at');
     }
 
     // Персональные скидки студента на курсы.

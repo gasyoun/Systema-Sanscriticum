@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
+use App\Services\GroupMembershipManager;
 use App\Support\CourseNoteBlockParser;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -143,7 +144,11 @@ class CoursesRelationManager extends RelationManager
                             ->required(),
                         Forms\Components\Textarea::make('note')
                             ->label('Примечание'),
-                    ]),
+                    ])
+                    // Новый статус курса → пересчитать активный состав групп
+                    // студента (членство в группах не теряется — только пометка
+                    // «вышел»/«активен»). См. GroupMembershipManager.
+                    ->after(fn () => $this->syncGroupMembership()),
             ])
             ->actions([
                 // Распознать блоки входа/выхода из текста примечания и проставить
@@ -218,11 +223,15 @@ class CoursesRelationManager extends RelationManager
                 Tables\Actions\EditAction::make()
                     ->label('Изменить статус')
                     ->iconButton()
-                    ->tooltip('Редактировать статус и примечание'),
+                    ->tooltip('Редактировать статус и примечание')
+                    // Терминальный статус (Выпускник/Покинул/Исключен) → вывести из
+                    // активного состава групп курса; обратно — вернуть.
+                    ->after(fn () => $this->syncGroupMembership()),
                 Tables\Actions\DetachAction::make()
                     ->label('Отвязать')
                     ->iconButton()
-                    ->tooltip('Удалить с курса'),
+                    ->tooltip('Удалить с курса')
+                    ->after(fn () => $this->syncGroupMembership()),
             ])
             ->bulkActions([
                 // Массовая простановка блоков из примечаний по выделенным строкам:
@@ -287,9 +296,20 @@ class CoursesRelationManager extends RelationManager
                     }),
 
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make(),
+                    Tables\Actions\DetachBulkAction::make()
+                        ->after(fn () => $this->syncGroupMembership()),
                 ]),
             ]);
+    }
+
+    /**
+     * Пересчитать «активный состав» групп студента по его текущим курсовым
+     * статусам. Доступ к оплаченным урокам не затрагивается — членство в группе
+     * сохраняется, меняется лишь пометка left_at (см. GroupMembershipManager).
+     */
+    private function syncGroupMembership(): void
+    {
+        app(GroupMembershipManager::class)->syncAllForUser($this->getOwnerRecord());
     }
 
     /**

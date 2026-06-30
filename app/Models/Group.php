@@ -27,7 +27,19 @@ class Group extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        // ВСЕ участники (включая вышедших) — путь доступа/листинга.
+        return $this->belongsToMany(User::class)
+            ->withPivot(['left_at', 'left_reason'])
+            ->withTimestamps();
+    }
+
+    /** Активный состав группы: участники без отметки «вышел» (left_at IS NULL). */
+    public function activeUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot(['left_at', 'left_reason'])
+            ->withTimestamps()
+            ->wherePivotNull('left_at');
     }
 
     // Курсы, к которым привязана группа (тот же pivot, что в Course::groups()).
