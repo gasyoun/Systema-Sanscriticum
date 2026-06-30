@@ -105,7 +105,7 @@ class LessonResource extends Resource
                     // Серверная валидация: Filament-default Rule::exists для relationship-Select
                     // не накладывает where, поэтому учитель может через POST передать чужой
                     // course_id. Closure-правило учитывает и основного, и со-препода.
-                    ->rule(Course::teacherCourseValidationRule())
+                    ->rule(fn () => Course::teacherCourseValidationRule())
                     ->required()
                     ->live()
                     ->label('Привязать к курсу'),

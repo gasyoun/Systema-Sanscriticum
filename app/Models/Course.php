@@ -174,6 +174,11 @@ class Course extends Model
      * Closure-правило валидации course_id для преподавательских форм
      * (Lesson/Schedule/Certificate): отсекает чужой course_id из POST с учётом и
      * основного препода, и со-препода (pivot). Для не-преподавателей — пропускает.
+     *
+     * ВАЖНО: для Filament оборачивать в `->rule(fn () => Course::teacherCourseValidationRule())`.
+     * Filament к голому Closure в ->rule() применяет evaluate() (резолв параметров
+     * по имени) и не может разрешить $attribute — нужно внешнее замыкание, ВОЗВРАЩАЮЩЕЕ
+     * это правило.
      */
     public static function teacherCourseValidationRule(): \Closure
     {
