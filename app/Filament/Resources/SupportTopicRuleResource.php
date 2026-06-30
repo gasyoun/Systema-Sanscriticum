@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\TelegramSupport;
 use App\Filament\Resources\SupportTopicRuleResource\Pages;
 use App\Models\SupportTopicRule;
 use Filament\Forms;
@@ -14,11 +15,15 @@ class SupportTopicRuleResource extends Resource
 {
     protected static ?string $model = SupportTopicRule::class;
 
+    protected static ?string $cluster = TelegramSupport::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationGroup = 'Пользователи';
 
-    protected static ?string $navigationLabel = 'Support topics';
+    protected static ?string $navigationLabel = 'Темы';
+
+    protected static ?int $navigationSort = 40;
 
     public static function canAccess(): bool
     {
