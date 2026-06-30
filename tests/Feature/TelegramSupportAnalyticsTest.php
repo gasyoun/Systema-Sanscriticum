@@ -645,6 +645,31 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame('Комментарий: Обновленная заметка', $student->note);
     }
 
+    public function test_import_students_merges_by_existing_email_when_name_differs(): void
+    {
+        $existing = User::factory()->create([
+            'name' => 'Old Student Name',
+            'email' => 'shared@example.test',
+            'telegram_username' => 'old_username',
+        ]);
+
+        File::ensureDirectoryExists(storage_path('app/imports'));
+        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+            implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
+            implode(',', ['1', '', 'New Student Name', '@new_username', '+79990000002', 'Shared@Example.test', '', '', '', 'Обычный студент', '', '']),
+        ]));
+
+        $this->artisan('import:academy')
+            ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
+            ->assertExitCode(0);
+
+        $this->assertDatabaseCount('users', 1);
+        $fresh = $existing->fresh();
+        $this->assertSame('Old Student Name', $fresh->name);
+        $this->assertSame('shared@example.test', $fresh->email);
+        $this->assertSame('new_username', $fresh->telegram_username);
+    }
+
     public function test_backfills_telegram_usernames_from_legacy_notes_without_changing_notes(): void
     {
         $user = User::factory()->create([
