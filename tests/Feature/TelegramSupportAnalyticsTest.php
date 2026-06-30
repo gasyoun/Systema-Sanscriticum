@@ -606,13 +606,12 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_import_students_writes_telegram_username_field_and_keeps_note_clean(): void
     {
-        File::ensureDirectoryExists(storage_path('app/imports'));
-        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+        $path = $this->writeStudentImportCsv([
             implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
             implode(',', ['1', '', 'Import Student', '@imported_tg', '+79990000000', 'Import@Example.test', '', '', '', 'Обычный студент', '', 'Любит грамматику']),
-        ]));
+        ]);
 
-        $this->artisan('import:academy')
+        $this->artisan('import:academy', ['--students-file' => $path])
             ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
             ->assertExitCode(0);
 
@@ -630,13 +629,12 @@ class TelegramSupportAnalyticsTest extends TestCase
             'telegram_username' => 'keep_me',
         ]);
 
-        File::ensureDirectoryExists(storage_path('app/imports'));
-        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+        $path = $this->writeStudentImportCsv([
             implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
             implode(',', ['1', '', 'Existing Student', '', '+79990000001', 'existing@example.test', '', '', '', 'Обычный студент', '', 'Обновленная заметка']),
-        ]));
+        ]);
 
-        $this->artisan('import:academy')
+        $this->artisan('import:academy', ['--students-file' => $path])
             ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
             ->assertExitCode(0);
 
@@ -654,13 +652,12 @@ class TelegramSupportAnalyticsTest extends TestCase
             'telegram_username' => 'old_username',
         ]);
 
-        File::ensureDirectoryExists(storage_path('app/imports'));
-        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+        $path = $this->writeStudentImportCsv([
             implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
             implode(',', ['1', '', 'New Student Name', '@new_username', '+79990000002', 'Shared@Example.test', '', '', '', 'Обычный студент', '', '']),
-        ]));
+        ]);
 
-        $this->artisan('import:academy')
+        $this->artisan('import:academy', ['--students-file' => $path])
             ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
             ->assertExitCode(0);
 
@@ -680,13 +677,12 @@ class TelegramSupportAnalyticsTest extends TestCase
             'telegram_username' => 'existing_person',
         ]);
 
-        File::ensureDirectoryExists(storage_path('app/imports'));
-        file_put_contents(storage_path('app/imports/students.csv'), implode("\n", [
+        $path = $this->writeStudentImportCsv([
             implode(',', ['id', 'x', 'name', 'telegram', 'phone', 'email', 'vk', 'h', 'i', 'status', 'k', 'note']),
             implode(',', ['1', '', 'Actually Other Person', '@other_person', '+79990000003', 'shared@example.test', '', '', '', 'Обычный студент', '', '']),
-        ]));
+        ]);
 
-        $this->artisan('import:academy')
+        $this->artisan('import:academy', ['--students-file' => $path])
             ->expectsChoice('Что будем импортировать сейчас?', '4. Студенты (готово)', $this->academyImportChoices())
             ->assertExitCode(0);
 
@@ -724,6 +720,18 @@ class TelegramSupportAnalyticsTest extends TestCase
             '5. Оплаты и Доступы',
             'Выход',
         ];
+    }
+
+    /**
+     * @param  array<int, string>  $lines
+     */
+    private function writeStudentImportCsv(array $lines): string
+    {
+        $path = storage_path('framework/testing/imports/students-'.uniqid().'.csv');
+        File::ensureDirectoryExists(dirname($path));
+        file_put_contents($path, implode("\n", $lines));
+
+        return $path;
     }
 }
 
