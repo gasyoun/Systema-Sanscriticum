@@ -286,7 +286,7 @@ class FakeMadelineProtoClient
 
     public object $messages;
 
-    public function __construct(string $session, array $settings)
+    public function __construct(string $session, mixed $settings)
     {
         $this->messages = new class
         {
