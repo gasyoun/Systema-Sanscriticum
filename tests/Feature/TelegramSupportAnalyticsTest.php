@@ -604,6 +604,39 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame($student->id, $chat->refresh()->linked_user_id);
     }
 
+    public function test_madelineproto_sync_uses_private_peer_as_contact_user_id_when_from_id_is_missing(): void
+    {
+        $student = User::factory()->create(['telegram_id' => 6801]);
+
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            6801 => [
+                ['id' => 1, 'date' => strtotime('2026-06-28 13:00:00'), 'message' => 'Private without from_id', 'peer_id' => 6801],
+            ],
+        ];
+        FakeMadelineProtoClient::$users = [];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = [];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $contact = TelegramSupportContact::where('telegram_user_id', 6801)->firstOrFail();
+        $this->assertSame(1, $result['synced']);
+        $this->assertSame($student->id, $contact->linked_user_id);
+        $this->assertSame($student->id, $contact->chat->linked_user_id);
+    }
+
     public function test_import_students_writes_telegram_username_field_and_keeps_note_clean(): void
     {
         $path = $this->writeStudentImportCsv([
