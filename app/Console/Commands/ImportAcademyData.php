@@ -459,6 +459,8 @@ class ImportAcademyData extends Command
         $file = fopen($absolutePath, 'r');
 
         $count = 0;
+        $countEmailMatched = 0;
+        $countEmailConflicts = 0;
         $firstRow = true;
 
         while (($row = fgetcsv($file, 10000, ',')) !== false) {
@@ -477,7 +479,7 @@ class ImportAcademyData extends Command
 
             $telegram = trim($row[3] ?? '');  // Колонка D: Ник телеграм
             $phone = trim($row[4] ?? '');     // Колонка E: Телефон
-            $email = trim($row[5] ?? '');     // Колонка F: Email
+            $email = User::normalizeEmail($row[5] ?? ''); // Колонка F: Email
             $vk = trim($row[6] ?? '');        // Колонка G: VK
             $statusRaw = trim($row[9] ?? ''); // Колонка J: Статус
             $note = trim($row[11] ?? '');     // Колонка L: Примечание
@@ -487,7 +489,22 @@ class ImportAcademyData extends Command
             $status = in_array($statusRaw, $validStatuses) ? $statusRaw : 'Обычный студент';
 
             // Ищем, есть ли уже такой студент в базе
-            $existingUser = User::where('name', $name)->first();
+            $existingUserByName = User::where('name', $name)->first();
+            $existingUserByEmail = $email !== ''
+                ? User::where('email', $email)->first()
+                : null;
+
+            $existingUser = $existingUserByName ?? $existingUserByEmail;
+
+            if (! $existingUserByName && $existingUserByEmail) {
+                $countEmailMatched++;
+            }
+
+            if ($existingUserByName && $existingUserByEmail && $existingUserByName->isNot($existingUserByEmail)) {
+                $email = $existingUserByName->email;
+                $existingUser = $existingUserByName;
+                $countEmailConflicts++;
+            }
 
             // Если email пустой и студента еще нет - генерируем заглушку
             if (empty($email)) {
@@ -528,10 +545,11 @@ class ImportAcademyData extends Command
             }
 
             // Сохраняем в базу (без автоматической отправки писем, так как мы обходим контроллеры!)
-            User::updateOrCreate(
-                ['name' => $name], // Ищем строго по ФИО
-                $attributes
-            );
+            if ($existingUser) {
+                $existingUser->update($attributes);
+            } else {
+                User::create(['name' => $name] + $attributes);
+            }
 
             $count++;
         }
@@ -539,6 +557,12 @@ class ImportAcademyData extends Command
         fclose($file);
 
         $this->info("✅ Успешно импортировано студентов: {$count}");
+        if ($countEmailMatched > 0) {
+            $this->info("🔗 Обновлено существующих студентов по email при отличающемся ФИО: {$countEmailMatched}");
+        }
+        if ($countEmailConflicts > 0) {
+            $this->warn("⚠️ Конфликтов ФИО/email, где сохранён старый email записи по ФИО: {$countEmailConflicts}");
+        }
     }
 
     // ==========================================
