@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 
 class ImportAcademyData extends Command
 {
-    protected $signature = 'import:academy';
+    protected $signature = 'import:academy
+        {--students-file= : Путь к CSV студентов для тестов/разового импорта вместо storage/app/imports/students.csv}';
 
     protected $description = 'Пошаговый импорт данных из старой базы Excel';
 
@@ -447,7 +448,9 @@ class ImportAcademyData extends Command
     // ==========================================
     private function importStudents()
     {
-        $absolutePath = storage_path('app/imports/students.csv');
+        $absolutePath = $this->option('students-file')
+            ? (string) $this->option('students-file')
+            : storage_path('app/imports/students.csv');
 
         if (! file_exists($absolutePath)) {
             $this->error('Файл не найден! Положи students.csv сюда: '.$absolutePath);
