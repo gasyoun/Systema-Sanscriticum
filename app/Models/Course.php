@@ -104,6 +104,88 @@ class Course extends Model
         return $this->belongsTo(Teacher::class);
     }
 
+    /**
+     * Со-преподаватели курса со своими условиями ЗП (pivot course_teacher).
+     * Основной препод (teacher_id) сюда НЕ входит — он на самом курсе.
+     */
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(Teacher::class, 'course_teacher')
+            ->withPivot(['salary_type', 'salary_value'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Курсы, доступные преподавателю: он основной (teacher_id) ИЛИ со-препод
+     * (pivot). При $teacherId === null — ничего (препод без привязки к Teacher
+     * не видит курсов, как и раньше).
+     */
+    public function scopeForTeacher($query, ?int $teacherId)
+    {
+        if ($teacherId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($q) use ($teacherId) {
+            $q->where('teacher_id', $teacherId)
+                ->orWhereHas('teachers', fn ($t) => $t->where('teachers.id', $teacherId));
+        });
+    }
+
+    /** Ведёт ли курс данный преподаватель (основной или со-препод). */
+    public function isTaughtBy(?int $teacherId): bool
+    {
+        if ($teacherId === null) {
+            return false;
+        }
+
+        return (int) $this->teacher_id === $teacherId
+            || $this->teachers->contains('id', $teacherId);
+    }
+
+    /**
+     * Эффективные условия ЗП пары (курс, препод): основной берёт условия с
+     * курса, со-препод — из pivot. null = препод не ведёт курс. Единый источник
+     * правды для TeacherSalaryService и страницы расчёта.
+     *
+     * @return array{type: ?string, value: float}|null
+     */
+    public function salaryTermsFor(?int $teacherId): ?array
+    {
+        if ($teacherId === null) {
+            return null;
+        }
+
+        if ((int) $this->teacher_id === $teacherId) {
+            return ['type' => $this->salary_type, 'value' => (float) $this->salary_value];
+        }
+
+        $co = $this->teachers->firstWhere('id', $teacherId)
+            ?? $this->loadMissing('teachers')->teachers->firstWhere('id', $teacherId);
+
+        if ($co) {
+            return ['type' => $co->pivot->salary_type, 'value' => (float) $co->pivot->salary_value];
+        }
+
+        return null;
+    }
+
+    /**
+     * Closure-правило валидации course_id для преподавательских форм
+     * (Lesson/Schedule/Certificate): отсекает чужой course_id из POST с учётом и
+     * основного препода, и со-препода (pivot). Для не-преподавателей — пропускает.
+     */
+    public static function teacherCourseValidationRule(): \Closure
+    {
+        return static function (string $attribute, $value, \Closure $fail): void {
+            $user = auth()->user();
+            if ($user?->isTeacher()
+                && ! static::query()->forTeacher($user->teacher_id)->whereKey($value)->exists()) {
+                $fail('Этот курс не закреплён за вами.');
+            }
+        };
+    }
+
     // Урок-заготовка, который открывается при покупке пробного (синхронизируется
     // из trial_schedule_id на сохранении курса).
     public function trialLesson(): BelongsTo

@@ -28,7 +28,8 @@ class ListCertificates extends ListRecords
         $user = auth()->user();
         $query = Course::query();
         if ($user && $user->isTeacher()) {
-            $query->where('teacher_id', $user->teacher_id ?: 0);
+            // Курсы препода: основной ИЛИ со-препод. Без teacher_id — пусто.
+            $query->forTeacher($user->teacher_id);
         }
 
         return $query->orderBy('title')->pluck('title', 'id')->all();
@@ -82,10 +83,10 @@ class ListCertificates extends ListRecords
                     // свои курсы (зеркалит rule() в CertificateResource::form).
                     $user = auth()->user();
                     if ($user?->isTeacher()) {
-                        $owns = $user->teacher_id
-                            && Course::where('id', $courseId)
-                                ->where('teacher_id', $user->teacher_id)
-                                ->exists();
+                        $owns = Course::query()
+                            ->forTeacher($user->teacher_id)
+                            ->whereKey($courseId)
+                            ->exists();
                         if (! $owns) {
                             Notification::make()->title('Этот курс не закреплён за вами')->danger()->send();
 

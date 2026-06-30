@@ -121,23 +121,28 @@ class TeacherSalaries extends Page implements HasTable
 
                 Forms\Components\Select::make('course_id')
                     ->label('Курс')
+                    // Курсы препода: где он основной ИЛИ со-препод (pivot course_teacher).
                     ->options(fn (Forms\Get $get) => $get('teacher_id')
-                        ? Course::query()->where('teacher_id', $get('teacher_id'))->orderBy('title')->pluck('title', 'id')
+                        ? Course::query()->forTeacher((int) $get('teacher_id'))->orderBy('title')->pluck('title', 'id')
                         : [])
                     ->searchable()
                     ->required()
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set): void {
                         $course = $state ? Course::find($state) : null;
-                        $type = (string) ($course?->salary_type ?: 'percent');
+                        // Эффективные условия ЭТОГО препода на курсе (основной — с
+                        // курса, со-препод — из pivot).
+                        $terms = $course?->salaryTermsFor($get('teacher_id') ? (int) $get('teacher_id') : null);
+                        $type = (string) ($terms['type'] ?? 'percent');
+                        $value = $terms['value'] ?? null;
                         $set('salary_type', $type);
 
                         // Для фикс-моделей salary_value — это ставка в ₽, не процент.
                         if ($this->isFixedModel($type)) {
-                            $set('fixed_rate', $course?->salary_value);
+                            $set('fixed_rate', $value);
                             $set('teacher_percent', null);
                         } else {
-                            $set('teacher_percent', $course?->salary_value);
+                            $set('teacher_percent', $value);
                             $set('fixed_rate', null);
                         }
 
@@ -1062,7 +1067,7 @@ class TeacherSalaries extends Page implements HasTable
                 Forms\Components\Select::make('course_id')
                     ->label('Курс (необязательно)')
                     ->options(fn (Model $r) => Course::query()
-                        ->where('teacher_id', $r->id)
+                        ->forTeacher((int) $r->id)
                         ->orderBy('title')
                         ->pluck('title', 'id'))
                     ->helperText('Если выбрать — зафиксируем снимок ставки курса в выплате.'),
@@ -1082,14 +1087,18 @@ class TeacherSalaries extends Page implements HasTable
             ->action(function (Model $r, array $data): void {
                 $course = ! empty($data['course_id']) ? Course::find($data['course_id']) : null;
 
+                // Снимок ЭФФЕКТИВНЫХ условий этого препода (основной — с курса,
+                // со-препод — из pivot), а не всегда основного.
+                $terms = $course?->salaryTermsFor((int) $r->id);
+
                 $payout = Teacher::find($r->id)?->payouts()->create([
                     'amount' => $data['amount'],
                     'type' => TeacherPayout::TYPE_REGULAR,
                     'paid_at' => $data['paid_at'],
                     'period_month' => $data['period_month'] ?? null,
                     'course_id' => $course?->id,
-                    'salary_type' => $course?->salary_type,
-                    'salary_value' => $course?->salary_value,
+                    'salary_type' => $terms['type'] ?? null,
+                    'salary_value' => $terms['value'] ?? null,
                     'comment' => $data['comment'] ?? null,
                 ]);
 
