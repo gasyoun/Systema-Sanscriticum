@@ -258,6 +258,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
             'services.telegram_support.history_limit' => 50,
             'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
         ]);
 
         FakeMadelineProtoClient::$histories = [
@@ -309,6 +310,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
             'services.telegram_support.history_limit' => 50,
             'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
         ]);
 
         FakeMadelineProtoClient::$histories = [
@@ -340,6 +342,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
             'services.telegram_support.history_limit' => 50,
             'services.telegram_support.dialog_limit' => 2,
+            'services.telegram_support.profile_backfill_limit' => 20,
         ]);
 
         FakeMadelineProtoClient::$histories = [
@@ -471,12 +474,164 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame($student->id, $contact->refresh()->linked_user_id);
         $this->assertSame($student->id, $chat->refresh()->linked_user_id);
     }
+
+    public function test_auto_linker_matches_unique_telegram_username_from_user_note(): void
+    {
+        if (! Schema::hasColumn('users', 'note')) {
+            Schema::table('users', function ($table) {
+                $table->text('note')->nullable();
+            });
+        }
+
+        $student = User::factory()->create([
+            'name' => 'Username Student',
+            'note' => "Telegram: @known_student\nКомментарий: imported",
+        ]);
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 6401,
+            'type' => 'private',
+        ]);
+        $contact = TelegramSupportContact::create([
+            'telegram_user_id' => 6401,
+            'telegram_support_chat_id' => $chat->id,
+            'username' => 'known_student',
+        ]);
+
+        $result = app(TelegramSupportSyncService::class)->syncNormalizedMessages([]);
+
+        $this->assertSame(1, $result['auto_linked']);
+        $this->assertSame($student->id, $contact->refresh()->linked_user_id);
+        $this->assertSame($student->id, $chat->refresh()->linked_user_id);
+    }
+
+    public function test_auto_linker_matches_unique_full_name_when_username_is_unavailable(): void
+    {
+        $student = User::factory()->create(['name' => 'Exact Telegram Name']);
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 6501,
+            'type' => 'private',
+        ]);
+        $contact = TelegramSupportContact::create([
+            'telegram_user_id' => 6501,
+            'telegram_support_chat_id' => $chat->id,
+            'name' => 'Exact Telegram Name',
+        ]);
+
+        $result = app(TelegramSupportSyncService::class)->syncNormalizedMessages([]);
+
+        $this->assertSame(1, $result['auto_linked']);
+        $this->assertSame($student->id, $contact->refresh()->linked_user_id);
+    }
+
+    public function test_madelineproto_sync_enriches_contacts_from_history_users_payload(): void
+    {
+        if (! Schema::hasColumn('users', 'note')) {
+            Schema::table('users', function ($table) {
+                $table->text('note')->nullable();
+            });
+        }
+
+        $student = User::factory()->create([
+            'name' => 'History User',
+            'note' => 'Telegram: @history_user',
+        ]);
+
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            6601 => [
+                ['id' => 1, 'date' => strtotime('2026-06-28 13:00:00'), 'message' => 'Из истории', 'peer_id' => 6601, 'from_id' => ['user_id' => 9601]],
+            ],
+        ];
+        FakeMadelineProtoClient::$users = [
+            6601 => [
+                ['id' => 9601, 'first_name' => 'History', 'last_name' => 'User', 'username' => 'history_user'],
+            ],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = [];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $contact = TelegramSupportContact::where('telegram_user_id', 9601)->firstOrFail();
+        $this->assertSame('History User', $contact->name);
+        $this->assertSame('history_user', $contact->username);
+        $this->assertSame(1, $result['auto_linked']);
+        $this->assertSame($student->id, $contact->linked_user_id);
+    }
+
+    public function test_madelineproto_sync_backfills_existing_contact_profile_and_auto_links(): void
+    {
+        if (! Schema::hasColumn('users', 'note')) {
+            Schema::table('users', function ($table) {
+                $table->text('note')->nullable();
+            });
+        }
+
+        $student = User::factory()->create([
+            'name' => 'Backfill Student',
+            'note' => 'Telegram: @backfill_student',
+        ]);
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 6701,
+            'type' => 'private',
+        ]);
+        $contact = TelegramSupportContact::create([
+            'telegram_user_id' => 9701,
+            'telegram_support_chat_id' => $chat->id,
+        ]);
+
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [];
+        FakeMadelineProtoClient::$users = [];
+        FakeMadelineProtoClient::$profiles = [
+            9701 => ['User' => ['id' => 9701, 'first_name' => 'Backfill', 'last_name' => 'Student', 'username' => 'backfill_student']],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        FakeMadelineProtoClient::$startFailures = [];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame(0, $result['synced']);
+        $this->assertSame(1, $result['auto_linked']);
+        $this->assertSame('Backfill Student', $contact->refresh()->name);
+        $this->assertSame('backfill_student', $contact->username);
+        $this->assertSame($student->id, $contact->linked_user_id);
+        $this->assertSame($student->id, $chat->refresh()->linked_user_id);
+    }
 }
 
 class FakeMadelineProtoClient
 {
     /** @var array<int, array<int, array<string, mixed>>> */
     public static array $histories = [];
+
+    /** @var array<int, array<int, array<string, mixed>>> */
+    public static array $users = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public static array $profiles = [];
 
     /** @var array<int, array<string, mixed>> */
     public static array $lastHistoryRequests = [];
@@ -507,6 +662,7 @@ class FakeMadelineProtoClient
                         ->filter(fn (array $message) => (int) $message['id'] > $minId)
                         ->values()
                         ->all(),
+                    'users' => FakeMadelineProtoClient::$users[$peer] ?? [],
                 ];
             }
         };
@@ -527,5 +683,13 @@ class FakeMadelineProtoClient
     public function getDialogIds(): array
     {
         return array_keys(self::$histories);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getInfo(int $id): array
+    {
+        return self::$profiles[$id] ?? [];
     }
 }

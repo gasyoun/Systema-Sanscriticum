@@ -103,6 +103,7 @@ return [
         'session' => env('TELEGRAM_SUPPORT_SESSION', storage_path('app/telegram-support/session.madeline')),
         'history_limit' => (int) env('TELEGRAM_SUPPORT_HISTORY_LIMIT', 50),
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
+        'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: \danog\MadelineProto\API::class,
     ],
 

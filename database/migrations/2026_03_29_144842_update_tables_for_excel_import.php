@@ -9,38 +9,53 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Обновляем таблицу users (Студенты)
-        Schema::table('users', function (Blueprint $table) {
-            // Проверяем каждую колонку перед добавлением
-            if (! Schema::hasColumn('users', 'phone')) {
-                $table->string('phone')->nullable()->after('email');
-            }
-            if (! Schema::hasColumn('users', 'global_status')) {
-                $table->string('global_status')->default('Обычный студент')->after('is_admin');
-            }
-            if (! Schema::hasColumn('users', 'note')) {
-                $table->text('note')->nullable()->after('global_status');
-            }
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                // Проверяем каждую колонку перед добавлением
+                if (! Schema::hasColumn('users', 'phone')) {
+                    $table->string('phone')->nullable()->after('email');
+                }
+                if (! Schema::hasColumn('users', 'global_status')) {
+                    $column = $table->string('global_status')->default('Обычный студент');
+                    Schema::hasColumn('users', 'is_admin')
+                        ? $column->after('is_admin')
+                        : $column->after('email');
+                }
+                if (! Schema::hasColumn('users', 'note')) {
+                    $table->text('note')->nullable()->after('global_status');
+                }
+            });
+        }
 
         // 2. Обновляем таблицу courses (Курсы)
-        Schema::table('courses', function (Blueprint $table) {
-            if (! Schema::hasColumn('courses', 'is_elective')) {
-                $table->boolean('is_elective')->default(false)->after('is_visible');
-            }
-        });
+        if (Schema::hasTable('courses')) {
+            Schema::table('courses', function (Blueprint $table) {
+                if (! Schema::hasColumn('courses', 'is_elective')) {
+                    $column = $table->boolean('is_elective')->default(false);
+                    if (Schema::hasColumn('courses', 'is_visible')) {
+                        $column->after('is_visible');
+                    }
+                }
+            });
+        }
 
         // 3. Обновляем таблицу payments (Оплаты)
-        Schema::table('payments', function (Blueprint $table) {
-            if (! Schema::hasColumn('payments', 'start_block')) {
-                $table->integer('start_block')->nullable()->after('amount');
-            }
-            if (! Schema::hasColumn('payments', 'end_block')) {
-                $table->integer('end_block')->nullable()->after('start_block');
-            }
-        });
+        if (Schema::hasTable('payments')) {
+            Schema::table('payments', function (Blueprint $table) {
+                if (! Schema::hasColumn('payments', 'start_block')) {
+                    $column = $table->integer('start_block')->nullable();
+                    if (Schema::hasColumn('payments', 'amount')) {
+                        $column->after('amount');
+                    }
+                }
+                if (! Schema::hasColumn('payments', 'end_block')) {
+                    $table->integer('end_block')->nullable()->after('start_block');
+                }
+            });
+        }
 
         // 4. Создаем связующую таблицу (если её еще нет)
-        if (! Schema::hasTable('course_user')) {
+        if (Schema::hasTable('users') && Schema::hasTable('courses') && ! Schema::hasTable('course_user')) {
             Schema::create('course_user', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -59,17 +74,29 @@ return new class extends Migration
     {
         Schema::dropIfExists('course_user');
 
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn(['start_block', 'end_block']);
-        });
+        if (Schema::hasTable('payments')) {
+            Schema::table('payments', function (Blueprint $table) {
+                $columns = array_filter(['start_block', 'end_block'], fn (string $column): bool => Schema::hasColumn('payments', $column));
+                if ($columns !== []) {
+                    $table->dropColumn($columns);
+                }
+            });
+        }
 
-        Schema::table('courses', function (Blueprint $table) {
-            $table->dropColumn('is_elective');
-        });
+        if (Schema::hasTable('courses') && Schema::hasColumn('courses', 'is_elective')) {
+            Schema::table('courses', function (Blueprint $table) {
+                $table->dropColumn('is_elective');
+            });
+        }
 
-        Schema::table('users', function (Blueprint $table) {
-            // Не удаляем phone при откате, так как он был там до нас
-            $table->dropColumn(['global_status', 'note']);
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                // Не удаляем phone при откате, так как он был там до нас
+                $columns = array_filter(['global_status', 'note'], fn (string $column): bool => Schema::hasColumn('users', $column));
+                if ($columns !== []) {
+                    $table->dropColumn($columns);
+                }
+            });
+        }
     }
 };
