@@ -8,7 +8,9 @@ use Filament\Tables\Table;
 
 class StudentsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'users';
+    // Активный состав: вышедшие/выпускники (group_user.left_at) скрыты — они
+    // сохраняют доступ к урокам, но в текущем составе группы не показываются.
+    protected static string $relationship = 'activeUsers';
 
     protected static ?string $title = 'Ученики группы';
 
