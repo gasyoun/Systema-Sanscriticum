@@ -16,6 +16,7 @@ class ChatMessage extends Model
         'answered_by',
         'text',
         'is_read',
+        'ai_state',
     ];
 
     protected $casts = [

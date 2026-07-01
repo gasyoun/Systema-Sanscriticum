@@ -66,7 +66,7 @@ The same person (e.g. one Telegram user) can be represented in all of these, wit
 ## Open decisions (the ones grounded in code)
 
 1. **Operational conversation object** — define it as a reopenable thread keyed to user/identity. ✅ Name collision resolved (Step 1): `SupportConversation` is free; use it for the thread.
-2. **Unification strategy** — read layer over `ChatMessage` + `TelegramSupportMessage`, upgrading `ChatMessage` toward the richer shape. Not a table merge.
+2. **Unification strategy** — ✅ read layer built (Step 2): [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) DTO + [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php)`::forUser()` merge both stores chronologically. No table merge. `ai_state` added to `chat_messages`; `direction`/`responder_type` are **derived from `role`** in the DTO (not stored — `role` stays the single source on the web side). Still open: a write path and thread grouping (come with the operational-thread object).
 3. **Identity reconciliation** — pick a canonical store (likely `SocialAccount`-shaped) and a migration path for the three existing mappings.
 4. **AI scope** — extend the existing `SupportAiReplyEvent` / `ai_state` model; add the two genuinely-missing functions (suggested-reply, summary) rather than a single on/off toggle. Triage (`SupportTopicRule`) and event logging already exist.
 
