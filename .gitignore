@@ -28,3 +28,6 @@ SECURITY_AUDIT*.md
 # audit sidecars
 .contributing_old.md
 .contributing_audit.txt
+
+# local agent config
+/docs/.claude/
