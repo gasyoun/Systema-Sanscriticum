@@ -78,7 +78,7 @@ return new class extends Migration
             $table->index(['direction', 'sent_at']);
         });
 
-        Schema::create('support_conversations', function (Blueprint $table) {
+        Schema::create('support_daily_rollups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('telegram_support_chat_id')->constrained()->cascadeOnDelete();
             $table->date('conversation_date');
@@ -96,7 +96,7 @@ return new class extends Migration
 
             $table->unique(
                 ['telegram_support_chat_id', 'conversation_date'],
-                'support_conversation_chat_date_unique'
+                'support_daily_rollup_chat_date_unique'
             );
             $table->index(['conversation_date', 'is_unanswered']);
         });
@@ -112,7 +112,7 @@ return new class extends Migration
 
         Schema::create('support_topic_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('support_conversation_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('support_daily_rollup_id')->constrained()->cascadeOnDelete();
             $table->string('category');
             $table->string('source', 24)->default('keyword');
             $table->decimal('confidence', 4, 3)->default(0);
@@ -120,7 +120,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(
-                ['support_conversation_id', 'category', 'source'],
+                ['support_daily_rollup_id', 'category', 'source'],
                 'support_topic_assignment_unique'
             );
         });
@@ -139,7 +139,7 @@ return new class extends Migration
         Schema::dropIfExists('support_ai_reply_events');
         Schema::dropIfExists('support_topic_assignments');
         Schema::dropIfExists('support_topic_rules');
-        Schema::dropIfExists('support_conversations');
+        Schema::dropIfExists('support_daily_rollups');
         Schema::dropIfExists('telegram_support_messages');
         Schema::dropIfExists('support_responder_mappings');
         Schema::dropIfExists('telegram_support_contacts');

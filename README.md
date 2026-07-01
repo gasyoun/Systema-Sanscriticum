@@ -405,7 +405,7 @@ php artisan telegram-support:sync --payload=storage/app/support-sample.json
 - авто-привязку контактов по `telegram_id`, username и имени, когда это однозначно.
 
 Файлы: [TelegramSupportSyncService.php](app/Services/TelegramSupport/TelegramSupportSyncService.php),
-[SupportConversationAggregator.php](app/Services/TelegramSupport/SupportConversationAggregator.php),
+[SupportDailyRollupAggregator.php](app/Services/TelegramSupport/SupportDailyRollupAggregator.php),
 [TelegramSupportAnalytics.php](app/Filament/Pages/TelegramSupportAnalytics.php),
 [TelegramSupportContactResource.php](app/Filament/Resources/TelegramSupportContactResource.php).
 

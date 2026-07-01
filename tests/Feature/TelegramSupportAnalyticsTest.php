@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\TelegramSupportAnalytics;
 use App\Filament\Resources\TelegramSupportContactResource;
 use App\Filament\Resources\TelegramSupportContactResource\Pages\EditTelegramSupportContact;
-use App\Models\SupportConversation;
+use App\Models\SupportDailyRollup;
 use App\Models\SupportResponderMapping;
 use App\Models\SupportTopicRule;
 use App\Models\TelegramSupportAccount;
@@ -142,7 +142,7 @@ class TelegramSupportAnalyticsTest extends TestCase
 
         $this->assertSame(6, TelegramSupportMessage::count());
 
-        $conversation = SupportConversation::whereDate('conversation_date', '2026-06-28')
+        $conversation = SupportDailyRollup::whereDate('conversation_date', '2026-06-28')
             ->whereHas('chat', fn ($query) => $query->where('telegram_chat_id', 1001))
             ->firstOrFail();
 
@@ -160,16 +160,16 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertTrue($conversation->has_new_contact);
         $this->assertFalse($conversation->is_unanswered);
         $this->assertDatabaseHas('support_topic_assignments', [
-            'support_conversation_id' => $conversation->id,
+            'support_daily_rollup_id' => $conversation->id,
             'category' => 'billing',
             'source' => 'keyword',
         ]);
 
-        $this->assertDatabaseHas('support_conversations', [
+        $this->assertDatabaseHas('support_daily_rollups', [
             'conversation_date' => '2026-06-28 00:00:00',
             'is_unanswered' => true,
         ]);
-        $this->assertDatabaseHas('support_conversations', [
+        $this->assertDatabaseHas('support_daily_rollups', [
             'conversation_date' => '2026-06-28 00:00:00',
             'ai_sent_count' => 1,
         ]);
@@ -178,7 +178,7 @@ class TelegramSupportAnalyticsTest extends TestCase
             'reason' => 'no keyword match; llm fallback reserved',
         ]);
 
-        $todayConversation = SupportConversation::whereDate('conversation_date', '2026-06-29')->firstOrFail();
+        $todayConversation = SupportDailyRollup::whereDate('conversation_date', '2026-06-29')->firstOrFail();
         $this->assertFalse($todayConversation->has_new_contact);
     }
 

@@ -35,6 +35,6 @@ class TelegramSupportChat extends Model
 
     public function conversations(): HasMany
     {
-        return $this->hasMany(SupportConversation::class);
+        return $this->hasMany(SupportDailyRollup::class);
     }
 }

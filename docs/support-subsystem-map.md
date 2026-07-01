@@ -2,6 +2,8 @@
 
 <p align="right"><sub>Created: 01-07-2026 · Last updated: 01-07-2026</sub></p>
 
+> **Update 01-07-2026 (Step 1 done):** the naming landmine below is **resolved in code** — the daily-rollup model is now [`SupportDailyRollup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportDailyRollup.php) (table `support_daily_rollups`, FK `support_daily_rollup_id`, aggregator `SupportDailyRollupAggregator`). The name `SupportConversation` is now **free** for the future operational thread. Display vocabulary (`conversations()` relation, `conversation_date` column, dashboard `conversations` key) was intentionally left as-is.
+
 > Companion to [jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md).
 > jivo.md is product strategy benchmarked against Jivo; **its "current state" claims are unreliable** (sourced from Jivo help pages, not the repo). This file is the ground truth: what the support code actually is, verified against models on `main`. Read this before building anything in the support area so you don't rebuild what exists or trip a naming landmine.
 
@@ -27,15 +29,11 @@ There is **no unified inbox.** Support messages live in two structurally differe
 
 `TelegramSupportMessage` is the richer, more normalized of the two. If you unify, it is the *target shape*; `ChatMessage` is what needs upgrading (add grouping, `direction`, `responder_type`, `ai_state`). **Do not merge the tables** — channels differ; build a read layer over both.
 
-## The `SupportConversation` naming landmine
+## The `SupportConversation` naming landmine — RESOLVED (Step 1, 01-07-2026)
 
-[`SupportConversation`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportConversation.php) belongs to a `TelegramSupportChat` and holds `conversation_date`, `incoming_count`, `outgoing_count`, `human_reply_count`, `ai_sent_count`, `is_unanswered`, `first_response_seconds`. **It is a daily metrics aggregate, not an operational case.**
+[`SupportDailyRollup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportDailyRollup.php) (formerly `SupportConversation`) belongs to a `TelegramSupportChat` and holds `conversation_date`, `incoming_count`, `outgoing_count`, `human_reply_count`, `ai_sent_count`, `is_unanswered`, `first_response_seconds`. **It is a daily metrics aggregate, not an operational case.**
 
-If you build an operational thread/case object, you have a name collision. Decide up front:
-- rename the existing model to `SupportDailyRollup` (or similar), **or**
-- name the operational object differently (`SupportThread` / `SupportCase`).
-
-Don't overload the existing model — its semantics (one row = one chat × one day) are incompatible with a reopenable thread.
+The model, its table (`support_daily_rollups`), the FK on topic assignments (`support_daily_rollup_id`), and the aggregator service (`SupportDailyRollupAggregator`) were renamed so the clean name **`SupportConversation` is now free** for the future reopenable operational thread. Its semantics (one row = one chat × one day) remain incompatible with a reopenable thread — build the thread as a new object, don't overload the rollup.
 
 ## Support infra that ALREADY exists (don't rebuild)
 
@@ -67,7 +65,7 @@ The same person (e.g. one Telegram user) can be represented in all of these, wit
 
 ## Open decisions (the ones grounded in code)
 
-1. **Operational conversation object** — define it as a reopenable thread keyed to user/identity; resolve the `SupportConversation` name collision first.
+1. **Operational conversation object** — define it as a reopenable thread keyed to user/identity. ✅ Name collision resolved (Step 1): `SupportConversation` is free; use it for the thread.
 2. **Unification strategy** — read layer over `ChatMessage` + `TelegramSupportMessage`, upgrading `ChatMessage` toward the richer shape. Not a table merge.
 3. **Identity reconciliation** — pick a canonical store (likely `SocialAccount`-shaped) and a migration path for the three existing mappings.
 4. **AI scope** — extend the existing `SupportAiReplyEvent` / `ai_state` model; add the two genuinely-missing functions (suggested-reply, summary) rather than a single on/off toggle. Triage (`SupportTopicRule`) and event logging already exist.
