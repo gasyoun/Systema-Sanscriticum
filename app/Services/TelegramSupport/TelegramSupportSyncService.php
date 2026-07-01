@@ -221,13 +221,7 @@ class TelegramSupportSyncService
      */
     private function fetchIncrementalMadelineMessages(TelegramSupportAccount $account, string $clientClass): array
     {
-        $session = (string) config('services.telegram_support.session');
-        File::ensureDirectoryExists(dirname(base_path($session)));
-
-        $settings = $this->madelineSettings();
-
-        $client = new $clientClass($session, $settings);
-        $client->start();
+        $client = $this->openClient($clientClass);
         $this->backfillContactProfiles($client);
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
@@ -282,6 +276,65 @@ class TelegramSupportSyncService
         }
 
         return array_slice($dialogs, 0, $limit);
+    }
+
+    /** Открыть залогиненный MadelineProto-клиент (та же сессия, что и для sync). */
+    protected function openClient(string $clientClass): object
+    {
+        $session = (string) config('services.telegram_support.session');
+        File::ensureDirectoryExists(dirname(base_path($session)));
+
+        $client = new $clientClass($session, $this->madelineSettings());
+        $client->start();
+
+        return $client;
+    }
+
+    /**
+     * Отправить исходящее сообщение через userbot в указанный чат. Возвращает
+     * статус + реальный telegram_message_id при успехе. Гварды повторяют sync():
+     * без enabled/creds/клиента — просто статус, без открытия клиента. Ошибки
+     * самой отправки пробрасываются (job их ретраит).
+     *
+     * @return array{status: string, telegram_message_id?: int|null}
+     */
+    public function deliverMessage(int $chatId, string $text): array
+    {
+        if (! config('services.telegram_support.enabled')) {
+            return ['status' => 'disabled'];
+        }
+
+        if (! config('services.telegram_support.api_id') || ! config('services.telegram_support.api_hash')) {
+            return ['status' => 'unconfigured'];
+        }
+
+        $clientClass = (string) config('services.telegram_support.client_class');
+        if ($clientClass === '' || ! class_exists($clientClass)) {
+            return ['status' => 'missing_madelineproto'];
+        }
+
+        $result = $this->openClient($clientClass)->messages->sendMessage([
+            'peer' => $chatId,
+            'message' => $text,
+        ]);
+
+        return ['status' => 'ok', 'telegram_message_id' => $this->extractSentMessageId($result)];
+    }
+
+    /** Достать реальный id отправленного сообщения из ответа MadelineProto (Updates). */
+    private function extractSentMessageId(mixed $result): ?int
+    {
+        if (! is_array($result)) {
+            return null;
+        }
+
+        foreach (($result['updates'] ?? []) as $update) {
+            if (is_array($update) && ($update['_'] ?? null) === 'updateMessageID' && isset($update['id'])) {
+                return (int) $update['id'];
+            }
+        }
+
+        return isset($result['id']) ? (int) $result['id'] : null;
     }
 
     private function madelineSettings(): object

@@ -28,5 +28,10 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Userbot выключен в тестах (локальный .env может ставить =true); тесты,
+             которым он нужен, включают его через config() явно. Иначе class_exists
+             на реальном danog\MadelineProto\API регистрирует shutdown-хендлер,
+             роняющий amp на teardown под Windows. -->
+        <env name="TELEGRAM_SUPPORT_ENABLED" value="false"/>
     </php>
 </phpunit>
