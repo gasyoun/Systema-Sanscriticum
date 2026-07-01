@@ -68,7 +68,21 @@ The same person (e.g. one Telegram user) can be represented in all of these, wit
 1. **Operational conversation object** — define it as a reopenable thread keyed to user/identity. ✅ Name collision resolved (Step 1): `SupportConversation` is free; use it for the thread.
 2. **Unification strategy** — ✅ read layer built (Step 2): [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) DTO + [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php)`::forUser()` merge both stores chronologically. No table merge. `ai_state` added to `chat_messages`; `direction`/`responder_type` are **derived from `role`** in the DTO (not stored — `role` stays the single source on the web side). Still open: a write path and thread grouping (come with the operational-thread object).
 3. **Identity reconciliation** — ✅ resolved (Step 3): [`social_accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_06_25_130000_create_social_accounts_table.php) is canonical; see [docs/support-identity.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-identity.md). Backfill: [`identity:backfill-social-accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ConsolidateSocialIdentities.php) (dry-run default, idempotent, non-clobbering). Denormalized `users.telegram_id/vk_id/max_user_id` kept as outbound caches. No 4th table.
-4. **AI scope** — extend the existing `SupportAiReplyEvent` / `ai_state` model; add the two genuinely-missing functions (suggested-reply, summary) rather than a single on/off toggle. Triage (`SupportTopicRule`) and event logging already exist.
+4. **AI scope** — ✅ done: [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) adds the two genuinely-missing functions (`suggestReply`, `summarize`) over the unified thread, logging each to the existing `SupportAiReplyEvent` (`suggested`/`summary`). Behind `features.support_ai_assist` (off). Reuses `CuratorAi::chat()`; never auto-sends.
+
+## What now exists on top of the two stores (integration wave, 01-07-2026)
+
+The read layer, operational thread, reply router, and AI assist were all built. Current state:
+
+| Concern | Where | Notes |
+|---|---|---|
+| Unified read | [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php) + [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) | merges both stores per user; DTO carries presentation helpers |
+| Operational thread | [`SupportConversation`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportConversation.php) + [`SupportConversationManager`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportConversationManager.php) | one reopenable thread per user; `support_conversation_id` FK on both message tables |
+| Curator UI | [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) | shows both channels in one stream (channel badges + thread status); sidebar includes TG-linked users |
+| Reply routing | [`SupportReplyService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportReplyService.php) | flag `support_unified_reply` (off); TG-support userbot delivery still NOT wired (records pending) |
+| AI assist | [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) | flag `support_ai_assist` (off) |
+
+**Still open:** real userbot outbound delivery for the imported TG-support channel (currently a logged pending record).
 
 ## Where jivo.md is still useful
 

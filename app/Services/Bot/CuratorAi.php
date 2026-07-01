@@ -42,6 +42,25 @@ class CuratorAi
             $this->history($user),
         );
 
+        return $this->chat($messages);
+    }
+
+    /**
+     * Низкоуровневый вызов LLM с готовым набором сообщений (OpenAI chat format).
+     * Переиспользуется ИИ-ассистом поддержки поверх единого треда. Возвращает
+     * текст ответа или null при ошибке/отказе.
+     *
+     * @param  list<array{role: string, content: string}>  $messages
+     */
+    public function chat(array $messages): ?string
+    {
+        $apiKey = config('services.openrouter.api_key');
+        if (empty($apiKey)) {
+            Log::error('CuratorAi: OPENROUTER_API_KEY не задан');
+
+            return null;
+        }
+
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$apiKey,
