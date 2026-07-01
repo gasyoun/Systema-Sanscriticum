@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Операционный тред поддержки: reopenable «дело» по одному пользователю поверх
+ * обоих каналов. НЕ путать с `SupportDailyRollup` (дневная аналитика). Группирует
+ * сообщения через nullable FK на chat_messages и telegram_support_messages.
+ * См. docs/support-subsystem-map.md.
+ */
+class SupportConversation extends Model
+{
+    public const STATUS_OPEN = 'open';
+
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_CLOSED = 'closed';
+
+    protected $fillable = [
+        'user_id',
+        'status',
+        'subject',
+        'assigned_to',
+        'last_message_at',
+        'closed_at',
+    ];
+
+    protected $casts = [
+        'last_message_at' => 'datetime',
+        'closed_at' => 'datetime',
+    ];
+
+    public function isOpen(): bool
+    {
+        return $this->status !== self::STATUS_CLOSED;
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    public function telegramMessages(): HasMany
+    {
+        return $this->hasMany(TelegramSupportMessage::class);
+    }
+}

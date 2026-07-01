@@ -29,13 +29,14 @@ class UnifiedInboxReader
         $userId = $user instanceof User ? $user->id : $user;
 
         $web = ChatMessage::query()
+            ->with('answeredBy:id,name')
             ->where('user_id', $userId)
             ->orderBy('created_at')
             ->get()
             ->map(fn (ChatMessage $message) => UnifiedMessage::fromChatMessage($message));
 
         $telegram = TelegramSupportMessage::query()
-            ->with(['chat', 'contact'])
+            ->with(['chat', 'contact', 'responder:id,name'])
             ->where(function ($query) use ($userId) {
                 $query->whereHas('chat', fn ($q) => $q->where('linked_user_id', $userId))
                     ->orWhereHas('contact', fn ($q) => $q->where('linked_user_id', $userId));

@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
+use App\Services\Support\SupportConversationManager;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -25,6 +26,7 @@ class StudentChatService
     public function __construct(
         private StudentSelfService $selfService,
         private CuratorAi $ai,
+        private SupportConversationManager $conversations,
     ) {}
 
     /** Ключ «режима человека» для веб-канала (по пользователю, не по chat_id). */
@@ -44,12 +46,17 @@ class StudentChatService
             return null;
         }
 
-        return ChatMessage::create([
+        $message = ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'user',
             'text' => $text,
             'is_read' => false,
         ]);
+
+        // Входящее открывает/переоткрывает операционный тред поддержки.
+        $this->conversations->recordMessage($user, $message, $message->created_at);
+
+        return $message;
     }
 
     /** Сохранить входящее и сразу сформировать ответ (синхронно). */
@@ -104,11 +111,13 @@ class StudentChatService
 
     private function botSay(User $user, string $text): void
     {
-        ChatMessage::create([
+        $message = ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'bot',
             'text' => $text,
             'is_read' => true,
         ]);
+
+        $this->conversations->recordMessage($user, $message, $message->created_at);
     }
 }

@@ -593,6 +593,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(ChatMessage::class);
     }
 
+    /** Импортированные TG-support чаты, сведённые на этого пользователя. */
+    public function linkedSupportChats()
+    {
+        return $this->hasMany(TelegramSupportChat::class, 'linked_user_id');
+    }
+
     public function paymentPromises(): HasMany
     {
         return $this->hasMany(PaymentPromise::class);
