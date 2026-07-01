@@ -19,4 +19,22 @@ return [
      | флагом не управляется (см. Tariff::upgradeCreditForUser).
      */
     'full_course_block_credit' => (bool) env('FULL_COURSE_BLOCK_CREDIT', false),
+
+    /*
+     | Единый ответ из Helpdesk с маршрутизацией в канал разговора. ВЫКЛЮЧЕН по
+     | умолчанию: когда включён, ответ куратора на диалог, живущий в
+     | импортированном TG-support (userbot), пишется в TelegramSupportMessage
+     | (исходящее) и привязывается к треду, а не в веб-ChatMessage. Реальная
+     | доставка через userbot пока НЕ подключена — запись помечается pending и
+     | логируется. Веб/бот-каналы работают как прежде. Включать осознанно.
+     */
+    'support_unified_reply' => (bool) env('SUPPORT_UNIFIED_REPLY', false),
+
+    /*
+     | ИИ-ассист в поддержке: черновик ответа (suggested-reply) и краткое
+     | резюме диалога поверх существующего SupportAiReplyEvent/ai_state.
+     | ВЫКЛЮЧЕН по умолчанию — не шлёт ничего сам, только готовит черновик
+     | куратору. Требует OPENROUTER_API_KEY.
+     */
+    'support_ai_assist' => (bool) env('SUPPORT_AI_ASSIST', false),
 ];

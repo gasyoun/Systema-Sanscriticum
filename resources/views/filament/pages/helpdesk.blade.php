@@ -300,6 +300,24 @@
                     @endforelse
                 </div>
 
+                {{-- ИИ-ассист (за флагом): черновик ответа + резюме диалога --}}
+                @if(config('features.support_ai_assist'))
+                    <div style="padding: 8px 24px 0; display: flex; gap: 8px; align-items: center;">
+                        <button type="button" wire:click="suggestReply" wire:loading.attr="disabled"
+                            style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                            🤖 Подсказать ответ
+                        </button>
+                        <button type="button" wire:click="summarizeThread" wire:loading.attr="disabled"
+                            style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                            📝 Резюме
+                        </button>
+                        <span wire:loading style="font-size: 11px; color: #9ca3af;">ИИ думает…</span>
+                    </div>
+                    @if($aiSummary)
+                        <div style="margin: 8px 24px 0; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #166534; white-space: pre-line;">{{ $aiSummary }}</div>
+                    @endif
+                @endif
+
                 {{-- Ввод --}}
                 <div class="chat-input-area">
                     <form wire:submit.prevent="sendMessageToStudent" class="input-group">

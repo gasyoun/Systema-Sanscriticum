@@ -40,6 +40,9 @@ class Helpdesk extends Page
     /** Чья карточка открыта в модалке инфо (null = закрыта). */
     public $infoUserId = null;
 
+    /** Последнее ИИ-резюме диалога (за флагом support_ai_assist). */
+    public $aiSummary = null;
+
     public $usersWithChats = []; // Вернули []
 
     public function mount()
@@ -103,6 +106,29 @@ class Helpdesk extends Page
         return app(SupportConversationManager::class)->currentFor($this->activeUserId);
     }
 
+    /** ИИ-черновик ответа: кладём в поле ввода, не отправляя. */
+    public function suggestReply(): void
+    {
+        if (! $this->activeUserId) {
+            return;
+        }
+
+        $draft = app(\App\Services\Support\SupportAiService::class)->suggestReply($this->activeUserId);
+        if ($draft) {
+            $this->newMessage = $draft;
+        }
+    }
+
+    /** ИИ-резюме диалога для куратора (только показ). */
+    public function summarizeThread(): void
+    {
+        if (! $this->activeUserId) {
+            return;
+        }
+
+        $this->aiSummary = app(\App\Services\Support\SupportAiService::class)->summarize($this->activeUserId);
+    }
+
     public function sendMessageToStudent()
     {
         $this->validate([
@@ -117,6 +143,19 @@ class Helpdesk extends Page
 
         $curator = auth()->user();
         $alias = $curator?->curatorDisplayName() ?? 'Куратор';
+
+        // Единый ответ (за флагом): если разговор живёт в импортированном TG-support,
+        // пишем туда, а не в веб-чат. Веб/бот-каналы идут прежним путём ниже.
+        if (config('features.support_unified_reply')) {
+            $router = app(\App\Services\Support\SupportReplyService::class);
+            if ($router->activeChannel($user) === \App\Services\Support\SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
+                && $router->replyViaSupportChannel($user, $this->newMessage, $curator)) {
+                $this->newMessage = '';
+                $this->loadUsersList();
+
+                return;
+            }
+        }
 
         // Сохраняем ответ куратора в базу данных (кто ответил — answered_by).
         $curatorMessage = \App\Models\ChatMessage::create([
