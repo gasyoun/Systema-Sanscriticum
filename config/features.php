@@ -37,4 +37,13 @@ return [
      | куратору. Требует OPENROUTER_API_KEY.
      */
     'support_ai_assist' => (bool) env('SUPPORT_AI_ASSIST', false),
+
+    /*
+     | Включать ли содержимое ИМПОРТИРОВАННОГО Telegram-support (приватные ЛС) в
+     | контекст, уходящий во внешний LLM (OpenRouter) при support_ai_assist.
+     | ВЫКЛЮЧЕН по умолчанию: приватные TG-сообщения НЕ покидают систему — ИИ-ассист
+     | работает только по веб-чату, пока это явно не разрешено. Включать осознанно
+     | (согласие/приватность), см. docs/support-subsystem-map.md.
+     */
+    'support_ai_include_telegram' => (bool) env('SUPPORT_AI_INCLUDE_TELEGRAM', false),
 ];

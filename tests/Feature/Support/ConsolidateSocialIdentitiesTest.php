@@ -76,6 +76,26 @@ class ConsolidateSocialIdentitiesTest extends TestCase
         $this->assertDatabaseCount('social_accounts', 1);
     }
 
+    public function test_normalized_provider_id_reconciles_with_existing_row(): void
+    {
+        // users.telegram_id с пробелами/ведущими нулями; каноничный provider_id — '111'.
+        $user = User::factory()->create(['telegram_id' => ' 00111 ']);
+        SocialAccount::create([
+            'user_id' => $user->id,
+            'provider' => SocialAccount::PROVIDER_TELEGRAM,
+            'provider_id' => '111',
+        ]);
+
+        $this->artisan('identity:backfill-social-accounts --apply')->assertSuccessful();
+
+        // Без нормализации получили бы вторую строку ' 00111 ' — проверяем, что её нет.
+        $this->assertDatabaseCount('social_accounts', 1);
+        $this->assertDatabaseMissing('social_accounts', [
+            'provider' => SocialAccount::PROVIDER_TELEGRAM,
+            'provider_id' => ' 00111 ',
+        ]);
+    }
+
     public function test_existing_row_for_different_user_is_not_overwritten(): void
     {
         $owner = User::factory()->create();

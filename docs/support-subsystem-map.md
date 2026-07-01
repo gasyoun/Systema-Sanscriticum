@@ -81,7 +81,7 @@ The read layer, operational thread, reply router, and AI assist were all built. 
 | Curator UI | [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) | shows both channels in one stream (channel badges + thread status); sidebar includes TG-linked users |
 | Reply routing | [`SupportReplyService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportReplyService.php) | flag `support_unified_reply` (off); TG-support delivery via userbot wired ([`DeliverSupportReply`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/DeliverSupportReply.php)) |
 | Userbot send | [`TelegramSupportSyncService::deliverMessage()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php) | MadelineProto `messages.sendMessage`; queued job marks the record delivered + sets the real `telegram_message_id`. Only dispatched when `TELEGRAM_SUPPORT_ENABLED` |
-| AI assist | [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) | flag `support_ai_assist` (off) |
+| AI assist | [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) | flag `support_ai_assist` (off). **Privacy:** imported Telegram DMs are sent to OpenRouter only when `support_ai_include_telegram` (off) is also set — default context is web-chat only |
 
 **Fully wired.** Enabling the imported-TG reply path end-to-end needs: `features.support_unified_reply=true`, a configured+logged-in userbot (`TELEGRAM_SUPPORT_ENABLED=true` + api creds + session), and a queue worker for `DeliverSupportReply`.
 

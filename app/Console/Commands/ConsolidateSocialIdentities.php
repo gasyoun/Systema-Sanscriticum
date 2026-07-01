@@ -108,7 +108,11 @@ class ConsolidateSocialIdentities extends Command
                 ->where($column, '!=', '')
                 ->select(['id', $column])
                 ->cursor() as $user) {
-                yield [$provider, (string) $user->{$column}, (int) $user->id, "users.{$column}"];
+                $providerId = $this->normalizeProviderId($user->{$column});
+                if ($providerId === '') {
+                    continue;
+                }
+                yield [$provider, $providerId, (int) $user->id, "users.{$column}"];
             }
         }
 
@@ -117,12 +121,35 @@ class ConsolidateSocialIdentities extends Command
             ->whereNotNull('linked_user_id')
             ->select(['telegram_user_id', 'linked_user_id'])
             ->cursor() as $contact) {
+            $providerId = $this->normalizeProviderId($contact->telegram_user_id);
+            if ($providerId === '') {
+                continue;
+            }
             yield [
                 SocialAccount::PROVIDER_TELEGRAM,
-                (string) $contact->telegram_user_id,
+                $providerId,
                 (int) $contact->linked_user_id,
                 'TelegramSupportContact',
             ];
         }
+    }
+
+    /**
+     * Канонизировать внешний id перед сравнением/вставкой, чтобы дрейф формата не
+     * плодил почти-дубли и всё сводилось к одной строке (provider, provider_id).
+     * Telegram/VK/MAX id — целочисленные: убираем пробелы, ведущий '+' и ведущие
+     * нули у чисто числовых значений. Не-числовые (на всякий случай) — только trim.
+     */
+    private function normalizeProviderId(mixed $raw): string
+    {
+        $value = ltrim(trim((string) $raw), '+');
+
+        if ($value !== '' && ctype_digit($value)) {
+            $value = ltrim($value, '0');
+
+            return $value === '' ? '0' : $value;
+        }
+
+        return $value;
     }
 }

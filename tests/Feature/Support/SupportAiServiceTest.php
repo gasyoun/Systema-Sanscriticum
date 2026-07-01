@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Models\ChatMessage;
+use App\Models\TelegramSupportAccount;
+use App\Models\TelegramSupportChat;
+use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\SupportAiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,6 +39,61 @@ class SupportAiServiceTest extends TestCase
         ]);
 
         return $user;
+    }
+
+    private function studentWithTelegramMessage(): User
+    {
+        $user = User::factory()->create();
+        $account = TelegramSupportAccount::create(['name' => 'support']);
+        $chat = TelegramSupportChat::create([
+            'telegram_chat_id' => 9700,
+            'linked_user_id' => $user->id,
+        ]);
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 9700,
+            'telegram_message_id' => 1,
+            'direction' => 'incoming',
+            'text' => 'Приватный вопрос из личных сообщений',
+            'sent_at' => now(),
+        ]);
+
+        return $user;
+    }
+
+    public function test_telegram_dm_not_sent_to_llm_by_default(): void
+    {
+        config([
+            'features.support_ai_assist' => true,
+            'features.support_ai_include_telegram' => false,
+        ]);
+        Http::fake();
+        $user = $this->studentWithTelegramMessage();
+
+        // Контекст только из TG → веб-истории нет → ИИ не вызывается, ничего не уходит.
+        $this->assertNull(app(SupportAiService::class)->suggestReply($user));
+
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('support_ai_reply_events', 0);
+    }
+
+    public function test_telegram_dm_sent_to_llm_when_opted_in(): void
+    {
+        config([
+            'features.support_ai_assist' => true,
+            'features.support_ai_include_telegram' => true,
+        ]);
+        $this->fakeOpenRouter('Черновик ответа');
+        $user = $this->studentWithTelegramMessage();
+
+        $draft = app(SupportAiService::class)->suggestReply($user);
+
+        $this->assertSame('Черновик ответа', $draft);
+        Http::assertSent(fn ($request) => str_contains(
+            json_encode($request->data(), JSON_UNESCAPED_UNICODE),
+            'Приватный вопрос из личных сообщений',
+        ));
     }
 
     public function test_disabled_flag_returns_null_and_calls_no_api(): void
