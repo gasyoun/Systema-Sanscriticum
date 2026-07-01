@@ -447,12 +447,56 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 ## Роадмап
 
-Приоритеты: **P0** — снять нагрузку с кураторов и сделать кабинет понятным
-студенту, **P1** — следующая волна, **P2** — стратегические задачи. **P0, P1 и P2
-полностью закрыты** (включая редактор лекций v2 и вебинары Zoom). **P3 тоже
-закрыт**: мобильная адаптация кабинета, реферальная награда денежным кредитом и
-углубление геймификации праны (end-to-end). Следующая волна — hardening/техдолг,
-кросс-репо `lecture-ui` и polish/UX (см. «Следующая волна» ниже).
+Роадмап ведётся волнами: **Now** — активная разработка, **Next** — ближайшая
+очередь после стабилизации текущей волны, **Later** — крупные улучшения без
+жёсткой даты. Старые P0/P1/P2/P3-задачи закрыты и оставлены ниже только как
+история доставленного.
+
+### Now
+
+- **Telegram support analytics — в разработке.** MVP уже импортирует историю
+  support-аккаунта через MadelineProto, хранит нормализованные сообщения,
+  собирает дневные conversations, first-time / unanswered / human-vs-AI метрики,
+  keyword-топики и страницу `/admin/telegram-support-analytics`. Текущий фокус:
+  production login/session, аккуратная автопривязка контактов к `User`, responder
+  mappings на реальных данных, лимиты против Telegram flood и понятный operational
+  runbook.
+- **Salary / finance.** Активно развивается контур выплат преподавателям:
+  калькулятор зарплат, поздние оплаты прошлых блоков, фильтры по курсу/блоку,
+  процент-фолбэк, PayPal-конвертация, письма-отчёты преподавателям и зеркалирование
+  выплат в финансовую таблицу/ledger. Это денежный контур, поэтому любые изменения
+  требуют точечных тестов и осторожного review.
+- **Hardening / техдолг.** Продолжить покрытие денежно- и доступно-критичных
+  путей: `Tariff::upgradeCreditForUser()`, loyalty/deposit в
+  `calculateFinalPriceForUser()`, ключи `block_N_hH`, webhook-подписи и
+  fail-policy для Tochka/Telegram/VK/MAX/Zoom. В Laravel 10 касты задавать через
+  `protected $casts`, не через метод `casts()`.
+- **UX / polish.** Проход по `/dvaram`, helpdesk, Telegram support analytics,
+  salary/finance страницам и лендингам: адаптив, ясные пустые состояния,
+  формулировки, таблицы и действия без изменения денежной семантики.
+
+### Next
+
+- **Telegram support production loop.** После первой живой сессии: проверить
+  cron-safe импорт, dashboard на реальных чатах, responder breakdown, профильные
+  backfill-лимиты, сценарий мягкого сброса только support analytics/sync state.
+- **Finance reliability.** Закрепить salary/finance регрессии тестами:
+  late-payment picker, закрытые периоды, авансы, PayPal rate date, зеркальные
+  `salary_payout`-транзакции, экспорт/письма.
+- **Attendance / Zoom reliability.** Связать новые attendance-изменения с текущим
+  UX: трекинг-редирект «подключиться к занятию», Zoom participant webhooks,
+  `zoom:sync-attendance --days=2` как страховка и показ посещаемости в админке.
+- **Docs and runbooks.** Удерживать README как публичную карту, `.ai_state.md` как
+  рабочий журнал, а `AGENTS.md` как инструкции для следующих агентов.
+
+### Later
+
+- **AI-diff для редактора лекций.** Визуальный pre-apply diff перед применением
+  AI-правок, поверх уже существующего отката к бэкапу.
+- **Mobile/API follow-up.** Нативный клиент или PWA-слой поверх уже готового
+  Sanctum API, если появится продуктовый запрос.
+- **Глубокая аналитика обучения.** Сводные cohort/retention отчёты по кабинетам,
+  вебинарам, домашним заданиям и платежным событиям.
 
 ### ✅ Уже сделано
 
@@ -516,23 +560,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   расписания (Server-to-Server OAuth), автоимпорт записи по вебхуку
   `recording.completed` → урок, посещаемость по `participant_joined/left` →
   `webinar_attendances` → секция в `TeacherAnalytics`. Включается кредами Zoom-приложения.
-- [x] **Telegram support analytics** — импорт support-аккаунта через MadelineProto,
-  normalized storage, дневные conversation-агрегаты, keyword-топики, first-time /
-  unanswered / human-vs-AI метрики, Filament-страница аналитики и CRUD привязок
-  support contact → `User`. По умолчанию выключено флагом
-  `TELEGRAM_SUPPORT_ENABLED=false`.
 
-### ✅ P3 / следующая волна — закрыто
+**P3 / предыдущая волна**
 
-Весь агент-доступный бэклог доставлен. Остаётся только **включение на проде**
-(не код): креды Zoom (OAuth + Event Subscription) и VK/Yandex (social-auth),
-секреты бот-вебхуков, миграции, Horizon-воркер на очереди `lectures`, флаги
-`PRANA_DECAY_ENABLED` / `REFERRAL_CREDIT_AMOUNT`, наполнение магазина праны
-админом, live-login support-аккаунта Telegram и включение
-`TELEGRAM_SUPPORT_ENABLED=true`. Подробности — в `Uprava/GTD_NEXT_ACTIONS.md`
-(раздел `@DO`).
-
-- [x] **P3 · Мобильная адаптация кабинета** — аудит показал, что кабинет уже
+- [x] **Мобильная адаптация кабинета** — аудит показал, что кабинет уже
   адаптивен (нет горизонтального оверфлоу на 375px на дашборде, плеере урока,
   странице курса, календаре). Точечная полировка под телефон доставлена (#199):
   бейдж праны в мобильной шапке, свёрнутое уведомление с «Подробнее», fade-подсказка
@@ -564,19 +595,3 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   earn+spend слой целиком — лидерборд · бейджи · streak · магазин · P2P · ранги —
   рядом со скидочным кошельком (two-counter, концепции сосуществуют). **Decay
   остаётся выключенным** (`PRANA_DECAY_ENABLED=false`); сгорание не включаем.
-
-### ⏭️ Следующая волна
-
-Агент-доступный бэклог исчерпан — новая волна это три направления (решение 2026-06-26):
-
-- **Hardening / техдолг** (приоритет) — системно убрать cast-ловушку `User`
-  (datetime/int приходят строками; перевести на свойство `$casts`), добить
-  тест-покрытие денежно-/доступно-критичных путей (upgrade-credit, лояльность,
-  половины блоков `block_N_hH`), security-проход по всем webhook-секретам/подписям,
-  свип мёртвых конфигов (напр. `prana.rewards.referral` после перехода рефералки
-  на денежный кредит).
-- **Cross-repo lecture-ui (Python)** — разметка dialog-блоков в `template.html.j2`
-  (`data-block-index`) + опц. визуальный pre-apply AI-diff (diff-payload от
-  Python-сервиса). Сверяться с `SHARED_CODE.md` / `Uprava/PROJECT_INTERLINKS.md`.
-- **Polish / UX** — проход по кабинету, админ-панелям и лендингам
-  (вёрстка/адаптив/копирайт) через skill `blade-styling`; вне денежной семантики.
