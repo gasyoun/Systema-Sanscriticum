@@ -1,5 +1,7 @@
 # Support subsystem — what actually exists (agent reference)
 
+<p align="right"><sub>Created: 01-07-2026 · Last updated: 01-07-2026</sub></p>
+
 > Companion to [jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md).
 > jivo.md is product strategy benchmarked against Jivo; **its "current state" claims are unreliable** (sourced from Jivo help pages, not the repo). This file is the ground truth: what the support code actually is, verified against models on `main`. Read this before building anything in the support area so you don't rebuild what exists or trip a naming landmine.
 
@@ -73,3 +75,5 @@ The same person (e.g. one Telegram user) can be represented in all of these, wit
 ## Where jivo.md is still useful
 
 Keep it for: the Jivo product decomposition, "copy inbox patterns not the whole product," the EdTech side-panel widget priorities (P0/P1/P2), and the phased roadmap *shape*. Ignore its "Как у нас сейчас" column and its open-questions inventory — both predate reading the code.
+
+<p align="right"><sub>Dr. Mārcis Gasūns</sub></p>
