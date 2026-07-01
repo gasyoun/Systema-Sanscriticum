@@ -88,12 +88,22 @@ class SupportAiService
 
     /**
      * Единый тред в формате OpenAI chat: входящее → user, исходящее → assistant.
+     * Приватные импортированные Telegram-сообщения попадают во внешний LLM только
+     * при support_ai_include_telegram (иначе контекст — только веб-чат).
      *
      * @return list<array{role: string, content: string}>
      */
     private function history(User|int $user): array
     {
+        $includeTelegram = (bool) config('features.support_ai_include_telegram');
+
         return $this->reader->forUser($user)
+            ->when(
+                ! $includeTelegram,
+                fn ($messages) => $messages->filter(
+                    fn (UnifiedMessage $message) => $message->channel === UnifiedMessage::CHANNEL_WEB,
+                ),
+            )
             ->slice(-self::HISTORY_LIMIT)
             ->map(fn (UnifiedMessage $message) => [
                 'role' => $message->isIncoming() ? 'user' : 'assistant',
