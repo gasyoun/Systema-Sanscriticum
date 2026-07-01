@@ -12,6 +12,18 @@ class SocialAccount extends Model
 {
     use HasFactory;
 
+    /**
+     * Канонические имена провайдеров внешней идентичности. `social_accounts`
+     * (provider, provider_id, user_id) — единственный целевой стор консолидации
+     * (см. docs/support-identity.md). VK-бот и VK-OAuth делят один namespace
+     * VK-user-id → общий провайдер `vkontakte`, а не отдельный `vk`.
+     */
+    public const PROVIDER_TELEGRAM = 'telegram';
+
+    public const PROVIDER_VK = 'vkontakte';
+
+    public const PROVIDER_MAX = 'max';
+
     protected $fillable = [
         'user_id',
         'provider',
