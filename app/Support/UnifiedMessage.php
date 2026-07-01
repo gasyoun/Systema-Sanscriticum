@@ -37,11 +37,63 @@ final class UnifiedMessage
         public readonly string $direction,
         public readonly ?string $responderType,
         public readonly ?int $responderUserId,
+        public readonly ?string $responderName,
         public readonly ?string $aiState,
         public readonly string $text,
         public readonly Carbon $sentAt,
         public readonly bool $isRead,
     ) {}
+
+    public function isIncoming(): bool
+    {
+        return $this->direction === self::DIRECTION_INCOMING;
+    }
+
+    /** Человеческий (не студент, не ИИ) исходящий ответ. */
+    public function isHumanReply(): bool
+    {
+        return ! $this->isIncoming() && $this->responderType !== self::RESPONDER_AI;
+    }
+
+    /** Подпись отправителя для UI. */
+    public function senderLabel(): string
+    {
+        if ($this->isIncoming()) {
+            return 'Студент';
+        }
+
+        if ($this->responderType === self::RESPONDER_AI) {
+            return 'ИИ-Куратор';
+        }
+
+        return $this->responderName ?? 'Куратор';
+    }
+
+    /** CSS-класс пузыря (совместим с версткой helpdesk). */
+    public function bubbleClass(): string
+    {
+        if ($this->isIncoming()) {
+            return 'user-bubble';
+        }
+
+        return $this->responderType === self::RESPONDER_AI ? 'bot-bubble' : 'curator-bubble';
+    }
+
+    /** Сторона пузыря: человеческий ответ справа, остальное слева. */
+    public function wrapperClass(): string
+    {
+        return $this->isHumanReply() ? 'curator' : 'user';
+    }
+
+    public function channelLabel(): string
+    {
+        return $this->channel === self::CHANNEL_TELEGRAM ? 'Telegram' : 'Кабинет';
+    }
+
+    public function htmlText(): string
+    {
+        return SupportText::safeHtml($this->text);
+    }
 
     /**
      * Веб-чат. direction и responderType выводятся из role — единственного
@@ -64,6 +116,7 @@ final class UnifiedMessage
             direction: $incoming ? self::DIRECTION_INCOMING : self::DIRECTION_OUTGOING,
             responderType: $responderType,
             responderUserId: $message->answered_by,
+            responderName: $message->answeredBy?->name,
             aiState: $message->ai_state,
             text: (string) $message->text,
             sentAt: $message->created_at,
@@ -87,6 +140,7 @@ final class UnifiedMessage
             direction: $message->direction,
             responderType: $message->responder_type,
             responderUserId: $message->responder_user_id,
+            responderName: $message->responder?->name,
             aiState: $message->ai_state,
             text: (string) $message->text,
             sentAt: $message->sent_at,

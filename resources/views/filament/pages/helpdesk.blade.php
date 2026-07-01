@@ -99,6 +99,29 @@
             font-weight: 600;
             text-transform: uppercase;
         }
+        /* Бейдж канала сообщения (Кабинет / Telegram) */
+        .msg-channel {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 99px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: none;
+            vertical-align: middle;
+        }
+        .msg-channel.web { background: #ede9fe; color: #6d28d9; }
+        .msg-channel.telegram { background: #e0f2fe; color: #0369a1; }
+        /* Статус операционного треда в шапке чата */
+        .thread-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 99px;
+        }
+        .thread-status.open { background: #dcfce7; color: #15803d; }
+        .thread-status.pending { background: #fef9c3; color: #a16207; }
+        .thread-status.closed { background: #f3f4f6; color: #6b7280; }
         
         /* ИДЕАЛЬНЫЕ ПУЗЫРИ */
         .msg-bubble {
@@ -233,7 +256,18 @@
                             {{ $activeUser->name ?? 'Студент' }}
                             <svg style="width: 15px; height: 15px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         </button>
-                        <div style="font-size: 12px; color: #16a34a; font-weight: 500;">● Telegram подключен</div>
+                        @php $thread = $this->thread; @endphp
+                        @if($thread)
+                            <div style="font-size: 12px; margin-top: 2px;">
+                                <span class="thread-status {{ $thread->status }}">
+                                    @switch($thread->status)
+                                        @case('open') Открыт @break
+                                        @case('pending') Ожидает @break
+                                        @default Закрыт
+                                    @endswitch
+                                </span>
+                            </div>
+                        @endif
                         </div>
                     </div>
 
@@ -246,32 +280,19 @@
                     @endif
                 </div>
 
-                {{-- Сообщения --}}
-                <div class="messages-area" id="chat-messages" wire:poll.5s="loadMessages">
-                    @forelse($messages as $message)
-                        @php
-                            $isUser = $message->role === 'user';
-                            $isBot = $message->role === 'bot';
-                            // Человеческий ответ — всё, что не студент и не ИИ
-                            // (curator и легаси-admin).
-                            $isHuman = ! $isUser && ! $isBot;
-
-                            $wrapperClass = $isHuman ? 'curator' : 'user';
-                            $bubbleClass = $isUser ? 'user-bubble' : ($isBot ? 'bot-bubble' : 'curator-bubble');
-                            // Для человеческого ответа — настоящее имя ответившего
-                            // (кто отвечал), фолбэк «Куратор» для легаси без answered_by.
-                            $senderName = $isUser
-                                ? 'Студент'
-                                : ($isBot ? 'ИИ-Куратор' : ($message->answeredBy?->name ?? 'Куратор'));
-                        @endphp
-
-                        <div class="msg-wrapper {{ $wrapperClass }}">
+                {{-- Сообщения: единый поток веб-чата и импортированного TG-support --}}
+                <div class="messages-area" id="chat-messages" wire:poll.5s>
+                    @forelse($this->messages as $message)
+                        <div class="msg-wrapper {{ $message->wrapperClass() }}">
                             <div class="msg-content">
-                                <div class="msg-sender">{{ $senderName }}</div>
-                                <div class="msg-bubble {{ $bubbleClass }}">
-                                    {!! $message->htmlForWeb() !!}
+                                <div class="msg-sender">
+                                    {{ $message->senderLabel() }}
+                                    <span class="msg-channel {{ $message->channel }}">{{ $message->channelLabel() }}</span>
                                 </div>
-                                <div class="msg-time" title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</div>
+                                <div class="msg-bubble {{ $message->bubbleClass() }}">
+                                    {!! $message->htmlText() !!}
+                                </div>
+                                <div class="msg-time" title="{{ $message->sentAt->format('d.m.Y H:i') }}">{{ $message->sentAt->format('H:i') }}</div>
                             </div>
                         </div>
                     @empty

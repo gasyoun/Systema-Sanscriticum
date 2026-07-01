@@ -3,8 +3,12 @@
 namespace App\Filament\Pages;
 
 use App\Models\ChatMessage;
+use App\Models\SupportConversation;
 use App\Models\User;
+use App\Services\Support\SupportConversationManager;
+use App\Services\Support\UnifiedInboxReader;
 use Filament\Pages\Page;
+use Illuminate\Support\Collection;
 
 class Helpdesk extends Page
 {
@@ -38,8 +42,6 @@ class Helpdesk extends Page
 
     public $usersWithChats = []; // Вернули []
 
-    public $messages = [];       // Вернули []
-
     public function mount()
     {
         $this->loadUsersList();
@@ -51,13 +53,18 @@ class Helpdesk extends Page
 
     public function loadUsersList()
     {
-        $this->usersWithChats = User::whereHas('chatMessages')
+        // Диалоги — веб-чат ИЛИ импортированный TG-support, сведённый на пользователя.
+        $this->usersWithChats = User::query()
+            ->where(function ($query): void {
+                $query->whereHas('chatMessages')
+                    ->orWhereHas('linkedSupportChats');
+            })
             ->withCount(['chatMessages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('role', 'user');
             }])
             ->orderByDesc('unread_count')
             ->get()
-            ->all(); // <--- ВОТ ЭТО СПАСЕТ СИТУАЦИЮ
+            ->all();
     }
 
     public function selectUser($userId)
@@ -68,19 +75,32 @@ class Helpdesk extends Page
             ->where('role', 'user')
             ->update(['is_read' => true]);
 
-        $this->loadMessages();
         $this->loadUsersList();
     }
 
-    public function loadMessages()
+    /**
+     * Единый поток сообщений обоих каналов (веб + TG-support). Computed, а не
+     * public-свойство: UnifiedMessage — обычный объект, Livewire его не сериализует.
+     *
+     * @return Collection<int, \App\Support\UnifiedMessage>
+     */
+    public function getMessagesProperty(): Collection
     {
-        if ($this->activeUserId) {
-            $this->messages = ChatMessage::where('user_id', $this->activeUserId)
-                ->with('answeredBy:id,name')
-                ->orderBy('created_at', 'asc')
-                ->get()
-                ->all(); // <--- И ЗДЕСЬ ТОЖЕ
+        if (! $this->activeUserId) {
+            return collect();
         }
+
+        return app(UnifiedInboxReader::class)->forUser($this->activeUserId);
+    }
+
+    /** Операционный тред активного пользователя (для статуса в шапке). */
+    public function getThreadProperty(): ?SupportConversation
+    {
+        if (! $this->activeUserId) {
+            return null;
+        }
+
+        return app(SupportConversationManager::class)->currentFor($this->activeUserId);
     }
 
     public function sendMessageToStudent()
@@ -99,13 +119,16 @@ class Helpdesk extends Page
         $alias = $curator?->curatorDisplayName() ?? 'Куратор';
 
         // Сохраняем ответ куратора в базу данных (кто ответил — answered_by).
-        \App\Models\ChatMessage::create([
+        $curatorMessage = \App\Models\ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'curator',
             'answered_by' => $curator?->id,
             'text' => $this->newMessage,
             'is_read' => true,
         ]);
+
+        app(\App\Services\Support\SupportConversationManager::class)
+            ->recordMessage($user, $curatorMessage, $curatorMessage->created_at);
 
         // ==========================================
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
@@ -132,7 +155,7 @@ class Helpdesk extends Page
         }
 
         $this->newMessage = '';
-        $this->loadMessages();
+        $this->loadUsersList();
     }
 
     public function returnToBot()
@@ -168,14 +191,15 @@ class Helpdesk extends Page
             }
 
             // Записываем системное сообщение, чтобы было видно в админке
-            \App\Models\ChatMessage::create([
+            $systemMessage = \App\Models\ChatMessage::create([
                 'user_id' => $user->id,
                 'role' => 'bot',
                 'text' => '🔄 [Системное сообщение: ИИ-ассистент снова активирован]',
                 'is_read' => true,
             ]);
 
-            $this->loadMessages();
+            app(\App\Services\Support\SupportConversationManager::class)
+                ->recordMessage($user, $systemMessage, $systemMessage->created_at);
         }
     }
 

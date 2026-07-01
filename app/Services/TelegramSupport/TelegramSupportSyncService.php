@@ -23,6 +23,7 @@ class TelegramSupportSyncService
     public function __construct(
         private readonly SupportDailyRollupAggregator $aggregator,
         private readonly SupportContactUserAutoLinker $autoLinker,
+        private readonly \App\Services\Support\SupportConversationManager $conversations,
     ) {}
 
     public function sync(): array
@@ -184,6 +185,12 @@ class TelegramSupportSyncService
                 ],
                 ['meta' => ['source' => 'telegram_support_sync']],
             );
+        }
+
+        // Привязываем к операционному треду, если чат/контакт сведён с пользователем.
+        $linkedUserId = $chat->linked_user_id ?: $contact?->linked_user_id;
+        if ($linkedUserId) {
+            $this->conversations->recordMessage($linkedUserId, $message, $message->sent_at);
         }
 
         return $message;

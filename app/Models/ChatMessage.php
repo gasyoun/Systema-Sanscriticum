@@ -11,6 +11,7 @@ class ChatMessage extends Model
     use HasFactory;
 
     protected $fillable = [
+        'support_conversation_id',
         'user_id',
         'role',
         'answered_by',
@@ -31,17 +32,7 @@ class ChatMessage extends Model
      */
     public function htmlForWeb(): string
     {
-        $escaped = e((string) $this->text);
-
-        foreach (['b', 'strong', 'i', 'em', 'u', 's', 'code', 'pre'] as $tag) {
-            $escaped = str_replace(
-                ['&lt;'.$tag.'&gt;', '&lt;/'.$tag.'&gt;'],
-                ['<'.$tag.'>', '</'.$tag.'>'],
-                $escaped,
-            );
-        }
-
-        return nl2br($escaped);
+        return \App\Support\SupportText::safeHtml($this->text);
     }
 
     // Сообщение принадлежит студенту

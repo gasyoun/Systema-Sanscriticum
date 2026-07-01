@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TelegramSupportMessage extends Model
 {
     protected $fillable = [
+        'support_conversation_id',
         'telegram_support_account_id',
         'telegram_support_chat_id',
         'telegram_support_contact_id',
