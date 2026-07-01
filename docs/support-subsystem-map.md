@@ -79,10 +79,13 @@ The read layer, operational thread, reply router, and AI assist were all built. 
 | Unified read | [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php) + [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) | merges both stores per user; DTO carries presentation helpers |
 | Operational thread | [`SupportConversation`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportConversation.php) + [`SupportConversationManager`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportConversationManager.php) | one reopenable thread per user; `support_conversation_id` FK on both message tables |
 | Curator UI | [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) | shows both channels in one stream (channel badges + thread status); sidebar includes TG-linked users |
-| Reply routing | [`SupportReplyService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportReplyService.php) | flag `support_unified_reply` (off); TG-support userbot delivery still NOT wired (records pending) |
+| Reply routing | [`SupportReplyService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportReplyService.php) | flag `support_unified_reply` (off); TG-support delivery via userbot wired ([`DeliverSupportReply`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/DeliverSupportReply.php)) |
+| Userbot send | [`TelegramSupportSyncService::deliverMessage()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php) | MadelineProto `messages.sendMessage`; queued job marks the record delivered + sets the real `telegram_message_id`. Only dispatched when `TELEGRAM_SUPPORT_ENABLED` |
 | AI assist | [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) | flag `support_ai_assist` (off) |
 
-**Still open:** real userbot outbound delivery for the imported TG-support channel (currently a logged pending record).
+**Fully wired.** Enabling the imported-TG reply path end-to-end needs: `features.support_unified_reply=true`, a configured+logged-in userbot (`TELEGRAM_SUPPORT_ENABLED=true` + api creds + session), and a queue worker for `DeliverSupportReply`.
+
+> **Test note:** the userbot is force-disabled in `phpunit.xml` (`TELEGRAM_SUPPORT_ENABLED=false`) so `class_exists()` never autoloads real MadelineProto — its shutdown handler crashes amp on teardown under Windows. Tests that need it set the config explicitly with a fake client.
 
 ## Where jivo.md is still useful
 

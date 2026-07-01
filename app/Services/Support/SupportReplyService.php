@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Веб/бот-каналы отвечает как прежде сам Helpdesk (ChatMessage + bot API). Этот
  * сервис добавляет ветку для импортированного TG-support (userbot): пишет
- * ИСХОДЯЩЕЕ TelegramSupportMessage и привязывает к треду. Реальная доставка через
- * userbot ещё НЕ подключена — сообщение помечается pending и логируется.
+ * ИСХОДЯЩЕЕ TelegramSupportMessage, привязывает к треду и ставит в очередь
+ * доставку через userbot ([[DeliverSupportReply]]). Пока userbot не настроен —
+ * запись остаётся pending, job тихо выходит.
  */
 class SupportReplyService
 {
@@ -90,10 +91,18 @@ class SupportReplyService
 
         $this->conversations->recordMessage($user, $message, $message->sent_at);
 
-        Log::info('SupportReplyService: ответ записан в TG-support как pending (userbot-доставка не подключена)', [
+        // Реальную доставку через userbot ставим в очередь только когда он включён;
+        // иначе запись остаётся pending до настройки userbot (без пустого job'а).
+        $queued = (bool) config('services.telegram_support.enabled');
+        if ($queued) {
+            \App\Jobs\DeliverSupportReply::dispatch($message->id);
+        }
+
+        Log::info('SupportReplyService: ответ записан в TG-support', [
             'user_id' => $user->id,
             'chat_id' => $chat->telegram_chat_id,
             'message_id' => $message->id,
+            'delivery_queued' => $queued,
         ]);
 
         return $message;
