@@ -144,7 +144,7 @@ class ScheduleResource extends Resource
                         // Серверная валидация: relationship-Select по умолчанию не накладывает
                         // where на Rule::exists, поэтому учитель мог бы через POST передать
                         // чужой course_id. Дополняем явным правилом по teacher_id.
-                        ->rule(\App\Models\Course::teacherCourseValidationRule())
+                        ->rule(fn () => \App\Models\Course::teacherCourseValidationRule())
                         ->searchable()
                         ->preload()
                         ->placeholder('Без привязки')
