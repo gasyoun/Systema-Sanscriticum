@@ -9,6 +9,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -74,20 +75,7 @@ class SupportReplyService
             return null;
         }
 
-        $message = TelegramSupportMessage::create([
-            'telegram_support_account_id' => $accountId,
-            'telegram_support_chat_id' => $chat->id,
-            'telegram_chat_id' => $chat->telegram_chat_id,
-            // Синтетический отрицательный id — реального message_id ещё нет (не отправлено).
-            'telegram_message_id' => -1 * (int) round(microtime(true) * 1000),
-            'direction' => 'outgoing',
-            'role' => 'human',
-            'responder_type' => 'human',
-            'responder_user_id' => $curator?->id,
-            'text' => $text,
-            'raw_payload' => ['pending_delivery' => true, 'via' => 'helpdesk_unified_reply'],
-            'sent_at' => now(),
-        ]);
+        $message = $this->createPendingOutgoing($accountId, $chat, $text, $curator);
 
         $this->conversations->recordMessage($user, $message, $message->sent_at);
 
@@ -106,5 +94,59 @@ class SupportReplyService
         ]);
 
         return $message;
+    }
+
+    /**
+     * Создать pending-исходящее с гарантированно уникальным placeholder-id.
+     * Реального telegram_message_id ещё нет; берём (min по чату) − 1 — строго
+     * убывающий отрицательный id, не сталкивающийся с реальными (положительными).
+     * На гонку (уникальный индекс account+chat+message_id) — ограниченный ретрай.
+     */
+    private function createPendingOutgoing(
+        int $accountId,
+        TelegramSupportChat $chat,
+        string $text,
+        ?User $curator,
+    ): TelegramSupportMessage {
+        for ($attempt = 0; ; $attempt++) {
+            try {
+                return TelegramSupportMessage::create([
+                    'telegram_support_account_id' => $accountId,
+                    'telegram_support_chat_id' => $chat->id,
+                    'telegram_chat_id' => $chat->telegram_chat_id,
+                    'telegram_message_id' => $this->nextPendingMessageId($accountId, (int) $chat->telegram_chat_id),
+                    'direction' => 'outgoing',
+                    'role' => 'human',
+                    'responder_type' => 'human',
+                    'responder_user_id' => $curator?->id,
+                    'text' => $text,
+                    'raw_payload' => ['pending_delivery' => true, 'via' => 'helpdesk_unified_reply'],
+                    'sent_at' => now(),
+                ]);
+            } catch (QueryException $e) {
+                // 23000 — нарушение уникального индекса (гонка двух ответов). Пересчитываем id.
+                if ($attempt < 3 && $e->getCode() === '23000') {
+                    continue;
+                }
+
+                throw $e;
+            }
+        }
+    }
+
+    /**
+     * Следующий placeholder-id: строго отрицательный и убывающий. Берём минимум
+     * из (существующий минимум по account+chat, 0) и вычитаем 1 — так placeholder
+     * всегда ≤ −1 (не столкнётся с реальными положительными id), а каждый новый
+     * ниже предыдущего.
+     */
+    private function nextPendingMessageId(int $accountId, int $chatId): int
+    {
+        $min = TelegramSupportMessage::query()
+            ->where('telegram_support_account_id', $accountId)
+            ->where('telegram_chat_id', $chatId)
+            ->min('telegram_message_id');
+
+        return min((int) ($min ?? 0), 0) - 1;
     }
 }
