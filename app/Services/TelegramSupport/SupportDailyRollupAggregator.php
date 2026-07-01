@@ -2,12 +2,12 @@
 
 namespace App\Services\TelegramSupport;
 
-use App\Models\SupportConversation;
+use App\Models\SupportDailyRollup;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use Carbon\CarbonImmutable;
 
-class SupportConversationAggregator
+class SupportDailyRollupAggregator
 {
     public function __construct(
         private readonly SupportTopicClassifier $topicClassifier,
@@ -44,7 +44,7 @@ class SupportConversationAggregator
                         && $message->contact->first_inbound_at
                         && $message->contact->first_inbound_at->timezone(config('app.timezone'))->toDateString() === $day->toDateString());
 
-                $conversation = SupportConversation::updateOrCreate(
+                $conversation = SupportDailyRollup::updateOrCreate(
                     [
                         'telegram_support_chat_id' => $chat->id,
                         'conversation_date' => $day->startOfDay(),

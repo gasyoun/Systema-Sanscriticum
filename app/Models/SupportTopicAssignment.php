@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SupportTopicAssignment extends Model
 {
     protected $fillable = [
-        'support_conversation_id',
+        'support_daily_rollup_id',
         'category',
         'source',
         'confidence',
@@ -21,6 +21,6 @@ class SupportTopicAssignment extends Model
 
     public function conversation(): BelongsTo
     {
-        return $this->belongsTo(SupportConversation::class, 'support_conversation_id');
+        return $this->belongsTo(SupportDailyRollup::class, 'support_daily_rollup_id');
     }
 }

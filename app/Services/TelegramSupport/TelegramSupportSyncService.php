@@ -21,7 +21,7 @@ class TelegramSupportSyncService
     private static bool $loggedMissingTelegramIdColumn = false;
 
     public function __construct(
-        private readonly SupportConversationAggregator $aggregator,
+        private readonly SupportDailyRollupAggregator $aggregator,
         private readonly SupportContactUserAutoLinker $autoLinker,
     ) {}
 

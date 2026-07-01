@@ -2,7 +2,7 @@
 
 namespace App\Services\TelegramSupport;
 
-use App\Models\SupportConversation;
+use App\Models\SupportDailyRollup;
 use App\Models\SupportTopicAssignment;
 use App\Models\TelegramSupportMessage;
 use Carbon\CarbonImmutable;
@@ -33,7 +33,7 @@ class SupportDashboardPacketBuilder
 
     private function metricsForDate(string $date): array
     {
-        $query = SupportConversation::whereDate('conversation_date', $date);
+        $query = SupportDailyRollup::whereDate('conversation_date', $date);
 
         return [
             'conversations' => (clone $query)->count(),
@@ -86,13 +86,13 @@ class SupportDashboardPacketBuilder
 
     private function chatsForDate(string $date): array
     {
-        return SupportConversation::query()
+        return SupportDailyRollup::query()
             ->with(['chat.linkedUser:id,name,email', 'topicAssignments'])
             ->whereDate('conversation_date', $date)
             ->orderByDesc('last_message_at')
             ->limit(25)
             ->get()
-            ->map(fn (SupportConversation $conversation) => [
+            ->map(fn (SupportDailyRollup $conversation) => [
                 'id' => $conversation->id,
                 'chat_id' => $conversation->chat->telegram_chat_id,
                 'title' => $conversation->chat->title

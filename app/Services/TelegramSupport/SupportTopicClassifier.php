@@ -2,14 +2,14 @@
 
 namespace App\Services\TelegramSupport;
 
-use App\Models\SupportConversation;
+use App\Models\SupportDailyRollup;
 use App\Models\SupportTopicAssignment;
 use App\Models\SupportTopicRule;
 use App\Models\TelegramSupportMessage;
 
 class SupportTopicClassifier
 {
-    public function classify(SupportConversation $conversation): void
+    public function classify(SupportDailyRollup $conversation): void
     {
         $conversation->topicAssignments()->where('source', 'keyword')->delete();
 
@@ -31,7 +31,7 @@ class SupportTopicClassifier
                 foreach ($rule->keywords ?? [] as $keyword) {
                     if ($keyword !== '' && mb_stripos($text, (string) $keyword) !== false) {
                         SupportTopicAssignment::create([
-                            'support_conversation_id' => $conversation->id,
+                            'support_daily_rollup_id' => $conversation->id,
                             'category' => $rule->category,
                             'source' => 'keyword',
                             'confidence' => 1,
@@ -46,7 +46,7 @@ class SupportTopicClassifier
 
         if (! $matched) {
             SupportTopicAssignment::create([
-                'support_conversation_id' => $conversation->id,
+                'support_daily_rollup_id' => $conversation->id,
                 'category' => 'uncategorized',
                 'source' => 'keyword',
                 'confidence' => 0,

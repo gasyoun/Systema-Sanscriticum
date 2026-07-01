@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class SupportConversation extends Model
+class SupportDailyRollup extends Model
 {
     protected $fillable = [
         'telegram_support_chat_id',
@@ -38,6 +38,6 @@ class SupportConversation extends Model
 
     public function topicAssignments(): HasMany
     {
-        return $this->hasMany(SupportTopicAssignment::class);
+        return $this->hasMany(SupportTopicAssignment::class, 'support_daily_rollup_id');
     }
 }

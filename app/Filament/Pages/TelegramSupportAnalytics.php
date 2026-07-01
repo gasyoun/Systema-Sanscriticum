@@ -3,7 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Clusters\TelegramSupport;
-use App\Models\SupportConversation;
+use App\Models\SupportDailyRollup;
 use App\Models\TelegramSupportMessage;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
 use Carbon\CarbonImmutable;
@@ -67,7 +67,7 @@ class TelegramSupportAnalytics extends Page
 
     public function getConversationsProperty(): Collection
     {
-        return SupportConversation::query()
+        return SupportDailyRollup::query()
             ->with(['chat.linkedUser:id,name,email', 'topicAssignments'])
             ->whereDate('conversation_date', $this->selectedDate)
             ->when($this->onlyUnanswered, fn ($query) => $query->where('is_unanswered', true))
@@ -92,7 +92,7 @@ class TelegramSupportAnalytics extends Page
             return new Collection;
         }
 
-        $conversation = SupportConversation::find($this->activeConversationId);
+        $conversation = SupportDailyRollup::find($this->activeConversationId);
         if (! $conversation) {
             return new Collection;
         }
