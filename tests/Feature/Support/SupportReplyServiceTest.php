@@ -67,6 +67,24 @@ class SupportReplyServiceTest extends TestCase
         $this->assertSame(0, ChatMessage::where('user_id', $user->id)->where('role', 'curator')->count());
     }
 
+    public function test_rapid_replies_to_same_chat_get_distinct_negative_ids(): void
+    {
+        $user = User::factory()->create();
+        $curator = User::factory()->create();
+        // Входящее с реальным положительным id — placeholder не должен с ним столкнуться.
+        $this->linkedTgMessage($user, 'incoming', now()->toDateTimeString());
+
+        $service = app(SupportReplyService::class);
+        $first = $service->replyViaSupportChannel($user, 'Первый', $curator);
+        $second = $service->replyViaSupportChannel($user, 'Второй', $curator);
+
+        $this->assertNotNull($first);
+        $this->assertNotNull($second);
+        $this->assertNotSame($first->telegram_message_id, $second->telegram_message_id);
+        $this->assertLessThan(0, $first->telegram_message_id);
+        $this->assertLessThan(0, $second->telegram_message_id);
+    }
+
     public function test_helpdesk_flag_on_routes_reply_to_telegram_support(): void
     {
         config(['features.support_unified_reply' => true]);
