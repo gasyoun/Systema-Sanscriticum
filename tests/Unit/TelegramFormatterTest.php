@@ -51,6 +51,27 @@ class TelegramFormatterTest extends TestCase
     public function test_to_plain_strips_all_markup_for_vk(): void
     {
         $in = "### Курс\n- **Цена**: 8 000 ₽\n[ссылка](https://x.ru) и `код`";
-        $this->assertSame("Курс\n• Цена: 8 000 ₽\nссылка и код", TelegramFormatter::toPlain($in));
+        $this->assertSame("Курс\n• Цена: 8 000 ₽\nссылка (https://x.ru) и код", TelegramFormatter::toPlain($in));
+    }
+
+    public function test_to_plain_keeps_link_urls_visible(): void
+    {
+        // Markdown-ссылка от LLM: URL должен остаться в тексте, не только якорь.
+        $this->assertSame(
+            'Страница курса (https://samskrte.ru/kurs)',
+            TelegramFormatter::toPlain('[Страница курса](https://samskrte.ru/kurs)')
+        );
+
+        // Готовый HTML-якорь (StudentSelfService шлёт с одинарными кавычками).
+        $this->assertSame(
+            'Открыть личный кабинет (https://samskrte.ru/dvaram)',
+            TelegramFormatter::toPlain("<a href='https://samskrte.ru/dvaram'>Открыть личный кабинет</a>")
+        );
+
+        // Текст ссылки совпадает с URL — не дублируем «url (url)».
+        $this->assertSame(
+            'https://samskrte.ru/x',
+            TelegramFormatter::toPlain('[https://samskrte.ru/x](https://samskrte.ru/x)')
+        );
     }
 }
