@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChatMessage;
-use App\Models\User;
-use App\Services\Bot\CuratorAi;
-use App\Services\Bot\StudentSelfService;
-use App\Services\Bot\TelegramFormatter;
+use App\Jobs\ProcessVkBotMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class VkBotController extends Controller
 {
+    /**
+     * Callback API легаси VK-бота. Отвечает «ok» сразу: вся обработка (привязка,
+     * ИИ-куратор) — в очереди (ProcessVkBotMessage). Синхронный LLM-вызов здесь
+     * приводил к ретраям VK (не дождался «ok») и дублям ответов студенту.
+     */
     public function handle(Request $request)
     {
         $data = $request->all();
@@ -30,7 +30,7 @@ class VkBotController extends Controller
                 ->header('Content-Type', 'text/plain');
         }
 
-        // 2. ОБРАБОТКА НОВОГО СООБЩЕНИЯ
+        // 2. НОВОЕ СООБЩЕНИЕ — валидируем, дедуплицируем, ставим в очередь.
         if (($data['type'] ?? '') === 'message_new') {
             $messageObj = $data['object']['message'] ?? null;
             $vkId = is_array($messageObj) ? ($messageObj['from_id'] ?? null) : null;
@@ -44,182 +44,20 @@ class VkBotController extends Controller
                 return response('ok', 200);
             }
 
-            $vkId = (int) $vkId;
-            $text = is_string($messageObj['text'] ?? null) ? $messageObj['text'] : '';
-            // Одноразовый токен привязки из ссылки vk.me (VkController::connect).
-            // Раньше тут был сырой user id → IDOR-перехват чужого аккаунта.
-            $ref = is_string($messageObj['ref'] ?? null) ? $messageObj['ref'] : null;
+            // Дедупликация повторных доставок: VK ретраит событие, если не получил
+            // «ok» вовремя (пиковая нагрузка, рестарт fpm). Атомарный Cache::add
+            // отдаёт обработку только первой доставке сообщения.
+            $messageKey = $messageObj['conversation_message_id']
+                ?? $messageObj['id']
+                ?? md5(($messageObj['text'] ?? '').'|'.($messageObj['date'] ?? ''));
 
-            $user = User::where('vk_id', $vkId)->first();
-
-            // Если перешел по кнопке с сайта
-            if (! $user && $ref) {
-                // Ищем по неугадываемому токену, а не по id. Токен одноразовый —
-                // гасим сразу после привязки, чтобы ссылку нельзя было переиспользовать.
-                $candidate = User::where('vk_auth_token', $ref)->first();
-                // Защита от перехвата аккаунта: привязываем VK ТОЛЬКО к ещё не
-                // привязанному аккаунту (на случай гонки/повторной отправки токена).
-                if ($candidate && ! $candidate->vk_id) {
-                    $candidate->update([
-                        'vk_id' => $vkId,
-                        'vk_connected_at' => now(),
-                        'vk_auth_token' => null,
-                    ]);
-                    $user = $candidate;
-                    // Подтягиваем аватарку из VK (в очереди, не тормозим вебхук).
-                    \App\Jobs\SyncUserAvatarJob::dispatch($user->id);
-                    $this->sendVkMessage($vkId, "✅ Отлично! Вы успешно привязали свой аккаунт ВКонтакте. Теперь я смогу помогать вам здесь.\n\nНапишите «мои группы», чтобы увидеть свои группы и расписание.");
-
-                    return response('ok', 200);
-                }
-            }
-
-            if (! $user) {
-                $this->sendVkMessage($vkId, 'Пожалуйста, перейдите в этот чат по кнопке из личного кабинета на сайте, чтобы я мог вас узнать.');
-
+            if (! Cache::add("vk_bot_msg:{$vkId}:{$messageKey}", true, 600)) {
                 return response('ok', 200);
             }
 
-            $adminId = config('services.telegram.admin_id');
-
-            // Сохраняем вопрос в базу
-            ChatMessage::create([
-                'user_id' => $user->id,
-                'role' => 'user',
-                'text' => $text,
-                'is_read' => false,
-            ]);
-
-            // SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ.
-            if (app(StudentSelfService::class)->matchesGroupsIntent($text)) {
-                $summary = app(StudentSelfService::class)->groupsSummary($user, 'vk');
-
-                ChatMessage::create([
-                    'user_id' => $user->id,
-                    'role' => 'bot',
-                    'text' => $summary,
-                    'is_read' => true,
-                ]);
-
-                $this->sendVkMessage($vkId, $summary);
-
-                return response('ok', 200);
-            }
-
-            // ПРОВЕРКА: Если бот на паузе (отвечает человек)
-            if (Cache::has("chat_human_vk_{$vkId}")) {
-                if ($adminId) {
-                    $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
-                    $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
-                    $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-                    $alertMessage = "🔵 <b>Новое сообщение из ВК от {$safeName}:</b>\n\n<i>{$safeText}</i>\n\n👉 <a href='{$adminUrl}'>Ответить в Админке</a>";
-                    $this->sendTelegramAlert($alertMessage); // Шлем пуш админу в ТГ
-                }
-
-                return response('ok', 200);
-            }
-
-            // ПРОВЕРКА НА ВЫЗОВ КУРАТОРА
-            $triggerWords = ['куратор', 'человек', 'помощь', 'админ', 'менеджер', 'оператор'];
-            foreach ($triggerWords as $word) {
-                if (mb_stripos($text, $word) !== false) {
-                    Cache::put("chat_human_vk_{$vkId}", true, 7200);
-                    $this->sendVkMessage($vkId, '🙏 Понял вас. Передал ваш вопрос живому куратору, ожидайте ответа!');
-
-                    if ($adminId) {
-                        $adminUrl = config('app.url')."/admin/dialogs?user_id={$user->id}";
-                        $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
-                        $safeText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-                        $this->sendTelegramAlert("🔔 <b>СТУДЕНТ ИЗ ВК ЗОВЕТ КУРАТОРА!</b>\nИмя: {$safeName}\nВопрос: {$safeText}\n\n👉 <a href='{$adminUrl}'>Открыть диалог в Админке</a>");
-                    }
-
-                    return response('ok', 200);
-                }
-            }
-
-            // Если не позвал человека, бот начинает "думать"
-            $this->sendVkMessage($vkId, '⏳ Изучаю манускрипты...');
-
-            // Вопрос студента уже сохранён в ChatMessage выше — он попадёт в
-            // историю последним. Думает единый сервис (DeepSeek через OpenRouter).
-            $answer = app(CuratorAi::class)->reply($user, $text);
-
-            if ($answer === null) {
-                $this->sendVkMessage($vkId, "Мои чакры перегружены 🧘‍♂️. Пожалуйста, напишите 'позови куратора', и вам ответит человек.");
-
-                return response('ok', 200);
-            }
-
-            ChatMessage::create([
-                'user_id' => $user->id,
-                'role' => 'bot',
-                'text' => $answer,
-                'is_read' => true,
-            ]);
-
-            $this->sendVkMessage($vkId, $answer);
+            ProcessVkBotMessage::dispatch($messageObj);
         }
 
         return response('ok', 200);
-    }
-
-    // ==========================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // ==========================================
-
-    // Отправка в ВК
-    private function sendVkMessage($vkId, $text)
-    {
-        // ВК не понимает разметку: ИИ-куратор форматирует под Telegram, причём
-        // нередко в Markdown. Приводим к плоскому тексту — уходят и «**»/«###»,
-        // и голые <b>; остаются текст и эмодзи.
-        $text = TelegramFormatter::toPlain((string) $text);
-
-        // ДОБАВЛЕНО asForm() - чтобы ВК понял наш токен!
-        $response = Http::asForm()->post('https://api.vk.com/method/messages.send', [
-            'access_token' => config('services.vk.bot_token'),
-            'v' => '5.131',
-            'user_id' => $vkId,
-            'message' => $text,
-            'random_id' => rand(100000, 999999999),
-        ]);
-
-        // Если ВК вернул ошибку внутри JSON (например, токен недействителен)
-        $json = $response->json();
-        if (isset($json['error'])) {
-            \Illuminate\Support\Facades\Log::error('ОШИБКА ОТПРАВКИ ВК: ', $json);
-        }
-    }
-
-    // Уведомление Админа в Телеграм. ADMIN_TELEGRAM_ID может содержать несколько
-    // ID через запятую — шлём всем кураторам.
-    private function sendTelegramAlert($text)
-    {
-        $token = config('services.telegram.bot_token');
-
-        foreach ($this->adminChatIds() as $chatId) {
-            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'parse_mode' => 'HTML',
-            ]);
-
-            if (! $response->successful()) {
-                Log::error('Telegram alert error', ['chat_id' => $chatId, 'status' => $response->status(), 'body' => $response->body()]);
-            }
-        }
-    }
-
-    /**
-     * Список ID кураторов-админов из ADMIN_TELEGRAM_ID (несколько — через запятую).
-     *
-     * @return list<string>
-     */
-    private function adminChatIds(): array
-    {
-        return array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string) config('services.telegram.admin_id')),
-        )));
     }
 }

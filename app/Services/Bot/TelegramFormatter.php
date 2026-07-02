@@ -55,7 +55,18 @@ class TelegramFormatter
      */
     public static function toPlain(string $text): string
     {
-        return trim(html_entity_decode(strip_tags(self::toHtml($text)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $html = self::toHtml($text);
+
+        // <a href="url">текст</a> → «текст (url)»: strip_tags ниже выбрасывает
+        // атрибуты вместе с тегом, и URL пропадал бы из VK-сообщений совсем
+        // (VK не рендерит ни HTML, ни markdown — ссылки живут только голым текстом).
+        $html = preg_replace_callback(
+            '/<a\s[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/su',
+            fn (array $m): string => $m[2] === $m[1] ? $m[1] : $m[2].' ('.$m[1].')',
+            $html
+        ) ?? $html;
+
+        return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     private static function convertMarkdown(string $text): string
