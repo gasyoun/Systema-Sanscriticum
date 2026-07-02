@@ -91,4 +91,26 @@ class ReferralCreditCheckoutTest extends TestCase
         $this->assertSame(2000.0, (float) $user->fresh()->referral_credit);
         $this->assertSame(0.0, (float) $payment->fresh()->referral_credit_applied); // не вернётся дважды
     }
+
+    /** @test */
+    public function admin_canceled_status_refunds_applied_credit_to_wallet(): void
+    {
+        // Регрессия: канон статуса в payments — 'canceled' (одно L), именно его
+        // пишет админка (PaymentResource). Раньше guard проверял только 'cancelled',
+        // и отмена платежа куратором НЕ возвращала реферальный кредит/прану.
+        $user = User::factory()->create(['referral_credit' => 0]);
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 3000,
+            'referral_credit_applied' => 2000,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $payment->update(['status' => 'canceled']); // отмена из админки
+
+        $this->assertSame(2000.0, (float) $user->fresh()->referral_credit);
+        $this->assertSame(0.0, (float) $payment->fresh()->referral_credit_applied);
+    }
 }
