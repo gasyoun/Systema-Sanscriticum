@@ -103,4 +103,15 @@ final class ProcessVkMagnetCallback implements ShouldQueue
 
         return [$userId, $token];
     }
+
+    /**
+     * Исчерпаны ретраи: логируем, чтобы «магнит не пришёл» не терялся молча.
+     */
+    public function failed(\Throwable $e): void
+    {
+        Log::error('ProcessVkMagnetCallback: доставка магнита не удалась', [
+            'type' => $this->event['type'] ?? null,
+            'error' => $e->getMessage(),
+        ]);
+    }
 }

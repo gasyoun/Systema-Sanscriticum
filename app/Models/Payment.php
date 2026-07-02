@@ -353,6 +353,10 @@ class Payment extends Model
                 $this->sendWelcomeEmailIfNeeded();
                 $this->sendCourseWelcomeEmailIfFirstForCourse();
                 $this->awardPranaForPurchase();
+                // Засчитываем использование промокода только по подтверждённой
+                // оплате (раньше инкремент стоял на создании pending, из-за чего
+                // брошенные чекауты исчерпывали usage_limit).
+                $this->promoCode?->markRedeemed();
             }
         });
 

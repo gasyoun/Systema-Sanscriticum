@@ -80,4 +80,16 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         // уже открыто; иначе выдаст планировщик magnets:deliver-due.
         LeadMagnetDispatcher::deliverOrDefer($lead, 'telegram');
     }
+
+    /**
+     * Исчерпаны ретраи: логируем, чтобы «магнит не пришёл» не терялся молча.
+     */
+    public function failed(\Throwable $e): void
+    {
+        Log::error('ProcessTelegramMagnetUpdate: доставка магнита не удалась', [
+            'chat_id' => $this->update['message']['chat']['id'] ?? null,
+            'landing_bot_id' => $this->landingBotId,
+            'error' => $e->getMessage(),
+        ]);
+    }
 }

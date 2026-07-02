@@ -71,4 +71,15 @@ final class ProcessMaxMagnetUpdate implements ShouldQueue
 
         LeadMagnetDispatcher::deliverOrDefer($lead, 'max');
     }
+
+    /**
+     * Исчерпаны ретраи: логируем, чтобы «магнит не пришёл» не терялся молча.
+     */
+    public function failed(\Throwable $e): void
+    {
+        Log::error('ProcessMaxMagnetUpdate: доставка магнита не удалась', [
+            'user_id' => $this->update['message']['sender']['user_id'] ?? null,
+            'error' => $e->getMessage(),
+        ]);
+    }
 }
