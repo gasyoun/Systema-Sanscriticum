@@ -69,12 +69,21 @@ class LectureDraftController extends Controller
     {
         $this->authorizeAccess($draft);
 
-        // Жёстко ограничиваем разрешённые подпапки
-        if (! preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path)) {
+        // Жёстко ограничиваем разрешённые подпапки. Класс символов включает
+        // «.» и «/», поэтому дополнительно явно запрещаем обход каталога («..»),
+        // иначе slides/../../../.env прошёл бы белый список (LFI).
+        if (! preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path) || str_contains($path, '..')) {
             abort(403, 'Запрещённый путь');
         }
 
-        $abs = $this->storage->absolutePath($draft, $path);
+        // Вторая линия защиты: реальный путь обязан оставаться внутри рабочей
+        // папки черновика. Ловит символьные ссылки и любые неожиданные обходы.
+        $abs = realpath($this->storage->absolutePath($draft, $path));
+        $root = realpath($this->storage->absoluteWorkingDir($draft));
+        if ($abs === false || $root === false || ! str_starts_with($abs, $root.DIRECTORY_SEPARATOR)) {
+            abort(404);
+        }
+
         if (! is_file($abs)) {
             abort(404);
         }

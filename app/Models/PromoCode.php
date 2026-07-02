@@ -42,10 +42,17 @@ class PromoCode extends Model
         return $this->course_id === null || (int) $this->course_id === (int) $courseId;
     }
 
+    // Окно, в течение которого незавершённый (pending) платёж «держит» промокод
+    // за пользователем — только для авторитетной проверки в момент оплаты
+    // (hasRecentPendingForUser). Защищает от гонки в двух вкладках, но не
+    // блокирует навсегда брошенную оплату (по истечении окна код снова доступен).
+    private const PENDING_HOLD_MINUTES = 30;
+
     // Уже погашен этим пользователем? Правило «один человек — один раз»:
     // код израсходован, когда у юзера есть ОПЛАЧЕННЫЙ платёж с этим кодом
-    // (зеркалит PaymentObserver::SUCCESS_STATUSES). Гость (null) — проверить
-    // нельзя, авторитетная проверка делается в PaymentController по резолвнутому юзеру.
+    // (зеркалит PaymentObserver::SUCCESS_STATUSES). Брошенный/pending чекаут НЕ
+    // сжигает код (advisory-проверка в CheckoutController::applyPromo). Гость
+    // (null) — проверить нельзя, авторитетная проверка делается в PaymentController.
     public function redeemedByUser(?int $userId): bool
     {
         if ($userId === null) {
@@ -56,6 +63,31 @@ class PromoCode extends Model
             ->where('user_id', $userId)
             ->paid()
             ->exists();
+    }
+
+    // Есть ли у пользователя СВЕЖИЙ pending с этим кодом. Используется только в
+    // авторитетном createPayment (под lockForUpdate на строке кода), чтобы два
+    // одновременных чекаута в разных вкладках не применили одноразовый код дважды:
+    // redeemedByUser видит лишь paid, поэтому в гонке оба pending прошли бы её.
+    public function hasRecentPendingForUser(?int $userId): bool
+    {
+        if ($userId === null) {
+            return false;
+        }
+
+        return Payment::where('promo_code_id', $this->id)
+            ->where('user_id', $userId)
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES))
+            ->exists();
+    }
+
+    // Атомарно засчитывает использование кода при подтверждённой оплате.
+    // Вызывается из Payment при переходе платежа в paid (а не при создании
+    // pending), чтобы брошенные чекауты не исчерпывали usage_limit.
+    public function markRedeemed(): void
+    {
+        $this->increment('used_count');
     }
 
     // Метод: Проверяет, можно ли применить этот код прямо сейчас

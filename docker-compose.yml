@@ -6,6 +6,7 @@ services:
             args:
                 WWWGROUP: '${WWWGROUP}'
         image: sail-8.4/app
+        restart: unless-stopped
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -22,18 +23,22 @@ services:
         networks:
             - sail
         depends_on:
-            - mysql
+            mysql:
+                # Не стартуем приложение раньше готовности БД (иначе гонка на миграциях/коннекте).
+                condition: service_healthy
     mysql:
         image: 'mysql/mysql-server:8.0'
+        restart: unless-stopped
         ports:
-            - '${FORWARD_DB_PORT:-3306}:3306'
+            # Биндим только на localhost хоста: порт БД не должен торчать наружу.
+            - '127.0.0.1:${FORWARD_DB_PORT:-3306}:3306'
         environment:
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ROOT_HOST: '%'
+            # root — только с localhost внутри контейнера (не '%'), и без пустого пароля.
+            MYSQL_ROOT_HOST: 'localhost'
             MYSQL_DATABASE: '${DB_DATABASE}'
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 1
         volumes:
             - 'sail-mysql:/var/lib/mysql'
         networks:

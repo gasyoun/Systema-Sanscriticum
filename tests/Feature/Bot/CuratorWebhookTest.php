@@ -23,6 +23,12 @@ class CuratorWebhookTest extends TestCase
         config()->set('services.openrouter.api_key', 'test-key');
         config()->set('services.openrouter.model', 'deepseek/deepseek-chat');
 
+        // Вебхуки TG/VK теперь fail-closed — задаём секреты и шлём их (заголовок
+        // TG сохраняется на все запросы теста; в VK-тела добавляем поле secret).
+        config()->set('services.telegram.bot_webhook_secret', 'test-tg');
+        config()->set('services.vk.callback_secret', 'test-vk');
+        $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-tg');
+
         Http::fake([
             'openrouter.ai/*' => Http::response([
                 'choices' => [['message' => ['content' => 'Намасте! Курс стоит 16500 ₽.']]],
@@ -112,6 +118,7 @@ class CuratorWebhookTest extends TestCase
 
         $this->postJson('/api/vk-webhook', [
             'type' => 'message_new',
+            'secret' => 'test-vk',
             'object' => ['message' => ['from_id' => 555222, 'text' => 'Сколько стоит курс?']],
         ])->assertOk();
 

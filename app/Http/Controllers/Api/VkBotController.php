@@ -19,8 +19,9 @@ class VkBotController extends Controller
     {
         $data = $request->all();
 
-        // ПРИНУДИТЕЛЬНЫЙ ЛОГ ВСЕХ ВХОДЯЩИХ ЗАПРОСОВ
-        Log::info('VK WEBHOOK CATCHED:', $data);
+        // Логируем только тип события — без полного payload (в message_new лежит
+        // текст переписки студента, который не должен копиться в файловых логах).
+        Log::info('VK webhook получен', ['type' => $data['type'] ?? null]);
 
         // 1. ПОДТВЕРЖДЕНИЕ СЕРВЕРА ДЛЯ ВК
         if (($data['type'] ?? '') === 'confirmation') {
@@ -37,7 +38,8 @@ class VkBotController extends Controller
             // Малформированный payload (битый callback / сканер / replay): отвечаем 200
             // чтобы VK не уходил в бесконечный retry, и логируем для диагностики.
             if (! is_int($vkId) && ! ctype_digit((string) $vkId)) {
-                Log::warning('VK webhook: malformed message_new payload', ['data' => $data]);
+                // Не логируем весь payload (может содержать текст сообщения) — только факт.
+                Log::warning('VK webhook: malformed message_new payload');
 
                 return response('ok', 200);
             }

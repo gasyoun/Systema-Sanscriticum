@@ -101,7 +101,6 @@ final class DepositController extends Controller
         Log::error('Ошибка Точка Эквайринг (deposit)', [
             'payment_id' => $payment->id,
             'status' => $response->status(),
-            'body' => $response->json(),
         ]);
 
         return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');

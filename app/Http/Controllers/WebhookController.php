@@ -43,11 +43,15 @@ class WebhookController extends Controller
             }
 
             $payload = (array) $decoded;
-            Log::info('--- ДАННЫЕ ВЕБХУКА ---', $payload);
 
             // ========== БИЗНЕС-ЛОГИКА ==========
             $purpose = $payload['purpose'] ?? '';
             $statusFromBank = $payload['status'] ?? null;
+
+            // Логируем только статус — без полного payload (там ФИО/суммы/атрибуты
+            // покупателя, которые не должны копиться в файловых логах). Трассировка
+            // по номеру заказа обеспечивается сообщениями ниже.
+            Log::info('Tochka webhook получен', ['status' => $statusFromBank]);
 
             preg_match('/Заказ №(\d+)/', $purpose, $matches);
             $paymentId = $matches[1] ?? null;
