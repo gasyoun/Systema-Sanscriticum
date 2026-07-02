@@ -135,7 +135,21 @@ class MarketingSetting extends Model
      */
     public static function cached(): ?self
     {
-        return Cache::rememberForever(self::CACHE_KEY, fn () => static::first());
+        // Не кэшируем отсутствие строки навсегда: иначе на «холодном» инстансе
+        // (строки настроек ещё нет / создана в обход Eloquent — сидер/прямой SQL)
+        // в кэш попадёт null навсегда, и подсистемы (депозит/боты/магниты) молча
+        // выключатся до ручного сброса. Кэшируем только реально существующую строку.
+        if ($cached = Cache::get(self::CACHE_KEY)) {
+            return $cached;
+        }
+
+        $settings = static::first();
+
+        if ($settings !== null) {
+            Cache::forever(self::CACHE_KEY, $settings);
+        }
+
+        return $settings;
     }
 
     public static function flushCached(): void

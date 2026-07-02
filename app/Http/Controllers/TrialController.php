@@ -92,7 +92,6 @@ final class TrialController extends Controller
         Log::error('Ошибка Точка Эквайринг (trial)', [
             'payment_id' => $payment->id,
             'status' => $response->status(),
-            'body' => $response->json(),
         ]);
 
         return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');

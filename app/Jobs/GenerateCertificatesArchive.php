@@ -82,7 +82,10 @@ class GenerateCertificatesArchive implements ShouldQueue
         }
 
         // 3. Создаем ZIP
-        $fileName = 'certificates_group_'.$this->groupId.'_'.time().'.zip';
+        // Имя содержит случайный токен, а не time(): иначе имя предсказуемо
+        // (group_id перебираемый + узкое окно секунд) и любой залогиненный мог бы
+        // скачать чужой архив сертификатов через /force-download (IDOR).
+        $fileName = 'certificates_group_'.$this->groupId.'_'.\Illuminate\Support\Str::random(40).'.zip';
         // Сохраняем в storage/app/public/archives
         $zipPath = storage_path('app/public/archives/'.$fileName);
 
@@ -92,29 +95,36 @@ class GenerateCertificatesArchive implements ShouldQueue
         }
 
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            $service = new CertificateService;
-
-            foreach ($certificates as $cert) {
-                try {
-                    $pdf = $service->generatePdf($cert);
-                    $pdfData = $pdf->output();
-                    $safeName = \Illuminate\Support\Str::slug($cert->user->name.'-'.$cert->course->title, '_');
-                    $zip->addFromString($safeName.'.pdf', $pdfData);
-
-                    // JPG-дубль рядом с PDF. Если на сервере нет imagick/ghostscript —
-                    // тихо кладём только PDF, архив не ломаем.
-                    try {
-                        $zip->addFromString($safeName.'.jpg', $service->pdfToJpeg($pdfData));
-                    } catch (\Throwable $e) {
-                    }
-                } catch (\Exception $e) {
-                    // Игнорируем ошибки генерации одного файла, чтобы не сломать весь архив
-                    continue;
-                }
-            }
-            $zip->close();
+        // Раньше сборка шла в `if (open === true) { ... }`, а уведомление «Архив
+        // готов!» отправлялось ВСЕГДА — при сбое open() админ получал ссылку на
+        // несуществующий файл. Теперь при неудаче бросаем исключение (сработает
+        // failed(), админ узнает о провале), а уведомление об успехе — только
+        // после реальной сборки.
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException("Не удалось создать ZIP-архив: {$zipPath}");
         }
+
+        $service = new CertificateService;
+
+        foreach ($certificates as $cert) {
+            try {
+                $pdf = $service->generatePdf($cert);
+                $pdfData = $pdf->output();
+                $safeName = \Illuminate\Support\Str::slug($cert->user->name.'-'.$cert->course->title, '_');
+                $zip->addFromString($safeName.'.pdf', $pdfData);
+
+                // JPG-дубль рядом с PDF. Если на сервере нет imagick/ghostscript —
+                // тихо кладём только PDF, архив не ломаем.
+                try {
+                    $zip->addFromString($safeName.'.jpg', $service->pdfToJpeg($pdfData));
+                } catch (\Throwable $e) {
+                }
+            } catch (\Exception $e) {
+                // Игнорируем ошибки генерации одного файла, чтобы не сломать весь архив
+                continue;
+            }
+        }
+        $zip->close();
 
         // 4. Отправляем уведомление админу
         // Используем наш надежный маршрут для принудительного скачивания
@@ -133,6 +143,21 @@ class GenerateCertificatesArchive implements ShouldQueue
                         ->label('Скачать ZIP')
                         ->url($downloadUrl, shouldOpenInNewTab: true),
                 ])
+                ->sendToDatabase($recipient);
+        }
+    }
+
+    /**
+     * Провал джобы (в т.ч. сбой ZIP) — сообщаем инициатору, иначе он ждёт
+     * «архив готов», который уже не придёт.
+     */
+    public function failed(\Throwable $e): void
+    {
+        if ($recipient = User::find($this->adminUserId)) {
+            Notification::make()
+                ->title('Не удалось собрать архив сертификатов')
+                ->danger()
+                ->body('Произошла ошибка при формировании ZIP. Попробуйте ещё раз позже или обратитесь к администратору.')
                 ->sendToDatabase($recipient);
         }
     }

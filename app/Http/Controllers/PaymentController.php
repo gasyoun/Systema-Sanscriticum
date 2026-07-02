@@ -34,43 +34,20 @@ class PaymentController extends Controller
 
         $request->validate($rules);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana, $tochka) {
+        // Резолв пользователя — ВНЕ транзакции. Для гостя с существующим email —
+        // отказ (анти-takeover), как в DepositController/TrialController. Иначе
+        // аноним мог создавать платежи на чужой аккаунт и триггерить письмо со
+        // сбросом пароля владельцу (Payment::sendWelcomeEmailIfNeeded).
+        $user = $this->resolveUser($request);
 
-            // 2. ПОЛУЧАЕМ ИЛИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ
-            if (auth()->check()) {
-                $user = auth()->user();
-            } else {
-                $existingUser = User::where('email', User::normalizeEmail($request->input('email')))->first();
+        $tariff = Tariff::with('course')->findOrFail($request->input('tariff_id'));
 
-                if ($existingUser) {
-                    $user = $existingUser;
-                } else {
-                    // Склейка ФИО+город прямо в name: «Фамилия Имя, Город»
-                    $fullName = trim($request->input('surname').' '.$request->input('name'));
-                    $city = trim((string) $request->input('city'));
-                    if ($city !== '') {
-                        $fullName .= ', '.$city;
-                    }
+        // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
+        // commit, иначе медленный/упавший эквайринг держит row-lock на
+        // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
+        $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana, $user, $tariff) {
 
-                    $user = User::create([
-                        'email' => $request->input('email'),
-                        'name' => $fullName,
-                        'password' => Hash::make(Str::random(12)),
-                        'wants_email_announcements' => $request->boolean('wants_announcements'),
-                    ]);
-
-                    // Реферал: привязываем нового студента к пригласившему по коду
-                    // (из формы или сохранённого в сессии при переходе по ссылке).
-                    app(\App\Services\ReferralService::class)
-                        ->attachReferrer($user, $request->input('ref') ?: session('ref'));
-
-                    auth()->login($user);
-                }
-            }
-
-            $tariff = Tariff::with('course')->findOrFail($request->input('tariff_id'));
-
-            // 3. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
+            // 1. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
             $finalPrice = $tariff->calculateFinalPriceForUser($user);
 
             // Фиксируем скидку (персональная/лояльность) для пометки в админке и
@@ -78,7 +55,7 @@ class PaymentController extends Controller
             // и процент, и рублёвый эквивалент. Промокод/прана — отдельно.
             $discount = $tariff->discountInfoForUser($user);
 
-            // Применяем промокод
+            // 2. Применяем промокод
             $promo = null;
             if (session()->has('promo_code')) {
                 $promo = PromoCode::where('code', session('promo_code'))
@@ -89,6 +66,9 @@ class PaymentController extends Controller
                     && $promo->isValid()
                     && $promo->appliesToCourse($tariff->course->id ?? null)
                     && ! $promo->redeemedByUser($user->id)
+                    // Гонка в двух вкладках: redeemedByUser видит только paid, поэтому
+                    // здесь дополнительно отсекаем свежий pending с тем же кодом.
+                    && ! $promo->hasRecentPendingForUser($user->id)
                 ) {
                     $finalPrice = $promo->calculateDiscountedPrice($finalPrice);
                 } else {
@@ -149,7 +129,7 @@ class PaymentController extends Controller
                 $endBlock = $tariff->block_number;
             }
 
-            // 4. СОЗДАЕМ ПЛАТЕЖ
+            // 3. СОЗДАЕМ ПЛАТЕЖ
             $payment = Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $tariff->course->id ?? null,
@@ -184,68 +164,117 @@ class PaymentController extends Controller
                 }
             }
 
-            // 5. ИНКРЕМЕНТИРУЕМ ПРОМОКОД
+            // 4. ИНКРЕМЕНТИРУЕМ ПРОМОКОД
+            // used_count растёт только по подтверждённой оплате (Payment::redeemPromoOnPaid),
+            // а не здесь — иначе брошенные/незавершённые чекауты исчерпывали бы лимит.
             if ($promo) {
-                $promo->increment('used_count');
                 session()->forget('promo_code');
             }
 
-            // 6. ЕСЛИ ЦЕНА 0
-            if ($finalPrice == 0) {
-                $payment->update(['status' => 'paid']);
+            return [$payment, $finalPrice, $tariff];
+        });
 
-                if (! auth()->check()) {
-                    return redirect()->route('login')
-                        ->with('success', 'Доступ открыт! Войдите в аккаунт, чтобы начать обучение.');
-                }
+        [$payment, $finalPrice, $tariff] = $result;
 
-                return redirect()->route('student.dashboard')
-                    ->with('success', 'Доступ к курсу успешно открыт!');
+        // 5. ЕСЛИ ЦЕНА 0 — доступ открывается сразу (после commit; наблюдатель
+        // Payment::updated по статусу paid выдаёт доступ к группам).
+        if ($finalPrice == 0) {
+            $payment->update(['status' => 'paid']);
+
+            if (! auth()->check()) {
+                return redirect()->route('login')
+                    ->with('success', 'Доступ открыт! Войдите в аккаунт, чтобы начать обучение.');
             }
 
-            // 7. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ (с фискализацией — чек уйдёт на email студента)
-            $purpose = 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
+            return redirect()->route('student.dashboard')
+                ->with('success', 'Доступ к курсу успешно открыт!');
+        }
 
-            try {
-                $response = $tochka->createPaymentWithReceipt(
-                    user: $user,
-                    amount: (float) $finalPrice,
-                    purpose: $purpose,
-                    itemName: ($tariff->course->title ?? 'Курс').' — '.$tariff->title,
-                );
-            } catch (ConnectionException $e) {
-                // Сетевой сбой / TLS / DNS / timeout. Без catch Guzzle RequestException
-                // вылетит наружу из DB::transaction — пользователь увидит 500, а строка
-                // платежа откатится, и след попытки потеряется. Помечаем failed и
-                // возвращаем мягкую ошибку, чтобы юзер мог попробовать ещё раз.
-                $payment->update(['status' => 'failed']);
+        // 6. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ — ПОСЛЕ commit (с фискализацией: чек уйдёт на email студента)
+        $purpose = 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
 
-                Log::error('Tochka недоступна', [
-                    'payment_id' => $payment->id,
-                    'error' => $e->getMessage(),
-                ]);
-
-                return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
-            }
-
-            // 8. ОБРАБАТЫВАЕМ ОТВЕТ
-            if ($response->successful() && isset($response['Data']['paymentLink'])) {
-                $payment->update([
-                    'transaction_id' => $response['Data']['paymentLinkId'],
-                ]);
-
-                return redirect()->away($response['Data']['paymentLink']);
-            }
-
+        try {
+            $response = $tochka->createPaymentWithReceipt(
+                user: $user,
+                amount: (float) $finalPrice,
+                purpose: $purpose,
+                itemName: ($tariff->course->title ?? 'Курс').' — '.$tariff->title,
+            );
+        } catch (ConnectionException $e) {
+            // Сетевой сбой / TLS / DNS / timeout. Помечаем платёж failed (наблюдатель
+            // вернёт списанную прану) и возвращаем мягкую ошибку для повторной попытки.
             $payment->update(['status' => 'failed']);
 
-            Log::error('Ошибка Точка Эквайринг', [
-                'status' => $response->status(),
-                'body' => $response->json(),
+            Log::error('Tochka недоступна', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
-        });
+        }
+
+        // 7. ОБРАБАТЫВАЕМ ОТВЕТ
+        if ($response->successful() && isset($response['Data']['paymentLink'])) {
+            $payment->update([
+                'transaction_id' => $response['Data']['paymentLinkId'],
+            ]);
+
+            return redirect()->away($response['Data']['paymentLink']);
+        }
+
+        $payment->update(['status' => 'failed']);
+
+        Log::error('Ошибка Точка Эквайринг', [
+            'payment_id' => $payment->id,
+            'status' => $response->status(),
+        ]);
+
+        return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
+     * Возвращает пользователя для оформления платежа.
+     *
+     * Залогиненный — текущий. Гость с НОВЫМ email — создаём аккаунт и логиним
+     * (риска takeover нет: владелец сам только что ввёл email). Гость с
+     * СУЩЕСТВУЮЩИМ email — отказ: раньше платёж молча создавался на чужой аккаунт,
+     * а первая оплата перегенерировала владельцу пароль и слала письмо.
+     */
+    private function resolveUser(Request $request): User
+    {
+        if (auth()->check()) {
+            return auth()->user();
+        }
+
+        $existing = User::where('email', User::normalizeEmail($request->input('email')))->first();
+        if ($existing) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите заказ оттуда.',
+            ]);
+        }
+
+        // Склейка ФИО+город прямо в name: «Фамилия Имя, Город»
+        $fullName = trim($request->input('surname').' '.$request->input('name'));
+        $city = trim((string) $request->input('city'));
+        if ($city !== '') {
+            $fullName .= ', '.$city;
+        }
+
+        $user = User::create([
+            'email' => $request->input('email'),
+            'name' => $fullName,
+            'password' => Hash::make(Str::random(12)),
+            'wants_email_announcements' => $request->boolean('wants_announcements'),
+        ]);
+
+        // Реферал: привязываем нового студента к пригласившему по коду
+        // (из формы или сохранённого в сессии при переходе по ссылке).
+        app(\App\Services\ReferralService::class)
+            ->attachReferrer($user, $request->input('ref') ?: session('ref'));
+
+        auth()->login($user);
+
+        return $user;
     }
 
     public function success(Request $request)
@@ -261,17 +290,13 @@ class PaymentController extends Controller
 
     public function fail(Request $request)
     {
-        if (auth()->check()) {
-            $lastPayment = Payment::where('user_id', auth()->id())
-                ->where('status', 'pending')
-                ->latest()
-                ->first();
-
-            if ($lastPayment) {
-                $lastPayment->update(['status' => 'failed']);
-            }
-        }
-
+        // Ничего не помечаем и не возвращаем прану здесь: это GET-возврат с банка,
+        // которому нельзя доверять как факту провала. Источник истины — вебхук
+        // Точки (WebhookController), который атомарно переведёт платёж в failed и
+        // вернёт списанную прану. Иначе пользователь мог оплатить со скидкой прана,
+        // затем открыть /payment/fail до вебхука и получить прану обратно, а вебхук
+        // потом всё равно открыл бы доступ — двойная выгода. Плюс здесь брался
+        // «последний pending» без привязки к заказу — мог свалиться не тот платёж.
         return redirect('/')->with('error', 'Оплата была отменена или произошла ошибка. Вы можете попробовать снова.');
     }
 }

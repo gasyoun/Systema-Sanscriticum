@@ -28,26 +28,55 @@ class SocialAuthScaffoldTest extends TestCase
     }
 
     /** @test */
-    public function find_or_create_links_by_matching_email(): void
+    public function find_or_create_links_by_matching_email_when_verified(): void
     {
         $user = User::factory()->create(['email' => 'match@example.test']);
 
-        $result = app(SocialAuthService::class)->findOrCreateUser('vkontakte', '222', 'match@example.test', 'V');
+        // Подтверждённый провайдером email — линкуем к существующему аккаунту.
+        $result = app(SocialAuthService::class)
+            ->findOrCreateUser('google', '222', 'match@example.test', 'V', emailVerified: true);
 
         $this->assertTrue($result->is($user));
         $this->assertSame(1, User::count()); // нового не создали
         $this->assertDatabaseHas('social_accounts', [
-            'user_id' => $user->id, 'provider' => 'vkontakte', 'provider_id' => '222',
+            'user_id' => $user->id, 'provider' => 'google', 'provider_id' => '222',
         ]);
     }
 
     /** @test */
-    public function find_or_create_makes_a_new_user_when_unknown(): void
+    public function find_or_create_rejects_unverified_email_of_existing_user(): void
     {
-        $result = app(SocialAuthService::class)->findOrCreateUser('yandex', '333', 'new@example.test', 'Новый');
+        User::factory()->create(['email' => 'match@example.test']);
+
+        // Неподтверждённый email, совпавший с чужим аккаунтом = takeover → отказ.
+        $this->expectException(\App\Exceptions\SocialEmailNotVerifiedException::class);
+
+        app(SocialAuthService::class)
+            ->findOrCreateUser('vkontakte', '222', 'match@example.test', 'V', emailVerified: false);
+    }
+
+    /** @test */
+    public function find_or_create_makes_a_new_user_with_verified_email(): void
+    {
+        $result = app(SocialAuthService::class)
+            ->findOrCreateUser('google', '333', 'new@example.test', 'Новый', emailVerified: true);
 
         $this->assertSame('new@example.test', $result->email);
-        $this->assertDatabaseHas('social_accounts', ['provider' => 'yandex', 'provider_id' => '333']);
+        $this->assertDatabaseHas('social_accounts', ['provider' => 'google', 'provider_id' => '333']);
+    }
+
+    /** @test */
+    public function find_or_create_new_user_with_unverified_email_uses_stub(): void
+    {
+        // Неподтверждённый email нового пользователя НЕ занимает пространство логинов:
+        // в users кладём stub, реальный email — только на строке social_account.
+        $result = app(SocialAuthService::class)
+            ->findOrCreateUser('yandex', '444', 'squat@example.test', 'Аноним', emailVerified: false);
+
+        $this->assertSame('yandex_444@social.local', $result->email);
+        $this->assertDatabaseHas('social_accounts', [
+            'provider' => 'yandex', 'provider_id' => '444', 'email' => 'squat@example.test',
+        ]);
     }
 
     /** @test */

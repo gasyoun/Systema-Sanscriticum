@@ -20,6 +20,11 @@ class BotConnectionTrackingTest extends TestCase
             'api.telegram.org/*' => Http::response(['ok' => true], 200),
             'api.vk.com/*' => Http::response(['response' => 1], 200),
         ]);
+
+        // Вебхуки TG/VK теперь fail-closed — задаём секреты и шлём их.
+        config()->set('services.telegram.bot_webhook_secret', 'test-tg');
+        config()->set('services.vk.callback_secret', 'test-vk');
+        $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-tg');
     }
 
     public function test_telegram_binding_records_connected_at(): void
@@ -84,13 +89,14 @@ class BotConnectionTrackingTest extends TestCase
 
     public function test_vk_binding_records_connected_at(): void
     {
-        // Привязка идёт по одноразовому токену (vk_auth_token), а не по сырому
-        // user id — это закрытый VK-IDOR (см. VkController::connect / PR #173).
-        $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => 'vktok123']);
+        // Привязка идёт по одноразовому токену vk_auth_token (не по сырому user id —
+        // это был IDOR-перехват, см. PR #173). Токен приходит в ref из ссылки vk.me.
+        $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => 'vk_tok_123']);
 
         $this->postJson('/api/vk-webhook', [
             'type' => 'message_new',
-            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => 'vktok123']],
+            'secret' => 'test-vk',
+            'object' => ['message' => ['from_id' => 888002, 'text' => 'привет', 'ref' => 'vk_tok_123']],
         ])->assertOk();
 
         $fresh = $user->fresh();

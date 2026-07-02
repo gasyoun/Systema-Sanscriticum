@@ -35,7 +35,7 @@ class AuthController extends Controller
 
             // Если это Админ -> в админку
             $user = Auth::user();
-            if ($user->email === 'pe4kinsmart@gmail.com' || $user->is_admin) {
+            if ($user->is_admin) {
                 return redirect()->intended('/admin');
             }
 

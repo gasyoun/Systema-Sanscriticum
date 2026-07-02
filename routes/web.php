@@ -28,7 +28,11 @@ Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))-
 Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('checkout.show');
 
 // --- НОВЫЕ РОУТЫ ДЛЯ ПРОМОКОДОВ ---
-Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'])->name('checkout.promo');
+// throttle на apply — иначе публичный эндпоинт превращается в оракул для
+// перебора валидных промокодов (по 10 попыток в минуту хватит легитимному юзеру).
+Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'])
+    ->middleware('throttle:10,1')
+    ->name('checkout.promo');
 Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])->name('checkout.promo.remove');
 
 // 1. РЕДИРЕКТ (чтобы старые ссылки работали)
@@ -208,6 +212,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
 // БЕЗОПАСНОЕ СКАЧИВАНИЕ ФАЙЛОВ
 Route::get('/force-download/{file}', function (string $file) {
+    // Только персонал: архивы сертификатов групп генерят и качают админы/редакторы/
+    // преподаватели из Filament. Студенту тут делать нечего — раньше любой
+    // залогиненный мог скачать чужой архив по (предсказуемому) имени (IDOR).
+    $u = auth()->user();
+    abort_unless($u && ($u->is_admin || $u->is_lecture_editor || $u->teacher_id), 403);
+
     $safeFileName = basename($file); // защита от path traversal
     // Архивы сертификатов кладёт GenerateCertificatesArchive в подкаталог archives/.
     $path = 'archives/'.$safeFileName;
@@ -233,7 +243,11 @@ Route::get('/thank-you', function () {
 
 // --- РОУТЫ ДЛЯ ТОЧКА БАНКА ---
 // Перенес их выше роута-перехватчика {slug} для безопасности
-Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+// throttle:5,1 — как у deposit/trial: публичный приём email + создание платежа,
+// защита от ботов (спам pending-платежей, enumeration email, злоупотребление API Точки).
+Route::post('/payment/create', [PaymentController::class, 'createPayment'])
+    ->middleware('throttle:5,1')
+    ->name('payment.create');
 Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/fail', [PaymentController::class, 'fail'])->name('payment.fail');
 
