@@ -22,10 +22,24 @@
     };
 @endphp
 
+{{-- Тёмная тема: аддитивные правила, светлую тему не трогают. Вью целиком на
+     инлайновых стилях, поэтому цвета перебиваем точечно по [style*=…]!important,
+     ограничив область `.si-modal`. Меняются ТОЛЬКО цвета — никаких сумм/логики. --}}
+<style>
+    .dark .si-modal { background: #16181d !important; box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+    .dark .si-modal [style*="border-bottom: 1px solid #e5e7eb"] { border-bottom-color: rgba(255,255,255,.1) !important; }
+    .dark .si-modal [style*="border-bottom: 1px solid #f3f4f6"] { border-bottom-color: rgba(255,255,255,.07) !important; }
+    .dark .si-modal [style*="color: #111827"] { color: #f3f4f6 !important; }
+    .dark .si-modal [style*="color: #374151"] { color: #d1d5db !important; }
+    .dark .si-modal [style*="color: #2563eb"] { color: #93c5fd !important; }
+    .dark .si-modal [style*="background: #f9fafb"] { background: rgba(255,255,255,.05) !important; color: #d1d5db !important; }
+    .dark .si-modal [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; color: #d1d5db !important; }
+</style>
+
 {{-- Оверлей --}}
 <div wire:click.self="closeStudentInfo"
      style="position: fixed; inset: 0; background: rgba(17,24,39,0.55); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto;">
-    <div style="background: #fff; width: 100%; max-width: 720px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden;">
+    <div class="si-modal" style="background: #fff; width: 100%; max-width: 720px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden;">
 
         {{-- Шапка --}}
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #e5e7eb;">
