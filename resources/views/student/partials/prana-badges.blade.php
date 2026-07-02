@@ -20,7 +20,8 @@
                                 ? 'border-amber-200 bg-gradient-to-br from-amber-50 to-white'
                                 : 'border-gray-100 bg-gray-50' }}"
                      title="{{ $b['desc'] }}">
-                    <div class="text-3xl mb-1 {{ $b['earned'] ? '' : 'opacity-30 grayscale' }}">{{ $b['icon'] }}</div>
+                    {{-- 🪷 (U+1FAB7) нет в эмодзи-шрифте Windows 10 — лотос рисуем SVG-компонентом, остальные иконки как есть --}}
+                    <div class="text-3xl mb-1 {{ $b['earned'] ? '' : 'opacity-30 grayscale' }}">@if($b['icon'] === '🪷')<x-prana-lotus class="w-8 h-8" />@else{{ $b['icon'] }}@endif</div>
                     <div class="text-sm font-extrabold {{ $b['earned'] ? 'text-gray-900' : 'text-gray-400' }}">{{ $b['name'] }}</div>
                     <div class="text-[11px] text-gray-400 leading-snug mt-0.5">{{ $b['desc'] }}</div>
 
