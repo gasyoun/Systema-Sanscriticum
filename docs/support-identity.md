@@ -1,6 +1,6 @@
 # Support identity — the one canonical external-identity story
 
-<p align="right"><sub>Created: 01-07-2026 · Last updated: 01-07-2026</sub></p>
+_Created: 01-07-2026 · Last updated: 01-07-2026_
 
 > Companion to [docs/support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md). Resolves open decision #3 (identity reconciliation). Read this before adding any external-identity storage — the point is that a **fourth** mapping must never be created.
 
@@ -47,4 +47,4 @@ php artisan identity:backfill-social-accounts --apply   # write
 
 Any new channel's identity goes into `social_accounts` under a new `PROVIDER_*` constant. **Never** add a fourth external-identity table or a per-channel id column that competes with `social_accounts` — that is the exact identity-chaos failure this decision exists to prevent. A denormalized outbound cache column (like `users.telegram_id`) is acceptable only as an explicit, documented cache of a `social_accounts` row.
 
-<p align="right"><sub>Dr. Mārcis Gasūns</sub></p>
+_Dr. Mārcis Gasūns_

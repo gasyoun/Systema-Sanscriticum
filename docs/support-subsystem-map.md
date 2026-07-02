@@ -1,6 +1,6 @@
 # Support subsystem — what actually exists (agent reference)
 
-<p align="right"><sub>Created: 01-07-2026 · Last updated: 01-07-2026</sub></p>
+_Created: 01-07-2026 · Last updated: 01-07-2026_
 
 > **Update 01-07-2026 (Step 1 done):** the naming landmine below is **resolved in code** — the daily-rollup model is now [`SupportDailyRollup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportDailyRollup.php) (table `support_daily_rollups`, FK `support_daily_rollup_id`, aggregator `SupportDailyRollupAggregator`). The name `SupportConversation` is now **free** for the future operational thread. Display vocabulary (`conversations()` relation, `conversation_date` column, dashboard `conversations` key) was intentionally left as-is.
 
@@ -91,4 +91,4 @@ The read layer, operational thread, reply router, and AI assist were all built. 
 
 Keep it for: the Jivo product decomposition, "copy inbox patterns not the whole product," the EdTech side-panel widget priorities (P0/P1/P2), and the phased roadmap *shape*. Ignore its "Как у нас сейчас" column and its open-questions inventory — both predate reading the code.
 
-<p align="right"><sub>Dr. Mārcis Gasūns</sub></p>
+_Dr. Mārcis Gasūns_
