@@ -51,6 +51,38 @@ class HalfBlockPurchaseTest extends TestCase
     }
 
     /** @test */
+    public function loyalty_deposit_and_upgrade_credit_stack_in_order(): void
+    {
+        // Полный конвейер цены: сначала процент лояльности от базовой цены,
+        // затем зачёт депозита, затем зачёт уплаченной половины.
+        \App\Models\MarketingSetting::create([
+            'is_loyalty_active' => true,
+            'wholesale_small_threshold' => 2,
+            'wholesale_small_discount' => 10,
+            'wholesale_large_threshold' => 99,
+            'wholesale_large_discount' => 20,
+        ]);
+
+        $course = $this->course();
+        $user = User::factory()->create();
+
+        // 2 других купленных курса → лояльность 10%.
+        foreach (range(1, 2) as $i) {
+            $this->pay($user, Course::factory()->create(), 'full', 4800);
+        }
+        // Уже купленная первая половина блока за 2000.
+        $this->pay($user, $course, 'block_1_h1', 2000);
+        // Депозит 500 ПОСЛЕ покупки половины — иначе реальная покупка его зачтёт
+        // (observer помечает deposit_consumed_at) и кредита не останется.
+        $this->pay($user, $course, 'deposit', 500);
+
+        $whole = Tariff::factory()->block(1)->create(['course_id' => $course->id, 'price' => 10000]);
+
+        // 10000 − 10% = 9000; − депозит 500 = 8500; − половина 2000 = 6500.
+        $this->assertSame(6500.0, $whole->calculateFinalPriceForUser($user->fresh()));
+    }
+
+    /** @test */
     public function tariff_access_key_reflects_type_and_half(): void
     {
         $full = Tariff::factory()->create();
