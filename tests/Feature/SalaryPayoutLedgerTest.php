@@ -359,6 +359,55 @@ class SalaryPayoutLedgerTest extends TestCase
     }
 
     /** @test */
+    public function available_prior_block_payments_skips_blocks_that_have_not_started(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true, 'starts_at' => now()->addYear()->toDateString()]);
+
+        $user = User::factory()->create();
+        // full без блоков → покрывает оба блока, доля 500 на блок.
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'full', 'status' => 'paid',
+        ]));
+
+        $items = app(TeacherSalaryService::class)
+            ->availablePriorBlockPayments($teacher->fresh('courses'), null, null);
+
+        // Будущий блок 2 не «прошлый» — предлагается только доля блока 1.
+        $this->assertCount(1, $items);
+        $this->assertSame(1, $items[0]['block_number']);
+        $this->assertEqualsWithDelta(500.0, $items[0]['share'], 0.01);
+        $this->assertEqualsWithDelta(150.0, $items[0]['teacher_amount'], 0.01); // 500 × 30%
+    }
+
+    /** @test */
+    public function available_prior_block_payments_ignores_non_percent_courses(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id, 'salary_type' => 'fix_per_block', 'salary_value' => 5000,
+        ]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'is_active' => true, 'starts_at' => '2026-01-01']);
+
+        $user = User::factory()->create();
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 1000,
+            'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1, 'status' => 'paid',
+        ]));
+
+        // Picker работает только для percent-схем — фикс-курс не предлагает поздних оплат.
+        $this->assertSame(
+            [],
+            app(TeacherSalaryService::class)->availablePriorBlockPayments($teacher->fresh('courses'), null, null),
+        );
+    }
+
+    /** @test */
     public function backfill_command_is_dry_run_by_default_and_idempotent_with_apply(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
