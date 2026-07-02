@@ -12,7 +12,17 @@
     };
 @endphp
 
-<div style="display: flex; flex-direction: column; gap: 16px; font-size: 13px;">
+{{-- Тёмная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]). --}}
+<style>
+    .dark .att-panel [style*="border-bottom: 1px solid #e5e7eb"] { border-bottom-color: rgba(255,255,255,.12) !important; }
+    .dark .att-panel [style*="border-bottom: 1px solid #f3f4f6"] { border-bottom-color: rgba(255,255,255,.07) !important; }
+    .dark .att-panel [style*="color: #111827"] { color: #f3f4f6 !important; }
+    .dark .att-panel [style*="color: #374151"] { color: #d1d5db !important; }
+    .dark .att-panel [style*="color: #6b7280"] { color: #9ca3af !important; }
+    .dark .att-panel [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; }
+</style>
+
+<div class="att-panel" style="display: flex; flex-direction: column; gap: 16px; font-size: 13px;">
     {{-- Сводка --}}
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
         @php

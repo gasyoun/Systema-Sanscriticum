@@ -207,6 +207,36 @@
             transition: background 0.2s;
         }
         .btn-send:hover { background: #ea580c; }
+
+        /* === Тёмная тема: Filament вешает .dark на <html>. Правила чисто
+           аддитивные — светлую тему не трогают. Инлайновые цвета в разметке
+           перебиваем точечно по подстроке атрибута style (+ !important). === */
+        .dark .chat-container { background: #16181d; border-color: rgba(255,255,255,.1); }
+        .dark .chat-sidebar { background: #111318; border-right-color: rgba(255,255,255,.1); }
+        .dark .chat-main { background: #16181d; }
+        .dark .chat-header { background: #16181d; border-bottom-color: rgba(255,255,255,.1); }
+        .dark .chat-user-item { border-bottom-color: rgba(255,255,255,.06); }
+        .dark .chat-user-item:hover { background: rgba(255,255,255,.05); }
+        .dark .chat-user-item.active { background: rgba(249,115,22,.12); }
+        .dark .chat-avatar { background: rgba(249,115,22,.2); color: #fdba74; }
+        .dark .messages-area { background-color: #0b0e14; }
+        .dark .msg-sender { color: #9ca3af; }
+        .dark .msg-time { color: #6b7280; }
+        .dark .msg-bubble.user-bubble { background: #1f2937; color: #e5e7eb; border-color: rgba(255,255,255,.1); }
+        .dark .msg-bubble.bot-bubble { background: rgba(59,130,246,.15); color: #bfdbfe; border-color: rgba(59,130,246,.35); }
+        .dark .chat-input-area { background: #16181d; border-top-color: rgba(255,255,255,.1); }
+        .dark .chat-textarea { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.15); color: #f3f4f6; }
+        .dark .chat-textarea::placeholder { color: #6b7280; }
+        .dark .chat-textarea:focus { background: rgba(255,255,255,.08); border-color: #f97316; }
+        .dark .thread-status.open { background: rgba(34,197,94,.2); color: #86efac; }
+        .dark .thread-status.pending { background: rgba(234,179,8,.2); color: #fde047; }
+        .dark .thread-status.closed { background: rgba(255,255,255,.1); color: #9ca3af; }
+        .dark .msg-channel.web { background: rgba(139,92,246,.25); color: #c4b5fd; }
+        .dark .msg-channel.telegram { background: rgba(14,165,233,.25); color: #7dd3fc; }
+        .dark [style*="color: #111827"] { color: #f3f4f6 !important; }
+        .dark [style*="color: #1f2937"] { color: #e5e7eb !important; }
+        .dark [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; color: #e5e7eb !important; }
+        .dark [style*="color: #6b7280"] { color: #9ca3af !important; }
     </style>
 
     <div class="chat-container">

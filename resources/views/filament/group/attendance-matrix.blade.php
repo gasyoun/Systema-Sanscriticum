@@ -13,7 +13,17 @@
     };
 @endphp
 
-<div style="overflow-x: auto; font-size: 12px;">
+{{-- Тёмная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]).
+     Липкая первая колонка на background:#fff иначе осталась бы белой в тёмной теме. --}}
+<style>
+    .dark .att-matrix [style*="background: #fff"] { background: #16181d !important; }
+    .dark .att-matrix [style*="border-bottom: 2px solid #e5e7eb"] { border-bottom-color: rgba(255,255,255,.15) !important; }
+    .dark .att-matrix [style*="border-bottom: 1px solid #f3f4f6"] { border-bottom-color: rgba(255,255,255,.07) !important; }
+    .dark .att-matrix [style*="color: #111827"] { color: #f3f4f6 !important; }
+    .dark .att-matrix [style*="color: #6b7280"] { color: #9ca3af !important; }
+</style>
+
+<div class="att-matrix" style="overflow-x: auto; font-size: 12px;">
     @if($schedules->isEmpty() || $students->isEmpty())
         <div style="color: #9ca3af; padding: 12px;">Нет занятий или студентов за период.</div>
     @else
