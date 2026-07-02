@@ -137,6 +137,33 @@ class LoyaltyDiscountTest extends TestCase
     }
 
     /** @test */
+    public function repeat_payments_on_the_same_course_count_once(): void
+    {
+        $this->loyalty(true);
+        $user = User::factory()->create();
+
+        // Три платежа, но уникальный курс один; платёж без course_id не считается.
+        $course = Course::factory()->create();
+        foreach (['block_1', 'block_2'] as $tariff) {
+            Payment::create([
+                'user_id' => $user->id, 'course_id' => $course->id,
+                'amount' => 2400, 'tariff' => $tariff, 'status' => 'paid',
+            ]);
+        }
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => null,
+            'amount' => 4800, 'tariff' => 'full', 'status' => 'paid',
+        ]);
+
+        // small-порог = 2 уникальных курса — один курс не дотягивает.
+        $this->assertSame(0, $this->percentFor($user));
+
+        // Второй уникальный курс добирает порог.
+        $this->payCourses($user, 1);
+        $this->assertSame(10, $this->percentFor($user));
+    }
+
+    /** @test */
     public function discount_is_ignored_for_payments_older_than_a_year(): void
     {
         // Порог окна лояльности — последний год: оплаты старше года не считаются.
