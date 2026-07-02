@@ -202,7 +202,7 @@
             <a href="{{ route('student.dashboard') }}#prana"
                title="Ваш баланс праны"
                class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 h-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 text-[#E85C24] hover:from-orange-100 hover:to-amber-100 transition-all">
-                <span class="text-lg leading-none" aria-hidden="true">🪷</span>
+                <x-prana-lotus class="w-[1.15rem] h-[1.15rem] align-middle" />
                 <span class="text-sm font-extrabold tabular-nums">{{ number_format((int) (auth()->user()->prana_balance ?? 0), 0, '.', ' ') }}</span>
             </a>
         @endif

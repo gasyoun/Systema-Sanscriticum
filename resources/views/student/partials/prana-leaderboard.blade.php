@@ -28,7 +28,7 @@
                         <span class="block text-[11px] text-gray-400">{{ $row['rank'] }}</span>
                     </div>
                     <span class="shrink-0 text-sm font-extrabold text-amber-600 tabular-nums">
-                        🪷 {{ number_format($row['lifetime'], 0, '.', ' ') }}
+                        <x-prana-lotus /> {{ number_format($row['lifetime'], 0, '.', ' ') }}
                     </span>
                 </li>
             @endforeach

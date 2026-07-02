@@ -319,7 +319,7 @@
             <button @click="activeTab = 'prana'"
                     :class="activeTab === 'prana' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                     class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
-                <span class="mr-2" aria-hidden="true">🪷</span>Прана
+                <x-prana-lotus class="mr-2" />Прана
             </button>
         @endif
 
@@ -340,8 +340,9 @@
          x-transition:enter-start="opacity-0 translate-y-4" 
          x-transition:enter-end="opacity-100 translate-y-0">
          
-        {{-- Идеальная сетка: 1-2-3-4 колонки. Больше 4 делать не стоит, чтобы карточки не сжимались --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+        {{-- Сетка 1-2-3-4 колонки со сдвигом на шаг вверх: фиксированный сайдбар (280px)
+             съедает ширину, и при lg:3/xl:4 карточки ужимались до ~200px — кнопки переносились. --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-16">
             @forelse($courses as $course)
                 <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_15px_35px_rgba(232,92,36,0.08)] hover:border-[#E85C24]/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
                     
@@ -754,7 +755,7 @@
                 <div>
                     <p class="text-xs font-bold text-orange-300 uppercase tracking-widest mb-3">Ваш баланс праны</p>
                     <div class="flex items-baseline gap-3">
-                        <span class="text-6xl md:text-7xl" aria-hidden="true">🪷</span>
+                        <x-prana-lotus class="w-16 h-16 md:w-20 md:h-20" />
                         <span class="text-5xl md:text-6xl font-black tracking-tight tabular-nums">{{ number_format($balance, 0, '.', ' ') }}</span>
                     </div>
                     <p class="text-sm text-gray-400 mt-3 max-w-md leading-relaxed">
@@ -794,7 +795,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-bold text-gray-900 truncate">{{ $label }}</p>
-                                <p class="text-xs text-[#E85C24] font-extrabold mt-0.5">+{{ $amount }} 🪷</p>
+                                <p class="text-xs text-[#E85C24] font-extrabold mt-0.5">+{{ $amount }} <x-prana-lotus /></p>
                             </div>
                         </div>
                     @endif
@@ -807,7 +808,7 @@
             <h3 class="text-2xl font-extrabold text-gray-900 mb-5">История</h3>
             @if($pranaTransactions->isEmpty())
                 <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-                    <div class="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-3 text-3xl">🪷</div>
+                    <div class="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-3"><x-prana-lotus class="w-8 h-8" /></div>
                     <p class="text-gray-500">Пока нет начислений. Пройдите первый урок — и тут появится запись.</p>
                 </div>
             @else
@@ -827,7 +828,7 @@
                             </div>
                             <div class="text-base font-extrabold tabular-nums {{ $isPositive ? 'text-emerald-600' : 'text-rose-600' }}">
                                 {{ $isPositive ? '+' : '' }}{{ $tx->amount }}
-                                <span class="text-xs">🪷</span>
+                                <x-prana-lotus class="w-3.5 h-3.5" />
                             </div>
                         </div>
                     @endforeach

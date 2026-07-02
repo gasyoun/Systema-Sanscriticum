@@ -12,7 +12,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-extrabold text-[#101010]">Магазин праны</h3>
-                <p class="text-gray-500 text-sm">Потратьте прану на перки. Ваш баланс: <span class="font-bold text-[#E85C24]">🪷 {{ number_format($balance, 0, '.', ' ') }}</span></p>
+                <p class="text-gray-500 text-sm">Потратьте прану на перки. Ваш баланс: <span class="font-bold text-[#E85C24]"><x-prana-lotus /> {{ number_format($balance, 0, '.', ' ') }}</span></p>
             </div>
         </div>
 
@@ -37,7 +37,7 @@
                     </div>
 
                     <div class="mt-3 flex items-center justify-between gap-2">
-                        <span class="font-extrabold text-[#E85C24] tabular-nums">🪷 {{ number_format($perk->cost, 0, '.', ' ') }}</span>
+                        <span class="font-extrabold text-[#E85C24] tabular-nums"><x-prana-lotus /> {{ number_format($perk->cost, 0, '.', ' ') }}</span>
                         @if(! $available)
                             <span class="text-xs font-bold text-gray-400">Недоступно</span>
                         @elseif(! $afford)
