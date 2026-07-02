@@ -282,18 +282,8 @@ class PaymentResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'paid', 'success' => 'success',
-                        'pending' => 'warning',
-                        'canceled' => 'danger',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'paid', 'success' => 'Оплачено',
-                        'pending' => 'Ожидает',
-                        'canceled' => 'Отменено',
-                        default => $state ?? 'Не указан',
-                    })
+                    ->color(fn (?string $state): string => Payment::statusColor($state))
+                    ->formatStateUsing(fn (?string $state): string => Payment::statusLabel($state))
                     ->alignment(\Filament\Support\Enums\Alignment::Center),
 
                 // 6. ПРИМЕЧАНИЕ

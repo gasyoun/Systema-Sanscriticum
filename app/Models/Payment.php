@@ -229,6 +229,28 @@ class Payment extends Model
         return $query->whereIn('status', self::PAID_STATUSES);
     }
 
+    /** Цвет Filament-бейджа статуса — единая точка вместо дублей match по вьюхам. */
+    public static function statusColor(?string $status): string
+    {
+        return match (true) {
+            in_array($status, self::PAID_STATUSES, true) => 'success',
+            $status === 'pending' => 'warning',
+            $status === 'canceled' => 'danger',
+            default => 'gray',
+        };
+    }
+
+    /** Человекочитаемая подпись статуса платежа. */
+    public static function statusLabel(?string $status): string
+    {
+        return match (true) {
+            in_array($status, self::PAID_STATUSES, true) => 'Оплачено',
+            $status === 'pending' => 'Ожидает',
+            $status === 'canceled' => 'Отменено',
+            default => $status ?? 'Не указан',
+        };
+    }
+
     /** Только настоящие платежи — учитываются в фин-отчётах и debt-расчётах. */
     public function scopeReal(Builder $query): Builder
     {
