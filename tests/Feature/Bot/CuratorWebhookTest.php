@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Bot;
 
+use App\Jobs\ProcessVkBotMessage;
+use App\Models\ChatMessage;
 use App\Models\Course;
 use App\Models\User;
 use App\Services\Bot\BotKnowledgeBase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class CuratorWebhookTest extends TestCase
@@ -126,6 +129,39 @@ class CuratorWebhookTest extends TestCase
         $this->assertDatabaseHas('chat_messages', ['user_id' => $user->id, 'role' => 'bot', 'text' => 'Намасте! Курс стоит 16500 ₽.']);
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'openrouter.ai'));
+    }
+
+    public function test_vk_webhook_deduplicates_retried_delivery(): void
+    {
+        $user = User::factory()->create(['vk_id' => 555333, 'name' => 'Студент ВК']);
+
+        // VK ретраит событие, если не получил «ok» вовремя, — payload идентичный.
+        $payload = [
+            'type' => 'message_new',
+            'secret' => 'test-vk',
+            'object' => ['message' => ['from_id' => 555333, 'conversation_message_id' => 42, 'text' => 'Сколько стоит курс?']],
+        ];
+
+        $this->postJson('/api/vk-webhook', $payload)->assertOk();
+        $this->postJson('/api/vk-webhook', $payload)->assertOk();
+
+        // Обработана только первая доставка: один вопрос, один ответ.
+        $this->assertSame(1, ChatMessage::where('user_id', $user->id)->where('role', 'user')->count());
+        $this->assertSame(1, ChatMessage::where('user_id', $user->id)->where('role', 'bot')->count());
+    }
+
+    public function test_vk_webhook_processes_message_via_queued_job(): void
+    {
+        Queue::fake();
+
+        $this->postJson('/api/vk-webhook', [
+            'type' => 'message_new',
+            'secret' => 'test-vk',
+            'object' => ['message' => ['from_id' => 555444, 'conversation_message_id' => 7, 'text' => 'Привет']],
+        ])->assertOk();
+
+        // «ok» уходит сразу, LLM-вызов не блокирует вебхук — иначе VK ретраит.
+        Queue::assertPushed(ProcessVkBotMessage::class, 1);
     }
 
     public function test_curator_trigger_word_escalates_without_calling_ai(): void
