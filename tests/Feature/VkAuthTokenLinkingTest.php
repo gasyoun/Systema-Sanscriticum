@@ -22,8 +22,8 @@ class VkAuthTokenLinkingTest extends TestCase
     {
         parent::setUp();
 
-        // Не задаём callback_secret → VerifyVkBotWebhook пропускает (прод-режим).
-        config(['services.vk.callback_secret' => '']);
+        // Вебхук VK теперь fail-closed — задаём секрет и шлём его в теле (см. vkWebhook).
+        config(['services.vk.callback_secret' => 'test-vk']);
         config(['services.vk.group_id' => '12345']);
         config(['services.vk.bot_token' => 'test-token']);
         config(['services.telegram.admin_id' => '']);
@@ -41,6 +41,7 @@ class VkAuthTokenLinkingTest extends TestCase
 
         return $this->postJson('/api/vk-webhook', [
             'type' => 'message_new',
+            'secret' => 'test-vk',
             'object' => ['message' => $message],
         ]);
     }

@@ -101,6 +101,13 @@ class CheckoutPriceTest extends TestCase
         $payment = Payment::where('user_id', $user->id)->firstOrFail();
         $this->assertSame('pending', $payment->status);
         $this->assertEquals(4000, (float) $payment->amount); // 5000 − 20%
+
+        // used_count растёт только по подтверждённой оплате, а не на создании
+        // pending — иначе брошенные чекауты исчерпывали бы лимит промокода.
+        $this->assertSame(0, $promo->fresh()->used_count);
+
+        // После оплаты (вебхук Точки → paid) код засчитывается ровно один раз.
+        $payment->update(['status' => 'paid']);
         $this->assertSame(1, $promo->fresh()->used_count);
     }
 }

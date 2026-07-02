@@ -11,15 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Секрет легаси VK-бот-вебхука (/api/vk-webhook).
  *
- * Режим «enforce-if-configured»: пока секрет не задан в
- * config(services.vk.callback_secret) — пропускаем (поведение как раньше).
- * Как только секрет задан — требуем body-поле `secret` (fail-closed).
+ * Fail-CLOSED: если секрет не задан в config(services.vk.callback_secret) —
+ * запрос отклоняется (403). Открытый режим убрали: без секрета кто угодно мог
+ * подделывать сообщения студентов и злоупотреблять платным ИИ-куратором.
  *
  * VK-confirmation приходит БЕЗ секрета — пропускаем всегда, иначе VK не сможет
  * подтвердить адрес callback-сервера (контроллер вернёт confirm_code).
  *
- * Включение: задать VK_CALLBACK_SECRET в .env И тот же секрет в настройках
- * Callback API группы VK.
+ * ⚠️ Деплой: перед выкаткой задать VK_CALLBACK_SECRET в .env И тот же секрет в
+ * настройках Callback API группы VK, иначе живой вебхук начнёт отвечать 403.
  */
 final class VerifyVkBotWebhook
 {
@@ -32,9 +32,9 @@ final class VerifyVkBotWebhook
 
         $expected = (string) config('services.vk.callback_secret', '');
 
-        // Секрет ещё не настроен — эндпоинт работает как раньше (открыто).
+        // Секрет обязателен: без него нельзя отличить настоящий VK от подделки.
         if ($expected === '') {
-            return $next($request);
+            abort(403, 'VK callback secret is not configured');
         }
 
         $received = (string) $request->input('secret', '');

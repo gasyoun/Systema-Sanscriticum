@@ -28,6 +28,10 @@ class StudentGroupsInfoTest extends TestCase
             'api.telegram.org/*' => Http::response(['ok' => true], 200),
             'api.vk.com/*' => Http::response(['response' => 1], 200),
         ]);
+
+        // Вебхук TG теперь fail-closed — задаём секрет и шлём его во всех запросах.
+        config()->set('services.telegram.bot_webhook_secret', 'test-tg');
+        $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-tg');
     }
 
     public function test_my_groups_replies_from_db_without_calling_ai(): void

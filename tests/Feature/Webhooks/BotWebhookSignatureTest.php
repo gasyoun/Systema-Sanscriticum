@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * Подпись легаси бот-вебхуков в режиме «enforce-if-configured»: пока секрет не
- * задан — пропускаем (без регрессии для прода), как только задан — fail-closed.
- * Тестируем middleware в изоляции на временных маршрутах.
+ * Подпись легаси бот-вебхуков в режиме fail-CLOSED: без заданного секрета запрос
+ * отклоняется (403); при заданном — требуется совпадение. VK-confirmation
+ * пропускается без секрета. Тестируем middleware в изоляции на временных маршрутах.
  */
 class BotWebhookSignatureTest extends TestCase
 {
@@ -27,12 +27,13 @@ class BotWebhookSignatureTest extends TestCase
     }
 
     /** @test */
-    public function telegram_passes_through_when_secret_not_configured(): void
+    public function telegram_rejects_when_secret_not_configured(): void
     {
         config(['services.telegram.bot_webhook_secret' => '']);
         $this->tgRoute();
 
-        $this->post('/__test/tg-bot')->assertOk();
+        // Fail-closed: без секрета нельзя отличить настоящий Telegram от подделки.
+        $this->post('/__test/tg-bot')->assertStatus(403);
     }
 
     /** @test */
@@ -57,12 +58,13 @@ class BotWebhookSignatureTest extends TestCase
     }
 
     /** @test */
-    public function vk_passes_through_when_secret_not_configured(): void
+    public function vk_rejects_when_secret_not_configured(): void
     {
         config(['services.vk.callback_secret' => '']);
         $this->vkRoute();
 
-        $this->post('/__test/vk-bot', ['type' => 'message_new'])->assertOk();
+        // Fail-closed: без секрета отклоняем (кроме confirmation-handshake).
+        $this->post('/__test/vk-bot', ['type' => 'message_new'])->assertStatus(403);
     }
 
     /** @test */

@@ -102,7 +102,7 @@ class CheckoutNameTest extends TestCase
     }
 
     /** @test */
-    public function existing_user_name_is_not_overwritten(): void
+    public function guest_checkout_on_existing_email_is_rejected(): void
     {
         $tariff = $this->tariff();
 
@@ -111,6 +111,9 @@ class CheckoutNameTest extends TestCase
             'email' => 'old@example.test',
         ]);
 
+        // Гость, указавший СУЩЕСТВУЮЩИЙ email, отклоняется (анти-takeover): раньше
+        // платёж молча создавался на чужой аккаунт, а первая оплата слала владельцу
+        // письмо со сбросом пароля. Нужно войти в кабинет и оформить оттуда.
         $this->post(route('payment.create'), [
             'tariff_id' => $tariff->id,
             'name' => 'Новое',
@@ -118,9 +121,10 @@ class CheckoutNameTest extends TestCase
             'city' => 'Сочи',
             'email' => 'old@example.test',
             'wants_announcements' => '1',
-        ])->assertRedirect('https://pay.tochka.com/redirect/abc');
+        ])->assertSessionHasErrors('email');
 
-        $this->assertSame('Старое Имя', $existing->fresh()->name,
-            'Имя существующего пользователя не должно перезаписываться при повторной покупке.');
+        // Ни платежа на чужой аккаунт, ни перезаписи имени.
+        $this->assertDatabaseMissing('payments', ['user_id' => $existing->id]);
+        $this->assertSame('Старое Имя', $existing->fresh()->name);
     }
 }
