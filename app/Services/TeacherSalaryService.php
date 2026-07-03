@@ -249,6 +249,74 @@ class TeacherSalaryService
     }
 
     /**
+     * Прямые платежи, полученные преподавателем НА ЛИЧНЫЙ СЧЁТ (минуя кассу школы),
+     * признанные в окне — источник АВТО-ЗАЧЁТА в гонорар по номиналу в валюте
+     * выплаты преподавателя. Признание — по дате чека (created_at) / override, как
+     * у returnsForTeacher (это кассовое событие, не accrual по блокам). Из выручки
+     * такие платежи уже исключены (computeCourseRevenue) — здесь они возвращаются
+     * как вычет. Строки с валютой, не равной payout_currency преподавателя, в total
+     * НЕ входят и помечаются mismatch=true (молча валюты не сводим).
+     *
+     * @return array{total: float, currency: ?string, lines: list<array{
+     *     course_title:string, amount:float, currency:?string, date:?string,
+     *     payer_note:?string, student:?string, mismatch:bool}>}
+     */
+    public function directReceiptsForTeacher(Teacher $teacher, $start = null, $end = null): array
+    {
+        $payoutCurrency = $teacher->payout_currency;
+        $lines = [];
+        $total = 0.0;
+
+        foreach ($teacher->allTaughtCourses() as $course) {
+            if (self::isTechnicalCourse($course)) {
+                continue;
+            }
+
+            foreach ($this->coursePayments($course->id) as $p) {
+                if ($p->received_account !== Payment::RECEIVED_TEACHER
+                    || (int) $p->received_by_teacher_id !== (int) $teacher->id) {
+                    continue;
+                }
+
+                $month = $p->salary_recognition_month ?: $p->created_at?->format('Y-m');
+                if (! $month || ! $this->monthInWindow($month, $start, $end)) {
+                    continue;
+                }
+
+                $amount = (float) $p->foreign_amount;
+                $currency = $p->foreign_currency;
+                // Зачёт возможен только в валюте выплаты преподавателя.
+                $mismatch = empty($payoutCurrency) || $currency !== $payoutCurrency || $amount <= 0;
+
+                if (! $mismatch) {
+                    $total += $amount;
+                }
+
+                $lines[] = [
+                    'course_title' => (string) $course->title,
+                    'amount' => round($amount, 2),
+                    'currency' => $currency,
+                    'date' => $p->created_at?->format('d.m.Y'),
+                    'payer_note' => $p->payer_note,
+                    'student' => $p->user?->name ?? ($p->user_id ? '#'.$p->user_id : null),
+                    'mismatch' => $mismatch,
+                ];
+            }
+        }
+
+        return ['total' => round($total, 2), 'currency' => $payoutCurrency, 'lines' => $lines];
+    }
+
+    /**
+     * Итоговый номинал прямых платежей преподавателю за окно (в валюте выплаты) —
+     * удобная обёртка над directReceiptsForTeacher()['total'].
+     */
+    public function directReceiptsTotal(Teacher $teacher, $start = null, $end = null): float
+    {
+        return $this->directReceiptsForTeacher($teacher, $start, $end)['total'];
+    }
+
+    /**
      * Сводка по всем преподавателям за выбранный месяц.
      *
      * @return array<int, array{
@@ -310,6 +378,13 @@ class TeacherSalaryService
             $earnedAll = $this->totalForTeacher($teacher, null, null, $opts);
             $paidAll = (float) ($paidAllTime[$teacher->id] ?? 0);
 
+            // Прямые платежи на личный счёт преподавателя — зачёт по номиналу в
+            // валюте выплаты. НЕ сводим с рублёвым balance (валюты разные): нетто
+            // «к переводу» считается в валюте выплаты в момент выплаты (калькулятор),
+            // как это делает бухгалтер. Здесь — отдельной информационной строкой.
+            $directReceipts = $this->directReceiptsForTeacher($teacher, $start, $end);
+            $directReceiptsAll = $this->directReceiptsForTeacher($teacher, null, null);
+
             $result[$teacher->id] = [
                 'teacher_id' => (int) $teacher->id,
                 'name' => (string) $teacher->name,
@@ -322,6 +397,10 @@ class TeacherSalaryService
                 'paid_all_time' => round($paidAll, 2),
                 'balance' => round($earnedAll - $paidAll, 2),
                 'advances_outstanding' => round((float) ($advancesOutstanding[$teacher->id] ?? 0), 2),
+                // Зачёт прямых платежей (в валюте выплаты преподавателя), справочно.
+                'direct_receipts_period' => $directReceipts['total'],
+                'direct_receipts_all_time' => $directReceiptsAll['total'],
+                'direct_receipts_currency' => $directReceipts['currency'],
             ];
         }
 
@@ -397,6 +476,7 @@ class TeacherSalaryService
             ->where('course_id', $courseId)
             ->paid()
             ->real()
+            ->schoolReceived() // прямые платежи преподавателю — не выручка блока
             ->whereNotIn('tariff', self::NON_REVENUE_TARIFFS)
             ->where('amount', '>', 0);
 
@@ -448,6 +528,7 @@ class TeacherSalaryService
             ->where('course_id', $courseId)
             ->paid()
             ->real()
+            ->schoolReceived() // симметрично blockGroupRevenueDetail
             ->whereNotIn('tariff', self::NON_REVENUE_TARIFFS)
             ->where('amount', '=', 0);
 
@@ -543,7 +624,8 @@ class TeacherSalaryService
                 ->all();
 
             foreach ($this->coursePayments($course->id) as $p) {
-                if (in_array($p->tariff, self::NON_REVENUE_TARIFFS, true) || (float) $p->amount <= 0) {
+                if (in_array($p->tariff, self::NON_REVENUE_TARIFFS, true) || (float) $p->amount <= 0
+                    || $p->received_account === Payment::RECEIVED_TEACHER) {
                     continue;
                 }
 
@@ -604,10 +686,14 @@ class TeacherSalaryService
      * процентом своего курса (teacher_amount = доля × процент), а коэффициент
      * домножается здесь, в единой точке. Т.е. поздняя оплата эквивалентна добавке
      * к базе: (база + поздняя) × коэф × процент.
+     * Прямой зачёт ($directOffset) — номинал прямых платежей на личный счёт
+     * преподавателя, вычитается из итога КАК ЕСТЬ (без коэффициента и процента),
+     * отдельно от штрафного «Удержания», чтобы в аудите не смешивать зачёт с
+     * штрафом. Ожидается в той же валюте, что и остальной итог.
      */
-    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0, float $priorBlocksTotal = 0.0): float
+    public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0, float $priorBlocksTotal = 0.0, float $directOffset = 0.0): float
     {
-        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal * ($coef / 100), 2);
+        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal * ($coef / 100) - abs($directOffset), 2);
     }
 
     /**
@@ -637,8 +723,13 @@ class TeacherSalaryService
 
         $payments = $this->coursePayments($course->id);
 
+        // Прямые платежи на личный счёт преподавателя НЕ образуют выручку курса:
+        // деньги не прошли через кассу школы, а зачитываются в гонорар по номиналу
+        // (directReceiptsForTeacher). Иначе — двойной счёт: препод и держит сумму,
+        // и получил бы свой процент сверху. См. docs/direct-teacher-receipts.md.
         $real = $payments->reject(fn (Payment $p) => in_array($p->tariff, self::NON_REVENUE_TARIFFS, true)
-            || (float) $p->amount <= 0);
+            || (float) $p->amount <= 0
+            || $p->received_account === Payment::RECEIVED_TEACHER);
         $returns = $payments->filter(fn (Payment $p) => $p->tariff === self::EXPENSE_TARIFF);
 
         // Положительная выручка по месяцам (без возвратов) + ранний месяц студента.
