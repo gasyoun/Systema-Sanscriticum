@@ -29,9 +29,12 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-white/10">
                     @foreach ($lines as $line)
-                        <tr>
+                        <tr @class(['text-red-600 dark:text-red-400' => $line['is_return'] ?? false])>
                             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-200">{{ $line['user_name'] }}</td>
                             <td class="px-2 py-1.5 text-gray-500">
+                                @if ($line['is_return'] ?? false)
+                                    <span class="font-medium text-red-600 dark:text-red-400">Возврат ·</span>
+                                @endif
                                 {{ $line['label'] }}
                                 @if (($line['covered_blocks'] ?? 1) > 1)
                                     <span class="text-gray-400">(÷{{ $line['covered_blocks'] }})</span>
