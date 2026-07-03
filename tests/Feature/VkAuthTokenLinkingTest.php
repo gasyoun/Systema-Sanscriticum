@@ -59,7 +59,12 @@ class VkAuthTokenLinkingTest extends TestCase
 
         // Редирект на vk.me несёт токен, а НЕ user id.
         $response->assertRedirect("https://vk.me/club12345?ref={$user->vk_auth_token}");
-        $this->assertStringNotContainsString("ref={$user->id}", $response->headers->get('Location'));
+        // Значение ref — именно токен, а не сырой id (IDOR). Сверяем сам query-параметр,
+        // а не подстроку: случайный 32-символьный токен может начинаться с цифр id
+        // (напр. id=1 и токен «1mmA…» → подстрока "ref=1" ложно срабатывала — флак).
+        parse_str((string) parse_url($response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $this->assertSame($user->vk_auth_token, $query['ref'] ?? null);
+        $this->assertNotSame((string) $user->id, $query['ref'] ?? null);
     }
 
     /** @test */

@@ -32,7 +32,11 @@ return [
     ],
 
     'tochka' => [
-        'url' => env('TOCHKA_API_URL', 'https://enter.tochka.com/uapi/acquiring/v1.0'),
+        // ?: (не 2-й арг env): пустой TOCHKA_API_URL= в .env/.env.example даёт ''
+        // (не дефолт), из-за чего эквайринговый POST уходил на бессхемный
+        // '/payments_with_receipt' → Guzzle «scheme "" is not allowed» → 500 на
+        // каждом платеже (ловится только ConnectionException). Пустое → дефолт.
+        'url' => env('TOCHKA_API_URL') ?: 'https://enter.tochka.com/uapi/acquiring/v1.0',
         'token' => env('TOCHKA_API_TOKEN'),
         'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
         // merchantId торговой точки (15 цифр). Обязателен, если у ИП > 1 retailer'а в Точке,

@@ -520,6 +520,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_enriches_contacts_from_history_users_payload(): void
     {
+        $this->skipWithoutMadelineProto();
+
         $student = User::factory()->create([
             'name' => 'History User',
             'telegram_username' => 'history_user',
@@ -561,6 +563,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_backfills_existing_contact_profile_and_auto_links(): void
     {
+        $this->skipWithoutMadelineProto();
+
         $student = User::factory()->create([
             'name' => 'Backfill Student',
             'telegram_username' => 'backfill_student',
@@ -606,6 +610,8 @@ class TelegramSupportAnalyticsTest extends TestCase
 
     public function test_madelineproto_sync_uses_private_peer_as_contact_user_id_when_from_id_is_missing(): void
     {
+        $this->skipWithoutMadelineProto();
+
         $student = User::factory()->create(['telegram_id' => 6801]);
 
         config([
