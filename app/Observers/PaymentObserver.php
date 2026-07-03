@@ -54,6 +54,13 @@ class PaymentObserver
         if ($justBecamePaid) {
             app(\App\Services\ReferralService::class)->rewardForPayment($payment);
         }
+
+        // Реверс: платёж откатили из paid (вебхук отмены/возврата или правка в
+        // админке) → снять начисленную рефереру награду и освободить разовый слот.
+        if ($payment->isDirty('status')
+            && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
+            app(\App\Services\ReferralService::class)->reverseRewardForPayment($payment);
+        }
     }
 
     /**

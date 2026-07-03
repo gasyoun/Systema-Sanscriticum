@@ -123,6 +123,39 @@ class ReferralService
     }
 
     /**
+     * Реверс реферальной награды, когда платёж, за который она была начислена,
+     * откатывается (paid → failed/canceled). Зеркалит rewardForPayment: снимает
+     * начисленный рефереру кредит (не ниже нуля — часть могла быть уже потрачена)
+     * и удаляет строку ReferralReward, чтобы unique(referred_id) больше не блокировал
+     * законную будущую награду за этого приглашённого. Идемпотентно: после удаления
+     * повторный вызов ничего не находит.
+     */
+    public function reverseRewardForPayment(Payment $payment): void
+    {
+        $reward = ReferralReward::where('payment_id', $payment->id)->first();
+        if (! $reward) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($reward): void {
+                $referrer = User::find($reward->referrer_id);
+                if ($referrer) {
+                    $newCredit = max(0.0, (float) $referrer->referral_credit - (float) $reward->amount);
+                    $referrer->forceFill(['referral_credit' => $newCredit])->save();
+                }
+
+                $reward->delete();
+            });
+        } catch (\Throwable $e) {
+            Log::warning('ReferralService::reverseRewardForPayment failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Уже награждён за этого приглашённого? Учитываем и новые денежные награды, и
      * старые прана-награды — чтобы при переходе на кредит не наградить дважды тех,
      * кого уже наградили праной.
