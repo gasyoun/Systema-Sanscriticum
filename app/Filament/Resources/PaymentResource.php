@@ -211,6 +211,59 @@ class PaymentResource extends Resource
                         ->placeholder('Авто — по периодам блоков')
                         ->helperText('Перекрывает авто-расчёт ЗП преподавателя: вся сумма попадёт в выбранный месяц. Пусто = авто-раскладка по оплаченным блокам.'),
                 ]),
+
+                // Прямой платёж на ЛИЧНЫЙ счёт преподавателя (минуя кассу школы).
+                // Такой платёж НЕ образует выручку курса (иначе двойной счёт) и
+                // авто-зачитывается в гонорар по номиналу в валюте выплаты препода.
+                Forms\Components\Section::make('Прямой платёж преподавателю')
+                    ->description('Деньги пришли напрямую на личный счёт преподавателя, минуя кассу школы. Зачтётся в его гонорар по номиналу.')
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\Select::make('received_account')
+                            ->label('Куда пришли деньги')
+                            ->options([
+                                Payment::RECEIVED_SCHOOL => 'Касса школы (обычный платёж)',
+                                Payment::RECEIVED_TEACHER => 'Личный счёт преподавателя',
+                            ])
+                            ->default(Payment::RECEIVED_SCHOOL)
+                            ->required()
+                            ->native(false)
+                            ->live(),
+
+                        Forms\Components\Select::make('received_by_teacher_id')
+                            ->label('Преподаватель-получатель')
+                            ->relationship('receivedByTeacher', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->native(false)
+                            ->visible(fn (Forms\Get $get) => $get('received_account') === Payment::RECEIVED_TEACHER)
+                            ->required(fn (Forms\Get $get) => $get('received_account') === Payment::RECEIVED_TEACHER)
+                            ->helperText('Валюта платежа (поле «Валюта» выше) должна совпадать с валютой выплаты этого преподавателя — иначе зачёт не сойдётся.')
+                            // Инвариант валюты: foreign_currency платежа == payout_currency преподавателя.
+                            ->rule(fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                if ($get('received_account') !== Payment::RECEIVED_TEACHER || empty($value)) {
+                                    return;
+                                }
+                                $teacher = \App\Models\Teacher::find($value);
+                                if ($teacher === null) {
+                                    return;
+                                }
+                                $payoutCurrency = $teacher->payout_currency;
+                                $paymentCurrency = $get('foreign_currency');
+                                if (empty($payoutCurrency)) {
+                                    $fail('У преподавателя не задана валюта выплаты (payout_currency) — зачёт по номиналу невозможен.');
+                                } elseif ($paymentCurrency !== $payoutCurrency) {
+                                    $fail("Валюта платежа ({$paymentCurrency}) не совпадает с валютой выплаты преподавателя ({$payoutCurrency}).");
+                                }
+                            }),
+
+                        Forms\Components\TextInput::make('payer_note')
+                            ->label('Плательщик / посредник')
+                            ->maxLength(255)
+                            ->placeholder('Напр.: за студента X заплатил Y, чек №…')
+                            ->visible(fn (Forms\Get $get) => $get('received_account') === Payment::RECEIVED_TEACHER)
+                            ->helperText('Кто фактически заплатил и через кого. Дата чека — поле «Дата платежа»; сумма в валюте — поля «Сумма в валюте»/«Валюта».'),
+                    ]),
             ]);
     }
 
