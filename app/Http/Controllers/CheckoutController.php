@@ -128,14 +128,15 @@ class CheckoutController extends Controller
         $loyaltyPercent = 0;
 
         if ($user) {
-            $marketing = \App\Models\MarketingSetting::first();
-            if ($marketing && $marketing->is_loyalty_active) {
-                $hasAnyPaid = \App\Models\Payment::where('user_id', $user->id)->paid()->exists();
-                if ($hasAnyPaid) {
-                    $isLoyal = true;
-                    $loyaltyPercent = $marketing->loyalty_discount_percent;
-                }
-            }
+            // Реальный процент оптовой лояльности — тот же источник, что и в движке
+            // цены (Tariff::getDiscountPercentForUser): считает уникальные ОПЛАЧЕННЫЕ
+            // курсы за год против wholesale-порогов (и сам проверяет is_loyalty_active).
+            // Раньше здесь читалась колонка loyalty_discount_percent, которую дропнула
+            // миграция 2026_03_27_182336 → всегда null → бейдж «−0%»; а isLoyal
+            // ставился при ЛЮБОМ paid-платеже (включая депозит/пробное/Расход), что
+            // расходилось с реальной скидкой в цене.
+            $loyaltyPercent = $tariff->getDiscountPercentForUser($user);
+            $isLoyal = $loyaltyPercent > 0;
         }
 
         // Персональная скидка на курс имеет приоритет над лояльностью — для подписи в UI.
