@@ -265,6 +265,28 @@ Route::post('/trial/{course:slug}', [\App\Http\Controllers\TrialController::clas
     ->middleware('throttle:5,1')
     ->name('trial.create');
 
+// Оплата из-за рубежа (PayPal): форма-заявка студента + приём. Автосписания нет —
+// платёж ложится pending и сверяется вручную в админке. Строго до catch-all /{slug}.
+// throttle:5,1 — публичный приём email + создание pending-платежа (защита от ботов).
+Route::get('/paypal/{tariff}', [\App\Http\Controllers\PaypalClaimController::class, 'show'])
+    ->name('paypal.claim.show');
+Route::post('/paypal/{tariff}', [\App\Http\Controllers\PaypalClaimController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('paypal.claim.store');
+
+// Приватный чек PayPal-заявки: только персонал (сверка платежа в админке).
+// Диск 'local' (не public) — скрин может содержать личные/платёжные данные.
+Route::get('/admin/payments/{payment}/paypal-proof', function (\App\Models\Payment $payment) {
+    $u = auth()->user();
+    abort_unless($u && $u->is_admin, 403);
+    abort_unless(
+        filled($payment->proof_path) && Storage::disk('local')->exists($payment->proof_path),
+        404
+    );
+
+    return Storage::disk('local')->download($payment->proof_path);
+})->middleware('auth')->name('paypal.proof');
+
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])
     ->prefix('editor/lectures/{draft}')
