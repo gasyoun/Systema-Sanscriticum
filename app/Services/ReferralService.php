@@ -55,6 +55,18 @@ class ReferralService
             return;
         }
 
+        // Награда — только за ПЕРВУЮ РЕАЛЬНУЮ ОПЛАТУ КУРСА (config/referral.php:
+        // «приглашённый ВПЕРВЫЕ оплачивает курс»). Не курсовые/бесплатные события
+        // не должны сжигать разовую награду и минтить реальный кредит:
+        //   - conditional «под обещание» (amount=0, is_conditional) — не покупка;
+        //   - deposit (бронь) / trial (пробное) — не оплата курса;
+        //   - Расход / salary_payout — бухгалтерские записи;
+        //   - 0₽-заказ (100%-промо или полное покрытие праной+кредитом) — нет выручки;
+        //   - платёж без course_id — системный.
+        if (! $this->isQualifyingCoursePayment($payment)) {
+            return;
+        }
+
         $referred = $payment->user;
         if (! $referred || blank($referred->referred_by)) {
             return;
@@ -93,6 +105,21 @@ class ReferralService
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Квалифицирует ли платёж на реферальную награду: реальная (не conditional),
+     * с положительной суммой, по курсу, и НЕ deposit/trial/Расход/salary_payout.
+     */
+    private function isQualifyingCoursePayment(Payment $payment): bool
+    {
+        return ! $payment->is_conditional
+            && (float) $payment->amount > 0
+            && filled($payment->course_id)
+            && ! $payment->isDeposit()
+            && ! $payment->isTrial()
+            && ! $payment->isExpense()
+            && ! $payment->isSalaryPayout();
     }
 
     /**

@@ -56,14 +56,14 @@ platform upgrade.
 
 ## Decisions taken
 
-Recorded verbatim from the 03-07-2026 interview (MG rulings):
+Recorded from the 03-07-2026 interview (MG rulings):
 
 | # | Decision point | Ruling | Rationale |
 |---|---|---|---|
 | D1 | Depth of PII-dump remediation | **Full git-history purge + force-push; no user notification** | Scrub `t_login_at`/`KEYS` from all history so the data is unrecoverable; treated as internal cleanup — the affected student is not contacted and no forced password reset is issued. |
 | D2 | Where the security roadmap lives | **Dedicated `docs/SECURITY_ROADMAP.md`** | Keep the security track coherent and referenceable, cross-linked with the general roadmap, rather than diluted into a hardening subsection. |
 | D3 | Wave-1 focus | **Exposure + platform toggles first** | Fast, external-facing, low-risk; shrink the public attack surface before touching money code. |
-| D4 | Automated tooling & process | **Both — PHP SAST in CI *and* an institutionalized recurring adversarial money-core review** | The adversarial review found 16 real bugs; make it repeatable and add a static gate CodeQL can't provide for PHP. |
+| D4 | Automated tooling & process | **Both — PHP SAST in CI *and* an institutionalized recurring adversarial money-core review** | The adversarial review found 16 real bugs; make it repeatable and add a static gate CodeQL cannot provide for PHP. |
 
 ---
 
@@ -77,7 +77,7 @@ Recorded verbatim from the 03-07-2026 interview (MG rulings):
 - ✅ Untrack `t_login_at` + `KEYS` from HEAD; extend `.gitignore` with dump patterns. **(done)**
 - [ ] **Purge `t_login_at` + `KEYS` from all git history** (D1) via `/secret-purge`:
   `git filter-repo`, coordinated force-push, verify no ref still resolves the blob, confirm
-  GitHub's cached views drop. Coordinate with open [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)
+  GitHub cached views drop. Coordinate with open [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)
   (rebase after the rewrite). → **[H080](#handoffs)**
 - [ ] **Audit the 23 tracked PNG screenshots** for embedded student PII; purge from history any
   that show real names/emails/payments; keep only synthetic-data shots. → **[H080](#handoffs)**
@@ -94,21 +94,21 @@ every inbound webhook is authenticated fail-closed; secret pushes are blocked at
 
 ---
 
-## Wave 2 — Close the known logic defects (Q3→Q4 2026)
+## Wave 2 — Close the known logic defects (Q3 to Q4 2026)
 
-**Unblocked by:** Wave 1 (don't rewrite history under half-finished money PRs). Runs against the
+**Unblocked by:** Wave 1 (do not rewrite history under half-finished money PRs). Runs against the
 existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071_systema_money_core_findings.md)
 handoff — this roadmap does not restate the findings, it sequences them.
 
 - [ ] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
   regression test, no auto-merge** (money core under special protection). Highest-impact first:
   - **Access leaks** (unpaid access / revenue-visible-to-anon): VIP/bundle tariff writes raw
-    `type` instead of `Tariff::accessKey()` → paid VIP unlocks 0 lessons
+    `type` instead of `Tariff::accessKey()`, so paid VIP unlocks 0 lessons
     (`PaymentController.php:119`); public `/class/{id}/join` redirects anonymous users to the
     real Zoom link (`JoinClassController.php:44`); chargeback/failed reversal never revokes
     group membership or Zoom calendar access (`Payment.php:296`).
   - **Revenue leaks:** deposit credited to multiple pending payments (`Payment.php:519`);
-    referral reward paid on 0₽/deposit/trial/conditional orders (`ReferralService.php:52`);
+    referral reward paid on 0-ruble / deposit / trial / conditional orders (`ReferralService.php:52`);
     salary month-close double-counts the whole month (`TeacherSalaryService.php:769`); block
     payout ignores refunds (`TeacherSalaryService.php:400`).
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
@@ -120,7 +120,7 @@ non-reversed payment.
 
 ---
 
-## Wave 3 — Automated defense so it doesn't regress (Q4 2026)
+## Wave 3 — Automated defense so it does not regress (Q4 2026)
 
 **Unblocked by:** Wave 2 (institutionalize the review that produced the Wave-2 list; wire SAST
 once the known-defect backlog is drained so the baseline is clean).
@@ -142,14 +142,14 @@ merge; the adversarial review is a scheduled, documented step rather than a one-
 
 ---
 
-## Wave 4 — Platform & supply-chain hardening (Q1→Q2 2027)
+## Wave 4 — Platform & supply-chain hardening (Q1 to Q2 2027)
 
 **Unblocked by:** Wave 3 (a clean SAST baseline and green money-core tests de-risk the upgrade).
 Overlaps the general roadmap's Laravel-11 item — this track owns the **security** rationale.
 
-- [ ] **Laravel 10 → 11** — off the security-EOL framework onto a supported release line.
+- [ ] **Laravel 10 to 11** — off the security-EOL framework onto a supported release line.
   Gate on the full suite green + the Wave-3 SAST baseline.
-- [ ] **PHP 8.2 → 8.3** (tracked in
+- [ ] **PHP 8.2 to 8.3** (tracked in
   [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md)).
 - [ ] **Dependency posture review** — audit `composer.lock`/`package-lock.json` for abandoned or
   known-vulnerable packages once Dependabot alerts populate; pin and update.
@@ -166,9 +166,9 @@ Dependabot alerts and no secret material in deploy tooling.
 - **Notifying the exposed student / forcing a password reset** — ruled out under D1 (treated as
   internal cleanup). Do not re-propose per-user breach notification for the `t_login_at` leak.
 - **Folding security into the general roadmap** — ruled out under D2; this dedicated doc is the
-  home. Don't spawn a third security file or migrate this content back.
+  home. Do not spawn a third security file or migrate this content back.
 - **CodeQL for PHP** — not viable (unsupported by CodeQL); Wave 3 uses Semgrep/Larastan instead.
-  Don't re-attempt a PHP CodeQL job (it previously failed every PR and was already removed).
+  Do not re-attempt a PHP CodeQL job (it previously failed every PR and was already removed).
 - **Blocking per-PR adversarial review** — ruled out under D4 (per-release + quarterly, not
   per-PR); a per-PR full adversarial run is too slow and noisy.
 - **Rewriting the two message stores or the identity mappings for "security"** — that is a
