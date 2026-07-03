@@ -62,14 +62,24 @@ class PaymentController extends Controller
                     ->lockForUpdate()
                     ->first();
 
-                if ($promo
+                $applicable = $promo
                     && $promo->isValid()
                     && $promo->appliesToCourse($tariff->course->id ?? null)
-                    && ! $promo->redeemedByUser($user->id)
-                    // Гонка в двух вкладках: redeemedByUser видит только paid, поэтому
-                    // здесь дополнительно отсекаем свежий pending с тем же кодом.
-                    && ! $promo->hasRecentPendingForUser($user->id)
-                ) {
+                    && ! $promo->redeemedByUser($user->id);
+
+                // Свежий pending с тем же кодом (гонка двух вкладок / возврат на
+                // чекаут): НЕ создаём второй заказ по цене выше показанной. Раньше
+                // промокод здесь молча обнулялся, и юзер уходил в банк на ПОЛНУЮ
+                // сумму, а чекаут за клик до этого показывал цену со скидкой
+                // (money-core, H071 #13). Теперь — явная ошибка вместо тихого
+                // повышения цены.
+                if ($applicable && $promo->hasRecentPendingForUser($user->id)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'promo_code' => 'У вас уже есть незавершённый заказ с этим промокодом. Завершите оплату или отмените его, прежде чем оформлять новый.',
+                    ]);
+                }
+
+                if ($applicable) {
                     $finalPrice = $promo->calculateDiscountedPrice($finalPrice);
                 } else {
                     $promo = null;
