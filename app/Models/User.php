@@ -84,6 +84,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'is_lecture_editor' => 'boolean',
         'last_login_at' => 'datetime',
         'cabinet_invite_sent_at' => 'datetime',
+        'welcome_email_sent_at' => 'datetime',
         'last_activity_at' => 'datetime',
         'telegram_connected_at' => 'datetime',
         'vk_connected_at' => 'datetime',

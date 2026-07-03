@@ -797,6 +797,14 @@ class Payment extends Model
             return;
         }
 
+        // Пароль генерируем и шлём РОВНО ОДИН РАЗ на аккаунт. Иначе повторный вход
+        // платежа в paid-статус (round-trip canceled→paid, ре-сейв legacy 'success',
+        // поздний вебхук) при единственной оплате снова перегенерировал бы пароль,
+        // который студент уже сам сменил, и ломал ему вход (money-core H071 #15).
+        if ($student->welcome_email_sent_at !== null) {
+            return;
+        }
+
         // Считаем успешные оплаты
         $paymentsCount = $student->payments()->paid()->count();
 
@@ -809,6 +817,7 @@ class Payment extends Model
 
             $newPassword = \Illuminate\Support\Str::random(8);
             $student->password = \Illuminate\Support\Facades\Hash::make($newPassword);
+            $student->welcome_email_sent_at = now();
             $student->save();
 
             \Illuminate\Support\Facades\Mail::to($student->email)->send(new \App\Mail\StudentWelcomeMail($student, $newPassword));
