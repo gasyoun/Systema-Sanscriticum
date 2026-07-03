@@ -294,7 +294,9 @@ class Payment extends Model
             }
 
             // Откатываем списанную прану и зачтённый реферальный кредит, если оплата сорвалась.
-            if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'cancelled'], true)) {
+            // ВАЖНО: канон статуса в payments — 'canceled' (одно L; см. миграцию и админку
+            // PaymentResource). 'cancelled' оставлен оборонительно для чужих написаний.
+            if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
                 $payment->refundPranaIfSpent();
                 $payment->refundReferralCreditIfApplied();
             }
