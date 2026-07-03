@@ -219,6 +219,9 @@ document.addEventListener('alpine:init', () => {
                 </div>
             @endif
 
+            {{-- Оплата из-за рубежа (PayPal) — заявка со сверкой вручную. --}}
+            @include('partials.paypal-cta', ['tariff' => $tariff])
+
             <div x-data class="grid grid-cols-1 md:grid-cols-12 md:gap-x-10 lg:gap-x-14">
 
                 {{-- ════════════════ ЛЕВАЯ КОЛОНКА ════════════════ --}}

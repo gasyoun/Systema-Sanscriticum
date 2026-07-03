@@ -400,6 +400,12 @@ class PaymentResource extends Resource
                         'canceled' => 'Отменено',
                     ]),
 
+                // Валютные заявки студентов (PayPal), ожидающие ручной сверки.
+                Tables\Filters\Filter::make('paypal_pending')
+                    ->label('Заявки PayPal на проверке')
+                    ->query(fn ($query) => $query->paypalPending())
+                    ->toggle(),
+
                 Tables\Filters\TernaryFilter::make('is_deposit')
                     ->label('Только брони (депозиты)')
                     ->placeholder('Все транзакции')
@@ -447,6 +453,26 @@ class PaymentResource extends Resource
                     }),
             ])
             ->actions([
+                // Подтвердить PayPal-заявку после сверки платежа: перевод в paid
+                // запускает штатную Payment::booted() → доступ/письма/прана.
+                Tables\Actions\Action::make('confirmPaypal')
+                    ->label('Подтвердить PayPal')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isPaypal() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить оплату через PayPal')
+                    ->modalDescription('Сверьте платёж в PayPal. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // Открыть приложенный чек/скриншот (приватный диск, только персонал).
+                Tables\Actions\Action::make('viewProof')
+                    ->label('Чек')
+                    ->icon('heroicon-o-paper-clip')
+                    ->color('gray')
+                    ->visible(fn (Payment $record) => (bool) $record->proof_path)
+                    ->url(fn (Payment $record) => $record->proof_path ? route('paypal.proof', $record) : null, shouldOpenInNewTab: true),
+
                 Tables\Actions\EditAction::make()->iconButton(),
             ])
             ->bulkActions([

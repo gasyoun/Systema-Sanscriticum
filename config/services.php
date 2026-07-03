@@ -183,4 +183,14 @@ return [
         'redirect' => env('YANDEX_REDIRECT_URI', '/auth/yandex/callback'),
     ],
 
+    // === ОПЛАТА ИЗ-ЗА РУБЕЖА (PayPal, полу-интегрированная) ===
+    // Автосписания нет: студент платит на me_link и подаёт заявку
+    // (PaypalClaimController), админ сверяет вручную. Пусто/выключено → публичные
+    // роуты /paypal/* отдают 404, кнопка на чекауте скрыта.
+    'paypal' => [
+        'enabled' => (bool) env('PAYPAL_CLAIM_ENABLED', false),
+        'me_link' => env('PAYPAL_ME_LINK'),      // напр. https://www.paypal.com/paypalme/xxx
+        'recipient' => env('PAYPAL_RECIPIENT'),  // email/имя получателя для инструкции студенту
+    ],
+
 ];
