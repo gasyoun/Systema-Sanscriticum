@@ -138,6 +138,38 @@ class HomeworkFlowTest extends TestCase
     }
 
     /** @test */
+    public function student_with_lesson_grant_can_submit_homework(): void
+    {
+        // Регрессия (money-core, H071 #16): гейт ДЗ проверял только is_free и
+        // оплаченные тарифные ключи, игнорируя LessonAccessGrant. Держатель
+        // персонального гранта (платное пробное / выданный куратором урок) мог
+        // смотреть урок, но получал 403 на сдаче ДЗ.
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher, free: false);
+        $student = User::factory()->create();
+
+        \App\Models\LessonAccessGrant::create([
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'course_id' => $course->id,
+        ]);
+
+        // Никаких оплаченных тарифных ключей — доступ только по гранту.
+        $this->assertTrue(\App\Models\LessonAccessGrant::userCanWatch($student, $lesson));
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'решение по гранту']
+        )->assertRedirect();
+
+        $this->assertDatabaseHas('homework_submissions', [
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'status' => HomeworkSubmission::STATUS_SUBMITTED,
+        ]);
+    }
+
+    /** @test */
     public function review_cycle_return_resubmit_accept(): void
     {
         [$teacher, $teacherUser] = $this->makeTeacher();

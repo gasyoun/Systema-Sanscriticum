@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
+use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Services\HomeworkService;
 use Illuminate\Http\Request;
@@ -100,11 +101,20 @@ class HomeworkController extends Controller
 
     /**
      * Зеркалит StudentController::ensureLessonAccessible — доступ к уроку
-     * (free либо оплачен full/block_X). Защита сдачи от IDOR на чужие уроки.
+     * (free, персональный грант, либо оплачен full/block_X). Защита сдачи от
+     * IDOR на чужие уроки.
      */
     private function ensureLessonAccessible($user, Course $course, Lesson $lesson): void
     {
         if ($lesson->is_free) {
+            return;
+        }
+
+        // Персональный грант на урок (платное пробное — Payment::processTrial,
+        // либо выданный куратором доступ к одному уроку). Плеер (StudentController)
+        // пускает такого студента, поэтому и сдача ДЗ должна пускать — иначе урок
+        // видно, а ДЗ 403 (money-core, H071 #16).
+        if (LessonAccessGrant::userCanWatch($user, $lesson)) {
             return;
         }
 
