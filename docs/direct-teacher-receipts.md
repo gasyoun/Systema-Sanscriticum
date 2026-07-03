@@ -2,10 +2,25 @@
 
 _Created: 03-07-2026 · Last updated: 03-07-2026_
 
-> Статус: **проект архитектуры (@DECIDE MG)**. Ниже — схема миграции, инварианты и
-> точные точки врезки в [`TeacherSalaryService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php)
-> и калькулятор выплат [`TeacherSalaries`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/TeacherSalaries.php).
-> Пример-мотиватор обезличен (репозиторий публичный).
+> Статус: **слои 1–3 реализованы** (03-07-2026, MG go), issue
+> [#270](https://github.com/gasyoun/Systema-Sanscriticum/issues/270). Слой 4 (UI
+> калькулятора + учёт зачтённого) — открытый follow-up, см. §7. Ниже — схема
+> миграции, инварианты и точные точки врезки. Пример-мотиватор обезличен
+> (репозиторий публичный).
+
+## 0. Что сделано / что осталось
+
+| Слой | Содержание | Статус |
+|---|---|---|
+| 1 | Миграция `received_account`/`received_by_teacher_id`/`payer_note`; константы/скоупы/связь/guard на [`Payment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Payment.php); форма захвата в [`PaymentResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php) с проверкой совпадения валют | ✅ `9872903` |
+| 2 | Исключение прямых платежей из выручки (4 точки [`TeacherSalaryService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php)) — снят двойной счёт | ✅ `61918f6` |
+| 3 | `directReceiptsForTeacher()` + поля в `summaryForAll` + `$directOffset` в `blockPayoutTotal`; тест `DirectTeacherReceiptTest` (6) | ✅ `61918f6` |
+| 4 | UI калькулятора: строка «Прямые платежи преподавателю (зачёт)» + **учёт уже зачтённого** (чтобы один платёж не зачёлся в двух выплатах) | ⏳ §7 |
+
+**Следствие принятой модели (важно, MG в курсе):** «исключить из выручки + зачесть
+номинал» воспроизводит цифру бухгалтера точно (начислено − номинал = к оплате), но
+означает, что **школа НЕ берёт свою долю** с денег, собранных преподавателем напрямую —
+преподаватель оставляет себе полный номинал. Это соответствует текущей практике учёта.
 
 ## 1. Проблема
 
@@ -163,5 +178,33 @@ public function directReceiptsForTeacher(Teacher $teacher, $start = null, $end =
 
 Денежный контур — правило репозитория: осторожный review на каждое изменение
 (см. [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.ai_state.md) Now-B/Now-C).
+
+## 7. Открытый follow-up (слой 4): UI калькулятора + учёт зачтённого
+
+Слои 1–3 дают: захват прямого платежа (дата/плательщик/валюта), исключение из выручки
+и `directReceiptsForTeacher()` — зачёт **виден** в сводке
+([`summaryForAll`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php),
+поля `direct_receipts_*`), но **не вычитается автоматически при постинге выплаты**.
+`blockPayoutTotal()` уже принимает `$directOffset`, но калькулятор
+[`TeacherSalaries`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/TeacherSalaries.php)
+его пока не подаёт — сейчас зачёт делается прежним ручным «Удержанием».
+
+Слой 4 (отдельный review — денежный контур):
+
+1. **Учёт зачтённого** (критично, иначе двойной зачёт). По образцу авансов
+   (`TeacherPayout::settled_at`) и `paidShareKeys()` для поздних оплат: пометить,
+   какие прямые платежи уже вошли в выплату. Вариант — `settled_at`/`settled_payout_id`
+   на `payments` для строк `teacher_personal`, либо снимок `direct_receipts` (id
+   платежей) в `TeacherPayout.breakdown` + фильтр «ещё не зачтённых» в калькуляторе.
+2. **Строка калькулятора** «Прямые платежи преподавателю (зачёт)» — предзаполняется
+   из `directReceiptsForTeacher()` (только ещё-не-зачтённые, в валюте выплаты),
+   построчно (дата/плательщик/курс/студент), подаётся в `blockPayoutTotal()` как
+   `$directOffset`, снимок пишется в `breakdown['direct_receipts']`.
+3. **Идемпотентность/откат:** удаление выплаты снимает пометку «зачтено» (как
+   `TeacherPayout::deleting` снимает зеркало-платёж).
+4. **Тесты:** один платёж не зачитывается дважды; удаление выплаты возвращает его в
+   пул; строки с mismatch валюты в авто-зачёт не попадают.
+
+До слоя 4 зачёт остаётся ручным («Удержание»), но теперь виден и посчитан в сводке.
 
 _Dr. Mārcis Gasūns_
