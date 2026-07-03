@@ -193,7 +193,9 @@ class TeacherSalaries extends Page implements HasTable
                             ->first();
                         $groupId = $get('group_id') ? (int) $get('group_id') : null;
                         $detail = app(TeacherSalaryService::class)
-                            ->blockGroupRevenueDetail((int) $courseId, (int) $blockNumber, $groupId);
+                            ->blockGroupRevenueDetail((int) $courseId, (int) $blockNumber, $groupId, [
+                                'teacher_id' => (int) $get('teacher_id'),
+                            ]);
 
                         return view('filament.teacher-salaries.revenue-lines', [
                             'block' => $block,
@@ -356,6 +358,38 @@ class TeacherSalaries extends Page implements HasTable
                                 : '');
                     }),
 
+                // === Прямые платежи преподавателю (зачёт по номиналу в валюте выплаты) ===
+                Forms\Components\CheckboxList::make('direct_receipt_ids')
+                    ->label('Прямые платежи преподавателю (зачёт)')
+                    ->visible(fn (Forms\Get $get) => filled($get('teacher_id')) && ! empty($this->availableDirectReceiptItems($get)))
+                    ->live()
+                    ->columns(1)
+                    ->bulkToggleable()
+                    ->options(function (Forms\Get $get): array {
+                        return collect($this->availableDirectReceiptItems($get))
+                            ->mapWithKeys(fn (array $i) => [
+                                $i['payment_id'] => $i['course_title'].' · '.($i['student'] ?? '—').' · '.$i['date']
+                                    .' — '.number_format($i['amount'], 2, '.', ' ').' '.TeacherPayout::currencySymbol($i['currency'])
+                                    .($i['payer_note'] ? ' ('.$i['payer_note'].')' : ''),
+                            ])->all();
+                    })
+                    ->helperText('Платежи, пришедшие напрямую на личный счёт преподавателя и ещё не зачтённые ни в одной выплате. '
+                        .'Вычитаются из итога по номиналу в валюте выплаты (через курс). Один платёж дважды не зачтётся.'),
+
+                Forms\Components\Placeholder::make('direct_offset_preview')
+                    ->label('Зачёт прямых платежей')
+                    ->visible(fn (Forms\Get $get) => $this->directOffsetForeign($get) > 0)
+                    ->content(function (Forms\Get $get): string {
+                        $eur = $this->directOffsetForeign($get);
+                        $sym = TeacherPayout::currencySymbol($get('payout_currency'));
+                        $rate = (float) ($get('exchange_rate') ?: 0);
+
+                        return '− '.number_format($eur, 2, '.', ' ').' '.$sym
+                            .($rate > 0
+                                ? ' (= '.number_format($this->directOffsetRub($get), 0, '.', ' ').' ₽ по курсу '.number_format($rate, 2, '.', ' ').')'
+                                : ' — укажите курс на дату, чтобы зачесть');
+                    }),
+
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
                     ->content(function (Forms\Get $get): string {
@@ -373,13 +407,24 @@ class TeacherSalaries extends Page implements HasTable
                         $surcharge = (float) ($get('surcharge') ?: 0);
                         $deduction = (float) ($get('deduction') ?: 0);
                         $priorBlocksTotal = $this->priorBlocksTotal($get);
+                        $directOffset = $this->directOffsetRub($get);
 
-                        $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal);
+                        $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffset);
+                        $advanceOffset = $this->advanceOffsetForTotal($get, $grossTotal);
+                        $total = max(0, round($grossTotal - $advanceOffset, 2));
 
                         $formula = $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction);
                         if ($priorBlocksTotal > 0) {
                             $formula .= ' + поздние оплаты '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
                                 .($coef != 100.0 ? ' × '.number_format($coef, 0, '.', ' ').'%' : '');
+                        }
+                        if ($directOffset > 0) {
+                            $formula .= ' − прямые платежи '.number_format($this->directOffsetForeign($get), 2, '.', ' ')
+                                .' '.TeacherPayout::currencySymbol($get('payout_currency'))
+                                .' ('.number_format($directOffset, 0, '.', ' ').' ₽)';
+                        }
+                        if ($advanceOffset > 0) {
+                            $formula .= ' − аванс '.number_format($advanceOffset, 0, '.', ' ').' ₽';
                         }
 
                         return $formula.' = '.number_format($total, 0, '.', ' ').' ₽';
@@ -458,7 +503,28 @@ class TeacherSalaries extends Page implements HasTable
                 );
                 $priorBlocksTotal = round(array_sum(array_column($priorItems, 'teacher_amount')), 2);
 
-                $total = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal);
+                // Прямые платежи преподавателю (зачёт): деривим выбранные заново из
+                // доступных (не доверяя клиенту), считаем номинал в валюте выплаты и
+                // его рублёвый эквивалент по курсу. Снимок пишем в breakdown — он же
+                // источник «уже зачтено» (settledDirectReceiptIds), поэтому удаление
+                // выплаты автоматически освобождает эти платежи.
+                $teacherForReceipts = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
+                $selectedReceiptIds = array_flip(array_map('intval', $data['direct_receipt_ids'] ?? []));
+                $directLines = $teacherForReceipts
+                    ? array_values(array_filter(
+                        app(TeacherSalaryService::class)->availableDirectReceipts($teacherForReceipts),
+                        fn (array $i) => isset($selectedReceiptIds[$i['payment_id']]),
+                    ))
+                    : [];
+                $directOffsetForeign = round(array_sum(array_column($directLines, 'amount')), 2);
+                $directOffsetRub = round($directOffsetForeign * (float) ($data['exchange_rate'] ?? 0), 2);
+
+                $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffsetRub);
+                $teacherForAdvances = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
+                $advanceOffset = $teacherForAdvances
+                    ? min($grossTotal, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
+                    : 0.0;
+                $total = max(0, round($grossTotal - $advanceOffset, 2));
 
                 $blockNumber = (int) $data['block_number'];
                 $courseId = (int) $data['course_id'];
@@ -466,7 +532,9 @@ class TeacherSalaries extends Page implements HasTable
 
                 $groupId = $data['group_id'] ? (int) $data['group_id'] : null;
                 $detail = app(TeacherSalaryService::class)
-                    ->blockGroupRevenueDetail($courseId, $blockNumber, $groupId);
+                    ->blockGroupRevenueDetail($courseId, $blockNumber, $groupId, [
+                        'teacher_id' => (int) $data['teacher_id'],
+                    ]);
 
                 $block = CourseBlock::query()
                     ->where('course_id', $courseId)
@@ -484,6 +552,19 @@ class TeacherSalaries extends Page implements HasTable
                         : '',
                     number_format($total, 0, '.', ' '),
                 );
+
+                if ($directOffsetForeign > 0) {
+                    $comment .= sprintf(
+                        ' − прямые платежи (%d шт.) %s %s (%s ₽)',
+                        count($directLines),
+                        number_format($directOffsetForeign, 2, '.', ' '),
+                        TeacherPayout::currencySymbol($data['payout_currency'] ?: null),
+                        number_format($directOffsetRub, 0, '.', ' '),
+                    );
+                }
+                if ($advanceOffset > 0) {
+                    $comment .= ' − аванс '.number_format($advanceOffset, 0, '.', ' ').' ₽';
+                }
 
                 $fixedRate = (float) ($data['fixed_rate'] ?? 0);
 
@@ -548,8 +629,25 @@ class TeacherSalaries extends Page implements HasTable
                         // Поздние оплаты прошлых блоков, добавленные вручную (дедуп на будущее).
                         'prior_blocks_paid' => $priorItems,
                         'prior_blocks_total' => $priorBlocksTotal,
+                        // Прямые платежи преподавателю, зачтённые этой выплатой (источник
+                        // «уже зачтено» — settledDirectReceiptIds читает именно это).
+                        'direct_receipts' => $directLines,
+                        'direct_offset_foreign' => $directOffsetForeign,
+                        'direct_offset_rub' => $directOffsetRub,
+                        'advance_offset' => $advanceOffset,
+                        'advance_settlements' => [],
+                        'gross_before_advances' => $grossTotal,
                     ],
                 ]);
+
+                if ($payout && $teacherForAdvances && $advanceOffset > 0) {
+                    $advanceSettlement = app(TeacherSalaryService::class)
+                        ->settleAdvancesForBlockPayout($teacherForAdvances, $advanceOffset, auth()->id());
+                    $breakdown = $payout->breakdown ?? [];
+                    $breakdown['advance_settlements'] = $advanceSettlement['lines'];
+                    $breakdown['advance_offset'] = $advanceSettlement['total'];
+                    $payout->updateQuietly(['breakdown' => $breakdown]);
+                }
 
                 if ($payout && ($data['post_to_finance'] ?? true)) {
                     app(TeacherPayoutPoster::class)->post($payout);
@@ -623,7 +721,9 @@ class TeacherSalaries extends Page implements HasTable
 
         $groupId = $get('group_id') ? (int) $get('group_id') : null;
         $detail = app(TeacherSalaryService::class)
-            ->blockGroupRevenueDetail((int) $courseId, (int) $blockNumber, $groupId);
+            ->blockGroupRevenueDetail((int) $courseId, (int) $blockNumber, $groupId, [
+                'teacher_id' => (int) $get('teacher_id'),
+            ]);
 
         $set('base_revenue', $detail['total']);
 
@@ -661,7 +761,7 @@ class TeacherSalaries extends Page implements HasTable
         ];
         ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($state);
 
-        return TeacherSalaryService::blockPayoutTotal(
+        $gross = TeacherSalaryService::blockPayoutTotal(
             $base,
             $this->normalizeCoef($get('coefficient')),
             $pct,
@@ -669,7 +769,67 @@ class TeacherSalaries extends Page implements HasTable
             (float) ($get('surcharge') ?: 0),
             (float) ($get('deduction') ?: 0),
             $this->priorBlocksTotal($get),
+            $this->directOffsetRub($get),
         );
+
+        return max(0, round($gross - $this->advanceOffsetForTotal($get, $gross), 2));
+    }
+
+    private function advanceOffsetForTotal(Forms\Get $get, float $total): float
+    {
+        $teacherId = $get('teacher_id') ? (int) $get('teacher_id') : null;
+        if (! $teacherId || $total <= 0 || ! ($teacher = Teacher::find($teacherId))) {
+            return 0.0;
+        }
+
+        $outstanding = round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacher), 'remaining')), 2);
+
+        return min($outstanding, round($total, 2));
+    }
+
+    /** Request-scoped мемо доступных прямых зачётов (по преподавателю). */
+    private array $directReceiptsMemo = [];
+
+    /**
+     * Прямые платежи преподавателю, готовые к зачёту, по состоянию формы.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function availableDirectReceiptItems(Forms\Get $get): array
+    {
+        $teacherId = $get('teacher_id') ? (int) $get('teacher_id') : null;
+        if (! $teacherId || ! ($teacher = Teacher::find($teacherId))) {
+            return [];
+        }
+
+        return $this->directReceiptsMemo[$teacherId] ??= app(TeacherSalaryService::class)->availableDirectReceipts($teacher);
+    }
+
+    /** Выбранные прямые платежи (деривим заново по id, не доверяя клиенту). */
+    private function selectedDirectReceiptItems(Forms\Get $get): array
+    {
+        $keys = $get('direct_receipt_ids') ?? [];
+        if (empty($keys)) {
+            return [];
+        }
+        $selected = array_flip(array_map('intval', $keys));
+
+        return array_values(array_filter(
+            $this->availableDirectReceiptItems($get),
+            fn (array $i) => isset($selected[$i['payment_id']]),
+        ));
+    }
+
+    /** Сумма выбранных прямых платежей в валюте выплаты (номинал). */
+    private function directOffsetForeign(Forms\Get $get): float
+    {
+        return round(array_sum(array_column($this->selectedDirectReceiptItems($get), 'amount')), 2);
+    }
+
+    /** Тот же зачёт в рублях по курсу выплаты — для вычета из рублёвого итога. */
+    private function directOffsetRub(Forms\Get $get): float
+    {
+        return round($this->directOffsetForeign($get) * (float) ($get('exchange_rate') ?: 0), 2);
     }
 
     /** Request-scoped мемо для availablePriorBlockPayments (несколько вызовов за рендер). */
@@ -1114,7 +1274,12 @@ class TeacherSalaries extends Page implements HasTable
                     TeacherPayout::query()
                         ->where('teacher_id', $r->id)
                         ->unsettledAdvances()
-                        ->update(['settled_at' => now(), 'settled_by' => auth()->id()]);
+                        ->get()
+                        ->each(fn (TeacherPayout $advance) => $advance->update([
+                            'settled_amount' => $advance->amount,
+                            'settled_at' => now(),
+                            'settled_by' => auth()->id(),
+                        ]));
                 }
 
                 Notification::make()

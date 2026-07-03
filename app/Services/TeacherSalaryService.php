@@ -77,6 +77,9 @@ class TeacherSalaryService
     /** @var array<int, list<string>>|null  teacher_id => закрытые месяцы 'Y-m' */
     private ?array $closedMonthsCache = null;
 
+    /** @var array<int, array<string, Carbon>>|null  teacher_id => [period_month => closed_at] */
+    private ?array $closedPeriodCache = null;
+
     /**
      * Человекочитаемые подписи схем оплаты курса.
      *
@@ -258,8 +261,9 @@ class TeacherSalaryService
      * НЕ входят и помечаются mismatch=true (молча валюты не сводим).
      *
      * @return array{total: float, currency: ?string, lines: list<array{
-     *     course_title:string, amount:float, currency:?string, date:?string,
-     *     payer_note:?string, student:?string, mismatch:bool}>}
+     *     payment_id:int, course_id:int, course_title:string, amount:float,
+     *     currency:?string, date:?string, payer_note:?string, student:?string,
+     *     mismatch:bool}>}
      */
     public function directReceiptsForTeacher(Teacher $teacher, $start = null, $end = null): array
     {
@@ -293,6 +297,8 @@ class TeacherSalaryService
                 }
 
                 $lines[] = [
+                    'payment_id' => (int) $p->id,
+                    'course_id' => (int) $course->id,
                     'course_title' => (string) $course->title,
                     'amount' => round($amount, 2),
                     'currency' => $currency,
@@ -317,6 +323,126 @@ class TeacherSalaryService
     }
 
     /**
+     * ID платежей-прямых-зачётов, уже вошедших в какую-либо выплату преподавателя
+     * (снимок `direct_receipts` в breakdown). По образцу paidShareKeys(): источник
+     * истины — сами выплаты, поэтому удаление выплаты автоматически «освобождает»
+     * её зачёты (снимок исчезает вместе с payout). Так один прямой платёж не
+     * зачитывается дважды.
+     *
+     * @return array<int, true> payment_id => true
+     */
+    public function settledDirectReceiptIds(Teacher $teacher): array
+    {
+        $ids = [];
+        foreach ($teacher->payouts()->whereNotNull('breakdown')->get() as $payout) {
+            foreach (($payout->breakdown['direct_receipts'] ?? []) as $line) {
+                if (isset($line['payment_id'])) {
+                    $ids[(int) $line['payment_id']] = true;
+                }
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Прямые платежи преподавателю, готовые к зачёту в НОВОЙ выплате: в валюте
+     * выплаты (mismatch отсечены) и ещё не вошедшие ни в одну выплату. Кандидаты
+     * для пикера в калькуляторе.
+     *
+     * @return list<array{payment_id:int, course_id:int, course_title:string,
+     *     amount:float, currency:?string, date:?string, payer_note:?string,
+     *     student:?string, mismatch:bool}>
+     */
+    public function availableDirectReceipts(Teacher $teacher): array
+    {
+        $settled = $this->settledDirectReceiptIds($teacher);
+
+        return array_values(array_filter(
+            $this->directReceiptsForTeacher($teacher)['lines'],
+            fn (array $l) => ! $l['mismatch'] && ! isset($settled[$l['payment_id']]),
+        ));
+    }
+
+    /**
+     * @return list<array{payout_id:int, amount:float, settled_amount:float, remaining:float, paid_at:?string}>
+     */
+    public function outstandingAdvanceItems(Teacher $teacher): array
+    {
+        return $teacher->payouts()
+            ->unsettledAdvances()
+            ->orderBy('paid_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (TeacherPayout $payout): array => [
+                'payout_id' => (int) $payout->id,
+                'amount' => round((float) $payout->amount, 2),
+                'settled_amount' => round((float) $payout->settled_amount, 2),
+                'remaining' => round((float) $payout->amount - (float) $payout->settled_amount, 2),
+                'paid_at' => $payout->paid_at?->toDateString(),
+            ])
+            ->filter(fn (array $item): bool => $item['remaining'] > 0)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Зачесть авансы FIFO на сумму не больше $limit и вернуть audit-снимок.
+     *
+     * @return array{total: float, lines: list<array{payout_id:int, applied:float, remaining_after:float}>}
+     */
+    public function settleAdvancesForBlockPayout(Teacher $teacher, float $limit, ?int $settledBy = null): array
+    {
+        $limit = round(max(0.0, $limit), 2);
+        if ($limit <= 0) {
+            return ['total' => 0.0, 'lines' => []];
+        }
+
+        $lines = [];
+        $total = 0.0;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($teacher, $limit, $settledBy, &$lines, &$total): void {
+            $remainingLimit = $limit;
+            $advances = $teacher->payouts()
+                ->unsettledAdvances()
+                ->lockForUpdate()
+                ->orderBy('paid_at')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($advances as $advance) {
+                if ($remainingLimit <= 0) {
+                    break;
+                }
+
+                $remainingAdvance = round((float) $advance->amount - (float) $advance->settled_amount, 2);
+                if ($remainingAdvance <= 0) {
+                    continue;
+                }
+
+                $applied = min($remainingAdvance, $remainingLimit);
+                $newSettled = round((float) $advance->settled_amount + $applied, 2);
+                $advance->settled_amount = $newSettled;
+                $advance->settled_by = $settledBy;
+                if ($newSettled >= round((float) $advance->amount, 2)) {
+                    $advance->settled_at = now();
+                }
+                $advance->save();
+
+                $remainingLimit = round($remainingLimit - $applied, 2);
+                $total = round($total + $applied, 2);
+                $lines[] = [
+                    'payout_id' => (int) $advance->id,
+                    'applied' => round($applied, 2),
+                    'remaining_after' => round((float) $advance->amount - $newSettled, 2),
+                ];
+            }
+        });
+
+        return ['total' => $total, 'lines' => $lines];
+    }
+
+    /**
      * Сводка по всем преподавателям за выбранный месяц.
      *
      * @return array<int, array{
@@ -337,24 +463,14 @@ class TeacherSalaryService
 
         $teachers = Teacher::query()->with(['courses', 'coTaughtCourses'])->get();
 
-        // «Выплачено» = обычные выплаты + уже зачтённые авансы. Непогашенный аванс
-        // (type=advance, settled_at IS NULL) деньги выданы, но к ЗП ещё не зачтён —
-        // в «выплачено»/balance НЕ идёт, считается отдельно (advancesOutstanding).
-        $excludeUnsettledAdvances = function ($q) {
-            $q->where('type', '!=', TeacherPayout::TYPE_ADVANCE)
-                ->orWhereNotNull('settled_at');
-        };
-
         // Сумма всех выплат и выплат за период — батчем по всем преподам.
         $paidAllTime = TeacherPayout::query()
-            ->where($excludeUnsettledAdvances)
-            ->selectRaw('teacher_id, SUM(amount) AS total')
+            ->selectRaw('teacher_id, SUM(CASE WHEN type = ? THEN COALESCE(settled_amount, 0) ELSE amount END) AS total', [TeacherPayout::TYPE_ADVANCE])
             ->groupBy('teacher_id')
             ->pluck('total', 'teacher_id');
 
         $paidPeriod = TeacherPayout::query()
-            ->where($excludeUnsettledAdvances)
-            ->selectRaw('teacher_id, SUM(amount) AS total')
+            ->selectRaw('teacher_id, SUM(CASE WHEN type = ? THEN COALESCE(settled_amount, 0) ELSE amount END) AS total', [TeacherPayout::TYPE_ADVANCE])
             ->where(function ($q) use ($periodMonth, $start, $end) {
                 $q->where('period_month', $periodMonth)
                     ->orWhere(function ($q2) use ($start, $end) {
@@ -368,7 +484,7 @@ class TeacherSalaryService
         // Непогашенные авансы — отдельной величиной (деньги выданы, к ЗП не зачтены).
         $advancesOutstanding = TeacherPayout::query()
             ->unsettledAdvances()
-            ->selectRaw('teacher_id, SUM(amount) AS total')
+            ->selectRaw('teacher_id, SUM(amount - COALESCE(settled_amount, 0)) AS total')
             ->groupBy('teacher_id')
             ->pluck('total', 'teacher_id');
 
@@ -470,6 +586,10 @@ class TeacherSalaryService
     {
         $opts = $this->normalizeOptions($opts);
         $blockNumbers = $this->blockNumbersFor($courseId);
+        $paid = [];
+        if (! empty($opts['teacher_id']) && ($teacher = Teacher::find((int) $opts['teacher_id']))) {
+            $paid = $this->paidShareKeys($teacher);
+        }
 
         $query = Payment::query()
             ->with('user:id,name')
@@ -491,6 +611,9 @@ class TeacherSalaryService
         foreach ($query->get() as $p) {
             $covered = $this->coveredBlockNumbers($p, $blockNumbers);
             if (empty($covered) || ! in_array($blockNumber, $covered, true)) {
+                continue;
+            }
+            if (isset($paid[$courseId.':'.$blockNumber.':'.$p->id])) {
                 continue;
             }
             $amount = $this->accrualAmount($p, $opts['gross_before_discount']);
@@ -746,7 +869,7 @@ class TeacherSalaryService
      * преподавателей курса (у каждого свои условия начисляются поверх).
      *
      * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
-     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
+     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, revenueEvents: list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>, returnEvents: list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
      */
     private function courseRevenueData(Course $course, array $opts): array
     {
@@ -757,7 +880,7 @@ class TeacherSalaryService
 
     /**
      * @param  array{gross_before_discount: bool, subtract_returns: bool}  $opts
-     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
+     * @return array{revenue: array<string,float>, returnsByMonth: array<string,float>, revenueEvents: list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>, returnEvents: list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>, studentEarliest: array<int,string>, blockNumbers: list<int>, blockMonths: array<int,string>, totalBlocks: int}
      */
     private function computeCourseRevenue(Course $course, array $opts): array
     {
@@ -779,12 +902,20 @@ class TeacherSalaryService
         // Положительная выручка по месяцам (без возвратов) + ранний месяц студента.
         $revenue = [];
         $returnsByMonth = [];
+        $revenueEvents = [];
+        $returnEvents = [];
         $studentEarliest = [];
         foreach ($real as $p) {
             $amount = $this->accrualAmount($p, $opts['gross_before_discount']);
             $shares = $this->recognizedShares($p, $amount, $blockNumbers, $blockMonths);
             foreach ($shares as $m => $amt) {
                 $revenue[$m] = ($revenue[$m] ?? 0.0) + $amt;
+                $revenueEvents[] = [
+                    'month' => $m,
+                    'amount' => (float) $amt,
+                    'created_at' => $p->created_at,
+                    'user_id' => $p->user_id ? (int) $p->user_id : null,
+                ];
             }
             if ($p->user_id && ! empty($shares)) {
                 $earliest = min(array_keys($shares));
@@ -800,6 +931,12 @@ class TeacherSalaryService
                 $month = $p->salary_recognition_month ?: $p->created_at?->format('Y-m');
                 if ($month) {
                     $returnsByMonth[$month] = ($returnsByMonth[$month] ?? 0.0) + (float) $p->amount;
+                    $returnEvents[] = [
+                        'month' => $month,
+                        'amount' => (float) $p->amount,
+                        'created_at' => $p->created_at,
+                        'user_id' => $p->user_id ? (int) $p->user_id : null,
+                    ];
                 }
             }
         }
@@ -807,6 +944,8 @@ class TeacherSalaryService
         return [
             'revenue' => $revenue,
             'returnsByMonth' => $returnsByMonth,
+            'revenueEvents' => $revenueEvents,
+            'returnEvents' => $returnEvents,
             'studentEarliest' => $studentEarliest,
             'blockNumbers' => $blockNumbers,
             'blockMonths' => $blockMonths,
@@ -838,6 +977,8 @@ class TeacherSalaryService
         $rev = $this->courseRevenueData($course, $opts);
         $revenue = $rev['revenue'];
         $returnsByMonth = $rev['returnsByMonth'];
+        $revenueEvents = $rev['revenueEvents'];
+        $returnEvents = $rev['returnEvents'];
         $studentEarliest = $rev['studentEarliest'];
         $blockNumbers = $rev['blockNumbers'];
         $blockMonths = $rev['blockMonths'];
@@ -847,16 +988,27 @@ class TeacherSalaryService
         $accruedGross = [];
         $accruedReturns = [];
 
+        $closed = $this->closedPeriodsFor($teacherId);
+
         switch ($type) {
             case 'percent':
             case 'percent_per_block':
-                foreach ($revenue as $m => $amt) {
-                    $accruedGross[$m] = $amt * ($value / 100);
+                $revenue = [];
+                foreach ($revenueEvents as $event) {
+                    $m = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
+                    $amt = $event['amount'];
+                    $revenue[$m] = ($revenue[$m] ?? 0.0) + $amt;
+                    $accruedGross[$m] = ($accruedGross[$m] ?? 0.0) + $amt * ($value / 100);
                 }
                 // На ЗП возвраты влияют только в процентных схемах.
-                foreach ($returnsByMonth as $m => $amt) {
-                    $accruedReturns[$m] = $amt * ($value / 100);
+                $returnsByMonth = [];
+                foreach ($returnEvents as $event) {
+                    $m = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
+                    $amt = $event['amount'];
+                    $returnsByMonth[$m] = ($returnsByMonth[$m] ?? 0.0) + $amt;
+                    $accruedReturns[$m] = ($accruedReturns[$m] ?? 0.0) + $amt * ($value / 100);
                 }
+                $studentEarliest = $this->studentEarliestFromEvents($revenueEvents, $closed);
                 break;
 
             case 'fix_per_block':
@@ -899,14 +1051,14 @@ class TeacherSalaryService
 
         // Ролл-форвард: всё, что попало в закрытый месяц ЭТОГО преподавателя,
         // переносим в ближайший открытый (нельзя начислять в уже рассчитанный).
-        $closed = $this->closedMonthsFor($teacherId);
-        if (! empty($closed)) {
-            $accrued = $this->remapMonths($accrued, $closed);
-            $accruedGross = $this->remapMonths($accruedGross, $closed);
-            $accruedReturns = $this->remapMonths($accruedReturns, $closed);
-            $revenue = $this->remapMonths($revenue, $closed);
-            $returnsByMonth = $this->remapMonths($returnsByMonth, $closed);
-            $studentEarliest = array_map(fn (string $m) => $this->rollForwardMonth($m, $closed), $studentEarliest);
+        $closedMonths = array_keys($closed);
+        if (! empty($closedMonths) && ! in_array($type, ['percent', 'percent_per_block'], true)) {
+            $accrued = $this->remapMonths($accrued, $closedMonths);
+            $accruedGross = $this->remapMonths($accruedGross, $closedMonths);
+            $accruedReturns = $this->remapMonths($accruedReturns, $closedMonths);
+            $revenue = $this->remapMonths($revenue, $closedMonths);
+            $returnsByMonth = $this->remapMonths($returnsByMonth, $closedMonths);
+            $studentEarliest = array_map(fn (string $m) => $this->rollForwardMonth($m, $closedMonths), $studentEarliest);
         }
 
         return [
@@ -948,6 +1100,63 @@ class TeacherSalaryService
         }
 
         return $this->closedMonthsCache[$teacherId] ?? [];
+    }
+
+    /**
+     * @return array<string, Carbon> period_month => closed_at
+     */
+    private function closedPeriodsFor(int $teacherId): array
+    {
+        if ($this->closedPeriodCache === null) {
+            $this->closedPeriodCache = [];
+            foreach (SalaryClosedPeriod::query()->get(['teacher_id', 'period_month', 'closed_at']) as $row) {
+                $this->closedPeriodCache[(int) $row->teacher_id][(string) $row->period_month] = Carbon::parse($row->closed_at);
+            }
+        }
+
+        return $this->closedPeriodCache[$teacherId] ?? [];
+    }
+
+    /**
+     * Закрытый месяц переносит только события, созданные ПОСЛЕ закрытия.
+     * Уже существовавшие начисления остаются в своём месяце.
+     *
+     * @param  array<string, Carbon>  $closed
+     */
+    private function rollForwardEventMonth(string $month, ?Carbon $createdAt, array $closed): string
+    {
+        $guard = 0;
+        while (isset($closed[$month]) && $guard++ < 600) {
+            if ($createdAt !== null && $createdAt->lte($closed[$month])) {
+                return $month;
+            }
+
+            $month = $this->nextMonth($month);
+        }
+
+        return $month;
+    }
+
+    /**
+     * @param  list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>  $events
+     * @param  array<string, Carbon>  $closed
+     * @return array<int, string>
+     */
+    private function studentEarliestFromEvents(array $events, array $closed): array
+    {
+        $out = [];
+        foreach ($events as $event) {
+            if ($event['user_id'] === null) {
+                continue;
+            }
+
+            $month = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
+            if (! isset($out[$event['user_id']]) || $month < $out[$event['user_id']]) {
+                $out[$event['user_id']] = $month;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -1251,14 +1460,20 @@ class TeacherSalaryService
     }
 
     /**
-     * @param  array{gross_before_discount?: bool, subtract_returns?: bool}  $opts
-     * @return array{gross_before_discount: bool, subtract_returns: bool}
+     * @param  array{gross_before_discount?: bool, subtract_returns?: bool, teacher_id?: int}  $opts
+     * @return array{gross_before_discount: bool, subtract_returns: bool, teacher_id?: int}
      */
     private function normalizeOptions(array $opts): array
     {
-        return [
+        $normalized = [
             'gross_before_discount' => (bool) ($opts['gross_before_discount'] ?? false),
             'subtract_returns' => (bool) ($opts['subtract_returns'] ?? true),
         ];
+
+        if (isset($opts['teacher_id'])) {
+            $normalized['teacher_id'] = (int) $opts['teacher_id'];
+        }
+
+        return $normalized;
     }
 }
