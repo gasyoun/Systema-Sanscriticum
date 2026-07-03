@@ -185,6 +185,49 @@ class ReferralProgramTest extends TestCase
     }
 
     /** @test */
+    public function reward_is_clawed_back_when_referred_payment_is_reversed(): void
+    {
+        // Регрессия (money-core, H071 #12): при откате платежа приглашённого
+        // (paid → failed/canceled) награда рефереру не снималась — он держал
+        // реальный кредит за отменённую покупку, а строка ReferralReward навсегда
+        // блокировала будущую награду за этого приглашённого.
+        config(['referral.credit_amount' => 500]);
+        $referrer = User::factory()->create(['referral_credit' => 0]);
+        $referred = User::factory()->create(['referred_by' => $referrer->id]);
+
+        $payment = $this->paidPayment($referred);
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+
+        // Откат оплаты (вебхук отмены/возврата).
+        $payment->update(['status' => 'failed']);
+
+        // Кредит снят, строка награды удалена — разовый слот свободен.
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
+        $this->assertSame(0, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+
+        // Новая настоящая оплата приглашённого снова награждает.
+        $this->paidPayment($referred);
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+    }
+
+    /** @test */
+    public function clawback_floors_referrer_credit_at_zero_when_already_spent(): void
+    {
+        config(['referral.credit_amount' => 500]);
+        $referrer = User::factory()->create(['referral_credit' => 0]);
+        $referred = User::factory()->create(['referred_by' => $referrer->id]);
+
+        $payment = $this->paidPayment($referred); // +500
+        // Реферер потратил 300 из 500 до отмены.
+        $referrer->forceFill(['referral_credit' => 200])->save();
+
+        $payment->update(['status' => 'canceled']);
+
+        // Не уходим в минус: max(0, 200 − 500) = 0.
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
+    }
+
+    /** @test */
     public function middleware_stores_ref_code_in_session(): void
     {
         $request = Request::create('/landing?ref=ABC123', 'GET');

@@ -355,6 +355,10 @@ class Payment extends Model
             if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
                 $payment->refundPranaIfSpent();
                 $payment->refundReferralCreditIfApplied();
+
+                if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
+                    $payment->reconcileAccessAfterReversal();
+                }
             }
         });
     }
@@ -724,6 +728,72 @@ class Payment extends Model
         $this->user->courses()->attach($this->course_id, ['status' => 'Записался']);
 
         Log::info("enrollInCourse: студент #{$this->user_id} записан на курс #{$this->course_id} (Записался).");
+    }
+
+    /**
+     * При откате оплаченного платежа закрываем групповой доступ только если у
+     * студента больше нет других access-granting платежей на этот курс.
+     * course_user не трогаем: это история/админское состояние, а не ACL.
+     */
+    public function reconcileAccessAfterReversal(): void
+    {
+        if (! $this->user_id || ! $this->course_id || ! $this->user || ! $this->course) {
+            return;
+        }
+
+        if (! $this->grantsCourseAccess()) {
+            return;
+        }
+
+        $courseGroupIds = $this->course->groups()->pluck('groups.id')->all();
+        if (empty($courseGroupIds)) {
+            return;
+        }
+
+        if ($this->userHasRemainingCourseAccess((int) $this->course_id)) {
+            return;
+        }
+
+        $neededByOtherCourses = Course::query()
+            ->whereKeyNot($this->course_id)
+            ->whereHas('groups', fn (Builder $q) => $q->whereIn('groups.id', $courseGroupIds))
+            ->whereHas('payments', fn (Builder $q) => $this->accessGrantingPaymentsForUser($q))
+            ->with(['groups' => fn ($q) => $q->whereIn('groups.id', $courseGroupIds)])
+            ->get()
+            ->flatMap(fn (Course $course) => $course->groups->pluck('id'))
+            ->unique()
+            ->all();
+
+        $detachIds = array_values(array_diff($courseGroupIds, $neededByOtherCourses));
+        if (empty($detachIds)) {
+            return;
+        }
+
+        $this->user->groups()->detach($detachIds);
+    }
+
+    private function grantsCourseAccess(): bool
+    {
+        return ! $this->isDeposit()
+            && ! $this->isTrial()
+            && ! $this->isExpense()
+            && ! $this->isSalaryPayout();
+    }
+
+    private function userHasRemainingCourseAccess(int $courseId): bool
+    {
+        return self::query()
+            ->where('course_id', $courseId)
+            ->where(fn (Builder $q) => $this->accessGrantingPaymentsForUser($q))
+            ->exists();
+    }
+
+    private function accessGrantingPaymentsForUser(Builder $query): Builder
+    {
+        return $query
+            ->where('user_id', $this->user_id)
+            ->paid()
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']);
     }
 
     // ==========================================

@@ -311,6 +311,133 @@ class HalfBlockPurchaseTest extends TestCase
     }
 
     /** @test */
+    public function refunded_half_block_no_longer_discounts_whole_block(): void
+    {
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1_h1', 2500);
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => -2500,
+            'tariff' => 'Расход',
+            'status' => 'paid',
+            'start_block' => 1,
+            'end_block' => 1,
+        ]);
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4800,
+        ]);
+
+        $this->assertSame(0.0, $wholeBlock1->upgradeCreditForUser($user));
+        $this->assertSame(4800.0, $wholeBlock1->calculateFinalPriceForUser($user));
+    }
+
+    /** @test */
+    public function partial_refund_reduces_upgrade_credit_and_floors_at_zero(): void
+    {
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1_h1', 2500);
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => -1000,
+            'tariff' => 'Расход',
+            'status' => 'paid',
+            'start_block' => 1,
+            'end_block' => 1,
+        ]);
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4800,
+        ]);
+
+        $this->assertSame(1500.0, $wholeBlock1->upgradeCreditForUser($user));
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => -5000,
+            'tariff' => 'Расход',
+            'status' => 'paid',
+            'start_block' => 1,
+            'end_block' => 1,
+        ]);
+
+        $this->assertSame(0.0, $wholeBlock1->upgradeCreditForUser($user));
+    }
+
+    /** @test */
+    public function upgrade_credit_ignores_conditional_and_zero_amount_payments(): void
+    {
+        $course = $this->course();
+        $user = User::factory()->create();
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 0,
+            'tariff' => 'block_1_h1',
+            'status' => 'paid',
+            'is_conditional' => true,
+        ]);
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 0,
+            'tariff' => 'block_1_h2',
+            'status' => 'paid',
+        ]);
+
+        $wholeBlock1 = Tariff::factory()->block(1)->create([
+            'course_id' => $course->id,
+            'price' => 4800,
+        ]);
+
+        $this->assertSame(0.0, $wholeBlock1->upgradeCreditForUser($user));
+    }
+
+    /** @test */
+    public function full_course_block_credit_flag_still_controls_credit_with_refund_netting(): void
+    {
+        $course = $this->course();
+        $user = User::factory()->create();
+        $this->pay($user, $course, 'block_1_h1', 2500);
+        $this->pay($user, $course, 'block_2', 4800);
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => -1000,
+            'tariff' => 'Расход',
+            'status' => 'paid',
+            'start_block' => 1,
+            'end_block' => 1,
+        ]);
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => -700,
+            'tariff' => 'Расход',
+            'status' => 'paid',
+        ]);
+
+        $fullTariff = Tariff::factory()->create([
+            'course_id' => $course->id,
+            'price' => 12000,
+        ]);
+
+        config(['features.full_course_block_credit' => false]);
+        $this->assertSame(0.0, $fullTariff->upgradeCreditForUser($user));
+
+        config(['features.full_course_block_credit' => true]);
+        $this->assertSame(5600.0, $fullTariff->upgradeCreditForUser($user));
+        $this->assertSame(6400.0, $fullTariff->calculateFinalPriceForUser($user));
+    }
+
+    /** @test */
     public function vip_and_bundle_tariffs_give_no_upgrade_credit(): void
     {
         // vip/bundle — самостоятельные продукты, не контейнеры блоков: зачёта нет,

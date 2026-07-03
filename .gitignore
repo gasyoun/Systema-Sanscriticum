@@ -25,6 +25,14 @@ yarn-error.log
 BUGS_REPORT.md
 SECURITY_AUDIT*.md
 
+# Локальные дампы / tinker-выгрузки — содержат персональные данные, НИКОГДА не коммитить
+t_login_at
+KEYS
+*_login_at
+*.dump
+*.tinker
+tinker-*.txt
+
 # audit sidecars
 .contributing_old.md
 .contributing_audit.txt
