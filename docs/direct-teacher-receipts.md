@@ -184,6 +184,9 @@ public function directReceiptsForTeacher(Teacher $teacher, $start = null, $end =
 > «Прямые платежи преподавателю (зачёт)» в калькуляторе, `settledDirectReceiptIds()`
 > / `availableDirectReceipts()` в сервисе, снимок в `breakdown.direct_receipts`,
 > зачёт в валюте выплаты через курс. Тесты — `DirectTeacherReceiptTest` (8).
+> UX-полировка (03-07-2026): при выборе преподавателя пикер **по умолчанию
+> отмечает все** доступные прямые платежи (зачитываем целиком; ненужные снимают
+> вручную) — через `$set('direct_receipt_ids', …)` в `afterStateUpdated` поля препода.
 
 Слои 1–3 дают: захват прямого платежа (дата/плательщик/валюта), исключение из выручки
 и `directReceiptsForTeacher()` — зачёт **виден** в сводке
