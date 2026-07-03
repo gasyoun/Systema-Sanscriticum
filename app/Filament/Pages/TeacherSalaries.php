@@ -628,8 +628,11 @@ class TeacherSalaries extends Page implements HasTable
         $set('base_revenue', $detail['total']);
 
         // Для «фикс за студента» подставляем число студентов блока/группы.
+        // Строки-возвраты (Расход) исключаем — это не активные слушатели.
         if ($get('salary_type') === 'fix_per_student') {
-            $set('student_count', collect($detail['lines'])->pluck('user_id')->unique()->count());
+            $set('student_count', collect($detail['lines'])
+                ->reject(fn ($line) => $line['is_return'] ?? false)
+                ->pluck('user_id')->unique()->count());
         }
     }
 
