@@ -980,6 +980,74 @@ class LandingPageResource extends Resource
                                             ->defaultItems(3),
                                     ]),
 
+                                // 8b. ИСТОРИИ УЧЕНИКОВ (нарративный пруф + анти-кейс)
+                                Builder\Block::make('student_story_block')
+                                    ->label('8б. Истории учеников (путь + анти-кейс)')
+                                    ->icon('heroicon-m-user-group')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Заголовок')
+                                            ->default('Истории учеников'),
+
+                                        TextInput::make('subtitle')
+                                            ->label('Подзаголовок (необязательно)')
+                                            ->placeholder('Как ученики приходили с нуля и куда добрались'),
+
+                                        Repeater::make('stories')
+                                            ->label('Истории (путь ученика: крючок → путь → результат)')
+                                            ->schema([
+                                                Grid::make(2)->schema([
+                                                    TextInput::make('date')
+                                                        ->label('Дата / год')
+                                                        ->placeholder('2026'),
+
+                                                    TextInput::make('track')
+                                                        ->label('Трек')
+                                                        ->placeholder('с нуля / для йоги / грамматика'),
+
+                                                    FileUpload::make('avatar')
+                                                        ->label('Фото ученика (с согласия)')
+                                                        ->image()
+                                                        ->avatar()
+                                                        ->directory('promo'),
+
+                                                    TextInput::make('name')
+                                                        ->label('Имя')
+                                                        ->required(),
+
+                                                    TextInput::make('city')
+                                                        ->label('Город (необязательно)')
+                                                        ->placeholder('Казань'),
+                                                ]),
+
+                                                Textarea::make('hook')
+                                                    ->label('Крючок-проблема')
+                                                    ->placeholder('пришла читать мантры, боялась, что поздно в 45')
+                                                    ->hint('Боль, в которой читатель узнаёт себя.')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
+
+                                                Textarea::make('path')
+                                                    ->label('Путь: что было трудно и как помог куратор')
+                                                    ->rows(3)
+                                                    ->columnSpanFull(),
+
+                                                Textarea::make('result')
+                                                    ->label('Результат-цифра (конкретика, не «улучшили»)')
+                                                    ->placeholder('за 8 блоков читает Гиту в оригинале / сдал внутренний зачёт')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
+
+                                                Textarea::make('not_for')
+                                                    ->label('Честность: кому курс НЕ зайдёт (анти-кейс)')
+                                                    ->hint('Отсекает не-ЦА и поднимает доверие — их сильнейший приём.')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
+                                            ])
+                                            ->grid(1)
+                                            ->defaultItems(2),
+                                    ]),
+
                                 // 9. FORM (С ДЕФИЦИТОМ)
                                 Builder\Block::make('form_block')
                                     ->label('9. Форма заявки (CTA + Дефицит)')
