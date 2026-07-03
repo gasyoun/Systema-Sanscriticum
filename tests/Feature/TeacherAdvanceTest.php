@@ -85,8 +85,8 @@ class TeacherAdvanceTest extends TestCase
             'paid_at' => now()->toDateString(),
         ]);
 
-        // Зачёт аванса.
-        $advance->update(['settled_at' => now()]);
+        // Зачёт аванса — как экшен «Зачесть аванс»: settled_at + settled_amount.
+        $advance->update(['settled_at' => now(), 'settled_amount' => $advance->amount]);
 
         $row = $this->service->summaryForAll(now()->format('Y-m'))[$teacher->id];
 
@@ -114,7 +114,7 @@ class TeacherAdvanceTest extends TestCase
             'paid_at' => now()->toDateString(),
             'period_month' => now()->format('Y-m'),
         ]);
-        $advance->update(['settled_at' => now()]);
+        $advance->update(['settled_at' => now(), 'settled_amount' => $advance->amount]);
 
         $row = $this->service->summaryForAll(now()->format('Y-m'))[$teacher->id];
 
