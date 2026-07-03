@@ -115,8 +115,14 @@ class TeacherSalaries extends Page implements HasTable
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Set $set): void {
                         $set('course_id', null);
+                        $teacher = $state ? Teacher::find($state) : null;
                         // Валюта выплаты преподавателя управляет блоком «Курс PayPal».
-                        $set('payout_currency', $state ? Teacher::find($state)?->payout_currency : null);
+                        $set('payout_currency', $teacher?->payout_currency);
+                        // Прямые платежи преподавателю по умолчанию все выбраны (зачитываем
+                        // целиком; ненужные можно снять). При смене препода — пересобираем.
+                        $set('direct_receipt_ids', $teacher
+                            ? array_column(app(TeacherSalaryService::class)->availableDirectReceipts($teacher), 'payment_id')
+                            : []);
                     }),
 
                 Forms\Components\Select::make('course_id')
@@ -374,7 +380,8 @@ class TeacherSalaries extends Page implements HasTable
                             ])->all();
                     })
                     ->helperText('Платежи, пришедшие напрямую на личный счёт преподавателя и ещё не зачтённые ни в одной выплате. '
-                        .'Вычитаются из итога по номиналу в валюте выплаты (через курс). Один платёж дважды не зачтётся.'),
+                        .'По умолчанию выбраны все — ненужные снимите. Вычитаются из итога по номиналу в валюте выплаты '
+                        .'(через курс). Один платёж дважды не зачтётся.'),
 
                 Forms\Components\Placeholder::make('direct_offset_preview')
                     ->label('Зачёт прямых платежей')
