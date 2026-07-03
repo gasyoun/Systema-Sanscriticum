@@ -120,6 +120,70 @@ class ReferralProgramTest extends TestCase
         $this->assertSame(0, \App\Models\ReferralReward::count());
     }
 
+    /**
+     * Регрессия (money-core, H071 #3): награда — только за ПЕРВУЮ РЕАЛЬНУЮ ОПЛАТУ
+     * КУРСА. Не курсовые/бесплатные оплаченные события не должны минтить кредит и
+     * сжигать разовую награду (unique referred_id).
+     *
+     * @test
+     *
+     * @dataProvider nonQualifyingPayments
+     */
+    public function no_reward_on_non_course_payments(array $attributes): void
+    {
+        config(['referral.credit_amount' => 500]);
+        $referrer = User::factory()->create();
+        $referred = User::factory()->create(['referred_by' => $referrer->id]);
+
+        Payment::create(array_merge([
+            'user_id' => $referred->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ], $attributes));
+
+        // Ни награды, ни кредита, ни занятого разового слота.
+        $this->assertSame(0, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
+    }
+
+    public static function nonQualifyingPayments(): array
+    {
+        return [
+            'deposit' => [['tariff' => 'deposit']],
+            'trial' => [['tariff' => 'trial']],
+            'expense' => [['tariff' => 'Расход', 'amount' => -1000]],
+            'salary_payout' => [['tariff' => 'salary_payout', 'amount' => -5000]],
+            'conditional promise (0₽)' => [['amount' => 0, 'is_conditional' => true]],
+            'zero-amount order' => [['amount' => 0]],
+            'no course_id' => [['course_id' => null]],
+        ];
+    }
+
+    /** @test */
+    public function real_course_purchase_after_non_qualifying_still_rewards(): void
+    {
+        // Разовый слот НЕ должен быть сожжён не курсовым событием: после депозита
+        // первая настоящая оплата курса всё-таки награждает пригласившего.
+        config(['referral.credit_amount' => 500]);
+        $referrer = User::factory()->create();
+        $referred = User::factory()->create(['referred_by' => $referrer->id]);
+
+        Payment::create([
+            'user_id' => $referred->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 2000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
+
+        $this->paidPayment($referred); // реальная оплата курса
+
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+    }
+
     /** @test */
     public function middleware_stores_ref_code_in_session(): void
     {
