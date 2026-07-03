@@ -31,3 +31,11 @@ SECURITY_AUDIT*.md
 
 # local agent config
 /docs/.claude/
+
+# Локальные дампы / tinker-выгрузки — содержат персональные данные, НИКОГДА не коммитить
+t_login_at
+KEYS
+*_login_at
+*.dump
+*.tinker
+tinker-*.txt
