@@ -74,26 +74,30 @@ class JoinClassControllerTest extends TestCase
     }
 
     /** @test */
-    public function anonymous_unsigned_redirects_without_recording(): void
+    public function anonymous_unsigned_is_sent_to_login_without_recording(): void
     {
         $schedule = $this->schedule();
 
+        // Гейт доступа (#252, H071 #6): аноним по неподписанной ссылке НЕ получает
+        // настоящий Zoom-URL (иначе перебором /class/{id}/join можно было ходить на
+        // платные живые занятия без оплаты) — его отправляют на вход.
         $this->get(route('class.join', $schedule))
-            ->assertRedirect('https://zoom.us/j/123456789');
+            ->assertRedirect(route('login'));
 
         $this->assertSame(0, ScheduleJoinClick::count());
     }
 
     /** @test */
-    public function tampered_signature_does_not_attribute_param_user(): void
+    public function tampered_signature_is_sent_to_login_and_does_not_attribute_param_user(): void
     {
         $user = User::factory()->create();
         $schedule = $this->schedule();
 
-        // Подписанный URL с подменённым u → подпись невалидна → клик не пишем.
+        // Подписанный URL с подменённым u → подпись невалидна → проваливаемся в
+        // ветку анонима: ни клика, ни выдачи Zoom-ссылки — на вход.
         $url = URL::signedRoute('class.join', ['schedule' => $schedule->id, 'u' => $user->id]).'&u=999999';
 
-        $this->get($url)->assertRedirect('https://zoom.us/j/123456789');
+        $this->get($url)->assertRedirect(route('login'));
         $this->assertSame(0, ScheduleJoinClick::count());
     }
 }
