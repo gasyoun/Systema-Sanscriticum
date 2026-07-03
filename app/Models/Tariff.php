@@ -227,7 +227,9 @@ class Tariff extends Model
         $query = \App\Models\Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
-            ->paid();
+            ->paid()
+            ->real()
+            ->where('amount', '>', 0);
 
         if ($this->type === 'block' && $this->block_half) {
             // Половина блока ничего не содержит — зачёта нет.
@@ -249,6 +251,33 @@ class Tariff extends Model
             }
 
             $query->where('tariff', 'like', 'block_%');
+        }
+
+        $credit = (float) $query->sum('amount');
+        $refunds = $this->upgradeRefundsForUser($user);
+
+        return max(0.0, $credit + $refunds);
+    }
+
+    private function upgradeRefundsForUser($user): float
+    {
+        $query = \App\Models\Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $this->course_id)
+            ->paid()
+            ->real()
+            ->where('tariff', 'Расход')
+            ->where('amount', '<', 0);
+
+        if ($this->type === 'block') {
+            $block = (int) $this->block_number;
+
+            $query->whereNotNull('start_block')
+                ->where('start_block', '<=', $block)
+                ->where(function ($q) use ($block) {
+                    $q->whereNull('end_block')
+                        ->orWhere('end_block', '>=', $block);
+                });
         }
 
         return (float) $query->sum('amount');
