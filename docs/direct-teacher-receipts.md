@@ -2,10 +2,9 @@
 
 _Created: 03-07-2026 · Last updated: 03-07-2026_
 
-> Статус: **слои 1–3 реализованы** (03-07-2026, MG go), issue
-> [#270](https://github.com/gasyoun/Systema-Sanscriticum/issues/270). Слой 4 (UI
-> калькулятора + учёт зачтённого) — открытый follow-up, см. §7. Ниже — схема
-> миграции, инварианты и точные точки врезки. Пример-мотиватор обезличен
+> Статус: **все 4 слоя реализованы** (03-07-2026, MG go), issue
+> [#270](https://github.com/gasyoun/Systema-Sanscriticum/issues/270) закрыт. Ниже —
+> схема миграции, инварианты и точные точки врезки. Пример-мотиватор обезличен
 > (репозиторий публичный).
 
 ## 0. Что сделано / что осталось
@@ -15,7 +14,7 @@ _Created: 03-07-2026 · Last updated: 03-07-2026_
 | 1 | Миграция `received_account`/`received_by_teacher_id`/`payer_note`; константы/скоупы/связь/guard на [`Payment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Payment.php); форма захвата в [`PaymentResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php) с проверкой совпадения валют | ✅ `9872903` |
 | 2 | Исключение прямых платежей из выручки (4 точки [`TeacherSalaryService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php)) — снят двойной счёт | ✅ `61918f6` |
 | 3 | `directReceiptsForTeacher()` + поля в `summaryForAll` + `$directOffset` в `blockPayoutTotal`; тест `DirectTeacherReceiptTest` (6) | ✅ `61918f6` |
-| 4 | UI калькулятора: строка «Прямые платежи преподавателю (зачёт)» + **учёт уже зачтённого** (чтобы один платёж не зачёлся в двух выплатах) | ⏳ §7 |
+| 4 | UI калькулятора: пикер «Прямые платежи преподавателю (зачёт)» + **учёт уже зачтённого** (`settledDirectReceiptIds` читает `breakdown.direct_receipts`; удаление выплаты освобождает платёж); зачёт в валюте выплаты через курс; тест +2 (8 всего) | ✅ `6c41553` |
 
 **Следствие принятой модели (важно, MG в курсе):** «исключить из выручки + зачесть
 номинал» воспроизводит цифру бухгалтера точно (начислено − номинал = к оплате), но
@@ -179,7 +178,12 @@ public function directReceiptsForTeacher(Teacher $teacher, $start = null, $end =
 Денежный контур — правило репозитория: осторожный review на каждое изменение
 (см. [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.ai_state.md) Now-B/Now-C).
 
-## 7. Открытый follow-up (слой 4): UI калькулятора + учёт зачтённого
+## 7. Слой 4 — UI калькулятора + учёт зачтённого ✅ (реализовано `6c41553`)
+
+> Доставлено 03-07-2026. Ниже — исходная спека, воплощённая как есть: пикер
+> «Прямые платежи преподавателю (зачёт)» в калькуляторе, `settledDirectReceiptIds()`
+> / `availableDirectReceipts()` в сервисе, снимок в `breakdown.direct_receipts`,
+> зачёт в валюте выплаты через курс. Тесты — `DirectTeacherReceiptTest` (8).
 
 Слои 1–3 дают: захват прямого платежа (дата/плательщик/валюта), исключение из выручки
 и `directReceiptsForTeacher()` — зачёт **виден** в сводке
