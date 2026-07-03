@@ -22,6 +22,11 @@ class TeacherPayout extends Model
         'paid_at',
         'settled_at',
         'settled_by',
+        // Зачтённая сумма аванса. Обязательно fillable: экшен «Зачесть аванс»
+        // (TeacherSalaries::recordPayoutAction) пишет её через ->update([...]).
+        // Без fillable mass-assignment молча её отбрасывал → settled_amount оставался
+        // 0 → зачтённый аванс не уменьшал баланс ЗП (money-core, #271).
+        'settled_amount',
         'period_month',
         'course_id',
         'salary_type',
