@@ -32,7 +32,12 @@ return [
     ],
 
     'tochka' => [
-        'url' => env('TOCHKA_API_URL', 'https://enter.tochka.com/uapi/acquiring/v1.0'),
+        // env('...', default) НЕ применяет default к пустой строке — а .env.example
+        // держит TOCHKA_API_URL= пустым. Пустой URL → scheme-less запрос → Guzzle
+        // RequestException «scheme "" is not allowed» (НЕ ConnectionException, ловля в
+        // PaymentController её не перехватывает) → 500 на всём checkout в CI (#271).
+        // ?: заставляет пустую строку тоже падать в дефолт. Домен публичный, не секрет.
+        'url' => env('TOCHKA_API_URL') ?: 'https://enter.tochka.com/uapi/acquiring/v1.0',
         'token' => env('TOCHKA_API_TOKEN'),
         'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
         // merchantId торговой точки (15 цифр). Обязателен, если у ИП > 1 retailer'а в Точке,
