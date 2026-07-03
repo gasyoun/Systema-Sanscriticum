@@ -127,4 +127,51 @@ class TeacherBlockPayoutTest extends TestCase
 
         $this->assertSame(12000.0, $this->service->blockGroupRevenue($course->id, 5, null));
     }
+
+    /** @test */
+    public function block_revenue_subtracts_refund_expense_rows(): void
+    {
+        // Регрессия (money-core, H071 #5): blockGroupRevenueDetail игнорировал
+        // возвраты (tariff='Расход', отрицательная сумма), т.к. фильтровал
+        // whereNotIn(NON_REVENUE_TARIFFS) + amount>0. Полностью возвращённый блок
+        // всё равно попадал в базу → преподавателю платили % с возвращённых денег.
+        $course = Course::factory()->create(['salary_type' => 'percent', 'salary_value' => 30]);
+        for ($n = 1; $n <= 3; $n++) {
+            CourseBlock::create(['course_id' => $course->id, 'number' => $n, 'is_active' => true]);
+        }
+
+        $u1 = User::factory()->create();
+        $u2 = User::factory()->create();
+
+        // Два платежа за блок 2 по 10000; u1 полностью возвращён (Расход −10000).
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => 10000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2]);
+        $this->pay($course, ['user_id' => $u2->id, 'amount' => 10000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2]);
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => -10000, 'tariff' => 'Расход', 'start_block' => 2, 'end_block' => 2]);
+
+        // База блока 2 = 20000 − 10000 = 10000, а не 20000.
+        $detail = $this->service->blockGroupRevenueDetail($course->id, 2, null);
+        $this->assertSame(10000.0, $detail['total']);
+
+        // Возврат виден отдельной строкой с отрицательной долей.
+        $returnLine = collect($detail['lines'])->firstWhere('is_return', true);
+        $this->assertNotNull($returnLine);
+        $this->assertSame(-10000.0, $returnLine['share']);
+    }
+
+    /** @test */
+    public function block_revenue_floors_at_zero_when_refunds_exceed_revenue(): void
+    {
+        // Возврат больше выручки блока не уводит базу в минус (иначе отрицательная
+        // выплата). База = max(0, нетто).
+        $course = Course::factory()->create(['salary_type' => 'percent', 'salary_value' => 30]);
+        for ($n = 1; $n <= 3; $n++) {
+            CourseBlock::create(['course_id' => $course->id, 'number' => $n, 'is_active' => true]);
+        }
+
+        $u1 = User::factory()->create();
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => 10000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2]);
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => -12000, 'tariff' => 'Расход', 'start_block' => 2, 'end_block' => 2]);
+
+        $this->assertSame(0.0, $this->service->blockGroupRevenue($course->id, 2, null));
+    }
 }

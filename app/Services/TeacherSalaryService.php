@@ -507,10 +507,54 @@ class TeacherSalaryService
                 'covered_blocks' => count($covered),
                 'share' => round($share, 2),
                 'created_at' => $p->created_at?->format('d.m.Y'),
+                'is_return' => false,
             ];
         }
 
-        return ['total' => round($total, 2), 'lines' => $lines];
+        // Возвраты (Расход) по этому блоку вычитаются из базы: иначе преподавателю
+        // платят % с уже возвращённых студенту денег (money-core H071 #5). Расход —
+        // отдельный tariff с отрицательной суммой; он несёт start_block/end_block
+        // возвращённой покупки, поэтому его доля раскладывается на те же блоки.
+        if ($opts['subtract_returns']) {
+            $returnQuery = Payment::query()
+                ->with('user:id,name')
+                ->where('course_id', $courseId)
+                ->paid()
+                ->real()
+                ->where('tariff', self::EXPENSE_TARIFF);
+
+            if ($groupId !== null) {
+                $returnQuery->whereIn('user_id', function ($q) use ($groupId) {
+                    $q->select('user_id')->from('group_user')->where('group_id', $groupId);
+                });
+            }
+
+            foreach ($returnQuery->get() as $p) {
+                $covered = $this->coveredBlockNumbers($p, $blockNumbers);
+                if (empty($covered) || ! in_array($blockNumber, $covered, true)) {
+                    continue;
+                }
+                $amount = (float) $p->amount; // отрицательная
+                $share = $amount / count($covered);
+                $total += $share;
+
+                $lines[] = [
+                    'payment_id' => $p->id,
+                    'user_id' => $p->user_id,
+                    'user_name' => $p->user?->name ?? ('#'.$p->user_id),
+                    'tariff' => $p->tariff,
+                    'label' => $p->operationLabel(),
+                    'amount' => round($amount, 2),
+                    'covered_blocks' => count($covered),
+                    'share' => round($share, 2),
+                    'created_at' => $p->created_at?->format('d.m.Y'),
+                    'is_return' => true,
+                ];
+            }
+        }
+
+        // База блока не может быть отрицательной (возвраты сверх выручки блока).
+        return ['total' => round(max(0.0, $total), 2), 'lines' => $lines];
     }
 
     /**
