@@ -186,4 +186,59 @@ class DirectTeacherReceiptTest extends TestCase
 
         $this->assertNull($p->fresh()->received_by_teacher_id);
     }
+
+    /** @test */
+    public function available_direct_receipts_exclude_mismatch_and_already_settled(): void
+    {
+        [$teacher, $course] = $this->percentTeacher(60, 'EUR');
+        $u1 = User::factory()->create();
+        $u2 = User::factory()->create();
+
+        // EUR (валюта выплаты) — кандидат к зачёту.
+        $eur = $this->pay($course, [
+            'user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'full',
+            'received_account' => Payment::RECEIVED_TEACHER, 'received_by_teacher_id' => $teacher->id,
+            'foreign_amount' => 60, 'foreign_currency' => 'EUR',
+        ]);
+        // USD (чужая валюта) — mismatch, в кандидаты не идёт.
+        $this->pay($course, [
+            'user_id' => $u2->id, 'amount' => 6000, 'tariff' => 'full',
+            'received_account' => Payment::RECEIVED_TEACHER, 'received_by_teacher_id' => $teacher->id,
+            'foreign_amount' => 70, 'foreign_currency' => 'USD',
+        ]);
+
+        $available = $this->service->availableDirectReceipts($teacher);
+        $this->assertCount(1, $available);
+        $this->assertSame($eur->id, $available[0]['payment_id']);
+    }
+
+    /** @test */
+    public function settled_receipt_is_not_offered_twice_and_is_freed_when_payout_deleted(): void
+    {
+        [$teacher, $course] = $this->percentTeacher(60, 'EUR');
+        $u1 = User::factory()->create();
+
+        $p = $this->pay($course, [
+            'user_id' => $u1->id, 'amount' => 5000, 'tariff' => 'full',
+            'received_account' => Payment::RECEIVED_TEACHER, 'received_by_teacher_id' => $teacher->id,
+            'foreign_amount' => 60, 'foreign_currency' => 'EUR',
+        ]);
+
+        // До зачёта — доступен.
+        $this->assertCount(1, $this->service->availableDirectReceipts($teacher));
+
+        // Выплата зачла его: снимок в breakdown.direct_receipts (источник «уже зачтено»).
+        $payout = $teacher->payouts()->create([
+            'amount' => 1000,
+            'paid_at' => now()->toDateString(),
+            'breakdown' => ['direct_receipts' => [['payment_id' => $p->id, 'amount' => 60.0, 'currency' => 'EUR']]],
+        ]);
+
+        $this->assertArrayHasKey($p->id, $this->service->settledDirectReceiptIds($teacher));
+        $this->assertCount(0, $this->service->availableDirectReceipts($teacher));
+
+        // Удаление выплаты возвращает платёж в пул (снимок исчезает вместе с payout).
+        $payout->delete();
+        $this->assertCount(1, $this->service->availableDirectReceipts($teacher));
+    }
 }
