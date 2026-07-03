@@ -44,6 +44,32 @@ class CuratorNotifier
         $this->dispatchToCurators($this->join($lines));
     }
 
+    /**
+     * Новая заявка на оплату через PayPal (оплата из-за рубежа). Требует ручной
+     * сверки в PayPal — доступ откроется после перевода платежа в paid в админке.
+     */
+    public function paypalClaimReceived(Payment $payment): void
+    {
+        $lines = [
+            '🌍 <b>Заявка на оплату через PayPal</b> — нужна сверка',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if (! empty($payment->payer_note)) {
+            $lines[] = 'Примечание: '.e($payment->payer_note);
+        }
+        if (! empty($payment->proof_path)) {
+            $lines[] = '📎 Приложен файл подтверждения';
+        }
+        $lines[] = $this->adminLink($payment->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
     public function depositReceived(Payment $payment): void
     {
         $lines = [

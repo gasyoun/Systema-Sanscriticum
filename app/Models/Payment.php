@@ -29,6 +29,9 @@ class Payment extends Model
         'deposit_consumed_at',
         'status',
         'transaction_id',
+        // --- Полу-интегрированная валютная оплата (PayPal-заявка студента) ---
+        'provider',
+        'proof_path',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
         'start_block',
         'end_block',
@@ -50,6 +53,13 @@ class Payment extends Model
 
     /** Деньги пришли напрямую на личный счёт преподавателя (минуя кассу школы). */
     public const RECEIVED_TEACHER = 'teacher_personal';
+
+    /**
+     * Платёжный источник: валютная заявка студента через PayPal (оплата из-за
+     * рубежа), сверяется вручную. null = касса/Точка (дефолт). Отличает
+     * pending-заявку PayPal от pending-платежа Точки в фильтрах админки.
+     */
+    public const PROVIDER_PAYPAL = 'paypal';
 
     protected $casts = [
         'is_conditional' => 'boolean',
@@ -110,6 +120,12 @@ class Payment extends Model
     public function isTrial(): bool
     {
         return $this->tariff === 'trial';
+    }
+
+    /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
+    public function isPaypal(): bool
+    {
+        return $this->provider === self::PROVIDER_PAYPAL;
     }
 
     /**
@@ -249,6 +265,12 @@ class Payment extends Model
     public function scopePaid(Builder $query): Builder
     {
         return $query->whereIn('status', self::PAID_STATUSES);
+    }
+
+    /** Неподтверждённые PayPal-заявки, ожидающие ручной сверки в админке. */
+    public function scopePaypalPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_PAYPAL)->where('status', 'pending');
     }
 
     /** Цвет Filament-бейджа статуса — единая точка вместо дублей match по вьюхам. */

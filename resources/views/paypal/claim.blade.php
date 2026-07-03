@@ -1,0 +1,136 @@
+@extends('layouts.shop')
+@section('title', 'Оплата через PayPal')
+
+@section('content')
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 md:py-16 font-sans antialiased">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="mb-8">
+            <a href="{{ route('checkout.show', $tariff) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition mb-4">
+                <i class="fas fa-arrow-left mr-2 text-xs"></i> Назад к оформлению
+            </a>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оплата через PayPal</h1>
+            <p class="mt-2 text-base text-gray-500">
+                Для оплаты из-за рубежа: переведите оплату на наш PayPal и сообщите об этом ниже.
+                Доступ откроется после сверки платежа.
+            </p>
+        </div>
+
+        @if(session('success'))
+            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-2xl p-4 text-sm font-medium flex items-start gap-2">
+                <i class="fas fa-check-circle mt-0.5"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-medium">
+                <div class="flex items-start gap-2">
+                    <i class="fas fa-exclamation-circle mt-0.5"></i>
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
+        {{-- Шаг 1: куда платить --}}
+        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100 mb-6">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">1</span>
+                <h4 class="text-base font-extrabold text-gray-900">Оплатите через PayPal</h4>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
+                Ориентировочная стоимость — <span class="font-bold text-gray-900">{{ number_format($price, 0, '.', ' ') }} ₽</span>
+                (уточните текущий курс валют перед переводом).
+            </p>
+            @if($meLink)
+                <a href="{{ $meLink }}" target="_blank" rel="noopener"
+                   class="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0070BA] hover:bg-[#005ea6] text-white font-bold text-sm transition">
+                    <i class="fab fa-paypal"></i> Перейти к оплате на PayPal
+                </a>
+            @endif
+            @if($recipient)
+                <p class="mt-3 text-xs text-gray-500">Получатель PayPal: <span class="font-semibold text-gray-700">{{ $recipient }}</span></p>
+            @endif
+        </div>
+
+        {{-- Шаг 2: сообщить об оплате --}}
+        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
+            <div class="flex items-center gap-3 mb-5">
+                <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">2</span>
+                <h4 class="text-base font-extrabold text-gray-900">Сообщите нам об оплате</h4>
+            </div>
+
+            <form action="{{ route('paypal.claim.store', $tariff) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                @csrf
+
+                @guest
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Имя <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" required maxlength="255" value="{{ old('name') }}"
+                                   placeholder="Как к вам обращаться"
+                                   class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                            <input type="email" name="email" required maxlength="255" value="{{ old('email') }}"
+                                   placeholder="you@example.com"
+                                   class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500">После сверки мы пришлём пароль на email — войдёте в личный кабинет.</p>
+                @endguest
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Сколько заплатили <span class="text-red-500">*</span></label>
+                        <input type="number" name="foreign_amount" required min="1" step="0.01" value="{{ old('foreign_amount') }}"
+                               placeholder="Напр. 50"
+                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Валюта <span class="text-red-500">*</span></label>
+                        <select name="foreign_currency" required
+                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                            <option value="USD" @selected(old('foreign_currency') === 'USD')>Доллары (USD, $)</option>
+                            <option value="EUR" @selected(old('foreign_currency') === 'EUR')>Евро (EUR, €)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Номер транзакции PayPal</label>
+                    <input type="text" name="paypal_txn" maxlength="255" value="{{ old('paypal_txn') }}"
+                           placeholder="Напр. 1AB23456CD789012E"
+                           class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                    <p class="mt-1 text-xs text-gray-500">Укажите номер транзакции <b>или</b> приложите скриншот/чек ниже — достаточно одного.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Скриншот / чек оплаты</label>
+                    <input type="file" name="proof" accept=".jpg,.jpeg,.png,.pdf"
+                           class="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition">
+                    <p class="mt-1 text-xs text-gray-500">JPG, PNG или PDF, до 5 МБ.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Комментарий</label>
+                    <textarea name="comment" rows="3" maxlength="1000"
+                              placeholder="Что-то важное для нас (необязательно)"
+                              class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">{{ old('comment') }}</textarea>
+                </div>
+
+                <button type="submit"
+                        class="w-full flex justify-center items-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-indigo-200">
+                    <i class="fas fa-paper-plane mr-2"></i> Отправить уведомление об оплате
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
