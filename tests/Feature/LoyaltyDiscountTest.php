@@ -164,6 +164,36 @@ class LoyaltyDiscountTest extends TestCase
     }
 
     /** @test */
+    public function conditional_and_zero_amount_payments_do_not_count_toward_loyalty(): void
+    {
+        // Регрессия (money-core, H071 #7 / audit #8+#13): conditional-доступ «под
+        // обещание» (amount=0, is_conditional) и любой 0₽-заказ (100%-промо) —
+        // не покупка. Раньше они проходили все фильтры и фиктивно набирали порог
+        // оптовой скидки.
+        $this->loyalty(true);
+        $user = User::factory()->create();
+
+        // 1 настоящий курс (ниже small-порога 2) + 2 conditional/0₽ на разных
+        // курсах. Если бы они считались, счёт = 3 и появилась бы скидка.
+        $this->payCourses($user, 1, 'full');
+
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => Course::factory()->create()->id,
+            'amount' => 0, 'tariff' => 'full', 'status' => 'paid', 'is_conditional' => true,
+        ]);
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => Course::factory()->create()->id,
+            'amount' => 0, 'tariff' => 'block_1', 'status' => 'paid',
+        ]);
+
+        $this->assertSame(0, $this->percentFor($user));
+
+        // Настоящая платная покупка второго курса добирает порог — скидка есть.
+        $this->payCourses($user, 1, 'full');
+        $this->assertSame(10, $this->percentFor($user));
+    }
+
+    /** @test */
     public function discount_is_ignored_for_payments_older_than_a_year(): void
     {
         // Порог окна лояльности — последний год: оплаты старше года не считаются.

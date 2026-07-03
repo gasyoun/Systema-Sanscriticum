@@ -87,8 +87,14 @@ class Tariff extends Model
         // ЖЕЛЕЗОБЕТОННЫЙ ПОДСЧЕТ УНИКАЛЬНЫХ КУРСОВ (pluck + unique)
         // Депозит (бронь), пробное, расходы и выплаты ЗП не считаются «купленным
         // курсом» для лояльности — иначе они фиктивно увеличивали бы скидку.
+        // real() + amount>0: conditional-доступ «под обещание» (amount=0,
+        // is_conditional) и любые 0₽-заказы (100%-промо) — не покупка и НЕ должны
+        // повышать оптовую скидку (см. ShopController/CourseCatalog, где такой же
+        // ->real() уже стоит).
         $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
             ->paid()
+            ->real()
+            ->where('amount', '>', 0)
             ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout'])
             ->where('created_at', '>=', now()->subYear()) // За последний год
             ->whereNotNull('course_id') // Исключаем системные платежи без курса
