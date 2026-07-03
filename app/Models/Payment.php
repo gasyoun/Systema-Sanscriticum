@@ -37,9 +37,19 @@ class Payment extends Model
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
         'linked_promise_id',
+        // --- Прямой платёж на личный счёт преподавателя (минуя кассу школы) ---
+        'received_account',
+        'received_by_teacher_id',
+        'payer_note',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
     ];
+
+    /** Деньги пришли в кассу школы (обычный платёж). */
+    public const RECEIVED_SCHOOL = 'school';
+
+    /** Деньги пришли напрямую на личный счёт преподавателя (минуя кассу школы). */
+    public const RECEIVED_TEACHER = 'teacher_personal';
 
     protected $casts = [
         'is_conditional' => 'boolean',
@@ -77,6 +87,18 @@ class Payment extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    /** Преподаватель, получивший этот платёж напрямую на личный счёт (для teacher_personal). */
+    public function receivedByTeacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'received_by_teacher_id');
+    }
+
+    /** Платёж пришёл напрямую на личный счёт преподавателя (не в кассу школы). */
+    public function isTeacherReceived(): bool
+    {
+        return $this->received_account === self::RECEIVED_TEACHER;
     }
 
     public function isDeposit(): bool
@@ -263,6 +285,23 @@ class Payment extends Model
     }
 
     /**
+     * Платежи, пришедшие в кассу школы. Единственные, что образуют ВЫРУЧКУ курса
+     * для начисления ЗП. Прямые платежи на личный счёт преподавателя исключены
+     * (иначе двойной счёт — он уже держит всю сумму). NB: доступ и отчёт должников
+     * этим НЕ ограничиваются — там учитываются все оплаченные платежи.
+     */
+    public function scopeSchoolReceived(Builder $query): Builder
+    {
+        return $query->where('received_account', self::RECEIVED_SCHOOL);
+    }
+
+    /** Прямые платежи на личный счёт преподавателя — источник авто-зачёта в гонорар. */
+    public function scopeTeacherReceived(Builder $query): Builder
+    {
+        return $query->where('received_account', self::RECEIVED_TEACHER);
+    }
+
+    /**
      * Реально оплаченные и ещё не зачтённые в стоимость тарифа суммы: и депозиты
      * (бронь), и пробные занятия — обе засчитываются при последующей покупке курса.
      */
@@ -279,6 +318,23 @@ class Payment extends Model
     // ==========================================
     protected static function booted()
     {
+        // 0. Инвариант прямого платежа: teacher_personal обязан называть
+        // преподавателя-получателя; для кассы школы поле-получатель чистим.
+        // Совпадение валюты (foreign_currency == payout_currency преподавателя)
+        // проверяет форма — на уровне модели её знать не обязаны.
+        static::saving(function (Payment $payment): void {
+            if ($payment->received_account === self::RECEIVED_TEACHER) {
+                if (empty($payment->received_by_teacher_id)) {
+                    throw new \InvalidArgumentException(
+                        'Прямой платёж на личный счёт преподавателя требует указания преподавателя-получателя (received_by_teacher_id).'
+                    );
+                }
+            } else {
+                $payment->received_account = self::RECEIVED_SCHOOL;
+                $payment->received_by_teacher_id = null;
+            }
+        });
+
         // 1. Срабатывает при СОЗДАНИИ нового платежа
         static::created(function (Payment $payment) {
             // Ловим и 'success', и 'paid' (в зависимости от того, как сохраняет админка)
