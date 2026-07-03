@@ -173,7 +173,7 @@ class Tariff extends Model
      *  - зачёт при докупке: сумма уже оплаченного за то, что этот тариф «содержит»
      *    (половины блока → при покупке целого блока; блоки → при покупке full).
      */
-    public function calculateFinalPriceForUser($user): float
+    public function calculateFinalPriceForUser($user, bool $includePrepaid = true): float
     {
         if (! $user) {
             return (float) $this->price;
@@ -199,7 +199,9 @@ class Tariff extends Model
         // 2. Зачёт неизрасходованной предоплаты (бронь курса / пробное занятие).
         //    max(0, ...) в конце страхует от отрицательной цены, если предоплата
         //    превышает стоимость блока.
-        $finalPrice -= $this->prepaidCreditForUser($user);
+        if ($includePrepaid) {
+            $finalPrice -= $this->prepaidCreditForUser($user);
+        }
 
         // 3. ЗАЧЁТ ПРИ ДОКУПКЕ: вычитаем уже оплаченное за то, что этот тариф «содержит».
         $finalPrice -= $this->upgradeCreditForUser($user);

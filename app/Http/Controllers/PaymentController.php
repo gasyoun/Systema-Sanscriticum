@@ -46,16 +46,25 @@ class PaymentController extends Controller
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
         $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana, $user, $tariff) {
+            if ($tariff->course_id) {
+                Payment::releaseStalePrepaidReservations($user->id, (int) $tariff->course_id);
+            }
 
             // 1. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
-            $finalPrice = $tariff->calculateFinalPriceForUser($user);
+            $finalPrice = $tariff->calculateFinalPriceForUser($user, includePrepaid: false);
 
             // Фиксируем скидку (персональная/лояльность) для пометки в админке и
             // выгрузке в Google Sheet. fixed-скидка пишет только рубли, percent —
             // и процент, и рублёвый эквивалент. Промокод/прана — отдельно.
             $discount = $tariff->discountInfoForUser($user);
 
-            // 2. Применяем промокод
+            // 2. Резервируем предоплату (deposit/trial) под конкретный pending-платёж.
+            // Без резерва две вкладки могли создать два платёжных линка с одним и тем же
+            // кредитом, а вебхук потом оплачивал оба.
+            [$prepaidIds, $prepaidCredit] = $this->reservePrepaidCredits($user, $tariff, $finalPrice);
+            $finalPrice = max(0, $finalPrice - $prepaidCredit);
+
+            // 3. Применяем промокод
             $promo = null;
             if (session()->has('promo_code')) {
                 $promo = PromoCode::where('code', session('promo_code'))
@@ -152,11 +161,22 @@ class PaymentController extends Controller
                 'discount_amount' => $discount['amount'] > 0 ? $discount['amount'] : null,
                 'prana_spent' => $pranaToSpend,
                 'referral_credit_applied' => $referralCreditApplied > 0 ? $referralCreditApplied : null,
+                'prepaid_credit_payment_ids' => ! empty($prepaidIds) ? $prepaidIds : null,
+                'prepaid_credit_amount' => $prepaidCredit > 0 ? $prepaidCredit : null,
                 'tariff' => $tariffKey,
                 'status' => 'pending',
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
             ]);
+
+            if (! empty($prepaidIds)) {
+                Payment::query()
+                    ->whereIn('id', $prepaidIds)
+                    ->update([
+                        'prepaid_reserved_by_payment_id' => $payment->id,
+                        'prepaid_reserved_at' => now(),
+                    ]);
+            }
 
             // Списываем реферальный кредит ровно сейчас, в той же транзакции (как прану).
             if ($referralCreditApplied > 0) {
@@ -288,6 +308,47 @@ class PaymentController extends Controller
         auth()->login($user);
 
         return $user;
+    }
+
+    /**
+     * @return array{0: list<int>, 1: float}
+     */
+    private function reservePrepaidCredits(User $user, Tariff $tariff, float $price): array
+    {
+        if (! $tariff->course_id || $price <= 0) {
+            return [[], 0.0];
+        }
+
+        $remaining = round($price, 2);
+        $ids = [];
+        $credit = 0.0;
+
+        $credits = Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $tariff->course_id)
+            ->unconsumedDeposits()
+            ->lockForUpdate()
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get(['id', 'amount']);
+
+        foreach ($credits as $payment) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $amount = round((float) $payment->amount, 2);
+            if ($amount <= 0) {
+                continue;
+            }
+
+            $ids[] = (int) $payment->id;
+            $applied = min($amount, $remaining);
+            $credit += $applied;
+            $remaining -= $applied;
+        }
+
+        return [$ids, round($credit, 2)];
     }
 
     public function success(Request $request)

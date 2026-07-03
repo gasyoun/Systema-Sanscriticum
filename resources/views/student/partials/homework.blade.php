@@ -3,8 +3,12 @@
     $hwEditable = ! $homeworkSubmission || $homeworkSubmission->isEditableByStudent();
     $hwBadge = match($hwStatus) {
         'submitted' => ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке'],
+        'under_review' => ['bg-amber-50 text-amber-700 border-amber-200', 'fa-eye', 'Проверяется'],
+        'needs_changes' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку'],
         'needs_revision' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку'],
         'accepted' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'fa-circle-check', 'Принято'],
+        'late' => ['bg-red-50 text-red-700 border-red-200', 'fa-clock', 'Просрочено'],
+        'locked' => ['bg-gray-100 text-gray-700 border-gray-200', 'fa-lock', 'Закрыто'],
         'draft' => ['bg-gray-100 text-gray-600 border-gray-200', 'fa-pen', 'Черновик'],
         default => null,
     };
@@ -113,7 +117,7 @@
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
                   x-data="{ files: [] }">
                 @csrf
-                @if($hwStatus === 'needs_revision')
+                @if(in_array($hwStatus, ['needs_changes', 'needs_revision', 'late'], true))
                     <p class="text-sm text-red-600 font-semibold mb-3"><i class="fas fa-rotate-left mr-1.5"></i>Преподаватель вернул работу — внесите правки и отправьте снова.</p>
                 @endif
 
@@ -157,10 +161,20 @@
                 <i class="fas fa-hourglass-half text-blue-500 shrink-0"></i>
                 <p class="text-[13px] text-blue-800"><span class="font-bold">Работа на проверке.</span> Сообщим на почту, когда появится результат.</p>
             </div>
+        @elseif($hwStatus === 'under_review')
+            <div class="flex items-center gap-3 rounded-xl bg-amber-50/70 border border-amber-100 px-4 py-3">
+                <i class="fas fa-eye text-amber-500 shrink-0"></i>
+                <p class="text-[13px] text-amber-800"><span class="font-bold">Преподаватель проверяет работу.</span> Скоро появится результат.</p>
+            </div>
         @elseif($hwStatus === 'accepted')
             <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
                 <i class="fas fa-circle-check text-emerald-500 shrink-0"></i>
-                <p class="text-[13px] text-emerald-800"><span class="font-bold">Работа принята.</span> Поздравляем! 🎉</p>
+                <p class="text-[13px] text-emerald-800"><span class="font-bold">Работа принята.</span> @if($homeworkSubmission?->gradeLabel()) Оценка: {{ $homeworkSubmission->gradeLabel() }}. @endif Поздравляем! 🎉</p>
+            </div>
+        @elseif($hwStatus === 'locked')
+            <div class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+                <i class="fas fa-lock text-gray-500 shrink-0"></i>
+                <p class="text-[13px] text-gray-700"><span class="font-bold">Сдача закрыта.</span> Если нужен дополнительный срок, обратитесь к преподавателю.</p>
             </div>
         @endif
 

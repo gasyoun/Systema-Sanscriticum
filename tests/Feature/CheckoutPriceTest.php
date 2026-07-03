@@ -110,4 +110,91 @@ class CheckoutPriceTest extends TestCase
         $payment->update(['status' => 'paid']);
         $this->assertSame(1, $promo->fresh()->used_count);
     }
+
+    /** @test */
+    public function prepaid_credit_is_reserved_for_one_pending_checkout_only(): void
+    {
+        $user = User::factory()->create();
+        $tariff = $this->tariff(5000);
+
+        $deposit = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $first = Payment::query()->where('tariff', 'full')->latest('id')->firstOrFail();
+        $this->assertEquals(4000, (float) $first->amount);
+        $this->assertSame([$deposit->id], $first->prepaid_credit_payment_ids);
+        $this->assertSame($first->id, $deposit->fresh()->prepaid_reserved_by_payment_id);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $second = Payment::query()->where('tariff', 'full')->latest('id')->firstOrFail();
+        $this->assertEquals(5000, (float) $second->amount);
+        $this->assertNull($second->prepaid_credit_payment_ids);
+
+        $first->update(['status' => 'paid']);
+        $this->assertNotNull($deposit->fresh()->deposit_consumed_at);
+    }
+
+    /** @test */
+    public function failed_pending_payment_releases_prepaid_reservation(): void
+    {
+        $user = User::factory()->create();
+        $tariff = $this->tariff(5000);
+
+        $deposit = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $payment = Payment::query()->where('tariff', 'full')->latest('id')->firstOrFail();
+        $this->assertSame($payment->id, $deposit->fresh()->prepaid_reserved_by_payment_id);
+
+        $payment->update(['status' => 'failed']);
+        $this->assertNull($deposit->fresh()->prepaid_reserved_by_payment_id);
+    }
+
+    /** @test */
+    public function stale_prepaid_reservation_is_released_and_old_payment_becomes_invalid(): void
+    {
+        $user = User::factory()->create();
+        $tariff = $this->tariff(5000);
+
+        $deposit = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $old = Payment::query()->where('tariff', 'full')->latest('id')->firstOrFail();
+        $old->updateQuietly(['created_at' => now()->subMinutes(31)]);
+
+        Payment::releaseStalePrepaidReservations($user->id, $tariff->course_id);
+
+        $this->assertNull($deposit->fresh()->prepaid_reserved_by_payment_id);
+        $this->assertFalse($old->fresh()->hasValidPrepaidReservations());
+    }
 }

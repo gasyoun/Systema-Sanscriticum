@@ -24,10 +24,12 @@ class PasswordResetMail extends Mailable implements ShouldQueue
     {
         $this->user = $user;
         $this->token = $token;
-        $this->resetUrl = route('password.reset', [
+        $relativeResetUrl = route('password.reset', [
             'token' => $token,
             'email' => $user->email,
-        ]);
+        ], false);
+
+        $this->resetUrl = rtrim((string) config('app.url'), '/').$relativeResetUrl;
         $this->onQueue('mailing');
     }
 

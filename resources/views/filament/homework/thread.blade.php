@@ -27,6 +27,9 @@
             @if($c->body)
                 <p class="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-line leading-relaxed">{{ $c->body }}</p>
             @endif
+            @if($c->new_status === \App\Models\HomeworkSubmission::STATUS_ACCEPTED && $submission->gradeLabel())
+                <p class="mt-2 text-sm font-bold text-success-700 dark:text-success-300">Оценка: {{ $submission->gradeLabel() }}</p>
+            @endif
 
             @if($c->files->isNotEmpty())
                 <div class="mt-2.5 flex flex-wrap gap-2">

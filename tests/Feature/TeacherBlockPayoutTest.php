@@ -174,4 +174,79 @@ class TeacherBlockPayoutTest extends TestCase
 
         $this->assertSame(0.0, $this->service->blockGroupRevenue($course->id, 2, null));
     }
+
+    /** @test */
+    public function block_revenue_excludes_shares_already_paid_to_teacher(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create(['teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30]);
+        CourseBlock::create(['course_id' => $course->id, 'number' => 2, 'is_active' => true]);
+
+        $user = User::factory()->create();
+        Payment::withoutEvents(function () use ($course, $user, &$payment) {
+            $payment = Payment::create([
+                'course_id' => $course->id,
+                'user_id' => $user->id,
+                'amount' => 10000,
+                'tariff' => 'block_2',
+                'start_block' => 2,
+                'end_block' => 2,
+                'status' => 'paid',
+            ]);
+        });
+
+        $teacher->payouts()->create([
+            'amount' => 3000,
+            'paid_at' => now()->toDateString(),
+            'breakdown' => [
+                'course_id' => $course->id,
+                'block_number' => 2,
+                'payments' => [['payment_id' => $payment->id]],
+            ],
+        ]);
+
+        $detail = $this->service->blockGroupRevenueDetail($course->id, 2, null, ['teacher_id' => $teacher->id]);
+
+        $this->assertSame(0.0, $detail['total']);
+        $this->assertSame([], $detail['lines']);
+    }
+
+    /** @test */
+    public function prior_block_paid_share_is_excluded_from_later_block_base(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = Course::factory()->create(['teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30]);
+        foreach ([1, 2, 3] as $n) {
+            CourseBlock::create(['course_id' => $course->id, 'number' => $n, 'is_active' => true]);
+        }
+
+        $user = User::factory()->create();
+        Payment::withoutEvents(function () use ($course, $user, &$payment) {
+            $payment = Payment::create([
+                'course_id' => $course->id,
+                'user_id' => $user->id,
+                'amount' => 30000,
+                'tariff' => 'full',
+                'status' => 'paid',
+            ]);
+        });
+
+        $teacher->payouts()->create([
+            'amount' => 3000,
+            'paid_at' => now()->toDateString(),
+            'breakdown' => [
+                'course_id' => $course->id,
+                'block_number' => 2,
+                'prior_blocks_paid' => [[
+                    'course_id' => $course->id,
+                    'block_number' => 3,
+                    'payment_id' => $payment->id,
+                ]],
+            ],
+        ]);
+
+        $detail = $this->service->blockGroupRevenueDetail($course->id, 3, null, ['teacher_id' => $teacher->id]);
+
+        $this->assertSame(0.0, $detail['total']);
+    }
 }

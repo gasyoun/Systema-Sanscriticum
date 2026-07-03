@@ -45,7 +45,7 @@ platform upgrade.
 - 🟠 ~15 CONFIRMED money/access defects from the 02-07 adversarial review
   ([H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071_systema_money_core_findings.md);
   #1 fixed in [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)).
-- 🟠 3 webhooks (Telegram-bot / VK-bot / Zoom) still **fail-open** pending a prod `.env` deploy step.
+- 🟠 Webhook secrets still need prod `.env` verification (Telegram-bot / VK-bot / Zoom), but code is fail-closed.
 - 🟡 **No PHP SAST** — CodeQL cannot analyze PHP, so the language the entire app is written
   in has no static security scanning; the only defense today is manual adversarial review.
 - 🟡 **Laravel 10.50.2** — security-EOL since ~Feb 2025 — on PHP 8.2.
@@ -81,16 +81,16 @@ Recorded from the 03-07-2026 interview (MG rulings):
   (rebase after the rewrite). → **[H080](#handoffs)**
 - [ ] **Audit the 23 tracked PNG screenshots** for embedded student PII; purge from history any
   that show real names/emails/payments; keep only synthetic-data shots. → **[H080](#handoffs)**
-- [ ] **Flip the 3 fail-open webhooks to fail-closed** — a prod deploy action (set
+- [ ] **Verify prod webhook secrets** — set
   `TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET` and register them
-  with each provider). Matrix:
+  with each provider before deploying fail-closed code. Matrix:
   [docs/webhook-security.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md).
   Already a GTD `@DO` — **MG action**.
 - [ ] **Add required-review branch protection on `main`** so money-core changes cannot merge
   without a review (codifies the "no auto-merge on money core" convention as a gate).
 
 **Exit criterion:** no personal data or secret is retrievable from the repo or its history;
-every inbound webhook is authenticated fail-closed; secret pushes are blocked at the gate.
+every inbound webhook has a configured prod secret and authenticates fail-closed; secret pushes are blocked at the gate.
 
 ---
 

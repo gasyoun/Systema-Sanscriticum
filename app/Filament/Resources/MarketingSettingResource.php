@@ -123,6 +123,32 @@ class MarketingSettingResource extends Resource
                             ->default(30)
                             ->helperText('Через сколько минут после конца занятия слать «вы пропустили» (0–1440).'),
 
+                        Forms\Components\Toggle::make('homework_notifications_enabled')
+                            ->label('Уведомления по домашним заданиям')
+                            ->helperText('Сдача, проверка, дедлайны и закрытие работ (homework:notify-deadlines + события проверки).')
+                            ->default(true)
+                            ->live(),
+                        Forms\Components\TextInput::make('homework_telegram_chat_id')
+                            ->label('Telegram-чат ДЗ')
+                            ->placeholder('-100...')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\TextInput::make('homework_vk_peer_id')
+                            ->label('VK peer_id для ДЗ')
+                            ->placeholder('2000000001')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_opened')->label('ДЗ открыто')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_deadline_near')->label('Дедлайн близко')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_submitted')->label('Студент сдал работу')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_returned')->label('Работа возвращена')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_accepted')->label('Работа принята с оценкой')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+                        Forms\Components\Toggle::make('homework_notify_locked')->label('Сдача закрыта')->default(true)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_notifications_enabled')),
+
                         Forms\Components\Toggle::make('debt_reminders_enabled')
                             ->label('Напоминания должникам')
                             ->helperText('Авто-рассылка должникам (просрочка / не продлил / блок скоро начнётся) по TG/VK/email. Каждому — не чаще раза в N дней. Выключено — не шлём.')

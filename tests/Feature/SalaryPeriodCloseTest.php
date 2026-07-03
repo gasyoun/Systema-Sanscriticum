@@ -48,6 +48,18 @@ class SalaryPeriodCloseTest extends TestCase
         });
     }
 
+    private function payBlock5At(Course $course, float $amount, string $createdAt): void
+    {
+        $u = User::factory()->create();
+        Payment::withoutEvents(function () use ($course, $u, $amount, $createdAt) {
+            Payment::create([
+                'user_id' => $u->id, 'course_id' => $course->id, 'amount' => $amount,
+                'tariff' => 'block_5', 'start_block' => 5, 'end_block' => 5,
+                'status' => 'paid', 'created_at' => $createdAt,
+            ]);
+        });
+    }
+
     private function close(Teacher $teacher, string $month): void
     {
         SalaryClosedPeriod::create([
@@ -87,6 +99,20 @@ class SalaryPeriodCloseTest extends TestCase
         $this->assertSame(200.0, $this->earnedInMonth($teacher->id, '2026-07'));
 
         // Итог за всё время не меняется.
+        $this->assertSame(200.0, app(TeacherSalaryService::class)->totalForTeacher(Teacher::with('courses')->find($teacher->id)));
+    }
+
+    /** @test */
+    public function payment_created_before_close_stays_in_the_closed_month(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $course = $this->percentCourseWithBlock5($teacher);
+        $this->payBlock5At($course, 2000, '2026-05-20 10:00:00'); // 10% = 200
+
+        $this->close($teacher, '2026-05');
+
+        $this->assertSame(200.0, $this->earnedInMonth($teacher->id, '2026-05'));
+        $this->assertSame(0.0, $this->earnedInMonth($teacher->id, '2026-06'));
         $this->assertSame(200.0, app(TeacherSalaryService::class)->totalForTeacher(Teacher::with('courses')->find($teacher->id)));
     }
 

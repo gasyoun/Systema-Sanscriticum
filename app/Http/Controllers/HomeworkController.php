@@ -8,6 +8,7 @@ use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
+use App\Services\HomeworkDeadlineService;
 use App\Services\HomeworkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +16,10 @@ use Illuminate\Support\Str;
 
 class HomeworkController extends Controller
 {
-    public function __construct(private HomeworkService $service) {}
+    public function __construct(
+        private HomeworkService $service,
+        private HomeworkDeadlineService $deadlines,
+    ) {}
 
     /**
      * Студент сохраняет черновик или отправляет домашнюю работу на проверку.
@@ -47,6 +51,10 @@ class HomeworkController extends Controller
 
         if ($existing && ! $existing->isEditableByStudent()) {
             return back()->with('error', 'Работа уже на проверке или принята — изменения недоступны.');
+        }
+
+        if ($reason = $this->deadlines->rejectReasonForSubmit($user, $lesson, $existing)) {
+            return back()->with('error', $reason);
         }
 
         $uploaded = $request->file('files', []);

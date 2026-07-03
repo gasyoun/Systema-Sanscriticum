@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\HomeworkSubmissionResource\Pages\ListHomeworkSubmissions;
 use App\Models\Course;
+use App\Models\HomeworkComment;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Teacher;
@@ -55,14 +57,56 @@ class HomeworkReviewQueueTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(ListHomeworkSubmissions::class)
-            ->callTableBulkAction('accept', [$submitted, $alreadyAccepted], data: ['body' => 'Отлично'])
+            ->callTableBulkAction('accept', [$submitted, $alreadyAccepted], data: ['body' => 'Отлично', 'grade' => HomeworkSubmission::GRADE_5])
             ->assertHasNoTableBulkActionErrors();
 
         $this->assertSame(HomeworkSubmission::STATUS_ACCEPTED, $submitted->fresh()->status);
+        $this->assertSame(HomeworkSubmission::GRADE_5, $submitted->fresh()->grade);
         $this->assertSame($admin->id, $submitted->fresh()->reviewed_by);
         // Запись комментария-вердикта создана только для реально обработанной работы.
         $this->assertSame(1, $submitted->fresh()->comments()->count());
         $this->assertSame(0, $alreadyAccepted->fresh()->comments()->count());
+    }
+
+    /** @test */
+    public function homework_resource_query_exposes_student_file_size_for_submission(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод', 'email' => 'teacher@example.test']);
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $course = Course::factory()->create(['teacher_id' => $teacher->id]);
+        $lesson = Lesson::factory()->for($course)->create();
+        $submission = $this->submission($course, $lesson);
+
+        $studentComment = $submission->comments()->create([
+            'author_id' => $submission->user_id,
+            'author_role' => HomeworkComment::ROLE_STUDENT,
+            'type' => HomeworkComment::TYPE_SUBMISSION,
+        ]);
+        $teacherComment = $submission->comments()->create([
+            'author_id' => $admin->id,
+            'author_role' => HomeworkComment::ROLE_TEACHER,
+            'type' => HomeworkComment::TYPE_REVIEW,
+        ]);
+        $studentComment->files()->create([
+            'disk' => 'local',
+            'path' => 'homework/a.pdf',
+            'original_name' => 'a.pdf',
+            'size' => 2048,
+        ]);
+        $teacherComment->files()->create([
+            'disk' => 'local',
+            'path' => 'homework/feedback.pdf',
+            'original_name' => 'feedback.pdf',
+            'size' => 4096,
+        ]);
+
+        $this->actingAs($admin);
+
+        $record = \App\Filament\Resources\HomeworkSubmissionResource::getEloquentQuery()->findOrFail($submission->id);
+
+        $this->assertSame(2048, $record->studentFilesBytes());
+        $this->assertSame(1, $record->studentFilesCount());
+        $this->assertSame('2 КБ', HomeworkFile::humanSizeFor($record->studentFilesBytes()));
     }
 
     /** @test */

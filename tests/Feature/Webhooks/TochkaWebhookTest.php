@@ -130,7 +130,7 @@ PEM;
             'status' => 'pending',
         ]);
 
-        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']);
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid', 'amount' => 4800]);
 
         // Первый вебхук: pending -> paid, доступ (группа) выдан.
         $this->postJwt($jwt)->assertOk();
@@ -141,5 +141,95 @@ PEM;
         $this->postJwt($jwt)->assertOk();
         $this->assertSame('paid', $payment->fresh()->status);
         $this->assertSame(1, $user->fresh()->groups()->count());
+    }
+
+    /** @test */
+    public function paid_webhook_without_amount_does_not_grant_access(): void
+    {
+        $this->useTestKey();
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::create(['name' => 'G']);
+        $course->groups()->attach($group->id);
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']))->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups->contains($group->id));
+    }
+
+    /** @test */
+    public function paid_webhook_with_mismatched_amount_does_not_grant_access(): void
+    {
+        $this->useTestKey();
+
+        $payment = Payment::create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'paid',
+            'amount' => 4700,
+        ]))->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+    }
+
+    /** @test */
+    public function authorization_hold_status_does_not_grant_access(): void
+    {
+        $this->useTestKey();
+
+        $payment = Payment::create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'authorized',
+            'amount' => 4800,
+        ]))->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+    }
+
+    /** @test */
+    public function captured_status_with_matching_amount_grants_access(): void
+    {
+        $this->useTestKey();
+
+        $payment = Payment::create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => Course::factory()->create()->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'captured',
+            'amount' => 4800,
+        ]))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
     }
 }

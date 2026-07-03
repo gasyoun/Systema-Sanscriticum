@@ -22,6 +22,12 @@
             (курс «{{ $submission->course->title ?? '—' }}»).
         </p>
 
+        @if($accepted && $submission->gradeLabel())
+        <p style="font-size: 18px; text-align: center; color: #27894a;">
+            Оценка: <strong>{{ $submission->gradeLabel() }}</strong>
+        </p>
+        @endif
+
         @if(!empty($review->body))
         <div style="background-color: #faf7f0; border-left: 4px solid {{ $accepted ? '#27894a' : '#d35400' }}; padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #95a5a6;">Комментарий преподавателя</p>

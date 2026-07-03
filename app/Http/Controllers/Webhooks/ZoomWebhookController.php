@@ -9,14 +9,15 @@ use App\Models\Schedule;
 use App\Services\Zoom\AttendanceRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Zoom Event Subscription webhook (посещаемость, #78).
  *
  * Обрабатывает:
- *  - `endpoint.url_validation` — челлендж при настройке эндпоинта (отдаём
- *    plainToken + его HMAC);
+ *  - `endpoint.url_validation` — челлендж при настройке эндпоинта, только
+ *    когда временно включён `services.zoom.url_validation_enabled`;
  *  - `meeting.participant_joined` / `meeting.participant_left` — посещаемость:
  *    резолвим занятие по occurrence uuid + времени (единый meeting_id курса),
  *    пишем строку в `webinar_attendances`.
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Log;
  * поэтому событие `recording.completed` здесь не трогаем.
  *
  * Подпись Zoom: `x-zm-signature: v0=<hmac_sha256("v0:{ts}:{body}", secret)>`.
- * При заданном секрете — fail-closed; пустой секрет (локалка) — пропускаем с логом.
+ * При заданном секрете — fail-closed; пустой секрет допускается только локально/в тестах.
  */
 class ZoomWebhookController extends Controller
 {
@@ -34,9 +35,13 @@ class ZoomWebhookController extends Controller
         $secret = (string) config('services.zoom.webhook_secret', '');
         $event = (string) $request->input('event', '');
 
-        // URL-валидация подписывается тем же секретом, но проверка подписи на ней
-        // не делается (Zoom шлёт её до того, как мы «доверены») — отвечаем челленджем.
         if ($event === 'endpoint.url_validation') {
+            if (! (bool) config('services.zoom.url_validation_enabled', false) || $secret === '') {
+                Log::warning('Zoom webhook: URL validation отключена или секрет не задан', ['ip' => $request->ip()]);
+
+                return response()->json(['message' => 'URL validation disabled'], 403);
+            }
+
             return $this->urlValidationResponse($request, $secret);
         }
 
@@ -65,19 +70,34 @@ class ZoomWebhookController extends Controller
     }
 
     /**
-     * Проверка `x-zm-signature`. Пустой секрет → пропускаем (enforce-if-configured).
+     * Проверка `x-zm-signature`.
      */
     private function signatureValid(Request $request, string $secret): bool
     {
         if ($secret === '') {
-            Log::warning('Zoom webhook: секрет не задан — подпись не проверяется');
+            if (app()->environment(['local', 'testing'])) {
+                Log::warning('Zoom webhook: секрет не задан — подпись не проверяется');
 
-            return true;
+                return true;
+            }
+
+            Log::warning('Zoom webhook: секрет не задан — запрос отклонён');
+
+            return false;
         }
 
         $timestamp = (string) $request->header('x-zm-request-timestamp', '');
         $signature = (string) $request->header('x-zm-signature', '');
         if ($timestamp === '' || $signature === '') {
+            return false;
+        }
+
+        if (! ctype_digit($timestamp)) {
+            return false;
+        }
+
+        $sentAt = Carbon::createFromTimestamp((int) $timestamp);
+        if ($sentAt->lt(now()->subMinutes(5)) || $sentAt->gt(now()->addMinutes(5))) {
             return false;
         }
 

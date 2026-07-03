@@ -19,6 +19,7 @@ class PasswordResetFlowTest extends TestCase
     public function test_forgot_password_sends_reset_mail_with_link(): void
     {
         Mail::fake();
+        config(['app.url' => 'https://academy.example.test']);
 
         $user = User::create([
             'name' => 'Тест Студент',
@@ -33,8 +34,30 @@ class PasswordResetFlowTest extends TestCase
 
         Mail::assertQueued(PasswordResetMail::class, function (PasswordResetMail $mail) use ($user) {
             return $mail->user->is($user)
+                && str_starts_with($mail->resetUrl, 'https://academy.example.test/reset-password/')
                 && str_contains($mail->resetUrl, '/reset-password/')
                 && str_contains($mail->resetUrl, urlencode($user->email));
+        });
+    }
+
+    public function test_forgot_password_reset_link_ignores_untrusted_host_header(): void
+    {
+        Mail::fake();
+        config(['app.url' => 'https://academy.example.test']);
+
+        $user = User::create([
+            'name' => 'Тест Студент',
+            'email' => 'host-reset@example.com',
+            'password' => Hash::make('oldpassword'),
+        ]);
+
+        $this->withServerVariables(['HTTP_HOST' => 'attacker.example'])
+            ->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHas('email_found', 'host-reset@example.com');
+
+        Mail::assertQueued(PasswordResetMail::class, function (PasswordResetMail $mail): bool {
+            return str_starts_with($mail->resetUrl, 'https://academy.example.test/reset-password/')
+                && ! str_contains($mail->resetUrl, 'attacker.example');
         });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\HomeworkSubmissionResource\Pages;
 
 use App\Filament\Resources\HomeworkSubmissionResource;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Services\HomeworkService;
 use Filament\Actions\Action;
@@ -33,16 +34,29 @@ class ViewHomeworkSubmission extends ViewRecord
                         ->badge()
                         ->formatStateUsing(fn (string $state): string => match ($state) {
                             HomeworkSubmission::STATUS_SUBMITTED => 'На проверке',
-                            HomeworkSubmission::STATUS_NEEDS_REVISION => 'На доработку',
+                            HomeworkSubmission::STATUS_UNDER_REVIEW => 'Проверяется',
+                            HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION => 'На доработку',
                             HomeworkSubmission::STATUS_ACCEPTED => 'Принято',
+                            HomeworkSubmission::STATUS_LATE => 'Просрочено',
+                            HomeworkSubmission::STATUS_LOCKED => 'Закрыто',
                             default => $state,
                         })
                         ->color(fn (string $state): string => match ($state) {
                             HomeworkSubmission::STATUS_SUBMITTED => 'info',
-                            HomeworkSubmission::STATUS_NEEDS_REVISION => 'danger',
+                            HomeworkSubmission::STATUS_UNDER_REVIEW => 'warning',
+                            HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION => 'danger',
                             HomeworkSubmission::STATUS_ACCEPTED => 'success',
+                            HomeworkSubmission::STATUS_LATE => 'danger',
+                            HomeworkSubmission::STATUS_LOCKED => 'gray',
                             default => 'gray',
                         }),
+                    TextEntry::make('grade')
+                        ->label('Оценка')
+                        ->formatStateUsing(fn (?string $state): string => $state ? (HomeworkSubmission::gradeOptions()[$state] ?? $state) : '—')
+                        ->placeholder('—'),
+                    TextEntry::make('student_files')
+                        ->label('Файлы студента')
+                        ->state(fn (HomeworkSubmission $record): string => $record->studentFilesCount().' · '.HomeworkFile::humanSizeFor($record->studentFilesBytes())),
                 ]),
 
             Section::make('Переписка и файлы')
@@ -56,6 +70,24 @@ class ViewHomeworkSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('startReview')
+                ->label('Начать проверку')
+                ->icon('heroicon-o-eye')
+                ->color('warning')
+                ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord())
+                    && $this->getRecord()->status === HomeworkSubmission::STATUS_SUBMITTED)
+                ->action(function (): void {
+                    $record = $this->getRecord();
+                    $record->update([
+                        'status' => HomeworkSubmission::STATUS_UNDER_REVIEW,
+                        'review_started_at' => now(),
+                        'last_activity_at' => now(),
+                    ]);
+
+                    Notification::make()->success()->title('Проверка начата')->send();
+                    $this->redirect(HomeworkSubmissionResource::getUrl('view', ['record' => $record]));
+                }),
+
             Action::make('accept')
                 ->label('Принять')
                 ->icon('heroicon-o-check-circle')
@@ -73,10 +105,10 @@ class ViewHomeworkSubmission extends ViewRecord
                 ->color('danger')
                 ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
                 ->form([
-                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_NEEDS_REVISION, bodyRequired: true),
+                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_NEEDS_CHANGES, bodyRequired: true),
                     $this->feedbackFilesField(),
                 ])
-                ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_NEEDS_REVISION, $data)),
+                ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_NEEDS_CHANGES, $data)),
         ];
     }
 
@@ -114,6 +146,7 @@ class ViewHomeworkSubmission extends ViewRecord
             $status,
             $data['body'] ?? null,
             $files,
+            $data['grade'] ?? null,
         );
 
         Notification::make()

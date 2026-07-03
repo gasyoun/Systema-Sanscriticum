@@ -153,9 +153,12 @@ return [
         'client_secret' => env('ZOOM_CLIENT_SECRET'),
         'timeout' => (int) env('ZOOM_TIMEOUT', 30),
         // Secret Token из настроек Event Subscriptions приложения. Подписывает
-        // вебхуки (`recording.completed`) и проверку URL. Пусто → проверка
-        // подписи выключена (только для локалки; на проде задать ОБЯЗАТЕЛЬНО).
+        // вебхуки и URL validation. Пусто → только local/testing могут пропускать
+        // подпись; на проде задать ОБЯЗАТЕЛЬНО.
         'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
+        // Включать только на время регистрации/повторной проверки endpoint URL в
+        // Zoom Marketplace, затем сразу выключать (иначе это HMAC signing oracle).
+        'url_validation_enabled' => filter_var(env('ZOOM_URL_VALIDATION_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
     // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===

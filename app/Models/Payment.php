@@ -25,8 +25,12 @@ class Payment extends Model
         'discount_amount',
         'prana_spent',
         'referral_credit_applied',
+        'prepaid_credit_payment_ids',
+        'prepaid_credit_amount',
         'tariff',
         'deposit_consumed_at',
+        'prepaid_reserved_by_payment_id',
+        'prepaid_reserved_at',
         'status',
         'transaction_id',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
@@ -57,7 +61,10 @@ class Payment extends Model
         'discount_amount' => 'decimal:2',
         'foreign_amount' => 'decimal:2',
         'referral_credit_applied' => 'decimal:2',
+        'prepaid_credit_payment_ids' => 'array',
+        'prepaid_credit_amount' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
+        'prepaid_reserved_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
         'start_block' => 'integer',
@@ -310,7 +317,13 @@ class Payment extends Model
         return $query
             ->whereIn('tariff', ['deposit', 'trial'])
             ->whereNull('deposit_consumed_at')
+            ->whereNull('prepaid_reserved_by_payment_id')
             ->whereIn('status', self::PAID_STATUSES);
+    }
+
+    public function scopeReservedFor(Builder $query, int $paymentId): Builder
+    {
+        return $query->where('prepaid_reserved_by_payment_id', $paymentId);
     }
 
     // ==========================================
@@ -355,6 +368,7 @@ class Payment extends Model
             if ($payment->isDirty('status') && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
                 $payment->refundPranaIfSpent();
                 $payment->refundReferralCreditIfApplied();
+                $payment->releasePrepaidReservations();
 
                 if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
                     $payment->reconcileAccessAfterReversal();
@@ -584,14 +598,76 @@ class Payment extends Model
             return;
         }
 
-        self::query()
+        $query = self::query()
             ->where('user_id', $this->user_id)
             ->where('course_id', $this->course_id)
-            ->unconsumedDeposits()
-            ->get()
-            ->each(fn (self $deposit) => $deposit->updateQuietly([
-                'deposit_consumed_at' => now(),
-            ]));
+            ->whereIn('tariff', ['deposit', 'trial'])
+            ->whereNull('deposit_consumed_at')
+            ->whereIn('status', self::PAID_STATUSES);
+
+        if (! empty($this->prepaid_credit_payment_ids)) {
+            $query->whereIn('id', array_map('intval', $this->prepaid_credit_payment_ids));
+        } else {
+            $query->whereNull('prepaid_reserved_by_payment_id');
+        }
+
+        $query->get()->each(fn (self $deposit) => $deposit->updateQuietly([
+            'deposit_consumed_at' => now(),
+            'prepaid_reserved_by_payment_id' => null,
+            'prepaid_reserved_at' => null,
+        ]));
+    }
+
+    public function releasePrepaidReservations(): void
+    {
+        self::query()
+            ->reservedFor((int) $this->id)
+            ->update([
+                'prepaid_reserved_by_payment_id' => null,
+                'prepaid_reserved_at' => null,
+            ]);
+    }
+
+    public function hasValidPrepaidReservations(): bool
+    {
+        $ids = array_map('intval', $this->prepaid_credit_payment_ids ?? []);
+        if (empty($ids)) {
+            return true;
+        }
+
+        $reserved = self::query()
+            ->whereKey($ids)
+            ->where('user_id', $this->user_id)
+            ->where('course_id', $this->course_id)
+            ->whereIn('tariff', ['deposit', 'trial'])
+            ->whereNull('deposit_consumed_at')
+            ->where('prepaid_reserved_by_payment_id', $this->id)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->sum('amount');
+
+        return round((float) $reserved, 2) === round((float) $this->prepaid_credit_amount, 2);
+    }
+
+    public static function releaseStalePrepaidReservations(int $userId, int $courseId, int $minutes = 30): void
+    {
+        $staleIds = self::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->whereNotNull('prepaid_credit_payment_ids')
+            ->where('created_at', '<=', now()->subMinutes($minutes))
+            ->pluck('id');
+
+        if ($staleIds->isEmpty()) {
+            return;
+        }
+
+        self::query()
+            ->whereIn('prepaid_reserved_by_payment_id', $staleIds->all())
+            ->update([
+                'prepaid_reserved_by_payment_id' => null,
+                'prepaid_reserved_at' => null,
+            ]);
     }
 
     /**

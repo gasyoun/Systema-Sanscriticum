@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\SendHomeworkNotificationJob;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -48,13 +49,10 @@ class HomeworkVisibilityTest extends TestCase
         ]);
 
         app(HomeworkService::class)->recordReview(
-            $submission, $teacherUser, HomeworkSubmission::STATUS_NEEDS_REVISION, 'Поправьте сандхи'
+            $submission, $teacherUser, HomeworkSubmission::STATUS_NEEDS_CHANGES, 'Поправьте сандхи'
         );
 
-        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
-            && str_contains($request->url(), 'sendMessage')
-            && $request['chat_id'] === '99887766'
-            && str_contains($request['text'], 'на доработку'));
+        Queue::assertPushed(SendHomeworkNotificationJob::class, fn ($job) => $job->event === \App\Services\HomeworkNotificationService::EVENT_RETURNED);
     }
 
     /** @test */
@@ -77,7 +75,7 @@ class HomeworkVisibilityTest extends TestCase
         ]);
 
         app(HomeworkService::class)->recordReview(
-            $submission, $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Отлично'
+            $submission, $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Отлично', [], HomeworkSubmission::GRADE_5
         );
 
         Http::assertNothingSent();

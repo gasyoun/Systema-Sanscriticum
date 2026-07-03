@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Resources\HomeworkSubmissionResource;
+use App\Jobs\SendHomeworkNotificationJob;
 use App\Mail\HomeworkReviewedMail;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
+use App\Models\Group;
+use App\Models\HomeworkDeadlineOverride;
+use App\Models\HomeworkNotificationLog;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Payment;
@@ -185,8 +189,8 @@ class HomeworkFlowTest extends TestCase
         $submission = HomeworkSubmission::firstOrFail();
 
         // Вернуть на доработку
-        $service->recordReview($submission, $teacherUser, HomeworkSubmission::STATUS_NEEDS_REVISION, 'Поправьте пункт 2');
-        $this->assertSame(HomeworkSubmission::STATUS_NEEDS_REVISION, $submission->fresh()->status);
+        $service->recordReview($submission, $teacherUser, HomeworkSubmission::STATUS_NEEDS_CHANGES, 'Поправьте пункт 2');
+        $this->assertSame(HomeworkSubmission::STATUS_NEEDS_CHANGES, $submission->fresh()->status);
         Mail::assertQueued(HomeworkReviewedMail::class, fn ($m) => $m->hasTo($student->email));
 
         // Пересдача студентом
@@ -203,8 +207,146 @@ class HomeworkFlowTest extends TestCase
         });
 
         // Принять
-        $service->recordReview($submission->fresh(), $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Отлично');
+        $service->recordReview($submission->fresh(), $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Отлично', [], HomeworkSubmission::GRADE_5_PLUS);
         $this->assertSame(HomeworkSubmission::STATUS_ACCEPTED, $submission->fresh()->status);
+        $this->assertSame(HomeworkSubmission::GRADE_5_PLUS, $submission->fresh()->grade);
+    }
+
+    /** @test */
+    public function accepted_homework_requires_grade(): void
+    {
+        [$teacher, $teacherUser] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $submission = HomeworkSubmission::create([
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'course_id' => $course->id,
+            'status' => HomeworkSubmission::STATUS_SUBMITTED,
+            'last_activity_at' => now(),
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(HomeworkService::class)->recordReview($submission, $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'ok');
+    }
+
+    /** @test */
+    public function lesson_default_deadline_blocks_submission_after_lock_time(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $lesson->update([
+            'homework_due_at' => now()->subDays(2),
+            'homework_locks_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'late']
+        )->assertSessionHas('error');
+
+        $this->assertDatabaseCount('homework_submissions', 0);
+    }
+
+    /** @test */
+    public function student_deadline_override_beats_group_and_lesson_deadlines(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $group = Group::create(['name' => 'G']);
+        $course->groups()->syncWithoutDetaching([$group->id]);
+        $student->groups()->syncWithoutDetaching([$group->id]);
+        $lesson->update(['homework_due_at' => now()->subDays(3)]);
+        HomeworkDeadlineOverride::create([
+            'lesson_id' => $lesson->id,
+            'group_id' => $group->id,
+            'due_at' => now()->subDays(2),
+            'locks_at' => now()->subDay(),
+        ]);
+        HomeworkDeadlineOverride::create([
+            'lesson_id' => $lesson->id,
+            'user_id' => $student->id,
+            'due_at' => now()->addDay(),
+            'locks_at' => now()->addDays(2),
+        ]);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'override ok']
+        )->assertRedirect();
+
+        $this->assertDatabaseHas('homework_submissions', [
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'status' => HomeworkSubmission::STATUS_SUBMITTED,
+        ]);
+    }
+
+    /** @test */
+    public function group_deadline_override_beats_lesson_deadline(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $group = Group::create(['name' => 'G2']);
+        $course->groups()->syncWithoutDetaching([$group->id]);
+        $student->groups()->syncWithoutDetaching([$group->id]);
+        $lesson->update(['homework_due_at' => now()->subDays(3), 'homework_locks_at' => now()->subDay()]);
+        HomeworkDeadlineOverride::create([
+            'lesson_id' => $lesson->id,
+            'group_id' => $group->id,
+            'due_at' => now()->addDay(),
+            'locks_at' => now()->addDays(2),
+        ]);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'group override ok']
+        )->assertRedirect();
+
+        $this->assertDatabaseHas('homework_submissions', [
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+        ]);
+    }
+
+    /** @test */
+    public function student_submission_queues_homework_notification_job(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'notify']
+        )->assertRedirect();
+
+        Queue::assertPushed(SendHomeworkNotificationJob::class);
+    }
+
+    /** @test */
+    public function deadline_command_deduplicates_student_notifications(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $group = Group::create(['name' => 'Deadline group']);
+        $course->groups()->syncWithoutDetaching([$group->id]);
+        $student->groups()->syncWithoutDetaching([$group->id]);
+        $lesson->update([
+            'homework_opens_at' => now()->subHour(),
+            'homework_due_at' => now()->addHours(12),
+        ]);
+
+        $this->artisan('homework:notify-deadlines')->assertSuccessful();
+        $this->artisan('homework:notify-deadlines')->assertSuccessful();
+
+        $this->assertSame(1, HomeworkNotificationLog::where('event', \App\Services\HomeworkNotificationService::EVENT_OPENED)->count());
+        $this->assertSame(1, HomeworkNotificationLog::where('event', \App\Services\HomeworkNotificationService::EVENT_DEADLINE_NEAR)->count());
     }
 
     /** @test */

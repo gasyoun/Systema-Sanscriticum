@@ -175,7 +175,11 @@ class StudentController extends Controller
         // Ответы преподавателя, требующие действия студента (работа возвращена на
         // доработку) — чтобы он узнал сразу в кабинете, а не только из письма.
         $homeworkAlerts = $user->homeworkSubmissions()
-            ->where('status', \App\Models\HomeworkSubmission::STATUS_NEEDS_REVISION)
+            ->whereIn('status', [
+                \App\Models\HomeworkSubmission::STATUS_NEEDS_CHANGES,
+                \App\Models\HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION,
+                \App\Models\HomeworkSubmission::STATUS_LATE,
+            ])
             ->with(['lesson:id,course_id,title', 'course:id,slug,title'])
             ->latest('reviewed_at')
             ->get()

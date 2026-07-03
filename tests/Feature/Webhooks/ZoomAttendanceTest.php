@@ -20,18 +20,17 @@ class ZoomAttendanceTest extends TestCase
 
     private const SECRET = 'whsec-123';
 
-    private const TS = '1700000000';
-
     private function postZoom(array $payload): TestResponse
     {
         config(['services.zoom.webhook_secret' => self::SECRET]);
         $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $timestamp = (string) now()->timestamp;
 
         return $this->call('POST', '/api/webhooks/zoom', [], [], [], $this->transformHeadersToServerVars([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'x-zm-request-timestamp' => self::TS,
-            'x-zm-signature' => 'v0='.hash_hmac('sha256', 'v0:'.self::TS.':'.$body, self::SECRET),
+            'x-zm-request-timestamp' => $timestamp,
+            'x-zm-signature' => 'v0='.hash_hmac('sha256', 'v0:'.$timestamp.':'.$body, self::SECRET),
         ]), $body);
     }
 

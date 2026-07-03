@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\HomeworkSubmissionResource\Pages;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Services\HomeworkService;
 use App\Support\RoleGate;
@@ -91,7 +92,7 @@ class HomeworkSubmissionResource extends Resource
      */
     public static function reviewCommentFields(string $status, bool $bodyRequired): array
     {
-        return [
+        $fields = [
             Forms\Components\Select::make('template')
                 ->label('Шаблон ответа')
                 ->options(static::commentTemplates($status))
@@ -106,6 +107,15 @@ class HomeworkSubmissionResource extends Resource
                 ->rows(4)
                 ->required($bodyRequired),
         ];
+
+        if ($status === HomeworkSubmission::STATUS_ACCEPTED) {
+            $fields[] = Forms\Components\Select::make('grade')
+                ->label('Оценка')
+                ->options(HomeworkSubmission::gradeOptions())
+                ->required();
+        }
+
+        return $fields;
     }
 
     /**
@@ -126,7 +136,7 @@ class HomeworkSubmissionResource extends Resource
                 continue;
             }
 
-            $service->recordReview($record, $reviewer, $status, $data['body'] ?? null);
+            $service->recordReview($record, $reviewer, $status, $data['body'] ?? null, [], $data['grade'] ?? null);
             $done++;
         }
 
@@ -144,7 +154,24 @@ class HomeworkSubmissionResource extends Resource
     {
         $query = parent::getEloquentQuery()
             // Черновики студентов в админку не показываем — только реально сданное.
-            ->where('status', '!=', HomeworkSubmission::STATUS_DRAFT);
+            ->where('status', '!=', HomeworkSubmission::STATUS_DRAFT)
+            ->select('homework_submissions.*')
+            ->selectSub(
+                "select coalesce(sum(homework_files.size), 0)
+                 from homework_comments
+                 join homework_files on homework_files.comment_id = homework_comments.id
+                 where homework_comments.submission_id = homework_submissions.id
+                   and homework_comments.author_role = 'student'",
+                'student_homework_files_size',
+            )
+            ->selectSub(
+                "select count(homework_files.id)
+                 from homework_comments
+                 join homework_files on homework_files.comment_id = homework_comments.id
+                 where homework_comments.submission_id = homework_submissions.id
+                   and homework_comments.author_role = 'student'",
+                'student_homework_files_count',
+            );
 
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
@@ -163,7 +190,7 @@ class HomeworkSubmissionResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = static::getEloquentQuery()
-            ->where('status', HomeworkSubmission::STATUS_SUBMITTED)
+            ->whereIn('status', [HomeworkSubmission::STATUS_SUBMITTED, HomeworkSubmission::STATUS_UNDER_REVIEW])
             ->count();
 
         return $count > 0 ? (string) $count : null;
@@ -199,16 +226,35 @@ class HomeworkSubmissionResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         HomeworkSubmission::STATUS_SUBMITTED => 'На проверке',
-                        HomeworkSubmission::STATUS_NEEDS_REVISION => 'На доработку',
+                        HomeworkSubmission::STATUS_UNDER_REVIEW => 'Проверяется',
+                        HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION => 'На доработку',
                         HomeworkSubmission::STATUS_ACCEPTED => 'Принято',
+                        HomeworkSubmission::STATUS_LATE => 'Просрочено',
+                        HomeworkSubmission::STATUS_LOCKED => 'Закрыто',
                         default => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
                         HomeworkSubmission::STATUS_SUBMITTED => 'info',
-                        HomeworkSubmission::STATUS_NEEDS_REVISION => 'danger',
+                        HomeworkSubmission::STATUS_UNDER_REVIEW => 'warning',
+                        HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION => 'danger',
                         HomeworkSubmission::STATUS_ACCEPTED => 'success',
+                        HomeworkSubmission::STATUS_LATE => 'danger',
+                        HomeworkSubmission::STATUS_LOCKED => 'gray',
                         default => 'gray',
                     }),
+
+                Tables\Columns\TextColumn::make('grade')
+                    ->label('Оценка')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ? (HomeworkSubmission::gradeOptions()[$state] ?? $state) : '—')
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('student_homework_files_size')
+                    ->label('Файлы ДЗ')
+                    ->state(fn (HomeworkSubmission $record): string => $record->studentFilesCount().' · '.HomeworkFile::humanSizeFor($record->studentFilesBytes()))
+                    ->sortable()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('last_activity_at')
                     ->label('Ждёт')
@@ -227,8 +273,11 @@ class HomeworkSubmissionResource extends Resource
                     ->label('Статус')
                     ->options([
                         HomeworkSubmission::STATUS_SUBMITTED => 'На проверке',
-                        HomeworkSubmission::STATUS_NEEDS_REVISION => 'На доработку',
+                        HomeworkSubmission::STATUS_UNDER_REVIEW => 'Проверяется',
+                        HomeworkSubmission::STATUS_NEEDS_CHANGES => 'На доработку',
                         HomeworkSubmission::STATUS_ACCEPTED => 'Принято',
+                        HomeworkSubmission::STATUS_LATE => 'Просрочено',
+                        HomeworkSubmission::STATUS_LOCKED => 'Закрыто',
                     ])
                     ->default(HomeworkSubmission::STATUS_SUBMITTED),
 

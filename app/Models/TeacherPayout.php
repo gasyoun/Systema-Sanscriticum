@@ -22,6 +22,7 @@ class TeacherPayout extends Model
         'paid_at',
         'settled_at',
         'settled_by',
+        'settled_amount',
         'period_month',
         'course_id',
         'salary_type',
@@ -37,6 +38,7 @@ class TeacherPayout extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'settled_amount' => 'decimal:2',
         'salary_value' => 'decimal:2',
         'exchange_rate' => 'decimal:4',
         'amount_foreign' => 'decimal:2',
@@ -75,7 +77,7 @@ class TeacherPayout extends Model
     /** Аванс зачтён? */
     public function isSettled(): bool
     {
-        return $this->settled_at !== null;
+        return (float) $this->settled_amount >= (float) $this->amount;
     }
 
     public function scopeAdvances(Builder $query): Builder
@@ -86,11 +88,29 @@ class TeacherPayout extends Model
     /** Непогашенные авансы — деньги выданы, но к ЗП ещё не зачтены. */
     public function scopeUnsettledAdvances(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_ADVANCE)->whereNull('settled_at');
+        return $query
+            ->where('type', self::TYPE_ADVANCE)
+            ->whereRaw('COALESCE(settled_amount, 0) < amount');
     }
 
     protected static function booted(): void
     {
+        static::saving(function (self $payout): void {
+            if ($payout->type !== self::TYPE_ADVANCE) {
+                $payout->settled_amount = 0;
+
+                return;
+            }
+
+            if ($payout->settled_at !== null && (float) $payout->settled_amount <= 0) {
+                $payout->settled_amount = $payout->amount;
+            }
+
+            if ((float) $payout->settled_amount >= (float) $payout->amount && $payout->settled_at === null) {
+                $payout->settled_at = now();
+            }
+        });
+
         // Удаление выплаты снимает её транзакцию-зеркало в «Финансах».
         // withoutEvents — у salary_payout нет побочных хуков, чистим тихо.
         static::deleting(function (self $payout): void {

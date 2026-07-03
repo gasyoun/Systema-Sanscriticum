@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\UserResource;
 use App\Models\Course;
+use App\Models\HomeworkComment;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\User;
@@ -73,6 +75,58 @@ class StudentProgressCardTest extends TestCase
         $this->assertSame(1, $hw['submitted']);
         $this->assertSame(1, $hw['needs_revision']);
         $this->assertSame(2, $hw['accepted']);
+    }
+
+    /** @test */
+    public function learning_progress_summarises_student_homework_file_size_and_ignores_teacher_feedback(): void
+    {
+        $student = User::factory()->create();
+        $teacher = User::factory()->create();
+        $course = Course::factory()->create();
+        $lesson = Lesson::factory()->for($course)->create(['group_id' => null]);
+        $submission = HomeworkSubmission::create([
+            'user_id' => $student->id,
+            'lesson_id' => $lesson->id,
+            'course_id' => $course->id,
+            'status' => HomeworkSubmission::STATUS_SUBMITTED,
+            'last_activity_at' => now(),
+        ]);
+
+        $studentComment = $submission->comments()->create([
+            'author_id' => $student->id,
+            'author_role' => HomeworkComment::ROLE_STUDENT,
+            'type' => HomeworkComment::TYPE_SUBMISSION,
+        ]);
+        $teacherComment = $submission->comments()->create([
+            'author_id' => $teacher->id,
+            'author_role' => HomeworkComment::ROLE_TEACHER,
+            'type' => HomeworkComment::TYPE_REVIEW,
+        ]);
+        $studentComment->files()->create([
+            'disk' => 'local',
+            'path' => 'homework/a.pdf',
+            'original_name' => 'a.pdf',
+            'size' => 1048576,
+        ]);
+        $studentComment->files()->create([
+            'disk' => 'local',
+            'path' => 'homework/b.pdf',
+            'original_name' => 'b.pdf',
+            'size' => 512,
+        ]);
+        $teacherComment->files()->create([
+            'disk' => 'local',
+            'path' => 'homework/feedback.pdf',
+            'original_name' => 'feedback.pdf',
+            'size' => 1048576,
+        ]);
+
+        $hw = UserResource::learningProgress($student)['homework'];
+
+        $this->assertSame(1049088, $hw['bytes']);
+        $this->assertSame('1 МБ', $hw['size_label']);
+        $this->assertSame('0 Б', HomeworkFile::humanSizeFor(0));
+        $this->assertSame('2 КБ', HomeworkFile::humanSizeFor(2048));
     }
 
     /** @test */

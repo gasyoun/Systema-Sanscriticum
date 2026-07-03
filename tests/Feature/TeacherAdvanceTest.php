@@ -143,4 +143,52 @@ class TeacherAdvanceTest extends TestCase
         // Зачёт денег не двигает (отдельная транзакция не создаётся).
         $this->assertSame(1, Payment::where('tariff', 'salary_payout')->count());
     }
+
+    /** @test */
+    public function block_payout_settles_advances_fifo_partially(): void
+    {
+        $teacher = $this->teacherEarning12000();
+
+        $first = $teacher->payouts()->create([
+            'amount' => 5000,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->subDay()->toDateString(),
+        ]);
+        $second = $teacher->payouts()->create([
+            'amount' => 4000,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $res = $this->service->settleAdvancesForBlockPayout($teacher, 7000);
+
+        $this->assertSame(7000.0, $res['total']);
+        $this->assertEquals(5000.0, (float) $first->fresh()->settled_amount);
+        $this->assertNotNull($first->fresh()->settled_at);
+        $this->assertEquals(2000.0, (float) $second->fresh()->settled_amount);
+        $this->assertNull($second->fresh()->settled_at);
+
+        $row = app(TeacherSalaryService::class)->summaryForAll(now()->format('Y-m'))[$teacher->id];
+        $this->assertSame(7000.0, $row['paid_all_time']);
+        $this->assertSame(5000.0, $row['balance']);
+        $this->assertSame(2000.0, $row['advances_outstanding']);
+    }
+
+    /** @test */
+    public function block_payout_does_not_settle_more_advance_than_the_payout_total(): void
+    {
+        $teacher = $this->teacherEarning12000();
+
+        $advance = $teacher->payouts()->create([
+            'amount' => 5000,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $res = $this->service->settleAdvancesForBlockPayout($teacher, 3000);
+
+        $this->assertSame(3000.0, $res['total']);
+        $this->assertEquals(3000.0, (float) $advance->fresh()->settled_amount);
+        $this->assertNull($advance->fresh()->settled_at);
+    }
 }

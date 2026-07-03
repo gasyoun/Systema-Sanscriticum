@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\Course;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\User;
 use App\Support\CourseNoteBlockParser;
@@ -452,7 +453,7 @@ class UserResource extends Resource
      * курсу (та же формула, что в кабинете — completedLessons / уроки группы) и
      * сводка домашних работ по статусам.
      *
-     * @return array{courses: list<array{title: string, completed: int, total: int, percent: int}>, homework: array{submitted: int, needs_revision: int, accepted: int}}
+     * @return array{courses: list<array{title: string, completed: int, total: int, percent: int}>, homework: array{submitted: int, needs_revision: int, accepted: int, bytes: int, size_label: string}}
      */
     public static function learningProgress(User $record): array
     {
@@ -476,15 +477,32 @@ class UserResource extends Resource
             ->selectRaw('status, count(*) as c')
             ->groupBy('status')
             ->pluck('c', 'status');
+        $homeworkBytes = static::studentHomeworkFilesBytes($record);
 
         return [
             'courses' => $courses,
             'homework' => [
                 'submitted' => (int) ($counts[HomeworkSubmission::STATUS_SUBMITTED] ?? 0),
-                'needs_revision' => (int) ($counts[HomeworkSubmission::STATUS_NEEDS_REVISION] ?? 0),
+                'needs_revision' => (int) (($counts[HomeworkSubmission::STATUS_NEEDS_CHANGES] ?? 0) + ($counts[HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION] ?? 0)),
                 'accepted' => (int) ($counts[HomeworkSubmission::STATUS_ACCEPTED] ?? 0),
+                'bytes' => $homeworkBytes,
+                'size_label' => HomeworkFile::humanSizeFor($homeworkBytes),
             ],
         ];
+    }
+
+    public static function studentHomeworkFilesBytes(User $record): int
+    {
+        if (array_key_exists('student_homework_files_size', $record->getAttributes())) {
+            return (int) $record->getAttribute('student_homework_files_size');
+        }
+
+        return (int) \Illuminate\Support\Facades\DB::table('homework_files')
+            ->join('homework_comments', 'homework_files.comment_id', '=', 'homework_comments.id')
+            ->join('homework_submissions', 'homework_comments.submission_id', '=', 'homework_submissions.id')
+            ->where('homework_submissions.user_id', $record->id)
+            ->where('homework_comments.author_role', \App\Models\HomeworkComment::ROLE_STUDENT)
+            ->sum('homework_files.size');
     }
 
     /**
@@ -506,6 +524,17 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->select('users.*')
+                ->selectSub(
+                    "select coalesce(sum(homework_files.size), 0)
+                     from homework_submissions
+                     join homework_comments on homework_comments.submission_id = homework_submissions.id
+                     join homework_files on homework_files.comment_id = homework_comments.id
+                     where homework_submissions.user_id = users.id
+                       and homework_comments.author_role = 'student'",
+                    'student_homework_files_size',
+                ))
             ->columns([
                 // --- АВАТАРКА ---
                 // Реальное фото из TG/VK (avatar_path в public-диске). Если фото нет —
@@ -559,6 +588,12 @@ class UserResource extends Resource
                     ->copyMessage('Ссылка на карточку скопирована')
                     ->copyMessageDuration(1500)
                     ->toggleable(),
+
+                Tables\Columns\TextColumn::make('student_homework_files_size')
+                    ->label('Размер ДЗ')
+                    ->state(fn (User $record): string => HomeworkFile::humanSizeFor(static::studentHomeworkFilesBytes($record)))
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 // --- @USERNAME TG (скрыт по умолчанию; даёт поиск по @username) ---
                 Tables\Columns\TextColumn::make('telegram_username')

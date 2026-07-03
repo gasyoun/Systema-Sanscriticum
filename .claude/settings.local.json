@@ -30,11 +30,14 @@
       "Bash(findstr /i \"prana\")",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git pull *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(/c/xampp/php/php.exe artisan *)",
+      "Skill(update-config)"
     ]
   },
   "enabledMcpjsonServers": [
     "playwright",
-    "context7"
+    "context7",
+    "graymatter"
   ]
 }

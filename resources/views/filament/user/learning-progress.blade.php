@@ -40,5 +40,8 @@
         <span class="inline-flex items-center gap-1 rounded-md bg-success-50 dark:bg-success-500/10 px-2 py-0.5 text-success-700 dark:text-success-300">
             Принято: {{ $hw['accepted'] }}
         </span>
+        <span class="inline-flex items-center gap-1 rounded-md bg-gray-50 dark:bg-white/10 px-2 py-0.5 text-gray-700 dark:text-gray-300">
+            Файлы: {{ $hw['size_label'] }}
+        </span>
     </div>
 </div>

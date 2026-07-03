@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use InvalidArgumentException;
 
 class HomeworkService
 {
@@ -34,13 +35,16 @@ class HomeworkService
             // Пересдача: работа уже возвращалась на доработку и студент шлёт её заново.
             // Фиксируем до перезаписи статуса — после save() прежнее значение теряется.
             $isResubmission = $submission->exists
-                && $submission->status === HomeworkSubmission::STATUS_NEEDS_REVISION;
+                && in_array($submission->status, [HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION], true);
 
             $submission->course_id = $lesson->course_id;
             $submission->status = $finalize
                 ? HomeworkSubmission::STATUS_SUBMITTED
                 : HomeworkSubmission::STATUS_DRAFT;
             $submission->last_activity_at = now();
+            if ($finalize) {
+                $submission->submitted_at = now();
+            }
             $submission->save();
 
             $comment = $submission->comments()->create([
@@ -54,6 +58,7 @@ class HomeworkService
 
             if ($finalize) {
                 $this->notifyTeacher($submission, $isResubmission);
+                app(HomeworkNotificationService::class)->queue($submission, HomeworkNotificationService::EVENT_SUBMITTED);
             }
 
             return $submission;
@@ -71,8 +76,13 @@ class HomeworkService
         string $newStatus,
         ?string $body,
         array $files = [],
+        ?string $grade = null,
     ): HomeworkComment {
-        $comment = DB::transaction(function () use ($submission, $reviewer, $newStatus, $body, $files) {
+        if ($newStatus === HomeworkSubmission::STATUS_ACCEPTED && ! array_key_exists((string) $grade, HomeworkSubmission::gradeOptions())) {
+            throw new InvalidArgumentException('Accepted homework requires a grade.');
+        }
+
+        $comment = DB::transaction(function () use ($submission, $reviewer, $newStatus, $body, $files, $grade) {
             $role = $reviewer->is_admin
                 ? HomeworkComment::ROLE_ADMIN
                 : HomeworkComment::ROLE_TEACHER;
@@ -91,6 +101,10 @@ class HomeworkService
             $submission->reviewed_by = $reviewer->id;
             $submission->reviewed_at = now();
             $submission->last_activity_at = now();
+            if ($newStatus === HomeworkSubmission::STATUS_ACCEPTED) {
+                $submission->accepted_at = now();
+                $submission->grade = $grade;
+            }
             $submission->save();
 
             $this->notifyStudent($submission, $comment);
@@ -100,49 +114,14 @@ class HomeworkService
 
         // Пуш в мессенджеры — после коммита: это синхронный HTTP, его нельзя
         // держать внутри транзакции. Письмо (notifyStudent) уходит в очередь.
-        $this->pushReviewToMessengers($submission, $comment);
+        app(HomeworkNotificationService::class)->queue(
+            $submission,
+            $submission->status === HomeworkSubmission::STATUS_ACCEPTED
+                ? HomeworkNotificationService::EVENT_ACCEPTED
+                : HomeworkNotificationService::EVENT_RETURNED
+        );
 
         return $comment;
-    }
-
-    /**
-     * Мгновенно уведомить студента в привязанный мессенджер о вердикте по ДЗ.
-     * Письмо уходит отдельно (notifyStudent); здесь — Telegram/VK, чтобы студент
-     * узнал сразу, а не только из почты.
-     */
-    private function pushReviewToMessengers(HomeworkSubmission $submission, HomeworkComment $review): void
-    {
-        $user = $submission->user;
-        if (! $user || (! $user->telegram_id && ! $user->vk_id)) {
-            return;
-        }
-
-        $accepted = $submission->status === HomeworkSubmission::STATUS_ACCEPTED;
-        $lessonTitle = $submission->lesson?->title;
-        $where = $lessonTitle ? " «{$lessonTitle}»" : '';
-
-        $lessonUrl = url('/login');
-        if ($submission->course && $submission->lesson) {
-            $lessonUrl = route('student.lesson', [$submission->course->slug, $submission->lesson_id]);
-        }
-
-        $text = $accepted
-            ? "✅ Ваша домашняя работа{$where} принята! Поздравляем 🎉\n{$lessonUrl}"
-            : "✍️ Преподаватель вернул работу{$where} на доработку. Откройте урок и посмотрите комментарии:\n{$lessonUrl}";
-
-        try {
-            if ($user->telegram_id) {
-                $user->sendTelegramMessage($text);
-            }
-            if ($user->vk_id) {
-                $user->sendVkMessage($text);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Homework review push failed', [
-                'submission_id' => $submission->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
     }
 
     /**

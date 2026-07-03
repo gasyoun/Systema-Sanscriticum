@@ -23,14 +23,7 @@ class CertificateService
         // 2. Подготовка QR-кода (Base64)
         $qrImage = null;
         try {
-            $apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($verifyUrl);
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            $imgData = curl_exec($ch);
-            curl_close($ch);
+            $imgData = $this->fetchQrImage($verifyUrl);
             if ($imgData) {
                 $qrImage = 'data:image/png;base64,'.base64_encode($imgData);
             }
@@ -69,6 +62,30 @@ class CertificateService
         $pdf->setPaper('a4', 'landscape');
 
         return $pdf;
+    }
+
+    protected function fetchQrImage(string $verifyUrl): ?string
+    {
+        $apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($verifyUrl);
+        $ch = curl_init();
+        curl_setopt_array($ch, $this->qrCurlOptions($apiUrl));
+        $imgData = curl_exec($ch);
+        curl_close($ch);
+
+        return is_string($imgData) ? $imgData : null;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function qrCurlOptions(string $apiUrl): array
+    {
+        return [
+            CURLOPT_URL => $apiUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FAILONERROR => true,
+            CURLOPT_TIMEOUT => 5,
+        ];
     }
 
     /**

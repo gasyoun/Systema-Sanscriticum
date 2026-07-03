@@ -36,7 +36,12 @@ class HomeworkFile extends Model
 
     public function humanSize(): string
     {
-        $bytes = $this->size;
+        return self::humanSizeFor((int) $this->size);
+    }
+
+    public static function humanSizeFor(int|float|null $bytes): string
+    {
+        $bytes = max(0, (int) ($bytes ?? 0));
         if ($bytes >= 1048576) {
             return round($bytes / 1048576, 1).' МБ';
         }

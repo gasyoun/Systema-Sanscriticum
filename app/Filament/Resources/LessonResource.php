@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\LessonResource\Pages;
+use App\Filament\Resources\LessonResource\RelationManagers\DeadlineOverridesRelationManager;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Support\RoleGate;
@@ -289,6 +290,23 @@ class LessonResource extends Resource
                             ->maxSize(51200)
                             ->columnSpanFull()
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        Forms\Components\DateTimePicker::make('homework_opens_at')
+                            ->label('Открыть сдачу')
+                            ->seconds(false)
+                            ->helperText('Пусто = сдавать можно сразу после публикации урока.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        Forms\Components\DateTimePicker::make('homework_due_at')
+                            ->label('Дедлайн')
+                            ->seconds(false)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        Forms\Components\DateTimePicker::make('homework_locks_at')
+                            ->label('Закрыть сдачу')
+                            ->seconds(false)
+                            ->helperText('Пусто = автоматически через 1 день после дедлайна.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -466,7 +484,9 @@ class LessonResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            DeadlineOverridesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

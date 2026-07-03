@@ -36,6 +36,9 @@ class Lesson extends Model
         'homework_enabled',
         'homework_prompt',
         'homework_attachments',
+        'homework_opens_at',
+        'homework_due_at',
+        'homework_locks_at',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
@@ -52,6 +55,9 @@ class Lesson extends Model
         'duration_seconds' => 'integer',
         'homework_enabled' => 'boolean',
         'homework_attachments' => 'array',
+        'homework_opens_at' => 'datetime',
+        'homework_due_at' => 'datetime',
+        'homework_locks_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -105,6 +111,11 @@ class Lesson extends Model
     public function homeworkSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(HomeworkSubmission::class);
+    }
+
+    public function deadlineOverrides(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HomeworkDeadlineOverride::class);
     }
 
     // ===================================================================

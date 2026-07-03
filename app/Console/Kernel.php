@@ -97,6 +97,13 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('notify-absent-students');
 
+        // Домашние задания: открытие, дедлайн за сутки, late/locked статусы.
+        $schedule->command('homework:notify-deadlines')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('notify-homework-deadlines');
+
         // --- СВЕРКА ПОСЕЩАЕМОСТИ ZOOM (страховка вебхука) ---
         // Ночью догружаем участников прошедших занятий через Reports API — на
         // случай пропущенных participant-вебхуков. Реалтайм покрывает вебхук.

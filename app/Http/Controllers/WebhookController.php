@@ -47,6 +47,7 @@ class WebhookController extends Controller
             // ========== БИЗНЕС-ЛОГИКА ==========
             $purpose = $payload['purpose'] ?? '';
             $statusFromBank = $payload['status'] ?? null;
+            $amountFromBank = $this->extractAmount($payload);
 
             // Логируем только статус — без полного payload (там ФИО/суммы/атрибуты
             // покупателя, которые не должны копиться в файловых логах). Трассировка
@@ -62,12 +63,12 @@ class WebhookController extends Controller
                 return response('OK', 200);
             }
 
-            $successStatuses = ['paid', 'authorized', 'APPROVED', 'AUTHORIZED', 'captured', 'completed'];
+            $successStatuses = ['paid', 'captured', 'completed'];
             $failureStatuses = ['rejected', 'canceled', 'failed'];
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
-            DB::transaction(function () use ($paymentId, $statusFromBank, $successStatuses, $failureStatuses) {
+            DB::transaction(function () use ($paymentId, $statusFromBank, $amountFromBank, $successStatuses, $failureStatuses) {
                 $payment = Payment::lockForUpdate()->find($paymentId);
 
                 if (! $payment) {
@@ -77,6 +78,27 @@ class WebhookController extends Controller
                 }
 
                 if (in_array($statusFromBank, $successStatuses, true)) {
+                    if ($amountFromBank === null || round($amountFromBank, 2) !== round((float) $payment->amount, 2)) {
+                        Log::warning('Tochka webhook: сумма не совпадает с локальным платежом', [
+                            'payment_id' => $payment->id,
+                            'status' => $statusFromBank,
+                            'bank_amount' => $amountFromBank,
+                            'local_amount' => (float) $payment->amount,
+                        ]);
+
+                        return;
+                    }
+
+                    if (! $payment->hasValidPrepaidReservations()) {
+                        Log::warning('Tochka webhook: prepaid reservation invalid, access not granted', [
+                            'payment_id' => $payment->id,
+                            'prepaid_credit_payment_ids' => $payment->prepaid_credit_payment_ids,
+                            'prepaid_credit_amount' => (float) $payment->prepaid_credit_amount,
+                        ]);
+
+                        return;
+                    }
+
                     if ($payment->status !== 'paid') {
                         $payment->update(['status' => 'paid']);
                         Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
@@ -98,5 +120,29 @@ class WebhookController extends Controller
 
             return response('Server error', 500);
         }
+    }
+
+    private function extractAmount(array|object $payload): ?float
+    {
+        if (is_object($payload)) {
+            $payload = (array) $payload;
+        }
+
+        foreach (['amount', 'operationAmount', 'totalAmount', 'sum'] as $key) {
+            if (isset($payload[$key]) && is_numeric($payload[$key])) {
+                return (float) $payload[$key];
+            }
+        }
+
+        foreach (['Data', 'data', 'payment'] as $container) {
+            if (isset($payload[$container]) && (is_array($payload[$container]) || is_object($payload[$container]))) {
+                $amount = $this->extractAmount($payload[$container]);
+                if ($amount !== null) {
+                    return $amount;
+                }
+            }
+        }
+
+        return null;
     }
 }

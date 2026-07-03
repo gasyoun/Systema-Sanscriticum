@@ -49,12 +49,12 @@ class StuckStudentsReport
                 })
                     // Или работа на доработке зависла без пересдачи.
                     ->orWhereHas('homeworkSubmissions', function (Builder $h) use ($reworkCutoff) {
-                        $h->where('status', HomeworkSubmission::STATUS_NEEDS_REVISION)
+                        $h->whereIn('status', [HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION])
                             ->where('reviewed_at', '<', $reworkCutoff);
                     });
             })
             ->with(['homeworkSubmissions' => function ($h) use ($reworkCutoff) {
-                $h->where('status', HomeworkSubmission::STATUS_NEEDS_REVISION)
+                $h->whereIn('status', [HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION])
                     ->where('reviewed_at', '<', $reworkCutoff);
             }]);
     }
@@ -81,7 +81,7 @@ class StuckStudentsReport
         $stalledRework = $user->relationLoaded('homeworkSubmissions')
             ? $user->homeworkSubmissions->count()
             : $user->homeworkSubmissions()
-                ->where('status', HomeworkSubmission::STATUS_NEEDS_REVISION)
+                ->whereIn('status', [HomeworkSubmission::STATUS_NEEDS_CHANGES, HomeworkSubmission::LEGACY_STATUS_NEEDS_REVISION])
                 ->where('reviewed_at', '<', now()->subDays(self::REWORK_STALE_DAYS))
                 ->count();
 
