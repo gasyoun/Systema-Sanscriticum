@@ -116,13 +116,16 @@ class PaymentController extends Controller
             }
 
             // --- ОПРЕДЕЛЯЕМ КЛЮЧ ДЛЯ ДОСТУПА И НОМЕРА БЛОКОВ ---
-            $tariffKey = $tariff->type;
+            // accessKey() — единственный источник ключа доступа: не-блочные тарифы
+            // ('full'/'vip'/'bundle') → 'full', целый блок → 'block_N', половина →
+            // 'block_N_hH'. Раньше сюда писался сырой $tariff->type, поэтому оплаченный
+            // 'vip'/'bundle' сохранялся в payments.tariff как 'vip'/'bundle' и не
+            // совпадал ни с одним Lesson::unlockingKeys() → студент не открывал уроки.
+            $tariffKey = $tariff->accessKey();
             $startBlock = null;
             $endBlock = null;
 
             if ($tariff->type === 'block') {
-                // accessKey() даёт 'block_N' для целого блока и 'block_N_hH' для половины.
-                $tariffKey = $tariff->accessKey();
                 // 💡 Сохраняем номер блока — для отчётности в Google Sheets
                 // и чтобы администратор видел, за какой блок платят (для половины — тот же блок)
                 $startBlock = $tariff->block_number;
