@@ -64,6 +64,9 @@ class TeacherSalaryService
     /** @var array<int, array<int, string>>  course_id => [block_number => 'Y-m'] (только с датой) */
     private array $blockMonthsCache = [];
 
+    /** @var array<int, array<int, string>>  course_id => [block_number => 'Y-m-d'] (только с датой) */
+    private array $blockStartDatesCache = [];
+
     /** @var array<int, Collection<int, Payment>>  course_id => все paid/non-conditional платежи */
     private array $coursePaymentsCache = [];
 
@@ -226,7 +229,7 @@ class TeacherSalaryService
             $isPercent = SalaryScheme::isPercentType($terms['type']);
 
             foreach ($this->coursePayments($course->id) as $p) {
-                if ($p->tariff !== self::EXPENSE_TARIFF) {
+                if (! $this->isReturnPayment($p)) {
                     continue;
                 }
                 $month = $p->salary_recognition_month ?: $p->created_at?->format('Y-m');
@@ -776,16 +779,10 @@ class TeacherSalaryService
             $percent = (float) $terms['value'] ?: $fallbackPercent;
             $blockNumbers = $this->blockNumbersFor($course->id);
             // [number => 'Y-m-d'] для датированных блоков — чтобы отсечь ещё не начавшиеся.
-            $blockStarts = CourseBlock::query()
-                ->where('course_id', $course->id)
-                ->whereNotNull('starts_at')
-                ->get(['number', 'starts_at'])
-                ->mapWithKeys(fn (CourseBlock $cb) => [(int) $cb->number => $cb->starts_at->toDateString()])
-                ->all();
+            $blockStarts = $this->blockStartDatesFor($course->id);
 
             foreach ($this->coursePayments($course->id) as $p) {
-                if (in_array($p->tariff, self::NON_REVENUE_TARIFFS, true) || (float) $p->amount <= 0
-                    || $p->received_account === Payment::RECEIVED_TEACHER) {
+                if (! $this->isCourseRevenuePayment($p)) {
                     continue;
                 }
 
@@ -887,10 +884,8 @@ class TeacherSalaryService
         // деньги не прошли через кассу школы, а зачитываются в гонорар по номиналу
         // (directReceiptsForTeacher). Иначе — двойной счёт: препод и держит сумму,
         // и получил бы свой процент сверху. См. docs/direct-teacher-receipts.md.
-        $real = $payments->reject(fn (Payment $p) => in_array($p->tariff, self::NON_REVENUE_TARIFFS, true)
-            || (float) $p->amount <= 0
-            || $p->received_account === Payment::RECEIVED_TEACHER);
-        $returns = $payments->filter(fn (Payment $p) => $p->tariff === self::EXPENSE_TARIFF);
+        $real = $payments->filter(fn (Payment $p) => $this->isCourseRevenuePayment($p));
+        $returns = $payments->filter(fn (Payment $p) => $this->isReturnPayment($p));
 
         // Положительная выручка по месяцам (без возвратов) + ранний месяц студента.
         $revenue = [];
@@ -987,11 +982,19 @@ class TeacherSalaryService
             case 'percent':
             case 'percent_per_block':
                 $revenue = [];
+                // Ранний месяц студента считаем в этом же проходе (роллфорвард $m
+                // уже посчитан на событие) — без второго прохода по revenueEvents.
+                $studentEarliest = [];
                 foreach ($revenueEvents as $event) {
                     $m = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
                     $amt = $event['amount'];
                     $revenue[$m] = ($revenue[$m] ?? 0.0) + $amt;
                     $accruedGross[$m] = ($accruedGross[$m] ?? 0.0) + $amt * ($value / 100);
+
+                    $uid = $event['user_id'];
+                    if ($uid !== null && (! isset($studentEarliest[$uid]) || $m < $studentEarliest[$uid])) {
+                        $studentEarliest[$uid] = $m;
+                    }
                 }
                 // На ЗП возвраты влияют только в процентных схемах.
                 $returnsByMonth = [];
@@ -1001,7 +1004,6 @@ class TeacherSalaryService
                     $returnsByMonth[$m] = ($returnsByMonth[$m] ?? 0.0) + $amt;
                     $accruedReturns[$m] = ($accruedReturns[$m] ?? 0.0) + $amt * ($value / 100);
                 }
-                $studentEarliest = $this->studentEarliestFromEvents($revenueEvents, $closed);
                 break;
 
             case 'fix_per_block':
@@ -1077,6 +1079,47 @@ class TeacherSalaryService
         );
     }
 
+    /** Возврат/расход (tariff='Расход', отрицательная сумма) — вычитается из базы. */
+    private function isReturnPayment(Payment $payment): bool
+    {
+        return $payment->tariff === self::EXPENSE_TARIFF;
+    }
+
+    /**
+     * Платёж образует ВЫРУЧКУ КУРСА: не возврат/зеркало выплаты, положительная
+     * сумма и получен кассой школы. Прямые платежи на личный счёт преподавателя
+     * (RECEIVED_TEACHER) выручкой не считаются — они зачитываются в гонорар по
+     * номиналу (directReceiptsForTeacher), иначе двойной счёт. Единый предикат
+     * для computeCourseRevenue и availablePriorBlockPayments.
+     */
+    private function isCourseRevenuePayment(Payment $payment): bool
+    {
+        return ! in_array($payment->tariff, self::NON_REVENUE_TARIFFS, true)
+            && (float) $payment->amount > 0
+            && $payment->received_account !== Payment::RECEIVED_TEACHER;
+    }
+
+    /**
+     * Дата начала каждого датированного блока курса: [block_number => 'Y-m-d'].
+     * Кэш request-scoped — как blockMonthsFor, чтобы не бить CourseBlock в цикле
+     * по курсам преподавателя (availablePriorBlockPayments).
+     *
+     * @return array<int, string>
+     */
+    private function blockStartDatesFor(int $courseId): array
+    {
+        if (isset($this->blockStartDatesCache[$courseId])) {
+            return $this->blockStartDatesCache[$courseId];
+        }
+
+        return $this->blockStartDatesCache[$courseId] = CourseBlock::query()
+            ->where('course_id', $courseId)
+            ->whereNotNull('starts_at')
+            ->get(['number', 'starts_at'])
+            ->mapWithKeys(fn (CourseBlock $cb) => [(int) $cb->number => $cb->starts_at->toDateString()])
+            ->all();
+    }
+
     /**
      * Закрытые месяцы преподавателя (ролл-форвард). Предзагрузка всех периодов
      * одним запросом, request-scoped.
@@ -1128,28 +1171,6 @@ class TeacherSalaryService
         }
 
         return $month;
-    }
-
-    /**
-     * @param  list<array{month:string,amount:float,created_at:?Carbon,user_id:?int}>  $events
-     * @param  array<string, Carbon>  $closed
-     * @return array<int, string>
-     */
-    private function studentEarliestFromEvents(array $events, array $closed): array
-    {
-        $out = [];
-        foreach ($events as $event) {
-            if ($event['user_id'] === null) {
-                continue;
-            }
-
-            $month = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
-            if (! isset($out[$event['user_id']]) || $month < $out[$event['user_id']]) {
-                $out[$event['user_id']] = $month;
-            }
-        }
-
-        return $out;
     }
 
     /**
