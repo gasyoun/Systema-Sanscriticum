@@ -94,11 +94,28 @@ class DebtPaymentResolver
             ];
         }
 
+        // Перенос даты: доступен на ближайшем непогашенном обещании, если студент
+        // ещё не переносил его сам.
+        $reschedule = null;
+        if ($nextPromise instanceof PaymentPromise && $nextPromise->student_rescheduled_at === null) {
+            $reschedule = [
+                'promise_id' => $nextPromise->id,
+                'url' => route('student.debt.promise.reschedule', $nextPromise),
+                'current_date' => $nextPromise->promised_at?->format('Y-m-d'),
+            ];
+        }
+
         return [
             'type' => 'arrangement',
             'next' => $next,
             'whole' => $whole,
             'installment' => $isInstallment,
+            // Кастомная частичная оплата постит сюда с полем amount (границы —
+            // [next_amount, remaining]); прана — опциональным prana_amount.
+            'pay_all_url' => route('student.debt.course.pay-all', $debt->course_id),
+            'next_amount' => $next['amount'] ?? null,
+            'remaining' => $whole['amount'] ?? ($next['amount'] ?? null),
+            'reschedule' => $reschedule,
         ];
     }
 
