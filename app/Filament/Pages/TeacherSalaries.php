@@ -12,6 +12,7 @@ use App\Filament\Widgets\TeacherSalariesTotalWidget;
 use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\MarketingSetting;
 use App\Models\SalaryClosedPeriod;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
@@ -102,7 +103,7 @@ class TeacherSalaries extends Page implements HasTable
             ->modalHeading('Расчёт выплаты по блоку')
             ->modalWidth('2xl')
             ->modalSubmitActionLabel('Записать выплату')
-            ->fillForm(fn (): array => ['coefficient' => 92, 'post_to_finance' => true])
+            ->fillForm(fn (): array => ['coefficient' => 92, 'post_to_finance' => true, 'compare_percent' => $this->referenceTeacherPercent()])
             ->form([
                 // Снимок модели ЗП выбранного курса — управляет видимостью полей и формулой.
                 Forms\Components\Hidden::make('salary_type')->default('percent'),
@@ -259,7 +260,24 @@ class TeacherSalaries extends Page implements HasTable
                         ->required(fn (Forms\Get $get) => ! $this->isFixedModel($get('salary_type')))
                         ->live(onBlur: true)
                         ->helperText('Из ставки курса.'),
+
+                    // фикс-модели: гипотетический процент для сравнения «фикс vs процент».
+                    Forms\Components\TextInput::make('compare_percent')
+                        ->label('Сравнить с % от выручки')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->suffix('%')
+                        ->visible(fn (Forms\Get $get) => $this->isFixedModel($get('salary_type')))
+                        ->live(onBlur: true)
+                        ->helperText('Гипотетический процент. По умолчанию из настроек.'),
                 ]),
+
+                // Что вышло бы, будь эта фикс-ставка процентом от выручки блока.
+                Forms\Components\Placeholder::make('whatif_percent')
+                    ->label('Что было бы при проценте')
+                    ->visible(fn (Forms\Get $get) => $this->isFixedModel($get('salary_type')))
+                    ->content(fn (Forms\Get $get) => $this->whatIfPercentContent($get)),
 
                 Forms\Components\Repeater::make('extras')
                     ->label('Допзанятия')
@@ -936,6 +954,83 @@ class TeacherSalaries extends Page implements HasTable
     private function courseBlockCount(int $courseId): int
     {
         return $courseId ? CourseBlock::where('course_id', $courseId)->count() : 0;
+    }
+
+    /**
+     * Опорный процент преподавателя для сравнения «фикс vs процент»
+     * (из маркетинговых настроек, дефолт 30%).
+     */
+    private function referenceTeacherPercent(): float
+    {
+        return (float) (MarketingSetting::first()?->reference_teacher_percent ?? 30);
+    }
+
+    /**
+     * Сравнение «фикс vs процент» для калькулятора: сколько препод получил бы,
+     * будь его фикс-ставка процентом от выручки блока. Обе величины считаются
+     * через ОДИН коэффициент, поэтому допзанятия/доплаты/удержания (одинаковые
+     * в обоих сценариях) в разнице сокращаются — сравниваем схемную часть.
+     */
+    /**
+     * Схемная часть выплаты в обоих сценариях (через один коэффициент) и их
+     * разница: percent = выручка × сравн.% × коэф; fixed = фикс-база × коэф.
+     * delta > 0 → процент дороже школе; delta < 0 → фикс дешевле.
+     *
+     * @return array{fixed: float, percent: float, delta: float}
+     */
+    public static function whatIfPercentBreakdown(float $revenue, float $comparePct, float $coef, float $fixedBase): array
+    {
+        $fixed = round($fixedBase * $coef / 100, 2);
+        $percent = round($revenue * $comparePct / 100 * $coef / 100, 2);
+
+        return ['fixed' => $fixed, 'percent' => $percent, 'delta' => round($percent - $fixed, 2)];
+    }
+
+    private function whatIfPercentContent(Forms\Get $get): HtmlString
+    {
+        $courseId = (int) ($get('course_id') ?? 0);
+        $blockNumber = (int) ($get('block_number') ?? 0);
+        if (! $courseId || ! $blockNumber) {
+            return new HtmlString('<span class="text-sm text-gray-400">Выберите курс и блок…</span>');
+        }
+
+        $groupId = $get('group_id') ? (int) $get('group_id') : null;
+        $revenue = app(TeacherSalaryService::class)
+            ->blockGroupRevenue($courseId, $blockNumber, $groupId, ['teacher_id' => (int) $get('teacher_id')]);
+
+        $coef = $this->normalizeCoef($get('coefficient'));
+        $comparePct = (float) ($get('compare_percent') ?: 0);
+        $fixedBase = $this->effectiveBaseAndPct([
+            'salary_type' => $get('salary_type'),
+            'fixed_rate' => $get('fixed_rate'),
+            'student_count' => $get('student_count'),
+            'course_id' => $courseId,
+        ])['base'];
+
+        ['fixed' => $fixedCore, 'percent' => $hypothetical, 'delta' => $delta]
+            = self::whatIfPercentBreakdown($revenue, $comparePct, $coef, $fixedBase);
+
+        $pctText = rtrim(rtrim(number_format($comparePct, 2, '.', ''), '0'), '.');
+        $coefNote = $coef != 100.0
+            ? ' · коэф. '.rtrim(rtrim(number_format($coef, 2, '.', ''), '0'), '.').'%'
+            : '';
+
+        if ($delta > 0) {
+            $verdict = '<span class="text-warning-600 dark:text-warning-400">процент дороже школе на '.$this->money(abs($delta)).'</span>';
+        } elseif ($delta < 0) {
+            $verdict = '<span class="text-success-600 dark:text-success-400">фикс дешевле школе на '.$this->money(abs($delta)).'</span>';
+        } else {
+            $verdict = 'фикс и процент равны';
+        }
+
+        return new HtmlString(
+            '<div class="text-sm space-y-1">'
+            .'<div>Выручка блока: <b>'.$this->money($revenue).'</b>'.$coefNote.'</div>'
+            .'<div>При <b>'.$pctText.'%</b> от выручки: <b>'.$this->money($hypothetical).'</b></div>'
+            .'<div>Сейчас (фикс): <b>'.$this->money($fixedCore).'</b></div>'
+            .'<div>Разница: <b>'.$this->money($delta).'</b> — '.$verdict.'</div>'
+            .'</div>'
+        );
     }
 
     /**
