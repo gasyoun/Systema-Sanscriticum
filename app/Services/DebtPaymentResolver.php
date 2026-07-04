@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
