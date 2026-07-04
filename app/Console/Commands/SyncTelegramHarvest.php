@@ -46,7 +46,8 @@ class SyncTelegramHarvest extends Command
         $line = 'Telegram harvest: '.$result['status']
             .'; harvested='.($result['harvested'] ?? 0)
             .'; stored='.($result['stored'] ?? 0)
-            .'; skipped_dupe='.($result['skipped_dupe'] ?? 0);
+            .'; skipped_dupe='.($result['skipped_dupe'] ?? 0)
+            .'; failed='.($result['failed'] ?? 0);
         if (! empty($result['error'])) {
             $line .= '; error='.$result['error'];
         }
