@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Enums\SalaryScheme;
 use App\Filament\Exports\TeacherSalariesExporter;
 use App\Filament\Resources\TeacherPayoutResource;
 use App\Filament\Resources\TeacherResource;
@@ -746,7 +747,7 @@ class TeacherSalaries extends Page implements HasTable
     /** Фикс-модели ЗП (ставка в ₽, без процента и без выручки). */
     private function isFixedModel(?string $type): bool
     {
-        return in_array($type, ['fix_per_block', 'fix_total', 'fix_per_student'], true);
+        return SalaryScheme::isFixedType($type);
     }
 
     /** Коэффициент: пусто ⇒ 100% (без скидки). */
