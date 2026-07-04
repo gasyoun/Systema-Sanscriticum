@@ -134,7 +134,7 @@ class DebtPaymentController extends Controller
         $purpose = 'Заказ №'.$payment->id.' | '.$courseName.' — погашение задолженности';
 
         try {
-            $response = $tochka = app(TochkaPaymentService::class)->createPaymentWithReceipt(
+            $response = app(TochkaPaymentService::class)->createPaymentWithReceipt(
                 user: $user,
                 amount: $amount,
                 purpose: $purpose,
