@@ -129,6 +129,10 @@ return [
         // OUT-OF-GIT raw store (PII-bearing). Points at the corpus repo's gitignored
         // data/raw/ dir or an external workspace — never inside the Systema repo.
         'store_path' => env('TELEGRAM_HARVEST_STORE_PATH', storage_path('app/telegram-harvest/raw')),
+        // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
+        // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
+        'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
+        'peer_delay_max' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MAX', 0),
     ],
 
     'vk' => [

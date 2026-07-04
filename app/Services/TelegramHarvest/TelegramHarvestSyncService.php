@@ -6,6 +6,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
 use App\Services\Telegram\MadelineClientFactory;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -26,9 +27,20 @@ use Throwable;
  */
 class TelegramHarvestSyncService
 {
+    private ?HarvestStoreWriter $writer = null;
+
     public function __construct(
         private readonly MadelineClientFactory $clientFactory,
     ) {}
+
+    /**
+     * Override the raw-store writer (tests inject a throwing writer to exercise
+     * the dead-letter lane; the live path uses the config-built default).
+     */
+    public function setStoreWriter(HarvestStoreWriter $writer): void
+    {
+        $this->writer = $writer;
+    }
 
     /**
      * Live harvest over the configured peer list. Requires MadelineProto
@@ -76,6 +88,47 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * D5: read-only peer discovery. Enumerate the account's dialogs and resolve
+     * each to id/username/type/access_level/restricted so the operator can pick
+     * which to add to TELEGRAM_HARVEST_PEERS. No harvest, no store, no cursor.
+     *
+     * @return array<int, array{id: ?int, username: ?string, type: string, access_level: string, restricted: bool, title: ?string}>
+     */
+    public function discoverPeers(): array
+    {
+        if (! $this->clientFactory->isConfigured()) {
+            return [];
+        }
+
+        $client = $this->clientFactory->open();
+        if (! method_exists($client, 'getDialogs')) {
+            return [];
+        }
+
+        $peers = [];
+        $seen = [];
+        foreach ((array) $client->getDialogs() as $dialog) {
+            $peer = $this->telegramId($dialog) ?? (is_scalar($dialog) ? $dialog : null);
+            if ($peer === null || isset($seen[(string) $peer])) {
+                continue;
+            }
+            $seen[(string) $peer] = true;
+
+            $info = $this->peerInfo($client, $peer);
+            $peers[] = [
+                'id' => $info['id'],
+                'username' => $info['username'],
+                'type' => $info['type'],
+                'access_level' => $info['access_level'],
+                'restricted' => $info['restricted'],
+                'title' => $info['title'],
+            ];
+        }
+
+        return $peers;
+    }
+
+    /**
      * Apply dedup + raw-store write + cursor advance to already-normalized
      * records. Shared by the live path, the --payload local-import path, and
      * tests (so the pipeline is exercisable without MadelineProto).
@@ -90,6 +143,7 @@ class TelegramHarvestSyncService
 
         $stored = 0;
         $skipped = 0;
+        $failed = 0;
 
         foreach ($messages as $message) {
             $chatId = (int) ($message['telegram_chat_id'] ?? 0);
@@ -107,10 +161,17 @@ class TelegramHarvestSyncService
                 continue;
             }
 
-            $message['harvested_at'] ??= now()->toIso8601String();
-            $message['source_account'] = $account->name;
-            $writer->write($message);
-            $stored++;
+            try {
+                $message['harvested_at'] ??= now()->toIso8601String();
+                $message['source_account'] = $account->name;
+                $writer->write($message);
+                $stored++;
+            } catch (Throwable $e) {
+                // Dead-letter lane (clean-room of tracker.py failed_messages): a
+                // single bad record must not abort the whole harvest.
+                $this->recordFailure($message, $e);
+                $failed++;
+            }
         }
 
         $this->advanceCursors($account, $messages);
@@ -119,9 +180,37 @@ class TelegramHarvestSyncService
             'harvested' => count($messages),
             'stored' => $stored,
             'skipped_dupe' => $skipped,
+            'failed' => $failed,
         ]);
 
-        return ['harvested' => count($messages), 'stored' => $stored, 'skipped_dupe' => $skipped];
+        return ['harvested' => count($messages), 'stored' => $stored, 'skipped_dupe' => $skipped, 'failed' => $failed];
+    }
+
+    /**
+     * Append a failed record's provenance to the out-of-git `_failures/` lane so
+     * it can be reprocessed later. Never re-throws (best-effort dead-letter).
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function recordFailure(array $message, Throwable $e): void
+    {
+        try {
+            $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
+            $dir = $path.'/_failures';
+            File::ensureDirectoryExists($dir);
+            $entry = [
+                'peer' => $message['peer'] ?? null,
+                'telegram_message_id' => (int) ($message['telegram_message_id'] ?? 0),
+                'error' => $e->getMessage(),
+                'at' => now()->toIso8601String(),
+            ];
+            File::append(
+                $dir.'/'.now()->format('Y-m-d').'.jsonl',
+                json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n",
+            );
+        } catch (Throwable $inner) {
+            Log::error('Telegram harvest dead-letter write failed', ['error' => $inner->getMessage()]);
+        }
     }
 
     private function supportAlreadyIngested(int $chatId, int $messageId): bool
@@ -143,7 +232,12 @@ class TelegramHarvestSyncService
         $peerState = $account->sync_state['peers'] ?? [];
         $messages = [];
 
-        foreach ($peers as $peer) {
+        foreach ($peers as $index => $peer) {
+            // Anti-ban: randomized inter-peer delay (default 0 → tests never sleep).
+            if ($index > 0) {
+                $this->interPeerDelay();
+            }
+
             $info = $this->peerInfo($client, $peer);
             $peerId = $info['id'];
             if ($peerId === null) {
@@ -152,16 +246,7 @@ class TelegramHarvestSyncService
 
             $minId = (int) (($peerState[(string) $peerId]['last_message_id']) ?? 0);
 
-            $history = $client->messages->getHistory([
-                'peer' => $peer,
-                'offset_id' => 0,
-                'offset_date' => 0,
-                'add_offset' => 0,
-                'limit' => $limit,
-                'max_id' => 0,
-                'min_id' => $minId,
-                'hash' => 0,
-            ]);
+            $history = $this->getHistoryWithBackoff($client, $peer, $limit, $minId);
             $usersById = $this->usersById($history['users'] ?? []);
 
             foreach (($history['messages'] ?? []) as $raw) {
@@ -176,13 +261,72 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * Randomized pause between peers to look less bot-like. Bounds come from
+     * config (default 0/0 so the test/CI path never sleeps).
+     */
+    private function interPeerDelay(): void
+    {
+        $min = (int) config('services.telegram_harvest.peer_delay_min', 0);
+        $max = (int) config('services.telegram_harvest.peer_delay_max', 0);
+        if ($max <= 0 || $max < $min) {
+            return;
+        }
+        sleep(random_int(max(0, $min), $max));
+    }
+
+    /**
+     * Fetch history with a single FloodWait backoff: on FLOOD_WAIT_<n> sleep the
+     * advised seconds and retry once (clean-room of the cloner's anti-ban logic).
+     *
+     * @return array<string, mixed>
+     */
+    private function getHistoryWithBackoff(object $client, string $peer, int $limit, int $minId): array
+    {
+        $params = [
+            'peer' => $peer,
+            'offset_id' => 0,
+            'offset_date' => 0,
+            'add_offset' => 0,
+            'limit' => $limit,
+            'max_id' => 0,
+            'min_id' => $minId,
+            'hash' => 0,
+        ];
+
+        try {
+            return $client->messages->getHistory($params);
+        } catch (Throwable $e) {
+            $wait = $this->floodWaitSeconds($e->getMessage());
+            if ($wait === null) {
+                throw $e;
+            }
+            Log::warning('Telegram harvest FLOOD_WAIT backoff', ['peer' => $peer, 'seconds' => $wait]);
+            sleep($wait);
+
+            return $client->messages->getHistory($params);
+        }
+    }
+
+    /**
+     * Parse the advised wait from a FLOOD_WAIT_<n> RPC error message, else null.
+     */
+    private function floodWaitSeconds(string $message): ?int
+    {
+        if (preg_match('/FLOOD_WAIT_(\d+)/', $message, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
+    }
+
+    /**
      * Resolve a peer's id, type and public/private access level from MadelineProto.
      *
-     * @return array{id: ?int, type: string, title: ?string, username: ?string, access_level: string}
+     * @return array{id: ?int, type: string, title: ?string, username: ?string, access_level: string, restricted: bool}
      */
-    private function peerInfo(object $client, string $peer): array
+    private function peerInfo(object $client, int|string $peer): array
     {
-        $default = ['id' => null, 'type' => 'unknown', 'title' => null, 'username' => null, 'access_level' => 'private_group'];
+        $default = ['id' => null, 'type' => 'unknown', 'title' => null, 'username' => null, 'access_level' => 'private_group', 'restricted' => false];
 
         if (! method_exists($client, 'getInfo')) {
             return $default;
@@ -213,6 +357,8 @@ class TelegramHarvestSyncService
             'title' => $chat['title'] ?? null,
             'username' => $username,
             'access_level' => $accessLevel,
+            // D6: channels/groups that disable saving/forwarding set noforwards.
+            'restricted' => (bool) ($chat['noforwards'] ?? false),
         ];
     }
 
@@ -228,8 +374,11 @@ class TelegramHarvestSyncService
             return null;
         }
 
-        $text = $raw['message'] ?? null;
-        if ($text === null || $text === '') {
+        $text = (string) ($raw['message'] ?? '');
+        $media = $this->mediaMeta($raw);
+
+        // D4: keep media-bearing messages (previously dropped) — text OR media qualifies.
+        if ($text === '' && ! $media['has_media']) {
             return null;
         }
 
@@ -244,12 +393,59 @@ class TelegramHarvestSyncService
             'peer_title' => $info['title'],
             'peer_username' => $info['username'],
             'access_level' => $info['access_level'],
+            // D6: record the noforwards/restricted flag for the publication gate; harvest anyway.
+            'peer_restricted' => (bool) ($info['restricted'] ?? false),
             'telegram_user_id' => $authorId,
             'author_name' => $author ? $this->displayName($author) : null,
             'author_username' => $author['username'] ?? null,
             'direction' => ! empty($raw['out']) ? 'outgoing' : 'incoming',
             'text' => $text,
+            // D4: media metadata only — never download the file.
+            'has_media' => $media['has_media'],
+            'media_type' => $media['media_type'],
+            'media_caption' => $media['has_media'] && $text !== '' ? $text : null,
+            'media_size' => $media['media_size'],
+            'media_mime' => $media['media_mime'],
             'sent_at' => CarbonImmutable::createFromTimestamp((int) $raw['date'], config('app.timezone'))->toIso8601String(),
+        ];
+    }
+
+    /**
+     * D4: extract media presence + metadata from a raw MadelineProto message.
+     * Metadata only — the file itself is NEVER downloaded (a future D## if taken).
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array{has_media: bool, media_type: ?string, media_size: ?int, media_mime: ?string}
+     */
+    private function mediaMeta(array $raw): array
+    {
+        $media = $raw['media'] ?? null;
+        if (! is_array($media) || $media === []) {
+            return ['has_media' => false, 'media_type' => null, 'media_size' => null, 'media_mime' => null];
+        }
+
+        $kind = (string) ($media['_'] ?? '');
+        $document = is_array($media['document'] ?? null) ? $media['document'] : [];
+        $mime = isset($document['mime_type']) ? (string) $document['mime_type'] : null;
+        $size = isset($document['size']) ? (int) $document['size'] : null;
+
+        // photo/document/audio/video/… — prefer the document mime prefix, fall
+        // back to the MadelineProto media constructor name.
+        $type = match (true) {
+            $kind === 'messageMediaPhoto' => 'photo',
+            $mime !== null && str_starts_with($mime, 'audio/') => 'audio',
+            $mime !== null && str_starts_with($mime, 'video/') => 'video',
+            $mime !== null && str_starts_with($mime, 'image/') => 'image',
+            $kind === 'messageMediaDocument' => 'document',
+            $kind !== '' => (string) preg_replace('/^messageMedia/', '', $kind),
+            default => 'unknown',
+        };
+
+        return [
+            'has_media' => true,
+            'media_type' => strtolower($type),
+            'media_size' => $size,
+            'media_mime' => $mime,
         ];
     }
 
@@ -297,9 +493,13 @@ class TelegramHarvestSyncService
 
     private function storeWriter(): HarvestStoreWriter
     {
+        if ($this->writer !== null) {
+            return $this->writer;
+        }
+
         $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
 
-        return new HarvestStoreWriter($path);
+        return $this->writer = new HarvestStoreWriter($path);
     }
 
     /**
