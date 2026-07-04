@@ -78,6 +78,15 @@ class PaymentObserver
      */
     private function isSyncable(Payment $payment): bool
     {
+        // Нулевые access-only siblings (мульти-блочный доступ, BlockAccessMaterializer)
+        // — не реальная транзакция, а «дорисовка ключа»; в финансовый лист не идут.
+        // Нулевые ЛЕГИТИМНЫЕ оплаты (бесплатный доступ, 100%-промокод) синкаются —
+        // отсекаем строго по маркеру transaction_id, а не по amount==0.
+        if (is_string($payment->transaction_id)
+            && str_starts_with($payment->transaction_id, \App\Services\BlockAccessMaterializer::GRANT_PREFIX)) {
+            return false;
+        }
+
         return in_array($payment->status, self::SUCCESS_STATUSES, true)
             && ! $payment->is_conditional;
     }

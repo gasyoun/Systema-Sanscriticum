@@ -36,11 +36,13 @@ class PaymentPromise extends Model
         'installment_group_id',
         'revocation_channels_sent',
         'revocation_notified_at',
+        'student_rescheduled_at',
     ];
 
     protected $casts = [
         'promised_at' => 'date',
         'actual_paid_at' => 'date',
+        'student_rescheduled_at' => 'datetime',
         'amount' => 'decimal:2',
         'fulfilled_at' => 'datetime',
         'cancelled_at' => 'datetime',

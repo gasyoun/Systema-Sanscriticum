@@ -176,6 +176,23 @@ class CuratorNotifier
         $this->dispatchToCurators($this->join($lines));
     }
 
+    public function promiseRescheduledByStudent(PaymentPromise $promise): void
+    {
+        $lines = [
+            '📅 <b>Студент перенёс дату оплаты</b>',
+            '',
+            $this->studentLine($promise->user),
+            $this->courseLine($promise->course),
+            'Новая дата: <b>'.$this->date($promise->promised_at).'</b>',
+        ];
+        if ($promise->amount !== null) {
+            $lines[] = 'Сумма: '.$this->money((float) $promise->amount);
+        }
+        $lines[] = $this->adminLink($promise->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
     public function promiseCancelled(PaymentPromise $promise): void
     {
         $lines = [

@@ -40,6 +40,8 @@ class Payment extends Model
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
         'linked_promise_id',
+        // Платёж создан должником самостоятельно из кабинета (self-service).
+        'is_self_service',
         // --- Прямой платёж на личный счёт преподавателя (минуя кассу школы) ---
         'received_account',
         'received_by_teacher_id',
@@ -63,6 +65,7 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'is_self_service' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'foreign_amount' => 'decimal:2',
@@ -379,6 +382,10 @@ class Payment extends Model
                 $payment->refundReferralCreditIfApplied();
 
                 if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
+                    // Снимаем нулевые access-only siblings этого платежа — иначе
+                    // оплаченные «в кредит доступа» блоки остались бы открыты
+                    // после отката основного платежа.
+                    app(\App\Services\BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
                 }
             }
@@ -422,6 +429,12 @@ class Payment extends Model
             // Self-service: должник сам погасил обещание/рассрочку — закрываем
             // привязанное обещание, чтобы у куратора не висел открытый долг.
             app(\App\Services\PromiseAutoFulfiller::class)->handlePaidPayment($payment);
+
+            // Мульти-блочный доступ: платёж с диапазоном блоков несёт лишь один
+            // ключ — дорисовываем недостающие ключи блоков нулевыми access-only
+            // строками (иначе оплаченные блоки N+1..M остаются закрыты). Лечит и
+            // менеджерский PromiseFulfillment.
+            app(\App\Services\BlockAccessMaterializer::class)->materialize($payment);
         }
     }
 
