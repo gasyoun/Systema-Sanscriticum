@@ -8,36 +8,43 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Services\Payments\TochkaPaymentService;
+use App\Services\Prana\PranaService;
+use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Самообслуживание должника (self-service): студент сам платит по согласованной
- * договорённости/рассрочке из личного кабинета. Плоский долг «не продлил» идёт
- * штатным CheckoutController — сюда попадает только promise-оплата, где сумма
- * зафиксирована куратором (часто со скидкой) и не равна цене тарифа.
+ * Самообслуживание должника (self-service): студент сам гасит долг из личного
+ * кабинета. Плоский долг «не продлил» без договорённости идёт штатным
+ * CheckoutController (поблочно) ИЛИ сюда одним бандлом (payBundle). Рассрочка/
+ * обещание — сюда (сумма зафиксирована куратором, не равна цене тарифа).
  *
- * Реальный платёж создаётся по образцу PromiseFulfillment/PaymentController:
- * pending → Точка → вебхук переведёт в paid → Payment::processSuccessfulPayment
- * выдаст доступ, а PromiseAutoFulfiller закроет привязанное обещание. Поле
- * linked_promise_id при is_conditional=false — маркер self-service оплаты.
+ * Реальный платёж: pending → Точка → вебхук → Payment::processSuccessfulPayment
+ * (доступ + BlockAccessMaterializer дорисует ключи мульти-блока) + PromiseAutoFulfiller
+ * закроет покрытые обещания. Все платежи помечаются is_self_service=true.
  *
- * Промокод/прана к согласованной рассрочке в Phase 1 не применяются намеренно.
+ * Phase 2: прана к рассрочке (лояльность/промокод по-прежнему нет — цена
+ * фиксирована), кастомная частичная сумма, бандл плоского долга, перенос даты.
  */
 class DebtPaymentController extends Controller
 {
     /** Сколько минут держим незавершённый self-service заказ «занятым» (анти-дубль). */
     private const PENDING_HOLD_MINUTES = 30;
 
+    /** На сколько дней вперёд студент может перенести дату обещания (один раз). */
+    private const RESCHEDULE_MAX_DAYS = 14;
+
     public function __construct(
         private readonly StudentDebtsService $debts,
+        private readonly PranaService $prana,
     ) {}
 
-    /** Оплатить одно обещание (одиночное или очередной платёж рассрочки). */
-    public function payPromise(PaymentPromise $promise): RedirectResponse
+    /** Оплатить одно обещание (одиночное или конкретный взнос рассрочки). */
+    public function payPromise(PaymentPromise $promise, Request $request): RedirectResponse
     {
         $user = auth()->user();
 
@@ -60,11 +67,16 @@ class DebtPaymentController extends Controller
             amount: $amount,
             leadPromiseId: $promise->id,
             debt: $debt,
+            pranaRequested: (int) $request->input('prana_amount', 0),
         );
     }
 
-    /** Погасить весь остаток графика по курсу одним платежом. */
-    public function payAll(Course $course): RedirectResponse
+    /**
+     * Погасить остаток графика по курсу. Без `amount` — весь остаток; с `amount`
+     * — кастомная частичная сумма в диапазоне [ближайший взнос, весь остаток]
+     * (greedy-закрытие ранних обещаний делает PromiseAutoFulfiller).
+     */
+    public function payAll(Course $course, Request $request): RedirectResponse
     {
         $user = auth()->user();
 
@@ -79,11 +91,22 @@ class DebtPaymentController extends Controller
         }
 
         $debt = $this->debtRow($user, (int) $course->id);
-        // Остаток по графику; если суммы обещаний не заданы — берём расчётный долг.
         $planRemaining = (float) $unmet->sum(fn (PaymentPromise $p) => (float) ($p->amount ?? 0));
-        $amount = $planRemaining > 0
+        $remaining = $planRemaining > 0
             ? $planRemaining
             : ($debt?->debt_amount !== null ? (float) $debt->debt_amount : 0.0);
+
+        // Ближайший взнос — нижняя граница кастомной частичной оплаты.
+        $nextInstalment = (float) ($unmet->first()->amount ?? $remaining);
+
+        $amount = $remaining;
+        if ($request->filled('amount')) {
+            $custom = (float) $request->input('amount');
+            if ($custom < $nextInstalment - 0.01 || $custom > $remaining + 0.01) {
+                return back()->with('error', 'Сумма должна быть не меньше ближайшего взноса и не больше остатка по графику.');
+            }
+            $amount = $custom;
+        }
 
         return $this->startCheckout(
             user: $user,
@@ -91,33 +114,129 @@ class DebtPaymentController extends Controller
             amount: $amount,
             leadPromiseId: (int) $unmet->first()->id,
             debt: $debt,
+            pranaRequested: (int) $request->input('prana_amount', 0),
         );
     }
 
     /**
-     * Общая часть: создать pending-платёж (в транзакции) и увести в Точку
-     * (после commit — сеть держать row-lock нельзя, как в PaymentController).
+     * Бандл: погасить весь плоский многоблочный долг «не продлил» одним платежом
+     * (без договорённости). Доступ ко всем блокам откроется через
+     * BlockAccessMaterializer по диапазону.
+     */
+    public function payBundle(Course $course, Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        $debt = $this->debtRow($user, (int) $course->id);
+
+        if ($debt === null || ! empty($debt->has_arrangement)) {
+            return back()->with('error', 'Бандл доступен только для долга без договорённости.');
+        }
+
+        $blocks = array_values(array_map('intval', $debt->debt_block_numbers ?? []));
+        if (count($blocks) < 2) {
+            return back()->with('error', 'Бандл применим к долгу из нескольких блоков.');
+        }
+
+        // Цена бандла = сумма итоговых цен тарифов оплачиваемых блоков (лояльность
+        // применяется, как в обычном чекауте). Блоки без тарифа не бандлятся.
+        $amount = 0.0;
+        $unpriced = [];
+        foreach ($blocks as $n) {
+            $tariff = \App\Models\Tariff::query()
+                ->where('course_id', $course->id)
+                ->where('is_active', true)
+                ->where('type', 'block')
+                ->where('block_number', $n)
+                ->whereNull('block_half')
+                ->first();
+            if ($tariff === null) {
+                $unpriced[] = $n;
+
+                continue;
+            }
+            $amount += (float) $tariff->calculateFinalPriceForUser($user);
+        }
+
+        if (! empty($unpriced)) {
+            return back()->with('error', 'Не для всех блоков есть тариф — оформите оплату через куратора.');
+        }
+
+        return $this->startCheckout(
+            user: $user,
+            courseId: (int) $course->id,
+            amount: $amount,
+            leadPromiseId: null,
+            debt: $debt,
+            pranaRequested: (int) $request->input('prana_amount', 0),
+        );
+    }
+
+    /** Перенести дату ближайшего обещания вперёд (один раз, в пределах лимита). */
+    public function reschedule(PaymentPromise $promise, Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($promise->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if (! $promise->isUnmet()) {
+            return back()->with('error', 'Перенести можно только активное обещание.');
+        }
+
+        if ($promise->student_rescheduled_at !== null) {
+            return back()->with('error', 'Вы уже переносили дату по этой договорённости. Дальнейшие изменения — через куратора.');
+        }
+
+        $request->validate(['new_date' => 'required|date']);
+        $newDate = \Illuminate\Support\Carbon::parse($request->input('new_date'))->startOfDay();
+        $today = now()->startOfDay();
+        $maxDate = $today->copy()->addDays(self::RESCHEDULE_MAX_DAYS);
+        $original = $promise->promised_at?->copy()->startOfDay() ?? $today;
+
+        if ($newDate->lte($original)) {
+            return back()->with('error', 'Новая дата должна быть позже текущей.');
+        }
+        if ($newDate->gt($maxDate)) {
+            return back()->with('error', 'Перенести можно не более чем на '.self::RESCHEDULE_MAX_DAYS.' дней вперёд.');
+        }
+
+        $promise->forceFill([
+            'promised_at' => $newDate,
+            'student_rescheduled_at' => now(),
+            // Возвращаем в active, если демон уже пометил expired — дата снова в будущем.
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ])->save();
+
+        app(\App\Services\CuratorNotifier::class)->promiseRescheduledByStudent($promise);
+
+        return back()->with('success', 'Дата оплаты перенесена на '.$newDate->format('d.m.Y').'. Куратор уведомлён.');
+    }
+
+    /**
+     * Общая часть: (гард дубля) → создать pending-платёж (в транзакции, со
+     * списанием праны) → увести в Точку ПОСЛЕ commit (сеть не держит row-lock).
      */
     private function startCheckout(
         \App\Models\User $user,
         int $courseId,
         float $amount,
-        int $leadPromiseId,
+        ?int $leadPromiseId,
         ?object $debt,
+        int $pranaRequested = 0,
     ): RedirectResponse {
         if ($amount <= 0) {
             return back()->with('error', 'Не удалось определить сумму к оплате. Обратитесь к куратору.');
         }
 
         // Анти-дубль: свежий незавершённый self-service заказ по этому курсу уже
-        // висит (двойной клик / возврат по back) → не создаём второй payment-link,
-        // иначе студент может оплатить долг дважды. Зеркалит PromoCode::hasRecentPendingForUser.
+        // висит (двойной клик / back) → не создаём второй payment-link, иначе
+        // студент может оплатить долг дважды.
         $hasRecentPending = Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $courseId)
             ->where('status', 'pending')
-            ->where('is_conditional', false)
-            ->whereNotNull('linked_promise_id')
+            ->where('is_self_service', true)
             ->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES))
             ->exists();
 
@@ -130,23 +249,57 @@ class DebtPaymentController extends Controller
             return back()->with('error', 'Курс не найден.');
         }
 
-        // Блоки долга → диапазон/ключ. Зеркалим PromiseFulfillment: tariff по
-        // стартовому блоку (или 'full', если долг = весь курс), start/end для
-        // отчётности. Так self-service открывает доступ ровно как ручное
-        // «Подтвердить оплату» куратора — без новой семантики доступа.
         [$tariffKey, $startBlock, $endBlock] = $this->resolveKeyAndBlocks($course, $debt);
 
-        $payment = DB::transaction(fn () => Payment::create([
-            'user_id' => $user->id,
-            'course_id' => $courseId,
-            'amount' => $amount,
-            'tariff' => $tariffKey,
-            'status' => 'pending',
-            'start_block' => $startBlock,
-            'end_block' => $endBlock,
-            'is_conditional' => false,
-            'linked_promise_id' => $leadPromiseId,
-        ]));
+        // Прана: студент может списать СВОЮ прану против суммы (лояльность/промокод
+        // не применяем — цена фиксирована куратором). Максимум считаем на сервере,
+        // клиенту не верим (зеркалит PaymentController::createPayment).
+        $result = DB::transaction(function () use ($user, $courseId, $amount, $tariffKey, $startBlock, $endBlock, $leadPromiseId, $pranaRequested) {
+            $finalAmount = $amount;
+            $pranaToSpend = 0;
+
+            if ($pranaRequested > 0 && PranaSettings::isActive()) {
+                $maxSpend = $this->prana->maxSpendableForPrice($user, $finalAmount);
+                $pranaToSpend = min($pranaRequested, $maxSpend);
+                $rate = PranaSettings::rate();
+                if ($rate > 0) {
+                    $pranaToSpend = intdiv($pranaToSpend, $rate) * $rate;
+                }
+                if ($pranaToSpend > 0) {
+                    $finalAmount = max(1.0, $finalAmount - $this->prana->pranaToRubles($pranaToSpend));
+                } else {
+                    $pranaToSpend = 0;
+                }
+            }
+
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $courseId,
+                'amount' => $finalAmount,
+                'prana_spent' => $pranaToSpend,
+                'tariff' => $tariffKey,
+                'status' => 'pending',
+                'start_block' => $startBlock,
+                'end_block' => $endBlock,
+                'is_conditional' => false,
+                'is_self_service' => true,
+                'linked_promise_id' => $leadPromiseId,
+            ]);
+
+            if ($pranaToSpend > 0) {
+                try {
+                    $this->prana->spend($user, $pranaToSpend, 'spent_on_purchase', $payment);
+                } catch (\RuntimeException $e) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'prana_amount' => 'Не удалось списать прану — обновите страницу и попробуйте снова.',
+                    ]);
+                }
+            }
+
+            return [$payment, $finalAmount];
+        });
+
+        [$payment, $finalAmount] = $result;
 
         $courseName = $course->title ?? 'Курс';
         $purpose = 'Заказ №'.$payment->id.' | '.$courseName.' — погашение задолженности';
@@ -154,11 +307,12 @@ class DebtPaymentController extends Controller
         try {
             $response = app(TochkaPaymentService::class)->createPaymentWithReceipt(
                 user: $user,
-                amount: $amount,
+                amount: (float) $finalAmount,
                 purpose: $purpose,
                 itemName: $courseName.' — погашение задолженности',
             );
         } catch (ConnectionException $e) {
+            // failed → наблюдатель Payment вернёт списанную прану.
             $payment->update(['status' => 'failed']);
             Log::error('Tochka недоступна (self-service debt)', [
                 'payment_id' => $payment->id,
@@ -192,8 +346,6 @@ class DebtPaymentController extends Controller
         $blocks = array_values(array_map('intval', $blocks));
 
         if (empty($blocks)) {
-            // Нет разложения по блокам (курс без актуального блока / чистая
-            // договорённость) — открываем весь курс: студент гасит весь долг.
             return ['full', null, null];
         }
 
@@ -201,8 +353,8 @@ class DebtPaymentController extends Controller
         $end = max($blocks);
         $courseBlockCount = $course->blocks->count();
 
-        // Долг = весь курс → 'full' (один ключ открывает всё). Иначе ключ по
-        // стартовому блоку, как в PromiseFulfillment.
+        // Долг = весь курс → 'full' (ключ открывает всё). Иначе ключ по стартовому
+        // блоку; остальные блоки диапазона откроет BlockAccessMaterializer.
         if ($courseBlockCount > 0 && count($blocks) >= $courseBlockCount) {
             return ['full', $start, $end];
         }
