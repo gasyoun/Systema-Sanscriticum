@@ -65,6 +65,7 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'is_self_service' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'foreign_amount' => 'decimal:2',
