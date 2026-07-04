@@ -40,6 +40,12 @@ class Course extends Model
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
         'format',
+        // --- ПРОДАЮЩАЯ СТРАНИЦА (лендинг) ---
+        'audience',
+        'outcomes',
+        'tech_requirements',
+        'meta_title',
+        'meta_description',
     ];
 
     public function categories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -97,7 +103,25 @@ class Course extends Model
         'is_active' => 'boolean',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
+        // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
+        'audience' => 'array',
+        'outcomes' => 'array',
     ];
+
+    /**
+     * Техтребования курса: per-course override или общий дефолт. Пусто на курсе →
+     * общий текст (сейчас статичный дефолт; при появлении поля в MarketingSetting
+     * читать оттуда). Единый источник для блока «Техтребования» на лендинге.
+     */
+    public function techRequirements(): ?string
+    {
+        return filled($this->tech_requirements)
+            ? $this->tech_requirements
+            : self::DEFAULT_TECH_REQUIREMENTS;
+    }
+
+    /** Общий дефолт техтребований (когда у курса нет override). */
+    public const DEFAULT_TECH_REQUIREMENTS = 'Для обучения понадобится компьютер, планшет или смартфон с доступом в интернет и любой современный браузер. Специальное программное обеспечение не требуется — все материалы и видеозаписи доступны прямо в личном кабинете.';
 
     public function teacher()
     {
@@ -262,6 +286,36 @@ class Course extends Model
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
+    }
+
+    /** Вопросы-ответы по курсу (блок «FAQ» продающей страницы), по порядку. */
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(CourseFaq::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** Отзывы, прикреплённые к курсу из библиотеки, в порядке пивота. */
+    public function testimonials(): BelongsToMany
+    {
+        return $this->belongsToMany(Testimonial::class, 'course_testimonial')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    /**
+     * Публичный preview-урок курса (блок «Пример урока»). Ровно один на курс —
+     * гарантируется валидацией в Filament. Фильтр is_published зеркалит публичный
+     * preview-роут (ShopController::preview): блок/CTA видны ровно тогда, когда
+     * урок реально открывается. hasOne берёт первый по sort_order.
+     */
+    public function previewLesson(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Lesson::class)
+            ->where('is_preview', true)
+            ->where('is_published', true)
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     // ==========================================

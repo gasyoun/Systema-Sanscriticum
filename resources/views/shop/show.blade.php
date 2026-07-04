@@ -1,5 +1,9 @@
-@extends('layouts.shop') 
-@section('title', $course->title . ' — Общество ревнителей санскрита')
+@extends('layouts.shop')
+@section('title', $course->meta_title ?: $course->title)
+
+@push('head')
+    <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
+@endpush
 
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white font-sans relative overflow-hidden">
@@ -36,6 +40,11 @@
                         <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#E85C24] hover:bg-[#d64e1c] transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                             Выбрать тариф
                         </a>
+                        @if($course->previewLesson)
+                            <a href="#sample" class="inline-flex justify-center items-center gap-2 px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#38BDF8]/15 border border-[#38BDF8]/30 hover:bg-[#38BDF8]/25 transition-all">
+                                <i class="fas fa-play text-xs"></i> Смотреть пробный урок
+                            </a>
+                        @endif
                         <a href="{{ route('shop.index') }}" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
                             Все курсы
                         </a>
@@ -85,6 +94,11 @@
 
     {{-- ═════════════════ ОСНОВНОЙ КОНТЕНТ (одна широкая колонка) ═════════════════ --}}
     <div class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {{-- ───── Микродоверие / Для кого / Чему научитесь (продающие блоки) ───── --}}
+        @include('shop.partials.trust-strip')
+        @include('shop.partials.audience')
+        @include('shop.partials.outcomes')
 
         {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
         @php
@@ -228,6 +242,10 @@
             </div>
         </section>
         @endif
+
+        {{-- ───── Пример урока + Преподаватель(и) ───── --}}
+        @include('shop.partials.sample')
+        @include('shop.partials.teachers')
 
         {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
@@ -671,6 +689,12 @@
                 </div>
             @endif
         </section>
+
+        {{-- ───── Отзывы / FAQ / Техтребования+оплата / Финальный CTA ───── --}}
+        @include('shop.partials.testimonials')
+        @include('shop.partials.faq')
+        @include('shop.partials.tech-payment')
+        @include('shop.partials.final-cta')
 
         {{-- ───── 3. ПРЕИМУЩЕСТВА ───── --}}
         <section class="grid grid-cols-1 md:grid-cols-2 gap-6">

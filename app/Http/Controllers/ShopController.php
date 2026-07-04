@@ -64,6 +64,10 @@ class ShopController extends Controller
             'tariffs.block',
             'blocks',
             'teacher', // подгружаем преподавателя одним запросом
+            'teachers', // со-преподаватели (блок «Преподаватель(и)» на лендинге)
+            'faqs', // блок «FAQ по курсу»
+            'testimonials', // блок «Отзывы» (в порядке пивота)
+            'previewLesson', // блок «Пример урока» + вторая CTA в hero
             // Для блока «Программа курса»: только опубликованные уроки, по порядку.
             'lessons' => fn ($query) => $query
                 ->where('is_published', true)
@@ -124,5 +128,32 @@ class ShopController extends Controller
         }
 
         return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'scheduleGroups', 'lessonsByBlock'));
+    }
+
+    /**
+     * МЕТОД 3: Публичный «Пример урока» (бесплатный preview).
+     *
+     * Единственная точка правды доступа к preview: отдаём РОВНО preview-урок
+     * этого курса (lessons.is_preview = true, опубликованный). URL не содержит
+     * lesson-id, поэтому гость физически не может запросить произвольный урок —
+     * ни соседний платный, ни урок другого курса. Нет preview-урока → 404.
+     */
+    public function preview(Course $course)
+    {
+        if (! $course->is_visible) {
+            abort(404, 'Курс не найден');
+        }
+
+        // Жёсткий гейт: урок принадлежит ЭТОМУ курсу И is_preview И опубликован.
+        $lesson = $course->lessons()
+            ->preview()
+            ->where('is_published', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->first();
+
+        abort_if($lesson === null, 404, 'У этого курса нет пробного урока');
+
+        return view('shop.preview', compact('course', 'lesson'));
     }
 }

@@ -169,6 +169,32 @@ class LessonResource extends Resource
                     ->live()
                     ->columnSpanFull(),
 
+                Forms\Components\Toggle::make('is_preview')
+                    ->label('Пробный урок (публичный «Пример урока»)')
+                    ->helperText('Бесплатный урок на продающей странице курса — открыт всем, включая гостей без регистрации. Не более одного на курс.')
+                    ->onColor('info')
+                    ->columnSpanFull()
+                    // Валидация «не более одного preview на курс». Filament к голому
+                    // Closure применяет evaluate() — оборачиваем во внешнее замыкание,
+                    // как Course::teacherCourseValidationRule().
+                    ->rule(fn (?\App\Models\Lesson $record, Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($record, $get) {
+                        if (! $value) {
+                            return;
+                        }
+                        $courseId = $get('course_id');
+                        if (! $courseId) {
+                            return;
+                        }
+                        $exists = \App\Models\Lesson::query()
+                            ->where('course_id', $courseId)
+                            ->where('is_preview', true)
+                            ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                            ->exists();
+                        if ($exists) {
+                            $fail('У этого курса уже есть пробный урок — разрешён только один.');
+                        }
+                    }),
+
                 Forms\Components\Toggle::make('show_on_main')
                     ->label('Показывать на главной странице')
                     ->helperText('Если включено — карточка урока появится в карусели «Бесплатные беседы вокруг санскрита» на витрине сайта. Требует включённого «Открытый урок».')
