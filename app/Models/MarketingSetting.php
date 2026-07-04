@@ -75,10 +75,14 @@ class MarketingSetting extends Model
 
         // --- ДОЛЖНИКИ ---
         'debtors_notify_years',
+
+        // --- ЗАРПЛАТЫ ПРЕПОДАВАТЕЛЕЙ ---
+        'reference_teacher_percent',
     ];
 
     protected $casts = [
         'is_loyalty_active' => 'boolean',
+        'reference_teacher_percent' => 'float',
         'deposit_enabled' => 'boolean',
         'bundle_2_discount' => 'integer',
         'bundle_3_discount' => 'integer',

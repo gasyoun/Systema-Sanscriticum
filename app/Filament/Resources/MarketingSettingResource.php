@@ -41,6 +41,20 @@ class MarketingSettingResource extends Resource
     {
         return $form
             ->schema([
+                // --- БЛОК: Зарплаты преподавателей ---
+                Forms\Components\Section::make('💸 Зарплаты преподавателей')
+                    ->description('Опорный процент для сравнения «фикс vs процент» в калькуляторе выплаты по блоку. Подставляется по умолчанию, на месте редактируется.')
+                    ->schema([
+                        Forms\Components\TextInput::make('reference_teacher_percent')
+                            ->label('Опорный % от выручки')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->default(30)
+                            ->helperText('Гипотетическая ставка процента: с ней сравнивается фиксированная оплата.'),
+                    ]),
+
                 // --- БЛОК: Техобслуживание кабинета ---
                 Forms\Components\Section::make('🛠 Техобслуживание кабинета')
                     ->description('Студенты увидят заглушку. Админка, редактор, вебхуки и витрина продолжают работать. Применяется сразу после сохранения.')
