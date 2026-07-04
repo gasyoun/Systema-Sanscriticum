@@ -418,6 +418,10 @@ class Payment extends Model
         if (! $payment->is_conditional) {
             $payment->consumeDepositsForCourse();
             $payment->reconcileConditionalGrants();
+
+            // Self-service: должник сам погасил обещание/рассрочку — закрываем
+            // привязанное обещание, чтобы у куратора не висел открытый долг.
+            app(\App\Services\PromiseAutoFulfiller::class)->handlePaidPayment($payment);
         }
     }
 

@@ -707,11 +707,52 @@
                         </div>
                     @endif
 
-                    <a href="{{ route('student.course', $debt->course->slug) }}"
-                       class="mt-auto flex items-center justify-center px-3 py-1.5 {{ $debt->promise_active ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#E85C24] hover:bg-[#d34f1c]' }} text-white text-xs font-bold rounded-lg transition-colors">
-                        <span>К курсу</span>
-                        <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
-                    </a>
+                    @php
+                        $opts = $debtPayOptions[$debt->course_id] ?? null;
+                    @endphp
+                    <div class="mt-auto space-y-2">
+                        {{-- Самостоятельная оплата долга (self-service) --}}
+                        @if($opts && $opts['type'] === 'arrangement')
+                            @if($opts['next'])
+                                <form method="POST" action="{{ $opts['next']['url'] }}">
+                                    @csrf
+                                    <button type="submit" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                        <i class="fas fa-credit-card mr-1.5 text-[10px]"></i>
+                                        <span>Оплатить{{ $opts['next']['amount'] ? ' '.number_format($opts['next']['amount'], 0, '.', ' ').' ₽' : '' }}</span>
+                                    </button>
+                                </form>
+                            @endif
+                            @if($opts['whole'])
+                                <form method="POST" action="{{ $opts['whole']['url'] }}">
+                                    @csrf
+                                    <button type="submit" class="w-full flex items-center justify-center px-3 py-1.5 border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
+                                        <span>Погасить всё{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
+                                    </button>
+                                </form>
+                            @endif
+                        @elseif($opts && $opts['type'] === 'tariff')
+                            @if($opts['full'])
+                                <a href="{{ $opts['full']['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                    <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить курс</span>
+                                </a>
+                            @else
+                                @foreach($opts['blocks'] as $b)
+                                    <a href="{{ $b['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                        <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить блок №{{ $b['number'] }}</span>
+                                    </a>
+                                @endforeach
+                                @if(!empty($opts['unpriced_blocks']))
+                                    <p class="text-[11px] text-gray-400 text-center leading-snug">Блок{{ count($opts['unpriced_blocks']) > 1 ? 'и' : '' }} №{{ implode(', №', $opts['unpriced_blocks']) }} — оплата через куратора</p>
+                                @endif
+                            @endif
+                        @endif
+
+                        <a href="{{ route('student.course', $debt->course->slug) }}"
+                           class="flex items-center justify-center px-3 py-1.5 text-gray-500 hover:text-gray-800 text-xs font-semibold transition-colors">
+                            <span>К курсу</span>
+                            <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             @endforeach
         </div>
