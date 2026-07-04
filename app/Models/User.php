@@ -398,6 +398,23 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(Certificate::class);
     }
 
+    public function feedTokens(): HasMany
+    {
+        return $this->hasMany(FeedToken::class);
+    }
+
+    /**
+     * Активный токен персонального iCal/webcal-фида — лениво создаётся при
+     * первом обращении (Google Calendar Phase 1,
+     * docs/GOOGLE_CALENDAR_INTEGRATION_ROADMAP.md).
+     */
+    public function calendarFeedToken(): FeedToken
+    {
+        $token = $this->feedTokens()->whereNull('revoked_at')->latest()->first();
+
+        return $token ?? $this->feedTokens()->create(['token' => FeedToken::generate()]);
+    }
+
     // --- НОВАЯ СВЯЗЬ: Студент -> Курсы (со статусами) ---
     public function courses(): BelongsToMany
     {
