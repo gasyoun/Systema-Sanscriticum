@@ -94,12 +94,11 @@ class PromiseAutoFulfiller
     }
 
     /**
-     * Какие обещания закрывает этот платёж:
-     *  - если платёж покрывает весь остаток графика рассрочки (в пределах
-     *    небольшого допуска) — закрываем ВСЕ непогашенные обещания группы
-     *    («Погасить всё»);
-     *  - иначе — только само привязанное обещание («Внести следующий платёж»
-     *    или одиночное обещание).
+     * Какие обещания закрывает этот платёж — greedy по графику: закрываем самые
+     * ранние непогашенные обещания, чью НАКОПЛЕННУЮ сумму платёж покрывает целиком
+     * (допуск 1 ₽). Единый механизм для next(1) / partial(K) / whole(все):
+     *  - одиночное обещание → [lead];
+     *  - рассрочка: идём от ранних к поздним, пока хватает денег.
      *
      * @return \Illuminate\Support\Collection<int, PaymentPromise>
      */
@@ -116,16 +115,26 @@ class PromiseAutoFulfiller
         $unmetGroup = PaymentPromise::query()
             ->inGroup($lead->installment_group_id)
             ->whereIn('status', [PaymentPromise::STATUS_ACTIVE, PaymentPromise::STATUS_EXPIRED])
+            ->orderBy('promised_at')
             ->get();
 
-        $groupRemaining = (float) $unmetGroup->sum(fn (PaymentPromise $p) => (float) ($p->amount ?? 0));
-
-        // Допуск 1 ₽ на округления. Платёж «погасить всё» приходит ровно на
-        // остаток; одиночный взнос — заметно меньше.
-        if ($groupRemaining > 0 && $paidAmount + 1.0 >= $groupRemaining) {
-            return $unmetGroup;
+        $toClose = collect();
+        $running = 0.0;
+        foreach ($unmetGroup as $promise) {
+            $running += (float) ($promise->amount ?? 0);
+            if ($running <= $paidAmount + 1.0) {
+                $toClose->push($promise);
+            } else {
+                break; // денег на этот взнос уже не хватает — дальше тем более
+            }
         }
 
-        return collect([$lead]);
+        // Платёж всегда закрывает как минимум привязанное (lead) обещание — оно
+        // самое раннее и его сумму студент точно внёс (контроллер это гарантирует).
+        if ($toClose->isEmpty()) {
+            $toClose->push($lead);
+        }
+
+        return $toClose;
     }
 }
