@@ -26,9 +26,20 @@ use Throwable;
  */
 class TelegramHarvestSyncService
 {
+    private ?HarvestStoreWriter $writer = null;
+
     public function __construct(
         private readonly MadelineClientFactory $clientFactory,
     ) {}
+
+    /**
+     * Override the raw-store writer (tests inject a throwing writer to exercise
+     * the dead-letter lane; the live path uses the config-built default).
+     */
+    public function setStoreWriter(HarvestStoreWriter $writer): void
+    {
+        $this->writer = $writer;
+    }
 
     /**
      * Live harvest over the configured peer list. Requires MadelineProto
