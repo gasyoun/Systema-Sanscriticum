@@ -46,7 +46,16 @@ class PromiseAutoFulfiller
             return 0;
         }
 
-        $toClose = $this->promisesToClose($lead, (float) $payment->amount);
+        // Стоимость, зачтённая в долг = наличные (payment->amount, уже за вычетом
+        // праны) + рублёвый эквивалент списанной праны. Иначе оплата с праной
+        // недозакрыла бы обещания на сумму скидки.
+        $debtValue = (float) $payment->amount;
+        if ((int) $payment->prana_spent > 0) {
+            $debtValue += (float) app(\App\Services\Prana\PranaService::class)
+                ->pranaToRubles((int) $payment->prana_spent);
+        }
+
+        $toClose = $this->promisesToClose($lead, $debtValue);
         if ($toClose->isEmpty()) {
             return 0;
         }
