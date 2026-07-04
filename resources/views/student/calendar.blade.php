@@ -16,6 +16,44 @@
         <div class="w-16 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
     </div>
 
+    {{-- Подписка на Google Calendar / iCal (Phase 1 фида, без OAuth) --}}
+    <div class="mb-8 bg-white rounded-2xl border border-gray-100 p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-[#101010] text-sm md:text-base mb-1">
+                <i class="far fa-calendar-plus text-[#E85C24] mr-1.5"></i>
+                Подписаться на расписание в своём календаре
+            </p>
+            <p class="text-gray-500 text-xs md:text-sm">
+                Занятия и даты курса будут появляться автоматически в Google Calendar, Apple Calendar и других приложениях.
+            </p>
+            @if(session('feed_token_status'))
+                <p class="text-green-600 text-xs md:text-sm mt-1">{{ session('feed_token_status') }}</p>
+            @endif
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+            <a href="{{ $webcalUrl }}"
+               class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#E85C24] hover:bg-[#d6501f] text-white text-xs md:text-sm font-extrabold rounded-xl transition-all uppercase tracking-wide whitespace-nowrap">
+                <i class="far fa-calendar-plus"></i>
+                Добавить в календарь
+            </a>
+            <button type="button"
+                    onclick="navigator.clipboard.writeText('{{ $feedUrl }}'); this.dataset.copied = 1; this.querySelector('span').textContent = 'Скопировано!';"
+                    class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs md:text-sm font-bold rounded-xl transition-all whitespace-nowrap">
+                <i class="far fa-copy"></i>
+                <span>Скопировать ссылку</span>
+            </button>
+            <form action="{{ route('student.calendar.feed.regenerate') }}" method="POST"
+                  onsubmit="return confirm('Старая ссылка перестанет работать. Продолжить?');">
+                @csrf
+                <button type="submit"
+                        class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-[#E85C24] text-xs md:text-sm font-bold rounded-xl transition-all whitespace-nowrap w-full">
+                    <i class="fas fa-rotate"></i>
+                    Обновить ссылку
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="space-y-10">
         @forelse($groupedEvents as $date => $events)
 

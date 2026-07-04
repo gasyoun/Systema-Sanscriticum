@@ -77,7 +77,11 @@ class StudentController extends Controller
             return $event->start->translatedFormat('d F, l');
         });
 
-        return view('student.calendar', compact('groupedEvents'));
+        $feedToken = $user->calendarFeedToken()->token;
+        $feedUrl = route('student.calendar.feed', ['user' => $user->id, 'token' => $feedToken]);
+        $webcalUrl = preg_replace('~^https?://~', 'webcal://', $feedUrl);
+
+        return view('student.calendar', compact('groupedEvents', 'feedUrl', 'webcalUrl'));
     }
 
     /**

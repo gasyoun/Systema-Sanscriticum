@@ -150,6 +150,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     })->name('home');
 
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
+    Route::post('/calendar/feed/regenerate', [\App\Http\Controllers\CalendarFeedController::class, 'regenerate'])
+        ->name('student.calendar.feed.regenerate');
     Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
@@ -331,6 +333,12 @@ Route::get('/verify/{number}', [\App\Http\Controllers\CertificateVerificationCon
 Route::get('/u/{user}', function (\App\Models\User $user) {
     return redirect(\App\Filament\Resources\UserResource::getUrl('view', ['record' => $user]));
 })->whereNumber('user')->name('student.shortlink');
+
+// --- ПЕРСОНАЛЬНЫЙ iCAL/WEBCAL-ФИД РАСПИСАНИЯ (Google Calendar Phase 1) ---
+// ВАЖНО: до catch-all /{slug}. Публичный: доступ по токену в URL, не по сессии
+// (Google сам опрашивает ссылку) — см. docs/GOOGLE_CALENDAR_INTEGRATION_ROADMAP.md.
+Route::get('/calendar/feed/{user}/{token}.ics', [\App\Http\Controllers\CalendarFeedController::class, 'show'])
+    ->whereNumber('user')->name('student.calendar.feed');
 
 // --- ТРЕКИНГ-РЕДИРЕКТ «ПОДКЛЮЧИТЬСЯ К ЗАНЯТИЮ» (учёт посещаемости) ---
 // ВАЖНО: до catch-all /{slug}. Публичный: кабинетная ссылка ловит юзера из сессии,
