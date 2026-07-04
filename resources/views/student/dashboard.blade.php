@@ -770,9 +770,18 @@
                                     <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить курс</span>
                                 </a>
                             @else
+                                @if($opts['bundle'] ?? null)
+                                    {{-- Бандл: весь многоблочный долг одним платежом --}}
+                                    <form method="POST" action="{{ $opts['bundle']['url'] }}">
+                                        @csrf
+                                        <button type="submit" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                            <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
+                                        </button>
+                                    </form>
+                                @endif
                                 @foreach($opts['blocks'] as $b)
-                                    <a href="{{ $b['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
-                                        <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить блок №{{ $b['number'] }}</span>
+                                    <a href="{{ $b['url'] }}" class="flex items-center justify-center px-3 py-{{ ($opts['bundle'] ?? null) ? '1.5' : '2' }} {{ ($opts['bundle'] ?? null) ? 'border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50' : 'bg-[#E85C24] hover:bg-[#d34f1c] text-white' }} text-xs font-bold rounded-lg transition-colors">
+                                        <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>{{ ($opts['bundle'] ?? null) ? 'Блок №'.$b['number'].' отдельно' : 'Оплатить блок №'.$b['number'] }}</span>
                                     </a>
                                 @endforeach
                                 @if(!empty($opts['unpriced_blocks']))
