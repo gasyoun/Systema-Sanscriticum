@@ -122,7 +122,8 @@ class DebtPaymentResolver
         // «Полный курс» предлагаем только когда студент должен ВЕСЬ курс (классика
         // «без оплат»): иначе full переплачивает за уже оплаченные блоки. Считаем
         // «весь курс» = число блоков долга совпадает с числом блоков курса.
-        $courseBlockCount = $debt->course->blocks->count();
+        // Прямой count вместо relation — не зависим от eager-load / preventLazyLoading.
+        $courseBlockCount = \App\Models\CourseBlock::where('course_id', $courseId)->count();
         $full = null;
         if ($courseBlockCount > 0 && count($debtBlocks) >= $courseBlockCount) {
             $fullTariff = $tariffs->first(fn (Tariff $t) => $t->accessKey() === 'full');
