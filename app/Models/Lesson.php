@@ -26,6 +26,7 @@ class Lesson extends Model
         'group_id',
         'is_published',
         'is_free',
+        'is_preview',
         'show_on_main',
         'block_number',
         'block_half',
@@ -44,6 +45,7 @@ class Lesson extends Model
         'flash_cards' => 'array',
         'is_published' => 'boolean',
         'is_free' => 'boolean',
+        'is_preview' => 'boolean',
         'show_on_main' => 'boolean',
         'lesson_date' => 'date',
         'block_number' => 'integer', // Гарантируем, что это всегда будет число
@@ -242,10 +244,27 @@ class Lesson extends Model
         return $keys;
     }
 
-    /** Открыт ли урок при данном наборе оплаченных тарифов (ключей payments.tariff). */
+    /**
+     * Открыт ли урок при данном наборе оплаченных тарифов (ключей payments.tariff).
+     *
+     * Preview-урок (is_preview) — публичный бесплатный «пример урока» продающей
+     * страницы: открыт ВСЕМ, в т.ч. гостю без единого оплаченного ключа. Это
+     * единственная точка правды доступа к preview — проверяется ДО ключей
+     * full/block_N/block_N_hH, которые остаются неизменными для платных уроков.
+     */
     public function isUnlockedBy(array $ownedKeys): bool
     {
+        if ($this->is_preview) {
+            return true;
+        }
+
         return (bool) array_intersect($this->unlockingKeys(), $ownedKeys);
+    }
+
+    /** Публичные preview-уроки («Пример урока» на лендинге). */
+    public function scopePreview(Builder $query): Builder
+    {
+        return $query->where('is_preview', true);
     }
 
     /**

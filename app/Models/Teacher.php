@@ -14,6 +14,8 @@ class Teacher extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio',
+        // Фото для блока «Преподаватель» на продающей странице курса.
+        'photo_path',
         // Валюта выплаты через PayPal (EUR/USD); null = только ₽.
         'payout_currency',
     ];
