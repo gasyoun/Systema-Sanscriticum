@@ -7,9 +7,11 @@ namespace Tests\Feature;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
+use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use ReflectionMethod;
 use Tests\TestCase;
 
 class TelegramHarvestSyncTest extends TestCase
