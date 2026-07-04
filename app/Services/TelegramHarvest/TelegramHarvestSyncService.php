@@ -213,6 +213,8 @@ class TelegramHarvestSyncService
             'title' => $chat['title'] ?? null,
             'username' => $username,
             'access_level' => $accessLevel,
+            // D6: channels/groups that disable saving/forwarding set noforwards.
+            'restricted' => (bool) ($chat['noforwards'] ?? false),
         ];
     }
 
