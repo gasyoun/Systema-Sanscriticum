@@ -109,6 +109,22 @@ class DebtPaymentController extends Controller
             return back()->with('error', 'Не удалось определить сумму к оплате. Обратитесь к куратору.');
         }
 
+        // Анти-дубль: свежий незавершённый self-service заказ по этому курсу уже
+        // висит (двойной клик / возврат по back) → не создаём второй payment-link,
+        // иначе студент может оплатить долг дважды. Зеркалит PromoCode::hasRecentPendingForUser.
+        $hasRecentPending = Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->where('is_conditional', false)
+            ->whereNotNull('linked_promise_id')
+            ->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES))
+            ->exists();
+
+        if ($hasRecentPending) {
+            return back()->with('error', 'У вас уже есть незавершённый заказ по этому курсу. Завершите оплату или подождите несколько минут, прежде чем начинать новый.');
+        }
+
         $course = Course::with('blocks')->find($courseId);
         if (! $course) {
             return back()->with('error', 'Курс не найден.');
