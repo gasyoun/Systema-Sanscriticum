@@ -98,4 +98,77 @@ class TelegramHarvestSyncTest extends TestCase
         $this->assertSame(12, $harvester->sync_state['peers']['100']['last_message_id']);
         $this->assertSame(1, $result['stored']);
     }
+
+    /** @param array<string, mixed> $raw @param array<string, mixed> $info @return array<string, mixed>|null */
+    private function normalize(array $raw, array $info): ?array
+    {
+        $m = new ReflectionMethod(TelegramHarvestSyncService::class, 'normalize');
+        $m->setAccessible(true);
+
+        return $m->invoke(app(TelegramHarvestSyncService::class), $raw, $info, []);
+    }
+
+    public function test_d4_media_message_gets_metadata_and_d6_records_restricted(): void
+    {
+        $info = ['id' => 100, 'type' => 'channel', 'title' => 'Sanskrit', 'username' => 'sanskrit', 'access_level' => 'public', 'restricted' => true];
+        $raw = [
+            'id' => 42,
+            'date' => 1751360400,
+            'message' => 'манускрипт',
+            'media' => ['_' => 'messageMediaDocument', 'document' => ['size' => 1234, 'mime_type' => 'image/jpeg']],
+        ];
+
+        $rec = $this->normalize($raw, $info);
+
+        $this->assertNotNull($rec);
+        $this->assertTrue($rec['has_media']);
+        $this->assertSame('image', $rec['media_type']);
+        $this->assertSame(1234, $rec['media_size']);
+        $this->assertSame('image/jpeg', $rec['media_mime']);
+        $this->assertSame('манускрипт', $rec['media_caption']);
+        $this->assertTrue($rec['peer_restricted']);   // D6
+    }
+
+    public function test_d4_media_only_message_is_kept_previously_dropped(): void
+    {
+        $info = ['id' => 100, 'type' => 'channel', 'title' => 'S', 'username' => 'sanskrit', 'access_level' => 'public', 'restricted' => false];
+
+        // Media-only (empty text) — the old text-only guard would have dropped this.
+        $rec = $this->normalize(['id' => 43, 'date' => 1751360400, 'message' => '', 'media' => ['_' => 'messageMediaPhoto']], $info);
+        $this->assertNotNull($rec);
+        $this->assertTrue($rec['has_media']);
+        $this->assertSame('photo', $rec['media_type']);
+        $this->assertNull($rec['media_caption']);
+        $this->assertSame('', $rec['text']);
+
+        // A text-only message carries no media metadata but is still kept.
+        $text = $this->normalize(['id' => 44, 'date' => 1751360400, 'message' => 'oṃ'], $info);
+        $this->assertFalse($text['has_media']);
+        $this->assertNull($text['media_type']);
+        $this->assertFalse($text['peer_restricted']);
+
+        // Truly empty (no text, no media) is still dropped.
+        $this->assertNull($this->normalize(['id' => 45, 'date' => 1751360400, 'message' => ''], $info));
+    }
+
+    public function test_store_failure_is_dead_lettered_and_counted(): void
+    {
+        $throwing = new class('unused') extends HarvestStoreWriter
+        {
+            public function write(array $record): string
+            {
+                throw new \RuntimeException('boom');
+            }
+        };
+
+        $service = app(TelegramHarvestSyncService::class);
+        $service->setStoreWriter($throwing);
+        $result = $service->ingestNormalized([$this->record(100, 10, 'public', '2026-07-01T10:00:00+03:00')]);
+
+        $this->assertSame(0, $result['stored']);
+        $this->assertSame(1, $result['failed']);
+        $failFile = $this->store.'/_failures/'.now()->format('Y-m-d').'.jsonl';
+        $this->assertFileExists($failFile);
+        $this->assertStringContainsString('boom', File::get($failFile));
+    }
 }
