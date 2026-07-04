@@ -379,6 +379,10 @@ class Payment extends Model
                 $payment->refundReferralCreditIfApplied();
 
                 if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
+                    // Снимаем нулевые access-only siblings этого платежа — иначе
+                    // оплаченные «в кредит доступа» блоки остались бы открыты
+                    // после отката основного платежа.
+                    app(\App\Services\BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
                 }
             }
