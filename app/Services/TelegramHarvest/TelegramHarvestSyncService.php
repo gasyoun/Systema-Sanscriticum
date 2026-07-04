@@ -6,6 +6,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
 use App\Services\Telegram\MadelineClientFactory;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
