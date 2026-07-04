@@ -397,9 +397,13 @@ class TelegramHarvestSyncService
 
     private function storeWriter(): HarvestStoreWriter
     {
+        if ($this->writer !== null) {
+            return $this->writer;
+        }
+
         $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
 
-        return new HarvestStoreWriter($path);
+        return $this->writer = new HarvestStoreWriter($path);
     }
 
     /**
