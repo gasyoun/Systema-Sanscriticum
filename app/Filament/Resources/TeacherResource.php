@@ -40,6 +40,14 @@ class TeacherResource extends Resource
                         \Filament\Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel(),
+                        \Filament\Forms\Components\FileUpload::make('photo_path')
+                            ->label('Фото (для страницы курса)')
+                            ->image()
+                            ->directory('teachers')
+                            ->imageEditor()
+                            ->maxSize(4096)
+                            ->helperText('Показывается в блоке «Преподаватель» на продающей странице курса.')
+                            ->columnSpanFull(),
                     ])->columns(3),
 
                 \Filament\Forms\Components\Section::make('Аккаунт для входа в админку')

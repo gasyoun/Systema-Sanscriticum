@@ -220,6 +220,46 @@ class CourseResource extends Resource
                     ]),
 
                 // ==========================================
+                // БЛОК: ПРОДАЮЩАЯ СТРАНИЦА (ЛЕНДИНГ)
+                // ==========================================
+                Forms\Components\Section::make('🛒 Продающая страница')
+                    ->description('Дополнительные блоки публичной страницы курса. Пустые поля — соответствующий блок просто не показывается.')
+                    ->schema([
+                        Forms\Components\TagsInput::make('audience')
+                            ->label('Для кого этот курс')
+                            ->helperText('Каждый пункт — отдельный тег (Enter). Пусто — блок скрыт.')
+                            ->placeholder('Добавить пункт')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TagsInput::make('outcomes')
+                            ->label('Чему научатся')
+                            ->helperText('Результаты обучения. Каждый пункт — отдельный тег (Enter).')
+                            ->placeholder('Добавить пункт')
+                            ->columnSpanFull(),
+
+                        Forms\Components\Textarea::make('tech_requirements')
+                            ->label('Технические требования (переопределение)')
+                            ->helperText('Пусто — показывается общий текст по умолчанию.')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('meta_title')
+                                    ->label('SEO: заголовок (title)')
+                                    ->helperText('Пусто — берётся название курса.')
+                                    ->maxLength(255),
+
+                                Forms\Components\TextInput::make('meta_description')
+                                    ->label('SEO: описание (meta description)')
+                                    ->helperText('Пусто — берётся усечённое описание курса.')
+                                    ->maxLength(255),
+                            ]),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                // ==========================================
                 // БЛОК: ПРЕДОПЛАТА ЗА БРОНЬ
                 // ==========================================
                 Forms\Components\Section::make('📌 Предоплата за бронь курса')
@@ -450,7 +490,8 @@ class CourseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            CourseResource\RelationManagers\FaqsRelationManager::class,
+            CourseResource\RelationManagers\TestimonialsRelationManager::class,
         ];
     }
 
