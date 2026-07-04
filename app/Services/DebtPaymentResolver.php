@@ -157,6 +157,7 @@ class DebtPaymentResolver
         // блока (block_N). Половинные (block_N_hH) в Phase 1 не собираем.
         $blockOptions = [];
         $unpriced = [];
+        $bundleAmount = 0.0;
         foreach ($debtBlocks as $n) {
             $tariff = $tariffs->first(fn (Tariff $t) => $t->type === 'block'
                 && (int) $t->block_number === $n
@@ -168,9 +169,21 @@ class DebtPaymentResolver
                     'title' => (string) $tariff->title,
                     'url' => route('checkout.show', $tariff),
                 ];
+                $bundleAmount += (float) $tariff->calculateFinalPriceForUser($user);
             } else {
                 $unpriced[] = $n;
             }
+        }
+
+        // Бандл: один платёж на весь плоский многоблочный долг, когда все блоки
+        // имеют тариф и их ≥2 (и это не «весь курс» с тарифом full). Цена — сумма
+        // итоговых цен блоков (та же, что пересчитает контроллер).
+        $bundle = null;
+        if ($full === null && empty($unpriced) && count($blockOptions) >= 2) {
+            $bundle = [
+                'amount' => $bundleAmount,
+                'url' => route('student.debt.course.pay-bundle', $courseId),
+            ];
         }
 
         $type = ($full !== null || ! empty($blockOptions)) ? 'tariff' : 'none';
@@ -180,6 +193,7 @@ class DebtPaymentResolver
             'full' => $full,
             'blocks' => $blockOptions,
             'unpriced_blocks' => $unpriced,
+            'bundle' => $bundle,
         ];
     }
 }
