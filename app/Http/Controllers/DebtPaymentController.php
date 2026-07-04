@@ -35,7 +35,7 @@ class DebtPaymentController extends Controller
     ) {}
 
     /** Оплатить одно обещание (одиночное или очередной платёж рассрочки). */
-    public function payPromise(PaymentPromise $promise, TochkaPaymentService $tochka): RedirectResponse
+    public function payPromise(PaymentPromise $promise): RedirectResponse
     {
         $user = auth()->user();
 
