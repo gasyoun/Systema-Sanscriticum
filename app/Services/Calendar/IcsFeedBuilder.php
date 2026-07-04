@@ -7,7 +7,6 @@ namespace App\Services\Calendar;
 use App\Models\CourseBlock;
 use App\Models\Schedule;
 use App\Models\User;
-use Illuminate\Support\Str;
 
 /**
  * Строит RFC 5545 VCALENDAR для персонального read-only фида студента
@@ -147,7 +146,7 @@ class IcsFeedBuilder
     private function escape(string $value): string
     {
         return str_replace(
-            ["\\", ',', ';', "\r\n", "\n"],
+            ['\\', ',', ';', "\r\n", "\n"],
             ['\\\\', '\\,', '\\;', '\\n', '\\n'],
             $value
         );
