@@ -40,6 +40,8 @@ class Payment extends Model
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
         'linked_promise_id',
+        // Платёж создан должником самостоятельно из кабинета (self-service).
+        'is_self_service',
         // --- Прямой платёж на личный счёт преподавателя (минуя кассу школы) ---
         'received_account',
         'received_by_teacher_id',
