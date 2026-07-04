@@ -523,35 +523,74 @@ class DebtSelfServiceTest extends TestCase
 
     // ---- Phase 2: bundle ----------------------------------------------
 
+    /**
+     * Курс блоков 1–4 (текущий 4); оплачены 1 и 2 → долг = блоки 3,4 (плоский,
+     * без договорённости). Тарифы на 3 и 4 → доступен бандл на оба.
+     */
+    private function plainTwoBlockDebtCourse(User $user): Course
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->create(['number' => 3]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 4]);
+
+        foreach ([1, 2] as $n) {
+            Payment::create([
+                'user_id' => $user->id, 'course_id' => $course->id,
+                'amount' => 4000, 'tariff' => 'block_'.$n, 'status' => 'paid',
+                'start_block' => $n, 'end_block' => $n, 'is_conditional' => false,
+            ]);
+        }
+        Tariff::create(['course_id' => $course->id, 'title' => 'Блок 3', 'type' => 'block', 'block_number' => 3, 'price' => 4000, 'is_active' => true]);
+        Tariff::create(['course_id' => $course->id, 'title' => 'Блок 4', 'type' => 'block', 'block_number' => 4, 'price' => 4000, 'is_active' => true]);
+
+        return $course;
+    }
+
     /** @test */
     public function resolver_offers_a_bundle_for_a_plain_multi_block_debt(): void
     {
         $user = User::factory()->create();
-        $course = Course::factory()->create(['is_active' => true]);
-        CourseBlock::factory()->for($course)->create(['number' => 1]);
-        CourseBlock::factory()->for($course)->current()->create(['number' => 2]);
-        // Без оплат → долг = блоки 1 и 2. Тарифы на оба, без full.
-        Tariff::create(['course_id' => $course->id, 'title' => 'Блок 1', 'type' => 'block', 'block_number' => 1, 'price' => 4000, 'is_active' => true]);
-        Tariff::create(['course_id' => $course->id, 'title' => 'Блок 2', 'type' => 'block', 'block_number' => 2, 'price' => 4000, 'is_active' => true]);
-        // Реальная оплата, чтобы курс попал в долги как «не продлил» блока 2… нет,
-        // без оплат курс не в долгах. Заводим оплату блока 1 в прошлом? Тогда долг=2.
-        // Проще: платёж, покрывающий 0 блоков — не выйдет. Используем join + без оплат
-        // не даёт долг. Значит платим блок… оставляем «без оплат» → StudentDebtsService
-        // требует реальный платёж ИЛИ обещание. Заводим обещание? Тогда arrangement.
-        // Для плоского долга нужен реальный платёж, не покрывающий текущий блок:
-        Payment::create([
-            'user_id' => $user->id, 'course_id' => $course->id,
-            'amount' => 100, 'tariff' => 'block_0', 'status' => 'paid',
-            'start_block' => 0, 'end_block' => 0, 'is_conditional' => false,
-        ]);
+        $course = $this->plainTwoBlockDebtCourse($user);
 
         $debt = app(StudentDebtsService::class)->forUser($user)->firstWhere('course_id', $course->id);
         $this->assertNotNull($debt);
-        $opts = app(DebtPaymentResolver::class)->optionsFor($debt, $user);
+        $this->assertSame([3, 4], $debt->debt_block_numbers);
 
+        $opts = app(DebtPaymentResolver::class)->optionsFor($debt, $user);
         $this->assertSame('tariff', $opts['type']);
         $this->assertNotNull($opts['bundle']);
         $this->assertSame(8000.0, $opts['bundle']['amount']);
+    }
+
+    /** @test */
+    public function pay_bundle_creates_one_ranged_payment_that_opens_every_owed_block(): void
+    {
+        Http::fake([
+            '*/payments_with_receipt' => Http::response([
+                'Data' => ['paymentLink' => 'https://pay.tochka.test/b', 'paymentLinkId' => 'pl-b'],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+        $course = $this->plainTwoBlockDebtCourse($user);
+
+        $this->actingAs($user)
+            ->post(route('student.debt.course.pay-bundle', $course))
+            ->assertRedirect('https://pay.tochka.test/b');
+
+        $bundle = Payment::where('user_id', $user->id)->where('status', 'pending')->firstOrFail();
+        $this->assertSame(8000.0, (float) $bundle->amount);
+        $this->assertSame(3, (int) $bundle->start_block);
+        $this->assertSame(4, (int) $bundle->end_block);
+        $this->assertTrue((bool) $bundle->is_self_service);
+
+        // При оплате открываются оба блока (block_3 своим ключом + block_4 sibling).
+        $bundle->update(['status' => 'paid']);
+        $keys = Payment::where('user_id', $user->id)->where('course_id', $course->id)->paid()->pluck('tariff')->all();
+        $this->assertContains('block_3', $keys);
+        $this->assertContains('block_4', $keys);
     }
 
     // ---- Phase 2: reschedule ------------------------------------------
