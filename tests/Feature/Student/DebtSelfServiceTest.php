@@ -278,6 +278,28 @@ class DebtSelfServiceTest extends TestCase
     }
 
     /** @test */
+    public function dashboard_renders_the_pay_cta_for_a_student_with_an_installment_debt(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->courseWithCurrentBlock2();
+        $group = (string) Str::uuid();
+
+        foreach ([[-3, 2000], [30, 2000]] as [$days, $amount]) {
+            PaymentPromise::create([
+                'user_id' => $user->id, 'course_id' => $course->id,
+                'promised_at' => now()->addDays($days)->toDateString(), 'amount' => $amount,
+                'status' => PaymentPromise::STATUS_ACTIVE, 'installment_group_id' => $group,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Оплатить')
+            ->assertSee('Погасить всё');
+    }
+
+    /** @test */
     public function paying_a_promise_creates_a_pending_payment_and_redirects_to_the_bank(): void
     {
         Http::fake([
