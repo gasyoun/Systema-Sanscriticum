@@ -191,7 +191,12 @@ class TelegramHarvestSyncService
         $peerState = $account->sync_state['peers'] ?? [];
         $messages = [];
 
-        foreach ($peers as $peer) {
+        foreach ($peers as $index => $peer) {
+            // Anti-ban: randomized inter-peer delay (default 0 → tests never sleep).
+            if ($index > 0) {
+                $this->interPeerDelay();
+            }
+
             $info = $this->peerInfo($client, $peer);
             $peerId = $info['id'];
             if ($peerId === null) {
@@ -200,16 +205,7 @@ class TelegramHarvestSyncService
 
             $minId = (int) (($peerState[(string) $peerId]['last_message_id']) ?? 0);
 
-            $history = $client->messages->getHistory([
-                'peer' => $peer,
-                'offset_id' => 0,
-                'offset_date' => 0,
-                'add_offset' => 0,
-                'limit' => $limit,
-                'max_id' => 0,
-                'min_id' => $minId,
-                'hash' => 0,
-            ]);
+            $history = $this->getHistoryWithBackoff($client, $peer, $limit, $minId);
             $usersById = $this->usersById($history['users'] ?? []);
 
             foreach (($history['messages'] ?? []) as $raw) {
@@ -221,6 +217,65 @@ class TelegramHarvestSyncService
         }
 
         return $messages;
+    }
+
+    /**
+     * Randomized pause between peers to look less bot-like. Bounds come from
+     * config (default 0/0 so the test/CI path never sleeps).
+     */
+    private function interPeerDelay(): void
+    {
+        $min = (int) config('services.telegram_harvest.peer_delay_min', 0);
+        $max = (int) config('services.telegram_harvest.peer_delay_max', 0);
+        if ($max <= 0 || $max < $min) {
+            return;
+        }
+        sleep(random_int(max(0, $min), $max));
+    }
+
+    /**
+     * Fetch history with a single FloodWait backoff: on FLOOD_WAIT_<n> sleep the
+     * advised seconds and retry once (clean-room of the cloner's anti-ban logic).
+     *
+     * @return array<string, mixed>
+     */
+    private function getHistoryWithBackoff(object $client, string $peer, int $limit, int $minId): array
+    {
+        $params = [
+            'peer' => $peer,
+            'offset_id' => 0,
+            'offset_date' => 0,
+            'add_offset' => 0,
+            'limit' => $limit,
+            'max_id' => 0,
+            'min_id' => $minId,
+            'hash' => 0,
+        ];
+
+        try {
+            return $client->messages->getHistory($params);
+        } catch (Throwable $e) {
+            $wait = $this->floodWaitSeconds($e->getMessage());
+            if ($wait === null) {
+                throw $e;
+            }
+            Log::warning('Telegram harvest FLOOD_WAIT backoff', ['peer' => $peer, 'seconds' => $wait]);
+            sleep($wait);
+
+            return $client->messages->getHistory($params);
+        }
+    }
+
+    /**
+     * Parse the advised wait from a FLOOD_WAIT_<n> RPC error message, else null.
+     */
+    private function floodWaitSeconds(string $message): ?int
+    {
+        if (preg_match('/FLOOD_WAIT_(\d+)/', $message, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
     }
 
     /**
