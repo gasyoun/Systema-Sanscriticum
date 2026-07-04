@@ -36,7 +36,7 @@ class DebtPaymentResolver
      *   unpriced_blocks?: list<int>,
      * }
      */
-    public function optionsFor(object $debt): array
+    public function optionsFor(object $debt, ?User $user = null): array
     {
         // Договорённость (обещание/рассрочка) — платим согласованную сумму, а не
         // цену тарифа: она часто со скидкой куратора. Это приоритетная ветка:
@@ -46,7 +46,7 @@ class DebtPaymentResolver
         }
 
         // Долг «не продлил» без договорённости — штатный чекаут по тарифам.
-        return $this->tariffOptions($debt);
+        return $this->tariffOptions($debt, $user);
     }
 
     /**
