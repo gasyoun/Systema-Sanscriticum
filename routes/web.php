@@ -66,6 +66,10 @@ Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
 
+// Публичный «Пример урока»: отдаёт ТОЛЬКО preview-урок этого курса (is_preview),
+// без auth. Никакого lesson-id в URL — гость не может запросить произвольный урок.
+Route::get('/online/kursy/{course:slug}/preview', [ShopController::class, 'preview'])->name('shop.course.preview');
+
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
 // Специфичный /shop/course/* — ДО общего /shop, иначе общий перехватит.
