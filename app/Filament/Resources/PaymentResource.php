@@ -142,7 +142,17 @@ class PaymentResource extends Resource
                             Forms\Components\TextInput::make('end_block')
                                 ->label('По блок №')
                                 ->numeric()
-                                ->helperText('Пусто, если курс куплен целиком'),
+                                ->helperText('Пусто, если курс куплен целиком')
+                                // «По блок №» не может быть меньше «с блока №»: перевёрнутый
+                                // диапазон молча разворачивался в accrual в range(min,max) и
+                                // размазывал платёж не на те блоки (audit #3). Студенческие
+                                // пути это уже валидируют; ручная админ-форма — нет.
+                                ->rule(static fn (Forms\Get $get) => static function (string $attribute, $value, \Closure $fail) use ($get): void {
+                                    $start = $get('start_block');
+                                    if (filled($start) && filled($value) && (int) $value < (int) $start) {
+                                        $fail('«По блок №» не может быть меньше «Оплачен с блока №».');
+                                    }
+                                }),
 
                             Forms\Components\TextInput::make('discount_percent')
                                 ->label('Скидка, %')

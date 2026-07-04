@@ -29,6 +29,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
@@ -489,190 +490,201 @@ class TeacherSalaries extends Page implements HasTable
                     ->helperText('Создаст транзакцию-отток в «Финансах» (тип «Выплата ЗП») на этом курсе и блоке.'),
             ])
             ->action(function (array $data): void {
-                $course = $data['course_id'] ? Course::find($data['course_id']) : null;
-                $salaryType = (string) ($data['salary_type'] ?? 'percent');
-                $isFixed = $this->isFixedModel($salaryType);
+                // Атомарность + сериализация одновременных выплат одному
+                // преподавателю: блокировка строки препода не даёт зачесть один
+                // прямой платёж (availableDirectReceipts) дважды при гонке двух
+                // параллельных submit'ов, а выплата + зачёт аванса + проводка в
+                // «Финансы» фиксируются целиком либо откатываются вместе (audit #4).
+                DB::transaction(function () use ($data): void {
+                    if (! empty($data['teacher_id'])) {
+                        Teacher::whereKey((int) $data['teacher_id'])->lockForUpdate()->first();
+                    }
 
-                ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($data);
-                $coef = $this->normalizeCoef($data['coefficient'] ?? null);
-                $extras = $data['extras'] ?? [];
-                $extrasTotal = $this->extrasTotal($extras);
-                $surcharge = (float) ($data['surcharge'] ?? 0);
-                $deduction = (float) ($data['deduction'] ?? 0);
+                    $course = $data['course_id'] ? Course::find($data['course_id']) : null;
+                    $salaryType = (string) ($data['salary_type'] ?? 'percent');
+                    $isFixed = $this->isFixedModel($salaryType);
 
-                // Поздние оплаты прошлых блоков (по всем курсам препода): деривим заново
-                // по выбранным ключам, суммируем готовые рубли (% уже применён).
-                $priorItems = $this->selectedPriorBlockItems(
-                    $data['teacher_id'] ? (int) $data['teacher_id'] : null,
-                    $data['course_id'] ? (int) $data['course_id'] : null,
-                    $data['block_number'] ? (int) $data['block_number'] : null,
-                    (float) ($data['teacher_percent'] ?? 0),
-                    $data['prior_block_keys'] ?? [],
-                );
-                $priorBlocksTotal = round(array_sum(array_column($priorItems, 'teacher_amount')), 2);
+                    ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($data);
+                    $coef = $this->normalizeCoef($data['coefficient'] ?? null);
+                    $extras = $data['extras'] ?? [];
+                    $extrasTotal = $this->extrasTotal($extras);
+                    $surcharge = (float) ($data['surcharge'] ?? 0);
+                    $deduction = (float) ($data['deduction'] ?? 0);
 
-                // Прямые платежи преподавателю (зачёт): деривим выбранные заново из
-                // доступных (не доверяя клиенту), считаем номинал в валюте выплаты и
-                // его рублёвый эквивалент по курсу. Снимок пишем в breakdown — он же
-                // источник «уже зачтено» (settledDirectReceiptIds), поэтому удаление
-                // выплаты автоматически освобождает эти платежи.
-                $teacherForReceipts = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
-                $selectedReceiptIds = array_flip(array_map('intval', $data['direct_receipt_ids'] ?? []));
-                $directLines = $teacherForReceipts
-                    ? array_values(array_filter(
-                        app(TeacherSalaryService::class)->availableDirectReceipts($teacherForReceipts),
-                        fn (array $i) => isset($selectedReceiptIds[$i['payment_id']]),
-                    ))
-                    : [];
-                $directOffsetForeign = round(array_sum(array_column($directLines, 'amount')), 2);
-                $directOffsetRub = round($directOffsetForeign * (float) ($data['exchange_rate'] ?? 0), 2);
-
-                $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffsetRub);
-                $teacherForAdvances = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
-                $advanceOffset = $teacherForAdvances
-                    ? min($grossTotal, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
-                    : 0.0;
-                $total = max(0, round($grossTotal - $advanceOffset, 2));
-
-                $blockNumber = (int) $data['block_number'];
-                $courseId = (int) $data['course_id'];
-                $period = $this->blockPeriodMonth($courseId, $blockNumber);
-
-                $groupId = $data['group_id'] ? (int) $data['group_id'] : null;
-                $detail = app(TeacherSalaryService::class)
-                    ->blockGroupRevenueDetail($courseId, $blockNumber, $groupId, [
-                        'teacher_id' => (int) $data['teacher_id'],
-                    ]);
-
-                $block = CourseBlock::query()
-                    ->where('course_id', $courseId)
-                    ->where('number', $blockNumber)
-                    ->first();
-
-                $comment = sprintf(
-                    'Блок %d%s: %s%s = %s ₽',
-                    $blockNumber,
-                    $course ? ' · '.$course->title : '',
-                    $this->formulaText($data, $coef, $extrasTotal, $surcharge, $deduction),
-                    $priorBlocksTotal > 0
-                        ? ' + поздние оплаты ('.count($priorItems).' шт.) '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
-                            .($coef != 100.0 ? ' × '.number_format($coef, 0, '.', ' ').'%' : '')
-                        : '',
-                    number_format($total, 0, '.', ' '),
-                );
-
-                if ($directOffsetForeign > 0) {
-                    $comment .= sprintf(
-                        ' − прямые платежи (%d шт.) %s %s (%s ₽)',
-                        count($directLines),
-                        number_format($directOffsetForeign, 2, '.', ' '),
-                        TeacherPayout::currencySymbol($data['payout_currency'] ?: null),
-                        number_format($directOffsetRub, 0, '.', ' '),
+                    // Поздние оплаты прошлых блоков (по всем курсам препода): деривим заново
+                    // по выбранным ключам, суммируем готовые рубли (% уже применён).
+                    $priorItems = $this->selectedPriorBlockItems(
+                        $data['teacher_id'] ? (int) $data['teacher_id'] : null,
+                        $data['course_id'] ? (int) $data['course_id'] : null,
+                        $data['block_number'] ? (int) $data['block_number'] : null,
+                        (float) ($data['teacher_percent'] ?? 0),
+                        $data['prior_block_keys'] ?? [],
                     );
-                }
-                if ($advanceOffset > 0) {
-                    $comment .= ' − аванс '.number_format($advanceOffset, 0, '.', ' ').' ₽';
-                }
+                    $priorBlocksTotal = round(array_sum(array_column($priorItems, 'teacher_amount')), 2);
 
-                $fixedRate = (float) ($data['fixed_rate'] ?? 0);
+                    // Прямые платежи преподавателю (зачёт): деривим выбранные заново из
+                    // доступных (не доверяя клиенту), считаем номинал в валюте выплаты и
+                    // его рублёвый эквивалент по курсу. Снимок пишем в breakdown — он же
+                    // источник «уже зачтено» (settledDirectReceiptIds), поэтому удаление
+                    // выплаты автоматически освобождает эти платежи.
+                    $teacherForReceipts = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
+                    $selectedReceiptIds = array_flip(array_map('intval', $data['direct_receipt_ids'] ?? []));
+                    $directLines = $teacherForReceipts
+                        ? array_values(array_filter(
+                            app(TeacherSalaryService::class)->availableDirectReceipts($teacherForReceipts),
+                            fn (array $i) => isset($selectedReceiptIds[$i['payment_id']]),
+                        ))
+                        : [];
+                    $directOffsetForeign = round(array_sum(array_column($directLines, 'amount')), 2);
+                    $directOffsetRub = round($directOffsetForeign * (float) ($data['exchange_rate'] ?? 0), 2);
 
-                // Число слушателей блока/группы — для прозрачного отчёта («X студентов»),
-                // независимо от модели ЗП. Для fix_per_student источник правды — ручной ввод.
-                $studentCount = $salaryType === 'fix_per_student'
-                    ? (int) ($data['student_count'] ?? 0)
-                    : collect($detail['lines'])->pluck('user_id')->unique()->count();
+                    $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffsetRub);
+                    $teacherForAdvances = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
+                    $advanceOffset = $teacherForAdvances
+                        ? min($grossTotal, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
+                        : 0.0;
+                    $total = max(0, round($grossTotal - $advanceOffset, 2));
 
-                // Состав слушателей для письма: платные (платёж > 0) и льготники
-                // (нулевая оплата). Считаем из платежей, независимо от модели ЗП.
-                $paidStudentCount = collect($detail['lines'])->pluck('user_id')->unique()->count();
-                $freeStudentCount = app(TeacherSalaryService::class)
-                    ->blockFreeStudentCount($courseId, $blockNumber, $groupId);
+                    $blockNumber = (int) $data['block_number'];
+                    $courseId = (int) $data['course_id'];
+                    $period = $this->blockPeriodMonth($courseId, $blockNumber);
 
-                // Валютная конвертация (PayPal): курс на выбранную дату, сумма в валюте справочная.
-                $currency = $data['payout_currency'] ?: null;
-                $rate = (float) ($data['exchange_rate'] ?? 0);
-                $rateDate = $data['rate_date'] ?? null;
-                $amountForeign = ($currency && $rate > 0) ? round($total / $rate, 2) : null;
+                    $groupId = $data['group_id'] ? (int) $data['group_id'] : null;
+                    $detail = app(TeacherSalaryService::class)
+                        ->blockGroupRevenueDetail($courseId, $blockNumber, $groupId, [
+                            'teacher_id' => (int) $data['teacher_id'],
+                        ]);
 
-                $payout = Teacher::find($data['teacher_id'])?->payouts()->create([
-                    'amount' => $total,
-                    'paid_at' => now()->toDateString(),
-                    'period_month' => $period,
-                    'course_id' => $course?->id,
-                    'salary_type' => $salaryType,
-                    'salary_value' => $isFixed ? $fixedRate : $pct,
-                    'payout_currency' => $amountForeign !== null ? $currency : null,
-                    'exchange_rate' => $amountForeign !== null ? $rate : null,
-                    'rate_date' => $amountForeign !== null ? $rateDate : null,
-                    'amount_foreign' => $amountForeign,
-                    'comment' => $comment,
-                    'breakdown' => [
+                    $block = CourseBlock::query()
+                        ->where('course_id', $courseId)
+                        ->where('number', $blockNumber)
+                        ->first();
+
+                    $comment = sprintf(
+                        'Блок %d%s: %s%s = %s ₽',
+                        $blockNumber,
+                        $course ? ' · '.$course->title : '',
+                        $this->formulaText($data, $coef, $extrasTotal, $surcharge, $deduction),
+                        $priorBlocksTotal > 0
+                            ? ' + поздние оплаты ('.count($priorItems).' шт.) '.number_format($priorBlocksTotal, 0, '.', ' ').' ₽'
+                                .($coef != 100.0 ? ' × '.number_format($coef, 0, '.', ' ').'%' : '')
+                            : '',
+                        number_format($total, 0, '.', ' '),
+                    );
+
+                    if ($directOffsetForeign > 0) {
+                        $comment .= sprintf(
+                            ' − прямые платежи (%d шт.) %s %s (%s ₽)',
+                            count($directLines),
+                            number_format($directOffsetForeign, 2, '.', ' '),
+                            TeacherPayout::currencySymbol($data['payout_currency'] ?: null),
+                            number_format($directOffsetRub, 0, '.', ' '),
+                        );
+                    }
+                    if ($advanceOffset > 0) {
+                        $comment .= ' − аванс '.number_format($advanceOffset, 0, '.', ' ').' ₽';
+                    }
+
+                    $fixedRate = (float) ($data['fixed_rate'] ?? 0);
+
+                    // Число слушателей блока/группы — для прозрачного отчёта («X студентов»),
+                    // независимо от модели ЗП. Для fix_per_student источник правды — ручной ввод.
+                    $studentCount = $salaryType === 'fix_per_student'
+                        ? (int) ($data['student_count'] ?? 0)
+                        : collect($detail['lines'])->pluck('user_id')->unique()->count();
+
+                    // Состав слушателей для письма: платные (платёж > 0) и льготники
+                    // (нулевая оплата). Считаем из платежей, независимо от модели ЗП.
+                    $paidStudentCount = collect($detail['lines'])->pluck('user_id')->unique()->count();
+                    $freeStudentCount = app(TeacherSalaryService::class)
+                        ->blockFreeStudentCount($courseId, $blockNumber, $groupId);
+
+                    // Валютная конвертация (PayPal): курс на выбранную дату, сумма в валюте справочная.
+                    $currency = $data['payout_currency'] ?: null;
+                    $rate = (float) ($data['exchange_rate'] ?? 0);
+                    $rateDate = $data['rate_date'] ?? null;
+                    $amountForeign = ($currency && $rate > 0) ? round($total / $rate, 2) : null;
+
+                    $payout = Teacher::find($data['teacher_id'])?->payouts()->create([
+                        'amount' => $total,
+                        'paid_at' => now()->toDateString(),
+                        'period_month' => $period,
                         'course_id' => $course?->id,
-                        'block_number' => $blockNumber,
-                        'group_id' => $groupId,
-                        'block_period' => [
-                            'starts_at' => $block?->starts_at?->toDateString(),
-                            'ends_at' => $block?->ends_at?->toDateString(),
-                        ],
                         'salary_type' => $salaryType,
-                        'base_revenue' => $base,
-                        'coefficient' => $coef,
-                        'teacher_percent' => $pct,
-                        'fixed_rate' => $isFixed ? $fixedRate : null,
-                        'student_count' => $studentCount,
-                        'paid_student_count' => $paidStudentCount,
-                        'free_student_count' => $freeStudentCount,
-                        'extras' => array_values($extras),
-                        'extras_total' => $extrasTotal,
-                        'surcharge' => $surcharge,
-                        'deduction' => abs($deduction),
-                        'total' => $total,
+                        'salary_value' => $isFixed ? $fixedRate : $pct,
                         'payout_currency' => $amountForeign !== null ? $currency : null,
                         'exchange_rate' => $amountForeign !== null ? $rate : null,
                         'rate_date' => $amountForeign !== null ? $rateDate : null,
                         'amount_foreign' => $amountForeign,
-                        // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
-                        'payments' => $detail['lines'],
-                        'payments_total' => $detail['total'],
-                        // Поздние оплаты прошлых блоков, добавленные вручную (дедуп на будущее).
-                        'prior_blocks_paid' => $priorItems,
-                        'prior_blocks_total' => $priorBlocksTotal,
-                        // Прямые платежи преподавателю, зачтённые этой выплатой (источник
-                        // «уже зачтено» — settledDirectReceiptIds читает именно это).
-                        'direct_receipts' => $directLines,
-                        'direct_offset_foreign' => $directOffsetForeign,
-                        'direct_offset_rub' => $directOffsetRub,
-                        'advance_offset' => $advanceOffset,
-                        'advance_settlements' => [],
-                        'gross_before_advances' => $grossTotal,
-                    ],
-                ]);
+                        'comment' => $comment,
+                        'breakdown' => [
+                            'course_id' => $course?->id,
+                            'block_number' => $blockNumber,
+                            'group_id' => $groupId,
+                            'block_period' => [
+                                'starts_at' => $block?->starts_at?->toDateString(),
+                                'ends_at' => $block?->ends_at?->toDateString(),
+                            ],
+                            'salary_type' => $salaryType,
+                            'base_revenue' => $base,
+                            'coefficient' => $coef,
+                            'teacher_percent' => $pct,
+                            'fixed_rate' => $isFixed ? $fixedRate : null,
+                            'student_count' => $studentCount,
+                            'paid_student_count' => $paidStudentCount,
+                            'free_student_count' => $freeStudentCount,
+                            'extras' => array_values($extras),
+                            'extras_total' => $extrasTotal,
+                            'surcharge' => $surcharge,
+                            'deduction' => abs($deduction),
+                            'total' => $total,
+                            'payout_currency' => $amountForeign !== null ? $currency : null,
+                            'exchange_rate' => $amountForeign !== null ? $rate : null,
+                            'rate_date' => $amountForeign !== null ? $rateDate : null,
+                            'amount_foreign' => $amountForeign,
+                            // Какие оплаты автоматически вошли в сумму за блок (на момент расчёта).
+                            'payments' => $detail['lines'],
+                            'payments_total' => $detail['total'],
+                            // Поздние оплаты прошлых блоков, добавленные вручную (дедуп на будущее).
+                            'prior_blocks_paid' => $priorItems,
+                            'prior_blocks_total' => $priorBlocksTotal,
+                            // Прямые платежи преподавателю, зачтённые этой выплатой (источник
+                            // «уже зачтено» — settledDirectReceiptIds читает именно это).
+                            'direct_receipts' => $directLines,
+                            'direct_offset_foreign' => $directOffsetForeign,
+                            'direct_offset_rub' => $directOffsetRub,
+                            'advance_offset' => $advanceOffset,
+                            'advance_settlements' => [],
+                            'gross_before_advances' => $grossTotal,
+                        ],
+                    ]);
 
-                if ($payout && $teacherForAdvances && $advanceOffset > 0) {
-                    $advanceSettlement = app(TeacherSalaryService::class)
-                        ->settleAdvancesForBlockPayout($teacherForAdvances, $advanceOffset, auth()->id());
-                    $breakdown = $payout->breakdown ?? [];
-                    $breakdown['advance_settlements'] = $advanceSettlement['lines'];
-                    $breakdown['advance_offset'] = $advanceSettlement['total'];
-                    $payout->updateQuietly(['breakdown' => $breakdown]);
-                }
+                    if ($payout && $teacherForAdvances && $advanceOffset > 0) {
+                        $advanceSettlement = app(TeacherSalaryService::class)
+                            ->settleAdvancesForBlockPayout($teacherForAdvances, $advanceOffset, auth()->id());
+                        $breakdown = $payout->breakdown ?? [];
+                        $breakdown['advance_settlements'] = $advanceSettlement['lines'];
+                        $breakdown['advance_offset'] = $advanceSettlement['total'];
+                        $payout->updateQuietly(['breakdown' => $breakdown]);
+                    }
 
-                if ($payout && ($data['post_to_finance'] ?? true)) {
-                    app(TeacherPayoutPoster::class)->post($payout);
-                }
+                    if ($payout && ($data['post_to_finance'] ?? true)) {
+                        app(TeacherPayoutPoster::class)->post($payout);
+                    }
 
-                // Прозрачный отчёт преподавателю на почту (по галочке, только при конвертации).
-                $teacher = $payout?->teacher;
-                if ($payout && ($data['email_report'] ?? false) && $teacher?->email) {
-                    Mail::to($teacher->email)->queue(new TeacherPayoutReportMail($payout->id));
-                }
+                    // Прозрачный отчёт преподавателю на почту (по галочке, только при конвертации).
+                    $teacher = $payout?->teacher;
+                    if ($payout && ($data['email_report'] ?? false) && $teacher?->email) {
+                        Mail::to($teacher->email)->queue(new TeacherPayoutReportMail($payout->id));
+                    }
 
-                Notification::make()
-                    ->title('Выплата записана')
-                    ->body('Итог: '.number_format($total, 0, '.', ' ').' ₽'
-                        .($amountForeign !== null ? ' ≈ '.number_format($amountForeign, 2, '.', ' ').' '.TeacherPayout::currencySymbol($currency) : ''))
-                    ->success()
-                    ->send();
+                    Notification::make()
+                        ->title('Выплата записана')
+                        ->body('Итог: '.number_format($total, 0, '.', ' ').' ₽'
+                            .($amountForeign !== null ? ' ≈ '.number_format($amountForeign, 2, '.', ' ').' '.TeacherPayout::currencySymbol($currency) : ''))
+                        ->success()
+                        ->send();
+                });
             });
     }
 
@@ -1226,7 +1238,23 @@ class TeacherSalaries extends Page implements HasTable
                     ->label('Сумма выплаты (₽)')
                     ->numeric()
                     ->required()
-                    ->minValue(1),
+                    ->minValue(1)
+                    // Мягкий контроль переплаты: не блокируем (бонус/корректировка —
+                    // легитимны), но предупреждаем, когда сумма выше остатка к выплате
+                    // (баланс − непогашенный аванс), чтобы баланс не ушёл в минус по
+                    // опечатке (audit #2).
+                    ->live(onBlur: true)
+                    ->helperText(function (Model $r, Forms\Get $get): string|HtmlString {
+                        $s = $this->salaryFor((int) $r->id);
+                        $available = round((float) ($s['balance'] ?? 0) - (float) ($s['advances_outstanding'] ?? 0), 2);
+                        $entered = (float) $get('amount');
+
+                        if ($entered > $available + 0.001) {
+                            return new HtmlString('<span class="text-warning-600 dark:text-warning-400">Выше остатка к выплате ('.$this->money($available).') — переплата (бонус/корректировка), баланс уйдёт в минус.</span>');
+                        }
+
+                        return 'Остаток к выплате: '.$this->money($available).'.';
+                    }),
                 Forms\Components\DatePicker::make('paid_at')
                     ->label('Дата выплаты')
                     ->native(false)
