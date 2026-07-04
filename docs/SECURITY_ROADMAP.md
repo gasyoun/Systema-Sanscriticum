@@ -43,7 +43,7 @@ platform upgrade.
 **Open — carried into the waves below:**
 - 🔴 PII dump is still recoverable from **git history** and GitHub caches until the purge runs.
 - 🟠 ~15 CONFIRMED money/access defects from the 02-07 adversarial review
-  ([H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071_systema_money_core_findings.md);
+  ([H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md);
   #1 fixed in [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)).
 - 🟠 3 webhooks (Telegram-bot / VK-bot / Zoom) still **fail-open** pending a prod `.env` deploy step.
 - 🟡 **No PHP SAST** — CodeQL cannot analyze PHP, so the language the entire app is written
@@ -97,7 +97,7 @@ every inbound webhook is authenticated fail-closed; secret pushes are blocked at
 ## Wave 2 — Close the known logic defects (Q3 to Q4 2026)
 
 **Unblocked by:** Wave 1 (do not rewrite history under half-finished money PRs). Runs against the
-existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071_systema_money_core_findings.md)
+existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 handoff — this roadmap does not restate the findings, it sequences them.
 
 - [ ] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
@@ -185,10 +185,10 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
 
 - **H080** — Wave 1 exposure purge (git-history scrub of `t_login_at`/`KEYS` via `/secret-purge`
   + PNG PII sweep + `main` branch protection).
-  [H080_systema_security_exposure_purge.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H080_systema_security_exposure_purge.md)
+  [H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md)
 - **H081** — Wave 3 automated defense (PHP SAST CI job + recurring adversarial money-core review harness).
-  [H081_systema_security_sast_and_review.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H081_systema_security_sast_and_review.md)
+  [H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
-  [H071_systema_money_core_findings.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071_systema_money_core_findings.md)
+  [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 
 _Dr. Mārcis Gasūns_

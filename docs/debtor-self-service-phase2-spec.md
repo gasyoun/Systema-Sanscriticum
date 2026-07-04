@@ -3,7 +3,7 @@
 _Created: 04-07-2026 · Last updated: 04-07-2026_
 
 Продолжение [`docs/debtor-self-service-spec.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/debtor-self-service-spec.md)
-(Phase 1, [H168](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H168_systema_debtor_self_service_F1.md),
+(Phase 1, [H168](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H168-Opus_Systema-Sanscriticum_systema_debtor_self_service_F1_04.07.26.md),
 [PR #293](https://github.com/gasyoun/Systema-Sanscriticum/pull/293) merged). Phase 2 закрывает
 пять пробелов, найденных при code-grounded ревью Phase 1.
 
