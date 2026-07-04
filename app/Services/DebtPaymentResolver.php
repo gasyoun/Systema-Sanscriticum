@@ -120,9 +120,9 @@ class DebtPaymentResolver
     }
 
     /**
-     * @return array{type: 'tariff'|'none', full: array|null, blocks: list<array>, unpriced_blocks: list<int>}
+     * @return array{type: 'tariff'|'none', full: array|null, blocks: list<array>, unpriced_blocks: list<int>, bundle: array|null}
      */
-    private function tariffOptions(object $debt): array
+    private function tariffOptions(object $debt, ?User $user = null): array
     {
         $courseId = (int) $debt->course_id;
         /** @var list<int> $debtBlocks */
