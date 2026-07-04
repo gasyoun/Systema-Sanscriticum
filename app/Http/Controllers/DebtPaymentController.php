@@ -29,6 +29,9 @@ use Illuminate\Support\Facades\Log;
  */
 class DebtPaymentController extends Controller
 {
+    /** Сколько минут держим незавершённый self-service заказ «занятым» (анти-дубль). */
+    private const PENDING_HOLD_MINUTES = 30;
+
     public function __construct(
         private readonly StudentDebtsService $debts,
     ) {}
