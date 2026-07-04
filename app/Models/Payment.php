@@ -422,6 +422,12 @@ class Payment extends Model
             // Self-service: должник сам погасил обещание/рассрочку — закрываем
             // привязанное обещание, чтобы у куратора не висел открытый долг.
             app(\App\Services\PromiseAutoFulfiller::class)->handlePaidPayment($payment);
+
+            // Мульти-блочный доступ: платёж с диапазоном блоков несёт лишь один
+            // ключ — дорисовываем недостающие ключи блоков нулевыми access-only
+            // строками (иначе оплаченные блоки N+1..M остаются закрыты). Лечит и
+            // менеджерский PromiseFulfillment.
+            app(\App\Services\BlockAccessMaterializer::class)->materialize($payment);
         }
     }
 
