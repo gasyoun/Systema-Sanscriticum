@@ -724,7 +724,7 @@
                                 <form method="POST" action="{{ $opts['whole']['url'] }}">
                                     @csrf
                                     <button type="submit" class="w-full flex items-center justify-center px-3 py-1.5 border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
-                                        <span>Погасить всё@if($opts['whole']['amount']) ({{ number_format($opts['whole']['amount'], 0, '.', ' ') }} ₽)@endif</span>
+                                        <span>Погасить всё{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
                                     </button>
                                 </form>
                             @endif
