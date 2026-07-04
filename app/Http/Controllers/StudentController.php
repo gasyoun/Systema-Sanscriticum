@@ -157,6 +157,11 @@ class StudentController extends Controller
         $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
 
+        // Варианты самостоятельной оплаты долга (self-service): тариф-ссылки для
+        // «не продлил», следующий платёж / погасить всё — для рассрочки.
+        $debtPayResolver = app(\App\Services\DebtPaymentResolver::class);
+        $debtPayOptions = $debts->mapWithKeys(fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d)]);
+
         // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
         // которым нет полного доступа по группам, но есть персональный grant на урок.
         $trialLessons = LessonAccessGrant::query()
@@ -195,6 +200,7 @@ class StudentController extends Controller
             'pranaReasons',
             'debts',
             'debtsByCourseId',
+            'debtPayOptions',
             'trialLessons',
             'onboarding',
             'homeworkAlerts',
