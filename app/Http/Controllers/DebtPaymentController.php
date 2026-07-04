@@ -13,7 +13,6 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Самообслуживание должника (self-service): студент сам платит по согласованной
@@ -170,7 +169,7 @@ class DebtPaymentController extends Controller
      */
     private function resolveKeyAndBlocks(Course $course, ?object $debt): array
     {
-        $blocks = $debt->debt_block_numbers ?? [];
+        $blocks = $debt?->debt_block_numbers ?? [];
         $blocks = array_values(array_map('intval', $blocks));
 
         if (empty($blocks)) {
