@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
@@ -35,7 +36,7 @@ class DebtPaymentResolver
      *   unpriced_blocks?: list<int>,
      * }
      */
-    public function optionsFor(object $debt): array
+    public function optionsFor(object $debt, ?User $user = null): array
     {
         // Договорённость (обещание/рассрочка) — платим согласованную сумму, а не
         // цену тарифа: она часто со скидкой куратора. Это приоритетная ветка:
@@ -45,7 +46,7 @@ class DebtPaymentResolver
         }
 
         // Долг «не продлил» без договорённости — штатный чекаут по тарифам.
-        return $this->tariffOptions($debt);
+        return $this->tariffOptions($debt, $user);
     }
 
     /**
@@ -93,25 +94,42 @@ class DebtPaymentResolver
             ];
         }
 
+        // Перенос даты: доступен на ближайшем непогашенном обещании, если студент
+        // ещё не переносил его сам.
+        $reschedule = null;
+        if ($nextPromise instanceof PaymentPromise && $nextPromise->student_rescheduled_at === null) {
+            $reschedule = [
+                'promise_id' => $nextPromise->id,
+                'url' => route('student.debt.promise.reschedule', $nextPromise),
+                'current_date' => $nextPromise->promised_at?->format('Y-m-d'),
+            ];
+        }
+
         return [
             'type' => 'arrangement',
             'next' => $next,
             'whole' => $whole,
             'installment' => $isInstallment,
+            // Кастомная частичная оплата постит сюда с полем amount (границы —
+            // [next_amount, remaining]); прана — опциональным prana_amount.
+            'pay_all_url' => route('student.debt.course.pay-all', $debt->course_id),
+            'next_amount' => $next['amount'] ?? null,
+            'remaining' => $whole['amount'] ?? ($next['amount'] ?? null),
+            'reschedule' => $reschedule,
         ];
     }
 
     /**
-     * @return array{type: 'tariff'|'none', full: array|null, blocks: list<array>, unpriced_blocks: list<int>}
+     * @return array{type: 'tariff'|'none', full: array|null, blocks: list<array>, unpriced_blocks: list<int>, bundle: array|null}
      */
-    private function tariffOptions(object $debt): array
+    private function tariffOptions(object $debt, ?User $user = null): array
     {
         $courseId = (int) $debt->course_id;
         /** @var list<int> $debtBlocks */
         $debtBlocks = array_values(array_map('intval', $debt->debt_block_numbers ?? []));
 
         if (empty($debtBlocks)) {
-            return ['type' => 'none', 'full' => null, 'blocks' => [], 'unpriced_blocks' => []];
+            return ['type' => 'none', 'full' => null, 'blocks' => [], 'unpriced_blocks' => [], 'bundle' => null];
         }
 
         $tariffs = Tariff::query()
@@ -139,6 +157,7 @@ class DebtPaymentResolver
         // блока (block_N). Половинные (block_N_hH) в Phase 1 не собираем.
         $blockOptions = [];
         $unpriced = [];
+        $bundleAmount = 0.0;
         foreach ($debtBlocks as $n) {
             $tariff = $tariffs->first(fn (Tariff $t) => $t->type === 'block'
                 && (int) $t->block_number === $n
@@ -150,9 +169,21 @@ class DebtPaymentResolver
                     'title' => (string) $tariff->title,
                     'url' => route('checkout.show', $tariff),
                 ];
+                $bundleAmount += (float) $tariff->calculateFinalPriceForUser($user);
             } else {
                 $unpriced[] = $n;
             }
+        }
+
+        // Бандл: один платёж на весь плоский многоблочный долг, когда все блоки
+        // имеют тариф и их ≥2 (и это не «весь курс» с тарифом full). Цена — сумма
+        // итоговых цен блоков (та же, что пересчитает контроллер).
+        $bundle = null;
+        if ($full === null && empty($unpriced) && count($blockOptions) >= 2) {
+            $bundle = [
+                'amount' => $bundleAmount,
+                'url' => route('student.debt.course.pay-bundle', $courseId),
+            ];
         }
 
         $type = ($full !== null || ! empty($blockOptions)) ? 'tariff' : 'none';
@@ -162,6 +193,7 @@ class DebtPaymentResolver
             'full' => $full,
             'blocks' => $blockOptions,
             'unpriced_blocks' => $unpriced,
+            'bundle' => $bundle,
         ];
     }
 }

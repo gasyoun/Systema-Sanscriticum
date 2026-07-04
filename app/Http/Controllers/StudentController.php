@@ -160,7 +160,7 @@ class StudentController extends Controller
         // Варианты самостоятельной оплаты долга (self-service): тариф-ссылки для
         // «не продлил», следующий платёж / погасить всё — для рассрочки.
         $debtPayResolver = app(\App\Services\DebtPaymentResolver::class);
-        $debtPayOptions = $debts->mapWithKeys(fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d)]);
+        $debtPayOptions = $debts->mapWithKeys(fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d, $user)]);
 
         // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
         // которым нет полного доступа по группам, но есть персональный grant на урок.

@@ -181,8 +181,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Плоский долг «не продлил» идёт штатным /checkout/{tariff} (см. DebtPaymentResolver).
     Route::post('/debt/promise/{promise}/pay', [\App\Http\Controllers\DebtPaymentController::class, 'payPromise'])
         ->name('student.debt.promise.pay');
+    Route::post('/debt/promise/{promise}/reschedule', [\App\Http\Controllers\DebtPaymentController::class, 'reschedule'])
+        ->name('student.debt.promise.reschedule');
     Route::post('/debt/course/{course}/pay-all', [\App\Http\Controllers\DebtPaymentController::class, 'payAll'])
         ->name('student.debt.course.pay-all');
+    Route::post('/debt/course/{course}/pay-bundle', [\App\Http\Controllers\DebtPaymentController::class, 'payBundle'])
+        ->name('student.debt.course.pay-bundle');
 
     // P2P-перевод праны другому студенту (подарок).
     Route::post('/prana/transfer', [\App\Http\Controllers\PranaTransferController::class, 'transfer'])
