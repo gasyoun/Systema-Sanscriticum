@@ -228,8 +228,11 @@ class TelegramHarvestSyncService
             return null;
         }
 
-        $text = $raw['message'] ?? null;
-        if ($text === null || $text === '') {
+        $text = (string) ($raw['message'] ?? '');
+        $media = $this->mediaMeta($raw);
+
+        // D4: keep media-bearing messages (previously dropped) — text OR media qualifies.
+        if ($text === '' && ! $media['has_media']) {
             return null;
         }
 
@@ -244,12 +247,59 @@ class TelegramHarvestSyncService
             'peer_title' => $info['title'],
             'peer_username' => $info['username'],
             'access_level' => $info['access_level'],
+            // D6: record the noforwards/restricted flag for the publication gate; harvest anyway.
+            'peer_restricted' => (bool) ($info['restricted'] ?? false),
             'telegram_user_id' => $authorId,
             'author_name' => $author ? $this->displayName($author) : null,
             'author_username' => $author['username'] ?? null,
             'direction' => ! empty($raw['out']) ? 'outgoing' : 'incoming',
             'text' => $text,
+            // D4: media metadata only — never download the file.
+            'has_media' => $media['has_media'],
+            'media_type' => $media['media_type'],
+            'media_caption' => $media['has_media'] && $text !== '' ? $text : null,
+            'media_size' => $media['media_size'],
+            'media_mime' => $media['media_mime'],
             'sent_at' => CarbonImmutable::createFromTimestamp((int) $raw['date'], config('app.timezone'))->toIso8601String(),
+        ];
+    }
+
+    /**
+     * D4: extract media presence + metadata from a raw MadelineProto message.
+     * Metadata only — the file itself is NEVER downloaded (a future D## if taken).
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array{has_media: bool, media_type: ?string, media_size: ?int, media_mime: ?string}
+     */
+    private function mediaMeta(array $raw): array
+    {
+        $media = $raw['media'] ?? null;
+        if (! is_array($media) || $media === []) {
+            return ['has_media' => false, 'media_type' => null, 'media_size' => null, 'media_mime' => null];
+        }
+
+        $kind = (string) ($media['_'] ?? '');
+        $document = is_array($media['document'] ?? null) ? $media['document'] : [];
+        $mime = isset($document['mime_type']) ? (string) $document['mime_type'] : null;
+        $size = isset($document['size']) ? (int) $document['size'] : null;
+
+        // photo/document/audio/video/… — prefer the document mime prefix, fall
+        // back to the MadelineProto media constructor name.
+        $type = match (true) {
+            $kind === 'messageMediaPhoto' => 'photo',
+            $mime !== null && str_starts_with($mime, 'audio/') => 'audio',
+            $mime !== null && str_starts_with($mime, 'video/') => 'video',
+            $mime !== null && str_starts_with($mime, 'image/') => 'image',
+            $kind === 'messageMediaDocument' => 'document',
+            $kind !== '' => (string) preg_replace('/^messageMedia/', '', $kind),
+            default => 'unknown',
+        };
+
+        return [
+            'has_media' => true,
+            'media_type' => strtolower($type),
+            'media_size' => $size,
+            'media_mime' => $mime,
         ];
     }
 
