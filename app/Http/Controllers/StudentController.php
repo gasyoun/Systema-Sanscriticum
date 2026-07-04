@@ -200,6 +200,7 @@ class StudentController extends Controller
             'pranaReasons',
             'debts',
             'debtsByCourseId',
+            'debtPayOptions',
             'trialLessons',
             'onboarding',
             'homeworkAlerts',
