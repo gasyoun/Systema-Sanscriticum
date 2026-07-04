@@ -32,7 +32,7 @@ _Created: 04-07-2026 · Last updated: 04-07-2026_
 | Чему вы научитесь | ➕ новый | `courses.outcomes` (json array) |
 | О курсе | ✅ есть | `courses.description` (Tiptap rich-text) |
 | Программа по модулям | ✅ есть | `CourseBlock` + `lessons` (аккордеон уже построен) — **не дублировать таблицей модулей** |
-| Пример урока (sample) | ➕ новый | `courses.preview_video_url` + `courses.preview_note` |
+| Пример урока (sample) | 🔁 переиспользовать плеер | `lessons.is_preview` — существующий гейт-плеер `Lesson`, публично открыт **только** для флаг-урока |
 | Преподаватель(и) | 🔁 расширить | `Teacher.bio` (уже есть, редко заполнен) + новое `teachers.photo_path`; показывать основного И со-препода |
 | Тарифы (#tariffs) | ✅ есть | `tariffs` (полностью готов: full/block/half, скидки, депозит) |
 | Отзывы | ➕ новый | таблица `testimonials` + пивот `course_testimonial` |
@@ -93,13 +93,16 @@ unique(course_id, testimonial_id)
 ```
 audience            json      nullable   // «Для кого» — массив строк
 outcomes            json      nullable   // «Чему научитесь» — массив строк
-preview_video_url   string    nullable   // ссылка на пример урока (YouTube/VK/mp4)
-preview_note        text      nullable   // подпись/что в примере + ДЗ
 tech_requirements   text      nullable   // per-course override; пусто → общий текст
-meta_title          string    nullable   // SEO <title> (опц., см. под-решения)
-meta_description    string    nullable   // SEO meta description
+meta_title          string    nullable   // SEO <title> (override; пусто → фолбэк = title курса)
+meta_description    string    nullable   // SEO meta description (override; пусто → усечённое description)
 ```
 Касты в модели: `audience` и `outcomes` → `'array'`.
+
+### Новая колонка на `lessons` (пример урока)
+```
+is_preview   boolean default false   // бесплатный публичный preview данного урока
+```
 
 ### Новая колонка на `teachers`
 ```
@@ -121,7 +124,7 @@ photo_path   string nullable   // фото для блока преподава�
 4. **Чему вы научитесь** — hidden если `outcomes` пуст
 5. **О курсе** (`description`) — *есть*
 6. **Программа курса** (аккордеон блоков) — *есть*, `id="program"`
-7. **Пример урока** — `id="sample"`, hidden если `preview_video_url` пуст
+7. **Пример урока** — `id="sample"`, гейт-плеер `Lesson` с `is_preview=true`; hidden если у курса нет preview-урока
 8. **Преподаватель(и)** — bio + фото, основной и со-препод
 9. **Тарифы** — `id="tariffs"`, *есть* (сохранить якорь, на него ведёт карточка каталога)
 10. **Отзывы** — hidden если пивот пуст
@@ -148,6 +151,16 @@ photo_path   string nullable   // фото для блока преподава�
 (с `orderByPivot('sort_order')`), касты массивов. Аксессор `techRequirements()` →
 per-course override или общий дефолт из `MarketingSetting`.
 
+### Пример урока — доступ и безопасность (переиспользование гейт-плеера)
+Блок «Пример урока» открывает существующий плеер `Lesson`, а не отдельное видео-поле.
+- **Флаг:** `lessons.is_preview`. В Filament — ограничить **одним** preview-уроком на курс (валидация).
+- **Гейт доступа — единственная точка правды.** Научить [`Lesson::isUnlockedBy()` / `unlockingKeys()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Lesson.php)
+  возвращать «открыт» для preview-урока **для всех** (в т.ч. гость), не трогая ключи `full`/`block_N`/`block_N_hH`.
+- **Роут:** отдавать плеер preview-урока по публичному пути без auth-middleware.
+- ⚠️ **Безопасность (обязательный тест):** публично доступен **только** урок с `is_preview=true`
+  этого курса — не соседние уроки, не другой курс. Прямой запрос не-preview урока гостем → 403/redirect.
+  Feature-тест на оба случая (preview открыт гостю; не-preview закрыт) — часть DoD.
+
 ### Blade
 Новые партиалы в `resources/views/shop/partials/` (audience, outcomes, sample, teachers,
 testimonials, faq, tech-payment, trust-strip, final-cta) — включаются из `show.blade.php`.
@@ -155,8 +168,10 @@ testimonials, faq, tech-payment, trust-strip, final-cta) — включаютс�
 
 ### Filament — [CourseResource](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/CourseResource.php)
 Сейчас RelationManagers пусты — это и есть точка расширения.
-- Новая вкладка **«Лендинг»**: `TagsInput` для `audience`/`outcomes`; `TextInput` `preview_video_url`;
-  `Textarea` `preview_note`; Tiptap `tech_requirements`; `TextInput` `meta_title`/`meta_description`.
+- Новая вкладка **«Лендинг»**: `TagsInput` для `audience`/`outcomes`; Tiptap `tech_requirements`;
+  `TextInput` `meta_title`/`meta_description`.
+- **Preview-урок:** `Toggle` `is_preview` в редакторе уроков (`LectureEditor`/`LessonResource`),
+  валидация «не более одного preview на курс».
 - **FaqsRelationManager** (question/answer/sort_order/is_visible, reorderable) — паттерн как у репитера `tariffs`.
 - **TestimonialsRelationManager** (attach из библиотеки + `sort_order`) + отдельный `TestimonialResource` для самой библиотеки.
 - **TeacherResource**: `FileUpload` → `photo_path`.
@@ -188,13 +203,12 @@ vitrina перечисляет события `view_course_page`, `sample_lesson
 Подписка на весь каталог · лид-магниты + email-цепочки · унификация реквизитов/ценовых якорей
 (ИП Гасунс vs ИП Поликарпова, «от 400 ₽») · миграция платформы. Каждое — отдельный @DECIDE в GTD.
 
-## Открытые под-решения (уточнить перед реализацией)
+## Под-решения — зафиксированы (интервью 04-07-2026)
 
-1. **Отзывы:** библиотека + пивот (рекомендуется, переиспользование) **или** проще —
-   `course_reviews` с прямым `course_id`. Спека выше идёт по варианту «библиотека».
-2. **Пример урока:** просто ссылка на видео (`preview_video_url`, рекомендуется) **или**
-   переиспользовать гейт-плеер `Lesson` как бесплатный preview (сложнее, но единый плеер).
-3. **SEO-поля** `meta_title`/`meta_description`: в v1 **или** отложить в v2.
+1. **Отзывы:** ✅ библиотека `testimonials` + пивот `course_testimonial` (переиспользование между курсами).
+2. **Пример урока:** ✅ переиспользуем гейт-плеер `Lesson` (`lessons.is_preview`), публично только флаг-урок —
+   см. «Пример урока — доступ и безопасность». (Отдельного видео-поля на курсе нет.)
+3. **SEO-поля:** ✅ v1 — `meta_title`/`meta_description` сразу, с авто-фолбэком (title курса / усечённое description).
 
 ---
 
