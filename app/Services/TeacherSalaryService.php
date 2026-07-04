@@ -12,6 +12,7 @@ use App\Models\SalaryClosedPeriod;
 use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -148,15 +149,15 @@ class TeacherSalaryService
                 'salary_type' => $terms['type'],
                 'salary_value' => (float) $terms['value'],
                 'students' => $students,
-                'revenue' => round($revenue, 2),
-                'returns' => round($returns, 2),
-                'accrued' => round($accrued, 2),
+                'revenue' => Money::round($revenue),
+                'returns' => Money::round($returns),
+                'accrued' => Money::round($accrued),
             ];
 
             $total += $accrued;
         }
 
-        return ['rows' => $rows, 'total' => round($total, 2)];
+        return ['rows' => $rows, 'total' => Money::round($total)];
     }
 
     /**
@@ -195,7 +196,7 @@ class TeacherSalaryService
             $returns += $this->windowSum($data['accrued_returns'], $start, $end);
         }
 
-        return ['net' => round($net, 2), 'gross' => round($gross, 2), 'returns' => round($returns, 2)];
+        return ['net' => Money::round($net), 'gross' => Money::round($gross), 'returns' => Money::round($returns)];
     }
 
     /**
@@ -235,8 +236,8 @@ class TeacherSalaryService
                 $amount = (float) $p->amount;
                 $lines[] = [
                     'course_title' => (string) $course->title,
-                    'amount' => round($amount, 2),
-                    'effect' => round($isPercent ? $amount * ($value / 100) : 0.0, 2),
+                    'amount' => Money::round($amount),
+                    'effect' => Money::round($isPercent ? $amount * ($value / 100) : 0.0),
                     'date' => $p->created_at?->format('d.m.Y'),
                     'note' => $p->transaction_id,
                 ];
@@ -295,7 +296,7 @@ class TeacherSalaryService
                     'payment_id' => (int) $p->id,
                     'course_id' => (int) $course->id,
                     'course_title' => (string) $course->title,
-                    'amount' => round($amount, 2),
+                    'amount' => Money::round($amount),
                     'currency' => $currency,
                     'date' => $p->created_at?->format('d.m.Y'),
                     'payer_note' => $p->payer_note,
@@ -305,7 +306,7 @@ class TeacherSalaryService
             }
         }
 
-        return ['total' => round($total, 2), 'currency' => $payoutCurrency, 'lines' => $lines];
+        return ['total' => Money::round($total), 'currency' => $payoutCurrency, 'lines' => $lines];
     }
 
     /**
@@ -371,9 +372,9 @@ class TeacherSalaryService
             ->get()
             ->map(fn (TeacherPayout $payout): array => [
                 'payout_id' => (int) $payout->id,
-                'amount' => round((float) $payout->amount, 2),
-                'settled_amount' => round((float) $payout->settled_amount, 2),
-                'remaining' => round((float) $payout->amount - (float) $payout->settled_amount, 2),
+                'amount' => Money::round((float) $payout->amount),
+                'settled_amount' => Money::round((float) $payout->settled_amount),
+                'remaining' => Money::round((float) $payout->amount - (float) $payout->settled_amount),
                 'paid_at' => $payout->paid_at?->toDateString(),
             ])
             ->filter(fn (array $item): bool => $item['remaining'] > 0)
@@ -388,7 +389,7 @@ class TeacherSalaryService
      */
     public function settleAdvancesForBlockPayout(Teacher $teacher, float $limit, ?int $settledBy = null): array
     {
-        $limit = round(max(0.0, $limit), 2);
+        $limit = Money::round(max(0.0, $limit));
         if ($limit <= 0) {
             return ['total' => 0.0, 'lines' => []];
         }
@@ -410,26 +411,26 @@ class TeacherSalaryService
                     break;
                 }
 
-                $remainingAdvance = round((float) $advance->amount - (float) $advance->settled_amount, 2);
+                $remainingAdvance = Money::round((float) $advance->amount - (float) $advance->settled_amount);
                 if ($remainingAdvance <= 0) {
                     continue;
                 }
 
                 $applied = min($remainingAdvance, $remainingLimit);
-                $newSettled = round((float) $advance->settled_amount + $applied, 2);
+                $newSettled = Money::round((float) $advance->settled_amount + $applied);
                 $advance->settled_amount = $newSettled;
                 $advance->settled_by = $settledBy;
-                if ($newSettled >= round((float) $advance->amount, 2)) {
+                if ($newSettled >= Money::round((float) $advance->amount)) {
                     $advance->settled_at = now();
                 }
                 $advance->save();
 
-                $remainingLimit = round($remainingLimit - $applied, 2);
-                $total = round($total + $applied, 2);
+                $remainingLimit = Money::round($remainingLimit - $applied);
+                $total = Money::round($total + $applied);
                 $lines[] = [
                     'payout_id' => (int) $advance->id,
-                    'applied' => round($applied, 2),
-                    'remaining_after' => round((float) $advance->amount - $newSettled, 2),
+                    'applied' => Money::round($applied),
+                    'remaining_after' => Money::round((float) $advance->amount - $newSettled),
                 ];
             }
         });
@@ -503,11 +504,11 @@ class TeacherSalaryService
                 'earned_period' => $period['net'],          // чистое (валовое + возвраты)
                 'earned_period_gross' => $period['gross'],   // только положительные начисления
                 'returns_period' => $period['returns'],      // эффект возвратов на ЗП (<=0)
-                'earned_all_time' => round($earnedAll, 2),
-                'paid_period' => round((float) ($paidPeriod[$teacher->id] ?? 0), 2),
-                'paid_all_time' => round($paidAll, 2),
-                'balance' => round($earnedAll - $paidAll, 2),
-                'advances_outstanding' => round((float) ($advancesOutstanding[$teacher->id] ?? 0), 2),
+                'earned_all_time' => Money::round($earnedAll),
+                'paid_period' => Money::round((float) ($paidPeriod[$teacher->id] ?? 0)),
+                'paid_all_time' => Money::round($paidAll),
+                'balance' => Money::round($earnedAll - $paidAll),
+                'advances_outstanding' => Money::round((float) ($advancesOutstanding[$teacher->id] ?? 0)),
                 // Зачёт прямых платежей (в валюте выплаты преподавателя), справочно.
                 'direct_receipts_period' => $directReceipts['total'],
                 'direct_receipts_all_time' => $directReceiptsAll['total'],
@@ -621,9 +622,9 @@ class TeacherSalaryService
                 'user_name' => $p->user?->name ?? ('#'.$p->user_id),
                 'tariff' => $p->tariff,
                 'label' => $p->operationLabel(),
-                'amount' => round($amount, 2),
+                'amount' => Money::round($amount),
                 'covered_blocks' => count($covered),
-                'share' => round($share, 2),
+                'share' => Money::round($share),
                 'created_at' => $p->created_at?->format('d.m.Y'),
                 'is_return' => false,
             ];
@@ -662,9 +663,9 @@ class TeacherSalaryService
                     'user_name' => $p->user?->name ?? ('#'.$p->user_id),
                     'tariff' => $p->tariff,
                     'label' => $p->operationLabel(),
-                    'amount' => round($amount, 2),
+                    'amount' => Money::round($amount),
                     'covered_blocks' => count($covered),
-                    'share' => round($share, 2),
+                    'share' => Money::round($share),
                     'created_at' => $p->created_at?->format('d.m.Y'),
                     'is_return' => true,
                 ];
@@ -672,7 +673,7 @@ class TeacherSalaryService
         }
 
         // База блока не может быть отрицательной (возвраты сверх выручки блока).
-        return ['total' => round(max(0.0, $total), 2), 'lines' => $lines];
+        return ['total' => Money::round(max(0.0, $total)), 'lines' => $lines];
     }
 
     /**
@@ -792,7 +793,7 @@ class TeacherSalaryService
                 if (empty($covered)) {
                     continue;
                 }
-                $share = round($this->accrualAmount($p, false) / count($covered), 2);
+                $share = Money::round($this->accrualAmount($p, false) / count($covered));
 
                 foreach ($covered as $block) {
                     // Текущая пара (курс, блок) уже учтена в base_revenue.
@@ -817,10 +818,10 @@ class TeacherSalaryService
                         'payment_id' => $p->id,
                         'user_id' => (int) $p->user_id,
                         'user_name' => $p->user?->name ?? ('#'.$p->user_id),
-                        'amount' => round((float) $p->amount, 2),
+                        'amount' => Money::round((float) $p->amount),
                         'share' => $share,
                         'percent' => $percent,
-                        'teacher_amount' => round($share * $percent / 100, 2),
+                        'teacher_amount' => Money::round($share * $percent / 100),
                     ];
                 }
             }
@@ -852,7 +853,7 @@ class TeacherSalaryService
      */
     public static function blockPayoutTotal(float $base, float $coef, float $teacherPct, float $extrasTotal, float $surcharge = 0.0, float $deduction = 0.0, float $priorBlocksTotal = 0.0, float $directOffset = 0.0): float
     {
-        return round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal * ($coef / 100) - abs($directOffset), 2);
+        return Money::round(($base * $coef / 100) * ($teacherPct / 100) + $extrasTotal * ($coef / 100) + $surcharge - abs($deduction) + $priorBlocksTotal * ($coef / 100) - abs($directOffset));
     }
 
     /**
