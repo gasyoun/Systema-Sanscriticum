@@ -283,7 +283,7 @@ class TelegramHarvestSyncService
      *
      * @return array{id: ?int, type: string, title: ?string, username: ?string, access_level: string, restricted: bool}
      */
-    private function peerInfo(object $client, string $peer): array
+    private function peerInfo(object $client, int|string $peer): array
     {
         $default = ['id' => null, 'type' => 'unknown', 'title' => null, 'username' => null, 'access_level' => 'private_group', 'restricted' => false];
 
