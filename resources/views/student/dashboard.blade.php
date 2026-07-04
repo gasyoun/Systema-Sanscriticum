@@ -707,7 +707,9 @@
                         </div>
                     @endif
 
-                    @php($opts = $debtPayOptions[$debt->course_id] ?? null)
+                    @php
+                        $opts = $debtPayOptions[$debt->course_id] ?? null;
+                    @endphp
                     <div class="mt-auto space-y-2">
                         {{-- Самостоятельная оплата долга (self-service) --}}
                         @if($opts && $opts['type'] === 'arrangement')
