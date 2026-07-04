@@ -88,6 +88,47 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * D5: read-only peer discovery. Enumerate the account's dialogs and resolve
+     * each to id/username/type/access_level/restricted so the operator can pick
+     * which to add to TELEGRAM_HARVEST_PEERS. No harvest, no store, no cursor.
+     *
+     * @return array<int, array{id: ?int, username: ?string, type: string, access_level: string, restricted: bool, title: ?string}>
+     */
+    public function discoverPeers(): array
+    {
+        if (! $this->clientFactory->isConfigured()) {
+            return [];
+        }
+
+        $client = $this->clientFactory->open();
+        if (! method_exists($client, 'getDialogs')) {
+            return [];
+        }
+
+        $peers = [];
+        $seen = [];
+        foreach ((array) $client->getDialogs() as $dialog) {
+            $peer = $this->telegramId($dialog) ?? (is_scalar($dialog) ? $dialog : null);
+            if ($peer === null || isset($seen[(string) $peer])) {
+                continue;
+            }
+            $seen[(string) $peer] = true;
+
+            $info = $this->peerInfo($client, $peer);
+            $peers[] = [
+                'id' => $info['id'],
+                'username' => $info['username'],
+                'type' => $info['type'],
+                'access_level' => $info['access_level'],
+                'restricted' => $info['restricted'],
+                'title' => $info['title'],
+            ];
+        }
+
+        return $peers;
+    }
+
+    /**
      * Apply dedup + raw-store write + cursor advance to already-normalized
      * records. Shared by the live path, the --payload local-import path, and
      * tests (so the pipeline is exercisable without MadelineProto).
