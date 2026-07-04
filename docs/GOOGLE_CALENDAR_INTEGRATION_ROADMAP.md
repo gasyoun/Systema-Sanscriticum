@@ -123,13 +123,26 @@ Resolve this at the start of Phase 4, not now.
 
 | Phase | Deliverable | Depends on | Acceptance |
 |---|---|---|---|
-| **1. iCal feed** | Signed per-user `.ics` feed + "Add to Google Calendar" buttons; Zoom link + course-range events embedded | nothing (no Google dependency) | A student subscribes; sessions + course ranges appear in their calendar; revoking the token kills the feed |
+| **1. iCal feed ✅ DONE 04-07-2026** | Signed per-user `.ics` feed + "Add to Google Calendar" buttons; Zoom link + course-range events embedded | nothing (no Google dependency) | A student subscribes; sessions + course ranges appear in their calendar; revoking the token kills the feed |
 | **2. OAuth connect + app→Google push** | Teachers/admin link Google; sessions + ranges written into their calendars (one-way) | Google `calendar`-scope app verification (§8) | A teacher links; app edits appear in Google within one sync cycle |
 | **3. Google→app pull (two-way)** | `events.watch` channels + sync worker + last-write-wins + the 3-step cascade (§6) | Phase 2 | A teacher's drag in Google moves the Schedule row, reschedules Zoom, and notifies the group |
 | **4. Course-date propagation** | `CourseBlock` date edits shift sessions and flow out | Phase 1 (feed) or 2/3; shift-rule decision | Editing a block's dates moves its sessions per the chosen rule and updates both channels |
 
 Phase 1 delivers student value immediately with zero Google dependency and de-risks
 the whole effort — build it first.
+
+**Phase 1 status (H153, 04-07-2026, Sonnet 5 `claude-sonnet-5`):** delivered —
+`feed_tokens` table + [`FeedToken`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/FeedToken.php)
+model, `User::calendarFeedToken()`, [`IcsFeedBuilder`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Calendar/IcsFeedBuilder.php)
+(hand-rolled RFC 5545 serializer — no new Composer dependency), token-gated
+`GET /calendar/feed/{user}/{token}.ics` route +
+[`CalendarFeedController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/CalendarFeedController.php),
+subscribe/copy/regenerate UI in
+[`student/calendar.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/calendar.blade.php),
+and [`CalendarFeedTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Student/CalendarFeedTest.php)
+(5 tests — UTC serialization, course-block ranges, revoked/wrong-token 404,
+regenerate flow). Phase 2 (OAuth) is gated on the Google `calendar`-scope app
+verification in §8 — kick that off separately, it is not part of this delivery.
 
 ## 8. Risks & external blockers
 
