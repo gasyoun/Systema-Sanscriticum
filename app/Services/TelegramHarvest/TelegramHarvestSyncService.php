@@ -178,11 +178,11 @@ class TelegramHarvestSyncService
     /**
      * Resolve a peer's id, type and public/private access level from MadelineProto.
      *
-     * @return array{id: ?int, type: string, title: ?string, username: ?string, access_level: string}
+     * @return array{id: ?int, type: string, title: ?string, username: ?string, access_level: string, restricted: bool}
      */
     private function peerInfo(object $client, string $peer): array
     {
-        $default = ['id' => null, 'type' => 'unknown', 'title' => null, 'username' => null, 'access_level' => 'private_group'];
+        $default = ['id' => null, 'type' => 'unknown', 'title' => null, 'username' => null, 'access_level' => 'private_group', 'restricted' => false];
 
         if (! method_exists($client, 'getInfo')) {
             return $default;
