@@ -730,6 +730,40 @@
                                     </button>
                                 </form>
                             @endif
+
+                            {{-- Частичная оплата / прана (self-service Phase 2) --}}
+                            @if(($opts['remaining'] ?? null) && \App\Services\Prana\PranaSettings::isActive() || ($opts['next_amount'] ?? null) !== ($opts['remaining'] ?? null))
+                                <details class="text-[11px] text-gray-500">
+                                    <summary class="cursor-pointer select-none hover:text-gray-700">Другая сумма{{ \App\Services\Prana\PranaSettings::isActive() ? ' / прана' : '' }}</summary>
+                                    <form method="POST" action="{{ $opts['pay_all_url'] }}" class="mt-2 space-y-2">
+                                        @csrf
+                                        <label class="block">
+                                            <span class="text-gray-500">Сумма, ₽ (от {{ number_format($opts['next_amount'] ?? 0, 0, '.', ' ') }} до {{ number_format($opts['remaining'] ?? 0, 0, '.', ' ') }})</span>
+                                            <input type="number" name="amount" step="1" min="{{ (int) ($opts['next_amount'] ?? 0) }}" max="{{ (int) ($opts['remaining'] ?? 0) }}" value="{{ (int) ($opts['next_amount'] ?? 0) }}" class="mt-0.5 w-full rounded border-gray-300 text-xs">
+                                        </label>
+                                        @if(\App\Services\Prana\PranaSettings::isActive())
+                                            <label class="block">
+                                                <span class="text-gray-500">Списать прану (баланс {{ (int) (auth()->user()->prana_balance ?? 0) }})</span>
+                                                <input type="number" name="prana_amount" step="{{ \App\Services\Prana\PranaSettings::rate() }}" min="0" max="{{ (int) (auth()->user()->prana_balance ?? 0) }}" value="0" class="mt-0.5 w-full rounded border-gray-300 text-xs">
+                                            </label>
+                                        @endif
+                                        <button type="submit" class="w-full px-3 py-1.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">Оплатить</button>
+                                    </form>
+                                </details>
+                            @endif
+
+                            {{-- Перенос даты ближайшего обещания (один раз) --}}
+                            @if($opts['reschedule'] ?? null)
+                                <details class="text-[11px] text-gray-500">
+                                    <summary class="cursor-pointer select-none hover:text-gray-700">Перенести дату</summary>
+                                    <form method="POST" action="{{ $opts['reschedule']['url'] }}" class="mt-2 flex gap-1.5">
+                                        @csrf
+                                        <input type="date" name="new_date" value="{{ $opts['reschedule']['current_date'] }}" class="flex-1 rounded border-gray-300 text-xs">
+                                        <button type="submit" class="px-2.5 py-1 border border-gray-300 hover:bg-gray-50 rounded-lg text-xs font-semibold">ОК</button>
+                                    </form>
+                                    <p class="mt-1 text-gray-400">Не более чем на 2 недели вперёд, один раз.</p>
+                                </details>
+                            @endif
                         @elseif($opts && $opts['type'] === 'tariff')
                             @if($opts['full'])
                                 <a href="{{ $opts['full']['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
