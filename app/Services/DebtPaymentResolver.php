@@ -129,7 +129,7 @@ class DebtPaymentResolver
         $debtBlocks = array_values(array_map('intval', $debt->debt_block_numbers ?? []));
 
         if (empty($debtBlocks)) {
-            return ['type' => 'none', 'full' => null, 'blocks' => [], 'unpriced_blocks' => []];
+            return ['type' => 'none', 'full' => null, 'blocks' => [], 'unpriced_blocks' => [], 'bundle' => null];
         }
 
         $tariffs = Tariff::query()
