@@ -62,7 +62,7 @@ class DebtPaymentController extends Controller
     }
 
     /** Погасить весь остаток графика по курсу одним платежом. */
-    public function payAll(Course $course, TochkaPaymentService $tochka): RedirectResponse
+    public function payAll(Course $course): RedirectResponse
     {
         $user = auth()->user();
 
