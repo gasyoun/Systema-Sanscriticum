@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\SalaryScheme;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Payment;
@@ -87,18 +88,12 @@ class TeacherSalaryService
      */
     public static function salaryTypeLabels(): array
     {
-        return [
-            'percent' => '% от выручки',
-            'fix_per_student' => 'Фикс за студента',
-            'fix_total' => 'Фикс за курс',
-            'percent_per_block' => '% за блок',
-            'fix_per_block' => 'Фикс за блок',
-        ];
+        return SalaryScheme::labels();
     }
 
     public static function salaryTypeLabel(?string $type): string
     {
-        return self::salaryTypeLabels()[$type] ?? ($type ?: '—');
+        return SalaryScheme::labels()[$type] ?? ($type ?: '—');
     }
 
     /**
@@ -227,7 +222,7 @@ class TeacherSalaryService
                 continue;
             }
             $value = (float) $terms['value'];
-            $isPercent = in_array($terms['type'], ['percent', 'percent_per_block'], true);
+            $isPercent = SalaryScheme::isPercentType($terms['type']);
 
             foreach ($this->coursePayments($course->id) as $p) {
                 if ($p->tariff !== self::EXPENSE_TARIFF) {
@@ -716,9 +711,6 @@ class TeacherSalaryService
         return count($userIds);
     }
 
-    /** percent-модели ЗП (доля выручки × %) — только для них работает picker поздних оплат. */
-    private const PERCENT_SALARY_TYPES = ['percent', 'percent_per_block'];
-
     /**
      * Множество уже выплаченных долей платежей в виде set ключей
      * "{course_id}:{block_number}:{payment_id}" => true. Собирается из аудита всех
@@ -773,7 +765,7 @@ class TeacherSalaryService
         foreach ($teacher->allTaughtCourses() as $course) {
             $terms = $course->salaryTermsFor((int) $teacher->id);
             if (self::isTechnicalCourse($course) || $terms === null
-                || ! in_array($terms['type'], self::PERCENT_SALARY_TYPES, true)) {
+                || ! SalaryScheme::isPercentType($terms['type'])) {
                 continue;
             }
 
@@ -1052,7 +1044,7 @@ class TeacherSalaryService
         // Ролл-форвард: всё, что попало в закрытый месяц ЭТОГО преподавателя,
         // переносим в ближайший открытый (нельзя начислять в уже рассчитанный).
         $closedMonths = array_keys($closed);
-        if (! empty($closedMonths) && ! in_array($type, ['percent', 'percent_per_block'], true)) {
+        if (! empty($closedMonths) && ! SalaryScheme::isPercentType($type)) {
             $accrued = $this->remapMonths($accrued, $closedMonths);
             $accruedGross = $this->remapMonths($accruedGross, $closedMonths);
             $accruedReturns = $this->remapMonths($accruedReturns, $closedMonths);
