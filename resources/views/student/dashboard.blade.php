@@ -716,7 +716,7 @@
                                     @csrf
                                     <button type="submit" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
                                         <i class="fas fa-credit-card mr-1.5 text-[10px]"></i>
-                                        <span>Оплатить@if($opts['next']['amount']) {{ number_format($opts['next']['amount'], 0, '.', ' ') }} ₽@endif</span>
+                                        <span>Оплатить{{ $opts['next']['amount'] ? ' '.number_format($opts['next']['amount'], 0, '.', ' ').' ₽' : '' }}</span>
                                     </button>
                                 </form>
                             @endif
