@@ -112,6 +112,25 @@ return [
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: \danog\MadelineProto\API::class,
     ],
 
+    // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
+    // Reuses the SAME MadelineProto session/credentials as telegram_support
+    // (one account, one session) — this block only carries harvester-specific
+    // behaviour. Never run telegram-harvest:sync concurrently with
+    // telegram-support:sync (a second parallel session triggers AUTH_RESTART).
+    'telegram_harvest' => [
+        'enabled' => (bool) env('TELEGRAM_HARVEST_ENABLED', false),
+        // Own telegram_support_accounts row → cursor namespace separate from 'support'.
+        'account_name' => env('TELEGRAM_HARVEST_ACCOUNT_NAME', 'harvester'),
+        'history_limit' => (int) env('TELEGRAM_HARVEST_HISTORY_LIMIT', 200),
+        // Comma-separated peer list (@usernames or numeric ids); NOT the 20-dialog support cap.
+        'peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_PEERS', ''))))),
+        // Optional JSON file with a managed peer list (merged with the env list).
+        'peers_file' => env('TELEGRAM_HARVEST_PEERS_FILE'),
+        // OUT-OF-GIT raw store (PII-bearing). Points at the corpus repo's gitignored
+        // data/raw/ dir or an external workspace — never inside the Systema repo.
+        'store_path' => env('TELEGRAM_HARVEST_STORE_PATH', storage_path('app/telegram-harvest/raw')),
+    ],
+
     'vk' => [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),
