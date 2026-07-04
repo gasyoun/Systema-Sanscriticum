@@ -219,6 +219,19 @@ document.addEventListener('alpine:init', () => {
                 </div>
             @endif
 
+            {{-- Ошибки валидации (обяз. поля, анти-takeover email, гонки промо/праны).
+                 Промо/прана не привязаны к видимым полям — нужен сводный catch-all. --}}
+            @if($errors->any())
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-medium flex items-start gap-2">
+                    <i class="fas fa-exclamation-circle mt-0.5"></i>
+                    <ul class="space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             {{-- Оплата из-за рубежа (PayPal) — заявка со сверкой вручную. --}}
             @include('partials.paypal-cta', ['tariff' => $tariff])
 
@@ -245,14 +258,18 @@ document.addEventListener('alpine:init', () => {
                                             Фамилия <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" name="surname" required minlength="2" placeholder="Например, Иванов"
+                                               value="{{ old('surname') }}"
                                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                        @error('surname')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                                     </div>
                                     <div class="sm:col-span-1">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Имя <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" name="name" required minlength="2" placeholder="Например, Иван"
+                                               value="{{ old('name') }}"
                                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                        @error('name')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -261,21 +278,25 @@ document.addEventListener('alpine:init', () => {
                                         </label>
                                         <input type="email" name="email" required placeholder="ivan@example.com"
                                                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                                               value="{{ old('email') }}"
                                                class="peer block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
                                         <p class="mt-1.5 text-xs text-red-500 hidden peer-[&:not(:placeholder-shown):invalid]:block">
                                             <i class="fas fa-exclamation-circle mr-1"></i> Укажите корректный email
                                         </p>
+                                        @error('email')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Город <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" name="city" required placeholder="Например, Москва"
+                                               value="{{ old('city') }}"
                                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                        @error('city')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label class="flex items-start gap-3 cursor-pointer">
-                                            <input type="checkbox" name="wants_announcements" value="1" checked
+                                            <input type="checkbox" name="wants_announcements" value="1" {{ old('wants_announcements', true) ? 'checked' : '' }}
                                                    class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
                                             <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
                                         </label>
