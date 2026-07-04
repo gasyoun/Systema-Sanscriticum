@@ -418,7 +418,7 @@ class TeacherSalaries extends Page implements HasTable
                         $priorBlocksTotal = $this->priorBlocksTotal($get);
                         $directOffset = $this->directOffsetRub($get);
 
-                        $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffset);
+                        $grossTotal = TeacherSalaryService::blockPayoutTotal(base: $base, coef: $coef, teacherPct: $pct, extrasTotal: $extrasTotal, surcharge: $surcharge, deduction: $deduction, priorBlocksTotal: $priorBlocksTotal, directOffset: $directOffset);
                         $advanceOffset = $this->advanceOffsetForTotal($get, $grossTotal);
                         $total = max(0, round($grossTotal - $advanceOffset, 2));
 
@@ -538,7 +538,7 @@ class TeacherSalaries extends Page implements HasTable
                     $directOffsetForeign = round(array_sum(array_column($directLines, 'amount')), 2);
                     $directOffsetRub = round($directOffsetForeign * (float) ($data['exchange_rate'] ?? 0), 2);
 
-                    $grossTotal = TeacherSalaryService::blockPayoutTotal($base, $coef, $pct, $extrasTotal, $surcharge, $deduction, $priorBlocksTotal, $directOffsetRub);
+                    $grossTotal = TeacherSalaryService::blockPayoutTotal(base: $base, coef: $coef, teacherPct: $pct, extrasTotal: $extrasTotal, surcharge: $surcharge, deduction: $deduction, priorBlocksTotal: $priorBlocksTotal, directOffset: $directOffsetRub);
                     $teacherForAdvances = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
                     $advanceOffset = $teacherForAdvances
                         ? min($grossTotal, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
@@ -782,14 +782,14 @@ class TeacherSalaries extends Page implements HasTable
         ['base' => $base, 'pct' => $pct] = $this->effectiveBaseAndPct($state);
 
         $gross = TeacherSalaryService::blockPayoutTotal(
-            $base,
-            $this->normalizeCoef($get('coefficient')),
-            $pct,
-            $this->extrasTotal($get('extras') ?? []),
-            (float) ($get('surcharge') ?: 0),
-            (float) ($get('deduction') ?: 0),
-            $this->priorBlocksTotal($get),
-            $this->directOffsetRub($get),
+            base: $base,
+            coef: $this->normalizeCoef($get('coefficient')),
+            teacherPct: $pct,
+            extrasTotal: $this->extrasTotal($get('extras') ?? []),
+            surcharge: (float) ($get('surcharge') ?: 0),
+            deduction: (float) ($get('deduction') ?: 0),
+            priorBlocksTotal: $this->priorBlocksTotal($get),
+            directOffset: $this->directOffsetRub($get),
         );
 
         return max(0, round($gross - $this->advanceOffsetForTotal($get, $gross), 2));
