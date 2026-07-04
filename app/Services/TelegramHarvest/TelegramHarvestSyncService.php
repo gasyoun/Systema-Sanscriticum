@@ -101,6 +101,7 @@ class TelegramHarvestSyncService
 
         $stored = 0;
         $skipped = 0;
+        $failed = 0;
 
         foreach ($messages as $message) {
             $chatId = (int) ($message['telegram_chat_id'] ?? 0);
@@ -118,10 +119,17 @@ class TelegramHarvestSyncService
                 continue;
             }
 
-            $message['harvested_at'] ??= now()->toIso8601String();
-            $message['source_account'] = $account->name;
-            $writer->write($message);
-            $stored++;
+            try {
+                $message['harvested_at'] ??= now()->toIso8601String();
+                $message['source_account'] = $account->name;
+                $writer->write($message);
+                $stored++;
+            } catch (Throwable $e) {
+                // Dead-letter lane (clean-room of tracker.py failed_messages): a
+                // single bad record must not abort the whole harvest.
+                $this->recordFailure($message, $e);
+                $failed++;
+            }
         }
 
         $this->advanceCursors($account, $messages);
@@ -130,9 +138,37 @@ class TelegramHarvestSyncService
             'harvested' => count($messages),
             'stored' => $stored,
             'skipped_dupe' => $skipped,
+            'failed' => $failed,
         ]);
 
-        return ['harvested' => count($messages), 'stored' => $stored, 'skipped_dupe' => $skipped];
+        return ['harvested' => count($messages), 'stored' => $stored, 'skipped_dupe' => $skipped, 'failed' => $failed];
+    }
+
+    /**
+     * Append a failed record's provenance to the out-of-git `_failures/` lane so
+     * it can be reprocessed later. Never re-throws (best-effort dead-letter).
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function recordFailure(array $message, Throwable $e): void
+    {
+        try {
+            $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
+            $dir = $path.'/_failures';
+            File::ensureDirectoryExists($dir);
+            $entry = [
+                'peer' => $message['peer'] ?? null,
+                'telegram_message_id' => (int) ($message['telegram_message_id'] ?? 0),
+                'error' => $e->getMessage(),
+                'at' => now()->toIso8601String(),
+            ];
+            File::append(
+                $dir.'/'.now()->format('Y-m-d').'.jsonl',
+                json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n",
+            );
+        } catch (Throwable $inner) {
+            Log::error('Telegram harvest dead-letter write failed', ['error' => $inner->getMessage()]);
+        }
     }
 
     private function supportAlreadyIngested(int $chatId, int $messageId): bool
