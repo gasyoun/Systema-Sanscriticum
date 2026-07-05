@@ -1,0 +1,127 @@
+# SEO Roadmap — samskrte.ru (Общество ревнителей санскрита)
+
+_Created: 05-07-2026 · Last updated: 05-07-2026_
+
+**Primary engine: Yandex. Secondary: Google.** Framing method: entity/semantic-SEO
+concepts from [seobythesea.com](https://www.seobythesea.com) (Bill Slawski — Google-patent-derived:
+entity salience, knowledge-graph triplets, topical authority) re-ranked for a Yandex-first
+Russian course storefront.
+
+---
+
+## 0. The Yandex-first recalibration (read this before spending effort)
+
+seobythesea material is almost entirely **Google-patent-derived**. It maps to our
+**Google-second** channel and to the dictionary long-tail — it is *not* how Yandex, our
+primary engine, ranks. Yandex is dominated by, in order:
+
+1. **Behavioral factors** (dwell, return-to-SERP, click satisfaction) via Metrika — **already live**:
+   [`layouts/articles.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/layouts/articles.blade.php)
+   runs Metrika with `webvisor`, `clickmap`, `accurateTrackBounce`. This is the single biggest Yandex lever and it is shipped.
+2. **YATI / neural text relevance** — depth and topical coverage of the Russian text, not markup.
+3. **Host authority (ИКС)** + Yandex.Webmaster / Yandex Business registration.
+4. A *narrow* schema set Yandex actually consumes for SERP features: **FAQPage, BreadcrumbList, Organization, prices/Offer**.
+
+**Consequence for the "deep entity-graph + Wikidata triplets" ambition:** it is worth doing,
+but it pays off on **Google + the dictionary long-tail**, not on the Yandex primary. It is
+therefore sequenced as **P2**, *after* the cheap Yandex + commercial wins — not first.
+
+---
+
+## 1. Current state — already solid (do NOT rebuild)
+
+| Asset | Where | Notes |
+|---|---|---|
+| Sitemap | [`SitemapController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SitemapController.php) | home, `/online`, articles index, landing pages, courses, articles, with `lastmod`/`priority`. Hourly cache. Clean. |
+| robots.txt | [`public/robots.txt`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/robots.txt) | Correctly blocks the **student** area (`/course/{slug}`, [`routes/web.php:161`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php#L161)) while leaving **sales** pages `/online/kursy/{slug}` ([`routes/web.php:67`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php#L67)) crawlable. No accidental blocking. |
+| Article schema | [`articles/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php) | `Article` JSON-LD; layout supplies canonical + OG + `og:image` dims. |
+| FAQ schema | [`promo/blocks/faq_block.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/promo/blocks/faq_block.blade.php) | `FAQPage` JSON-LD — Yandex-consumable. |
+| Behavioral analytics | article + main layouts | Yandex Metrika (webvisor) + VK/mail.ru pixel. |
+
+---
+
+## 2. Gaps, ranked by leverage × goal
+
+Goals, ranked by MG: **(1) course sales · (2) articles→funnel · (3) dictionary traffic magnet.**
+
+| ID | Gap | Serves goal | Engine | Effort |
+|---|---|---|---|---|
+| **P0-a** | No `Course`/`Offer`/`Product` schema on sales pages — [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php) has ₽ prices but zero structured offer markup | 1 sales | Yandex prices + Google | S |
+| **P0-b** | No site-wide `Organization` + `WebSite` JSON-LD (no `sameAs`, no logo entity, no `SearchAction` sitelinks-searchbox). The `@id` spine everything else links to | all | both | S |
+| **P0-c** | No `BreadcrumbList` schema anywhere → loses breadcrumb SERP rows on both engines | 1 + 2 | both | S |
+| **P1-a** | Article author is `Organization`, not `Person` ([`show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php)); missing `mainEntityOfPage`, `author.url` — weakens E-E-A-T | 2 articles | Google | S |
+| **P1-b** | Topical-authority / internal-linking gaps in articles — YATI rewards depth + cluster linking. The real Yandex *content* lever | 2 articles | Yandex primary | M (ongoing) |
+| **P2** | Dictionary corpus completely unexposed — [`DictionaryWord.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php) (`devanagari`/`iast`/`cyrillic`/`translation`) has **no routes, no pages, not in sitemap**. The traffic magnet — greenfield | 3 dictionary | Google long-tail | **L** |
+
+---
+
+## 3. P0 batch — ship first (one session, high ROI, both engines)
+
+All three are small, low-risk, and help sales *now*.
+
+1. **`Organization` + `WebSite` JSON-LD in the base layout** ([`main.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/main.blade.php)):
+   - `Organization` with `@id`, `name`, `url`, `logo`, `sameAs` → VK / Telegram / YouTube channels.
+   - `WebSite` with `potentialAction` → `SearchAction` (sitelinks searchbox target).
+   - Register the same Organization in **Yandex.Webmaster + Yandex Business** (human `@DO`).
+2. **`Course` + `Offer` JSON-LD on** [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php):
+   - `Course` (`name`, `description`, `provider` → the `@id` Organization) + `Offer` (`price`, `priceCurrency: RUB`, `availability`, `url`). Drives price-rich results.
+3. **`BreadcrumbList` JSON-LD** on article + course + landing pages (Home → section → item).
+
+**Do NOT** touch behavioral analytics (already optimal) or the sitemap structure (correct).
+
+---
+
+## 4. P1 — E-E-A-T + the Yandex content lever
+
+- **P1-a:** switch Article `author` to `Person` with `url`; add `mainEntityOfPage`. Small edit in
+  [`articles/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php).
+- **P1-b (ongoing, highest Yandex payoff):** topical clustering — group articles into
+  RU Sanskrit topic hubs, add contextual internal links between related articles/courses/dictionary
+  entries. This feeds YATI relevance and behavioral depth. Not a one-shot; a content discipline.
+
+---
+
+## 5. P2 — dictionary entity pages + semantic triplets (the deep seobythesea work)
+
+**Prioritized per MG (05-07-2026): "in scope soon".** This is the only real home for the
+entity-graph / Wikidata-`sameAs` ambition. Scoped as its own project, NOT started in the P0 pass.
+
+### 5.1 What it is
+Public word pages `/slovar/{slug}` over
+[`DictionaryWord`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php)
+(`devanagari` ↔ `iast` ↔ `cyrillic` ↔ `translation`, grouped by
+[`Dictionary`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Dictionary.php)),
+each carrying:
+
+- `DefinedTerm` / `DefinedTermSet` JSON-LD, `inLanguage: sa`, `inDefinedTermSet` → the dictionary.
+- The concrete **semantic triplets**: *word* — `sameAs` → **Wikidata/DBpedia** concept; *word* — `inLanguage` → `sa`; *word* — `isPartOf` → dictionary `@id`.
+- `@id`-linked graph so words ↔ articles ↔ courses share one entity spine (P0-b Organization at the root).
+
+### 5.2 Build checklist (L-sized)
+- Route `Route::get('/slovar/{word:slug}', …)` + slug column/accessor on `DictionaryWord`.
+- Index page `/slovar` + per-dictionary listing; controller + blade.
+- Per-word canonical + `DefinedTerm` JSON-LD + OG.
+- New sitemap chunk in [`SitemapController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SitemapController.php) (chunked, `changefreq: monthly`).
+- Cross-link word pages ⇄ related articles/courses (feeds P1-b).
+
+### 5.3 ⚠️ Risk — thin-content / over-indexation on Yandex
+Thousands of near-empty word pages (headword + one gloss) can trigger Yandex **thin-content /
+low-quality** demotion and dilute host authority. Mitigations, decide before launch:
+- Only expose words with a substantive `translation` (min length / quality gate); `noindex` the rest.
+- Enrich pages (etymology, cross-refs, usage) before indexing, or roll out in indexation waves.
+- Consider `<meta robots="noindex,follow">` on stubs until enriched.
+
+**This risk is why P2 is a scoped project with its own gate, not a P0 quick win.**
+
+---
+
+## 6. Priority summary
+
+1. **P0 batch** — Organization+WebSite spine, Course/Offer schema, BreadcrumbList. Cheap, helps sales now, both engines. → handoff **H193**.
+2. **P1** — Person authors + `mainEntityOfPage`; begin the article topical-cluster/internal-link discipline (Yandex content lever).
+3. **P2** — dictionary entity pages + Wikidata `sameAs` triplets, with the thin-content gate. The deep seobythesea work.
+
+Human actions (Yandex.Webmaster + Yandex Business registration, VK/TG/YouTube `sameAs` URLs)
+mirrored to [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md).
+
+_Dr. Mārcis Gasūns_
