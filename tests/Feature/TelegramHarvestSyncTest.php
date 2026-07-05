@@ -171,4 +171,48 @@ class TelegramHarvestSyncTest extends TestCase
         $this->assertFileExists($failFile);
         $this->assertStringContainsString('boom', File::get($failFile));
     }
+
+    public function test_discover_peers_uses_get_dialog_ids_and_resolves_info(): void
+    {
+        // Регресс на реальный MadelineProto: верхнеуровневого getDialogs() нет,
+        // discoverPeers обязан ходить через getDialogIds() (+ getInfo() на пир).
+        $client = new class
+        {
+            public function getDialogIds(): array
+            {
+                return [100, -200];
+            }
+
+            public function getInfo(int|string $peer): array
+            {
+                return $peer === 100
+                    ? ['_' => 'channel', 'id' => 100, 'title' => 'Sanskrit', 'username' => 'sanskrit', 'noforwards' => true]
+                    : ['_' => 'chat', 'id' => -200, 'title' => 'ЛС-группа'];
+            }
+        };
+
+        $factory = new class($client) extends \App\Services\Telegram\MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(\App\Services\Telegram\MadelineClientFactory::class, $factory);
+
+        $peers = app(TelegramHarvestSyncService::class)->discoverPeers();
+
+        $this->assertCount(2, $peers);
+        $this->assertSame(100, $peers[0]['id']);
+        $this->assertSame('public', $peers[0]['access_level']);   // есть username
+        $this->assertTrue($peers[0]['restricted']);               // D6 noforwards
+        $this->assertSame('private_group', $peers[1]['access_level']); // без username
+    }
 }
