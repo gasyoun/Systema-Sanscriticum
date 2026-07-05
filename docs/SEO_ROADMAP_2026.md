@@ -106,12 +106,13 @@ each carrying:
 - The concrete **semantic triplets**: *word* — `sameAs` → **Wikidata/DBpedia** concept; *word* — `inLanguage` → `sa`; *word* — `isPartOf` → dictionary `@id`.
 - `@id`-linked graph so words ↔ articles ↔ courses share one entity spine (P0-b Organization at the root).
 
-### 5.2 Build checklist (L-sized)
-- Route `Route::get('/slovar/{word:slug}', …)` + slug column/accessor on `DictionaryWord`.
-- Index page `/slovar` + per-dictionary listing; controller + blade.
-- Per-word canonical + `DefinedTerm` JSON-LD + OG.
-- New sitemap chunk in [`SitemapController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SitemapController.php) (chunked, `changefreq: monthly`).
-- Cross-link word pages ⇄ related articles/courses (feeds P1-b).
+### 5.2 Build checklist (L-sized) — ✅ Wave 0 built 05-07-2026 (all `noindex,follow`)
+- ✅ Routes `/slovar` + `/slovar/{slug}` (before catch-all) + `slug`/`wikidata_qid` columns + `makeHeadwordSlug()`/auto-slug on `DictionaryWord`.
+- ✅ Index page `/slovar` + per-dictionary `?dict=` listing; [`DictionaryPageController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/DictionaryPageController.php) + blades.
+- ✅ Canonical per-headword page (D3 collapse) + `DefinedTerm` JSON-LD (`inLanguage: sa`, `inDefinedTermSet`, conditional `sameAs`) via [`partials/schema-defined-term.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/schema-defined-term.blade.php) + OG + `BreadcrumbList`.
+- ✅ Sitemap word-chunk in [`SitemapController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SitemapController.php) — **built but gated on `dictionary_seo.index_enabled` (withheld in Wave 0, D2)**.
+- ✅ Cross-link related words (feeds P1-b); course/article cross-links = a later enrichment wave.
+- ⏳ **Follow-on (not this PR):** Wave-1 indexation (flip `index_enabled`, wire the curated-core allowlist D1, Yandex.Webmaster checkpoint) + the automated Wikidata `sameAs` matcher populating `wikidata_qid` (D4).
 
 ### 5.3 ⚠️ Risk — thin-content / over-indexation on Yandex
 Thousands of near-empty word pages (headword + one gloss) can trigger Yandex **thin-content /
