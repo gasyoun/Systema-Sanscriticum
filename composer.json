@@ -5,7 +5,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "awcodes/filament-curator": "^3.7",
         "awcodes/filament-tiptap-editor": "^3.5",
         "barryvdh/laravel-dompdf": "^2.0",
@@ -37,7 +37,7 @@
         "spatie/laravel-ignition": "^2.0"
     },
     "suggest": {
-        "danog/madelineproto": "Только для Telegram support analytics (telegram-support:sync). Требует PHP >= 8.2.14 — ставить на хосте с PHP 8.3 командой `composer require danog/madelineproto:^8.7`. Прод на PHP 8.1 этот пакет не грузит (его bootstrap делает die)."
+        "danog/madelineproto": "Только для Telegram support analytics (telegram-support:sync). Требует PHP >= 8.2.14 — прод на 8.3 (с 05-07-2026), ставить командой `composer require danog/madelineproto:^8.7`."
     },
     "autoload": {
         "psr-4": {
@@ -77,9 +77,9 @@
         "sort-packages": true,
         "platform-check": false,
         "platform": {
-            "php": "8.2.12",
-            "ext-pcntl": "8.1.2",
-            "ext-posix": "8.1.2"
+            "php": "8.3.0",
+            "ext-pcntl": "8.3.0",
+            "ext-posix": "8.3.0"
         },
         "allow-plugins": {
             "pestphp/pest-plugin": true,
