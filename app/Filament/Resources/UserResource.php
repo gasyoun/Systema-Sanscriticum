@@ -445,6 +445,17 @@ class UserResource extends Resource
                             ->view('filament.user.learning-progress')
                             ->columnSpanFull(),
                     ]),
+
+                // Скор платёжной дисциплины (см. docs/discipline-score-spec.md) — advisory-only,
+                // рядом с вкладкой «Обещания оплатить». Не влияет на скидки/рассрочку/доступ.
+                InfoSection::make('Дисциплина')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->schema([
+                        ViewEntry::make('discipline_score')
+                            ->hiddenLabel()
+                            ->view('filament.user.discipline-score')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
