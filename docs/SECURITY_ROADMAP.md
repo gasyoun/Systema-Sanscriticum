@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 03-07-2026_
+_Created: 03-07-2026 · Last updated: 05-07-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -38,10 +38,15 @@ platform upgrade.
 - ✅ GitHub **private vulnerability reporting** enabled (was off).
 - ✅ [`SECURITY.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY.md) disclosure policy added (was missing).
 - ✅ `t_login_at` (real student PII dump) and `KEYS` **untracked from HEAD** + `.gitignore`
-  patterns added for dumps (`*_login_at`, `*.dump`, `*.tinker`) — **history purge still pending** (Wave 1, [H080](#handoffs)).
+  patterns added for dumps (`*_login_at`, `*.dump`, `*.tinker`), then **fully purged from git
+  history** via `/secret-purge` (`git filter-repo` + coordinated force-push of all 15 branches
+  + tag `v1.0.1`, 05-07-2026, [H080](#handoffs)). Both paths 404 on every branch.
 
 **Open — carried into the waves below:**
-- 🔴 PII dump is still recoverable from **git history** and GitHub caches until the purge runs.
+- 🟡 PII dump **purged from history** (05-07-2026); the only residual is the orphaned old
+  commit `8851c92` still fetchable **by exact 40-char SHA** until GitHub's automatic GC (not in
+  any branch, not browsable/searchable). Optional acceleration = a GitHub Support GC request
+  (GTD `@DO`, MG account).
 - 🟠 ~15 CONFIRMED money/access defects from the 02-07 adversarial review
   ([H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md);
   #1 fixed in [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)).
@@ -49,8 +54,11 @@ platform upgrade.
 - 🟡 **No PHP SAST** — CodeQL cannot analyze PHP, so the language the entire app is written
   in has no static security scanning; the only defense today is manual adversarial review.
 - 🟡 **Laravel 10.50.2** — security-EOL since ~Feb 2025 — on PHP 8.2.
-- 🟡 23 tracked PNG screenshots may embed seeded/real student PII (unaudited).
-- 🟡 `main` branch protection has **no required review** (money core relies on convention, not a gate).
+- ✅ 23 tracked PNG screenshots **audited** (05-07-2026) — all synthetic UI/design/marketing
+  renders (blank certificate template, placeholder `Иван`/`mail@example.com` forms, module
+  grids); no real student PII, none purged.
+- ✅ `main` branch protection now **requires 1 approving review** + blocks force-push/deletion
+  (set 05-07-2026 during H080; the one purge force-push was a temporary, immediately-reverted lift).
 
 ---
 
@@ -69,25 +77,27 @@ Recorded from the 03-07-2026 interview (MG rulings):
 
 ## Wave 1 — Kill the exposure (Q3 2026, now)
 
-**Unblocked by:** nothing — this is the entry point. Mostly done; one destructive step remains.
+**Unblocked by:** nothing — this is the entry point. **Complete** (05-07-2026) except the two
+MG-action items (webhook `.env` deploy).
 
 - ✅ Enable GitHub secret scanning, push protection, Dependabot alerts + auto-fixes, private
   vulnerability reporting. **(done this session)**
 - ✅ Add [`SECURITY.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY.md). **(done)**
 - ✅ Untrack `t_login_at` + `KEYS` from HEAD; extend `.gitignore` with dump patterns. **(done)**
-- [ ] **Purge `t_login_at` + `KEYS` from all git history** (D1) via `/secret-purge`:
-  `git filter-repo`, coordinated force-push, verify no ref still resolves the blob, confirm
-  GitHub cached views drop. Coordinate with open [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)
-  (rebase after the rewrite). → **[H080](#handoffs)**
-- [ ] **Audit the 23 tracked PNG screenshots** for embedded student PII; purge from history any
-  that show real names/emails/payments; keep only synthetic-data shots. → **[H080](#handoffs)**
+- ✅ **Purge `t_login_at` + `KEYS` from all git history** (D1) via `/secret-purge`:
+  `git filter-repo --invert-paths` on a fresh mirror, coordinated force-push of all 15 branches +
+  tag, verified no ref resolves the paths and both 404 on GitHub. [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)
+  was already merged, so nothing to rebase. **(done 05-07-2026)** → **[H080](#handoffs)**
+- ✅ **Audit the 23 tracked PNG screenshots** for embedded student PII — all synthetic
+  UI/design renders (blank certificate, placeholder forms, module grids); none showed real
+  student data, none purged. **(done 05-07-2026)** → **[H080](#handoffs)**
 - [ ] **Flip the 3 fail-open webhooks to fail-closed** — a prod deploy action (set
   `TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET` and register them
   with each provider). Matrix:
   [docs/webhook-security.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md).
   Already a GTD `@DO` — **MG action**.
-- [ ] **Add required-review branch protection on `main`** so money-core changes cannot merge
-  without a review (codifies the "no auto-merge on money core" convention as a gate).
+- ✅ **Add required-review branch protection on `main`** — 1 approving review required, force-push
+  + deletion blocked (codifies the "no auto-merge on money core" convention as a gate). **(done 05-07-2026)**
 
 **Exit criterion:** no personal data or secret is retrievable from the repo or its history;
 every inbound webhook is authenticated fail-closed; secret pushes are blocked at the gate.
