@@ -109,6 +109,7 @@ class MarketingSetting extends Model
         'debt_reminder_to_vk' => 'boolean',
         'debt_reminder_to_email' => 'boolean',
         'debtors_notify_years' => 'array',
+        'reminder_detection_enabled' => 'boolean',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',
