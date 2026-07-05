@@ -31,6 +31,30 @@
             ->values()
             ->all();
 
+        // hasCourseInstance → включает курс в «Course Info» Google (карусель с ценой + режимом).
+        // Обязательные для CourseInstance: courseMode + (courseWorkload ИЛИ courseSchedule).
+        // courseWorkload берём из hours_count (ISO-8601 «PTnH»); если часов нет — instance
+        // не добавляем (базовый Course + offers остаётся валидным сам по себе).
+        $courseWorkload = $course->hours_count ? 'PT'.((int) $course->hours_count).'H' : null;
+        $ciStart = $course->blocks->filter(fn ($b) => $b->starts_at)->min('starts_at');
+        $ciEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+        $courseInstance = $courseWorkload
+            ? array_filter([
+                '@type' => 'CourseInstance',
+                'courseMode' => 'online', // платформа полностью онлайн (формат live | recorded)
+                'courseWorkload' => $courseWorkload,
+                'location' => [
+                    '@type' => 'VirtualLocation',
+                    'url' => $courseUrl,
+                ],
+                'startDate' => $ciStart ? $ciStart->toDateString() : null,
+                'endDate' => $ciEnd ? $ciEnd->toDateString() : null,
+                'instructor' => $course->teacher
+                    ? ['@type' => 'Person', 'name' => $course->teacher->name]
+                    : null,
+            ], fn ($v) => $v !== null)
+            : null;
+
         $courseSchema = array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Course',
@@ -44,6 +68,7 @@
                 '@id' => 'https://samskrte.ru/#org',
                 'name' => 'Общество ревнителей санскрита',
             ],
+            'hasCourseInstance' => $courseInstance,
             'offers' => !empty($offers) ? $offers : null,
         ], fn ($v) => $v !== null);
     @endphp

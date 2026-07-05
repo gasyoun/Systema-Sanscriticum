@@ -70,6 +70,7 @@ All three are small, low-risk, and help sales *now*.
    - ⏳ Register the same Organization in **Yandex.Webmaster + Yandex Business** (human `@DO`).
 2. ✅ **`Course` + `Offer` JSON-LD on** [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php):
    - ✅ `Course` (`name`, `description`, `provider` → the `@id` Organization) + one `Offer` per active tariff (`price`, `priceCurrency: RUB`, `availability`, `url`). Drives price-rich results.
+   - ✅ `hasCourseInstance` (`courseMode: online` + `courseWorkload` from `hours_count`, plus `location`/`startDate`/`endDate`/`instructor` when known) → qualifies for Google's **Course Info** carousel. Emitted only when a workload is derivable, so a course without hours degrades to a valid basic `Course`.
 3. ✅ **`BreadcrumbList` JSON-LD** on article + course + landing pages (Home → section → item), via the shared partial.
 
 **Do NOT** touch behavioral analytics (already optimal) or the sitemap structure (correct).
