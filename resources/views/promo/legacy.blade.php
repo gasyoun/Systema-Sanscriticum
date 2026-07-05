@@ -115,6 +115,12 @@
           }
       }">
 
+    {{-- BreadcrumbList (schema.org) — Главная → текущий лендинг. JSON-LD в body валиден. --}}
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => $page?->title],
+    ]])
+
     <x-public-header variant="light" />
 
     <section class="relative bg-[#F9FAFB] pt-12 pb-20 lg:pt-24 lg:pb-32 overflow-hidden" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 200)">

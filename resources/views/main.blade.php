@@ -33,6 +33,53 @@
     <meta name="twitter:description" content="{{ $description }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
+    {{-- ═══════════════ SEO: Organization + WebSite (schema.org / JSON-LD) ═══════════════
+         Ставится на главной — стабильные @id, на которые ссылаются Course/Article/Breadcrumb
+         на остальных страницах. Помогает Яндексу и Google строить карточку организации
+         и поле поиска по сайту (sitelinks searchbox). --}}
+    @php
+        // Канонический домен для стабильных @id (в проде APP_URL = https://samskrte.ru).
+        $orgSiteUrl = 'https://samskrte.ru';
+        $orgSchema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'Organization',
+                    '@id' => $orgSiteUrl.'/#org',
+                    'name' => $siteName,
+                    'url' => $orgSiteUrl.'/',
+                    'logo' => [
+                        '@type' => 'ImageObject',
+                        'url' => $orgSiteUrl.'/images/logo.png',
+                    ],
+                    'sameAs' => [
+                        'https://vk.com/samskrtamru',
+                        'https://t.me/rusamskrtam',
+                    ],
+                ],
+                [
+                    '@type' => 'WebSite',
+                    '@id' => $orgSiteUrl.'/#website',
+                    'url' => $orgSiteUrl.'/',
+                    'name' => $siteName,
+                    'inLanguage' => 'ru-RU',
+                    'publisher' => ['@id' => $orgSiteUrl.'/#org'],
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => [
+                            '@type' => 'EntryPoint',
+                            'urlTemplate' => $orgSiteUrl.'/online?search={search_term_string}',
+                        ],
+                        'query-input' => 'required name=search_term_string',
+                    ],
+                ],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">
+{!! json_encode($orgSchema) !!}
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

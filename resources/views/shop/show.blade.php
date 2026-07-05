@@ -3,6 +3,59 @@
 
 @push('head')
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
+
+    {{-- ═══════════════ SEO: Course + Offer (schema.org / JSON-LD) ═══════════════
+         Помогает Яндексу и Google показать курс с ценой в выдаче. Цены берём из
+         публичных (list) цен активных тарифов — без учёта персональных скидок. --}}
+    @php
+        $courseUrl = route('shop.course.show', $course->slug);
+        $courseDescription = $course->meta_description
+            ?: \Illuminate\Support\Str::limit(trim(strip_tags((string) $course->description)), 300);
+
+        // Активные тарифы = покупаемые варианты участия. Каждый → отдельный Offer.
+        $offerTariffs = $course->tariffs->where('is_active', true);
+        if ($offerTariffs->isEmpty()) {
+            $offerTariffs = $course->tariffs;
+        }
+        $offers = $offerTariffs
+            ->filter(fn ($t) => (float) $t->price > 0)
+            ->map(fn ($t) => [
+                '@type' => 'Offer',
+                'name' => $t->title,
+                'price' => number_format((float) $t->price, 2, '.', ''),
+                'priceCurrency' => 'RUB',
+                'availability' => 'https://schema.org/InStock',
+                'url' => $courseUrl.'#tariffs',
+                'category' => 'Paid',
+            ])
+            ->values()
+            ->all();
+
+        $courseSchema = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Course',
+            'name' => $course->title,
+            'description' => $courseDescription,
+            'url' => $courseUrl,
+            'inLanguage' => 'ru-RU',
+            'image' => $course->image_path ? \Illuminate\Support\Facades\Storage::url($course->image_path) : null,
+            'provider' => [
+                '@type' => 'Organization',
+                '@id' => 'https://samskrte.ru/#org',
+                'name' => 'Общество ревнителей санскрита',
+            ],
+            'offers' => !empty($offers) ? $offers : null,
+        ], fn ($v) => $v !== null);
+    @endphp
+    <script type="application/ld+json">
+{!! json_encode($courseSchema) !!}
+    </script>
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Курсы', 'url' => route('shop.index')],
+        ['name' => $course->title],
+    ]])
 @endpush
 
 @section('content')
