@@ -76,6 +76,16 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "platform-check": false,
+        "audit": {
+            "block-insecure": false,
+            "ignore": {
+                "PKSA-m5cs-t1y6-qpcs": "GHSA-crmm-hgp2-wgrp: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-3r5d-mb8f-1qw9": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-mdq4-51ck-6kdq": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-8qx3-n5y5-vvnd": "GHSA-78fx-h6xr-vch4: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-w7xr-vk7n-rstm": "GHSA-gv7v-rgg6-548h: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)"
+            }
+        },
         "platform": {
             "php": "8.3.0",
             "ext-pcntl": "8.3.0",
