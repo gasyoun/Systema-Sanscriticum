@@ -138,6 +138,23 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('send-due-reminders');
+
+        // --- ДЕТЕКТОР ПРОСЬБ «НАПОМНИТЕ МНЕ» В ПЕРЕПИСКЕ (H187) ---
+        // Гибрид regex+LLM поверх веб-чата и импортированного TG-support; создаёт
+        // только предложение (ReminderSuggestion) — ничего не отправляет сам.
+        // Гейт reminder_detection_enabled (MarketingSetting) внутри сервиса.
+        $schedule->command('reminders:detect-requests')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('detect-reminder-requests');
+
+        // Просроченные (14+ дней без действия куратора) pending-предложения → expired.
+        $schedule->command('reminders:expire-stale-suggestions')
+            ->dailyAt('04:05')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('expire-stale-reminder-suggestions');
     }
 
     /**
