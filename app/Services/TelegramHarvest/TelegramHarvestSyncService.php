@@ -101,13 +101,18 @@ class TelegramHarvestSyncService
         }
 
         $client = $this->clientFactory->open();
-        if (! method_exists($client, 'getDialogs')) {
+        // getDialogIds() — реальный метод верхнего уровня MadelineProto (как в
+        // TelegramSupportSyncService), возвращает массив peer-id. Верхнеуровневого
+        // getDialogs() у API нет (он в неймспейсе ->messages->), поэтому и вызов,
+        // и method_exists() по нему проваливались: magic __call не виден
+        // method_exists() → discoverPeers молча отдавал [] («not configured»).
+        if (! method_exists($client, 'getDialogIds')) {
             return [];
         }
 
         $peers = [];
         $seen = [];
-        foreach ((array) $client->getDialogs() as $dialog) {
+        foreach ((array) $client->getDialogIds() as $dialog) {
             $peer = $this->telegramId($dialog) ?? (is_scalar($dialog) ? $dialog : null);
             if ($peer === null || isset($seen[(string) $peer])) {
                 continue;
