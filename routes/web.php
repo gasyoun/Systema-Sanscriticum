@@ -124,6 +124,20 @@ Route::prefix('s')->name('articles.')->group(function () {
         ->name('show');
 });
 
+// ═══════════════════════════════════════════════════════════════
+// СЛОВАРЬ (публичные словарные entity-страницы, SEO P2 / H204)
+// ВАЖНО: строго до catch-all /{slug}. Wave 0 — все страницы noindex,follow.
+// ═══════════════════════════════════════════════════════════════
+Route::prefix('slovar')->name('slovar.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\DictionaryPageController::class, 'index'])
+        ->name('index');
+
+    // slug — по заголовочному слову (не по строке×словарь), см. решение D3.
+    Route::get('/{slug}', [\App\Http\Controllers\DictionaryPageController::class, 'show'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('show');
+});
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = \App\Models\MarketingSetting::cached();

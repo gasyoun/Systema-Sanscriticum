@@ -1,0 +1,86 @@
+@extends('layouts.slovar')
+
+@php
+    $canonical = route('slovar.show', $slug);
+    $headword = $primary->headword();
+    $metaDesc = \Illuminate\Support\Str::limit(trim(strip_tags((string) $primary->translation)), 160);
+@endphp
+
+@section('title', $headword.' — значение и перевод на русский | Словарь санскрита')
+@section('meta_description', $headword.' ('.($primary->cyrillic ?: $primary->iast).'): '.$metaDesc)
+@section('og_title', $headword.' — санскритско-русский словарь')
+@section('canonical', $canonical)
+{{-- Wave 0: всё noindex,follow. Как только index_enabled и слово проходит curated-гейт — index. --}}
+@section('robots', $indexable ? 'index, follow' : 'noindex, follow')
+
+@push('head')
+    @include('partials.schema-defined-term', ['primary' => $primary, 'sameAs' => $sameAs, 'canonical' => $canonical])
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Словарь', 'url' => route('slovar.index')],
+        ['name' => $headword],
+    ]])
+@endpush
+
+@section('content')
+    {{-- ═════ Заголовочное слово ═════ --}}
+    <header class="text-center mb-12">
+        @if($primary->devanagari)
+            <div class="deva text-6xl md:text-7xl text-white mb-3 leading-none">{{ $primary->devanagari }}</div>
+        @endif
+        <h1 class="text-3xl md:text-4xl font-extrabold text-[#E85C24] tracking-tight">{{ $headword }}</h1>
+        <div class="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-gray-400 text-sm">
+            @if($primary->iast)<span>IAST: <span lang="sa-Latn">{{ $primary->iast }}</span></span>@endif
+            @if($primary->cyrillic)<span>кириллица: {{ $primary->cyrillic }}</span>@endif
+        </div>
+    </header>
+
+    {{-- ═════ Толкования по словарям (каноническая сборка, решение D3) ═════ --}}
+    <div class="space-y-4 max-w-3xl mx-auto">
+        @foreach($entries->sortByDesc(fn ($w) => mb_strlen((string) $w->translation)) as $entry)
+            <article class="bg-[#161b28] border border-gray-700/60 rounded-2xl p-6">
+                <div class="flex items-baseline justify-between gap-4 mb-2">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-gray-500">
+                        {{ $entry->dictionary?->name ?? 'Словарь' }}
+                    </h2>
+                    @if($entry->page)
+                        <span class="text-xs text-gray-600 shrink-0">{{ $entry->page }}</span>
+                    @endif
+                </div>
+                <div class="text-gray-200 leading-relaxed">{{ $entry->translation }}</div>
+            </article>
+        @endforeach
+    </div>
+
+    {{-- ═════ Внешние соответствия (sameAs, решение D4 — только при наличии) ═════ --}}
+    @if($sameAs->isNotEmpty())
+        <div class="max-w-3xl mx-auto mt-6 text-sm text-gray-400">
+            <span class="font-bold text-gray-500 uppercase tracking-widest text-xs">Соответствия:</span>
+            @foreach($sameAs as $link)
+                <a href="{{ $link }}" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline ml-2">Wikidata</a>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- ═════ Смежные слова (внутренняя перелинковка) ═════ --}}
+    @if($related->isNotEmpty())
+        <section class="max-w-3xl mx-auto mt-14">
+            <h2 class="text-sm font-black uppercase tracking-widest text-gray-500 mb-4">Смежные слова</h2>
+            <div class="flex flex-wrap gap-2">
+                @foreach($related as $rel)
+                    <a href="{{ route('slovar.show', $rel->slug) }}"
+                       class="px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 text-sm hover:bg-gray-700 hover:text-white transition-colors">
+                        {{ $rel->iast ?: $rel->devanagari ?: $rel->cyrillic }}
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <div class="max-w-3xl mx-auto mt-14 pt-8 border-t border-gray-800">
+        <a href="{{ route('slovar.index') }}" class="text-sm font-bold text-gray-400 hover:text-[#E85C24] transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i> Ко всем словам
+        </a>
+    </div>
+@endsection

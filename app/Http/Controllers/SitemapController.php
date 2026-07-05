@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Course;
+use App\Models\DictionaryWord;
 use App\Models\LandingPage;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -83,6 +84,40 @@ class SitemapController extends Controller
                         ];
                     }
                 });
+
+            // ───── Словарные entity-страницы (SEO P2 / H204) ─────
+            // Chunk БУДЕТ построен, но URL-ы слов ВЫДАЮТСЯ в sitemap только когда
+            // index_enabled (Wave 1+). Wave 0 (default): держим их вне карты сайта
+            // («built but unsubmitted», решение D2). Одна каноническая запись на slug.
+            if (config('dictionary_seo.index_enabled', false)) {
+                $urls[] = [
+                    'loc' => route('slovar.index'),
+                    'lastmod' => optional(DictionaryWord::max('updated_at'))?->format(DATE_ATOM),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.5',
+                ];
+
+                DictionaryWord::query()
+                    ->whereNotNull('slug')
+                    ->whereHas('dictionary', fn ($q) => $q->where('is_active', true))
+                    ->select(['slug', 'translation', 'updated_at'])
+                    ->orderBy('slug')
+                    ->chunk(1000, function ($words) use (&$urls) {
+                        $seen = [];
+                        foreach ($words as $word) {
+                            if (isset($seen[$word->slug]) || ! $word->isIndexable()) {
+                                continue; // одна канон. запись на slug + только curated-core (D1/D3)
+                            }
+                            $seen[$word->slug] = true;
+                            $urls[] = [
+                                'loc' => route('slovar.show', $word->slug),
+                                'lastmod' => optional($word->updated_at)->format(DATE_ATOM),
+                                'changefreq' => 'monthly',
+                                'priority' => '0.4',
+                            ];
+                        }
+                    });
+            }
 
             return view('sitemap', ['urls' => $urls])->render();
         });
