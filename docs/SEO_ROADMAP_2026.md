@@ -49,7 +49,7 @@ Goals, ranked by MG: **(1) course sales · (2) articles→funnel · (3) dictiona
 | **P0-a** | No `Course`/`Offer`/`Product` schema on sales pages — [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php) has ₽ prices but zero structured offer markup | 1 sales | Yandex prices + Google | S |
 | **P0-b** | No site-wide `Organization` + `WebSite` JSON-LD (no `sameAs`, no logo entity, no `SearchAction` sitelinks-searchbox). The `@id` spine everything else links to | all | both | S |
 | **P0-c** | No `BreadcrumbList` schema anywhere → loses breadcrumb SERP rows on both engines | 1 + 2 | both | S |
-| **P1-a** | Article author is `Organization`, not `Person` ([`show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php)); missing `mainEntityOfPage`, `author.url` — weakens E-E-A-T | 2 articles | Google | S |
+| ~~**P1-a**~~ ✅ | Article author now `Person` (Org fallback) + `mainEntityOfPage` ([`show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php)); `author.url` deferred (no author entity yet) — E-E-A-T signal added | 2 articles | Google | S |
 | **P1-b** | Topical-authority / internal-linking gaps in articles — YATI rewards depth + cluster linking. The real Yandex *content* lever | 2 articles | Yandex primary | M (ongoing) |
 | **P2** | Dictionary corpus completely unexposed — [`DictionaryWord.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php) (`devanagari`/`iast`/`cyrillic`/`translation`) has **no routes, no pages, not in sitemap**. The traffic magnet — greenfield | 3 dictionary | Google long-tail | **L** |
 
@@ -79,8 +79,11 @@ All three are small, low-risk, and help sales *now*.
 
 ## 4. P1 — E-E-A-T + the Yandex content lever
 
-- **P1-a:** switch Article `author` to `Person` with `url`; add `mainEntityOfPage`. Small edit in
-  [`articles/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php).
+- **P1-a:** ✅ **done** — Article `author` now emits `Person` (with `Organization` fallback when
+  `author_name` is empty) + `mainEntityOfPage`, and `publisher`/fallback-author link the `https://samskrte.ru/#org`
+  spine, in [`articles/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php).
+  `author.url` deferred: no per-author profile/entity exists yet — add an `author_url` (or author entity)
+  field first, then populate it here.
 - **P1-b (ongoing, highest Yandex payoff):** topical clustering — group articles into
   RU Sanskrit topic hubs, add contextual internal links between related articles/courses/dictionary
   entries. This feeds YATI relevance and behavioral depth. Not a one-shot; a content discipline.

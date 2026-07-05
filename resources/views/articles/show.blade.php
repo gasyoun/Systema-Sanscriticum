@@ -24,12 +24,23 @@
     @endif
     "datePublished": @json(optional($article->published_at)->toIso8601String()),
     "dateModified": @json($article->updated_at->toIso8601String()),
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": @json(route('articles.show', $article->slug))
+    },
     "author": {
-        "@type": "Organization",
+        @if($article->author_name)
+        "@type": "Person",
         "name": @json($article->author_name)
+        @else
+        "@type": "Organization",
+        "@id": "https://samskrte.ru/#org",
+        "name": "Общество ревнителей санскрита"
+        @endif
     },
     "publisher": {
         "@type": "Organization",
+        "@id": "https://samskrte.ru/#org",
         "name": "Общество ревнителей санскрита",
         "logo": {
             "@type": "ImageObject",
