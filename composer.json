@@ -5,7 +5,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "awcodes/filament-curator": "^3.7",
         "awcodes/filament-tiptap-editor": "^3.5",
         "barryvdh/laravel-dompdf": "^2.0",
@@ -37,7 +37,7 @@
         "spatie/laravel-ignition": "^2.0"
     },
     "suggest": {
-        "danog/madelineproto": "Только для Telegram support analytics (telegram-support:sync). Требует PHP >= 8.2.14 — ставить на хосте с PHP 8.3 командой `composer require danog/madelineproto:^8.7`. Прод на PHP 8.1 этот пакет не грузит (его bootstrap делает die)."
+        "danog/madelineproto": "Только для Telegram support analytics (telegram-support:sync). Требует PHP >= 8.2.14 — прод на 8.3 (с 05-07-2026), ставить командой `composer require danog/madelineproto:^8.7`."
     },
     "autoload": {
         "psr-4": {
@@ -76,10 +76,20 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "platform-check": false,
+        "audit": {
+            "block-insecure": false,
+            "ignore": {
+                "PKSA-m5cs-t1y6-qpcs": "GHSA-crmm-hgp2-wgrp: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-3r5d-mb8f-1qw9": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-mdq4-51ck-6kdq": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-8qx3-n5y5-vvnd": "GHSA-78fx-h6xr-vch4: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
+                "PKSA-w7xr-vk7n-rstm": "GHSA-gv7v-rgg6-548h: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)"
+            }
+        },
         "platform": {
-            "php": "8.2.12",
-            "ext-pcntl": "8.1.2",
-            "ext-posix": "8.1.2"
+            "php": "8.3.0",
+            "ext-pcntl": "8.3.0",
+            "ext-posix": "8.3.0"
         },
         "allow-plugins": {
             "pestphp/pest-plugin": true,
