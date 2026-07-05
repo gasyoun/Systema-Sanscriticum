@@ -9,6 +9,7 @@
         "awcodes/filament-curator": "^3.7",
         "awcodes/filament-tiptap-editor": "^3.5",
         "barryvdh/laravel-dompdf": "^2.0",
+        "danog/madelineproto": "^8.7",
         "filament/filament": "^3.0",
         "firebase/php-jwt": "^7.0",
         "guzzlehttp/guzzle": "^7.2",
@@ -35,9 +36,6 @@
         "nunomaduro/collision": "^7.0",
         "phpunit/phpunit": "^10.1",
         "spatie/laravel-ignition": "^2.0"
-    },
-    "suggest": {
-        "danog/madelineproto": "Только для Telegram support analytics (telegram-support:sync). Требует PHP >= 8.2.14 — прод на 8.3 (с 05-07-2026), ставить командой `composer require danog/madelineproto:^8.7`."
     },
     "autoload": {
         "psr-4": {

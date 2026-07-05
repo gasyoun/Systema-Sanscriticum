@@ -21,7 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ["8.1", "8.2"]
+        # Прод на 8.3 (05-07-2026, docs/php-8.3-upgrade.md); require php ^8.3,
+        # danog/madelineproto требует >=8.2.14 — старые версии из матрицы убраны.
+        php: ["8.3"]
     steps:
       - uses: actions/checkout@v7
 

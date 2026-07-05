@@ -281,10 +281,12 @@ class TelegramSupportSyncService
     /** Открыть залогиненный MadelineProto-клиент (та же сессия, что и для sync). */
     protected function openClient(string $clientClass): object
     {
-        $session = (string) config('services.telegram_support.session');
-        File::ensureDirectoryExists(dirname(base_path($session)));
+        // Абсолютный путь через фабрику: дефолт конфига — storage_path() (уже
+        // абсолютный), оборачивать его в base_path() нельзя (задвоение пути).
+        $session = \App\Services\Telegram\MadelineClientFactory::sessionPath();
+        File::ensureDirectoryExists(dirname($session));
 
-        $client = new $clientClass($session, $this->madelineSettings());
+        $client = new $clientClass($session, $this->madelineSettings($clientClass));
         $client->start();
 
         return $client;
@@ -337,8 +339,16 @@ class TelegramSupportSyncService
         return isset($result['id']) ? (int) $result['id'] : null;
     }
 
-    private function madelineSettings(): object
+    private function madelineSettings(string $clientClass): object
     {
+        // Реальные Settings — только для настоящего API-клиента: загрузка
+        // MadelineProto ставит глобальный error-handler, эскалирующий
+        // warnings/deprecations в исключения (в тестах с фейком это роняет
+        // остальной сьют). Фейки настройки не читают.
+        if (! is_a($clientClass, 'danog\\MadelineProto\\API', true)) {
+            return new \stdClass;
+        }
+
         $settingsClass = 'danog\\MadelineProto\\Settings';
         $settings = new $settingsClass;
         $settings->getAppInfo()
