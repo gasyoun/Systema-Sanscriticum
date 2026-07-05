@@ -64,7 +64,7 @@
             font-size: 16px;
             flex-shrink: 0;
         }
-        
+
         /* === ЗОНА СООБЩЕНИЙ === */
         .messages-area {
             flex: 1;
@@ -76,14 +76,14 @@
             flex-direction: column;
             gap: 16px;
         }
-        
+
         .msg-wrapper {
             display: flex;
             width: 100%;
         }
         .msg-wrapper.curator { justify-content: flex-end; }
         .msg-wrapper.user { justify-content: flex-start; }
-        
+
         .msg-content {
             max-width: 65%;
             display: flex;
@@ -91,7 +91,7 @@
         }
         .msg-wrapper.curator .msg-content { align-items: flex-end; }
         .msg-wrapper.user .msg-content { align-items: flex-start; }
-        
+
         .msg-sender {
             font-size: 11px;
             color: #6b7280;
@@ -122,7 +122,44 @@
         .thread-status.open { background: #dcfce7; color: #15803d; }
         .thread-status.pending { background: #fef9c3; color: #a16207; }
         .thread-status.closed { background: #f3f4f6; color: #6b7280; }
-        
+
+        /* Баннер предложений напоминаний (детектор reminders:detect-requests) */
+        .reminder-banner {
+            margin: 12px 24px 0;
+            padding: 12px 16px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+        }
+        .reminder-banner + .reminder-banner { margin-top: 8px; }
+        .reminder-banner-text {
+            font-size: 13px;
+            color: #92400e;
+            margin-bottom: 6px;
+        }
+        .reminder-banner-meta {
+            font-size: 11px;
+            color: #b45309;
+            margin-bottom: 8px;
+        }
+        .reminder-banner-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .reminder-banner-actions a,
+        .reminder-banner-actions button {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .reminder-btn-approve { background: #16a34a; color: #fff; }
+        .reminder-btn-edit { background: #ffffff; color: #92400e; border-color: #fde68a; }
+        .reminder-btn-dismiss { background: #ffffff; color: #b91c1c; border-color: #fecaca; }
+
         /* ИДЕАЛЬНЫЕ ПУЗЫРИ */
         .msg-bubble {
             padding: 12px 16px;
@@ -132,7 +169,7 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             word-wrap: break-word;
         }
-        
+
         /* Пузырь студента (серый/белый) */
         .msg-bubble.user-bubble {
             background: #ffffff;
@@ -140,7 +177,7 @@
             border: 1px solid #e5e7eb;
             border-top-left-radius: 4px;
         }
-        
+
         /* Пузырь ИИ (светло-синий) */
         .msg-bubble.bot-bubble {
             background: #eff6ff;
@@ -148,14 +185,14 @@
             border: 1px solid #bfdbfe;
             border-top-left-radius: 4px;
         }
-        
+
         /* Пузырь Куратора (оранжевый) */
         .msg-bubble.curator-bubble {
             background: #f97316; /* Твой оранжевый цвет */
             color: #ffffff;
             border-top-right-radius: 4px;
         }
-        
+
         .msg-time {
             font-size: 10px;
             color: #9ca3af;
@@ -233,6 +270,11 @@
         .dark .thread-status.closed { background: rgba(255,255,255,.1); color: #9ca3af; }
         .dark .msg-channel.web { background: rgba(139,92,246,.25); color: #c4b5fd; }
         .dark .msg-channel.telegram { background: rgba(14,165,233,.25); color: #7dd3fc; }
+        .dark .reminder-banner { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); }
+        .dark .reminder-banner-text { color: #fcd34d; }
+        .dark .reminder-banner-meta { color: #fbbf24; }
+        .dark .reminder-btn-edit { background: transparent; color: #fcd34d; border-color: rgba(245,158,11,.4); }
+        .dark .reminder-btn-dismiss { background: transparent; color: #fca5a5; border-color: rgba(248,113,113,.4); }
         .dark [style*="color: #111827"] { color: #f3f4f6 !important; }
         .dark [style*="color: #1f2937"] { color: #e5e7eb !important; }
         .dark [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; color: #e5e7eb !important; }
@@ -240,14 +282,14 @@
     </style>
 
     <div class="chat-container">
-        
+
         {{-- ЛЕВАЯ ПАНЕЛЬ --}}
         <div class="chat-sidebar">
             <div class="chat-header">
                 <span style="font-weight: bold; color: #111827;">Диалоги</span>
                 <span style="background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px;">{{ count($usersWithChats) }}</span>
             </div>
-            
+
             <div class="chat-list" wire:poll.10s="loadUsersList">
                 @forelse($usersWithChats as $chatUser)
                     <button wire:click="selectUser({{ $chatUser->id }})" class="chat-user-item {{ $activeUserId == $chatUser->id ? 'active' : '' }}">
@@ -272,7 +314,7 @@
         <div class="chat-main">
             @if($activeUserId)
                 @php $activeUser = collect($usersWithChats)->firstWhere('id', $activeUserId); @endphp
-                
+
                 {{-- Шапка открытого чата --}}
                 <div class="chat-header">
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -309,6 +351,28 @@
                         </button>
                     @endif
                 </div>
+
+                {{-- Баннер: детектор нашёл просьбу «напомните мне» в переписке. Ничего
+                     не отправлено само — только предложение, куратор подтверждает/правит/
+                     отклоняет. Та же логика, что в очереди «Предложения напоминаний». --}}
+                @foreach($this->pendingReminderSuggestions as $suggestion)
+                    <div class="reminder-banner" wire:key="reminder-suggestion-{{ $suggestion->id }}">
+                        <div class="reminder-banner-text">
+                            🔔 Похоже, студент просит напомнить: «{{ \Illuminate\Support\Str::limit($suggestion->detected_text, 160) }}»
+                        </div>
+                        <div class="reminder-banner-meta">
+                            @if($suggestion->suggested_date)
+                                Предполагаемая дата: {{ $suggestion->suggested_date->format('d.m.Y H:i') }} ·
+                            @endif
+                            Уверенность: {{ number_format($suggestion->confidence * 100, 0) }}%
+                        </div>
+                        <div class="reminder-banner-actions">
+                            <button type="button" class="reminder-btn-approve" wire:click="approveReminderSuggestion({{ $suggestion->id }})">Подтвердить</button>
+                            <a class="reminder-btn-edit" href="{{ \App\Filament\Resources\ReminderSuggestionResource::getUrl('edit', ['record' => $suggestion]) }}">Изменить</a>
+                            <button type="button" class="reminder-btn-dismiss" wire:click="dismissReminderSuggestion({{ $suggestion->id }})">Отклонить</button>
+                        </div>
+                    </div>
+                @endforeach
 
                 {{-- Сообщения: единый поток веб-чата и импортированного TG-support --}}
                 <div class="messages-area" id="chat-messages" wire:poll.5s>
@@ -351,9 +415,9 @@
                 {{-- Ввод --}}
                 <div class="chat-input-area">
                     <form wire:submit.prevent="sendMessageToStudent" class="input-group">
-                        <textarea wire:model.defer="newMessage" 
+                        <textarea wire:model.defer="newMessage"
                             class="chat-textarea"
-                            placeholder="Напишите ответ..." 
+                            placeholder="Напишите ответ..."
                             required
                             oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"
                             onkeydown="if(event.keyCode===13 && !event.shiftKey) { event.preventDefault(); @this.sendMessageToStudent(); }"
@@ -384,7 +448,7 @@
                 container.scrollTop = container.scrollHeight;
             }
         }
-        
+
         document.addEventListener('livewire:load', function () {
             scrollToBottom();
             Livewire.hook('message.processed', (message, component) => {

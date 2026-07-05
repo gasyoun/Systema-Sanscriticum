@@ -3,10 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\ChatMessage;
+use App\Models\ReminderSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
+use App\Services\Reminders\ReminderSuggestionService;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\UnifiedInboxReader;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 
@@ -104,6 +107,53 @@ class Helpdesk extends Page
         }
 
         return app(SupportConversationManager::class)->currentFor($this->activeUserId);
+    }
+
+    /**
+     * Pending-предложения детектора напоминаний (reminders:detect-requests) для
+     * открытого студента — баннер над лентой сообщений. Тот же сервис
+     * подтверждения/отклонения, что и в очереди ReminderSuggestionResource.
+     *
+     * @return Collection<int, ReminderSuggestion>
+     */
+    public function getPendingReminderSuggestionsProperty(): Collection
+    {
+        if (! $this->activeUserId) {
+            return collect();
+        }
+
+        return ReminderSuggestion::query()
+            ->where('user_id', $this->activeUserId)
+            ->pending()
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /** Один клик: планирует напоминание из данных предложения как есть. */
+    public function approveReminderSuggestion(int $suggestionId): void
+    {
+        $suggestion = ReminderSuggestion::find($suggestionId);
+        if (! $suggestion || $suggestion->status !== ReminderSuggestion::STATUS_PENDING) {
+            return;
+        }
+
+        app(ReminderSuggestionService::class)->approve($suggestion, [
+            'message' => (string) $suggestion->detected_text,
+            'scheduled_for' => $suggestion->suggested_date ?? now()->addDay(),
+            'channels' => ['to_telegram'],
+        ], auth()->user());
+
+        Notification::make()->title('Напоминание запланировано')->success()->send();
+    }
+
+    public function dismissReminderSuggestion(int $suggestionId): void
+    {
+        $suggestion = ReminderSuggestion::find($suggestionId);
+        if (! $suggestion) {
+            return;
+        }
+
+        app(ReminderSuggestionService::class)->dismiss($suggestion, auth()->user());
     }
 
     /** ИИ-черновик ответа: кладём в поле ввода, не отправляя. */
