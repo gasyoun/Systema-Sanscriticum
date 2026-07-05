@@ -1,139 +1,29 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
+_Created: 13-02-2026 · Last updated: 05-07-2026_
+
 Laravel-приложение для школы санскрита: учебный кабинет со словарём и домашними
 заданиями, магазин курсов с гибкими тарифами, конструктор лендингов, редактор
 лекций, лояльная валюта «прана» и панель администратора.
 
 Это не абстрактная LMS, а специализированная среда: учебный контент завязан на
 санскритскую лексику (деванагари / IAST / кириллица), проверку домашних заданий
-куратором и выдачу верифицируемых сертификатов.
+куратором и выдачу верифицируемых сертификатов. Ниже — сначала то, что платформа
+даёт студенту, куратору и преподавателю; техническая часть (стек, установка,
+доменная модель) идёт следом.
 
 ---
 
 ## Оглавление
 
+- [Санскритская педагогика](#санскритская-педагогика)
+- [Сценарии использования](#сценарии-использования)
 - [Стек](#стек)
 - [Быстрый старт](#быстрый-старт)
 - [Архитектура и доменная модель](#архитектура-и-доменная-модель)
-- [Санскритская педагогика](#санскритская-педагогика)
-- [Сценарии использования](#сценарии-использования)
 - [Модули](#модули)
 - [Интеграции и вебхуки](#интеграции-и-вебхуки)
 - [Роадмап](#роадмап)
-
----
-
-## Стек
-
-| Слой | Технологии |
-|---|---|
-| Backend | Laravel 10, PHP 8.1+ |
-| Frontend | Vite 5, Tailwind CSS 4, Axios, Livewire |
-| Admin | Filament v3 (две панели: `admin` и `editor`) |
-| Очереди | Laravel Horizon + Redis |
-| БД | MySQL (прод), SQLite in-memory (тесты) |
-| Деплой | Laravel Sail (Docker) |
-| Часовой пояс | `Europe/Moscow` (зашит в [config/app.php](config/app.php)) |
-
----
-
-## Быстрый старт
-
-```bash
-cp .env.example .env
-composer install
-npm install
-
-php artisan key:generate
-php artisan migrate --seed   # создаёт тестового админа из ADMIN_EMAIL / ADMIN_PASSWORD
-
-npm run dev                  # фронтенд на :5173
-php artisan serve            # бэкенд на :8000
-php artisan horizon          # мониторинг очередей на /horizon
-```
-
-Через Docker Sail:
-
-```bash
-./vendor/bin/sail up -d
-./vendor/bin/sail artisan migrate --seed
-```
-
-Тесты (SQLite in-memory, реальная БД не нужна):
-
-```bash
-php artisan test
-php artisan test --filter=TestName
-./vendor/bin/pint            # форматирование PHP
-```
-
----
-
-## Архитектура и доменная модель
-
-### Управление доступом через оплату
-
-В системе **нет ручного назначения групп**. Доступ к урокам выдаётся автоматически
-по факту успешной оплаты:
-
-```
-Оплата (Точка Банк)
-   → вебхук /api/webhooks/tochka
-   → Payment переходит в один из Payment::PAID_STATUSES
-   → PaymentObserver::grantAccess()
-   → пользователь добавляется в нужную Group
-   → уроки фильтруются по группам пользователя на этапе запроса
-```
-
-Ключевые файлы: [PaymentObserver.php](app/Observers/PaymentObserver.php),
-[Payment.php](app/Models/Payment.php).
-
-### Блочная структура курсов и ключи доступа
-
-Курс делится на `CourseBlock` — секции с временным окном (`starts_at` / `ends_at`).
-Тариф (`Tariff`) может ограничивать доступ конкретными блоками. Доступ кодируется
-строковыми ключами, хранящимися в `payments.tariff`:
-
-| Ключ | Что открывает |
-|---|---|
-| `full` | весь курс |
-| `block_N` | блок N целиком |
-| `block_N_hH` | половина блока N (H ∈ {1,2}) |
-
-Блок можно продавать «половинами»: урок несёт `lesson.block_half` (1/2; `null` —
-не разделён). Единственный источник правды по генерации и проверке ключей —
-`Tariff::accessKey()`, `Lesson::unlockingKeys()`, `Lesson::isUnlockedBy()`.
-
-Ценообразование (`Tariff::calculateFinalPriceForUser()`) учитывает:
-- скидки за лояльность (через `MarketingSetting`),
-- зачёт депозита,
-- **апгрейд-кредит** (`Tariff::upgradeCreditForUser()`): покупка целого блока
-  засчитывает уже оплаченные его половины, покупка `full` — все оплаченные
-  блоки/половины (containment-модель).
-
-### Ключевые доменные связи
-
-```
-User ──< Payment >── Tariff ──> Course
-User ──< UserGroup >── Group ──< LessonGroup >── Lesson
-Course ──< CourseBlock
-Course ──< Lesson ──< HomeworkSubmission >── User (куратор-рецензент)
-Teacher ──< TeacherPayout (модели оплаты: percent | per_student | per_block | fixed)
-Dictionary ──< DictionaryWord
-User ──< PranaTransaction (balance-скидка + lifetime-ранг)
-User ──< SocialAccount (вход через провайдера)
-User ──< User (referred_by — реферальная связь)
-LandingPage ──> JSON-блоки
-```
-
-### Две Filament-панели
-
-- [AdminPanelProvider.php](app/Providers/Filament/AdminPanelProvider.php) — полная
-  админка `/admin`, доступ по `is_admin` (18 ресурсов).
-- [LectureEditorPanelProvider.php](app/Providers/Filament/LectureEditorPanelProvider.php)
-  — редактор лекций `/editor`, доступ по `is_lecture_editor`.
-
-Полный администратор видит обе панели.
 
 ---
 
@@ -281,6 +171,120 @@ draft → submitted → (needs_revision → submitted)* → accepted
    промокоды — единый расчёт в `Tariff`.
 4. **Мобильное приложение.** Sanctum-токены, эндпоинты `/api/v1` (курсы с прогрессом,
    уроки с флагами `locked`/`is_completed`) — фундамент под нативный клиент.
+
+---
+
+## Стек
+
+| Слой | Технологии |
+|---|---|
+| Backend | Laravel 10, PHP 8.1+ |
+| Frontend | Vite 5, Tailwind CSS 4, Axios, Livewire |
+| Admin | Filament v3 (две панели: `admin` и `editor`) |
+| Очереди | Laravel Horizon + Redis |
+| БД | MySQL (прод), SQLite in-memory (тесты) |
+| Деплой | Laravel Sail (Docker) |
+| Часовой пояс | `Europe/Moscow` (зашит в [config/app.php](config/app.php)) |
+
+---
+
+## Быстрый старт
+
+```bash
+cp .env.example .env
+composer install
+npm install
+
+php artisan key:generate
+php artisan migrate --seed   # создаёт тестового админа из ADMIN_EMAIL / ADMIN_PASSWORD
+
+npm run dev                  # фронтенд на :5173
+php artisan serve            # бэкенд на :8000
+php artisan horizon          # мониторинг очередей на /horizon
+```
+
+Через Docker Sail:
+
+```bash
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --seed
+```
+
+Тесты (SQLite in-memory, реальная БД не нужна):
+
+```bash
+php artisan test
+php artisan test --filter=TestName
+./vendor/bin/pint            # форматирование PHP
+```
+
+---
+
+## Архитектура и доменная модель
+
+### Управление доступом через оплату
+
+В системе **нет ручного назначения групп**. Доступ к урокам выдаётся автоматически
+по факту успешной оплаты:
+
+```
+Оплата (Точка Банк)
+   → вебхук /api/webhooks/tochka
+   → Payment переходит в один из Payment::PAID_STATUSES
+   → PaymentObserver::grantAccess()
+   → пользователь добавляется в нужную Group
+   → уроки фильтруются по группам пользователя на этапе запроса
+```
+
+Ключевые файлы: [PaymentObserver.php](app/Observers/PaymentObserver.php),
+[Payment.php](app/Models/Payment.php).
+
+### Блочная структура курсов и ключи доступа
+
+Курс делится на `CourseBlock` — секции с временным окном (`starts_at` / `ends_at`).
+Тариф (`Tariff`) может ограничивать доступ конкретными блоками. Доступ кодируется
+строковыми ключами, хранящимися в `payments.tariff`:
+
+| Ключ | Что открывает |
+|---|---|
+| `full` | весь курс |
+| `block_N` | блок N целиком |
+| `block_N_hH` | половина блока N (H ∈ {1,2}) |
+
+Блок можно продавать «половинами»: урок несёт `lesson.block_half` (1/2; `null` —
+не разделён). Единственный источник правды по генерации и проверке ключей —
+`Tariff::accessKey()`, `Lesson::unlockingKeys()`, `Lesson::isUnlockedBy()`.
+
+Ценообразование (`Tariff::calculateFinalPriceForUser()`) учитывает:
+- скидки за лояльность (через `MarketingSetting`),
+- зачёт депозита,
+- **апгрейд-кредит** (`Tariff::upgradeCreditForUser()`): покупка целого блока
+  засчитывает уже оплаченные его половины, покупка `full` — все оплаченные
+  блоки/половины (containment-модель).
+
+### Ключевые доменные связи
+
+```
+User ──< Payment >── Tariff ──> Course
+User ──< UserGroup >── Group ──< LessonGroup >── Lesson
+Course ──< CourseBlock
+Course ──< Lesson ──< HomeworkSubmission >── User (куратор-рецензент)
+Teacher ──< TeacherPayout (модели оплаты: percent | per_student | per_block | fixed)
+Dictionary ──< DictionaryWord
+User ──< PranaTransaction (balance-скидка + lifetime-ранг)
+User ──< SocialAccount (вход через провайдера)
+User ──< User (referred_by — реферальная связь)
+LandingPage ──> JSON-блоки
+```
+
+### Две Filament-панели
+
+- [AdminPanelProvider.php](app/Providers/Filament/AdminPanelProvider.php) — полная
+  админка `/admin`, доступ по `is_admin` (18 ресурсов).
+- [LectureEditorPanelProvider.php](app/Providers/Filament/LectureEditorPanelProvider.php)
+  — редактор лекций `/editor`, доступ по `is_lecture_editor`.
+
+Полный администратор видит обе панели.
 
 ---
 
@@ -597,3 +601,7 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   earn+spend слой целиком — лидерборд · бейджи · streak · магазин · P2P · ранги —
   рядом со скидочным кошельком (two-counter, концепции сосуществуют). **Decay
   остаётся выключенным** (`PRANA_DECAY_ENABLED=false`); сгорание не включаем.
+
+---
+
+_Dr. Mārcis Gasūns_
