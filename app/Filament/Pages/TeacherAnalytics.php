@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\DisciplineByGroupWidget;
 use App\Services\TeacherAnalytics as TeacherAnalyticsService;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -73,5 +74,10 @@ class TeacherAnalytics extends Page
     public function webinarAttendance(): Collection
     {
         return $this->analytics()->webinarAttendance();
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [DisciplineByGroupWidget::class];
     }
 }

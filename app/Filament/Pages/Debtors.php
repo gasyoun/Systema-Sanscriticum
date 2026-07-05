@@ -17,6 +17,7 @@ use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Services\ConditionalAccessGranter;
 use App\Services\DebtorsReport;
+use App\Services\DisciplineScoreService;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
 use App\Support\RoleGate;
@@ -57,6 +58,9 @@ class Debtors extends Page implements HasTable
 
     /** @var array<int, Payment|null> */
     private static array $paymentCache = [];
+
+    /** @var array<int, \App\Services\Discipline\DisciplineScore> */
+    private static array $disciplineCache = [];
 
     /** @var array<string, list<int>>  ключ "{course_id}:{ref}:{yearSig}" */
     private static array $courseBlockNumbersCache = [];
@@ -389,6 +393,14 @@ class Debtors extends Page implements HasTable
 
                         return empty($parts) ? null : implode(' · ', $parts);
                     }),
+
+                Tables\Columns\TextColumn::make('discipline')
+                    ->label('Дисциплина')
+                    ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->state(fn (Model $r): string => self::disciplineFor((int) $r->id)->label().' · '.self::disciplineFor((int) $r->id)->score)
+                    ->color(fn (Model $r): string => self::disciplineFor((int) $r->id)->color())
+                    ->tooltip('Advisory-скор платёжной дисциплины (см. карточку студента) — не влияет на скидки/рассрочку.'),
 
                 Tables\Columns\TextColumn::make('last_payment_id')
                     ->label('Последняя оплата')
@@ -744,6 +756,17 @@ class Debtors extends Page implements HasTable
         sort($result);
 
         return $result;
+    }
+
+    private static function disciplineFor(int $userId): \App\Services\Discipline\DisciplineScore
+    {
+        if (isset(self::$disciplineCache[$userId])) {
+            return self::$disciplineCache[$userId];
+        }
+
+        $user = User::find($userId);
+
+        return self::$disciplineCache[$userId] = app(DisciplineScoreService::class)->forUser($user);
     }
 
     private static function formatPaidBlocks(?int $start, ?int $end): string
