@@ -55,7 +55,7 @@ Roadmap / sequencing forks (interview, 05-07-2026):
 Each wave states what unblocks it. Waves are sequential; the pilot flag gates *student
 exposure*, not the build.
 
-### Wave 1 — Core loop (P1) · **starts now** · handoff [H210](https://github.com/gasyoun/Uprava/blob/main/handoffs/H210-Opus_Systema-Sanscriticum_srs_flashcards_p1_05.07.26.md)
+### Wave 1 — Core loop (P1) · **starts now** · handoff [H211](https://github.com/gasyoun/Uprava/blob/main/handoffs/H211-Opus_Systema-Sanscriticum_srs_flashcards_p1_05.07.26.md)
 _Unblocked by: nothing — ready._
 
 - Migrations: `srs_decks`, `srs_note_types`, `srs_cards`, `srs_review_states` (per user×card FSRS state), `srs_review_logs`, `srs_deck_user`.
