@@ -78,6 +78,9 @@ class MarketingSetting extends Model
 
         // --- ЗАРПЛАТЫ ПРЕПОДАВАТЕЛЕЙ ---
         'reference_teacher_percent',
+
+        // --- ДЕТЕКТОР ПРОСЬБ «НАПОМНИТЕ МНЕ» (H187) ---
+        'reminder_detection_enabled',
     ];
 
     protected $casts = [
