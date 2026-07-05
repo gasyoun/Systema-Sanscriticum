@@ -38,6 +38,13 @@
     }
 }
 </script>
+
+{{-- BreadcrumbList (schema.org) — Главная → Статьи → текущая статья --}}
+@include('partials.schema-breadcrumbs', ['crumbs' => [
+    ['name' => 'Главная', 'url' => url('/')],
+    ['name' => 'Статьи', 'url' => route('articles.index')],
+    ['name' => $article->title],
+]])
 @endpush
 
 @section('content')

@@ -57,15 +57,20 @@ Goals, ranked by MG: **(1) course sales · (2) articles→funnel · (3) dictiona
 
 ## 3. P0 batch — ship first (one session, high ROI, both engines)
 
+**Status: ✅ Shipped 05-07-2026 (handoff H193).** JSON-LD wired via a shared
+[`partials/schema-breadcrumbs.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/schema-breadcrumbs.blade.php)
++ per-page blocks. All three validate as JSON. Two follow-ups stay open as GTD `@DO`:
+YouTube channel URL for `sameAs`, and Yandex.Webmaster/Business registration.
+
 All three are small, low-risk, and help sales *now*.
 
-1. **`Organization` + `WebSite` JSON-LD in the base layout** ([`main.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/main.blade.php)):
-   - `Organization` with `@id`, `name`, `url`, `logo`, `sameAs` → VK / Telegram / YouTube channels.
-   - `WebSite` with `potentialAction` → `SearchAction` (sitelinks searchbox target).
-   - Register the same Organization in **Yandex.Webmaster + Yandex Business** (human `@DO`).
-2. **`Course` + `Offer` JSON-LD on** [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php):
-   - `Course` (`name`, `description`, `provider` → the `@id` Organization) + `Offer` (`price`, `priceCurrency: RUB`, `availability`, `url`). Drives price-rich results.
-3. **`BreadcrumbList` JSON-LD** on article + course + landing pages (Home → section → item).
+1. ✅ **`Organization` + `WebSite` JSON-LD in the base layout** ([`main.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/main.blade.php)):
+   - ✅ `Organization` with `@id` (`https://samskrte.ru/#org`), `name`, `url`, `logo`, `sameAs` → VK + Telegram. ⏳ YouTube channel URL still needed (`@DO`).
+   - ✅ `WebSite` with `potentialAction` → `SearchAction` (target `…/online?search={search_term_string}`).
+   - ⏳ Register the same Organization in **Yandex.Webmaster + Yandex Business** (human `@DO`).
+2. ✅ **`Course` + `Offer` JSON-LD on** [`shop/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/show.blade.php):
+   - ✅ `Course` (`name`, `description`, `provider` → the `@id` Organization) + one `Offer` per active tariff (`price`, `priceCurrency: RUB`, `availability`, `url`). Drives price-rich results.
+3. ✅ **`BreadcrumbList` JSON-LD** on article + course + landing pages (Home → section → item), via the shared partial.
 
 **Do NOT** touch behavioral analytics (already optimal) or the sitemap structure (correct).
 
