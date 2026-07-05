@@ -129,6 +129,15 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('telegram-support-sync');
+
+        // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
+        // Куратор ставит текст + дату один раз в карточке студента (кнопка
+        // «Запланировать напоминание») — дальше это дело системы, не человека.
+        $schedule->command('reminders:send-due')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('send-due-reminders');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
+use App\Models\ScheduledReminder;
 use App\Models\User;
 use App\Support\CourseNoteBlockParser;
 use App\Support\RoleGate;
@@ -983,6 +984,65 @@ class UserResource extends Resource
                                 ->danger()
                                 ->send();
                         }
+                    }),
+
+                // --- РАЗОВОЕ НАПОМИНАНИЕ НА ДАТУ ---
+                // Куратор ставит текст + дату/время один раз — reminders:send-due
+                // (каждые 15 минут) отправит его сам. Снимает риск того, что
+                // человек забудет напомнить человеку вручную (например: студент
+                // уехал и просит написать ему после конкретного числа).
+                Tables\Actions\Action::make('schedule_reminder')
+                    ->iconButton()
+                    ->icon('heroicon-o-bell-alert')
+                    ->color('info')
+                    ->tooltip('Запланировать напоминание')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->modalHeading(fn (User $record) => 'Напоминание для: '.$record->name)
+                    ->modalSubmitActionLabel('Запланировать')
+                    ->modalWidth('lg')
+                    ->form([
+                        Forms\Components\Textarea::make('message')
+                            ->label('Текст напоминания')
+                            ->required()
+                            ->rows(4)
+                            ->maxLength(2000),
+
+                        Forms\Components\DateTimePicker::make('scheduled_for')
+                            ->label('Отправить не раньше')
+                            ->native(false)
+                            ->seconds(false)
+                            ->minDate(now())
+                            ->default(now()->addDay())
+                            ->required(),
+
+                        Forms\Components\CheckboxList::make('channels')
+                            ->label('Каналы')
+                            ->options([
+                                'to_telegram' => 'Telegram',
+                                'to_vk' => 'ВКонтакте',
+                                'to_email' => 'Email',
+                            ])
+                            ->default(['to_telegram'])
+                            ->required()
+                            ->columns(3),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $channels = $data['channels'] ?? [];
+
+                        ScheduledReminder::create([
+                            'user_id' => $record->id,
+                            'created_by' => auth()->id(),
+                            'message' => $data['message'],
+                            'to_telegram' => in_array('to_telegram', $channels, true),
+                            'to_vk' => in_array('to_vk', $channels, true),
+                            'to_email' => in_array('to_email', $channels, true),
+                            'scheduled_for' => $data['scheduled_for'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Напоминание запланировано')
+                            ->success()
+                            ->send();
                     }),
             ])
             ->bulkActions([
