@@ -48,6 +48,12 @@ class Helpdesk extends Page
 
     public $usersWithChats = []; // Вернули []
 
+    /**
+     * Фильтр диалогов по назначению (за флагом crm_cockpit, H221):
+     * all | mine (назначены мне) | unassigned (без ответственного).
+     */
+    public $assignmentFilter = 'all';
+
     public function mount()
     {
         $this->loadUsersList();
@@ -60,17 +66,93 @@ class Helpdesk extends Page
     public function loadUsersList()
     {
         // Диалоги — веб-чат ИЛИ импортированный TG-support, сведённый на пользователя.
-        $this->usersWithChats = User::query()
+        $query = User::query()
             ->where(function ($query): void {
                 $query->whereHas('chatMessages')
                     ->orWhereHas('linkedSupportChats');
             })
             ->withCount(['chatMessages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('role', 'user');
-            }])
+            }]);
+
+        // Фильтр по назначению — только за флагом; иначе UI не меняется.
+        if (config('features.crm_cockpit')) {
+            $this->applyAssignmentFilter($query);
+        }
+
+        $this->usersWithChats = $query
             ->orderByDesc('unread_count')
             ->get()
             ->all();
+    }
+
+    /**
+     * Сузить список по ответственному последнего треда пользователя.
+     * «mine» — последний тред назначен мне; «unassigned» — у последнего треда
+     * нет ответственного (или тредов ещё нет).
+     */
+    private function applyAssignmentFilter(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $latestThread = function ($q): void {
+            $q->from('support_conversations as sc')
+                ->whereColumn('sc.user_id', 'users.id')
+                ->whereRaw('sc.id = (select max(sc2.id) from support_conversations sc2 where sc2.user_id = users.id)');
+        };
+
+        if ($this->assignmentFilter === 'mine') {
+            $meId = (int) auth()->id();
+            $query->whereExists(function ($q) use ($latestThread, $meId): void {
+                $latestThread($q);
+                $q->where('sc.assigned_to', $meId);
+            });
+        } elseif ($this->assignmentFilter === 'unassigned') {
+            $query->whereNotExists(function ($q) use ($latestThread): void {
+                $latestThread($q);
+                $q->whereNotNull('sc.assigned_to');
+            });
+        }
+    }
+
+    /** Переключить фильтр назначения и перечитать список. */
+    public function setAssignmentFilter(string $filter): void
+    {
+        $this->assignmentFilter = in_array($filter, ['all', 'mine', 'unassigned'], true)
+            ? $filter : 'all';
+        $this->loadUsersList();
+    }
+
+    /**
+     * Кураторы для селектора назначения (админоподобные + менеджеры).
+     *
+     * @return array<int,string> id => name
+     */
+    public function getCuratorsProperty(): array
+    {
+        return User::query()
+            ->whereIn('role', [\App\Support\Roles::SUPER_ADMIN, \App\Support\Roles::ADMIN, \App\Support\Roles::MANAGER])
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    /**
+     * Назначить/переназначить ответственного за текущий тред активного студента.
+     * Пустая строка снимает ответственного. Тред создаётся при необходимости.
+     */
+    public function assignThread($assigneeId): void
+    {
+        if (! $this->activeUserId) {
+            return;
+        }
+
+        $thread = app(SupportConversationManager::class)->openFor((int) $this->activeUserId);
+        $thread->forceFill([
+            'assigned_to' => $assigneeId !== '' && $assigneeId !== null ? (int) $assigneeId : null,
+        ])->save();
+
+        $this->loadUsersList();
+
+        Notification::make()->title('Ответственный обновлён')->success()->send();
     }
 
     public function selectUser($userId)
