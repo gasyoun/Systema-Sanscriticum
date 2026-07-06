@@ -36,6 +36,7 @@ class Lead extends Model
         'status',
         'assigned_to',
         'next_contact_at',
+        'reminded_at',
 
         // Аналитика (UTM метки) - теперь они будут сохраняться
         'utm_source',
