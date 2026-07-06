@@ -67,4 +67,13 @@ return [
      | (нетех-ассистент). Пока флаг OFF — интерфейс не меняется.
      */
     'crm_cockpit' => (bool) env('CRM_COCKPIT', false),
+
+    /*
+     | Авто-постинг ссылки на занятие в Telegram-чат группы за N минут до старта
+     | (команда classes:post-group-link, P0 автоматизации «Отдела заботы»).
+     | ВЫКЛЮЧЕН по умолчанию: включается флагом class_link_autopost_enabled в
+     | админке (MarketingSetting). Этот env-флаг — аварийный рубильник на уровне
+     | деплоя. Требует, чтобы у группы был заполнен telegram_chat_id.
+     */
+    'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
 ];

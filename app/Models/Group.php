@@ -10,7 +10,7 @@ use Illuminate\Support\Str; // <--- 1. Важный импорт
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'slug', 'intake_id'];
+    protected $fillable = ['name', 'slug', 'intake_id', 'telegram_chat_id'];
 
     /** Набор, породивший эту группу (null для исторических групп до наборов). */
     public function intake(): BelongsTo
