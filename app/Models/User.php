@@ -554,6 +554,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     // ==========================================
+    // ОТПРАВКА SMS (SMS.ru, РЕЗЕРВНЫЙ КАНАЛ)
+    // ==========================================
+    public function sendSmsMessage(string $text): bool
+    {
+        if (empty($this->phone)) {
+            \Illuminate\Support\Facades\Log::info("Пропуск SMS: У пользователя {$this->email} не заполнен phone в базе.");
+
+            return false;
+        }
+
+        return app(\App\Services\Messaging\SmsRuChannel::class)->send($this->phone, $text);
+    }
+
+    // ==========================================
     // СВЯЗЬ С ЧАТОМ (ДЛЯ HELPDESK)
     // ==========================================
     /** Привязанные внешние OAuth-аккаунты (Google/VK/Yandex). */

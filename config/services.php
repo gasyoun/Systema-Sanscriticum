@@ -150,6 +150,13 @@ return [
         'agent_id' => env('YANDEX_AGENT_ID'),
     ],
 
+    // SMS.ru — резервный канал для «спящих» студентов без Telegram/VK/рабочего
+    // email (students:send-login-invites). Пусто → SMS-канал отключен (см.
+    // App\Services\Messaging\SmsRuChannel::isConfigured()).
+    'sms_ru' => [
+        'api_id' => env('SMS_RU_API_ID'),
+    ],
+
     // «Мозги» ИИ-куратора TG/VK. OpenRouter — OpenAI-совместимый шлюз; модель
     // по умолчанию DeepSeek V3 (быстро/дёшево, контекст ~64k). См.
     // App\Services\Bot\CuratorAi.
