@@ -164,7 +164,158 @@ class Reactivation extends Page implements HasTable
                             $query->where('d.debt_type', $data['value']);
                         }
                     }),
+            ])
+            ->actions([
+                $this->sendTemplateAction(),
+            ])
+            ->bulkActions([
+                $this->sendTemplateBulkAction(),
             ]);
+    }
+
+    /**
+     * Строчное действие «Отправить шаблон» (за флагом crm_cockpit, H221).
+     * Пока read-only-режим по умолчанию сохранён: без флага действие скрыто.
+     */
+    private function sendTemplateAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('send_template')
+            ->label('Отправить шаблон')
+            ->icon('heroicon-o-paper-airplane')
+            ->color('warning')
+            ->visible(fn (Model $r): bool => config('features.crm_cockpit')
+                && ($this->hasAnyChannel($r)))
+            ->modalHeading(fn (Model $r): string => 'Реактивация — '.($r->name ?: $r->email))
+            ->form([
+                Forms\Components\Select::make('template_id')
+                    ->label('Шаблон реактивации')
+                    ->options(fn (): array => $this->reactivationTemplateOptions())
+                    ->required()
+                    ->live()
+                    ->native(false)
+                    ->helperText('Категория «Реактивация» из библиотеки шаблонов.'),
+                Forms\Components\Placeholder::make('preview')
+                    ->label('Предпросмотр')
+                    ->content(function (Forms\Get $get, $livewire): string {
+                        $tpl = ($id = $get('template_id')) ? MessageTemplate::find($id) : null;
+                        if (! $tpl) {
+                            return 'Выберите шаблон, чтобы увидеть текст.';
+                        }
+                        $record = method_exists($livewire, 'getMountedTableActionRecord')
+                            ? $livewire->getMountedTableActionRecord() : null;
+                        $user = $record ? User::find($record->id) : null;
+                        if (! $user) {
+                            return $tpl->body;
+                        }
+                        $course = $record?->course_id ? Course::find($record->course_id) : null;
+
+                        return $tpl->render($user, $course, $this->blockOf($record));
+                    }),
+            ])
+            ->action(function (Model $r, array $data): void {
+                $tpl = MessageTemplate::find($data['template_id'] ?? null);
+                if (! $tpl) {
+                    Notification::make()->title('Шаблон не найден')->danger()->send();
+
+                    return;
+                }
+
+                $res = app(WinBackSender::class)->send(
+                    (int) $r->id,
+                    (int) $r->course_id,
+                    $this->blockOf($r),
+                    $tpl,
+                    auth()->user(),
+                );
+
+                $this->notifyResult($res);
+            });
+    }
+
+    /** Массовая отправка одного шаблона по выбранным кандидатам. */
+    private function sendTemplateBulkAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make('send_template_bulk')
+            ->label('Отправить шаблон')
+            ->icon('heroicon-o-paper-airplane')
+            ->color('warning')
+            ->visible(fn (): bool => (bool) config('features.crm_cockpit'))
+            ->form([
+                Forms\Components\Select::make('template_id')
+                    ->label('Шаблон реактивации')
+                    ->options(fn (): array => $this->reactivationTemplateOptions())
+                    ->required()
+                    ->native(false),
+            ])
+            ->action(function (Collection $records, array $data): void {
+                $tpl = MessageTemplate::find($data['template_id'] ?? null);
+                if (! $tpl) {
+                    Notification::make()->title('Шаблон не найден')->danger()->send();
+
+                    return;
+                }
+
+                $sender = app(WinBackSender::class);
+                $sent = 0;
+                $skipped = 0;
+                foreach ($records as $r) {
+                    $res = $sender->send(
+                        (int) $r->id,
+                        (int) $r->course_id,
+                        $this->blockOf($r),
+                        $tpl,
+                        auth()->user(),
+                    );
+                    $res['status'] === 'sent' ? $sent++ : $skipped++;
+                }
+
+                Notification::make()
+                    ->title("Отправлено: {$sent}. Пропущено (дедуп/нет каналов): {$skipped}.")
+                    ->success()
+                    ->send();
+            })
+            ->deselectRecordsAfterCompletion();
+    }
+
+    private function hasAnyChannel(Model $r): bool
+    {
+        return ! empty($r->telegram_id)
+            || ! empty($r->vk_id)
+            || filter_var($r->email, FILTER_VALIDATE_EMAIL);
+    }
+
+    private function blockOf(?Model $r): ?int
+    {
+        return $r && $r->ref_block_number !== null ? (int) $r->ref_block_number : null;
+    }
+
+    /** @return array<int,string> id => title активных шаблонов реактивации */
+    private function reactivationTemplateOptions(): array
+    {
+        return MessageTemplate::query()
+            ->forCategory(MessageTemplate::CATEGORY_REACTIVATION)
+            ->orderBy('title')
+            ->pluck('title', 'id')
+            ->all();
+    }
+
+    /** @param  array{status:string, channels:array}  $res */
+    private function notifyResult(array $res): void
+    {
+        match ($res['status']) {
+            'sent' => Notification::make()
+                ->title('Отправлено: '.implode(', ', $res['channels']))
+                ->success()->send(),
+            'skipped' => Notification::make()
+                ->title('Пропущено: уже писали за последние 24 ч')
+                ->warning()->send(),
+            'no_channels' => Notification::make()
+                ->title('Нет доступных каналов для отправки')
+                ->danger()->send(),
+            default => Notification::make()
+                ->title('Студент не найден')
+                ->danger()->send(),
+        };
     }
 
     /**
