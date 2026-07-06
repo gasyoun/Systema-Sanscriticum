@@ -316,6 +316,44 @@ class Helpdesk extends Page
         $this->aiSummary = app(\App\Services\Support\SupportAiService::class)->summarize($this->activeUserId);
     }
 
+    /**
+     * Быстрые ответы (H223 D5, за флагом crm_cockpit): активные шаблоны категории
+     * «Поддержка» из общей библиотеки H221. Пусто → dropdown не рендерится.
+     *
+     * @return array<int,string> id => title
+     */
+    public function getSupportTemplatesProperty(): array
+    {
+        if (! config('features.crm_cockpit')) {
+            return [];
+        }
+
+        return \App\Models\MessageTemplate::query()
+            ->forCategory(\App\Models\MessageTemplate::CATEGORY_SUPPORT)
+            ->orderBy('title')
+            ->pluck('title', 'id')
+            ->all();
+    }
+
+    /**
+     * Вставить текст шаблона в поле ответа с подстановкой плейсхолдеров под
+     * активного студента. НЕ отправляет — куратор правит перед отправкой.
+     */
+    public function insertCannedReply($templateId): void
+    {
+        if (! $this->activeUserId || ! config('features.crm_cockpit')) {
+            return;
+        }
+
+        $template = \App\Models\MessageTemplate::find($templateId);
+        $user = \App\Models\User::find($this->activeUserId);
+        if (! $template || ! $user) {
+            return;
+        }
+
+        $this->newMessage = $template->render($user);
+    }
+
     public function sendMessageToStudent()
     {
         $this->validate([
