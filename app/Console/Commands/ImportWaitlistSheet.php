@@ -229,13 +229,15 @@ class ImportWaitlistSheet extends Command
             return null;
         }
 
-        if (array_key_exists($label, $this->intakeCache)) {
-            $id = $this->intakeCache[$label];
-        } else {
-            $id = Intake::query()->whereRaw('LOWER(label) = ?', [mb_strtolower($label)])->value('id');
-            $this->intakeCache[$label] = $id !== null ? (int) $id : null;
-            $id = $this->intakeCache[$label];
+        // Case-fold в PHP, а не в SQL: SQLite LOWER() не трогает кириллицу.
+        if ($this->intakeMap === null) {
+            $this->intakeMap = Intake::query()
+                ->pluck('id', 'label')
+                ->mapWithKeys(fn (int $id, string $lbl) => [mb_strtolower(trim($lbl)) => $id])
+                ->all();
         }
+
+        $id = $this->intakeMap[mb_strtolower($label)] ?? null;
 
         if ($id === null) {
             $missingIntakes[$label] = ($missingIntakes[$label] ?? 0) + 1;
