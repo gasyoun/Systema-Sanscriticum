@@ -40,6 +40,9 @@ class Helpdesk extends Page
 
     public $newMessage = '';
 
+    /** Активная вкладка списка диалогов: inbox | mine | resolved. */
+    public $activeTab = 'inbox';
+
     /** Чья карточка открыта в модалке инфо (null = закрыта). */
     public $infoUserId = null;
 
@@ -71,6 +74,7 @@ class Helpdesk extends Page
                 $query->whereHas('chatMessages')
                     ->orWhereHas('linkedSupportChats');
             })
+            ->tap(fn ($query) => $this->applyTabFilter($query))
             ->withCount(['chatMessages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('role', 'user');
             }]);
@@ -87,72 +91,78 @@ class Helpdesk extends Page
     }
 
     /**
-     * Сузить список по ответственному последнего треда пользователя.
-     * «mine» — последний тред назначен мне; «unassigned» — у последнего треда
-     * нет ответственного (или тредов ещё нет).
+     * Сузить список диалогов по активной вкладке, опираясь на текущий (последний)
+     * операционный тред пользователя (SupportConversation):
+     *   inbox    — не закрыт и без ответственного (или треда ещё нет) → «входящие»;
+     *   mine     — назначен на текущего куратора;
+     *   resolved — тред закрыт.
      */
-    private function applyAssignmentFilter(\Illuminate\Database\Eloquent\Builder $query): void
+    protected function applyTabFilter($query): void
     {
-        $latestThread = function ($q): void {
-            $q->from('support_conversations as sc')
-                ->whereColumn('sc.user_id', 'users.id')
-                ->whereRaw('sc.id = (select max(sc2.id) from support_conversations sc2 where sc2.user_id = users.id)');
-        };
+        $meId = auth()->id();
 
-        if ($this->assignmentFilter === 'mine') {
-            $meId = (int) auth()->id();
-            $query->whereExists(function ($q) use ($latestThread, $meId): void {
-                $latestThread($q);
-                $q->where('sc.assigned_to', $meId);
-            });
-        } elseif ($this->assignmentFilter === 'unassigned') {
-            $query->whereNotExists(function ($q) use ($latestThread): void {
-                $latestThread($q);
-                $q->whereNotNull('sc.assigned_to');
-            });
-        }
+        match ($this->activeTab) {
+            'mine' => $query->whereHas('latestSupportConversation', fn ($q) => $q->where('assigned_to', $meId)),
+            'resolved' => $query->whereHas('latestSupportConversation', fn ($q) => $q->where('status', SupportConversation::STATUS_CLOSED)),
+            default => $query->where(function ($outer): void {
+                $outer->whereDoesntHave('supportConversations')
+                    ->orWhereHas('latestSupportConversation', fn ($q) => $q
+                        ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+                        ->whereNull('assigned_to'));
+            }),
+        };
     }
 
-    /** Переключить фильтр назначения и перечитать список. */
-    public function setAssignmentFilter(string $filter): void
+    /** Переключить вкладку списка диалогов и перечитать список. */
+    public function switchTab(string $tab): void
     {
-        $this->assignmentFilter = in_array($filter, ['all', 'mine', 'unassigned'], true)
-            ? $filter : 'all';
+        $this->activeTab = in_array($tab, ['inbox', 'mine', 'resolved'], true) ? $tab : 'inbox';
         $this->loadUsersList();
     }
 
     /**
-     * Кураторы для селектора назначения (админоподобные + менеджеры).
+     * Счётчики диалогов по вкладкам (для бейджей над списком). Считаем по тем же
+     * критериям, что и applyTabFilter, но без изменения активного списка.
      *
-     * @return array<int,string> id => name
+     * @return array{inbox:int, mine:int, resolved:int}
      */
-    public function getCuratorsProperty(): array
+    public function getTabCountsProperty(): array
     {
-        return User::query()
-            ->whereIn('role', [\App\Support\Roles::SUPER_ADMIN, \App\Support\Roles::ADMIN, \App\Support\Roles::MANAGER])
-            ->orderBy('name')
-            ->pluck('name', 'id')
-            ->all();
+        $meId = auth()->id();
+
+        $base = fn () => User::query()->where(function ($query): void {
+            $query->whereHas('chatMessages')->orWhereHas('linkedSupportChats');
+        });
+
+        return [
+            'inbox' => $base()->where(function ($outer): void {
+                $outer->whereDoesntHave('supportConversations')
+                    ->orWhereHas('latestSupportConversation', fn ($q) => $q
+                        ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+                        ->whereNull('assigned_to'));
+            })->count(),
+            'mine' => $base()->whereHas('latestSupportConversation', fn ($q) => $q->where('assigned_to', $meId))->count(),
+            'resolved' => $base()->whereHas('latestSupportConversation', fn ($q) => $q->where('status', SupportConversation::STATUS_CLOSED))->count(),
+        ];
     }
 
     /**
-     * Назначить/переназначить ответственного за текущий тред активного студента.
-     * Пустая строка снимает ответственного. Тред создаётся при необходимости.
+     * «Взять диалог себе»: назначить текущий тред открытого пользователя куратору.
+     * Минимальный механизм назначения, чтобы вкладка «Мои» была рабочей (полный
+     * механизм назначения из H221 D4 её дополнит).
      */
-    public function assignThread($assigneeId): void
+    public function takeConversation(): void
     {
         if (! $this->activeUserId) {
             return;
         }
 
-        $thread = app(SupportConversationManager::class)->openFor((int) $this->activeUserId);
-        $thread->forceFill([
-            'assigned_to' => $assigneeId !== '' && $assigneeId !== null ? (int) $assigneeId : null,
-        ])->save();
+        $thread = app(SupportConversationManager::class)->openFor($this->activeUserId);
+        $thread->update(['assigned_to' => auth()->id()]);
 
         $this->loadUsersList();
 
-        Notification::make()->title('Ответственный обновлён')->success()->send();
+        Notification::make()->title('Диалог назначен вам')->success()->send();
     }
 
     public function selectUser($userId)
@@ -238,6 +248,29 @@ class Helpdesk extends Page
         app(ReminderSuggestionService::class)->dismiss($suggestion, auth()->user());
     }
 
+    /**
+     * Куда уйдёт ответ куратора для открытого диалога — чтобы оператор видел
+     * канал ДО отправки и не писал не туда (актуально при support_unified_reply).
+     *
+     * @return array{key:string, label:string, emoji:string}
+     */
+    public function getReplyChannelProperty(): array
+    {
+        $cabinet = ['key' => 'web', 'label' => 'Кабинет', 'emoji' => '🔹'];
+
+        if (! $this->activeUserId) {
+            return $cabinet;
+        }
+
+        $channel = app(\App\Services\Support\SupportReplyService::class)->activeChannel($this->activeUserId);
+
+        if ($channel === \App\Services\Support\SupportReplyService::CHANNEL_TELEGRAM_SUPPORT) {
+            return ['key' => 'telegram', 'label' => 'Telegram-support', 'emoji' => '🔹'];
+        }
+
+        return $cabinet;
+    }
+
     /** ИИ-черновик ответа: кладём в поле ввода, не отправляя. */
     public function suggestReply(): void
     {
@@ -285,6 +318,8 @@ class Helpdesk extends Page
                 $this->newMessage = '';
                 $this->loadUsersList();
 
+                Notification::make()->title('Ответ отправлен в Telegram-support')->success()->send();
+
                 return;
             }
         }
@@ -327,6 +362,15 @@ class Helpdesk extends Page
 
         $this->newMessage = '';
         $this->loadUsersList();
+
+        // Тост называет канал доставки — оператор сразу видит, куда ушёл ответ.
+        $sentToMessenger = ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}"))
+            || ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}"));
+
+        Notification::make()
+            ->title($sentToMessenger ? 'Ответ отправлен в мессенджер' : 'Ответ отправлен в кабинет')
+            ->success()
+            ->send();
     }
 
     public function returnToBot()

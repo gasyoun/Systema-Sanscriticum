@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Filament\Pages\Debtors;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\Payment;
@@ -206,6 +207,47 @@ class CuratorNotifier
             $lines[] = 'Сумма: '.$this->money((float) $promise->amount);
         }
         $lines[] = $this->adminLink($promise->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Утренний дайджест по истёкшим за ночь обещаниям: общее число + худшие
+     * по сумме. Раньше promises:expire молчал (retention audit gap #4).
+     *
+     * @param  \Illuminate\Support\Collection<int, PaymentPromise>  $promises
+     */
+    public function promisesExpiredDigest(\Illuminate\Support\Collection $promises): void
+    {
+        if ($promises->isEmpty()) {
+            return;
+        }
+
+        $total = $promises->sum(fn (PaymentPromise $p): float => (float) ($p->amount ?? 0));
+
+        $lines = [
+            '⏳ <b>Истекли обещания оплаты</b>',
+            '',
+            'Просрочено за ночь: <b>'.$promises->count().'</b>',
+            'Сумма долга: <b>'.$this->money($total).'</b>',
+            '',
+            'Крупнейшие:',
+        ];
+
+        // Худшие по сумме (уже отсортированы в команде, но подстрахуемся).
+        foreach ($promises->sortByDesc(fn (PaymentPromise $p): float => (float) ($p->amount ?? 0))->take(5) as $promise) {
+            $name = e((string) ($promise->user->name ?? ('#'.$promise->user_id)));
+            $amount = $promise->amount !== null ? $this->money((float) $promise->amount) : '—';
+            $lines[] = '• <b>'.$name.'</b> — '.$amount.' · до '.$this->date($promise->promised_at);
+        }
+
+        try {
+            $url = Debtors::getUrl();
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть должников</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

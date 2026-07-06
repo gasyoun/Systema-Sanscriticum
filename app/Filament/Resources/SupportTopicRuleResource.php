@@ -36,9 +36,12 @@ class SupportTopicRuleResource extends Resource
             Forms\Components\TextInput::make('category')
                 ->required()
                 ->maxLength(255),
+            // No ->separator(): TagsInput must store an ARRAY to match the model's
+            // `keywords => array` cast. With a separator it stores one delimited
+            // STRING, which the cast then re-encodes as a JSON scalar — the
+            // classifier's foreach then gets a string and matches nothing.
             Forms\Components\TagsInput::make('keywords')
-                ->required()
-                ->separator(','),
+                ->required(),
             Forms\Components\TextInput::make('priority')
                 ->numeric()
                 ->default(100)

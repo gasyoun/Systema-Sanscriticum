@@ -3,13 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str; // <--- 1. Важный импорт
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'intake_id'];
+
+    /** Набор, породивший эту группу (null для исторических групп до наборов). */
+    public function intake(): BelongsTo
+    {
+        return $this->belongsTo(Intake::class);
+    }
 
     // 2. Магия автоматического заполнения
     protected static function booted()

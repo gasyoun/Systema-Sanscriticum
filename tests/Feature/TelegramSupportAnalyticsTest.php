@@ -16,9 +16,12 @@ use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
+use App\Services\TelegramSupport\SupportTopicClassifier;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use App\Support\Roles;
+use danog\MadelineProto\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
@@ -35,7 +38,7 @@ class TelegramSupportAnalyticsTest extends TestCase
      */
     private function skipWithoutMadelineProto(): void
     {
-        if (! class_exists(\danog\MadelineProto\Settings::class)) {
+        if (! class_exists(Settings::class)) {
             $this->markTestSkipped('danog/madelineproto не установлен (опциональная зависимость).');
         }
     }
@@ -180,6 +183,54 @@ class TelegramSupportAnalyticsTest extends TestCase
 
         $todayConversation = SupportDailyRollup::whereDate('conversation_date', '2026-06-29')->firstOrFail();
         $this->assertFalse($todayConversation->has_new_contact);
+    }
+
+    public function test_classifier_tolerates_keywords_stored_as_a_delimited_string(): void
+    {
+        config(['app.timezone' => 'Europe/Moscow']);
+
+        // Reproduce a rule saved through the old ->separator() form, which stored
+        // the tags as ONE JSON-scalar string instead of a JSON array.
+        $rule = SupportTopicRule::create([
+            'category' => 'payment',
+            'keywords' => ['placeholder'],
+            'priority' => 10,
+            'is_enabled' => true,
+        ]);
+        DB::table('support_topic_rules')->where('id', $rule->id)
+            ->update(['keywords' => json_encode('оплат,цена')]);
+        $this->assertIsString(SupportTopicRule::find($rule->id)->keywords); // bug shape confirmed
+
+        $account = TelegramSupportAccount::create(['name' => 'support', 'is_enabled' => true]);
+        $chat = TelegramSupportChat::create(['telegram_chat_id' => 2001, 'type' => 'private']);
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 2001,
+            'telegram_message_id' => 1,
+            'direction' => 'incoming',
+            'text' => 'Подскажите, как пройти оплату?',
+            'sent_at' => '2026-06-28 09:00:00',
+        ]);
+        $rollup = SupportDailyRollup::create([
+            'telegram_support_chat_id' => $chat->id,
+            'conversation_date' => '2026-06-28 00:00:00',
+            'incoming_count' => 1,
+            'outgoing_count' => 0,
+        ]);
+
+        app(SupportTopicClassifier::class)->classify($rollup);
+
+        // The string keyword "оплат" must still match — not fall to uncategorized.
+        $this->assertDatabaseHas('support_topic_assignments', [
+            'support_daily_rollup_id' => $rollup->id,
+            'category' => 'payment',
+            'source' => 'keyword',
+        ]);
+        $this->assertDatabaseMissing('support_topic_assignments', [
+            'support_daily_rollup_id' => $rollup->id,
+            'category' => 'uncategorized',
+        ]);
     }
 
     public function test_dashboard_packet_and_filament_filters_expose_support_metrics(): void

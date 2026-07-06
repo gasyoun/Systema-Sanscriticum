@@ -82,7 +82,15 @@ class LeadResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Статус')
                             ->options(Lead::STATUSES)
+                            ->live()
                             ->default('new'),
+
+                        Forms\Components\Textarea::make('rejection_reason')
+                            ->label('Причина отказа')
+                            ->rows(2)
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get): bool => $get('status') === 'rejected')
+                            ->required(fn (Forms\Get $get): bool => $get('status') === 'rejected'),
 
                         Forms\Components\Select::make('assigned_to')
                             ->label('Ответственный')
@@ -133,7 +141,16 @@ class LeadResource extends Resource
                     ->label('Статус')
                     ->options(Lead::STATUSES)
                     ->selectablePlaceholder(false)
-                    ->width('1%'),
+                    ->width('1%')
+                    // Workflow-гард: не даём молча откатить финальный статус в «Новый»
+                    // и не пускаем в «Отказ» без причины (её заполняют в карточке).
+                    ->updateStateUsing(function (Lead $record, $state): void {
+                        if (self::rejectStatusChange($record, (string) $state)) {
+                            return;
+                        }
+
+                        $record->update(['status' => $state]);
+                    }),
 
                 Tables\Columns\IconColumn::make('converted_at')
                     ->label('Оплата')
@@ -146,6 +163,17 @@ class LeadResource extends Resource
                         ? 'Оплатил: '.$record->converted_at->format('d.m.Y H:i')
                         : 'Не оплатил')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('next_contact_at')
+                    ->label('Контакт')
+                    ->badge()
+                    ->placeholder('—')
+                    ->state(fn (Lead $r): ?string => self::contactDueLabel($r))
+                    ->color(fn (Lead $r): string => self::contactDueColor($r))
+                    ->tooltip(fn (Lead $r): ?string => $r->next_contact_at
+                        ? 'Следующий контакт: '.$r->next_contact_at->format('d.m.Y')
+                        : null)
+                    ->sortable(query: fn ($query, string $direction) => $query->orderBy('next_contact_at', $direction)),
 
                 Tables\Columns\TextColumn::make('assignee.name')
                     ->label('Ответственный')
@@ -226,6 +254,26 @@ class LeadResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                // Пресет «на контакт сегодня»: просроченные/сегодняшние активные лиды.
+                // По умолчанию включён — оператор сразу видит, кому надо звонить.
+                Tables\Filters\TernaryFilter::make('due_for_contact')
+                    ->label('На контакт сегодня')
+                    ->placeholder('Все заявки')
+                    ->trueLabel('Пора связаться (просрочка/сегодня)')
+                    ->falseLabel('Контакт назначен на потом')
+                    ->default(true)
+                    ->queries(
+                        true: fn ($query) => $query
+                            ->whereNotNull('next_contact_at')
+                            ->whereDate('next_contact_at', '<=', today())
+                            ->whereNotIn('status', Lead::FINAL_STATUSES),
+                        false: fn ($query) => $query
+                            ->where(fn ($q) => $q
+                                ->whereNull('next_contact_at')
+                                ->orWhereDate('next_contact_at', '>', today())),
+                        blank: fn ($query) => $query,
+                    ),
+
                 Tables\Filters\SelectFilter::make('landing_page_id')
                     ->label('Лендинг')
                     ->relationship('landingPage', 'title')
@@ -266,6 +314,7 @@ class LeadResource extends Resource
                     ),
             ])
             ->actions([
+                self::takeLeadAction(),
                 self::emailAction(),
                 self::messengerAction(),
                 Tables\Actions\EditAction::make(),
@@ -274,6 +323,7 @@ class LeadResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    self::bulkTakeLeadsAction(),
                     self::bulkSetStatusAction(),
                     self::bulkAssignAction(),
                     self::bulkMessengerAction(),
@@ -321,6 +371,7 @@ class LeadResource extends Resource
     {
         return [
             LeadResource\RelationManagers\NotesRelationManager::class,
+            LeadResource\RelationManagers\AuditsRelationManager::class,
         ];
     }
 
@@ -344,6 +395,117 @@ class LeadResource extends Resource
             ->orderBy('name')
             ->pluck('name', 'id')
             ->all();
+    }
+
+    /**
+     * Workflow-гард смены статуса. Возвращает true, если переход НАДО отклонить
+     * (и показывает пояснение оператору): финальный статус нельзя молча вернуть
+     * в «Новый», а перевод в «Отказ» требует заполненной причины.
+     */
+    protected static function rejectStatusChange(Lead $record, string $newStatus): bool
+    {
+        if ($newStatus === 'new' && in_array($record->status, Lead::FINAL_STATUSES, true)) {
+            Notification::make()
+                ->title('Нельзя вернуть финальный статус в «Новый»')
+                ->body('Сначала смените «Конверсию»/«Отказ» на промежуточный статус.')
+                ->danger()
+                ->send();
+
+            return true;
+        }
+
+        if ($newStatus === 'rejected' && blank($record->rejection_reason)) {
+            Notification::make()
+                ->title('Укажите причину отказа')
+                ->body('Откройте карточку заявки и заполните «Причина отказа», затем поставьте «Отказ».')
+                ->warning()
+                ->send();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Подпись к колонке «Контакт»: сколько дней просрочки / до контакта.
+     */
+    protected static function contactDueLabel(Lead $lead): ?string
+    {
+        if (! $lead->next_contact_at) {
+            return null;
+        }
+
+        $days = today()->diffInDays($lead->next_contact_at->copy()->startOfDay(), false);
+
+        if ($days < 0) {
+            return 'просрочка '.abs($days).' дн.';
+        }
+
+        if ($days === 0) {
+            return 'сегодня';
+        }
+
+        return 'через '.$days.' дн.';
+    }
+
+    /**
+     * Цвет колонки «Контакт»: красный при просрочке, янтарный за ≤3 дня до, иначе серый.
+     */
+    protected static function contactDueColor(Lead $lead): string
+    {
+        if (! $lead->next_contact_at) {
+            return 'gray';
+        }
+
+        $days = today()->diffInDays($lead->next_contact_at->copy()->startOfDay(), false);
+
+        return match (true) {
+            $days <= 0 => 'danger',
+            $days <= 3 => 'warning',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * Row-action «Взять себе»: назначает лид текущему сотруднику и ставит
+     * следующий контакт на завтра. Заменяет цепочку edit→dropdown→save.
+     */
+    protected static function takeLeadAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('take_lead')
+            ->label('Взять себе')
+            ->icon('heroicon-o-hand-raised')
+            ->color('success')
+            ->visible(fn (Lead $r): bool => $r->assigned_to !== auth()->id())
+            ->action(function (Lead $r): void {
+                $r->update([
+                    'assigned_to' => auth()->id(),
+                    'next_contact_at' => today()->addDay(),
+                ]);
+
+                Notification::make()->title('Заявка назначена вам')->success()->send();
+            });
+    }
+
+    /**
+     * Bulk «Взять себе»: массово назначить выбранные лиды текущему сотруднику.
+     */
+    protected static function bulkTakeLeadsAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make('take_leads')
+            ->label('Взять себе')
+            ->icon('heroicon-o-hand-raised')
+            ->color('success')
+            ->action(function (Collection $records): void {
+                $records->each->update([
+                    'assigned_to' => auth()->id(),
+                    'next_contact_at' => today()->addDay(),
+                ]);
+
+                Notification::make()->title('Назначено вам: '.$records->count())->success()->send();
+            })
+            ->deselectRecordsAfterCompletion();
     }
 
     /**
@@ -485,11 +647,42 @@ class LeadResource extends Resource
                 Forms\Components\Select::make('status')
                     ->label('Статус')
                     ->options(Lead::STATUSES)
+                    ->live()
                     ->required(),
+                Forms\Components\Textarea::make('rejection_reason')
+                    ->label('Причина отказа')
+                    ->rows(3)
+                    ->visible(fn (Forms\Get $get): bool => $get('status') === 'rejected')
+                    ->required(fn (Forms\Get $get): bool => $get('status') === 'rejected'),
             ])
             ->action(function (Collection $records, array $data): void {
-                $records->each->update(['status' => $data['status']]);
-                Notification::make()->title('Статус обновлён: '.$records->count())->success()->send();
+                $status = (string) $data['status'];
+                $updated = 0;
+                $skipped = 0;
+
+                foreach ($records as $record) {
+                    /** @var Lead $record */
+                    // Молчаливый откат финального статуса в «Новый» — пропускаем.
+                    if ($status === 'new' && in_array($record->status, Lead::FINAL_STATUSES, true)) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $attrs = ['status' => $status];
+                    if ($status === 'rejected') {
+                        $attrs['rejection_reason'] = $data['rejection_reason'] ?? null;
+                    }
+
+                    $record->update($attrs);
+                    $updated++;
+                }
+
+                Notification::make()
+                    ->title('Статус обновлён: '.$updated)
+                    ->body($skipped > 0 ? "Пропущено (финальный статус нельзя вернуть в «Новый»): {$skipped}" : null)
+                    ->success()
+                    ->send();
             })
             ->deselectRecordsAfterCompletion();
     }

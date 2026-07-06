@@ -31,6 +31,63 @@
             justify-content: space-between;
             align-items: center;
         }
+        /* Вкладки статусов над списком диалогов */
+        .chat-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 8px 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .chat-tab {
+            flex: 1;
+            padding: 8px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .chat-tab:hover { color: #ea580c; }
+        .chat-tab.active {
+            color: #ea580c;
+            border-bottom-color: #f97316;
+        }
+        .chat-tab-count {
+            background: #e5e7eb;
+            color: #4b5563;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 99px;
+            min-width: 18px;
+        }
+        .chat-tab.active .chat-tab-count { background: #ffedd5; color: #c2410c; }
+
+        /* Индикатор канала ответа над полем ввода (D6) */
+        .reply-channel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 24px 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .reply-channel-badge {
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+        }
+        .reply-channel-badge.web { background: #ede9fe; color: #6d28d9; }
+        .reply-channel-badge.telegram { background: #e0f2fe; color: #0369a1; }
+
         .chat-list {
             flex: 1;
             overflow-y: auto;
@@ -279,6 +336,15 @@
         .dark [style*="color: #1f2937"] { color: #e5e7eb !important; }
         .dark [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; color: #e5e7eb !important; }
         .dark [style*="color: #6b7280"] { color: #9ca3af !important; }
+        .dark .chat-tabs { background: #111318; border-bottom-color: rgba(255,255,255,.1); }
+        .dark .chat-tab { color: #9ca3af; }
+        .dark .chat-tab:hover { color: #fdba74; }
+        .dark .chat-tab.active { color: #fdba74; }
+        .dark .chat-tab-count { background: rgba(255,255,255,.1); color: #d1d5db; }
+        .dark .chat-tab.active .chat-tab-count { background: rgba(249,115,22,.25); color: #fdba74; }
+        .dark .reply-channel { color: #9ca3af; }
+        .dark .reply-channel-badge.web { background: rgba(139,92,246,.25); color: #c4b5fd; }
+        .dark .reply-channel-badge.telegram { background: rgba(14,165,233,.25); color: #7dd3fc; }
     </style>
 
     <div class="chat-container">
@@ -290,17 +356,22 @@
                 <span style="background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px;">{{ count($usersWithChats) }}</span>
             </div>
 
-            @if(config('features.crm_cockpit'))
-                {{-- Фильтр по назначению (H221): все / назначены мне / без ответственного --}}
-                <div style="display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,.06);">
-                    @foreach(['all' => 'Все', 'mine' => 'Мои', 'unassigned' => 'Без ответств.'] as $key => $label)
-                        <button type="button" wire:click="setAssignmentFilter('{{ $key }}')"
-                            style="flex: 1; font-size: 11px; font-weight: 600; padding: 5px 4px; border-radius: 6px; cursor: pointer; border: 1px solid {{ $assignmentFilter === $key ? '#f59e0b' : 'rgba(0,0,0,.12)' }}; background: {{ $assignmentFilter === $key ? '#f59e0b' : 'transparent' }}; color: {{ $assignmentFilter === $key ? '#1c1917' : '#374151' }};">
-                            {{ $label }}
-                        </button>
-                    @endforeach
-                </div>
-            @endif
+            {{-- Вкладки статусов: Входящие (открыт/без ответственного) · Мои · Решённые --}}
+            @php $tabCounts = $this->tabCounts; @endphp
+            <div class="chat-tabs">
+                @foreach ([
+                    'inbox' => 'Входящие',
+                    'mine' => 'Мои',
+                    'resolved' => 'Решённые',
+                ] as $tabKey => $tabLabel)
+                    <button type="button"
+                        wire:click="switchTab('{{ $tabKey }}')"
+                        class="chat-tab {{ $activeTab === $tabKey ? 'active' : '' }}">
+                        {{ $tabLabel }}
+                        <span class="chat-tab-count">{{ $tabCounts[$tabKey] }}</span>
+                    </button>
+                @endforeach
+            </div>
 
             <div class="chat-list" wire:poll.10s="loadUsersList">
                 @forelse($usersWithChats as $chatUser)
@@ -368,13 +439,23 @@
                         </div>
                     </div>
 
-                    {{-- Кнопка "Вернуть ИИ" (показывается только если бот на паузе) --}}
-                    @if(\Illuminate\Support\Facades\Cache::has('chat_human_' . ($activeUser->telegram_id ?? '')) || \Illuminate\Support\Facades\Cache::has('chat_human_vk_' . ($activeUser->vk_id ?? '')))
-                        <button wire:click="returnToBot" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); transition: 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Завершить чат (Вернуть ИИ)
-                        </button>
-                    @endif
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        {{-- «Взять диалог себе»: назначает текущий тред куратору (вкладка «Мои»). --}}
+                        @if(! $thread || $thread->assigned_to !== auth()->id())
+                            <button wire:click="takeConversation" style="background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); transition: 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                                <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Взять диалог
+                            </button>
+                        @endif
+
+                        {{-- Кнопка "Вернуть ИИ" (показывается только если бот на паузе) --}}
+                        @if(\Illuminate\Support\Facades\Cache::has('chat_human_' . ($activeUser->telegram_id ?? '')) || \Illuminate\Support\Facades\Cache::has('chat_human_vk_' . ($activeUser->vk_id ?? '')))
+                            <button wire:click="returnToBot" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); transition: 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                                <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Завершить чат (Вернуть ИИ)
+                            </button>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Баннер: детектор нашёл просьбу «напомните мне» в переписке. Ничего
@@ -435,6 +516,21 @@
                     @if($aiSummary)
                         <div style="margin: 8px 24px 0; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #166534; white-space: pre-line;">{{ $aiSummary }}</div>
                     @endif
+                @endif
+
+                {{-- D6: куда уйдёт ответ — оператор видит канал до отправки --}}
+                @php $replyChannel = $this->replyChannel; @endphp
+                <div class="reply-channel">
+                    <span>Отвечаю в:</span>
+                    <span class="reply-channel-badge {{ $replyChannel['key'] }}">{{ $replyChannel['emoji'] }} {{ $replyChannel['label'] }}</span>
+                </div>
+
+                {{-- D5 (заготовка): выпадающий список шаблонов быстрых ответов.
+                     Ждёт модель MessageTemplate из H221 D2 (category='support'). Когда
+                     она появится — здесь встанет dropdown, подставляющий текст в
+                     newMessage для правки перед отправкой. Пока модели нет — не рендерим. --}}
+                @if(class_exists(\App\Models\MessageTemplate::class))
+                    {{-- TODO(H221 D2): canned-reply dropdown → вставка в newMessage. --}}
                 @endif
 
                 {{-- Ввод --}}

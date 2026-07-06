@@ -32,8 +32,23 @@ say "Предполётные проверки в $APP_DIR"
 [ -f artisan ] || fail "Здесь нет artisan — APP_DIR указывает не на приложение?"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 [ "$CURRENT_BRANCH" = "$BRANCH" ] || fail "Ветка $CURRENT_BRANCH, ожидалась $BRANCH"
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-  fail "Рабочее дерево грязное — сначала разобраться с локальными изменениями (git status)"
+
+# Прод-локальные документы: оферту/политику/согласие заменяют на сервере
+# руками, мимо git. Пока они не закоммичены в репо, деплой обязан их пережить:
+# стэшим на время обновления кода и возвращаем после. Любая ДРУГАЯ грязь —
+# по-прежнему стоп-сигнал: это не «известный танец», а чьи-то незафиксированные
+# правки, которые reset/pull молча потеряет.
+ALLOWED_DIRTY_RE='^public/docs/[^/]+\.pdf$'
+DIRTY_FILES=$(git status --porcelain --untracked-files=no | sed 's/^...//')
+STASHED=0
+if [ -n "$DIRTY_FILES" ]; then
+  if echo "$DIRTY_FILES" | grep -qvE "$ALLOWED_DIRTY_RE"; then
+    fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
+  fi
+  say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
+  # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
+  git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
+  STASHED=1
 fi
 OLD_COMMIT=$(git rev-parse --short HEAD)
 
@@ -41,6 +56,11 @@ OLD_COMMIT=$(git rev-parse --short HEAD)
 say "git pull --ff-only origin $BRANCH"
 git fetch origin
 git pull --ff-only origin "$BRANCH"
+
+if [ "$STASHED" = 1 ]; then
+  say "Возвращаю прод-локальные PDF из стэша"
+  git stash pop || fail "git stash pop конфликтнул — PDF в public/docs изменились и в репозитории. Разбор руками: git status; свежие прод-версии лежат в стэше (git stash list)."
+fi
 NEW_COMMIT=$(git rev-parse --short HEAD)
 if [ "$OLD_COMMIT" = "$NEW_COMMIT" ]; then
   echo "Код не изменился ($NEW_COMMIT) — продолжаю (пересборка кэшей всё равно полезна)."
@@ -62,6 +82,10 @@ fi
 
 say "Сброс кэшей + миграции"
 php artisan optimize:clear
+# Кеш Filament-компонентов optimize:clear НЕ трогает (bootstrap/cache/filament/);
+# без явного сброса новый виджет/страница ловит ComponentNotFoundException на
+# первом же update-запросе (см. docs/deploy.md, гочка LeadCostRangeWidget).
+php artisan filament:optimize-clear 2>/dev/null || true
 php artisan migrate --force
 
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
@@ -74,9 +98,18 @@ PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
 say "systemctl reload php${PHP_VER}-fpm (сброс OPcache)"
 systemctl reload "php${PHP_VER}-fpm" || fail "Не удалось перезагрузить php${PHP_VER}-fpm — старые вьюхи останутся в OPcache!"
 
-# ── 6. Очереди: мягкий рестарт Horizon (supervisor поднимет заново) ─────────
-say "php artisan horizon:terminate"
-php artisan horizon:terminate || echo "Horizon не запущен — пропускаю."
+# ── 6. Очереди: рестарт Horizon через supervisor ────────────────────────────
+# horizon:terminate на этом проде воркеры НЕ циклит (PID-ы не меняются — они
+# продолжают крутить старый код/кеш); работает только supervisorctl restart.
+# Фолбэк на terminate — для окружений без supervisor (dev-бокс).
+say "Рестарт Horizon"
+if command -v supervisorctl >/dev/null 2>&1; then
+  supervisorctl restart horizon || fail "supervisorctl restart horizon провалился — очереди крутят старый код!"
+  sleep 2
+  supervisorctl status horizon || true
+else
+  php artisan horizon:terminate || echo "Horizon не запущен — пропускаю."
+fi
 
 if [ "$USE_DOWN" = 1 ]; then
   say "php artisan up"

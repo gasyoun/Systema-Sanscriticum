@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
 class DirectAdSpend extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'starts_at',
@@ -25,6 +27,7 @@ class DirectAdSpend extends Model
         'ad_budget',
         'utm_source',
         'landing_page_id',
+        'is_locked',
     ];
 
     protected $casts = [
@@ -32,6 +35,7 @@ class DirectAdSpend extends Model
         'ends_at' => 'date',
         'specialist_salary' => 'decimal:2',
         'ad_budget' => 'decimal:2',
+        'is_locked' => 'boolean',
     ];
 
     public function landingPage(): BelongsTo

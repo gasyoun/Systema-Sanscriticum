@@ -259,10 +259,10 @@ class TelegramHarvestSyncService
 
             $minId = (int) (($peerState[(string) $peerId]['last_message_id']) ?? 0);
 
-            $history = $this->getHistoryWithBackoff($client, $peer, $limit, $minId);
-            $usersById = $this->usersById($history['users'] ?? []);
+            $history = $this->fetchPeerHistory($client, $peer, $limit, $minId);
+            $usersById = $this->usersById($history['users']);
 
-            foreach (($history['messages'] ?? []) as $raw) {
+            foreach ($history['messages'] as $raw) {
                 $normalized = $this->normalize($raw, $info, $usersById);
                 if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
                     $messages[] = $normalized;
@@ -288,16 +288,62 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * Page messages.getHistory newest→oldest until the per-peer cursor (min_id),
+     * history exhaustion, or the run cap ($limit) is reached. Telegram clamps a
+     * single getHistory call to 100 messages, so one call per peer (the old
+     * behaviour) silently capped a wound-back cursor at ~100 — a backfill after
+     * telegram-harvest:rewind needs real pagination.
+     *
+     * @return array{messages: array<int, array<string, mixed>>, users: array<int, array<string, mixed>>}
+     */
+    private function fetchPeerHistory(object $client, string $peer, int $limit, int $minId): array
+    {
+        $messages = [];
+        $users = [];
+        $offsetId = 0;
+
+        while (count($messages) < $limit) {
+            $batchLimit = min(100, $limit - count($messages));
+            if ($messages !== []) {
+                // Anti-ban: same randomized pause between pages as between peers.
+                $this->interPeerDelay();
+            }
+
+            $batch = $this->getHistoryWithBackoff($client, $peer, $batchLimit, $minId, $offsetId);
+            $batchMessages = array_values($batch['messages'] ?? []);
+            if ($batchMessages === []) {
+                break;
+            }
+
+            $users = array_merge($users, (array) ($batch['users'] ?? []));
+            $messages = array_merge($messages, $batchMessages);
+
+            $last = end($batchMessages);
+            $oldestId = isset($last['id']) ? (int) $last['id'] : null;
+            // Stop on a short page (range exhausted) or when the server stops
+            // making progress (offset not decreasing) — never loop on a stall.
+            if (count($batchMessages) < $batchLimit
+                || $oldestId === null
+                || ($offsetId !== 0 && $oldestId >= $offsetId)) {
+                break;
+            }
+            $offsetId = $oldestId;
+        }
+
+        return ['messages' => $messages, 'users' => $users];
+    }
+
+    /**
      * Fetch history with a single FloodWait backoff: on FLOOD_WAIT_<n> sleep the
      * advised seconds and retry once (clean-room of the cloner's anti-ban logic).
      *
      * @return array<string, mixed>
      */
-    private function getHistoryWithBackoff(object $client, string $peer, int $limit, int $minId): array
+    private function getHistoryWithBackoff(object $client, string $peer, int $limit, int $minId, int $offsetId = 0): array
     {
         $params = [
             'peer' => $peer,
-            'offset_id' => 0,
+            'offset_id' => $offsetId,
             'offset_date' => 0,
             'add_offset' => 0,
             'limit' => $limit,

@@ -631,10 +631,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(TelegramSupportChat::class, 'linked_user_id');
     }
 
-    /** Операционные треды поддержки этого пользователя (H221 — назначение куратора). */
+    /** Операционные треды поддержки этого пользователя. */
     public function supportConversations(): HasMany
     {
-        return $this->hasMany(\App\Models\SupportConversation::class);
+        return $this->hasMany(SupportConversation::class);
+    }
+
+    /** Текущий (последний) тред поддержки — для фильтра вкладок Helpdesk. */
+    public function latestSupportConversation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SupportConversation::class)->latestOfMany();
     }
 
     public function paymentPromises(): HasMany
