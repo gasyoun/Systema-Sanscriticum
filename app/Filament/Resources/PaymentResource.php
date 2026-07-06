@@ -496,13 +496,18 @@ class PaymentResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            PaymentResource\RelationManagers\AuditsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListPayments::route('/'),
+            // Полная страница правки платежа — несёт read-only таб «История
+            // изменений» (аудит). Создание по-прежнему через модалку списка.
+            'edit' => Pages\EditPayment::route('/{record}/edit'),
         ];
     }
 }
