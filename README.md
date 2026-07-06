@@ -458,6 +458,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 критериями выхода) — в
 [`docs/ROADMAP_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
 
+Стратегический вид бизнеса целиком (обе линии — курсы и книги) —
+одностраничный холст Остервальдера в
+[`docs/BUSINESS_MODEL_CANVAS.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BUSINESS_MODEL_CANVAS.md).
+
 ### Now
 
 - **Telegram support analytics — в разработке.** MVP уже импортирует историю
