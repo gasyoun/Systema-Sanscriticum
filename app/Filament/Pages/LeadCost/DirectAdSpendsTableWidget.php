@@ -87,8 +87,13 @@ class DirectAdSpendsTableWidget extends TableWidget
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->form($this->formSchema())
+                    // Заблокированную (is_locked) историю правит только админ.
+                    ->visible(fn (DirectAdSpend $record): bool => ! $record->is_locked || RoleGate::adminOnly())
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
                 Tables\Actions\DeleteAction::make()
+                    // Удаление истории расходов — только админ и только если запись
+                    // не заблокирована (soft-delete: физически не исчезает).
+                    ->visible(fn (DirectAdSpend $record): bool => RoleGate::adminOnly() && ! $record->is_locked)
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
             ])
             ->emptyStateHeading('Пока нет месяцев')
