@@ -217,6 +217,49 @@
         .reminder-btn-edit { background: #ffffff; color: #92400e; border-color: #fde68a; }
         .reminder-btn-dismiss { background: #ffffff; color: #b91c1c; border-color: #fecaca; }
 
+        /* Баннер факт-черновика FAQ-ответа (support:suggest-answers, H247) */
+        .answer-banner {
+            margin: 12px 24px 0;
+            padding: 12px 16px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+        }
+        .answer-banner + .answer-banner { margin-top: 8px; }
+        .answer-banner-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1d4ed8;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+        .answer-banner-text {
+            font-size: 13px;
+            color: #1e3a8a;
+            white-space: pre-line;
+            margin: 6px 0;
+        }
+        .answer-banner-meta {
+            font-size: 11px;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+        .answer-banner-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .answer-banner-actions button {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .answer-btn-accept { background: #2563eb; color: #fff; }
+        .answer-btn-edit { background: #ffffff; color: #1d4ed8; border-color: #bfdbfe; }
+        .answer-btn-discard { background: #ffffff; color: #b91c1c; border-color: #fecaca; }
+
         /* ИДЕАЛЬНЫЕ ПУЗЫРИ */
         .msg-bubble {
             padding: 12px 16px;
@@ -332,6 +375,12 @@
         .dark .reminder-banner-meta { color: #fbbf24; }
         .dark .reminder-btn-edit { background: transparent; color: #fcd34d; border-color: rgba(245,158,11,.4); }
         .dark .reminder-btn-dismiss { background: transparent; color: #fca5a5; border-color: rgba(248,113,113,.4); }
+        .dark .answer-banner { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.35); }
+        .dark .answer-banner-badge { color: #93c5fd; }
+        .dark .answer-banner-text { color: #bfdbfe; }
+        .dark .answer-banner-meta { color: #93c5fd; }
+        .dark .answer-btn-edit { background: transparent; color: #93c5fd; border-color: rgba(59,130,246,.4); }
+        .dark .answer-btn-discard { background: transparent; color: #fca5a5; border-color: rgba(248,113,113,.4); }
         .dark [style*="color: #111827"] { color: #f3f4f6 !important; }
         .dark [style*="color: #1f2937"] { color: #e5e7eb !important; }
         .dark [style*="background: #f3f4f6"] { background: rgba(255,255,255,.1) !important; color: #e5e7eb !important; }
@@ -476,6 +525,34 @@
                             <button type="button" class="reminder-btn-approve" wire:click="approveReminderSuggestion({{ $suggestion->id }})">Подтвердить</button>
                             <a class="reminder-btn-edit" href="{{ \App\Filament\Resources\ReminderSuggestionResource::getUrl('edit', ['record' => $suggestion]) }}">Изменить</a>
                             <button type="button" class="reminder-btn-dismiss" wire:click="dismissReminderSuggestion({{ $suggestion->id }})">Отклонить</button>
+                        </div>
+                    </div>
+                @endforeach
+
+                {{-- Баннер: FAQ-суггестер собрал факт-черновик ответа из данных LMS
+                     (support:suggest-answers, H247). Без LLM. Бот НИЧЕГО не отправил —
+                     куратор принимает/правит/отклоняет; «Принять»/«Изменить» кладут
+                     текст в поле ответа ниже. --}}
+                @php
+                    $answerCategoryLabels = [
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_ZOOM => 'Zoom / ссылка',
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_RECORDING => 'Запись урока',
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_SCHEDULE => 'Расписание',
+                    ];
+                @endphp
+                @foreach($this->pendingAnswerSuggestions as $answer)
+                    <div class="answer-banner" wire:key="answer-suggestion-{{ $answer->id }}">
+                        <div class="answer-banner-head">
+                            <span class="answer-banner-badge">💡 Черновик ответа · {{ $answerCategoryLabels[$answer->category] ?? $answer->category }}</span>
+                        </div>
+                        <div class="answer-banner-text">{{ \Illuminate\Support\Str::limit($answer->draft_text, 320) }}</div>
+                        <div class="answer-banner-meta">
+                            На вопрос: «{{ \Illuminate\Support\Str::limit($answer->detected_text, 120) }}»
+                        </div>
+                        <div class="answer-banner-actions">
+                            <button type="button" class="answer-btn-accept" wire:click="acceptAnswerSuggestion({{ $answer->id }})">Принять</button>
+                            <button type="button" class="answer-btn-edit" wire:click="editAnswerSuggestion({{ $answer->id }})">Изменить</button>
+                            <button type="button" class="answer-btn-discard" wire:click="discardAnswerSuggestion({{ $answer->id }})">Отклонить</button>
                         </div>
                     </div>
                 @endforeach

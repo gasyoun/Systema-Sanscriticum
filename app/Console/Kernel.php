@@ -2,6 +2,8 @@
 
 namespace App\Console;
 
+use App\Jobs\CloseStaleSessionsJob;
+use App\Models\MarketingSetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -37,7 +39,7 @@ class Kernel extends ConsoleKernel
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.
         // Защитный фолбэк на 09:00 — чтобы битое значение не уронило schedule:run.
-        $paymentTime = \App\Models\MarketingSetting::cached()?->payment_reminder_time;
+        $paymentTime = MarketingSetting::cached()?->payment_reminder_time;
         $paymentTime = preg_match('/^\d{1,2}:\d{2}$/', (string) $paymentTime) ? $paymentTime : '09:00';
         $schedule->command('promises:remind-tomorrow')
             ->dailyAt($paymentTime);
@@ -102,7 +104,7 @@ class Kernel extends ConsoleKernel
 
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
-        $schedule->job(new \App\Jobs\CloseStaleSessionsJob)
+        $schedule->job(new CloseStaleSessionsJob)
             ->everyFiveMinutes()
             ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
             ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
@@ -184,6 +186,25 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('expire-stale-reminder-suggestions');
+
+        // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247, тикет S3) ---
+        // Regex-префильтр поверх веб-чата и TG-support находит фактологические
+        // вопросы (Zoom/записи/расписание) и собирает факт-черновик ответа из LMS —
+        // БЕЗ LLM. Создаёт только предложение (SupportAnswerSuggestion), ничего не
+        // шлёт. Гейт: config('features.support_answer_suggester') + админ-тумблер
+        // support_answer_suggester_enabled (MarketingSetting) — оба внутри сервиса.
+        $schedule->command('support:suggest-answers')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('suggest-support-answers');
+
+        // Просроченные (14+ дней) pending-черновики FAQ-ответов → expired.
+        $schedule->command('support:expire-stale-answer-suggestions')
+            ->dailyAt('04:10')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('expire-stale-support-answer-suggestions');
     }
 
     /**

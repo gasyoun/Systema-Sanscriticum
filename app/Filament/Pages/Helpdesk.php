@@ -3,15 +3,25 @@
 namespace App\Filament\Pages;
 
 use App\Models\ChatMessage;
+use App\Models\MessageTemplate;
 use App\Models\ReminderSuggestion;
+use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
+use App\Services\ClassAttendanceService;
 use App\Services\Reminders\ReminderSuggestionService;
+use App\Services\Support\SupportAiService;
+use App\Services\Support\SupportAnswerSuggestionService;
 use App\Services\Support\SupportConversationManager;
+use App\Services\Support\SupportReplyService;
 use App\Services\Support\UnifiedInboxReader;
+use App\Support\Roles;
+use App\Support\UnifiedMessage;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class Helpdesk extends Page
 {
@@ -164,7 +174,7 @@ class Helpdesk extends Page
     public function getCuratorsProperty(): array
     {
         return User::query()
-            ->whereIn('role', [\App\Support\Roles::SUPER_ADMIN, \App\Support\Roles::ADMIN, \App\Support\Roles::MANAGER])
+            ->whereIn('role', [Roles::SUPER_ADMIN, Roles::ADMIN, Roles::MANAGER])
             ->orderBy('name')
             ->pluck('name', 'id')
             ->all();
@@ -202,7 +212,7 @@ class Helpdesk extends Page
      * Единый поток сообщений обоих каналов (веб + TG-support). Computed, а не
      * public-свойство: UnifiedMessage — обычный объект, Livewire его не сериализует.
      *
-     * @return Collection<int, \App\Support\UnifiedMessage>
+     * @return Collection<int, UnifiedMessage>
      */
     public function getMessagesProperty(): Collection
     {
@@ -271,6 +281,75 @@ class Helpdesk extends Page
     }
 
     /**
+     * Pending факт-черновики ответов FAQ-суггестера (support:suggest-answers, H247)
+     * для открытого студента — баннер над лентой. Куратор жмёт Принять/Изменить/
+     * Отклонить; бот сам НИЧЕГО не отправляет.
+     *
+     * @return Collection<int, SupportAnswerSuggestion>
+     */
+    public function getPendingAnswerSuggestionsProperty(): Collection
+    {
+        if (! $this->activeUserId) {
+            return collect();
+        }
+
+        return SupportAnswerSuggestion::query()
+            ->where('user_id', $this->activeUserId)
+            ->pending()
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /** Принять черновик как есть: текст уходит в поле ответа, статус = accepted. */
+    public function acceptAnswerSuggestion(int $suggestionId): void
+    {
+        $suggestion = $this->findPendingAnswerSuggestion($suggestionId);
+        if (! $suggestion) {
+            return;
+        }
+
+        $this->newMessage = (string) $suggestion->draft_text;
+        app(SupportAnswerSuggestionService::class)->accept($suggestion, auth()->user());
+
+        Notification::make()->title('Черновик подставлен в ответ')->success()->send();
+    }
+
+    /** Изменить: тот же черновик в поле ответа для правки, статус = edited. */
+    public function editAnswerSuggestion(int $suggestionId): void
+    {
+        $suggestion = $this->findPendingAnswerSuggestion($suggestionId);
+        if (! $suggestion) {
+            return;
+        }
+
+        $this->newMessage = (string) $suggestion->draft_text;
+        app(SupportAnswerSuggestionService::class)->edit($suggestion, auth()->user());
+
+        Notification::make()->title('Черновик в поле ответа — отредактируйте и отправьте')->success()->send();
+    }
+
+    public function discardAnswerSuggestion(int $suggestionId): void
+    {
+        $suggestion = $this->findPendingAnswerSuggestion($suggestionId);
+        if (! $suggestion) {
+            return;
+        }
+
+        app(SupportAnswerSuggestionService::class)->discard($suggestion, auth()->user());
+    }
+
+    private function findPendingAnswerSuggestion(int $suggestionId): ?SupportAnswerSuggestion
+    {
+        $suggestion = SupportAnswerSuggestion::find($suggestionId);
+
+        if (! $suggestion || $suggestion->status !== SupportAnswerSuggestion::STATUS_PENDING) {
+            return null;
+        }
+
+        return $suggestion;
+    }
+
+    /**
      * Куда уйдёт ответ куратора для открытого диалога — чтобы оператор видел
      * канал ДО отправки и не писал не туда (актуально при support_unified_reply).
      *
@@ -284,9 +363,9 @@ class Helpdesk extends Page
             return $cabinet;
         }
 
-        $channel = app(\App\Services\Support\SupportReplyService::class)->activeChannel($this->activeUserId);
+        $channel = app(SupportReplyService::class)->activeChannel($this->activeUserId);
 
-        if ($channel === \App\Services\Support\SupportReplyService::CHANNEL_TELEGRAM_SUPPORT) {
+        if ($channel === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT) {
             return ['key' => 'telegram', 'label' => 'Telegram-support', 'emoji' => '🔹'];
         }
 
@@ -300,7 +379,7 @@ class Helpdesk extends Page
             return;
         }
 
-        $draft = app(\App\Services\Support\SupportAiService::class)->suggestReply($this->activeUserId);
+        $draft = app(SupportAiService::class)->suggestReply($this->activeUserId);
         if ($draft) {
             $this->newMessage = $draft;
         }
@@ -313,7 +392,7 @@ class Helpdesk extends Page
             return;
         }
 
-        $this->aiSummary = app(\App\Services\Support\SupportAiService::class)->summarize($this->activeUserId);
+        $this->aiSummary = app(SupportAiService::class)->summarize($this->activeUserId);
     }
 
     /**
@@ -328,8 +407,8 @@ class Helpdesk extends Page
             return [];
         }
 
-        return \App\Models\MessageTemplate::query()
-            ->forCategory(\App\Models\MessageTemplate::CATEGORY_SUPPORT)
+        return MessageTemplate::query()
+            ->forCategory(MessageTemplate::CATEGORY_SUPPORT)
             ->orderBy('title')
             ->pluck('title', 'id')
             ->all();
@@ -345,8 +424,8 @@ class Helpdesk extends Page
             return;
         }
 
-        $template = \App\Models\MessageTemplate::find($templateId);
-        $user = \App\Models\User::find($this->activeUserId);
+        $template = MessageTemplate::find($templateId);
+        $user = User::find($this->activeUserId);
         if (! $template || ! $user) {
             return;
         }
@@ -364,7 +443,7 @@ class Helpdesk extends Page
             return;
         }
 
-        $user = \App\Models\User::find($this->activeUserId);
+        $user = User::find($this->activeUserId);
 
         $curator = auth()->user();
         $alias = $curator?->curatorDisplayName() ?? 'Куратор';
@@ -372,8 +451,8 @@ class Helpdesk extends Page
         // Единый ответ (за флагом): если разговор живёт в импортированном TG-support,
         // пишем туда, а не в веб-чат. Веб/бот-каналы идут прежним путём ниже.
         if (config('features.support_unified_reply')) {
-            $router = app(\App\Services\Support\SupportReplyService::class);
-            if ($router->activeChannel($user) === \App\Services\Support\SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
+            $router = app(SupportReplyService::class);
+            if ($router->activeChannel($user) === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
                 && $router->replyViaSupportChannel($user, $this->newMessage, $curator)) {
                 $this->newMessage = '';
                 $this->loadUsersList();
@@ -385,7 +464,7 @@ class Helpdesk extends Page
         }
 
         // Сохраняем ответ куратора в базу данных (кто ответил — answered_by).
-        $curatorMessage = \App\Models\ChatMessage::create([
+        $curatorMessage = ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'curator',
             'answered_by' => $curator?->id,
@@ -393,25 +472,25 @@ class Helpdesk extends Page
             'is_read' => true,
         ]);
 
-        app(\App\Services\Support\SupportConversationManager::class)
+        app(SupportConversationManager::class)
             ->recordMessage($user, $curatorMessage, $curatorMessage->created_at);
 
         // ==========================================
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
         // Студенту подписываем сообщение псевдонимом куратора (бэйдж).
         // ==========================================
-        if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
+        if ($user->telegram_id && Cache::has("chat_human_{$user->telegram_id}")) {
             // Если пауза стоит в Telegram — отвечаем ботом кабинета (фолбэк на основной)
             $token = config('services.telegram.student_bot_token')
                 ?: config('services.telegram.bot_token');
-            \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+            Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $user->telegram_id,
                 'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
                 'parse_mode' => 'HTML',
             ]);
-        } elseif ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}")) {
+        } elseif ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}")) {
             // Если пауза стоит во ВКонтакте (ДОБАВЛЕНО asForm())
-            \Illuminate\Support\Facades\Http::asForm()->post('https://api.vk.com/method/messages.send', [
+            Http::asForm()->post('https://api.vk.com/method/messages.send', [
                 'access_token' => env('VK_BOT_TOKEN'),
                 'v' => '5.131',
                 'user_id' => $user->vk_id,
@@ -424,8 +503,8 @@ class Helpdesk extends Page
         $this->loadUsersList();
 
         // Тост называет канал доставки — оператор сразу видит, куда ушёл ответ.
-        $sentToMessenger = ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}"))
-            || ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}"));
+        $sentToMessenger = ($user->telegram_id && Cache::has("chat_human_{$user->telegram_id}"))
+            || ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}"));
 
         Notification::make()
             ->title($sentToMessenger ? 'Ответ отправлен в мессенджер' : 'Ответ отправлен в кабинет')
@@ -438,15 +517,15 @@ class Helpdesk extends Page
         if (! $this->activeUserId) {
             return;
         }
-        $user = \App\Models\User::find($this->activeUserId);
+        $user = User::find($this->activeUserId);
 
         if ($user) {
             // Сбрасываем кэш и уведомляем, если диалог был в ТГ
-            if ($user->telegram_id && \Illuminate\Support\Facades\Cache::has("chat_human_{$user->telegram_id}")) {
-                \Illuminate\Support\Facades\Cache::forget("chat_human_{$user->telegram_id}");
+            if ($user->telegram_id && Cache::has("chat_human_{$user->telegram_id}")) {
+                Cache::forget("chat_human_{$user->telegram_id}");
                 $token = config('services.telegram.student_bot_token')
                     ?: config('services.telegram.bot_token');
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $user->telegram_id,
                     'text' => '🤖 Куратор завершил диалог. Я снова с вами! Чем я могу помочь?',
                     'parse_mode' => 'HTML',
@@ -454,9 +533,9 @@ class Helpdesk extends Page
             }
 
             // Сбрасываем кэш и уведомляем, если диалог был в ВК (ДОБАВЛЕНО asForm())
-            if ($user->vk_id && \Illuminate\Support\Facades\Cache::has("chat_human_vk_{$user->vk_id}")) {
-                \Illuminate\Support\Facades\Cache::forget("chat_human_vk_{$user->vk_id}");
-                \Illuminate\Support\Facades\Http::asForm()->post('https://api.vk.com/method/messages.send', [
+            if ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}")) {
+                Cache::forget("chat_human_vk_{$user->vk_id}");
+                Http::asForm()->post('https://api.vk.com/method/messages.send', [
                     'access_token' => env('VK_BOT_TOKEN'),
                     'v' => '5.131',
                     'user_id' => $user->vk_id,
@@ -466,14 +545,14 @@ class Helpdesk extends Page
             }
 
             // Записываем системное сообщение, чтобы было видно в админке
-            $systemMessage = \App\Models\ChatMessage::create([
+            $systemMessage = ChatMessage::create([
                 'user_id' => $user->id,
                 'role' => 'bot',
                 'text' => '🔄 [Системное сообщение: ИИ-ассистент снова активирован]',
                 'is_read' => true,
             ]);
 
-            app(\App\Services\Support\SupportConversationManager::class)
+            app(SupportConversationManager::class)
                 ->recordMessage($user, $systemMessage, $systemMessage->created_at);
         }
     }
@@ -523,7 +602,7 @@ class Helpdesk extends Page
                 ->with('course')
                 ->get(),
             // Последние занятия с посещаемостью (Zoom/клик).
-            'attendance' => app(\App\Services\ClassAttendanceService::class)->forStudent($user, 8),
+            'attendance' => app(ClassAttendanceService::class)->forStudent($user, 8),
         ];
     }
 }
