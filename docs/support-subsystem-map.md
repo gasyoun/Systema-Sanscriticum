@@ -1,6 +1,6 @@
 # Support subsystem — what actually exists (agent reference)
 
-_Created: 01-07-2026 · Last updated: 01-07-2026_
+_Created: 01-07-2026 · Last updated: 05-07-2026_
 
 > **Update 01-07-2026 (Step 1 done):** the naming landmine below is **resolved in code** — the daily-rollup model is now [`SupportDailyRollup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportDailyRollup.php) (table `support_daily_rollups`, FK `support_daily_rollup_id`, aggregator `SupportDailyRollupAggregator`). The name `SupportConversation` is now **free** for the future operational thread. Display vocabulary (`conversations()` relation, `conversation_date` column, dashboard `conversations` key) was intentionally left as-is.
 
@@ -63,12 +63,14 @@ The same person (e.g. one Telegram user) can be represented in all of these, wit
 
 **Before any omnichannel work, document one identity story.** Adding jivo.md's proposed `external_identity` table verbatim would create a *fourth* mapping — the exact identity-chaos failure its own roadmap warns about.
 
-## Open decisions (the ones grounded in code)
+## Decisions made (Steps 1–4, resolved 01-07-2026)
 
-1. **Operational conversation object** — define it as a reopenable thread keyed to user/identity. ✅ Name collision resolved (Step 1): `SupportConversation` is free; use it for the thread.
-2. **Unification strategy** — ✅ read layer built (Step 2): [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) DTO + [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php)`::forUser()` merge both stores chronologically. No table merge. `ai_state` added to `chat_messages`; `direction`/`responder_type` are **derived from `role`** in the DTO (not stored — `role` stays the single source on the web side). Still open: a write path and thread grouping (come with the operational-thread object).
-3. **Identity reconciliation** — ✅ resolved (Step 3): [`social_accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_06_25_130000_create_social_accounts_table.php) is canonical; see [docs/support-identity.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-identity.md). Backfill: [`identity:backfill-social-accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ConsolidateSocialIdentities.php) (dry-run default, idempotent, non-clobbering). Denormalized `users.telegram_id/vk_id/max_user_id` kept as outbound caches. No 4th table.
-4. **AI scope** — ✅ done: [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) adds the two genuinely-missing functions (`suggestReply`, `summarize`) over the unified thread, logging each to the existing `SupportAiReplyEvent` (`suggested`/`summary`). Behind `features.support_ai_assist` (off). Reuses `CuratorAi::chat()`; never auto-sends.
+This was previously labeled "Open decisions" — all four were closed the same day they were raised. Keeping this as a dated log, not a live task list; see **Actually open** below for what's genuinely left.
+
+1. **Operational conversation object** — defined as a reopenable thread keyed to user/identity. Name collision resolved (Step 1): `SupportConversation` is free; used for the thread.
+2. **Unification strategy** — read layer built (Step 2): [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php) DTO + [`UnifiedInboxReader`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php)`::forUser()` merge both stores chronologically. No table merge. `ai_state` added to `chat_messages`; `direction`/`responder_type` are **derived from `role`** in the DTO (not stored — `role` stays the single source on the web side). The write path and thread grouping landed with the operational-thread object (see the integration-wave table below: `support_conversation_id` FK on both message tables) — this is no longer open.
+3. **Identity reconciliation** — resolved (Step 3): [`social_accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_06_25_130000_create_social_accounts_table.php) is canonical; see [docs/support-identity.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-identity.md). Backfill: [`identity:backfill-social-accounts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ConsolidateSocialIdentities.php) (dry-run default, idempotent, non-clobbering). Denormalized `users.telegram_id/vk_id/max_user_id` kept as outbound caches. No 4th table.
+4. **AI scope** — done: [`SupportAiService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAiService.php) adds the two genuinely-missing functions (`suggestReply`, `summarize`) over the unified thread, logging each to the existing `SupportAiReplyEvent` (`suggested`/`summary`). Behind `features.support_ai_assist` (off). Reuses `CuratorAi::chat()`; never auto-sends.
 
 ## What now exists on top of the two stores (integration wave, 01-07-2026)
 
@@ -86,6 +88,24 @@ The read layer, operational thread, reply router, and AI assist were all built. 
 **Fully wired.** Enabling the imported-TG reply path end-to-end needs: `features.support_unified_reply=true`, a configured+logged-in userbot (`TELEGRAM_SUPPORT_ENABLED=true` + api creds + session), and a queue worker for `DeliverSupportReply`.
 
 > **Test note:** the userbot is force-disabled in `phpunit.xml` (`TELEGRAM_SUPPORT_ENABLED=false`) so `class_exists()` never autoloads real MadelineProto — its shutdown handler crashes amp on teardown under Windows. Tests that need it set the config explicitly with a fake client.
+
+## Actually open (verified against code, 05-07-2026)
+
+Real remaining gaps toward jivo.md Phase 0–6 parity — not decisions, punch-list items:
+
+| Gap | Phase | Detail |
+|---|---|---|
+| Security hardening unfixed | 0 | [SECURITY_AUDIT_money_2026-07-02.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY_AUDIT_money_2026-07-02.md) findings (HTTP-in-DB-transaction, path traversal, XSS, social-auth takeover) still not closed |
+| Status filter tabs missing in UI | 1 | `SupportConversation.status` exists but `Helpdesk` doesn't surface New/In-Progress/Resolved filter tabs yet |
+| EdTech sidebar incomplete | 2 | Modal shows payments/promises/discounts/attendance only; no active courses/groups, per-block access status, next lesson, or recent-tickets summary |
+| Topics web-chat-side | 4 | `SupportTopicRule`/`SupportTopicAssignment` only cover the Telegram-support side; `ChatMessage` has no topic taxonomy |
+| No required-close-topic workflow | 4 | Conversations can close without a topic assigned |
+| No support-ops follow-up-task model | 4 | `ScheduledReminder`/`ReminderSuggestion` are academic (lesson reminders), not a Jivo-style task-from-dialog object |
+| Web-chat analytics missing | 5 | `SupportDailyRollup`/`TelegramSupportAnalytics` only aggregate the Telegram-support side |
+| No support↔outcome correlation | 5 | No dashboard linking support topics to payment/access/attendance failures; no unresolved-after-N-hours KPI |
+| Reply-out path untested in production | 6 | `support_unified_reply` + `TELEGRAM_SUPPORT_ENABLED` flags wired (`DeliverSupportReply`, `TelegramSupportSyncService::deliverMessage()`) but never exercised live |
+| VK/Telegram-student-bot channel tagging | 6 | Both write to `ChatMessage` but aren't distinctly badged as separate channels in the unified view |
+| No email channel | 6 | Not started; jivo.md treats this as later-phase anyway |
 
 ## Where jivo.md is still useful
 
