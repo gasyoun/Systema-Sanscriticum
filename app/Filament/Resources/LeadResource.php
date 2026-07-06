@@ -321,6 +321,7 @@ class LeadResource extends Resource
     {
         return [
             LeadResource\RelationManagers\NotesRelationManager::class,
+            LeadResource\RelationManagers\AuditsRelationManager::class,
         ];
     }
 
