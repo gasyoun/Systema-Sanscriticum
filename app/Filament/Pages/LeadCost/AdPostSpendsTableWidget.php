@@ -61,12 +61,27 @@ class AdPostSpendsTableWidget extends TableWidget
                         ? '—'
                         : self::money($record->costPerWriter()))
                     ->color(fn (AdPostSpend $record): string => $record->costPerWriter() === null ? 'gray' : 'success'),
+                Tables\Columns\IconColumn::make('is_locked')
+                    ->label('Замок')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-lock-closed')
+                    ->falseIcon('heroicon-o-lock-open')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->tooltip(fn (AdPostSpend $record): string => $record->is_locked
+                        ? 'Заблокировано от правки/удаления'
+                        : 'Открыто для правки')
+                    ->toggleable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->form($this->formSchema())
+                    // Заблокированную (is_locked) историю правит только админ.
+                    ->visible(fn (AdPostSpend $record): bool => ! $record->is_locked || RoleGate::adminOnly())
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
                 Tables\Actions\DeleteAction::make()
+                    // Удаление истории — только админ и только если не заблокировано.
+                    ->visible(fn (AdPostSpend $record): bool => RoleGate::adminOnly() && ! $record->is_locked)
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
             ])
             ->emptyStateHeading('Пока нет постов')
