@@ -20,6 +20,9 @@ class Lead extends Model
         'rejected' => 'Отказ',
     ];
 
+    /** Финальные статусы воронки — их нельзя молча откатить в «Новый». */
+    public const FINAL_STATUSES = ['converted', 'rejected'];
+
     protected $fillable = [
         // Основные данные
         'landing_page_id',
@@ -32,6 +35,7 @@ class Lead extends Model
 
         // Воронка (статус, ответственный, дата следующего контакта)
         'status',
+        'rejection_reason',
         'assigned_to',
         'next_contact_at',
 
@@ -95,7 +99,7 @@ class Lead extends Model
             // status переводим в «Конверсия» только если он ещё не финальный
             // (менеджер мог вручную поставить «Отказ» — не перетираем).
             $attrs = ['converted_at' => now()];
-            if (! in_array($this->status, ['converted', 'rejected'], true)) {
+            if (! in_array($this->status, self::FINAL_STATUSES, true)) {
                 $attrs['status'] = 'converted';
             }
             $this->updateQuietly($attrs);
