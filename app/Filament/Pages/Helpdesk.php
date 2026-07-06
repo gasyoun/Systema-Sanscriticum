@@ -73,11 +73,6 @@ class Helpdesk extends Page
                 $query->where('is_read', false)->where('role', 'user');
             }]);
 
-        // Фильтр по назначению — только за флагом; иначе UI не меняется.
-        if (config('features.crm_cockpit')) {
-            $this->applyAssignmentFilter($query);
-        }
-
         $this->usersWithChats = $query
             ->orderByDesc('unread_count')
             ->get()
