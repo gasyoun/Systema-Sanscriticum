@@ -105,6 +105,12 @@ class Payment extends Model
         return $this->belongsTo(Lead::class);
     }
 
+    // Аудит-таймлайн: кто/что/когда правил платёж (append-only, PaymentAuditObserver).
+    public function audits(): HasMany
+    {
+        return $this->hasMany(PaymentAudit::class)->latest();
+    }
+
     /** Преподаватель, получивший этот платёж напрямую на личный счёт (для teacher_personal). */
     public function receivedByTeacher(): BelongsTo
     {
