@@ -8,6 +8,7 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 в [`accountant-guide.md`](accountant-guide.md), на который каждый раздел ниже ссылается.
 
 > Общая (нефинансовая) часть админ-панели описана в [`admin-manual.md`](admin-manual.md).
+> Как студент видит долги/оплату со своей стороны (личный кабинет) — [`student-manual.md`](student-manual.md) §§4–5.
 
 ---
 
