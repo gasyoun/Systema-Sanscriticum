@@ -290,6 +290,18 @@
                 <span style="background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px;">{{ count($usersWithChats) }}</span>
             </div>
 
+            @if(config('features.crm_cockpit'))
+                {{-- Фильтр по назначению (H221): все / назначены мне / без ответственного --}}
+                <div style="display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,.06);">
+                    @foreach(['all' => 'Все', 'mine' => 'Мои', 'unassigned' => 'Без ответств.'] as $key => $label)
+                        <button type="button" wire:click="setAssignmentFilter('{{ $key }}')"
+                            style="flex: 1; font-size: 11px; font-weight: 600; padding: 5px 4px; border-radius: 6px; cursor: pointer; border: 1px solid {{ $assignmentFilter === $key ? '#f59e0b' : 'rgba(0,0,0,.12)' }}; background: {{ $assignmentFilter === $key ? '#f59e0b' : 'transparent' }}; color: {{ $assignmentFilter === $key ? '#1c1917' : '#374151' }};">
+                            {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="chat-list" wire:poll.10s="loadUsersList">
                 @forelse($usersWithChats as $chatUser)
                     <button wire:click="selectUser({{ $chatUser->id }})" class="chat-user-item {{ $activeUserId == $chatUser->id ? 'active' : '' }}">
