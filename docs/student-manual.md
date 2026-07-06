@@ -18,7 +18,11 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 
 > Аудитория: разработчики/кураторы Академии, которым нужна полная карта кабинета
 > студента. Для настройки/связи с админ-функциями см.
-> `docs/admin-manual.md` (готовится отдельным PR, см. ниже).
+> [`docs/admin-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/admin-manual.md)
+> (общий гайд по `/admin`) и
+> [`docs/finance-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/finance-manual.md)
+> (финансовый функционал, для бухгалтера) — на момент этой правки ещё в
+> [PR #328](https://github.com/gasyoun/Systema-Sanscriticum/pull/328), не в `main`.
 
 ---
 
