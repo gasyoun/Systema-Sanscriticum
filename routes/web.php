@@ -320,10 +320,10 @@ Route::get('/admin/payments/{payment}/paypal-proof', function (\App\Models\Payme
 
 // Скачивание планировочных шаблонов «Нескучных финансов» (Финмодель, Бюджет,
 // План доходов/расходов) — гибридная стратегия H207: живые отчёты в панели +
-// эти workbooks вручную. Доступ — бухгалтер/супер-админ (как у финотчётов).
+// эти workbooks вручную. Доступ — админ ИЛИ бухгалтер (+ супер-админ).
 // Имена берём из белого списка, чтобы исключить обход каталога.
 Route::get('/admin/finance-templates/{name}', function (string $name) {
-    abort_unless(\App\Support\RoleGate::accounting(), 403);
+    abort_unless(\App\Support\RoleGate::finance(), 403);
 
     $catalog = [
         'finmodel' => ['file' => 'finmodel.xlsx', 'as' => 'НФ — Финансовая модель.xlsx'],

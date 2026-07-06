@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Enums\ExpenseCategory;
-use App\Filament\Concerns\AccountingOnly;
+use App\Filament\Concerns\FinanceAccess;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
 use Filament\Forms;
@@ -21,7 +21,7 @@ use Filament\Tables\Table;
  */
 class ExpenseResource extends Resource
 {
-    use AccountingOnly;
+    use FinanceAccess;
 
     protected static ?string $model = Expense::class;
 

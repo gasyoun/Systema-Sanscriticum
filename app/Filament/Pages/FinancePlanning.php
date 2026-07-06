@@ -11,7 +11,7 @@ use Filament\Pages\Page;
  * Планирование (Нескучные финансы) — гибридная сторона H207: то, что нельзя
  * авто-считать из данных LMS (сценарная финмодель, бюджет, план доходов/
  * расходов), остаётся ручными excel-workbooks. Здесь — ссылки на их скачивание.
- * Доступ — бухгалтер/супер-админ, как у остальных финансовых экранов.
+ * Доступ — админ ИЛИ бухгалтер (+ супер-админ), как у остальных финэкранов.
  */
 class FinancePlanning extends Page
 {
@@ -31,12 +31,12 @@ class FinancePlanning extends Page
 
     public static function canAccess(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     /**

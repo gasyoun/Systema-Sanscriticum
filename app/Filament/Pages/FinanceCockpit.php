@@ -12,8 +12,8 @@ use Illuminate\Support\Carbon;
 /**
  * Финансовый штурвал — управленческие отчёты в стиле «Нескучных финансов»:
  * ОПиУ (P&L, первый живой отчёт), ДДС, Баланс и платёжный календарь. Считаются
- * из живых данных LMS через FinanceCockpitReport. Доступ — бухгалтер и
- * супер-админ (как у зарплат): страница раскрывает чистую прибыль и маржу.
+ * из живых данных LMS через FinanceCockpitReport. Доступ — админ ИЛИ бухгалтер
+ * (+ супер-админ), ruling MG в H116: страница раскрывает чистую прибыль и маржу.
  */
 class FinanceCockpit extends Page
 {
@@ -39,12 +39,12 @@ class FinanceCockpit extends Page
 
     public static function canAccess(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     public function mount(): void
