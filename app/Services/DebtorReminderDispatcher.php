@@ -44,16 +44,10 @@ class DebtorReminderDispatcher
         }
 
         $course = Course::query()->whereKey($courseId)->first(['id', 'slug', 'title']);
-        $slug = $course?->slug;
 
-        $replacements = [
-            '{name}' => $user->name ?: 'Друг',
-            '{course}' => $course?->title ?? '',
-            '{block}' => (string) ($blockNumber ?? ''),
-            '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
-        ];
+        $replacements = \App\Support\MessagePlaceholders::forUser($user, $course, $blockNumber);
 
-        $rendered = strtr($textTpl, $replacements);
+        $rendered = \App\Support\MessagePlaceholders::render($textTpl, $replacements);
 
         if ($hasTg || $hasVk) {
             SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
