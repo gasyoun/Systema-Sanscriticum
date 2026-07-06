@@ -39,6 +39,16 @@ final class RoleGate
         return self::any(Roles::ACCOUNTANT);
     }
 
+    /**
+     * Доступ к управленческим финотчётам (ОПиУ/ДДС/штурвал): администратор ИЛИ
+     * бухгалтер (+ супер-админ всегда). Ruling MG в H116: RoleGate::any(ADMIN,
+     * ACCOUNTANT) — шире, чем accounting(): владелец-админ тоже видит P&L.
+     */
+    public static function finance(): bool
+    {
+        return self::any(Roles::ADMIN, Roles::ACCOUNTANT);
+    }
+
     public static function isSuperAdmin(): bool
     {
         $user = auth()->user();
