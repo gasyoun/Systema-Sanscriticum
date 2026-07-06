@@ -117,19 +117,24 @@ class WebhookController extends Controller
     }
 
     /**
-     * Нормализованный способ оплаты из payload Точки: 'sbp' | 'card' | null.
+     * Нормализованный способ оплаты из payload Точки: 'sbp' | 'card' | 'dolyame' | null.
      *
-     * ВАЖНО: точное имя поля в вебхуке Точки на реальном платеже НЕ подтверждено.
-     * Пробуем набор вероятных ключей (paymentType/paymentMode/payment_type/type);
-     * если способ есть, но не распознан — логируем сырое значение (без PII), чтобы
-     * подтвердить ключ по первому же боевому платежу и затем сузить эвристику.
+     * Поле ПОДТВЕРЖДЕНО по официальной документации Точки (событие
+     * `acquiringInternetPayment`): ключ — `paymentType`, значения — `"card"`,
+     * `"sbp"`, `"dolyame"` (рассрочка). См.
+     * https://developers.tochka.com/docs/tochka-api/opisanie-metodov/vebhuki/acquiringInternetPayment
+     * `paymentType` (капабилити «какие способы предложены») — это ДРУГОЕ поле,
+     * массив, поэтому его сюда не берём. Основной ключ пробуем первым; несколько
+     * форматных фолбэков оставлены на случай смены регистра/нотации. Нераспознанное
+     * значение (например новый способ) логируем без PII и возвращаем null — такой
+     * платёж «Юнит-экономика» посчитает вилкой.
      *
      * @param  array<string, mixed>  $payload
      */
     private function extractPaymentMethod(array $payload): ?string
     {
         $raw = null;
-        foreach (['paymentType', 'paymentMode', 'payment_type', 'payment_method', 'type'] as $k) {
+        foreach (['paymentType', 'payment_type', 'type'] as $k) {
             if (! empty($payload[$k]) && is_string($payload[$k])) {
                 $raw = $payload[$k];
                 break;
@@ -147,6 +152,9 @@ class WebhookController extends Controller
         }
         if (str_contains($v, 'card') || str_contains($v, 'карт')) {
             return 'card';
+        }
+        if (str_contains($v, 'dolyame') || str_contains($v, 'доляме')) {
+            return 'dolyame';
         }
 
         // Способ пришёл, но не распознан — зафиксировать сырое значение для настройки.
