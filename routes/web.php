@@ -318,6 +318,27 @@ Route::get('/admin/payments/{payment}/paypal-proof', function (\App\Models\Payme
     return Storage::disk('local')->download($payment->proof_path);
 })->middleware('auth')->name('paypal.proof');
 
+// Скачивание планировочных шаблонов «Нескучных финансов» (Финмодель, Бюджет,
+// План доходов/расходов) — гибридная стратегия H207: живые отчёты в панели +
+// эти workbooks вручную. Доступ — бухгалтер/супер-админ (как у финотчётов).
+// Имена берём из белого списка, чтобы исключить обход каталога.
+Route::get('/admin/finance-templates/{name}', function (string $name) {
+    abort_unless(\App\Support\RoleGate::accounting(), 403);
+
+    $catalog = [
+        'finmodel' => ['file' => 'finmodel.xlsx', 'as' => 'НФ — Финансовая модель.xlsx'],
+        'budget' => ['file' => 'budget.xlsx', 'as' => 'НФ — Бюджет.xlsx'],
+        'plan-income-expense' => ['file' => 'plan-income-expense.xlsx', 'as' => 'НФ — План доходов и расходов.xlsx'],
+    ];
+
+    abort_unless(isset($catalog[$name]), 404);
+
+    $path = 'finance-templates/'.$catalog[$name]['file'];
+    abort_unless(Storage::disk('local')->exists($path), 404);
+
+    return Storage::disk('local')->download($path, $catalog[$name]['as']);
+})->middleware('auth')->name('finance.template');
+
 // --- РЕДАКТОР ЛЕКЦИЙ (Filament-панель /editor) ---
 Route::middleware(['web', 'auth'])
     ->prefix('editor/lectures/{draft}')
