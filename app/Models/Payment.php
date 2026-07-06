@@ -31,6 +31,7 @@ class Payment extends Model
         'transaction_id',
         // --- Полу-интегрированная валютная оплата (PayPal-заявка студента) ---
         'provider',
+        'payment_method',
         'proof_path',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
         'start_block',
