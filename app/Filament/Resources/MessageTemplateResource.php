@@ -8,6 +8,7 @@ use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MessageTemplateResource\Pages;
 use App\Models\MessageTemplate;
 use App\Support\MessagePlaceholders;
+use App\Support\RoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
