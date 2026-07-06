@@ -56,6 +56,12 @@ class WaitlistEntry extends Model
         'last_reply_at' => 'date',
     ];
 
+    // Дефолты в памяти (зеркалят DB-default), чтобы status/level были
+    // определены сразу после create() без перезагрузки из БД.
+    protected $attributes = [
+        'status' => 'waiting',
+    ];
+
     protected static function booted(): void
     {
         // Нормализуем @username при сохранении и автоматически привязываем
