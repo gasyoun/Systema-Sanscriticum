@@ -158,6 +158,11 @@ class DirectAdSpendsTableWidget extends TableWidget
 
                         return self::money(((float) $get('specialist_salary') + (float) $get('ad_budget')) / $leads);
                     }),
+                Forms\Components\Toggle::make('is_locked')
+                    ->label('Заблокировать запись')
+                    ->helperText('Защита истории: заблокированную запись нельзя править/удалять (снять замок может только админ).')
+                    ->visible(fn (): bool => RoleGate::adminOnly())
+                    ->columnSpanFull(),
             ]),
         ];
     }
