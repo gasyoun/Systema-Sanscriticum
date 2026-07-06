@@ -16,7 +16,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('payments', function (Blueprint $table) {
-            // 'sbp' | 'card' | NULL (неизвестно/legacy).
+            // 'sbp' | 'card' | 'dolyame' | NULL (неизвестно/legacy).
             $table->string('payment_method', 16)->nullable()->after('provider');
         });
     }
