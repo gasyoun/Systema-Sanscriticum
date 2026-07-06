@@ -51,12 +51,6 @@ class Helpdesk extends Page
 
     public $usersWithChats = []; // Вернули []
 
-    /**
-     * Фильтр диалогов по назначению (за флагом crm_cockpit, H221):
-     * all | mine (назначены мне) | unassigned (без ответственного).
-     */
-    public $assignmentFilter = 'all';
-
     public function mount()
     {
         $this->loadUsersList();
