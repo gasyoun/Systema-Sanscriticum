@@ -76,4 +76,14 @@ return [
      | деплоя. Требует, чтобы у группы был заполнен telegram_chat_id.
      */
     'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
+
+    /*
+     | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
+     | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
+     | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
+     | pending-черновик, куратор в Helpdesk жмёт Принять/Изменить/Отклонить.
+     | ВЫКЛ по умолчанию: это deploy-рубильник. Реальный запуск требует ещё и
+     | админ-тумблера support_answer_suggester_enabled (MarketingSetting).
+     */
+    'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 ];
