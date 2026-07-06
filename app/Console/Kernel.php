@@ -24,6 +24,15 @@ class Kernel extends ConsoleKernel
         $schedule->command('unreliable:recount')
             ->dailyAt('03:45');
 
+        // Напоминание менеджеру о заявках с наступившим next_contact_at.
+        // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
+        // флаг выключен, прогон — no-op.
+        $schedule->command('leads:remind-followup')
+            ->dailyAt('08:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('remind-leads-followup');
+
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.
