@@ -28,8 +28,8 @@ class SupportTopicClassifier
             ->orderBy('category')
             ->get()
             ->each(function (SupportTopicRule $rule) use ($conversation, $text, &$matched): void {
-                foreach ($rule->keywords ?? [] as $keyword) {
-                    if ($keyword !== '' && mb_stripos($text, (string) $keyword) !== false) {
+                foreach ($this->keywordsOf($rule) as $keyword) {
+                    if ($keyword !== '' && mb_stripos($text, $keyword) !== false) {
                         SupportTopicAssignment::create([
                             'support_daily_rollup_id' => $conversation->id,
                             'category' => $rule->category,
@@ -53,5 +53,28 @@ class SupportTopicClassifier
                 'reason' => 'no keyword match; llm fallback reserved',
             ]);
         }
+    }
+
+    /**
+     * Normalize a rule's keywords to a trimmed string list. The `keywords => array`
+     * cast should already yield an array, but a rule saved through a form that
+     * stored the tags as one delimited string comes back as a scalar — defend
+     * against that so a mis-stored rule never fatals classification (foreach on a
+     * string) nor silently matches nothing.
+     *
+     * @return array<int, string>
+     */
+    private function keywordsOf(SupportTopicRule $rule): array
+    {
+        $keywords = $rule->keywords;
+
+        if (is_string($keywords)) {
+            $keywords = preg_split('/[,\n]+/', $keywords) ?: [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn ($keyword): string => trim((string) $keyword),
+            is_array($keywords) ? $keywords : [],
+        ), static fn (string $keyword): bool => $keyword !== ''));
     }
 }
