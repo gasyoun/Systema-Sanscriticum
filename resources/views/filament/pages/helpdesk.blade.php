@@ -352,6 +352,19 @@
                                 </span>
                             </div>
                         @endif
+                        @if(config('features.crm_cockpit'))
+                            {{-- Назначение ответственного за тред (H221) --}}
+                            <div style="font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                <span style="color: #6b7280;">Ответственный:</span>
+                                <select wire:change="assignThread($event.target.value)"
+                                    style="font-size: 12px; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: #111827;">
+                                    <option value="" @selected(!($thread && $thread->assigned_to))>— не назначен —</option>
+                                    @foreach($this->curators as $cid => $cname)
+                                        <option value="{{ $cid }}" @selected($thread && (int) $thread->assigned_to === (int) $cid)>{{ $cname }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         </div>
                     </div>
 
