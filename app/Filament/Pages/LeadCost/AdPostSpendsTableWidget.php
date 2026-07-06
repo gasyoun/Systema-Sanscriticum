@@ -125,6 +125,11 @@ class AdPostSpendsTableWidget extends TableWidget
                     ->label('Комментарий')
                     ->rows(2)
                     ->columnSpanFull(),
+                Forms\Components\Toggle::make('is_locked')
+                    ->label('Заблокировать запись')
+                    ->helperText('Защита истории: заблокированную запись нельзя править/удалять (снять замок может только админ).')
+                    ->visible(fn (): bool => RoleGate::adminOnly())
+                    ->columnSpanFull(),
             ]),
         ];
     }
