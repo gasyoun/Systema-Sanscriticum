@@ -46,4 +46,14 @@ return [
      | (согласие/приватность), см. docs/support-subsystem-map.md.
      */
     'support_ai_include_telegram' => (bool) env('SUPPORT_AI_INCLUDE_TELEGRAM', false),
+
+    /*
+     | Авто-напоминания CRM: демоны, которые сами ПИШУТ людям по воронке
+     | (напоминание менеджеру о лидах с наступившим next_contact_at — команда
+     | leads:remind-followup). ВЫКЛЮЧЕН по умолчанию — чтобы отладить каденс и
+     | текст прежде, чем система начнёт слать сообщения. Включать осознанно:
+     | CRM_REMINDERS=true в .env. Пассивные уведомления (аудит, digest куратору
+     | о просрочках) этим флагом НЕ управляются — только исходящие людям пинги.
+     */
+    'crm_reminders' => (bool) env('CRM_REMINDERS', false),
 ];

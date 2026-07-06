@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TracksBlame;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 
 class Payment extends Model
 {
     use HasFactory;
+    use TracksBlame;
 
     protected $fillable = [
         'user_id',
@@ -101,6 +104,12 @@ class Payment extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    // Аудит-таймлайн: кто/что/когда правил платёж (append-only, PaymentAuditObserver).
+    public function audits(): HasMany
+    {
+        return $this->hasMany(PaymentAudit::class)->latest();
     }
 
     /** Преподаватель, получивший этот платёж напрямую на личный счёт (для teacher_personal). */

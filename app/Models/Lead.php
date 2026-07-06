@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TracksBlame;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Lead extends Model
 {
     use HasFactory;
+    use TracksBlame;
 
     /** Статусы воронки лида (единый источник для формы/колонки/фильтра). */
     public const STATUSES = [
@@ -38,6 +40,7 @@ class Lead extends Model
         'rejection_reason',
         'assigned_to',
         'next_contact_at',
+        'reminded_at',
 
         // Аналитика (UTM метки) - теперь они будут сохраняться
         'utm_source',
@@ -67,6 +70,7 @@ class Lead extends Model
         'is_promo_agreed' => 'boolean',
         'converted_at' => 'datetime',
         'next_contact_at' => 'date',
+        'reminded_at' => 'datetime',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)
@@ -91,6 +95,12 @@ class Lead extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(LeadNote::class)->latest();
+    }
+
+    // Аудит-таймлайн: кто/что/когда правил заявку (append-only, LeadAuditObserver).
+    public function audits(): HasMany
+    {
+        return $this->hasMany(LeadAudit::class)->latest();
     }
 
     public function markConverted(): void

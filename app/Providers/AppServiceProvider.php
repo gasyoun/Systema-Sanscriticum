@@ -6,10 +6,12 @@ use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\Course;
 use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\LandingPageObserver;
+use App\Observers\LeadAuditObserver;
 use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\ScheduleObserver;
@@ -72,6 +74,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Аудит финансовых операций (кто/что/когда правил платёж).
         Payment::observe(PaymentAuditObserver::class);
+
+        // Аудит CRM-воронки (кто/что/когда правил заявку).
+        Lead::observe(LeadAuditObserver::class);
 
         LandingPage::observe(LandingPageObserver::class);
 

@@ -83,12 +83,28 @@ class DirectAdSpendsTableWidget extends TableWidget
                     ->label('Источник')
                     ->placeholder('все')
                     ->toggleable(),
+                Tables\Columns\IconColumn::make('is_locked')
+                    ->label('Замок')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-lock-closed')
+                    ->falseIcon('heroicon-o-lock-open')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->tooltip(fn (DirectAdSpend $record): string => $record->is_locked
+                        ? 'Заблокировано от правки/удаления'
+                        : 'Открыто для правки')
+                    ->toggleable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->form($this->formSchema())
+                    // Заблокированную (is_locked) историю правит только админ.
+                    ->visible(fn (DirectAdSpend $record): bool => ! $record->is_locked || RoleGate::adminOnly())
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
                 Tables\Actions\DeleteAction::make()
+                    // Удаление истории расходов — только админ и только если запись
+                    // не заблокирована (soft-delete: физически не исчезает).
+                    ->visible(fn (DirectAdSpend $record): bool => RoleGate::adminOnly() && ! $record->is_locked)
                     ->after(fn () => $this->dispatch('leadCostUpdated')),
             ])
             ->emptyStateHeading('Пока нет месяцев')
@@ -142,6 +158,11 @@ class DirectAdSpendsTableWidget extends TableWidget
 
                         return self::money(((float) $get('specialist_salary') + (float) $get('ad_budget')) / $leads);
                     }),
+                Forms\Components\Toggle::make('is_locked')
+                    ->label('Заблокировать запись')
+                    ->helperText('Защита истории: заблокированную запись нельзя править/удалять (снять замок может только админ).')
+                    ->visible(fn (): bool => RoleGate::adminOnly())
+                    ->columnSpanFull(),
             ]),
         ];
     }

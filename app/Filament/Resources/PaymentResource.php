@@ -219,7 +219,11 @@ class PaymentResource extends Resource
                         ->options(self::salaryRecognitionMonthOptions())
                         ->searchable()
                         ->placeholder('Авто — по периодам блоков')
-                        ->helperText('Перекрывает авто-расчёт ЗП преподавателя: вся сумма попадёт в выбранный месяц. Пусто = авто-раскладка по оплаченным блокам.'),
+                        ->helperText('Перекрывает авто-расчёт ЗП преподавателя: вся сумма попадёт в выбранный месяц. Пусто = авто-раскладка по оплаченным блокам.')
+                        // Внутреннее ЗП-поле: менеджеру/бухгалтеру-ассистенту не видно
+                        // (скрытое поле не дегидрируется — существующее значение при
+                        // сохранении не затирается).
+                        ->visible(fn (): bool => RoleGate::adminOnly()),
                 ]),
 
                 // Прямой платёж на ЛИЧНЫЙ счёт преподавателя (минуя кассу школы).
@@ -228,6 +232,11 @@ class PaymentResource extends Resource
                 Forms\Components\Section::make('Прямой платёж преподавателю')
                     ->description('Деньги пришли напрямую на личный счёт преподавателя, минуя кассу школы. Зачтётся в его гонорар по номиналу.')
                     ->collapsed()
+                    // Салярные/выплатные поля (received_account, received_by_teacher_id,
+                    // payer_note) — только для админа. Менеджер-ассистент их не видит и
+                    // не редактирует (money-critical trust floor, H222 D4). Скрытая
+                    // секция не дегидрируется — существующие значения сохраняются.
+                    ->visible(fn (): bool => RoleGate::adminOnly())
                     ->schema([
                         Forms\Components\Select::make('received_account')
                             ->label('Куда пришли деньги')
@@ -496,13 +505,18 @@ class PaymentResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            PaymentResource\RelationManagers\AuditsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListPayments::route('/'),
+            // Полная страница правки платежа — несёт read-only таб «История
+            // изменений» (аудит). Создание по-прежнему через модалку списка.
+            'edit' => Pages\EditPayment::route('/{record}/edit'),
         ];
     }
 }
