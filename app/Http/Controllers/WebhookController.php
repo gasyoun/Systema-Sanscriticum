@@ -48,10 +48,17 @@ class WebhookController extends Controller
             $purpose = $payload['purpose'] ?? '';
             $statusFromBank = $payload['status'] ?? null;
 
+            // Способ оплаты (СБП/карта) — для точного расчёта комиссии эквайринга в
+            // «Юнит-экономике». Точное имя поля в payload Точки пока не подтверждено
+            // на реальном платеже (см. extractPaymentMethod): пробуем известные
+            // варианты, а нераспознанное логируем, чтобы подтвердить ключ и потом
+            // сузить эвристику. NULL = считаем такой платёж вилкой.
+            $paymentMethod = $this->extractPaymentMethod($payload);
+
             // Логируем только статус — без полного payload (там ФИО/суммы/атрибуты
             // покупателя, которые не должны копиться в файловых логах). Трассировка
             // по номеру заказа обеспечивается сообщениями ниже.
-            Log::info('Tochka webhook получен', ['status' => $statusFromBank]);
+            Log::info('Tochka webhook получен', ['status' => $statusFromBank, 'payment_method' => $paymentMethod]);
 
             preg_match('/Заказ №(\d+)/', $purpose, $matches);
             $paymentId = $matches[1] ?? null;
@@ -67,7 +74,7 @@ class WebhookController extends Controller
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
-            DB::transaction(function () use ($paymentId, $statusFromBank, $successStatuses, $failureStatuses) {
+            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $successStatuses, $failureStatuses) {
                 $payment = Payment::lockForUpdate()->find($paymentId);
 
                 if (! $payment) {
@@ -78,8 +85,17 @@ class WebhookController extends Controller
 
                 if (in_array($statusFromBank, $successStatuses, true)) {
                     if ($payment->status !== 'paid') {
-                        $payment->update(['status' => 'paid']);
+                        $update = ['status' => 'paid'];
+                        // Способ оплаты пишем только когда распознан — не затираем
+                        // уже сохранённый NULL'ом на возможных повторных вебхуках.
+                        if ($paymentMethod !== null) {
+                            $update['payment_method'] = $paymentMethod;
+                        }
+                        $payment->update($update);
                         Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
+                    } elseif ($paymentMethod !== null && $payment->payment_method === null) {
+                        // Платёж уже был отмечен оплаченным, но без способа — дозаполняем.
+                        $payment->update(['payment_method' => $paymentMethod]);
                     }
                 } elseif (in_array($statusFromBank, $failureStatuses, true)) {
                     if ($payment->status !== 'failed') {
@@ -98,5 +114,44 @@ class WebhookController extends Controller
 
             return response('Server error', 500);
         }
+    }
+
+    /**
+     * Нормализованный способ оплаты из payload Точки: 'sbp' | 'card' | null.
+     *
+     * ВАЖНО: точное имя поля в вебхуке Точки на реальном платеже НЕ подтверждено.
+     * Пробуем набор вероятных ключей (paymentType/paymentMode/payment_type/type);
+     * если способ есть, но не распознан — логируем сырое значение (без PII), чтобы
+     * подтвердить ключ по первому же боевому платежу и затем сузить эвристику.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function extractPaymentMethod(array $payload): ?string
+    {
+        $raw = null;
+        foreach (['paymentType', 'paymentMode', 'payment_type', 'payment_method', 'type'] as $k) {
+            if (! empty($payload[$k]) && is_string($payload[$k])) {
+                $raw = $payload[$k];
+                break;
+            }
+        }
+
+        if ($raw === null) {
+            return null;
+        }
+
+        $v = mb_strtolower(trim($raw));
+
+        if (str_contains($v, 'sbp') || str_contains($v, 'qr') || str_contains($v, 'fps')) {
+            return 'sbp';
+        }
+        if (str_contains($v, 'card') || str_contains($v, 'карт')) {
+            return 'card';
+        }
+
+        // Способ пришёл, но не распознан — зафиксировать сырое значение для настройки.
+        Log::info('Tochka webhook: нераспознанный способ оплаты', ['raw' => $v]);
+
+        return null;
     }
 }
