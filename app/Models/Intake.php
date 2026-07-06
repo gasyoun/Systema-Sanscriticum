@@ -37,6 +37,10 @@ class Intake extends Model
         'opens_at' => 'date',
     ];
 
+    protected $attributes = [
+        'status' => 'planning',
+    ];
+
     /** Заявки в этот набор. */
     public function waitlistEntries(): HasMany
     {
