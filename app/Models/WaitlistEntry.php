@@ -201,6 +201,6 @@ class WaitlistEntry extends Model
 
     public function statusLabel(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return self::STATUSES[$this->status] ?? ($this->status ?? '—');
     }
 }
