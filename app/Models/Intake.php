@@ -56,6 +56,6 @@ class Intake extends Model
     /** Человекочитаемая подпись статуса. */
     public function statusLabel(): string
     {
-        return self::STATUSES[$this->status] ?? $this->status;
+        return self::STATUSES[$this->status] ?? ($this->status ?? '—');
     }
 }
