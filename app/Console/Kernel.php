@@ -54,6 +54,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
 
+        // Еженедельный автонапоминание тем же не заходившим: Telegram → VK → SMS
+        // → email (см. SendCabinetInvites). Батч 50/неделю — не спам-флаги, не
+        // блокировать очередь; --resend не передаём, каждый получает ровно один
+        // повторный призыв, пока не пришёл (cabinet_invite_sent_at дедупит).
+        $schedule->command('students:send-login-invites --send --limit=50')
+            ->weeklyOn(1, '10:00') // понедельник 10:00 МСК, после дайджеста
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('send-login-invites');
+
         // Сгорание (decay) тратимой праны у давно неактивных студентов — еженедельно,
         // в ночное окно. Команда сама пропускает прогон, если decay выключен
         // (config prana.decay.enabled=false, дефолт), так что повесить безопасно:

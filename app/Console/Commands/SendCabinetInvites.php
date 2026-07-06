@@ -3,16 +3,22 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Services\Messaging\SmsRuChannel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Password;
 
 /**
- * Повторное приглашение в личный кабинет для «спящих» оплативших студентов:
- * те, кто покупал курсы, но НИ РАЗУ не заходил (`last_login_at` пуст). Исходное
- * письмо с паролем многие не заметили — часть ушла в спам.
+ * Повторное приглашение в личный кабинет для студентов с выданным доступом,
+ * которые НИ РАЗУ не заходили (`login_count = 0`). Популяция ровно та же, что
+ * считает еженедельная сводка (см. OnboardingWeeklyDigest): «доступ выслан»
+ * по штампу `[Доступ отправлен` в note + реальный email — НЕ только платившие,
+ * иначе список расходится с тем, что куратор видит в дайджесте.
  *
- * Канал: предпочитаем Telegram (если привязан) — он надёжнее email, который и
- * попадал в спам. Иначе — письмо со ссылкой на вход (сброс пароля).
+ * Исходное письмо с паролем многие не заметили — часть ушла в спам.
+ *
+ * Канал (первый доступный побеждает, дальше не дублируем): Telegram → VK → SMS
+ * → email (сброс пароля). Telegram/VK/SMS надёжнее email, который чаще уходит
+ * в спам — поэтому email на последнем месте.
  *
  * REPORT-ONLY по умолчанию. Рассылка — только с --send, батчами (--limit),
  * чтобы не словить спам-флаги и не блокировать очередь.
@@ -28,7 +34,7 @@ class SendCabinetInvites extends Command
         {--limit=200 : Максимум приглашений за один прогон (батч)}
         {--resend : Включить тех, кому приглашение уже отправляли}';
 
-    protected $description = 'Пригласить в кабинет спящих оплативших студентов (никогда не логинились)';
+    protected $description = 'Пригласить в кабинет студентов с выданным доступом, которые никогда не логинились';
 
     public function handle(): int
     {
@@ -36,11 +42,15 @@ class SendCabinetInvites extends Command
         $limit = max(1, (int) $this->option('limit'));
         $resend = (bool) $this->option('resend');
 
+        // Та же популяция, что и в OnboardingWeeklyDigest: «доступ выслан» +
+        // ни разу не заходил (login_count=0), а не только платившие.
         $query = User::query()
-            ->whereNull('last_login_at')                       // ни разу не заходил
+            ->where('is_admin', false)
+            ->where('note', 'like', '%[Доступ отправлен%')
+            ->where('login_count', 0)
+            ->whereNotNull('email')
             ->where('email', '<>', '')
-            ->where('email', 'not like', '%@no-email.com')      // реальный адрес
-            ->whereHas('payments', fn ($q) => $q->paid());      // покупал курсы
+            ->where('email', 'not like', '%@no-email.com');      // реальный адрес
 
         if (! $resend) {
             $query->whereNull('cabinet_invite_sent_at');        // ещё не приглашали
@@ -49,16 +59,19 @@ class SendCabinetInvites extends Command
         $total = (clone $query)->count();
         $batch = $query->orderBy('id')->limit($limit)->get();
 
-        $withTg = $batch->whereNotNull('telegram_id')->count();
-        $withEmail = $batch->count() - $withTg;
+        $counts = $batch->reduce(function (array $acc, User $u) {
+            $acc[$this->pickChannel($u)]++;
 
-        $this->info("Спящих оплативших (подходящих): {$total}. В этом батче: {$batch->count()} (TG: {$withTg}, email: {$withEmail}).");
+            return $acc;
+        }, ['telegram' => 0, 'vk' => 0, 'sms' => 0, 'email' => 0]);
+
+        $this->info("Не заходивших с выданным доступом: {$total}. В этом батче: {$batch->count()} "
+            ."(TG: {$counts['telegram']}, VK: {$counts['vk']}, SMS: {$counts['sms']}, email: {$counts['email']}).");
 
         if (! $send) {
             $this->comment('Сухой прогон. Запустите с --send, чтобы разослать (батч ограничен --limit).');
             foreach ($batch->take(10) as $u) {
-                $ch = $u->telegram_id ? 'TG' : 'email';
-                $this->line("  #{$u->id} {$u->email} → {$ch}");
+                $this->line("  #{$u->id} {$u->email} → {$this->pickChannel($u)}");
             }
 
             return self::SUCCESS;
@@ -68,11 +81,17 @@ class SendCabinetInvites extends Command
         $failed = 0;
         foreach ($batch as $user) {
             try {
-                if ($user->telegram_id) {
-                    $this->sendViaTelegram($user);
-                } else {
-                    Password::sendResetLink(['email' => $user->email]);
+                $ok = match ($this->pickChannel($user)) {
+                    'telegram' => $this->sendViaTelegram($user),
+                    'vk' => $user->sendVkMessage($this->messageText($user)),
+                    'sms' => $user->sendSmsMessage($this->smsText($user)),
+                    default => Password::sendResetLink(['email' => $user->email]) === Password::RESET_LINK_SENT,
+                };
+
+                if (! $ok) {
+                    throw new \RuntimeException('канал отказал (см. лог)');
                 }
+
                 $user->forceFill(['cabinet_invite_sent_at' => now()])->save();
                 $sent++;
             } catch (\Throwable $e) {
@@ -81,24 +100,57 @@ class SendCabinetInvites extends Command
             }
         }
 
-        $this->info("Отправлено: {$sent}. Ошибок: {$failed}. Осталось спящих: ".max(0, $total - $sent).'.');
+        $this->info("Отправлено: {$sent}. Ошибок: {$failed}. Осталось: ".max(0, $total - $sent).'.');
 
         return self::SUCCESS;
     }
 
-    /**
-     * Ссылка для входа через Telegram: генерим токен сброса и шлём дружелюбное
-     * сообщение со ссылкой — надёжнее письма (которое уходит в спам).
-     */
-    private function sendViaTelegram(User $user): void
+    /** Приоритет: Telegram → VK → SMS (если настроен) → email. */
+    private function pickChannel(User $user): string
     {
-        $token = Password::broker()->createToken($user);
-        $url = route('password.reset', $token).'?email='.urlencode($user->email);
+        if ($user->telegram_id) {
+            return 'telegram';
+        }
+        if ($user->vk_id) {
+            return 'vk';
+        }
+        if ($user->phone && app(SmsRuChannel::class)->isConfigured()) {
+            return 'sms';
+        }
 
-        $text = "🙏 Вы покупали курсы в Обществе ревнителей санскрита, но ещё не заходили в личный кабинет.\n\n"
+        return 'email';
+    }
+
+    private function sendViaTelegram(User $user): bool
+    {
+        return $user->sendTelegramMessage($this->messageText($user));
+    }
+
+    /**
+     * Ссылка для входа: генерим токен сброса и шлём дружелюбное сообщение со
+     * ссылкой — надёжнее письма (которое уходит в спам).
+     */
+    private function messageText(User $user): string
+    {
+        $url = $this->resetUrl($user);
+
+        return "🙏 Вам открыт доступ в личный кабинет Общества ревнителей санскрита, но вы ещё не заходили.\n\n"
             ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке (задайте пароль):\n{$url}\n\n"
             .'Ссылка одноразовая. Если возникнут вопросы — просто ответьте на это сообщение.';
+    }
 
-        $user->sendTelegramMessage($text);
+    /** SMS короче — без эмодзи/форматирования, тариф идёт по длине сообщения. */
+    private function smsText(User $user): string
+    {
+        $url = $this->resetUrl($user);
+
+        return "Общество ревнителей санскрита: вам открыт доступ в личный кабинет. Войдите по ссылке (задайте пароль): {$url}";
+    }
+
+    private function resetUrl(User $user): string
+    {
+        $token = Password::broker()->createToken($user);
+
+        return route('password.reset', $token).'?email='.urlencode($user->email);
     }
 }
