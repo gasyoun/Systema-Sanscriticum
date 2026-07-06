@@ -207,6 +207,129 @@ class TelegramHarvestSyncTest extends TestCase
         }
     }
 
+    public function test_live_sync_paginates_history_past_the_100_message_api_clamp(): void
+    {
+        config([
+            'services.telegram_harvest.enabled' => true,
+            'services.telegram_support.enabled' => true,
+            'services.telegram_harvest.history_limit' => 250,
+        ]);
+
+        // Telegram клампит messages.getHistory до 100 за вызов — один вызов на
+        // пира (старое поведение) молча резал бэкфилл после rewind до ~100.
+        $client = new class
+        {
+            /** @var array<int, array<string, mixed>> */
+            public array $historyCalls = [];
+
+            public object $messages;
+
+            public function __construct()
+            {
+                $this->messages = new class($this)
+                {
+                    public function __construct(private object $client) {}
+
+                    /** @param array<string, mixed> $params @return array<string, mixed> */
+                    public function getHistory(array $params): array
+                    {
+                        return $this->client->history($params);
+                    }
+                };
+            }
+
+            /** @return array<string, mixed> */
+            public function getInfo(int|string $peer): array
+            {
+                return ['_' => 'channel', 'id' => 100, 'title' => 'Sanskrit', 'username' => 'sanskrit'];
+            }
+
+            /**
+             * 250 сообщений (id 1..250), newest-first, честные offset_id/min_id/limit.
+             *
+             * @param  array<string, mixed>  $params
+             * @return array<string, mixed>
+             */
+            public function history(array $params): array
+            {
+                $this->historyCalls[] = $params;
+                $start = $params['offset_id'] > 0 ? $params['offset_id'] - 1 : 250;
+                $out = [];
+                for ($id = $start; $id > $params['min_id'] && count($out) < $params['limit']; $id--) {
+                    $out[] = ['id' => $id, 'date' => 1751360400, 'message' => 'oṃ '.$id];
+                }
+
+                return ['messages' => $out, 'users' => []];
+            }
+        };
+
+        $factory = new class($client) extends MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(MadelineClientFactory::class, $factory);
+
+        $result = app(TelegramHarvestSyncService::class)->sync(['@sanskrit']);
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(250, $result['stored']);
+
+        // Пейджинг: 100 + 100 + 50, лимит вызова никогда не выше API-клампа.
+        $this->assertCount(3, $client->historyCalls);
+        $this->assertSame([0, 151, 51], array_column($client->historyCalls, 'offset_id'));
+        $this->assertLessThanOrEqual(100, max(array_column($client->historyCalls, 'limit')));
+
+        $harvester = TelegramSupportAccount::where('name', 'harvester')->firstOrFail();
+        $this->assertSame(250, $harvester->sync_state['peers']['100']['last_message_id']);
+
+        // Инкрементальный повтор: курсор на вершине → min_id отдаёт пусто.
+        $again = app(TelegramHarvestSyncService::class)->sync(['@sanskrit']);
+        $this->assertSame(0, $again['harvested']);
+        $this->assertSame(0, $again['stored']);
+    }
+
+    public function test_rewind_command_lists_and_winds_back_cursors(): void
+    {
+        TelegramSupportAccount::create([
+            'name' => 'harvester',
+            'is_enabled' => true,
+            'sync_state' => ['peers' => [
+                '100' => ['last_message_id' => 250, 'last_sent_at' => '2026-07-01T10:00:00+03:00'],
+                '200' => ['last_message_id' => 40, 'last_sent_at' => null],
+            ]],
+        ]);
+        $cursor = fn (string $key): int => (int) TelegramSupportAccount::where('name', 'harvester')
+            ->firstOrFail()->sync_state['peers'][$key]['last_message_id'];
+
+        // Без опций — только листинг, ничего не мутирует.
+        $this->artisan('telegram-harvest:rewind')->assertExitCode(0);
+        $this->assertSame(250, $cursor('100'));
+
+        // Отмотка одного пира к 0; второй не тронут.
+        $this->artisan('telegram-harvest:rewind', ['--peer' => ['100']])->assertExitCode(0);
+        $this->assertSame(0, $cursor('100'));
+        $this->assertSame(40, $cursor('200'));
+
+        // --to выше текущего курсора НЕ двигает его вперёд (иначе пропуск
+        // несохранённых сообщений — режим отказа «199 сгоревших»).
+        $this->artisan('telegram-harvest:rewind', ['--peer' => ['200'], '--to' => '90'])->assertExitCode(0);
+        $this->assertSame(40, $cursor('200'));
+
+        // --all мотает все оставшиеся ненулевые курсоры.
+        $this->artisan('telegram-harvest:rewind', ['--all' => true])->assertExitCode(0);
+        $this->assertSame(0, $cursor('200'));
+    }
+
     public function test_discover_peers_uses_get_dialog_ids_and_resolves_info(): void
     {
         // Регресс на реальный MadelineProto: верхнеуровневого getDialogs() нет,
