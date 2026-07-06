@@ -232,6 +232,11 @@ class PaymentResource extends Resource
                 Forms\Components\Section::make('Прямой платёж преподавателю')
                     ->description('Деньги пришли напрямую на личный счёт преподавателя, минуя кассу школы. Зачтётся в его гонорар по номиналу.')
                     ->collapsed()
+                    // Салярные/выплатные поля (received_account, received_by_teacher_id,
+                    // payer_note) — только для админа. Менеджер-ассистент их не видит и
+                    // не редактирует (money-critical trust floor, H222 D4). Скрытая
+                    // секция не дегидрируется — существующие значения сохраняются.
+                    ->visible(fn (): bool => RoleGate::adminOnly())
                     ->schema([
                         Forms\Components\Select::make('received_account')
                             ->label('Куда пришли деньги')
