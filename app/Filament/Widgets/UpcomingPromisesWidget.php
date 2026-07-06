@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Filament\Pages\Debtors;
+use App\Jobs\SendTelegramMessageJob;
 use App\Models\PaymentPromise;
+use App\Models\PromiseEvent;
+use App\Services\CuratorNotifier;
+use App\Support\RoleGate;
+use App\Support\Roles;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Дашборд-виджет «Скоро срок»: показывает обещания оплаты, у которых
