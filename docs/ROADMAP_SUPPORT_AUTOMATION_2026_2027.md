@@ -123,7 +123,7 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
 - **Переиспользуется:** [`DebtorsReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/DebtorsReport.php) (весь расчёт), страница [`Debtors`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Debtors.php), Telegram-webhook `/api/telegram/webhook`, `User::sendTelegramMessage()`.
 - **Agent-шаги:** (1) обработчик команды в webhook-контроллере: `/долги [группа]` → сводка из `DebtorsReport` (счёт должников, сумма, топ-5) с ссылкой на полную страницу `/admin/debtors`; (2) авторизация: только `telegram_id` админов/кураторов (whitelist по ролям), чужим — молчание; (3) `/группа` заготовка под S6 (заглушка «скоро»); (4) тесты webhook-команды (по образцу `tests/Feature/Webhooks/`).
 - **Метрика успеха:** вопросы категории G в штабном чате −30 % за квартал после включения; команда используется ≥ 20 раз/мес (лог).
-- **Зависимость:** прод-БД (локально расчёты проверяются на сиде). Хэндофф: **H248**.
+- **Зависимость:** прод-БД (локально расчёты проверяются на сиде). Хэндофф: **H250**.
 
 ---
 
@@ -262,7 +262,7 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
 
 ## 10. Провязка
 
-- Хэндоффы: **H247** (S3, SupportAnswerSuggester v1), **H248** (S4, `/долги`-команда) —
+- Хэндоффы: **H247** (S3, SupportAnswerSuggester v1), **H250** (S4, `/долги`-команда) —
   [реестр](https://github.com/gasyoun/Uprava/blob/main/handoffs/README.md).
 - Топ-3 Q3-тикета отражены в [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md) (Tier 0, Systema).
 - Статус-журнал: [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.ai_state.md) § Now-SUPPORT-AUTO.
