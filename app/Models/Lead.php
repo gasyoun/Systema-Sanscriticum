@@ -66,6 +66,7 @@ class Lead extends Model
         'is_promo_agreed' => 'boolean',
         'converted_at' => 'datetime',
         'next_contact_at' => 'date',
+        'reminded_at' => 'datetime',
     ];
 
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)
