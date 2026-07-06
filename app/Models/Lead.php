@@ -91,6 +91,12 @@ class Lead extends Model
         return $this->hasMany(LeadNote::class)->latest();
     }
 
+    // Аудит-таймлайн: кто/что/когда правил заявку (append-only, LeadAuditObserver).
+    public function audits(): HasMany
+    {
+        return $this->hasMany(LeadAudit::class)->latest();
+    }
+
     public function markConverted(): void
     {
         if (is_null($this->converted_at)) {
