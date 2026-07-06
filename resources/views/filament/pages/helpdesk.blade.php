@@ -525,12 +525,22 @@
                     <span class="reply-channel-badge {{ $replyChannel['key'] }}">{{ $replyChannel['emoji'] }} {{ $replyChannel['label'] }}</span>
                 </div>
 
-                {{-- D5 (заготовка): выпадающий список шаблонов быстрых ответов.
-                     Ждёт модель MessageTemplate из H221 D2 (category='support'). Когда
-                     она появится — здесь встанет dropdown, подставляющий текст в
-                     newMessage для правки перед отправкой. Пока модели нет — не рендерим. --}}
-                @if(class_exists(\App\Models\MessageTemplate::class))
-                    {{-- TODO(H221 D2): canned-reply dropdown → вставка в newMessage. --}}
+                {{-- D5 (H223): быстрые ответы — шаблоны поддержки из библиотеки H221
+                     (за флагом crm_cockpit). Подставляют текст в поле ответа для правки
+                     перед отправкой; ничего не шлют сами. --}}
+                @php $supportTemplates = $this->supportTemplates; @endphp
+                @if(! empty($supportTemplates))
+                    <div class="reply-channel" style="padding-bottom: 4px;">
+                        <span>Быстрый ответ:</span>
+                        <select
+                            wire:change="insertCannedReply($event.target.value); $event.target.value=''"
+                            style="font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: #111827; max-width: 260px;">
+                            <option value="">— выбрать шаблон —</option>
+                            @foreach($supportTemplates as $tid => $ttitle)
+                                <option value="{{ $tid }}">{{ $ttitle }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 @endif
 
                 {{-- Ввод --}}
