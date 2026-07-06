@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\StudentUnitEconomics;
 use App\Models\AdPostSpend;
 use App\Models\Course;
 use App\Models\DirectAdSpend;
