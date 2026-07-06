@@ -158,7 +158,7 @@ class ImportWaitlistSheet extends Command
 
     /**
      * @param  array<int,string>  $rawHeader
-     * @return array<string,int>  канонич. поле => индекс колонки
+     * @return array<string,int> канонич. поле => индекс колонки
      */
     private function mapHeader(array $rawHeader): array
     {

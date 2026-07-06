@@ -32,7 +32,7 @@ class ImportWaitlistSheetTest extends TestCase
         $student = User::factory()->create(['telegram_username' => 'anna_i']);
         Intake::create(['label' => 'Июль 2026', 'target_year' => 2026, 'target_month' => 7]);
 
-        $csv = $this->writeCsv(<<<CSV
+        $csv = $this->writeCsv(<<<'CSV'
         Имя,Никнейм в тукане,Набор,Время и дни,Уровень,Примечания
         Анна Иванова,@anna_i,Июль 2026,Суббота 9:00,Новичок,просила напомнить
         Пётр Смирнов,petr_s,Июль 2026,Воскресенье,Продолжающий,возврат
@@ -61,7 +61,7 @@ class ImportWaitlistSheetTest extends TestCase
     {
         Intake::create(['label' => 'Июль 2026', 'target_year' => 2026, 'target_month' => 7]);
 
-        $csv = $this->writeCsv(<<<CSV
+        $csv = $this->writeCsv(<<<'CSV'
         Имя,Никнейм в тукане,Набор,Уровень
         Анна Иванова,@anna_i,Июль 2026,Новичок
         CSV);
@@ -77,7 +77,7 @@ class ImportWaitlistSheetTest extends TestCase
 
     public function test_column_order_is_resolved_by_header_names(): void
     {
-        $csv = $this->writeCsv(<<<CSV
+        $csv = $this->writeCsv(<<<'CSV'
         Уровень,Примечания,Имя,Никнейм в тукане
         Продолжающий,заметка,Смешанный Порядок,@mixed
         CSV);
