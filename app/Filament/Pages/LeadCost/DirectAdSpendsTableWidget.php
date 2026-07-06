@@ -83,6 +83,17 @@ class DirectAdSpendsTableWidget extends TableWidget
                     ->label('Источник')
                     ->placeholder('все')
                     ->toggleable(),
+                Tables\Columns\IconColumn::make('is_locked')
+                    ->label('Замок')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-lock-closed')
+                    ->falseIcon('heroicon-o-lock-open')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->tooltip(fn (DirectAdSpend $record): string => $record->is_locked
+                        ? 'Заблокировано от правки/удаления'
+                        : 'Открыто для правки')
+                    ->toggleable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
