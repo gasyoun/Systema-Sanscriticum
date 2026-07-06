@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\LocksMadelineSession;
 use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Track B harvester driver. Reuses the ONE shared MadelineProto session (the
@@ -13,6 +15,8 @@ use Illuminate\Support\Facades\File;
  */
 class SyncTelegramHarvest extends Command
 {
+    use LocksMadelineSession;
+
     protected $signature = 'telegram-harvest:sync
         {--payload= : JSON file of pre-normalized harvest records (local import, no MadelineProto needed)}
         {--peer=* : Override the configured peer list (repeatable)}';
@@ -40,7 +44,16 @@ class SyncTelegramHarvest extends Command
             $result = $harvest->ingestNormalized($payload);
             $result['status'] ??= 'ok';
         } else {
-            $result = $harvest->sync($this->option('peer'));
+            // Live path opens the shared MadelineProto session — serialise it
+            // against telegram-support:sync / :peers (see LocksMadelineSession).
+            $result = $this->withMadelineSessionLock(fn () => $harvest->sync($this->option('peer')));
+
+            if ($result === null) {
+                Log::warning('Telegram harvest skipped: MadelineProto session busy.');
+                $this->warn('Telegram harvest: session_busy (another MadelineProto command holds the session).');
+
+                return self::SUCCESS;
+            }
         }
 
         $line = 'Telegram harvest: '.$result['status']

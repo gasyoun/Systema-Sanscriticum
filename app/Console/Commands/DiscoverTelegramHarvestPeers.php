@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\LocksMadelineSession;
 use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Console\Command;
 
@@ -16,13 +17,23 @@ use Illuminate\Console\Command;
  */
 class DiscoverTelegramHarvestPeers extends Command
 {
+    use LocksMadelineSession;
+
     protected $signature = 'telegram-harvest:peers';
 
     protected $description = 'List the account dialogs (id | username | type | access_level | noforwards) for the Track B peer list. Read-only.';
 
     public function handle(TelegramHarvestSyncService $harvest): int
     {
-        $peers = $harvest->discoverPeers();
+        // Read-only, but still opens the shared session — serialise it against
+        // the sync commands (see LocksMadelineSession).
+        $peers = $this->withMadelineSessionLock(fn () => $harvest->discoverPeers());
+
+        if ($peers === null) {
+            $this->warn('Telegram harvest peers: session_busy (another MadelineProto command holds the session). Retry shortly.');
+
+            return self::SUCCESS;
+        }
 
         if ($peers === []) {
             $this->warn('No peers discovered (MadelineProto not configured on this host, or no dialogs).');

@@ -149,6 +149,11 @@ class TelegramHarvestSyncService
         $stored = 0;
         $skipped = 0;
         $failed = 0;
+        // Only messages we actually persisted (stored) or safely already have
+        // (skipped dupe) advance the cursor. A failed store must NOT move it, or
+        // the next run would skip past a message we never saved — exactly how a
+        // broken store path once burned 199 messages on prod.
+        $advanceable = [];
 
         foreach ($messages as $message) {
             $chatId = (int) ($message['telegram_chat_id'] ?? 0);
@@ -162,6 +167,7 @@ class TelegramHarvestSyncService
             if (($message['access_level'] ?? null) === 'dm'
                 && $this->supportAlreadyIngested($chatId, $messageId)) {
                 $skipped++;
+                $advanceable[] = $message;
 
                 continue;
             }
@@ -171,15 +177,17 @@ class TelegramHarvestSyncService
                 $message['source_account'] = $account->name;
                 $writer->write($message);
                 $stored++;
+                $advanceable[] = $message;
             } catch (Throwable $e) {
                 // Dead-letter lane (clean-room of tracker.py failed_messages): a
-                // single bad record must not abort the whole harvest.
+                // single bad record must not abort the whole harvest. Deliberately
+                // left out of $advanceable so a retry re-fetches it.
                 $this->recordFailure($message, $e);
                 $failed++;
             }
         }
 
-        $this->advanceCursors($account, $messages);
+        $this->advanceCursors($account, $advanceable);
 
         Log::info('Telegram harvest finished', [
             'harvested' => count($messages),
