@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 02-07-2026_
+_Created: 02-07-2026 · Last updated: 06-07-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -22,15 +22,24 @@ _Created: 02-07-2026 · Last updated: 02-07-2026_
 ## Что делает скрипт (по шагам)
 
 1. **Предполёт:** каталог приложения, ветка `main`, чистое рабочее дерево.
+   Исключение — `public/docs/*.pdf` (оферта/политика/согласие, которые заменяют
+   на сервере мимо git): их скрипт сам стэшит на время обновления кода и
+   возвращает после (`git stash pop`); конфликт при возврате = стоп с
+   инструкцией. Любая другая грязь — по-прежнему отказ деплоить.
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
 3. `composer install --no-dev -o` + `npm ci && npm run build`
    (`public/build` в git не хранится — фронт собирается на сервере).
 4. (с флагом `--down`) `php artisan down` на время миграций.
-5. `php artisan optimize:clear` → `php artisan migrate --force`.
+5. `php artisan optimize:clear` + `filament:optimize-clear` (кеш
+   Filament-компонентов `optimize:clear` не трогает — без явного сброса новый
+   виджет/страница падает `ComponentNotFoundException` на update-запросе)
+   → `php artisan migrate --force`.
 6. Прогрев: `php artisan optimize` (config/route/view) + `filament:optimize`.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживёт апгрейд 8.1 → 8.3).
-8. `php artisan horizon:terminate` — supervisor поднимет Horizon на свежем коде.
+8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
+   не циклит (PID-ы не меняются, старый код продолжает крутиться); фолбэк на
+   terminate только там, где supervisor отсутствует.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
 
