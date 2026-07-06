@@ -32,6 +32,7 @@ class Schedule extends Model
         'group_id',
         'course_id',
         'reminded_at',
+        'group_link_posted_at',
         'absent_notified_at',
         'zoom_meeting_id',
         'zoom_occurrence_uuid',
@@ -45,6 +46,7 @@ class Schedule extends Model
         'start' => 'datetime',
         'end' => 'datetime',
         'reminded_at' => 'datetime',
+        'group_link_posted_at' => 'datetime',
         'absent_notified_at' => 'datetime',
         'zoom_recording_received_at' => 'datetime',
     ];
@@ -55,9 +57,11 @@ class Schedule extends Model
         // чтобы classes:remind-upcoming напомнил студентам заново к новому времени.
         static::updating(function (self $schedule): void {
             if ($schedule->isDirty('start')) {
-                // Перенос времени — напоминание и уведомление о пропуске шлём заново.
+                // Перенос времени — напоминание, уведомление о пропуске и пост
+                // ссылки в чат группы шлём заново к новому времени.
                 $schedule->reminded_at = null;
                 $schedule->absent_notified_at = null;
+                $schedule->group_link_posted_at = null;
             }
         });
     }

@@ -64,6 +64,9 @@ class MarketingSetting extends Model
         'class_reminder_lead_minutes',
         'absent_notify_enabled',
         'absent_notify_delay_minutes',
+        // Авто-постинг ссылки Zoom в чат группы за N минут до занятия (classes:post-group-link).
+        'class_link_autopost_enabled',
+        'class_link_autopost_lead_minutes',
         'debt_reminders_enabled',
         'debt_reminder_lead_days',
         'debt_reminder_cadence_days',
@@ -102,6 +105,8 @@ class MarketingSetting extends Model
         'class_reminder_lead_minutes' => 'integer',
         'absent_notify_enabled' => 'boolean',
         'absent_notify_delay_minutes' => 'integer',
+        'class_link_autopost_enabled' => 'boolean',
+        'class_link_autopost_lead_minutes' => 'integer',
         'debt_reminders_enabled' => 'boolean',
         'debt_reminder_lead_days' => 'integer',
         'debt_reminder_cadence_days' => 'integer',

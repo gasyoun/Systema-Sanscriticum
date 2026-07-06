@@ -59,6 +59,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('remind-upcoming-classes');
 
+        // Авто-постинг ссылки на занятие в Telegram-чат группы (за ~15 мин до
+        // старта, ОДНО сообщение на группу — в отличие от remind-upcoming, что
+        // шлёт персональные ЛС). Гейт (class_link_autopost_enabled), окно и дедуп
+        // (group_link_posted_at) — внутри команды; без telegram_chat_id у группы — no-op.
+        $schedule->command('classes:post-group-link')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('post-class-link-to-group');
+
         // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК

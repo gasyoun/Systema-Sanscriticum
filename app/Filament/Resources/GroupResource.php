@@ -37,6 +37,11 @@ class GroupResource extends Resource
                             ->required()
                             ->label('Название группы'),
 
+                        Forms\Components\TextInput::make('telegram_chat_id')
+                            ->label('Telegram chat_id группы')
+                            ->helperText('ID чата группы в Telegram (напр. -1001234567890). Нужен для авто-постинга ссылки на занятие перед стартом. Пусто — не постим.')
+                            ->maxLength(64),
+
                         // --- НОВЫЙ БЛОК: ИНТЕРАКТИВНЫЙ СПИСОК УЧЕНИКОВ ---
                         Forms\Components\Select::make('users')
                             ->relationship('users', 'name') // Автоматически подтягивает и сохраняет связи
