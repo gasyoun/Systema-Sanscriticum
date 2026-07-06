@@ -30,7 +30,7 @@ class BlameStampingTest extends TestCase
         $admin = User::factory()->create();
         $this->actingAs($admin);
 
-        $lead = Lead::create(['name' => 'X', 'status' => 'new']);
+        $lead = Lead::create(['name' => 'X', 'contact' => '+70000000000', 'status' => 'new']);
 
         $this->assertSame($admin->id, $lead->created_by_user_id);
         $this->assertSame($admin->id, $lead->updated_by_user_id);
@@ -43,7 +43,7 @@ class BlameStampingTest extends TestCase
         $editor = User::factory()->create();
 
         $this->actingAs($creator);
-        $lead = Lead::create(['name' => 'X', 'status' => 'new']);
+        $lead = Lead::create(['name' => 'X', 'contact' => '+70000000000', 'status' => 'new']);
 
         $this->actingAs($editor);
         $lead->update(['status' => 'in_work']);
@@ -56,7 +56,7 @@ class BlameStampingTest extends TestCase
     public function system_context_leaves_blame_null(): void
     {
         // Без actingAs() — эмуляция webhook/CLI/импорта.
-        $lead = Lead::create(['name' => 'X', 'status' => 'new']);
+        $lead = Lead::create(['name' => 'X', 'contact' => '+70000000000', 'status' => 'new']);
 
         $this->assertNull($lead->created_by_user_id);
         $this->assertNull($lead->updated_by_user_id);
