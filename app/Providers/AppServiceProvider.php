@@ -75,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
         // Аудит финансовых операций (кто/что/когда правил платёж).
         Payment::observe(PaymentAuditObserver::class);
 
+        // Аудит CRM-воронки (кто/что/когда правил заявку).
+        Lead::observe(LeadAuditObserver::class);
+
         LandingPage::observe(LandingPageObserver::class);
 
         // Сброс sitemap.xml-кэша при изменении контента, который туда входит.
