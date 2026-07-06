@@ -24,6 +24,8 @@ class HelpdeskAssignmentTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Рендер Filament-страницы шифрует данные Livewire — нужен ключ приложения.
+        config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
         config(['features.crm_cockpit' => true]);
         Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
