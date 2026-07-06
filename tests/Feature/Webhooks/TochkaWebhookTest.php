@@ -142,4 +142,54 @@ PEM;
         $this->assertSame('paid', $payment->fresh()->status);
         $this->assertSame(1, $user->fresh()->groups()->count());
     }
+
+    /**
+     * Способ оплаты из поля `paymentType` (подтверждено докой Точки для события
+     * acquiringInternetPayment: card/sbp/dolyame) сохраняется в
+     * payments.payment_method — источник факта для «Юнит-экономики». Проверяем
+     * все три значения без боевого платежа.
+     *
+     * @test
+     *
+     * @dataProvider paymentTypeProvider
+     */
+    public function payment_type_from_webhook_is_persisted(string $paymentType, string $expected): void
+    {
+        $this->useTestKey();
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::create(['name' => 'G']);
+        $course->groups()->attach($group->id);
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $jwt = $this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'paid',
+            'paymentType' => $paymentType,
+        ]);
+
+        $this->postJwt($jwt)->assertOk();
+
+        $fresh = $payment->fresh();
+        $this->assertSame('paid', $fresh->status);
+        $this->assertSame($expected, $fresh->payment_method);
+    }
+
+    /** @return array<string, array{0: string, 1: string}> */
+    public static function paymentTypeProvider(): array
+    {
+        return [
+            'card' => ['card', 'card'],
+            'sbp' => ['sbp', 'sbp'],
+            'dolyame (рассрочка)' => ['dolyame', 'dolyame'],
+        ];
+    }
 }
