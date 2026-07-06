@@ -63,7 +63,7 @@ class Helpdesk extends Page
     public function loadUsersList()
     {
         // Диалоги — веб-чат ИЛИ импортированный TG-support, сведённый на пользователя.
-        $this->usersWithChats = User::query()
+        $query = User::query()
             ->where(function ($query): void {
                 $query->whereHas('chatMessages')
                     ->orWhereHas('linkedSupportChats');
@@ -71,7 +71,9 @@ class Helpdesk extends Page
             ->tap(fn ($query) => $this->applyTabFilter($query))
             ->withCount(['chatMessages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('role', 'user');
-            }])
+            }]);
+
+        $this->usersWithChats = $query
             ->orderByDesc('unread_count')
             ->get()
             ->all();
@@ -150,6 +152,39 @@ class Helpdesk extends Page
         $this->loadUsersList();
 
         Notification::make()->title('Диалог назначен вам')->success()->send();
+    }
+
+    /**
+     * Полный механизм назначения (H221 D4, за флагом crm_cockpit): селектор в
+     * шапке — назначить/переназначить тред любому куратору или снять
+     * ответственного. Дополняет «взять себе» ({@see takeConversation}).
+     *
+     * @return array<int,string> id => name
+     */
+    public function getCuratorsProperty(): array
+    {
+        return User::query()
+            ->whereIn('role', [\App\Support\Roles::SUPER_ADMIN, \App\Support\Roles::ADMIN, \App\Support\Roles::MANAGER])
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    /** Пустая строка снимает ответственного. Тред создаётся при необходимости. */
+    public function assignThread($assigneeId): void
+    {
+        if (! $this->activeUserId) {
+            return;
+        }
+
+        $thread = app(SupportConversationManager::class)->openFor((int) $this->activeUserId);
+        $thread->forceFill([
+            'assigned_to' => $assigneeId !== '' && $assigneeId !== null ? (int) $assigneeId : null,
+        ])->save();
+
+        $this->loadUsersList();
+
+        Notification::make()->title('Ответственный обновлён')->success()->send();
     }
 
     public function selectUser($userId)

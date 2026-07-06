@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Models\Lead;
+use App\Models\PaymentPromise;
+use App\Models\SupportConversation;
+use App\Services\Support\UnifiedInboxReader;
+use Illuminate\Support\Collection;
+
+/**
+ * Агрегатор «Моя работа сегодня» (H221): четыре бакета операторской работы поверх
+ * УЖЕ существующих сигналов — без новой скоринговой модели. Только чтение;
+ * действия (написать/напомнить/открыть) живут на самой странице кокпита.
+ *
+ *   1) лиды на контакт сегодня      — Lead.next_contact_at <= сегодня;
+ *   2) обещания просрочены/истекают — PaymentPromise;
+ *   3) риск оттока                  — StuckStudentsReport;
+ *   4) поддержка без ответа > N ч    — открытый тред, последнее сообщение входящее.
+ */
+class WorkQueueReport
+{
+    /** Порог «поддержка без ответа», часов. */
+    public const SUPPORT_SLA_HOURS = 3;
+
+    /** Сколько дней вперёд считаем обещание «истекающим». */
+    public const PROMISE_EXPIRING_DAYS = 2;
+
+    /** Предел строк на бакет (домашний экран, не полноценный отчёт). */
+    public const LIMIT = 50;
+
+    public function __construct(private UnifiedInboxReader $inbox) {}
+
+    /**
+     * Лиды, которых пора контактировать: дата следующего контакта наступила и
+     * лид ещё в работе (не конверсия/отказ).
+     *
+     * @return Collection<int, Lead>
+     */
+    public function leadsToContact(): Collection
+    {
+        return Lead::query()
+            ->whereNotNull('next_contact_at')
+            ->whereDate('next_contact_at', '<=', now()->toDateString())
+            ->whereNotIn('status', ['converted', 'rejected'])
+            ->orderBy('next_contact_at')
+            ->limit(self::LIMIT)
+            ->get();
+    }
+
+    /**
+     * Непогашенные обещания оплаты: просроченные (в т.ч. переведённые демоном в
+     * expired) и истекающие в ближайшие дни.
+     *
+     * @return Collection<int, PaymentPromise>
+     */
+    public function overduePromises(): Collection
+    {
+        $horizon = now()->addDays(self::PROMISE_EXPIRING_DAYS)->toDateString();
+
+        return PaymentPromise::query()
+            ->with(['user', 'course'])
+            ->where(function ($q) use ($horizon): void {
+                $q->where(function ($a) use ($horizon): void {
+                    $a->where('status', PaymentPromise::STATUS_ACTIVE)
+                        ->whereDate('promised_at', '<=', $horizon);
+                })->orWhere('status', PaymentPromise::STATUS_EXPIRED);
+            })
+            ->orderBy('promised_at')
+            ->limit(self::LIMIT)
+            ->get();
+    }
+
+    /**
+     * Застрявшие / риск оттока — переиспользуем существующий отчёт.
+     *
+     * @return Collection<int, \App\Models\User>
+     */
+    public function stuckStudents(): Collection
+    {
+        return StuckStudentsReport::query()
+            ->orderBy('last_activity_at')
+            ->limit(self::LIMIT)
+            ->get();
+    }
+
+    /**
+     * Открытые треды поддержки, где последнее сообщение — входящее и висит
+     * дольше SLA (человек ещё не ответил).
+     *
+     * @return Collection<int, array{conversation: SupportConversation, waiting_since: \Illuminate\Support\Carbon}>
+     */
+    public function unansweredSupport(): Collection
+    {
+        $cutoff = now()->subHours(self::SUPPORT_SLA_HOURS);
+
+        $open = SupportConversation::query()
+            ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+            ->with('user')
+            ->orderByDesc('last_message_at')
+            ->limit(100)
+            ->get();
+
+        return $open
+            ->filter(fn (SupportConversation $c) => $c->user !== null)
+            ->map(function (SupportConversation $c) use ($cutoff) {
+                $last = $this->inbox->forUser($c->user_id)->last();
+                if (! $last || ! $last->isIncoming() || $last->sentAt->gt($cutoff)) {
+                    return null;
+                }
+
+                return ['conversation' => $c, 'waiting_since' => $last->sentAt];
+            })
+            ->filter()
+            ->take(self::LIMIT)
+            ->values();
+    }
+
+    /**
+     * Счётчики бакетов для заголовка страницы.
+     *
+     * @return array{leads:int, promises:int, stuck:int, support:int}
+     */
+    public function counts(): array
+    {
+        return [
+            'leads' => $this->leadsToContact()->count(),
+            'promises' => $this->overduePromises()->count(),
+            'stuck' => $this->stuckStudents()->count(),
+            'support' => $this->unansweredSupport()->count(),
+        ];
+    }
+}

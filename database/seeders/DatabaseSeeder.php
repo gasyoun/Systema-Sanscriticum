@@ -41,5 +41,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make($password),
             'role' => Roles::SUPER_ADMIN,
         ])->save();
+
+        // Общая библиотека шаблонов сообщений оператора (H221) — идемпотентно.
+        $this->call(MessageTemplateSeeder::class);
     }
 }
