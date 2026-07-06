@@ -38,15 +38,19 @@ class MessageTemplateResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Шаблоны сообщений';
 
-    /** Весь ресурс живёт за фича-флагом кокпита. */
+    /**
+     * Весь ресурс живёт за фича-флагом кокпита + AdminOnly. NB: AdminOnly —
+     * trait, «влитый» в класс, поэтому parent:: ушёл бы мимо гейта в
+     * Resource::* — проверяем роль напрямую через RoleGate.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return config('features.crm_cockpit') && parent::shouldRegisterNavigation();
+        return config('features.crm_cockpit') && RoleGate::adminOnly();
     }
 
     public static function canViewAny(): bool
     {
-        return config('features.crm_cockpit') && parent::canViewAny();
+        return config('features.crm_cockpit') && RoleGate::adminOnly();
     }
 
     public static function form(Form $form): Form
