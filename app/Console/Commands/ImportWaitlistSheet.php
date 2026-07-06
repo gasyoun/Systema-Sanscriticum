@@ -49,8 +49,8 @@ class ImportWaitlistSheet extends Command
         'пояс' => 'timezone_note',
     ];
 
-    /** @var array<string, ?int> Кеш Intake по label (null = не найден). */
-    private array $intakeCache = [];
+    /** @var array<string,int>|null Карта [mb_strtolower(label) => id] всех наборов. */
+    private ?array $intakeMap = null;
 
     public function handle(): int
     {
