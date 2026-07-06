@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +17,7 @@ class RetentionChart extends ChartWidget
 
     public static function canView(): bool
     {
-        return false; // Возвращаем false, и виджет полностью исчезает
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
     // Растягиваем график на всю ширину страницы

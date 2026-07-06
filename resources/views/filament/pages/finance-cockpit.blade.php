@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @php
-        use App\Enums\ExpenseCategory;
-
+        // NB: без `use`-импорта — @php компилируется в тело функции представления,
+        // где PHP-импорт запрещён (ParseError). Enum — по полному имени ниже.
         $money = fn ($v) => number_format((float) $v, 0, ',', ' ') . ' ₽';
         $pct = fn ($v) => $v === null ? '—' : number_format((float) $v, 1, ',', ' ') . ' %';
         $signClass = fn ($v) => (float) $v < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-success-600 dark:text-success-400';
@@ -52,7 +52,7 @@
                         <td class="py-1 text-right tabular-nums">−{{ $money($opiu['salaryCogs']) }}</td>
                     </tr>
                     <tr>
-                        <td class="py-1 pl-10">{{ ExpenseCategory::Acquiring->label() }}</td>
+                        <td class="py-1 pl-10">{{ \App\Enums\ExpenseCategory::Acquiring->label() }}</td>
                         <td class="py-1 text-right tabular-nums">−{{ $money($opiu['acquiring']) }}</td>
                     </tr>
                     <tr class="border-t border-gray-200 dark:border-gray-600">
@@ -78,7 +78,7 @@
                     </tr>
                     @foreach ($opiu['admin'] as $catValue => $sum)
                         <tr>
-                            <td class="py-1 pl-10">{{ ExpenseCategory::from($catValue)->label() }}</td>
+                            <td class="py-1 pl-10">{{ \App\Enums\ExpenseCategory::from($catValue)->label() }}</td>
                             <td class="py-1 text-right tabular-nums">−{{ $money($sum) }}</td>
                         </tr>
                     @endforeach
