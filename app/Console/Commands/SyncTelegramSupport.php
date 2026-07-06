@@ -2,12 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\LocksMadelineSession;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class SyncTelegramSupport extends Command
 {
+    use LocksMadelineSession;
+
     protected $signature = 'telegram-support:sync {--payload= : JSON file with normalized Telegram messages for local import}';
 
     protected $description = 'Sync Telegram support-account messages and rebuild daily support analytics.';
@@ -32,7 +36,16 @@ class SyncTelegramSupport extends Command
 
             $result = $sync->syncNormalizedMessages($payload);
         } else {
-            $result = $sync->sync();
+            // Live path opens the shared MadelineProto session — serialise it
+            // against telegram-harvest:sync / :peers (see LocksMadelineSession).
+            $result = $this->withMadelineSessionLock(fn () => $sync->sync());
+
+            if ($result === null) {
+                Log::warning('Telegram support sync skipped: MadelineProto session busy.');
+                $this->warn('Telegram support sync: session_busy (another MadelineProto command holds the session).');
+
+                return self::SUCCESS;
+            }
         }
 
         $line = 'Telegram support sync: '.$result['status'].'; synced='.$result['synced'];

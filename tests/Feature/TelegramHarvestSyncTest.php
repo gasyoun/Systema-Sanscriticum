@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
+use App\Services\Telegram\MadelineClientFactory;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -170,6 +171,40 @@ class TelegramHarvestSyncTest extends TestCase
         $failFile = $this->store.'/_failures/'.now()->format('Y-m-d').'.jsonl';
         $this->assertFileExists($failFile);
         $this->assertStringContainsString('boom', File::get($failFile));
+
+        // A failed store must NOT advance the cursor — otherwise the next run
+        // skips past a message we never saved (the prod "199 burned" incident).
+        $harvester = TelegramSupportAccount::where('name', 'harvester')->first();
+        $this->assertNull($harvester?->sync_state['peers']['100']['last_message_id'] ?? null);
+
+        // With a healthy writer the retry re-fetches the same id and stores it,
+        // and only then does the cursor advance.
+        $service->setStoreWriter(new HarvestStoreWriter($this->store));
+        $retry = $service->ingestNormalized([$this->record(100, 10, 'public', '2026-07-01T10:00:00+03:00')]);
+        $this->assertSame(1, $retry['stored']);
+        $this->assertSame(10, TelegramSupportAccount::where('name', 'harvester')
+            ->firstOrFail()->sync_state['peers']['100']['last_message_id']);
+    }
+
+    public function test_empty_store_path_env_falls_back_to_default(): void
+    {
+        // Regression: TELEGRAM_HARVEST_STORE_PATH= (present but empty) must not
+        // yield '' (which made the writer build /corpus/… from filesystem root
+        // → mkdir Permission denied). env(key, default) keeps the '';  `?:` does not.
+        putenv('TELEGRAM_HARVEST_STORE_PATH=');
+        $_ENV['TELEGRAM_HARVEST_STORE_PATH'] = '';
+        $_SERVER['TELEGRAM_HARVEST_STORE_PATH'] = '';
+
+        try {
+            $config = require base_path('config/services.php');
+            $this->assertSame(
+                storage_path('app/telegram-harvest/raw'),
+                $config['telegram_harvest']['store_path'],
+            );
+        } finally {
+            putenv('TELEGRAM_HARVEST_STORE_PATH');
+            unset($_ENV['TELEGRAM_HARVEST_STORE_PATH'], $_SERVER['TELEGRAM_HARVEST_STORE_PATH']);
+        }
     }
 
     public function test_discover_peers_uses_get_dialog_ids_and_resolves_info(): void
@@ -191,7 +226,7 @@ class TelegramHarvestSyncTest extends TestCase
             }
         };
 
-        $factory = new class($client) extends \App\Services\Telegram\MadelineClientFactory
+        $factory = new class($client) extends MadelineClientFactory
         {
             public function __construct(private object $fake) {}
 
@@ -205,7 +240,7 @@ class TelegramHarvestSyncTest extends TestCase
                 return $this->fake;
             }
         };
-        $this->app->instance(\App\Services\Telegram\MadelineClientFactory::class, $factory);
+        $this->app->instance(MadelineClientFactory::class, $factory);
 
         $peers = app(TelegramHarvestSyncService::class)->discoverPeers();
 

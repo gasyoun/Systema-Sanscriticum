@@ -1,5 +1,7 @@
 <?php
 
+use danog\MadelineProto\API;
+
 return [
 
     /*
@@ -109,7 +111,7 @@ return [
         'history_limit' => (int) env('TELEGRAM_SUPPORT_HISTORY_LIMIT', 50),
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
         'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
-        'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: \danog\MadelineProto\API::class,
+        'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: API::class,
     ],
 
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
@@ -128,7 +130,10 @@ return [
         'peers_file' => env('TELEGRAM_HARVEST_PEERS_FILE'),
         // OUT-OF-GIT raw store (PII-bearing). Points at the corpus repo's gitignored
         // data/raw/ dir or an external workspace — never inside the Systema repo.
-        'store_path' => env('TELEGRAM_HARVEST_STORE_PATH', storage_path('app/telegram-harvest/raw')),
+        // `?:` (not env's 2nd arg) so an empty TELEGRAM_HARVEST_STORE_PATH= still
+        // falls back to the default; env(key, default) keeps the '' and the writer
+        // would then build paths from filesystem root (/corpus/… → mkdir denied).
+        'store_path' => env('TELEGRAM_HARVEST_STORE_PATH') ?: storage_path('app/telegram-harvest/raw'),
         // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
