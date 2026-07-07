@@ -227,6 +227,35 @@ class ReferralProgramTest extends TestCase
         $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
     }
 
+    /**
+     * Регрессия (money-core, H330): A1-атрибуция (#347) добавила на users СТОЛБЕЦ
+     * `referrer` (HTTP-реферер регистрации), который затеняет одноимённую relation
+     * `referrer()` при обращении `$user->referrer` — Eloquent отдаёт столбец
+     * (URL/null) вместо пригласившего, и награда молча не начислялась вовсе.
+     * Тест пинит коллизию: и заполненный, и пустой столбец не должны ломать награду.
+     *
+     * @test
+     */
+    public function reward_survives_http_referrer_attribution_column_shadowing(): void
+    {
+        config(['referral.credit_amount' => 500]);
+        $referrer = User::factory()->create();
+        $referred = User::factory()->create([
+            'referred_by' => $referrer->id,
+            // Тот самый затеняющий столбец users.referrer (A1): у реального
+            // студента он часто заполнен URL-ом источника регистрации.
+            'referrer' => 'https://vk.com/some-ad-campaign',
+        ]);
+
+        $this->paidPayment($referred);
+
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+        $this->assertDatabaseHas('referral_rewards', [
+            'referrer_id' => $referrer->id,
+            'referred_id' => $referred->id,
+        ]);
+    }
+
     /** @test */
     public function middleware_stores_ref_code_in_session(): void
     {
