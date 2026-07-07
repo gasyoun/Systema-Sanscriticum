@@ -5,5 +5,6 @@
         @livewire(\App\Filament\Pages\LeadCost\LeadCostChartWidget::class)
         @livewire(\App\Filament\Pages\LeadCost\DirectAdSpendsTableWidget::class)
         @livewire(\App\Filament\Pages\LeadCost\AdPostSpendsTableWidget::class)
+        @livewire(\App\Filament\Pages\LeadCost\ChannelConversionWidget::class)
     </div>
 </x-filament-panels::page>

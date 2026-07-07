@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\AttributionService;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -135,6 +136,8 @@ final class DepositController extends Controller
             'name' => $request->input('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+
+        app(AttributionService::class)->applyToNewUser($user);
 
         auth()->login($user);
 

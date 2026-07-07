@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\AttributionService;
 use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
@@ -33,6 +34,7 @@ class PaymentController extends Controller
             $rules['city'] = 'required|string|max:255';
             $rules['email'] = 'required|email|max:255';
             $rules['wants_announcements'] = 'nullable|boolean';
+            $rules['birth_year'] = 'nullable|integer|min:1900|max:'.now()->format('Y');
         }
 
         $request->validate($rules);
@@ -321,6 +323,14 @@ class PaymentController extends Controller
         // (из формы или сохранённого в сессии при переходе по ссылке).
         app(ReferralService::class)
             ->attachReferrer($user, $request->input('ref') ?: session('ref'));
+
+        // A1: источник (UTM/реферер с первого визита) + лид-мэтчинг; год
+        // рождения — необязательное поле формы чекаута.
+        $attribution = app(AttributionService::class);
+        $attribution->applyToNewUser($user);
+        if ($request->filled('birth_year')) {
+            $attribution->applyBirthYear($user, $request->input('birth_year'));
+        }
 
         auth()->login($user);
 

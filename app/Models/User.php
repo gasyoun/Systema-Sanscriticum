@@ -74,6 +74,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_marked_by',
         'unreliable_auto',
         'discipline_improved_since',
+        // Атрибуция при регистрации (A1) — захват UTM/реферера на первом визите +
+        // необязательное поле онбординга.
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'utm_term',
+        'click_id',
+        'referrer',
+        'lead_id',
+        'birth_year',
     ];
 
     protected $hidden = [
@@ -610,6 +621,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function referrals(): HasMany
     {
         return $this->hasMany(User::class, 'referred_by');
+    }
+
+    // --- АТРИБУЦИЯ (A1) ---
+
+    /** Lead, из которого вырос этот аккаунт (мэтчинг по email при регистрации). */
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
     }
 
     /** Реферальный код студента — генерируется лениво при первом обращении. */

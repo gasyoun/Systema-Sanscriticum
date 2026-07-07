@@ -89,6 +89,10 @@ class SocialAuthService
                 'email' => $accountEmail,
                 'password' => Hash::make(Str::random(32)),
             ]);
+
+            // A1: только для реально новых аккаунтов — существующий (matched по
+            // email) уже прошёл собственную атрибуцию при своей регистрации.
+            app(AttributionService::class)->applyToNewUser($user);
         }
 
         $user->socialAccounts()->create([
