@@ -110,4 +110,59 @@ class CheckoutPriceTest extends TestCase
         $payment->update(['status' => 'paid']);
         $this->assertSame(1, $promo->fresh()->used_count);
     }
+
+    /**
+     * money-core H071 #2: депозит числится unconsumed до момента реальной оплаты
+     * (deposit_consumed_at ставится в consumeDepositsForCourse только по paid),
+     * так что раньше второй pending-заказ на тот же курс получал СВОЙ полный
+     * вычет того же ещё не потраченного депозита — оба заказа затем оплачивались
+     * по заниженной цене, и депозит фактически списывался дважды. Сценарий из
+     * аудита: 2000₽ депозит, два блока по 5000₽ → должно быть заблокировано
+     * создание второго pending, пока первый висит неоплаченным.
+     */
+    /** @test */
+    public function second_pending_order_on_same_course_is_blocked_while_deposit_unspent(): void
+    {
+        $course = Course::factory()->create();
+        $user = User::factory()->create();
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 2000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+
+        $block1 = Tariff::factory()->for($course)->block(1)->create(['price' => 5000]);
+        $block2 = Tariff::factory()->for($course)->block(2)->create(['price' => 5000]);
+
+        // Первый заказ: 5000 − 2000 депозит = 3000, уходит в Точку как pending.
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $block1->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $paymentA = Payment::where('tariff', 'block_1')->firstOrFail();
+        $this->assertSame('pending', $paymentA->status);
+        $this->assertEquals(3000, (float) $paymentA->amount);
+
+        // Второй заказ на тот же курс, депозит ещё не потрачен (paymentA не оплачен) →
+        // должен быть отклонён, а не создан со своим полным вычетом того же депозита.
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $block2->id])
+            ->assertSessionHasErrors('tariff_id');
+
+        $this->assertSame(0, Payment::where('tariff', 'block_2')->count());
+
+        // Первый заказ оплачен → депозит потрачен. Теперь второй заказ создаётся
+        // нормально, но уже по полной цене (депозита больше нет).
+        $paymentA->update(['status' => 'paid']);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $block2->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $paymentB = Payment::where('tariff', 'block_2')->firstOrFail();
+        $this->assertEquals(5000, (float) $paymentB->amount);
+    }
 }

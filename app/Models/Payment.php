@@ -2,13 +2,26 @@
 
 namespace App\Models;
 
+use App\Jobs\SendTelegramMessageJob;
+use App\Mail\CourseWelcomeMail;
+use App\Mail\DepositReceivedMail;
+use App\Mail\StudentWelcomeMail;
+use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
+use App\Services\BlockAccessMaterializer;
+use App\Services\CuratorNotifier;
+use App\Services\Prana\PranaService;
+use App\Services\PromiseAutoFulfiller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class Payment extends Model
 {
@@ -348,6 +361,22 @@ class Payment extends Model
             ->whereIn('status', self::PAID_STATUSES);
     }
 
+    /**
+     * Есть ли уже другой незавершённый (pending) заказ этого пользователя на этот
+     * курс. Используется, чтобы не дать создать второй pending, который зачтёт
+     * ту же ещё не потраченную бронь/пробное занятие — иначе оба заказа получают
+     * полную скидку на один и тот же депозит, и оба потом оплачиваются
+     * (money-core, H071 #2: депозит кредитуется на несколько pending).
+     */
+    public function scopeHasOtherPendingOrderForCourse(Builder $query, int $userId, int $courseId): Builder
+    {
+        return $query
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->whereNotIn('tariff', ['deposit', 'trial']);
+    }
+
     // ==========================================
     // АВТОМАТИЗАЦИЯ ПРИ СОЗДАНИИ ИЛИ ИЗМЕНЕНИИ
     // ==========================================
@@ -395,7 +424,7 @@ class Payment extends Model
                     // Снимаем нулевые access-only siblings этого платежа — иначе
                     // оплаченные «в кредит доступа» блоки остались бы открыты
                     // после отката основного платежа.
-                    app(\App\Services\BlockAccessMaterializer::class)->removeSiblingsOf($payment);
+                    app(BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
                 }
             }
@@ -438,13 +467,13 @@ class Payment extends Model
 
             // Self-service: должник сам погасил обещание/рассрочку — закрываем
             // привязанное обещание, чтобы у куратора не висел открытый долг.
-            app(\App\Services\PromiseAutoFulfiller::class)->handlePaidPayment($payment);
+            app(PromiseAutoFulfiller::class)->handlePaidPayment($payment);
 
             // Мульти-блочный доступ: платёж с диапазоном блоков несёт лишь один
             // ключ — дорисовываем недостающие ключи блоков нулевыми access-only
             // строками (иначе оплаченные блоки N+1..M остаются закрыты). Лечит и
             // менеджерский PromiseFulfillment.
-            app(\App\Services\BlockAccessMaterializer::class)->materialize($payment);
+            app(BlockAccessMaterializer::class)->materialize($payment);
         }
     }
 
@@ -453,7 +482,7 @@ class Payment extends Model
     // ==========================================
     public function processSuccessfulPayment()
     {
-        \Illuminate\Support\Facades\DB::transaction(function () {
+        DB::transaction(function () {
             $this->grantAccess();
             $this->enrollInCourse();
 
@@ -474,7 +503,7 @@ class Payment extends Model
         // Уведомление кураторам — только по реальным (не conditional) оплатам.
         // Conditional-доступ под обещание уведомляется в ConditionalAccessGranter.
         if (! $this->is_conditional) {
-            app(\App\Services\CuratorNotifier::class)->paymentPaid($this);
+            app(CuratorNotifier::class)->paymentPaid($this);
         }
 
         if (! $this->user_id) {
@@ -505,7 +534,7 @@ class Payment extends Model
             $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
         }
 
-        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+        SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 
     // ==========================================
@@ -513,7 +542,7 @@ class Payment extends Model
     // ==========================================
     public function processDeposit(): void
     {
-        \Illuminate\Support\Facades\DB::transaction(function () {
+        DB::transaction(function () {
             // НЕ вызываем grantAccess: депозит не открывает платные уроки.
             // Открытые уроки уже доступны любому залогиненному пользователю.
             $this->sendWelcomeEmailIfNeeded();
@@ -522,7 +551,7 @@ class Payment extends Model
         });
 
         // Уведомление кураторам о брони (депозите).
-        app(\App\Services\CuratorNotifier::class)->depositReceived($this);
+        app(CuratorNotifier::class)->depositReceived($this);
 
         if (! $this->user_id) {
             return;
@@ -531,8 +560,8 @@ class Payment extends Model
         // E-mail-подтверждение брони (со ссылкой на чат курса). Telegram есть не
         // у всех — без письма повторные студенты не получали бы по брони ничего.
         if ($this->user && $this->user->email && $this->course) {
-            \Illuminate\Support\Facades\Mail::to($this->user->email)
-                ->send(new \App\Mail\DepositReceivedMail($this->user, $this->course));
+            Mail::to($this->user->email)
+                ->send(new DepositReceivedMail($this->user, $this->course));
         }
 
         $courseName = $this->course->title ?? 'курс';
@@ -543,7 +572,7 @@ class Payment extends Model
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
-        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+        SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 
     // ==========================================
@@ -553,7 +582,7 @@ class Payment extends Model
     {
         $lessonId = $this->course?->trial_lesson_id;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($lessonId) {
+        DB::transaction(function () use ($lessonId) {
             // Доступ к курсу/группам НЕ открываем — только разовый grant на пробный урок.
             // Создаём напрямую (не через ConditionalAccessGranter::grantLesson), чтобы
             // оплаченный доступ не блокировался флагом «неблагонадёжный» и не слал свой
@@ -587,7 +616,7 @@ class Payment extends Model
             $this->lead?->markConverted();
         });
 
-        app(\App\Services\CuratorNotifier::class)->depositReceived($this);
+        app(CuratorNotifier::class)->depositReceived($this);
 
         if (! $this->user_id) {
             return;
@@ -600,8 +629,8 @@ class Payment extends Model
 
         // Письмо со ссылкой на Zoom (если есть email и пользователь, и сама запись расписания).
         if ($this->user && $this->user->email) {
-            \Illuminate\Support\Facades\Mail::to($this->user->email)
-                ->send(new \App\Mail\TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt));
+            Mail::to($this->user->email)
+                ->send(new TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt));
         }
 
         $courseName = $this->course->title ?? 'курс';
@@ -619,7 +648,7 @@ class Payment extends Model
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
-        \App\Jobs\SendTelegramMessageJob::dispatch($this->user_id, $text);
+        SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 
     /**
@@ -860,7 +889,7 @@ class Payment extends Model
         }
 
         // Идемпотентно по этому платежу — индекс не даст начислить дважды.
-        app(\App\Services\Prana\PranaService::class)
+        app(PranaService::class)
             ->award($this->user, 'payment_success', $this);
     }
 
@@ -873,7 +902,7 @@ class Payment extends Model
             return;
         }
 
-        app(\App\Services\Prana\PranaService::class)->refund(
+        app(PranaService::class)->refund(
             $this->user,
             (int) $this->prana_spent,
             'refund_failed',
@@ -905,7 +934,7 @@ class Payment extends Model
         $student = $this->user;
 
         if (! $student) {
-            \Illuminate\Support\Facades\Log::error('Студент не найден для платежа ID: '.$this->id);
+            Log::error('Студент не найден для платежа ID: '.$this->id);
 
             return;
         }
@@ -928,22 +957,22 @@ class Payment extends Model
         $paymentsCount = $student->payments()->paid()->count();
 
         // Пишем в лог, сколько оплат нашла система
-        \Illuminate\Support\Facades\Log::info("Попытка отправки письма. Студент: {$student->email}. Найдено успешных оплат: {$paymentsCount}");
+        Log::info("Попытка отправки письма. Студент: {$student->email}. Найдено успешных оплат: {$paymentsCount}");
 
         // Если это первая оплата
         if ($paymentsCount === 1) {
-            \Illuminate\Support\Facades\Log::info("Генерируем пароль и отправляем письмо студенту: {$student->email}");
+            Log::info("Генерируем пароль и отправляем письмо студенту: {$student->email}");
 
-            $newPassword = \Illuminate\Support\Str::random(8);
-            $student->password = \Illuminate\Support\Facades\Hash::make($newPassword);
+            $newPassword = Str::random(8);
+            $student->password = Hash::make($newPassword);
             $student->welcome_email_sent_at = now();
             $student->save();
 
-            \Illuminate\Support\Facades\Mail::to($student->email)->send(new \App\Mail\StudentWelcomeMail($student, $newPassword));
+            Mail::to($student->email)->send(new StudentWelcomeMail($student, $newPassword));
 
-            \Illuminate\Support\Facades\Log::info('Письмо успешно передано в почтовик!');
+            Log::info('Письмо успешно передано в почтовик!');
         } else {
-            \Illuminate\Support\Facades\Log::warning("Письмо НЕ отправлено, так как это не первая оплата (счетчик: {$paymentsCount})");
+            Log::warning("Письмо НЕ отправлено, так как это не первая оплата (счетчик: {$paymentsCount})");
         }
     }
 
@@ -978,8 +1007,8 @@ class Payment extends Model
             ->count();
 
         if ($count === 1) {
-            \Illuminate\Support\Facades\Mail::to($student->email)
-                ->send(new \App\Mail\CourseWelcomeMail($student, $this->course));
+            Mail::to($student->email)
+                ->send(new CourseWelcomeMail($student, $this->course));
         }
     }
 }
