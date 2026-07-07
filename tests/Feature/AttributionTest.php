@@ -80,7 +80,33 @@ class AttributionTest extends TestCase
         $user->refresh();
         $this->assertSame('vk', $user->utm_source);
         $this->assertSame('cpc', $user->utm_medium);
-        $this->assertSame('https://vk.com/x', $user->referrer);
+        $this->assertSame('https://vk.com/x', $user->http_referrer);
+    }
+
+    /**
+     * Регрессия на затенение: столбец http_referrer НЕ должен затенять relation
+     * referrer() (BelongsTo через referred_by). До rename-миграции столбец
+     * назывался referrer и $user->referrer отдавал URL вместо пригласившего —
+     * money-core баг в ReferralService. Пинним, что теперь оба сосуществуют.
+     *
+     * @test
+     */
+    public function http_referrer_column_does_not_shadow_referrer_relation(): void
+    {
+        $inviter = User::factory()->create();
+        $invitee = User::factory()->create([
+            'referred_by' => $inviter->id,
+            'http_referrer' => 'https://vk.com/wall1',
+        ]);
+
+        $invitee->refresh();
+
+        // Property-доступ отдаёт relation (пригласившего), а не URL.
+        $this->assertInstanceOf(User::class, $invitee->referrer);
+        $this->assertSame($inviter->id, $invitee->referrer->id);
+
+        // URL по-прежнему доступен под своим именем.
+        $this->assertSame('https://vk.com/wall1', $invitee->http_referrer);
     }
 
     /** @test */

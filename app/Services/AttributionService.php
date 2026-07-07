@@ -26,8 +26,11 @@ class AttributionService
         $session = session(CaptureAttribution::SESSION_KEY, []);
 
         $attrs = array_intersect_key($session, array_flip(CaptureAttribution::UTM_FIELDS));
+        // Источник (сессия/лид) хранит HTTP-реферер под ключом 'referrer'; на User
+        // он ложится в столбец http_referrer (см. rename-миграцию — столбец
+        // referrer затенял relation referrer()).
         if (isset($session['referrer'])) {
-            $attrs['referrer'] = $session['referrer'];
+            $attrs['http_referrer'] = $session['referrer'];
         }
 
         $lead = $this->matchLead($user);
@@ -42,8 +45,8 @@ class AttributionService
                     $attrs[$field] = $lead->$field;
                 }
             }
-            if (! isset($attrs['referrer']) && filled($lead->referrer)) {
-                $attrs['referrer'] = $lead->referrer;
+            if (! isset($attrs['http_referrer']) && filled($lead->referrer)) {
+                $attrs['http_referrer'] = $lead->referrer;
             }
         }
 

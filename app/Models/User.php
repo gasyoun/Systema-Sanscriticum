@@ -83,7 +83,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'utm_content',
         'utm_term',
         'click_id',
-        'referrer',
+        // HTTP-реферер регистрации. Имя http_referrer (а не referrer), чтобы не
+        // затенять relation referrer() (BelongsTo через referred_by).
+        'http_referrer',
         'lead_id',
         'birth_year',
     ];
