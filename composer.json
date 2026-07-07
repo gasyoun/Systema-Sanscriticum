@@ -19,6 +19,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/socialite": "^5.11",
         "laravel/tinker": "^2.8",
+        "league/flysystem-webdav": "^3.31",
         "nelexa/zip": "^4.0",
         "pxlrbt/filament-excel": "^2.5",
         "saade/filament-fullcalendar": "^3.0",
