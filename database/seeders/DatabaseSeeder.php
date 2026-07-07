@@ -44,5 +44,9 @@ class DatabaseSeeder extends Seeder
 
         // Общая библиотека шаблонов сообщений оператора (H221) — идемпотентно.
         $this->call(MessageTemplateSeeder::class);
+
+        // Системная санскритская колода SRS (H211) — идемпотентно, безопасно при
+        // пустом словаре. Данные заводятся всегда; показываются только за флагом srs.enabled.
+        $this->call(SrsSanskritDeckSeeder::class);
     }
 }
