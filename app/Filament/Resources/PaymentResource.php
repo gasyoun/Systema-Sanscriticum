@@ -3,18 +3,24 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
+use App\Jobs\SendTelegramMessageJob;
+use App\Mail\DepositTransferredMail;
+use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Teacher;
+use App\Services\CuratorNotifier;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentResource extends Resource
 {
@@ -526,6 +532,73 @@ class PaymentResource extends Resource
                     ->modalHeading('Подтвердить оплату через PayPal')
                     ->modalDescription('Сверьте платёж в PayPal. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // Перенести оплаченную незачтённую бронь (депозит) на другой курс:
+                // студент передумал и хочет учиться на другом курсе. Зачёт депозита
+                // жёстко привязан к course_id (Tariff::prepaidCreditForUser /
+                // Payment::consumeDepositsForCourse), поэтому перенос = смена course_id.
+                // Меняем ТОЛЬКО курс — сумма/статус/зачёт не трогаются, доступ депозит
+                // не выдавал; повторных писем брони нет (fireOnPaid висит на смене
+                // status). Аудит course_id и sheet-sync — автоматом. Только админ.
+                Tables\Actions\Action::make('transferDeposit')
+                    ->label('Перенести бронь')
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->color('warning')
+                    ->visible(fn (Payment $record): bool => RoleGate::adminOnly()
+                        && $record->isDeposit()
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && $record->deposit_consumed_at === null)
+                    ->modalHeading('Перенести бронь на другой курс')
+                    ->modalDescription('Оплаченная сумма брони зачтётся при оплате выбранного курса. Курс текущей брони будет заменён; доступ к урокам бронь не открывала.')
+                    ->form([
+                        Forms\Components\Select::make('new_course_id')
+                            ->label('Новый курс')
+                            ->options(fn (Payment $record): array => Course::query()
+                                ->where('id', '!=', $record->course_id)
+                                ->orderBy('title')
+                                ->pluck('title', 'id')
+                                ->all())
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Toggle::make('notify_student')
+                            ->label('Уведомить студента (e-mail + Telegram)')
+                            ->default(true),
+                    ])
+                    ->action(function (Payment $record, array $data): void {
+                        $from = $record->course;
+                        $to = Course::find($data['new_course_id']);
+                        if (! $to) {
+                            Notification::make()->title('Курс не найден')->danger()->send();
+
+                            return;
+                        }
+
+                        // Единственное изменение — курс брони. Аудит (PaymentAuditObserver),
+                        // blame и Google-Sheet ре-синк срабатывают автоматически.
+                        $record->update(['course_id' => $to->id]);
+
+                        if (($data['notify_student'] ?? true) && $record->user_id) {
+                            if ($record->user?->email && $from) {
+                                Mail::to($record->user->email)
+                                    ->send(new DepositTransferredMail($record->user, $from, $to));
+                            }
+
+                            $text = "🔄 <b>Бронь перенесена</b>\n\n"
+                                ."Ваша предоплата перенесена на курс <b>«{$to->title}»</b>. "
+                                .'Сумма зачтётся при оплате.'
+                                ."\n\n<a href='".url('/login')."'>Личный кабинет</a>";
+                            SendTelegramMessageJob::dispatch($record->user_id, $text);
+                        }
+
+                        if ($from) {
+                            app(CuratorNotifier::class)->depositTransferred($record, $from, $to);
+                        }
+
+                        Notification::make()
+                            ->title('Бронь перенесена: «'.($from->title ?? '—').'» → «'.$to->title.'»')
+                            ->success()
+                            ->send();
+                    }),
 
                 // Открыть приложенный чек/скриншот (приватный диск, только персонал).
                 Tables\Actions\Action::make('viewProof')

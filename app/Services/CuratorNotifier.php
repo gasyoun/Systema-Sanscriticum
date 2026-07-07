@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Filament\Pages\Debtors;
+use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /**
  * Информативные уведомления кураторам в общий Telegram-чат по всем
@@ -80,6 +82,26 @@ class CuratorNotifier
             $this->courseLine($payment->course),
             'Сумма: <b>'.$this->money((float) $payment->amount).'</b>',
             $this->dateLine($payment->created_at),
+            $this->adminLink($payment->user),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Бронь перенесена админом с одного курса на другой (PaymentResource action
+     * «Перенести бронь»). Депозит не менял суммы/статуса — только курс, в который
+     * он зачтётся при оплате.
+     */
+    public function depositTransferred(Payment $payment, Course $from, Course $to): void
+    {
+        $lines = [
+            '🔄 <b>Бронь перенесена на другой курс</b>',
+            '',
+            $this->studentLine($payment->user),
+            'С курса: <b>'.e($from->title).'</b>',
+            'На курс: <b>'.e($to->title).'</b>',
+            'Сумма: <b>'.$this->money((float) $payment->amount).'</b>',
             $this->adminLink($payment->user),
         ];
 
@@ -215,9 +237,9 @@ class CuratorNotifier
      * Утренний дайджест по истёкшим за ночь обещаниям: общее число + худшие
      * по сумме. Раньше promises:expire молчал (retention audit gap #4).
      *
-     * @param  \Illuminate\Support\Collection<int, PaymentPromise>  $promises
+     * @param  Collection<int, PaymentPromise>  $promises
      */
-    public function promisesExpiredDigest(\Illuminate\Support\Collection $promises): void
+    public function promisesExpiredDigest(Collection $promises): void
     {
         if ($promises->isEmpty()) {
             return;
@@ -357,7 +379,7 @@ class CuratorNotifier
         }
 
         try {
-            $url = \App\Filament\Resources\UserResource::getUrl('edit', ['record' => $user->id]);
+            $url = UserResource::getUrl('edit', ['record' => $user->id]);
         } catch (\Throwable) {
             $url = url('/admin');
         }
