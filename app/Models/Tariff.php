@@ -85,7 +85,7 @@ class Tariff extends Model
 
         // «Прана сгорает»: для неблагонадёжных студентов loyalty-скидка
         // отключается до тех пор, пока менеджер не снимет флаг вручную.
-        if ($user instanceof \App\Models\User && $user->isUnreliable()) {
+        if ($user instanceof User && $user->isUnreliable()) {
             return 0;
         }
 
@@ -93,7 +93,7 @@ class Tariff extends Model
         // на saved/deleted. На странице «Должники» этот метод дёргается сотни раз
         // (по одному вызову на каждый блок каждой пары user×курс), и без кэша
         // мы бы делали столько же SELECT'ов по marketing_settings.
-        $marketing = \App\Models\MarketingSetting::cached();
+        $marketing = MarketingSetting::cached();
         if (! $marketing || ! $marketing->is_loyalty_active) {
             return 0;
         }
@@ -105,7 +105,7 @@ class Tariff extends Model
         // is_conditional) и любые 0₽-заказы (100%-промо) — не покупка и НЕ должны
         // повышать оптовую скидку (см. ShopController/CourseCatalog, где такой же
         // ->real() уже стоит).
-        $paidCoursesCount = \App\Models\Payment::where('user_id', $user->id)
+        $paidCoursesCount = Payment::where('user_id', $user->id)
             ->paid()
             ->real()
             ->where('amount', '>', 0)
@@ -150,11 +150,11 @@ class Tariff extends Model
         $price = (float) $this->price;
 
         $individual = $this->course_id
-            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
+            ? StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
             : null;
 
         // Fixed-скидка: осмысленны только рубли (капаем по цене), процент не выводим.
-        if ($individual && $individual->type === \App\Models\StudentDiscount::TYPE_FIXED) {
+        if ($individual && $individual->type === StudentDiscount::TYPE_FIXED) {
             $amount = min((float) $individual->value, $price);
 
             return $amount > 0
@@ -198,7 +198,7 @@ class Tariff extends Model
         // 1. Скидка. Персональная скидка студента на этот курс ИМЕЕТ ПРИОРИТЕТ и
         //    применяется ВМЕСТО накопительной лояльности (не суммируется).
         $individual = $this->course_id
-            ? \App\Models\StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
+            ? StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
             : null;
 
         if ($individual) {
@@ -238,7 +238,7 @@ class Tariff extends Model
             return 0.0;
         }
 
-        $query = \App\Models\Payment::query()
+        $query = Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->paid()
@@ -275,7 +275,7 @@ class Tariff extends Model
 
     private function upgradeRefundsForUser($user): float
     {
-        $query = \App\Models\Payment::query()
+        $query = Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->paid()
@@ -308,7 +308,7 @@ class Tariff extends Model
             return 0.0;
         }
 
-        return (float) \App\Models\Payment::query()
+        return (float) Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->unconsumedDeposits()
@@ -369,7 +369,7 @@ class Tariff extends Model
             return false;
         }
 
-        return \App\Models\Payment::query()
+        return Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->where('tariff', $this->accessKey())

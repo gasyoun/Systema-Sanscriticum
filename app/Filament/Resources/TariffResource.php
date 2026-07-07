@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TariffResource\Pages;
+use App\Models\CourseBlock;
 use App\Models\Tariff;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -88,7 +89,7 @@ class TariffResource extends Resource
                                     return [];
                                 }
 
-                                return \App\Models\CourseBlock::where('course_id', $courseId)
+                                return CourseBlock::where('course_id', $courseId)
                                     ->orderBy('number')
                                     ->get()
                                     ->mapWithKeys(fn ($b) => [$b->id => '№'.$b->number.($b->title ? ' — '.$b->title : '')])

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Course extends Model
 {
@@ -51,7 +53,7 @@ class Course extends Model
         'meta_description',
     ];
 
-    public function categories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_course');
     }
@@ -341,7 +343,7 @@ class Course extends Model
      * preview-роут (ShopController::preview): блок/CTA видны ровно тогда, когда
      * урок реально открывается. hasOne берёт первый по sort_order.
      */
-    public function previewLesson(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function previewLesson(): HasOne
     {
         return $this->hasOne(Lesson::class)
             ->where('is_preview', true)
@@ -353,7 +355,7 @@ class Course extends Model
     // ==========================================
     // СВЯЗЬ: Один курс имеет много оплат
     // ==========================================
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
@@ -397,7 +399,7 @@ class Course extends Model
      * `end` — от `start` минус DEFAULT_DURATION_HOURS, как в Schedule::isLive(),
      * чтобы идущее сейчас занятие не пропадало из списка ровно в момент старта.
      */
-    public function upcomingSchedules(int $limit = 24): \Illuminate\Database\Eloquent\Collection
+    public function upcomingSchedules(int $limit = 24): Collection
     {
         $groupIds = $this->groups()->pluck('groups.id');
 

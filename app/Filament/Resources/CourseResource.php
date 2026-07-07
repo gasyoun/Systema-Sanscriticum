@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CourseResource\Pages;
 use App\Models\Course;
+use App\Models\Schedule;
+use App\Models\Teacher;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -299,13 +301,13 @@ class CourseResource extends Resource
                         Forms\Components\Select::make('trial_schedule_id')
                             ->label('Живое занятие (из расписания)')
                             ->helperText('Предстоящее событие расписания этого курса. Zoom-ссылка и дата берутся из него; группа события должна совпадать с той, что присылает n8n.')
-                            ->options(fn (?\App\Models\Course $record): array => $record
-                                ? \App\Models\Schedule::query()
+                            ->options(fn (?Course $record): array => $record
+                                ? Schedule::query()
                                     ->where('course_id', $record->id)
                                     ->where('start', '>=', now())
                                     ->orderBy('start')
                                     ->get()
-                                    ->mapWithKeys(fn (\App\Models\Schedule $s) => [
+                                    ->mapWithKeys(fn (Schedule $s) => [
                                         $s->id => $s->start->format('d.m.Y H:i').' — '.$s->title,
                                     ])
                                     ->all()
@@ -361,7 +363,7 @@ class CourseResource extends Resource
                                     ->options(function (Forms\Get $get) {
                                         $primary = $get('../../teacher_id');
 
-                                        return \App\Models\Teacher::query()
+                                        return Teacher::query()
                                             ->when($primary, fn ($q) => $q->whereKeyNot($primary))
                                             ->orderBy('name')
                                             ->pluck('name', 'id');
@@ -523,7 +525,7 @@ class CourseResource extends Resource
      *
      * @param  array<int, array<string, mixed>>  $rows
      */
-    public static function syncCoTeachers(\App\Models\Course $course, array $rows): void
+    public static function syncCoTeachers(Course $course, array $rows): void
     {
         $pivot = collect($rows)
             ->filter(fn ($r) => ! empty($r['teacher_id']))
