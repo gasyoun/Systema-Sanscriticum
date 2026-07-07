@@ -218,7 +218,7 @@ class StudentController extends Controller
             'trialLessons',
             'onboarding',
             'homeworkAlerts',
-        
+
             'continueLearningAction',
 ));
     }
