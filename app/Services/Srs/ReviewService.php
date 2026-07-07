@@ -71,6 +71,37 @@ class ReviewService
     }
 
     /**
+     * Предпросмотр интервалов для каждой оценки (Again/Hard/Good/Easy) без записи:
+     * сколько секунд до следующего показа, если сейчас нажать эту кнопку. Fuzz
+     * выключен, чтобы подписи на кнопках были стабильными.
+     *
+     * @return array<int, int>  ключ — Rating->value, значение — секунды до due
+     */
+    public function previewIntervals(User $user, SrsCard $card, ?DateTimeImmutable $now = null): array
+    {
+        $now = $now ?? new DateTimeImmutable('now');
+
+        $state = SrsReviewState::firstOrNew([
+            'user_id' => $user->id,
+            'card_id' => $card->id,
+        ]);
+        $base = $this->toFsrsCard($state, $now);
+
+        $preview = new Fsrs(
+            desiredRetention: (float) config('srs.desired_retention', 0.9),
+            enableFuzzing: false,
+        );
+
+        $out = [];
+        foreach ([Rating::Again, Rating::Hard, Rating::Good, Rating::Easy] as $rating) {
+            $result = $preview->reviewCard($base, $rating, $now);
+            $out[$rating->value] = $result->due->getTimestamp() - $now->getTimestamp();
+        }
+
+        return $out;
+    }
+
+    /**
      * Применяет оценку карточки: пересчитывает FSRS-состояние, сохраняет его и
      * дописывает журнал. Возвращает обновлённое состояние.
      */
