@@ -4,13 +4,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Models\Teacher;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 class PaymentResource extends Resource
 {
@@ -263,7 +267,7 @@ class PaymentResource extends Resource
                                 if ($get('received_account') !== Payment::RECEIVED_TEACHER || empty($value)) {
                                     return;
                                 }
-                                $teacher = \App\Models\Teacher::find($value);
+                                $teacher = Teacher::find($value);
                                 if ($teacher === null) {
                                     return;
                                 }
@@ -304,7 +308,7 @@ class PaymentResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->wrap() // <-- МАГИЯ ЗДЕСЬ: Длинные ФИО перенесутся на новую строку
-                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->weight(FontWeight::Bold)
                     ->description(fn (Payment $record): string => $record->user->email ?? 'Нет email'),
 
                 // 3. КУРС (Займет всё освободившееся пространство)
@@ -330,9 +334,9 @@ class PaymentResource extends Resource
                     ->label('Сумма')
                     ->money('RUB', locale: 'ru')
                     ->sortable()
-                    ->weight(\Filament\Support\Enums\FontWeight::ExtraBold)
+                    ->weight(FontWeight::ExtraBold)
                     ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
-                    ->alignment(\Filament\Support\Enums\Alignment::End),
+                    ->alignment(Alignment::End),
 
                 // Пометка «по скидке»: бейдж «-10%» / «-1000 ₽», если платёж со скидкой.
                 Tables\Columns\TextColumn::make('discount')
@@ -340,7 +344,7 @@ class PaymentResource extends Resource
                     ->badge()
                     ->color('success')
                     ->getStateUsing(fn (Payment $record): ?string => $record->discountLabel() ?: null)
-                    ->alignment(\Filament\Support\Enums\Alignment::Center),
+                    ->alignment(Alignment::Center),
 
                 // Применённый промокод (если был). Скрыто по умолчанию — включается тумблером колонок.
                 Tables\Columns\TextColumn::make('promoCode.code')
@@ -356,26 +360,28 @@ class PaymentResource extends Resource
                     ->badge()
                     ->color(fn (?string $state): string => Payment::statusColor($state))
                     ->formatStateUsing(fn (?string $state): string => Payment::statusLabel($state))
-                    ->alignment(\Filament\Support\Enums\Alignment::Center),
+                    ->alignment(Alignment::Center),
 
-                // Способ оплаты из вебхука Точки (H226): card/sbp. Пусто — ручной
-                // платёж, PayPal или вебхук до появления поля; такие в юнит-экономике
-                // считаются вилкой эквайринга.
+                // Способ оплаты из вебхука Точки (H226): card/sbp/dolyame. Пусто —
+                // ручной платёж, PayPal или вебхук до появления поля; такие в
+                // юнит-экономике считаются вилкой эквайринга.
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Способ')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'card' => 'info',
                         'sbp' => 'success',
+                        'dolyame' => 'warning',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'card' => 'Карта',
                         'sbp' => 'СБП',
+                        'dolyame' => 'Долями',
                         default => (string) $state,
                     })
                     ->placeholder('—')
-                    ->alignment(\Filament\Support\Enums\Alignment::Center)
+                    ->alignment(Alignment::Center)
                     ->toggleable(),
 
                 // 6. ПРИМЕЧАНИЕ
@@ -446,6 +452,7 @@ class PaymentResource extends Resource
                     ->options([
                         'card' => 'Карта',
                         'sbp' => 'СБП',
+                        'dolyame' => 'Долями (рассрочка)',
                         'unknown' => 'Не определён',
                     ])
                     ->query(fn ($query, array $data) => $query->when(
@@ -498,10 +505,10 @@ class PaymentResource extends Resource
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['from'] ?? null) {
-                            $indicators[] = 'С '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                            $indicators[] = 'С '.Carbon::parse($data['from'])->format('d.m.Y');
                         }
                         if ($data['until'] ?? null) {
-                            $indicators[] = 'По '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                            $indicators[] = 'По '.Carbon::parse($data['until'])->format('d.m.Y');
                         }
 
                         return $indicators;

@@ -18,7 +18,8 @@ use Tests\TestCase;
 
 /**
  * H226 — способ оплаты Точки в списке транзакций: колонка-бейдж + фильтр
- * card/sbp/«Не определён» (NULL = ручные платежи, PayPal, старые вебхуки).
+ * card/sbp/dolyame/«Не определён» (NULL = ручные платежи, PayPal, старые
+ * вебхуки). Канон значений — WebhookController::extractPaymentMethod().
  */
 class PaymentMethodTrackingTest extends TestCase
 {
@@ -50,20 +51,24 @@ class PaymentMethodTrackingTest extends TestCase
     {
         $card = $this->payment('card');
         $sbp = $this->payment('sbp');
+        $dolyame = $this->payment('dolyame');
         $manual = $this->payment(null);
 
         Livewire::test(ListPayments::class)
             ->assertOk()
-            ->assertCanSeeTableRecords([$card, $sbp, $manual])
+            ->assertCanSeeTableRecords([$card, $sbp, $dolyame, $manual])
             ->filterTable('payment_method', 'card')
             ->assertCanSeeTableRecords([$card])
-            ->assertCanNotSeeTableRecords([$sbp, $manual])
+            ->assertCanNotSeeTableRecords([$sbp, $dolyame, $manual])
             ->filterTable('payment_method', 'sbp')
             ->assertCanSeeTableRecords([$sbp])
-            ->assertCanNotSeeTableRecords([$card, $manual])
+            ->assertCanNotSeeTableRecords([$card, $dolyame, $manual])
+            ->filterTable('payment_method', 'dolyame')
+            ->assertCanSeeTableRecords([$dolyame])
+            ->assertCanNotSeeTableRecords([$card, $sbp, $manual])
             // «Не определён» — NULL: ручной платёж / PayPal / вебхук до поля.
             ->filterTable('payment_method', 'unknown')
             ->assertCanSeeTableRecords([$manual])
-            ->assertCanNotSeeTableRecords([$card, $sbp]);
+            ->assertCanNotSeeTableRecords([$card, $sbp, $dolyame]);
     }
 }
