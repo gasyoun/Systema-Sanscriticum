@@ -72,7 +72,13 @@ class ReferralService
             return;
         }
 
-        $referrer = $referred->referrer;
+        // ВАЖНО: не $referred->referrer — миграция 2026_07_07_120000 добавила
+        // users.referrer (строка UTM-атрибуции), которая теперь затеняет
+        // одноимённую BelongsTo-связь referrer() в magic-геттере Eloquent
+        // (getAttribute() всегда предпочитает реальную колонку атрибуту-связи с
+        // тем же именем). $referred->referrer молча возвращал null вместо
+        // пригласившего — награда переставала начисляться вовсе.
+        $referrer = User::find($referred->referred_by);
         if (! $referrer) {
             return;
         }
