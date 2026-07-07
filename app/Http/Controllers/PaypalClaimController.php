@@ -9,6 +9,7 @@ use App\Mail\PaypalClaimReceivedMail;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -153,6 +154,8 @@ final class PaypalClaimController extends Controller
             'name' => $request->validated('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+
+        app(AttributionService::class)->applyToNewUser($user);
 
         auth()->login($user);
 

@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\AttributionService;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -127,6 +128,8 @@ final class TrialController extends Controller
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
+
+        app(AttributionService::class)->applyToNewUser($user);
 
         auth()->login($user);
 

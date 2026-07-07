@@ -295,6 +295,16 @@ document.addEventListener('alpine:init', () => {
                                         @error('city')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                                     </div>
                                     <div class="sm:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Год рождения <span class="text-gray-400 font-normal">(необязательно)</span>
+                                        </label>
+                                        <input type="number" name="birth_year" min="1900" max="{{ now()->format('Y') }}"
+                                               placeholder="Например, 1990"
+                                               value="{{ old('birth_year') }}"
+                                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:invalid:border-red-500 focus:invalid:ring-red-500 py-3 px-4 transition">
+                                        @error('birth_year')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
+                                    </div>
+                                    <div class="sm:col-span-2">
                                         <label class="flex items-start gap-3 cursor-pointer">
                                             <input type="checkbox" name="wants_announcements" value="1" {{ old('wants_announcements', true) ? 'checked' : '' }}
                                                    class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
