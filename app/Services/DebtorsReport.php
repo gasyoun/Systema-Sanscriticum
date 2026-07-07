@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Filament\Pages\Debtors;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\MarketingSetting;
+use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 
 class DebtorsReport
 {
-    private const PAID_STATUSES = \App\Models\Payment::PAID_STATUSES;
+    private const PAID_STATUSES = Payment::PAID_STATUSES;
 
     /**
      * Статусы в course_user, при которых пара (user, course) НЕ должна
@@ -745,7 +747,7 @@ class DebtorsReport
 
         // Шаг 4. Прогреть кэши платежей и joined_at_block для debtBlocks() —
         // двумя whereIn-запросами вместо 2×N+1 (по 2 запроса на каждую пару).
-        \App\Filament\Pages\Debtors::preloadPairCaches($rows);
+        Debtors::preloadPairCaches($rows);
 
         $totalAmount = 0.0;
         $totalMissing = 0;
@@ -762,7 +764,7 @@ class DebtorsReport
                 continue;
             }
 
-            $blocks = \App\Filament\Pages\Debtors::debtBlocks($userId, $courseId, $refNumber, $this->years);
+            $blocks = Debtors::debtBlocks($userId, $courseId, $refNumber, $this->years);
 
             $info = $this->computeDebtAmount($user, $courseId, $blocks);
             $amount = (float) ($info['amount'] ?? 0);
@@ -828,12 +830,12 @@ class DebtorsReport
         $userIds = array_keys($byUser);
         $courseIds = array_unique(array_merge(...array_map('array_keys', array_values($byUser))));
 
-        $sums = \App\Models\Payment::query()
+        $sums = Payment::query()
             ->whereIn('user_id', $userIds)
             ->whereIn('course_id', $courseIds)
             ->unconsumedDeposits()
             ->groupBy('user_id', 'course_id')
-            ->selectRaw('user_id, course_id, SUM(amount) AS total')
+            ->selectRaw('user_id, course_id, SUM(amount - COALESCE(consumed_amount, 0)) AS total')
             ->get();
 
         foreach ($sums as $s) {
@@ -859,11 +861,11 @@ class DebtorsReport
             return $this->depositCreditCache[$key];
         }
 
-        $sum = (float) \App\Models\Payment::query()
+        $sum = (float) Payment::query()
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
             ->unconsumedDeposits()
-            ->sum('amount');
+            ->sum(DB::raw('amount - COALESCE(consumed_amount, 0)'));
 
         return $this->depositCreditCache[$key] = $sum;
     }

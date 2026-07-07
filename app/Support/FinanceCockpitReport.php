@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\DebtorsReport;
 use App\Services\TeacherSalaryService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Финансовый штурвал — сборочный слой поверх денежного ядра. Собирает четыре
@@ -205,7 +206,11 @@ class FinanceCockpitReport
         }
 
         // Непотраченные депозиты/брони — пассив (предоплата за неоказанную услугу).
-        $deposits = (float) Payment::query()->unconsumedDeposits()->sum('amount');
+        // Остаток = amount − consumed_amount: частично зачтённые брони входят
+        // только непотраченной частью.
+        $deposits = (float) Payment::query()
+            ->unconsumedDeposits()
+            ->sum(DB::raw('amount - COALESCE(consumed_amount, 0)'));
 
         // Прана как скидочное обязательство (верхняя оценка: весь баланс праны в
         // рублях; фактически тратится не более 30 % цены покупки).

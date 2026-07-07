@@ -89,6 +89,14 @@ class PaymentController extends Controller
             // 1. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
             $finalPrice = $tariff->calculateFinalPriceForUser($user);
 
+            // Сколько предоплаты (депозит/пробное) реально зачтено в эту цену —
+            // пишется в платёж, чтобы при оплате погасить депозиты ровно на эту
+            // сумму (остаток переживает покупку, H071 #10) и чтобы зачёт при
+            // докупке видел полную стоимость покупки (net-кэш + депозитная
+            // часть, H071 #9). Всегда не-null для чекаута: 0.0 = «предоплата не
+            // применялась» (null зарезервирован за легаси-строками до колонки).
+            $depositCreditApplied = $tariff->prepaidCreditAppliedForUser($user);
+
             // Фиксируем скидку (персональная/лояльность) для пометки в админке и
             // выгрузке в Google Sheet. fixed-скидка пишет только рубли, percent —
             // и процент, и рублёвый эквивалент. Промокод/прана — отдельно.
@@ -191,6 +199,7 @@ class PaymentController extends Controller
                 'discount_amount' => $discount['amount'] > 0 ? $discount['amount'] : null,
                 'prana_spent' => $pranaToSpend,
                 'referral_credit_applied' => $referralCreditApplied > 0 ? $referralCreditApplied : null,
+                'deposit_credit_applied' => $depositCreditApplied,
                 'tariff' => $tariffKey,
                 'status' => 'pending',
                 'start_block' => $startBlock,

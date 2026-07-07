@@ -9,6 +9,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 /**
  * Read-only список всех оплат студента прямо в его карточке.
@@ -45,6 +46,8 @@ class PaymentsRelationManager extends RelationManager
 
                         if ($record->tariff === 'deposit' && $record->deposit_consumed_at) {
                             $label .= ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y');
+                        } elseif ($record->tariff === 'deposit' && (float) ($record->consumed_amount ?? 0) > 0) {
+                            $label .= ' · зачтено частично: '.number_format((float) $record->consumed_amount, 0, ',', ' ').' ₽';
                         }
 
                         return $label;
@@ -158,10 +161,10 @@ class PaymentsRelationManager extends RelationManager
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['from'] ?? null) {
-                            $indicators[] = 'С '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                            $indicators[] = 'С '.Carbon::parse($data['from'])->format('d.m.Y');
                         }
                         if ($data['until'] ?? null) {
-                            $indicators[] = 'По '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                            $indicators[] = 'По '.Carbon::parse($data['until'])->format('d.m.Y');
                         }
 
                         return $indicators;
