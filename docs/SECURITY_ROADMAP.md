@@ -52,7 +52,7 @@ platform upgrade.
   await manual MG review per the money-core no-auto-merge discipline.
 - 🟠 3 webhooks (Telegram-bot / VK-bot / Zoom) still **fail-open** pending a prod `.env` deploy step.
 - ✅ **PHP SAST added** (07-07-2026) — [Semgrep job](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml)
-  (`p/php` + `p/security-audit` + `p/laravel`), advisory/non-blocking during triage. CodeQL still
+  (`p/php` + `p/security-audit` + `p/owasp-top-ten`), advisory/non-blocking during triage. CodeQL still
   can't cover PHP directly, but the gap is now filled.
 - 🟡 **Laravel 10.50.2** — security-EOL since ~Feb 2025 — on PHP 8.2.
 - ✅ 23 tracked PNG screenshots **audited** (05-07-2026) — all synthetic UI/design/marketing
@@ -143,7 +143,7 @@ once the known-defect backlog is drained so the baseline is clean).
   leaves — CodeQL is JS-only here. → **[H081](#handoffs)**
   - ✅ **Semgrep job added** (07-07-2026, Sonnet 5 `claude-sonnet-5`):
     [.github/workflows/semgrep.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml),
-    `p/php` + `p/security-audit` + `p/laravel` rulesets, `continue-on-error: true`
+    `p/php` + `p/security-audit` + `p/owasp-top-ten` rulesets, `continue-on-error: true`
     (advisory). **Still open:** ~2-week triage window, then flip to required and
     document any dismissed rules (mirror `/cologne-alert-triage`). Larastan not
     added — Semgrep's Laravel ruleset judged sufficient coverage to start; revisit

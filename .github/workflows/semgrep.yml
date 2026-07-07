@@ -31,6 +31,6 @@ jobs:
           semgrep scan \
             --config p/php \
             --config p/security-audit \
-            --config p/laravel \
+            --config p/owasp-top-ten \
             --error \
             --metrics=off
