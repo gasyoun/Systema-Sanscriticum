@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\Log;
 
 class ScheduleObserver
 {
-    // Сюда вставь свой Webhook URL из n8n (Webhook Node -> Production URL)
-    private string $webhookUrl = 'https://context-ai.ru/webhook-test/6a4e0703-4059-47ba-8bad-c3c3d51447ff';
-
     /**
      * Срабатывает, когда создано новое событие
      */
@@ -36,16 +33,27 @@ class ScheduleObserver
     }
 
     /**
-     * Метод отправки данных
+     * Метод отправки данных.
+     *
+     * URL — из N8N_SCHEDULE_SHEET_WEBHOOK (тот же, что у кнопки выгрузки в
+     * ListSchedules). Обязательно PRODUCTION-URL n8n (/webhook/...) активного
+     * workflow: захардкоженный ранее /webhook-test/... живёт только пока в
+     * редакторе n8n нажат «Execute workflow» → в проде каждый CRUD расписания
+     * стабильно ловил 404. Пусто → интеграция выключена, не шлём ничего.
      */
     private function sendToN8n(string $action, Schedule $schedule): void
     {
+        $webhookUrl = (string) config('services.n8n.schedule_sheet_webhook');
+        if ($webhookUrl === '') {
+            return;
+        }
+
         try {
             // ДОБАВИЛИ timeout(2) — ждать не более 2 секунд
             // ДОБАВИЛИ retry(2, 100) — если ошибка, попробовать еще 2 раза с паузой 100мс
             Http::timeout(2)
                 ->retry(2, 100)
-                ->post($this->webhookUrl, [
+                ->post($webhookUrl, [
                     'action' => $action,
                     'id' => $schedule->id,
                     'title' => $schedule->title,
