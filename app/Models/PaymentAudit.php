@@ -55,6 +55,8 @@ class PaymentAudit extends Model
         'transaction_id' => 'Примечание',
         'is_conditional' => 'Условный доступ',
         'deposit_consumed_at' => 'Зачёт депозита',
+        'consumed_amount' => 'Зачтено из депозита',
+        'deposit_credit_applied' => 'Предоплата в цене заказа',
     ];
 
     /**

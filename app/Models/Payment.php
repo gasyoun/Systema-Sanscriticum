@@ -43,6 +43,8 @@ class Payment extends Model
         'referral_credit_applied',
         'tariff',
         'deposit_consumed_at',
+        'consumed_amount',
+        'deposit_credit_applied',
         'status',
         'transaction_id',
         // --- Полу-интегрированная валютная оплата (PayPal-заявка студента) ---
@@ -88,6 +90,8 @@ class Payment extends Model
         'foreign_amount' => 'decimal:2',
         'referral_credit_applied' => 'decimal:2',
         'deposit_consumed_at' => 'datetime',
+        'consumed_amount' => 'decimal:2',
+        'deposit_credit_applied' => 'decimal:2',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
         'start_block' => 'integer',
@@ -652,9 +656,16 @@ class Payment extends Model
     }
 
     /**
-     * Гасит все ранее оплаченные и ещё не зачтённые депозиты по тому же
-     * курсу, что и текущий «реальный» платёж. updateQuietly — чтобы не
-     * перезапустить booted-хуки и не зациклить обсёрвер.
+     * Гасит ранее оплаченные и ещё не зачтённые депозиты по тому же курсу,
+     * что и текущий «реальный» платёж — но только НА СУММУ, реально вычтенную
+     * из цены этого заказа (deposit_credit_applied, пишется в чекауте).
+     * Остаток депозита переживает покупку дешевле депозита и зачтётся в
+     * следующий заказ (money-core, H071 #10: раньше гасился весь депозит
+     * целиком, излишек молча сгорал).
+     *
+     * Легаси-платежи без deposit_credit_applied (null — созданы до колонки)
+     * гасят всё целиком, как раньше. updateQuietly — чтобы не перезапустить
+     * booted-хуки и не зациклить обсёрвер.
      */
     public function consumeDepositsForCourse(): void
     {
@@ -662,14 +673,48 @@ class Payment extends Model
             return;
         }
 
-        self::query()
+        $deposits = self::query()
             ->where('user_id', $this->user_id)
             ->where('course_id', $this->course_id)
             ->unconsumedDeposits()
-            ->get()
-            ->each(fn (self $deposit) => $deposit->updateQuietly([
+            ->orderBy('created_at')
+            ->get();
+
+        if ($this->deposit_credit_applied === null) {
+            $deposits->each(fn (self $deposit) => $deposit->updateQuietly([
+                'consumed_amount' => $deposit->amount,
                 'deposit_consumed_at' => now(),
             ]));
+
+            return;
+        }
+
+        $remaining = (float) $this->deposit_credit_applied;
+
+        foreach ($deposits as $deposit) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $alreadyConsumed = (float) ($deposit->consumed_amount ?? 0);
+            $residual = (float) $deposit->amount - $alreadyConsumed;
+
+            if ($residual <= 0) {
+                // Стоимость выбрана ранее, но штамп не поставлен — дочищаем.
+                $deposit->updateQuietly(['deposit_consumed_at' => now()]);
+
+                continue;
+            }
+
+            $take = min($residual, $remaining);
+            $remaining -= $take;
+            $newConsumed = $alreadyConsumed + $take;
+
+            $deposit->updateQuietly([
+                'consumed_amount' => $newConsumed,
+                'deposit_consumed_at' => $newConsumed >= (float) $deposit->amount ? now() : null,
+            ]);
+        }
     }
 
     /**

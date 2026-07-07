@@ -32,6 +32,8 @@ class PaymentAuditObserver
         'transaction_id',
         'is_conditional',
         'deposit_consumed_at',
+        'consumed_amount',
+        'deposit_credit_applied',
     ];
 
     public function created(Payment $payment): void

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Tariff extends Model
 {
@@ -193,10 +194,33 @@ class Tariff extends Model
             return (float) $this->price;
         }
 
+        // 1. Скидка (персональная/лояльность).
+        $finalPrice = $this->priceAfterDiscountForUser($user);
+
+        // 2. ЗАЧЁТ ПРИ ДОКУПКЕ: вычитаем уже оплаченное за то, что этот тариф «содержит».
+        $finalPrice -= $this->upgradeCreditForUser($user);
+
+        // 3. Зачёт неизрасходованной предоплаты (бронь курса / пробное занятие) —
+        //    только в размере, реально нужном для покрытия остатка цены: излишек
+        //    депозита не сгорает, а остаётся на следующую покупку (H071 #10).
+        $finalPrice -= $this->prepaidCreditAppliedForUser($user);
+
+        return max(0, $finalPrice);
+    }
+
+    /**
+     * Цена после скидки (персональная скидка студента ИМЕЕТ ПРИОРИТЕТ и
+     * применяется ВМЕСТО накопительной лояльности — не суммируются), ДО зачёта
+     * предоплаты и докупки.
+     */
+    public function priceAfterDiscountForUser($user): float
+    {
         $finalPrice = (float) $this->price;
 
-        // 1. Скидка. Персональная скидка студента на этот курс ИМЕЕТ ПРИОРИТЕТ и
-        //    применяется ВМЕСТО накопительной лояльности (не суммируется).
+        if (! $user) {
+            return $finalPrice;
+        }
+
         $individual = $this->course_id
             ? StudentDiscount::activeFor($user->id, $this->course_id, $this->block_number)
             : null;
@@ -210,15 +234,29 @@ class Tariff extends Model
             }
         }
 
-        // 2. Зачёт неизрасходованной предоплаты (бронь курса / пробное занятие).
-        //    max(0, ...) в конце страхует от отрицательной цены, если предоплата
-        //    превышает стоимость блока.
-        $finalPrice -= $this->prepaidCreditForUser($user);
+        return $finalPrice;
+    }
 
-        // 3. ЗАЧЁТ ПРИ ДОКУПКЕ: вычитаем уже оплаченное за то, что этот тариф «содержит».
-        $finalPrice -= $this->upgradeCreditForUser($user);
+    /**
+     * Какая часть доступной предоплаты (депозит/пробное) БУДЕТ зачтена при
+     * покупке этого тарифа: min(доступно, сколько осталось покрыть после скидки
+     * и зачёта докупки). Ровно эта сумма пишется в payments.deposit_credit_applied
+     * при создании заказа и ровно она гасится из депозитов при его оплате.
+     */
+    public function prepaidCreditAppliedForUser($user): float
+    {
+        if (! $user) {
+            return 0.0;
+        }
 
-        return max(0, $finalPrice);
+        $available = $this->prepaidCreditForUser($user);
+        if ($available <= 0) {
+            return 0.0;
+        }
+
+        $need = max(0.0, $this->priceAfterDiscountForUser($user) - $this->upgradeCreditForUser($user));
+
+        return min($available, $need);
     }
 
     /**
@@ -238,12 +276,22 @@ class Tariff extends Model
             return 0.0;
         }
 
+        // Стоимость содержащегося тарифа = net-кэш (amount) + зачтённая в него
+        // предоплата (deposit_credit_applied): раньше депозитная часть половины
+        // терялась при докупке целого блока, и студент переплачивал ровно на
+        // сумму депозита (money-core, H071 #9). Условие amount>0 расширено на
+        // «или была зачтена предоплата» — половина, полностью покрытая депозитом
+        // (amount=0), тоже даёт зачёт; нулевые access-only siblings и conditional
+        // по-прежнему отсекаются (у них deposit_credit_applied пуст + ->real()).
         $query = Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->paid()
             ->real()
-            ->where('amount', '>', 0);
+            ->where(function ($q) {
+                $q->where('amount', '>', 0)
+                    ->orWhere('deposit_credit_applied', '>', 0);
+            });
 
         if ($this->type === 'block' && $this->block_half) {
             // Половина блока ничего не содержит — зачёта нет.
@@ -267,7 +315,7 @@ class Tariff extends Model
             $query->where('tariff', 'like', 'block_%');
         }
 
-        $credit = (float) $query->sum('amount');
+        $credit = (float) $query->sum(DB::raw('amount + COALESCE(deposit_credit_applied, 0)'));
         $refunds = $this->upgradeRefundsForUser($user);
 
         return max(0.0, $credit + $refunds);
@@ -308,11 +356,13 @@ class Tariff extends Model
             return 0.0;
         }
 
+        // Остаток = amount − consumed_amount: частично зачтённый депозит
+        // (deposit_consumed_at ещё null) отдаёт в кредит только непотраченное.
         return (float) Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $this->course_id)
             ->unconsumedDeposits()
-            ->sum('amount');
+            ->sum(DB::raw('amount - COALESCE(consumed_amount, 0)'));
     }
 
     /**

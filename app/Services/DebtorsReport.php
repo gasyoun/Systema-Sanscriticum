@@ -833,7 +833,7 @@ class DebtorsReport
             ->whereIn('course_id', $courseIds)
             ->unconsumedDeposits()
             ->groupBy('user_id', 'course_id')
-            ->selectRaw('user_id, course_id, SUM(amount) AS total')
+            ->selectRaw('user_id, course_id, SUM(amount - COALESCE(consumed_amount, 0)) AS total')
             ->get();
 
         foreach ($sums as $s) {
@@ -863,7 +863,7 @@ class DebtorsReport
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
             ->unconsumedDeposits()
-            ->sum('amount');
+            ->sum(\Illuminate\Support\Facades\DB::raw('amount - COALESCE(consumed_amount, 0)'));
 
         return $this->depositCreditCache[$key] = $sum;
     }

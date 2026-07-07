@@ -45,6 +45,8 @@ class PaymentsRelationManager extends RelationManager
 
                         if ($record->tariff === 'deposit' && $record->deposit_consumed_at) {
                             $label .= ' · зачтено '.$record->deposit_consumed_at->format('d.m.Y');
+                        } elseif ($record->tariff === 'deposit' && (float) ($record->consumed_amount ?? 0) > 0) {
+                            $label .= ' · зачтено частично: '.number_format((float) $record->consumed_amount, 0, ',', ' ').' ₽';
                         }
 
                         return $label;
