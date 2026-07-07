@@ -28,6 +28,8 @@ class PaymentObserver
         // Платёж сразу создан как paid → наградить пригласившего (если есть).
         if (in_array($payment->status, self::SUCCESS_STATUSES, true)) {
             app(\App\Services\ReferralService::class)->rewardForPayment($payment);
+            // Партнёрская программа (B2B) — независимая от студенческой (no-op, если выключена).
+            app(\App\Services\PartnerService::class)->rewardForPayment($payment);
         }
     }
 
@@ -53,6 +55,8 @@ class PaymentObserver
         // Основной кейс: вебхук Точки перевёл платёж в paid → награда рефереру.
         if ($justBecamePaid) {
             app(\App\Services\ReferralService::class)->rewardForPayment($payment);
+            // Партнёрская программа (B2B) — независимая от студенческой (no-op, если выключена).
+            app(\App\Services\PartnerService::class)->rewardForPayment($payment);
         }
 
         // Реверс: платёж откатили из paid (вебхук отмены/возврата или правка в
@@ -60,6 +64,8 @@ class PaymentObserver
         if ($payment->isDirty('status')
             && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
             app(\App\Services\ReferralService::class)->reverseRewardForPayment($payment);
+            // Зеркально снимаем ещё не выплаченное партнёрское вознаграждение.
+            app(\App\Services\PartnerService::class)->reverseRewardForPayment($payment);
         }
     }
 

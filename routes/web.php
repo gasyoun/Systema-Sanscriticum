@@ -392,3 +392,12 @@ Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialAuthCo
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
 // ВАЖНО: Этот маршрут ВСЕГДА строго в самом низу!
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
+
+// === ПАРТНЁРСКАЯ (АГЕНТСКАЯ) ПРОГРАММА (за флагом config/partner.php) ===
+// Публичный лендинг с условиями + приём заявок. Контроллер сам отдаёт 404,
+// когда программа выключена. throttle на регистрацию — публичный приём формы.
+Route::get('/partners', [\App\Http\Controllers\PartnerController::class, 'landing'])->name('partners.landing');
+Route::post('/partners/register', [\App\Http\Controllers\PartnerController::class, 'register'])
+    ->middleware('throttle:10,1')
+    ->name('partners.register');
+Route::get('/partners/{code}', [\App\Http\Controllers\PartnerController::class, 'registered'])->name('partners.registered');

@@ -79,3 +79,12 @@ Route::post('/webhooks/max-magnet/{secret}', [\App\Http\Controllers\Webhooks\Max
 Route::post('/webhooks/lead-step', [\App\Http\Controllers\Webhooks\LeadStepWebhookController::class, 'handle'])
     ->middleware('verify.n8n.leadstep')
     ->name('webhook.lead-step');
+
+// === ПАРТНЁРСКИЙ БОТ (агентская программа) ===
+// Внешний Telegram-бот (@Partner_..._bot, ?start=agent) регистрирует партнёров
+// и запрашивает их статистику. Общий секрет — заголовок X-Partner-Bot-Secret
+// (config partner.bot_secret; enforce-if-configured). throttle против перебора.
+Route::prefix('partner-bot')->middleware(['verify.partner.bot', 'throttle:30,1'])->group(function () {
+    Route::post('/register', [\App\Http\Controllers\Api\PartnerBotController::class, 'register'])->name('api.partner-bot.register');
+    Route::post('/stats', [\App\Http\Controllers\Api\PartnerBotController::class, 'stats'])->name('api.partner-bot.stats');
+});
