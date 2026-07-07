@@ -2,15 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\TrackLessonViewJob;
+use App\Models\Announcement;
 use App\Models\Course;
+use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
+use App\Models\PranaPerk;
+use App\Models\PranaRedemption;
 use App\Models\Schedule;
+use App\Models\SubscriberMagnet;
 use App\Services\CertificateService;
 use App\Services\CourseMaterialsArchiver;
+use App\Services\DebtPaymentResolver;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\StudentDebtsService;
+use App\Support\Badges;
+use App\Support\OnboardingChecklist;
+use App\Support\PranaLeaderboard;
+use App\Support\TranscriptParser;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -150,20 +162,20 @@ class StudentController extends Controller
         $pranaReasons = config('prana.reasons', []);
 
         // Таблица лидеров по накопленной пране (геймификация).
-        $pranaLeaderboard = \App\Support\PranaLeaderboard::rows(10, $user->id);
+        $pranaLeaderboard = PranaLeaderboard::rows(10, $user->id);
         // Бейджи (достижения) — вычисляются из сигналов прогресса/праны.
-        $badges = \App\Support\Badges::for($user);
+        $badges = Badges::for($user);
         // Магазин праны (spend-sink): активные перки + последние покупки студента.
-        $pranaPerks = \App\Models\PranaPerk::shownInShop()->get();
-        $pranaRedemptions = \App\Models\PranaRedemption::where('user_id', $user->id)
+        $pranaPerks = PranaPerk::shownInShop()->get();
+        $pranaRedemptions = PranaRedemption::where('user_id', $user->id)
             ->latest()->limit(5)->get();
 
-        $debts = app(\App\Services\StudentDebtsService::class)->forUser($user);
+        $debts = app(StudentDebtsService::class)->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
 
         // Варианты самостоятельной оплаты долга (self-service): тариф-ссылки для
         // «не продлил», следующий платёж / погасить всё — для рассрочки.
-        $debtPayResolver = app(\App\Services\DebtPaymentResolver::class);
+        $debtPayResolver = app(DebtPaymentResolver::class);
         $debtPayOptions = $debts->mapWithKeys(fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d, $user)]);
 
         // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
@@ -179,12 +191,12 @@ class StudentController extends Controller
 
         // Чеклист первых шагов (P0-онбординг). Карточку показываем, пока не все
         // шаги выполнены — см. partial onboarding-checklist.
-        $onboarding = \App\Support\OnboardingChecklist::for($user);
+        $onboarding = OnboardingChecklist::for($user);
 
         // Ответы преподавателя, требующие действия студента (работа возвращена на
         // доработку) — чтобы он узнал сразу в кабинете, а не только из письма.
         $homeworkAlerts = $user->homeworkSubmissions()
-            ->where('status', \App\Models\HomeworkSubmission::STATUS_NEEDS_REVISION)
+            ->where('status', HomeworkSubmission::STATUS_NEEDS_REVISION)
             ->with(['lesson:id,course_id,title', 'course:id,slug,title'])
             ->latest('reviewed_at')
             ->get()
@@ -200,6 +212,12 @@ class StudentController extends Controller
             $homeworkAlerts,
         );
 
+        // «Полка подписчика» (H324): бесплатные магниты для подписчиков рассылки.
+        // Пустая коллекция, когда флаг OFF или пользователь не подписчик — partial
+        // сам ничего не рендерит. Платного доступа не касается.
+        $subscriberMagnets = (config('features.newsletter_subscribe') && $user->isNewsletterSubscriber())
+            ? SubscriberMagnet::active()->get()
+            : collect();
 
         return view('student.dashboard', compact(
             'courses',
@@ -218,9 +236,10 @@ class StudentController extends Controller
             'trialLessons',
             'onboarding',
             'homeworkAlerts',
+            'subscriberMagnets',
 
             'continueLearningAction',
-));
+        ));
     }
 
     /**
@@ -406,6 +425,7 @@ class StudentController extends Controller
 
         return $parts ? implode(' · ', $parts) : null;
     }
+
     /**
      * Просмотр содержания курса (список уроков)
      */
@@ -465,7 +485,7 @@ class StudentController extends Controller
         // ==========================================
         // Не dispatchим для админов (они просматривают уроки для проверки, это не учебная активность)
         if (! $user->is_admin) {
-            \App\Jobs\TrackLessonViewJob::dispatch(
+            TrackLessonViewJob::dispatch(
                 userId: $user->id,
                 lessonId: $lesson->id,
                 courseId: $course->id,
@@ -500,7 +520,7 @@ class StudentController extends Controller
         // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
         $upcomingSession = null;
         if (empty($youtubeId) && empty($rutubeId) && empty($lesson->video_url) && $lesson->lesson_date) {
-            $upcomingSession = \App\Models\Schedule::query()
+            $upcomingSession = Schedule::query()
                 ->where('course_id', $course->id)
                 ->where('group_id', $lesson->group_id)
                 ->whereDate('start', $lesson->lesson_date)
@@ -513,7 +533,7 @@ class StudentController extends Controller
         // ==========================================
         // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
         // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
-        $transcriptSentences = \App\Support\TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $transcriptSentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
 
         // Домашняя работа этого студента по уроку (если задание включено)
         $homeworkSubmission = null;
@@ -755,7 +775,7 @@ class StudentController extends Controller
         // Добавили круглые скобки () и явно указали таблицу, чтобы избежать конфликтов!
         $userGroupIds = $user->groups()->pluck('groups.id')->toArray();
 
-        $messages = \App\Models\Announcement::where('is_published', true)
+        $messages = Announcement::where('is_published', true)
             ->orderBy('created_at', 'desc')
             ->get()
             ->filter(function ($announcement) use ($userGroupIds) {

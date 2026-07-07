@@ -36,6 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'wants_email_announcements',
+        'newsletter_subscribed_at',
         'is_admin',
         'role',
         'teacher_id',
@@ -102,6 +103,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'password' => 'hashed',
         'is_admin' => 'boolean',
         'wants_email_announcements' => 'boolean',
+        'newsletter_subscribed_at' => 'datetime',
         'is_lecture_editor' => 'boolean',
         'last_login_at' => 'datetime',
         'cabinet_invite_sent_at' => 'datetime',
@@ -148,6 +150,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function setEmailAttribute(?string $value): void
     {
         $this->attributes['email'] = self::normalizeEmail($value);
+    }
+
+    /**
+     * Подписан ли пользователь на рассылку (H324) — открывает «полку подписчика»
+     * в кабинете. НЕ влияет на платный доступ.
+     */
+    public function isNewsletterSubscriber(): bool
+    {
+        return $this->newsletter_subscribed_at !== null;
     }
 
     /**

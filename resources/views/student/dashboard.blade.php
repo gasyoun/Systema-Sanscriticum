@@ -41,6 +41,8 @@
 
     @include('student.partials.continue-learning-card')
 
+    @include('student.partials.subscriber-shelf')
+
     {{-- ========================================== --}}
     {{-- МОДАЛКА СМЕНЫ ПАРОЛЯ                        --}}
     {{-- ========================================== --}}
