@@ -9,11 +9,14 @@ use App\Models\User;
 use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\ReferralService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -45,7 +48,41 @@ class PaymentController extends Controller
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
-        $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $prana, $user, $tariff) {
+        $result = DB::transaction(function () use ($request, $prana, $user, $tariff) {
+
+            $courseId = $tariff->course->id ?? null;
+
+            if ($courseId) {
+                // Лочим ещё не потраченные депозит/пробное этого курса — сериализует
+                // параллельные createPayment на один и тот же курс/пользователя.
+                Payment::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->unconsumedDeposits()
+                    ->lockForUpdate()
+                    ->get();
+
+                // Депозит/пробное списывается (deposit_consumed_at) только когда
+                // РЕАЛЬНЫЙ платёж дойдёт до paid — не в момент создания pending.
+                // Значит, пока он не потрачен, каждый новый pending-заказ на этот
+                // курс получает СВОЙ полный вычет того же депозита, и оба потом
+                // могут быть оплачены (money-core, H071 #2: 2000₽ депозит был
+                // зачтён дважды на два разных block-заказа). Раз в момент оплаты
+                // неизвестно, какой из параллельных заказов «первый», блокируем
+                // создание ВТОРОГО pending-заказа на курс, пока есть неизрасходованный
+                // депозит и уже открыт другой (не deposit/trial) pending той же покупки.
+                $hasUnspentDeposit = Payment::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->unconsumedDeposits()
+                    ->exists();
+
+                if ($hasUnspentDeposit && Payment::query()->hasOtherPendingOrderForCourse($user->id, $courseId)->exists()) {
+                    throw ValidationException::withMessages([
+                        'tariff_id' => 'У вас уже есть незавершённый заказ по этому курсу, использующий бронь/предоплату. Завершите оплату или отмените его, прежде чем оформлять новый.',
+                    ]);
+                }
+            }
 
             // 1. СЧИТАЕМ ИТОГОВУЮ ЦЕНУ
             $finalPrice = $tariff->calculateFinalPriceForUser($user);
@@ -74,7 +111,7 @@ class PaymentController extends Controller
                 // (money-core, H071 #13). Теперь — явная ошибка вместо тихого
                 // повышения цены.
                 if ($applicable && $promo->hasRecentPendingForUser($user->id)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         'promo_code' => 'У вас уже есть незавершённый заказ с этим промокодом. Завершите оплату или отмените его, прежде чем оформлять новый.',
                     ]);
                 }
@@ -171,7 +208,7 @@ class PaymentController extends Controller
                 } catch (\RuntimeException $e) {
                     // Race: вторая вкладка/двойной клик успели списать раньше. Не отдаём 500 —
                     // транзакция откатится по ValidationException, юзер вернётся к форме с ошибкой.
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         'prana_amount' => 'Не удалось списать прану — обновите страницу и попробуйте снова.',
                     ]);
                 }
@@ -261,7 +298,7 @@ class PaymentController extends Controller
 
         $existing = User::where('email', User::normalizeEmail($request->input('email')))->first();
         if ($existing) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите заказ оттуда.',
             ]);
         }
@@ -282,7 +319,7 @@ class PaymentController extends Controller
 
         // Реферал: привязываем нового студента к пригласившему по коду
         // (из формы или сохранённого в сессии при переходе по ссылке).
-        app(\App\Services\ReferralService::class)
+        app(ReferralService::class)
             ->attachReferrer($user, $request->input('ref') ?: session('ref'));
 
         auth()->login($user);
