@@ -358,6 +358,26 @@ class PaymentResource extends Resource
                     ->formatStateUsing(fn (?string $state): string => Payment::statusLabel($state))
                     ->alignment(\Filament\Support\Enums\Alignment::Center),
 
+                // Способ оплаты из вебхука Точки (H226): card/sbp. Пусто — ручной
+                // платёж, PayPal или вебхук до появления поля; такие в юнит-экономике
+                // считаются вилкой эквайринга.
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Способ')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'card' => 'info',
+                        'sbp' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'card' => 'Карта',
+                        'sbp' => 'СБП',
+                        default => (string) $state,
+                    })
+                    ->placeholder('—')
+                    ->alignment(\Filament\Support\Enums\Alignment::Center)
+                    ->toggleable(),
+
                 // 6. ПРИМЕЧАНИЕ
                 Tables\Columns\TextColumn::make('transaction_id')
                     ->label('Примечание (Банк)')
@@ -418,6 +438,22 @@ class PaymentResource extends Resource
                         'paid' => 'Оплачено',
                         'canceled' => 'Отменено',
                     ]),
+
+                // Способ оплаты Точки; «Не определён» = NULL (ручные платежи,
+                // PayPal, старые вебхуки) — их эквайринг в юнит-экономике вилка.
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->label('Способ оплаты')
+                    ->options([
+                        'card' => 'Карта',
+                        'sbp' => 'СБП',
+                        'unknown' => 'Не определён',
+                    ])
+                    ->query(fn ($query, array $data) => $query->when(
+                        $data['value'] ?? null,
+                        fn ($q, $value) => $value === 'unknown'
+                            ? $q->whereNull('payment_method')
+                            : $q->where('payment_method', $value),
+                    )),
 
                 // Валютные заявки студентов (PayPal), ожидающие ручной сверки.
                 Tables\Filters\Filter::make('paypal_pending')
