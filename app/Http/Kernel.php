@@ -37,6 +37,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CaptureReferral::class,
+            \App\Http\Middleware\CapturePartnerReferral::class,
             \App\Http\Middleware\CaptureAttribution::class,
         ],
 
@@ -79,5 +80,7 @@ class Kernel extends HttpKernel
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
         'verify.tg.bot' => \App\Http\Middleware\VerifyTelegramBotWebhook::class,
         'verify.vk.bot' => \App\Http\Middleware\VerifyVkBotWebhook::class,
+        // --- ПАРТНЁРСКИЙ БОТ (enforce-if-configured) ---
+        'verify.partner.bot' => \App\Http\Middleware\VerifyPartnerBotWebhook::class,
     ];
 }
