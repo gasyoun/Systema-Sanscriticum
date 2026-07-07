@@ -84,4 +84,43 @@ class CalendarWidgetTest extends TestCase
 
         Livewire::test(ScheduleCalendarWidget::class)->assertOk();
     }
+
+    /**
+     * Регресс на прод-403: базовый Filament\Widget через CanAuthorizeAccess на
+     * КАЖДОЙ гидрации делает abort_unless(canView(), 403). Когда canView()
+     * возвращал false, initial mount проходил (тест выше был зелёным), но первый
+     * же AJAX FullCalendar (гидрация) падал 403 поверх загруженной страницы.
+     * Здесь дёргаем $refresh — это полный цикл гидрации, который ловил бы баг.
+     *
+     * @test
+     */
+    public function widget_survives_hydration_for_authorized_role(): void
+    {
+        [, $teacherUser] = $this->makeTeacher('a@example.test');
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($teacherUser);
+
+        $this->assertTrue(ScheduleCalendarWidget::canView());
+
+        Livewire::test(ScheduleCalendarWidget::class)
+            ->call('$refresh')
+            ->assertOk();
+    }
+
+    /** @test */
+    public function widget_is_excluded_from_dashboard_autodiscovery(): void
+    {
+        // Виджет живёт только на CalendarPage — не должен всплывать на Dashboard.
+        $this->assertFalse(ScheduleCalendarWidget::isDiscovered());
+    }
+
+    /** @test */
+    public function widget_is_hidden_from_non_privileged_roles(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs(User::factory()->create(['role' => Roles::MANAGER]));
+
+        $this->assertFalse(ScheduleCalendarWidget::canView());
+    }
 }
