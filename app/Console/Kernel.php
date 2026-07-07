@@ -26,6 +26,15 @@ class Kernel extends ConsoleKernel
         $schedule->command('unreliable:recount')
             ->dailyAt('03:45');
 
+        // Контроль дебиторки/рассрочки (H257): после promises:expire, чтобы
+        // свежая просрочка уже учтена в пороге. Алерт финдиру при превышении —
+        // замена ручного мониторинга владельца. Гейт «есть получатели» — внутри.
+        $schedule->command('receivables:check')
+            ->dailyAt('04:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('receivables-threshold-check');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.
