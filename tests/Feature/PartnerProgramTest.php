@@ -287,6 +287,17 @@ class PartnerProgramTest extends TestCase
     }
 
     /** @test */
+    public function clean_partner_link_sets_pref_and_redirects_home(): void
+    {
+        $partner = $this->activePartner();
+
+        $this->get('/mitram/'.$partner->code)
+            ->assertRedirect('/');
+
+        $this->assertSame($partner->code, session('pref'));
+    }
+
+    /** @test */
     public function landing_is_hidden_when_disabled_and_visible_when_enabled(): void
     {
         config(['partner.enabled' => false]);

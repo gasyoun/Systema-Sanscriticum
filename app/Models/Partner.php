@@ -90,7 +90,7 @@ class Partner extends Model
     /** Публичная партнёрская ссылка: last-touch атрибуция клиента по коду. */
     public function referralLink(): string
     {
-        return url('/?pref='.$this->code);
+        return url('/mitram/'.$this->code);
     }
 
     /**

@@ -402,6 +402,8 @@ Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialAuthCo
 // Публичный лендинг с условиями + приём заявок. Контроллер сам отдаёт 404,
 // когда программа выключена. throttle на регистрацию — публичный приём формы.
 Route::get('/partners', [\App\Http\Controllers\PartnerController::class, 'landing'])->name('partners.landing');
+// Чистая (SEO-friendly, без «?») партнёрская ссылка: /mitram/<КОД> → сессия + редирект на /.
+Route::get('/mitram/{code}', [\App\Http\Controllers\PartnerController::class, 'track'])->name('partners.track');
 Route::post('/partners/register', [\App\Http\Controllers\PartnerController::class, 'register'])
     ->middleware('throttle:10,1')
     ->name('partners.register');

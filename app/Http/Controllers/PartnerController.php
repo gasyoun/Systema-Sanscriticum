@@ -34,6 +34,28 @@ class PartnerController extends Controller
         ]);
     }
 
+    /**
+     * Чистая (без «?») партнёрская ссылка /partner/{code}: кладёт код в сессию
+     * (last-touch), привязывает залогиненного клиента и уводит на главную —
+     * ссылку удобно шарить, без UTM-хвоста в адресной строке.
+     */
+    public function track(Request $request, string $code): RedirectResponse
+    {
+        $this->ensureEnabled();
+
+        $code = trim($code);
+        if ($code !== '') {
+            if (! $request->session()->has('pref')) {
+                $request->session()->put('pref', $code);
+            }
+            if ($request->user()) {
+                app(\App\Services\PartnerService::class)->attachPartner($request->user(), $code);
+            }
+        }
+
+        return redirect('/');
+    }
+
     public function register(Request $request): RedirectResponse
     {
         $this->ensureEnabled();
