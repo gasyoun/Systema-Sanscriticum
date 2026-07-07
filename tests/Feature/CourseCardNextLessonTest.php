@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
+use App\Models\PaymentPromise;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -100,5 +101,86 @@ class CourseCardNextLessonTest extends TestCase
             ->assertOk()
             ->assertSee('Урок 2')
             ->assertSee(route('student.lesson', [$course->slug, $lessons[1]->id]), false);
+    }
+    /** @test */
+    public function continue_learning_block_points_fresh_student_to_the_first_lesson(): void
+    {
+        [$student, $course, $lessons] = $this->enrolledStudentWithLessons();
+
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Продолжить обучение')
+            ->assertSee('Грамматика санскрита')
+            ->assertSee('Урок 1')
+            ->assertSee('0%')
+            ->assertSee('Начать обучение')
+            ->assertSee(route('student.lesson', [$course->slug, $lessons[0]->id]), false);
+    }
+
+    /** @test */
+    public function continue_learning_block_points_partially_completed_student_to_next_lesson(): void
+    {
+        [$student, $course, $lessons] = $this->enrolledStudentWithLessons();
+        $this->complete($student, $lessons[0]);
+
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Продолжить обучение')
+            ->assertSee('Урок 2')
+            ->assertSee('33%')
+            ->assertSee('Продолжить')
+            ->assertSee(route('student.lesson', [$course->slug, $lessons[1]->id]), false);
+    }
+
+    /** @test */
+    public function continue_learning_block_prioritizes_payment_action_over_learning(): void
+    {
+        [$student, $course] = $this->enrolledStudentWithLessons(1);
+
+        PaymentPromise::create([
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'promised_at' => now()->subDay()->toDateString(),
+            'amount' => 2000,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Нужно действие по оплате')
+            ->assertSee('Грамматика санскрита')
+            ->assertSee('2 000 ₽')
+            ->assertSee('Оплатить следующий взнос')
+            ->assertSee(route('student.debt.promise.pay', PaymentPromise::first()), false);
+    }
+
+    /** @test */
+    public function continue_learning_block_handles_courses_with_no_next_lessons(): void
+    {
+        [$student, $course, $lessons] = $this->enrolledStudentWithLessons();
+        $lessons->each(fn (Lesson $lesson) => $this->complete($student, $lesson));
+
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Все доступные уроки пройдены')
+            ->assertSee('Открыть курс')
+            ->assertSee(route('student.course', $course->slug), false);
+    }
+
+    /** @test */
+    public function continue_learning_block_handles_students_without_courses(): void
+    {
+        $student = User::factory()->create();
+
+        $this->actingAs($student)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Пока нет доступных курсов')
+            ->assertSee('Перейти в каталог')
+            ->assertSee(route('shop.index'), false);
     }
 }
