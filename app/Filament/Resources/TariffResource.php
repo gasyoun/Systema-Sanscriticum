@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TariffResource\Pages;
+use App\Models\CourseBlock;
 use App\Models\Tariff;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -88,7 +89,7 @@ class TariffResource extends Resource
                                     return [];
                                 }
 
-                                return \App\Models\CourseBlock::where('course_id', $courseId)
+                                return CourseBlock::where('course_id', $courseId)
                                     ->orderBy('number')
                                     ->get()
                                     ->mapWithKeys(fn ($b) => [$b->id => '№'.$b->number.($b->title ? ' — '.$b->title : '')])
@@ -119,6 +120,11 @@ class TariffResource extends Resource
                         Forms\Components\Toggle::make('is_active')
                             ->label('Активен (можно купить)')
                             ->default(true),
+
+                        Forms\Components\Toggle::make('is_recording')
+                            ->label('Тариф-запись (evergreen)')
+                            ->default(false)
+                            ->helperText('Продаёт ЗАПИСЬ завершённого курса, а не участие в живом потоке. Доступ и цена — как обычно (ключ full/block_N, тот же чекаут). На лендинге завершённого курса CTA станет «Купить запись» (когда включён флаг course_recordings_sales).'),
                     ])->columns(2),
             ]);
     }
@@ -172,6 +178,13 @@ class TariffResource extends Resource
 
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Активен'),
+
+                Tables\Columns\IconColumn::make('is_recording')
+                    ->label('Запись')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-film')
+                    ->falseIcon('heroicon-o-minus-small')
+                    ->falseColor('gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course_id')

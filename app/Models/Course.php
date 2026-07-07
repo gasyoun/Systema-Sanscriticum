@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Course extends Model
 {
@@ -25,6 +27,9 @@ class Course extends Model
         'zoom_meeting_id',
         'is_visible',
         'is_active',
+        // Курс/поток завершён, записи опубликованы. Включает «режим записей» на
+        // лендинге (см. sellsRecordings()). Аддитивно, по умолчанию false.
+        'is_completed',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -48,7 +53,7 @@ class Course extends Model
         'meta_description',
     ];
 
-    public function categories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_course');
     }
@@ -101,12 +106,41 @@ class Course extends Model
         'is_visible' => 'boolean',
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
+        'is_completed' => 'boolean',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
         'audience' => 'array',
         'outcomes' => 'array',
     ];
+
+    /** Курс/поток завершён (записи опубликованы, повторного набора нет). */
+    public function isCompleted(): bool
+    {
+        return (bool) $this->is_completed;
+    }
+
+    /**
+     * Показывать ли на лендинге «режим записи» вместо «Записаться» (H266, M1).
+     * Единственный источник правды для переключения CTA. Три условия, все
+     * обязательны:
+     *   1) фича-флаг course_recordings_sales ВКЛ (deploy-рубильник, по умолчанию OFF);
+     *   2) курс помечен завершённым (is_completed);
+     *   3) есть хотя бы один активный тариф-запись (is_recording).
+     * Доступ/цена при этом НЕ меняются — это косметика витрины поверх обычного
+     * key-based чекаута (accessKey() → 'full'/'block_N').
+     */
+    public function sellsRecordings(): bool
+    {
+        if (! config('features.course_recordings_sales', false) || ! $this->isCompleted()) {
+            return false;
+        }
+
+        return $this->tariffs()
+            ->where('is_active', true)
+            ->where('is_recording', true)
+            ->exists();
+    }
 
     /**
      * Техтребования курса: per-course override или общий дефолт. Пусто на курсе →
@@ -309,7 +343,7 @@ class Course extends Model
      * preview-роут (ShopController::preview): блок/CTA видны ровно тогда, когда
      * урок реально открывается. hasOne берёт первый по sort_order.
      */
-    public function previewLesson(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function previewLesson(): HasOne
     {
         return $this->hasOne(Lesson::class)
             ->where('is_preview', true)
@@ -321,7 +355,7 @@ class Course extends Model
     // ==========================================
     // СВЯЗЬ: Один курс имеет много оплат
     // ==========================================
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
@@ -365,7 +399,7 @@ class Course extends Model
      * `end` — от `start` минус DEFAULT_DURATION_HOURS, как в Schedule::isLive(),
      * чтобы идущее сейчас занятие не пропадало из списка ровно в момент старта.
      */
-    public function upcomingSchedules(int $limit = 24): \Illuminate\Database\Eloquent\Collection
+    public function upcomingSchedules(int $limit = 24): Collection
     {
         $groupIds = $this->groups()->pluck('groups.id');
 
