@@ -8,7 +8,7 @@ use DateTimeImmutable;
 
 /**
  * Чистое значение-объект: снимок FSRS-состояния одной карточки для конкретного
- * пользователя. Не привязан к Eloquent — {@see \App\Services\Srs\ReviewService}
+ * пользователя. Не привязан к Eloquent — {@see ReviewService}
  * маппит его в/из строки srs_review_states. Порт `Card` из открытой реализации
  * FSRS (open-spaced-repetition/py-fsrs).
  */
@@ -21,8 +21,7 @@ class FsrsCard
         public ?float $difficulty = null,
         public ?DateTimeImmutable $due = null,
         public ?DateTimeImmutable $lastReview = null,
-    ) {
-    }
+    ) {}
 
     /** Свежая карточка, ещё ни разу не повторявшаяся (Learning, шаг 0). */
     public static function fresh(DateTimeImmutable $now): self

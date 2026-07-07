@@ -60,7 +60,7 @@ class FsrsTest extends TestCase
      */
     public function test_reference_memo_state(): void
     {
-        $fsrs = new Fsrs();
+        $fsrs = new Fsrs;
 
         $ratings = [Rating::Again, Rating::Good, Rating::Good, Rating::Good, Rating::Good, Rating::Good];
         $ivls = [0, 0, 1, 3, 8, 21];

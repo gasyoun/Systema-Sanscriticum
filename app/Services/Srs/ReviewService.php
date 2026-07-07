@@ -75,7 +75,7 @@ class ReviewService
      * сколько секунд до следующего показа, если сейчас нажать эту кнопку. Fuzz
      * выключен, чтобы подписи на кнопках были стабильными.
      *
-     * @return array<int, int>  ключ — Rating->value, значение — секунды до due
+     * @return array<int, int> ключ — Rating->value, значение — секунды до due
      */
     public function previewIntervals(User $user, SrsCard $card, ?DateTimeImmutable $now = null): array
     {

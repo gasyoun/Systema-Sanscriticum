@@ -13,8 +13,8 @@ use InvalidArgumentException;
  * Дословный порт эталонной открытой реализации
  * {@link https://github.com/open-spaced-repetition/py-fsrs} (FSRS-6, 21 вес) на PHP.
  * Ничего не «изобретаем» — формулы, константы и веса перенесены как есть, а
- * численная точность подтверждается эталонными векторами в
- * {@see \Tests\Unit\Srs\FsrsTest} (те же значения, что в py-fsrs `tests/test_basic.py`).
+ * численная точность подтверждается эталонными векторами в `FsrsTest`
+ * (те же значения, что в py-fsrs `tests/test_basic.py`).
  *
  * Замечание о версии: handoff H211 (05-07-2026) называл «19 весов» (FSRS-5); к моменту
  * реализации (07-07-2026) эталон перешёл на FSRS-6 (21 вес, decay — обучаемый вес №20).
@@ -31,7 +31,9 @@ class Fsrs
     ];
 
     private const STABILITY_MIN = 0.001;
+
     private const MIN_DIFFICULTY = 1.0;
+
     private const MAX_DIFFICULTY = 10.0;
 
     /** Диапазоны «размытия» интервала (fuzz) — как в эталоне. */
@@ -49,9 +51,9 @@ class Fsrs
     private float $factor;
 
     /**
-     * @param  float[]  $parameters       21 вес FSRS (по умолчанию — эталонные)
-     * @param  int[]    $learningSteps     Под-дневные шаги обучения, в секундах
-     * @param  int[]    $relearningSteps   Под-дневные шаги переобучения, в секундах
+     * @param  float[]  $parameters  21 вес FSRS (по умолчанию — эталонные)
+     * @param  int[]  $learningSteps  Под-дневные шаги обучения, в секундах
+     * @param  int[]  $relearningSteps  Под-дневные шаги переобучения, в секундах
      */
     public function __construct(
         array $parameters = self::DEFAULT_PARAMETERS,

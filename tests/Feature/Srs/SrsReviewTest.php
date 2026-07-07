@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Srs;
 
+use App\Http\Controllers\SrsController;
 use App\Livewire\SrsReview;
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
@@ -93,7 +94,7 @@ class SrsReviewTest extends TestCase
 
         $this->expectException(NotFoundHttpException::class);
 
-        (new \App\Http\Controllers\SrsController())->review();
+        (new SrsController)->review();
     }
 
     public function test_component_gated_when_flag_disabled(): void
