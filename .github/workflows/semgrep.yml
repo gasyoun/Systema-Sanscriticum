@@ -1,0 +1,36 @@
+name: Semgrep (PHP SAST)
+
+# CodeQL cannot analyze PHP (see codeql.yml comment) — this is the actual static
+# security gate for the language the whole app is written in. Advisory/non-blocking
+# while the false-positive rate is triaged (H081 Part A); promote to required once
+# clean, see docs/SECURITY_ROADMAP.md Wave 3.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Semgrep scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    # Advisory: findings are surfaced but do not fail the job/PR yet.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config p/php \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --error \
+            --metrics=off
