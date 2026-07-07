@@ -190,6 +190,16 @@ class StudentController extends Controller
             ->get()
             ->filter(fn ($s) => $s->lesson && $s->course)
             ->values();
+        $continueLearningAction = $this->buildContinueLearningAction(
+            $courses,
+            $nextLessonByCourseId,
+            $completedLessonIds,
+            $debts,
+            $debtPayOptions,
+            $trialLessons,
+            $homeworkAlerts,
+        );
+
 
         return view('student.dashboard', compact(
             'courses',
@@ -208,9 +218,194 @@ class StudentController extends Controller
             'trialLessons',
             'onboarding',
             'homeworkAlerts',
-        ));
+        
+            'continueLearningAction',
+));
     }
 
+    /**
+     * Верхний блок кабинета: одно главное действие, без изменения доступов/оплат.
+     */
+    private function buildContinueLearningAction(
+        $courses,
+        $nextLessonByCourseId,
+        array $completedLessonIds,
+        $debts,
+        $debtPayOptions,
+        $trialLessons,
+        $homeworkAlerts,
+    ): array {
+        foreach ($debts as $debt) {
+            $opts = $debtPayOptions[$debt->course_id] ?? null;
+            $cta = is_array($opts) ? $this->continueLearningDebtCta($opts) : null;
+
+            if ($cta !== null) {
+                return [
+                    'kind' => 'debt',
+                    'title' => 'Нужно действие по оплате',
+                    'body' => $debt->course->title ?? 'Курс',
+                    'meta' => $this->continueLearningDebtMeta($debt),
+                    'cta' => $cta,
+                ];
+            }
+        }
+
+        $homework = $homeworkAlerts->first();
+        if ($homework) {
+            return [
+                'kind' => 'homework',
+                'title' => 'Домашнее задание вернулось на доработку',
+                'body' => $homework->course->title ?? 'Курс',
+                'meta' => $homework->lesson->title ?? null,
+                'cta' => [
+                    'label' => 'Открыть урок',
+                    'url' => route('student.lesson', [$homework->course->slug, $homework->lesson->id]),
+                    'method' => 'GET',
+                ],
+            ];
+        }
+
+        $trial = $trialLessons->first();
+        if ($trial) {
+            return [
+                'kind' => 'trial',
+                'title' => 'Открыто пробное занятие',
+                'body' => $trial->course->title,
+                'meta' => $trial->lesson->title,
+                'cta' => [
+                    'label' => 'Перейти к занятию',
+                    'url' => route('student.lesson', [$trial->course->slug, $trial->lesson->id]),
+                    'method' => 'GET',
+                ],
+            ];
+        }
+
+        foreach ($courses as $course) {
+            $lesson = $nextLessonByCourseId->get($course->id);
+            if (! $lesson) {
+                continue;
+            }
+
+            $totalLessons = $course->lessons->count();
+            $completedLessons = $course->lessons
+                ->filter(fn (Lesson $courseLesson) => in_array($courseLesson->id, $completedLessonIds, true))
+                ->count();
+            $percent = $totalLessons > 0 ? (int) round(($completedLessons / $totalLessons) * 100) : 0;
+
+            return [
+                'kind' => 'lesson',
+                'title' => 'Продолжить обучение',
+                'body' => $course->title,
+                'meta' => $lesson->title,
+                'progress' => $percent,
+                'cta' => [
+                    'label' => $percent > 0 ? 'Продолжить' : 'Начать обучение',
+                    'url' => route('student.lesson', [$course->slug, $lesson->id]),
+                    'method' => 'GET',
+                ],
+            ];
+        }
+
+        $firstCourse = $courses->first();
+        if ($firstCourse) {
+            return [
+                'kind' => 'completed',
+                'title' => 'Все доступные уроки пройдены',
+                'body' => $firstCourse->title,
+                'meta' => 'Можно вернуться к материалам курса.',
+                'cta' => [
+                    'label' => 'Открыть курс',
+                    'url' => route('student.course', $firstCourse->slug),
+                    'method' => 'GET',
+                ],
+            ];
+        }
+
+        return [
+            'kind' => 'empty',
+            'title' => 'Пока нет доступных курсов',
+            'body' => 'Посмотрите каталог и выберите подходящий курс.',
+            'meta' => null,
+            'cta' => [
+                'label' => 'Перейти в каталог',
+                'url' => route('shop.index'),
+                'method' => 'GET',
+            ],
+        ];
+    }
+
+    private function continueLearningDebtCta(array $opts): ?array
+    {
+        if (($opts['type'] ?? null) === 'arrangement') {
+            if (! empty($opts['next'])) {
+                return [
+                    'label' => 'Оплатить следующий взнос',
+                    'url' => $opts['next']['url'],
+                    'method' => 'POST',
+                ];
+            }
+
+            if (! empty($opts['whole'])) {
+                return [
+                    'label' => 'Погасить всё',
+                    'url' => $opts['whole']['url'],
+                    'method' => 'POST',
+                ];
+            }
+        }
+
+        if (($opts['type'] ?? null) === 'tariff') {
+            if (! empty($opts['full'])) {
+                return [
+                    'label' => 'Оплатить курс',
+                    'url' => $opts['full']['url'],
+                    'method' => 'GET',
+                ];
+            }
+
+            if (! empty($opts['bundle'])) {
+                return [
+                    'label' => 'Оплатить блоки',
+                    'url' => $opts['bundle']['url'],
+                    'method' => 'POST',
+                ];
+            }
+
+            if (! empty($opts['blocks'][0])) {
+                return [
+                    'label' => 'Оплатить блок №'.$opts['blocks'][0]['number'],
+                    'url' => $opts['blocks'][0]['url'],
+                    'method' => 'GET',
+                ];
+            }
+        }
+
+        if (($opts['type'] ?? null) !== 'none') {
+            return [
+                'label' => 'Открыть долги',
+                'url' => '#debts',
+                'method' => 'TAB',
+            ];
+        }
+
+        return null;
+    }
+
+    private function continueLearningDebtMeta(object $debt): ?string
+    {
+        $parts = [];
+        if (! empty($debt->debt_label)) {
+            $parts[] = $debt->debt_label;
+        }
+        if (! empty($debt->debt_amount)) {
+            $parts[] = ($debt->debt_amount_approximate ? '≈ ' : '').number_format((float) $debt->debt_amount, 0, '.', ' ').' ₽';
+        }
+        if (empty($parts) && ! empty($debt->plan_remaining)) {
+            $parts[] = number_format((float) $debt->plan_remaining, 0, '.', ' ').' ₽ осталось по графику';
+        }
+
+        return $parts ? implode(' · ', $parts) : null;
+    }
     /**
      * Просмотр содержания курса (список уроков)
      */
@@ -574,3 +769,4 @@ class StudentController extends Controller
         return view('student.messages', compact('messages'));
     }
 }
+
