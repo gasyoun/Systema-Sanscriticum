@@ -170,6 +170,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 
+    // SRS-карточки (H211, Wave 1) — маршрут появляется только при включённом
+    // флаге srs.enabled (в проде OFF). Пункт меню в layouts.student — под тем же условием.
+    if (config('srs.enabled')) {
+        Route::get('/dvaram/srs', [\App\Http\Controllers\SrsController::class, 'review'])
+            ->name('student.srs');
+    }
+
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
 
     Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');

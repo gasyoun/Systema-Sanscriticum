@@ -99,6 +99,16 @@
                 <i class="fas fa-lock-open mr-3 w-5 text-center {{ request()->routeIs('student.open-lessons') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
                 Открытые уроки
             </a>
+
+            {{-- Карточки SRS (H211) — только при включённом флаге srs.enabled --}}
+            @if (config('srs.enabled'))
+            <a href="{{ route('student.srs') }}"
+               class="{{ request()->routeIs('student.srs') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-layer-group mr-3 w-5 text-center {{ request()->routeIs('student.srs') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Карточки
+            </a>
+            @endif
+
             {{-- Сообщения --}}
             <a href="{{ route('student.messages') }}" 
    class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold 
