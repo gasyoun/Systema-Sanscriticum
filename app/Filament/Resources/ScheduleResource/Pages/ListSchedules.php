@@ -25,8 +25,11 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 
 class ListSchedules extends ListRecords
 {
@@ -152,7 +155,7 @@ class ListSchedules extends ListRecords
                                 ->required()
                                 ->rows(3)
                                 ->default('{TITLE} (#{N}, {DATE}) | {BN}-е занятие {BLOCK}-го блока')
-                                ->helperText(new \Illuminate\Support\HtmlString(
+                                ->helperText(new HtmlString(
                                     'Доступные плейсхолдеры: '
                                     .'<code>{N}</code> <code>{DATE}</code> <code>{TITLE}</code> '
                                     .'<code>{BLOCK}</code> <code>{BN}</code>. '
@@ -232,10 +235,10 @@ class ListSchedules extends ListRecords
                 ->modalDescription('Соберём курсы этого месяца, текст и картинку и отправим в n8n (он постит в сообщество ВК и канал ТГ). Тот же пост уходит автоматически 1-го числа.')
                 ->modalSubmitActionLabel('Опубликовать')
                 ->action(function (): void {
-                    $code = \Illuminate\Support\Facades\Artisan::call('schedule:post-monthly');
-                    $output = trim(\Illuminate\Support\Facades\Artisan::output());
+                    $code = Artisan::call('schedule:post-monthly');
+                    $output = trim(Artisan::output());
 
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title($code === 0 ? 'Отправлено' : 'Ошибка публикации')
                         ->body($output !== '' ? $output : 'Готово.')
                         ->{$code === 0 ? 'success' : 'danger'}()
@@ -393,12 +396,21 @@ class ListSchedules extends ListRecords
 
     /**
      * Один пакетный вебхук в n8n (вместо 60 отдельных через Observer).
+     *
+     * URL — из N8N_SCHEDULE_SHEET_WEBHOOK; нужен PRODUCTION-URL (/webhook/...)
+     * активного workflow, а не /webhook-test/... (тот отвечает 404 вне
+     * редактора n8n). Пусто → интеграция выключена, молча пропускаем.
      */
-    private function sendBulkWebhook(\Illuminate\Support\Collection $schedules): void
+    private function sendBulkWebhook(Collection $schedules): void
     {
+        $webhookUrl = (string) config('services.n8n.schedule_sheet_webhook');
+        if ($webhookUrl === '') {
+            return;
+        }
+
         try {
             Http::timeout(5)->post(
-                'https://context-ai.ru/webhook-test/6a4e0703-4059-47ba-8bad-c3c3d51447ff',
+                $webhookUrl,
                 [
                     'action' => 'bulk_create',
                     'schedules' => $schedules->map(fn (Schedule $s) => [

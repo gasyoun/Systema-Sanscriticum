@@ -2,17 +2,27 @@
 
 namespace App\Models;
 
+use App\Mail\PasswordResetMail;
+use App\Services\Messaging\SmsRuChannel;
+use App\Services\Prana\PranaSettings;
 use App\Support\Roles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+// --- ДОБАВЛЯЕМ КЛАССЫ ДЛЯ ЗАЩИТЫ FILAMENT ---
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-// --- ДОБАВЛЯЕМ КЛАССЫ ДЛЯ ЗАЩИТЫ FILAMENT ---
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 // --- УКАЗЫВАЕМ, ЧТО ЮЗЕР ИСПОЛЬЗУЕТ ИНТЕРФЕЙС FILAMENT ---
@@ -160,7 +170,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return null;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path);
+        return Storage::disk('public')->url($this->avatar_path);
     }
 
     /** Filament подхватывает это для топбара/меню/таблиц (интерфейс HasAvatar). */
@@ -352,7 +362,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     // Персональные скидки студента на курсы.
-    public function individualDiscounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function individualDiscounts(): HasMany
     {
         return $this->hasMany(StudentDiscount::class);
     }
@@ -430,8 +440,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // на русском в фирменном оформлении (через очередь 'mailing').
     public function sendPasswordResetNotification($token): void
     {
-        \Illuminate\Support\Facades\Mail::to($this->email)
-            ->send(new \App\Mail\PasswordResetMail($this, $token));
+        Mail::to($this->email)
+            ->send(new PasswordResetMail($this, $token));
     }
 
     // ==========================================
@@ -459,14 +469,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
                 if (mb_strlen(strip_tags($text)) > 1000) {
 
                     // 1. Текст слишком длинный! Отправляем сначала просто КАРТИНКУ
-                    \Illuminate\Support\Facades\Http::attach(
+                    Http::attach(
                         'photo', fopen($absolutePath, 'r'), basename($absolutePath)
                     )->post("https://api.telegram.org/bot{$token}/sendPhoto", [
                         'chat_id' => $this->telegram_id,
                     ]);
 
                     // 2. А следом отправляем ТЕКСТ
-                    $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                         'chat_id' => $this->telegram_id,
                         'text' => $text,
                         'parse_mode' => 'HTML',
@@ -474,7 +484,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
                 } else {
                     // Текст короткий! Отправляем КАРТИНКУ ВМЕСТЕ С ТЕКСТОМ
-                    $response = \Illuminate\Support\Facades\Http::attach(
+                    $response = Http::attach(
                         'photo', fopen($absolutePath, 'r'), basename($absolutePath)
                     )->post("https://api.telegram.org/bot{$token}/sendPhoto", [
                         'chat_id' => $this->telegram_id,
@@ -485,7 +495,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
             } else {
                 // КАРТИНКИ НЕТ - Отправляем обычный текст
-                $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $this->telegram_id,
                     'text' => $text,
                     'parse_mode' => 'HTML',
@@ -494,7 +504,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
             // ЛОВИМ ОШИБКИ ТЕЛЕГРАМА (теперь они не пройдут незамеченными!)
             if ($response->failed()) {
-                \Illuminate\Support\Facades\Log::error('Ошибка API ТГ: '.$response->body());
+                Log::error('Ошибка API ТГ: '.$response->body());
 
                 return false;
             }
@@ -502,7 +512,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return true;
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Критическая ошибка отправки в ТГ: '.$e->getMessage());
+            Log::error('Критическая ошибка отправки в ТГ: '.$e->getMessage());
 
             return false;
         }
@@ -514,12 +524,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendVkMessage($text, $attachment = null)
     {
         if (empty($this->vk_id)) {
-            \Illuminate\Support\Facades\Log::info("Пропуск ВК: У пользователя {$this->email} не заполнен vk_id в базе.");
+            Log::info("Пропуск ВК: У пользователя {$this->email} не заполнен vk_id в базе.");
 
             return false;
         }
 
-        $token = env('VK_BOT_TOKEN');
+        // env() в рантайме = null при закешированном конфиге (deploy.sh делает
+        // optimize) — VK отвечал error 15 «token required». Только config().
+        $token = config('services.vk.bot_token');
 
         try {
             // Формируем базовые параметры (Я УБРАЛ strip_tags, текст уже подготовлен в Job!)
@@ -536,18 +548,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
                 $params['attachment'] = $attachment;
             }
 
-            $response = \Illuminate\Support\Facades\Http::asForm()->post('https://api.vk.com/method/messages.send', $params);
+            $response = Http::asForm()->post('https://api.vk.com/method/messages.send', $params);
             $result = $response->json();
 
             if (isset($result['error'])) {
-                \Illuminate\Support\Facades\Log::error('ВК АПИ ОШИБКА: '.json_encode($result['error'], JSON_UNESCAPED_UNICODE));
+                Log::error('ВК АПИ ОШИБКА: '.json_encode($result['error'], JSON_UNESCAPED_UNICODE));
 
                 return false;
             }
 
             return true;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Критическая ошибка отправки в ВК: '.$e->getMessage());
+            Log::error('Критическая ошибка отправки в ВК: '.$e->getMessage());
 
             return false;
         }
@@ -559,12 +571,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendSmsMessage(string $text): bool
     {
         if (empty($this->phone)) {
-            \Illuminate\Support\Facades\Log::info("Пропуск SMS: У пользователя {$this->email} не заполнен phone в базе.");
+            Log::info("Пропуск SMS: У пользователя {$this->email} не заполнен phone в базе.");
 
             return false;
         }
 
-        return app(\App\Services\Messaging\SmsRuChannel::class)->send($this->phone, $text);
+        return app(SmsRuChannel::class)->send($this->phone, $text);
     }
 
     // ==========================================
@@ -583,7 +595,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function pranaRank(): array
     {
-        return \App\Services\Prana\PranaSettings::rankFor((int) ($this->lifetime_prana ?? 0));
+        return PranaSettings::rankFor((int) ($this->lifetime_prana ?? 0));
     }
 
     // --- РЕФЕРАЛЬНАЯ ПРОГРАММА ---
@@ -605,7 +617,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         if (blank($this->referral_code)) {
             do {
-                $code = strtoupper(\Illuminate\Support\Str::random(8));
+                $code = strtoupper(Str::random(8));
             } while (static::where('referral_code', $code)->exists());
 
             $this->forceFill(['referral_code' => $code])->save();
@@ -638,7 +650,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     /** Текущий (последний) тред поддержки — для фильтра вкладок Helpdesk. */
-    public function latestSupportConversation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestSupportConversation(): HasOne
     {
         return $this->hasOne(SupportConversation::class)->latestOfMany();
     }
@@ -656,7 +668,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Все сессии пользователя.
      */
-    public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function sessions(): HasMany
     {
         return $this->hasMany(UserSession::class)->orderByDesc('started_at');
     }
@@ -664,7 +676,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Текущая активная сессия (если есть).
      */
-    public function activeSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function activeSession(): HasOne
     {
         return $this->hasOne(UserSession::class)->where('is_active', true)->latestOfMany('started_at');
     }
@@ -672,7 +684,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Все просмотры уроков.
      */
-    public function lessonViews(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function lessonViews(): HasMany
     {
         return $this->hasMany(LessonView::class);
     }
@@ -680,7 +692,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Сырые события активности.
      */
-    public function activityEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function activityEvents(): HasMany
     {
         return $this->hasMany(ActivityEvent::class);
     }
@@ -688,7 +700,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * История начислений и списаний праны.
      */
-    public function pranaTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function pranaTransactions(): HasMany
     {
         return $this->hasMany(PranaTransaction::class)->orderByDesc('created_at');
     }
@@ -705,6 +717,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
         // last_activity_at теперь кастуется в Carbon (см. $casts); parse оставлен
         // как дешёвая защита на случай сырой строки — Carbon::parse(Carbon) идемпотентен.
-        return \Illuminate\Support\Carbon::parse($this->last_activity_at)->gt(now()->subMinutes(5));
+        return Carbon::parse($this->last_activity_at)->gt(now()->subMinutes(5));
     }
 }

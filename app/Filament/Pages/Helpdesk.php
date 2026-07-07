@@ -491,7 +491,8 @@ class Helpdesk extends Page
         } elseif ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}")) {
             // Если пауза стоит во ВКонтакте (ДОБАВЛЕНО asForm())
             Http::asForm()->post('https://api.vk.com/method/messages.send', [
-                'access_token' => env('VK_BOT_TOKEN'),
+                // env() в рантайме = null под config-кешем → VK error 15.
+                'access_token' => config('services.vk.bot_token'),
                 'v' => '5.131',
                 'user_id' => $user->vk_id,
                 'message' => '👨‍🏫 '.$alias.':'."\n".$this->newMessage,
@@ -536,7 +537,8 @@ class Helpdesk extends Page
             if ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}")) {
                 Cache::forget("chat_human_vk_{$user->vk_id}");
                 Http::asForm()->post('https://api.vk.com/method/messages.send', [
-                    'access_token' => env('VK_BOT_TOKEN'),
+                    // env() в рантайме = null под config-кешем → VK error 15.
+                    'access_token' => config('services.vk.bot_token'),
                     'v' => '5.131',
                     'user_id' => $user->vk_id,
                     'message' => '🤖 Куратор завершил диалог. Я снова с вами! Чем я могу помочь?',
