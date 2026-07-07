@@ -55,6 +55,29 @@ There is **no manual group assignment**. The `PaymentObserver` (`app/Observers/P
 
 Courses have `CourseBlock` records (time-windowed sections with `starts_at`/`ends_at`). `Tariff` models can scope access to specific blocks. Access is keyed by string tariff keys stored in `payments.tariff` and matched against lessons: `full`, `block_N` (whole block), and `block_N_hH` (half of a block, H ∈ {1,2}). A block can be sold "in halves": lessons carry `lesson.block_half` (1/2; null = not split), and `Tariff::accessKey()` / `Lesson::unlockingKeys()` / `Lesson::isUnlockedBy()` are the single source of truth for key generation and access checks. `Tariff::calculateFinalPriceForUser()` handles loyalty discounts (via `MarketingSetting`), deposit credits, and upgrade credit via `Tariff::upgradeCreditForUser()` (containment model: buying a whole block credits its already-paid halves; buying `full` credits all paid blocks/halves).
 
+### Receivables & Installments Governance
+
+Installments are **not a separate model** — an installment plan is a group of
+`PaymentPromise` rows sharing an `installment_group_id` (created by
+`InstallmentPlanCreator`). "Receivables" (дебиторка) = the sum of **unmet**
+promises (status `active`/`expired` with an `amount`). The `Debtors` page shows
+*who* owes; `ReceivablesGovernanceService` + the `ReceivablesGovernance` Filament
+page ("Дебиторка: план-факт", `RoleGate::finance()`) are the *control loop*:
+current receivables vs a "max allowable receivables" threshold, illiquid
+(overdue) share, week-over-week delta (reconstructed from the promise ledger — no
+snapshot table), installment-vs-other split, and the three installment limits
+(share of sales, concurrent plans, term). Thresholds and limits live in
+`config/receivables.php` (env-backed) — **never hardcode them in a page/service**.
+The `receivables:check` daily command alerts finance-role users when the threshold
+or a limit is breached (replaces the owner's manual monitoring).
+
+**Commercial policy for installments (условия рассрочки — first-instalment %,
+number of payments, term, and the limits above) is approved by the finance lead
+(финдир), not changed by sales in isolation.** This mirrors the "Алохомора"
+anti-case: installments introduced without finance sign-off produced ~2M ₽ of
+illiquid receivables in 3 weeks. When widening a limit in `config/receivables.php`
+or `installment_limits`, treat it as a finance decision, not a routine tweak.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
