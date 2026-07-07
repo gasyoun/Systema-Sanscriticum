@@ -56,6 +56,18 @@ return [
             'throw' => false,
         ],
 
+        // Off-site назначение еженедельного бэкапа — WebDAV поверх Яндекс.Диска
+        // (driver зарегистрирован в AppServiceProvider::boot() через Storage::extend).
+        // YANDEX_DISK_APP_PASSWORD — пароль приложения (НЕ основной пароль аккаунта),
+        // создаётся на https://id.yandex.ru/security/app-passwords (тип «Диск/WebDAV»).
+        'yandex_disk' => [
+            'driver' => 'webdav',
+            'baseUri' => env('YANDEX_DISK_WEBDAV_URL', 'https://webdav.yandex.ru'),
+            'username' => env('YANDEX_DISK_LOGIN'),
+            'password' => env('YANDEX_DISK_APP_PASSWORD'),
+            'prefix' => env('YANDEX_DISK_BACKUP_PATH', '/Backups/systema-sanscriticum'),
+        ],
+
     ],
 
     /*
