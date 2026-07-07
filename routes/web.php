@@ -1,17 +1,42 @@
 <?php
 
+use App\Filament\Resources\UserResource;
+use App\Http\Controllers\Api\HeartbeatController;
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\DepositController;
+use App\Http\Controllers\DictionaryPageController;
+use App\Http\Controllers\DocController;
+use App\Http\Controllers\Editor\LectureDraftController;
+use App\Http\Controllers\HomeworkController;
+use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\NewsletterSubscribeController;
+use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaypalClaimController;
+use App\Http\Controllers\PranaShopController;
+use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SrsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VkController;
 use App\Models\LandingPage;
+use App\Models\Lesson;
+use App\Models\MarketingSetting;
+use App\Models\Payment;
+use App\Models\User;
+use App\Support\RoleGate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -52,7 +77,7 @@ Route::get('/', function () {
 
     // Открытые занятия для витринной карусели: отобраны вручную через флаг show_on_main
     // (фильтрация is_free + is_published сидит в Lesson::scopeShownOnMain).
-    $openLessons = \App\Models\Lesson::shownOnMain()
+    $openLessons = Lesson::shownOnMain()
         ->with('course:id,slug,title')
         ->latest('lesson_date')
         ->get();
@@ -91,14 +116,14 @@ Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
 
 // --- ВОССТАНОВЛЕНИЕ ПАРОЛЯ (для незалогиненных) ---
 Route::middleware('guest')->group(function () {
-    Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showRequestForm'])
+    Route::get('/forgot-password', [PasswordResetController::class, 'showRequestForm'])
         ->name('password.request');
-    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
         ->middleware('throttle:5,1')
         ->name('password.email');
-    Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'showResetForm'])
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])
         ->name('password.reset');
-    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
         ->middleware('throttle:5,1')
         ->name('password.update');
 });
@@ -110,17 +135,17 @@ Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301))
 // ═══════════════════════════════════════════════════════════════
 // ПУБЛИЧНЫЕ ДОКУМЕНТЫ (оферта, политика, согласия) — до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════
-Route::get('/dokumenty/{slug}', [\App\Http\Controllers\DocController::class, 'show'])
+Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
     ->name('docs.show');
 
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════
 Route::prefix('s')->name('articles.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\ArticleController::class, 'index'])
+    Route::get('/', [ArticleController::class, 'index'])
         ->name('index');
 
-    Route::get('/{article:slug}', [\App\Http\Controllers\ArticleController::class, 'show'])
+    Route::get('/{article:slug}', [ArticleController::class, 'show'])
         ->name('show');
 });
 
@@ -129,18 +154,18 @@ Route::prefix('s')->name('articles.')->group(function () {
 // ВАЖНО: строго до catch-all /{slug}. Wave 0 — все страницы noindex,follow.
 // ═══════════════════════════════════════════════════════════════
 Route::prefix('slovar')->name('slovar.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\DictionaryPageController::class, 'index'])
+    Route::get('/', [DictionaryPageController::class, 'index'])
         ->name('index');
 
     // slug — по заголовочному слову (не по строке×словарь), см. решение D3.
-    Route::get('/{slug}', [\App\Http\Controllers\DictionaryPageController::class, 'show'])
+    Route::get('/{slug}', [DictionaryPageController::class, 'show'])
         ->where('slug', '[A-Za-z0-9\-]+')
         ->name('show');
 });
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
-    $s = \App\Models\MarketingSetting::cached();
+    $s = MarketingSetting::cached();
     abort_unless(
         $s && filled($s->student_maintenance_secret)
             && hash_equals((string) $s->student_maintenance_secret, $secret),
@@ -164,7 +189,7 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     })->name('home');
 
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
-    Route::post('/calendar/feed/regenerate', [\App\Http\Controllers\CalendarFeedController::class, 'regenerate'])
+    Route::post('/calendar/feed/regenerate', [CalendarFeedController::class, 'regenerate'])
         ->name('student.calendar.feed.regenerate');
     Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
 
@@ -173,7 +198,7 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // SRS-карточки (H211, Wave 1) — маршрут появляется только при включённом
     // флаге srs.enabled (в проде OFF). Пункт меню в layouts.student — под тем же условием.
     if (config('srs.enabled')) {
-        Route::get('/dvaram/srs', [\App\Http\Controllers\SrsController::class, 'review'])
+        Route::get('/dvaram/srs', [SrsController::class, 'review'])
             ->name('student.srs');
     }
 
@@ -192,32 +217,32 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.lesson.note');
 
     // Домашние задания: сдача студентом + контролируемое скачивание файлов
-    Route::post('/course/{slug}/lesson/{lessonId}/homework', [\App\Http\Controllers\HomeworkController::class, 'store'])
+    Route::post('/course/{slug}/lesson/{lessonId}/homework', [HomeworkController::class, 'store'])
         ->name('student.homework.store');
-    Route::get('/homework/file/{file}', [\App\Http\Controllers\HomeworkController::class, 'download'])
+    Route::get('/homework/file/{file}', [HomeworkController::class, 'download'])
         ->name('homework.file.download');
 
-    Route::post('/api/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store'])
+    Route::post('/api/heartbeat', [HeartbeatController::class, 'store'])
         ->name('activity.heartbeat');
 
     // Самообслуживание должника: студент сам гасит согласованную рассрочку/обещание.
     // Плоский долг «не продлил» идёт штатным /checkout/{tariff} (см. DebtPaymentResolver).
-    Route::post('/debt/promise/{promise}/pay', [\App\Http\Controllers\DebtPaymentController::class, 'payPromise'])
+    Route::post('/debt/promise/{promise}/pay', [DebtPaymentController::class, 'payPromise'])
         ->name('student.debt.promise.pay');
-    Route::post('/debt/promise/{promise}/reschedule', [\App\Http\Controllers\DebtPaymentController::class, 'reschedule'])
+    Route::post('/debt/promise/{promise}/reschedule', [DebtPaymentController::class, 'reschedule'])
         ->name('student.debt.promise.reschedule');
-    Route::post('/debt/course/{course}/pay-all', [\App\Http\Controllers\DebtPaymentController::class, 'payAll'])
+    Route::post('/debt/course/{course}/pay-all', [DebtPaymentController::class, 'payAll'])
         ->name('student.debt.course.pay-all');
-    Route::post('/debt/course/{course}/pay-bundle', [\App\Http\Controllers\DebtPaymentController::class, 'payBundle'])
+    Route::post('/debt/course/{course}/pay-bundle', [DebtPaymentController::class, 'payBundle'])
         ->name('student.debt.course.pay-bundle');
 
     // P2P-перевод праны другому студенту (подарок).
-    Route::post('/prana/transfer', [\App\Http\Controllers\PranaTransferController::class, 'transfer'])
+    Route::post('/prana/transfer', [PranaTransferController::class, 'transfer'])
         ->middleware('throttle:20,1')
         ->name('student.prana.transfer');
 
     // Магазин праны: покупка перка за прану.
-    Route::post('/prana/redeem/{perk}', [\App\Http\Controllers\PranaShopController::class, 'redeem'])
+    Route::post('/prana/redeem/{perk}', [PranaShopController::class, 'redeem'])
         ->middleware('throttle:20,1')
         ->name('student.prana.redeem');
 
@@ -271,6 +296,17 @@ Route::get('/force-download/{file}', function (string $file) {
 
 // --- ОТПРАВКА ФОРМЫ ---
 Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
+
+// --- ПОДПИСКА НА РАССЫЛКУ (H324) — email-only → кабинет + magic-link + магниты.
+// Оба маршрута самогейтятся по фича-флагу newsletter_subscribe (404 при OFF).
+// Строго до catch-all /{slug} ниже. Публичные; троттлинг в контроллере/middleware.
+Route::post('/subscribe', [NewsletterSubscribeController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('newsletter.subscribe');
+Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('newsletter.magic');
 Route::get('/thank-you', function () {
     // Переносим flash на следующий request, чтобы F5 на странице
     // не сбрасывал состояние (дубликат vs новая заявка) и кнопки магнита.
@@ -299,22 +335,22 @@ Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])
     ->name('deposit.create');
 
 // Пробное занятие — отдельный POST, тот же эквайринг. Строго до catch-all /{slug}.
-Route::post('/trial/{course:slug}', [\App\Http\Controllers\TrialController::class, 'create'])
+Route::post('/trial/{course:slug}', [TrialController::class, 'create'])
     ->middleware('throttle:5,1')
     ->name('trial.create');
 
 // Оплата из-за рубежа (PayPal): форма-заявка студента + приём. Автосписания нет —
 // платёж ложится pending и сверяется вручную в админке. Строго до catch-all /{slug}.
 // throttle:5,1 — публичный приём email + создание pending-платежа (защита от ботов).
-Route::get('/paypal/{tariff}', [\App\Http\Controllers\PaypalClaimController::class, 'show'])
+Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
     ->name('paypal.claim.show');
-Route::post('/paypal/{tariff}', [\App\Http\Controllers\PaypalClaimController::class, 'store'])
+Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
 
 // Приватный чек PayPal-заявки: только персонал (сверка платежа в админке).
 // Диск 'local' (не public) — скрин может содержать личные/платёжные данные.
-Route::get('/admin/payments/{payment}/paypal-proof', function (\App\Models\Payment $payment) {
+Route::get('/admin/payments/{payment}/paypal-proof', function (Payment $payment) {
     $u = auth()->user();
     abort_unless($u && $u->is_admin, 403);
     abort_unless(
@@ -330,7 +366,7 @@ Route::get('/admin/payments/{payment}/paypal-proof', function (\App\Models\Payme
 // эти workbooks вручную. Доступ — админ ИЛИ бухгалтер (+ супер-админ).
 // Имена берём из белого списка, чтобы исключить обход каталога.
 Route::get('/admin/finance-templates/{name}', function (string $name) {
-    abort_unless(\App\Support\RoleGate::finance(), 403);
+    abort_unless(RoleGate::finance(), 403);
 
     $catalog = [
         'finmodel' => ['file' => 'finmodel.xlsx', 'as' => 'НФ — Финансовая модель.xlsx'],
@@ -351,12 +387,12 @@ Route::middleware(['web', 'auth'])
     ->prefix('editor/lectures/{draft}')
     ->name('editor.lecture.')
     ->group(function () {
-        Route::get('preview', [\App\Http\Controllers\Editor\LectureDraftController::class, 'preview'])
+        Route::get('preview', [LectureDraftController::class, 'preview'])
             ->name('preview');
-        Route::get('asset/{path}', [\App\Http\Controllers\Editor\LectureDraftController::class, 'asset'])
+        Route::get('asset/{path}', [LectureDraftController::class, 'asset'])
             ->where('path', '.*')
             ->name('asset');
-        Route::post('patch', [\App\Http\Controllers\Editor\LectureDraftController::class, 'patch'])
+        Route::post('patch', [LectureDraftController::class, 'patch'])
             ->name('patch');
     });
 
@@ -366,34 +402,34 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 
 // --- ВЕРИФИКАЦИЯ СЕРТИФИКАТА (ссылка из QR-кода) ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth.
-Route::get('/verify/{number}', [\App\Http\Controllers\CertificateVerificationController::class, 'show'])
+Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
 
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).
 // Ведёт на режим ПРОСМОТРА карточки; доступ под guard'ом Filament-панели admin.
-Route::get('/u/{user}', function (\App\Models\User $user) {
-    return redirect(\App\Filament\Resources\UserResource::getUrl('view', ['record' => $user]));
+Route::get('/u/{user}', function (User $user) {
+    return redirect(UserResource::getUrl('view', ['record' => $user]));
 })->whereNumber('user')->name('student.shortlink');
 
 // --- ПЕРСОНАЛЬНЫЙ iCAL/WEBCAL-ФИД РАСПИСАНИЯ (Google Calendar Phase 1) ---
 // ВАЖНО: до catch-all /{slug}. Публичный: доступ по токену в URL, не по сессии
 // (Google сам опрашивает ссылку) — см. docs/GOOGLE_CALENDAR_INTEGRATION_ROADMAP.md.
-Route::get('/calendar/feed/{user}/{token}.ics', [\App\Http\Controllers\CalendarFeedController::class, 'show'])
+Route::get('/calendar/feed/{user}/{token}.ics', [CalendarFeedController::class, 'show'])
     ->whereNumber('user')->name('student.calendar.feed');
 
 // --- ТРЕКИНГ-РЕДИРЕКТ «ПОДКЛЮЧИТЬСЯ К ЗАНЯТИЮ» (учёт посещаемости) ---
 // ВАЖНО: до catch-all /{slug}. Публичный: кабинетная ссылка ловит юзера из сессии,
 // бот/напоминания приходят подписанным URL с user id (внутри JoinClassController).
-Route::get('/class/{schedule}/join', [\App\Http\Controllers\JoinClassController::class, 'join'])
+Route::get('/class/{schedule}/join', [JoinClassController::class, 'join'])
     ->whereNumber('schedule')->name('class.join');
 
 // --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ---
 // ВАЖНО: до catch-all /{slug}. Провайдер включается заданием client_id в .env,
 // иначе redirect/callback отдают 404 (см. SocialAuthService::isEnabled).
-Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
     ->name('social.redirect');
-Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
     ->name('social.callback');
 
 // --- ЛЕНДИНГИ (БЕЗ ПРЕФИКСА) ---
@@ -401,12 +437,12 @@ Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialAuthCo
 // === ПАРТНЁРСКАЯ (АГЕНТСКАЯ) ПРОГРАММА (за флагом config/partner.php) ===
 // Публичный лендинг с условиями + приём заявок. Контроллер сам отдаёт 404,
 // когда программа выключена. throttle на регистрацию — публичный приём формы.
-Route::get('/partners', [\App\Http\Controllers\PartnerController::class, 'landing'])->name('partners.landing');
+Route::get('/partners', [PartnerController::class, 'landing'])->name('partners.landing');
 // Чистая (SEO-friendly, без «?») партнёрская ссылка: /mitram/<КОД> → сессия + редирект на /.
-Route::get('/mitram/{code}', [\App\Http\Controllers\PartnerController::class, 'track'])->name('partners.track');
-Route::post('/partners/register', [\App\Http\Controllers\PartnerController::class, 'register'])
+Route::get('/mitram/{code}', [PartnerController::class, 'track'])->name('partners.track');
+Route::post('/partners/register', [PartnerController::class, 'register'])
     ->middleware('throttle:10,1')
     ->name('partners.register');
-Route::get('/partners/{code}', [\App\Http\Controllers\PartnerController::class, 'registered'])->name('partners.registered');
+Route::get('/partners/{code}', [PartnerController::class, 'registered'])->name('partners.registered');
 
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
