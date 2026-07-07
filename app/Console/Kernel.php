@@ -187,6 +187,23 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expire-stale-reminder-suggestions');
 
+        // --- WEEKLY DB BACKUP (spatie/laravel-backup) ---
+        // DB-only dump (source.files.include is empty) to local + yandex_disk
+        // (config/backup.php). Until YANDEX_DISK_LOGIN/YANDEX_DISK_APP_PASSWORD
+        // are set in .env, the yandex_disk write just fails — local still lands.
+        $schedule->command('backup:run --only-db')
+            ->weeklyOn(1, '02:00') // Monday 02:00 MSK, ahead of other nightly jobs
+            ->withoutOverlapping(60)
+            ->onOneServer()
+            ->name('weekly-backup-run');
+
+        // Cleanup old archives per config/backup.php's strategy, right after the run.
+        $schedule->command('backup:clean')
+            ->weeklyOn(1, '02:30')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('weekly-backup-clean');
+
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247, тикет S3) ---
         // Regex-префильтр поверх веб-чата и TG-support находит фактологические
         // вопросы (Zoom/записи/расписание) и собирает факт-черновик ответа из LMS —

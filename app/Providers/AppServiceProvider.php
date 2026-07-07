@@ -16,11 +16,19 @@ use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
+use App\Services\Lecture\LectureAiClient;
+use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Zoom\ZoomService;
+use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use League\Flysystem\Filesystem;
+use League\Flysystem\WebDAV\WebDAVAdapter;
+use Sabre\DAV\Client;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,18 +38,18 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(
-            \App\Services\Lecture\LectureBuilderClient::class,
-            fn () => \App\Services\Lecture\LectureBuilderClient::fromConfig(),
+            LectureBuilderClient::class,
+            fn () => LectureBuilderClient::fromConfig(),
         );
         $this->app->singleton(
-            \App\Services\Lecture\LectureAiClient::class,
-            fn () => \App\Services\Lecture\LectureAiClient::fromConfig(),
+            LectureAiClient::class,
+            fn () => LectureAiClient::fromConfig(),
         );
         // bind (не singleton): креды читаются из config на момент резолва —
         // важно для тестов, где config('services.zoom.*') ставится в setUp.
         $this->app->bind(
-            \App\Services\Zoom\ZoomService::class,
-            fn () => \App\Services\Zoom\ZoomService::fromConfig(),
+            ZoomService::class,
+            fn () => ZoomService::fromConfig(),
         );
     }
 
@@ -105,6 +113,21 @@ class AppServiceProvider extends ServiceProvider
             });
 
             $view->with('recordedCoursesMini', $courses);
+        });
+
+        // Диск «yandex_disk» — off-site назначение еженедельного бэкапа (WebDAV,
+        // тот же аккаунт, что синхронизируется на ПК через десктоп-клиент Яндекс.Диска).
+        // Требует YANDEX_DISK_LOGIN/YANDEX_DISK_APP_PASSWORD — см. .env.example.
+        Storage::extend('webdav', function ($app, array $config) {
+            $client = new Client([
+                'baseUri' => $config['baseUri'],
+                'userName' => $config['username'] ?? null,
+                'password' => $config['password'] ?? null,
+            ]);
+
+            $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
+
+            return new LaravelFilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
         });
     }
 }
