@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 05-07-2026_
+_Created: 03-07-2026 · Last updated: 07-07-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -47,12 +47,13 @@ platform upgrade.
   commit `8851c92` still fetchable **by exact 40-char SHA** until GitHub's automatic GC (not in
   any branch, not browsable/searchable). Optional acceleration = a GitHub Support GC request
   (GTD `@DO`, MG account).
-- 🟠 ~15 CONFIRMED money/access defects from the 02-07 adversarial review
-  ([H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md);
-  #1 fixed in [PR #248](https://github.com/gasyoun/Systema-Sanscriticum/pull/248)).
+- ✅ **H071 money/access defects fully drained** (07-07-2026) — all findings from the 02-07
+  adversarial review fixed, one PR each with a regression test; last two ([PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360))
+  await manual MG review per the money-core no-auto-merge discipline.
 - 🟠 3 webhooks (Telegram-bot / VK-bot / Zoom) still **fail-open** pending a prod `.env` deploy step.
-- 🟡 **No PHP SAST** — CodeQL cannot analyze PHP, so the language the entire app is written
-  in has no static security scanning; the only defense today is manual adversarial review.
+- ✅ **PHP SAST added** (07-07-2026) — [Semgrep job](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml)
+  (`p/php` + `p/security-audit` + `p/laravel`), advisory/non-blocking during triage. CodeQL still
+  can't cover PHP directly, but the gap is now filled.
 - 🟡 **Laravel 10.50.2** — security-EOL since ~Feb 2025 — on PHP 8.2.
 - ✅ 23 tracked PNG screenshots **audited** (05-07-2026) — all synthetic UI/design/marketing
   renders (blank certificate template, placeholder `Иван`/`mail@example.com` forms, module
@@ -140,11 +141,23 @@ once the known-defect backlog is drained so the baseline is clean).
   and/or `larastan/larastan` at a security-focused level. Start advisory (non-blocking) to
   triage the false-positive rate, then make it required once tuned. Fills the gap CodeQL
   leaves — CodeQL is JS-only here. → **[H081](#handoffs)**
-- [ ] **Institutionalize the adversarial money-core review** (D4): capture the 02-07 multi-agent
-  finder+verifier run as a repeatable harness (a workflow script / handoff) scoped to
-  `app/Models/Payment.php`, `app/Models/Tariff.php`, `PaymentController`, `ReferralService`,
-  `TeacherSalaryService`, and the webhook controllers. Run it **per money-core release and on a
-  quarterly cadence**, not per-PR. → **[H081](#handoffs)**
+  - ✅ **Semgrep job added** (07-07-2026, Sonnet 5 `claude-sonnet-5`):
+    [.github/workflows/semgrep.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml),
+    `p/php` + `p/security-audit` + `p/laravel` rulesets, `continue-on-error: true`
+    (advisory). **Still open:** ~2-week triage window, then flip to required and
+    document any dismissed rules (mirror `/cologne-alert-triage`). Larastan not
+    added — Semgrep's Laravel ruleset judged sufficient coverage to start; revisit
+    if the triage shows thin Laravel-specific sink coverage.
+- [x] **Institutionalize the adversarial money-core review** (D4) — ✅ done
+  (07-07-2026, Sonnet 5 `claude-sonnet-5`): the 02-07 multi-agent finder+verifier
+  run is now a committed, repeatable harness —
+  [scripts/security/money_core_adversarial_review.workflow.js](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/security/money_core_adversarial_review.workflow.js)
+  (5 finder agents × adversarial-verifier, same scope: `Payment.php`, `Tariff.php`,
+  `PaymentController`, `ReferralService`, `TeacherSalaryService`, webhook
+  controllers), documented in
+  [docs/money-core-adversarial-review.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-core-adversarial-review.md)
+  with cadence (per money-core release + quarterly, not per-PR) and the
+  findings-to-PR discipline. → **[H081](#handoffs)**
 - [ ] Keep Dependabot auto-merge (already deployed) green so dependency CVEs close without a human.
 
 **Exit criterion:** a new injection or obvious access defect in PHP is caught by CI before
