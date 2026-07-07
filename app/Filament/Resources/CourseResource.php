@@ -178,6 +178,13 @@ class CourseResource extends Resource
                                     ->default(true)
                                     ->onColor('success')
                                     ->inline(false),
+
+                                Forms\Components\Toggle::make('is_completed')
+                                    ->label('Курс завершён (продаём записи)')
+                                    ->helperText('Поток закончился, записи опубликованы, повторного набора нет. Вместе с тарифом-записью и включённым флагом course_recordings_sales переключает лендинг с «Записаться» на «Купить запись».')
+                                    ->default(false)
+                                    ->onColor('warning')
+                                    ->inline(false),
                             ]),
 
                         // БЛОК: КАТЕГОРИИ И ФОРМАТ
@@ -425,6 +432,11 @@ class CourseResource extends Resource
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Активен')
                                     ->default(true),
+
+                                Forms\Components\Toggle::make('is_recording')
+                                    ->label('Тариф-запись (evergreen)')
+                                    ->helperText('Продаёт запись завершённого курса, а не участие в живом потоке.')
+                                    ->default(false),
                             ])
                             ->columns(2)
                             ->addActionLabel('Добавить тариф')

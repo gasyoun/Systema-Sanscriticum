@@ -25,6 +25,9 @@ class Course extends Model
         'zoom_meeting_id',
         'is_visible',
         'is_active',
+        // Курс/поток завершён, записи опубликованы. Включает «режим записей» на
+        // лендинге (см. sellsRecordings()). Аддитивно, по умолчанию false.
+        'is_completed',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -101,12 +104,41 @@ class Course extends Model
         'is_visible' => 'boolean',
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
+        'is_completed' => 'boolean',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
         'audience' => 'array',
         'outcomes' => 'array',
     ];
+
+    /** Курс/поток завершён (записи опубликованы, повторного набора нет). */
+    public function isCompleted(): bool
+    {
+        return (bool) $this->is_completed;
+    }
+
+    /**
+     * Показывать ли на лендинге «режим записи» вместо «Записаться» (H266, M1).
+     * Единственный источник правды для переключения CTA. Три условия, все
+     * обязательны:
+     *   1) фича-флаг course_recordings_sales ВКЛ (deploy-рубильник, по умолчанию OFF);
+     *   2) курс помечен завершённым (is_completed);
+     *   3) есть хотя бы один активный тариф-запись (is_recording).
+     * Доступ/цена при этом НЕ меняются — это косметика витрины поверх обычного
+     * key-based чекаута (accessKey() → 'full'/'block_N').
+     */
+    public function sellsRecordings(): bool
+    {
+        if (! config('features.course_recordings_sales', false) || ! $this->isCompleted()) {
+            return false;
+        }
+
+        return $this->tariffs()
+            ->where('is_active', true)
+            ->where('is_recording', true)
+            ->exists();
+    }
 
     /**
      * Техтребования курса: per-course override или общий дефолт. Пусто на курсе →

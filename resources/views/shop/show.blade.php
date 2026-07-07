@@ -415,6 +415,10 @@
         @php
             $hasCurrentBlock = !empty($currentBlockNumber);
             $defaultTab = $hasCurrentBlock ? 'blocks' : 'full';
+
+            // H266 (M1): «режим записи» — завершённый курс с активным тарифом-записью
+            // при включённом флаге. Меняет ТОЛЬКО текст CTA (доступ/цена/чекаут те же).
+            $sellsRecordings = $course->sellsRecordings();
         @endphp
         <section id="tariffs" class="mb-16 lg:mb-20"
                  x-data="{ tab: '{{ $defaultTab }}' }"
@@ -606,7 +610,7 @@
                             @else
                                 <a href="{{ route('checkout.show', $tariff->id) }}"
                                    class="w-full flex justify-center items-center py-4 px-4 bg-[#E85C24] text-white text-base font-bold rounded-xl hover:bg-[#d64e1c] hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
-                                    Записаться на курс
+                                    {{ $sellsRecordings ? 'Купить запись курса' : 'Записаться на курс' }}
                                 </a>
                             @endif
                         </div>
@@ -749,7 +753,7 @@
                                 @elseif($whole)
                                     <a href="{{ route('checkout.show', $whole->id) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-[#E85C24] hover:bg-[#d64e1c] text-white shadow-md shadow-[#E85C24]/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
-                                        {{ $halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль' }}
+                                        {{ $sellsRecordings ? 'Купить запись блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль') }}
                                     </a>
                                 @endif
                             </div>

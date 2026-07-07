@@ -86,4 +86,15 @@ return [
      | админ-тумблера support_answer_suggester_enabled (MarketingSetting).
      */
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
+
+    /*
+     | Продажа записей завершённых курсов (H266, тикет M1, #190). Когда ВКЛ, лендинг
+     | завершённого курса (Course::is_completed) с активным тарифом-записью
+     | (Tariff::is_recording) переключает CTA с «Записаться» на «Купить запись» —
+     | см. Course::sellsRecordings(). Доступ/цена не меняются: покупка записи идёт
+     | тем же key-based чекаутом (accessKey() → 'full'/'block_N') и открывает уроки
+     | через тот же PaymentObserver::grantAccess(). ВЫКЛ по умолчанию — это
+     | deploy-рубильник: пока флаг OFF, витрина ведёт себя как раньше.
+     */
+    'course_recordings_sales' => (bool) env('COURSE_RECORDINGS_SALES', false),
 ];

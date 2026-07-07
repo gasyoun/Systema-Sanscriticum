@@ -21,12 +21,14 @@ class Tariff extends Model
         'old_price',
         'description',
         'is_active',
+        'is_recording',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'old_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_recording' => 'boolean',
         'block_number' => 'integer',
         'block_half' => 'integer', // NULL = весь блок; 1/2 = половина блока
     ];
@@ -46,6 +48,18 @@ class Tariff extends Model
         return $this->block_half
             ? 'block_'.$this->block_number.'_h'.$this->block_half
             : 'block_'.$this->block_number;
+    }
+
+    /**
+     * Продаёт ли этот тариф ЗАПИСЬ завершённого курса (evergreen), а не участие в
+     * живом потоке. Маркер витрины/лейбла — НЕ отдельная система доступа: accessKey()
+     * остаётся 'full'/'block_N', поэтому запись открывает те же уроки через тот же
+     * PaymentObserver::grantAccess(). У завершённого курса живых занятий/Zoom-цикла
+     * уже нет, поэтому «запись открывает уроки, но не расписание» выполняется само.
+     */
+    public function isRecording(): bool
+    {
+        return (bool) $this->is_recording;
     }
 
     public function course(): BelongsTo
