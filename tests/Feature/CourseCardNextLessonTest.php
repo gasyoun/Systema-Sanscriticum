@@ -184,4 +184,3 @@ class CourseCardNextLessonTest extends TestCase
             ->assertSee(route('shop.index'), false);
     }
 }
-

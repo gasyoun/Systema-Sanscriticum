@@ -769,4 +769,3 @@ class StudentController extends Controller
         return view('student.messages', compact('messages'));
     }
 }
-
