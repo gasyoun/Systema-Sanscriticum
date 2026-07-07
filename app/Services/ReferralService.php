@@ -72,7 +72,11 @@ class ReferralService
             return;
         }
 
-        $referrer = $referred->referrer;
+        // НЕ `$referred->referrer`: с 07-07-2026 (A1-атрибуция, #347) на users есть
+        // СТОЛБЕЦ `referrer` (HTTP-реферер регистрации), и при обращении как к
+        // свойству Eloquent отдаёт столбец, затеняя одноимённую relation, — награда
+        // молча умирала на «нет реферера». Явный вызов relation обходит затенение.
+        $referrer = $referred->referrer()->first();
         if (! $referrer) {
             return;
         }
