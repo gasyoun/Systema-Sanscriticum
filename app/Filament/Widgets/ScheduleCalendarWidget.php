@@ -4,6 +4,8 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\ScheduleResource;
 use App\Models\Schedule;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms\Form;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -22,11 +24,19 @@ class ScheduleCalendarWidget extends FullCalendarWidget
 {
     public Model|string|null $model = Schedule::class;
 
-    // false → виджет не выводится на Dashboard при авто-обнаружении. Рендерится явно
-    // на странице «Календарь» (CalendarPage), доступ к которой уже гейтится по роли.
+    // Не выводить на Dashboard при авто-обнаружении (discoverWidgets). Виджет
+    // рендерится ЯВНО на CalendarPage. ВАЖНО: убирать с дашборда именно этим
+    // флагом, а НЕ canView()=false — базовый Widget через CanAuthorizeAccess
+    // на КАЖДОЙ гидрации делает abort_unless(canView(), 403), поэтому canView()=false
+    // отдавал 403 на первом же AJAX FullCalendar (fetchEvents): страница
+    // грузилась, а календарь падал 403 поверх неё.
+    protected static bool $isDiscovered = false;
+
+    // Гидрация Livewire-компонента авторизуется через canView() — зеркалим гейт
+    // CalendarPage (иначе abort 403). Заодно защищает от прямого вызова минуя страницу.
     public static function canView(): bool
     {
-        return false;
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
     }
 
     /** Тот же teacher-scope, что и в ресурсе: events и резолв записей по ссылке. */
