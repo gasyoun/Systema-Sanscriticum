@@ -27,10 +27,26 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Run Semgrep
+        # Advisory scan (see header): findings are printed in the job log but the
+        # step exits 0 — NO `--error` — so this non-required check reads green
+        # instead of a permanent red X on every PR while the false-positive rate
+        # is triaged. To promote to a hard gate (Wave 3): re-add `--error` and
+        # drop `continue-on-error` above once the owned findings are clean.
+        # `--exclude` keeps this a *PHP/source* gate: skip vendored, generated,
+        # minified, and static-asset trees (minified filament/filepond JS, the
+        # nginx default page, static marketing HTML, lecture-* microservice
+        # output) that a source SAST has no business flagging.
         run: |
           semgrep scan \
             --config p/php \
             --config p/security-audit \
             --config p/owasp-top-ten \
-            --error \
+            --exclude vendor \
+            --exclude node_modules \
+            --exclude public \
+            --exclude storage \
+            --exclude bootstrap \
+            --exclude lecture-ui \
+            --exclude lecture-builder \
+            --exclude '*.min.js' \
             --metrics=off

@@ -27,7 +27,10 @@ class CertificateService
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $apiUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            // TLS-верификацию НЕ отключаем: QR кодирует verify-URL сертификата,
+            // подменённый по MITM QR увёл бы студента на чужой адрес. У
+            // api.qrserver.com валидный сертификат; при сбое QR просто станет
+            // null (сертификат отрендерится без него — см. try/catch).
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
             $imgData = curl_exec($ch);
             curl_close($ch);
