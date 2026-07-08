@@ -87,6 +87,10 @@ class MarketingSetting extends Model
 
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247) ---
         'support_answer_suggester_enabled',
+
+        // --- НАБОР КУРСОВ: РАССЫЛКА О НЕДОБОРЕ (H162) ---
+        'recruitment_notify_enabled',
+        'recruitment_notify_lead_days',
     ];
 
     protected $casts = [
@@ -117,6 +121,8 @@ class MarketingSetting extends Model
         'debt_reminder_to_vk' => 'boolean',
         'debt_reminder_to_email' => 'boolean',
         'debtors_notify_years' => 'array',
+        'recruitment_notify_enabled' => 'boolean',
+        'recruitment_notify_lead_days' => 'integer',
         'reminder_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',
         'prana_rate' => 'integer',
