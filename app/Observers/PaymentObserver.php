@@ -6,6 +6,10 @@ namespace App\Observers;
 
 use App\Jobs\SendPaymentToSheetJob;
 use App\Models\Payment;
+use App\Services\BlockAccessMaterializer;
+use App\Services\PartnerService;
+use App\Services\ReferralService;
+use App\Services\RevenueScheduleService;
 
 class PaymentObserver
 {
@@ -27,10 +31,13 @@ class PaymentObserver
 
         // Платёж сразу создан как paid → наградить пригласившего (если есть).
         if (in_array($payment->status, self::SUCCESS_STATUSES, true)) {
-            app(\App\Services\ReferralService::class)->rewardForPayment($payment);
+            app(ReferralService::class)->rewardForPayment($payment);
             // Партнёрская программа (B2B) — независимая от студенческой (no-op, если выключена).
-            app(\App\Services\PartnerService::class)->rewardForPayment($payment);
+            app(PartnerService::class)->rewardForPayment($payment);
         }
+
+        // График признания выручки (accrual) — субледжер поверх платежа.
+        app(RevenueScheduleService::class)->regenerateFor($payment);
     }
 
     /**
@@ -54,19 +61,24 @@ class PaymentObserver
 
         // Основной кейс: вебхук Точки перевёл платёж в paid → награда рефереру.
         if ($justBecamePaid) {
-            app(\App\Services\ReferralService::class)->rewardForPayment($payment);
+            app(ReferralService::class)->rewardForPayment($payment);
             // Партнёрская программа (B2B) — независимая от студенческой (no-op, если выключена).
-            app(\App\Services\PartnerService::class)->rewardForPayment($payment);
+            app(PartnerService::class)->rewardForPayment($payment);
         }
 
         // Реверс: платёж откатили из paid (вебхук отмены/возврата или правка в
         // админке) → снять начисленную рефереру награду и освободить разовый слот.
         if ($payment->isDirty('status')
             && in_array($payment->status, ['failed', 'canceled', 'cancelled'], true)) {
-            app(\App\Services\ReferralService::class)->reverseRewardForPayment($payment);
+            app(ReferralService::class)->reverseRewardForPayment($payment);
             // Зеркально снимаем ещё не выплаченное партнёрское вознаграждение.
-            app(\App\Services\PartnerService::class)->reverseRewardForPayment($payment);
+            app(PartnerService::class)->reverseRewardForPayment($payment);
         }
+
+        // Пересобираем график признания выручки: сумма/блоки/курс/статус могли
+        // измениться. Платёж, переставший быть выручкой (отмена/возврат), теряет
+        // строки — субледжер самоочищается (см. RevenueScheduleService).
+        app(RevenueScheduleService::class)->regenerateFor($payment);
     }
 
     /**
@@ -89,7 +101,7 @@ class PaymentObserver
         // Нулевые ЛЕГИТИМНЫЕ оплаты (бесплатный доступ, 100%-промокод) синкаются —
         // отсекаем строго по маркеру transaction_id, а не по amount==0.
         if (is_string($payment->transaction_id)
-            && str_starts_with($payment->transaction_id, \App\Services\BlockAccessMaterializer::GRANT_PREFIX)) {
+            && str_starts_with($payment->transaction_id, BlockAccessMaterializer::GRANT_PREFIX)) {
             return false;
         }
 

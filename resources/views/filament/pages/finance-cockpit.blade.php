@@ -7,6 +7,8 @@
         $signClass = fn ($v) => (float) $v < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-success-600 dark:text-success-400';
 
         $opiu = $this->getOpiu();
+        $opiuAccrual = $this->getOpiuAccrual();
+        $deferred = $this->getDeferredRevenue();
         $dds = $this->getDds();
         $balance = $this->getBalance();
         $calendar = $this->getCalendar();
@@ -95,8 +97,97 @@
             </table>
         </div>
         <p class="mt-3 text-xs text-gray-400">
-            Ниже EBITDA (проценты, амортизация, налог на прибыль) LMS не моделирует —
-            чистая прибыль здесь ≈ EBITDA.
+            Кассовый метод: вся сумма платежа признаётся в месяц оплаты. Ниже EBITDA
+            (проценты, амортизация, налог на прибыль) LMS не моделирует — чистая прибыль ≈ EBITDA.
+        </p>
+    </x-filament::section>
+
+    {{-- ОПиУ по методу начисления (accrual) — выручка признаётся по месяцам блоков --}}
+    <x-filament::section>
+        <x-slot name="heading">ОПиУ (начисление) · {{ \Illuminate\Support\Str::ucfirst($this->getPeriodLabel()) }}</x-slot>
+        <x-slot name="description">Метод начисления: годовой курс, оплаченный сразу, признаётся долями по месяцам занятий, а не целиком в месяц оплаты. Лекарство от «прибыль есть, а денег нет».</x-slot>
+
+        {{-- Отложенная выручка: оплачено, но ещё не отработано — обязательство --}}
+        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                    <div class="text-sm font-semibold text-amber-800 dark:text-amber-300">Отложенная выручка (на конец периода)</div>
+                    <div class="text-xs text-amber-700/80 dark:text-amber-400/80">Оплачено кассой, но ещё не признано как выручка — обязательство перед студентами.</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-bold tabular-nums text-amber-900 dark:text-amber-200">{{ $money($deferred['deferred']) }}</div>
+                    <div class="text-xs text-amber-700/80 dark:text-amber-400/80 tabular-nums">
+                        оплачено {{ $money($deferred['cashReceived']) }} − признано {{ $money($deferred['recognized']) }}
+                    </div>
+                </div>
+            </div>
+            @if ($deferred['deferred'] < 0)
+                <p class="mt-2 text-xs text-amber-700/80 dark:text-amber-400/80">
+                    Значение отрицательное: выручка признана раньше кассы (поздние оплаты уже прошедших блоков) — начисленная, но ещё не полученная выручка.
+                </p>
+            @endif
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tr class="font-semibold">
+                        <td class="py-2">Выручка (признанная)</td>
+                        <td class="py-2 text-right tabular-nums">{{ $money($opiuAccrual['revenue']) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pl-6 text-gray-500 dark:text-gray-400" colspan="2">Переменные расходы</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 pl-10">ЗП преподавателей (COGS, начисление)</td>
+                        <td class="py-1 text-right tabular-nums">−{{ $money($opiuAccrual['salaryCogs']) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 pl-10">{{ \App\Enums\ExpenseCategory::Acquiring->label() }}</td>
+                        <td class="py-1 text-right tabular-nums">−{{ $money($opiuAccrual['acquiring']) }}</td>
+                    </tr>
+                    <tr class="border-t border-gray-200 dark:border-gray-600">
+                        <td class="py-1 pl-6 font-medium">Итого переменные</td>
+                        <td class="py-1 text-right tabular-nums font-medium">−{{ $money($opiuAccrual['variableTotal']) }}</td>
+                    </tr>
+
+                    <tr class="bg-gray-50 dark:bg-gray-800/40 font-semibold">
+                        <td class="py-2">Валовая прибыль <span class="text-xs text-gray-400">(маржа {{ $pct($opiuAccrual['grossMargin']) }})</span></td>
+                        <td class="py-2 text-right tabular-nums {{ $signClass($opiuAccrual['grossProfit']) }}">{{ $money($opiuAccrual['grossProfit']) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pl-6 text-gray-500 dark:text-gray-400" colspan="2">Коммерческие расходы</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 pl-10">Маркетинг (реклама)</td>
+                        <td class="py-1 text-right tabular-nums">−{{ $money($opiuAccrual['marketing']) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pl-6 text-gray-500 dark:text-gray-400" colspan="2">Административные расходы</td>
+                    </tr>
+                    @foreach ($opiuAccrual['admin'] as $catValue => $sum)
+                        <tr>
+                            <td class="py-1 pl-10">{{ \App\Enums\ExpenseCategory::from($catValue)->label() }}</td>
+                            <td class="py-1 text-right tabular-nums">−{{ $money($sum) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr class="border-t border-gray-200 dark:border-gray-600">
+                        <td class="py-1 pl-6 font-medium">Итого административные</td>
+                        <td class="py-1 text-right tabular-nums font-medium">−{{ $money($opiuAccrual['adminTotal']) }}</td>
+                    </tr>
+
+                    <tr class="bg-primary-50 dark:bg-primary-900/20 text-base font-bold">
+                        <td class="py-3">Операционная прибыль (EBITDA) <span class="text-xs font-normal text-gray-400">(рентабельность {{ $pct($opiuAccrual['ebitdaMargin']) }})</span></td>
+                        <td class="py-3 text-right tabular-nums {{ $signClass($opiuAccrual['ebitda']) }}">{{ $money($opiuAccrual['ebitda']) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="mt-3 text-xs text-gray-400">
+            Сумма признанной выручки за всё время равна кассовой — метод начисления лишь перераспределяет её между месяцами занятий. Расходная часть у обеих вкладок одинакова.
         </p>
     </x-filament::section>
 

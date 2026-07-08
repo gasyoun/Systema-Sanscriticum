@@ -11,6 +11,7 @@ use App\Models\PaymentPromise;
 use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\DebtorsReport;
+use App\Services\RevenueScheduleService;
 use App\Services\TeacherSalaryService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -89,7 +90,7 @@ class FinanceCockpitReport
      * поэтому чистая прибыль здесь ≈ EBITDA — это честно помечено в UI.
      *
      * @return array{
-     *     revenue:float,
+     *     revenue:float, revenueBasis:string,
      *     salaryCogs:float, acquiring:float, variableTotal:float,
      *     grossProfit:float, grossMargin:?float,
      *     marketing:float, commercialTotal:float,
@@ -102,7 +103,71 @@ class FinanceCockpitReport
     {
         [$start, $end] = $this->monthBounds($period);
 
-        $revenue = $this->revenueForWindow($start, $end);
+        // Кассовый ОПиУ: выручка = платежи по дате оплаты.
+        return $this->buildOpiu($period, $this->revenueForWindow($start, $end), 'cash');
+    }
+
+    /**
+     * ОПиУ по методу НАЧИСЛЕНИЯ (accrual): та же структура и те же расходы, но
+     * выручка = сумма признаний RevenueSchedule за месяц (годовой курс, оплаченный
+     * сразу, разложен по месяцам блоков — не падает целиком в месяц оплаты).
+     * COGS (ЗП) уже accrual, поэтому эта вкладка честно сводит выручку и её
+     * себестоимость по одному периоду. Кассовая вкладка сохранена рядом — она
+     * нужна для ДДС и сверки с банком.
+     *
+     * @return array{
+     *     revenue:float, revenueBasis:string,
+     *     salaryCogs:float, acquiring:float, variableTotal:float,
+     *     grossProfit:float, grossMargin:?float,
+     *     marketing:float, commercialTotal:float,
+     *     admin:array<string,float>, adminTotal:float,
+     *     opexTotal:float,
+     *     ebitda:float, ebitdaMargin:?float
+     * }
+     */
+    public function opiuAccrual(string $period): array
+    {
+        return $this->buildOpiu($period, $this->accrualRevenueForPeriod($period), 'accrual');
+    }
+
+    /**
+     * Признанная (accrual) выручка за месяц — сумма строк субледжера
+     * RevenueSchedule. Σ за всё время == Σ кассовой выручки (инвариант раскладки),
+     * отличается только помесячное распределение.
+     */
+    public function accrualRevenueForPeriod(string $period): float
+    {
+        return app(RevenueScheduleService::class)->recognizedForMonth($period);
+    }
+
+    /**
+     * Отложенная выручка на конец периода: оплачено кассой − признано
+     * (накопительно). «Замороженный» разрыв между кассой и прибылью.
+     *
+     * @return array{cashReceived:float, recognized:float, deferred:float}
+     */
+    public function deferredRevenue(string $period): array
+    {
+        return app(RevenueScheduleService::class)->deferredRevenueAsOf($period);
+    }
+
+    /**
+     * Сборка ОПиУ с заданной выручкой (кассовой или accrual). Расходная часть у
+     * обеих вкладок одинакова — различается только источник строки «Выручка».
+     *
+     * @return array{
+     *     revenue:float, revenueBasis:string,
+     *     salaryCogs:float, acquiring:float, variableTotal:float,
+     *     grossProfit:float, grossMargin:?float,
+     *     marketing:float, commercialTotal:float,
+     *     admin:array<string,float>, adminTotal:float,
+     *     opexTotal:float,
+     *     ebitda:float, ebitdaMargin:?float
+     * }
+     */
+    private function buildOpiu(string $period, float $revenue, string $revenueBasis): array
+    {
+        [$start, $end] = $this->monthBounds($period);
 
         // COGS: ЗП преподавателей начислением по периоду блока (accrual).
         $salaryCogs = 0.0;
@@ -139,7 +204,7 @@ class FinanceCockpitReport
         $ebitdaMargin = $revenue > 0 ? $ebitda / $revenue * 100 : null;
 
         return compact(
-            'revenue',
+            'revenue', 'revenueBasis',
             'salaryCogs', 'acquiring', 'variableTotal',
             'grossProfit', 'grossMargin',
             'marketing', 'commercialTotal',
