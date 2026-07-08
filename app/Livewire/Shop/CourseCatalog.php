@@ -34,6 +34,10 @@ class CourseCatalog extends Component
     #[Url(as: 'format', except: '')]
     public string $format = '';
 
+    /** Уровень: '' | ключ из Course::LEVELS (beginner/continuing/advanced). */
+    #[Url(as: 'level', except: '')]
+    public string $level = '';
+
     /**
      * Подсказки «Часто ищут» под строкой поиска. Подбираются под слова,
      * реально встречающиеся в названиях курсов (LIKE по title), чтобы клик
@@ -55,7 +59,7 @@ class CourseCatalog extends Component
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'categoryIds', 'teacherId', 'format']);
+        $this->reset(['search', 'categoryIds', 'teacherId', 'format', 'level']);
     }
 
     /** Сбросить только категории — для чипа «Все» в ленте категорий */
@@ -81,6 +85,9 @@ class CourseCatalog extends Component
             ->when($this->teacherId !== '', fn ($q) => $q->forTeacher((int) $this->teacherId))
             ->when(in_array($this->format, ['live', 'recorded'], true),
                 fn ($q) => $q->where('format', $this->format)
+            )
+            ->when(array_key_exists($this->level, Course::LEVELS),
+                fn ($q) => $q->where('level', $this->level)
             );
     }
 
@@ -103,13 +110,31 @@ class CourseCatalog extends Component
             ->get(['id', 'name']);
     }
 
+    /**
+     * Сколько видимых курсов у каждого уровня — БЕЗ учёта самого фильтра уровня,
+     * чтобы чипы не «схлопывались» при выборе. Чипы уровней показываются только
+     * когда владелец классифицировал хотя бы один курс.
+     */
+    #[Computed]
+    public function levelCounts(): array
+    {
+        return Course::query()
+            ->where('is_visible', true)
+            ->whereNotNull('level')
+            ->selectRaw('level, count(*) as cnt')
+            ->groupBy('level')
+            ->pluck('cnt', 'level')
+            ->all();
+    }
+
     #[Computed]
     public function hasActiveFilters(): bool
     {
         return $this->search !== ''
             || ! empty($this->categoryIds)
             || $this->teacherId !== ''
-            || $this->format !== '';
+            || $this->format !== ''
+            || $this->level !== '';
     }
 
     public function render(): View

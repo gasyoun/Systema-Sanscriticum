@@ -73,6 +73,11 @@ class TestimonialResource extends Resource
                 Forms\Components\Toggle::make('is_visible')
                     ->label('Показывать')
                     ->default(true),
+
+                Forms\Components\Toggle::make('is_featured')
+                    ->label('Избранный (витрина каталога)')
+                    ->helperText('Показывать в общесайтовом блоке отзывов на странице каталога — помимо привязки к курсам.')
+                    ->default(false),
             ]),
         ]);
     }

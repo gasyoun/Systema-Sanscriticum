@@ -1,7 +1,14 @@
 {{-- resources/views/partials/guest-purchase-warning.blade.php --}}
 {{--
-    Предупреждение для неавторизованных гостей перед покупкой.
-    
+    Подсказка для неавторизованных гостей перед покупкой (H323 — смягчено).
+
+    Раньше здесь был красный блок «ВАЖНО: не регистрируйтесь самостоятельно,
+    напишите куратору» — он блокировал и НОВЫХ покупателей (главный убийца
+    конверсии по бенчмарку Синхронизация/Arzamas). Теперь: новый покупатель
+    свободно регистрируется и платит; спокойная строка «уже покупали раньше?»
+    остаётся только для возвратных студентов, чтобы куратор связал их старые
+    доступы с аккаунтом.
+
     Параметры:
     - $variant: 'dark' (для тёмной темы магазина) | 'light' (для checkout)
                 по умолчанию 'dark'
@@ -16,12 +23,9 @@
             'icon_wrap'   => 'bg-[#38BDF8]/20 border-[#38BDF8]/30',
             'icon'        => 'text-[#38BDF8]',
             'text'        => 'text-white',
+            'muted'       => 'text-slate-400',
             'link'        => 'text-[#38BDF8] underline decoration-[#38BDF8]/40 hover:text-white hover:decoration-white',
-            'warn_wrap'   => 'bg-amber-500/15 border-2 border-amber-500/60 ring-1 ring-amber-500/30 shadow-lg shadow-amber-500/10',
-            'warn_label'  => 'text-amber-300',
-            'warn_text'   => 'text-red-400',
             'divider'     => 'border-[#1F2636]',
-            'caption'     => 'text-slate-500',
             'btn_wrap'    => 'bg-[#0A0D14] border-[#1F2636] hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5',
             'btn_text'    => 'text-slate-300 group-hover:text-white',
             'btn_icon'    => 'text-[#38BDF8]',
@@ -32,12 +36,9 @@
             'icon_wrap'   => 'bg-indigo-100 border-indigo-200',
             'icon'        => 'text-indigo-600',
             'text'        => 'text-gray-900',
+            'muted'       => 'text-gray-500',
             'link'        => 'text-indigo-600 underline decoration-indigo-300 hover:text-indigo-800 hover:decoration-indigo-800',
-            'warn_wrap'   => 'bg-amber-100 border-2 border-amber-400 ring-1 ring-amber-300/70 shadow-md shadow-amber-200/60',
-            'warn_label'  => 'text-amber-800',
-            'warn_text'   => 'text-red-700',
             'divider'     => 'border-gray-200',
-            'caption'     => 'text-gray-400',
             'btn_wrap'    => 'bg-white border-gray-200 hover:border-indigo-400 hover:bg-indigo-50',
             'btn_text'    => 'text-gray-700 group-hover:text-indigo-700',
             'btn_icon'    => 'text-indigo-500',
@@ -53,7 +54,7 @@
         <div class="absolute -top-10 -right-10 w-32 h-32 {{ $t['glow'] }} rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="relative z-10">
-            {{-- Призыв войти --}}
+            {{-- Призыв войти (не блокирует покупку) --}}
             <div class="flex items-start gap-3 mb-4">
                 <div class="shrink-0 w-9 h-9 rounded-lg {{ $t['icon_wrap'] }} border flex items-center justify-center">
                     <i class="fas fa-user-shield text-sm {{ $t['icon'] }}"></i>
@@ -68,21 +69,11 @@
                 </p>
             </div>
 
-            {{-- Важное предупреждение --}}
-            <div class="rounded-xl {{ $t['warn_wrap'] }} px-5 py-4 mb-4">
-                <p class="flex items-center gap-2 text-sm font-extrabold uppercase tracking-widest {{ $t['warn_label'] }} mb-2">
-                    <i class="fas fa-exclamation-triangle text-base animate-pulse"></i> Важно
-                </p>
-                <p class="text-base sm:text-lg font-bold {{ $t['warn_text'] }} leading-relaxed">
-                    Если Вы раньше покупали наши курсы — <span class="underline decoration-2 underline-offset-2">не регистрируйтесь самостоятельно</span>,
-                    напишите куратору. Он создаст аккаунт вручную, и все ваши доступы сохранятся.
-                </p>
-            </div>
-
-            {{-- Контакты кураторов --}}
+            {{-- Спокойная строка для возвратных студентов (вместо красного «ВАЖНО») --}}
             <div class="pt-4 border-t {{ $t['divider'] }}">
-                <p class="text-[10px] font-bold uppercase tracking-widest {{ $t['caption'] }} mb-2.5">
-                    Связаться с куратором
+                <p class="text-sm {{ $t['muted'] }} leading-relaxed mb-2.5">
+                    Уже покупали наши курсы раньше? Напишите куратору — он свяжет прежние
+                    доступы с вашим аккаунтом, ничего не потеряется.
                 </p>
                 <div class="flex flex-wrap gap-2">
                     <a href="https://t.me/rusamskrtam"
