@@ -234,6 +234,32 @@ class PaymentResource extends Resource
                         // (скрытое поле не дегидрируется — существующее значение при
                         // сохранении не затирается).
                         ->visible(fn (): bool => RoleGate::adminOnly()),
+
+                    // Возврат за конкретный платёж (H352, модель «отдельный Расход»).
+                    // На «Расход»-возврате указывает исходную оплату — её признание
+                    // выручки усечётся по месяц возврата (флаг revenue.reverse_
+                    // unrecognized_on_refund), отложенная выручка вычтет возвращённое.
+                    Forms\Components\Select::make('refund_of_payment_id')
+                        ->label('Возврат за платёж (начисление)')
+                        ->placeholder('Не возврат — признание не трогаем')
+                        ->helperText('Только для «Расход»-возврата: исходная оплата, чью выручку усечь по месяц возврата. Пусто = обычный расход.')
+                        ->searchable()
+                        ->options(function ($get): array {
+                            return Payment::query()
+                                ->when($get('user_id'), fn ($q, $uid) => $q->where('user_id', $uid))
+                                ->whereIn('status', Payment::PAID_STATUSES)
+                                ->where('amount', '>', 0)
+                                ->whereNull('refund_of_payment_id')
+                                ->latest('created_at')
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn (Payment $p): array => [
+                                    $p->id => '#'.$p->id.' · '.number_format((float) $p->amount, 0, '.', ' ').' ₽ · '.$p->tariff.' · '.optional($p->created_at)->format('Y-m-d'),
+                                ])
+                                ->all();
+                        })
+                        // Money-critical: только админ (как salary_recognition_month).
+                        ->visible(fn (): bool => RoleGate::adminOnly()),
                 ]),
 
                 // Прямой платёж на ЛИЧНЫЙ счёт преподавателя (минуя кассу школы).

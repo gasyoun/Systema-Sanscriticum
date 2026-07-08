@@ -46,6 +46,9 @@ class Payment extends Model
         'consumed_amount',
         'deposit_credit_applied',
         'status',
+        // Возврат за конкретный платёж (H352): у платежа-«Расход» указывает
+        // исходную оплату, чью выручку усекать по месяц возврата.
+        'refund_of_payment_id',
         'transaction_id',
         // --- Полу-интегрированная валютная оплата (PayPal-заявка студента) ---
         'provider',
@@ -116,6 +119,18 @@ class Payment extends Model
     public function linkedPromise(): BelongsTo
     {
         return $this->belongsTo(PaymentPromise::class, 'linked_promise_id');
+    }
+
+    /** Исходный платёж, за который сделан этот возврат (H352). */
+    public function refundOf(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'refund_of_payment_id');
+    }
+
+    /** Возвраты, привязанные к этому платежу (H352). */
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'refund_of_payment_id');
     }
 
     public function lead(): BelongsTo
