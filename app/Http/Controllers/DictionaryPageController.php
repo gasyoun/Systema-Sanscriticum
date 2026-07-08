@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Dictionary;
 use App\Models\DictionaryWord;
+use App\Services\SanskritGlossary;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -49,7 +50,7 @@ class DictionaryPageController extends Controller
      * shares this headword slug onto one page (decision D3). The richest translation
      * is the primary sense; the rest render as per-dictionary sections.
      */
-    public function show(string $slug): View
+    public function show(string $slug, SanskritGlossary $glossary): View
     {
         $entries = DictionaryWord::query()
             ->where('slug', $slug)
@@ -82,6 +83,11 @@ class DictionaryPageController extends Controller
             ->take(8)
             ->values();
 
+        // H344 — корпусная Sa→Ru глосса из вендорного фида (за фича-флагом, по умолч. OFF).
+        // Enrich по каноническому (самому «богатому») слову; null, когда флаг выкл /
+        // слово не засвидетельствовано в корпусе.
+        $enrichment = $glossary->enrich($primary);
+
         return view('slovar.show', [
             'slug' => $slug,
             'entries' => $entries,
@@ -89,6 +95,7 @@ class DictionaryPageController extends Controller
             'sameAs' => $sameAs,
             'related' => $related,
             'indexable' => $entries->contains(fn ($w) => $w->isIndexable()),
+            'enrichment' => $enrichment,
         ]);
     }
 }
