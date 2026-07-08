@@ -15,6 +15,7 @@ use App\Models\TeacherPayout;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Единый источник правды по начислению зарплаты преподавателям.
@@ -400,7 +401,7 @@ class TeacherSalaryService
         $lines = [];
         $total = 0.0;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($teacher, $limit, $settledBy, &$lines, &$total): void {
+        DB::transaction(function () use ($teacher, $limit, $settledBy, &$lines, &$total): void {
             $remainingLimit = $limit;
             $advances = $teacher->payouts()
                 ->unsettledAdvances()
@@ -526,7 +527,7 @@ class TeacherSalaryService
      * Сырые платежи преподавателя, признанные в окне, сгруппированные по курсу —
      * для drill-down в модалке «Разбивка» (из чего сложилось начисление).
      *
-     * @return array<int, \Illuminate\Support\Collection<int, Payment>> course_id => payments
+     * @return array<int, Collection<int, Payment>> course_id => payments
      */
     public function paymentsForTeacher(Teacher $teacher, $start = null, $end = null): array
     {
@@ -1070,7 +1071,7 @@ class TeacherSalaryService
      * Реальные платежи курса (без не-выручки и нулей) — для фоллбэк-месяца
      * фикс-схем. coursePayments кэшируется, фильтр дешёвый.
      *
-     * @return \Illuminate\Support\Collection<int, Payment>
+     * @return Collection<int, Payment>
      */
     private function realPaymentsFor(int $courseId): Collection
     {
@@ -1235,50 +1236,21 @@ class TeacherSalaryService
             return [$createdMonth => $amount];
         }
 
-        $share = $amount / count($covered);
-        $out = [];
-        foreach ($covered as $n) {
-            $month = $blockMonths[$n] ?? $createdMonth;
-            $out[$month] = ($out[$month] ?? 0.0) + $share;
-        }
-
-        return $out;
+        return BlockMonthRecognition::distribute($amount, $covered, $blockMonths, $createdMonth);
     }
 
     /**
      * Номера блоков, которые покрывает платёж. full / (null,null) → все блоки
-     * курса. Переиспользуем DebtorsReport::paymentCovers. Если по списку блоков
-     * курса ничего не совпало (платёж за блоки сверх заведённых) — берём прямой
-     * диапазон start..end.
+     * курса. Делегирует канонический алгоритм BlockMonthRecognition (тот же, что в
+     * признании выручки) — тонкая обёртка, чтобы 5 вызывающих мест внутри сервиса
+     * не переписывать.
      *
      * @param  list<int>  $blockNumbers
      * @return list<int>
      */
     private function coveredBlockNumbers(Payment $payment, array $blockNumbers): array
     {
-        $start = $payment->start_block;
-        $end = $payment->end_block;
-
-        if ($start === null && $end === null) {
-            return $blockNumbers;
-        }
-
-        $covered = array_values(array_filter(
-            $blockNumbers,
-            fn (int $n) => DebtorsReport::paymentCovers($start, $end, $n),
-        ));
-
-        if (! empty($covered)) {
-            return $covered;
-        }
-
-        $s = $start ?? $end;
-        $e = $end ?? $start;
-        if ($s !== null) {
-            return range(min($s, $e), max($s, $e));
-        }
-
-        return [];
+        return BlockMonthRecognition::coveredBlockNumbers($payment->start_block, $payment->end_block, $blockNumbers);
     }
 
     /**
@@ -1308,7 +1280,7 @@ class TeacherSalaryService
     /**
      * Все paid/non-conditional платежи курса (за всё время) — кэшируются.
      *
-     * @return \Illuminate\Support\Collection<int, Payment>
+     * @return Collection<int, Payment>
      */
     private function coursePayments(int $courseId): Collection
     {
@@ -1371,7 +1343,7 @@ class TeacherSalaryService
      * датированный блок, иначе ранний месяц реальной оплаты.
      *
      * @param  array<int, string>  $blockMonths
-     * @param  \Illuminate\Support\Collection<int, Payment>  $real
+     * @param  Collection<int, Payment>  $real
      */
     private function fallbackMonth(array $blockMonths, Collection $real): ?string
     {

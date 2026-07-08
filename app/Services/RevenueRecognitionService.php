@@ -19,9 +19,10 @@ use Illuminate\Support\Carbon;
  * блоки (start_block/end_block, либо все блоки курса для 'full'/депозита), доля
  * за блок признаётся в месяце CourseBlock.starts_at; fallback — месяц created_at.
  * Override: salary_recognition_month (YYYY-MM) признаёт всю сумму в одном месяце.
- * Держим ОТДЕЛЬНЫЙ сервис (а не тянем private-метод ЗП), чтобы денежно-критичный
- * TeacherSalaryService не трогать; при будущей унификации — свести в один
- * источник (см. docs/revenue-recognition.md).
+ * Общее ядро «блок → месяц» (покрытые блоки + раскладка по месяцам) сведено в
+ * BlockMonthRecognition (H349); оба сервиса делегируют его. Резолюция блоков курса
+ * и request-scoped кэши остаются здесь и в TeacherSalaryService раздельно —
+ * денежно-критичный кэш ЗП не тронут (см. docs/revenue-recognition.md).
  *
  * Инвариант: Σ долей одного платежа == сумме платежа. Поэтому Σ признанной
  * выручки за всё время == Σ кассовой выручки (revenueForWindow) — вкладки ОПиУ
@@ -83,7 +84,7 @@ class RevenueRecognitionService
 
         $courseId = $payment->course_id ? (int) $payment->course_id : null;
         $blockNumbers = $courseId ? $this->blockNumbersFor($courseId) : [];
-        $covered = $this->coveredBlockNumbers($payment, $blockNumbers);
+        $covered = BlockMonthRecognition::coveredBlockNumbers($payment->start_block, $payment->end_block, $blockNumbers);
 
         // Платёж без курса/блоков (разовый, короткий продукт) — признаём в месяц оплаты.
         if (empty($covered)) {
@@ -91,51 +92,8 @@ class RevenueRecognitionService
         }
 
         $blockMonths = $this->blockMonthsFor($courseId);
-        $share = $amount / count($covered);
 
-        $out = [];
-        foreach ($covered as $n) {
-            $month = $blockMonths[$n] ?? $createdMonth;
-            $out[$month] = ($out[$month] ?? 0.0) + $share;
-        }
-
-        return $out;
-    }
-
-    /**
-     * Номера блоков, которые покрывает платёж. (null,null) → все блоки курса
-     * (full/депозит/legacy). Переиспользуем DebtorsReport::paymentCovers (тот же
-     * предикат, что в ЗП). Если по списку блоков курса ничего не совпало (платёж
-     * за блоки сверх заведённых) — берём прямой диапазон start..end.
-     *
-     * @param  list<int>  $blockNumbers
-     * @return list<int>
-     */
-    private function coveredBlockNumbers(Payment $payment, array $blockNumbers): array
-    {
-        $start = $payment->start_block;
-        $end = $payment->end_block;
-
-        if ($start === null && $end === null) {
-            return $blockNumbers;
-        }
-
-        $covered = array_values(array_filter(
-            $blockNumbers,
-            fn (int $n) => DebtorsReport::paymentCovers($start, $end, $n),
-        ));
-
-        if (! empty($covered)) {
-            return $covered;
-        }
-
-        $s = $start ?? $end;
-        $e = $end ?? $start;
-        if ($s !== null) {
-            return range(min($s, $e), max($s, $e));
-        }
-
-        return [];
+        return BlockMonthRecognition::distribute($amount, $covered, $blockMonths, $createdMonth);
     }
 
     /**
