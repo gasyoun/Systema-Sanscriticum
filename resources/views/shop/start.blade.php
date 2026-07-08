@@ -104,6 +104,25 @@
         {{-- ДОВЕРИЕ --}}
         @include('shop.partials.trust-strip')
 
+        {{-- БЕСПЛАТНЫЕ МАТЕРИАЛЫ (H387): мостик в хаб «Материалы» --}}
+        <section class="mb-16 lg:mb-20" data-analytics="onramp-materials">
+            <a href="{{ route('shop.materials') }}"
+               class="group flex items-center justify-between gap-4 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 p-6 transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-[#1F2636] flex items-center justify-center shrink-0">
+                        <i class="fas fa-book-open text-[#38BDF8]"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white mb-1 group-hover:text-[#E85C24] transition-colors">
+                            Почитать и посмотреть бесплатно
+                        </h2>
+                        <p class="text-sm text-slate-400">Статьи, беседы и открытые уроки — в разделе «Материалы».</p>
+                    </div>
+                </div>
+                <span class="shrink-0 text-xs font-bold text-[#38BDF8]">Открыть →</span>
+            </a>
+        </section>
+
         {{-- ЛИД-ФОРМА (самогейтится по фича-флагу newsletter_subscribe) --}}
         <section class="mb-16 lg:mb-20 flex justify-center" data-analytics="onramp-lead">
             <x-newsletter-subscribe

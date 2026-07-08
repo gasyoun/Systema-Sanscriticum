@@ -122,6 +122,24 @@
 
 </div>
 
+{{-- ═══════════════ CTA В КОНЦЕ СТАТЬИ (H387): статья → воронка магазина ═══════════════ --}}
+{{-- Тот же партиал «лесенки», что на «С чего начать» и в «Материалах»; якоря
+     цен считает ProductLadderAnchors в контроллере — цифры нигде не хардкодятся. --}}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 mt-16" data-analytics="article-funnel">
+    <div class="bg-[#0A0D14] text-white rounded-3xl px-5 sm:px-8 pt-10 pb-1 md:px-12 md:pt-12">
+        <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Понравилась статья?</p>
+        @include('shop.partials.ladder', $ladder)
+    </div>
+</section>
+
+{{-- Ещё материалы: обратно в хаб --}}
+<div class="text-center mt-8" data-analytics="article-materials-link">
+    <a href="{{ route('shop.materials') }}"
+       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#E85C24] transition-colors">
+        <i class="fas fa-book-open"></i> Все бесплатные материалы
+    </a>
+</div>
+
 @endsection
 
 @push('scripts')

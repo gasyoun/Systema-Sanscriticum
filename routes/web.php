@@ -16,6 +16,7 @@ use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PasswordResetController;
@@ -91,6 +92,11 @@ Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
+
+// «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
+// паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
+// типизированных карточек. Блог остаётся на /s — здесь только агрегатор.
+Route::get('/online/materialy', [MaterialsController::class, 'index'])->name('shop.materials');
 
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');

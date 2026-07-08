@@ -8,6 +8,7 @@ use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\MarketingSetting;
 use App\Services\ArticleViewTracker;
+use App\Support\ProductLadderAnchors;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -88,7 +89,11 @@ class ArticleController extends Controller
         // Аналитика: ID счётчиков с приоритетом «своё поле > глобальный дефолт»
         $blogAnalytics = $this->resolveAnalytics($article);
 
-        return view('articles.show', compact('article', 'blogAnalytics'));
+        // CTA-«лесенка» в конце статьи (H387): честные якоря цен из общего
+        // хелпера — те же числа, что на «С чего начать» и в «Материалах».
+        $ladder = ProductLadderAnchors::resolve();
+
+        return view('articles.show', compact('article', 'blogAnalytics', 'ladder'));
     }
 
     /**

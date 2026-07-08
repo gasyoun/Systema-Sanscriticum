@@ -7,8 +7,8 @@ use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
-use App\Models\Tariff;
 use App\Models\Testimonial;
+use App\Support\ProductLadderAnchors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -70,7 +70,16 @@ class ShopController extends Controller
      */
     public function start()
     {
-        $catalogUrl = route('shop.index');
+        // Якоря лесенки (цены «от N ₽», бесплатная ступень) — общий хелпер
+        // ProductLadderAnchors: те же числа видят конец статьи и «Материалы».
+        [
+            'freeUrl' => $freeUrl,
+            'minRecordedPrice' => $minRecordedPrice,
+            'minBlockPrice' => $minBlockPrice,
+            'catalogUrl' => $catalogUrl,
+            'freePreviewCourse' => $freePreviewCourse,
+        ] = ProductLadderAnchors::resolve();
+
         $beginnerUrl = route('shop.index', ['level' => 'beginner']);
         $curatorUrl = config('onramp.curator_url');
 
@@ -87,29 +96,6 @@ class ShopController extends Controller
         $courseUrl = fn (?Course $course, string $fallback): string => $course
             ? route('shop.course.show', $course->slug)
             : $fallback;
-
-        // Якоря цен для лесенки: «от N ₽» честно считаются из активных тарифов.
-        $minBlockPrice = Tariff::query()
-            ->where('is_active', true)
-            ->where('type', 'block')
-            ->whereHas('course', fn ($q) => $q->where('is_visible', true))
-            ->min('price');
-
-        $minRecordedPrice = Tariff::query()
-            ->where('is_active', true)
-            ->whereHas('course', fn ($q) => $q->where('is_visible', true)->where('format', 'recorded'))
-            ->min('price');
-
-        // Бесплатная ступень: любой курс с публичным preview-уроком.
-        $freePreviewCourse = Course::query()
-            ->where('is_visible', true)
-            ->whereHas('previewLesson')
-            ->orderBy('id')
-            ->first();
-
-        $freeUrl = $freePreviewCourse
-            ? route('shop.course.preview', $freePreviewCourse->slug)
-            : $catalogUrl;
 
         // Данные квиза (порт мастер-квиза ORS-FAQ, переретаргетированный на
         // маршруты магазина). Рендерится Alpine-компонентом на странице.
