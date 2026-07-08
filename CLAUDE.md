@@ -108,6 +108,30 @@ finance-role users so the rhythm has teeth. **БДР план-факт** is defe
 picks a canonical budget template (@DECIDE) — shown as an explicit grey "awaiting
 template" card, not silently dropped.
 
+### Order→Payment Conversion (Sales Funnel)
+
+The phase-F superstructure of the noboring `/cases/education` plan (H262). One
+Filament page under the "Продажи" group, gated by `RoleGate::finance()`:
+
+- **`OrderPaymentConversion`** ("Конверсия заказ→оплата",
+  `/admin/order-payment-conversion`) over `OrderPaymentConversionService`: the
+  operational funnel report from the noboring case "Нашли и обезвредили слабое
+  место в продажах" (order→payment was only 47 %). An **order** = a real
+  (`is_conditional=false`) `Payment` excluding accounting/micro-purchase tariffs
+  (`config('conversion.excluded_tariffs')` = `Расход`/`salary_payout`/`deposit`/
+  `trial`). Conversion is measured **cohort-by-creation-date**: of orders placed
+  in a period, the share that reached `paid`/`success`. Shows a headline
+  conversion + traffic light (green ≥ `target_pct`, yellow ≥ `warn_pct`, else
+  red), week/quarter trend, per-course and per-channel (`users.utm_source`)
+  breakdowns, and a **недожатые заказы** working list (pending > `unclosed_after_days`).
+  The недожатые list is an **early signal before receivables** — its data source
+  (pending `Payment` rows) is distinct from `ReceivablesGovernance` (unmet
+  `PaymentPromise`); the two do not share logic. A yellow nav badge shows the
+  недожатые count so the operator sees the leak without opening the page.
+  Thresholds/windows live in `config/conversion.php` (env-backed, **never
+  hardcode**). Reuses the channel derivation of `ChannelConversionReport` (which
+  measures channel→paid at the *user* level monthly — a different question).
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
