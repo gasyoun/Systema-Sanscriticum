@@ -78,6 +78,18 @@ class FinanceCockpit extends Page
         return app(FinanceCockpitReport::class)->opiu($this->period);
     }
 
+    /** ОПиУ по методу начисления (accrual): выручка = признания RevenueSchedule. @return array<string,mixed> */
+    public function getOpiuAccrual(): array
+    {
+        return app(FinanceCockpitReport::class)->opiuAccrual($this->period);
+    }
+
+    /** Отложенная выручка на конец периода (оплачено − признано). @return array<string,mixed> */
+    public function getDeferredRevenue(): array
+    {
+        return app(FinanceCockpitReport::class)->deferredRevenue($this->period);
+    }
+
     /** @return array<string,mixed> */
     public function getDds(): array
     {
