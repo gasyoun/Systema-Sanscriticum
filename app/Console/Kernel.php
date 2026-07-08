@@ -44,6 +44,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('finance-kpi-digest');
 
+        // Еженедельный goal check-in (H376): фиксирует темп каждой активной
+        // цели и шлёт дайджест при отставании — та же понедельничная утренняя
+        // рамка, что и KPI-дайджест.
+        $schedule->command('goals:record-checkins')
+            ->weeklyOn(1, '09:15')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('goals-record-checkins');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.
