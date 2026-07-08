@@ -14,7 +14,7 @@
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 
 @push('head')
-    @include('partials.schema-defined-term', ['primary' => $primary, 'sameAs' => $sameAs, 'canonical' => $canonical])
+    @include('partials.schema-defined-term', ['primary' => $primary, 'sameAs' => $sameAs, 'canonical' => $canonical, 'enrichment' => $enrichment ?? null])
 
     @include('partials.schema-breadcrumbs', ['crumbs' => [
         ['name' => 'Главная', 'url' => url('/')],
@@ -35,6 +35,28 @@
             @if($primary->cyrillic)<span>кириллица: {{ $primary->cyrillic }}</span>@endif
         </div>
     </header>
+
+    {{-- ═════ Корпусные значения (H344, за фича-флагом slovar_enrichment) ═════ --}}
+    @if(!empty($enrichment))
+        <div class="max-w-3xl mx-auto mb-8">
+            <section class="bg-[#12321f]/40 border border-emerald-800/50 rounded-2xl p-6">
+                <div class="flex items-baseline justify-between gap-4 mb-3">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-emerald-500">Корпусные значения</h2>
+                    @if($enrichment['pos_label'])
+                        <span class="text-xs text-emerald-400/80 shrink-0">{{ $enrichment['pos_label'] }}</span>
+                    @endif
+                </div>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    @foreach($enrichment['glosses'] as $gloss)
+                        <span class="px-3 py-1.5 rounded-lg bg-emerald-900/40 text-emerald-100 text-sm">{{ $gloss }}</span>
+                    @endforeach
+                </div>
+                <p class="text-xs text-gray-500">
+                    По данным корпуса санскрита (DCS){{ $enrichment['freq'] ? ', встречаемость: '.number_format($enrichment['freq'], 0, '.', ' ') : '' }}@if($enrichment['slp1']) · SLP1: <span lang="sa-Latn">{{ $enrichment['slp1'] }}</span>@endif.
+                </p>
+            </section>
+        </div>
+    @endif
 
     {{-- ═════ Толкования по словарям (каноническая сборка, решение D3) ═════ --}}
     <div class="space-y-4 max-w-3xl mx-auto">

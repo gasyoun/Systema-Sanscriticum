@@ -11,13 +11,25 @@
 --}}
 @php
     $__dict = $primary->dictionary;
+
+    // H344 — при включённом обогащении корпусные Sa→Ru значения дополняют
+    // description; при выключенном ($enrichment === null) поведение как в Wave 0.
+    $__enrichment = $enrichment ?? null;
+    $__desc = trim(strip_tags((string) $primary->translation));
+    if (! empty($__enrichment['glosses'])) {
+        $__corpus = implode(', ', $__enrichment['glosses']);
+        $__desc = $__desc !== ''
+            ? $__desc.'; корпусные значения: '.$__corpus
+            : 'Корпусные значения: '.$__corpus;
+    }
+
     $__definedTerm = array_filter([
         '@context' => 'https://schema.org',
         '@type' => 'DefinedTerm',
         '@id' => $canonical.'#term',
         'name' => $primary->headword(),
         'inLanguage' => 'sa',
-        'description' => \Illuminate\Support\Str::limit(trim(strip_tags((string) $primary->translation)), 300),
+        'description' => \Illuminate\Support\Str::limit($__desc, 300),
         'url' => $canonical,
         'sameAs' => $sameAs->isNotEmpty() ? $sameAs->values()->all() : null,
         'inDefinedTermSet' => $__dict ? array_filter([
