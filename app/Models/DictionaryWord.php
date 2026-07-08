@@ -17,8 +17,13 @@ class DictionaryWord extends Model
         'cyrillic',
         'slug',
         'wikidata_qid',
+        'is_indexable',
         'translation',
         'page',
+    ];
+
+    protected $casts = [
+        'is_indexable' => 'boolean',
     ];
 
     /** Автоматически проставляем slug при сохранении, если он пуст (новые/правленые слова). */
@@ -74,7 +79,10 @@ class DictionaryWord extends Model
 
     /**
      * Whether THIS page may be indexed. Wave 0 (`index_enabled` = false) → always
-     * false. Once enabled, gated by the curated-core quality bar (decisions D1/D2).
+     * false. Once enabled, gated by the curated-core quality bar (decisions D1/D2):
+     * the translation must clear `min_translation_length` AND, while `curated_only`
+     * is on, the row must be on the curated allowlist (`is_indexable` = true, fed by
+     * `dictionary:mark-core-indexable` from «Сборное ядро» / DCS-attested).
      */
     public function isIndexable(): bool
     {
@@ -87,9 +95,10 @@ class DictionaryWord extends Model
             return false;
         }
 
-        // Curated allowlist not yet wired → default-closed so nothing indexes by accident.
+        // Curated allowlist gate (D1): index only the reviewed core. Default-closed —
+        // an unmarked row stays noindex even with the master switch on.
         if (config('dictionary_seo.gate.curated_only', true)) {
-            return false;
+            return (bool) $this->is_indexable;
         }
 
         return true;

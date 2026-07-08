@@ -18,16 +18,20 @@ return [
     'index_enabled' => env('DICTIONARY_SEO_INDEX_ENABLED', false),
 
     // D1 — quality gate for the curated core, applied ONLY once index_enabled is true.
-    // A word is index-eligible when its translation clears this bar AND (optionally)
-    // it is on the curated allowlist. Until the allowlist data (Сборное ядро /
-    // DCS-attested) is wired, `curated_only` stays true so nothing indexes by accident.
+    // A word is index-eligible when its translation clears this bar AND, while
+    // `curated_only` is on, it is on the curated allowlist (`dictionary_words.is_indexable`,
+    // fed by `php artisan dictionary:mark-core-indexable <list>` from the «Сборное ядро»
+    // / DCS-attested headwords). Default `curated_only` = true → nothing indexes by
+    // accident even with the master switch flipped until the list is fed.
     'gate' => [
         'min_translation_length' => env('DICTIONARY_SEO_MIN_TRANSLATION', 40),
         'curated_only' => env('DICTIONARY_SEO_CURATED_ONLY', true),
     ],
 
     // D4 — emit the Wikidata/DBpedia `sameAs` triplet only when a mapping exists.
-    // The auto-matcher + confidence gate populates `dictionary_words.wikidata_qid`
-    // out of band; the page never guesses.
+    // `php artisan dictionary:match-wikidata` populates `dictionary_words.wikidata_qid`
+    // out of band (propose-only by default; `--write` after a spot-check — the exact
+    // Devanāgarī signal still has conceptual-disambiguation false positives, see
+    // docs/WIKIDATA_SAMEAS_SPOTCHECK.md). The page never guesses.
     'wikidata_base' => 'https://www.wikidata.org/wiki/',
 ];
