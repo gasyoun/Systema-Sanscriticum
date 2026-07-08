@@ -14,7 +14,7 @@ a fresh session.
 | ID | File | Status | Deliverable |
 |---|---|---|---|
 | H296 | [H296-Sonnet_Systema-Sanscriticum_public-store-ux-audit_07.07.26.md](H296-Sonnet_Systema-Sanscriticum_public-store-ux-audit_07.07.26.md) | ✅ Done — [PR #355](https://github.com/gasyoun/Systema-Sanscriticum/pull/355) merged | [`docs/PUBLIC_STORE_UX_AUDIT_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PUBLIC_STORE_UX_AUDIT_2026.md) |
-| H297 | [H297-Sonnet_Systema-Sanscriticum_checkout-purchase-ux-audit_07.07.26.md](H297-Sonnet_Systema-Sanscriticum_checkout-purchase-ux-audit_07.07.26.md) | 🟡 Queued | `docs/CHECKOUT_PURCHASE_UX_AUDIT_2026.md` |
+| H297 | [H297-Sonnet_Systema-Sanscriticum_checkout-purchase-ux-audit_07.07.26.md](H297-Sonnet_Systema-Sanscriticum_checkout-purchase-ux-audit_07.07.26.md) | 🔵 Delivered — [PR #379](https://github.com/gasyoun/Systema-Sanscriticum/pull/379) open (draft) | [`docs/CHECKOUT_PURCHASE_UX_AUDIT_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/checkout-purchase-ux-audit/docs/CHECKOUT_PURCHASE_UX_AUDIT_2026.md) |
 | H298 | [H298-Sonnet_Systema-Sanscriticum_first-5-minutes-student-audit_07.07.26.md](H298-Sonnet_Systema-Sanscriticum_first-5-minutes-student-audit_07.07.26.md) | 🟡 Queued | `docs/FIRST_5_MINUTES_STUDENT_UX_AUDIT_2026.md` |
 | H299 | [H299-Sonnet_Systema-Sanscriticum_learning-experience-ux-audit_07.07.26.md](H299-Sonnet_Systema-Sanscriticum_learning-experience-ux-audit_07.07.26.md) | 🟡 Queued | `docs/LEARNING_EXPERIENCE_UX_AUDIT_2026.md` |
 | H300 | [H300-Sonnet_Systema-Sanscriticum_self-service-support-ux-audit_07.07.26.md](H300-Sonnet_Systema-Sanscriticum_self-service-support-ux-audit_07.07.26.md) | 🟡 Queued | `docs/SELF_SERVICE_SUPPORT_UX_AUDIT_2026.md` |
