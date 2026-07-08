@@ -225,6 +225,14 @@ class CourseResource extends Resource
                                     ->required()
                                     ->inline(false)
                                     ->columnSpanFull(),
+
+                                Forms\Components\Select::make('level')
+                                    ->label('Уровень')
+                                    ->options(Course::LEVELS)
+                                    ->placeholder('Не задан')
+                                    ->helperText('«С нуля» / «Продолжающим» / «Продвинутый» — бейдж на карточке и фильтр каталога. Пусто — бейджа нет и курс не участвует в фильтре по уровню.')
+                                    ->nullable()
+                                    ->columnSpanFull(),
                             ]),
                     ]),
 

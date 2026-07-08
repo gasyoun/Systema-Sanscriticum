@@ -88,6 +88,10 @@ Route::get('/', function () {
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 
+// «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
+// курса + уровни (H323, beginner on-ramp).
+Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
+
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
 

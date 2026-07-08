@@ -13,12 +13,32 @@
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
                 Общество ревнителей санскрита
             </h1>
-            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-8">
+            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-6">
                 Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
             </p>
+
+            {{-- Вход для новичка (H323, beginner on-ramp) --}}
+            <a href="{{ route('shop.start') }}"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
+                <i class="fas fa-compass"></i>
+                Не знаете, с чего начать?
+            </a>
         </div>
 
+        {{-- Полоса доверия (H323, social proof) --}}
+        @include('shop.partials.trust-strip')
+
         @livewire('shop.course-catalog')
+
+        {{-- Общесайтовые отзывы (H323, social proof) --}}
+        @include('shop.partials.featured-testimonials', ['testimonials' => $featuredTestimonials])
+
+        {{-- Лид-форма (самогейтится по фича-флагу newsletter_subscribe) --}}
+        <div class="mt-16 flex justify-center">
+            <x-newsletter-subscribe
+                title="Пока просто присматриваетесь?"
+                blurb="Оставьте email — пришлём бесплатные материалы для первого шага и заведём личный кабинет." />
+        </div>
     </div>
 
     @include('partials.deposit-modal', ['deposit' => $deposit])

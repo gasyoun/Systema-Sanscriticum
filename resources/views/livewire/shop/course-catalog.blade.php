@@ -112,6 +112,39 @@
             </div>
         </div>
 
+        {{-- ===== Строка A2: уровень (появляется, когда владелец классифицировал курсы) ===== --}}
+        @if(! empty($this->levelCounts))
+            <div class="flex flex-wrap items-center gap-2" data-analytics="level-filter">
+                <span class="text-xs font-bold uppercase tracking-widest text-slate-500 mr-1">Уровень:</span>
+                @foreach(\App\Models\Course::LEVELS as $levelKey => $levelLabel)
+                    @if(($this->levelCounts[$levelKey] ?? 0) > 0)
+                        @php $levelActive = $level === $levelKey; @endphp
+                        <button type="button"
+                                wire:click="$set('level', '{{ $levelActive ? '' : $levelKey }}')"
+                                wire:key="level-{{ $levelKey }}"
+                                @class([
+                                    'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
+                                    'bg-emerald-500 text-white border-emerald-500' => $levelActive,
+                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-emerald-500/50 hover:text-white' => ! $levelActive,
+                                ])>
+                            @if($levelKey === 'beginner')<i class="fas fa-seedling text-[11px] opacity-80"></i>@endif
+                            {{ $levelLabel }}
+                            <span @class([
+                                'text-[11px]',
+                                'text-white/70' => $levelActive,
+                                'text-slate-500' => ! $levelActive,
+                            ])>{{ $this->levelCounts[$levelKey] }}</span>
+                        </button>
+                    @endif
+                @endforeach
+                <a href="{{ route('shop.start') }}"
+                   class="inline-flex items-center gap-1.5 text-xs font-bold text-[#38BDF8] hover:text-white underline-offset-4 hover:underline px-2 py-2 transition-colors">
+                    <i class="fas fa-compass text-[11px]"></i>
+                    С чего начать?
+                </a>
+            </div>
+        @endif
+
         {{-- ===== Строка B: категории (скролл по горизонтали на узких экранах) ===== --}}
         @if($this->categories->isNotEmpty())
             <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -153,13 +186,13 @@
     {{-- ============================================ --}}
     <div>
         {{-- Индикатор перерасчёта фильтров --}}
-        <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
+        <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,level,resetFilters"
              class="flex items-center gap-2 text-xs text-slate-400 mb-6">
             <i class="fas fa-spinner fa-spin text-[#E85C24]"></i>
             Обновляем...
         </div>
 
-        <div wire:loading.class="opacity-50" wire:target="search,toggleCategory,resetCategories,teacherId,format,resetFilters"
+        <div wire:loading.class="opacity-50" wire:target="search,toggleCategory,resetCategories,teacherId,format,level,resetFilters"
              class="space-y-12 transition-opacity">
 
             @php

@@ -45,6 +45,8 @@ class Course extends Model
         // --- НОВОЕ ПОЛЕ: Для программы лояльности ---
         'is_elective',
         'format',
+        // Уровень для витрины: beginner | continuing | advanced | null (не задан).
+        'level',
         // --- ПРОДАЮЩАЯ СТРАНИЦА (лендинг) ---
         'audience',
         'outcomes',
@@ -92,6 +94,33 @@ class Course extends Model
             'recorded' => 'В записи',
             default => null,
         };
+    }
+
+    /**
+     * Уровни курса для витрины (H323, beginner on-ramp). Единый источник
+     * значений/лейблов для админки (CourseResource), фильтра каталога
+     * (CourseCatalog) и бейджей на карточке/лендинге.
+     */
+    public const LEVELS = [
+        'beginner' => 'С нуля',
+        'continuing' => 'Продолжающим',
+        'advanced' => 'Продвинутый',
+    ];
+
+    /** Человекочитаемый лейбл уровня; null/неизвестное значение — null (бейдж скрыт). */
+    public function levelLabel(): ?string
+    {
+        return self::LEVELS[$this->level] ?? null;
+    }
+
+    /** Курсы заданного уровня (значение вне LEVELS игнорируется — фильтр не применяется). */
+    public function scopeOfLevel($query, ?string $level)
+    {
+        if ($level === null || ! array_key_exists($level, self::LEVELS)) {
+            return $query;
+        }
+
+        return $query->where('level', $level);
     }
 
     /** Курс считается новинкой, если создан за последние 30 дней. */
