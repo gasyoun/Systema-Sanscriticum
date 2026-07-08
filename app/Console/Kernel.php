@@ -35,6 +35,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('receivables-threshold-check');
 
+        // Недельный KPI-дайджест делегирования (H259, фаза D): сводка всех фаз
+        // финдиру по понедельникам утром — «ритм обзора» с зубами. Гейт «есть
+        // получатели» — внутри команды.
+        $schedule->command('finance:kpi-digest')
+            ->weeklyOn(1, '09:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('finance-kpi-digest');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.

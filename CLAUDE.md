@@ -78,6 +78,36 @@ anti-case: installments introduced without finance sign-off produced ~2M ₽ of
 illiquid receivables in 3 weeks. When widening a limit in `config/receivables.php`
 or `installment_limits`, treat it as a finance decision, not a routine tweak.
 
+### Profit Funds & Delegation KPI
+
+The management capstone of the noboring `/cases/education` plan (H259, phase D).
+Two Filament pages under the "Финансы" group, both gated by `RoleGate::finance()`:
+
+- **`ProfitFunds`** ("Фонды прибыли", `/admin/profit-funds`) over
+  `ProfitFundsService`: distributes **accrual net profit** (EBITDA from the
+  accrual ОПиУ, phase B) across configurable funds (default 60 % dividends / 20 %
+  reserve / 10 % team / 10 % company), accumulates over a window, and reconciles
+  the **reserve fund against real cash** (accumulated ДДС net flow) — an accrued
+  reserve with no cash behind it is flagged. Only positive-profit months fund;
+  shares/window live in `config/profit_funds.php` (env-backed, **never hardcode**).
+  Fund accumulation is a management earmark, not a bank ledger (the LMS has no
+  bank-balance account) — this is labeled honestly in the UI.
+- **`DelegationKpi`** ("KPI делегирования", `/admin/delegation-kpi`, first in the
+  group) over `DelegationKpiService`: one operator screen aggregating all four
+  phases with traffic lights — A (LTV/CAC payback), B (accrual profit + deferred
+  revenue), C (receivables vs threshold), D (reserve fund). Each card links to its
+  detail page. The whole point is to run the business **without the owner**.
+
+**Review rhythm is part of the deliverable, not optional.** The anti-case
+"Лингвистик" shows a perfect finance plan is useless if nobody owns it and there's
+no cadence. The **owner of the numbers** is the delegated finance lead
+(`RoleGate::finance()`); the weekly/monthly checklist, thresholds, and the exact
+person (@DECIDE MG) live in [`docs/FINANCE_REVIEW_RHYTHM.md`](docs/FINANCE_REVIEW_RHYTHM.md).
+The `finance:kpi-digest` command (weekly, Mondays 09:00) pushes the KPI summary to
+finance-role users so the rhythm has teeth. **БДР план-факт** is deferred until MG
+picks a canonical budget template (@DECIDE) — shown as an explicit grey "awaiting
+template" card, not silently dropped.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
