@@ -1,6 +1,6 @@
 # SEO Roadmap — samskrte.ru (Общество ревнителей санскрита)
 
-_Created: 05-07-2026 · Last updated: 05-07-2026_
+_Created: 05-07-2026 · Last updated: 08-07-2026_
 
 **Primary engine: Yandex. Secondary: Google.** Framing method: entity/semantic-SEO
 concepts from [seobythesea.com](https://www.seobythesea.com) (Bill Slawski — Google-patent-derived:
@@ -112,7 +112,10 @@ each carrying:
 - ✅ Canonical per-headword page (D3 collapse) + `DefinedTerm` JSON-LD (`inLanguage: sa`, `inDefinedTermSet`, conditional `sameAs`) via [`partials/schema-defined-term.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/schema-defined-term.blade.php) + OG + `BreadcrumbList`.
 - ✅ Sitemap word-chunk in [`SitemapController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SitemapController.php) — **built but gated on `dictionary_seo.index_enabled` (withheld in Wave 0, D2)**.
 - ✅ Cross-link related words (feeds P1-b); course/article cross-links = a later enrichment wave.
-- ⏳ **Follow-on (not this PR):** Wave-1 indexation (flip `index_enabled`, wire the curated-core allowlist D1, Yandex.Webmaster checkpoint) + the automated Wikidata `sameAs` matcher populating `wikidata_qid` (D4).
+- ✅ **Wave-1 mechanisms built offline (H210, 08-07-2026 — ready to flip on deploy):**
+  - Track A / D1 — curated-core allowlist: `dictionary_words.is_indexable` column + [`dictionary:mark-core-indexable`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MarkCoreIndexable.php) (feeds it from the «Сборное ядро» / DCS-attested list by headword slug); [`DictionaryWord::isIndexable()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php) now gates on the allowlist under `curated_only`. Default-closed — flipping `index_enabled` still indexes nothing until the list is fed.
+  - Track B / D4 — Wikidata `sameAs` matcher: [`WikidataSameAsMatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Seo/WikidataSameAsMatcher.php) + [`dictionary:match-wikidata`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MatchWikidataSameAs.php) (exact Devanāgarī signal + P31 instance-of filter; **propose-only, `--write` after a spot-check**). Spot-check + residual-FP analysis: [`docs/WIKIDATA_SAMEAS_SPOTCHECK.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/WIKIDATA_SAMEAS_SPOTCHECK.md).
+- ⏳ **Deploy-gated activation (human, prod):** flip `DICTIONARY_SEO_INDEX_ENABLED=true`, run `dictionary:mark-core-indexable <list>` + `dictionary:match-wikidata --write`, submit the sitemap chunk to Yandex.Webmaster, promote in monitored waves (D2).
 
 ### 5.3 ⚠️ Risk — thin-content / over-indexation on Yandex
 Thousands of near-empty word pages (headword + one gloss) can trigger Yandex **thin-content /
