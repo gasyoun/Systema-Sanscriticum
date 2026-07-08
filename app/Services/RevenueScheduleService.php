@@ -33,7 +33,7 @@ class RevenueScheduleService
         DB::transaction(function () use ($payment) {
             RevenueSchedule::query()->where('payment_id', $payment->id)->delete();
 
-            $shares = $this->recognition->sharesForPayment($payment);
+            $shares = $this->resolveShares($payment);
             if (empty($shares)) {
                 return;
             }
@@ -52,6 +52,46 @@ class RevenueScheduleService
 
             RevenueSchedule::query()->insert($rows);
         });
+    }
+
+    /**
+     * Строки признания платежа с учётом реверса возврата (H352).
+     *
+     * Дефолт (флаг revenue.reverse_unrecognized_on_refund = false): как раньше —
+     * полная раскладка sharesForPayment, возврат отдельным «Расход» её не трогает.
+     *
+     * Флаг включён И у платежа есть привязанный возврат (Payment.refund_of_payment_id
+     * → этот платёж): раскладку усекаем по месяц ПЕРВОГО возврата включительно —
+     * уже оказанная услуга остаётся выручкой, непризнанный будущий остаток
+     * отбрасывается. Решение MG 08-07-2026 (H258 @DECIDE #2, модель «отдельный
+     * Расход, заработанное остаётся»).
+     *
+     * @return array<string, float>
+     */
+    private function resolveShares(Payment $payment): array
+    {
+        $shares = $this->recognition->sharesForPayment($payment);
+
+        if (empty($shares) || ! config('revenue.reverse_unrecognized_on_refund')) {
+            return $shares;
+        }
+
+        $earliestRefundAt = Payment::query()
+            ->where('refund_of_payment_id', $payment->id)
+            ->min('created_at');
+
+        if ($earliestRefundAt === null) {
+            return $shares;
+        }
+
+        $refundMonth = Carbon::parse($earliestRefundAt)->format('Y-m');
+
+        // Строковое сравнение корректно для 'YYYY-MM' (лексикографика = хронология).
+        return array_filter(
+            $shares,
+            fn (string $month) => $month <= $refundMonth,
+            ARRAY_FILTER_USE_KEY,
+        );
     }
 
     /**
@@ -108,7 +148,12 @@ class RevenueScheduleService
      * Отрицательное = признано раньше кассы (поздняя оплата уже прошедших блоков) —
      * по сути начисленная, но не полученная выручка; помечаем в UI отдельно.
      *
-     * @return array{cashReceived:float, recognized:float, deferred:float}
+     * Реверс возврата (H352, флаг revenue.reverse_unrecognized_on_refund): из
+     * кассы вычитаем возвращённое ученикам (привязанные возвраты refund_of_payment_id),
+     * иначе отложенная выручка завышала бы обязательство на уже возвращённую сумму
+     * (признание при этом усечено по месяц возврата — см. resolveShares).
+     *
+     * @return array{cashReceived:float, refundsReturned:float, recognized:float, deferred:float}
      */
     public function deferredRevenueAsOf(string $period): array
     {
@@ -125,12 +170,23 @@ class RevenueScheduleService
             ->where('created_at', '<=', $end)
             ->sum('amount'));
 
+        // Возвращённое ученикам по конец периода (привязанные возвраты). Только при
+        // включённом реверсе — иначе поведение инертно (дефолт до H352).
+        $refundsReturned = 0.0;
+        if (config('revenue.reverse_unrecognized_on_refund')) {
+            $refundsReturned = Money::round((float) Payment::query()
+                ->whereNotNull('refund_of_payment_id')
+                ->where('created_at', '<=', $end)
+                ->sum(DB::raw('ABS(amount)')));
+        }
+
         $recognized = $this->recognizedThroughMonth($period);
 
         return [
             'cashReceived' => $cashReceived,
+            'refundsReturned' => $refundsReturned,
             'recognized' => $recognized,
-            'deferred' => Money::round($cashReceived - $recognized),
+            'deferred' => Money::round($cashReceived - $refundsReturned - $recognized),
         ];
     }
 }

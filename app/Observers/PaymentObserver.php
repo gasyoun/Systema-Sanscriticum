@@ -37,7 +37,7 @@ class PaymentObserver
         }
 
         // График признания выручки (accrual) — субледжер поверх платежа.
-        app(RevenueScheduleService::class)->regenerateFor($payment);
+        $this->syncRevenueSchedule($payment);
     }
 
     /**
@@ -78,7 +78,43 @@ class PaymentObserver
         // Пересобираем график признания выручки: сумма/блоки/курс/статус могли
         // измениться. Платёж, переставший быть выручкой (отмена/возврат), теряет
         // строки — субледжер самоочищается (см. RevenueScheduleService).
-        app(RevenueScheduleService::class)->regenerateFor($payment);
+        $this->syncRevenueSchedule($payment);
+    }
+
+    /**
+     * Удаление платежа-возврата снимает усечение с исходного платежа (H352):
+     * его график признания пересобирается уже без этого возврата.
+     *
+     * Сам удалённый платёж НЕ пересобираем — его строки признания ушли каскадом
+     * (revenue_schedules.payment_id cascadeOnDelete), а INSERT под удалённый
+     * payment_id нарушил бы FK. Трогаем только исходный платёж возврата.
+     */
+    public function deleted(Payment $payment): void
+    {
+        if ($payment->refund_of_payment_id) {
+            $original = Payment::find($payment->refund_of_payment_id);
+            if ($original !== null) {
+                app(RevenueScheduleService::class)->regenerateFor($original);
+            }
+        }
+    }
+
+    /**
+     * Пересобрать график признания выручки для платежа И — если это возврат
+     * (refund_of_payment_id) — для исходного платежа, чтобы усечение по месяц
+     * возврата применилось/снялось (H352, флаг revenue.reverse_unrecognized_on_refund).
+     */
+    private function syncRevenueSchedule(Payment $payment): void
+    {
+        $service = app(RevenueScheduleService::class);
+        $service->regenerateFor($payment);
+
+        if ($payment->refund_of_payment_id) {
+            $original = Payment::find($payment->refund_of_payment_id);
+            if ($original !== null) {
+                $service->regenerateFor($original);
+            }
+        }
     }
 
     /**
