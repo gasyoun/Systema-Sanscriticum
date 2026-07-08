@@ -205,11 +205,12 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expire-stale-reminder-suggestions');
 
-        // --- WEEKLY DB BACKUP (spatie/laravel-backup) ---
-        // DB-only dump (source.files.include is empty) to local + yandex_disk
+        // --- WEEKLY DB + FILE STORAGE BACKUP (spatie/laravel-backup) ---
+        // H364: source.files.include now covers storage/app (uploads, finance
+        // templates, imports, lectures) alongside the DB dump, to local + yandex_disk
         // (config/backup.php). Until YANDEX_DISK_LOGIN/YANDEX_DISK_APP_PASSWORD
         // are set in .env, the yandex_disk write just fails — local still lands.
-        $schedule->command('backup:run --only-db')
+        $schedule->command('backup:run')
             ->weeklyOn(1, '02:00') // Monday 02:00 MSK, ahead of other nightly jobs
             ->withoutOverlapping(60)
             ->onOneServer()
