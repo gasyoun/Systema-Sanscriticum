@@ -165,6 +165,32 @@ exists. `GroupResource`'s "Предпочтения" action reads them straight 
 the source data is free text) so the curator can eyeball the popular slot before
 fixing a group's date.
 
+### Investment Model (NPV / IRR / payback)
+
+The phase-E superstructure of the noboring `/cases/education` plan (H261),
+independent of the A–D core. One Filament page under the "Финансы" group, gated
+by `RoleGate::finance()`:
+
+- **`InvestmentModel`** ("Инвест-решение", `/admin/investment-model`) over
+  `InvestmentModelService`: a scenario calculator for a **large forward-looking
+  spend** (book print run, hire, offline point, expensive course launch), from
+  the case "Юный чемпион" where a CFO talked the owner out of opening a branch by
+  the numbers. Enter capex + annual additional revenue/expense (+ optional revenue
+  growth %), a discount rate and horizon; get **NPV, IRR, simple + discounted
+  payback, breakeven annual cash flow**, a year-by-year cash flow table, and a
+  traffic-light verdict — **two scenarios side by side** (as in the case, "with
+  purchase" vs "without"). The finance math (`npv`/`irr` via bisection/`annuityFactor`/
+  `paybackTime`) lives in reusable static methods on the service; it moves no money
+  and stores nothing (planning-only). **Live figures** (avg check/LTV, CAC, EBITDA
+  margin, monthly accrual profit) are pulled from `StudentUnitEconomicsService` +
+  `FinanceCockpitReport` via `defaults()` as *starting reference points* for the
+  manual scenario entry — not an auto-built scenario. Discount rate, horizon, and
+  acceptable-payback threshold live in `config/investment.php` (env-backed,
+  **never hardcode**; @DECIDE MG: exact cost of capital, horizon+threshold, which
+  spend types to model first). The page is prefilled with the published
+  "Юный чемпион" worked example (14.5M capex / 160k-mo rent → IRR ~1 %, payback in
+  year 6), which doubles as the correctness validation against the real case.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.

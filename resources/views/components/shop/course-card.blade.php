@@ -54,8 +54,8 @@
             </div>
         @endif
 
-        {{-- Бейдж формата (live / recorded) --}}
-        <div class="absolute top-3 right-3 z-20">
+        {{-- Бейджи формата (live / recorded) и уровня --}}
+        <div class="absolute top-3 right-3 z-20 flex flex-col items-end gap-1.5">
             @if($course->isLive())
                 <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(244,63,94,0.5)] tracking-wider">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
@@ -65,6 +65,13 @@
                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
                     <i class="fas fa-play-circle text-[9px]"></i>
                     В записи
+                </span>
+            @endif
+
+            @if($course->levelLabel())
+                <span class="inline-flex items-center gap-1.5 bg-emerald-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
+                    @if($course->level === 'beginner')<i class="fas fa-seedling text-[9px]"></i>@endif
+                    {{ $course->levelLabel() }}
                 </span>
             @endif
         </div>

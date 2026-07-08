@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http; // Добавили для переключения на человека
+use Illuminate\Support\Facades\Cache; // Добавили для переключения на человека
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
@@ -43,7 +45,7 @@ class TelegramWebhookController extends Controller
                     ]);
 
                     // Подтягиваем аватарку из Telegram (в очереди, не тормозим вебхук).
-                    \App\Jobs\SyncUserAvatarJob::dispatch($user->id);
+                    SyncUserAvatarJob::dispatch($user->id);
 
                     $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!\n\nНапишите <b>«мои группы»</b>, чтобы увидеть свои группы и расписание.");
                 } else {
@@ -53,6 +55,15 @@ class TelegramWebhookController extends Controller
             // Если просто написали /start без токена
             elseif ($text === '/start') {
                 $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
+            }
+            // ==========================================
+            // КУРАТОР-КОМАНДЫ (/долги, /группа) — тикет S4 support-roadmap (H250).
+            // Полностью отдельная ветка от студенческого AI-чата: неавторизованным
+            // (не куратор/не привязан) — тишина, а не обычное «привяжите аккаунт»,
+            // чтобы не светить существование команды посторонним.
+            // ==========================================
+            elseif (app(DebtorsBotCommand::class)->isCommand($text)) {
+                $this->handleCuratorCommand($chatId, $text);
             }
             // ==========================================
             // НОВАЯ ЧАСТЬ: ОБРАБОТКА ОБЫЧНЫХ ВОПРОСОВ
@@ -165,6 +176,24 @@ class TelegramWebhookController extends Controller
         ]);
 
         $this->sendMessage($chatId, $answer);
+    }
+
+    // ==========================================
+    // Куратор-команды поверх DebtorsReport — см. DebtorsBotCommand (H250).
+    // Неавторизованным (не найден по telegram_id, либо найден, но не
+    // admin/manager/super_admin) — тишина: не подтверждаем существование
+    // команды посторонним и студентам.
+    // ==========================================
+    private function handleCuratorCommand($chatId, $text)
+    {
+        $curator = User::where('telegram_id', $chatId)->first();
+
+        if (! $curator || ! DebtorsBotCommand::isCurator($curator)) {
+            return;
+        }
+
+        $reply = app(DebtorsBotCommand::class)->reply($curator, $text);
+        $this->sendMessage($chatId, $reply);
     }
 
     // ==========================================
