@@ -51,6 +51,9 @@ class ActivityEvent extends Model
 
     public const TYPE_SESSION_TIMEOUT = 'session_timeout';
 
+    /** Куратор вызвал бот-команду (/долги, /группа) — см. DebtorsBotCommand (H250). */
+    public const TYPE_CURATOR_BOT_COMMAND = 'curator_bot_command';
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
