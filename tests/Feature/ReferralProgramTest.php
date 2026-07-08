@@ -228,11 +228,13 @@ class ReferralProgramTest extends TestCase
     }
 
     /**
-     * Регрессия (money-core, H330): A1-атрибуция (#347) добавила на users СТОЛБЕЦ
-     * `referrer` (HTTP-реферер регистрации), который затеняет одноимённую relation
-     * `referrer()` при обращении `$user->referrer` — Eloquent отдаёт столбец
-     * (URL/null) вместо пригласившего, и награда молча не начислялась вовсе.
-     * Тест пинит коллизию: и заполненный, и пустой столбец не должны ломать награду.
+     * Регрессия (money-core, H330 + #366): A1-атрибуция (#347) добавила на users
+     * СТОЛБЕЦ `referrer` (HTTP-реферер регистрации), который затенял одноимённую
+     * relation `referrer()` — Eloquent отдавал столбец (URL/null) вместо
+     * пригласившего, и награда молча не начислялась вовсе. #366 снял мину у корня,
+     * переименовав столбец в `http_referrer` (relation `referrer()` снова
+     * единственный владелец имени). Тест пинит: заполненный атрибуционный столбец
+     * (теперь `http_referrer`) не должен ломать награду.
      *
      * @test
      */
@@ -242,9 +244,9 @@ class ReferralProgramTest extends TestCase
         $referrer = User::factory()->create();
         $referred = User::factory()->create([
             'referred_by' => $referrer->id,
-            // Тот самый затеняющий столбец users.referrer (A1): у реального
+            // Атрибуционный столбец (после #366 — http_referrer): у реального
             // студента он часто заполнен URL-ом источника регистрации.
-            'referrer' => 'https://vk.com/some-ad-campaign',
+            'http_referrer' => 'https://vk.com/some-ad-campaign',
         ]);
 
         $this->paidPayment($referred);
