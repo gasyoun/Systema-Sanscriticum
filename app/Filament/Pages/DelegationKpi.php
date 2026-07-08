@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Pages;
+
+use App\Services\DelegationKpiService;
+use App\Support\RoleGate;
+use Filament\Pages\Page;
+
+/**
+ * «KPI делегирования» — панель оператора (H259, фаза D, венец плана noboring
+ * /cases/education).
+ *
+ * Один экран, сводящий главные цифры всех четырёх фаз (окупаемость привлечения,
+ * прибыль по начислению, отложенная выручка, дебиторка против порога, резервный
+ * фонд) со светофорами. Цель — вывести собственника из операционки: оператор/
+ * бухгалтер ведёт бизнес по этой панели, не заходя к владельцу. Каждая карточка
+ * ведёт на подробную страницу фазы.
+ *
+ * Стоит ПЕРВОЙ в группе «Финансы» (navigationSort 78) — это то, что оператор
+ * открывает утром. Красный бейдж = где-то красный флаг, надо разбираться.
+ *
+ * Считается из живых сервисов фаз через {@see DelegationKpiService}. Доступ —
+ * админ ИЛИ бухгалтер (RoleGate::finance).
+ */
+class DelegationKpi extends Page
+{
+    protected static ?string $navigationIcon = 'heroicon-o-signal';
+
+    protected static ?string $navigationGroup = 'Финансы';
+
+    protected static ?int $navigationSort = 78;
+
+    protected static ?string $navigationLabel = 'KPI делегирования';
+
+    protected static ?string $title = 'KPI делегирования — панель оператора';
+
+    protected static ?string $slug = 'delegation-kpi';
+
+    protected static string $view = 'filament.pages.delegation-kpi';
+
+    public static function canAccess(): bool
+    {
+        return RoleGate::finance();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return RoleGate::finance();
+    }
+
+    /** Красный бейдж, когда хоть одна фаза в тревоге. */
+    public static function getNavigationBadge(): ?string
+    {
+        return app(DelegationKpiService::class)->snapshot()['ok'] ? null : '!';
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getViewData(): array
+    {
+        return [
+            'snap' => app(DelegationKpiService::class)->snapshot(),
+        ];
+    }
+}
