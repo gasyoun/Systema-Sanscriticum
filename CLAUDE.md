@@ -132,6 +132,39 @@ Filament page under the "Продажи" group, gated by `RoleGate::finance()`:
   hardcode**). Reuses the channel derivation of `ChannelConversionReport` (which
   measures channel→paid at the *user* level monthly — a different question).
 
+### Group Recruitment (Набор курсов)
+
+H162: a paying student had no way to learn her forming group was under-enrolled
+on the expected start day — the curator answered manually in chat. `Group` now
+carries recruitment state: `status` (`forming`/`active`/`archived`), `min_size`,
+`planned_start_date`, `start_date_override` (manual reschedule, priority over
+planned), `recruitment_notified_at` (dedup, mirrors `Schedule.reminded_at`).
+`Group::effectiveStartDate()` = `start_date_override ?? planned_start_date`;
+changing the override resets `recruitment_notified_at` so the warning cycle
+re-arms for the new date. `Group::isRecruited()` = `min_size` unset (size not
+checked) or `activeUsers()->count() >= min_size` — status is **not** auto-flipped
+on attach (many entry points: `PaymentObserver`, `GroupMembershipManager`,
+Filament); the curator flips `forming → active` manually via `GroupResource`.
+
+Daily `groups:notify-forming-shortfall` (same slot as `debts:remind`) finds
+`forming` groups whose `effectiveStartDate()` lands `recruitment_notify_lead_days`
+(default 2, `MarketingSetting`) days out and still under `min_size`, then:
+`GroupRecruitmentNotifier::notifyShortfall()` messages the group's `activeUsers()`
+via `SendMessengerAlerts` (honest status, not silence), and
+`CuratorNotifier::groupUnderEnrolled()` alerts the curators chat symmetrically.
+The same notifier fires immediately from `GroupResource`'s "Зафиксировать дату"
+action when a curator sets `start_date_override`, instead of waiting for the next
+lead-window. Toggle: `recruitment_notify_enabled` (`MarketingSetting`).
+
+**Availability-preference collection already existed — no new table.** Before
+building a planned `enrollment_preferences` table, `/prior-art` found
+`WaitlistEntry.preferred_schedule`/`timezone_note` (H230, feeds off `Intake`)
+already captures "кому когда удобно" at the waitlist stage, before a `Group`
+exists. `GroupResource`'s "Предпочтения" action reads them straight off
+`Group::intake->waitlistEntries()` (free-text list, not a parsed day×time grid —
+the source data is free text) so the curator can eyeball the popular slot before
+fixing a group's date.
+
 ### Investment Model (NPV / IRR / payback)
 
 The phase-E superstructure of the noboring `/cases/education` plan (H261),

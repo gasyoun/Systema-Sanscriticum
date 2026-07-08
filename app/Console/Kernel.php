@@ -80,6 +80,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('remind-debtors');
 
+        // Уведомление о недоборе группы за N дней до плановой даты старта
+        // (recruitment_notify_lead_days, дефолт 2) — тот же утренний слот (H162).
+        $schedule->command('groups:notify-forming-shortfall')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('notify-forming-shortfall');
+
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).
         $schedule->command('classes:remind-upcoming')

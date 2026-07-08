@@ -5,6 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Models\Group;
+use App\Services\ClassAttendanceService;
+use App\Services\CuratorNotifier;
+use App\Services\GroupRecruitmentNotifier;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -52,6 +55,32 @@ class GroupResource extends Resource
                             ->placeholder('Начните вводить имя ученика...')
                             ->helperText('Здесь вы можете посмотреть текущих участников, удалить их или добавить новых.'),
                     ]),
+
+                // --- НАБОР КУРСОВ (H162) ---
+                Forms\Components\Section::make('Набор')
+                    ->schema([
+                        Forms\Components\Select::make('status')
+                            ->label('Статус набора')
+                            ->options(Group::STATUSES)
+                            ->default('forming')
+                            ->required(),
+
+                        Forms\Components\TextInput::make('min_size')
+                            ->label('Минимальный размер группы')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(255)
+                            ->helperText('Порог «набрана». Пусто — размер не проверяем.'),
+
+                        Forms\Components\DatePicker::make('planned_start_date')
+                            ->label('Плановая дата старта')
+                            ->native(false),
+
+                        Forms\Components\DatePicker::make('start_date_override')
+                            ->label('Перенос даты старта')
+                            ->native(false)
+                            ->helperText('Приоритет над плановой датой. Смена перезапускает отсчёт напоминания о недоборе и шлёт немедленное уведомление о переносе.'),
+                    ])->columns(2),
             ]);
     }
 
@@ -76,9 +105,41 @@ class GroupResource extends Resource
                     ->label('Учеников')
                     ->badge() // Делает цифру красивым бейджиком
                     ->color('info'), // Синий цвет
+
+                // --- НАБОР КУРСОВ (H162) ---
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Статус набора')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => Group::STATUSES[$state] ?? ($state ?? '—'))
+                    ->color(fn (?string $state): string => match ($state) {
+                        'forming' => 'warning',
+                        'active' => 'success',
+                        'archived' => 'gray',
+                        default => 'gray',
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('min_size')
+                    ->label('Порог набора')
+                    ->placeholder('—')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('planned_start_date')
+                    ->label('План. старт')
+                    ->date('d.m.Y')
+                    ->placeholder('—')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('start_date_override')
+                    ->label('Перенос')
+                    ->date('d.m.Y')
+                    ->placeholder('—')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Статус набора')
+                    ->options(Group::STATUSES),
             ])
             ->actions([
                 // Матрица посещаемости «студенты × занятия» за последние ~8 недель.
@@ -92,9 +153,53 @@ class GroupResource extends Resource
                     ->modalWidth('7xl')
                     ->modalContent(fn (Group $record) => view('filament.group.attendance-matrix', [
                         'group' => $record,
-                        'data' => app(\App\Services\ClassAttendanceService::class)
+                        'data' => app(ClassAttendanceService::class)
                             ->forGroup($record, now()->subWeeks(8), now()),
                     ])),
+
+                // Предпочтения по времени из заявок набора (WaitlistEntry.preferred_schedule)
+                // связанного Intake — прогон /prior-art подтвердил, что сбор предпочтений
+                // уже существует (H230), отдельная таблица enrollment_preferences не нужна.
+                Tables\Actions\Action::make('recruitment_preferences')
+                    ->label('Предпочтения')
+                    ->icon('heroicon-o-clock')
+                    ->color('gray')
+                    ->visible(fn (Group $record): bool => $record->intake_id !== null)
+                    ->modalHeading(fn (Group $record): string => 'Предпочтения набора — '.$record->name)
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Закрыть')
+                    ->modalContent(fn (Group $record) => view('filament.group.recruitment-preferences', [
+                        'group' => $record,
+                        'entries' => $record->intake
+                            ? $record->intake->waitlistEntries()
+                                ->whereIn('status', ['waiting', 'invited', 'recording_sent'])
+                                ->get()
+                            : collect(),
+                    ])),
+
+                // Ручная фиксация даты старта при переносе — сбрасывает дедуп рассылки
+                // (Group::booted()) и немедленно предупреждает уже присоединённых
+                // студентов + кураторов, вместо ожидания следующего lead-window.
+                Tables\Actions\Action::make('fix_start_date')
+                    ->label('Зафиксировать дату')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('warning')
+                    ->visible(fn (Group $record): bool => $record->status === 'forming')
+                    ->form([
+                        Forms\Components\DatePicker::make('start_date_override')
+                            ->label('Новая дата старта')
+                            ->native(false)
+                            ->required(),
+                    ])
+                    ->action(function (Group $record, array $data): void {
+                        $record->update(['start_date_override' => $data['start_date_override']]);
+
+                        if (! $record->isRecruited()) {
+                            app(GroupRecruitmentNotifier::class)->notifyShortfall($record);
+                            app(CuratorNotifier::class)->groupUnderEnrolled($record);
+                        }
+                    }),
+
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
