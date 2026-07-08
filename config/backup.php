@@ -26,7 +26,9 @@ return [
                  * The list of directories and files that will be included in the backup.
                  */
                 'include' => [
-                    // Мы оставили массив пустым, чтобы не бэкапить файлы, только БД
+                    // H364: расширено с DB-only на файловое хранилище — загрузки,
+                    // финансовые шаблоны, импорты, лекции (storage/app/*).
+                    storage_path('app'),
                 ],
 
                 /*
@@ -35,6 +37,7 @@ return [
                 'exclude' => [
                     base_path('vendor'),
                     base_path('node_modules'),
+                    storage_path('app/livewire-tmp'),
                 ],
 
                 'follow_links' => false,

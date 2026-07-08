@@ -65,4 +65,21 @@ class BackupScheduleTest extends TestCase
     {
         $this->assertSame('webdav', config('filesystems.disks.yandex_disk.driver'));
     }
+
+    /** @test */
+    public function file_storage_is_included_in_the_backup(): void
+    {
+        $include = config('backup.backup.source.files.include');
+
+        $this->assertContains(storage_path('app'), $include);
+    }
+
+    /** @test */
+    public function backup_run_command_is_not_restricted_to_db_only(): void
+    {
+        $event = $this->eventFor('backup:run');
+
+        $this->assertNotNull($event);
+        $this->assertStringNotContainsString('--only-db', (string) $event->command);
+    }
 }
