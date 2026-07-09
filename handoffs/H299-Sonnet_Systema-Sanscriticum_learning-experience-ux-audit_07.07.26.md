@@ -4,7 +4,7 @@ _Created: 07-07-2026 · Last updated: 07-07-2026_
 
 > **Recreation note (07-07-2026, Sonnet 5 `claude-sonnet-5`):** originally minted in `Uprava/handoffs/` as part of a 7-item batch; MG closed the PR ([Uprava#13](https://github.com/gasyoun/Uprava/pull/13)) — *"these handoff files belong in Systema-Sanscriticum, not Uprava. Recreating them in the correct repo."* Recreated here verbatim (content unchanged) with only the Start-instruction path updated.
 
-**Status:** 🟡 Queued
+**Status:** 🟡 Draft PR open — [#391](https://github.com/gasyoun/Systema-Sanscriticum/pull/391)
 **Intended executor:** Sonnet (`claude-sonnet-5`)
 **Repo:** `C:\Users\user\Documents\GitHub\Systema-Sanscriticum`
 **Start instruction:** `Read C:\Users\user\Documents\GitHub\Systema-Sanscriticum\handoffs\H299-Sonnet_Systema-Sanscriticum_learning-experience-ux-audit_07.07.26.md and execute it.`
