@@ -17,14 +17,23 @@ use App\Models\User;
 final class MessagePlaceholders
 {
     /** Список поддерживаемых плейсхолдеров — для подсказок в UI. */
-    public const KEYS = ['{name}', '{course}', '{block}', '{pay_link}'];
+    public const KEYS = ['{name}', '{course}', '{block}', '{pay_link}', '{paid_until}', '{deadline}'];
 
     /**
      * Значения плейсхолдеров для пары (пользователь, курс, блок).
      *
+     * $paidUntilLabel/$deadlineLabel — готовые фрагменты-предложения (с
+     * ведущим пробелом и точкой в конце, например " Предыдущая оплата
+     * покрывала до блока №5 (до 12.08.2026)."), а не голые значения — так их
+     * можно просто конкатенировать в шаблон без риска сломать грамматику,
+     * когда данных нет (тогда это пустая строка). Источник: {@see
+     * \App\Services\StudentDebtsService::paidUntilForUser} для paid_until;
+     * дедлайн = старт следующего/текущего непокрытого блока, 00:00 по Москве
+     * (приложение работает в Europe/Moscow — см. config('app.timezone')).
+     *
      * @return array<string, string>
      */
-    public static function forUser(User $user, ?Course $course = null, ?int $blockNumber = null): array
+    public static function forUser(User $user, ?Course $course = null, ?int $blockNumber = null, ?string $paidUntilLabel = null, ?string $deadlineLabel = null): array
     {
         $slug = $course?->slug;
 
@@ -33,6 +42,8 @@ final class MessagePlaceholders
             '{course}' => $course?->title ?? '',
             '{block}' => (string) ($blockNumber ?? ''),
             '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),
+            '{paid_until}' => $paidUntilLabel ?? '',
+            '{deadline}' => $deadlineLabel ?? '',
         ];
     }
 

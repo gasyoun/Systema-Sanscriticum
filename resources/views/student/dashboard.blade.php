@@ -452,6 +452,27 @@
                                         </div>
                                     </button>
                                 @endif
+                            @elseif($paidUntil = $paidUntilByCourseId->get($course->id))
+                                {{-- Долга нет: позитивная сводка «оплачено до» + дедлайн следующего
+                                     платежа (старт следующего блока, 00:00 МСК), а не только его отсутствие. --}}
+                                <div class="block w-full mb-3 px-3 py-2 bg-emerald-50 border border-emerald-200/70 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <i class="fas fa-check-circle text-emerald-600 text-xs mt-0.5 shrink-0"></i>
+                                        <div class="text-xs leading-snug">
+                                            <span class="font-bold text-emerald-700">Оплачено до:</span>
+                                            <span class="text-gray-700">блок №{{ $paidUntil->block->number }}</span>
+                                            @if($paidUntil->block->ends_at)
+                                                <span class="text-gray-500">(до {{ $paidUntil->block->ends_at->format('d.m.Y') }})</span>
+                                            @endif
+                                            @if($paidUntil->next_payment_deadline)
+                                                <div class="mt-1">
+                                                    <span class="font-bold text-[#E85C24]">Следующий платёж до:</span>
+                                                    <span class="text-gray-700">{{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             @endif
 
                             {{-- Кнопка: при наличии следующего урока ведём прямо в него,

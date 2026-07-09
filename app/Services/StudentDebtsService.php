@@ -199,6 +199,111 @@ class StudentDebtsService
     }
 
     /**
+     * «Оплачено до» по каждому курсу из списка: последний блок, покрытый
+     * непрерывной цепочкой реальных (не conditional) оплат начиная с блока
+     * входа студента (joined_at_block / первый оплаченный блок). Курсы без
+     * единого оплаченного блока в выборку не попадают — там показывать
+     * «оплачено до» нечего, это чистый долг.
+     *
+     * Считается независимо от reference-блока: если студент заплатил вперёд
+     * (несколько блоков разом), «оплачено до» уйдёт дальше текущего блока.
+     *
+     * Заодно отдаёт дедлайн следующего платежа: первый непокрытый блок сразу
+     * после «оплачено до» и момент его старта (00:00 по Москве — приложение
+     * работает в Europe/Moscow, см. config('app.timezone'), так что starts_at
+     * уже в нужном поясе без ручной конвертации). Это правило дедлайна задал
+     * MG: «до дня старта следующего модуля, до 00:00 по Москве». Если
+     * следующего блока в расписании ещё нет (курс оплачен до конца известных
+     * блоков) — next_block/next_payment_deadline будут null, платить пока
+     * нечего.
+     *
+     * Возвращает коллекцию объектов {course_id, block (CourseBlock),
+     * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon)},
+     * ключ — course_id.
+     *
+     * @param  iterable<int>  $courseIds
+     * @return Collection<int, object>
+     */
+    public function paidUntilForUser(User $user, iterable $courseIds): Collection
+    {
+        $courseIds = collect($courseIds)->map(fn ($id) => (int) $id)->unique()->values();
+        if ($courseIds->isEmpty()) {
+            return collect();
+        }
+
+        $blocksByCourse = CourseBlock::query()
+            ->whereIn('course_id', $courseIds)
+            ->orderBy('course_id')
+            ->orderBy('number')
+            ->get()
+            ->groupBy('course_id');
+
+        $paymentsByCourse = Payment::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->whereIn('course_id', $courseIds)
+            ->get(['course_id', 'start_block', 'end_block', 'amount'])
+            ->groupBy('course_id');
+
+        $joinedByCourse = \Illuminate\Support\Facades\DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->whereIn('course_id', $courseIds)
+            ->whereNotNull('joined_at_block')
+            ->pluck('joined_at_block', 'course_id');
+
+        $result = collect();
+        foreach ($courseIds as $courseId) {
+            $blocks = $blocksByCourse->get($courseId, collect());
+            $payments = $paymentsByCourse->get($courseId, collect());
+            if ($blocks->isEmpty() || $payments->isEmpty()) {
+                continue;
+            }
+
+            $explicitJoined = $joinedByCourse->get($courseId);
+            $explicitJoined = $explicitJoined !== null ? (int) $explicitJoined : null;
+            $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
+
+            $lastCovered = null;
+            $nextBlock = null;
+            foreach ($blocks as $block) {
+                $n = (int) $block->number;
+                if ($floor !== null && $n < $floor) {
+                    continue;
+                }
+                $covered = false;
+                foreach ($payments as $p) {
+                    if (DebtorsReport::paymentCovers($p->start_block, $p->end_block, $n)) {
+                        $covered = true;
+                        break;
+                    }
+                }
+                if (! $covered) {
+                    // Первый разрыв — дальше цепочка не непрерывна, стоп. Этот
+                    // блок и есть «следующий», за который нужно платить.
+                    $nextBlock = $block;
+                    break;
+                }
+                $lastCovered = $block;
+            }
+
+            if ($lastCovered === null) {
+                continue;
+            }
+
+            $result->push((object) [
+                'course_id' => $courseId,
+                'block' => $lastCovered,
+                'amount_paid' => (float) $payments->sum('amount'),
+                'next_block' => $nextBlock,
+                'next_payment_deadline' => $nextBlock?->starts_at?->copy()->startOfDay(),
+            ]);
+        }
+
+        return $result->keyBy('course_id');
+    }
+
+    /**
      * @param  Collection<int, CourseBlock>  $blocks
      */
     private function referenceBlock(Collection $blocks, Carbon $now, Carbon $today): ?CourseBlock

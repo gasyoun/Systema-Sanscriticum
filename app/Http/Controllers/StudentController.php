@@ -170,8 +170,13 @@ class StudentController extends Controller
         $pranaRedemptions = PranaRedemption::where('user_id', $user->id)
             ->latest()->limit(5)->get();
 
-        $debts = app(StudentDebtsService::class)->forUser($user);
+        $debtsService = app(StudentDebtsService::class);
+        $debts = $debtsService->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
+
+        // «Оплачено до»: положительная сводка (блок/дата) для курсов без долга —
+        // отвечает на «сколько оплатил и до какого момента я покрыт».
+        $paidUntilByCourseId = $debtsService->paidUntilForUser($user, $courses->pluck('id'));
 
         // Варианты самостоятельной оплаты долга (self-service): тариф-ссылки для
         // «не продлил», следующий платёж / погасить всё — для рассрочки.
@@ -232,6 +237,7 @@ class StudentController extends Controller
             'pranaReasons',
             'debts',
             'debtsByCourseId',
+            'paidUntilByCourseId',
             'debtPayOptions',
             'trialLessons',
             'onboarding',
