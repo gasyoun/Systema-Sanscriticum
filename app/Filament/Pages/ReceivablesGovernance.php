@@ -55,7 +55,9 @@ class ReceivablesGovernance extends Page
      */
     public static function getNavigationBadge(): ?string
     {
-        return app(ReceivablesGovernanceService::class)->snapshot()['ok'] ? null : '!';
+        // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
+        // DelegationKpi::getNavigationBadge (тяжёлый snapshot ронял панель в 500).
+        return \Illuminate\Support\Facades\Cache::get('nav_badge.receivables');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -68,8 +70,16 @@ class ReceivablesGovernance extends Page
      */
     protected function getViewData(): array
     {
+        $snap = app(ReceivablesGovernanceService::class)->snapshot();
+
+        \Illuminate\Support\Facades\Cache::put(
+            'nav_badge.receivables',
+            $snap['ok'] ? null : '!',
+            now()->addMinutes(30),
+        );
+
         return [
-            'snap' => app(ReceivablesGovernanceService::class)->snapshot(),
+            'snap' => $snap,
         ];
     }
 }
