@@ -117,10 +117,13 @@ return [
      | кабинетного User (без пароля), письмо с одноразовой magic-ссылкой в личный
      | кабинет + несколько лид-магнитов на бесплатной «полке подписчика». Пишем и
      | Lead-строку (CRM/UTM-атрибуция) — лид→пользователь→оплата не рвётся.
-     | ВЫКЛ по умолчанию — это deploy-рубильник: пока флаг OFF, виджет не
-     | рендерится, а маршруты /subscribe и /magic/{token} отдают 404. Доступ к
-     | платным урокам/тарифам этот флаг НЕ трогает — полка подписчика ортогональна
-     | key-based доступу (см. docs/newsletter-subscribe.md).
+     | Включён по умолчанию с 09-07-2026 (H388: виджет размещён на главной
+     | витрине, /{main.blade.php}, тёмный вариант перед footer-CTA) — можно
+     | выключить аварийно через NEWSLETTER_SUBSCRIBE_ENABLED=false в .env.
+     | Пока флаг OFF, виджет не рендерится, а маршруты /subscribe и
+     | /magic/{token} отдают 404. Доступ к платным урокам/тарифам этот флаг НЕ
+     | трогает — полка подписчика ортогональна key-based доступу (см.
+     | docs/newsletter-subscribe.md).
      */
-    'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', false),
+    'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', true),
 ];
