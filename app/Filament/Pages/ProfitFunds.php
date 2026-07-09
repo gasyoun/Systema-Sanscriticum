@@ -53,7 +53,9 @@ class ProfitFunds extends Page
      */
     public static function getNavigationBadge(): ?string
     {
-        return app(ProfitFundsService::class)->snapshot()['reserve_level'] === 'danger' ? '!' : null;
+        // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
+        // DelegationKpi::getNavigationBadge (тяжёлый snapshot ронял панель в 500).
+        return \Illuminate\Support\Facades\Cache::get('nav_badge.profit_funds');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -66,8 +68,16 @@ class ProfitFunds extends Page
      */
     protected function getViewData(): array
     {
+        $snap = app(ProfitFundsService::class)->snapshot();
+
+        \Illuminate\Support\Facades\Cache::put(
+            'nav_badge.profit_funds',
+            ($snap['reserve_level'] ?? null) === 'danger' ? '!' : null,
+            now()->addMinutes(30),
+        );
+
         return [
-            'snap' => app(ProfitFundsService::class)->snapshot(),
+            'snap' => $snap,
         ];
     }
 }

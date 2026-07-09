@@ -50,10 +50,17 @@ class DelegationKpi extends Page
         return RoleGate::finance();
     }
 
-    /** Красный бейдж, когда хоть одна фаза в тревоге. */
+    /**
+     * Красный бейдж, когда хоть одна фаза в тревоге.
+     *
+     * ВАЖНО: значок читается из кэша, а НЕ пересчитывает snapshot() на каждой
+     * загрузке админки — иначе тяжёлый каскад агрегатов (LTV/CAC, ОПиУ, дебиторка,
+     * фонды) выполняется на любом хите /admin у любого админа и роняет панель в 500
+     * под нагрузкой. Ключ наполняется при открытии самой страницы / по расписанию.
+     */
     public static function getNavigationBadge(): ?string
     {
-        return app(DelegationKpiService::class)->snapshot()['ok'] ? null : '!';
+        return \Illuminate\Support\Facades\Cache::get('nav_badge.delegation_kpi');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -66,8 +73,17 @@ class DelegationKpi extends Page
      */
     protected function getViewData(): array
     {
+        $snap = app(DelegationKpiService::class)->snapshot();
+
+        // Прогреваем кэш значка из уже посчитанного снимка (см. getNavigationBadge).
+        \Illuminate\Support\Facades\Cache::put(
+            'nav_badge.delegation_kpi',
+            $snap['ok'] ? null : '!',
+            now()->addMinutes(30),
+        );
+
         return [
-            'snap' => app(DelegationKpiService::class)->snapshot(),
+            'snap' => $snap,
         ];
     }
 }

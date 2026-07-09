@@ -56,9 +56,9 @@ class OrderPaymentConversion extends Page
      */
     public static function getNavigationBadge(): ?string
     {
-        $count = app(OrderPaymentConversionService::class)->unclosedCount();
-
-        return $count > 0 ? (string) $count : null;
+        // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
+        // DelegationKpi::getNavigationBadge (тяжёлый агрегат ронял панель в 500).
+        return \Illuminate\Support\Facades\Cache::get('nav_badge.order_conversion');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -71,8 +71,17 @@ class OrderPaymentConversion extends Page
      */
     protected function getViewData(): array
     {
+        $snap = app(OrderPaymentConversionService::class)->snapshot();
+
+        $unclosedCount = count($snap['unclosed'] ?? []);
+        \Illuminate\Support\Facades\Cache::put(
+            'nav_badge.order_conversion',
+            $unclosedCount > 0 ? (string) $unclosedCount : null,
+            now()->addMinutes(30),
+        );
+
         return [
-            'snap' => app(OrderPaymentConversionService::class)->snapshot(),
+            'snap' => $snap,
         ];
     }
 }
