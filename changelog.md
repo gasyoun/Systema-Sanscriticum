@@ -6,6 +6,11 @@ This repository does not currently publish versioned release notes. Entries use
 dated maintenance snapshots; keep upcoming work under [Unreleased] until it is
 ready for a dated entry.
 
+## [Unreleased]
+
+### Added
+- Group recruitment shortfall notifications (H162): `Group.status/min_size/planned_start_date/start_date_override`, daily `groups:notify-forming-shortfall` command warning paid students and curators when a forming group is under-enrolled near its start date, `GroupResource` "Зафиксировать дату" reschedule action.
+
 ## [1.0.0] - 2026-06-13
 
 ### Added
