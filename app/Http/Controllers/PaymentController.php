@@ -187,6 +187,12 @@ class PaymentController extends Controller
                 // и чтобы администратор видел, за какой блок платят (для половины — тот же блок)
                 $startBlock = $tariff->block_number;
                 $endBlock = $tariff->block_number;
+            } elseif ($tariff->type === 'bundle' && $tariff->start_block !== null && $tariff->end_block !== null) {
+                // Bundle-тариф на диапазон блоков: ключ = block_{start} (accessKey),
+                // а недостающие ключи диапазона дорисует BlockAccessMaterializer по
+                // start_block..end_block после оплаты.
+                $startBlock = $tariff->start_block;
+                $endBlock = $tariff->end_block;
             }
 
             // 3. СОЗДАЕМ ПЛАТЕЖ

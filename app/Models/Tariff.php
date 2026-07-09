@@ -17,6 +17,8 @@ class Tariff extends Model
         'type',
         'block_number',
         'block_half',
+        'start_block',
+        'end_block',
         'course_block_id',
         'price',
         'old_price',
@@ -32,16 +34,28 @@ class Tariff extends Model
         'is_recording' => 'boolean',
         'block_number' => 'integer',
         'block_half' => 'integer', // NULL = весь блок; 1/2 = половина блока
+        'start_block' => 'integer',
+        'end_block' => 'integer',
     ];
 
     /**
      * Ключ доступа, записываемый в payments.tariff и сверяемый с Lesson::unlockingKeys().
-     *  - не-блочный тариф          → 'full'
+     *  - не-блочный тариф            → 'full'
+     *  - bundle с диапазоном блоков  → 'block_{start}' (остальные блоки диапазона
+     *    открывает BlockAccessMaterializer по payments.start_block..end_block);
      *  - весь блок (block_half=null) → 'block_N'
-     *  - половина блока             → 'block_N_hH'
+     *  - половина блока              → 'block_N_hH'
+     *
+     * Bundle БЕЗ диапазона (мульти-курсовой пакет без привязки к блокам) остаётся
+     * 'full' — как и раньше. «Один ключ = один блок» не нарушается: диапазон живёт
+     * в числовых колонках платежа, а не в ключе.
      */
     public function accessKey(): string
     {
+        if ($this->type === 'bundle' && $this->start_block !== null) {
+            return 'block_'.$this->start_block;
+        }
+
         if ($this->type !== 'block') {
             return 'full';
         }
