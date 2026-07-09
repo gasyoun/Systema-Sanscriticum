@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Services\DebtorReminderDispatcher;
 use App\Services\DebtorsReport;
+use App\Services\StudentDebtsService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -184,7 +185,9 @@ class RemindDebtors extends Command
             return;
         }
 
-        $ok = $this->dispatcher->send($user, $courseId, $block, $this->text, $this->subject, $this->toTg, $this->toVk, $this->toEmail);
+        $paidUntilLabel = $this->paidUntilLabel($user, $courseId);
+        $deadlineLabel = $this->deadlineLabel($courseId, $block);
+        $ok = $this->dispatcher->send($user, $courseId, $block, $this->text, $this->subject, $this->toTg, $this->toVk, $this->toEmail, $paidUntilLabel, $deadlineLabel);
 
         if ($ok) {
             DebtReminder::create([
@@ -197,5 +200,60 @@ class RemindDebtors extends Command
         } else {
             $this->skipped++; // нет доступных каналов у студента
         }
+    }
+
+    /**
+     * «Оплачено до» для {paid_until}: только у тех, кто хоть раз платил
+     * реально (не conditional) — иначе нечего показывать («не продлил» это
+     * не отличит от «никогда не платил» без этого расчёта). Готовое
+     * предложение-фрагмент (ведущий пробел + точка) для прямой конкатенации
+     * в DEFAULT_TEXT — см. MessagePlaceholders::forUser.
+     */
+    private function paidUntilLabel(User $user, int $courseId): ?string
+    {
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$courseId])
+            ->get($courseId);
+
+        if ($paidUntil === null) {
+            return null;
+        }
+
+        $label = ' Предыдущая оплата покрывала до блока №'.$paidUntil->block->number;
+        if ($paidUntil->block->ends_at) {
+            $label .= ' (до '.$paidUntil->block->ends_at->format('d.m.Y').')';
+        }
+
+        return $label.'.';
+    }
+
+    /**
+     * Дедлайн следующего платежа для {deadline}: 00:00 по Москве в день
+     * старта блока {$block}, за который сейчас напоминаем (MG rule: «до дня
+     * старта следующего модуля, до 00:00 по Москве»). Берём starts_at именно
+     * этого блока напрямую, а не next_block из paidUntilForUser — она
+     * молчит, если у студента вообще не было ни одной реальной оплаты
+     * (частый случай для дебиторов), а тут дедлайн есть всегда, раз есть
+     * $block. Приложение работает в Europe/Moscow (config('app.timezone')),
+     * поэтому Carbon уже в нужном поясе без ручной конвертации.
+     */
+    private function deadlineLabel(int $courseId, ?int $blockNumber): ?string
+    {
+        if ($blockNumber === null) {
+            return null;
+        }
+
+        $block = CourseBlock::query()
+            ->where('course_id', $courseId)
+            ->where('number', $blockNumber)
+            ->first(['starts_at']);
+
+        if (! $block || ! $block->starts_at) {
+            return null;
+        }
+
+        $deadline = $block->starts_at->copy()->startOfDay();
+
+        return ' Оплатить нужно до '.$deadline->format('d.m.Y').', 00:00 (МСК).';
     }
 }

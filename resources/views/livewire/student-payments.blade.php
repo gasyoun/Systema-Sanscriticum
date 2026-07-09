@@ -7,6 +7,34 @@
         <div class="w-16 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
     </div>
 
+    {{-- Сводка «Оплачено до» по курсам: прямой ответ на «сколько оплатил и до
+         какого момента я покрыт», а не только список отдельных платежей ниже. --}}
+    @if($paidUntilByCourseId->isNotEmpty())
+        <div class="mb-8 grid gap-3 sm:grid-cols-2">
+            @foreach($paidUntilByCourseId as $courseId => $paidUntil)
+                <div class="flex items-start gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200/70 rounded-xl">
+                    <i class="fas fa-check-circle text-emerald-600 text-sm mt-0.5 shrink-0"></i>
+                    <div class="text-sm leading-snug">
+                        <div class="font-bold text-emerald-700">
+                            {{ $coursesById->get($courseId)?->title ?? 'Курс' }}
+                        </div>
+                        <div class="text-gray-700">
+                            Оплачено до: блок №{{ $paidUntil->block->number }}
+                            @if($paidUntil->block->ends_at)
+                                (до {{ $paidUntil->block->ends_at->format('d.m.Y') }})
+                            @endif
+                        </div>
+                        @if($paidUntil->next_payment_deadline)
+                            <div class="text-[#E85C24] font-semibold mt-0.5">
+                                Следующий платёж до: {{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Блок с таблицей --}}
     <div class="bg-white border border-gray-100 rounded-[1.5rem] shadow-sm overflow-hidden">
         
