@@ -33,6 +33,23 @@ class StudentStatsOverview extends BaseWidget
             ->count();
         $botPercent = round($botConnected / $studentsCount * 100);
 
+        // Оплат в месяц: считаем по завершённым календарным месяцам за последний год
+        // (текущий незакрытый месяц не включаем, чтобы не занижать среднее).
+        // Помесячные границы через whereBetween (как FinanceCockpitReport::monthBounds) —
+        // без DATE_FORMAT, чтобы тесты на SQLite не ломались.
+        $monthlyPayments = [];
+        for ($i = 12; $i >= 1; $i--) {
+            $monthStart = now()->subMonths($i)->startOfMonth();
+            $monthEnd = now()->subMonths($i)->endOfMonth();
+            $monthlyPayments[] = Payment::paid()
+                ->where('tariff', '!=', 'salary_payout')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->count();
+        }
+
+        $monthsInRange = count($monthlyPayments);
+        $avgPaymentsPerMonth = round(array_sum($monthlyPayments) / $monthsInRange, 1);
+
         return [
             Stat::make('Всего студентов', $studentsCount)
                 ->description('Зарегистрированных учеников')
@@ -54,6 +71,12 @@ class StudentStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('warning')
                 ->chart([7, 3, 4, 10, 15, 12, 18]), // Рисует красивый мини-график на фоне
+
+            Stat::make('Оплат в месяц (среднее)', $avgPaymentsPerMonth)
+                ->description('За последние '.$monthsInRange.' завершённых мес.')
+                ->descriptionIcon('heroicon-m-calendar-days')
+                ->color('primary')
+                ->chart($monthlyPayments),
         ];
     }
 }
