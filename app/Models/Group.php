@@ -6,11 +6,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str; // <--- 1. Важный импорт
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'slug', 'intake_id', 'telegram_chat_id'];
+    /** Статус набора (H162). forming — идёт набор, active — укомплектована/идёт обучение. */
+    public const STATUS_FORMING = 'forming';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_ARCHIVED = 'archived';
+
+    protected $fillable = [
+        'name', 'slug', 'intake_id', 'telegram_chat_id',
+        'status', 'min_size', 'planned_start_date', 'start_date_override', 'recruitment_notified_at',
+    ];
+
+    protected $casts = [
+        'planned_start_date' => 'date',
+        'start_date_override' => 'date',
+        'recruitment_notified_at' => 'datetime',
+        'min_size' => 'integer',
+    ];
+
+    protected $attributes = [
+        'status' => self::STATUS_FORMING,
+    ];
 
     /** Набор, породивший эту группу (null для исторических групп до наборов). */
     public function intake(): BelongsTo
@@ -30,6 +52,29 @@ class Group extends Model
                 $group->slug = Str::slug($group->name);
             }
         });
+
+        // Перенос даты старта — снимаем отметку о напоминании, чтобы
+        // groups:notify-forming-shortfall предупредил заново к новой дате
+        // (тот же паттерн, что Schedule::booted() при переносе занятия).
+        static::updating(function (self $group): void {
+            if ($group->isDirty('start_date_override')) {
+                $group->recruitment_notified_at = null;
+            }
+        });
+    }
+
+    /** Дата, от которой считаем «за N дней»: override переноса приоритетнее плана. */
+    public function effectiveStartDate(): ?Carbon
+    {
+        $date = $this->start_date_override ?? $this->planned_start_date;
+
+        return $date ? Carbon::parse($date) : null;
+    }
+
+    /** Набрана ли группа: порог не задан — размер не блокирует. */
+    public function isUnderEnrolled(): bool
+    {
+        return $this->min_size !== null && $this->activeUsers()->count() < $this->min_size;
     }
 
     public function users(): BelongsToMany

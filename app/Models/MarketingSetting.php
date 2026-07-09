@@ -87,6 +87,10 @@ class MarketingSetting extends Model
 
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247) ---
         'support_answer_suggester_enabled',
+
+        // --- НАБОР ГРУПП: УВЕДОМЛЕНИЕ О НЕДОБОРЕ (H162) ---
+        'recruitment_notify_enabled',
+        'recruitment_notify_lead_days',
     ];
 
     protected $casts = [
@@ -119,6 +123,8 @@ class MarketingSetting extends Model
         'debtors_notify_years' => 'array',
         'reminder_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',
+        'recruitment_notify_enabled' => 'boolean',
+        'recruitment_notify_lead_days' => 'integer',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',

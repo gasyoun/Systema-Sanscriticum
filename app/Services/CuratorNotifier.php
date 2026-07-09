@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Filament\Pages\Debtors;
+use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
@@ -284,6 +286,34 @@ class CuratorNotifier
             'Отменено обещаний: <b>'.$count.'</b>',
             $this->adminLink($promise->user),
         ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Группа недобрана за N дней до плановой/перенесённой даты старта (H162).
+     * Симметрия со студенческим уведомлением: куратор узнаёт о проблеме
+     * одновременно со студентами, не из входящего вопроса.
+     */
+    public function groupUnderEnrolled(Group $group): void
+    {
+        $startDate = $group->effectiveStartDate();
+        $size = $group->activeUsers()->count();
+
+        $lines = [
+            '⚠️ <b>Группа недобрана</b>',
+            '',
+            'Группа: <b>'.e($group->name).'</b>',
+            'Набрано: <b>'.$size.' из '.($group->min_size ?? '—').'</b>',
+            'Плановая дата старта: <b>'.($startDate ? $startDate->format('d.m.Y') : '—').'</b>',
+        ];
+
+        try {
+            $url = GroupResource::getUrl('index');
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '👉 <a href="'.$url.'">Открыть группы</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

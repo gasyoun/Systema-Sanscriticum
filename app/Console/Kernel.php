@@ -250,6 +250,16 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('expire-stale-support-answer-suggestions');
+
+        // --- НАБОР ГРУПП: УВЕДОМЛЕНИЕ О НЕДОБОРЕ (H162) ---
+        // За N дней (MarketingSetting.recruitment_notify_lead_days) до плановой/
+        // перенесённой даты старта — честный статус студентам + куратору, если
+        // группа ещё недобрана. Гейт и дедуп (recruitment_notified_at) — внутри команды.
+        $schedule->command('groups:notify-forming-shortfall')
+            ->dailyAt('09:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('notify-forming-group-shortfall');
     }
 
     /**
