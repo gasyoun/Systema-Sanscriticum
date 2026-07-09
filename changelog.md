@@ -8,6 +8,8 @@ ready for a dated entry.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-09
+
 ### Added
 - Group recruitment shortfall notifications (H162): `Group.status/min_size/planned_start_date/start_date_override`, daily `groups:notify-forming-shortfall` command warning paid students and curators when a forming group is under-enrolled near its start date, `GroupResource` "Зафиксировать дату" reschedule action.
 
