@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Filament\Pages\Debtors;
+use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
@@ -270,6 +272,36 @@ class CuratorNotifier
         }
         $lines[] = '';
         $lines[] = '👉 <a href="'.$url.'">Открыть должников</a>';
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Симметрично студенческой рассылке (GroupRecruitmentNotifier): автоматика
+     * обнаружила недобор группы за N дней до старта — куратор видит проблему
+     * одновременно со студентами, не узнаёт из входящего вопроса (H162).
+     */
+    public function groupUnderEnrolled(Group $group): void
+    {
+        $course = $group->courses()->first()?->title ?? $group->name;
+        $date = $group->effectiveStartDate()?->format('d.m.Y') ?? '—';
+
+        $lines = [
+            '⚠️ <b>Группа недобрана</b>',
+            '',
+            'Группа: <b>'.e($group->name).'</b>',
+            'Курс: <b>'.e($course).'</b>',
+            'Плановый старт: <b>'.$date.'</b>',
+            'Набрано: <b>'.$group->activeUsers()->count().'</b> из <b>'.($group->min_size ?? '—').'</b>',
+        ];
+
+        try {
+            $url = GroupResource::getUrl('index');
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть группы</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

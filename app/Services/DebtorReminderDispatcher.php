@@ -17,13 +17,21 @@ use Illuminate\Support\Facades\Mail;
  */
 class DebtorReminderDispatcher
 {
-    /** Плейсхолдеры: {name}, {course}, {block}, {pay_link}. */
-    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт (или скоро начнётся), а оплата ещё не поступила. Чтобы не потерять доступ к материалам, оформите оплату.\n\nОплатить курс: {pay_link}";
+    /** Плейсхолдеры: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}. */
+    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт (или скоро начнётся), а оплата ещё не поступила.{paid_until}{deadline} Чтобы не потерять доступ к материалам, оформите оплату.\n\nОплатить курс: {pay_link}";
 
     public const DEFAULT_SUBJECT = 'Напоминание об оплате — {course}';
 
     /**
      * Отправить напоминание. Возвращает true, если ушёл хотя бы один канал.
+     *
+     * $paidUntilLabel — «оплачено до» (блок/дата) по предыдущим реальным
+     * платежам студента, если были; см. StudentDebtsService::paidUntilForUser.
+     * $deadlineLabel — дедлайн следующего платежа: до 00:00 по Москве в день
+     * старта блока {block} (MG rule: «до дня старта следующего модуля, до
+     * 00:00 по Москве»). Оба — готовые предложения-фрагменты (ведущий пробел
+     * + точка) или null/"" при отсутствии данных, подставляются в
+     * {paid_until}/{deadline} в DEFAULT_TEXT.
      */
     public function send(
         User $user,
@@ -34,6 +42,8 @@ class DebtorReminderDispatcher
         bool $toTelegram,
         bool $toVk,
         bool $toEmail,
+        ?string $paidUntilLabel = null,
+        ?string $deadlineLabel = null,
     ): bool {
         $hasTg = $toTelegram && ! empty($user->telegram_id);
         $hasVk = $toVk && ! empty($user->vk_id);
@@ -45,7 +55,7 @@ class DebtorReminderDispatcher
 
         $course = Course::query()->whereKey($courseId)->first(['id', 'slug', 'title']);
 
-        $replacements = \App\Support\MessagePlaceholders::forUser($user, $course, $blockNumber);
+        $replacements = \App\Support\MessagePlaceholders::forUser($user, $course, $blockNumber, $paidUntilLabel, $deadlineLabel);
 
         $rendered = \App\Support\MessagePlaceholders::render($textTpl, $replacements);
 

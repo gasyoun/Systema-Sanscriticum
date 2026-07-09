@@ -22,12 +22,20 @@ class Testimonial extends Model
         'rating',
         'media_url',
         'is_visible',
+        'is_featured',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_visible' => 'boolean',
+        'is_featured' => 'boolean',
     ];
+
+    /** Отзывы для общесайтовой полосы на витрине каталога (H323). */
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_visible', true)->where('is_featured', true);
+    }
 
     public function courses(): BelongsToMany
     {

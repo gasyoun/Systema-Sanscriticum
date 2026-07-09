@@ -6,11 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str; // <--- 1. Важный импорт
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'slug', 'intake_id', 'telegram_chat_id'];
+    /** Статус набора (H162): forming = набирается, active = идёт обучение, archived = завершена. */
+    public const STATUSES = [
+        'forming' => 'Набирается',
+        'active' => 'Идёт обучение',
+        'archived' => 'Архив',
+    ];
+
+    protected $fillable = [
+        'name', 'slug', 'intake_id', 'telegram_chat_id',
+        'status', 'min_size', 'planned_start_date', 'start_date_override', 'recruitment_notified_at',
+    ];
+
+    protected $casts = [
+        'planned_start_date' => 'date',
+        'start_date_override' => 'date',
+        'recruitment_notified_at' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'status' => 'forming',
+    ];
 
     /** Набор, породивший эту группу (null для исторических групп до наборов). */
     public function intake(): BelongsTo
@@ -30,6 +51,32 @@ class Group extends Model
                 $group->slug = Str::slug($group->name);
             }
         });
+
+        // Перенос плановой даты старта — снимаем отметку о рассылке недобора,
+        // чтобы groups:notify-forming-shortfall предупредил заново к новой дате
+        // (тот же паттерн, что Schedule::booted() для reminded_at).
+        static::updating(function (self $group): void {
+            if ($group->isDirty('start_date_override')) {
+                $group->recruitment_notified_at = null;
+            }
+        });
+    }
+
+    /** Плановая дата старта с учётом ручного переноса. */
+    public function effectiveStartDate(): ?Carbon
+    {
+        return $this->start_date_override ?? $this->planned_start_date;
+    }
+
+    /** Группа набрана: min_size не задан (не проверяем размер) или активный состав его достиг. */
+    public function isRecruited(): bool
+    {
+        return $this->min_size === null || $this->activeUsers()->count() >= $this->min_size;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUSES[$this->status] ?? ($this->status ?? '—');
     }
 
     public function users(): BelongsToMany

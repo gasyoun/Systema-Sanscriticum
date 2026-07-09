@@ -44,6 +44,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('finance-kpi-digest');
 
+        // Еженедельный goal check-in (H376): фиксирует темп каждой активной
+        // цели и шлёт дайджест при отставании — та же понедельничная утренняя
+        // рамка, что и KPI-дайджест.
+        $schedule->command('goals:record-checkins')
+            ->weeklyOn(1, '09:15')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('goals-record-checkins');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.
@@ -70,6 +79,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('remind-debtors');
+
+        // Уведомление о недоборе группы за N дней до плановой даты старта
+        // (recruitment_notify_lead_days, дефолт 2) — тот же утренний слот (H162).
+        $schedule->command('groups:notify-forming-shortfall')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('notify-forming-shortfall');
 
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).

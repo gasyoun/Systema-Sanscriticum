@@ -132,6 +132,65 @@ Filament page under the "Продажи" group, gated by `RoleGate::finance()`:
   hardcode**). Reuses the channel derivation of `ChannelConversionReport` (which
   measures channel→paid at the *user* level monthly — a different question).
 
+### Group Recruitment (Набор курсов)
+
+H162: a paying student had no way to learn her forming group was under-enrolled
+on the expected start day — the curator answered manually in chat. `Group` now
+carries recruitment state: `status` (`forming`/`active`/`archived`), `min_size`,
+`planned_start_date`, `start_date_override` (manual reschedule, priority over
+planned), `recruitment_notified_at` (dedup, mirrors `Schedule.reminded_at`).
+`Group::effectiveStartDate()` = `start_date_override ?? planned_start_date`;
+changing the override resets `recruitment_notified_at` so the warning cycle
+re-arms for the new date. `Group::isRecruited()` = `min_size` unset (size not
+checked) or `activeUsers()->count() >= min_size` — status is **not** auto-flipped
+on attach (many entry points: `PaymentObserver`, `GroupMembershipManager`,
+Filament); the curator flips `forming → active` manually via `GroupResource`.
+
+Daily `groups:notify-forming-shortfall` (same slot as `debts:remind`) finds
+`forming` groups whose `effectiveStartDate()` lands `recruitment_notify_lead_days`
+(default 2, `MarketingSetting`) days out and still under `min_size`, then:
+`GroupRecruitmentNotifier::notifyShortfall()` messages the group's `activeUsers()`
+via `SendMessengerAlerts` (honest status, not silence), and
+`CuratorNotifier::groupUnderEnrolled()` alerts the curators chat symmetrically.
+The same notifier fires immediately from `GroupResource`'s "Зафиксировать дату"
+action when a curator sets `start_date_override`, instead of waiting for the next
+lead-window. Toggle: `recruitment_notify_enabled` (`MarketingSetting`).
+
+**Availability-preference collection already existed — no new table.** Before
+building a planned `enrollment_preferences` table, `/prior-art` found
+`WaitlistEntry.preferred_schedule`/`timezone_note` (H230, feeds off `Intake`)
+already captures "кому когда удобно" at the waitlist stage, before a `Group`
+exists. `GroupResource`'s "Предпочтения" action reads them straight off
+`Group::intake->waitlistEntries()` (free-text list, not a parsed day×time grid —
+the source data is free text) so the curator can eyeball the popular slot before
+fixing a group's date.
+
+### Investment Model (NPV / IRR / payback)
+
+The phase-E superstructure of the noboring `/cases/education` plan (H261),
+independent of the A–D core. One Filament page under the "Финансы" group, gated
+by `RoleGate::finance()`:
+
+- **`InvestmentModel`** ("Инвест-решение", `/admin/investment-model`) over
+  `InvestmentModelService`: a scenario calculator for a **large forward-looking
+  spend** (book print run, hire, offline point, expensive course launch), from
+  the case "Юный чемпион" where a CFO talked the owner out of opening a branch by
+  the numbers. Enter capex + annual additional revenue/expense (+ optional revenue
+  growth %), a discount rate and horizon; get **NPV, IRR, simple + discounted
+  payback, breakeven annual cash flow**, a year-by-year cash flow table, and a
+  traffic-light verdict — **two scenarios side by side** (as in the case, "with
+  purchase" vs "without"). The finance math (`npv`/`irr` via bisection/`annuityFactor`/
+  `paybackTime`) lives in reusable static methods on the service; it moves no money
+  and stores nothing (planning-only). **Live figures** (avg check/LTV, CAC, EBITDA
+  margin, monthly accrual profit) are pulled from `StudentUnitEconomicsService` +
+  `FinanceCockpitReport` via `defaults()` as *starting reference points* for the
+  manual scenario entry — not an auto-built scenario. Discount rate, horizon, and
+  acceptable-payback threshold live in `config/investment.php` (env-backed,
+  **never hardcode**; @DECIDE MG: exact cost of capital, horizon+threshold, which
+  spend types to model first). The page is prefilled with the published
+  "Юный чемпион" worked example (14.5M capex / 160k-mo rent → IRR ~1 %, payback in
+  year 6), which doubles as the correctness validation against the real case.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
