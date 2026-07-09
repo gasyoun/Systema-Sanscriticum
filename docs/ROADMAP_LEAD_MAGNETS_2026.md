@@ -1,6 +1,6 @@
 # Roadmap: Interactive Lead-Magnet Fleet 2026 (Q3 2026 →)
 
-_Created: 07-07-2026 · Last updated: 07-07-2026_
+_Created: 07-07-2026 · Last updated: 09-07-2026_
 
 > Narrow roadmap for a **4-part interactive lead-magnet (ЛМ) fleet** aimed at the widest
 > top-of-funnel for the samskrte.ru course business: a transliterator tool, a level quiz, a
@@ -62,7 +62,7 @@ where capture + funnel live.
 |---|---|---|---|---|
 | 1 | **"Your name in Devanagari" transliterator** | Widest top-of-funnel + shareable image | SLP1↔IAST↔Devanagari↔HK transcoder ([`sanskrit-util`](https://github.com/sanskrit-lexicon/sanskrit-util)) | [H312](https://github.com/gasyoun/Uprava/blob/main/handoffs/H312-Sonnet_csl-guides_beginner-lm-transliterator-tool_07.07.26.md) (anchor, Sonnet 5) |
 | 2 | **"What's your Sanskrit level?" quiz** | Best warmth-**segmenter** (score → email) | frequency-ranked headwords (VisualDCS) + H288 quiz telemetry | [H313](https://github.com/gasyoun/Uprava/blob/main/handoffs/H313-Sonnet_csl-guides_beginner-lm-level-quiz_07.07.26.md) (Sonnet 5) |
-| 3 | **Plain-language beginner article** | The cheap "strong LM"; routes to the other three | preface/beginner explainer content | [H314](https://github.com/gasyoun/Uprava/blob/main/handoffs/H314-Fable_csl-guides_beginner-lm-first-word-article_07.07.26.md) (Fable 5) |
+| 3 | **Plain-language beginner article** | The cheap "strong LM"; routes to the other three | DCS frequency feed (corpus-frequency.json) | [H314](https://github.com/gasyoun/Uprava/blob/main/handoffs/H314-Fable_csl-guides_beginner-lm-first-word-article_07.07.26.md) (Fable 5) — **EN SHIPPED 09-07-2026** ([csl-guides PR #102](https://github.com/sanskrit-lexicon/csl-guides/pull/102), [live page](https://sanskrit-lexicon.github.io/csl-guides/users/first-sanskrit-sentence)); RU draft ready for the storefront: [docs/lead-magnet-article-first-sentence-ru.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/lead-magnet-article-first-sentence-ru.md) |
 | 4 | **Word / flashcard-streak game** | Retention + virality (loose direct conversion) | frequency-ranked headwords + dict glosses ([`csl-websanlexicon`](https://github.com/sanskrit-lexicon/csl-websanlexicon)) | [H315](https://github.com/gasyoun/Uprava/blob/main/handoffs/H315-Sonnet_csl-guides_beginner-lm-word-game_07.07.26.md) (Sonnet 5) |
 
 **Build order:** H312 → H313 → H314 → H315 (tool proves the rails; quiz proves segmentation;
