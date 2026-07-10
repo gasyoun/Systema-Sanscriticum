@@ -53,7 +53,7 @@ Blade-шаблоны. Организованы по контексту (каби
 | `schedule_block.blade.php` | Расписание занятий |
 | `features_block.blade.php` | Преимущества курса |
 | `guarantee_block.blade.php` | Гарантия возврата |
-| `countdown_block.blade.php` | Таймер обратного отсчёта |
+| `countdown_block.blade.php` | Таймер обратного отсчета |
 | `gallery_block.blade.php` | Галерея изображений |
 | `text_block.blade.php` | Произвольный текстовый блок |
 | ...и другие | ~20 типов блоков всего |

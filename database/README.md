@@ -49,7 +49,7 @@ dictionaries ─< dictionary_words
 
 ## Сидер
 
-`DatabaseSeeder` создаёт (или обновляет) одного администратора:
+`DatabaseSeeder` создает (или обновляет) одного администратора:
 ```bash
 php artisan db:seed
 ```

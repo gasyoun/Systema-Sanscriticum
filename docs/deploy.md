@@ -6,7 +6,7 @@ _Created: 02-07-2026 · Last updated: 06-07-2026_
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
 в корне репозитория. Ручные выкладки («git pull и посмотрим») запрещены: именно
 они породили класс багов
-[#193](https://github.com/gasyoun/Systema-Sanscriticum/issues/193) — прод отдаёт
+[#193](https://github.com/gasyoun/Systema-Sanscriticum/issues/193) — прод отдает
 страницу в старой разметке, потому что скомпилированные Blade-вьюхи и OPcache
 пережили обновление кода.
 
@@ -21,7 +21,7 @@ _Created: 02-07-2026 · Last updated: 06-07-2026_
 
 ## Что делает скрипт (по шагам)
 
-1. **Предполёт:** каталог приложения, ветка `main`, чистое рабочее дерево.
+1. **Предполет:** каталог приложения, ветка `main`, чистое рабочее дерево.
    Исключение — `public/docs/*.pdf` (оферта/политика/согласие, которые заменяют
    на сервере мимо git): их скрипт сам стэшит на время обновления кода и
    возвращает после (`git stash pop`); конфликт при возврате = стоп с
@@ -36,7 +36,7 @@ _Created: 02-07-2026 · Last updated: 06-07-2026_
    → `php artisan migrate --force`.
 6. Прогрев: `php artisan optimize` (config/route/view) + `filament:optimize`.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
-   автоматически, переживёт апгрейд 8.1 → 8.3).
+   автоматически, переживет апгрейд 8.1 → 8.3).
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
    не циклит (PID-ы не меняются, старый код продолжает крутиться); фолбэк на
    terminate только там, где supervisor отсутствует.
@@ -67,7 +67,7 @@ chmod +x deploy.sh
 sudo bash deploy.sh
 ```
 
-С maintenance-окном (когда есть тяжёлые миграции):
+С maintenance-окном (когда есть тяжелые миграции):
 
 ```bash
 sudo bash deploy.sh --down
@@ -79,7 +79,7 @@ sudo bash deploy.sh --down
 curl -s https://samskrte.ru/online/kursy/grammatika-po-kocerginoi-gr62 | grep -oE 'Коротко о курсе|id="program"|snap-x'
 ```
 
-Непустой вывод = новая разметка отдаётся, issue
+Непустой вывод = новая разметка отдается, issue
 [#193](https://github.com/gasyoun/Systema-Sanscriticum/issues/193) можно закрывать.
 
 ## Откат

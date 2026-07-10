@@ -125,7 +125,7 @@ surface it well either).
 **L5 — Homework "no homework" state and the actual homework form use different visual registers.**
 When `homework_enabled` is false, the lesson page shows a muted grey "Домашнего задания для
 этого урока нет" card (`lesson.blade.php:429-436`); when enabled but `awaitingPrompt`, a separate
-amber "Задание ещё не задано" card (`homework.blade.php:107-111`). Two different "nothing to do
+amber "Задание еще не задано" card (`homework.blade.php:107-111`). Two different "nothing to do
 here" states with different colors and copy for what is, from the student's point of view, the
 same outcome ("no action needed right now") — a small but real consistency gap for a student
 paging through a course quickly.
@@ -144,7 +144,7 @@ The platform correctly branches into three lesson states — `player === 'youtub
 (recording available), `upcomingSession` set (live class not yet held), and bare "Видео
 недоступно" (neither) (`lesson.blade.php:104-106, 214-243`) — but nothing on the page names the
 state explicitly as "recorded" once a video *is* present. A recording plays exactly like a
-would-be-live embed with no on-page microcopy such as "запись — смотрите в своём темпе," and nose
+would-be-live embed with no on-page microcopy such as "запись — смотрите в своем темпе," and nose
 the only place "watch at your own pace" language exists at all is in curator-facing
 `onboarding-student.md`/`student-manual.md`, not the student-facing lesson chrome itself
 (`student-manual.md:70-72` documents the *mechanism* — auto-swap from Zoom card to video after

@@ -31,7 +31,7 @@
 | Файл | Роль |
 |---|---|
 | `AuthServiceProvider` | Привязка Policy-классов к моделям (если есть). |
-| `BlogAnalyticsServiceProvider` | Инициализация счётчиков аналитики для блога. |
+| `BlogAnalyticsServiceProvider` | Инициализация счетчиков аналитики для блога. |
 | `BroadcastServiceProvider` | Настройка broadcasting (не используется активно). |
 | `EventServiceProvider` | Маппинг событий на слушателей: `Login → UserLoginListener`, `Logout → UserLogoutListener`. |
 | `HorizonServiceProvider` | Настройка доступа к дашборду Horizon (`/horizon`). |

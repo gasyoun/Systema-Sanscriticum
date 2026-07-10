@@ -24,7 +24,7 @@ Mailable-классы для отправки email. Все письма ста�
 
 Рассылка объявления по email.  
 Тема письма — `Announcement::title`.  
-Запускается из `SendMessengerAlerts` job при включённом переключателе email в объявлении.
+Запускается из `SendMessengerAlerts` job при включенном переключателе email в объявлении.
 
 ---
 

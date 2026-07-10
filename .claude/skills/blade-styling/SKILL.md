@@ -1,6 +1,6 @@
 ---
 name: blade-styling
-description: Use when styling, restyling, or improving the visual layout of Blade templates in this Laravel project. Trigger phrases include «свёрстай», «причеши», «сделай красиво», «поправь UI», «адаптив», «таблица/карточка/шапка криво», applied to files under resources/views/. Defines the visual-feedback loop using Playwright MCP — without this loop the assistant verstaет blindly and burns iterations.
+description: Use when styling, restyling, or improving the visual layout of Blade templates in this Laravel project. Trigger phrases include «сверстай», «причеши», «сделай красиво», «поправь UI», «адаптив», «таблица/карточка/шапка криво», applied to files under resources/views/. Defines the visual-feedback loop using Playwright MCP — without this loop the assistant verstaет blindly and burns iterations.
 ---
 
 # Blade styling — visual-feedback workflow
@@ -63,5 +63,5 @@ additions — verify, don't guess.
 ## What this skill is NOT for
 
 - Logic/data changes in controllers/models (use normal flow).
-- Filament resource form/table schema changes (those are PHP, not «вёрстка»).
+- Filament resource form/table schema changes (those are PHP, not «верстка»).
 - Lecture HTML rendering (handled by `lecture-builder` Jinja templates, not Blade).
