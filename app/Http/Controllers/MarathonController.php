@@ -51,6 +51,11 @@ use Illuminate\View\View;
  *
  * Phases 5/6 (live consultation booking, warm-tail) are NOT in this slice —
  * see Uprava/handoffs/H440-*.md.
+ *
+ * H445 Phase 2 — `levelQuiz()`/`completeLevelQuiz()`: the January `deva`
+ * cohort's level-quiz (H313 item bank, reused verbatim), layered ON TOP OF
+ * the intent-quiz above — `zero` cohort enrollments 404 here, nothing to
+ * grade for an all-zero audience (H440 §1a).
  */
 class MarathonController extends Controller
 {
@@ -142,9 +147,16 @@ class MarathonController extends Controller
             $lead = Lead::create($leadData);
         }
 
+        // H445 Phase 1 — this route only ever serves the August all-zero
+        // landing today (`cohort` defaults to `zero` at the DB level too);
+        // a January-cohort landing + route is its own future phase (see
+        // Uprava/handoffs/H445-*.md), wired through once that landing's
+        // slug/copy is actually decided. Explicit here, not left to the
+        // column default, so the intent reads at the call site.
         $enrollment = MarathonEnrollment::create([
             'lead_id' => $lead->id,
             'track' => $validated['track'],
+            'cohort' => MarathonEnrollment::COHORT_ZERO,
             'quiz_goal' => $validated['quiz_goal'],
             'day0_started_at' => now(),
         ]);
@@ -271,7 +283,9 @@ class MarathonController extends Controller
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
 
-        $quiz = config("marathon.day{$day}_quiz");
+        // H445 Phase 1 — per-cohort content (falls back to the shared `zero`
+        // default when the enrollment's cohort has no day{N}_quiz override).
+        $quiz = $enrollment->content("day{$day}_quiz");
         abort_if($quiz === null, 404);
 
         return view("marathon.day{$day}", [
@@ -316,6 +330,83 @@ class MarathonController extends Controller
 
         return redirect()->route('marathon.day', ['day' => $day, 'token' => $token])
             ->with('marathon_day_done', true);
+    }
+
+    /**
+     * H445 Phase 2 — `deva` cohort only (404 for `zero` — nothing to grade
+     * for an all-zero audience, H440 §1a). Already-taken redirects straight
+     * to the result rather than re-grading (idempotent, same shape as the
+     * paid-checkout idempotency in `pay()`).
+     */
+    public function levelQuiz(string $token): View|RedirectResponse
+    {
+        $lead = Lead::where('magnet_token', $token)->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        abort_unless($enrollment->isDevaCohort(), 404);
+
+        if ($enrollment->hasTakenLevelQuiz()) {
+            return redirect()->route('marathon.level-quiz.result', ['token' => $token]);
+        }
+
+        $quiz = $enrollment->content('level_quiz');
+        abort_if($quiz === null, 404);
+
+        return view('marathon.level-quiz', [
+            'quiz' => $quiz,
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Scores server-side from the enrollment's own `content('level_quiz')`
+     * bank — the client posts which option index it picked per step, never
+     * a client-computed score, so a tampered request can't inflate the
+     * level. Idempotent: a second submit doesn't re-grade (quiz_level once
+     * set is authoritative for Day 1/2 branching, see H545/H546).
+     */
+    public function completeLevelQuiz(string $token, Request $request): RedirectResponse
+    {
+        $lead = Lead::where('magnet_token', $token)->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        abort_unless($enrollment->isDevaCohort(), 404);
+
+        if (! $enrollment->hasTakenLevelQuiz()) {
+            $quiz = $enrollment->content('level_quiz');
+            $steps = (array) ($quiz['steps'] ?? []);
+
+            $picks = (array) $request->input('picks', []);
+
+            $score = 0;
+            foreach ($steps as $i => $step) {
+                if (isset($picks[$i]) && (int) $picks[$i] === (int) $step['correct']) {
+                    $score++;
+                }
+            }
+
+            $enrollment->update(['quiz_level' => $score]);
+        }
+
+        return redirect()->route('marathon.level-quiz.result', ['token' => $token]);
+    }
+
+    /** H445 Phase 2 — result page, no further grading. */
+    public function levelQuizResult(string $token): View
+    {
+        $lead = Lead::where('magnet_token', $token)->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        abort_unless($enrollment->isDevaCohort() && $enrollment->hasTakenLevelQuiz(), 404);
+
+        $quiz = $enrollment->content('level_quiz');
+        $total = count((array) ($quiz['steps'] ?? []));
+
+        return view('marathon.level-quiz-result', [
+            'score' => $enrollment->quiz_level,
+            'total' => $total,
+            'token' => $token,
+        ]);
     }
 
     /**

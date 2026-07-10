@@ -15,6 +15,14 @@ use Illuminate\Support\Carbon;
  * anti-urgency design in Uprava/custdev/MARATHON_DIAGNOSTIC_2026.md §3
  * explicitly rejects a common start date. currentDay() is what the Phase 2
  * drip engine keys off of to decide which day's content to send.
+ *
+ * H445 Phase 1 — `cohort` distinguishes the August all-zero cohort (`zero`,
+ * cyrillic-only, this class's original design) from the January deva-entry
+ * follow-on (`deva`) that reuses this exact engine with a different content
+ * pack (config('marathon.cohorts.<cohort>.*'), read via content() below).
+ * Every enrollment defaults to `zero` today — a January landing/route that
+ * actually sets `deva` is its own future phase, see Uprava/handoffs/H445-*.md.
+ * Same drip/track/consultation machinery either way.
  */
 class MarathonEnrollment extends Model
 {
@@ -24,10 +32,18 @@ class MarathonEnrollment extends Model
 
     public const TRACK_PAID = 'paid';
 
+    /** August cohort — истинно нулевая, только кириллица (H440 as-built). */
+    public const COHORT_ZERO = 'zero';
+
+    /** January cohort — деванагари-входная (H445 §1, engine reuse of H440). */
+    public const COHORT_DEVA = 'deva';
+
     protected $fillable = [
         'lead_id',
         'track',
+        'cohort',
         'quiz_goal',
+        'quiz_level',
         'day2_question',
         'day0_started_at',
         'day1_completed_at',
@@ -50,6 +66,7 @@ class MarathonEnrollment extends Model
         'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
         'warm_tail_last_day_sent' => 'integer',
+        'quiz_level' => 'integer',
     ];
 
     public function lead(): BelongsTo
@@ -60,6 +77,34 @@ class MarathonEnrollment extends Model
     public function isPaidTrack(): bool
     {
         return $this->track === self::TRACK_PAID;
+    }
+
+    public function isDevaCohort(): bool
+    {
+        return $this->cohort === self::COHORT_DEVA;
+    }
+
+    /**
+     * H445 Phase 2 — the `deva` cohort's level-quiz (layered ON TOP OF the
+     * intent-quiz, `quiz_goal` — the August cohort never takes this, there's
+     * nothing to grade for an all-zero audience, see H440 §1a).
+     */
+    public function hasTakenLevelQuiz(): bool
+    {
+        return $this->quiz_level !== null;
+    }
+
+    /**
+     * H445 Phase 1 — resolves a content key for this enrollment's cohort,
+     * falling back to the shared `marathon.<key>` default when the cohort
+     * carries no override. Lets `config('marathon.cohorts.deva.*')` stay a
+     * sparse overlay (only day1/day2 content actually differs by cohort —
+     * price/host/schedule/day3 stay shared) instead of a full content fork.
+     */
+    public function content(string $key): mixed
+    {
+        return data_get(config('marathon.cohorts'), "{$this->cohort}.{$key}")
+            ?? config("marathon.{$key}");
     }
 
     /** H471 — has the ₽500 "с проверкой" track actually been paid (not just selected at registration)? */

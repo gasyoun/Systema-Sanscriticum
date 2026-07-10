@@ -20,6 +20,10 @@ use Illuminate\Support\Facades\Log;
  * следующем прогоне, когда лид запустит бота. Day 3 — общая живая
  * консультация (ОДИН Schedule на всех, не персональный слот); пропускается
  * молча, если MG ещё не настроил `marathon.schedule_id` (см. H487).
+ *
+ * H445 Phase 1 — Day 1/2 content resolved per-cohort via
+ * MarathonEnrollment::content() (falls back to the shared `zero` default);
+ * Day 3 stays shared across cohorts (host/schedule don't vary by cohort).
  */
 final class DeliverDueMarathonContent extends Command
 {
@@ -54,7 +58,7 @@ final class DeliverDueMarathonContent extends Command
 
             if ($day >= 1 && $enrollment->day1_completed_at === null) {
                 $link = route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]);
-                $text = str_replace('{link}', $link, (string) config('marathon.day1_message'));
+                $text = str_replace('{link}', $link, (string) $enrollment->content('day1_message'));
                 $channel->sendMessage((string) $lead->telegram_chat_id, $text);
                 $enrollment->update(['day1_completed_at' => now()]);
                 $sent++;
@@ -63,7 +67,7 @@ final class DeliverDueMarathonContent extends Command
 
             if ($day >= 2 && $enrollment->day2_completed_at === null) {
                 $link = route('marathon.day', ['day' => 2, 'token' => $lead->magnet_token]);
-                $text = str_replace('{link}', $link, (string) config('marathon.day2_message'));
+                $text = str_replace('{link}', $link, (string) $enrollment->content('day2_message'));
                 $channel->sendMessage((string) $lead->telegram_chat_id, $text);
                 $enrollment->update(['day2_completed_at' => now()]);
                 $sent++;

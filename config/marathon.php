@@ -115,15 +115,23 @@ return [
     'recording_message' => 'Запись консультации готова 🎬'."\n\n"
         .'{link}',
 
+    // Real testimonial quote, MG-supplied only — MARATHON_DIAGNOSTIC_2026.md
+    // §4 wants ONE pointed testimonial from a serious practitioner, never a
+    // fabricated one. Null until MG sets MARATHON_TESTIMONIAL in .env; the
+    // Day-5 warm-tail message falls back to a no-quote framing while empty
+    // (see DeliverMarathonWarmTail::handle()) rather than inventing one.
+    'testimonial' => env('MARATHON_TESTIMONIAL'),
+
     // H440 Phase 6 — 13-day warm-tail, sent to unpaid registrants (paid_at
     // null) on Days 4–16 off their personal clock (median time-to-purchase,
     // CUSTDEV_2026.md/MARATHON_DIAGNOSTIC_2026.md §warm-tail). Evergreen —
     // no deadlines, no "мест осталось" — cycles the four levers the custdev
     // data says move this audience: ВРЕМЯ→own-pace (obj. #1), рассрочка,
     // преподаватель, and ONE pointed testimonial (не навалом — соц.
-    // доказательство −6 in this audience per the design doc). Keyed 1..13
-    // to match MarathonEnrollment::warmTailDay(); `{host}`/`{coupon}`
-    // interpolated by marathon:deliver-warm-tail.
+    // доказательство −6 in this audience per the design doc — see `testimonial`
+    // above; никогда не выдумывается). Keyed 1..13 to match
+    // MarathonEnrollment::warmTailDay(); `{host}`/`{coupon}` interpolated by
+    // marathon:deliver-warm-tail, `{testimonial}` only on Day 5.
     'warm_tail_messages' => [
         1 => 'Как вам марафон? 🙂'."\n\n"
             .'Если разбор устройства слова зашёл — курсы идут в том же темпе: '
@@ -137,9 +145,7 @@ return [
         4 => 'Оплата — не обязательно сразу целиком 💳'."\n\n"
             .'Есть рассрочка по блокам курса — платите по мере прохождения, а не '
             .'всю сумму на старте.',
-        5 => 'Отзыв одного из практикующих сейчас 💬'."\n\n"
-            .'«Думал, санскрит — это только про заучивание. Оказалось — про то, как '
-            .'устроен язык. После первого блока читаю простые тексты сам.»',
+        5 => '{testimonial}',
         6 => 'Ваш вопрос с Дня 2 никуда не делся 📝'."\n\n"
             .'Если после консультации остались уточнения по курсу — просто напишите '
             .'сюда, ответим.',
@@ -155,14 +161,79 @@ return [
         10 => 'Если пока не время — это нормально ⏳'."\n\n"
             .'Курс никуда не уходит. Когда будет удобно — просто напишите сюда, '
             .'подключим.',
-        11 => 'Что говорят те, кто уже прошёл первый блок 💬'."\n\n"
-            .'«Больше всего понравилось, что не нужно ничего зубрить наизусть — '
-            .'сначала понимаешь структуру, потом она сама запоминается.»',
+        11 => 'Вопросы по ходу курса — не остаются без ответа 💬'."\n\n"
+            .'{host} читает разборы каждого блока лично — если что-то не сложилось, '
+            .'можно спросить напрямую, а не искать ответ самому.',
         12 => 'Скидка после марафона всё ещё доступна 🎁'."\n\n"
-            .'{coupon} ₽ на первый курс — как и обещали на консультации, без '
-            .'ограничения по сроку.',
+            .'{coupon} ₽ на первый курс — как и обещали на консультации. Просто '
+            .'напишите сюда, и мы применим её к оплате, без ограничения по сроку.',
         13 => 'Если решите начать 🙂'."\n\n"
             .'Напишите сюда в любой момент — подберём курс под ваш вопрос с Дня 2 '
             .'и оформим со скидкой.',
+    ],
+
+    // H445 Phase 1 — sparse per-cohort content overlay. Only `zero` (the
+    // August all-zero cohort) has real content, and it lives at the
+    // top-level keys above (unchanged, as-built by H440) — `zero` needs no
+    // entry here. `deva` (January) overrides ONLY day1/day2 content
+    // (MarathonEnrollment::content() falls back to the top-level default for
+    // any key without an override — price/host/schedule/day3 stay shared).
+    // Read via $enrollment->content('day1_message'), never config('marathon.
+    // day1_message') directly, once an enrollment might be either cohort.
+    'cohorts' => [
+        'deva' => [
+            // Day 1/2 content itself (name-in-devanagari, mantra-reading) is
+            // NOT yet built — own future phases, see
+            // Uprava/handoffs/H445-*.md §1 (H545 Day 1, H546 Day 2 + curator
+            // voice review). This overlay stays sparse until those land.
+            // 'day1_message' => '...',
+            // 'day2_message' => '...',
+            // 'day1_quiz' => ['steps' => [...]],
+            // 'day2_quiz' => ['steps' => [...]],
+
+            // H445 Phase 2 — level-quiz, layered ON TOP OF the intent-quiz
+            // (quiz_goal), read via MarathonController::levelQuiz(). Content
+            // ported verbatim (RU strings) from H313's item bank
+            // (csl-guides/src/data/level-quiz.json, generated
+            // 09-07-2026 from VisualDCS/DCS frequency data via kosha) —
+            // reused, not reinvented; `correct` is the 0-indexed position of
+            // the source's `answer` string within its own `options` array.
+            // The August `zero` cohort never takes this (H440 §1a — nothing
+            // to grade for an all-zero audience).
+            'level_quiz' => [
+                'steps' => [
+                    [
+                        'text' => 'Какой звук передаёт эта буква деванагари: क',
+                        'opts' => ['ka', 'ta', 'ma', 'sa'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'В какой паре показан краткий гласный и его долгая пара?',
+                        'opts' => ['a / ā', 'k / t', 'm / s', 'ka / ta'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Какое из этого — настоящее санскритское слово (а не набор букв)?',
+                        'opts' => ['एव', 'क्ष्ठौ', 'ऴ्ऱि', 'घ्व्रॗ'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Как अन्य записывается латиницей (IAST)?',
+                        'opts' => ['anya', 'vacas', 'bṛhat', 'durbala'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Какое слово чаще встречается в реальных санскритских текстах: «eva» или «durbala»?',
+                        'opts' => ['eva', 'durbala'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Верно или нет: когда два санскритских слова стоят рядом в предложении, их звуки часто меняются, сливаясь друг с другом (это называется сандхи).',
+                        'opts' => ['Верно', 'Неверно'],
+                        'correct' => 0,
+                    ],
+                ],
+            ],
+        ],
     ],
 ];

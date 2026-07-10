@@ -122,6 +122,14 @@ Route::get('/online/konsultaciya/day/{day}/{token}', [MarathonController::class,
     ->where('day', '[12]')->name('marathon.day');
 Route::post('/online/konsultaciya/day/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
     ->where('day', '[12]')->name('marathon.day.complete');
+// H445 Phase 2 — `deva` cohort level-quiz, layered on top of the intent-quiz.
+// 404s for `zero` enrollments (MarathonController::levelQuiz()).
+Route::get('/online/konsultaciya/level-quiz/{token}', [MarathonController::class, 'levelQuiz'])
+    ->name('marathon.level-quiz');
+Route::post('/online/konsultaciya/level-quiz/{token}/complete', [MarathonController::class, 'completeLevelQuiz'])
+    ->name('marathon.level-quiz.complete');
+Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController::class, 'levelQuizResult'])
+    ->name('marathon.level-quiz.result');
 
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');

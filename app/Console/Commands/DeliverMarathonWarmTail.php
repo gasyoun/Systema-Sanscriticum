@@ -58,8 +58,12 @@ final class DeliverMarathonWarmTail extends Command
             }
 
             $text = str_replace(
-                ['{host}', '{coupon}'],
-                [(string) config('marathon.host_name'), (string) config('marathon.coupon_amount')],
+                ['{host}', '{coupon}', '{testimonial}'],
+                [
+                    (string) config('marathon.host_name'),
+                    (string) config('marathon.coupon_amount'),
+                    $this->testimonialText(),
+                ],
                 $template
             );
 
@@ -72,5 +76,23 @@ final class DeliverMarathonWarmTail extends Command
         $this->info("Marathon warm-tail delivery: sent {$sent} message(s).");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Real quote when MG has supplied one (config('marathon.testimonial'),
+     * env MARATHON_TESTIMONIAL) — otherwise a safe framing that never
+     * fabricates a first-person quote (MARATHON_DIAGNOSTIC_2026.md §4:
+     * one pointed testimonial, never invented).
+     */
+    private function testimonialText(): string
+    {
+        $real = trim((string) config('marathon.testimonial'));
+        if ($real !== '') {
+            return 'Отзыв одного из практикующих сейчас 💬'."\n\n".'«'.$real.'»';
+        }
+
+        return 'Не собираем отзывы для галочки 💬'."\n\n"
+            .'Когда будет что показать от практикующего — поделимся здесь. '
+            .'А пока просто расскажем сами, чему учим и как.';
     }
 }
