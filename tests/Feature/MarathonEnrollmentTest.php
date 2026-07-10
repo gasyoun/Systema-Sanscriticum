@@ -184,9 +184,10 @@ class MarathonEnrollmentTest extends TestCase
         $enrollment = MarathonEnrollment::factory()->deva()->make();
 
         $this->assertTrue($enrollment->isDevaCohort());
-        // No `cohorts.deva.day1_message` entry exists yet (Phase 2+ content) —
-        // content() must fall back to the shared `zero` default, not null.
-        $this->assertSame(config('marathon.day1_message'), $enrollment->content('day1_message'));
+        // Day 3 (host/schedule) is design-permanent shared content -- see
+        // config/marathon.php's H445 Phase 1 comment -- unlike day1_message,
+        // which H445 Phase 3 gave a real `deva` override to.
+        $this->assertSame(config('marathon.day3_message_paid'), $enrollment->content('day3_message_paid'));
     }
 
     public function test_content_prefers_cohort_override_when_present(): void

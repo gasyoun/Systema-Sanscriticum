@@ -200,7 +200,7 @@ class ClassAttendanceService
         }
 
         $withRate = fn (array $row): array => $row + [
-            'rate' => $row['expected'] > 0 ? round($row['attended'] / $row['expected'] * 100) : 0,
+            'rate' => $row['expected'] > 0 ? (int) round($row['attended'] / $row['expected'] * 100) : 0,
         ];
 
         // Хронические неявки: последние $chronicThreshold занятий подряд (history
