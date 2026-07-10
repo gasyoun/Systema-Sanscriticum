@@ -180,13 +180,21 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('deliver-due-lead-magnets');
 
-        // --- МАРАФОН: DAY 1/2 КОНТЕНТ ПО ЛИЧНОМУ ДНЮ (H440/H464) ---
+        // --- МАРАФОН: DAY 1/2/3 КОНТЕНТ ПО ЛИЧНОМУ ДНЮ (H440/H464/H487) ---
         // currentDay() считается от day0_started_at энрола, НЕ от общего календаря.
         $schedule->command('marathon:deliver-due')
             ->everyFifteenMinutes()
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('deliver-due-marathon-content');
+
+        // --- МАРАФОН: ЗАПИСЬ ЖИВОЙ КОНСУЛЬТАЦИИ ДНЯ 3 (H487) ---
+        // Триггер — MG проставил Schedule.zoom_recording_url; не таймер от start.
+        $schedule->command('marathon:deliver-recording')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('deliver-marathon-recording');
 
         // --- ПИСЬМО ЛИДАМ СО ССЫЛКОЙ НА ЗАПИСЬ ВЕБИНАРА ---
         // Триггер — админ заполнил webinar_recording_url; команда сама отсечёт уже отправленных.

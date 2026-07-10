@@ -35,6 +35,7 @@ class MarathonEnrollment extends Model
         'day1_engaged_at',
         'day2_engaged_at',
         'consultation_booked_at',
+        'recording_sent_at',
         'paid_at',
     ];
 
@@ -45,6 +46,7 @@ class MarathonEnrollment extends Model
         'day1_engaged_at' => 'datetime',
         'day2_engaged_at' => 'datetime',
         'consultation_booked_at' => 'datetime',
+        'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
     ];
 

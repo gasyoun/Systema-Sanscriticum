@@ -30,6 +30,13 @@ return [
     // Day-3 warm-tail length in days — median time-to-purchase from CUSTDEV_2026.md.
     'warm_tail_days' => (int) env('MARATHON_WARM_TAIL_DAYS', 13),
 
+    // H487 Phase 5 — the Day-3 live consultation is ONE shared Schedule row
+    // (app/Models/Schedule.php), created/edited by MG through the existing
+    // Filament ScheduleResource (no course_id/group_id — a standalone
+    // session, same pattern as Course::trialSchedule()). Nothing activates
+    // until this is set — see DEPLOY_QUEUE.md.
+    'schedule_id' => env('MARATHON_SCHEDULE_ID'),
+
     // H464 Phase 2 (revised H483 Phase 3b) — Day 1/2 drip content, sent as
     // Telegram messages by `marathon:deliver-due`. `{link}` is replaced by
     // `marathon:deliver-due` with the enrollee's personal tap-choice page
@@ -90,4 +97,21 @@ return [
             ],
         ],
     ],
+
+    // H487 Phase 5 — Day-3 messages, sent once by marathon:deliver-due when
+    // currentDay() >= 3. {date}/{link}/{host} are interpolated by the command
+    // (date/link from the configured Schedule row, host from host_name above)
+    // — kept as template placeholders here, not re-reading env() a second
+    // time. Paid track gets the live join link; free track gets told a
+    // recording follows (H440 §3 item 6 — не ежедневный эфир, одна консультация).
+    'day3_message_paid' => 'День 3 — живая консультация 🎥'."\n\n"
+        .'{date}, ведёт {host}. Ваш вопрос уже у нас — разберём его лично.'."\n\n"
+        .'{link}',
+
+    'day3_message_free' => 'День 3 — живая консультация 🎥'."\n\n"
+        .'{date} пройдёт живая консультация с {host}. На бесплатном треке — запись '
+        .'после эфира, мы пришлём ссылку сюда же.',
+
+    'recording_message' => 'Запись консультации готова 🎬'."\n\n"
+        .'{link}',
 ];
