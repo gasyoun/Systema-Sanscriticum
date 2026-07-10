@@ -641,28 +641,36 @@ class Payment extends Model
             return;
         }
 
-        // Данные живого занятия (дата + Zoom) — из события расписания курса.
+        // Данные занятия — из события расписания курса. Прошедшее занятие → пробное
+        // открывает ЗАПИСЬ (Zoom-ссылка не нужна); предстоящее → живое подключение.
         $schedule = $this->course?->trialSchedule;
-        $zoomLink = $schedule?->link;
         $startsAt = $schedule?->start;
+        $isRecording = $startsAt && $startsAt->isPast();
+        $zoomLink = $isRecording ? null : $schedule?->link;
 
-        // Письмо со ссылкой на Zoom (если есть email и пользователь, и сама запись расписания).
+        // Письмо: живое → ссылка на Zoom; запись → указание на личный кабинет.
         if ($this->user && $this->user->email) {
             Mail::to($this->user->email)
-                ->send(new TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt));
+                ->send(new TrialZoomLinkMail($this->user, $this->course, $zoomLink, $startsAt, (bool) $isRecording));
         }
 
         $courseName = $this->course->title ?? 'курс';
         $url = url('/login');
 
         $text = "🎟 <b>Пробное занятие оплачено</b>\n\n";
-        $text .= "Намасте! Вы записаны на живое занятие курса <b>«{$courseName}»</b>";
-        if ($startsAt) {
-            $text .= ' — '.$startsAt->translatedFormat('d F, H:i').' (МСК)';
-        }
-        $text .= ".\n";
-        if ($zoomLink) {
-            $text .= "\n🔗 <a href='{$zoomLink}'>Подключиться к Zoom</a>\n";
+        if ($isRecording) {
+            $text .= "Намасте! Запись занятия курса <b>«{$courseName}»</b>";
+            $text .= ' от '.$startsAt->translatedFormat('d F').' открыта в личном кабинете.';
+            $text .= "\n";
+        } else {
+            $text .= "Намасте! Вы записаны на живое занятие курса <b>«{$courseName}»</b>";
+            if ($startsAt) {
+                $text .= ' — '.$startsAt->translatedFormat('d F, H:i').' (МСК)';
+            }
+            $text .= ".\n";
+            if ($zoomLink) {
+                $text .= "\n🔗 <a href='{$zoomLink}'>Подключиться к Zoom</a>\n";
+            }
         }
         $text .= 'Сумма зачтётся при оплате полного тарифа.';
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";

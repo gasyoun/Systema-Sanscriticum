@@ -144,6 +144,32 @@ class TrialPurchaseTest extends TestCase
     }
 
     /** @test */
+    public function paid_trial_for_past_class_grants_recording_access_and_marks_email_as_recording(): void
+    {
+        // Прошедшее занятие: пробное открывает его запись, а не живой Zoom.
+        [$course] = $this->courseWithTrial(500, now()->subDays(3)->setTime(7, 0));
+        $user = User::factory()->create();
+
+        // Заготовка под прошедшую дату всё равно создана и привязана.
+        $this->assertNotNull($course->trial_lesson_id);
+
+        $payment = Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 500, 'tariff' => 'trial', 'status' => 'pending',
+        ]);
+        $payment->update(['status' => 'paid']);
+
+        // Доступ к уроку-заготовке (записи) открыт.
+        $this->assertEquals(1, LessonAccessGrant::where('user_id', $user->id)
+            ->where('lesson_id', $course->trial_lesson_id)->active()->count());
+
+        // Письмо помечено как «запись», без Zoom-ссылки (хоть у события она и задана).
+        Mail::assertQueued(TrialZoomLinkMail::class, fn ($m) => $m->hasTo($user->email)
+            && $m->isRecording === true
+            && $m->zoomLink === null);
+    }
+
+    /** @test */
     public function lesson_page_shows_join_panel_before_recording(): void
     {
         [$course] = $this->courseWithTrial();

@@ -14,11 +14,19 @@
 
         <h2 style="color: #0c6ea3; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}! 🙏</h2>
 
-        <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Ждём вас на живом занятии!</p>
+        @if($isRecording)
+            <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Запись уже открыта в вашем личном кабинете.</p>
+        @else
+            <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Ждём вас на живом занятии!</p>
+        @endif
 
         <div style="background-color: #f0f9ff; border-left: 4px solid #38BDF8; padding: 20px; margin: 28px 0; border-radius: 0 4px 4px 0;">
             @if($startsAt)
-                <p style="margin: 6px 0; font-size: 16px;"><strong>Когда:</strong> <span style="color: #0c6ea3;">{{ $startsAt->translatedFormat('d F Y, H:i') }} (МСК)</span></p>
+                @if($isRecording)
+                    <p style="margin: 6px 0; font-size: 16px;"><strong>Занятие:</strong> <span style="color: #0c6ea3;">запись от {{ $startsAt->translatedFormat('d F Y') }}</span></p>
+                @else
+                    <p style="margin: 6px 0; font-size: 16px;"><strong>Когда:</strong> <span style="color: #0c6ea3;">{{ $startsAt->translatedFormat('d F Y, H:i') }} (МСК)</span></p>
+                @endif
             @endif
             @if($zoomLink)
                 <p style="margin: 6px 0; font-size: 16px;"><strong>Подключение:</strong> по кнопке ниже</p>
@@ -30,13 +38,19 @@
                 <a href="{{ $zoomLink }}" style="background-color: #38BDF8; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">Подключиться к Zoom</a>
             </div>
             <p style="font-size: 13px; color: #95a5a6; text-align: center; word-break: break-all;">Если кнопка не работает, скопируйте ссылку: {{ $zoomLink }}</p>
+        @elseif($isRecording)
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{ url('/login') }}" style="background-color: #38BDF8; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">Смотреть запись в кабинете</a>
+            </div>
         @else
             <p style="font-size: 16px; text-align: center; color: #8a3324;">Ссылку на подключение мы пришлём дополнительно — она появится в вашем личном кабинете.</p>
         @endif
 
-        <p style="font-size: 15px; color: #7f8c8d; text-align: center; margin-top: 28px;">
-            После занятия его запись появится в вашем личном кабинете в разделе «Пробные занятия».
-        </p>
+        @unless($isRecording)
+            <p style="font-size: 15px; color: #7f8c8d; text-align: center; margin-top: 28px;">
+                После занятия его запись появится в вашем личном кабинете в разделе «Пробные занятия».
+            </p>
+        @endunless
 
         <div style="text-align: center; margin-top: 24px;">
             <a href="{{ url('/login') }}" style="color: #0c6ea3; font-size: 14px;">Перейти в личный кабинет →</a>
