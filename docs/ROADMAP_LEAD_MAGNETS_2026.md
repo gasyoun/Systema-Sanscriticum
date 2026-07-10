@@ -1,6 +1,19 @@
 # Roadmap: Interactive Lead-Magnet Fleet 2026 (Q3 2026 →)
 
-_Created: 07-07-2026 · Last updated: 09-07-2026_
+_Created: 07-07-2026 · Last updated: 10-07-2026_
+
+> **10-07-2026 update (Sonnet 5 `claude-sonnet-5`):** the §4 «FREE first Zoom webinar
+> class» доходимость-bridge step is now **superseded** by the 3-day diagnostic
+> marathon («Консультация по онлайн-курсам ОРС», [H440](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H440-Sonnet_Systema-Sanscriticum_marathon_diagnostic_3day_09.07.26.md),
+> all 6 build phases merged, code-complete, launches 28-08-2026) — a multi-day
+> evergreen own-pace drip (intent-quiz → 2 async days → 1 live consultation) replaces
+> the single dated Zoom class as the bridge between the free LMs and the tripwire/
+> flagship. Same funnel position, same job (доходимость bridge, capture → warmth), a
+> stronger anti-urgency design (no dated cohort, own-pace ~15 min/day). The January
+> deva-entry follow-on ([H445](https://github.com/gasyoun/Uprava/blob/main/handoffs/H445-Sonnet_Systema-Sanscriticum_marathon_deva_january_cohort_09.07.26.md))
+> reuses the same engine one level up (H312 transliterator + H313 level-quiz feed
+> into it directly). §4's ladder diagram is not redrawn here — this note is the
+> pointer; the marathon's own design doc is [`Uprava/custdev/MARATHON_DIAGNOSTIC_2026.md`](https://github.com/gasyoun/Uprava/blob/main/custdev/MARATHON_DIAGNOSTIC_2026.md).
 
 > Narrow roadmap for a **4-part interactive lead-magnet (ЛМ) fleet** aimed at the widest
 > top-of-funnel for the samskrte.ru course business: a transliterator tool, a level quiz, a
@@ -25,7 +38,7 @@ Sanskrit data is a moat nobody else can copy (§1).
 ## 1. The thesis — why interactive LMs, why us
 
 The круглый-стол's operative line: *«Благодаря расцвету ИИ можно очень быстро создавать
-сложные ЛМ бесплатно… Игры, калькуляторы, тесты — то, что привлечёт.»* Interactive lead
+сложные ЛМ бесплатно… Игры, калькуляторы, тесты — то, что привлечет.»* Interactive lead
 magnets (calculators, tests, games) used to be expensive; AI has made them cheap.
 
 **Our unfair advantage:** a competitor can clone a transliterator UI in an afternoon — they
