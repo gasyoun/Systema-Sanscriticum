@@ -16,6 +16,7 @@
         "jenssegers/agent": "^2.6",
         "laravel/framework": "^10.10",
         "laravel/horizon": "^5.46",
+        "laravel/reverb": "^1.10",
         "laravel/sanctum": "^3.3",
         "laravel/socialite": "^5.11",
         "laravel/tinker": "^2.8",
