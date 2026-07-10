@@ -33,6 +33,7 @@ class MarathonEnrollment extends Model
         'day1_completed_at',
         'day2_completed_at',
         'consultation_booked_at',
+        'paid_at',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class MarathonEnrollment extends Model
         'day1_completed_at' => 'datetime',
         'day2_completed_at' => 'datetime',
         'consultation_booked_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
     public function lead(): BelongsTo
@@ -50,6 +52,12 @@ class MarathonEnrollment extends Model
     public function isPaidTrack(): bool
     {
         return $this->track === self::TRACK_PAID;
+    }
+
+    /** H471 — has the ₽500 "с проверкой" track actually been paid (not just selected at registration)? */
+    public function isPaidConfirmed(): bool
+    {
+        return $this->paid_at !== null;
     }
 
     /**

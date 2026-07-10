@@ -7,13 +7,22 @@ namespace App\Http\Controllers;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
+use App\Models\Payment;
+use App\Models\User;
+use App\Services\AttributionService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
+use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -28,9 +37,15 @@ use Illuminate\View\View;
  * Lead at capture time (same generic deep-link mechanism LeadController
  * uses for lead-magnet files — reused as-is, not landing-magnet-specific)
  * so `marathon:deliver-due` (H464) can find enrollees by `telegram_chat_id`
- * once they start the bot. Phases 3b/4/5/6 (interactive tap-choice UI,
- * paid-track checkout, live consultation booking, warm-tail) are NOT in
- * this slice — see Uprava/handoffs/H440-*.md for the full build plan.
+ * once they start the bot.
+ *
+ * Phase 4 (H471): `pay()` — ₽500 «с проверкой» track checkout via the
+ * existing Tochka gateway, mirrors TrialController::create() exactly
+ * (bespoke Payment, no Tariff row). Promo-code issuance and flagship-course
+ * credit are explicit follow-ons, not built here — see H471.
+ *
+ * Phases 3b/5/6 (interactive tap-choice UI, live consultation booking,
+ * warm-tail) are NOT in this slice — see Uprava/handoffs/H440-*.md.
  */
 class MarathonController extends Controller
 {
@@ -112,7 +127,10 @@ class MarathonController extends Controller
 
                 return redirect()->route('marathon.show')
                     ->with('marathon_result', $enrollment->quiz_goal)
-                    ->with('marathon_telegram_link', $this->deepLink($existingLead));
+                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
+                    ->with('marathon_track', $enrollment->track)
+                    ->with('marathon_paid', $enrollment->isPaidConfirmed())
+                    ->with('marathon_contact', $existingLead->contact);
             }
             $lead = $existingLead;
         } else {
@@ -130,7 +148,144 @@ class MarathonController extends Controller
 
         return redirect()->route('marathon.show')
             ->with('marathon_result', $enrollment->quiz_goal)
-            ->with('marathon_telegram_link', $this->deepLink($lead));
+            ->with('marathon_telegram_link', $this->deepLink($lead))
+            ->with('marathon_track', $enrollment->track)
+            ->with('marathon_paid', $enrollment->isPaidConfirmed())
+            ->with('marathon_contact', $lead->contact);
+    }
+
+    /**
+     * H471 — ₽500 «с проверкой» track checkout. Mirrors TrialController::create()
+     * (bespoke Payment, no Tariff row, DB::transaction then Tochka after commit).
+     * Idempotent: an already-paid enrollment redirects back without charging twice.
+     */
+    public function pay(Request $request, TochkaPaymentService $tochka): RedirectResponse
+    {
+        $rlKey = 'marathon-pay:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
+        $validated = $request->validate([
+            'contact' => 'required|string',
+            'email' => 'required|email',
+        ]);
+
+        $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
+
+        $leadQuery = Lead::where('contact', $validated['contact']);
+        if ($landing) {
+            $leadQuery->where('landing_page_id', $landing->id);
+        }
+        $lead = $leadQuery->first();
+
+        if (! $lead) {
+            return back()->with('error', 'Сначала зарегистрируйтесь на марафон — контакт не найден.');
+        }
+
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->first();
+
+        abort_unless(
+            $enrollment && $enrollment->isPaidTrack(),
+            403,
+            'Трек «с проверкой» не выбран при регистрации на марафон.'
+        );
+
+        // Идемпотентность: уже оплачено — не берём деньги повторно.
+        if ($enrollment->isPaidConfirmed()) {
+            return redirect()->route('marathon.show')
+                ->with('marathon_result', $enrollment->quiz_goal)
+                ->with('marathon_track', $enrollment->track)
+                ->with('marathon_paid', true);
+        }
+
+        try {
+            $user = $this->resolveUserForCheckout($validated['email'], $lead);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        $amount = (float) config('marathon.paid_track_price');
+
+        $payment = DB::transaction(function () use ($user, $lead, $amount): Payment {
+            return Payment::create([
+                'user_id' => $user->id,
+                'lead_id' => $lead->id,
+                'course_id' => null,
+                'amount' => $amount,
+                'tariff' => 'marathon_paid',
+                'status' => 'pending',
+            ]);
+        });
+
+        // Purpose должен включать «Заказ №{id}» — иначе вебхук Tochka не найдёт платёж.
+        $purpose = 'Заказ №'.$payment->id.' | Марафон «с проверкой»';
+
+        try {
+            $response = $tochka->createPaymentWithReceipt(
+                user: $user,
+                amount: $amount,
+                purpose: $purpose,
+                itemName: 'Марафон «Консультация по онлайн-курсам ОРС» — трек «с проверкой»',
+            );
+        } catch (ConnectionException $e) {
+            $payment->update(['status' => 'failed']);
+
+            Log::error('Tochka недоступна (marathon_paid)', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+        }
+
+        if ($response->successful() && isset($response['Data']['paymentLink'])) {
+            $payment->update(['transaction_id' => $response['Data']['paymentLinkId']]);
+
+            return redirect()->away($response['Data']['paymentLink']);
+        }
+
+        $payment->update(['status' => 'failed']);
+
+        Log::error('Ошибка Точка Эквайринг (marathon_paid)', [
+            'payment_id' => $payment->id,
+            'status' => $response->status(),
+        ]);
+
+        return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
+     * Залогиненный — текущий. Гость с НОВЫМ email — создаём аккаунт и логиним
+     * (без пароля, без surname/city — марафонский захват их не собирает).
+     * Гость с СУЩЕСТВУЮЩИМ email — отказ (защита от account takeover, как в
+     * TrialController::resolveUser()).
+     */
+    private function resolveUserForCheckout(string $email, Lead $lead): User
+    {
+        if (auth()->check()) {
+            return auth()->user();
+        }
+
+        $existing = User::where('email', User::normalizeEmail($email))->first();
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оплатите оттуда.',
+            ]);
+        }
+
+        $user = User::create([
+            'email' => $email,
+            'name' => $lead->name ?: 'Участник марафона',
+            'password' => Hash::make(Str::random(12)),
+        ]);
+
+        app(AttributionService::class)->applyToNewUser($user);
+
+        auth()->login($user);
+
+        return $user;
     }
 
     /**
