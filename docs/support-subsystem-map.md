@@ -95,7 +95,7 @@ Real remaining gaps toward jivo.md Phase 0–6 parity — not decisions, punch-l
 
 | Gap | Phase | Detail |
 |---|---|---|
-| Security hardening unfixed | 0 | [SECURITY_AUDIT_money_2026-07-02.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY_AUDIT_money_2026-07-02.md) findings (HTTP-in-DB-transaction, path traversal, XSS, social-auth takeover) still not closed |
+| Security hardening — remaining audit items | 0 | [SECURITY_AUDIT_money_2026-07-02.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY_AUDIT_money_2026-07-02.md)'s 20 money/pricing/access/salary findings are **all closed (07-07-2026)** — and it never contained an XSS finding (the earlier "XSS" here was a confabulation). Real still-open items live in [AUDIT_REPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AUDIT_REPORT.md) (2026-06-12): the editor/admin-gated **path-traversal** 🔴 in [`LectureDraftController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Editor/LectureDraftController.php) (~L73), plus #2/#4/#5 (rate-limiting, request-body logging, guest-identity attach). None are XSS; none block the web-chat build (H536). |
 | Status filter tabs missing in UI | 1 | `SupportConversation.status` exists but `Helpdesk` doesn't surface New/In-Progress/Resolved filter tabs yet |
 | EdTech sidebar incomplete | 2 | Modal shows payments/promises/discounts/attendance only; no active courses/groups, per-block access status, next lesson, or recent-tickets summary |
 | Topics web-chat-side | 4 | `SupportTopicRule`/`SupportTopicAssignment` only cover the Telegram-support side; `ChatMessage` has no topic taxonomy |
