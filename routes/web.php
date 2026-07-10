@@ -144,6 +144,13 @@ Route::get('/online/kursy/{course:slug}/preview', [ShopController::class, 'previ
 Route::get('/shop/course/{slug}', fn ($slug) => redirect()->route('shop.course.show', $slug, 301));
 Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 
+// Auth-state probe for the free static games under public/exercises/ — lets
+// gate.js skip the "register" wall for logged-in students. Public, web-guard
+// (session cookie) so it reflects the browser's own login; no CSRF (GET, no
+// state change). See public/exercises/gate.js.
+Route::get('/api/games/auth', fn () => response()->json(['authenticated' => auth()->check()]))
+    ->name('games.auth');
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1')

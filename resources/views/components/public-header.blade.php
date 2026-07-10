@@ -34,6 +34,7 @@
     $isHome  = request()->is('/');
     $isShop  = request()->is('online') || request()->is('online/*');
     $isBlog  = request()->is('s') || request()->is('s/*');
+    $isGames = request()->is('exercises') || request()->is('exercises/*');
 
     $shopUrl     = \Illuminate\Support\Facades\Route::has('shop.index')      ? route('shop.index')      : '/online';
     $articlesUrl = \Illuminate\Support\Facades\Route::has('articles.index')  ? route('articles.index')  : '/s';
@@ -73,6 +74,10 @@
                 <a href="{{ $articlesUrl }}"
                    class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {{ $isBlog ? $navActive : $navIdle }}">
                     Блог
+                </a>
+                <a href="/exercises/"
+                   class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {{ $isGames ? $navActive : $navIdle }}">
+                    Игры
                 </a>
             </nav>
         @elseif($noteText)
@@ -140,6 +145,7 @@
                         <a href="/" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isHome ? $navActive : $navIdle }}">Главная</a>
                         <a href="{{ $shopUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isShop ? $navActive : $navIdle }}">Все курсы</a>
                         <a href="{{ $articlesUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isBlog ? $navActive : $navIdle }}">Блог</a>
+                        <a href="/exercises/" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isGames ? $navActive : $navIdle }}">Игры</a>
                         <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-[#E85C24]/10' }} my-2"></div>
                     @elseif($noteText)
                         <a href="{{ $noteUrl ?: '#' }}" @if($noteUrl) target="_blank" rel="noopener" @endif
