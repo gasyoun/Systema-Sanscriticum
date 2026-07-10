@@ -115,4 +115,27 @@ class DeliverMarathonWarmTailTest extends TestCase
 
         Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Тестовый Ведущий'));
     }
+
+    public function test_day5_falls_back_to_a_safe_message_without_a_fabricated_quote(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        config(['marathon.testimonial' => null]);
+        $this->enrollment(['day0_started_at' => now()->subDays(7), 'warm_tail_last_day_sent' => 3]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Не собираем отзывы для галочки')
+            && ! str_contains((string) $req['text'], '«'));
+    }
+
+    public function test_day5_uses_the_real_testimonial_when_configured(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        config(['marathon.testimonial' => 'Преподаю Шивананда-йогу 20 лет. Созрела.']);
+        $this->enrollment(['day0_started_at' => now()->subDays(7), 'warm_tail_last_day_sent' => 3]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Преподаю Шивананда-йогу 20 лет. Созрела.'));
+    }
 }
