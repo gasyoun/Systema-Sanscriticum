@@ -120,7 +120,7 @@ class DeliverMarathonWarmTailTest extends TestCase
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);
         config(['marathon.testimonial' => null]);
-        $this->enrollment(['day0_started_at' => now()->subDays(7), 'warm_tail_last_day_sent' => 3]);
+        $this->enrollment(['day0_started_at' => now()->subDays(8), 'warm_tail_last_day_sent' => 3]);
 
         $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
 
@@ -132,7 +132,7 @@ class DeliverMarathonWarmTailTest extends TestCase
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);
         config(['marathon.testimonial' => 'Преподаю Шивананда-йогу 20 лет. Созрела.']);
-        $this->enrollment(['day0_started_at' => now()->subDays(7), 'warm_tail_last_day_sent' => 3]);
+        $this->enrollment(['day0_started_at' => now()->subDays(8), 'warm_tail_last_day_sent' => 3]);
 
         $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
 
