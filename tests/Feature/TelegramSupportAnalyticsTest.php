@@ -382,6 +382,40 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame(1, TelegramSupportMessage::count());
     }
 
+    public function test_madelineproto_sync_recovers_once_after_dead_ipc_channel(): void
+    {
+        $this->skipWithoutMadelineProto();
+
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
+        ]);
+
+        FakeMadelineProtoClient::$histories = [
+            5001 => [
+                ['id' => 1, 'date' => strtotime('2026-06-28 11:00:00'), 'message' => 'После оживления IPC', 'peer_id' => 5001, 'from_id' => ['user_id' => 9003]],
+            ],
+        ];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        // Первый start() имитирует мёртвый IPC-канал; сервис должен почистить сокет
+        // и повторить — второй start() уже успешен.
+        FakeMadelineProtoClient::$startFailures = ['Sending on the channel failed. Did the context die?'];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(1, $result['synced']);
+        $this->assertSame(2, FakeMadelineProtoClient::$startCalls);
+        $this->assertSame(1, TelegramSupportMessage::count());
+    }
+
     public function test_madelineproto_sync_limits_dialogs_per_run_to_avoid_flooding(): void
     {
         $this->skipWithoutMadelineProto();

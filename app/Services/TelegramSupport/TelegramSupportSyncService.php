@@ -9,6 +9,8 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Services\Support\SupportConversationManager;
+use App\Services\Telegram\MadelineClientFactory;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
@@ -23,7 +25,7 @@ class TelegramSupportSyncService
     public function __construct(
         private readonly SupportDailyRollupAggregator $aggregator,
         private readonly SupportContactUserAutoLinker $autoLinker,
-        private readonly \App\Services\Support\SupportConversationManager $conversations,
+        private readonly SupportConversationManager $conversations,
     ) {}
 
     public function sync(): array
@@ -75,19 +77,87 @@ class TelegramSupportSyncService
         try {
             return $this->fetchIncrementalMadelineMessages($account, $clientClass);
         } catch (Throwable $e) {
-            if (! $this->isMadelineAuthRestart($e)) {
-                throw $e;
+            if ($this->isMadelineAuthRestart($e)) {
+                Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
+
+                return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
             }
 
-            Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
+            // Мёртвый IPC-канал: фоновый демон MadelineProto умер, а его unix-сокет
+            // остался, поэтому каждый запуск бил бы в несуществующий контекст и сыпал
+            // "Did the context die?" раз в минуту (см. LocksMadelineSession). Чистим
+            // осиротевший сокет — авто-версия ручного `pkill madeline + rm *.ipc` —
+            // и пробуем ещё раз: следующий start() поднимет свежий демон.
+            if ($this->isMadelineIpcDead($e)) {
+                Log::warning('Telegram support sync: MadelineProto IPC channel dead — clearing stale socket and retrying', [
+                    'error' => $e->getMessage(),
+                ]);
 
-            return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
+                $this->clearStaleMadelineIpc();
+
+                return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
+            }
+
+            throw $e;
         }
     }
 
     private function isMadelineAuthRestart(Throwable $e): bool
     {
         return str_contains($e->getMessage(), 'AUTH_RESTART');
+    }
+
+    /**
+     * Признак «мёртвого» IPC-канала MadelineProto: демон сессии умер, а его сокет
+     * остался, поэтому клиент бьёт в несуществующий контекст. Ловим и голый
+     * Amp\Ipc\Sync\ChannelException, и его Revolt-обёртку (UncaughtThrowable),
+     * разматывая цепочку previous.
+     */
+    private function isMadelineIpcDead(Throwable $e): bool
+    {
+        $current = $e;
+
+        do {
+            $message = $current->getMessage();
+            if (str_contains($message, 'Did the context die?')
+                || str_contains($message, 'Sending on the channel failed')
+                || str_contains($message, 'ChannelException')) {
+                return true;
+            }
+        } while ($current = $current->getPrevious());
+
+        return false;
+    }
+
+    /**
+     * Удаляет осиротевший IPC-сокет/состояние сессии, НЕ трогая учётные данные
+     * (safe.php и прочие *.php лежат рядом — их удаление разлогинило бы аккаунт).
+     * После этого следующий new API()->start() поднимет свежий демон. Безопасно
+     * под session-локом команды (см. LocksMadelineSession) — конкурентного демона
+     * в этот момент нет. Аналог ручного `rm <session>/*.ipc` из ранбука прода.
+     */
+    protected function clearStaleMadelineIpc(): void
+    {
+        $session = MadelineClientFactory::sessionPath();
+
+        // v8: сессия — это КАТАЛОГ (X.madeline) с IPC-артефактами внутри.
+        if (! is_dir($session)) {
+            return;
+        }
+
+        $targets = [];
+        foreach (['ipc', 'callback.ipc', 'ipcState.php'] as $name) {
+            $targets[] = $session.DIRECTORY_SEPARATOR.$name;
+        }
+        foreach ((glob($session.DIRECTORY_SEPARATOR.'*.ipc') ?: []) as $path) {
+            $targets[] = $path;
+        }
+
+        foreach (array_unique($targets) as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
     }
 
     /**
@@ -283,7 +353,7 @@ class TelegramSupportSyncService
     {
         // Абсолютный путь через фабрику: дефолт конфига — storage_path() (уже
         // абсолютный), оборачивать его в base_path() нельзя (задвоение пути).
-        $session = \App\Services\Telegram\MadelineClientFactory::sessionPath();
+        $session = MadelineClientFactory::sessionPath();
         File::ensureDirectoryExists(dirname($session));
 
         $client = new $clientClass($session, $this->madelineSettings($clientClass));
