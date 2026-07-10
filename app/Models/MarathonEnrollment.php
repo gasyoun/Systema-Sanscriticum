@@ -43,6 +43,7 @@ class MarathonEnrollment extends Model
         'track',
         'cohort',
         'quiz_goal',
+        'quiz_level',
         'day2_question',
         'day0_started_at',
         'day1_completed_at',
@@ -65,6 +66,7 @@ class MarathonEnrollment extends Model
         'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
         'warm_tail_last_day_sent' => 'integer',
+        'quiz_level' => 'integer',
     ];
 
     public function lead(): BelongsTo
@@ -80,6 +82,16 @@ class MarathonEnrollment extends Model
     public function isDevaCohort(): bool
     {
         return $this->cohort === self::COHORT_DEVA;
+    }
+
+    /**
+     * H445 Phase 2 — the `deva` cohort's level-quiz (layered ON TOP OF the
+     * intent-quiz, `quiz_goal` — the August cohort never takes this, there's
+     * nothing to grade for an all-zero audience, see H440 §1a).
+     */
+    public function hasTakenLevelQuiz(): bool
+    {
+        return $this->quiz_level !== null;
     }
 
     /**

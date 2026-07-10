@@ -181,20 +181,59 @@ return [
     // Read via $enrollment->content('day1_message'), never config('marathon.
     // day1_message') directly, once an enrollment might be either cohort.
     'cohorts' => [
-        // H445 §1 delta, NOT yet built — placeholders only, so Phase 1 wiring
-        // is testable without inventing real curriculum content ahead of the
-        // dedicated phases:
-        //   Day 1 → H312 transliterator ("your name in devanagari" task,
-        //     own future handoff — see Uprava/handoffs/H445-*.md §1)
-        //   Day 2 → real mantra/line reading task + H313 level-quiz layered
-        //     on top of the intent-quiz (own future handoff)
-        //   Paid-track voice submissions → curator review workflow (own
-        //     future handoff, not existing anywhere yet)
-        // 'deva' => [
-        //     'day1_message' => '...',
-        //     'day2_message' => '...',
-        //     'day1_quiz' => ['steps' => [...]],
-        //     'day2_quiz' => ['steps' => [...]],
-        // ],
+        'deva' => [
+            // Day 1/2 content itself (name-in-devanagari, mantra-reading) is
+            // NOT yet built — own future phases, see
+            // Uprava/handoffs/H445-*.md §1 (H545 Day 1, H546 Day 2 + curator
+            // voice review). This overlay stays sparse until those land.
+            // 'day1_message' => '...',
+            // 'day2_message' => '...',
+            // 'day1_quiz' => ['steps' => [...]],
+            // 'day2_quiz' => ['steps' => [...]],
+
+            // H445 Phase 2 — level-quiz, layered ON TOP OF the intent-quiz
+            // (quiz_goal), read via MarathonController::levelQuiz(). Content
+            // ported verbatim (RU strings) from H313's item bank
+            // (csl-guides/src/data/level-quiz.json, generated
+            // 09-07-2026 from VisualDCS/DCS frequency data via kosha) —
+            // reused, not reinvented; `correct` is the 0-indexed position of
+            // the source's `answer` string within its own `options` array.
+            // The August `zero` cohort never takes this (H440 §1a — nothing
+            // to grade for an all-zero audience).
+            'level_quiz' => [
+                'steps' => [
+                    [
+                        'text' => 'Какой звук передаёт эта буква деванагари: क',
+                        'opts' => ['ka', 'ta', 'ma', 'sa'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'В какой паре показан краткий гласный и его долгая пара?',
+                        'opts' => ['a / ā', 'k / t', 'm / s', 'ka / ta'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Какое из этого — настоящее санскритское слово (а не набор букв)?',
+                        'opts' => ['एव', 'क्ष्ठौ', 'ऴ्ऱि', 'घ्व्रॗ'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Как अन्य записывается латиницей (IAST)?',
+                        'opts' => ['anya', 'vacas', 'bṛhat', 'durbala'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Какое слово чаще встречается в реальных санскритских текстах: «eva» или «durbala»?',
+                        'opts' => ['eva', 'durbala'],
+                        'correct' => 0,
+                    ],
+                    [
+                        'text' => 'Верно или нет: когда два санскритских слова стоят рядом в предложении, их звуки часто меняются, сливаясь друг с другом (это называется сандхи).',
+                        'opts' => ['Верно', 'Неверно'],
+                        'correct' => 0,
+                    ],
+                ],
+            ],
+        ],
     ],
 ];
