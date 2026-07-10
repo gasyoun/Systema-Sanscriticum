@@ -81,7 +81,7 @@ class LeadResource extends Resource
 
                         Forms\Components\Select::make('status')
                             ->label('Статус')
-                            ->options(Lead::STATUSES)
+                            ->options(Lead::statuses())
                             ->live()
                             ->default('new'),
 
@@ -139,7 +139,7 @@ class LeadResource extends Resource
 
                 Tables\Columns\SelectColumn::make('status')
                     ->label('Статус')
-                    ->options(Lead::STATUSES)
+                    ->options(Lead::statuses())
                     ->selectablePlaceholder(false)
                     ->width('1%')
                     // Workflow-гард: не даём молча откатить финальный статус в «Новый»
@@ -266,7 +266,7 @@ class LeadResource extends Resource
                         true: fn ($query) => $query
                             ->whereNotNull('next_contact_at')
                             ->whereDate('next_contact_at', '<=', today())
-                            ->whereNotIn('status', Lead::FINAL_STATUSES),
+                            ->whereNotIn('status', Lead::finalStatuses()),
                         false: fn ($query) => $query
                             ->where(fn ($q) => $q
                                 ->whereNull('next_contact_at')
@@ -282,7 +282,7 @@ class LeadResource extends Resource
 
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Статус')
-                    ->options(Lead::STATUSES),
+                    ->options(Lead::statuses()),
 
                 Tables\Filters\SelectFilter::make('assigned_to')
                     ->label('Ответственный')
@@ -404,7 +404,7 @@ class LeadResource extends Resource
      */
     protected static function rejectStatusChange(Lead $record, string $newStatus): bool
     {
-        if ($newStatus === 'new' && in_array($record->status, Lead::FINAL_STATUSES, true)) {
+        if (Lead::blocksRollbackToFirstStage($record->status, $newStatus)) {
             Notification::make()
                 ->title('Нельзя вернуть финальный статус в «Новый»')
                 ->body('Сначала смените «Конверсию»/«Отказ» на промежуточный статус.')
@@ -646,7 +646,7 @@ class LeadResource extends Resource
             ->form([
                 Forms\Components\Select::make('status')
                     ->label('Статус')
-                    ->options(Lead::STATUSES)
+                    ->options(Lead::statuses())
                     ->live()
                     ->required(),
                 Forms\Components\Textarea::make('rejection_reason')
@@ -662,8 +662,8 @@ class LeadResource extends Resource
 
                 foreach ($records as $record) {
                     /** @var Lead $record */
-                    // Молчаливый откат финального статуса в «Новый» — пропускаем.
-                    if ($status === 'new' && in_array($record->status, Lead::FINAL_STATUSES, true)) {
+                    // Молчаливый откат финального статуса в первую стадию — пропускаем.
+                    if (Lead::blocksRollbackToFirstStage($record->status, $status)) {
                         $skipped++;
 
                         continue;

@@ -107,8 +107,8 @@ class LeadAudit extends Model
     /** Нормализуем значение поля к строке для показа (статус — человекочитаемо). */
     private function display(string $field, mixed $value): string
     {
-        if ($field === 'status' && is_string($value) && isset(Lead::STATUSES[$value])) {
-            return Lead::STATUSES[$value];
+        if ($field === 'status' && is_string($value) && isset(Lead::statuses()[$value])) {
+            return Lead::statuses()[$value];
         }
 
         return match (true) {

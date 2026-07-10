@@ -13,17 +13,45 @@ class Lead extends Model
     use HasFactory;
     use TracksBlame;
 
-    /** Статусы воронки лида (единый источник для формы/колонки/фильтра). */
-    public const STATUSES = [
-        'new' => 'Новый',
-        'in_work' => 'В работе',
-        'qualified' => 'Квалифицирован',
-        'converted' => 'Конверсия',
-        'rejected' => 'Отказ',
-    ];
+    /**
+     * Стадии воронки лида — данные из lead_stages (единый источник для
+     * формы/колонки/фильтра), не hardcoded константы. См. GC-C1 / H451.
+     *
+     * @return array<string,string> key => label, отсортировано по sort_order
+     */
+    public static function statuses(): array
+    {
+        return LeadStage::query()->ordered()->pluck('label', 'key')->all();
+    }
 
-    /** Финальные статусы воронки — их нельзя молча откатить в «Новый». */
-    public const FINAL_STATUSES = ['converted', 'rejected'];
+    /**
+     * Финальные статусы воронки — их нельзя молча откатить в «Новый».
+     *
+     * @return list<string>
+     */
+    public static function finalStatuses(): array
+    {
+        return LeadStage::query()->where('is_final', true)->pluck('key')->all();
+    }
+
+    /**
+     * Ключ первой стадии по sort_order («Новый» на сегодняшних данных).
+     */
+    public static function firstStageKey(): ?string
+    {
+        return LeadStage::query()->ordered()->value('key');
+    }
+
+    /**
+     * Единый гард смены статуса (используется формой/колонкой в LeadResource
+     * и канбан-доской LeadKanbanBoard): нельзя молча откатить финальную стадию
+     * в первую стадию воронки.
+     */
+    public static function blocksRollbackToFirstStage(string $currentStatus, string $newStatus): bool
+    {
+        return $newStatus === self::firstStageKey()
+            && in_array($currentStatus, self::finalStatuses(), true);
+    }
 
     protected $fillable = [
         // Основные данные
@@ -73,6 +101,18 @@ class Lead extends Model
         'reminded_at' => 'datetime',
     ];
 
+    // Стадия воронки (LeadStage.key ↔ leads.status) — источник канбан-доски.
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(LeadStage::class, 'status', 'key');
+    }
+
+    // Заголовок карточки на канбан-доске: имя, иначе контакт, иначе email.
+    public function getKanbanTitleAttribute(): string
+    {
+        return $this->name ?: ($this->contact ?: ($this->email ?: 'Лид #'.$this->id));
+    }
+
     // Связь с лендингом (чтобы в админке видеть, откуда пришла заявка)
     public function landingPage()
     {
@@ -109,7 +149,7 @@ class Lead extends Model
             // status переводим в «Конверсия» только если он ещё не финальный
             // (менеджер мог вручную поставить «Отказ» — не перетираем).
             $attrs = ['converted_at' => now()];
-            if (! in_array($this->status, self::FINAL_STATUSES, true)) {
+            if (! in_array($this->status, self::finalStatuses(), true)) {
                 $attrs['status'] = 'converted';
             }
             $this->updateQuietly($attrs);
