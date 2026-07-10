@@ -5,10 +5,16 @@
         Кабинет
     </a>
     
-    <a href="{{ route('student.calendar') }}" 
+    <a href="{{ route('student.calendar') }}"
        class="{{ request()->routeIs('student.calendar') ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors">
         <i class="fas fa-calendar-alt mr-3 w-6 text-center text-indigo-300"></i>
         Расписание
+    </a>
+
+    <a href="/exercises/"
+       class="{{ request()->is('exercises*') ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors">
+        <i class="fas fa-gamepad mr-3 w-6 text-center text-indigo-300"></i>
+        Игры-упражнения
     </a>
 
     @if(isset($courses) && $courses->isNotEmpty())
