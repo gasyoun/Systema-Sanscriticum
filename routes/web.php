@@ -16,6 +16,7 @@ use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\PartnerController;
@@ -97,6 +98,12 @@ Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('sh
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
 // типизированных карточек. Блог остаётся на /s — здесь только агрегатор.
 Route::get('/online/materialy', [MaterialsController::class, 'index'])->name('shop.materials');
+
+// «Консультация по онлайн-курсам ОРС» — 3-дневный диагностический марафон,
+// верхний вход воронки (H440, Phase 1: landing + capture). Evergreen —
+// личные дни-0..3 от day0_started_at, НЕ общий календарь потока.
+Route::get('/online/konsultaciya', [MarathonController::class, 'show'])->name('marathon.show');
+Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->name('marathon.register');
 
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
