@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
@@ -35,6 +36,7 @@ class PaymentController extends Controller
             $rules['email'] = 'required|email|max:255';
             $rules['wants_announcements'] = 'nullable|boolean';
             $rules['birth_year'] = 'nullable|integer|min:1900|max:'.now()->format('Y');
+            $rules['signup_source'] = ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)];
         }
 
         $request->validate($rules);
@@ -340,11 +342,14 @@ class PaymentController extends Controller
             ->attachReferrer($user, $request->input('ref') ?: session('ref'));
 
         // A1: источник (UTM/реферер с первого визита) + лид-мэтчинг; год
-        // рождения — необязательное поле формы чекаута.
+        // рождения и «откуда о нас узнали» (H476) — необязательные поля чекаута.
         $attribution = app(AttributionService::class);
         $attribution->applyToNewUser($user);
         if ($request->filled('birth_year')) {
             $attribution->applyBirthYear($user, $request->input('birth_year'));
+        }
+        if ($request->filled('signup_source')) {
+            $attribution->applySignupSource($user, $request->input('signup_source'));
         }
 
         auth()->login($user);

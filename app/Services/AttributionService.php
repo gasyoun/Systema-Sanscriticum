@@ -17,6 +17,22 @@ use App\Models\User;
 class AttributionService
 {
     /**
+     * Белый список самоотчётного «источника прихода» (H476). Ключи хранятся в
+     * users.signup_source; русские подписи живут в partials/signup-source-select.
+     * Дополняет UTM-атрибуцию (H267): сарафан/поиск/«давно подписан» приходят
+     * без меток — их видит только сам студент.
+     */
+    public const SIGNUP_SOURCES = [
+        'telegram',
+        'youtube',
+        'vk',
+        'search',
+        'friend',
+        'article',
+        'other',
+    ];
+
+    /**
      * Вызывается сразу после User::create() во всех guest-registration
      * веток (checkout/deposit/trial/paypal-claim/social-auth). Идемпотентно
      * для нового пользователя: если в сессии ничего нет — просто мэтчит лид.
@@ -66,6 +82,16 @@ class AttributionService
         }
 
         $user->forceFill(['birth_year' => $birthYear])->save();
+    }
+
+    /** Необязательное поле «откуда о нас узнали» — не блокирует регистрацию/оплату. */
+    public function applySignupSource(User $user, mixed $source): void
+    {
+        if (! is_string($source) || ! in_array($source, self::SIGNUP_SOURCES, true)) {
+            return;
+        }
+
+        $user->forceFill(['signup_source' => $source])->save();
     }
 
     /** Последний Lead с этим email — тот же человек, что оставлял заявку на лендинге. */

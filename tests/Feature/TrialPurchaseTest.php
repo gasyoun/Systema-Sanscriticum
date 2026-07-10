@@ -116,6 +116,36 @@ class TrialPurchaseTest extends TestCase
     }
 
     /** @test */
+    public function guest_trial_stores_optional_signup_source_and_rejects_unknown_values(): void
+    {
+        [$course] = $this->courseWithTrial(500);
+
+        Http::fake(['*' => Http::response([
+            'Data' => ['paymentLink' => 'https://pay.tochka/abc', 'paymentLinkId' => 'pl_1'],
+        ], 200)]);
+
+        // H476: самоотчётный источник прихода пишется на нового пользователя.
+        $this->post(route('trial.create', $course->slug), [
+            'surname' => 'Иванов', 'name' => 'Иван', 'email' => 'src@example.test', 'city' => 'Москва',
+            'signup_source' => 'telegram',
+        ])->assertRedirect('https://pay.tochka/abc');
+
+        $this->assertDatabaseHas('users', ['email' => 'src@example.test', 'signup_source' => 'telegram']);
+
+        // Первый post залогинил гостя (auth()->login в resolveUser) — разлогиниваемся,
+        // иначе вторая отправка пойдёт по auth-ветке без guest-валидации.
+        auth()->logout();
+
+        // Значение вне белого списка — ошибка валидации в bag'е trial, аккаунт не создан.
+        $this->post(route('trial.create', $course->slug), [
+            'surname' => 'Петров', 'name' => 'Пётр', 'email' => 'bad@example.test', 'city' => 'Тверь',
+            'signup_source' => 'martian-radio',
+        ])->assertSessionHasErrorsIn('trial', ['signup_source']);
+
+        $this->assertDatabaseMissing('users', ['email' => 'bad@example.test']);
+    }
+
+    /** @test */
     public function trial_unavailable_without_schedule_or_price(): void
     {
         $course = Course::factory()->create(['slug' => 'no-trial', 'trial_price' => null, 'trial_schedule_id' => null]);

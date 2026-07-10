@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Services\AttributionService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StoreTrialRequest extends FormRequest
 {
@@ -30,6 +32,7 @@ final class StoreTrialRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'city' => ['required', 'string', 'max:255'],
+            'signup_source' => ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)],
         ];
     }
 }
