@@ -7,9 +7,13 @@ namespace App\Http\Controllers;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
+use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\Messaging\TelegramDeliveryChannel;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -20,10 +24,13 @@ use Illuminate\View\View;
  * different post-capture destination (the Day-0 quiz result), not
  * LeadController's generic "thank you" redirect.
  *
- * Phases 2-6 (drip engine, Day 1-2 async content delivery, paid-track
- * checkout, live consultation booking, warm-tail) are NOT in this slice —
- * see Uprava/handoffs/H440-*.md and the design doc it links for the full
- * build plan.
+ * Phase 2 (H464): attaches a magnet_token/magnet_channel='telegram' to the
+ * Lead at capture time (same generic deep-link mechanism LeadController
+ * uses for lead-magnet files — reused as-is, not landing-magnet-specific)
+ * so `marathon:deliver-due` (H464) can find enrollees by `telegram_chat_id`
+ * once they start the bot. Phases 3b/4/5/6 (interactive tap-choice UI,
+ * paid-track checkout, live consultation booking, warm-tail) are NOT in
+ * this slice — see Uprava/handoffs/H440-*.md for the full build plan.
  */
 class MarathonController extends Controller
 {
@@ -101,7 +108,11 @@ class MarathonController extends Controller
         if ($existingLead) {
             $enrollment = MarathonEnrollment::where('lead_id', $existingLead->id)->first();
             if ($enrollment) {
-                return redirect()->route('marathon.show')->with('marathon_result', $enrollment->quiz_goal);
+                $this->attachTelegramMagnet($existingLead);
+
+                return redirect()->route('marathon.show')
+                    ->with('marathon_result', $enrollment->quiz_goal)
+                    ->with('marathon_telegram_link', $this->deepLink($existingLead));
             }
             $lead = $existingLead;
         } else {
@@ -115,6 +126,55 @@ class MarathonController extends Controller
             'day0_started_at' => now(),
         ]);
 
-        return redirect()->route('marathon.show')->with('marathon_result', $enrollment->quiz_goal);
+        $this->attachTelegramMagnet($lead);
+
+        return redirect()->route('marathon.show')
+            ->with('marathon_result', $enrollment->quiz_goal)
+            ->with('marathon_telegram_link', $this->deepLink($lead));
+    }
+
+    /**
+     * Attaches a magnet_token/magnet_channel='telegram' to the lead if it
+     * doesn't already have one — the same generic mechanism LeadController
+     * uses for lead-magnet files (Lead::magnet_token is not landing-magnet-
+     * specific). Once the lead starts the bot with this token, the existing
+     * unmodified ProcessTelegramMagnetUpdate webhook path sets
+     * telegram_chat_id; marathon:deliver-due (H464) then finds them by it.
+     */
+    private function attachTelegramMagnet(Lead $lead): void
+    {
+        if ($lead->magnet_token) {
+            return;
+        }
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            try {
+                $lead->update([
+                    'magnet_token' => Str::random(12),
+                    'magnet_channel' => 'telegram',
+                ]);
+
+                return;
+            } catch (QueryException $e) {
+                if ($e->getCode() !== '23000') {
+                    throw $e;
+                }
+            }
+        }
+
+        throw new \RuntimeException("Не удалось сгенерировать уникальный magnet_token для Lead #{$lead->id}");
+    }
+
+    private function deepLink(Lead $lead): ?string
+    {
+        if (! $lead->magnet_token) {
+            return null;
+        }
+
+        $channel = app(DeliveryChannelManager::class)->get('telegram');
+
+        return $channel instanceof TelegramDeliveryChannel
+            ? $channel->buildDeepLink($lead->magnet_token)
+            : null;
     }
 }

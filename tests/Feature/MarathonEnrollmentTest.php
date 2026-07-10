@@ -7,12 +7,22 @@ namespace Tests\Feature;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
+use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MarathonEnrollmentTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        MarketingSetting::create([
+            'tg_bot_username' => 'samskrte_bot',
+            'tg_bot_token' => 'fake-tg',
+        ]);
+    }
 
     private function landing(): LandingPage
     {
@@ -103,6 +113,45 @@ class MarathonEnrollmentTest extends TestCase
         // 429 the second call instead of reaching validation.
         $this->post(route('marathon.register'), ['contact' => 'x@example.com', 'track' => 'bogus', 'quiz_goal' => 'grammar'])
             ->assertSessionHasErrors('track');
+    }
+
+    public function test_registration_attaches_telegram_magnet_token_and_deep_link(): void
+    {
+        $this->landing();
+
+        $response = $this->post(route('marathon.register'), [
+            'contact' => 'telegram-link@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ]);
+
+        $lead = Lead::where('contact', 'telegram-link@example.com')->firstOrFail();
+        $this->assertNotNull($lead->magnet_token);
+        $this->assertSame('telegram', $lead->magnet_channel);
+
+        $response->assertSessionHas('marathon_telegram_link', fn ($link) => str_contains($link, $lead->magnet_token)
+            && str_contains($link, 't.me/samskrte_bot'));
+    }
+
+    public function test_duplicate_registration_reuses_existing_magnet_token(): void
+    {
+        $landing = $this->landing();
+        $lead = Lead::factory()->create([
+            'contact' => 'repeat-token@example.com',
+            'landing_page_id' => $landing->id,
+            'magnet_token' => 'EXISTINGTOKEN',
+            'magnet_channel' => 'telegram',
+        ]);
+        MarathonEnrollment::factory()->create(['lead_id' => $lead->id]);
+
+        $this->post(route('marathon.register'), [
+            'contact' => 'repeat-token@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ]);
+
+        $lead->refresh();
+        $this->assertSame('EXISTINGTOKEN', $lead->magnet_token);
     }
 
     public function test_current_day_computed_from_registration_moment(): void
