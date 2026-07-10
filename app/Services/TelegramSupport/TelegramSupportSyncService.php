@@ -65,6 +65,13 @@ class TelegramSupportSyncService
 
             return $this->finish($account, $result, true, $messages);
         } catch (Throwable $e) {
+            // Мёртвый IPC-канал — отдельная ветка: убить зависший демон и почистить
+            // сокет, но НЕ ретраить в этом же процессе (он уже держит мёртвый IPC
+            // в памяти — повтор бесполезен). Восстановится следующий свежий запуск.
+            if ($this->isMadelineIpcDead($e)) {
+                return $this->recoverFromDeadIpc($account, $e);
+            }
+
             return $this->fail($account, $e);
         }
     }
@@ -77,29 +84,44 @@ class TelegramSupportSyncService
         try {
             return $this->fetchIncrementalMadelineMessages($account, $clientClass);
         } catch (Throwable $e) {
-            if ($this->isMadelineAuthRestart($e)) {
-                Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
-
-                return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
+            // Только AUTH_RESTART чиним повтором в этом же процессе (свежий new API()
+            // переавторизуется). Мёртвый IPC сюда НЕ попадает — он обрабатывается на
+            // верхнем уровне sync(), т.к. in-process retry против него бесполезен.
+            if (! $this->isMadelineAuthRestart($e)) {
+                throw $e;
             }
 
-            // Мёртвый IPC-канал: фоновый демон MadelineProto умер, а его unix-сокет
-            // остался, поэтому каждый запуск бил бы в несуществующий контекст и сыпал
-            // "Did the context die?" раз в минуту (см. LocksMadelineSession). Чистим
-            // осиротевший сокет — авто-версия ручного `pkill madeline + rm *.ipc` —
-            // и пробуем ещё раз: следующий start() поднимет свежий демон.
-            if ($this->isMadelineIpcDead($e)) {
-                Log::warning('Telegram support sync: MadelineProto IPC channel dead — clearing stale socket and retrying', [
-                    'error' => $e->getMessage(),
-                ]);
+            Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
 
-                $this->clearStaleMadelineIpc();
-
-                return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
-            }
-
-            throw $e;
+            return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
         }
+    }
+
+    /**
+     * Восстановление после «мёртвого» IPC-канала: убить зависший демон сессии и
+     * снести осиротевший сокет (полная авто-версия ручного `pkill madeline + rm
+     * *.ipc`), затем аккуратно завершить запуск — следующий свежий процесс поднимет
+     * демон заново. НЕ ретраим здесь: текущий процесс уже держит мёртвый IPC.
+     *
+     * @return array<string, mixed>
+     */
+    private function recoverFromDeadIpc(TelegramSupportAccount $account, Throwable $e): array
+    {
+        $killed = $this->killStaleMadelineDaemon();
+        $removed = $this->clearStaleMadelineIpc();
+
+        Log::warning('Telegram support sync: dead MadelineProto IPC — reset daemon, will reconnect next run', [
+            'killed_processes' => $killed,
+            'removed_files' => $removed,
+            'error' => $e->getMessage(),
+        ]);
+
+        $account->forceFill([
+            'last_synced_at' => now(),
+            'last_sync_error' => 'IPC channel dead; daemon reset, reconnecting next run',
+        ])->save();
+
+        return ['status' => 'session_recovering', 'synced' => 0];
     }
 
     private function isMadelineAuthRestart(Throwable $e): bool
@@ -135,14 +157,16 @@ class TelegramSupportSyncService
      * После этого следующий new API()->start() поднимет свежий демон. Безопасно
      * под session-локом команды (см. LocksMadelineSession) — конкурентного демона
      * в этот момент нет. Аналог ручного `rm <session>/*.ipc` из ранбука прода.
+     *
+     * @return array<int, string> реально удалённые файлы (для логов диагностики)
      */
-    protected function clearStaleMadelineIpc(): void
+    protected function clearStaleMadelineIpc(): array
     {
         $session = MadelineClientFactory::sessionPath();
 
         // v8: сессия — это КАТАЛОГ (X.madeline) с IPC-артефактами внутри.
         if (! is_dir($session)) {
-            return;
+            return [];
         }
 
         $targets = [];
@@ -153,11 +177,49 @@ class TelegramSupportSyncService
             $targets[] = $path;
         }
 
+        $removed = [];
         foreach (array_unique($targets) as $path) {
-            if (is_file($path)) {
-                @unlink($path);
+            if (is_file($path) && @unlink($path)) {
+                $removed[] = basename($path);
             }
         }
+
+        return $removed;
+    }
+
+    /**
+     * Убивает зависший фоновый демон MadelineProto (SIGTERM), исключая собственный
+     * процесс и родителя. Только POSIX; если exec/posix недоступны (или отключены в
+     * disable_functions) — тихий no-op (тогда работает лишь чистка сокета). Аналог
+     * ручного `pkill -f madeline` из ранбука прод-окружения. Безопасно под
+     * session-локом: у аккаунта один общий демон, конкурентной команды сейчас нет.
+     *
+     * @return int сколько процессов получили сигнал (для логов диагностики)
+     */
+    protected function killStaleMadelineDaemon(): int
+    {
+        if (PHP_OS_FAMILY === 'Windows' || ! function_exists('exec') || ! function_exists('posix_kill')) {
+            return 0;
+        }
+
+        $self = function_exists('getmypid') ? (int) getmypid() : 0;
+        $parent = function_exists('posix_getppid') ? posix_getppid() : 0;
+
+        $lines = [];
+        @exec('pgrep -f madeline 2>/dev/null', $lines);
+
+        $killed = 0;
+        foreach ($lines as $line) {
+            $pid = (int) trim($line);
+            if ($pid <= 0 || $pid === $self || $pid === $parent) {
+                continue;
+            }
+            if (@posix_kill($pid, 15)) { // SIGTERM
+                $killed++;
+            }
+        }
+
+        return $killed;
     }
 
     /**
