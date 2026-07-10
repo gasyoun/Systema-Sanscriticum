@@ -117,4 +117,25 @@ class MarathonTapChoiceTest extends TestCase
         $this->post(route('marathon.day.complete', ['day' => 1, 'token' => 'nonexistent']))
             ->assertNotFound();
     }
+
+    /** H445 Phase 3 — the `deva` cohort gets devanagari-recognition Day 1 content. */
+    public function test_deva_cohort_day1_quiz_is_devanagari_content(): void
+    {
+        $lead = Lead::factory()->create(['magnet_token' => Str::random(12)]);
+        MarathonEnrollment::factory()->deva()->create(['lead_id' => $lead->id]);
+
+        $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
+            ->assertOk()
+            ->assertSee('Деванагари читается');
+    }
+
+    /** The `zero` cohort must keep its original cyrillic-only content unchanged. */
+    public function test_zero_cohort_day1_quiz_is_unchanged(): void
+    {
+        [$lead] = $this->enrollment();
+
+        $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
+            ->assertOk()
+            ->assertDontSee('Деванагари читается');
+    }
 }

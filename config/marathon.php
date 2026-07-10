@@ -182,13 +182,56 @@ return [
     // day1_message') directly, once an enrollment might be either cohort.
     'cohorts' => [
         'deva' => [
-            // Day 1/2 content itself (name-in-devanagari, mantra-reading) is
-            // NOT yet built — own future phases, see
-            // Uprava/handoffs/H445-*.md §1 (H545 Day 1, H546 Day 2 + curator
-            // voice review). This overlay stays sparse until those land.
-            // 'day1_message' => '...',
+            // H445 Phase 3 — Day 1: name-in-devanagari, embedding H312's
+            // transliterator tool rather than rebuilding it (csl-guides
+            // `/tools/name-in-devanagari`, sanskrit-util transcoder). No
+            // Systema/RU embed of the tool exists yet (ROADMAP_LEAD_MAGNETS_
+            // 2026.md §3 — H312 shipped EN-only, RU-storefront wiring still
+            // gated on the LM fleet's own @DECIDE items) — link straight to
+            // the live EN page; re-point this string if/when an RU embed
+            // lands. `{link}` interpolated by marathon:deliver-due exactly
+            // like the `zero` cohort's day1_message.
+            'day1_message' => 'День 1. Ваше имя на деванагари 🕉️'."\n\n"
+                .'Санскритские тексты записаны деванагари — попробуйте прямо сейчас: '
+                .'введите своё имя и увидите, как оно звучит на деванагари, IAST и SLP1.'."\n\n"
+                .'https://sanskrit-lexicon.github.io/csl-guides/tools/name-in-devanagari'."\n\n"
+                .'Получилась красивая картинка — поделитесь в @samskrte, будет приятно 🙂'."\n\n"
+                .'{link}',
+
+            // Recognition tap-choice content for the Day 1 page (same shape
+            // as the `zero` cohort's day1_quiz, resources/views/marathon/
+            // day1.blade.php — reused unchanged, only the content differs:
+            // basic devanagari letter recognition instead of cyrillic
+            // root-family recognition). Distinct from the level-quiz
+            // (H544, graded once, layered before Day 1) — this is
+            // ungraded, explanation-per-step, matching H440's day1_quiz.
+            'day1_quiz' => [
+                'steps' => [
+                    [
+                        'text' => 'Деванагари читается...',
+                        'opts' => ['Справа налево', 'Слева направо', 'Сверху вниз'],
+                        'correct' => 1,
+                        'explain' => 'Верно! Деванагари читается слева направо, как кириллица и латиница — привычное направление, разница только в самих буквах.',
+                    ],
+                    [
+                        'text' => 'Буквы деванагари обычно связаны сверху общей чертой. Эта черта — это...',
+                        'opts' => ['Разделитель слов', 'Часть каждой буквы (как перекладина)', 'Знак ударения'],
+                        'correct' => 1,
+                        'explain' => 'Точно! Горизонтальная черта (широ-рекха) — часть написания почти каждой буквы, а не разделитель. Слова разделяются пробелами, как у нас.',
+                    ],
+                    [
+                        'text' => 'В деванагари согласный без явного гласного знака по умолчанию читается с гласным...',
+                        'opts' => ['a', 'i', 'u'],
+                        'correct' => 0,
+                        'explain' => 'Да! Каждый согласный «по умолчанию» несёт краткое a — поэтому क читается «ka», а не голое «k». Другие гласные показываются значками вокруг буквы.',
+                    ],
+                ],
+            ],
+
+            // H445 Phase 4 (H546) — Day-2 mantra reading + curator voice
+            // review, blocked on one MG @DECIDE (which mantra to use). Own
+            // future phase.
             // 'day2_message' => '...',
-            // 'day1_quiz' => ['steps' => [...]],
             // 'day2_quiz' => ['steps' => [...]],
 
             // H445 Phase 2 — level-quiz, layered ON TOP OF the intent-quiz
