@@ -40,7 +40,7 @@
                     <div class="wq-main">
                         <div class="wq-name">{{ $lead->name ?: ($lead->contact ?: $lead->email ?: 'Лид #'.$lead->id) }}</div>
                         <div class="wq-meta">
-                            {{ \App\Models\Lead::STATUSES[$lead->status] ?? $lead->status }}
+                            {{ \App\Models\Lead::statuses()[$lead->status] ?? $lead->status }}
                             @if($lead->next_contact_at) · контакт {{ \Illuminate\Support\Carbon::parse($lead->next_contact_at)->format('d.m.Y') }} @endif
                         </div>
                     </div>
