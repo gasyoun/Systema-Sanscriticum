@@ -105,7 +105,7 @@ What's genuinely missing, and what this roadmap adds:
 
 Format: **ID · quarter · title** — effort (S/M/L); what it reuses; agent steps; success metric.
 🔒 = deploy-gated (waits on the main roadmap's X0 gate — migrations need `php artisan migrate`,
-currently blocked on FTP-only hosting, see `docs/ROADMAP_2026_2027.md` §5 X0).
+currently blocked on prod credential access — not hosting; the "FTP-only" framing was refuted 10-07-2026 (H478), see `docs/ROADMAP_2026_2027.md` §5 X0).
 
 ### Wave 1 · Q3 2026 — Foundation: claim routing + VK public-comment ingestion pilot
 
@@ -254,7 +254,7 @@ Dependency chain: **S2 (SUP roadmap) → CAI3 → CAI4 → CAI5/CAI6 → CAI7**;
 
 | Risk / dependency | Affects | Mitigation |
 |---|---|---|
-| X0 deploy gate (FTP-only hosting, migrations blocked) | CAI1/CAI2 migrations | Additive nullable migrations, same fallback-SQL pattern as the main roadmap's X0; code ships behind flags and doesn't wait for the human deploy step |
+| X0 deploy gate (no prod credentials for MG/agents — *not* FTP-only hosting, refuted H478) | CAI1/CAI2 migrations | Additive nullable migrations, same fallback-SQL pattern as the main roadmap's X0; code ships behind flags and doesn't wait for the human deploy step |
 | VK Callback event (`wall_reply_new`) not yet enabled on the community | CAI2 | Human step in VK community admin settings — `@DO`, cheap, do first |
 | VK posting scope unverified (`wall.post` needs community-admin token, may differ from the existing bot token) | CAI7 | Verify scope before building; don't assume the existing `VK_BOT_TOKEN` covers posting |
 | Telegram bot not yet added as channel admin | CAI7 | Human step, cheap — `@DO` alongside VK |
