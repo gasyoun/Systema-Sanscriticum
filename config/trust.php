@@ -17,4 +17,15 @@ return [
     'graduates_count' => env('TRUST_GRADUATES_COUNT') !== null
         ? (int) env('TRUST_GRADUATES_COUNT')
         : null,
+
+    // Издано книг (Bibliotheca Sanscritica) — цифра из
+    // custdev/SELLING_LAYOUT_COMPARISON_2026.md (H431), 20 книг / 3834 стр.
+    'books_published' => env('TRUST_BOOKS_PUBLISHED') !== null
+        ? (int) env('TRUST_BOOKS_PUBLISHED')
+        : 20,
+
+    // Собрано краудфандингом, ₽. null = не показывать плитку.
+    'crowdfunding_raised_rub' => env('TRUST_CROWDFUNDING_RAISED_RUB') !== null
+        ? (int) env('TRUST_CROWDFUNDING_RAISED_RUB')
+        : 1_270_000,
 ];

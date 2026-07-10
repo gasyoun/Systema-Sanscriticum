@@ -122,17 +122,26 @@
 
     <div class="container mx-auto px-4 relative z-10 max-w-7xl pt-10 md:pt-14">
         
-        <div class="text-center mb-16">
+        <div class="text-center mb-12">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">
-        Общество ревнителей санскрита
+        Санскрит с нуля — шаг за шагом, с преподавателем
     </h1>
-    
+
     <div class="w-24 h-1 bg-[#E85C24] mx-auto mb-6 rounded-full"></div>
-    
-    <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-10">
-        Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
+
+    <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
+        От первой буквы деванагари до самостоятельного чтения текстов —
+        в маленьких группах, с домашними заданиями и записями всех занятий.
     </p>
-    
+</div>
+
+        @include('partials.trajectory-block', ['steps' => $trajectorySteps ?? []])
+
+        @include('partials.why-us-block')
+
+        @include('partials.proof-block', ['testimonials' => $featuredTestimonials ?? null])
+
+        <div class="text-center mb-16">
     <h2 class="text-3xl md:text-4xl font-bold">
         <span class="text-[#E85C24]">Наши курсы:</span>
     </h2>

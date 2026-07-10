@@ -37,8 +37,10 @@ use App\Models\LandingPage;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
+use App\Models\Testimonial;
 use App\Models\User;
 use App\Support\RoleGate;
+use App\Support\TrajectoryPaths;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -84,7 +86,15 @@ Route::get('/', function () {
         ->latest('lesson_date')
         ->get();
 
-    return view('main', compact('landings', 'openLessons'));
+    // Трёхшаговая траектория обучения в hero (H431, Phase 1 п.1) — резолвится
+    // в реальные курсы по паттерну title, см. App\Support\TrajectoryPaths.
+    $trajectorySteps = TrajectoryPaths::resolve();
+
+    // Отзывы для proof-блока (H431, Phase 1 п.3) — та же общесайтовая полоса
+    // избранных отзывов, что и в ShopController::index.
+    $featuredTestimonials = Testimonial::featured()->latest('id')->limit(6)->get();
+
+    return view('main', compact('landings', 'openLessons', 'trajectorySteps', 'featuredTestimonials'));
 });
 
 // Витрина магазина курсов
