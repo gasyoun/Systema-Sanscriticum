@@ -384,7 +384,7 @@
                                     @endphp
                                     @if($isTrialSession && ! empty($showTrialCta))
                                         <button type="button"
-                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ (float) $course->trial_price }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ (float) $course->trial_price }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
                                                 class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-xs font-bold transition-all whitespace-nowrap">
                                             <i class="fas fa-graduation-cap text-[11px]"></i>
                                             Купить пробное
@@ -495,7 +495,7 @@
                         </p>
                     </div>
                     <button type="button"
-                            onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ $trialAmount }}, date: @js($course->trialSchedule?->start?->translatedFormat('d F, H:i')) } }))"
+                            onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ $trialAmount }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($course->trialSchedule?->start?->translatedFormat('d F, H:i')) } }))"
                             class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
                         <i class="fas fa-graduation-cap mr-2 text-xs"></i>
                         Купить пробное

@@ -110,9 +110,14 @@ final class TrialController extends Controller
 
         $existing = User::where('email', User::normalizeEmail($request->input('email')))->first();
         if ($existing) {
-            throw ValidationException::withMessages([
+            // Тот же bag, что у StoreTrialRequest — иначе модалка на витрине не
+            // распознает ошибку и страница «тихо перезагрузится» без сообщения.
+            $exception = ValidationException::withMessages([
                 'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите пробное оттуда.',
             ]);
+            $exception->errorBag = 'trial';
+
+            throw $exception;
         }
 
         // Склейка ФИО+город прямо в name: «Фамилия Имя, Город» — как на чекауте.
