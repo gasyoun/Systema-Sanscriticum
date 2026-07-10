@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Генератор сортировок · Systema Sanscriticum</title>
+<link rel="stylesheet" href="../engine.css">
+<style>
+  :root {
+    --pg: #f3ecdb; --pnl: #faf5e8; --ink: #2a2118; --soft: #6b5d47;
+    --line: #d9cba8; --accent: #a8451f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --pg:#1c1712; --pnl:#26201a; --ink:#efe6d4; --soft:#b3a488; --line:#423628; --accent:#e07a4e; }
+  }
+  :root[data-theme="dark"]  { --pg:#1c1712; --pnl:#26201a; --ink:#efe6d4; --soft:#b3a488; --line:#423628; --accent:#e07a4e; }
+  :root[data-theme="light"] { --pg:#f3ecdb; --pnl:#faf5e8; --ink:#2a2118; --soft:#6b5d47; --line:#d9cba8; --accent:#a8451f; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--pg); color: var(--ink);
+    font-family: "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif; line-height: 1.5;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 26px 20px 70px; }
+  .eyebrow { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0 0 6px; }
+  h1 { font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600; font-size: clamp(24px,4vw,36px); margin: 0 0 6px; text-wrap: balance; }
+  .lead { color: var(--soft); margin: 0 0 22px; max-width: 66ch; }
+
+  .layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 26px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--pnl); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(60,45,20,.1), 0 6px 18px rgba(60,45,20,.08); }
+  .panel h2 { font-family: "Iowan Old Style",Palatino,Georgia,serif; font-size: 17px; margin: 0 0 14px; }
+  label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--soft); margin: 0 0 5px; }
+  input[type=text], input[type=number], textarea {
+    width: 100%; font: inherit; color: var(--ink); background: var(--pg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 14px;
+  }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  textarea { min-height: 96px; resize: vertical; font-family: "JetBrains Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace; font-size: 13px; line-height: 1.5; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .group-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 0 0 14px; background: var(--pg); }
+  .group-card .ghead { display: flex; align-items: center; justify-content: space-between; margin: 0 0 10px; }
+  .group-card .ghead b { font-size: 13px; }
+  .hint-note { font-size: 12px; color: var(--soft); margin: -8px 0 12px; }
+
+  .btn { font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: var(--pnl); color: var(--ink); padding: 9px 15px; border-radius: 999px; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.small { padding: 5px 11px; font-size: 12.5px; }
+  .btn.danger { color: #b23b2e; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+
+  .preview-head { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+  .preview-head h2 { margin: 0; }
+  .status { font-size: 13px; color: var(--soft); min-height: 1.2em; margin-top: 10px; }
+  .status.err { color: #b23b2e; }
+  .status.ok { color: #3f7d3f; }
+  #preview { background: var(--pg); border: 1px dashed var(--line); border-radius: 10px; padding: 16px; min-height: 120px; }
+  details.help { margin: 14px 0 0; font-size: 13px; color: var(--soft); }
+  details.help summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details.help code { background: var(--pg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">Systema Sanscriticum · авторский инструмент</p>
+  <h1>Генератор сортировок</h1>
+  <p class="lead">Опишите группы и элементы — получите готовое упражнение «перетащи в нужную группу». Живой предпросмотр, экспорт в автономный HTML для встраивания или копирование конфигурации в JSON. Всё работает офлайн, ничего не грузится извне.</p>
+
+  <div class="layout">
+    <!-- ─── EDITOR ─── -->
+    <div class="panel">
+      <h2>Настройки</h2>
+      <label for="f-task">Инструкция (задание)</label>
+      <input id="f-task" type="text" value="Распределите слова по группам.">
+      <div class="row2">
+        <div>
+          <label for="f-feedback">Текст при верном решении</label>
+          <input id="f-feedback" type="text" value="Задание выполнено верно.">
+        </div>
+        <div>
+          <label for="f-perround">Элементов из группы за раунд</label>
+          <input id="f-perround" type="number" min="0" step="1" value="0" placeholder="0 = все">
+        </div>
+      </div>
+
+      <div id="groups"></div>
+      <button class="btn small" id="add-group" type="button">+ Добавить группу</button>
+
+      <details class="help">
+        <summary>Формат элементов</summary>
+        <p>Каждый элемент — с новой строки. Подсказка (транслитерация, перевод) — после вертикальной черты:</p>
+        <p><code>अजः | ajaḥ · козёл</code><br><code>गजः | gajaḥ · слон</code></p>
+        <p>Черту можно опустить — тогда карточка будет без подсказки.</p>
+      </details>
+
+      <div class="actions">
+        <button class="btn primary" id="build" type="button">Собрать и показать</button>
+        <button class="btn" id="load-example" type="button">Пример</button>
+      </div>
+    </div>
+
+    <!-- ─── PREVIEW / EXPORT ─── -->
+    <div class="panel">
+      <div class="preview-head"><h2>Предпросмотр</h2></div>
+      <div id="preview"><p style="color:var(--soft);margin:0">Заполните группы и нажмите «Собрать и показать».</p></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn primary" id="download" type="button" disabled>Скачать HTML</button>
+        <button class="btn" id="copy-json" type="button" disabled>Копировать JSON</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../engine.js"></script>
+<script>
+(function () {
+  "use strict";
+  var groupsEl = document.getElementById("groups");
+  var statusEl = document.getElementById("status");
+  var previewEl = document.getElementById("preview");
+  var dlBtn = document.getElementById("download");
+  var jsonBtn = document.getElementById("copy-json");
+  var lastConfig = null;
+
+  function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+  function groupBlock(data) {
+    data = data || {};
+    var wrap = document.createElement("div");
+    wrap.className = "group-card";
+    wrap.innerHTML =
+      '<div class="ghead"><b class="gname">Группа</b>' +
+      '<button class="btn small danger remove" type="button">Удалить</button></div>' +
+      '<div class="row2">' +
+        '<div><label>Название группы</label><input type="text" class="g-label" value="' + esc(data.label||"") + '"></div>' +
+        '<div><label>Подзаголовок (необязательно)</label><input type="text" class="g-sub" value="' + esc(data.sub||"") + '"></div>' +
+      '</div>' +
+      '<label>Элементы (по одному в строке)</label>' +
+      '<textarea class="g-items" placeholder="देवः | devaḥ · бог">' + esc(data.itemsText||"") + '</textarea>';
+    wrap.querySelector(".remove").addEventListener("click", function () {
+      wrap.remove(); renumber();
+    });
+    groupsEl.appendChild(wrap);
+    renumber();
+    return wrap;
+  }
+  function renumber() {
+    [].forEach.call(groupsEl.querySelectorAll(".group-card"), function (g, i) {
+      g.querySelector(".gname").textContent = "Группа " + (i + 1);
+    });
+  }
+
+  function parseItems(text) {
+    return text.split("\n").map(function (line) {
+      line = line.trim();
+      if (!line) return null;
+      var parts = line.split("|");
+      var t = parts[0].trim();
+      var h = parts.slice(1).join("|").trim();
+      if (!t) return null;
+      return h ? { text: t, hint: h } : { text: t };
+    }).filter(Boolean);
+  }
+
+  function collect() {
+    var cfg = {
+      task: document.getElementById("f-task").value.trim(),
+      feedback: document.getElementById("f-feedback").value.trim() || "Задание выполнено верно.",
+      groups: []
+    };
+    var pr = parseInt(document.getElementById("f-perround").value, 10);
+    if (pr > 0) cfg.perRound = pr;
+    [].forEach.call(groupsEl.querySelectorAll(".group-card"), function (g) {
+      var label = g.querySelector(".g-label").value.trim();
+      var sub = g.querySelector(".g-sub").value.trim();
+      var items = parseItems(g.querySelector(".g-items").value);
+      if (label || items.length) {
+        var grp = { label: label || "Без названия", items: items };
+        if (sub) grp.sub = sub;
+        cfg.groups.push(grp);
+      }
+    });
+    return cfg;
+  }
+
+  function validate(cfg) {
+    var real = cfg.groups.filter(function (g) { return g.items.length; });
+    if (real.length < 2) return "Нужны минимум две группы, в каждой хотя бы один элемент.";
+    return null;
+  }
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || "";
+    statusEl.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function build() {
+    var cfg = collect();
+    var err = validate(cfg);
+    if (err) { setStatus(err, "err"); dlBtn.disabled = jsonBtn.disabled = true; return; }
+    lastConfig = cfg;
+    previewEl.innerHTML = "";
+    var mountEl = document.createElement("div");
+    previewEl.appendChild(mountEl);
+    SortExercise.mount(mountEl, cfg);
+    dlBtn.disabled = jsonBtn.disabled = false;
+    var n = cfg.groups.reduce(function (s, g) { return s + g.items.length; }, 0);
+    setStatus("Готово: " + cfg.groups.length + " групп, " + n + " элементов.", "ok");
+  }
+
+  // ---- export a self-contained HTML drill ----
+  function exportHtml(css, js) {
+    var cfg = lastConfig;
+    var title = (cfg.task || "Сортировка").slice(0, 60);
+    return '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="utf-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+      '<title>' + esc(title) + '</title>\n<style>\n' + css + '\n' +
+      'body{margin:0;background:#f3ecdb}@media(prefers-color-scheme:dark){body{background:#1c1712}}' +
+      ':root[data-theme="dark"] body{background:#1c1712}:root[data-theme="light"] body{background:#f3ecdb}' +
+      '.page{max-width:1000px;margin:0 auto;padding:28px 20px 60px}\n</style>\n</head>\n<body>\n' +
+      '<div class="page"><div id="app"></div></div>\n<script>\n' + js + '\n' +
+      'SortExercise.mount(document.getElementById("app"), ' +
+      JSON.stringify(cfg, null, 2) + ');\n' + '<\/script>\n</body>\n</html>\n';
+  }
+
+  function download() {
+    if (!lastConfig) return;
+    setStatus("Собираю файл…");
+    Promise.all([
+      fetch("../engine.css").then(function (r) { return r.text(); }),
+      fetch("../engine.js").then(function (r) { return r.text(); })
+    ]).then(function (parts) {
+      var html = exportHtml(parts[0], parts[1]);
+      var blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "sort-drill.html";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      setStatus("Файл скачан — автономный HTML, готов к встраиванию.", "ok");
+    }).catch(function () {
+      setStatus("Не удалось прочитать engine.css / engine.js (нужен http-доступ к папке).", "err");
+    });
+  }
+
+  function copyJson() {
+    if (!lastConfig) return;
+    var text = JSON.stringify(lastConfig, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { setStatus("JSON скопирован в буфер обмена.", "ok"); },
+        function () { setStatus("Копирование недоступно — JSON выведен в консоль.", "err"); console.log(text); }
+      );
+    } else { console.log(text); setStatus("JSON выведен в консоль (F12).", "ok"); }
+  }
+
+  document.getElementById("add-group").addEventListener("click", function () { groupBlock(); });
+  document.getElementById("build").addEventListener("click", build);
+  dlBtn.addEventListener("click", download);
+  jsonBtn.addEventListener("click", copyJson);
+
+  document.getElementById("load-example").addEventListener("click", function () {
+    groupsEl.innerHTML = "";
+    document.getElementById("f-task").value = "Распределите слова по грамматическим родам.";
+    document.getElementById("f-feedback").value = "Задание выполнено верно.";
+    document.getElementById("f-perround").value = "0";
+    groupBlock({ label: "Мужской род", sub: "masculine",
+      itemsText: "अजः | ajaḥ · козёл\nगजः | gajaḥ · слон\nनरः | naraḥ · человек" });
+    groupBlock({ label: "Женский род", sub: "feminine",
+      itemsText: "बाला | bālā · девочка\nमाला | mālā · гирлянда\nनदी | nadī · река" });
+    groupBlock({ label: "Средний род", sub: "neuter",
+      itemsText: "फलम् | phalam · плод\nजलम् | jalam · вода\nवनम् | vanam · лес" });
+    build();
+  });
+
+  // start with two empty groups
+  groupBlock(); groupBlock();
+})();
+</script>
+</body>
+</html>
