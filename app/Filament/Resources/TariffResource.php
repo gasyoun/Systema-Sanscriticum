@@ -42,7 +42,11 @@ class TariffResource extends Resource
                             ->label('Курс')
                             ->searchable()
                             ->preload()
-                            ->helperText('К какому курсу относится этот тариф (оставьте пустым, если это пакет из нескольких курсов)'),
+                            // Диапазонный bundle (start_block задан) обязан быть привязан
+                            // к одному курсу — accessKey/materializer/скоуп доступа
+                            // работают в рамках курса.
+                            ->required(fn (Forms\Get $get) => $get('type') === 'bundle' && filled($get('start_block')))
+                            ->helperText('К какому курсу относится этот тариф (оставьте пустым, если это пакет из нескольких курсов). Для пакета-диапазона блоков курс обязателен.'),
 
                         Forms\Components\TextInput::make('title')
                             ->label('Название тарифа')
@@ -79,6 +83,27 @@ class TariffResource extends Resource
                             ->placeholder('Весь блок целиком')
                             ->visible(fn (Forms\Get $get) => $get('type') === 'block')
                             ->helperText('Оставьте пустым для тарифа на ВЕСЬ блок. Выберите половину, чтобы продавать часть блока — тогда уроки этой половины должны быть размечены тем же номером (поле «Половина блока» у уроков). Купивший целый блок получает обе половины; уплаченное за половину засчитывается при докупке целого блока.'),
+
+                        // Bundle-тариф на ДИАПАЗОН блоков одного курса: открывает
+                        // блоки start..end одним платежом (доступ дорисует
+                        // BlockAccessMaterializer). Оставьте пустыми для пакета из
+                        // нескольких курсов (тогда bundle открывает весь курс, как full).
+                        Forms\Components\TextInput::make('start_block')
+                            ->label('Первый блок диапазона')
+                            ->numeric()
+                            ->minValue(1)
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'bundle')
+                            ->required(fn (Forms\Get $get) => $get('type') === 'bundle' && filled($get('end_block')))
+                            ->helperText('Номер первого блока пакета (например 2). Пусто = пакет из нескольких курсов, а не диапазон блоков.'),
+
+                        Forms\Components\TextInput::make('end_block')
+                            ->label('Последний блок диапазона')
+                            ->numeric()
+                            ->minValue(1)
+                            ->gte('start_block')
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'bundle')
+                            ->required(fn (Forms\Get $get) => $get('type') === 'bundle' && filled($get('start_block')))
+                            ->helperText('Номер последнего блока пакета (например 3). Должен быть не меньше первого.'),
 
                         Forms\Components\Select::make('course_block_id')
                             ->label('Сущность блока (даты, флаг «сейчас идёт»)')
@@ -164,9 +189,15 @@ class TariffResource extends Resource
                 // КОЛОНКА БЛОКА ТЕПЕРЬ СТОИТ ОТДЕЛЬНО И ПРАВИЛЬНО
                 Tables\Columns\TextColumn::make('block_number')
                     ->label('Блок')
-                    ->formatStateUsing(fn ($state, Tariff $record) => $state
-                        ? 'Блок '.$state.($record->block_half ? ' · '.$record->block_half.'-я пол.' : '')
-                        : '—')
+                    ->formatStateUsing(function ($state, Tariff $record) {
+                        if ($record->type === 'bundle' && $record->start_block !== null && $record->end_block !== null) {
+                            return 'Блоки '.$record->start_block.'–'.$record->end_block;
+                        }
+
+                        return $state
+                            ? 'Блок '.$state.($record->block_half ? ' · '.$record->block_half.'-я пол.' : '')
+                            : '—';
+                    })
                     ->badge()
                     ->color('info')
                     ->sortable(),

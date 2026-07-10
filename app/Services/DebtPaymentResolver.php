@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\CourseBlock;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
@@ -141,7 +142,7 @@ class DebtPaymentResolver
         // «без оплат»): иначе full переплачивает за уже оплаченные блоки. Считаем
         // «весь курс» = число блоков долга совпадает с числом блоков курса.
         // Прямой count вместо relation — не зависим от eager-load / preventLazyLoading.
-        $courseBlockCount = \App\Models\CourseBlock::where('course_id', $courseId)->count();
+        $courseBlockCount = CourseBlock::where('course_id', $courseId)->count();
         $full = null;
         if ($courseBlockCount > 0 && count($debtBlocks) >= $courseBlockCount) {
             $fullTariff = $tariffs->first(fn (Tariff $t) => $t->accessKey() === 'full');
@@ -176,14 +177,35 @@ class DebtPaymentResolver
         }
 
         // Бандл: один платёж на весь плоский многоблочный долг, когда все блоки
-        // имеют тариф и их ≥2 (и это не «весь курс» с тарифом full). Цена — сумма
-        // итоговых цен блоков (та же, что пересчитает контроллер).
+        // имеют тариф и их ≥2 (и это не «весь курс» с тарифом full).
+        //  1) есть заведённый bundle-тариф на диапазон, покрывающий долг → штатный
+        //     чекаут по нему (цена и ключ — из тарифа, как у поблочных кнопок);
+        //  2) иначе fallback на старый одноразовый путь pay-bundle (сумма = сумма
+        //     поблочных цен), чтобы кнопка «Оплатить всё» не пропала до заведения
+        //     тарифа-бандла.
         $bundle = null;
         if ($full === null && empty($unpriced) && count($blockOptions) >= 2) {
-            $bundle = [
-                'amount' => $bundleAmount,
-                'url' => route('student.debt.course.pay-bundle', $courseId),
-            ];
+            $min = min($debtBlocks);
+            $max = max($debtBlocks);
+            $bundleTariff = $tariffs->first(fn (Tariff $t) => $t->type === 'bundle'
+                && $t->start_block !== null
+                && $t->end_block !== null
+                && (int) $t->start_block <= $min
+                && (int) $t->end_block >= $max);
+
+            if ($bundleTariff instanceof Tariff) {
+                $bundle = [
+                    'amount' => (float) $bundleTariff->calculateFinalPriceForUser($user),
+                    'url' => route('checkout.show', $bundleTariff),
+                    'method' => 'GET',
+                ];
+            } else {
+                $bundle = [
+                    'amount' => $bundleAmount,
+                    'url' => route('student.debt.course.pay-bundle', $courseId),
+                    'method' => 'POST',
+                ];
+            }
         }
 
         $type = ($full !== null || ! empty($blockOptions)) ? 'tariff' : 'none';

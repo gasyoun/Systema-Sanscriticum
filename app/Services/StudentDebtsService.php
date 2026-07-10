@@ -11,6 +11,7 @@ use App\Models\PaymentPromise;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class StudentDebtsService
 {
@@ -84,7 +85,7 @@ class StudentDebtsService
         // Явный «блок входа» из course_user (joined_at_block) по каждому курсу —
         // приоритетная нижняя граница долга. Если не задан, debtFloor берёт
         // первый оплаченный блок.
-        $joinedByCourse = \Illuminate\Support\Facades\DB::table('course_user')
+        $joinedByCourse = DB::table('course_user')
             ->where('user_id', $user->id)
             ->whereIn('course_id', $courses->keys())
             ->whereNotNull('joined_at_block')
@@ -246,7 +247,7 @@ class StudentDebtsService
             ->get(['course_id', 'start_block', 'end_block', 'amount'])
             ->groupBy('course_id');
 
-        $joinedByCourse = \Illuminate\Support\Facades\DB::table('course_user')
+        $joinedByCourse = DB::table('course_user')
             ->where('user_id', $user->id)
             ->whereIn('course_id', $courseIds)
             ->whereNotNull('joined_at_block')
@@ -326,6 +327,63 @@ class StudentDebtsService
             ->filter(fn (CourseBlock $b) => $b->starts_at !== null && $b->starts_at->gt($now))
             ->sortBy('starts_at')
             ->first();
+    }
+
+    /**
+     * Неоплаченные блоки курса по возрастанию — БЕЗ потолка reference-блока (в
+     * отличие от debtBlockNumbers, где потолок = текущий блок). Нужен
+     * DebtPaymentController, чтобы сопоставить взнос рассрочки с конкретным блоком
+     * даже когда у курса нет актуального reference-блока (тогда debt_block_numbers
+     * пуст и ключ ошибочно падал в 'full'). Нижняя граница (блок входа) — та же.
+     *
+     * @return list<int>
+     */
+    public function unpaidBlockNumbers(User $user, int $courseId): array
+    {
+        $blocks = CourseBlock::query()
+            ->where('course_id', $courseId)
+            ->orderBy('number')
+            ->get();
+
+        if ($blocks->isEmpty()) {
+            return [];
+        }
+
+        $payments = Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->get(['start_block', 'end_block']);
+
+        $explicitJoined = DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->whereNotNull('joined_at_block')
+            ->value('joined_at_block');
+        $explicitJoined = $explicitJoined !== null ? (int) $explicitJoined : null;
+
+        $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
+
+        $debt = [];
+        foreach ($blocks as $block) {
+            $n = (int) $block->number;
+            if ($floor !== null && $n < $floor) {
+                continue;
+            }
+            $covered = false;
+            foreach ($payments as $p) {
+                if (DebtorsReport::paymentCovers($p->start_block, $p->end_block, $n)) {
+                    $covered = true;
+                    break;
+                }
+            }
+            if (! $covered) {
+                $debt[] = $n;
+            }
+        }
+
+        return $debt;
     }
 
     /**

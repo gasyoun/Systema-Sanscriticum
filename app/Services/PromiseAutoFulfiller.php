@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Services\Prana\PranaService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -51,11 +53,11 @@ class PromiseAutoFulfiller
         // недозакрыла бы обещания на сумму скидки.
         $debtValue = (float) $payment->amount;
         if ((int) $payment->prana_spent > 0) {
-            $debtValue += (float) app(\App\Services\Prana\PranaService::class)
+            $debtValue += (float) app(PranaService::class)
                 ->pranaToRubles((int) $payment->prana_spent);
         }
 
-        $toClose = $this->promisesToClose($lead, $debtValue);
+        $toClose = $this->coveredPromises($lead, $debtValue);
         if ($toClose->isEmpty()) {
             return 0;
         }
@@ -94,15 +96,19 @@ class PromiseAutoFulfiller
     }
 
     /**
-     * Какие обещания закрывает этот платёж — greedy по графику: закрываем самые
+     * Какие обещания покрывает этот платёж — greedy по графику: закрываем самые
      * ранние непогашенные обещания, чью НАКОПЛЕННУЮ сумму платёж покрывает целиком
      * (допуск 1 ₽). Единый механизм для next(1) / partial(K) / whole(все):
      *  - одиночное обещание → [lead];
      *  - рассрочка: идём от ранних к поздним, пока хватает денег.
      *
-     * @return \Illuminate\Support\Collection<int, PaymentPromise>
+     * Публичный: тем же счётчиком DebtPaymentController решает, СКОЛЬКО блоков
+     * открыть на чекауте (число покрытых взносов = число блоков снизу), чтобы
+     * грант доступа и закрытие обещаний на вебхуке не расходились.
+     *
+     * @return Collection<int, PaymentPromise>
      */
-    private function promisesToClose(PaymentPromise $lead, float $paidAmount): \Illuminate\Support\Collection
+    public function coveredPromises(PaymentPromise $lead, float $paidAmount): Collection
     {
         if (! $lead->isUnmet()) {
             return collect();

@@ -7,15 +7,22 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\Tariff;
+use App\Models\User;
+use App\Services\CuratorNotifier;
 use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\PromiseAutoFulfiller;
 use App\Services\StudentDebtsService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Самообслуживание должника (self-service): студент сам гасит долг из личного
@@ -41,6 +48,7 @@ class DebtPaymentController extends Controller
     public function __construct(
         private readonly StudentDebtsService $debts,
         private readonly PranaService $prana,
+        private readonly PromiseAutoFulfiller $fulfiller,
     ) {}
 
     /** Оплатить одно обещание (одиночное или конкретный взнос рассрочки). */
@@ -61,12 +69,17 @@ class DebtPaymentController extends Controller
             ? (float) $promise->amount
             : ($debt?->debt_amount !== null ? (float) $debt->debt_amount : 0.0);
 
+        // Сколько блоков открыть = сколько взносов покрывает эта сумма (тем же
+        // greedy-счётчиком, что закроет обещания на вебхуке).
+        $covered = $this->fulfiller->coveredPromises($promise, $amount);
+
         return $this->startCheckout(
             user: $user,
             courseId: (int) $promise->course_id,
             amount: $amount,
             leadPromiseId: $promise->id,
-            debt: $debt,
+            blocksToOpen: max(1, $covered->count()),
+            closesFinalPromise: $this->coversFinalPromise($promise, $covered),
             pranaRequested: (int) $request->input('prana_amount', 0),
         );
     }
@@ -108,12 +121,16 @@ class DebtPaymentController extends Controller
             $amount = $custom;
         }
 
+        $lead = $unmet->first();
+        $covered = $this->fulfiller->coveredPromises($lead, $amount);
+
         return $this->startCheckout(
             user: $user,
             courseId: (int) $course->id,
             amount: $amount,
-            leadPromiseId: (int) $unmet->first()->id,
-            debt: $debt,
+            leadPromiseId: (int) $lead->id,
+            blocksToOpen: max(1, $covered->count()),
+            closesFinalPromise: $this->coversFinalPromise($lead, $covered),
             pranaRequested: (int) $request->input('prana_amount', 0),
         );
     }
@@ -142,7 +159,7 @@ class DebtPaymentController extends Controller
         $amount = 0.0;
         $unpriced = [];
         foreach ($blocks as $n) {
-            $tariff = \App\Models\Tariff::query()
+            $tariff = Tariff::query()
                 ->where('course_id', $course->id)
                 ->where('is_active', true)
                 ->where('type', 'block')
@@ -161,12 +178,15 @@ class DebtPaymentController extends Controller
             return back()->with('error', 'Не для всех блоков есть тариф — оформите оплату через куратора.');
         }
 
+        // Fallback-бандл покрывает ВЕСЬ плоский долг сразу → открываем все его блоки
+        // (closesFinalPromise=true расширяет диапазон до конца неоплаченного).
         return $this->startCheckout(
             user: $user,
             courseId: (int) $course->id,
             amount: $amount,
             leadPromiseId: null,
-            debt: $debt,
+            blocksToOpen: max(1, count($blocks)),
+            closesFinalPromise: true,
             pranaRequested: (int) $request->input('prana_amount', 0),
         );
     }
@@ -189,7 +209,7 @@ class DebtPaymentController extends Controller
         }
 
         $request->validate(['new_date' => 'required|date']);
-        $newDate = \Illuminate\Support\Carbon::parse($request->input('new_date'))->startOfDay();
+        $newDate = Carbon::parse($request->input('new_date'))->startOfDay();
         $today = now()->startOfDay();
         $maxDate = $today->copy()->addDays(self::RESCHEDULE_MAX_DAYS);
         $original = $promise->promised_at?->copy()->startOfDay() ?? $today;
@@ -208,7 +228,7 @@ class DebtPaymentController extends Controller
             'status' => PaymentPromise::STATUS_ACTIVE,
         ])->save();
 
-        app(\App\Services\CuratorNotifier::class)->promiseRescheduledByStudent($promise);
+        app(CuratorNotifier::class)->promiseRescheduledByStudent($promise);
 
         return back()->with('success', 'Дата оплаты перенесена на '.$newDate->format('d.m.Y').'. Куратор уведомлён.');
     }
@@ -218,11 +238,12 @@ class DebtPaymentController extends Controller
      * списанием праны) → увести в Точку ПОСЛЕ commit (сеть не держит row-lock).
      */
     private function startCheckout(
-        \App\Models\User $user,
+        User $user,
         int $courseId,
         float $amount,
         ?int $leadPromiseId,
-        ?object $debt,
+        int $blocksToOpen,
+        bool $closesFinalPromise,
         int $pranaRequested = 0,
     ): RedirectResponse {
         if ($amount <= 0) {
@@ -249,7 +270,13 @@ class DebtPaymentController extends Controller
             return back()->with('error', 'Курс не найден.');
         }
 
-        [$tariffKey, $startBlock, $endBlock] = $this->resolveKeyAndBlocks($course, $debt);
+        $unpaidBlocksAsc = $this->debts->unpaidBlockNumbers($user, $courseId);
+        [$tariffKey, $startBlock, $endBlock] = $this->resolveKeyAndBlocks(
+            $course,
+            $unpaidBlocksAsc,
+            $blocksToOpen,
+            $closesFinalPromise,
+        );
 
         // Прана: студент может списать СВОЮ прану против суммы (лояльность/промокод
         // не применяем — цена фиксирована куратором). Максимум считаем на сервере,
@@ -290,7 +317,7 @@ class DebtPaymentController extends Controller
                 try {
                     $this->prana->spend($user, $pranaToSpend, 'spent_on_purchase', $payment);
                 } catch (\RuntimeException $e) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         'prana_amount' => 'Не удалось списать прану — обновите страницу и попробуйте снова.',
                     ]);
                 }
@@ -338,31 +365,76 @@ class DebtPaymentController extends Controller
     }
 
     /**
+     * Ключ и диапазон блоков для платежа. Ключ определяется по РЕАЛЬНО
+     * оплачиваемому объёму (сколько взносов покрыто → столько блоков снизу), а не
+     * по всему долгу — иначе один взнос открывал бы весь курс (ключ 'full').
+     *
+     * @param  list<int>  $unpaidBlocksAsc  неоплаченные блоки курса по возрастанию
      * @return array{0: string, 1: int|null, 2: int|null} [tariffKey, startBlock, endBlock]
      */
-    private function resolveKeyAndBlocks(Course $course, ?object $debt): array
-    {
-        $blocks = $debt?->debt_block_numbers ?? [];
-        $blocks = array_values(array_map('intval', $blocks));
+    private function resolveKeyAndBlocks(
+        Course $course,
+        array $unpaidBlocksAsc,
+        int $blocksToOpen,
+        bool $closesFinalPromise,
+    ): array {
+        $blocks = array_values(array_map('intval', $unpaidBlocksAsc));
+        sort($blocks);
 
         if (empty($blocks)) {
+            // У курса нет блоков (напр. без разбивки) — легитимный full.
             return ['full', null, null];
         }
 
-        $start = min($blocks);
-        $end = max($blocks);
+        // Открываем нижние N блоков (N = число покрытых взносов). Финальный платёж
+        // гасит остаток графика → расширяем до конца, чтобы не осталось запертого
+        // блока после полной оплаты.
+        $slice = $closesFinalPromise
+            ? $blocks
+            : array_slice($blocks, 0, max(1, $blocksToOpen));
+
+        $start = min($slice);
+        $end = max($slice);
         $courseBlockCount = $course->blocks->count();
 
-        // Долг = весь курс → 'full' (ключ открывает всё). Иначе ключ по стартовому
-        // блоку; остальные блоки диапазона откроет BlockAccessMaterializer.
-        if ($courseBlockCount > 0 && count($blocks) >= $courseBlockCount) {
+        // Оплачивается весь курс за раз → канонический 'full'. Иначе ключ по
+        // стартовому блоку; остальные блоки диапазона откроет BlockAccessMaterializer.
+        if ($courseBlockCount > 0 && count($slice) >= $courseBlockCount) {
             return ['full', $start, $end];
         }
 
         return ['block_'.$start, $start, $end];
     }
 
-    private function debtRow(\App\Models\User $user, int $courseId): ?object
+    /**
+     * Покрывает ли платёж ПОСЛЕДНЕЕ непогашенное обещание графика (значит долг
+     * гасится полностью — открываем весь оставшийся диапазон блоков).
+     *
+     * @param  Collection<int, PaymentPromise>  $covered
+     */
+    private function coversFinalPromise(PaymentPromise $lead, Collection $covered): bool
+    {
+        $last = $this->lastUnmetOfGroup($lead);
+
+        return $last === null || $covered->contains(fn (PaymentPromise $p) => $p->id === $last->id);
+    }
+
+    /** Последнее (по дате) непогашенное обещание группы рассрочки, либо само lead. */
+    private function lastUnmetOfGroup(PaymentPromise $lead): ?PaymentPromise
+    {
+        if ($lead->installment_group_id === null) {
+            return $lead->isUnmet() ? $lead : null;
+        }
+
+        return PaymentPromise::query()
+            ->inGroup($lead->installment_group_id)
+            ->whereIn('status', [PaymentPromise::STATUS_ACTIVE, PaymentPromise::STATUS_EXPIRED])
+            ->orderBy('promised_at')
+            ->get()
+            ->last();
+    }
+
+    private function debtRow(User $user, int $courseId): ?object
     {
         return $this->debts->forUser($user)->firstWhere('course_id', $courseId);
     }
