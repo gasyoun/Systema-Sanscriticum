@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="960" height="720" fill="#ffffff"/>
+  <text x="480" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="#1a1a2e">Sanskrit-HUB — layered architecture</text>
+  <text x="480" y="56" text-anchor="middle" font-size="13" fill="#666">samskrtam.ru/sanskritHUB · unified learner track over an open Sanskrit-NLP layer · open core + paid courses</text>
+
+  <!-- L7 Portal -->
+  <rect x="60" y="76" width="840" height="52" rx="8" fill="#4c3a8f"/>
+  <text x="80" y="99" font-size="15" font-weight="700" fill="#fff">L7 · Portal / hub</text>
+  <text x="80" y="118" font-size="12" fill="#e6e0ff">Search · Reader-as-a-service · Dashboards · Learn — one brand (samskrtam.ru H4, glossary H5)</text>
+
+  <!-- L6 Learn track -->
+  <rect x="60" y="140" width="840" height="58" rx="8" fill="#7b4bb0"/>
+  <text x="80" y="164" font-size="15" font-weight="700" fill="#fff">L6 · Learn track (PAID)  —  A0 ▸ A1 ▸ A2 ▸ B1 ▸ B2 ▸ C1 ▸ C2</text>
+  <text x="80" y="185" font-size="12" fill="#f0e8ff">Systema LMS (K19) · SRS · Reader · Quizzes · Karaoke (H7) · intent quiz — consumes L0–L5</text>
+
+  <!-- L5 API -->
+  <rect x="60" y="210" width="840" height="52" rx="8" fill="#1f6f6f"/>
+  <text x="80" y="233" font-size="15" font-weight="700" fill="#fff">L5 · API &amp; data hub (OPEN CORE)</text>
+  <text x="80" y="252" font-size="12" fill="#d8f2f2">/transliterate /lemmatize /segment /parse /generate /lookup /frequency /meter · kosha directory (J21) · C-SALT (G2) · releases+DOI</text>
+
+  <!-- Engine row: L2, L3, L4 as three columns -->
+  <rect x="60" y="278" width="270" height="150" rx="8" fill="#e8f0ea" stroke="#2e7d5b" stroke-width="1.5"/>
+  <text x="76" y="300" font-size="14" font-weight="700" fill="#1b5e40">L2 · Morphology &amp; roots</text>
+  <text x="76" y="322" font-size="11.5" fill="#333">DCS (E25/E27) lemmas</text>
+  <text x="76" y="340" font-size="11.5" fill="#333">vidyut FST (M14) generate</text>
+  <text x="76" y="358" font-size="11.5" fill="#333">Heritage (M11) segment</text>
+  <text x="76" y="376" font-size="11.5" fill="#333">Samsaadhanii (M10) parse</text>
+  <text x="76" y="394" font-size="11.5" fill="#333">mw_roots (B5) · Whitney (B9–11)</text>
+  <text x="76" y="412" font-size="11.5" fill="#333">Zaliznyak index (E31)</text>
+
+  <rect x="345" y="278" width="270" height="150" rx="8" fill="#eef0e8" stroke="#6b7d2e" stroke-width="1.5"/>
+  <text x="361" y="300" font-size="14" font-weight="700" fill="#4d5e1b">L3 · Corpus &amp; frequency</text>
+  <text x="361" y="322" font-size="11.5" fill="#333">DCS frequency (E26) bands</text>
+  <text x="361" y="340" font-size="11.5" fill="#333">Indische Sprüche (F33)</text>
+  <text x="361" y="358" font-size="11.5" fill="#333">VedaWeb accented RV (M13)</text>
+  <text x="361" y="376" font-size="11.5" fill="#333">&lt;ls&gt; citation graph (E38)</text>
+  <text x="361" y="394" font-size="11.5" fill="#333">ppp attested forms (B12)</text>
+
+  <rect x="630" y="278" width="270" height="150" rx="8" fill="#f0ece8" stroke="#7d4e2e" stroke-width="1.5"/>
+  <text x="646" y="300" font-size="14" font-weight="700" fill="#5e3a1b">L4 · Alignment &amp; translation</text>
+  <text x="646" y="322" font-size="11.5" fill="#333">corpus_lexicon Sa↔Ru (A1)</text>
+  <text x="646" y="340" font-size="11.5" fill="#333">3-layer glossary (A2/H5)</text>
+  <text x="646" y="358" font-size="11.5" fill="#333">mw_en_tm (A3) · mw/pwg_ru (L7)</text>
+  <text x="646" y="376" font-size="11.5" fill="#333">RussianRamayana reader (H6)</text>
+  <text x="646" y="394" font-size="11.5" fill="#333">DharmaMitra MT/OCR (M12)</text>
+
+  <!-- L1 Lexical -->
+  <rect x="60" y="444" width="840" height="52" rx="8" fill="#b0632e"/>
+  <text x="80" y="467" font-size="15" font-weight="700" fill="#fff">L1 · Lexical</text>
+  <text x="80" y="486" font-size="12" fill="#fce8d8">44 dictionaries (CDSL G1) · kosha collapse (G3) · union_headwords 323k (C13) · Eng→Skt · Skt→Skt</text>
+
+  <!-- L0 -->
+  <rect x="60" y="508" width="840" height="48" rx="8" fill="#37474f"/>
+  <text x="80" y="530" font-size="15" font-weight="700" fill="#fff">L0 · Script &amp; transliteration</text>
+  <text x="80" y="548" font-size="12" fill="#dfe6ea">sanskrit-util IAST ⇄ SLP1 ⇄ Devanāgarī (L1) · csl-orig canonical source · normalization keys</text>
+
+  <!-- Flywheel -->
+  <rect x="60" y="576" width="840" height="120" rx="8" fill="#fbf7ea" stroke="#c9a227" stroke-width="1.5"/>
+  <text x="480" y="600" text-anchor="middle" font-size="14" font-weight="700" fill="#8a6d00">The flywheel</text>
+  <text x="150" y="640" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5e4a00">Courses (revenue)</text>
+  <text x="390" y="640" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5e4a00">Corpus / aligned data</text>
+  <text x="620" y="640" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5e4a00">Open NLP tools + API</text>
+  <text x="835" y="640" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5e4a00">SEO · citations</text>
+  <text x="255" y="640" text-anchor="middle" font-size="16" fill="#c9a227">▶</text>
+  <text x="510" y="640" text-anchor="middle" font-size="16" fill="#c9a227">▶</text>
+  <text x="735" y="640" text-anchor="middle" font-size="16" fill="#c9a227">▶</text>
+  <text x="480" y="672" text-anchor="middle" font-size="11.5" fill="#8a6d00">↺ more learners · free data attracts developers → cite us → rank #1 → back to courses</text>
+
+  <!-- side note -->
+  <text x="480" y="712" text-anchor="middle" font-size="11" fill="#999">Built in Systema-Sanscriticum (Laravel LMS). Gaps to build: AUDIO (A1/A2), trained models (Yr 2). Full asset IDs → FEATURES_INDEX.md</text>
+</svg>
