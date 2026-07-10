@@ -115,15 +115,23 @@ return [
     'recording_message' => 'Запись консультации готова 🎬'."\n\n"
         .'{link}',
 
+    // Real testimonial quote, MG-supplied only — MARATHON_DIAGNOSTIC_2026.md
+    // §4 wants ONE pointed testimonial from a serious practitioner, never a
+    // fabricated one. Null until MG sets MARATHON_TESTIMONIAL in .env; the
+    // Day-5 warm-tail message falls back to a no-quote framing while empty
+    // (see DeliverMarathonWarmTail::handle()) rather than inventing one.
+    'testimonial' => env('MARATHON_TESTIMONIAL'),
+
     // H440 Phase 6 — 13-day warm-tail, sent to unpaid registrants (paid_at
     // null) on Days 4–16 off their personal clock (median time-to-purchase,
     // CUSTDEV_2026.md/MARATHON_DIAGNOSTIC_2026.md §warm-tail). Evergreen —
     // no deadlines, no "мест осталось" — cycles the four levers the custdev
     // data says move this audience: ВРЕМЯ→own-pace (obj. #1), рассрочка,
     // преподаватель, and ONE pointed testimonial (не навалом — соц.
-    // доказательство −6 in this audience per the design doc). Keyed 1..13
-    // to match MarathonEnrollment::warmTailDay(); `{host}`/`{coupon}`
-    // interpolated by marathon:deliver-warm-tail.
+    // доказательство −6 in this audience per the design doc — see `testimonial`
+    // above; никогда не выдумывается). Keyed 1..13 to match
+    // MarathonEnrollment::warmTailDay(); `{host}`/`{coupon}` interpolated by
+    // marathon:deliver-warm-tail, `{testimonial}` only on Day 5.
     'warm_tail_messages' => [
         1 => 'Как вам марафон? 🙂'."\n\n"
             .'Если разбор устройства слова зашёл — курсы идут в том же темпе: '
@@ -137,9 +145,7 @@ return [
         4 => 'Оплата — не обязательно сразу целиком 💳'."\n\n"
             .'Есть рассрочка по блокам курса — платите по мере прохождения, а не '
             .'всю сумму на старте.',
-        5 => 'Отзыв одного из практикующих сейчас 💬'."\n\n"
-            .'«Думал, санскрит — это только про заучивание. Оказалось — про то, как '
-            .'устроен язык. После первого блока читаю простые тексты сам.»',
+        5 => '{testimonial}',
         6 => 'Ваш вопрос с Дня 2 никуда не делся 📝'."\n\n"
             .'Если после консультации остались уточнения по курсу — просто напишите '
             .'сюда, ответим.',
@@ -155,12 +161,12 @@ return [
         10 => 'Если пока не время — это нормально ⏳'."\n\n"
             .'Курс никуда не уходит. Когда будет удобно — просто напишите сюда, '
             .'подключим.',
-        11 => 'Что говорят те, кто уже прошёл первый блок 💬'."\n\n"
-            .'«Больше всего понравилось, что не нужно ничего зубрить наизусть — '
-            .'сначала понимаешь структуру, потом она сама запоминается.»',
+        11 => 'Вопросы по ходу курса — не остаются без ответа 💬'."\n\n"
+            .'{host} читает разборы каждого блока лично — если что-то не сложилось, '
+            .'можно спросить напрямую, а не искать ответ самому.',
         12 => 'Скидка после марафона всё ещё доступна 🎁'."\n\n"
-            .'{coupon} ₽ на первый курс — как и обещали на консультации, без '
-            .'ограничения по сроку.',
+            .'{coupon} ₽ на первый курс — как и обещали на консультации. Просто '
+            .'напишите сюда, и мы применим её к оплате, без ограничения по сроку.',
         13 => 'Если решите начать 🙂'."\n\n"
             .'Напишите сюда в любой момент — подберём курс под ваш вопрос с Дня 2 '
             .'и оформим со скидкой.',
