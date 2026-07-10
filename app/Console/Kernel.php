@@ -196,6 +196,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('deliver-marathon-recording');
 
+        // --- МАРАФОН: ТЁПЛЫЙ ХВОСТ ДНИ 4-16 (H440 Phase 6) ---
+        // Только неоплатившие (paid_at null); идемпотентность — warm_tail_last_day_sent.
+        $schedule->command('marathon:deliver-warm-tail')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('deliver-marathon-warm-tail');
+
         // --- ПИСЬМО ЛИДАМ СО ССЫЛКОЙ НА ЗАПИСЬ ВЕБИНАРА ---
         // Триггер — админ заполнил webinar_recording_url; команда сама отсечёт уже отправленных.
         $schedule->command('webinar:deliver-recordings')

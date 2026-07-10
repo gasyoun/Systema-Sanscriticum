@@ -9,6 +9,11 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- 3-day diagnostic marathon, Phase 6 (H440): 13-day evergreen warm-tail for
+  unpaid registrants (Days 4-16 off the personal `day0_started_at` clock),
+  cycling own-pace/installments/teacher-credibility/one testimonial themes,
+  no urgency framing; auto-stops once `paid_at` is set. Closes out H440's
+  6-phase build plan.
 - Configurable CRM lead stages (GC-C1): `lead_stages` table replaces the
   hardcoded `Lead::STATUSES`/`FINAL_STATUSES` constants, plus a Filament
   drag-drop kanban board (`/admin/leads-board`) alongside the existing flat
