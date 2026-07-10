@@ -8,6 +8,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreTrialRequest extends FormRequest
 {
+    // Ошибки валидации уходят в именованный bag, чтобы модалка пробного на витрине
+    // могла отличить их от прочих форм страницы и открыться заново с текстом ошибки.
+    protected $errorBag = 'trial';
+
     public function authorize(): bool
     {
         return true;

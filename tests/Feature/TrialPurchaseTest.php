@@ -217,10 +217,26 @@ class TrialPurchaseTest extends TestCase
         [$course] = $this->courseWithTrial();
         User::factory()->create(['email' => 'taken@example.test']);
 
+        // Ошибка уходит в bag `trial` — по нему модалка на витрине открывается
+        // заново с сообщением (иначе редирект выглядел бы как «тихая перезагрузка»).
         $this->post(route('trial.create', $course->slug), [
             'surname' => 'Иванов', 'name' => 'Иван', 'email' => 'taken@example.test', 'city' => 'Москва',
-        ])->assertSessionHasErrors('email');
+        ])
+            ->assertSessionHasErrors('email', null, 'trial')
+            ->assertRedirect();
 
         $this->assertDatabaseMissing('payments', ['course_id' => $course->id, 'tariff' => 'trial']);
+    }
+
+    /** @test */
+    public function invalid_guest_input_reports_errors_in_trial_bag(): void
+    {
+        // Пустые поля (не email-конфликт) тоже должны попасть в bag `trial`,
+        // чтобы модалка распознала ошибку и открылась, а не «молча» перезагрузилась.
+        [$course] = $this->courseWithTrial();
+
+        $this->post(route('trial.create', $course->slug), [
+            'surname' => '', 'name' => '', 'email' => 'not-an-email', 'city' => '',
+        ])->assertSessionHasErrors(['surname', 'name', 'email', 'city'], null, 'trial');
     }
 }
