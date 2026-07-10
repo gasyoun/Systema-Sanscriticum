@@ -118,7 +118,14 @@ class MarathonTapChoiceTest extends TestCase
             ->assertNotFound();
     }
 
-    /** H445 Phase 3 — the `deva` cohort gets devanagari-recognition Day 1 content. */
+    /**
+     * H445 Phase 3 — the `deva` cohort gets devanagari-recognition Day 1
+     * content. Checked via the view's own `quiz` data, not `assertSee` —
+     * the quiz text is embedded in the page via Blade's `@js()` inside an
+     * Alpine `x-data` attribute, which Unicode-escapes Cyrillic (`Д...`)
+     * rather than emitting it literally, so it never appears as raw text in
+     * the response body for `assertSee` to find.
+     */
     public function test_deva_cohort_day1_quiz_is_devanagari_content(): void
     {
         $lead = Lead::factory()->create(['magnet_token' => Str::random(12)]);
@@ -126,7 +133,7 @@ class MarathonTapChoiceTest extends TestCase
 
         $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
             ->assertOk()
-            ->assertSee('Деванагари читается');
+            ->assertViewHas('quiz', fn ($quiz) => str_contains($quiz['steps'][0]['text'], 'Деванагари читается'));
     }
 
     /** The `zero` cohort must keep its original cyrillic-only content unchanged. */
@@ -136,6 +143,6 @@ class MarathonTapChoiceTest extends TestCase
 
         $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
             ->assertOk()
-            ->assertDontSee('Деванагари читается');
+            ->assertViewHas('quiz', fn ($quiz) => ! str_contains($quiz['steps'][0]['text'], 'Деванагари читается'));
     }
 }
