@@ -2,9 +2,9 @@
 
 Дата: 2026-06-12
 Ветка: `develop`
-Охват: маршруты, middleware, вебхуки (Tochka/Telegram/VK/Max/n8n), контроль доступа к урокам/файлам, платёжная логика, новый Internal API + Telegram-юзербот (незакоммичено).
+Охват: маршруты, middleware, вебхуки (Tochka/Telegram/VK/Max/n8n), контроль доступа к урокам/файлам, платежная логика, новый Internal API + Telegram-юзербот (незакоммичено).
 
-Легенда серьёзности: 🔴 высокая · 🟠 средняя · 🟡 низкая · 🔵 заметка/качество.
+Легенда серьезности: 🔴 высокая · 🟠 средняя · 🟡 низкая · 🔵 заметка/качество.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ```php
 if (! preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path)) {
-    abort(403, 'Запрещённый путь');
+    abort(403, 'Запрещенный путь');
 }
 $abs = $this->storage->absolutePath($draft, $path); // конкатенация без нормализации
 return response()->file($abs);
@@ -25,17 +25,17 @@ return response()->file($abs);
 Класс символов `[A-Za-z0-9_./-]` включает `.` и `/`, поэтому путь вида
 `slides/../../../../../../.env` проходит проверку. `LectureStorage::absolutePath()`
 просто склеивает корень диска с `relativePath` (никакой нормализации), а
-`response()->file()` отдаёт уже разрешённый PHP путь с `..`. Итог — чтение
+`response()->file()` отдает уже разрешенный PHP путь с `..`. Итог — чтение
 произвольных файлов сервера (`.env`, ключи, исходники).
 
 Гейт: доступ только у аутентифицированного `is_admin`/`is_lecture_editor`, поэтому
 это эскалация для редактора лекций, а не анонимный RCE. Тем не менее — реальная утечка секретов.
 
-**Фикс:** запретить `..` явно и/или проверять, что реальный путь остаётся внутри рабочей папки:
+**Фикс:** запретить `..` явно и/или проверять, что реальный путь остается внутри рабочей папки:
 
 ```php
 if (! preg_match('#^(slides|src)/[A-Za-z0-9_./-]+$#', $path) || str_contains($path, '..')) {
-    abort(403, 'Запрещённый путь');
+    abort(403, 'Запрещенный путь');
 }
 $abs = realpath($this->storage->absolutePath($draft, $path));
 $root = realpath($this->storage->absoluteWorkingDir($draft));
@@ -48,11 +48,11 @@ abort_if($abs === false || $root === false || ! str_starts_with($abs, $root), 40
 
 **Файл:** `app/Http/Controllers/PaymentController.php:37-220`
 
-Весь `createPayment` обёрнут в `DB::transaction`, и **внутри** транзакции делается
+Весь `createPayment` обернут в `DB::transaction`, и **внутри** транзакции делается
 сетевой вызов `$tochka->createPaymentWithReceipt(...)`. При этом ранее в коде берутся
 `lockForUpdate()` на промокод и списывается прана. Медленный/зависший эквайринг держит
 row-lock на `promo_codes`/`pranas` всё время HTTP-запроса (timeout у клиента — секунды),
-что под нагрузкой ведёт к блокировкам и таймаутам.
+что под нагрузкой ведет к блокировкам и таймаутам.
 
 Важно: в `DepositController` и `TrialController` это уже исправлено правильно — там
 запись в БД в транзакции, а HTTP-вызов **после** commit (см. комментарий
@@ -62,22 +62,22 @@ row-lock на `promo_codes`/`pranas` всё время HTTP-запроса (time
 
 ---
 
-## 🟠 3. Гостевой чекаут создаёт платежи на чужой существующий email
+## 🟠 3. Гостевой чекаут создает платежи на чужой существующий email
 
 **Файл:** `app/Http/Controllers/PaymentController.php:42-63`
 
 В отличие от `DepositController`/`TrialController` (где для существующего email гостю
 отказывают — защита от takeover), в `createPayment` гость, указавший **существующий**
 email, молча привязывается к этому аккаунту: `$user = $existingUser` и далее на него
-создаётся `Payment`. Логина (и takeover) нет, но любой может насоздавать pending-платежей
-на чужой аккаунт и засорять карточку студента; в связке с фискализацией чек уйдёт на чужой email.
+создается `Payment`. Логина (и takeover) нет, но любой может насоздавать pending-платежей
+на чужой аккаунт и засорять карточку студента; в связке с фискализацией чек уйдет на чужой email.
 
 **Фикс:** привести к поведению депозита — для гостя с существующим email бросать
 `ValidationException` («войдите в кабинет»), а не молча подставлять чужого пользователя.
 
 ---
 
-## 🟠 4. Internal API отдаёт PII всех студентов без троттлинга
+## 🟠 4. Internal API отдает PII всех студентов без троттлинга
 
 **Файл:** `routes/api.php:62-64`, `app/Http/Controllers/Internal/StudentTelegramNotesController.php`
 
@@ -131,7 +131,7 @@ if ($user->email === 'pe4kinsmart@gmail.com' || $user->is_admin) {
 
 **Файл:** `app/Http/Controllers/PaymentController.php:234-248`
 
-При возврате на `/payment/fail` берётся **любой** последний pending-платёж пользователя и
+При возврате на `/payment/fail` берется **любой** последний pending-платеж пользователя и
 помечается `failed`. Если у студента параллельно есть два pending (например, открыл две
 вкладки/два курса), может «свалиться» не тот заказ. Источник истины — вебхук Точки, так что
 это не критично для доступа, но статусы в админке могут разъезжаться.
@@ -167,7 +167,7 @@ Laravel 10.50; в тестах сверять через `assertDatabaseHas`, н
   `StudentController::downloadCertificate` (через `auth()->user()->certificates()`),
   `HomeworkController::ensureLessonAccessible` — реализованы корректно.
 - **Telegram-юзербот** (`telegram-userbot/`) — `.gitignore` исключает `.env`, `*.session`,
-  `state.json`; README предупреждает про `chmod 600` сессии. Секрет берётся из env, в коде
+  `state.json`; README предупреждает про `chmod 600` сессии. Секрет берется из env, в коде
   не хардкодится. Замечаний нет. Перед коммитом проверьте, что файл сессии/`.env` реально
   не попали в индекс.
 - **`/u/{user}` шорт-линк** — редиректит на Filament-URL; доступ режется гвардом панели
@@ -180,7 +180,7 @@ Laravel 10.50; в тестах сверять через `assertDatabaseHas`, н
 
 ## Сводка приоритетов
 
-| # | Серьёзность | Тема | Файл |
+| # | Серьезность | Тема | Файл |
 |---|------|------|------|
 | 1 | 🔴 | Path traversal в ассетах лекций | `Editor/LectureDraftController.php:73` |
 | 2 | 🟠 | HTTP к Tochka внутри DB-транзакции | `PaymentController.php:37` |
@@ -188,7 +188,7 @@ Laravel 10.50; в тестах сверять через `assertDatabaseHas`, н
 | 4 | 🟠 | Internal API: PII всех студентов без лимита | `routes/api.php:62` |
 | 5 | 🟠 | Логирование полного payload вебхуков | `WebhookController.php:43`, `VkBotController.php:20` |
 | 6 | 🟡 | Хардкод админ-почты | `AuthController.php:34` |
-| 7 | 🟡 | `fail()` берёт произвольный pending | `PaymentController.php:234` |
+| 7 | 🟡 | `fail()` берет произвольный pending | `PaymentController.php:234` |
 | 8 | 🟡 | `casts()`-метод не работает | модели |
 
 Рекомендованный порядок исправления: **1 → 3 → 5 → 4 → 2**, остальное — по мере.

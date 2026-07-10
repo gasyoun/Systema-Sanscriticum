@@ -2,7 +2,7 @@
 
 Eloquent-модели. Каждая модель = одна таблица БД + бизнес-логика, не вынесенная в сервис.
 
-## Домен: Учёба
+## Домен: Учеба
 
 | Файл | Таблица | Роль |
 |---|---|---|
@@ -13,13 +13,13 @@ Eloquent-модели. Каждая модель = одна таблица БД 
 | `CourseBlock.php` | `course_blocks` | Временной раздел курса (неделя, модуль). Поля `starts_at`/`ends_at`. Метод `isCurrent()` — определяет активный блок по датам или ручному флагу. |
 | `Tariff.php` | `tariffs` | Тариф (вариант покупки): на весь курс или на конкретные блоки. Метод `calculateFinalPriceForUser()` — скидки лояльности + вычет уже оплаченного (апгрейд). |
 | `Certificate.php` | `certificates` | Сертификат об окончании. Уникальный номер генерируется автоматически в `boot()`. |
-| `LessonView.php` | `lesson_views` | Одна запись на пару (студент, урок). Счётчик открытий, суммарное время, статус прохождения, последний хартбит. |
+| `LessonView.php` | `lesson_views` | Одна запись на пару (студент, урок). Счетчик открытий, суммарное время, статус прохождения, последний хартбит. |
 
 ## Домен: Оплата
 
 | Файл | Таблица | Роль |
 |---|---|---|
-| `Payment.php` | `payments` | Платёж. Статусы: `pending` → `paid` → `success`. Метод `grantAccess()` добавляет студента в нужные группы. Метод `processSuccessfulPayment()` вызывается из `PaymentObserver`. |
+| `Payment.php` | `payments` | Платеж. Статусы: `pending` → `paid` → `success`. Метод `grantAccess()` добавляет студента в нужные группы. Метод `processSuccessfulPayment()` вызывается из `PaymentObserver`. |
 | `PromoCode.php` | `promo_codes` | Промокод. Типы: `percent` или `fixed`. Метод `calculateDiscountedPrice()`. Поля: `max_uses`, `used_count`, `expires_at`. |
 
 ## Домен: Контент
@@ -27,7 +27,7 @@ Eloquent-модели. Каждая модель = одна таблица БД 
 | Файл | Таблица | Роль |
 |---|---|---|
 | `LandingPage.php` | `landing_pages` | Лендинг курса. Поле `content` — JSON массив блоков конструктора. Slug используется в catch-all роуте `/{slug}`. |
-| `Article.php` | `articles` | Статья блога. Автослаг из заголовка. Счётчик просмотров, время чтения, SEO-поля. |
+| `Article.php` | `articles` | Статья блога. Автослаг из заголовка. Счетчик просмотров, время чтения, SEO-поля. |
 | `ArticleCategory.php` | `article_categories` | Категория статей. |
 | `ArticleView.php` | `article_views` | Иммутабельный лог просмотра статьи: `visitor_hash`, IP, referrer, user-agent. Нет `updated_at`. |
 | `Announcement.php` | `announcements` | Объявление для студентов. Таргетинг по группам/курсам. Переключатели отправки: email, Telegram, VK. |
@@ -54,7 +54,7 @@ Eloquent-модели. Каждая модель = одна таблица БД 
 |---|---|---|
 | `Lead.php` | `leads` | Заявка с лендинга. UTM-поля, реферал, IP, user-agent. |
 | `MarketingSetting.php` | `marketing_settings` | Глобальные настройки: пороги скидок лояльности, пиксели (Яндекс Метрика, VK Pixel). Синглтон — одна запись в таблице. |
-| `Schedule.php` | `schedules` | Событие в календаре (вебинар, занятие). Привязка к группе/курсу. Метод `getLink()` — берёт прямую ссылку или извлекает из описания. |
+| `Schedule.php` | `schedules` | Событие в календаре (вебинар, занятие). Привязка к группе/курсу. Метод `getLink()` — берет прямую ссылку или извлекает из описания. |
 | `ChatMessage.php` | `chat_messages` | Сообщение чата поддержки. Роли: `user` / `assistant`. |
 | `Category.php` | `categories` | Категория курса (иконка, цвет, сортировка). |
 | `LectureDraft.php` | `lecture_drafts` | Черновик лекции. Машина состояний: `draft` → `preprocessing` → `editing` → `built` → `published`. |

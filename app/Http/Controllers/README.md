@@ -9,8 +9,8 @@ HTTP-контроллеры. Тонкие — бизнес-логика в се�
 | `AuthController.php` | `POST /login`, `POST /logout` | Вход и выход. После входа редиректит: `is_admin` → `/admin`, студент → `/cabinet`. Поддерживает AJAX-ответ для модального окна на странице магазина. |
 | `ShopController.php` | `GET /shop`, `GET /shop/{slug}` | Витрина курсов с пагинацией. Страница курса: тарифы, блоки, преподаватель, уже купленные тарифы студента. |
 | `CheckoutController.php` | `GET /checkout/{tariff}` | Страница оформления заказа. Применяет промокод, считает финальную цену через `Tariff::calculateFinalPriceForUser()`. |
-| `PaymentController.php` | `POST /payment` | Создаёт платёж: находит/создаёт пользователя, считает цену, обращается к платёжному шлюзу (Точка). |
-| `PromoController.php` | `GET /{slug}` (catch-all) | Отдаёт лендинг по slug. Кешируется 24 часа в Redis. |
+| `PaymentController.php` | `POST /payment` | Создает платеж: находит/создает пользователя, считает цену, обращается к платежному шлюзу (Точка). |
+| `PromoController.php` | `GET /{slug}` (catch-all) | Отдает лендинг по slug. Кешируется 24 часа в Redis. |
 | `ArticleController.php` | `GET /s`, `GET /s/{slug}` | Блог: листинг с фильтрами, страница статьи с трекингом просмотров. |
 | `LeadController.php` | `POST /lead`, `GET /leads/export` | Сохраняет заявку с UTM. Экспорт CSV только для администраторов (UTF-8 BOM для Excel). |
 

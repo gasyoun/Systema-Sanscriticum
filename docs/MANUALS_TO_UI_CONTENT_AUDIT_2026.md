@@ -60,11 +60,11 @@ Three content tiers, by where an answer belongs:
 ## 5. Prioritized content tickets
 
 1. **"Почему закрыто?" snippet set** (blocks `access-self-service-spec.md` implementation from shipping with good UX). Draft one sentence + one CTA label per finding code:
-   - `key_missing_for_paid_range` → "Оплаченный блок ещё не открылся автоматически." — **[Открыть оплаченные блоки]**
-   - `not_connected_bot` → "Похоже, бот не подключён — это может мешать уведомлениям и поддержке." — **[Подключить бота]**
+   - `key_missing_for_paid_range` → "Оплаченный блок еще не открылся автоматически." — **[Открыть оплаченные блоки]**
+   - `not_connected_bot` → "Похоже, бот не подключен — это может мешать уведомлениям и поддержке." — **[Подключить бота]**
    - `login_issue` → "Если не получается войти — сбросьте пароль." — **[Сбросить пароль]**
-   - `not_paid` (pending/failed payment found) → "Ваш платёж ещё обрабатывается." — **[Проверить статус оплаты]**
-   - `not_paid` (no payment found) → "За этот блок ещё нет оплаты." — **[Оплатить]** (routes to debt self-service)
+   - `not_paid` (pending/failed payment found) → "Ваш платеж еще обрабатывается." — **[Проверить статус оплаты]**
+   - `not_paid` (no payment found) → "За этот блок еще нет оплаты." — **[Оплатить]** (routes to debt self-service)
    - `no_finding` → "С доступом всё в порядке. Если урок всё равно не открывается — напишите куратору." — **[Позвать куратора]**
 2. **"Мои долги" tab context line** — add the one-sentence distinction (не продлил vs рассрочка) above the existing CTAs; smallest-effort, highest-frequency (debts tab is seen by every debtor on every login).
 3. **Homework status tooltips** — turn the existing `onboarding-student.md` table into four short badge tooltips on the lesson page; link the full table as a help page from a "?" if a student wants more.

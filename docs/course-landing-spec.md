@@ -4,7 +4,7 @@ _Created: 04-07-2026 · Last updated: 04-07-2026_
 
 Развитие существующей страницы курса `shop.course.show` в полноценную продающую
 страницу (landing) — первый слой из [vitrina.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/vitrina.md).
-Это следующий шаг после завершённого каталога в стиле Arzamas
+Это следующий шаг после завершенного каталога в стиле Arzamas
 ([TZ_arzamas_catalog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TZ_arzamas_catalog.md)).
 
 ## Зафиксированные решения (интервью 04-07-2026)
@@ -13,8 +13,8 @@ _Created: 04-07-2026 · Last updated: 04-07-2026_
 |---|---|
 | Как рендерить | **Расширяем существующую `shop.course.show`** (не generic LandingPage-билдер, не новая подсистема) |
 | Где хранится контент | **Структурированные реляции + Filament** (не JSON-блоб) |
-| Объём v1 | **Полный набор блоков** (MVP + доверие + техтребования + шаги оплаты) |
-| Идентичность страницы | **Одна страница** — тот же URL `/online/kursy/{slug}` продаёт холодному трафику и служит деталями для купивших |
+| Объем v1 | **Полный набор блоков** (MVP + доверие + техтребования + шаги оплаты) |
+| Идентичность страницы | **Одна страница** — тот же URL `/online/kursy/{slug}` продает холодному трафику и служит деталями для купивших |
 
 ---
 
@@ -95,7 +95,7 @@ audience            json      nullable   // «Для кого» — массив
 outcomes            json      nullable   // «Чему научитесь» — массив строк
 tech_requirements   text      nullable   // per-course override; пусто → общий текст
 meta_title          string    nullable   // SEO <title> (override; пусто → фолбэк = title курса)
-meta_description    string    nullable   // SEO meta description (override; пусто → усечённое description)
+meta_description    string    nullable   // SEO meta description (override; пусто → усеченное description)
 ```
 Касты в модели: `audience` и `outcomes` → `'array'`.
 
@@ -109,7 +109,7 @@ is_preview   boolean default false   // бесплатный публичный 
 photo_path   string nullable   // фото для блока преподавателя (сейчас поля нет)
 ```
 
-### Что НЕ создаём
+### Что НЕ создаем
 - ❌ `course_modules` — программа уже моделируется `CourseBlock` (title, dates, description) + `lessons`.
 - ❌ Отдельный движок лендинга — используем `Course` + Blade, не generic `LandingPage`.
 - ❌ Поля лендинга в JSON-блобе — по решению всё структурировано.
@@ -126,7 +126,7 @@ photo_path   string nullable   // фото для блока преподава�
 6. **Программа курса** (аккордеон блоков) — *есть*, `id="program"`
 7. **Пример урока** — `id="sample"`, гейт-плеер `Lesson` с `is_preview=true`; hidden если у курса нет preview-урока
 8. **Преподаватель(и)** — bio + фото, основной и со-препод
-9. **Тарифы** — `id="tariffs"`, *есть* (сохранить якорь, на него ведёт карточка каталога)
+9. **Тарифы** — `id="tariffs"`, *есть* (сохранить якорь, на него ведет карточка каталога)
 10. **Отзывы** — hidden если пивот пуст
 11. **FAQ по курсу** — аккордеон, hidden если `course_faqs` пуст
 12. **Техтребования + как проходит оплата** — общий партиал (+ override)
@@ -164,7 +164,7 @@ per-course override или общий дефолт из `MarketingSetting`.
 ### Blade
 Новые партиалы в `resources/views/shop/partials/` (audience, outcomes, sample, teachers,
 testimonials, faq, tech-payment, trust-strip, final-cta) — включаются из `show.blade.php`.
-Тёмная тема и токены (`#E85C24`, `#111622`, `#1F2636`) — как в каталоге.
+Темная тема и токены (`#E85C24`, `#111622`, `#1F2636`) — как в каталоге.
 
 ### Filament — [CourseResource](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/CourseResource.php)
 Сейчас RelationManagers пусты — это и есть точка расширения.
@@ -198,7 +198,7 @@ vitrina перечисляет события `view_course_page`, `sample_lesson
 `faq_expand`, `begin_checkout`. Разметку повесить отдельной фазой (data-атрибуты в партиалах
 готовим сразу, GA4/Metrica-провод — позже).
 
-## Вне объёма (отдельные слои vitrina, не эта спека)
+## Вне объема (отдельные слои vitrina, не эта спека)
 
 Подписка на весь каталог · лид-магниты + email-цепочки · унификация реквизитов/ценовых якорей
 (ИП Гасунс vs ИП Поликарпова, «от 400 ₽») · миграция платформы. Каждое — отдельный @DECIDE в GTD.
@@ -208,7 +208,7 @@ vitrina перечисляет события `view_course_page`, `sample_lesson
 1. **Отзывы:** ✅ библиотека `testimonials` + пивот `course_testimonial` (переиспользование между курсами).
 2. **Пример урока:** ✅ переиспользуем гейт-плеер `Lesson` (`lessons.is_preview`), публично только флаг-урок —
    см. «Пример урока — доступ и безопасность». (Отдельного видео-поля на курсе нет.)
-3. **SEO-поля:** ✅ v1 — `meta_title`/`meta_description` сразу, с авто-фолбэком (title курса / усечённое description).
+3. **SEO-поля:** ✅ v1 — `meta_title`/`meta_description` сразу, с авто-фолбэком (title курса / усеченное description).
 
 ---
 

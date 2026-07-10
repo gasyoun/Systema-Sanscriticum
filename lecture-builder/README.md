@@ -3,7 +3,7 @@
 HTTP-микросервис для сборки лекций. Используется из Laravel-админки
 (панель «Конструктор лекций»).
 
-Переиспользует логику из `../lecture-ui/` (makejson2, build) — обёртка
+Переиспользует логику из `../lecture-ui/` (makejson2, build) — обертка
 поверх существующего пайплайна, не дублирующая его.
 
 ## Установка
@@ -90,7 +90,7 @@ LECTURE_BUILDER_TOKEN=<тот же токен>
 ├── slides/                 ← создано preprocess
 │   └── XX_NN.jpg
 ├── data.json               ← создано preprocess, патчится Laravel
-├── backups/                ← бэкапы data.json (создаёт Laravel)
+├── backups/                ← бэкапы data.json (создает Laravel)
 └── output/                 ← создано render
     └── lecture.html
 ```

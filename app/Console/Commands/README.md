@@ -9,7 +9,7 @@ Artisan-команды. Запускаются через `php artisan <имя>`
 php artisan archives:clean
 ```
 Удаляет ZIP-архивы материалов старше 24 часов из `storage/app/tmp/course-archives/`.  
-Запускается по расписанию ежечасно. Выводит объём освобождённого места.
+Запускается по расписанию ежечасно. Выводит объем освобожденного места.
 
 ### `ImportAcademyData`
 ```bash
@@ -31,7 +31,7 @@ php artisan articles:import-html {path}
 php artisan media:migrate-to-curator
 ```
 Переносит загруженные файлы из старого формата хранилища в Filament Curator.  
-Создаёт записи в таблице `media`.
+Создает записи в таблице `media`.
 
 ### `MigrateBuilderMedia`
 ```bash

@@ -55,10 +55,10 @@ follow-up ticket** (§5, ticket 6) rather than guessing at a ranking here.
 |---|---|---|---|
 | 1 | "Оплатил, а доступа нет" / "не могу войти" | `docs/access-self-service-spec.md` `key_missing_for_paid_range` finding | ❌ No — spec only |
 | 2 | "Не могу войти" (password) | `PasswordResetController` exists, but nothing surfaces it from a locked-lesson context | 🟡 Mechanism exists, not surfaced |
-| 3 | "Не подключён бот" | `telegram.connect` deep-link exists (dashboard shows connect status) | 🟡 Surfaced on dashboard, not from a *locked-lesson* context |
+| 3 | "Не подключен бот" | `telegram.connect` deep-link exists (dashboard shows connect status) | 🟡 Surfaced on dashboard, not from a *locked-lesson* context |
 | 4 | "Где записи" (recordings) | No dedicated flow; explicitly out of Phase 1 scope per `access-self-service-spec.md` §"Граница" | ❌ Not scoped anywhere yet |
 | 5 | "Не продлил" / "оплата просрочена" | "Мои долги" tab, `DebtPaymentResolver` | ✅ Fully built |
-| 6 | "Рассрочка — следующий платёж / погасить всё" | Same tab, promise-aware checkout | ✅ Fully built |
+| 6 | "Рассрочка — следующий платеж / погасить всё" | Same tab, promise-aware checkout | ✅ Fully built |
 | 7 | "Какой бот подключать / где что" | No structured onboarding surface; `cabinet-bot.md` FAQ is Telegram/VK-only | ❌ Web-side gap |
 | 8 | Everything else (общий вопрос) | Free-text chat → AI → optional human escalation via magic phrase | 🟡 Works but ungrounded (no diagnostic context attached to escalation) |
 

@@ -17,7 +17,7 @@
 ### `SendPaymentToSheetJob`
 Отправляет данные платежа в n8n-вебхук для синхронизации с Google Sheets.  
 5 попыток с экспоненциальным откатом. Финальный сбой логируется.  
-URL вебхука берётся из `config('services.n8n.payment_webhook')`.
+URL вебхука берется из `config('services.n8n.payment_webhook')`.
 
 ### `BuildLectureHtmlJob`
 Вызывает `LectureBuilderClient::render()` для сборки HTML лекции из JSON.  
@@ -35,8 +35,8 @@ URL вебхука берётся из `config('services.n8n.payment_webhook')`.
 Запускается по расписанию каждые 5 минут через `Console/Kernel.php`.
 
 ### `TrackLessonViewJob`
-Upsert-запись в `lesson_views`: счётчик открытий, время, статус прохождения.  
-Инкрементирует счётчики уровня пользователя и сессии.  
+Upsert-запись в `lesson_views`: счетчик открытий, время, статус прохождения.  
+Инкрементирует счетчики уровня пользователя и сессии.  
 Пишет событие `lesson_open` в `ActivityEvent`.  
 Использует очередь `tracking` (отдельная от основной, чтобы не задерживать важные задачи).
 

@@ -174,10 +174,10 @@ Reordered by what a first-time buyer actually needs, in the order they need it:
   автосписание на нашей платформе — поэтому проверяем вручную"*). Gives foreign buyers a
   timeframe to hold onto instead of silence.
 - **Success page (F6):** *"Доступ откроется в течение пары минут. Если через 10 минут доступа
-  всё ещё нет — напишите куратору в Telegram, мы разберёмся."* — turns an anxious wait into a
+  всё еще нет — напишите куратору в Telegram, мы разберемся."* — turns an anxious wait into a
   bounded one with an escape hatch.
 - **Fail page (F7):** *"Оплата не прошла или была отменена. Если деньги списались — не платите
-  повторно, напишите нам, мы проверим и либо вернём доступ, либо деньги."* + a direct
+  повторно, напишите нам, мы проверим и либо вернем доступ, либо деньги."* + a direct
   "Попробовать снова" button back to the same tariff checkout, not just to `/`.
 - **Guest form fields (F10):** one small helper line under city/birth-year:
   *"Город и год рождения помогают нам точнее считать статистику курса — не влияют на цену
@@ -206,7 +206,7 @@ Reordered by what a first-time buyer actually needs, in the order they need it:
    `checkout/show.blade.php`. *Effort: trivial.*
 7. **Cross-link checkout → debtor self-service** — if a logged-in user with an open debt lands
    on `/checkout/{tariff}` directly (not via the dashboard's debt CTA), show a small banner:
-   *"У вас есть незавершённая договорённость по оплате — перейти в «Мои долги»"* linking to the
+   *"У вас есть незавершенная договоренность по оплате — перейти в «Мои долги»"* linking to the
    dashboard tab. *Effort: small* (needs `StudentDebtsService::forUser()` check in
    `CheckoutController::show()` — read-only, no logic change to debt calculation itself).
 8. **Bundle multi-block debt into one checkout** — already scoped as Phase 2 §2 in
