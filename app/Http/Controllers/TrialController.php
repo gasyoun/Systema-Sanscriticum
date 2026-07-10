@@ -134,7 +134,11 @@ final class TrialController extends Controller
             'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
 
-        app(AttributionService::class)->applyToNewUser($user);
+        $attribution = app(AttributionService::class);
+        $attribution->applyToNewUser($user);
+        if ($request->filled('signup_source')) {
+            $attribution->applySignupSource($user, $request->input('signup_source'));
+        }
 
         auth()->login($user);
 

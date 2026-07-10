@@ -120,6 +120,11 @@
                            class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] py-3 px-4 transition">
                 </div>
 
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Откуда вы о нас узнали? <span class="text-slate-500 normal-case">(необязательно)</span></label>
+                    @include('partials.signup-source-select', ['dark' => true])
+                </div>
+
                 <label class="flex items-start gap-2.5 cursor-pointer">
                     <input type="checkbox" name="wants_announcements" value="1" @checked(old('wants_announcements', true))
                            class="mt-0.5 h-5 w-5 rounded border-[#1F2636] bg-[#0A0D14] text-[#38BDF8] focus:ring-[#38BDF8]">

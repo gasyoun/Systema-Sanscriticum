@@ -157,6 +157,23 @@ class AttributionTest extends TestCase
     }
 
     /** @test */
+    public function apply_signup_source_accepts_whitelist_and_ignores_garbage(): void
+    {
+        $user = User::factory()->create();
+        $service = app(AttributionService::class);
+
+        $service->applySignupSource($user, 'friend');
+        $this->assertSame('friend', $user->fresh()->signup_source);
+
+        // Значение вне белого списка молча игнорируется — поле необязательно.
+        $service->applySignupSource($user, '<script>alert(1)</script>');
+        $this->assertSame('friend', $user->fresh()->signup_source);
+
+        $service->applySignupSource($user, ['telegram']);
+        $this->assertSame('friend', $user->fresh()->signup_source);
+    }
+
+    /** @test */
     public function channel_conversion_report_connects_lead_user_and_payment(): void
     {
         $course = Course::factory()->create();
