@@ -170,4 +170,16 @@ class DeliverDueMarathonContentTest extends TestCase
 
         Http::assertNothingSent();
     }
+
+    /** H445 Phase 3 — the `deva` cohort's Day 1 message links the H312 transliterator tool. */
+    public function test_deva_cohort_day1_message_links_transliterator_tool(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        $this->enrollment([], ['cohort' => MarathonEnrollment::COHORT_DEVA, 'day0_started_at' => now()->subDay()]);
+
+        $this->artisan('marathon:deliver-due')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'name-in-devanagari'));
+    }
 }
