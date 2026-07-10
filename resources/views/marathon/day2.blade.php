@@ -1,0 +1,82 @@
+@extends('layouts.shop')
+
+@section('title', 'День 2 — Консультация по онлайн-курсам ОРС')
+
+@section('content')
+<div class="max-w-2xl mx-auto py-12 px-4">
+
+    <div class="text-center mb-8">
+        <p class="text-xs font-black uppercase tracking-widest text-[#E85C24] mb-2">День 2 из 3</p>
+        <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Как устроено санскритское слово</h1>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8"
+         x-data="{
+             quiz: @js($quiz),
+             idx: 0,
+             answered: false,
+             picked: null,
+             tap(i) {
+                 if (this.answered) return;
+                 this.picked = i;
+                 this.answered = true;
+             },
+             next() {
+                 this.idx++;
+                 this.answered = false;
+                 this.picked = null;
+             },
+             get step() { return this.quiz.steps[this.idx]; },
+             get isLast() { return this.idx === this.quiz.steps.length - 1; },
+             get done() { return this.idx >= this.quiz.steps.length; }
+         }">
+
+        <template x-if="! done">
+            <div>
+                <p class="text-sm font-bold text-gray-400 mb-3" x-text="'Вопрос ' + (idx + 1) + ' из ' + quiz.steps.length"></p>
+                <h2 class="text-xl font-bold text-[#1A1A1A] mb-6" x-text="step.text"></h2>
+                <div class="grid grid-cols-1 gap-3 mb-4">
+                    <template x-for="(opt, i) in step.opts" :key="i">
+                        <button type="button" @click="tap(i)"
+                                class="text-left px-5 py-4 rounded-xl border font-semibold transition-all"
+                                :class="answered
+                                    ? (i === step.correct ? 'border-green-400 bg-green-50 text-green-800' : (i === picked ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-200 text-gray-400'))
+                                    : 'border-gray-200 hover:border-[#E85C24]/60 hover:bg-[#E85C24]/5 text-gray-700 cursor-pointer'"
+                                x-text="opt"></button>
+                    </template>
+                </div>
+                <template x-if="answered">
+                    <div>
+                        <p class="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 mb-4" x-text="step.explain"></p>
+                        <button type="button" @click="next()"
+                                class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                            <span x-text="isLast ? 'Дальше — вопрос к консультации' : 'Далее'"></span>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template x-if="done">
+            <form method="POST" action="{{ route('marathon.day.complete', ['day' => 2, 'token' => $token]) }}">
+                @csrf
+                <div class="py-2">
+                    <p class="text-2xl text-center mb-2">🎉</p>
+                    <p class="font-bold text-[#1A1A1A] text-center mb-1">День 2 пройден!</p>
+                    <p class="text-sm text-gray-500 text-center mb-6">
+                        День 3 — живая консультация. Если у вас уже есть вопрос — оставьте его здесь,
+                        мы разберём его лично (необязательно).
+                    </p>
+                    <textarea name="question" rows="3" maxlength="2000"
+                              placeholder="Например: с чего мне начать — грамматика или чтение текстов?"
+                              class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24] mb-4">{{ $enrollment->day2_question }}</textarea>
+                    <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                        Завершить День 2
+                    </button>
+                </div>
+            </form>
+        </template>
+
+    </div>
+</div>
+@endsection

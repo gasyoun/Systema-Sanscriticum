@@ -106,6 +106,12 @@ Route::get('/online/konsultaciya', [MarathonController::class, 'show'])->name('m
 Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->name('marathon.register');
 // H471 Phase 4 — ₽500 «с проверкой» track checkout.
 Route::post('/online/konsultaciya/pay', [MarathonController::class, 'pay'])->name('marathon.pay');
+// H483 Phase 3b — Day 1/2 tap-choice recognition pages, keyed by the lead's
+// existing magnet_token (no new token needed).
+Route::get('/online/konsultaciya/day/{day}/{token}', [MarathonController::class, 'day'])
+    ->where('day', '[12]')->name('marathon.day');
+Route::post('/online/konsultaciya/day/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
+    ->where('day', '[12]')->name('marathon.day.complete');
 
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
