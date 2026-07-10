@@ -103,7 +103,7 @@ Real remaining gaps toward jivo.md Phase 0–6 parity — not decisions, punch-l
 | No support-ops follow-up-task model | 4 | `ScheduledReminder`/`ReminderSuggestion` are academic (lesson reminders), not a Jivo-style task-from-dialog object |
 | Web-chat analytics missing | 5 | `SupportDailyRollup`/`TelegramSupportAnalytics` only aggregate the Telegram-support side |
 | No support↔outcome correlation | 5 | No dashboard linking support topics to payment/access/attendance failures; no unresolved-after-N-hours KPI |
-| Reply-out path untested in production | 6 | `support_unified_reply` + `TELEGRAM_SUPPORT_ENABLED` flags wired (`DeliverSupportReply`, `TelegramSupportSyncService::deliverMessage()`) but never exercised live |
+| Reply-out delivery untested in production | 6 | **Import/sync path is live in prod** (Ivan operationalized the userbot — logged-in MTProto session + queue worker, confirmed 11-07-2026). What remains untested live is the **reply-OUT delivery** path: `support_unified_reply` + `DeliverSupportReply` + `TelegramSupportSyncService::deliverMessage()` are wired but the send has never been exercised. Controlled canary = WS1.3 of [ROADMAP_TELEGRAM_SCALING_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) |
 | VK/Telegram-student-bot channel tagging | 6 | Both write to `ChatMessage` but aren't distinctly badged as separate channels in the unified view |
 | No email channel | 6 | Not started; jivo.md treats this as later-phase anyway |
 

@@ -5,7 +5,9 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 > Узкий roadmap **support-автоматизации** — как за год снять с людей автоматизируемые 38.5 % вопросов
 > рабочего чата «Отдел заботы». Общий продуктовый roadmap —
 > [`docs/ROADMAP_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md)
-> (этот документ его детализирует по одному направлению, не заменяет). Геймификация — отдельно в
+> (этот документ его детализирует по одному направлению, не заменяет). Этот же документ — **WS1**
+> зонтичного [`docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md)
+> (вся Telegram-поверхность: inbound/outbound/надёжность/student-AI). Геймификация — отдельно в
 > [`PRANA_ROADMAP.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/PRANA_ROADMAP.md).
 > Ground truth по support-коду — [`docs/support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md):
 > сверяться с ним ПЕРЕД реализацией любого тикета отсюда.
@@ -255,7 +257,7 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
 | Прод-миграции стоят (блокер деплоя, см. `.ai_state.md` WIP) | S2, S3, S6 (новые таблицы/колонки) | те же fallback-SQL-паттерны, что H204; тикеты не начинать раскатывать до снятия блокера |
 | Доступный контур (S8) — денежно-критичный | S8 | обязательный регресс access-сьютов + осторожный review; self-починка только read-only и переотправка уже положенного |
 | Открытые находки [SECURITY_AUDIT_money_2026-07-02.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SECURITY_AUDIT_money_2026-07-02.md) | S8 особенно | закрыть до включения self-service доступа в проде |
-| Reply-out путь (userbot) не проверен живьем | S3/S5 (доставка ответа в TG-support) | черновики работают и без него (куратор шлет как сейчас); live-проверка — отдельный @DO |
+| Reply-out доставка не проверена живьём | S3/S5 (доставка ответа в TG-support) | **Import-путь userbot ЖИВОЙ в проде** (Иван операционализировал — сессия+воркер, подтв. 11-07-2026); не проверена именно **доставка reply-out**. Черновики работают и без него (куратор шлёт как сейчас); контролируемая канарейка — WS1.3 зонтичного [ROADMAP_TELEGRAM_SCALING_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) |
 | Прод-данные недоступны агентам локально | S4, S6, S7 | расчеты тестируются на сиде; для аналитики есть локальный ledger-аналог (H138/H240-прецедент) |
 
 ---
