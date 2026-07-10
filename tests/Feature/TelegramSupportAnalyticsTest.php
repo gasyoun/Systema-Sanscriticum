@@ -382,7 +382,7 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertSame(1, TelegramSupportMessage::count());
     }
 
-    public function test_madelineproto_sync_recovers_once_after_dead_ipc_channel(): void
+    public function test_madelineproto_sync_resets_and_skips_on_dead_ipc_channel(): void
     {
         $this->skipWithoutMadelineProto();
 
@@ -399,21 +399,28 @@ class TelegramSupportAnalyticsTest extends TestCase
 
         FakeMadelineProtoClient::$histories = [
             5001 => [
-                ['id' => 1, 'date' => strtotime('2026-06-28 11:00:00'), 'message' => 'После оживления IPC', 'peer_id' => 5001, 'from_id' => ['user_id' => 9003]],
+                ['id' => 1, 'date' => strtotime('2026-06-28 11:00:00'), 'message' => 'Не должно синкнуться в этот заход', 'peer_id' => 5001, 'from_id' => ['user_id' => 9003]],
             ],
         ];
         FakeMadelineProtoClient::$lastHistoryRequests = [];
-        // Первый start() имитирует мёртвый IPC-канал; сервис должен почистить сокет
-        // и повторить — второй start() уже успешен.
+        // start() имитирует мёртвый IPC-канал. Сервис НЕ ретраит в этом же процессе:
+        // сбрасывает демон/сокет и завершает заход как session_recovering —
+        // восстановится следующий свежий запуск.
         FakeMadelineProtoClient::$startFailures = ['Sending on the channel failed. Did the context die?'];
         FakeMadelineProtoClient::$startCalls = 0;
 
         $result = app(TelegramSupportSyncService::class)->sync();
 
-        $this->assertSame('ok', $result['status']);
-        $this->assertSame(1, $result['synced']);
-        $this->assertSame(2, FakeMadelineProtoClient::$startCalls);
-        $this->assertSame(1, TelegramSupportMessage::count());
+        $this->assertSame('session_recovering', $result['status']);
+        $this->assertSame(0, $result['synced']);
+        // Ровно один заход в start() — никакого бесполезного in-process retry.
+        $this->assertSame(1, FakeMadelineProtoClient::$startCalls);
+        $this->assertSame(0, TelegramSupportMessage::count());
+
+        // Ошибка зафиксирована в аккаунте (видно оператору), но НЕ как success.
+        $account = TelegramSupportAccount::where('name', 'support')->firstOrFail();
+        $this->assertNotNull($account->last_sync_error);
+        $this->assertNull($account->last_successful_sync_at);
     }
 
     public function test_madelineproto_sync_limits_dialogs_per_run_to_avoid_flooding(): void
