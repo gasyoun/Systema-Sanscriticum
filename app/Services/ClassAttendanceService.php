@@ -141,6 +141,89 @@ class ClassAttendanceService
     }
 
     /**
+     * Консолидированный отчёт посещаемости за период (GC-B2, H553): rate по
+     * студенту/группе/курсу, тренд по неделям, хронические неявки. Реюз
+     * forSchedule() построчно — никакой новой логики подсчёта, только агрегация.
+     *
+     * @return array{
+     *     students: Collection,
+     *     groups: Collection,
+     *     courses: Collection,
+     *     weekly: Collection,
+     *     chronic: Collection,
+     * }
+     */
+    public function dashboard(CarbonInterface $from, CarbonInterface $to, int $chronicThreshold): array
+    {
+        $schedules = Schedule::query()
+            ->whereNotNull('start')
+            ->whereBetween('start', [$from, $to])
+            ->with(['group', 'course'])
+            ->orderBy('start')
+            ->get();
+
+        $students = []; // user_id => ['user'=>, 'expected'=>, 'attended'=>, 'history'=>[bool,...] по времени]
+        $groups = []; // group_id => ['group'=>, 'expected'=>, 'attended'=>]
+        $courses = []; // course_id => ['course'=>, 'expected'=>, 'attended'=>]
+        $weekly = []; // 'YYYY-MM-DD' (начало недели) => ['expected'=>, 'attended'=>]
+
+        foreach ($schedules as $schedule) {
+            $data = $this->forSchedule($schedule);
+            $weekKey = $schedule->start->copy()->startOfWeek()->toDateString();
+            $weekly[$weekKey] ??= ['expected' => 0, 'attended' => 0];
+
+            foreach ($data['roster'] as $row) {
+                /** @var User $user */
+                $user = $row['user'];
+                $attended = (bool) $row['attended'];
+
+                $students[$user->id] ??= ['user' => $user, 'expected' => 0, 'attended' => 0, 'history' => []];
+                $students[$user->id]['expected']++;
+                $students[$user->id]['attended'] += $attended ? 1 : 0;
+                $students[$user->id]['history'][] = $attended;
+
+                $weekly[$weekKey]['expected']++;
+                $weekly[$weekKey]['attended'] += $attended ? 1 : 0;
+
+                if ($schedule->group) {
+                    $groups[$schedule->group_id] ??= ['group' => $schedule->group, 'expected' => 0, 'attended' => 0];
+                    $groups[$schedule->group_id]['expected']++;
+                    $groups[$schedule->group_id]['attended'] += $attended ? 1 : 0;
+                }
+
+                if ($schedule->course) {
+                    $courses[$schedule->course_id] ??= ['course' => $schedule->course, 'expected' => 0, 'attended' => 0];
+                    $courses[$schedule->course_id]['expected']++;
+                    $courses[$schedule->course_id]['attended'] += $attended ? 1 : 0;
+                }
+            }
+        }
+
+        $withRate = fn (array $row): array => $row + [
+            'rate' => $row['expected'] > 0 ? round($row['attended'] / $row['expected'] * 100) : 0,
+        ];
+
+        // Хронические неявки: последние $chronicThreshold занятий подряд (history
+        // уже в хронологическом порядке — orderBy('start')) — все пропущены.
+        $chronic = collect($students)
+            ->filter(function (array $row) use ($chronicThreshold): bool {
+                $tail = array_slice($row['history'], -$chronicThreshold);
+
+                return count($tail) >= $chronicThreshold && ! in_array(true, $tail, true);
+            })
+            ->map($withRate)
+            ->values();
+
+        return [
+            'students' => collect($students)->map($withRate)->sortBy('rate')->values(),
+            'groups' => collect($groups)->map($withRate)->sortBy('rate')->values(),
+            'courses' => collect($courses)->map($withRate)->sortBy('rate')->values(),
+            'weekly' => collect($weekly)->map($withRate)->sortKeys(),
+            'chronic' => $chronic,
+        ];
+    }
+
+    /**
      * Один статус-ряд по студенту. present, если Zoom опознал (есть запись
      * посещаемости с user_id); иначе clicked, если перешёл по ссылке; иначе absent.
      *
