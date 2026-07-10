@@ -48,7 +48,7 @@ class MarathonPaidCheckoutTest extends TestCase
 
     public function test_paid_track_checkout_creates_pending_payment_and_redirects(): void
     {
-        [, ] = $this->paidTrackEnrollment();
+        $this->paidTrackEnrollment();
 
         Http::fake(['*' => Http::response([
             'Data' => ['paymentLink' => 'https://pay.tochka/marathon1', 'paymentLinkId' => 'pl_marathon1'],
@@ -112,7 +112,7 @@ class MarathonPaidCheckoutTest extends TestCase
 
     public function test_guest_with_existing_email_is_rejected(): void
     {
-        [, ] = $this->paidTrackEnrollment('newcomer@example.test');
+        $this->paidTrackEnrollment('newcomer@example.test');
         User::factory()->create(['email' => 'taken@example.test']);
 
         $this->post(route('marathon.pay'), [
