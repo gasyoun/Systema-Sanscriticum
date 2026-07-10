@@ -37,6 +37,7 @@ class MarathonEnrollment extends Model
         'consultation_booked_at',
         'recording_sent_at',
         'paid_at',
+        'warm_tail_last_day_sent',
     ];
 
     protected $casts = [
@@ -48,6 +49,7 @@ class MarathonEnrollment extends Model
         'consultation_booked_at' => 'datetime',
         'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
+        'warm_tail_last_day_sent' => 'integer',
     ];
 
     public function lead(): BelongsTo
@@ -77,5 +79,27 @@ class MarathonEnrollment extends Model
         $elapsedDays = (int) $this->day0_started_at->startOfDay()->diffInDays($now->copy()->startOfDay());
 
         return min($elapsedDays, 3);
+    }
+
+    /**
+     * H440 Phase 6 — which warm-tail day (1..warm_tail_days) this unpaid
+     * registrant is on, or null if not yet in the window (still inside the
+     * 3-day marathon) or past it (window elapsed, stop sending). Counted
+     * from the same personal day0_started_at clock as currentDay() — Day 4
+     * overall = warm-tail day 1.
+     */
+    public function warmTailDay(?Carbon $now = null): ?int
+    {
+        $now ??= now();
+        $elapsedDays = (int) $this->day0_started_at->startOfDay()->diffInDays($now->copy()->startOfDay());
+        $warmTailDay = $elapsedDays - 3;
+
+        $windowDays = (int) config('marathon.warm_tail_days', 13);
+
+        if ($warmTailDay < 1 || $warmTailDay > $windowDays) {
+            return null;
+        }
+
+        return $warmTailDay;
     }
 }
