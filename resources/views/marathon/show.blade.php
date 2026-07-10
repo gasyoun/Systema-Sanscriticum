@@ -18,8 +18,16 @@
 
     @if (session('marathon_result'))
         <div class="mb-8 p-6 bg-green-50 border border-green-200 rounded-2xl">
-            <p class="font-bold text-green-800">Вы записаны! Первый день придёт в Telegram
-                (<a href="{{ config('marathon.telegram_channel_url') }}" class="underline">{{ config('marathon.telegram_channel_url') }}</a>).</p>
+            <p class="font-bold text-green-800 mb-3">Вы записаны! Чтобы получить личный День 1 и День 2 в Telegram,
+                нажмите кнопку ниже и запустите бота — без этого шага дни не придут.</p>
+            @if (session('marathon_telegram_link'))
+                <a href="{{ session('marathon_telegram_link') }}" target="_blank" rel="noopener"
+                   class="inline-block bg-[#0088cc] text-white font-bold px-6 py-3 rounded-xl">
+                    Продолжить в Telegram
+                </a>
+            @endif
+            <p class="text-sm text-green-700 mt-3">Канал с общими новостями:
+                <a href="{{ config('marathon.telegram_channel_url') }}" class="underline">{{ config('marathon.telegram_channel_url') }}</a></p>
         </div>
     @endif
 
