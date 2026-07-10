@@ -28,6 +28,7 @@ class DeliverDueMarathonContentTest extends TestCase
     {
         $lead = Lead::factory()->create(array_merge([
             'telegram_chat_id' => '12345',
+            'magnet_token' => \Illuminate\Support\Str::random(12),
         ], $leadOverrides));
 
         return MarathonEnrollment::factory()->create(array_merge([

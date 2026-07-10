@@ -44,8 +44,13 @@ use Illuminate\View\View;
  * (bespoke Payment, no Tariff row). Promo-code issuance and flagship-course
  * credit are explicit follow-ons, not built here — see H471.
  *
- * Phases 3b/5/6 (interactive tap-choice UI, live consultation booking,
- * warm-tail) are NOT in this slice — see Uprava/handoffs/H440-*.md.
+ * Phase 3b (H483): `day()`/`completeDay()` — genuine tap-choice recognition
+ * pages for Day 1/2 (reuses ShopController::start()'s Alpine quiz pattern,
+ * keyed by the lead's existing magnet_token), plus Day-3 question capture
+ * (`day2_question`). No webhook/bot changes — see H483 "Why this scope".
+ *
+ * Phases 5/6 (live consultation booking, warm-tail) are NOT in this slice —
+ * see Uprava/handoffs/H440-*.md.
  */
 class MarathonController extends Controller
 {
@@ -254,6 +259,63 @@ class MarathonController extends Controller
         ]);
 
         return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
+     * H483 — Day 1/2 tap-choice recognition page. Keyed by the lead's
+     * existing magnet_token (H446/H464), no new token needed. 404 for an
+     * unknown token or a day that doesn't match an enrolled lead.
+     */
+    public function day(int $day, string $token): View
+    {
+        $lead = Lead::where('magnet_token', $token)->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        $quiz = config("marathon.day{$day}_quiz");
+        abort_if($quiz === null, 404);
+
+        return view("marathon.day{$day}", [
+            'quiz' => $quiz,
+            'day' => $day,
+            'token' => $token,
+            'enrollment' => $enrollment,
+        ]);
+    }
+
+    /**
+     * H483 — marks the tap sequence finished (day{N}_engaged_at, distinct
+     * from day{N}_completed_at which means "delivered" — see H464/H471,
+     * do NOT conflate). Day 2 optionally persists the Day-3 consultation
+     * question (day2_question, column exists since H446, unused until now).
+     */
+    public function completeDay(int $day, string $token, Request $request): RedirectResponse
+    {
+        $lead = Lead::where('magnet_token', $token)->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        $updates = [];
+
+        if ($day === 1 && $enrollment->day1_engaged_at === null) {
+            $updates['day1_engaged_at'] = now();
+        }
+
+        if ($day === 2) {
+            if ($enrollment->day2_engaged_at === null) {
+                $updates['day2_engaged_at'] = now();
+            }
+
+            $question = trim((string) $request->input('question', ''));
+            if ($question !== '' && $enrollment->day2_question === null) {
+                $updates['day2_question'] = mb_substr($question, 0, 2000);
+            }
+        }
+
+        if ($updates !== []) {
+            $enrollment->update($updates);
+        }
+
+        return redirect()->route('marathon.day', ['day' => $day, 'token' => $token])
+            ->with('marathon_day_done', true);
     }
 
     /**

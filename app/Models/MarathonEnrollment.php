@@ -32,6 +32,8 @@ class MarathonEnrollment extends Model
         'day0_started_at',
         'day1_completed_at',
         'day2_completed_at',
+        'day1_engaged_at',
+        'day2_engaged_at',
         'consultation_booked_at',
         'paid_at',
     ];
@@ -40,6 +42,8 @@ class MarathonEnrollment extends Model
         'day0_started_at' => 'datetime',
         'day1_completed_at' => 'datetime',
         'day2_completed_at' => 'datetime',
+        'day1_engaged_at' => 'datetime',
+        'day2_engaged_at' => 'datetime',
         'consultation_booked_at' => 'datetime',
         'paid_at' => 'datetime',
     ];

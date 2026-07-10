@@ -30,30 +30,64 @@ return [
     // Day-3 warm-tail length in days — median time-to-purchase from CUSTDEV_2026.md.
     'warm_tail_days' => (int) env('MARATHON_WARM_TAIL_DAYS', 13),
 
-    // H464 Phase 2 — Day 1/2 drip content, sent as Telegram messages by
-    // `marathon:deliver-due`. Self-contained recognition text (question +
-    // answer in the same message, "ноль производства" per MG's all-zero-
-    // cohort ruling in H440 §1a) — no reply/interaction is required or
-    // tracked. Cyrillic only, no devanagari. Plain config values, not
-    // env()-wrapped like the scalars above — long copy doesn't belong in
-    // .env, but it is still centralized here, not hardcoded in the command.
+    // H464 Phase 2 (revised H483 Phase 3b) — Day 1/2 drip content, sent as
+    // Telegram messages by `marathon:deliver-due`. `{link}` is replaced by
+    // `marathon:deliver-due` with the enrollee's personal tap-choice page
+    // URL (magnet_token-keyed, H483) — kept as a template placeholder here,
+    // not hardcoded in the command. Cyrillic only, no devanagari (H440 §1a).
     // HTML tags, not Markdown asterisks — TelegramDeliveryChannel::sendMessage
     // sends parse_mode=HTML (app/Services/Messaging/TelegramDeliveryChannel.php).
     'day1_message' => 'День 1. Санскрит роднее, чем кажется 👋'."\n\n"
-        .'Слово <b>veda</b> — «знание». Узнаёте корень? Это тот же корень, что в '
-        .'русском «ведать», «весть», «невежда» — санскрит и русский родня, оба из '
-        .'одной индоевропейской семьи.'."\n\n"
-        .'Ещё пример: <b>matar</b> — «мать». <b>bhratar</b> — «брат». Слышите похожесть?'."\n\n"
-        .'Завтра — как устроено само слово: корень + приставка/суффикс, на паре '
-        .'простых примеров. 15 минут, в своём темпе.',
+        .'Пара минут на тап-выбор — без деванагари, без письма, просто узнавание.'."\n\n"
+        .'{link}',
 
     'day2_message' => 'День 2. Как устроено санскритское слово 🧩'."\n\n"
-        .'Санскритское слово — почти всегда корень + аффиксы. Пример: <b>gam</b> '
-        .'(«идти») → <b>gacchati</b> («он идёт») — корень <b>gam</b> + показатель '
-        .'настоящего времени. Тот же корень виден в словах <b>āgama</b> («приход, '
-        .'писание») и <b>saṃgati</b> («встреча»).'."\n\n"
-        .'Это и есть то, что откроет вам санскритский текст: не запоминать тысячи '
-        .'слов отдельно, а видеть корни и узнавать родню.'."\n\n"
-        .'День 3 — живая консультация: разберём именно ваш вопрос о том, с чего '
-        .'начать. Приходите с вопросом — сбор вопросов к эфиру откроется отдельно.',
+        .'Корень + аффикс — на паре простых примеров. И в конце — оставьте свой '
+        .'вопрос к живой консультации Дня 3.'."\n\n"
+        .'{link}',
+
+    // H483 Phase 3b — tap-choice recognition content for the Day 1/2 pages
+    // (resources/views/marathon/day1.blade.php / day2.blade.php). Linear
+    // steps, not the branching results{} shape ShopController::start() uses
+    // for its master-quiz (recognition tasks don't route anywhere — each
+    // answer just reveals an explanation and advances). 0-indexed `correct`.
+    'day1_quiz' => [
+        'steps' => [
+            [
+                'text' => 'Слово veda значит...',
+                'opts' => ['Видеть', 'Знать', 'Течь'],
+                'correct' => 1,
+                'explain' => 'Верно! «Veda» — «знание». Тот же корень, что в русском «ведать», «весть», «невежда» — санскрит и русский родня, оба из одной индоевропейской семьи.',
+            ],
+            [
+                'text' => 'А matar?',
+                'opts' => ['Отец', 'Мать', 'Брат'],
+                'correct' => 1,
+                'explain' => 'Да! «Matar» — «мать». Слышите родство? bhratar — «брат» устроено так же.',
+            ],
+            [
+                'text' => 'Bhratar — это...',
+                'opts' => ['Сестра', 'Друг', 'Брат'],
+                'correct' => 2,
+                'explain' => 'Точно! Родство санскрита и русского — не совпадение, а общий индоевропейский предок.',
+            ],
+        ],
+    ],
+
+    'day2_quiz' => [
+        'steps' => [
+            [
+                'text' => 'gam значит «идти». Что добавляется, чтобы получить «он идёт» — gacchati?',
+                'opts' => ['Только окончание', 'Корень + показатель времени', 'Совсем другое слово'],
+                'correct' => 1,
+                'explain' => 'Верно! gacchati = корень gam + показатель настоящего времени. Санскритское слово почти всегда — корень + аффиксы.',
+            ],
+            [
+                'text' => 'āgama значит «приход, писание». Какой в нём корень?',
+                'opts' => ['gam', 'ā', 'ma'],
+                'correct' => 0,
+                'explain' => 'Да, тот же gam! И в saṃgati («встреча») — тоже он. Один корень, разные приставки — разный смысл.',
+            ],
+        ],
+    ],
 ];
