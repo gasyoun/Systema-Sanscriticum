@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · Выберите нужный глагол</title>
+<link rel="stylesheet" href="../engine.css">
+<style>
+  body { margin: 0; background: var(--page-bg, #f3ecdb); }
+  @media (prefers-color-scheme: dark) { body { background: #1c1712; } }
+  :root[data-theme="dark"] body { background: #1c1712; }
+  :root[data-theme="light"] body { background: #f3ecdb; }
+  .page { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+  .eyebrow {
+    font-family: "Noto Sans Devanagari","Nirmala UI",serif;
+    font-size: 13px; letter-spacing: .16em; color: #a8451f; font-weight: 600; margin: 0 0 6px;
+  }
+  @media (prefers-color-scheme: dark) { .eyebrow { color: #e07a4e; } }
+  :root[data-theme="dark"] .eyebrow { color: #e07a4e; }
+  h1 {
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 18px; color: #2a2118; text-wrap: balance;
+  }
+  @media (prefers-color-scheme: dark) { h1 { color: #efe6d4; } }
+  :root[data-theme="dark"] h1 { color: #efe6d4; }
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #d9cba8; font-size: 12.5px; color: #6b5d47; }
+  footer a { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #423628; color: #b3a488; } footer a { color: #e07a4e; } }
+  :root[data-theme="dark"] footer { border-color: #423628; color: #b3a488; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">संस्कृतम् · क्रियापदम्</p>
+  <h1>Выберите нужный глагол</h1>
+  <div id="app"></div>
+  <footer>
+    Заполните каждый пропуск подходящей формой глагола. Подсказки дают русский перевод искомого глагола;
+    «Заново» перемешивает варианты. Учебный виджет Systema&nbsp;Sanscriticum.
+  </footer>
+</div>
+
+<script src="../engine.js"></script>
+<script>
+  // Passage: गजः … । नेत्रं … । माला … ॥  etc.  Each blank lists the correct
+  // form first (LearningApps convention); the engine shuffles at render and
+  // tracks correctness by value.
+  ClozeExercise.mount(document.getElementById("app"), {
+    task: "Выберите нужный глагол для каждого пропуска, затем нажмите «Проверить».",
+    feedback: "Отлично, верное решение!",
+    segments: [
+      "गजः ",
+      { options: ["गच्छति", "तिष्ठति", "लसति"], answer: 0, gloss: "идет" },
+      "। नेत्रं ",
+      { options: ["स्फुरति", "वदति", "विकसति"], answer: 0, gloss: "дрожит" },
+      "। माला ",
+      { options: ["म्लायति", "पतति", "गच्छति"], answer: 0, gloss: "вянет" },
+      "॥\nलता ",
+      { options: ["पुष्प्यति", "स्फुरति", "फलति"], answer: 0, gloss: "цветет" },
+      "। वटः ",
+      { options: ["तिष्ठति", "पठति", "म्लायति"], answer: 0, gloss: "стоит" },
+      "। सीता ",
+      { options: ["वदति", "लसति", "पतति"], answer: 0, gloss: "говорит" },
+      "॥\nचूतः ",
+      { options: ["फलति", "स्फुरति", "गच्छति"], answer: 0, gloss: "плодоносит" },
+      "। पुष्पं ",
+      { options: ["विकसति", "तिष्ठति", "वदति"], answer: 0, gloss: "распускается" },
+      "। रामः ",
+      { options: ["पठति", "पतति", "पुष्प्यति"], answer: 0, gloss: "читает" },
+      "॥\nपात्रं ",
+      { options: ["पतति", "लसति", "फलति"], answer: 0, gloss: "падает" },
+      "। मुखं ",
+      { options: ["लसति", "पुष्प्यति", "स्फुरति"], answer: 0, gloss: "сияет" },
+      "॥"
+    ]
+  });
+</script>
+</body>
+</html>
