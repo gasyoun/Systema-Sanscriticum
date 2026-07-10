@@ -29,6 +29,37 @@
             <p class="text-sm text-green-700 mt-3">Канал с общими новостями:
                 <a href="{{ config('marathon.telegram_channel_url') }}" class="underline">{{ config('marathon.telegram_channel_url') }}</a></p>
         </div>
+
+        @if (session('marathon_track') === 'paid' && ! session('marathon_paid'))
+            <div class="mb-8 p-6 bg-orange-50 border border-orange-200 rounded-2xl">
+                <p class="font-bold text-[#1A1A1A] mb-1">Трек «с проверкой» выбран, но ещё не оплачен</p>
+                <p class="text-sm text-gray-600 mb-4">
+                    Оплатите {{ $paidTrackPrice }} ₽ — куратор будет проверять вашу практику Дней 1–2,
+                    и вам гарантировано место на живой консультации Дня 3.
+                </p>
+                <form method="POST" action="{{ route('marathon.pay') }}" class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="contact" value="{{ session('marathon_contact') }}">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email для чека</label>
+                        <input type="email" name="email" required
+                               class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+                    </div>
+                    @error('email')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                        Оплатить {{ $paidTrackPrice }} ₽
+                    </button>
+                </form>
+            </div>
+        @endif
+    @endif
+
+    @if (session('error'))
+        <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
+            {{ session('error') }}
+        </div>
     @endif
 
     <form method="POST" action="{{ route('marathon.register') }}" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6">

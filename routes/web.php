@@ -104,6 +104,8 @@ Route::get('/online/materialy', [MaterialsController::class, 'index'])->name('sh
 // личные дни-0..3 от day0_started_at, НЕ общий календарь потока.
 Route::get('/online/konsultaciya', [MarathonController::class, 'show'])->name('marathon.show');
 Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->name('marathon.register');
+// H471 Phase 4 — ₽500 «с проверкой» track checkout.
+Route::post('/online/konsultaciya/pay', [MarathonController::class, 'pay'])->name('marathon.pay');
 
 // Страница одного курса
 Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');

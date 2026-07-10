@@ -10,6 +10,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
 use Illuminate\Database\Eloquent\Builder;
@@ -165,6 +166,12 @@ class Payment extends Model
     public function isTrial(): bool
     {
         return $this->tariff === 'trial';
+    }
+
+    /** H440/H471 — оплата трека «с проверкой» ₽500 диагностического марафона. Доступа к курсу не даёт. */
+    public function isMarathonPaid(): bool
+    {
+        return $this->tariff === 'marathon_paid';
     }
 
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
@@ -476,6 +483,14 @@ class Payment extends Model
             return;
         }
 
+        // Марафон «с проверкой»: доступа к курсу/группам не даёт — только
+        // помечает энрол оплаченным (H471). course_id у такого платежа нет.
+        if ($payment->isMarathonPaid()) {
+            $payment->processMarathonPaid();
+
+            return;
+        }
+
         $payment->processSuccessfulPayment();
 
         // Conditional access под обещание — реальных денег нет,
@@ -676,6 +691,52 @@ class Payment extends Model
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
         SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    // ==========================================
+    // МАРАФОН «С ПРОВЕРКОЙ» ₽500 — отдельный путь (H471)
+    // ==========================================
+    /**
+     * Доступа к курсу/группам НЕ даёт — только помечает MarathonEnrollment
+     * оплаченным. Энрол ищется по lead_id (H446/H464 уже гарантируют один
+     * энрол на лида в рамках лендинга марафона — новой колонки-связки не
+     * потребовалось). Идемпотентно: paid_at выставляется один раз.
+     */
+    public function processMarathonPaid(): void
+    {
+        $enrollment = MarathonEnrollment::where('lead_id', $this->lead_id)->first();
+
+        if (! $enrollment) {
+            Log::warning('Payment::processMarathonPaid — MarathonEnrollment не найден', [
+                'payment_id' => $this->id,
+                'lead_id' => $this->lead_id,
+            ]);
+
+            return;
+        }
+
+        if ($enrollment->paid_at === null) {
+            $enrollment->update(['paid_at' => now()]);
+        }
+
+        $this->lead?->markConverted();
+
+        // Подтверждение шлём в Telegram лида (канал Phase 2 — TelegramDeliveryChannel
+        // по telegram_chat_id лида), не SendTelegramMessageJob (тот резолвит по
+        // User, отдельная от лид-магнит-бота привязка — марафонский лид её не имеет).
+        $lead = $this->lead;
+        if ($lead && $lead->telegram_chat_id) {
+            $text = '✅ <b>Оплата получена</b>'."\n\n"
+                .'Трек «с проверкой» марафона оплачен. Ваша практика Дней 1–2 '
+                .'разбирается куратором, и вам гарантировано место на живой '
+                .'консультации Дня 3 — ваш вопрос разберут лично.';
+
+            app(DeliveryChannelManager::class)
+                ->get('telegram')
+                ->sendMessage((string) $lead->telegram_chat_id, $text);
+        }
+
+        app(CuratorNotifier::class)->paymentPaid($this);
     }
 
     /**
