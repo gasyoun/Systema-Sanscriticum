@@ -126,4 +126,83 @@ class ClassAttendanceServiceTest extends TestCase
         $this->assertCount(1, $matrix['schedules']);
         $this->assertSame('present', $matrix['status'][$student->id][$s->id]);
     }
+
+    /** @test */
+    public function dashboard_returns_empty_report_when_no_schedules(): void
+    {
+        $report = app(ClassAttendanceService::class)->dashboard(now()->subMonth(), now(), 3);
+
+        $this->assertTrue($report['students']->isEmpty());
+        $this->assertTrue($report['groups']->isEmpty());
+        $this->assertTrue($report['courses']->isEmpty());
+        $this->assertTrue($report['weekly']->isEmpty());
+        $this->assertTrue($report['chronic']->isEmpty());
+    }
+
+    /** @test */
+    public function dashboard_computes_rates_by_student_group_course_and_weekly_trend(): void
+    {
+        $course = \App\Models\Course::factory()->create();
+        $group = Group::create(['name' => 'Группа 5']);
+        $group->courses()->attach($course->id);
+        $present = User::factory()->create(['name' => 'Present5']);
+        $absent = User::factory()->create(['name' => 'Absent5']);
+        $group->users()->attach([$present->id, $absent->id]);
+
+        $s1 = Schedule::create(['title' => 'Зан. 1', 'start' => now()->subWeeks(2), 'group_id' => $group->id, 'course_id' => $course->id]);
+        $s2 = Schedule::create(['title' => 'Зан. 2', 'start' => now()->subWeek(), 'group_id' => $group->id, 'course_id' => $course->id]);
+
+        foreach ([$s1, $s2] as $s) {
+            WebinarAttendance::create([
+                'schedule_id' => $s->id, 'user_id' => $present->id,
+                'zoom_participant_uuid' => 'w'.$s->id, 'joined_at' => $s->start, 'duration_seconds' => 1800,
+            ]);
+        }
+
+        $report = app(ClassAttendanceService::class)->dashboard(now()->subMonth(), now(), 2);
+
+        $byName = $report['students']->keyBy(fn ($r) => $r['user']->name);
+        $this->assertSame(2, $byName['Present5']['expected']);
+        $this->assertSame(2, $byName['Present5']['attended']);
+        $this->assertSame(100, $byName['Present5']['rate']);
+        $this->assertSame(0, $byName['Absent5']['rate']);
+
+        $this->assertCount(1, $report['groups']);
+        $this->assertSame($group->id, $report['groups']->first()['group']->id);
+
+        $this->assertCount(1, $report['courses']);
+        $this->assertSame($course->id, $report['courses']->first()['course']->id);
+
+        $this->assertCount(2, $report['weekly']);
+
+        // Absent5 missed both (threshold=2) consecutive classes -- chronic.
+        $chronicNames = $report['chronic']->map(fn ($r) => $r['user']->name);
+        $this->assertTrue($chronicNames->contains('Absent5'));
+        $this->assertFalse($chronicNames->contains('Present5'));
+    }
+
+    /** @test */
+    public function dashboard_chronic_absentees_require_threshold_consecutive_recent_misses(): void
+    {
+        $group = Group::create(['name' => 'Группа 6']);
+        $student = User::factory()->create(['name' => 'Mixed6']);
+        $group->users()->attach($student->id);
+
+        $s1 = Schedule::create(['title' => 'Зан. 1', 'start' => now()->subWeeks(3), 'group_id' => $group->id]);
+        $s2 = Schedule::create(['title' => 'Зан. 2', 'start' => now()->subWeeks(2), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Зан. 3', 'start' => now()->subWeek(), 'group_id' => $group->id]);
+
+        // Attended the OLDEST class only -- the two most recent are misses, but
+        // that's below a threshold of 3 consecutive misses.
+        WebinarAttendance::create([
+            'schedule_id' => $s1->id, 'user_id' => $student->id,
+            'zoom_participant_uuid' => 'x1', 'joined_at' => $s1->start,
+        ]);
+
+        $report = app(ClassAttendanceService::class)->dashboard(now()->subMonth(), now(), 3);
+        $this->assertTrue($report['chronic']->isEmpty());
+
+        $report2 = app(ClassAttendanceService::class)->dashboard(now()->subMonth(), now(), 2);
+        $this->assertCount(1, $report2['chronic']);
+    }
 }

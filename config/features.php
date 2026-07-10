@@ -126,4 +126,13 @@ return [
      | docs/newsletter-subscribe.md).
      */
     'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', true),
+
+    /*
+     | Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
+     | rate по студенту/группе/курсу, тренд по неделям, список хронических
+     | неявок, экспорт CSV — поверх уже существующих ClassAttendanceService /
+     | WebinarAttendance, без новой логики подсчёта. ВЫКЛ по умолчанию — это
+     | deploy-рубильник; пороги — в config/attendance.php.
+     */
+    'attendance_dashboard' => (bool) env('ATTENDANCE_DASHBOARD', false),
 ];
