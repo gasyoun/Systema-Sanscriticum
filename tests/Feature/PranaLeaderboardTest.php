@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Lead;
+use App\Models\MarathonEnrollment;
 use App\Models\User;
 use App\Support\PranaLeaderboard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -81,5 +83,67 @@ class PranaLeaderboardTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertTrue($rows->first()['is_me']);
         $this->assertSame(1, $rows->where('is_me', true)->count()); // без дубля
+    }
+
+    // --- H447 §5 leaderboard A/B: arm B (un-masked) is gated OFF by default ---
+
+    private function studentWithArm(string $name, int $lifetime, string $arm): User
+    {
+        $lead = Lead::factory()->create();
+        MarathonEnrollment::factory()->create(['lead_id' => $lead->id, 'ab_arm' => $arm]);
+
+        return User::factory()->create([
+            'name' => $name,
+            'is_admin' => false,
+            'lifetime_prana' => $lifetime,
+            'lead_id' => $lead->id,
+        ]);
+    }
+
+    /** @test */
+    public function arm_b_stays_masked_when_the_unmask_gate_is_off(): void
+    {
+        config(['marathon.leaderboard_unmask_enabled' => false]);
+        $this->studentWithArm('Иванов Аруна', 500, MarathonEnrollment::ARM_B);
+
+        $rows = PranaLeaderboard::rows(10);
+
+        $this->assertSame('Иванов А.', $rows->first()['display']);
+    }
+
+    /** @test */
+    public function arm_a_stays_masked_even_when_the_unmask_gate_is_on(): void
+    {
+        config(['marathon.leaderboard_unmask_enabled' => true]);
+        $this->studentWithArm('Петров Борис', 400, MarathonEnrollment::ARM_A);
+
+        $rows = PranaLeaderboard::rows(10);
+
+        $this->assertSame('Петров Б.', $rows->first()['display']);
+    }
+
+    /** @test */
+    public function only_arm_b_unmasks_and_only_when_the_gate_is_on(): void
+    {
+        config(['marathon.leaderboard_unmask_enabled' => true]);
+        $this->studentWithArm('Петров Борис', 400, MarathonEnrollment::ARM_A);
+        $this->studentWithArm('Сидоров Виктор', 300, MarathonEnrollment::ARM_B);
+
+        $rows = PranaLeaderboard::rows(10)->keyBy('lifetime');
+
+        $this->assertSame('Петров Б.', $rows[400]['display']);
+        $this->assertSame('Сидоров Виктор', $rows[300]['display']);
+    }
+
+    /** @test */
+    public function unlinked_students_default_to_masked(): void
+    {
+        // No Lead/enrollment at all — armFor() returns null, never treated as arm B.
+        config(['marathon.leaderboard_unmask_enabled' => true]);
+        $this->student('Кузнецов Игорь', 200);
+
+        $rows = PranaLeaderboard::rows(10);
+
+        $this->assertSame('Кузнецов И.', $rows->first()['display']);
     }
 }

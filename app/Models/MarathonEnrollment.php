@@ -38,12 +38,19 @@ class MarathonEnrollment extends Model
     /** January cohort — деванагари-входная (H445 §1, engine reuse of H440). */
     public const COHORT_DEVA = 'deva';
 
+    /** Arm A — control, name-masked leaderboard (see PranaLeaderboard). Default for everyone. */
+    public const ARM_A = 'a';
+
+    /** Arm B — treatment, un-masked leaderboard. Gated OFF by default, see config/marathon.php. */
+    public const ARM_B = 'b';
+
     protected $fillable = [
         'lead_id',
         'track',
         'cohort',
         'quiz_goal',
         'quiz_level',
+        'ab_arm',
         'day2_question',
         'day0_started_at',
         'day1_completed_at',
@@ -146,5 +153,37 @@ class MarathonEnrollment extends Model
         }
 
         return $warmTailDay;
+    }
+
+    /**
+     * H447 §5 leaderboard A/B. Deterministic 50/50 split, stable for a given
+     * id forever (same input → same arm, across sessions/requests/deploys).
+     *
+     * NOTE ON DEVIATION FROM THE HANDOFF WORDING: the design doc specifies
+     * "hash of user_id" — but marathon_enrollments is keyed by lead_id, and a
+     * registrant has no User account yet at enrolment time (accounts are
+     * created lazily at first payment, see MarathonController::pay()). This
+     * hashes `lead_id` instead, which is the only stable identity that
+     * exists at the point the arm must be fixed. Once a Lead converts to a
+     * User (User::lead_id), PranaLeaderboard::armFor() looks the arm back up
+     * via that link, so a student's arm is still consistent everywhere they
+     * appear as a User. Flagged for a human to confirm this substitution is
+     * acceptable, or to add a user_id column instead once accounts exist
+     * up-front for this cohort.
+     */
+    public static function computeArm(int $id): string
+    {
+        return crc32('h447-marathon-ab:'.$id) % 2 === 0 ? self::ARM_A : self::ARM_B;
+    }
+
+    /** Assigns and persists the arm if not already set — idempotent, never flips an existing arm. */
+    public function ensureArm(): string
+    {
+        if ($this->ab_arm === null) {
+            $this->ab_arm = self::computeArm($this->lead_id);
+            $this->save();
+        }
+
+        return $this->ab_arm;
     }
 }
