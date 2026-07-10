@@ -234,15 +234,18 @@ class ShopController extends Controller
 
         $deposit = MarketingSetting::cached();
 
-        // Кнопка «Купить пробное»: задана цена и предстоящее живое занятие, курс ещё
-        // не куплен, и (для залогиненного) нет активного гранта на урок-заготовку.
+        // Кнопка «Купить пробное»: задана цена и выбрано событие расписания
+        // (предстоящее — живьём, ИЛИ прошедшее — его запись), курс ещё не куплен,
+        // и (для залогиненного) нет активного гранта на урок-заготовку.
         $course->loadMissing('trialSchedule');
         $trialSession = $course->trialSchedule;
         $showTrialCta = (float) $course->trial_price > 0
             && $trialSession
             && $trialSession->start
-            && $trialSession->start->isFuture()
             && empty($purchasedKeys);
+
+        // Прошедшее занятие → пробное открывает запись (иначе — живое по Zoom).
+        $trialIsRecording = (bool) ($trialSession && $trialSession->start && $trialSession->start->isPast());
 
         if ($showTrialCta && Auth::check() && $course->trial_lesson_id) {
             $alreadyHasTrial = LessonAccessGrant::query()
@@ -253,7 +256,7 @@ class ShopController extends Controller
             $showTrialCta = ! $alreadyHasTrial;
         }
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'scheduleGroups', 'lessonsByBlock'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock'));
     }
 
     /**

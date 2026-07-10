@@ -474,16 +474,21 @@
                 <div class="mb-8 max-w-3xl rounded-2xl border border-[#38BDF8]/30 bg-gradient-to-r from-[#38BDF8]/10 to-transparent p-5 lg:p-6 flex flex-col md:flex-row md:items-center gap-4">
                     <div class="flex-1">
                         <div class="text-[10px] font-black uppercase tracking-widest text-[#38BDF8] mb-1.5">
-                            <i class="fas fa-graduation-cap mr-1"></i> Попробуйте вживую перед покупкой
+                            <i class="fas fa-graduation-cap mr-1"></i>
+                            {{ ! empty($trialIsRecording) ? 'Посмотрите запись перед покупкой' : 'Попробуйте вживую перед покупкой' }}
                         </div>
                         <h3 class="text-lg lg:text-xl font-bold text-white mb-1">
                             Пробное занятие за {{ $trialAmountLabel }} ₽
                         </h3>
                         <p class="text-sm text-slate-400 leading-relaxed">
                             @if($course->trialSchedule?->start)
-                                Живое занятие <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F, H:i') }}</span> — ссылку на Zoom пришлём на email.
+                                @if(! empty($trialIsRecording))
+                                    Запись занятия от <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F') }}</span> — доступ откроем в личном кабинете сразу после оплаты.
+                                @else
+                                    Живое занятие <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F, H:i') }}</span> — ссылку на Zoom пришлём на email.
+                                @endif
                             @else
-                                Оплатите одно живое занятие, чтобы оценить подачу и формат.
+                                Оплатите одно занятие, чтобы оценить подачу и формат.
                             @endif
                             Сумма <span class="text-[#38BDF8] font-bold">{{ $trialAmountLabel }} ₽</span>
                             будет зачтена в стоимость тарифа при последующей оплате.
