@@ -107,6 +107,13 @@
                 <i class="fas fa-layer-group mr-3 w-5 text-center {{ request()->routeIs('student.srs') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
                 Карточки
             </a>
+
+            {{-- H447 — статистика по карточкам, тот же флаг --}}
+            <a href="{{ route('student.srs.stats') }}"
+               class="{{ request()->routeIs('student.srs.stats') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.srs.stats') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Статистика карточек
+            </a>
             @endif
 
             {{-- Сообщения --}}

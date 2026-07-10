@@ -13,8 +13,9 @@ declare(strict_types=1);
 */
 
 return [
-    // Главный рубильник фичи. Прод — OFF, пилот включается SRS_ENABLED=true.
-    'enabled' => (bool) env('SRS_ENABLED', false),
+    // Главный рубильник фичи. Включена по умолчанию с H447 (Saraswati trainer
+    // suite Phase 1) — движок протестирован (SrsReviewTest), пилот август-2026.
+    'enabled' => (bool) env('SRS_ENABLED', true),
 
     // Сколько новых (ещё не виденных) карточек показывать в день на колоду.
     'new_per_day' => (int) env('SRS_NEW_PER_DAY', 20),

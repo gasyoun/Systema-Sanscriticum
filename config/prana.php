@@ -31,6 +31,14 @@ return [
         'open_lesson_view' => 20,
         'daily_login' => 5,
         'payment_success' => 50,
+
+        // H447 — Saraswati trainer suite Phase 1. Awarded on EVERY graded SRS
+        // review, right or wrong (deliberate — copied from Saraswati 1.3.8's
+        // "3 either way", anxiety-sensitive audience, see
+        // Uprava/docs/SARASWATI_TRAINERS_2026.md §1). Idempotent via
+        // PranaService's (user_id, reason, source_type, source_id) unique key,
+        // keyed off the srs_review_logs row.
+        'srs_review' => 3,
     ],
 
     // Ранги по накопленной пране (lifetime_prana, тратами не уменьшается).
@@ -61,6 +69,7 @@ return [
         'p2p_received' => 'Подарок от студента',
         'decay' => 'Сгорело за бездействие',
         'streak' => 'Бонус за серию дней',
+        'srs_review' => 'Повторение карточки',
     ],
 
     // Бонус праны за серию активных дней подряд (streak). Веха → бонус. Начисляется
