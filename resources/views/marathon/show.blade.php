@@ -1,0 +1,78 @@
+@extends('layouts.shop')
+
+@section('title', 'Консультация по онлайн-курсам Общества ревнителей санскрита')
+
+@section('content')
+<div class="max-w-2xl mx-auto py-12 px-4">
+
+    {{-- Anti-urgency hero — no countdown, no "spots left", evergreen entry any day. --}}
+    <div class="text-center mb-10">
+        <h1 class="text-3xl md:text-4xl font-black text-[#1A1A1A] mb-4">
+            Пойми, как устроен санскрит, и выбери свой курс
+        </h1>
+        <p class="text-gray-600 text-lg font-medium">
+            3 дня, ~15 минут в день, в своём темпе. Личный маршрут, а не общий поток —
+            начать можно в любой день.
+        </p>
+    </div>
+
+    @if (session('marathon_result'))
+        <div class="mb-8 p-6 bg-green-50 border border-green-200 rounded-2xl">
+            <p class="font-bold text-green-800">Вы записаны! Первый день придёт в Telegram
+                (<a href="{{ config('marathon.telegram_channel_url') }}" class="underline">{{ config('marathon.telegram_channel_url') }}</a>).</p>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('marathon.register') }}" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6">
+        @csrf
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Что вас привлекает в санскрите?</label>
+            <select name="quiz_goal" required class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+                <option value="">Выберите...</option>
+                @foreach ($quizGoals as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Формат участия</label>
+            <div class="space-y-2">
+                <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer">
+                    <input type="radio" name="track" value="free" checked class="mt-1">
+                    <span>
+                        <span class="font-bold block">Бесплатно</span>
+                        <span class="text-sm text-gray-500">2 дня записей + маршрут + консультация в записи.</span>
+                    </span>
+                </label>
+                <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer">
+                    <input type="radio" name="track" value="paid" class="mt-1">
+                    <span>
+                        <span class="font-bold block">«С проверкой» — {{ $paidTrackPrice }} ₽</span>
+                        <span class="text-sm text-gray-500">
+                            Куратор проверяет практику, личный разбор на живой консультации с {{ $hostName }},
+                            скидка {{ $couponAmount }} ₽ на любой первый курс.
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Контакт (телефон, email или Telegram)</label>
+            <input type="text" name="contact" required class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Имя (необязательно)</label>
+            <input type="text" name="name" class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+        </div>
+
+        <button type="submit" class="w-full px-6 py-3.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+            Записаться
+        </button>
+    </form>
+
+</div>
+@endsection
