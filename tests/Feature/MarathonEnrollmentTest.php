@@ -162,4 +162,41 @@ class MarathonEnrollmentTest extends TestCase
         $farFuture = MarathonEnrollment::factory()->create(['day0_started_at' => now()->subDays(30)]);
         $this->assertSame(3, $farFuture->currentDay());
     }
+
+    /** H445 Phase 1 — this route only ever serves the August landing today. */
+    public function test_registration_defaults_to_zero_cohort(): void
+    {
+        $this->landing();
+
+        $this->post(route('marathon.register'), [
+            'contact' => 'cohort-default@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ]);
+
+        $enrollment = MarathonEnrollment::whereHas('lead', fn ($q) => $q->where('contact', 'cohort-default@example.com'))->firstOrFail();
+        $this->assertSame(MarathonEnrollment::COHORT_ZERO, $enrollment->cohort);
+        $this->assertFalse($enrollment->isDevaCohort());
+    }
+
+    public function test_content_falls_back_to_shared_default_when_cohort_has_no_override(): void
+    {
+        $enrollment = MarathonEnrollment::factory()->deva()->make();
+
+        $this->assertTrue($enrollment->isDevaCohort());
+        // No `cohorts.deva.day1_message` entry exists yet (Phase 2+ content) —
+        // content() must fall back to the shared `zero` default, not null.
+        $this->assertSame(config('marathon.day1_message'), $enrollment->content('day1_message'));
+    }
+
+    public function test_content_prefers_cohort_override_when_present(): void
+    {
+        config(['marathon.cohorts.deva.day1_message' => 'деванагари день 1']);
+
+        $zero = MarathonEnrollment::factory()->make();
+        $deva = MarathonEnrollment::factory()->deva()->make();
+
+        $this->assertSame(config('marathon.day1_message'), $zero->content('day1_message'));
+        $this->assertSame('деванагари день 1', $deva->content('day1_message'));
+    }
 }

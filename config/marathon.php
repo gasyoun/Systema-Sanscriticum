@@ -171,4 +171,30 @@ return [
             .'Напишите сюда в любой момент — подберём курс под ваш вопрос с Дня 2 '
             .'и оформим со скидкой.',
     ],
+
+    // H445 Phase 1 — sparse per-cohort content overlay. Only `zero` (the
+    // August all-zero cohort) has real content, and it lives at the
+    // top-level keys above (unchanged, as-built by H440) — `zero` needs no
+    // entry here. `deva` (January) overrides ONLY day1/day2 content
+    // (MarathonEnrollment::content() falls back to the top-level default for
+    // any key without an override — price/host/schedule/day3 stay shared).
+    // Read via $enrollment->content('day1_message'), never config('marathon.
+    // day1_message') directly, once an enrollment might be either cohort.
+    'cohorts' => [
+        // H445 §1 delta, NOT yet built — placeholders only, so Phase 1 wiring
+        // is testable without inventing real curriculum content ahead of the
+        // dedicated phases:
+        //   Day 1 → H312 transliterator ("your name in devanagari" task,
+        //     own future handoff — see Uprava/handoffs/H445-*.md §1)
+        //   Day 2 → real mantra/line reading task + H313 level-quiz layered
+        //     on top of the intent-quiz (own future handoff)
+        //   Paid-track voice submissions → curator review workflow (own
+        //     future handoff, not existing anywhere yet)
+        // 'deva' => [
+        //     'day1_message' => '...',
+        //     'day2_message' => '...',
+        //     'day1_quiz' => ['steps' => [...]],
+        //     'day2_quiz' => ['steps' => [...]],
+        // ],
+    ],
 ];
