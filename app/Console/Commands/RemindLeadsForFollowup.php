@@ -8,6 +8,7 @@ use App\Jobs\SendTelegramMessageJob;
 use App\Models\Lead;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Будит поле next_contact_at: раз в день напоминает КАЖДОМУ ответственному
@@ -82,9 +83,9 @@ class RemindLeadsForFollowup extends Command
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Lead>  $group
+     * @param  Collection<int, Lead>  $group
      */
-    private function buildMessage(\Illuminate\Support\Collection $group, Carbon $today): string
+    private function buildMessage(Collection $group, Carbon $today): string
     {
         $lines = [
             '🔔 <b>Заявки на сегодня</b>',
@@ -97,7 +98,7 @@ class RemindLeadsForFollowup extends Command
             /** @var Lead $lead */
             $name = e((string) ($lead->name ?: 'Без имени'));
             $contact = $lead->contact ? ' — '.e((string) $lead->contact) : '';
-            $status = Lead::STATUSES[$lead->status] ?? $lead->status;
+            $status = Lead::statuses()[$lead->status] ?? $lead->status;
             $due = $lead->next_contact_at?->format('d.m.Y');
             $overdue = $lead->next_contact_at && $lead->next_contact_at->startOfDay()->lt($today)
                 ? ' ⚠️ просрочено'
