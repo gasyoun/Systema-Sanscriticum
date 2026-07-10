@@ -6,6 +6,15 @@ This repository does not currently publish versioned release notes. Entries use
 dated maintenance snapshots; keep upcoming work under [Unreleased] until it is
 ready for a dated entry.
 
+## [Unreleased]
+
+### Added
+- Configurable CRM lead stages (GC-C1): `lead_stages` table replaces the
+  hardcoded `Lead::STATUSES`/`FINAL_STATUSES` constants, plus a Filament
+  drag-drop kanban board (`/admin/leads-board`) alongside the existing flat
+  leads table. Payment auto-convert behavior unchanged.
+  [PR #408](https://github.com/gasyoun/Systema-Sanscriticum/pull/408)
+
 ## [1.1.1] - 2026-07-09
 
 ### Added
