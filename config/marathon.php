@@ -27,6 +27,16 @@ return [
     // Delivery channel — Telegram, NOT the internal Systema UI (MG decision).
     'telegram_channel_url' => env('MARATHON_TELEGRAM_CHANNEL_URL', 'https://t.me/samskrte'),
 
+    // H447 §5 — leaderboard A/B. Arm assignment (50/50, fixed at enrolment on
+    // marathon_enrollments.ab_arm) ALWAYS runs so the experiment has data.
+    // This flag gates only the ACTUAL UN-MASKING for arm B — it un-masks
+    // real student names to peers, which needs an explicit enrolment-consent
+    // decision (see Uprava/docs/SARASWATI_TRAINERS_2026.md §5 guard, and run
+    // /publish-safety-check before flipping this). DEFAULT OFF — do not
+    // change without that sign-off. While off, every arm (A and B alike)
+    // sees the name-masked leaderboard.
+    'leaderboard_unmask_enabled' => (bool) env('MARATHON_LEADERBOARD_UNMASK_ENABLED', false),
+
     // Day-3 warm-tail length in days — median time-to-purchase from CUSTDEV_2026.md.
     'warm_tail_days' => (int) env('MARATHON_WARM_TAIL_DAYS', 13),
 

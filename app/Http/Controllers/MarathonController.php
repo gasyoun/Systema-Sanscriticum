@@ -146,6 +146,10 @@ class MarathonController extends Controller
             'lead_id' => $lead->id,
             'track' => $validated['track'],
             'quiz_goal' => $validated['quiz_goal'],
+            // H447 §5 — assigned ONCE at enrolment, never recomputed per
+            // request; see MarathonEnrollment::computeArm() for why this is
+            // keyed on lead_id rather than user_id.
+            'ab_arm' => MarathonEnrollment::computeArm($lead->id),
             'day0_started_at' => now(),
         ]);
 

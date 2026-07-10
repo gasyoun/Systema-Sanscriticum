@@ -162,4 +162,70 @@ class MarathonEnrollmentTest extends TestCase
         $farFuture = MarathonEnrollment::factory()->create(['day0_started_at' => now()->subDays(30)]);
         $this->assertSame(3, $farFuture->currentDay());
     }
+
+    // --- H447 §5 leaderboard A/B: arm is assigned once at enrolment and never flips ---
+
+    public function test_registration_assigns_an_ab_arm(): void
+    {
+        $this->landing();
+
+        $this->post(route('marathon.register'), [
+            'contact' => 'arm@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ]);
+
+        $lead = Lead::where('contact', 'arm@example.com')->firstOrFail();
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
+
+        $this->assertContains($enrollment->ab_arm, [MarathonEnrollment::ARM_A, MarathonEnrollment::ARM_B]);
+        $this->assertSame(MarathonEnrollment::computeArm($lead->id), $enrollment->ab_arm);
+    }
+
+    public function test_ab_arm_is_stable_across_repeated_computation(): void
+    {
+        // "Across sessions" = recomputing later (a fresh session/request)
+        // for the same identity must always land on the same arm.
+        $lead = Lead::factory()->create();
+
+        $arm1 = MarathonEnrollment::computeArm($lead->id);
+        $arm2 = MarathonEnrollment::computeArm($lead->id);
+        $arm3 = MarathonEnrollment::computeArm($lead->id);
+
+        $this->assertSame($arm1, $arm2);
+        $this->assertSame($arm1, $arm3);
+    }
+
+    public function test_duplicate_registration_does_not_change_the_assigned_arm(): void
+    {
+        $landing = $this->landing();
+        $lead = Lead::factory()->create(['contact' => 'repeat-arm@example.com', 'landing_page_id' => $landing->id]);
+        $enrollment = MarathonEnrollment::factory()->create([
+            'lead_id' => $lead->id,
+            'ab_arm' => MarathonEnrollment::ARM_B,
+        ]);
+
+        $this->post(route('marathon.register'), [
+            'contact' => 'repeat-arm@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'philo',
+        ]);
+
+        $enrollment->refresh();
+        $this->assertSame(MarathonEnrollment::ARM_B, $enrollment->ab_arm);
+    }
+
+    public function test_arm_split_is_roughly_fifty_fifty_across_many_ids(): void
+    {
+        $arms = collect(range(1, 500))->map(fn (int $id) => MarathonEnrollment::computeArm($id));
+
+        $countA = $arms->filter(fn ($a) => $a === MarathonEnrollment::ARM_A)->count();
+        $countB = $arms->filter(fn ($a) => $a === MarathonEnrollment::ARM_B)->count();
+
+        $this->assertSame(500, $countA + $countB);
+        // Not asserting an exact 250/250 split (hash-dependent) — just that
+        // neither arm dominates, i.e. the split is genuinely ~50/50.
+        $this->assertGreaterThan(150, $countA);
+        $this->assertGreaterThan(150, $countB);
+    }
 }

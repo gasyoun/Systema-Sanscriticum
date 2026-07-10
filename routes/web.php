@@ -235,6 +235,10 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     if (config('srs.enabled')) {
         Route::get('/dvaram/srs', [SrsController::class, 'review'])
             ->name('student.srs');
+
+        // H447 — per-trainer stats dashboard, same gate as the review route.
+        Route::get('/dvaram/srs/stats', [SrsController::class, 'stats'])
+            ->name('student.srs.stats');
     }
 
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');

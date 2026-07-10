@@ -9,6 +9,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsReviewLog;
 use App\Models\SrsReviewState;
 use App\Models\User;
+use App\Services\Prana\PranaService;
 use DateTimeImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -138,7 +139,7 @@ class ReviewService
 
         $scheduledDays = intdiv($updated->due->getTimestamp() - $reviewedAt->getTimestamp(), 86400);
 
-        SrsReviewLog::create([
+        $log = SrsReviewLog::create([
             'user_id' => $user->id,
             'card_id' => $card->id,
             'deck_id' => $card->deck_id,
@@ -150,6 +151,12 @@ class ReviewService
             'difficulty_after' => $updated->difficulty,
             'reviewed_at' => $reviewedAt,
         ]);
+
+        // H447 — flat XP on every graded review, wrong answers included
+        // (deliberate, see config/prana.php 'srs_review'). Idempotent by
+        // (user, 'srs_review', SrsReviewLog::class, $log->id) — a replay of
+        // this exact log row (e.g. a retried request) never double-awards.
+        app(PranaService::class)->award($user, 'srs_review', $log);
 
         return $state;
     }
