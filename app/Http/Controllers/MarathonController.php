@@ -142,9 +142,16 @@ class MarathonController extends Controller
             $lead = Lead::create($leadData);
         }
 
+        // H445 Phase 1 — this route only ever serves the August all-zero
+        // landing today (`cohort` defaults to `zero` at the DB level too);
+        // a January-cohort landing + route is its own future phase (see
+        // Uprava/handoffs/H445-*.md), wired through once that landing's
+        // slug/copy is actually decided. Explicit here, not left to the
+        // column default, so the intent reads at the call site.
         $enrollment = MarathonEnrollment::create([
             'lead_id' => $lead->id,
             'track' => $validated['track'],
+            'cohort' => MarathonEnrollment::COHORT_ZERO,
             'quiz_goal' => $validated['quiz_goal'],
             'day0_started_at' => now(),
         ]);
@@ -271,7 +278,9 @@ class MarathonController extends Controller
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
 
-        $quiz = config("marathon.day{$day}_quiz");
+        // H445 Phase 1 — per-cohort content (falls back to the shared `zero`
+        // default when the enrollment's cohort has no day{N}_quiz override).
+        $quiz = $enrollment->content("day{$day}_quiz");
         abort_if($quiz === null, 404);
 
         return view("marathon.day{$day}", [

@@ -20,6 +20,7 @@ class MarathonEnrollmentFactory extends Factory
         return [
             'lead_id' => Lead::factory(),
             'track' => MarathonEnrollment::TRACK_FREE,
+            'cohort' => MarathonEnrollment::COHORT_ZERO,
             'quiz_goal' => 'grammar',
             'day0_started_at' => now(),
         ];
@@ -28,5 +29,11 @@ class MarathonEnrollmentFactory extends Factory
     public function paid(): static
     {
         return $this->state(fn () => ['track' => MarathonEnrollment::TRACK_PAID]);
+    }
+
+    /** H445 Phase 1 */
+    public function deva(): static
+    {
+        return $this->state(fn () => ['cohort' => MarathonEnrollment::COHORT_DEVA]);
     }
 }
