@@ -1,0 +1,18 @@
+{
+  "course_id": "TEST0001",
+  "course_name": "Sample fixture course (not the real Memrise export)",
+  "source_url": null,
+  "language": "sa",
+  "exported_at": "2026-07-11",
+  "columns": {
+    "devanagari": "devanagari",
+    "iast": "iast",
+    "cyrillic": "cyrillic",
+    "translation": "translation",
+    "alt_answers": "alt_answers"
+  },
+  "levels": [
+    {"index": 1, "name": "Level 1", "file": "level_01.csv"},
+    {"index": 2, "name": "Level 2", "file": "level_02.csv"}
+  ]
+}
