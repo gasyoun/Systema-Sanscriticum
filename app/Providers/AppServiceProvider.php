@@ -18,6 +18,7 @@ use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
 use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -50,6 +51,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ZoomService::class,
             fn () => ZoomService::fromConfig(),
+        );
+        // Активный вебинарный провайдер — Zoom (GC-B3, H601). Смена на BigBlueButton —
+        // одна строка здесь, без изменений в вызывающем коде (ZoomWebhookController и т.д.).
+        $this->app->bind(
+            WebinarProvider::class,
+            fn ($app) => $app->make(ZoomService::class),
         );
     }
 

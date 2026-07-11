@@ -198,6 +198,15 @@ return [
         'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
     ],
 
+    // === BIGBLUEBUTTON — скелет драйвера (GC-B3, H601) ===
+    // Целевой провайдер по ruling R1 (docs/DECISIONS_roadmap_forks_2026H2.md,
+    // Uprava). Ни один env здесь на проде пока не задан — BigBlueButtonService
+    // намеренно бросает исключение при вызове (полное развёртывание — Q4).
+    'bigbluebutton' => [
+        'base_url' => env('BBB_BASE_URL'),
+        'secret' => env('BBB_SECRET'),
+    ],
+
     // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===
     // Кнопка провайдера показывается, только если задан его client_id (см.
     // App\Services\SocialAuthService::enabledProviders). Секреты — в .env.

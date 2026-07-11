@@ -9,6 +9,14 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- WebinarProvider abstraction (GC-B3, H601): vendor-agnostic `App\Services\Webinar\WebinarProvider`
+  interface (`createMeeting`/`fetchParticipants`/`normalizeWebhook`); `ZoomService` now
+  implements it with no behaviour change to existing methods (extract-interface refactor);
+  `schedules.meeting_*` generated columns alias `zoom_*` (reversible migration, no vendor
+  name leak in the schema); `BigBlueButtonService` skeleton driver (method stubs + BBB
+  checksum-API scaffolding, throws until the Q4 full-deployment ticket lands) — insurance
+  against a Zoom departure per ruling R1
+  ([docs/DECISIONS_roadmap_forks_2026H2.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md)).
 - 3-day diagnostic marathon, Phase 6 (H440): 13-day evergreen warm-tail for
   unpaid registrants (Days 4-16 off the personal `day0_started_at` clock),
   cycling own-pace/installments/teacher-credibility/one testimonial themes,
