@@ -112,6 +112,10 @@ return [
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
         'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: API::class,
+        // Минут без успешного синка, после которых сессия считается протухшей
+        // (и SupportObservability, и telegram-support:healthcheck читают отсюда —
+        // один порог, не два разных магических числа).
+        'stale_after_minutes' => (int) env('TELEGRAM_SUPPORT_STALE_AFTER_MINUTES', 15),
     ],
 
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
