@@ -15,9 +15,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Дашборд наблюдаемости поддержки (W3.3, H597): здоровье userbot-сессий, лаг
- * синка, доля успешной доставки исходящих, объём обращений к LLM. Read-only
- * поверх существующих агрегатов — никакой новой логики записи. За рубильником
+ * Дашборд наблюдаемости поддержки (W3.3, H597 + H763 follow-up): здоровье
+ * userbot-сессий, лаг синка, доля успешной доставки исходящих, объём и
+ * (с H763) оценка расхода обращений к LLM. Read-only поверх существующих
+ * агрегатов — никакой новой логики записи. За рубильником
  * features.support_observability по образцу attendance_dashboard.
  */
 class SupportObservability extends Page
@@ -66,7 +67,7 @@ class SupportObservability extends Page
      *     accounts: Collection,
      *     delivery: array{outgoing_total: int, tracked: int, delivered: int, pending: int, rate: float|null},
      *     rollup: array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int},
-     *     llm: array{total: int, by_type: Collection}
+     *     llm: array{total: int, by_type: Collection, spend_usd: float|null, priced_events: int}
      * }
      */
     public function report(): array
@@ -162,23 +163,49 @@ class SupportObservability extends Page
     }
 
     /**
-     * Расход LLM: события ИИ-журнала за окно по типам. Токены/деньги в журнале
-     * не хранятся — метрика честно показывает объём обращений, не рубли.
+     * Расход LLM: события ИИ-журнала за окно по типам, плюс оценка стоимости
+     * (H763) из usage/model в meta — доступна только для событий, записанных
+     * ПОСЛЕ H763 (более ранние события журнала usage не хранили, честно дают
+     * null, а не 0). Модели без прайса в config('services.openrouter.pricing')
+     * попадают в priced_events как non-priced, а не молча считаются нулём.
      *
-     * @return array{total: int, by_type: Collection}
+     * @return array{total: int, by_type: Collection, spend_usd: float|null, priced_events: int}
      */
     private function llm(Carbon $from): array
     {
-        $byType = SupportAiReplyEvent::query()
+        $events = SupportAiReplyEvent::query()
             ->where('created_at', '>=', $from)
-            ->get(['id', 'event_type'])
+            ->get(['id', 'event_type', 'meta']);
+
+        $byType = $events
             ->groupBy('event_type')
-            ->map(fn ($events): int => $events->count())
+            ->map(fn ($rows): int => $rows->count())
             ->sortDesc();
+
+        $pricing = config('services.openrouter.pricing', []);
+        $pricedEvents = 0;
+        $spend = null;
+
+        foreach ($events as $event) {
+            $usage = $event->meta['usage'] ?? null;
+            $model = $event->meta['model'] ?? null;
+            if (! $usage || ! $model || ! isset($pricing[$model])) {
+                continue;
+            }
+
+            $rate = $pricing[$model];
+            $eventCost = ($usage['prompt_tokens'] / 1_000_000) * $rate['prompt_per_1m']
+                + ($usage['completion_tokens'] / 1_000_000) * $rate['completion_per_1m'];
+
+            $spend = ($spend ?? 0.0) + $eventCost;
+            $pricedEvents++;
+        }
 
         return [
             'total' => (int) $byType->sum(),
             'by_type' => $byType,
+            'spend_usd' => $spend !== null ? round($spend, 4) : null,
+            'priced_events' => $pricedEvents,
         ];
     }
 }

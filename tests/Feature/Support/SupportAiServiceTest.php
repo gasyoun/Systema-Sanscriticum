@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Models\ChatMessage;
+use App\Models\SupportAiReplyEvent;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
@@ -20,10 +21,15 @@ class SupportAiServiceTest extends TestCase
 
     private function fakeOpenRouter(string $content): void
     {
-        config(['services.openrouter.api_key' => 'test-key']);
+        config([
+            'services.openrouter.api_key' => 'test-key',
+            'services.openrouter.model' => 'deepseek/deepseek-chat',
+        ]);
         Http::fake([
             'openrouter.ai/*' => Http::response([
+                'model' => 'deepseek/deepseek-chat',
                 'choices' => [['message' => ['content' => $content]]],
+                'usage' => ['prompt_tokens' => 200, 'completion_tokens' => 80],
             ], 200),
         ]);
     }
@@ -121,6 +127,10 @@ class SupportAiServiceTest extends TestCase
             'event_type' => 'suggested',
             'telegram_support_message_id' => null,
         ]);
+
+        $event = SupportAiReplyEvent::query()->latest('id')->first();
+        $this->assertSame('deepseek/deepseek-chat', $event->meta['model']);
+        $this->assertSame(['prompt_tokens' => 200, 'completion_tokens' => 80], $event->meta['usage']);
     }
 
     public function test_summarize_logs_summary_event(): void

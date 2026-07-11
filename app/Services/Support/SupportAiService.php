@@ -64,10 +64,11 @@ class SupportAiService
             return null;
         }
 
-        $answer = $this->ai->chat(array_merge(
+        $result = $this->ai->chatWithUsage(array_merge(
             [['role' => 'system', 'content' => $systemPrompt]],
             $history,
         ));
+        $answer = $result['content'];
 
         if ($answer === null) {
             return null;
@@ -80,6 +81,8 @@ class SupportAiService
                 'scope' => 'helpdesk_unified',
                 'user_id' => $user instanceof User ? $user->id : $user,
                 'preview' => mb_substr($answer, 0, 240),
+                'model' => $result['model'],
+                'usage' => $result['usage'],
             ],
         ]);
 
