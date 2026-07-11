@@ -437,8 +437,29 @@
                         </div>
                     </button>
                 @empty
-                    <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">Нет диалогов</div>
+                    @if(empty($guestThreads))
+                        <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">Нет диалогов</div>
+                    @endif
                 @endforelse
+
+                {{-- Гостевые треды веб-чата: user_id = NULL, вне user-keyed списка (H536 Phase 5) --}}
+                @if(!empty($guestThreads))
+                    <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; background: #f9fafb;">Гости (веб-чат)</div>
+                    @foreach($guestThreads as $g)
+                        <button wire:click="selectGuest({{ $g['id'] }})" class="chat-user-item {{ $activeGuestId == $g['id'] ? 'active' : '' }}">
+                            <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">Г</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <strong style="font-size: 14px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['name'] }}</strong>
+                                    @if($g['unread'] > 0)
+                                        <span style="background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 99px; font-weight: bold;">{{ $g['unread'] }}</span>
+                                    @endif
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: 'Гость сайта' }}</div>
+                            </div>
+                        </button>
+                    @endforeach
+                @endif
             </div>
         </div>
 
@@ -629,6 +650,52 @@
                             required
                             oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"
                             onkeydown="if(event.keyCode===13 && !event.shiftKey) { event.preventDefault(); @this.sendMessageToStudent(); }"
+                        ></textarea>
+                        <button type="submit" class="btn-send">Отправить</button>
+                    </form>
+                    <div style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 8px;">
+                        Enter — отправить, Shift+Enter — новая строка
+                    </div>
+                </div>
+            @elseif($activeGuestId)
+                {{-- ГОСТЕВОЙ ЧАТ (user_id = NULL): аноним с сайта, только веб-канал (H536 Phase 5) --}}
+                @php $guestThread = $this->guestThread; @endphp
+                <div class="chat-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;">Г</div>
+                        <div>
+                            <div style="font-weight: bold; font-size: 16px; color: #111827;">{{ $guestThread?->displayName() ?? 'Гость' }}</div>
+                            <div style="font-size: 12px; margin-top: 2px; color: #6b7280;">Аноним · веб-чат сайта</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="messages-area" wire:poll.5s>
+                    @forelse($this->guestMessages as $m)
+                        <div class="msg-wrapper {{ $m->role }}">
+                            <div class="msg-content">
+                                <div class="msg-bubble {{ $m->role }}-bubble">{!! $m->htmlForWeb() !!}</div>
+                                <div class="msg-time" title="{{ $m->created_at?->format('d.m.Y H:i') }}">{{ $m->created_at?->format('H:i') }}</div>
+                            </div>
+                        </div>
+                    @empty
+                        <div style="text-align: center; margin: auto; color: #9ca3af;">Начало диалога</div>
+                    @endforelse
+                </div>
+
+                <div class="reply-channel">
+                    <span>Отвечаю в:</span>
+                    <span class="reply-channel-badge web">🌐 Веб-чат сайта</span>
+                </div>
+
+                <div class="chat-input-area">
+                    <form wire:submit.prevent="replyToGuest" class="input-group">
+                        <textarea wire:model.defer="newMessage"
+                            class="chat-textarea"
+                            placeholder="Ответить гостю..."
+                            required
+                            oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"
+                            onkeydown="if(event.keyCode===13 && !event.shiftKey) { event.preventDefault(); @this.replyToGuest(); }"
                         ></textarea>
                         <button type="submit" class="btn-send">Отправить</button>
                     </form>
