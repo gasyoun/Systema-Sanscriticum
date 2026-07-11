@@ -16,7 +16,8 @@ use Illuminate\Console\Command;
  *
  * Снимает самый механический класс вопросов из анализа чата (Zoom-ссылка,
  * «где ссылка», часть «когда занятие»). Ничего не шлёт, если:
- *  - выключен флаг class_link_autopost_enabled (MarketingSetting);
+ *  - выключен env-рубильник CLASS_LINK_AUTOPOST (config('features.class_link_autopost'), деплой-уровень);
+ *  - выключен флаг class_link_autopost_enabled (MarketingSetting, админка);
  *  - у группы не задан telegram_chat_id;
  *  - у занятия нет ни своей ссылки, ни zoom_join_url, ни course.zoom_link.
  * Дедуп — schedules.group_link_posted_at (сбрасывается при переносе start).
@@ -29,6 +30,12 @@ class PostClassLinkToGroupChat extends Command
 
     public function handle(): int
     {
+        if (! config('features.class_link_autopost')) {
+            $this->info('Авто-постинг ссылки в чат группы выключен env-рубильником CLASS_LINK_AUTOPOST — пропуск.');
+
+            return self::SUCCESS;
+        }
+
         $settings = MarketingSetting::cached();
         if ($settings && ! $settings->class_link_autopost_enabled) {
             $this->info('Авто-постинг ссылки в чат группы отключён в настройках — пропуск.');

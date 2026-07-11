@@ -19,6 +19,7 @@ class PostClassLinkToGroupChatTest extends TestCase
 
     private function enable(int $lead = 30): void
     {
+        config(['features.class_link_autopost' => true]);
         MarketingSetting::create([
             'class_link_autopost_enabled' => true,
             'class_link_autopost_lead_minutes' => $lead,
@@ -73,7 +74,24 @@ class PostClassLinkToGroupChatTest extends TestCase
     public function test_skips_when_disabled(): void
     {
         Queue::fake();
+        config(['features.class_link_autopost' => true]);
         MarketingSetting::create(['class_link_autopost_enabled' => false]);
+
+        $group = Group::create(['name' => 'G', 'telegram_chat_id' => '-100']);
+        Schedule::create([
+            'title' => 'X', 'start' => now()->addMinutes(10),
+            'group_id' => $group->id, 'zoom_join_url' => 'https://zoom.us/j/1',
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+        Queue::assertNothingPushed();
+    }
+
+    public function test_skips_when_env_killswitch_off(): void
+    {
+        Queue::fake();
+        config(['features.class_link_autopost' => false]);
+        MarketingSetting::create(['class_link_autopost_enabled' => true]);
 
         $group = Group::create(['name' => 'G', 'telegram_chat_id' => '-100']);
         Schedule::create([
