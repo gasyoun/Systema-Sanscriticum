@@ -279,5 +279,8 @@
     </div>
 
     @include('partials.cookie-consent')
+
+    {{-- Живой веб-чат поддержки — плавающий пузырь посетителя (H536 Phase 4). --}}
+    @include('partials.support-chat-widget')
 </body>
 </html>
