@@ -99,6 +99,8 @@
     </section>
 </div>
 
+{{-- @verbatim: CSS содержит @media/@keyframes — иначе Blade примет их за директивы. --}}
+@verbatim
 <style>
     .scw { position: fixed; right: 20px; bottom: 20px; z-index: 9998; font-family: inherit; }
     .scw-toggle {
@@ -160,6 +162,7 @@
         .scw-panel { width: calc(100vw - 28px); height: 70vh; bottom: 70px; }
     }
 </style>
+@endverbatim
 
 <script>
 (function () {

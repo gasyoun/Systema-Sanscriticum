@@ -16,6 +16,13 @@ class SupportChatWidgetTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Виджет — часть главной; тесту не нужен собранный Vite-манифест.
+        $this->withoutVite();
+    }
+
     public function test_home_page_renders_the_chat_widget(): void
     {
         $response = $this->get('/');
