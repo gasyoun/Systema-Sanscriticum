@@ -94,7 +94,13 @@ class SupportObservabilityTest extends TestCase
         ]);
 
         SupportAiReplyEvent::create(['event_type' => 'suggested', 'meta' => []]);
-        SupportAiReplyEvent::create(['event_type' => 'suggested', 'meta' => []]);
+        SupportAiReplyEvent::create([
+            'event_type' => 'suggested',
+            'meta' => [
+                'model' => 'deepseek/deepseek-chat',
+                'usage' => ['prompt_tokens' => 1_000_000, 'completion_tokens' => 500_000],
+            ],
+        ]);
         SupportAiReplyEvent::create(['event_type' => 'answer_accepted', 'meta' => []]);
 
         $admin = User::factory()->create(['role' => Roles::ADMIN]);
@@ -124,11 +130,14 @@ class SupportObservabilityTest extends TestCase
 
         $this->assertSame(3, $report['llm']['total']);
         $this->assertSame(2, $report['llm']['by_type']['suggested']);
+        $this->assertSame(1, $report['llm']['priced_events']);
+        $this->assertSame(0.6003, $report['llm']['spend_usd']);
 
         Livewire::test(SupportObservability::class)
             ->assertOk()
             ->assertSee('support-main')
             ->assertSee('support-stale')
-            ->assertSee('FLOOD_WAIT');
+            ->assertSee('FLOOD_WAIT')
+            ->assertSee('0.6003');
     }
 }

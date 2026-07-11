@@ -172,6 +172,15 @@ return [
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
         'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
+        // $ per 1M tokens, per OpenRouter model — source: openrouter.ai/<model>,
+        // checked 12-07-2026 (H763). Unknown models fall back to null spend
+        // rather than guessing a price (SupportObservability::llm()).
+        'pricing' => [
+            'deepseek/deepseek-chat' => [
+                'prompt_per_1m' => (float) env('OPENROUTER_PRICE_DEEPSEEK_CHAT_PROMPT', 0.2002),
+                'completion_per_1m' => (float) env('OPENROUTER_PRICE_DEEPSEEK_CHAT_COMPLETION', 0.8001),
+            ],
+        ],
     ],
 
     'admin' => [

@@ -48,17 +48,36 @@ class CuratorAi
     /**
      * Низкоуровневый вызов LLM с готовым набором сообщений (OpenAI chat format).
      * Переиспользуется ИИ-ассистом поддержки поверх единого треда. Возвращает
-     * текст ответа или null при ошибке/отказе.
+     * текст ответа или null при ошибке/отказе. Тонкая обёртка над
+     * {@see chatWithUsage()} для существующих вызывающих кодов, которым не
+     * нужны токены/модель.
      *
      * @param  list<array{role: string, content: string}>  $messages
      */
     public function chat(array $messages): ?string
     {
+        return $this->chatWithUsage($messages)['content'];
+    }
+
+    /**
+     * Как {@see chat()}, но также возвращает usage (токены) и имя модели —
+     * нужно для расхода LLM на дашборде наблюдаемости (W3.3 follow-up, H763).
+     * OpenRouter отдаёт `usage.prompt_tokens`/`usage.completion_tokens` в
+     * каждом успешном ответе; раньше эта часть тела просто отбрасывалась.
+     *
+     * @param  list<array{role: string, content: string}>  $messages
+     * @return array{content: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, model: ?string}
+     */
+    public function chatWithUsage(array $messages): array
+    {
+        $model = config('services.openrouter.model', 'deepseek/deepseek-chat');
+        $empty = ['content' => null, 'usage' => null, 'model' => $model];
+
         $apiKey = config('services.openrouter.api_key');
         if (empty($apiKey)) {
             Log::error('CuratorAi: OPENROUTER_API_KEY не задан');
 
-            return null;
+            return $empty;
         }
 
         try {
@@ -69,7 +88,7 @@ class CuratorAi
                 'HTTP-Referer' => (string) config('app.url'),
                 'X-Title' => 'Academy of Sanskrit (ORS) bot',
             ])->timeout(45)->post(self::ENDPOINT, [
-                'model' => config('services.openrouter.model', 'deepseek/deepseek-chat'),
+                'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.3,
                 'max_tokens' => 2000,
@@ -81,16 +100,23 @@ class CuratorAi
                     'body' => $response->body(),
                 ]);
 
-                return null;
+                return $empty;
             }
 
             $answer = $response->json('choices.0.message.content');
+            $content = is_string($answer) && trim($answer) !== '' ? trim($answer) : null;
 
-            return is_string($answer) && trim($answer) !== '' ? trim($answer) : null;
+            $promptTokens = $response->json('usage.prompt_tokens');
+            $completionTokens = $response->json('usage.completion_tokens');
+            $usage = is_int($promptTokens) && is_int($completionTokens)
+                ? ['prompt_tokens' => $promptTokens, 'completion_tokens' => $completionTokens]
+                : null;
+
+            return ['content' => $content, 'usage' => $usage, 'model' => $response->json('model', $model)];
         } catch (\Throwable $e) {
             Log::error('CuratorAi: сбой связи с OpenRouter: '.$e->getMessage());
 
-            return null;
+            return $empty;
         }
     }
 

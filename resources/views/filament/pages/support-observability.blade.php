@@ -102,11 +102,24 @@
     {{-- Расход LLM --}}
     <x-filament::section>
         <x-slot name="heading">Обращения к LLM ({{ $windowDays }} дн.)</x-slot>
-        <x-slot name="description">События журнала SupportAiReplyEvent по типам. Токены/стоимость в журнале не хранятся — это объём вызовов, не рубли.</x-slot>
+        <x-slot name="description">
+            События журнала SupportAiReplyEvent по типам, плюс оценка расхода из usage/model в meta (доступно только для событий, записанных после H763 — более ранние честно не учитываются, а не считаются нулём).
+        </x-slot>
 
         @if ($llm['total'] === 0)
             <p class="text-gray-400 text-sm">Обращений к LLM за период не было.</p>
         @else
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <div class="text-2xl font-semibold tabular-nums">{{ $llm['total'] }}</div>
+                    <div class="text-xs text-gray-500">обращений всего</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-semibold tabular-nums">{{ $llm['spend_usd'] !== null ? '$'.number_format($llm['spend_usd'], 4) : '—' }}</div>
+                    <div class="text-xs text-gray-500">расход (оценка, из {{ $llm['priced_events'] }} событий с usage)</div>
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
