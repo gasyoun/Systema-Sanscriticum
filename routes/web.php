@@ -26,6 +26,7 @@ use App\Http\Controllers\PaypalClaimController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
@@ -498,5 +499,15 @@ Route::post('/partners/register', [PartnerController::class, 'register'])
     ->middleware('throttle:10,1')
     ->name('partners.register');
 Route::get('/partners/{code}', [PartnerController::class, 'registered'])->name('partners.registered');
+
+// === ЖИВОЙ ВЕБ-ЧАТ ПОДДЕРЖКИ (H536) ===
+// Публичный, rate-limited: гость/студент открывает тред и шлёт сообщение без
+// перезагрузки; бродкаст оператору через Reverb (Phase 3). Строго до catch-all.
+Route::post('/chat/message', [PublicChatController::class, 'store'])
+    ->middleware('throttle:30,1')
+    ->name('chat.message');
+Route::get('/chat/history', [PublicChatController::class, 'history'])
+    ->middleware('throttle:60,1')
+    ->name('chat.history');
 
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');
