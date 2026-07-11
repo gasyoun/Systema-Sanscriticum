@@ -24,6 +24,8 @@ class SupportConversation extends Model
 
     protected $fillable = [
         'user_id',
+        'guest_token',
+        'guest_name',
         'status',
         'subject',
         'assigned_to',
@@ -39,6 +41,22 @@ class SupportConversation extends Model
     public function isOpen(): bool
     {
         return $this->status !== self::STATUS_CLOSED;
+    }
+
+    /** Тред анонимного веб-посетителя (нет user_id, есть session-токен, H536). */
+    public function isGuest(): bool
+    {
+        return $this->user_id === null && $this->guest_token !== null;
+    }
+
+    /** Подпись для оператора в Helpdesk: имя пользователя или «Гость #id». */
+    public function displayName(): string
+    {
+        if ($this->user_id !== null) {
+            return $this->user?->name ?? "Пользователь #{$this->user_id}";
+        }
+
+        return $this->guest_name ?: 'Гость #'.$this->id;
     }
 
     public function user(): BelongsTo

@@ -9,6 +9,16 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- Native live-chat support widget (H536), foundation (Phases 0-2 of 5): Laravel
+  Reverb WebSocket transport (`ChatMessageSent` broadcast event on the
+  `support.conversation.{id}` private channel) plus guest identity — an anonymous
+  samskrte.ru visitor owns a support thread via a session `guest_token` on
+  `support_conversations` (an ephemeral ownership marker, **not** a 4th
+  external-identity mapping; `chat_messages.user_id` is now nullable). A
+  `chat_guest` broadcasting guard authorizes the visitor's private channel without
+  a `users` row; the operator (admin) may listen to any thread. Output stays
+  escaped via `ChatMessage::htmlForWeb()`. Goes live once the public post endpoint
+  + visitor bubble land (Phases 3-4) and Reverb is deployed on the host.
 - 3-day diagnostic marathon, Phase 6 (H440): 13-day evergreen warm-tail for
   unpaid registrants (Days 4-16 off the personal `day0_started_at` clock),
   cycling own-pace/installments/teacher-credibility/one testimonial themes,
