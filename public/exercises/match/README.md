@@ -30,6 +30,34 @@ guarantees, but is a **different engine type** (matching, not grouping).
 - Match catalogue — `/exercises/match/`
 - Verb-roots drill — `/exercises/match/verb-roots/`
 
+## Data provenance (MEGABOOK §2.9)
+
+Every root in the `verb-roots` drill is anchored to a verified research source
+(mechanically checked 11-07-2026, H712): Whitney, *The Roots, Verb-forms and
+Primary Derivatives of the Sanskrit Language* via the live
+[whitney-roots reader](https://samskrtam.ru/whitney-roots/) (all links below
+returned HTTP 200 on 11-07-2026), cross-checked against the Monier-Williams
+headword list
+[`MW-unique-key1-194084.txt`](https://github.com/gasyoun/SanskritLexicography/blob/master/HeadwordLists/now-2026/MW-unique-key1-194084.txt)
+(SLP1, Cologne CDSL 2026 snapshot). Layout/pedagogy source: the LearningApps
+original named above.
+
+| Root (drill) | Whitney | MW key1 (SLP1) |
+|---|---|---|
+| sphur- | [root_sphur.html](https://samskrtam.ru/whitney-roots/root_sphur.html) | `sPur` |
+| paṭh- | [root_pa_th.html](https://samskrtam.ru/whitney-roots/root_pa_th.html) | `paW` |
+| gam- | [root_gam.html](https://samskrtam.ru/whitney-roots/root_gam.html) | `gam` |
+| vikas- (vi + kas) | [root_kas.html](https://samskrtam.ru/whitney-roots/root_kas.html) | `vikas` |
+| las- | [root_las.html](https://samskrtam.ru/whitney-roots/root_las.html) | `las` |
+| mlā- | [root_mlaa.html](https://samskrtam.ru/whitney-roots/root_mlaa.html) | `mlAta`/`mlAna` family (MW lemma *mlai*) |
+| puṣp- | not a Whitney root — denominative present *puṣpyati* | `puzpya` (denominative of `puzpa`) |
+| vad- | [root_vad.html](https://samskrtam.ru/whitney-roots/root_vad.html) | `vad` |
+| phal- | [root_1_phal.html](https://samskrtam.ru/whitney-roots/root_1_phal.html) | `Pal` |
+| sthā- | [root_sthaa.html](https://samskrtam.ru/whitney-roots/root_sthaa.html) | `sTA` |
+| kṛ- | [root_1_k_r.html](https://samskrtam.ru/whitney-roots/root_1_k_r.html) | `kf` |
+
+Full audit: [`docs/CONTENT_PROVENANCE_AUDIT_07.2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/develop/docs/CONTENT_PROVENANCE_AUDIT_07.2026.md).
+
 ## Authoring a new drill by hand
 
 Create `public/exercises/match/<slug>/index.html`:

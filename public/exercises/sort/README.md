@@ -1,6 +1,6 @@
 # Sort-into-groups exercise engine
 
-_Created: 10-07-2026 · Last updated: 10-07-2026_
+_Created: 10-07-2026 · Last updated: 11-07-2026_
 
 Interactive "drag each card into the right group" drills for Sanskrit learners,
 served as static files from `public/exercises/sort/`. No build step, no
@@ -19,13 +19,35 @@ Originally a remake of the LearningApps exercise
 | [`engine.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/sort/engine.js) | The engine — `SortExercise.mount(container, config)` |
 | [`index.html`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/sort/index.html) | Catalogue landing page |
 | [`genders/index.html`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/sort/genders/index.html) | Drill: 24 nouns sorted into masculine / feminine / neuter |
+| [`noun-pronoun/index.html`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/sort/noun-pronoun/index.html) | Drill: 18 nouns matched to the agreeing pronoun सः / सा / तद् |
 | [`generator/index.html`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/sort/generator/index.html) | In-browser authoring tool → live preview + export |
 
 ## URLs (once deployed)
 
 - Catalogue — `/exercises/sort/`
 - Genders drill — `/exercises/sort/genders/`
+- Noun–pronoun drill — `/exercises/sort/noun-pronoun/`
 - Generator — `/exercises/sort/generator/`
+
+## Data provenance (MEGABOOK §2.9)
+
+Every lexical item in the shipped drills is anchored to a verified research
+source, per the "teaching content inherits a research source" rule. All
+headwords below were mechanically verified (11-07-2026, H712) against the
+Monier-Williams headword list
+[`MW-unique-key1-194084.txt`](https://github.com/gasyoun/SanskritLexicography/blob/master/HeadwordLists/now-2026/MW-unique-key1-194084.txt)
+(SLP1, Cologne CDSL 2026 snapshot) — browseable at the
+[Cologne MW web interface](https://www.sanskrit-lexicon.uni-koeln.de/scans/MWScan/2020/web/index.php).
+Layout/pedagogy source: the LearningApps original named above.
+
+| Drill | Items | MW key1 anchors (SLP1) |
+|---|---|---|
+| `genders` — masculine | aja, gaja, aśva, nara, deva, vṛkṣa, sūrya, bāla | `aja`, `gaja`, `aSva`, `nara`, `deva`, `vfkza`, `sUrya`, `bAla` |
+| `genders` — feminine | bālā, mālā, jihvā, nāsā, kanyā, nadī, senā, latā | `bAlA`, `mAlA`, `jihvA`, `nAsA`, `kanyA`, `nadI`, `senA`, `latA` |
+| `genders` — neuter | pātra, netra, viśva, mukha, phala, jala, vana, pustaka | `pAtra`, `netra`, `viSva`, `muKa`, `Pala`, `jala`, `vana`, `pustaka` |
+| `noun-pronoun` — extra items | vaṭa, cūta, puṣpa, kamala + pronouns saḥ, sā, tad | `vawa`, `cUta`, `puzpa`, `kamala`, `sa`, `tad` (remaining 14 nouns shared with `genders`) |
+
+Full audit: [`docs/CONTENT_PROVENANCE_AUDIT_07.2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/develop/docs/CONTENT_PROVENANCE_AUDIT_07.2026.md).
 
 ## Authoring a new drill by hand
 
