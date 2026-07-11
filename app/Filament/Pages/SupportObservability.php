@@ -25,9 +25,6 @@ class SupportObservability extends Page
     /** Окно всех метрик, дней назад от сегодня. */
     private const WINDOW_DAYS = 14;
 
-    /** Синк считается протухшим после стольких минут без успешного прохода. */
-    private const SYNC_STALE_MINUTES = 15;
-
     protected static ?string $cluster = TelegramSupport::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-signal';
@@ -87,6 +84,8 @@ class SupportObservability extends Page
     /** Здоровье сессий: включённость, последний успешный синк, лаг, последняя ошибка. */
     private function accounts(): Collection
     {
+        $staleAfterMinutes = (int) config('services.telegram_support.stale_after_minutes', 15);
+
         return TelegramSupportAccount::query()
             ->orderBy('name')
             ->get()
@@ -97,7 +96,7 @@ class SupportObservability extends Page
                     : null,
                 'is_stale' => $account->is_enabled
                     && (! $account->last_successful_sync_at
-                        || $account->last_successful_sync_at->lt(now()->subMinutes(self::SYNC_STALE_MINUTES))),
+                        || $account->last_successful_sync_at->lt(now()->subMinutes($staleAfterMinutes))),
             ]);
     }
 

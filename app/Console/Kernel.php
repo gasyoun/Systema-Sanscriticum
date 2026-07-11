@@ -220,6 +220,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-sync');
 
+        // W3.1 healthcheck (H595): алерт админам, если синк протух или
+        // последний проход упал ошибкой — не чаще раза в 15 мин, no-op при
+        // отсутствии включённых аккаунтов.
+        $schedule->command('telegram-support:healthcheck')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('telegram-support-healthcheck');
+
         // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
         // Куратор ставит текст + дату один раз в карточке студента (кнопка
         // «Запланировать напоминание») — дальше это дело системы, не человека.

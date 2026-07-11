@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 06-07-2026_
+_Created: 02-07-2026 · Last updated: 11-07-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -60,6 +60,29 @@ chmod +x deploy.sh
 | `APP_DIR` | `/var/www/html` | каталог приложения |
 | `BRANCH` | `main` | деплоим только main |
 | `SMOKE_URL` | `https://samskrte.ru/` | URL смоук-проверки |
+
+### Планировщик (`schedule:run`) — раннер для ВСЕХ scheduled-команд
+
+Ни один `$schedule->command(...)` из
+[`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)
+(дебиторка, Telegram-support синк + его healthcheck, напоминания, марафон,
+warm-tail и т.д.) не сработает без единственной crontab-строки на сервере:
+
+```cron
+* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Это **не отдельный демон/systemd-юнит** — обычный минутный cron-вызов, который
+Laravel сам маршрутизирует по `everyMinute()`/`dailyAt()`/`everyFifteenMinutes()`
+и т.д. внутри `Kernel.php`. Для Telegram-support раннера это и есть
+зафиксированное решение MG (D2,
+[telegram-userbot-inventory.md §4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md#4-единый-раннер-и-риск-двух-демонов)):
+cron драйвит `schedule:run` → срабатывает `telegram-support:sync`
+(`everyMinute`, под `madeline-session` lock'ом) — отдельный самостоятельный
+MadelineProto-скрипт-демон на той же сессии **не держим** (риск `AUTH_RESTART`
+от двух демонов на одном аккаунте). Подтверждение, что на проде именно так,
+запрошено у Ивана в [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)
+§Telegram, T1.
 
 ## Обычный деплой
 
