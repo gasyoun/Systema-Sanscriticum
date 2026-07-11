@@ -103,4 +103,61 @@ class SupportConversationManagerTest extends TestCase
         $this->assertDatabaseCount('support_conversations', 1);
         $this->assertSame($incoming->support_conversation_id, $reply->fresh()->support_conversation_id);
     }
+
+    // --- H536 Phase 2: гостевая идентичность ---
+
+    public function test_open_for_guest_creates_then_reuses_single_thread(): void
+    {
+        $manager = app(SupportConversationManager::class);
+
+        $first = $manager->openForGuest('guesttok-aaa', 'Аноним');
+        $second = $manager->openForGuest('guesttok-aaa');
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertDatabaseCount('support_conversations', 1);
+        $this->assertNull($first->user_id);
+        $this->assertSame('guesttok-aaa', $first->guest_token);
+        $this->assertSame('Аноним', $first->fresh()->guest_name);
+        $this->assertTrue($first->fresh()->isGuest());
+    }
+
+    public function test_closed_guest_thread_reopens(): void
+    {
+        $manager = app(SupportConversationManager::class);
+
+        $thread = $manager->openForGuest('guesttok-bbb');
+        $manager->close($thread);
+        $this->assertSame(SupportConversation::STATUS_CLOSED, $thread->fresh()->status);
+
+        $reopened = $manager->openForGuest('guesttok-bbb');
+        $this->assertSame($thread->id, $reopened->id);
+        $this->assertSame(SupportConversation::STATUS_OPEN, $reopened->status);
+        $this->assertNull($reopened->closed_at);
+    }
+
+    public function test_record_guest_message_persists_message_with_null_user_id(): void
+    {
+        $manager = app(SupportConversationManager::class);
+
+        // Сообщение гостя: user_id NULL (миграция Phase 2 сделала колонку nullable).
+        $message = ChatMessage::create([
+            'user_id' => null,
+            'role' => 'user',
+            'text' => 'Здравствуйте, я без аккаунта',
+            'is_read' => false,
+        ]);
+        $thread = $manager->recordGuestMessage('guesttok-ccc', $message, 'Гость Пётр');
+
+        $this->assertNull($message->fresh()->user_id);
+        $this->assertSame($thread->id, $message->fresh()->support_conversation_id);
+        $this->assertTrue($thread->isGuest());
+        $this->assertSame('Гость Пётр', $thread->displayName());
+    }
+
+    public function test_guest_display_name_falls_back_to_hash_id(): void
+    {
+        $thread = app(SupportConversationManager::class)->openForGuest('guesttok-ddd');
+
+        $this->assertSame('Гость #'.$thread->id, $thread->displayName());
+    }
 }

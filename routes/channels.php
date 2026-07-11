@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\ChatMessage;
+use App\Support\SupportChannelAuth;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -19,15 +19,13 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 /*
- * Private per-conversation channel for the live support chat widget (H536).
- * Phase 1 scaffold: an authenticated user may listen to a conversation that
- * carries a message of theirs. Guest-visitor authorization (Phase 2 guest
- * identity) and the rate-limited public post endpoint (Phase 3) extend this —
- * a guest token will authorize its own conversation without a `users` row.
+ * Приватный per-conversation канал живого веб-чата поддержки (H536).
+ * Авторизует и залогиненного пользователя (guard `web`), и анонимного гостя
+ * (guard `chat_guest` по session-токену) единым предикатом SupportChannelAuth:
+ *  - гость — совпадение guest_token треда;
+ *  - студент — владелец треда;
+ *  - оператор-админ — любой тред (Helpdesk, Phase 5).
  */
 Broadcast::channel('support.conversation.{conversationId}', function ($user, $conversationId) {
-    return ChatMessage::query()
-        ->where('support_conversation_id', $conversationId)
-        ->where('user_id', $user->id)
-        ->exists();
-});
+    return SupportChannelAuth::canAccess($user, (int) $conversationId);
+}, ['guards' => ['web', 'chat_guest']]);

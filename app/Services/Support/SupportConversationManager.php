@@ -80,6 +80,57 @@ class SupportConversationManager
         return $thread;
     }
 
+    /** Текущий тред гостя по session-токену без создания (H536 Phase 2). */
+    public function currentForGuest(string $guestToken): ?SupportConversation
+    {
+        return SupportConversation::query()
+            ->where('guest_token', $guestToken)
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /** Открытый тред гостя; закрытый — переоткрыть; нет — создать (H536 Phase 2). */
+    public function openForGuest(string $guestToken, ?string $guestName = null): SupportConversation
+    {
+        $thread = $this->currentForGuest($guestToken);
+
+        if (! $thread) {
+            return SupportConversation::create([
+                'guest_token' => $guestToken,
+                'guest_name' => $guestName,
+                'status' => SupportConversation::STATUS_OPEN,
+                'last_message_at' => now(),
+            ]);
+        }
+
+        if ($thread->status === SupportConversation::STATUS_CLOSED) {
+            $thread->forceFill([
+                'status' => SupportConversation::STATUS_OPEN,
+                'closed_at' => null,
+            ])->save();
+        }
+
+        // Имя, если появилось позже, дописываем; существующее не затираем.
+        if ($guestName && ! $thread->guest_name) {
+            $thread->forceFill(['guest_name' => $guestName])->save();
+        }
+
+        return $thread;
+    }
+
+    /** Открыть/переоткрыть гостевой тред и привязать сообщение (H536 Phase 2). */
+    public function recordGuestMessage(
+        string $guestToken,
+        ChatMessage $message,
+        ?string $guestName = null,
+        ?\DateTimeInterface $at = null,
+    ): SupportConversation {
+        $thread = $this->openForGuest($guestToken, $guestName);
+        $this->attach($thread, $message, $at);
+
+        return $thread;
+    }
+
     public function close(SupportConversation $thread): void
     {
         $thread->forceFill([
