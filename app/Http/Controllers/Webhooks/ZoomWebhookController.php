@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
+use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\AttendanceRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,25 +92,28 @@ class ZoomWebhookController extends Controller
      * Посещаемость: участник зашёл/вышел. Одна строка на сессию участия
      * (schedule_id + participant_uuid), идемпотентно. Студент сопоставляется по
      * email (если Zoom его прислал), иначе остаётся гостем (user_id = NULL).
+     *
+     * Разбор payload вынесен в {@see WebinarProvider::normalizeWebhook()} (H601,
+     * GC-B3) — здесь та же форма результата, что и раньше, транспортный слой
+     * (сигнатура, url_validation) не тронут.
      */
     private function handleParticipant(Request $request, string $event): JsonResponse
     {
-        $object = (array) $request->input('payload.object', []);
-        $meetingId = isset($object['id']) ? (string) $object['id'] : '';
-        $occurrenceUuid = isset($object['uuid']) ? (string) $object['uuid'] : null;
+        $normalized = app(WebinarProvider::class)->normalizeWebhook($request->all());
+        if ($normalized === null) {
+            return response()->json(['status' => 'ignored', 'event' => $event]);
+        }
 
-        $p = (array) ($object['participant'] ?? []);
-
-        // Единый meeting_id курса повторяется на всех датах — занятие резолвим по
-        // occurrence uuid + времени запуска/участника.
-        $eventTime = $object['start_time'] ?? ($p['join_time'] ?? null);
-
-        $schedule = Schedule::resolveForZoomEvent($meetingId, $occurrenceUuid, $eventTime);
+        $schedule = Schedule::resolveForZoomEvent(
+            $normalized['meeting_id'],
+            $normalized['occurrence_uuid'],
+            $normalized['event_time'],
+        );
         if ($schedule === null) {
             return response()->json(['status' => 'ignored', 'reason' => 'schedule not found']);
         }
 
-        app(AttendanceRecorder::class)->recordWebhookEvent($schedule->id, $p, $event);
+        app(AttendanceRecorder::class)->recordWebhookEvent($schedule->id, $normalized['participant'], $event);
 
         return response()->json(['status' => 'ok', 'schedule_id' => $schedule->id, 'event' => $event]);
     }

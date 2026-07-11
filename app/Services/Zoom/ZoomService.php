@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Zoom;
 
+use App\Services\Webinar\WebinarProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -15,8 +16,13 @@ use RuntimeException;
  * Поток: account_credentials grant → access_token (кэшируется ~55 мин) →
  * POST /v2/users/me/meetings. Секреты — только из config('services.zoom'),
  * в коде их нет; без полного набора кредов сервис «не сконфигурирован».
+ *
+ * Реализует провайдеро-независимый {@see WebinarProvider} (GC-B3, H601) —
+ * извлечение интерфейса без изменения существующего поведения (методы ниже
+ * оставлены как есть; createMeeting/fetchParticipants/normalizeWebhook —
+ * тонкий адаптер поверх них).
  */
-class ZoomService
+class ZoomService implements WebinarProvider
 {
     private const OAUTH_URL = 'https://zoom.us/oauth/token';
 
@@ -114,6 +120,77 @@ class ZoomService
         } while ($token !== '');
 
         return $participants;
+    }
+
+    /**
+     * WebinarProvider::createMeeting. Ранее вызывалось из ScheduleResource
+     * (issue #78), убрано в H487 — встречи создаются вручную (H487 dev notes).
+     * Метод восстановлен как часть провайдерного шва: ни один текущий вызывающий
+     * код на него не полагается, поведение существующих методов не менялось.
+     *
+     * @param  array<string, mixed>  $options  topic/start_time/duration/timezone/settings.
+     * @return array{meeting_id: string, join_url: ?string, start_url: ?string}
+     */
+    public function createMeeting(array $options): array
+    {
+        $response = $this->apiRequest()->post(self::API_BASE.'/users/me/meetings', [
+            'topic' => $options['topic'] ?? 'Занятие',
+            'type' => $options['type'] ?? 2, // 2 = scheduled meeting
+            'start_time' => $options['start_time'] ?? null,
+            'duration' => $options['duration'] ?? null,
+            'timezone' => $options['timezone'] ?? 'Europe/Moscow',
+            'settings' => $options['settings'] ?? [],
+        ]);
+
+        if (! $response->successful()) {
+            throw new RuntimeException("Zoom: не удалось создать встречу (HTTP {$response->status()})");
+        }
+
+        return [
+            'meeting_id' => (string) $response->json('id'),
+            'join_url' => $response->json('join_url'),
+            'start_url' => $response->json('start_url'),
+        ];
+    }
+
+    /**
+     * WebinarProvider::fetchParticipants — тонкий алиас над {@see meetingParticipants()},
+     * которая остаётся публичной ради существующих вызывающих ({@see \App\Console\Commands\SyncZoomAttendance}).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function fetchParticipants(string $meetingUuid): array
+    {
+        return $this->meetingParticipants($meetingUuid);
+    }
+
+    /**
+     * WebinarProvider::normalizeWebhook — тот же разбор payload, что раньше жил
+     * внутри {@see \App\Http\Controllers\Webhooks\ZoomWebhookController::handleParticipant()},
+     * вынесенный сюда без изменения формы результата. Проверка подписи и
+     * url_validation-челлендж остаются в контроллере (это транспортный слой
+     * Zoom-вебхука, не часть провайдерного контракта).
+     *
+     * @param  array<string, mixed>  $payload  Полное тело Zoom-вебхука (event + payload.object).
+     * @return array{event: string, meeting_id: string, occurrence_uuid: ?string, event_time: mixed, participant: array<string, mixed>}|null
+     */
+    public function normalizeWebhook(array $payload): ?array
+    {
+        $event = (string) ($payload['event'] ?? '');
+        if ($event !== 'meeting.participant_joined' && $event !== 'meeting.participant_left') {
+            return null;
+        }
+
+        $object = (array) (($payload['payload'] ?? [])['object'] ?? []);
+        $participant = (array) ($object['participant'] ?? []);
+
+        return [
+            'event' => $event,
+            'meeting_id' => isset($object['id']) ? (string) $object['id'] : '',
+            'occurrence_uuid' => isset($object['uuid']) ? (string) $object['uuid'] : null,
+            'event_time' => $object['start_time'] ?? ($participant['join_time'] ?? null),
+            'participant' => $participant,
+        ];
     }
 
     /**
