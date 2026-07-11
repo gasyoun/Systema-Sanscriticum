@@ -1,10 +1,12 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 07-07-2026_
+_Created: 13-02-2026 · Last updated: 11-07-2026_
 
-Laravel-приложение для школы санскрита: учебный кабинет со словарем и домашними
-заданиями, магазин курсов с гибкими тарифами, конструктор лендингов, редактор
-лекций, лояльная валюта «прана» и панель администратора.
+Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
+заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
+воронки привлечения (диагностический марафон, бесплатные игры-упражнения),
+конструктор лендингов, редактор лекций, лояльная валюта «прана» и панель
+администратора.
 
 Это не абстрактная LMS, а специализированная среда: учебный контент завязан на
 санскритскую лексику (деванагари / IAST / кириллица), проверку домашних заданий
@@ -17,6 +19,7 @@ Laravel-приложение для школы санскрита: учебны�
 ## Оглавление
 
 - [Санскритская педагогика](#санскритская-педагогика)
+- [Воронки привлечения](#воронки-привлечения)
 - [Сценарии использования](#сценарии-использования)
 - [Стек](#стек)
 - [Быстрый старт](#быстрый-старт)
@@ -52,6 +55,18 @@ Laravel-приложение для школы санскрита: учебны�
 Наполнение словаря — импортом CSV в админке через
 [DictionaryWordImporter.php](app/Filament/Imports/DictionaryWordImporter.php)
 (колонки: деванагари, IAST, кириллица, перевод, страница).
+
+### Интервальные повторения — «Anki для санскрита» (`/dvaram/srs`)
+
+Нативный SRS-тренажер (Saraswati trainer suite) с планировщиком FSRS: студент
+повторяет карточки (лексика санскрита и хинди) с интервалами, которые движок
+подбирает по истории ответов, с дневным лимитом новых карточек на колоду. Есть
+страница статистики по тренажеру (`/dvaram/srs/stats`).
+
+Фича за флагом `SRS_ENABLED` ([config/srs.php](config/srs.php)) — по умолчанию
+**включена** с H447 (движок покрыт `SrsReviewTest`), пилот назначен на август 2026;
+маршрут и пункт меню появляются только при включенном флаге. Файлы:
+[SrsController.php](app/Http/Controllers/SrsController.php).
 
 ### Домашние задания с проверкой куратором
 
@@ -105,6 +120,35 @@ draft → submitted → (needs_revision → submitted)* → accepted
 > `lifetime_prana`, распад, P2P). Две концепции были несовместимы **только при
 > одном счетчике**. С разделением на `prana_balance` (деньги-скидка) и
 > `lifetime_prana` (статус-ранг) они сосуществуют: ранг — это статус, а не валюта.
+
+---
+
+## Воронки привлечения
+
+Верх воронки — как незнакомый посетитель превращается в лида, а лид в оплату.
+
+### Диагностический марафон (`/online/konsultaciya`)
+
+3-дневный марафон «Консультация по онлайн-курсам ОРС»: лендинг с захватом лида,
+входной квиз-диагностика уровня (`marathon.level-quiz`), выдача контента по дням
+через Telegram (`marathon:deliver-due`, доставка записей и «теплого хвоста» после
+марафона). Есть бесплатный трек и платный tripwire-трек «с проверкой»
+(`MARATHON_PAID_TRACK_PRICE`, дефолт 500 ₽). Длина прогрева после марафона —
+`MARATHON_WARM_TAIL_DAYS` (медиана времени до покупки из custdev).
+
+Файлы: [MarathonController.php](app/Http/Controllers/MarathonController.php),
+[config/marathon.php](config/marathon.php),
+[DeliverDueMarathonContent.php](app/Console/Commands/DeliverDueMarathonContent.php).
+
+### Бесплатные игры-упражнения (`/exercises/`)
+
+Статические браузерные тренажеры по санскриту (сортировка по группам, поиск пар,
+cloze-подстановка) под `public/exercises/` — index-каталог + отдельные движки.
+Мягкий воронковый гейт: аноним проходит **одну** игру бесплатно, дальше — ненавязчивое
+предложение «зарегистрируйте бесплатный кабинет, чтобы продолжить»; залогиненные
+студенты не гейтятся. Состояние — в `localStorage` (nudge, не DRM), авторизация
+читается пробой `/api/games/auth` (`games.auth`), так что гейт работает и на голом
+статик-хостинге. Файл гейта: [public/exercises/gate.js](public/exercises/gate.js).
 
 ---
 
@@ -182,6 +226,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
 | Frontend | Vite 5, Tailwind CSS 4, Axios, Livewire |
 | Admin | Filament v3 (две панели: `admin` и `editor`) |
 | Очереди | Laravel Horizon + Redis |
+| Real-time | Laravel Reverb (WebSocket, живой чат поддержки, H536) |
 | БД | MySQL (прод), SQLite in-memory (тесты) |
 | Деплой | Laravel Sail (Docker) |
 | Часовой пояс | `Europe/Moscow` (зашит в [config/app.php](config/app.php)) |
@@ -280,7 +325,8 @@ LandingPage ──> JSON-блоки
 ### Две Filament-панели
 
 - [AdminPanelProvider.php](app/Providers/Filament/AdminPanelProvider.php) — полная
-  админка `/admin`, доступ по `is_admin` (18 ресурсов).
+  админка `/admin`, доступ по `is_admin` (ресурсы автообнаружением из
+  `app/Filament/Resources`, сейчас 37).
 - [LectureEditorPanelProvider.php](app/Providers/Filament/LectureEditorPanelProvider.php)
   — редактор лекций `/editor`, доступ по `is_lecture_editor`.
 
@@ -333,7 +379,7 @@ HTML (микросервис `lecture-builder`) → публикация. Ест
 
 ### 5. Панель администратора (`/admin`)
 
-Filament v3, 18 CRUD-ресурсов: пользователи, курсы, уроки, платежи, тарифы,
+Filament v3, 37 автообнаруживаемых CRUD-ресурсов: пользователи, курсы, уроки, платежи, тарифы,
 промокоды, словари, преподаватели, расписание, объявления, статьи и т.д. Плюс
 медиа (Filament Curator), экспорт в Excel, мониторинг очередей (`/horizon`),
 резервное копирование БД (Spatie Backup).
@@ -430,7 +476,10 @@ php artisan telegram-support:sync --payload=storage/app/support-sample.json
 
 **Чат поддержки** реализован поверх мессенджеров: Telegram/VK-бот → лог
 `ChatMessage` → AI-автоответ с историей → передача куратору («позови куратора») →
-ответ из админ-панели Helpdesk/Dialogs.
+ответ из админ-панели Helpdesk/Dialogs. Веб-чат в кабинете (Livewire `StudentChat`)
+получает real-time доставку через **Laravel Reverb** (WebSocket-транспорт + broadcast-событие,
+H536): включается `BROADCAST_DRIVER=reverb` после развертывания Reverb-сервера на хосте
+(по умолчанию транспорт `log`/`null`).
 
 **Telegram support analytics** — не пользовательский бот и не вебхук, а импорт
 истории отдельного support-аккаунта через MadelineProto. Включается переменными
@@ -462,15 +511,24 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 одностраничный холст Остервальдера в
 [`docs/BUSINESS_MODEL_CANVAS.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BUSINESS_MODEL_CANVAS.md).
 
+Крупные активные направления вынесены в отдельные дорожные карты (папка
+[`docs/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs)):
+[масштабирование Telegram](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md)
+(+ [карта реализации](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_MAP_TELEGRAM_SCALING_2026_2027.md)),
+[SRS / Memrise-клон](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SRS_ROADMAP_2026.md),
+[паритет с GetCourse](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_GETCOURSE_PARITY_2026.md),
+[AI-контент](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_CONTENT_AI_2026_2027.md),
+[автоматизация поддержки](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SUPPORT_AUTOMATION_2026_2027.md).
+
 ### Now
 
-- **Telegram support analytics — в разработке.** MVP уже импортирует историю
-  support-аккаунта через MadelineProto, хранит нормализованные сообщения,
-  собирает дневные conversations, first-time / unanswered / human-vs-AI метрики,
-  keyword-топики и страницу `/admin/telegram-support-analytics`. Текущий фокус:
-  production login/session, аккуратная автопривязка контактов к `User`, responder
-  mappings на реальных данных, лимиты против Telegram flood и понятный operational
-  runbook.
+- **Масштабирование Telegram — активная программа.** Support-аналитика (импорт истории
+  support-аккаунта через MadelineProto → нормализованные сообщения, дневные conversations,
+  first-time / unanswered / human-vs-AI метрики, keyword-топики, страница
+  `/admin/telegram-support-analytics`) выросла в отдельную многопоточную дорожную карту
+  (userbot / MTProto-раннер, live-доставка, автопривязка контактов, лимиты против flood).
+  Детали и PR-уровневая карта реализации — в
+  [`docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md).
 - **Salary / finance.** Активно развивается контур выплат преподавателям:
   калькулятор зарплат, поздние оплаты прошлых блоков, фильтры по курсу/блоку,
   процент-фолбэк, PayPal-конвертация, письма-отчеты преподавателям и зеркалирование
@@ -509,6 +567,25 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   вебинарам, домашним заданиям и платежным событиям.
 
 ### ✅ Уже сделано
+
+**Привлечение и вовлечение (июль 2026)**
+
+- [x] **Диагностический марафон** — 3-дневная воронка «Консультация по онлайн-курсам
+  ОРС» end-to-end: лендинг + захват, входной level-quiz, доставка контента по дням
+  и «теплого хвоста» в Telegram, бесплатный + платный tripwire-трек
+  ([MarathonController.php](app/Http/Controllers/MarathonController.php),
+  [config/marathon.php](config/marathon.php)).
+- [x] **Бесплатные игры-упражнения** — статические браузерные тренажеры (sort / match /
+  cloze) под `public/exercises/` с мягким воронковым гейтом «одна игра бесплатно →
+  зарегистрируйся» ([public/exercises/gate.js](public/exercises/gate.js), проба
+  `/api/games/auth`).
+- [x] **SRS-движок (Saraswati trainer)** — нативные интервальные повторения «Anki для
+  санскрита» с планировщиком FSRS, страница повторений и статистики, за флагом
+  `SRS_ENABLED` (по умолчанию ON, пилот август 2026;
+  [SrsController.php](app/Http/Controllers/SrsController.php), [config/srs.php](config/srs.php)).
+- [x] **Живой чат поддержки на Reverb** — WebSocket-транспорт + broadcast-событие
+  (H536) для real-time доставки в веб-чате кабинета; включается `BROADCAST_DRIVER=reverb`.
+- [x] **Сводная посещаемость** — консолидированный дашборд посещаемости вебинаров (H553).
 
 **Денежное ядро и доступ**
 
