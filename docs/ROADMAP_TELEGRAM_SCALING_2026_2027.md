@@ -10,7 +10,7 @@ _Created: 11-07-2026 · Last updated: 11-07-2026_
 > - ground truth по support-коду — [`docs/support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md);
 > - кабинет-бот (студенческий ИИ-куратор) — [`docs/cabinet-bot.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/cabinet-bot.md).
 >
-> Хэндофф-происхождение: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md),
+> Хэндофф-происхождение: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md),
 > Opus 4.8 (`claude-opus-4-8`), 11-07-2026. Составлен после чтения кода на `main`
 > и четырёх решений MG (см. §4).
 
@@ -254,7 +254,7 @@ Phase 0 (разблокировка)      ── недели 1–4 ── P0.1 
 
 ## 10. Провязка
 
-- Хэндофф: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md)
+- Хэндофф: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md)
   (Opus 4.8, `claude-opus-4-8`, 11-07-2026).
 - Детализация WS1: [`ROADMAP_SUPPORT_AUTOMATION_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SUPPORT_AUTOMATION_2026_2027.md).
 - Ground truth support-кода: [`support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) · кабинет-бот: [`cabinet-bot.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/cabinet-bot.md).

@@ -2,7 +2,7 @@
 
 _Создано: 10-07-2026 · Обновлено: 10-07-2026_
 
-Все 6 фаз H440 влиты в `main` ([H446](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H446-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase1-landing-capture_10.07.26.md)/[H464](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H464-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase2-drip-engine_10.07.26.md)/[H483](https://github.com/gasyoun/Uprava/blob/main/handoffs/H483-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase3b-tap-choice-ui_10.07.26.md)/[H471](https://github.com/gasyoun/Uprava/blob/main/handoffs/H471-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase4-paid-track-checkout_10.07.26.md)/[H487](https://github.com/gasyoun/Uprava/blob/main/handoffs/H487-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase5-live-consultation_10.07.26.md)/[H489](https://github.com/gasyoun/Uprava/blob/main/handoffs/H489-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase6-warm-tail_10.07.26.md)), код-комплит. Это единый чек-лист активации, консолидирующий [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) пункты №12–17 в один документ — прогнать по порядку перед первым запуском когорты **28-08-2026**.
+Все 6 фаз H440 влиты в `main` ([H446](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H446-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase1-landing-capture_10.07.26.md)/[H464](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H464-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase2-drip-engine_10.07.26.md)/[H483](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H483-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase3b-tap-choice-ui_10.07.26.md)/[H471](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H471-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase4-paid-track-checkout_10.07.26.md)/[H487](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H487-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase5-live-consultation_10.07.26.md)/[H489](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H489-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase6-warm-tail_10.07.26.md)), код-комплит. Это единый чек-лист активации, консолидирующий [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) пункты №12–17 в один документ — прогнать по порядку перед первым запуском когорты **28-08-2026**.
 
 ⚠️ **Деплой делает человек на сервере — у агента нет доступа (ограничение прав, не хостинга).** Прод — root-VPS (Ubuntu, Beget). Обычный путь — `sudo bash deploy.sh`.
 
@@ -67,12 +67,12 @@ php artisan config:clear
 
 ## Что сознательно НЕ построено (отдельные будущие handoff'ы)
 
-- Промокод ₽1000 на первый курс — авто-выдачи нет, `PromoCode`-механизм реальный, но не подключен к этому событию (см. [H471](https://github.com/gasyoun/Uprava/blob/main/handoffs/H471-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase4-paid-track-checkout_10.07.26.md) «Why this scope»).
+- Промокод ₽1000 на первый курс — авто-выдачи нет, `PromoCode`-механизм реальный, но не подключен к этому событию (см. [H471](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H471-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase4-paid-track-checkout_10.07.26.md) «Why this scope»).
 - Зачет ₽500 во флагманский курс — `Tariff::upgradeCreditForUser` завязан на `Tariff`-контейнмент, у марафонского платежа `Tariff` нет.
 - Интерактивные inline-кнопки в самом Telegram (сейчас тап-выбор — веб-страница по ссылке, не callback в боте) — сознательное решение, не трогать общий webhook-путь (см. H483/H487 «Why this scope»).
 
 ---
 
-_Источник фаз: [`Uprava/custdev/MARATHON_DIAGNOSTIC_2026.md`](https://github.com/gasyoun/Uprava/blob/main/custdev/MARATHON_DIAGNOSTIC_2026.md) · полный билд-план [H440](https://github.com/gasyoun/Uprava/blob/main/handoffs/H440-Sonnet_Systema-Sanscriticum_marathon_diagnostic_3day_09.07.26.md)._
+_Источник фаз: [`Uprava/custdev/MARATHON_DIAGNOSTIC_2026.md`](https://github.com/gasyoun/Uprava/blob/main/custdev/MARATHON_DIAGNOSTIC_2026.md) · полный билд-план [H440](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H440-Sonnet_Systema-Sanscriticum_marathon_diagnostic_3day_09.07.26.md)._
 
 _Dr. Mārcis Gasūns_

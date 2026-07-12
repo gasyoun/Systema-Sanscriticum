@@ -15,7 +15,7 @@ _Created: 11-07-2026 · Last updated: 11-07-2026_
 > [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)
 > §Telegram, T1–T3, [PR #455](https://github.com/gasyoun/Systema-Sanscriticum/pull/455)).
 >
-> Провенанс: [H570](https://github.com/gasyoun/Uprava/blob/main/handoffs/H570-Opus_Systema-Sanscriticum_telegram_p01_ivan_userbot_inventory_11.07.26.md),
+> Провенанс: [H570](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H570-Opus_Systema-Sanscriticum_telegram_p01_ivan_userbot_inventory_11.07.26.md),
 > Opus 4.8 (`claude-opus-4-8`), 11-07-2026. Составлен по коду на `main`.
 
 ---
@@ -158,6 +158,6 @@ lock, что в планировщике, D2-раннер, риск двух д�
 - Зонтичный roadmap: [`ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) (§5 P0.1, §8 D2).
 - Вопросы Ивану: [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) §Telegram (T1–T3).
 - Архитектура харвестера/сессии: [`Uprava/docs/DECISIONS_telegram_harvester.md`](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_telegram_harvester.md).
-- Хэндоф: [H570](https://github.com/gasyoun/Uprava/blob/main/handoffs/H570-Opus_Systema-Sanscriticum_telegram_p01_ivan_userbot_inventory_11.07.26.md).
+- Хэндоф: [H570](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H570-Opus_Systema-Sanscriticum_telegram_p01_ivan_userbot_inventory_11.07.26.md).
 
 _Dr. Mārcis Gasūns_

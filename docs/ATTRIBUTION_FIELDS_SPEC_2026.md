@@ -5,7 +5,7 @@ _Created: 10-07-2026 · Last updated: 10-07-2026_
 Спека по [CUSTDEV_NEXT_FOUR_DOCS_RULINGS_2026H2.md §3.3](https://github.com/gasyoun/Uprava/blob/main/custdev/CUSTDEV_NEXT_FOUR_DOCS_RULINGS_2026H2.md):
 закрыть дыру «атрибуция обрывается на CRM» (возраст 7,1 %, e-mail 19,5 %, источника прихода
 нет вовсе — [CUSTDEV §2](https://github.com/gasyoun/Uprava/blob/main/custdev/CUSTDEV_2026.md)).
-Handoff: [H476](https://github.com/gasyoun/Uprava/blob/main/handoffs/H476-Sonnet_Systema-Sanscriticum_custdev_attribution_fields_spec_10.07.26.md).
+Handoff: [H476](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H476-Sonnet_Systema-Sanscriticum_custdev_attribution_fields_spec_10.07.26.md).
 Исполнено Fable 5 (`claude-fable-5`) 10-07-2026 — MG расширил модельный фильтр на эту сессию.
 
 ## 1. Что уже существовало (prior art — H267, не пересобиралось)

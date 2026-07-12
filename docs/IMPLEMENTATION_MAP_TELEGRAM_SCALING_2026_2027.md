@@ -10,7 +10,7 @@ _Created: 11-07-2026 · Last updated: 11-07-2026_
 > исполнителя. Составлена после чтения кода на `main` (не по прозе roadmap) — три
 > расхождения кода и roadmap зафиксированы в §2.
 >
-> Провенанс: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md)
+> Провенанс: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md)
 > (roadmap) → эта карта, Opus 4.8 (`claude-opus-4-8`), 11-07-2026. Все 4 @DECIDE roadmap'а
 > **уже решены MG** ([PR #453](https://github.com/gasyoun/Systema-Sanscriticum/pull/453), roadmap §8) —
 > учтено в гейтах ниже.
@@ -288,7 +288,7 @@ WS2-хэндоф).
 
 - Roadmap: [`ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) · WS1-детализация: [`ROADMAP_SUPPORT_AUTOMATION_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SUPPORT_AUTOMATION_2026_2027.md).
 - Ground truth кода: [`support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) · [`cabinet-bot.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/cabinet-bot.md).
-- Провенанс: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md) (roadmap) → эта карта.
+- Провенанс: [H565](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H565-Opus_Systema-Sanscriticum_telegram_scaling_roadmap_11.07.26.md) (roadmap) → эта карта.
 - Хэндофы узлов зеркалятся в [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md) (Tier 0, Systema).
 - Статус-журнал: [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.ai_state.md).
 

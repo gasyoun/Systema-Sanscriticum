@@ -5,7 +5,7 @@ _Created: 08-07-2026 · Last updated: 08-07-2026_
 Этот документ закрепляет **ритм обзора** финансовых KPI и **владельца цифр** —
 то, без чего панель делегирования бесполезна. Реализует венец плана noboring
 [`/cases/education`](https://github.com/gasyoun/Uprava/blob/main/noboring/README.md)
-(фаза D, [H259](https://github.com/gasyoun/Uprava/blob/main/handoffs/H259-Opus_Systema-Sanscriticum_profit_funds_bdr_kpi_06.07.26.md)).
+(фаза D, [H259](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H259-Opus_Systema-Sanscriticum_profit_funds_bdr_kpi_06.07.26.md)).
 
 ## Зачем ритм, а не только цифры
 
