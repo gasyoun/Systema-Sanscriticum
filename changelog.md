@@ -9,6 +9,19 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- Ops-offload automation, scenario C (H816): three net-new pieces closing the
+  gap identified by [OPS_OFFLOAD_AUTOMATION_PLAN_SAMSKRTE_2026H2.md](https://github.com/gasyoun/Uprava/blob/main/OPS_OFFLOAD_AUTOMATION_PLAN_SAMSKRTE_2026H2.md)
+  (most support automation was already merged and awaiting deploy, not build).
+  Roster bot commands `/группа`/`/кто` (S6) over `DebtorsBotCommand` — group
+  listing/detail with status + debt-color emoji, student search by name or
+  `@username`. Announcement scheduler (`Announcement.scheduled_at`, new
+  `announcements:dispatch-due` command, send logic extracted into
+  `AnnouncementDispatcher` for idempotent reuse between immediate and deferred
+  sends). LLM-FAQ v2 categories D/E/F (S5) — `SupportAnswerSuggester` extended
+  with a new `SupportAnswerAiResolver` (LLM drafts with LMS facts in the
+  prompt, gated by the existing `support_ai_assist` flag, off by default;
+  bot still never auto-sends, curator-review-only). 75 new/updated feature
+  tests across the three areas.
 - WebinarProvider abstraction (GC-B3, H601): vendor-agnostic `App\Services\Webinar\WebinarProvider`
   interface (`createMeeting`/`fetchParticipants`/`normalizeWebhook`); `ZoomService` now
   implements it with no behaviour change to existing methods (extract-interface refactor);
