@@ -9,6 +9,16 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- Mobile app (student cabinet) roadmap 2026–2027
+  ([docs/ROADMAP_MOBILE_APP_STUDENT_CABINET_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_MOBILE_APP_STUDENT_CABINET_2026_2027.md)):
+  decision-locked plan for an Android + iPhone app as a **Capacitor hybrid
+  wrapper** around the existing responsive web cabinet (reuses the cabinet,
+  Reverb chat, and `/api/v1` Sanctum tokens; native layer adds push + shell +
+  offline). MG rulings (12-07-2026): hybrid wrapper; MVP = courses/lessons/
+  progress + lesson video + push + live chat; purchases stay on web (no store
+  30% cut); login email+password + Telegram + VK, **iOS email-only** to sidestep
+  Apple Guideline 4.8; agent builds via PRs; Google Play/Android first, App Store
+  later. Wave 1 (Capacitor scaffold) minted as a handoff.
 - Native live-chat support widget (H536), foundation (Phases 0-3 of 5): Laravel
   Reverb WebSocket transport (`ChatMessageSent` broadcast event on the
   `support.conversation.{id}` private channel); guest identity — an anonymous
