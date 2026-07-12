@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Кабинет самскрте</title>
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <main class="screen" role="status" aria-live="polite">
+      <div class="mark">samskrte</div>
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="msg">Загрузка кабинета…</p>
+      <a id="manual" class="link" hidden href="#">Открыть кабинет</a>
+    </main>
+
+    <!-- Config-driven cabinet URL (generated from .env; never committed). -->
+    <script src="generated/env.js"></script>
+    <script>
+      // The native shell normally loads the cabinet via server.url. This local
+      // index.html is the WebView root/fallback — if it is ever shown, redirect
+      // to the configured cabinet host so the user still lands on the cabinet.
+      (function () {
+        var url = window.__CABINET_URL__;
+        var manual = document.getElementById('manual');
+        if (url) {
+          if (manual) {
+            manual.href = url;
+            manual.hidden = false;
+          }
+          // Small delay so the splash reads as intentional, not a flash.
+          setTimeout(function () {
+            window.location.replace(url);
+          }, 400);
+        } else if (manual) {
+          manual.hidden = true;
+        }
+      })();
+    </script>
+  </body>
+</html>

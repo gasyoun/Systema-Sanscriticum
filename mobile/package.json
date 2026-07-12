@@ -1,0 +1,30 @@
+{
+  "name": "samskrte-cabinet-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor hybrid wrapper (WebView) for the samskrte.ru student cabinet — Wave 1 scaffold (H824).",
+  "type": "module",
+  "scripts": {
+    "gen:env": "node scripts/gen-web-env.mjs",
+    "sync": "npm run gen:env && cap sync",
+    "add:android": "npm run gen:env && cap add android",
+    "add:ios": "npm run gen:env && cap add ios",
+    "open:android": "cap open android",
+    "apk:debug": "npm run sync && cd android && ./gradlew assembleDebug",
+    "icons": "npx --yes @capacitor/assets generate"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Generated native platform projects — regenerated with `npx cap add android|ios`
+# (ruling: one-owner repo, natives are large & derived → not tracked; see mobile/README.md)
+/android/
+/ios/
+
+# Build-time generated web glue (host injected from .env — never committed)
+/www/generated/
+
+# Local environment (real hosts live here; commit .env.example instead)
+.env
+.env.local
+
+# Icon/splash working files
+/resources/*.png
+/resources/*.jpg
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
