@@ -529,15 +529,19 @@
                     </div>
                 @endforeach
 
-                {{-- Баннер: FAQ-суггестер собрал факт-черновик ответа из данных LMS
-                     (support:suggest-answers, H247). Без LLM. Бот НИЧЕГО не отправил —
-                     куратор принимает/правит/отклоняет; «Принять»/«Изменить» кладут
-                     текст в поле ответа ниже. --}}
+                {{-- Баннер: FAQ-суггестер собрал черновик ответа (support:suggest-answers,
+                     H247/H816). A/B/C — факт-шаблон из данных LMS, БЕЗ LLM. D/E/F (v2, S5) —
+                     LMS-факты в промпте, формулирует CuratorAi (LLM). Бот НИЧЕГО не
+                     отправил — куратор принимает/правит/отклоняет; «Принять»/«Изменить»
+                     кладут текст в поле ответа ниже. --}}
                 @php
                     $answerCategoryLabels = [
                         \App\Models\SupportAnswerSuggestion::CATEGORY_ZOOM => 'Zoom / ссылка',
                         \App\Models\SupportAnswerSuggestion::CATEGORY_RECORDING => 'Запись урока',
                         \App\Models\SupportAnswerSuggestion::CATEGORY_SCHEDULE => 'Расписание',
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_PRICE => 'Оплата / цена',
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_ACCESS => 'Доступ / кабинет',
+                        \App\Models\SupportAnswerSuggestion::CATEGORY_MATERIALS => 'Материалы / ДЗ',
                     ];
                 @endphp
                 @foreach($this->pendingAnswerSuggestions as $answer)

@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\Support\SupportAnswerEventLogger;
 use App\Services\Support\SupportAnswerSuggester;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class SupportAnswerSuggesterTest extends TestCase
@@ -69,7 +70,11 @@ class SupportAnswerSuggesterTest extends TestCase
         $this->assertSame(SupportAnswerSuggestion::CATEGORY_SCHEDULE, $suggester->categorize('Когда следующее занятие?'));
         // «Ссылка на запись» — категория B (записи), а не A: порядок правил важен.
         $this->assertSame(SupportAnswerSuggestion::CATEGORY_RECORDING, $suggester->categorize('Скиньте ссылку на запись'));
-        $this->assertNull($suggester->categorize('Сколько стоит курс?'));
+        // v2 (S5, H816) — D/E/F добавлены ПОСЛЕ A/B/C, не меняя их приоритет.
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_PRICE, $suggester->categorize('Сколько стоит курс?'));
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_ACCESS, $suggester->categorize('Не могу зайти в личный кабинет'));
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_MATERIALS, $suggester->categorize('Где скачать домашнее задание?'));
+        $this->assertNull($suggester->categorize('Спасибо большое!'));
         $this->assertNull($suggester->categorize(''));
     }
 
@@ -77,7 +82,7 @@ class SupportAnswerSuggesterTest extends TestCase
     {
         $this->enableFeature();
         [$user] = $this->studentInGroup();
-        $this->webMessage($user, 'Сколько стоит полный курс?');
+        $this->webMessage($user, 'Спасибо, до свидания!');
 
         $result = app(SupportAnswerSuggester::class)->run();
 
@@ -234,5 +239,72 @@ class SupportAnswerSuggesterTest extends TestCase
         $this->assertDatabaseHas('support_ai_reply_events', [
             'event_type' => SupportAnswerEventLogger::EVENT_SUGGESTED,
         ]);
+    }
+
+    private function fakeOpenRouter(string $content): void
+    {
+        config(['services.openrouter.api_key' => 'test-key']);
+        Http::fake([
+            'openrouter.ai/*' => Http::response([
+                'choices' => [['message' => ['content' => $content]]],
+            ], 200),
+        ]);
+    }
+
+    /** @test */
+    public function price_question_creates_llm_draft_when_ai_assist_enabled(): void
+    {
+        $this->enableFeature();
+        config(['features.support_ai_assist' => true]);
+        $this->fakeOpenRouter('Полный курс стоит 45000 ₽, доступна рассрочка.');
+        [$user] = $this->studentInGroup();
+        $this->webMessage($user, 'Сколько стоит полный курс?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(1, $result['created']);
+        $suggestion = SupportAnswerSuggestion::first();
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_PRICE, $suggestion->category);
+        $this->assertSame('Полный курс стоит 45000 ₽, доступна рассрочка.', $suggestion->draft_text);
+
+        // Единственное событие suggested — резолвер сам его не дублирует.
+        $this->assertDatabaseCount('support_ai_reply_events', 1);
+    }
+
+    /** @test */
+    public function access_question_creates_no_suggestion_when_ai_assist_disabled(): void
+    {
+        $this->enableFeature();
+        // support_ai_assist НЕ включён — категория опознаётся, черновика нет.
+        Http::fake();
+        [$user] = $this->studentInGroup();
+        $this->webMessage($user, 'Не могу зайти в личный кабинет, помогите');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(0, $result['created']);
+        $this->assertDatabaseCount('support_answer_suggestions', 0);
+        Http::assertNothingSent();
+    }
+
+    /** @test */
+    public function materials_question_llm_draft_includes_lms_facts_in_prompt(): void
+    {
+        $this->enableFeature();
+        config(['features.support_ai_assist' => true]);
+        $this->fakeOpenRouter('Сертификат появится в личном кабинете после сдачи ДЗ.');
+        [$user, $group] = $this->studentInGroup();
+        $course = Course::factory()->create(['title' => 'Йога-сутры Патанджали']);
+        $group->courses()->attach($course->id);
+        $user->courses()->attach($course->id, ['status' => 'Учится']);
+        $this->webMessage($user, 'Где взять сертификат?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(1, $result['created']);
+        Http::assertSent(fn ($request) => str_contains(
+            json_encode($request->data(), JSON_UNESCAPED_UNICODE),
+            'Йога-сутры Патанджали',
+        ));
     }
 }
