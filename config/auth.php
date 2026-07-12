@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -40,6 +42,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Гостевой guard живого веб-чата (H536): драйвер зарегистрирован через
+        // Auth::viaRequest('chat_guest', …) в AuthServiceProvider — резолвит
+        // непостоянную GuestChatUser из session-токена. Провайдер не нужен.
+        'chat_guest' => [
+            'driver' => 'chat_guest',
+        ],
     ],
 
     /*
@@ -62,7 +71,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            'model' => User::class,
         ],
 
         // 'users' => [

@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Support;
+
+use App\Events\ChatMessageSent;
+use App\Filament\Pages\Helpdesk;
+use App\Models\ChatMessage;
+use App\Models\SupportConversation;
+use App\Models\User;
+use App\Support\Roles;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+/**
+ * H536 Phase 5: гостевые треды веб-чата (user_id = NULL) в операторском Helpdesk.
+ * Гость невидим для user-keyed списка — отдельная ветка его выводит, открывает,
+ * даёт ответить, и ответ куратора бродкастится обратно в виджет посетителя.
+ */
+class HelpdeskGuestChatTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function guestThreadWithMessage(string $text, ?string $name = null): SupportConversation
+    {
+        $thread = SupportConversation::create([
+            'guest_token' => 'tok-'.bin2hex(random_bytes(8)),
+            'guest_name' => $name,
+            'status' => SupportConversation::STATUS_OPEN,
+            'last_message_at' => now(),
+        ]);
+
+        $message = ChatMessage::create([
+            'support_conversation_id' => $thread->id,
+            'user_id' => null,
+            'role' => 'user',
+            'text' => $text,
+            'is_read' => false,
+        ]);
+
+        $thread->forceFill(['last_message_at' => $message->created_at])->save();
+
+        return $thread;
+    }
+
+    /** @test */
+    public function guest_threads_appear_in_the_operator_inbox(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $this->guestThreadWithMessage('Здравствуйте, вопрос по курсу', 'Аня');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->assertSee('Гости (веб-чат)')
+            ->assertSee('Аня');
+    }
+
+    /** @test */
+    public function anonymous_guest_without_a_name_is_labelled_by_id(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Аноним пишет');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->assertSee('Гость #'.$thread->id);
+    }
+
+    /** @test */
+    public function selecting_a_guest_opens_the_pane_and_marks_incoming_read(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Непрочитанное сообщение');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertSet('activeGuestId', $thread->id)
+            ->assertSet('activeUserId', null)
+            ->assertSee('Непрочитанное сообщение')
+            ->assertSee('Аноним · веб-чат сайта');
+
+        $this->assertSame(0, ChatMessage::where('support_conversation_id', $thread->id)
+            ->where('role', 'user')->where('is_read', false)->count());
+    }
+
+    /** @test */
+    public function replying_to_a_guest_stores_a_userless_curator_message_and_broadcasts(): void
+    {
+        Event::fake([ChatMessageSent::class]);
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Вопрос гостя');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->set('newMessage', 'Здравствуйте! Отвечаю по курсу.')
+            ->call('replyToGuest')
+            ->assertSet('newMessage', '');
+
+        $this->assertDatabaseHas('chat_messages', [
+            'support_conversation_id' => $thread->id,
+            'user_id' => null,
+            'role' => 'curator',
+            'answered_by' => $admin->id,
+            'text' => 'Здравствуйте! Отвечаю по курсу.',
+        ]);
+
+        Event::assertDispatched(
+            ChatMessageSent::class,
+            fn (ChatMessageSent $e) => $e->message->support_conversation_id === $thread->id
+                && $e->message->role === 'curator',
+        );
+    }
+
+    /** @test */
+    public function selecting_a_user_clears_an_active_guest(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $student = User::factory()->create(['name' => 'Студент']);
+        ChatMessage::create(['user_id' => $student->id, 'role' => 'user', 'text' => 'Привет', 'is_read' => false]);
+        $thread = $this->guestThreadWithMessage('Гость тут');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertSet('activeGuestId', $thread->id)
+            ->call('selectUser', $student->id)
+            ->assertSet('activeUserId', $student->id)
+            ->assertSet('activeGuestId', null);
+    }
+
+    /** @test */
+    public function replying_to_a_logged_in_student_also_broadcasts_to_the_widget(): void
+    {
+        Event::fake([ChatMessageSent::class]);
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $student = User::factory()->create(['name' => 'Живой студент']);
+        ChatMessage::create(['user_id' => $student->id, 'role' => 'user', 'text' => 'Здравствуйте', 'is_read' => false]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectUser', $student->id)
+            ->set('newMessage', 'Ответ студенту')
+            ->call('sendMessageToStudent');
+
+        Event::assertDispatched(
+            ChatMessageSent::class,
+            fn (ChatMessageSent $e) => $e->message->role === 'curator'
+                && $e->message->user_id === $student->id,
+        );
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Events\ChatMessageSent;
 use App\Models\ChatMessage;
 use App\Models\MessageTemplate;
 use App\Models\ReminderSuggestion;
@@ -48,6 +49,22 @@ class Helpdesk extends Page
 
     public $activeUserId = null;
 
+    /**
+     * Активный гостевой тред (SupportConversation с user_id = NULL, H536 Phase 5).
+     * Веб-чат анонимного посетителя не привязан к `users`, поэтому его нельзя
+     * открыть через $activeUserId — гостевые треды идут отдельной веткой.
+     */
+    public $activeGuestId = null;
+
+    /**
+     * Открытые гостевые треды для левого списка (H536 Phase 5): плоские массивы
+     * ['id','name','unread','preview'], а не Eloquent — чтобы Livewire не тащил
+     * модель в свойство. Наполняется в {@see loadUsersList()} тем же поллом.
+     *
+     * @var array<int, array{id:int, name:string, unread:int, preview:string}>
+     */
+    public $guestThreads = [];
+
     public $newMessage = '';
 
     /** Активная вкладка списка диалогов: inbox | mine | resolved. */
@@ -86,6 +103,38 @@ class Helpdesk extends Page
         $this->usersWithChats = $query
             ->orderByDesc('unread_count')
             ->get()
+            ->all();
+
+        $this->loadGuestThreads();
+    }
+
+    /**
+     * Открытые гостевые треды веб-чата (user_id = NULL) для левого списка
+     * (H536 Phase 5). Отдельно от usersWithChats: у гостя нет `users`-записи,
+     * поэтому он не попадает в user-keyed выборку выше. Не фильтруется вкладками
+     * (inbox/mine/resolved — это про user-треды) — гости всегда «входящие».
+     */
+    protected function loadGuestThreads(): void
+    {
+        $this->guestThreads = SupportConversation::query()
+            ->whereNull('user_id')
+            ->whereNotNull('guest_token')
+            ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+            ->withCount(['chatMessages as unread_count' => function ($query): void {
+                $query->where('is_read', false)->where('role', 'user');
+            }])
+            ->orderByDesc('last_message_at')
+            ->get()
+            ->map(function (SupportConversation $thread): array {
+                $last = $thread->chatMessages()->orderByDesc('id')->first();
+
+                return [
+                    'id' => $thread->id,
+                    'name' => $thread->displayName(),
+                    'unread' => (int) $thread->unread_count,
+                    'preview' => $last ? mb_strimwidth(strip_tags($last->text), 0, 42, '…') : '',
+                ];
+            })
             ->all();
     }
 
@@ -200,12 +249,109 @@ class Helpdesk extends Page
     public function selectUser($userId)
     {
         $this->activeUserId = $userId;
+        $this->activeGuestId = null; // взаимоисключимо с гостевым тредом
 
         ChatMessage::where('user_id', $userId)
             ->where('role', 'user')
             ->update(['is_read' => true]);
 
         $this->loadUsersList();
+    }
+
+    /**
+     * Открыть гостевой тред (H536 Phase 5): помечает входящие гостя прочитанными
+     * и переводит правую панель в гостевой режим. Взаимоисключимо с {@see selectUser}.
+     */
+    public function selectGuest($conversationId): void
+    {
+        $thread = SupportConversation::query()
+            ->whereNull('user_id')
+            ->whereKey((int) $conversationId)
+            ->first();
+
+        if (! $thread) {
+            return;
+        }
+
+        $this->activeGuestId = $thread->id;
+        $this->activeUserId = null;
+
+        ChatMessage::where('support_conversation_id', $thread->id)
+            ->where('role', 'user')
+            ->update(['is_read' => true]);
+
+        $this->loadUsersList();
+    }
+
+    /** Активный гостевой тред (шапка/статус правой панели, H536 Phase 5). */
+    public function getGuestThreadProperty(): ?SupportConversation
+    {
+        if (! $this->activeGuestId) {
+            return null;
+        }
+
+        return SupportConversation::query()
+            ->whereNull('user_id')
+            ->whereKey((int) $this->activeGuestId)
+            ->first();
+    }
+
+    /**
+     * Сообщения активного гостевого треда в хронологии (H536 Phase 5). Гость —
+     * только веб-чат (нет TG-канала), поэтому читаем chatMessages напрямую, а не
+     * через UnifiedInboxReader (тот user-keyed).
+     *
+     * @return Collection<int, ChatMessage>
+     */
+    public function getGuestMessagesProperty(): Collection
+    {
+        $thread = $this->guestThread;
+
+        if (! $thread) {
+            return collect();
+        }
+
+        return $thread->chatMessages()
+            ->with('answeredBy:id,name')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * Ответ куратора в гостевой тред (H536 Phase 5): у гостя нет `users`-записи,
+     * telegram_id/vk_id и обычного {@see sendMessageToStudent} пути — пишем
+     * curator-сообщение с user_id = NULL прямо в тред и бродкастим его в приватный
+     * канал support.conversation.{id}, откуда виджет посетителя (Phase 4) заберёт
+     * ответ живым. Текст экранируется на выводе через htmlForWeb().
+     */
+    public function replyToGuest(): void
+    {
+        $this->validate(['newMessage' => 'required|string']);
+
+        $thread = $this->guestThread;
+        if (! $thread) {
+            return;
+        }
+
+        $curator = auth()->user();
+
+        $curatorMessage = ChatMessage::create([
+            'support_conversation_id' => $thread->id,
+            'user_id' => null,
+            'role' => 'curator',
+            'answered_by' => $curator?->id,
+            'text' => $this->newMessage,
+            'is_read' => true,
+        ]);
+
+        $thread->forceFill(['last_message_at' => $curatorMessage->created_at])->save();
+
+        event(new ChatMessageSent($curatorMessage));
+
+        $this->newMessage = '';
+        $this->loadUsersList();
+
+        Notification::make()->title('Ответ отправлен гостю')->success()->send();
     }
 
     /**
@@ -474,6 +620,11 @@ class Helpdesk extends Page
 
         app(SupportConversationManager::class)
             ->recordMessage($user, $curatorMessage, $curatorMessage->created_at);
+
+        // Живой push ответа куратора в виджет посетителя (H536 Phase 5): виджет
+        // (Phase 4) слушает support.conversation.{id} и рендерит .chat.message.
+        // При broadcasting.default=null (до деплоя Reverb) — тихий no-op.
+        event(new ChatMessageSent($curatorMessage));
 
         // ==========================================
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР

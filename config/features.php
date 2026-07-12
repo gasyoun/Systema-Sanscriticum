@@ -135,4 +135,13 @@ return [
      | deploy-рубильник; пороги — в config/attendance.php.
      */
     'attendance_dashboard' => (bool) env('ATTENDANCE_DASHBOARD', false),
+
+    /*
+     | Дашборд наблюдаемости поддержки (W3.3, H597): здоровье userbot-сессий,
+     | лаг синка, доля успешной доставки исходящих, объём обращений к LLM —
+     | read-only поверх существующих агрегатов (SupportDailyRollup,
+     | TelegramSupportAccount, SupportAiReplyEvent), без новой логики записи.
+     | ВЫКЛ по умолчанию — deploy-рубильник по образцу attendance_dashboard.
+     */
+    'support_observability' => (bool) env('SUPPORT_OBSERVABILITY', false),
 ];

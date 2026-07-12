@@ -2,7 +2,7 @@
 
 _Created: 08-07-2026 · Last updated: 08-07-2026_
 
-Ground-truth по фазе B плана noboring [`/cases/education`](https://noboring-finance.ru/cases/onlayn-schkola-viveli-sobstvennika-iz-operacionki/) ([H258](https://github.com/gasyoun/Uprava/blob/main/handoffs/H258-Opus_Systema-Sanscriticum_revenue_recognition_accrual_06.07.26.md)). Решение MG 06-07-2026: LMS ведет выручку **и кассово, и по начислению**, а не только кассой.
+Ground-truth по фазе B плана noboring [`/cases/education`](https://noboring-finance.ru/cases/onlayn-schkola-viveli-sobstvennika-iz-operacionki/) ([H258](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H258-Opus_Systema-Sanscriticum_revenue_recognition_accrual_06.07.26.md)). Решение MG 06-07-2026: LMS ведет выручку **и кассово, и по начислению**, а не только кассой.
 
 ## Зачем
 

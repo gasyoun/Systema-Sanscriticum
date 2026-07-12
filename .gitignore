@@ -46,3 +46,6 @@ tinker-*.txt
 /.playwright-mcp/
 /*.png
 /*.pdf
+
+# Личная промпт-заметка (scratch), не проектный файл — не коммитится
+/docs/fable5.md

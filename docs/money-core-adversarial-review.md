@@ -3,10 +3,10 @@
 _Created: 07-07-2026 · Last updated: 07-07-2026_
 
 Institutionalizes the 02-07-2026 multi-agent review that produced
-[H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
+[H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 (20 CONFIRMED / 0 PLAUSIBLE / 0 REFUTED after dedup) as a standing process rather
 than a one-off. Part B of
-[H081](https://github.com/gasyoun/Uprava/blob/main/handoffs/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md),
+[H081](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md),
 Wave 3 of [docs/SECURITY_ROADMAP.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_ROADMAP.md).
 
 ## Why not CI

@@ -18,7 +18,7 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 (помесячные ряды и разбивка по категориям/авторам —
 [`agg_full.json`](https://github.com/gasyoun/Uprava/blob/main/telegram-zabota-export/agg_full.json)).
 Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэндоффу
-[H243](https://github.com/gasyoun/Uprava/blob/main/handoffs/H243-Fable_Systema-Sanscriticum_support_automation_year_roadmap_06.07.26.md).
+[H243](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H243-Fable_Systema-Sanscriticum_support_automation_year_roadmap_06.07.26.md).
 
 ---
 

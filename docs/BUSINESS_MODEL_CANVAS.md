@@ -7,7 +7,7 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 `samskrtam.ru`) **и** линия печатных учебников/книг. В отличие от финансовых
 рабочих книг [НФ]-пакета это **не дашборд с живыми метриками**, а
 стратегический артефакт: он задает *логику* бизнеса, тогда как ОПиУ/ДДС из
-финансового контура ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md))
+финансового контура ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md))
 показывают ее *операционные числа*. Блоки **Структура издержек** и **Потоки
 доходов** ниже — стратегический вид тех же величин, что финансовый дашборд
 считает по факту.
@@ -111,7 +111,7 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 
 ## 8. Структура издержек (Cost Structure)
 
-_Операционные числа — в финансовом дашборде ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md), блок ОПиУ)._
+_Операционные числа — в финансовом дашборде ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md), блок ОПиУ)._
 
 - **Выплаты преподавателям** (`percent | per_student | per_block | fixed`) —
   крупнейшая переменная статья.
@@ -124,7 +124,7 @@ _Операционные числа — в финансовом дашборд�
 
 ## 9. Потоки доходов (Revenue Streams)
 
-_Операционные числа — в финансовом дашборде ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md), блок «Выручка»)._
+_Операционные числа — в финансовом дашборде ([H207](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H207-Opus_Systema-Sanscriticum_noboring_finance_dashboard_05.07.26.md), блок «Выручка»)._
 
 - **Продажа курсов и блоков** (≈3 000–12 000 ₽) — текущая основа выручки.
 - **Подписка/членство** — рекуррентный поток: клуб + доступ к записям и рассылке

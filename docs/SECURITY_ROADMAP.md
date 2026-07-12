@@ -108,7 +108,7 @@ every inbound webhook is authenticated fail-closed; secret pushes are blocked at
 ## Wave 2 — Close the known logic defects (Q3 to Q4 2026)
 
 **Unblocked by:** Wave 1 (do not rewrite history under half-finished money PRs). Runs against the
-existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
+existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 handoff — this roadmap does not restate the findings, it sequences them.
 
 - [ ] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
@@ -210,8 +210,8 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
   + PNG PII sweep + `main` branch protection).
   [H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md)
 - **H081** — Wave 3 automated defense (PHP SAST CI job + recurring adversarial money-core review harness).
-  [H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md)
+  [H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
-  [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
+  [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 
 _Dr. Mārcis Gasūns_

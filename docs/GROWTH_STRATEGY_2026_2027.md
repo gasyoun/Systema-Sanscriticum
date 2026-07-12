@@ -53,7 +53,7 @@ Canvas фиксирует *что за бизнес*, роадмап — *что
 | Членство, год | то же + скидка за предоплату | **20 000 ₽** — 10 месяцев по цене года (−17 %) |
 
 Числа — вывод анализа
-[H240](https://github.com/gasyoun/Uprava/blob/main/handoffs/H240-Fable_Systema-Sanscriticum_membership_pricing_sizing_analysis_06.07.26.md)
+[H240](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H240-Fable_Systema-Sanscriticum_membership_pricing_sizing_analysis_06.07.26.md)
 (06-07-2026) по CRM-ведомости платежей; деривация — в приватном
 [`Uprava/custdev/MEMBERSHIP_PRICING_2026.md`](https://github.com/gasyoun/Uprava/blob/main/custdev/MEMBERSHIP_PRICING_2026.md)
 (резолвится только у MG). Ратификация пары — за человеком (см. §8 п. 1).
@@ -190,7 +190,7 @@ entity-спайн, JSON-LD, sitemap-дисциплина по Yandex-first
 ### Судьба остальных идей банка
 
 По требованию хендоффа
-[H232](https://github.com/gasyoun/Uprava/blob/main/handoffs/H232-Fable_Systema-Sanscriticum_growth_strategy_membership_06.07.26.md)
+[H232](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H232-Fable_Systema-Sanscriticum_growth_strategy_membership_06.07.26.md)
 — каждая идея либо в плане, либо отложена с причиной:
 
 - **В плане:** #1, #3 (ядро — §2–3), #6 (§4), #8 + #5 (§6), #13 + #2 (§5),
@@ -215,7 +215,7 @@ entity-спайн, JSON-LD, sitemap-дисциплина по Yandex-first
 [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md):
 
 1. ~~**Цены членства**~~ ✅ закрыто данными 06-07-2026 (анализ
-   [H240](https://github.com/gasyoun/Uprava/blob/main/handoffs/H240-Fable_Systema-Sanscriticum_membership_pricing_sizing_analysis_06.07.26.md)):
+   [H240](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H240-Fable_Systema-Sanscriticum_membership_pricing_sizing_analysis_06.07.26.md)):
    **2 000 ₽/мес · 20 000 ₽/год** (год = 10 месяцев). По 5 028 платежам CRM:
    ядро лояльных — 253 человека (медиана траты ₽52,4 тыс./год), «~80» —
    китовый ярус (₽66 тыс.+/год); 5 000 ₽/мес отклонено — адресует только

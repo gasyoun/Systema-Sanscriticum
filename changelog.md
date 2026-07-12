@@ -9,6 +9,19 @@ ready for a dated entry.
 ## [Unreleased]
 
 ### Added
+- Native live-chat support widget (H536), foundation (Phases 0-3 of 5): Laravel
+  Reverb WebSocket transport (`ChatMessageSent` broadcast event on the
+  `support.conversation.{id}` private channel); guest identity — an anonymous
+  samskrte.ru visitor owns a support thread via a session `guest_token` on
+  `support_conversations` (an ephemeral ownership marker, **not** a 4th
+  external-identity mapping; `chat_messages.user_id` is now nullable), with a
+  `chat_guest` broadcasting guard authorizing the visitor's private channel without
+  a `users` row; and a rate-limited public post endpoint (`POST /chat/message`,
+  `GET /chat/history` via `PublicChatController`) that opens/reopens the thread,
+  stores the message, and broadcasts it. A guest never resolves to a `users` row
+  (no account-takeover surface); output stays escaped via
+  `ChatMessage::htmlForWeb()`. Goes live once the visitor bubble lands (Phase 4)
+  and Reverb is deployed on the host.
 - 3-day diagnostic marathon, Phase 6 (H440): 13-day evergreen warm-tail for
   unpaid registrants (Days 4-16 off the personal `day0_started_at` clock),
   cycling own-pace/installments/teacher-credibility/one testimonial themes,
@@ -25,6 +38,13 @@ ready for a dated entry.
   block, and a proof block (years/books/crowdfunding numbers from `config/trust.php`
   + real testimonial slots via `Testimonial::featured()`, honest empty-state until
   the testimonial-collection @DO closes).
+
+### Fixed
+- `GET /login` for an already-authenticated user rendered the login form instead
+  of redirecting; `AuthController::showLoginForm()` now short-circuits logged-in
+  visitors (student → `/dvaram`, admin → `/admin`), mirroring the post-login
+  dispatch in `login()`. Regression test `tests/Feature/LoginRedirectTest.php`
+  (H806). [PR #480](https://github.com/gasyoun/Systema-Sanscriticum/pull/480)
 
 ## [1.1.1] - 2026-07-09
 

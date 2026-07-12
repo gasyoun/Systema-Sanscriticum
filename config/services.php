@@ -112,6 +112,10 @@ return [
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
         'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: API::class,
+        // Минут без успешного синка, после которых сессия считается протухшей
+        // (и SupportObservability, и telegram-support:healthcheck читают отсюда —
+        // один порог, не два разных магических числа).
+        'stale_after_minutes' => (int) env('TELEGRAM_SUPPORT_STALE_AFTER_MINUTES', 15),
     ],
 
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
@@ -168,6 +172,15 @@ return [
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
         'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
+        // $ per 1M tokens, per OpenRouter model — source: openrouter.ai/<model>,
+        // checked 12-07-2026 (H763). Unknown models fall back to null spend
+        // rather than guessing a price (SupportObservability::llm()).
+        'pricing' => [
+            'deepseek/deepseek-chat' => [
+                'prompt_per_1m' => (float) env('OPENROUTER_PRICE_DEEPSEEK_CHAT_PROMPT', 0.2002),
+                'completion_per_1m' => (float) env('OPENROUTER_PRICE_DEEPSEEK_CHAT_COMPLETION', 0.8001),
+            ],
+        ],
     ],
 
     'admin' => [

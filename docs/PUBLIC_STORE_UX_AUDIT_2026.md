@@ -255,7 +255,7 @@ Acceptance:
 | `recorded_library_entered` | использование записей как отдельного режима | появляется после Ticket 3 |
 
 Эти события — target-список для последующей инструментации (по аналогии с
-[`H288`](https://github.com/gasyoun/Uprava/blob/main/handoffs/H288-Sonnet_csl-guides_quiz_telemetry_optin_07.07.26.md)-подобной
+[`H288`](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H288-Sonnet_csl-guides_quiz_telemetry_optin_07.07.26.md)-подобной
 телеметрии в других репозиториях), не обязательная часть этого document-only PR.
 
 ## 7. Вне объема этого аудита
