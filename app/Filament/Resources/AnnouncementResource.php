@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\AnnouncementResource\Pages;
 use App\Models\Announcement;
+use App\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -50,7 +51,7 @@ class AnnouncementResource extends Resource
                         Forms\Components\Select::make('target_courses')
                             ->label('Кому отправить? (Фильтр по курсам)')
                             ->multiple() // Позволяет выбрать несколько курсов
-                            ->options(\App\Models\Course::pluck('title', 'id')) // Берем названия всех курсов из базы
+                            ->options(Course::pluck('title', 'id')) // Берем названия всех курсов из базы
                             ->placeholder('Всем студентам (оставьте пустым)')
                             ->helperText('Если ничего не выбрано, рассылка отобразится у ВСЕХ студентов платформы.')
                             ->columnSpanFull(),
@@ -90,6 +91,13 @@ class AnnouncementResource extends Resource
 
                 Forms\Components\Section::make('Настройки отправки')
                     ->schema([
+                        Forms\Components\DateTimePicker::make('scheduled_at')
+                            ->label('Плановое время отправки')
+                            ->helperText('Оставьте пустым — уйдёт сразу при сохранении. Иначе рассылка уйдёт автоматически, когда наступит указанное время (без повторного захода куратора).')
+                            ->native(false)
+                            ->minDate(now())
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('is_published')
                             ->label('Опубликовать в кабинетах студентов')
                             ->default(true),
@@ -135,6 +143,21 @@ class AnnouncementResource extends Resource
                 Tables\Columns\IconColumn::make('send_to_vk')
                     ->label('VK')
                     ->boolean(),
+
+                Tables\Columns\TextColumn::make('scheduled_at')
+                    ->label('Статус отправки')
+                    ->badge()
+                    ->state(function (Announcement $record): string {
+                        if ($record->dispatched_at !== null) {
+                            return 'Отправлено '.$record->dispatched_at->format('d.m.Y H:i');
+                        }
+                        if ($record->scheduled_at !== null) {
+                            return 'Запланировано на '.$record->scheduled_at->format('d.m.Y H:i');
+                        }
+
+                        return '—';
+                    })
+                    ->color(fn (Announcement $record): string => $record->dispatched_at !== null ? 'success' : ($record->scheduled_at !== null ? 'warning' : 'gray')),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Дата создания')

@@ -19,6 +19,8 @@ class Announcement extends Model
         'content',
         'button_text',
         'button_url',
+        'scheduled_at',
+        'dispatched_at',
         'is_published',
         'send_to_email',
         'send_to_telegram',
@@ -33,9 +35,20 @@ class Announcement extends Model
     protected $casts = [
         'target_groups' => 'array',
         'target_courses' => 'array',
+        'scheduled_at' => 'datetime',
+        'dispatched_at' => 'datetime',
         'is_published' => 'boolean',
         'send_to_email' => 'boolean',
         'send_to_telegram' => 'boolean',
         'send_to_vk' => 'boolean',
     ];
+
+    /** Ещё не разосланные плановые анонсы, для которых наступило время (H816/S6). */
+    public function scopeDueForDispatch($query)
+    {
+        return $query
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '<=', now())
+            ->whereNull('dispatched_at');
+    }
 }
