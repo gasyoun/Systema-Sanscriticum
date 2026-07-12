@@ -27,6 +27,13 @@ class SupportAnswerSuggestion extends Model
 
     public const CATEGORY_SCHEDULE = 'C';   // расписание / время / переносы
 
+    // v2 (S5, H816) — резолвятся LLM-ом (SupportAnswerAiResolver), а не шаблоном.
+    public const CATEGORY_PRICE = 'D';      // оплата / цена / тарифы
+
+    public const CATEGORY_ACCESS = 'E';     // доступ / группа / личный кабинет
+
+    public const CATEGORY_MATERIALS = 'F';  // материалы / ДЗ / сертификаты
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_ACCEPTED = 'accepted';
