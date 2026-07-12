@@ -13,6 +13,14 @@ class AuthController extends Controller
     // Показать страницу входа
     public function showLoginForm()
     {
+        // Уже залогинен -> не показываем форму, а уводим в кабинет
+        // (реальная смена URL: /login -> /dvaram, админ -> /admin).
+        if (Auth::check()) {
+            return Auth::user()->is_admin
+                ? redirect('/admin')
+                : redirect()->route('student.dashboard');
+        }
+
         return view('auth.login');
     }
 
