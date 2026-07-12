@@ -39,6 +39,13 @@ ready for a dated entry.
   + real testimonial slots via `Testimonial::featured()`, honest empty-state until
   the testimonial-collection @DO closes).
 
+### Fixed
+- `GET /login` for an already-authenticated user rendered the login form instead
+  of redirecting; `AuthController::showLoginForm()` now short-circuits logged-in
+  visitors (student → `/dvaram`, admin → `/admin`), mirroring the post-login
+  dispatch in `login()`. Regression test `tests/Feature/LoginRedirectTest.php`
+  (H806). [PR #480](https://github.com/gasyoun/Systema-Sanscriticum/pull/480)
+
 ## [1.1.1] - 2026-07-09
 
 ### Added
