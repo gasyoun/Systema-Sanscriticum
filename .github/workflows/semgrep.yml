@@ -1,9 +1,11 @@
 name: Semgrep (PHP SAST)
 
 # CodeQL cannot analyze PHP (see codeql.yml comment) — this is the actual static
-# security gate for the language the whole app is written in. Advisory/non-blocking
-# while the false-positive rate is triaged (H081 Part A); promote to required once
-# clean, see docs/SECURITY_ROADMAP.md Wave 3.
+# security gate for the language the whole app is written in. REQUIRED/blocking:
+# the 18 advisory findings (H081 Part A) were triaged to zero on 13-07-2026 —
+# GitHub Actions pinned to commit SHAs, dependabot cooldown added, the stray
+# nginx default page removed — so the job now fails on any new finding.
+# See docs/SECURITY_ROADMAP.md Wave 3.
 
 on:
   push:
@@ -21,23 +23,22 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: semgrep/semgrep
-    # Advisory: findings are surfaced but do not fail the job/PR yet.
-    continue-on-error: true
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Run Semgrep
-        # Advisory scan (see header): findings are printed in the job log but the
-        # step exits 0 — NO `--error` — so this non-required check reads green
-        # instead of a permanent red X on every PR while the false-positive rate
-        # is triaged. To promote to a hard gate (Wave 3): re-add `--error` and
-        # drop `continue-on-error` above once the owned findings are clean.
+        # Blocking scan (see header): `--error` makes the step exit non-zero on
+        # any finding, so a new SAST issue turns the required check red. The
+        # backlog of 18 advisory findings was cleared on 13-07-2026 before this
+        # was promoted; to re-triage a noisy new rule, prefer a scoped
+        # `# nosemgrep` or `.semgrepignore` entry over dropping `--error`.
         # `--exclude` keeps this a *PHP/source* gate: skip vendored, generated,
         # minified, and static-asset trees (minified filament/filepond JS, the
         # nginx default page, static marketing HTML, lecture-* microservice
         # output) that a source SAST has no business flagging.
         run: |
           semgrep scan \
+            --error \
             --config p/php \
             --config p/security-audit \
             --config p/owasp-top-ten \
