@@ -26,6 +26,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   `AnnouncementSchedulerTest` — 6/6 (due→рассылка+дедуп, future→тишина,
   unpublished/без-канала→тишина, немедленная через диспетчер).
 
+### Changed
+- **Поиск словаря — FULLTEXT вместо `LIKE '%…%'` (H859, PR 501).** `App\Livewire\StudentDictionary` (кабинет `/dvaram` + публичный `/slovar`) искал четырьмя OR'нутыми `LIKE '%term%'` — ведущий wildcard делает B-tree индекс бесполезным, каждый ввод = full table scan `dictionary_words` по всем словарям. Теперь на MySQL и запросе ≥3 символов используется составной FULLTEXT-индекс `dictionary_words_fulltext` через `MATCH…AGAINST` (BOOLEAN MODE, `+token*`). Миграция MySQL-guarded (no-op на SQLite/остальных); запрос сохраняет LIKE-подстроку-фолбэк для не-MySQL драйверов и коротких запросов (< 3 симв., которые FULLTEXT игнорирует по `innodb_ft_min_token_size` — обычны для санскритских корней). Семантика меняется на поиск по началу слова — требует staging-проверки на реальном MySQL перед деплоем (см. H859). `StudentDictionarySearchTest` покрывает LIKE-фолбэк; `--filter=Dictionary` = 28 passed.
+
 ## [1.3.0] - 2026-07-13
 
 ### Added
