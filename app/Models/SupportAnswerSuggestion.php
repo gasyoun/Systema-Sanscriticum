@@ -27,6 +27,16 @@ class SupportAnswerSuggestion extends Model
 
     public const CATEGORY_SCHEDULE = 'C';   // расписание / время / переносы
 
+    // Категории FAQ-суггестера v2 (S5) — черновик формулирует LLM по фактам LMS.
+    public const CATEGORY_PAYMENT = 'D';    // оплата / цена / тарифы / рассрочка
+
+    public const CATEGORY_ACCESS = 'E';     // доступ / группа / личный кабинет
+
+    public const CATEGORY_MATERIALS = 'F';  // материалы / ДЗ / сертификаты
+
+    /** Категории, чей черновик формулирует LLM (а не строковый шаблон A/B/C). */
+    public const LLM_CATEGORIES = [self::CATEGORY_PAYMENT, self::CATEGORY_ACCESS, self::CATEGORY_MATERIALS];
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_ACCEPTED = 'accepted';

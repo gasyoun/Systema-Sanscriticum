@@ -28,9 +28,17 @@ class SupportAnswerSuggester
         SupportAnswerSuggestion::CATEGORY_RECORDING => '/запис|видеозап|пересмотр|переслуш|тайм.?код|rutube|youtube/iu',
         SupportAnswerSuggestion::CATEGORY_ZOOM => '/зум|zoom|подключ|ссылк|линк|\bjoin\b|как\s+(?:мне\s+)?(?:войти|зайти|попасть)|войти\s+в\s+(?:занятие|урок|встреч)/iu',
         SupportAnswerSuggestion::CATEGORY_SCHEDULE => '/расписан|когда\s+(?:занятие|урок|начн|следующ|будет|стартует|пара)|во\s?сколько|время\s+(?:занят|урок)|перенос|перенес|в\s+какой\s+день|график\s+занят/iu',
+        // v2 (S5): LLM-черновики. Порядок — ПОСЛЕ A/B/C, чтобы «ссылка на запись»
+        // осталась за B, а не ушла в D/E по слову «оплатить/доступ».
+        SupportAnswerSuggestion::CATEGORY_PAYMENT => '/сколько\s+стоит|стоимост|\bцен[аеуы]\b|тариф|рассрочк|предоплат|доплат|скидк|промокод|сколько\s+(?:мне\s+)?(?:платить|заплатить)|как\s+оплат|можно\s+ли\s+оплат/iu',
+        SupportAnswerSuggestion::CATEGORY_ACCESS => '/нет\s+доступа|не\s+могу\s+(?:попасть|войти|зайти)\s+в\s+(?:личный\s+)?кабинет|личн(?:ый|ом)\s+кабинет|в\s+какой\s+(?:я\s+)?группе|моя\s+группа|какая\s+у\s+меня\s+группа|логин|пароль/iu',
+        SupportAnswerSuggestion::CATEGORY_MATERIALS => '/материал|методичк|конспект|презентац|домашн|\bдз\b|задани|сертификат|диплом|удостоверен|раздаточ/iu',
     ];
 
-    public function __construct(private readonly SupportAnswerFactResolver $facts) {}
+    public function __construct(
+        private readonly SupportAnswerFactResolver $facts,
+        private readonly SupportLlmDraftComposer $llm,
+    ) {}
 
     public function isEnabled(): bool
     {
@@ -147,10 +155,16 @@ class SupportAnswerSuggester
             return false;
         }
 
-        $resolved = $this->facts->resolve($category, $user);
+        // A/B/C — строковый шаблон из фактов (без LLM). D/E/F (S5) — LLM
+        // формулирует по фактам LMS, за флагом support_ai_assist + дневным cap.
+        $resolved = in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
+            ? $this->llm->compose($category, $user, $text, $sourceType)
+            : $this->facts->resolve($category, $user);
+
         if ($resolved === null) {
-            // Категория опознана, но фактов в LMS нет (нет ближайшего занятия /
-            // ссылки / записи) — пустой черновик куратору не показываем.
+            // Категория опознана, но черновика нет: для A/B/C — нет фактов в LMS;
+            // для D/E/F — ещё и LLM выключен / достигнут дневной cap / нет ключа.
+            // Пустой черновик куратору не показываем.
             return false;
         }
 

@@ -48,6 +48,15 @@ return [
     'support_ai_include_telegram' => (bool) env('SUPPORT_AI_INCLUDE_TELEGRAM', false),
 
     /*
+     | Дефолтный дневной предел LLM-черновиков FAQ-суггестера v2 (S5, категории
+     | D/E/F — цена/доступ/материалы). Ограничивает расход на OpenRouter, если в
+     | админке (MarketingSetting.support_ai_daily_cap) значение не задано (NULL).
+     | 0 → без предела. Считается по событиям SupportAiReplyEvent.answer_llm_drafted
+     | за сутки.
+     */
+    'support_ai_daily_cap' => (int) env('SUPPORT_AI_DAILY_CAP', 100),
+
+    /*
      | Авто-напоминания CRM: демоны, которые сами ПИШУТ людям по воронке
      | (напоминание менеджеру о лидах с наступившим next_contact_at — команда
      | leads:remind-followup). ВЫКЛЮЧЕН по умолчанию — чтобы отладить каденс и

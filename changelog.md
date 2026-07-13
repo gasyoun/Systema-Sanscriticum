@@ -11,6 +11,25 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **FAQ-суггестер v2 — LLM-черновики для категорий D/E/F (H816 PR 1, тикет S5).**
+  Расширяет фактологический суггестер v1 (A/B/C, без LLM) на самые частотные
+  «человеческие» категории: D «оплата/цена/тарифы» (7.4% FAQ), E «доступ/группа/
+  кабинет», F «материалы/ДЗ/сертификаты». Детект — дешёвым regex-префильтром;
+  ЦИФРЫ берутся из кода LMS (тариф через `Tariff::calculateFinalPriceForUser()` —
+  единственный источник истины по цене, активные группы, число опубликованных
+  уроков), а внешний LLM (`CuratorAi`/OpenRouter) лишь ФОРМУЛИРУЕТ из них черновик.
+  Как и v1, бот ничего не отправляет — только заводит pending
+  `SupportAnswerSuggestion` куратору. Три страховки: флаг `support_ai_assist`
+  (иначе категория опознана, но черновик не строится); дневной cap LLM-вызовов
+  (`MarketingSetting.support_ai_daily_cap` → дефолт `config('features.support_ai_daily_cap')`,
+  считается по событиям `answer_llm_drafted`); приватность — сырой текст
+  импортированного Telegram-ЛС уходит в LLM только при `support_ai_include_telegram`
+  (факты LMS — всегда). Новый `SupportLlmDraftComposer`; миграция
+  `marketing_settings.support_ai_daily_cap` (nullable, аддитивная). Всё за флагами,
+  OFF по умолчанию — прод не затронут. Feature-тесты с фейковым LLM (Http::fake),
+  19/19 green; полный `tests/Feature/Support` — 79/79.
+
 ## [1.3.0] - 2026-07-13
 
 ### Added
