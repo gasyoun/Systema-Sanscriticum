@@ -54,6 +54,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   `AnnouncementSchedulerTest` — 6/6 (due→рассылка+дедуп, future→тишина,
   unpublished/без-канала→тишина, немедленная через диспетчер).
 
+### Changed
+- **Тесты гоняются параллельно — `paratest` (H868).** `brianium/paratest ^7` добавлен в `require-dev`; CI-шаг и локальный прогон переведены на `php artisan test --parallel` (8 процессов локально). Весь набор **1503 теста / 4312 assertions зелёные** параллельно — parallel-safe, гонок по общим файловым путям нет. Сокращает время прогона CI (был ~12.5 мин последовательно) и локали пропорционально числу ядер.
+
 ## [1.3.0] - 2026-07-13
 
 ### Added

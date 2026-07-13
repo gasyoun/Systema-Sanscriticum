@@ -76,7 +76,7 @@ jobs:
 
       - name: PHPUnit tests
         # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it
-        run: php artisan test
+        run: php artisan test --parallel
 
   frontend-build:
     name: Frontend build (Vite + Tailwind)
