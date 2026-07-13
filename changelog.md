@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Companion metadocs for 31 manuals, specs, and reference docs (H890).** Second metadoc
+  sweep after the 13 roadmaps (H887): every `docs/` manual (admin/student/debtors/finance/
+  accountant, onboarding, cabinet-bot), spec (`*-spec`, ATTRIBUTION_FIELDS_SPEC, TZ_arzamas,
+  direct-teacher-receipts, newsletter-subscribe, partner-program, revenue-recognition,
+  student-unblock-access-feed), and operational/reference/security doc (deploy,
+  php-8.3-upgrade, webhook-security, money-core-adversarial-review, support-subsystem-map,
+  support-identity, telegram-userbot-inventory, vitrina, the two SANSKRIT_HUB indices,
+  FINANCE_REVIEW_RHYTHM) now has a sibling `.meta.md` per the `/metadoc` contract. Each in its
+  subject's language (ru/en). The 8 UX-audits and 5 strategy docs are a separate genre, left
+  for a future sweep. Docs only.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
