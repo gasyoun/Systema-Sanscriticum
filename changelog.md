@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Companion metadocs for the last 16 docs — UX-audits, strategy & one-offs (H891).** Third
+  and final metadoc sweep (after H887's 13 roadmaps and H890's 31 manuals/specs): the 8
+  `*_UX_AUDIT_2026` audits, 5 strategy/marketing docs (BUSINESS_MODEL_CANVAS,
+  GROWTH_STRATEGY_2026_2027, jivo, growth-ideas-2026, zapisi-katalog-strategiya), and 3
+  one-offs (deploy-checklist-audit-fixes, lead-magnet-article-first-sentence-ru,
+  WIKIDATA_SAMEAS_SPOTCHECK) now each have a sibling `.meta.md`. Point-in-time reports and
+  completed checklists carry a `retired`/`superseded` deprecation status; `jivo.meta.md`
+  records that the doc's "current state" claims are unreliable (support-subsystem-map.md is
+  ground truth). **Every `docs/*.md` in the repo now has a metadoc** (60 across H887/H890/H891).
+  Docs only.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
