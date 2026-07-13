@@ -8,16 +8,16 @@
         "php": "^8.3",
         "awcodes/filament-curator": "^3.7",
         "awcodes/filament-tiptap-editor": "^3.5",
-        "barryvdh/laravel-dompdf": "^2.0",
+        "barryvdh/laravel-dompdf": "^3.1",
         "danog/madelineproto": "^8.7",
         "filament/filament": "^3.0",
         "firebase/php-jwt": "^7.0",
         "guzzlehttp/guzzle": "^7.2",
         "jenssegers/agent": "^2.6",
-        "laravel/framework": "^10.10",
+        "laravel/framework": "^12.61.1",
         "laravel/horizon": "^5.46",
         "laravel/reverb": "^1.10",
-        "laravel/sanctum": "^3.3",
+        "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.11",
         "laravel/tinker": "^2.8",
         "league/flysystem-webdav": "^3.31",
@@ -27,9 +27,9 @@
         "saade/filament-fullcalendar": "^3.0",
         "socialiteproviders/vkontakte": "^5.1",
         "socialiteproviders/yandex": "^4.1",
-        "spatie/laravel-backup": "^8.8",
-        "symfony/css-selector": "^6.4",
-        "symfony/dom-crawler": "^6.4"
+        "spatie/laravel-backup": "^9.1",
+        "symfony/css-selector": "^7.0",
+        "symfony/dom-crawler": "^7.0"
     },
     "require-dev": {
         "brianium/paratest": "^7",
@@ -37,8 +37,8 @@
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^7.0",
-        "phpunit/phpunit": "^10.1",
+        "nunomaduro/collision": "^8.0",
+        "phpunit/phpunit": "^11.0",
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
@@ -79,14 +79,7 @@
         "sort-packages": true,
         "platform-check": false,
         "audit": {
-            "block-insecure": false,
-            "ignore": {
-                "PKSA-m5cs-t1y6-qpcs": "GHSA-crmm-hgp2-wgrp: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
-                "PKSA-3r5d-mb8f-1qw9": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
-                "PKSA-mdq4-51ck-6kdq": "GHSA-5vg9-5847-vvmq: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
-                "PKSA-8qx3-n5y5-vvnd": "GHSA-78fx-h6xr-vch4: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)",
-                "PKSA-w7xr-vk7n-rstm": "GHSA-gv7v-rgg6-548h: Laravel 10 EOL, фикс только в 11+; закрывается апгрейдом Laravel (роадмап Волна 2)"
-            }
+            "block-insecure": false
         },
         "platform": {
             "php": "8.3.0",

@@ -29,6 +29,10 @@ return new class extends Migration
 
         Schema::table('direct_ad_spends', function (Blueprint $table) {
             $table->index('starts_at');
+            // Снимаем индекс по month до удаления колонки: с Laravel 11 (нативный
+            // SQLite DDL без DBAL) DROP COLUMN отказывается удалять колонку, на
+            // которую всё ещё ссылается индекс.
+            $table->dropIndex(['month']);
             $table->dropColumn('month');
         });
     }

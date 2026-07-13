@@ -29,6 +29,11 @@ final class GuestChatUser implements Authenticatable
         return $this->guestToken;
     }
 
+    public function getAuthPasswordName(): string
+    {
+        return 'password';
+    }
+
     public function getAuthPassword(): string
     {
         return '';
