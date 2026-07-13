@@ -27,6 +27,12 @@ class EventServiceProvider extends ServiceProvider
             \App\Listeners\UserLogoutListener::class,
         ],
 
+        // --- ЛЕНТА «ПРОБЛЕМ СО ВХОДОМ» (H849) ---
+        // Неудачный Auth::attempt на /login и /shop/login → запись в access_attempts.
+        \Illuminate\Auth\Events\Failed::class => [
+            \App\Listeners\LogFailedAuthentication::class,
+        ],
+
         // --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ: community-драйверы Socialite ---
         // Google идёт из коробки в laravel/socialite; VK и Yandex регистрируются
         // через событие SocialiteWasCalled (socialiteproviders/*). Конфиг —
