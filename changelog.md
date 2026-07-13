@@ -11,6 +11,15 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Companion metadocs for all 13 roadmap docs (H887).** Every `docs/*ROADMAP*.md` /
+  `docs/*_ROADMAP.md` / `docs/IMPLEMENTATION_MAP_*.md` now has a sibling `.meta.md` holding
+  its purpose, audience, provenance (real git creation date + model), a ranked improvement
+  backlog (each row owned by an `H###` or `parked`), limitations, intended-use/misuse,
+  maintenance/sunset, deprecation status, and revision history — closing the "13 roadmap docs
+  carry zero metadoc coverage" gap flagged in the 13-07-2026 weekly review. Each metadoc is in
+  its subject's language (ru/en). Docs only.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
