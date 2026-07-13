@@ -11,6 +11,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Optimisation & bottleneck backlog (H881), `docs/OPTIMISATION_BACKLOG_2026H2.md`
+  (+ metadoc).** The single leverage-ranked index of what needs unblocking / speeding up /
+  paying down, replacing the prior scatter across `.ai_state.md` Dev Notes and ~15 topic
+  roadmaps. Every row fact-checked against `origin/main` on 13-07-2026 — which surfaced that
+  the Laravel-EOL row and the message-store-unification row were both already resolved (H862
+  10→12; the `UnifiedMessage`/`UnifiedInboxReader` read layer from 01-07-2026), and that
+  `vendor/` bloat is a non-issue. Documentation only — no product change, so intentionally
+  not release-cut.
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
