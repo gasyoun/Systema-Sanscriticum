@@ -22,8 +22,7 @@ class PartnerProgramTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Рендер лендинга не должен зависеть от собранного Vite-манифеста.
-        $this->withoutVite();
+        // Vite is disabled globally in Tests\TestCase::setUp().
         // Программа по умолчанию ВЫКЛ — включаем для большинства тестов явно.
         config(['partner.enabled' => true, 'partner.reward_amount' => 1000]);
     }
