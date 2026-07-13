@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-07-13
+
 ### Fixed
 - **Password-reset «Слишком много попыток» на первой попытке (H840).** Брокер
   Laravel возвращает `RESET_THROTTLED`, когда ссылку для входа уже отправили
