@@ -30,6 +30,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   immune to a missing manifest with no build step. CI's manifest-stub is now
   belt-and-suspenders. (Fixes a §2 dev-loop item from `docs/OPTIMISATION_BACKLOG_2026H2.md`.)
 
+### Security
+- **Semgrep PHP SAST promoted from advisory to a required/blocking gate (H885).**
+  Cleared the 18 advisory findings that were keeping it non-blocking (H081 Part A,
+  `docs/SECURITY_ROADMAP.md` Wave 3): pinned all 13 GitHub Actions `uses:` to full
+  commit SHAs (supply-chain hardening, Dependabot-maintained), added a 7-day
+  Dependabot `cooldown` to all three ecosystems, and removed a stray
+  `index.nginx-debian.html` (nginx default page) from the repo root. `semgrep.yml`
+  now runs with `--error` and no `continue-on-error`, so a new SAST finding fails
+  the PR. Executes a §3 tech-debt item from `docs/OPTIMISATION_BACKLOG_2026H2.md` (H881).
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
