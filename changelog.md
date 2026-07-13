@@ -11,6 +11,21 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Планировщик анонсов — `scheduled_at` (H816 PR 2).** Раньше анонс
+  рассылался СИНХРОННО при создании (`CreateAnnouncement::afterCreate`) — отсюда
+  аврал перед запуском. Теперь у анонса есть `scheduled_at` (пусто = «отправить
+  сразу»): рассылка по каналам email/Telegram/VK уходит, когда наступит срок,
+  командой `announcements:dispatch-due` (в `Kernel::schedule()`, каждые 5 минут).
+  Логика рассылки вынесена из Filament-страницы в переиспользуемый
+  `App\Services\AnnouncementDispatcher`; идемпотентность — по `dispatched_at`
+  (один анонс не уходит дважды). Поле «Запланировать рассылку на» + колонка
+  «Запланировано» в админке (Рассылки). Аддитивная миграция
+  `announcements.scheduled_at`/`dispatched_at` (обе nullable) — существующие
+  немедленные рассылки идут тем же путём, ничего не ломается. Feature-тесты
+  `AnnouncementSchedulerTest` — 6/6 (due→рассылка+дедуп, future→тишина,
+  unpublished/без-канала→тишина, немедленная через диспетчер).
+
 ## [1.3.0] - 2026-07-13
 
 ### Added
