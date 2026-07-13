@@ -53,5 +53,10 @@ optimisation thread who needs the leverage-ranked entry point rather than 15 roa
 
 - 13-07-2026 — created (H881). Initial ranked index; Laravel-EOL row dropped as resolved by
   H862 (10→12) after re-verification against `origin/main`.
+- 13-07-2026 — §3 corrected (H885 turn). Semgrep row → in-flight (H885/PR #509). Message-store
+  divergence row **dropped** — the read-layer unification (`UnifiedMessage` +
+  `UnifiedInboxReader`, built 01-07-2026 per `docs/support-subsystem-map.md`) already exists;
+  the `.ai_state.md` "not yet unified" note was stale. Prior-art check prevented a duplicate
+  read layer.
 
 _Dr. Mārcis Gasūns_

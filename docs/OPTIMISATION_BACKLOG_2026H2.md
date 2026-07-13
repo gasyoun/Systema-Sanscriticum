@@ -50,14 +50,11 @@ friction. Source: `.ai_state.md` Dev Notes.
 
 ## 3. Tech debt with a clock (owner: agent, some human-gated)
 
-- **Semgrep SAST still advisory.** `continue-on-error: true` in both
-  [`ci.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml)
-  and [`semgrep.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml);
-  the file's own comment says to drop it "once the owned findings are clean". Triage the
-  owned findings, then make the gate required — a bounded, high-value security win.
-- **Two divergent message stores** (`ChatMessage` vs `TelegramSupportMessage`) not yet
-  unified under a shared read layer — divergence risk as live-chat (H536) and Telegram
-  support both grow.
+- **Semgrep SAST — being promoted to a required gate** (H885,
+  [PR #509](https://github.com/gasyoun/Systema-Sanscriticum/pull/509), open). All 18 advisory
+  findings were cleared (actions pinned to SHAs, Dependabot cooldown, stray nginx page
+  removed) and `semgrep.yml` flipped to `--error`; the PR's Semgrep check is green. Closes
+  once merged.
 - **Off-site backups never actually run** until the Yandex.Disk app-password is set
   (human-gated secret). Until then there is no verified off-site copy.
 
@@ -90,5 +87,22 @@ is the surface most likely to become a cost/throughput bottleneck as volume grow
   [`.gitignore`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.gitignore) line 7;
   `git ls-files vendor/` returns 0. The 28k+ files are Composer's on-disk install only — no
   repo-size problem.
+- **Message-store unification is already built** (verified 13-07-2026 against `origin/main`).
+  The `ChatMessage` (web) vs `TelegramSupportMessage` (Telegram) divergence is reconciled by a
+  deliberate read layer, not a table merge:
+  [`UnifiedMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedMessage.php)
+  DTO (two factories normalise direction/responder/`ai_state`/timestamp; `htmlText()` renders
+  both via `SupportText::safeHtml`) +
+  [`UnifiedInboxReader::forUser()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/UnifiedInboxReader.php)
+  merges both stores chronologically, powering the
+  [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php)
+  operator inbox; writes stay per-channel via the union-typed `SupportConversationManager`.
+  Built 01-07-2026 (Step 2, [`docs/support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md)).
+  The `.ai_state.md` "not yet unified under a read layer" note is stale — do not rebuild it.
+  Single-channel consumers (student-cabinet chat, public web widget, per-store analytics,
+  write paths) bypass the reader **by design** — they must not pay the cross-channel merge
+  cost. Genuinely-open items are feature-parity gaps (Helpdesk status tabs, web-chat topic
+  taxonomy, channel badging), tracked in the subsystem map's "Actually open" table — not
+  unification.
 
 _Dr. Mārcis Gasūns_
