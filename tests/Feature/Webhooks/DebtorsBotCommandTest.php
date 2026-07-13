@@ -18,7 +18,8 @@ use Tests\TestCase;
 /**
  * Куратор-команда `/долги [группа]` поверх DebtorsReport (S4, H250):
  * авторизация по роли, тишина для посторонних/студентов, сводка +
- * фильтр по группе, `/группа`-заглушка, лог использования.
+ * фильтр по группе, лог использования. (Ростер `/группа`/`/кто` — S6,
+ * см. RosterBotCommandTest.)
  */
 class DebtorsBotCommandTest extends TestCase
 {
@@ -111,14 +112,17 @@ class DebtorsBotCommandTest extends TestCase
     }
 
     /** @test */
-    public function group_stub_replies_soon(): void
+    public function group_command_routes_to_roster(): void
     {
+        // /группа больше не заглушка — теперь настоящий ростер (S6, RosterBotCommand).
+        $this->debtor('Мария Ростер');
         User::factory()->create(['telegram_id' => 224, 'role' => Roles::ADMIN]);
 
-        $this->send(224, '/группа');
+        $this->send(224, '/группа Альфа');
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
-            && str_contains($request->data()['text'], 'скоро'));
+            && str_contains($request->data()['text'], 'Группа «Группа Альфа»')
+            && str_contains($request->data()['text'], 'Мария Ростер'));
     }
 
     /** @test */
