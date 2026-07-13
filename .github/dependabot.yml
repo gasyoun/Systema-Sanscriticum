@@ -8,6 +8,8 @@ updates:
       time: "08:00"
       timezone: Europe/Moscow
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: npm
     directory: /
@@ -17,6 +19,8 @@ updates:
       time: "08:00"
       timezone: Europe/Moscow
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: composer
     directory: /
@@ -26,3 +30,5 @@ updates:
       time: "08:00"
       timezone: Europe/Moscow
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
