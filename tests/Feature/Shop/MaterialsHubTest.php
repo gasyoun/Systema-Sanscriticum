@@ -20,14 +20,7 @@ class MaterialsHubTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // layouts.articles подключает бандл через @vite — в тестах манифест
-        // не собирается, стандартный тестовый стаб Laravel.
-        $this->withoutVite();
-    }
+    // Vite is disabled globally in Tests\TestCase::setUp().
 
     private function makeArticle(array $attrs = []): Article
     {

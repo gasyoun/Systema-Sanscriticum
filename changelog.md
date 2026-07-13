@@ -21,6 +21,15 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   `vendor/` bloat is a non-issue. Documentation only — no product change, so intentionally
   not release-cut.
 
+### Fixed
+- **Test suite no longer depends on a built frontend (H884).** `@vite` throws
+  `ManifestNotFoundException` (→ 500) when `public/build/manifest.json` is absent,
+  which locally turned every view-rendering feature test into a false failure until
+  `npm run build` was run. Hoisted `withoutVite()` from two ad-hoc per-test `setUp()`
+  overrides into the base `Tests\TestCase::setUp()`, so all 235 feature tests are
+  immune to a missing manifest with no build step. CI's manifest-stub is now
+  belt-and-suspenders. (Fixes a §2 dev-loop item from `docs/OPTIMISATION_BACKLOG_2026H2.md`.)
+
 ## [1.4.0] - 2026-07-13
 
 ### Added
