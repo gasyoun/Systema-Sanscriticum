@@ -50,7 +50,10 @@ Laravel-приложение для школы санскрита: учебны�
 Несколько словарей (`Dictionary`, флаг `is_active`) можно фильтровать по
 выпадающему списку. Реализация — Livewire-компонент
 [StudentDictionary.php](app/Livewire/StudentDictionary.php) с пагинацией и
-жадной загрузкой (`with('dictionary')`), чтобы избежать N+1.
+жадной загрузкой (`with('dictionary')`), чтобы избежать N+1. Поиск на MySQL
+идет через составной `FULLTEXT`-индекс (`MATCH … AGAINST`, boolean-prefix) по
+всем четырем полям, а не через `LIKE '%…%'` со сканом таблицы; для запросов
+короче трех символов и на SQLite (тесты) действует подстрочный LIKE-фолбэк.
 
 Наполнение словаря — импортом CSV в админке через
 [DictionaryWordImporter.php](app/Filament/Imports/DictionaryWordImporter.php)
@@ -258,7 +261,7 @@ php artisan horizon          # мониторинг очередей на /horiz
 Тесты (SQLite in-memory, реальная БД не нужна):
 
 ```bash
-php artisan test
+php artisan test --parallel   # параллельный прогон (brianium/paratest) — так же гоняет CI
 php artisan test --filter=TestName
 ./vendor/bin/pint            # форматирование PHP
 ```
