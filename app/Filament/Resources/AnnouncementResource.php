@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\AnnouncementResource\Pages;
 use App\Models\Announcement;
+use App\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -50,7 +51,7 @@ class AnnouncementResource extends Resource
                         Forms\Components\Select::make('target_courses')
                             ->label('Кому отправить? (Фильтр по курсам)')
                             ->multiple() // Позволяет выбрать несколько курсов
-                            ->options(\App\Models\Course::pluck('title', 'id')) // Берем названия всех курсов из базы
+                            ->options(Course::pluck('title', 'id')) // Берем названия всех курсов из базы
                             ->placeholder('Всем студентам (оставьте пустым)')
                             ->helperText('Если ничего не выбрано, рассылка отобразится у ВСЕХ студентов платформы.')
                             ->columnSpanFull(),
@@ -107,6 +108,12 @@ class AnnouncementResource extends Resource
                         Forms\Components\Toggle::make('send_to_vk')
                             ->label('Отправить в VK')
                             ->default(false),
+
+                        Forms\Components\DateTimePicker::make('scheduled_at')
+                            ->label('Запланировать рассылку на')
+                            ->helperText('Пусто — отправить сразу при сохранении. Иначе анонс уйдёт по каналам, когда наступит это время (проверка каждые 5 минут). В кабинете студента анонс виден сразу после публикации.')
+                            ->seconds(false)
+                            ->columnSpanFull(),
                     ])->columns(2), // Оставляем 2 колонки, они красиво выстроятся в квадрат 2х2
             ]);
     }
@@ -135,6 +142,12 @@ class AnnouncementResource extends Resource
                 Tables\Columns\IconColumn::make('send_to_vk')
                     ->label('VK')
                     ->boolean(),
+
+                Tables\Columns\TextColumn::make('scheduled_at')
+                    ->label('Запланировано')
+                    ->dateTime('d.m.Y H:i')
+                    ->placeholder('сразу')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Дата создания')
