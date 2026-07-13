@@ -15,8 +15,8 @@
 @push('head')
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "Article",
+    "@@context": "https://schema.org",
+    "@@type": "Article",
     "headline": @json($article->title),
     "description": @json($article->excerpt),
     @if($article->cover_url)
@@ -25,25 +25,25 @@
     "datePublished": @json(optional($article->published_at)->toIso8601String()),
     "dateModified": @json($article->updated_at->toIso8601String()),
     "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": @json(route('articles.show', $article->slug))
+        "@@type": "WebPage",
+        "@@id": @json(route('articles.show', $article->slug))
     },
     "author": {
         @if($article->author_name)
-        "@type": "Person",
+        "@@type": "Person",
         "name": @json($article->author_name)
         @else
-        "@type": "Organization",
-        "@id": "https://samskrte.ru/#org",
+        "@@type": "Organization",
+        "@@id": "https://samskrte.ru/#org",
         "name": "Общество ревнителей санскрита"
         @endif
     },
     "publisher": {
-        "@type": "Organization",
-        "@id": "https://samskrte.ru/#org",
+        "@@type": "Organization",
+        "@@id": "https://samskrte.ru/#org",
         "name": "Общество ревнителей санскрита",
         "logo": {
-            "@type": "ImageObject",
+            "@@type": "ImageObject",
             "url": @json(asset('images/logo.png'))
         }
     }

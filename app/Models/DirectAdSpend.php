@@ -69,7 +69,9 @@ class DirectAdSpend extends Model
             return 1;
         }
 
-        return max(1, $this->starts_at->diffInDays($this->ends_at) + 1);
+        // Carbon 3: diffInDays возвращает float (в Carbon 2 — int) и по умолчанию
+        // знаковый; приводим к int и берём модуль, сохраняя поведение Carbon 2.
+        return max(1, (int) $this->starts_at->diffInDays($this->ends_at, true) + 1);
     }
 
     public function budgetTotal(): float

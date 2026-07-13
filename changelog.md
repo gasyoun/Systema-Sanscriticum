@@ -57,6 +57,31 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ### Changed
 - **Тесты гоняются параллельно — `paratest` (H868).** `brianium/paratest ^7` добавлен в `require-dev`; CI-шаг и локальный прогон переведены на `php artisan test --parallel` (8 процессов локально). Весь набор **1503 теста / 4312 assertions зелёные** параллельно — parallel-safe, гонок по общим файловым путям нет. Сокращает время прогона CI (был ~12.5 мин последовательно) и локали пропорционально числу ядер.
 
+### Security
+- **Laravel 10 → 12: закрыты HIGH+MODERATE Dependabot-адвайзори (H862).**
+  `laravel/framework` поднят `^10.10` → `^12.63` (плюс `laravel/sanctum` 3→4,
+  `phpunit/phpunit` 10→11, `nunomaduro/collision` 7→8, `symfony/css-selector`+`dom-crawler` 6→7,
+  `barryvdh/laravel-dompdf` 2→3, `spatie/laravel-backup` 8→9). Закрывает
+  [Dependabot #14](https://github.com/gasyoun/Systema-Sanscriticum/security/dependabot/14)
+  (HIGH, GHSA-5vg9-5847-vvmq — CRLF-инъекция в дефолтном правиле валидации `email`) и
+  [#15](https://github.com/gasyoun/Systema-Sanscriticum/security/dependabot/15)
+  (MODERATE, GHSA-crmm-hgp2-wgrp — path confusion во временных подписанных URL):
+  фикс только в Laravel 11+, бэкпорта под EOL-нутую 10.x нет, поэтому Dependabot не мог
+  открыть PR. Классический скелет (`bootstrap/app.php` + `Http/Kernel`) сохранён —
+  Filament v3.3.54 уже поддерживает Laravel 12 (прыжок Filament 3→4 не нужен), а
+  `jenssegers/agent` не имеет Laravel-констрейнта (замена не потребовалась). Правки под
+  нативный SQLite-DDL Laravel 11 (Doctrine DBAL убран): снятие FK/индекса до `DROP COLUMN`
+  в [`2026_03_09_..._payments`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_03_09_093322_replace_landing_page_id_with_course_id_in_payments_table.php)
+  и [`2026_06_02_..._direct_ad_spends`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_06_02_000001_direct_ad_spends_to_period.php);
+  контракт `Authenticatable::getAuthPasswordName()` в
+  [`GuestChatUser`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Auth/GuestChatUser.php);
+  Carbon 3 `diffInDays()` теперь возвращает float → каст в
+  [`DirectAdSpend::periodDays()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DirectAdSpend.php);
+  экранирование JSON-LD `@context` (в Laravel 11 `@context` стала Blade-директивой) в
+  [`articles/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/articles/show.blade.php).
+  Устаревшие `audit.ignore` для L10-адвайзори убраны из `composer.json`. Весь набор
+  **1503/1503 зелёный**, `composer audit` — чисто. Прогон под Opus 4.8 (`claude-opus-4-8`).
+
 ## [1.3.0] - 2026-07-13
 
 ### Added
