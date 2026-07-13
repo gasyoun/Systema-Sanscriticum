@@ -21,7 +21,8 @@ class StudentUnblockAccessTest extends TestCase
         $student = User::factory()->create();
 
         $result = app(StudentUnblockService::class)->unblock($student, adminUserId: null);
-        $token = str_replace(url('/login-link/'), '', $result['login_link']);
+        $parts = explode('/', $result['login_link']);
+        $token = end($parts);
 
         // Первый заход — авторизует и ведёт в кабинет.
         $this->get('/login-link/'.$token)
