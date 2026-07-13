@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-14
+
 ### Added
 - **Companion metadocs for the last 16 docs — UX-audits, strategy & one-offs (H891).** Third
   and final metadoc sweep (after H887's 13 roadmaps and H890's 31 manuals/specs): the 8
