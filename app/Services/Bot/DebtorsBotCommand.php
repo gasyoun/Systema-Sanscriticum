@@ -22,8 +22,6 @@ class DebtorsBotCommand
 {
     public const COMMAND_DEBTORS = '/долги';
 
-    public const COMMAND_GROUP_STUB = '/группа';
-
     private const TOP_LIMIT = 5;
 
     /**
@@ -37,17 +35,12 @@ class DebtorsBotCommand
 
     public function isCommand(string $text): bool
     {
-        return $this->isDebtorsCommand($text) || $this->isGroupStubCommand($text);
+        return $this->isDebtorsCommand($text);
     }
 
     public function isDebtorsCommand(string $text): bool
     {
         return $this->matchesPrefix($text, self::COMMAND_DEBTORS);
-    }
-
-    public function isGroupStubCommand(string $text): bool
-    {
-        return $this->matchesPrefix($text, self::COMMAND_GROUP_STUB);
     }
 
     private function matchesPrefix(string $text, string $command): bool
@@ -65,12 +58,6 @@ class DebtorsBotCommand
      */
     public function reply(User $curator, string $text): string
     {
-        if ($this->isGroupStubCommand($text)) {
-            $this->logUsage($curator, 'gruppa', null);
-
-            return 'Список групп скоро появится здесь 🙏';
-        }
-
         $arg = trim(mb_substr(trim($text), mb_strlen(self::COMMAND_DEBTORS)));
 
         $group = null;

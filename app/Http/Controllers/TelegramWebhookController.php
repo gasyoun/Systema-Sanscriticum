@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
+use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
@@ -66,12 +67,12 @@ class TelegramWebhookController extends Controller
                 $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
             }
             // ==========================================
-            // КУРАТОР-КОМАНДЫ (/долги, /группа) — тикет S4 support-roadmap (H250).
-            // Полностью отдельная ветка от студенческого AI-чата: неавторизованным
-            // (не куратор/не привязан) — тишина, а не обычное «привяжите аккаунт»,
-            // чтобы не светить существование команды посторонним.
+            // КУРАТОР-КОМАНДЫ (/долги — S4 H250; /группа, /кто — S6 H816) — отдельная
+            // ветка от студенческого AI-чата: неавторизованным (не куратор/не привязан)
+            // — тишина, а не обычное «привяжите аккаунт», чтобы не светить существование
+            // команды посторонним.
             // ==========================================
-            elseif (app(DebtorsBotCommand::class)->isCommand($text)) {
+            elseif (app(DebtorsBotCommand::class)->isCommand($text) || app(RosterBotCommand::class)->isCommand($text)) {
                 $this->handleCuratorCommand($chatId, $text);
             }
             // Команда разблокировки /unblock <email> (H849) — только super_admin/admin.
@@ -206,7 +207,11 @@ class TelegramWebhookController extends Controller
             return;
         }
 
-        $reply = app(DebtorsBotCommand::class)->reply($curator, $text);
+        // /группа и /кто (S6) — ростер/поиск; /долги (S4) — сводка должников.
+        $reply = app(RosterBotCommand::class)->isCommand($text)
+            ? app(RosterBotCommand::class)->reply($curator, $text)
+            : app(DebtorsBotCommand::class)->reply($curator, $text);
+
         $this->sendMessage($chatId, $reply);
     }
 
