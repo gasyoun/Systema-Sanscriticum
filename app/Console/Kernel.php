@@ -212,6 +212,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('deliver-webinar-recordings');
 
+        // Планировщик анонсов (H816 PR 2): рассылает запланированные анонсы,
+        // у которых наступил scheduled_at. Дедуп по dispatched_at внутри
+        // диспетчера — no-op, если запланированных «на сейчас» анонсов нет.
+        $schedule->command('announcements:dispatch-due')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('dispatch-due-announcements');
+
         // Telegram support-account analytics. The command is a no-op unless
         // TELEGRAM_SUPPORT_ENABLED=true and Telegram Client API credentials exist.
         $schedule->command('telegram-support:sync')

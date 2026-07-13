@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccessAttempt;
+use App\Services\Access\AccessAttemptLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +42,15 @@ class PasswordResetController extends Controller
             && \App\Models\User::where('email', $email)->exists();
 
         if (! $exists) {
+            // Лента «проблем со входом» (H849): человек пытается войти, но его
+            // email не в базе (опечатка / другой адрес) — застрявший кандидат.
+            app(AccessAttemptLogger::class)->record(
+                AccessAttempt::KIND_RESET_NOT_FOUND,
+                email: $email,
+                ip: $request->ip(),
+                userAgent: $request->userAgent(),
+            );
+
             // Явно сообщаем: не нашли — и подсказываем, что делать дальше.
             return back()
                 ->withInput($request->only('email'))
@@ -47,6 +58,18 @@ class PasswordResetController extends Controller
         }
 
         $status = Password::sendResetLink(['email' => $email]);
+
+        // Лента H849: логируем исход запроса восстановления. RESET_THROTTLED —
+        // ровно сигнал «застрял» (письмо не дошло, жмёт снова), по нему бот
+        // проактивно пингует админа.
+        app(AccessAttemptLogger::class)->record(
+            $status === Password::RESET_THROTTLED
+                ? AccessAttempt::KIND_RESET_THROTTLED
+                : AccessAttempt::KIND_RESET_SENT,
+            email: $email,
+            ip: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
 
         // RESET_THROTTLED означает, что ссылку МЫ уже создали и отправили меньше
         // минуты назад (per-email троттл брокера, config/auth.php → passwords.throttle),

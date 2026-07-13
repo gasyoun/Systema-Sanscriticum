@@ -23,6 +23,44 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   `DebtorsBotCommand`), заглушка `/группа` из `DebtorsBotCommand` убрана. Чистый
   LMS-запрос: без LLM, без новых кред, без миграций — на проде работает сразу после
   выката. Feature-тесты `RosterBotCommandTest` 9/9; полный Bot+Webhooks сьют — 95/95.
+- **Планировщик анонсов — `scheduled_at` (H816 PR 2).** Раньше анонс
+  рассылался СИНХРОННО при создании (`CreateAnnouncement::afterCreate`) — отсюда
+  аврал перед запуском. Теперь у анонса есть `scheduled_at` (пусто = «отправить
+  сразу»): рассылка по каналам email/Telegram/VK уходит, когда наступит срок,
+  командой `announcements:dispatch-due` (в `Kernel::schedule()`, каждые 5 минут).
+  Логика рассылки вынесена из Filament-страницы в переиспользуемый
+  `App\Services\AnnouncementDispatcher`; идемпотентность — по `dispatched_at`
+  (один анонс не уходит дважды). Поле «Запланировать рассылку на» + колонка
+  «Запланировано» в админке (Рассылки). Аддитивная миграция
+  `announcements.scheduled_at`/`dispatched_at` (обе nullable) — существующие
+  немедленные рассылки идут тем же путём, ничего не ломается. Feature-тесты
+  `AnnouncementSchedulerTest` — 6/6 (due→рассылка+дедуп, future→тишина,
+  unpublished/без-канала→тишина, немедленная через диспетчер).
+
+## [1.3.0] - 2026-07-13
+
+### Added
+- **Разблокировка застрявшего студента одним кликом + лента «Проблемы со входом» (H849).**
+  До сих пор неудачные попытки входа/восстановления НИГДЕ не логировались.
+  Теперь: (1) новая таблица `access_attempts` собирает единой лентой неудачные
+  логины (слушатель `Auth\Events\Failed` на `/login` и `/shop/login`) и запросы
+  ссылки восстановления (`reset_sent`/`reset_not_found`/`reset_throttled`,
+  логируются в [`PasswordResetController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PasswordResetController.php));
+  (2) Filament-ресурс «Проблемы со входом» ([`AccessAttemptResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/AccessAttemptResource.php))
+  с бейджем «застрявших» и разблокировкой из строки, плюс кнопка «Разблокировать»
+  на карточке студента ([`UserResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/UserResource.php));
+  (3) разблокировка = снять IP-троттл + выдать **одноразовую magic-ссылку для входа**
+  (24 ч, hashed-at-rest, назначение `admin_unblock`, маршрут `/login-link/{token}`),
+  которую админ передаёт студенту напрямую, минуя сломанную почту (+ опц. сброс
+  пароля) — [`StudentUnblockService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Access/StudentUnblockService.php);
+  (4) Telegram: проактивный алерт админам с inline-кнопкой «🔓 Выслать ссылку»
+  при сигнале «застрял» (троттл восстановления / серия неудачных логинов) +
+  текстовая команда `/unblock <email>` — авторизация строго `super_admin`/`admin`
+  ([`UnblockBotCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/UnblockBotCommand.php),
+  [`TelegramWebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/TelegramWebhookController.php)).
+  Проактивные алерты идут на `ADMIN_TELEGRAM_ID`. Не устраняет корневую причину
+  недоставки писем (боевой SMTP) — но даёт админу обойти её вручную. Документация:
+  [`docs/student-unblock-access-feed.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-unblock-access-feed.md).
 
 ## [1.2.1] - 2026-07-13
 

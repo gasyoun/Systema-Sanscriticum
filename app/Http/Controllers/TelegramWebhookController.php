@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
+use App\Services\Bot\UnblockBotCommand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache; // Добавили для переключения на человека
 use Illuminate\Support\Facades\Http;
@@ -21,6 +23,13 @@ class TelegramWebhookController extends Controller
     {
         // Получаем все данные, которые прислал Telegram
         $data = $request->all();
+
+        // Нажатие inline-кнопки (например «Разблокировать» из алерта H849).
+        if (isset($data['callback_query'])) {
+            $this->handleCallbackQuery($data['callback_query']);
+
+            return response()->json(['status' => 'ok']);
+        }
 
         // Проверяем, есть ли текст в сообщении
         if (isset($data['message']['text'])) {
@@ -65,6 +74,11 @@ class TelegramWebhookController extends Controller
             // ==========================================
             elseif (app(DebtorsBotCommand::class)->isCommand($text) || app(RosterBotCommand::class)->isCommand($text)) {
                 $this->handleCuratorCommand($chatId, $text);
+            }
+            // Команда разблокировки /unblock <email> (H849) — только super_admin/admin.
+            // Неавторизованным тишина: не светим существование команды.
+            elseif (app(UnblockBotCommand::class)->isCommand($text)) {
+                $this->handleUnblockCommand($chatId, $text);
             }
             // ==========================================
             // НОВАЯ ЧАСТЬ: ОБРАБОТКА ОБЫЧНЫХ ВОПРОСОВ
@@ -199,6 +213,61 @@ class TelegramWebhookController extends Controller
             : app(DebtorsBotCommand::class)->reply($curator, $text);
 
         $this->sendMessage($chatId, $reply);
+    }
+
+    // ==========================================
+    // Разблокировка студента из Telegram (H849): текстовая команда /unblock <email>.
+    // Авторизация строже куратор-команд — только super_admin/admin (выдача ссылки =
+    // потенциальный вход в чужой кабинет). Неавторизованным — тишина.
+    // ==========================================
+    private function handleUnblockCommand($chatId, $text)
+    {
+        $admin = User::where('telegram_id', $chatId)->first();
+
+        if (! UnblockBotCommand::isAuthorized($admin)) {
+            return;
+        }
+
+        $reply = app(UnblockBotCommand::class)->replyForCommand($admin, $text);
+        $this->sendMessage($chatId, $reply);
+    }
+
+    // ==========================================
+    // Нажатие inline-кнопки. Пока единственная — «Разблокировать» (callback_data
+    // «ub:<id записи>») из проактивного алерта H849. Гасим «часики» на кнопке,
+    // авторизуем нажавшего по telegram_id → роль, отвечаем ссылкой в тот же чат.
+    // ==========================================
+    private function handleCallbackQuery(array $callback)
+    {
+        $notifier = app(TelegramAdminNotifier::class);
+
+        $callbackId = (string) ($callback['id'] ?? '');
+        $data = (string) ($callback['data'] ?? '');
+        $fromId = $callback['from']['id'] ?? null;
+        $chatId = $callback['message']['chat']['id'] ?? $fromId;
+
+        if (! str_starts_with($data, 'ub:') || $fromId === null) {
+            $notifier->answerCallback($callbackId);
+
+            return;
+        }
+
+        $admin = User::where('telegram_id', $fromId)->first();
+        if (! UnblockBotCommand::isAuthorized($admin)) {
+            $notifier->answerCallback($callbackId, 'Недостаточно прав.');
+
+            return;
+        }
+
+        $attemptId = (int) substr($data, 3);
+        $reply = app(UnblockBotCommand::class)->replyForAttempt($admin, $attemptId);
+
+        $notifier->answerCallback($callbackId, 'Готово');
+
+        $token = (string) config('services.telegram.bot_token');
+        if ($token !== '' && $chatId !== null) {
+            $notifier->send($token, (string) $chatId, $reply);
+        }
     }
 
     // ==========================================
