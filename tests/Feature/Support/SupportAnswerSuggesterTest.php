@@ -69,7 +69,9 @@ class SupportAnswerSuggesterTest extends TestCase
         $this->assertSame(SupportAnswerSuggestion::CATEGORY_SCHEDULE, $suggester->categorize('Когда следующее занятие?'));
         // «Ссылка на запись» — категория B (записи), а не A: порядок правил важен.
         $this->assertSame(SupportAnswerSuggestion::CATEGORY_RECORDING, $suggester->categorize('Скиньте ссылку на запись'));
-        $this->assertNull($suggester->categorize('Сколько стоит курс?'));
+        // v2 (S5): «сколько стоит» теперь распознаётся как D (оплата/цена).
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_PAYMENT, $suggester->categorize('Сколько стоит курс?'));
+        $this->assertNull($suggester->categorize('Здравствуйте, спасибо за урок!'));
         $this->assertNull($suggester->categorize(''));
     }
 
@@ -77,7 +79,7 @@ class SupportAnswerSuggesterTest extends TestCase
     {
         $this->enableFeature();
         [$user] = $this->studentInGroup();
-        $this->webMessage($user, 'Сколько стоит полный курс?');
+        $this->webMessage($user, 'Здравствуйте, спасибо большое за урок!');
 
         $result = app(SupportAnswerSuggester::class)->run();
 

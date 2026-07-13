@@ -23,6 +23,11 @@ class SupportAnswerEventLogger
 
     public const EVENT_DISCARDED = 'answer_discarded';
 
+    // Один вызов внешнего LLM ради черновика D/E/F (S5). Отдельно от
+    // EVENT_SUGGESTED (та метрика — дефлекшн), чтобы дневной cap считался по
+    // фактическим LLM-вызовам, а не по всем суггестам.
+    public const EVENT_LLM_DRAFTED = 'answer_llm_drafted';
+
     public static function log(SupportAnswerSuggestion $suggestion, string $eventType): void
     {
         $telegramMessageId = $suggestion->source_type === SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE

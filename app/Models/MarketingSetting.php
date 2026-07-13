@@ -88,6 +88,9 @@ class MarketingSetting extends Model
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247) ---
         'support_answer_suggester_enabled',
 
+        // --- LLM-ЧЕРНОВИКИ D/E/F: ДНЕВНОЙ ПРЕДЕЛ ВЫЗОВОВ (S5) ---
+        'support_ai_daily_cap',
+
         // --- НАБОР КУРСОВ: РАССЫЛКА О НЕДОБОРЕ (H162) ---
         'recruitment_notify_enabled',
         'recruitment_notify_lead_days',
@@ -125,6 +128,7 @@ class MarketingSetting extends Model
         'recruitment_notify_lead_days' => 'integer',
         'reminder_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',
+        'support_ai_daily_cap' => 'integer',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',
