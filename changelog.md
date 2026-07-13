@@ -22,10 +22,60 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   records that the doc's "current state" claims are unreliable (support-subsystem-map.md is
   ground truth). **Every `docs/*.md` in the repo now has a metadoc** (60 across H887/H890/H891).
   Docs only.
+- **Companion metadocs for 31 manuals, specs, and reference docs (H890).** Second metadoc
+  sweep after the 13 roadmaps (H887): every `docs/` manual (admin/student/debtors/finance/
+  accountant, onboarding, cabinet-bot), spec (`*-spec`, ATTRIBUTION_FIELDS_SPEC, TZ_arzamas,
+  direct-teacher-receipts, newsletter-subscribe, partner-program, revenue-recognition,
+  student-unblock-access-feed), and operational/reference/security doc (deploy,
+  php-8.3-upgrade, webhook-security, money-core-adversarial-review, support-subsystem-map,
+  support-identity, telegram-userbot-inventory, vitrina, the two SANSKRIT_HUB indices,
+  FINANCE_REVIEW_RHYTHM) now has a sibling `.meta.md` per the `/metadoc` contract. Each in its
+  subject's language (ru/en). The 8 UX-audits and 5 strategy docs are a separate genre, left
+  for a future sweep. Docs only.
+- **Companion metadocs for all 13 roadmap docs (H887).** Every `docs/*ROADMAP*.md` /
+  `docs/*_ROADMAP.md` / `docs/IMPLEMENTATION_MAP_*.md` now has a sibling `.meta.md` holding
+  its purpose, audience, provenance (real git creation date + model), a ranked improvement
+  backlog (each row owned by an `H###` or `parked`), limitations, intended-use/misuse,
+  maintenance/sunset, deprecation status, and revision history — closing the "13 roadmap docs
+  carry zero metadoc coverage" gap flagged in the 13-07-2026 weekly review. Each metadoc is in
+  its subject's language (ru/en). Docs only.
+- **Optimisation & bottleneck backlog (H881), `docs/OPTIMISATION_BACKLOG_2026H2.md`
+  (+ metadoc).** The single leverage-ranked index of what needs unblocking / speeding up /
+  paying down, replacing the prior scatter across `.ai_state.md` Dev Notes and ~15 topic
+  roadmaps. Every row fact-checked against `origin/main` on 13-07-2026 — which surfaced that
+  the Laravel-EOL row and the message-store-unification row were both already resolved (H862
+  10→12; the `UnifiedMessage`/`UnifiedInboxReader` read layer from 01-07-2026), and that
+  `vendor/` bloat is a non-issue. Documentation only — no product change, so intentionally
+  not release-cut.
+
+### Fixed
+- **Test suite no longer depends on a built frontend (H884).** `@vite` throws
+  `ManifestNotFoundException` (→ 500) when `public/build/manifest.json` is absent,
+  which locally turned every view-rendering feature test into a false failure until
+  `npm run build` was run. Hoisted `withoutVite()` from two ad-hoc per-test `setUp()`
+  overrides into the base `Tests\TestCase::setUp()`, so all 235 feature tests are
+  immune to a missing manifest with no build step. CI's manifest-stub is now
+  belt-and-suspenders. (Fixes a §2 dev-loop item from `docs/OPTIMISATION_BACKLOG_2026H2.md`.)
+
+### Security
+- **Semgrep PHP SAST promoted from advisory to a required/blocking gate (H885).**
+  Cleared the 18 advisory findings that were keeping it non-blocking (H081 Part A,
+  `docs/SECURITY_ROADMAP.md` Wave 3): pinned all 13 GitHub Actions `uses:` to full
+  commit SHAs (supply-chain hardening, Dependabot-maintained), added a 7-day
+  Dependabot `cooldown` to all three ecosystems, and removed a stray
+  `index.nginx-debian.html` (nginx default page) from the repo root. `semgrep.yml`
+  now runs with `--error` and no `continue-on-error`, so a new SAST finding fails
+  the PR. Executes a §3 tech-debt item from `docs/OPTIMISATION_BACKLOG_2026H2.md` (H881).
 
 ## [1.4.0] - 2026-07-13
 
 ### Added
+- **Optimisation & bottleneck backlog (H881), `docs/OPTIMISATION_BACKLOG_2026H2.md`
+  (+ metadoc).** The single leverage-ranked index of what needs unblocking / speeding up /
+  paying down, replacing the prior scatter across `.ai_state.md` Dev Notes and ~15 topic
+  roadmaps. Every row fact-checked against `origin/main` on 13-07-2026 (which surfaced that
+  the Laravel-EOL row was already resolved by H862's 10→12 upgrade, and that `vendor/` bloat
+  is a non-issue). Documentation only — no product change, so intentionally not release-cut.
 - **FAQ-суггестер v2 — LLM-черновики для категорий D/E/F (H816 PR 1, тикет S5).**
   Расширяет фактологический суггестер v1 (A/B/C, без LLM) на самые частотные
   «человеческие» категории: D «оплата/цена/тарифы» (7.4% FAQ), E «доступ/группа/

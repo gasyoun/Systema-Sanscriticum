@@ -27,7 +27,7 @@
         "saade/filament-fullcalendar": "^3.0",
         "socialiteproviders/vkontakte": "^5.1",
         "socialiteproviders/yandex": "^4.1",
-        "spatie/laravel-backup": "^9.1",
+        "spatie/laravel-backup": "^10.3",
         "symfony/css-selector": "^7.0",
         "symfony/dom-crawler": "^7.0"
     },
