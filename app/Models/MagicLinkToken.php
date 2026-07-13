@@ -66,7 +66,7 @@ class MagicLinkToken extends Model
      * Сравнение идёт по hash — константное по времени за счёт индексного поиска
      * ровно одной строки (unique token_hash) + равенства хешей.
      */
-    public static function findActive(string $plaintext): ?self
+    public static function findActive(string $plaintext, ?string $purpose = null): ?self
     {
         if ($plaintext === '') {
             return null;
@@ -75,6 +75,13 @@ class MagicLinkToken extends Model
         $token = self::where('token_hash', self::hash($plaintext))->first();
 
         if ($token === null || ! $token->isActive()) {
+            return null;
+        }
+
+        // Токены с явным назначением (например admin_unblock) гасятся только на
+        // «своём» маршруте — чтобы админ-ссылку нельзя было скормить в
+        // newsletter-обработчик и наоборот.
+        if ($purpose !== null && $token->purpose !== $purpose) {
             return null;
         }
 

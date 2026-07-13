@@ -362,6 +362,13 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+// --- ССЫЛКА ВХОДА ПОСЛЕ РАЗБЛОКИРОВКИ (H849) — админ выдаёт студенту, минуя
+// сломанную почту. НЕ завязано на newsletter-флаг; принимает только токены
+// назначения admin_unblock (см. StudentUnblockService::MAGIC_PURPOSE).
+Route::get('/login-link/{token}', [\App\Http\Controllers\AdminLoginLinkController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('admin.login-link');
 Route::get('/thank-you', function () {
     // Переносим flash на следующий request, чтобы F5 на странице
     // не сбрасывал состояние (дубликат vs новая заявка) и кнопки магнита.

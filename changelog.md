@@ -26,6 +26,31 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   `AnnouncementSchedulerTest` — 6/6 (due→рассылка+дедуп, future→тишина,
   unpublished/без-канала→тишина, немедленная через диспетчер).
 
+## [1.3.0] - 2026-07-13
+
+### Added
+- **Разблокировка застрявшего студента одним кликом + лента «Проблемы со входом» (H849).**
+  До сих пор неудачные попытки входа/восстановления НИГДЕ не логировались.
+  Теперь: (1) новая таблица `access_attempts` собирает единой лентой неудачные
+  логины (слушатель `Auth\Events\Failed` на `/login` и `/shop/login`) и запросы
+  ссылки восстановления (`reset_sent`/`reset_not_found`/`reset_throttled`,
+  логируются в [`PasswordResetController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PasswordResetController.php));
+  (2) Filament-ресурс «Проблемы со входом» ([`AccessAttemptResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/AccessAttemptResource.php))
+  с бейджем «застрявших» и разблокировкой из строки, плюс кнопка «Разблокировать»
+  на карточке студента ([`UserResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/UserResource.php));
+  (3) разблокировка = снять IP-троттл + выдать **одноразовую magic-ссылку для входа**
+  (24 ч, hashed-at-rest, назначение `admin_unblock`, маршрут `/login-link/{token}`),
+  которую админ передаёт студенту напрямую, минуя сломанную почту (+ опц. сброс
+  пароля) — [`StudentUnblockService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Access/StudentUnblockService.php);
+  (4) Telegram: проактивный алерт админам с inline-кнопкой «🔓 Выслать ссылку»
+  при сигнале «застрял» (троттл восстановления / серия неудачных логинов) +
+  текстовая команда `/unblock <email>` — авторизация строго `super_admin`/`admin`
+  ([`UnblockBotCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/UnblockBotCommand.php),
+  [`TelegramWebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/TelegramWebhookController.php)).
+  Проактивные алерты идут на `ADMIN_TELEGRAM_ID`. Не устраняет корневую причину
+  недоставки писем (боевой SMTP) — но даёт админу обойти её вручную. Документация:
+  [`docs/student-unblock-access-feed.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-unblock-access-feed.md).
+
 ## [1.2.1] - 2026-07-13
 
 ### Fixed
