@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Грамматика санскрита — курс · мокап Course workspace (H822)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте</a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Мои курсы</a>
+    <a href="course.html" aria-current="page">Расписание</a>
+    <a href="access.html">Платежи</a>
+    <a href="access.html#help">Помощь</a>
+    <a href="index.html#tools">Инструменты</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <p class="small" style="margin:0"><a href="index.html">← Все курсы</a></p>
+
+  <header class="ws-header">
+    <h1>Грамматика санскрита — I ступень</h1>
+    <div class="row">
+      <span class="badge live">Живой поток · группа I-3</span>
+      <span class="badge good">Оплачено до 30 сентября</span>
+      <span class="muted small">Блок 2 из 4 · 6 из 16 уроков</span>
+    </div>
+  </header>
+
+  <!-- The workspace: every course job lives INSIDE the course (R9) -->
+  <nav class="ws-tabs" aria-label="Разделы курса">
+    <a href="course.html" aria-current="page">Обзор</a>
+    <a href="course.html#lessons">Уроки</a>
+    <a href="course.html#materials">Материалы</a>
+    <a href="access.html">Доступ и продление</a>
+    <a href="access.html#help">Помощь</a>
+  </nav>
+
+  <section class="card hero-continue" aria-label="Продолжить в этом курсе">
+    <div class="row spread">
+      <div>
+        <h3>Продолжить: Урок 7 · Третий класс глаголов</h3>
+        <p class="muted small" style="margin:.2rem 0 0">запись прошлого занятия · вы на 12-й минуте</p>
+      </div>
+      <a class="btn" href="lesson.html">Продолжить</a>
+    </div>
+  </section>
+
+  <div class="live-chip" role="status">
+    <span class="badge live">Ближайшее занятие</span>
+    <div style="flex:1">
+      <strong>Вторник, 14 июля, 19:00 МСК</strong>
+      <span class="muted small"> · Урок 8 · Имперфект · ссылка Zoom появится здесь за 10 минут</span>
+    </div>
+  </div>
+
+  <h2 id="lessons">Уроки · Блок 2</h2>
+  <div class="card flat">
+    <ul class="lesson-list">
+      <li>
+        <span class="lesson-num done" aria-label="Пройден">✓</span>
+        <span class="lesson-title"><a href="lesson.html">Урок 5. Тематические глаголы настоящего времени</a></span>
+        <span class="badge rec">запись · в своем темпе</span>
+      </li>
+      <li>
+        <span class="lesson-num done" aria-label="Пройден">✓</span>
+        <span class="lesson-title"><a href="lesson.html">Урок 6. Аккузатив и инструменталис</a></span>
+        <span class="badge rec">запись · в своем темпе</span>
+      </li>
+      <li>
+        <span class="lesson-num next" aria-label="Следующий">7</span>
+        <span class="lesson-title">
+          <a href="lesson.html"><strong>Урок 7. Третий класс глаголов</strong></a>
+          <span class="badge warn">домашнее на доработке</span>
+        </span>
+        <span class="badge rec">запись</span>
+      </li>
+      <li>
+        <span class="lesson-num">8</span>
+        <span class="lesson-title">Урок 8. Имперфект</span>
+        <span class="badge live">вт 14.07, 19:00</span>
+      </li>
+    </ul>
+  </div>
+
+  <h2>Блок 3 · Причастия и герундий</h2>
+  <div class="card flat">
+    <ul class="lesson-list">
+      <li class="locked">
+        <span class="lesson-num" aria-label="Закрыт">🔒</span>
+        <span class="lesson-title">Урок 9. Причастия настоящего времени</span>
+        <span class="small"><a href="access.html">почему закрыто?</a></span>
+      </li>
+      <li class="locked">
+        <span class="lesson-num" aria-label="Закрыт">🔒</span>
+        <span class="lesson-title">Урок 10. Абсолютив и инфинитив</span>
+      </li>
+    </ul>
+    <p class="small muted" style="margin:.6rem 0 0">
+      Блок 3 открывается после оплаты — 4 урока с записями и проверкой домашних.
+      <a href="access.html">Состав и цена — в «Доступ и продление»</a>.
+    </p>
+  </div>
+
+  <!-- R2/R17: ONE contextual offer, at a genuine progress moment (block 2 nearly done) -->
+  <aside class="card offer-card" aria-label="Следующий шаг">
+    <h3>Блок 2 почти пройден — продолжить без паузы?</h3>
+    <p class="muted" style="margin:.3rem 0 .7rem">
+      Осталось 2 урока. Блок 3 «Причастия и герундий» — 4 занятия вашей группы I-3,
+      записи остаются навсегда. Доступна рассрочка и льготная цена.
+    </p>
+    <div class="row">
+      <a class="btn" href="access.html">Открыть Блок 3</a>
+      <a class="small muted" href="course.html">напомнить после Урока 8</a>
+    </div>
+  </aside>
+
+  <h2 id="materials">Материалы</h2>
+  <div class="card flat">
+    <ul style="margin:.2rem 0; padding-left:1.2rem">
+      <li><a href="course.html#materials">Таблица глагольных классов (PDF, 2 стр.)</a></li>
+      <li><a href="course.html#materials">Конспект уроков 5–7 (PDF)</a></li>
+      <li><a href="course.html#materials">Аудио мантры для разминки (MP3)</a></li>
+    </ul>
+  </div>
+
+  <footer class="colophon">
+    Мокап H822 · направление «Курс как дом» · данные иллюстративные
+  </footer>
+</main>
+
+<!-- R13: in-course bottom bar = course jobs -->
+<nav class="bottombar" aria-label="Навигация по курсу">
+  <a href="course.html" aria-current="page"><span class="glyph">▤</span>Обзор</a>
+  <a href="course.html#lessons"><span class="glyph">▶</span>Уроки</a>
+  <a href="course.html#materials"><span class="glyph">⇩</span>Материалы</a>
+  <a href="access.html#help"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+<script>
+(function () {
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  btn.addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>
