@@ -4,7 +4,7 @@ _Created: 11-07-2026 · Last updated: 11-07-2026_
 
 Destination for the **P0 export** of Memrise course
 [6679375 «Продлёнка по санскриту»](https://community-courses.memrise.com/community/course/6679375/prodlenka-po-sanskritu/)
-(H569, [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](../../../ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md)).
+(H569, [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](../../../../ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md)).
 This directory is **empty on purpose** — P0 (the export itself) has not run yet;
 it needs either the [Eltaurus-Lt/CourseDump2022](https://github.com/Eltaurus-Lt/CourseDump2022)
 Chrome extension run by a human with Memrise login, or a scripted pull with
