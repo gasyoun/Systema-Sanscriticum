@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Доступ, продление и помощь · мокап Course workspace (H822)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте</a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Мои курсы</a>
+    <a href="course.html">Расписание</a>
+    <a href="access.html" aria-current="page">Платежи</a>
+    <a href="access.html#help">Помощь</a>
+    <a href="index.html#tools">Инструменты</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Доступ и продление</h1>
+  <p class="muted small">Что у вас открыто, до какого срока и как продлить — без письма куратору.</p>
+
+  <!-- R4: expired access is a first-class, honest state with a renewal path -->
+  <section class="card" aria-label="Истекший доступ">
+    <div class="row spread">
+      <div>
+        <h3>Бхагавад-гита: введение</h3>
+        <p class="row" style="margin:.2rem 0 .4rem">
+          <span class="badge danger">Доступ истек 28 июня</span>
+          <span class="badge rec">Записи · 12 лекций</span>
+        </p>
+        <p class="muted small" style="margin:0 0 .6rem">
+          Пройдено 9 из 12 лекций. Конспекты, заметки и прогресс сохранены —
+          после продления вы продолжите с лекции 10.
+        </p>
+        <div class="row">
+          <a class="btn" href="access.html">Продлить доступ</a>
+          <span class="small muted">цена и рассрочка — на следующем шаге; есть льготная цена</span>
+        </div>
+      </div>
+    </div>
+    <details class="why-locked" style="margin-top:.7rem">
+      <summary>Почему закрыто?</summary>
+      <p class="muted" style="margin:.2rem 0">
+        Ваш тариф «Записи на 6 месяцев» действовал до 28 июня 2026 года. Это не долг и не ошибка —
+        просто закончился оплаченный период. Продление снова откроет все 12 лекций и ваши материалы.
+      </p>
+      <p class="small"><a href="access.html#help">Не сходится? Напишите нам — разберемся</a></p>
+    </details>
+  </section>
+
+  <section class="card" aria-label="Активный доступ">
+    <h3>Грамматика санскрита — I ступень</h3>
+    <p class="row" style="margin:.2rem 0 .4rem">
+      <span class="badge good">Оплачено до 30 сентября</span>
+      <span class="badge neutral">Блоки 1–2 из 4</span>
+    </p>
+    <p class="muted small" style="margin:0 0 .6rem">
+      Следующий платеж — за Блок 3, до 1 октября. Можно оплатить целиком, в рассрочку
+      или по льготной цене (пенсионеры, студенты, многодетные).
+    </p>
+    <div class="row">
+      <a class="btn secondary" href="access.html">Открыть Блок 3</a>
+      <a class="btn quiet" href="access.html">Рассрочка</a>
+      <a class="small" href="access.html">оплата из-за рубежа (PayPal)</a>
+    </div>
+  </section>
+
+  <section class="card flat" aria-label="История платежей">
+    <h3 style="margin-top:0">История платежей</h3>
+    <ul style="margin:.3rem 0; padding-left:1.2rem" class="small">
+      <li>2 июня 2026 — Грамматика санскрита, Блок 2 — оплачено ✓</li>
+      <li>14 апреля 2026 — Грамматика санскрита, Блок 1 — оплачено ✓</li>
+      <li>20 декабря 2025 — Бхагавад-гита: введение, записи 6 мес. — оплачено ✓</li>
+    </ul>
+    <p class="small"><a href="access.html">Все платежи и чеки →</a></p>
+  </section>
+
+  <h1 id="help" style="margin-top:2.2rem">Помощь</h1>
+  <p class="muted small">Сначала — быстрые ответы; живой куратор всегда в одном клике, без «магических фраз».</p>
+
+  <!-- R19: structured entry picker (GetCourse pattern) -->
+  <section class="card" aria-label="Новое обращение">
+    <h3 style="margin-top:0">С чем нужна помощь?</h3>
+    <div class="topic-grid">
+      <button type="button">Не открывается урок или курс</button>
+      <button type="button">Оплата, рассрочка, льготная цена</button>
+      <button type="button">Расписание и Zoom</button>
+      <button type="button">Записи и материалы</button>
+      <button type="button">Домашние задания</button>
+      <button type="button">Другое — написать куратору</button>
+    </div>
+    <p class="small muted" style="margin:.6rem 0 0">
+      К обращению автоматически приложится контекст (курс, урок, статус доступа) —
+      куратору не придется переспрашивать.
+    </p>
+  </section>
+
+  <section class="card flat" aria-label="Частые вопросы">
+    <h3 style="margin-top:0">Частые вопросы</h3>
+    <dl class="faq-list" style="margin:.2rem 0 0">
+      <dt>Я пропустила живое занятие — что делать?</dt>
+      <dd>Ничего страшного: запись появляется в курсе в течение суток, смотрите в своем темпе. Догонять не нужно.</dd>
+      <dt>Где ссылка на Zoom?</dt>
+      <dd>На странице курса, в карточке ближайшего занятия — она активируется за 10 минут до начала.</dd>
+      <dt>Как оплатить из-за границы?</dt>
+      <dd>Через PayPal — кнопка «оплата из-за рубежа» рядом с любой ценой. Время занятий показываем в трех часовых поясах.</dd>
+      <dt>Что будет, если не оплатить следующий блок?</dt>
+      <dd>Мы предупредим заранее. Уже оплаченные уроки и записи остаются вашими — честный статус всегда виден на этой странице.</dd>
+    </dl>
+    <p class="small" style="margin:.8rem 0 0"><a href="access.html#help">Все вопросы и ответы →</a></p>
+  </section>
+
+  <section class="card flat" aria-label="Мои обращения">
+    <h3 style="margin-top:0">Мои обращения</h3>
+    <p class="small muted" style="margin:.2rem 0">
+      12 июля · «Не приходит письмо со ссылкой» — <span class="badge good">решено</span>
+    </p>
+  </section>
+
+  <footer class="colophon">
+    Мокап H822 · направление «Курс как дом» · данные иллюстративные · офферы подавлены на этой
+    странице: у пользователя есть проблема доступа (guardrail R2)
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">▦</span>Курсы</a>
+  <a href="course.html"><span class="glyph">◷</span>Расписание</a>
+  <a href="access.html" aria-current="page"><span class="glyph">₽</span>Платежи</a>
+  <a href="access.html#help"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+<script>
+(function () {
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  btn.addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

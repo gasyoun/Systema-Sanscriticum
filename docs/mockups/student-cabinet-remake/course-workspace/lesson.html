@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 7 · Третий класс глаголов · мокап Course workspace (H822)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте</a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Мои курсы</a>
+    <a href="course.html">Расписание</a>
+    <a href="access.html">Платежи</a>
+    <a href="access.html#help">Помощь</a>
+    <a href="index.html#tools">Инструменты</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <p class="small" style="margin:0">
+    <a href="course.html">← Грамматика санскрита — I ступень</a>
+    <span class="muted"> · Блок 2 · урок 7 из 16</span>
+  </p>
+
+  <h1>Урок 7. Третий класс глаголов</h1>
+  <div class="row" style="margin-bottom:1rem">
+    <span class="badge rec">Запись · смотрите в своем темпе</span>
+    <span class="muted small">1 ч 22 мин · занятие от 7 июля</span>
+  </div>
+
+  <div class="player" role="img" aria-label="Видеоплеер (макет)">
+    <span class="play-glyph" aria-hidden="true">▶</span>
+  </div>
+
+  <!-- R7: hybrid progress — auto watch-signal + one-click confirm -->
+  <section class="card flat" aria-label="Прогресс урока">
+    <div class="row spread">
+      <div>
+        <span class="badge good">Просмотрено автоматически: 64%</span>
+        <span class="muted small"> · отметка «усвоено» остается за вами</span>
+      </div>
+      <button class="btn secondary" type="button">Отметить усвоенным ✓</button>
+    </div>
+  </section>
+
+  <div class="lesson-stack">
+    <!-- mobile order fix (C-L1): transcript right under the video -->
+    <section class="card transcript" aria-label="Конспект">
+      <h2 style="margin-top:0">Конспект</h2>
+      <p>Третий класс (hu-класс) образует основу настоящего времени <em>редупликацией</em> корня:
+        <strong>hu → juhóti</strong> «он совершает возлияние», <strong>dā → dádāti</strong> «он дает»,
+        <strong>dhā → dádhāti</strong> «он полагает».</p>
+      <p>Особенность класса — чередование сильной и слабой основы: сильная в единственном числе
+        parasmaipada (dádā-), слабая во множественном и в ātmanepada (dad-).</p>
+      <p class="muted small">Полный конспект — 6 страниц; продолжение под видео на десктопе.</p>
+    </section>
+
+    <section class="card homework" aria-label="Домашнее задание">
+      <h2 style="margin-top:0">Домашнее задание</h2>
+      <p class="row"><span class="badge warn">На доработке</span>
+        <span class="muted small">куратор Анастасия вернула 11 июля</span></p>
+      <blockquote class="muted" style="margin:.5rem 0; border-left:3px solid var(--line); padding-left:.8rem">
+        «Проверьте, пожалуйста, форму 3 л. мн. ч. от dhā — в слабой основе редупликация сохраняется».
+      </blockquote>
+      <a class="btn" href="lesson.html#hw">Доработать ответ</a>
+    </section>
+
+    <section class="card notes-block" aria-label="Мои заметки">
+      <h2 style="margin-top:0">Мои заметки</h2>
+      <textarea class="notes" aria-label="Текст заметки">juhoti / juhvati — не путать акцент; спросить про dadhati в ведийских формах</textarea>
+      <p class="small muted" style="margin:.4rem 0 0">Сохранено автоматически в 21:14 ✓</p>
+    </section>
+  </div>
+
+  <div class="row spread" style="margin-top:1.2rem">
+    <a class="btn quiet" href="course.html">← Урок 6</a>
+    <span class="muted small">7 из 16</span>
+    <a class="btn quiet" href="course.html">Урок 8 (вт, 19:00) →</a>
+  </div>
+
+  <footer class="colophon">
+    Мокап H822 · направление «Курс как дом» · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Навигация по курсу">
+  <a href="course.html"><span class="glyph">▤</span>Обзор</a>
+  <a href="course.html#lessons" aria-current="page"><span class="glyph">▶</span>Уроки</a>
+  <a href="course.html#materials"><span class="glyph">⇩</span>Материалы</a>
+  <a href="access.html#help"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+<script>
+(function () {
+  var btn = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  btn.addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

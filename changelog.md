@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Student-cabinet remake, first decision artifact (H822).** Evidence-led remake package:
+  research ledger ([docs/STUDENT_CABINET_REMAKE_RESEARCH_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_RESEARCH_2026.md)),
+  6-platform EdTech comparison ([docs/STUDENT_CABINET_EDTECH_COMPARISON_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_EDTECH_COMPARISON_2026.md)),
+  20 M.G. rulings + 4 whole-cabinet architecture directions
+  ([docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md)),
+  and the first browser-verified static mockup — direction B «Курс как дом» (course
+  workspace), 4 linked pages, light/dark, mobile bottom-nav, console-clean, screenshots
+  committed ([docs/mockups/student-cabinet-remake/course-workspace/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/course-workspace)).
+  Non-destructive: no production Blade/route/controller changes. Winner is an explicit
+  M.G. `@DECIDE`; remaining three mockups are decision-gated.
+
 ## [1.5.0] - 2026-07-14
 
 ### Added
