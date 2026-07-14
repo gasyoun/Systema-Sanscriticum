@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оплата и доступ — мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="calendar.html">Календарь</a>
+    <a href="library.html">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html" aria-current="page">Оплата и доступ</a>
+    <a href="messages.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Оплата и доступ</h1>
+  <p class="muted">Что открыто, до какого срока и как продлить — без письма куратору.
+  Статус всегда честный: оплаченное остаётся вашим.</p>
+
+  <div class="kicker">Требует внимания</div>
+
+  <article class="card" style="border-left:4px solid var(--danger)">
+    <h3>Бхагавад-гита: введение</h3>
+    <p class="muted small" style="margin:.1rem 0 .5rem">
+      <span class="badge danger">доступ истёк 28 июня</span>
+      <span class="badge rec">записи · 12 лекций</span>
+    </p>
+    <p class="muted">Пройдено 9 из 12. Конспекты, заметки и прогресс сохранены — после продления
+    вы продолжите с лекции 10.</p>
+    <p class="row" style="margin:.6rem 0 0">
+      <a class="btn" href="access.html#renew">Продлить доступ</a>
+      <span class="muted small">цена и рассрочка — на следующем шаге; есть льготная цена</span>
+    </p>
+    <details class="why-locked" id="why" style="margin-top:.6rem">
+      <summary>Почему закрыто?</summary>
+      <p class="muted small" style="margin:0">Записи этого курса продавались с доступом на 6 месяцев
+      (куплено 20 декабря 2025). Срок истёк 28 июня. Это не долг и не ошибка — так была устроена
+      покупка; продление открывает те же записи снова.</p>
+    </details>
+  </article>
+
+  <div class="kicker">Активные</div>
+
+  <article class="card">
+    <h3>Грамматика санскрита — I ступень</h3>
+    <p class="muted small" style="margin:.1rem 0 .5rem">
+      <span class="badge good">оплачено до 30 сентября</span>
+      <span class="badge neutral">блоки 1–2 из 4</span>
+    </p>
+    <p class="muted">Следующий платёж — за Блок 3, до 1 октября. Целиком, в рассрочку или по
+    льготной цене (пенсионеры, студенты, многодетные).</p>
+    <p class="row" style="margin:.6rem 0 0">
+      <a class="btn secondary" href="access.html#block3">Открыть Блок 3</a>
+      <a class="btn quiet" href="access.html#split">Рассрочка</a>
+      <a class="small" href="access.html#paypal">оплата из-за рубежа (PayPal)</a>
+    </p>
+  </article>
+
+  <article class="card">
+    <h3>Йога-сутры Патанджали</h3>
+    <p class="muted small" style="margin:0">
+      <span class="badge good">доступ бессрочный</span> · куплено в записи, продление не требуется.
+    </p>
+  </article>
+
+  <div class="kicker">История платежей</div>
+
+  <div class="card">
+    <ul style="margin:.2rem 0;padding-left:1.2rem">
+      <li>2 июня 2026 — Грамматика санскрита, Блок 2 — оплачено ✓</li>
+      <li>14 апреля 2026 — Грамматика санскрита, Блок 1 — оплачено ✓</li>
+      <li>20 декабря 2025 — Бхагавад-гита: введение, записи 6 мес. — оплачено ✓</li>
+    </ul>
+    <p class="small" style="margin:.4rem 0 0"><a href="access.html#receipts">Все платежи и чеки →</a></p>
+  </div>
+
+  <div class="card">
+    <p class="muted small" style="margin:0"><strong>Что будет, если не оплатить следующий блок?</strong>
+    Мы предупредим заранее. Уже оплаченные уроки и записи остаются вашими — честный статус всегда
+    виден на этой странице. Вопросы по оплате — в <a href="messages.html">помощи</a>, тема «Оплата».</p>
+  </div>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 · на этой странице у пользователя есть проблема доступа —
+    промо-офферы подавлены (guardrail R2); продление и следующий блок — сервисные действия,
+    не промо · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>

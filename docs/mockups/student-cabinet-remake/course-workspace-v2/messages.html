@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Помощь и сообщения — мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="calendar.html">Календарь</a>
+    <a href="library.html">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html">Оплата и доступ</a>
+    <a href="messages.html" aria-current="page">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Помощь</h1>
+  <p class="muted">Сначала — быстрые ответы; живой куратор всегда в одном клике,
+  без «магических фраз».</p>
+
+  <div class="kicker">С чем нужна помощь?</div>
+
+  <!-- R19: topic picker; context (course, lesson, access state) attaches automatically -->
+  <nav class="topic-grid" aria-label="Темы обращений">
+    <a href="messages.html#thread">Не открывается урок или курс</a>
+    <a href="messages.html#thread">Оплата, рассрочка, льготная цена</a>
+    <a href="messages.html#thread">Расписание и Zoom</a>
+    <a href="messages.html#thread">Записи и материалы</a>
+    <a href="messages.html#thread">Домашние задания</a>
+    <a href="messages.html#thread">Другое — написать куратору</a>
+  </nav>
+  <p class="muted small">К обращению автоматически приложится контекст (курс, урок, статус
+  доступа) — куратору не придётся переспрашивать.</p>
+
+  <div class="kicker">Частые вопросы</div>
+
+  <div class="card">
+    <dl class="faq-list" style="margin:0">
+      <dt>Я пропустила живое занятие — что делать?</dt>
+      <dd>Ничего страшного: запись появляется в курсе в течение суток, смотрите в своём темпе.
+      Догонять не нужно.</dd>
+      <dt>Где ссылка на Zoom?</dt>
+      <dd>В <a href="calendar.html">календаре</a> и на странице курса, в карточке ближайшего
+      занятия — она активируется за 10 минут до начала.</dd>
+      <dt>Как оплатить из-за границы?</dt>
+      <dd>Через PayPal — кнопка «оплата из-за рубежа» рядом с любой ценой. Время занятий
+      показываем в трёх часовых поясах.</dd>
+      <dt>Что будет, если не оплатить следующий блок?</dt>
+      <dd>Мы предупредим заранее. Уже оплаченные уроки и записи остаются вашими — честный статус
+      всегда виден на странице <a href="access.html">«Оплата и доступ»</a>.</dd>
+    </dl>
+    <p class="small" style="margin:.6rem 0 0"><a href="messages.html#faq">Все вопросы и ответы →</a></p>
+  </div>
+
+  <div class="kicker">Мои обращения</div>
+
+  <section class="card" id="thread">
+    <p class="row spread" style="margin:0 0 .8rem">
+      <strong>«Не приходит письмо со ссылкой»</strong>
+      <span class="badge good">решено · 12 июля</span>
+    </p>
+    <ul class="thread">
+      <li>
+        <div>
+          <div class="who">Елена · 12 июля, 18:02</div>
+          <div class="bubble">Добрый вечер! Оплатила Блок 2, а письмо со ссылкой не пришло.</div>
+        </div>
+      </li>
+      <li class="me">
+        <div>
+          <div class="who" style="text-align:right">куратор Анастасия · 18:11</div>
+          <div class="bubble">Елена, добрый вечер! Письмо ушло на е-мейл с опечаткой — поправила
+          адрес в профиле и продублировала ссылку. Проверьте, пожалуйста, входящие.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="who">Елена · 18:15</div>
+          <div class="bubble">Пришло, спасибо!</div>
+        </div>
+      </li>
+    </ul>
+    <div class="composer">
+      <input type="text" aria-label="Новое сообщение" placeholder="Написать куратору…">
+      <a class="btn" href="messages.html#thread">Отправить</a>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 · чат — макет; в проде это существующий student-chat с
+    web-FAQ поверх (F15) · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html" aria-current="page"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>

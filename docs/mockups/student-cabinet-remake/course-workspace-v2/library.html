@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мои записи · библиотека — мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="calendar.html">Календарь</a>
+    <a href="library.html" aria-current="page">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html">Оплата и доступ</a>
+    <a href="messages.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Мои записи</h1>
+  <p class="muted">Всё, что вы купили в записи, и записи прошедших живых занятий — в одном месте.
+  Купленное остаётся вашим.</p>
+
+  <div class="kicker">Смотрю сейчас</div>
+
+  <div class="lib-grid">
+    <article class="card" style="margin:0">
+      <h3>Йога-сутры Патанджали</h3>
+      <p class="muted small" style="margin:.1rem 0 .6rem">
+        <span class="badge rec">записи · в своём темпе</span>
+        <span class="badge good">доступ бессрочный</span>
+      </p>
+      <div class="progressbar" style="margin-bottom:.7rem" role="img" aria-label="14 из 24 лекций"><span style="width:58%"></span></div>
+      <p class="muted small" style="margin:0 0 .7rem">14 из 24 лекций · без домашних заданий</p>
+      <a class="btn secondary" href="lesson.html">Смотреть лекцию 15</a>
+    </article>
+
+    <article class="card" style="margin:0">
+      <h3>Грамматика санскрита — записи занятий I-3</h3>
+      <p class="muted small" style="margin:.1rem 0 .6rem">
+        <span class="badge live">ваш живой поток</span>
+        · записи появляются в течение суток после занятия
+      </p>
+      <p class="muted small" style="margin:0 0 .7rem">Последняя: Урок 7 от 7 июля · 1 ч 22 мин</p>
+      <a class="btn secondary" href="course.html">К курсу</a>
+    </article>
+  </div>
+
+  <div class="kicker">Доступ истёк</div>
+
+  <!-- R4: expired purchase stays a visible card with renewal -->
+  <article class="course-row expired">
+    <h3 style="margin:0">Бхагавад-гита: введение</h3>
+    <div class="cta"><a class="btn quiet" href="access.html">Продлить доступ</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge danger">истёк 28 июня</span>
+      · пройдено 9 из 12 — конспекты и прогресс сохранены; после продления вы продолжите с лекции 10
+      · <a href="access.html#why">почему закрыто?</a>
+    </p>
+  </article>
+
+  <div class="kicker">Членство «Самскрте+»</div>
+
+  <!-- R8: membership's permanent slot lives HERE, in the recordings library -->
+  <section class="membership" aria-label="Членство Самскрте+">
+    <p class="row spread" style="margin:0 0 .3rem">
+      <span class="badge gold">скоро · осень 2026</span>
+      <span class="price">2000 ₽/мес <span class="muted small" style="font-family:system-ui,sans-serif;font-weight:400">или 20 000 ₽/год</span></span>
+    </p>
+    <h2 style="margin:.2rem 0 .3rem">Вся библиотека записей — по подписке</h2>
+    <ul>
+      <li>все записанные курсы и лекции, пока действует членство;</li>
+      <li>свой темп — без расписания и дедлайнов;</li>
+      <li>месячная оплата вместо полной цены курса — начать можно с 2000 ₽;</li>
+      <li>живые потоки и проверка домашних в членство не входят — они остаются курсами.</li>
+    </ul>
+    <p class="row" style="margin:.4rem 0 0">
+      <a class="btn" href="library.html#member">Хочу в первый поток</a>
+      <span class="muted small">запуск осенью 2026 — оставьте заявку, оплата откроется письмом</span>
+    </p>
+  </section>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 · членство показано честно как «скоро» (рулинг M.G. 14-07-2026:
+    полноценная карточка с ценой) · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html" aria-current="page"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>
