@@ -115,6 +115,31 @@ class CuratorWebhookTest extends TestCase
         });
     }
 
+    public function test_custom_base_url_routes_request_to_alternate_provider(): void
+    {
+        // Прямой DeepSeek вместо OpenRouter (обход блокировки по IP).
+        config()->set('services.openrouter.base_url', 'https://api.deepseek.com');
+        config()->set('services.openrouter.model', 'deepseek-chat');
+
+        Http::fake([
+            'api.deepseek.com/*' => Http::response([
+                'choices' => [['message' => ['content' => 'Ответ прямого DeepSeek.']]],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create(['telegram_id' => 999222, 'name' => 'Студент']);
+
+        $this->postJson('/api/telegram/webhook', [
+            'message' => ['chat' => ['id' => 999222], 'text' => 'Сколько стоит курс?'],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('chat_messages', ['user_id' => $user->id, 'role' => 'bot', 'text' => 'Ответ прямого DeepSeek.']);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.deepseek.com/chat/completions'
+            && ($request->data()['model'] ?? null) === 'deepseek-chat');
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'openrouter.ai'));
+    }
+
     public function test_vk_webhook_answers_via_openrouter_and_saves_reply(): void
     {
         $user = User::factory()->create(['vk_id' => 555222, 'name' => 'Студент ВК']);

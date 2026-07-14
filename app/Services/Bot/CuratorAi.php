@@ -10,14 +10,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Единый «мозг» ИИ-куратора для обоих ботов (TG/VK). Инкапсулирует провайдера
- * (DeepSeek через OpenRouter, OpenAI-совместимый API). Контроллеры лишь
- * сохраняют входящее сообщение и шлют ответ в свой канал, а думает — этот класс.
+ * Единый «мозг» ИИ-куратора для обоих ботов (TG/VK). Инкапсулирует провайдера —
+ * любой OpenAI-совместимый chat-completions API (OpenRouter, прямой DeepSeek…),
+ * base_url задаётся в services.openrouter. Контроллеры лишь сохраняют входящее
+ * сообщение и шлют ответ в свой канал, а думает — этот класс.
  */
 class CuratorAi
 {
-    private const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
-
     /** Сколько последних сообщений диалога класть в контекст. */
     private const HISTORY_LIMIT = 15;
 
@@ -80,14 +79,17 @@ class CuratorAi
             return $empty;
         }
 
+        $endpoint = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/').'/chat/completions';
+
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$apiKey,
                 'Content-Type' => 'application/json',
-                // Рекомендованные OpenRouter заголовки атрибуции (ASCII).
+                // Рекомендованные OpenRouter заголовки атрибуции (ASCII);
+                // для других OpenAI-совместимых провайдеров безвредны.
                 'HTTP-Referer' => (string) config('app.url'),
                 'X-Title' => 'Academy of Sanskrit (ORS) bot',
-            ])->timeout(45)->post(self::ENDPOINT, [
+            ])->timeout(45)->post($endpoint, [
                 'model' => $model,
                 'messages' => $messages,
                 'temperature' => 0.3,

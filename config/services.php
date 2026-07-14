@@ -166,11 +166,15 @@ return [
         'api_id' => env('SMS_RU_API_ID'),
     ],
 
-    // «Мозги» ИИ-куратора TG/VK. OpenRouter — OpenAI-совместимый шлюз; модель
-    // по умолчанию DeepSeek V3 (быстро/дёшево, контекст ~64k). См.
-    // App\Services\Bot\CuratorAi.
+    // «Мозги» ИИ-куратора TG/VK. Любой OpenAI-совместимый шлюз; по умолчанию —
+    // OpenRouter с DeepSeek V3 (быстро/дёшево, контекст ~64k). При блокировке
+    // OpenRouter по IP переключаемся на прямой DeepSeek:
+    // OPENROUTER_BASE_URL=https://api.deepseek.com, OPENROUTER_MODEL=deepseek-chat
+    // (без префикса «deepseek/»), ключ — с platform.deepseek.com.
+    // См. App\Services\Bot\CuratorAi.
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
         'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
         // $ per 1M tokens, per OpenRouter model — source: openrouter.ai/<model>,
         // checked 12-07-2026 (H763). Unknown models fall back to null spend
