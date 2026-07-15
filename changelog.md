@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H987 follow-up: RQ4 consent text approved by MG 15-07-2026.** No wording change — `Rq4StudyController::CONSENT_TEXT` is exactly the draft reviewed in chat, only the "not finalised" doc-comment is removed. Protocol §6.4 is now the last of the 4 `@DECIDE` items ruled — the RQ4 study spec is fully decided; `features.rq4_study` still ships OFF by default (flipping it live is a separate, later call).
+
 ## [1.15.0] - 2026-07-15
 
 ### Added
