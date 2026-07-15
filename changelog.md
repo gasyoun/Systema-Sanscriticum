@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-15
+
 ### Added
 - **Student-cabinet mockup #2 — «Курс как дом» v2 (H954, iterates H822 direction B).** Per
   M.G. rulings R21–R25 (14-07-2026, recorded in
@@ -440,7 +442,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.3.0...v1.4.0
