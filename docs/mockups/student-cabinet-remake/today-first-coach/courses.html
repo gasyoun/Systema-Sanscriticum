@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мои курсы — мокап «Сегодня» / Today-first coach (H956)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="courses.html" aria-current="page">Мои курсы</a>
+    <a href="index.html">Расписание</a>
+    <a href="courses.html">Записи</a>
+    <a href="index.html">Платежи</a>
+    <a href="index.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Мои курсы</h1>
+  <p class="muted">В направлении «Сегодня» курс — тонкий список уроков; главная жизнь идёт в
+  <a href="index.html">плане дня</a>.</p>
+
+  <div class="kicker">Активные</div>
+
+  <article class="card">
+    <div class="row spread">
+      <h3 style="margin:0">Грамматика санскрита — I ступень</h3>
+      <span class="muted small">блок 2 из 4 · 6 из 16</span>
+    </div>
+    <p class="muted small" style="margin:.2rem 0 .6rem">
+      <span class="badge live">живой поток · I-3</span>
+      <span class="badge good">оплачено до 30 сентября</span>
+    </p>
+    <ol class="lesson-list" style="list-style:none">
+      <li>
+        <span class="lesson-num done" aria-label="пройден">✓</span>
+        <span class="lesson-title"><a href="lesson.html">Урок 6. Аккузатив и инструменталис</a></span>
+        <span class="badge rec">запись</span>
+      </li>
+      <li>
+        <span class="lesson-num next">7</span>
+        <span class="lesson-title"><a href="lesson.html"><strong>Урок 7. Третий класс глаголов</strong></a> <span class="badge warn">домашнее на доработке</span></span>
+        <span class="badge rec">запись</span>
+      </li>
+      <li>
+        <span class="lesson-num">8</span>
+        <span class="lesson-title">Урок 8. Имперфект</span>
+        <span class="badge live">сегодня, 19:00</span>
+      </li>
+      <li class="locked">
+        <span class="lesson-num" aria-label="закрыт">🔒</span>
+        <span class="lesson-title">Урок 9. Причастия настоящего времени</span>
+        <a class="small" href="courses.html">почему закрыто?</a>
+      </li>
+    </ol>
+  </article>
+
+  <article class="card">
+    <div class="row spread">
+      <h3 style="margin:0">Йога-сутры Патанджали</h3>
+      <span class="muted small">14 из 24</span>
+    </div>
+    <p class="muted small" style="margin:.2rem 0 .5rem">
+      <span class="badge rec">записи · в своём темпе</span>
+      <span class="badge good">доступ бессрочный</span>
+    </p>
+    <p class="small" style="margin:0"><a href="lesson.html">Смотреть лекцию 15 →</a></p>
+  </article>
+
+  <div class="kicker">Доступ истёк</div>
+
+  <article class="course-row expired">
+    <h3 style="margin:0">Бхагавад-гита: введение</h3>
+    <div class="cta"><a class="btn quiet" href="index.html">Продлить доступ</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge danger">истёк 28 июня</span>
+      · 9 из 12 пройдено — конспекты и прогресс сохранены · <a href="courses.html">почему закрыто?</a>
+    </p>
+  </article>
+
+  <article class="course-row">
+    <h3 style="margin:0">Деванагари за четыре недели</h3>
+    <div class="cta"><a class="btn quiet" href="lesson.html">Вводный урок</a></div>
+    <p class="entitlement" style="margin:0"><span class="badge neutral">пробный урок</span> · бесплатно, без ограничения по времени</p>
+  </article>
+
+  <footer class="colophon">
+    Мокап H956 · направление A · слабое место направления показано честно: у курса нет «дома»,
+    только тонкий список (ср. <a href="../course-workspace-v2/course.html">дом курса в направлении B</a>) ·
+    данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="courses.html" aria-current="page"><span class="glyph">📚</span>Курсы</a>
+  <a href="index.html"><span class="glyph">🗓</span>Расписание</a>
+  <a href="index.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>

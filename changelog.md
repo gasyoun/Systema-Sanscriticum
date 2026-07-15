@@ -11,6 +11,17 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Student-cabinet mockup #3 — direction A «Сегодня» / Today-first coach (H956).** Per M.G.
+  ruling R26 (15-07-2026): the home is a numbered day plan with a fixed honest order
+  (unfinished lesson → returned homework → today's live → first steps → ONE next step after a
+  real progress event), «Почему такой план?» transparency foldline answers the direction's
+  opaque-authority risk, and a recovery state (declined payment) leads with the problem banner
+  and suppresses all offers. 4 pages on the shared B-v2 design system so directions compare on
+  architecture, not styling; browser-verified (console clean, no 390px overflow), 7 screenshots
+  ([docs/mockups/student-cabinet-remake/today-first-coach/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/today-first-coach)).
+  Non-destructive; winner still an M.G. `@DECIDE`.
+
 ## [1.7.0] - 2026-07-15
 
 ### Added

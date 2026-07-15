@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сегодня · recovery-состояние — мокап «Сегодня» / Today-first coach (H956)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index-debt.html" aria-current="page">Сегодня</a>
+    <a href="courses.html">Мои курсы</a>
+    <a href="index-debt.html">Расписание</a>
+    <a href="courses.html">Записи</a>
+    <a href="index-debt.html">Платежи</a>
+    <a href="index-debt.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Сегодня</h1>
+  <p class="muted small">вторник, 14 июля · Москва (UTC+3)</p>
+
+  <!-- recovery state: access problem LEADS; all offers unconditionally suppressed (R2) -->
+  <section class="debt-banner" aria-label="Проблема с доступом">
+    <h3 style="margin:0 0 .3rem">Не проходит оплата Блока 2 — доступ приостановлен со вчера</h3>
+    <p class="muted small" style="margin:0 0 .7rem">Платёж от 13 июля отклонён банком. Ваш прогресс
+    и конспекты на месте; уроки 5–7 снова откроются сразу после оплаты. Это единственное, что
+    сегодня требует действия.</p>
+    <p class="row" style="margin:0">
+      <a class="btn" href="index-debt.html">Повторить оплату</a>
+      <a class="btn quiet" href="index-debt.html">Написать куратору</a>
+      <a class="small" href="index-debt.html">оплата из-за рубежа (PayPal)</a>
+    </p>
+  </section>
+
+  <div class="kicker">Пока доступно без оплаты</div>
+
+  <ol class="plan">
+    <li>
+      <h3>Йога-сутры Патанджали · лекция 15</h3>
+      <p class="plan-meta">доступ бессрочный — не зависит от этой оплаты · 14 из 24 просмотрено</p>
+      <p class="plan-cta"><a class="btn secondary" href="lesson.html">Смотреть</a></p>
+    </li>
+    <li class="live-item">
+      <h3>Живое занятие: Урок 8 · Имперфект</h3>
+      <p class="plan-meta"><span class="badge live">сегодня, 19:00 МСК</span> · вход на живое занятие
+      вашей группы НЕ блокируется этой оплатой — приходите</p>
+    </li>
+  </ol>
+
+  <p class="muted small">Никаких предложений о покупках в этом состоянии — сначала решаем проблему.
+  План вернётся к обычному виду сразу после оплаты.</p>
+
+  <footer class="colophon">
+    Мокап H956 · направление A · recovery-состояние: платёж отклонён → баннер ведёт, офферы
+    подавлены безусловно (R2), доступное продолжает работать честно ·
+    обычное состояние: <a href="index.html">план дня</a> · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index-debt.html" aria-current="page"><span class="glyph">☀</span>Сегодня</a>
+  <a href="courses.html"><span class="glyph">📚</span>Курсы</a>
+  <a href="index-debt.html"><span class="glyph">🗓</span>Расписание</a>
+  <a href="index-debt.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>
