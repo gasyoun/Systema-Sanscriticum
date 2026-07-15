@@ -29,6 +29,7 @@ use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\ReadingPackController;
+use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
@@ -265,6 +266,16 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         Route::get('/dvaram/srs/stats', [SrsController::class, 'stats'])
             ->name('student.srs.stats');
     }
+
+    // H987 — RQ4 user study (on-ramp-first vs Талмуд-first). За фича-флагом
+    // features.rq4_study, ВЫКЛ по умолчанию (404 пока не включен).
+    Route::prefix('rq4-study')->name('rq4.')->group(function () {
+        Route::get('/', [Rq4StudyController::class, 'intro'])->name('intro');
+        Route::post('/enroll', [Rq4StudyController::class, 'enroll'])->name('enroll');
+        Route::get('/start-arm', [Rq4StudyController::class, 'startArm'])->name('start-arm');
+        Route::get('/diagnostic/{phase}', [Rq4StudyController::class, 'diagnostic'])->name('diagnostic');
+        Route::post('/diagnostic/{phase}', [Rq4StudyController::class, 'submitAnswer'])->name('diagnostic.submit');
+    });
 
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
 

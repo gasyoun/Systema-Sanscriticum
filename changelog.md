@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H987: RQ4 study harness (on-ramp-first vs Талмуд-first learning-gain study).** New `/rq4-study` flow behind `features.rq4_study` (OFF by default): consent + intake (self-reported prior exposure), stratified 1:1 arm assignment via a minimisation rule (`Rq4Participant::assignArm`), a 3-phase diagnostic (pre_test/post_test/retention_test) reading the vendored `resources/data/rq4_item_bank.json` (SanskritGrammar's H984 item bank), and a `rq4:send-retention-reminders` command (scheduled daily) that queues one `ScheduledReminder` per participant whose 4-week retention window has arrived — reuses the existing reminder infrastructure (H187) rather than building a new notification channel. New `rq4_participants`/`rq4_responses` tables. Draft consent text included, marked not-finalised pending MG's review (protocol §6.4). 9 tests in `tests/Feature/Rq4StudyTest.php`.
+
 ## [1.14.0] - 2026-07-15
 
 ### Added

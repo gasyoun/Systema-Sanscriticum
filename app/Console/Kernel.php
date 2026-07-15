@@ -247,6 +247,13 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('send-due-reminders');
 
+        // --- H987 RQ4 STUDY: 4-НЕДЕЛЬНОЕ НАПОМИНАНИЕ (features.rq4_study, ВЫКЛ по умолч.) ---
+        $schedule->command('rq4:send-retention-reminders')
+            ->dailyAt('09:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('rq4-retention-reminders');
+
         // --- ДЕТЕКТОР ПРОСЬБ «НАПОМНИТЕ МНЕ» В ПЕРЕПИСКЕ (H187) ---
         // Гибрид regex+LLM поверх веб-чата и импортированного TG-support; создаёт
         // только предложение (ReminderSuggestion) — ничего не отправляет сам.
