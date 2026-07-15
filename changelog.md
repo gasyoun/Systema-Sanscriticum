@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-07-15
+
 ### Added
 - **Student-cabinet mockup #4 — direction C «Библиотека» / Learning library (H957).** Per M.G.
   ruling R27 (15-07-2026): the cabinet as a personal library of владения — five shelves
@@ -484,7 +486,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.5.0...v1.6.0
