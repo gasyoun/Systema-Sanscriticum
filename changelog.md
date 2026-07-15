@@ -11,6 +11,19 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H965: kosha last-mile pipeline, Hop C difficulty-score advisory consumption.**
+  `/reading/kosha-demo` (same route/flag as H959's Hop A) now also reads the
+  vendored `resources/data/kosha_reading_pack_difficulty.json` — kosha's real
+  `reading-pack-difficulty` dataset from its H949 scorer, not re-derived here —
+  and shows the pack's composite difficulty + four axis scores (vocab, sandhi,
+  morphology, compound), plus a ranked list of all 5 scored packs
+  (easiest→hardest) with the current page highlighted. Purely advisory per the
+  spec's Hop C ruling — nothing here reorders the reader or any course. 2 new
+  tests in `tests/Feature/ReadingPackTest.php` (6 total). Closes the last open
+  piece of [`docs/LAST_MILE_PIPELINE_SPEC.md`](https://github.com/gasyoun/SanskritGrammar/blob/main/docs/LAST_MILE_PIPELINE_SPEC.md)
+  on the Systema side — Hops A, B, and C now all consumed.
+
 ## [1.12.0] - 2026-07-15
 
 ### Added

@@ -8,13 +8,18 @@ use Illuminate\View\View;
 use RuntimeException;
 
 /**
- * H959 — Rung B1 of the kosha->Systema last-mile pipeline (Hop A: reader-as-a-service).
+ * H959/H965 — Rungs of the kosha->Systema last-mile pipeline reader-as-a-service.
  *
  * Renders a VENDORED static reading pack — resources/data/kosha_reading_pack_nala_1.json,
  * derived from kosha's dcs-reading-pack-nala-1 (our own derived data, no live dependency
  * on kosha or a sibling-repo path). Every token carries lemma/morph/gloss inline in the
  * feed, so word-tap disclosure needs no external link or runtime lookup — see
  * SanskritGrammar docs/LAST_MILE_PIPELINE_SPEC.md §1's vendored-file ruling.
+ *
+ * H965 (Hop C) adds the difficulty-score consumption: a second vendored feed,
+ * resources/data/kosha_reading_pack_difficulty.json (kosha's real `reading-pack-difficulty`
+ * dataset from its H949 scorer — NOT re-derived here), read as ADVISORY metadata only
+ * (never used to auto-reorder anything) per the spec's Hop C ruling.
  *
  * Gated by config('features.kosha_reader'); OFF by default — the route 404s exactly like
  * /slovar did before its own Wave 0 (H204).
@@ -23,11 +28,20 @@ class ReadingPackController extends Controller
 {
     private const FEED_PATH = 'data/kosha_reading_pack_nala_1.json';
 
+    private const DIFFICULTY_FEED_PATH = 'data/kosha_reading_pack_difficulty.json';
+
     public function show(): View
     {
         abort_if(! config('features.kosha_reader', false), 404);
 
-        return view('reading.kosha-demo', ['pack' => $this->readPack()]);
+        $pack = $this->readPack();
+        $difficulty = $this->readDifficulty($pack['slug'] ?? null);
+
+        return view('reading.kosha-demo', [
+            'pack' => $pack,
+            'difficulty' => $difficulty['own'],
+            'rankedPacks' => $difficulty['ranked'],
+        ]);
     }
 
     /**
@@ -35,10 +49,46 @@ class ReadingPackController extends Controller
      */
     private function readPack(): array
     {
-        $path = resource_path(self::FEED_PATH);
+        $data = $this->readJson(self::FEED_PATH);
+
+        if (! isset($data['sentences'])) {
+            throw new RuntimeException('Invalid or malformed reading pack at '.self::FEED_PATH);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Advisory difficulty metadata for the current pack + the full ranked list
+     * (easiest -> hardest) from kosha's H949 scorer. Returns nulls when the
+     * current pack wasn't scored (e.g. no UD morphology) rather than fabricating
+     * a number — mirrors the scorer's own fail-closed convention.
+     *
+     * @return array{own:?array,ranked:list<array>}
+     */
+    private function readDifficulty(?string $slug): array
+    {
+        $data = $this->readJson(self::DIFFICULTY_FEED_PATH);
+        $packs = $data['packs'] ?? [];
+
+        $own = null;
+        foreach ($packs as $row) {
+            if (($row['slug'] ?? null) === $slug) {
+                $own = $row;
+                break;
+            }
+        }
+
+        return ['own' => $own, 'ranked' => $packs];
+    }
+
+    /** @return array<string,mixed> */
+    private function readJson(string $relativePath): array
+    {
+        $path = resource_path($relativePath);
 
         if (! is_file($path)) {
-            throw new RuntimeException("Reading pack feed not found at {$path}");
+            throw new RuntimeException("Feed not found at {$path}");
         }
 
         $raw = file_get_contents($path);
@@ -47,8 +97,8 @@ class ReadingPackController extends Controller
         }
 
         $data = json_decode($raw, true);
-        if (! is_array($data) || ! isset($data['sentences'])) {
-            throw new RuntimeException("Invalid or malformed reading pack at {$path}");
+        if (! is_array($data)) {
+            throw new RuntimeException("Invalid or malformed feed at {$path}");
         }
 
         return $data;
