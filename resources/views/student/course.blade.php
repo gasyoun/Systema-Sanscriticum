@@ -110,7 +110,10 @@
             @endphp
 
             {{-- ИЗМЕНЕНИЕ 1: Ссылка ведет либо на урок, либо на страницу покупки тарифов --}}
-            <a href="{{ $isUnlocked ? route('student.lesson', [$course->slug, $lesson->id]) : route('shop.course.show', $course->slug) . '#tariffs' }}" 
+            {{-- data-track-*: baseline-телеметрия H962 (спека §4) — закрытый урок это
+                 оффер «докупи блок»: показ ряда = offer.impression, клик = offer.click. --}}
+            <a href="{{ $isUnlocked ? route('student.lesson', [$course->slug, $lesson->id]) : route('shop.course.show', $course->slug) . '#tariffs' }}"
+               @if(!$isUnlocked) data-track-event="offer.click" data-track-impression="offer.impression" data-track-kind="next-block" data-track-block="{{ $lesson->block_number }}" data-track-course="{{ $course->id }}" @endif
                class="group block bg-white rounded-2xl border transition-all duration-300 relative overflow-hidden
                       {{ $isUnlocked 
                           ? 'border-gray-100 hover:border-[#E85C24]/30 hover:shadow-lg hover:-translate-y-1' 

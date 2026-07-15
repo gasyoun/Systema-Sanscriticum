@@ -280,6 +280,9 @@
     {{-- Секция для скриптов из дочерних шаблонов (например, heartbeat с уроков) --}}
     @stack('scripts')
 
+    {{-- Baseline-телеметрия ремейка кабинета (H962): first-party, спека §4 --}}
+    @include('student.partials.telemetry')
+
     {{-- Глобальные скрипты (если на странице инициализируется компонент lessonHeartbeat,
          он сработает автоматически через Alpine x-data) --}}
     <script src="{{ asset('js/lesson-heartbeat.js') }}?v={{ filemtime(public_path('js/lesson-heartbeat.js')) }}" defer></script>

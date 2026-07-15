@@ -291,27 +291,30 @@
     {{-- relative + right-edge fade: на узких экранах подсказывает, что вкладки
          (Прана, Поддержка) скроллятся по горизонтали. --}}
     <div class="relative mb-10">
+    {{-- data-track-*: baseline-телеметрия H962. Имя course.tab.view — из спеки §4
+         (в гибриде это вкладки дома курса); surface=dashboard отличает нынешнюю
+         поверхность — вкладки главной кабинета. --}}
     <div class="flex space-x-6 border-b border-gray-200 overflow-x-auto custom-scrollbar">
-        <button @click="activeTab = 'courses'"
+        <button @click="activeTab = 'courses'" data-track-event="course.tab.view" data-track-tab="courses" data-track-surface="dashboard"
                 :class="activeTab === 'courses' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-graduation-cap mr-2"></i>Мои курсы
         </button>
 
-        <button @click="activeTab = 'dictionaries'" 
+        <button @click="activeTab = 'dictionaries'" data-track-event="course.tab.view" data-track-tab="dictionaries" data-track-surface="dashboard"
                 :class="activeTab === 'dictionaries' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-book mr-2"></i>Словари
         </button>
 
-        <button @click="activeTab = 'payments'"
+        <button @click="activeTab = 'payments'" data-track-event="course.tab.view" data-track-tab="payments" data-track-surface="dashboard"
                 :class="activeTab === 'payments' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-wallet mr-2"></i>Мои оплаты
         </button>
 
         @if($debts->isNotEmpty())
-            <button @click="activeTab = 'debts'"
+            <button @click="activeTab = 'debts'" data-track-event="course.tab.view" data-track-tab="debts" data-track-surface="dashboard"
                     :class="activeTab === 'debts' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                     class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
                 <i class="fas fa-exclamation-triangle mr-2"></i>Мои долги
@@ -320,14 +323,14 @@
         @endif
 
         @if(\App\Services\Prana\PranaSettings::isActive())
-            <button @click="activeTab = 'prana'"
+            <button @click="activeTab = 'prana'" data-track-event="course.tab.view" data-track-tab="prana" data-track-surface="dashboard"
                     :class="activeTab === 'prana' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                     class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
                 <x-prana-lotus class="mr-2" />Прана
             </button>
         @endif
 
-        <button @click="activeTab = 'chat'"
+        <button @click="activeTab = 'chat'" data-track-event="course.tab.view" data-track-tab="chat" data-track-surface="dashboard"
                 :class="activeTab === 'chat' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-headset mr-2"></i>Поддержка
@@ -477,7 +480,7 @@
 
                             {{-- Кнопка: при наличии следующего урока ведём прямо в него,
                                  иначе (всё пройдено / нет уроков) — на страницу курса. --}}
-                            <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
+                            <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $nextLesson ? 'lesson' : 'course' }}" data-track-surface="course-row" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
                                 <span>@if($nextLesson)@if($percent > 0) Продолжить @else Начать обучение @endif @else К курсу @endif</span>
                                 <i class="fas fa-arrow-right ml-2 text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                             </a>
@@ -736,12 +739,14 @@
                         $opts = $debtPayOptions[$debt->course_id] ?? null;
                     @endphp
                     <div class="mt-auto space-y-2">
-                        {{-- Самостоятельная оплата долга (self-service) --}}
+                        {{-- Самостоятельная оплата долга (self-service).
+                             data-track-*: baseline-телеметрия H962 — старт продления
+                             (access.renewal.start, спека §4). --}}
                         @if($opts && $opts['type'] === 'arrangement')
                             @if($opts['next'])
                                 <form method="POST" action="{{ $opts['next']['url'] }}">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-next" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
                                         <i class="fas fa-credit-card mr-1.5 text-[10px]"></i>
                                         <span>Оплатить{{ $opts['next']['amount'] ? ' '.number_format($opts['next']['amount'], 0, '.', ' ').' ₽' : '' }}</span>
                                     </button>
@@ -750,7 +755,7 @@
                             @if($opts['whole'])
                                 <form method="POST" action="{{ $opts['whole']['url'] }}">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center justify-center px-3 py-1.5 border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
+                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-whole" class="w-full flex items-center justify-center px-3 py-1.5 border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
                                         <span>Погасить всё{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
                                     </button>
                                 </form>
@@ -790,8 +795,11 @@
                                 </details>
                             @endif
                         @elseif($opts && $opts['type'] === 'tariff')
+                            {{-- data-track-*: baseline-телеметрия H962 — старт продления
+                                 (access.renewal.start, спека §4); complete пишет
+                                 PaymentTelemetryObserver по is_self_service+paid. --}}
                             @if($opts['full'])
-                                <a href="{{ $opts['full']['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                <a href="{{ $opts['full']['url'] }}" data-track-event="access.renewal.start" data-track-kind="full" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
                                     <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить курс</span>
                                 </a>
                             @else
@@ -799,20 +807,20 @@
                                     {{-- Бандл: весь многоблочный долг одним платежом. GET —
                                          штатный чекаут по bundle-тарифу; POST — fallback pay-bundle. --}}
                                     @if(($opts['bundle']['method'] ?? 'POST') === 'GET')
-                                        <a href="{{ $opts['bundle']['url'] }}" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                        <a href="{{ $opts['bundle']['url'] }}" data-track-event="access.renewal.start" data-track-kind="bundle" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
                                             <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                         </a>
                                     @else
                                         <form method="POST" action="{{ $opts['bundle']['url'] }}">
                                             @csrf
-                                            <button type="submit" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                            <button type="submit" data-track-event="access.renewal.start" data-track-kind="bundle" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
                                                 <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                             </button>
                                         </form>
                                     @endif
                                 @endif
                                 @foreach($opts['blocks'] as $b)
-                                    <a href="{{ $b['url'] }}" class="flex items-center justify-center px-3 py-{{ ($opts['bundle'] ?? null) ? '1.5' : '2' }} {{ ($opts['bundle'] ?? null) ? 'border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50' : 'bg-[#E85C24] hover:bg-[#d34f1c] text-white' }} text-xs font-bold rounded-lg transition-colors">
+                                    <a href="{{ $b['url'] }}" data-track-event="access.renewal.start" data-track-kind="block" class="flex items-center justify-center px-3 py-{{ ($opts['bundle'] ?? null) ? '1.5' : '2' }} {{ ($opts['bundle'] ?? null) ? 'border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50' : 'bg-[#E85C24] hover:bg-[#d34f1c] text-white' }} text-xs font-bold rounded-lg transition-colors">
                                         <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>{{ ($opts['bundle'] ?? null) ? 'Блок №'.$b['number'].' отдельно' : 'Оплатить блок №'.$b['number'] }}</span>
                                     </a>
                                 @endforeach

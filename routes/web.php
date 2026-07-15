@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource;
+use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\SocialAuthController;
@@ -287,6 +288,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::post('/api/heartbeat', [HeartbeatController::class, 'store'])
         ->name('activity.heartbeat');
+
+    // Baseline-телеметрия ремейка кабинета (H962, спека §4): клиентские клики/
+    // импрешены из первопартийного JS (никаких сторонних трекеров, R20).
+    Route::post('/dvaram/telemetry', [CabinetTelemetryController::class, 'store'])
+        ->name('student.telemetry');
 
     // Самообслуживание должника: студент сам гасит согласованную рассрочку/обещание.
     // Плоский долг «не продлил» идёт штатным /checkout/{tariff} (см. DebtPaymentResolver).
