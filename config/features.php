@@ -121,6 +121,17 @@ return [
     'slovar_enrichment' => (bool) env('SLOVAR_ENRICHMENT', false),
 
     /*
+     | Импорт демонстрационной SRS-колоды из kosha (H955, last-mile pipeline
+     | Rung B1). Когда ВКЛ, `php artisan srs:import-kosha-b1-demo` читает
+     | ВЕНДОРНЫЙ статический фид resources/data/kosha_srs_deck_b1_demo.json
+     | (kosha-srs-deck-b1-demo, наши собственные производные данные — НЕ живая
+     | зависимость от kosha) и создает одну системную колоду Saraswati SRS.
+     | Тот же паттерн, что и slovar_enrichment. ВЫКЛ по умолчанию — команда
+     | при выключенном флаге ничего не пишет и завершается с предупреждением.
+     */
+    'kosha_srs' => (bool) env('KOSHA_SRS', false),
+
+    /*
      | Подписка на рассылку (H324): GitHub-стиль инлайн-бокс «Подписаться на
      | рассылку». Не-студент вводит ТОЛЬКО email → find-or-create облегчённого
      | кабинетного User (без пароля), письмо с одноразовой magic-ссылкой в личный

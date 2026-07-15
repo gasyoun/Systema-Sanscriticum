@@ -1,0 +1,1164 @@
+{
+  "id": "kosha-srs-deck-b1-demo",
+  "source_reading_pack": "nala-1",
+  "method": "core_rank-ordered, function words (grammar_all in ind/pron) stripped — wave-1a method",
+  "stats": {
+    "total_tokens": 439,
+    "cards": 164,
+    "skipped_no_slp1": 5,
+    "skipped_duplicate": 108,
+    "skipped_function_words": 136,
+    "skipped_no_frequency": 0,
+    "skipped_no_core_rank": 26
+  },
+  "cards": [
+    {
+      "rank": 1,
+      "slp1": "kf",
+      "deva": "कृ",
+      "iast": "kṛ",
+      "gloss": "to make like or similar"
+    },
+    {
+      "rank": 2,
+      "slp1": "vac",
+      "deva": "वच्",
+      "iast": "vac",
+      "gloss": "to speak"
+    },
+    {
+      "rank": 4,
+      "slp1": "mahat",
+      "deva": "महत्",
+      "iast": "mahat",
+      "gloss": "great"
+    },
+    {
+      "rank": 5,
+      "slp1": "as",
+      "deva": "अस्",
+      "iast": "as",
+      "gloss": "to be"
+    },
+    {
+      "rank": 6,
+      "slp1": "rAjan",
+      "deva": "राजन्",
+      "iast": "rājan",
+      "gloss": "a king"
+    },
+    {
+      "rank": 7,
+      "slp1": "gam",
+      "deva": "गम्",
+      "iast": "gam",
+      "gloss": "to go"
+    },
+    {
+      "rank": 11,
+      "slp1": "arTa",
+      "deva": "अर्थ",
+      "iast": "artha",
+      "gloss": "aim"
+    },
+    {
+      "rank": 12,
+      "slp1": "Darma",
+      "deva": "धर्म",
+      "iast": "dharma",
+      "gloss": "that which is established or firm"
+    },
+    {
+      "rank": 16,
+      "slp1": "loka",
+      "deva": "लोक",
+      "iast": "loka",
+      "gloss": "free or open space"
+    },
+    {
+      "rank": 19,
+      "slp1": "Sru",
+      "deva": "श्रु",
+      "iast": "śru",
+      "gloss": "to hear"
+    },
+    {
+      "rank": 22,
+      "slp1": "indra",
+      "deva": "इन्द्र",
+      "iast": "indra",
+      "gloss": "the god of the atmosphere and sky"
+    },
+    {
+      "rank": 24,
+      "slp1": "brU",
+      "deva": "ब्रू",
+      "iast": "brū",
+      "gloss": "to speak"
+    },
+    {
+      "rank": 25,
+      "slp1": "sTA",
+      "deva": "स्था",
+      "iast": "sthā",
+      "gloss": "to stand"
+    },
+    {
+      "rank": 29,
+      "slp1": "rUpa",
+      "deva": "रूप",
+      "iast": "rūpa",
+      "gloss": "any outward appearance or phenomenon or colour (often pl.)"
+    },
+    {
+      "rank": 31,
+      "slp1": "tri",
+      "deva": "त्रि",
+      "iast": "tri",
+      "gloss": "three"
+    },
+    {
+      "rank": 37,
+      "slp1": "guRa",
+      "deva": "गुण",
+      "iast": "guṇa",
+      "gloss": "a single thread or strand of a cord or twine"
+    },
+    {
+      "rank": 39,
+      "slp1": "prAp",
+      "deva": "प्राप्",
+      "iast": "prāp",
+      "gloss": "to attain to"
+    },
+    {
+      "rank": 41,
+      "slp1": "puruza",
+      "deva": "पुरुष",
+      "iast": "puruṣa",
+      "gloss": "a man"
+    },
+    {
+      "rank": 42,
+      "slp1": "kAma",
+      "deva": "काम",
+      "iast": "kāma",
+      "gloss": "wish"
+    },
+    {
+      "rank": 45,
+      "slp1": "nara",
+      "deva": "नर",
+      "iast": "nara",
+      "gloss": "a man"
+    },
+    {
+      "rank": 47,
+      "slp1": "Sata",
+      "deva": "शत",
+      "iast": "śata",
+      "gloss": "a hundred"
+    },
+    {
+      "rank": 48,
+      "slp1": "fzi",
+      "deva": "ऋषि",
+      "iast": "ṛṣi",
+      "gloss": "a singer of sacred hymns"
+    },
+    {
+      "rank": 58,
+      "slp1": "grah",
+      "deva": "ग्रह्",
+      "iast": "grah",
+      "gloss": "to seize"
+    },
+    {
+      "rank": 63,
+      "slp1": "man",
+      "deva": "मन्",
+      "iast": "man",
+      "gloss": "to think"
+    },
+    {
+      "rank": 72,
+      "slp1": "Agam",
+      "deva": "आगम्",
+      "iast": "āgam",
+      "gloss": "to come"
+    },
+    {
+      "rank": 78,
+      "slp1": "vana",
+      "deva": "वन",
+      "iast": "vana",
+      "gloss": "a forest"
+    },
+    {
+      "rank": 85,
+      "slp1": "tejas",
+      "deva": "तेजस्",
+      "iast": "tejas",
+      "gloss": "the sharp edge (of a knife etc.)"
+    },
+    {
+      "rank": 86,
+      "slp1": "pati",
+      "deva": "पति",
+      "iast": "pati",
+      "gloss": "husband"
+    },
+    {
+      "rank": 89,
+      "slp1": "kaTay",
+      "deva": "कथय्",
+      "iast": "kathay",
+      "gloss": "to call"
+    },
+    {
+      "rank": 94,
+      "slp1": "suta",
+      "deva": "सुत",
+      "iast": "suta",
+      "gloss": "a son"
+    },
+    {
+      "rank": 103,
+      "slp1": "vAc",
+      "deva": "वाच्",
+      "iast": "vāc",
+      "gloss": "speech"
+    },
+    {
+      "rank": 115,
+      "slp1": "vad",
+      "deva": "वद्",
+      "iast": "vad",
+      "gloss": "to speak"
+    },
+    {
+      "rank": 117,
+      "slp1": "sTa",
+      "deva": "स्थ",
+      "iast": "stha",
+      "gloss": "standing"
+    },
+    {
+      "rank": 118,
+      "slp1": "gaRa",
+      "deva": "गण",
+      "iast": "gaṇa",
+      "gloss": "a flock"
+    },
+    {
+      "rank": 141,
+      "slp1": "brahman",
+      "deva": "ब्रह्मन्",
+      "iast": "brahman",
+      "gloss": "one who Prays"
+    },
+    {
+      "rank": 149,
+      "slp1": "SrezWa",
+      "deva": "श्रेष्ठ",
+      "iast": "śreṣṭha",
+      "gloss": "most splendid or beautiful"
+    },
+    {
+      "rank": 173,
+      "slp1": "veda",
+      "deva": "वेद",
+      "iast": "veda",
+      "gloss": "knowledge"
+    },
+    {
+      "rank": 174,
+      "slp1": "aSva",
+      "deva": "अश्व",
+      "iast": "aśva",
+      "gloss": "stallion"
+    },
+    {
+      "rank": 216,
+      "slp1": "prajA",
+      "deva": "प्रजा",
+      "iast": "prajā",
+      "gloss": "procreation"
+    },
+    {
+      "rank": 232,
+      "slp1": "BU",
+      "deva": "भू",
+      "iast": "bhū",
+      "gloss": "Erde"
+    },
+    {
+      "rank": 233,
+      "slp1": "ratna",
+      "deva": "रत्न",
+      "iast": "ratna",
+      "gloss": "a gift"
+    },
+    {
+      "rank": 267,
+      "slp1": "citta",
+      "deva": "चित्त",
+      "iast": "citta",
+      "gloss": "attending"
+    },
+    {
+      "rank": 278,
+      "slp1": "kanyA",
+      "deva": "कन्या",
+      "iast": "kanyā",
+      "gloss": "girl"
+    },
+    {
+      "rank": 297,
+      "slp1": "vid",
+      "deva": "विद्",
+      "iast": "vid",
+      "gloss": "knowing"
+    },
+    {
+      "rank": 314,
+      "slp1": "BAryA",
+      "deva": "भार्या",
+      "iast": "bhāryā",
+      "gloss": "a wife (or the female of an animal)"
+    },
+    {
+      "rank": 335,
+      "slp1": "janman",
+      "deva": "जन्मन्",
+      "iast": "janman",
+      "gloss": "birth"
+    },
+    {
+      "rank": 336,
+      "slp1": "Aditya",
+      "deva": "आदित्य",
+      "iast": "āditya",
+      "gloss": "name of seven deities of the heavenly sphere"
+    },
+    {
+      "rank": 338,
+      "slp1": "SUra",
+      "deva": "शूर",
+      "iast": "śūra",
+      "gloss": "a strong or mighty or valiant man"
+    },
+    {
+      "rank": 339,
+      "slp1": "Sak",
+      "deva": "शक्",
+      "iast": "śak",
+      "gloss": "to be strong or powerful"
+    },
+    {
+      "rank": 347,
+      "slp1": "manuzya",
+      "deva": "मनुष्य",
+      "iast": "manuṣya",
+      "gloss": "a man"
+    },
+    {
+      "rank": 370,
+      "slp1": "ganDarva",
+      "deva": "गन्धर्व",
+      "iast": "gandharva",
+      "gloss": "a Gandharva"
+    },
+    {
+      "rank": 438,
+      "slp1": "hfd",
+      "deva": "हृद्",
+      "iast": "hṛd",
+      "gloss": "the heart (as the seat of feelings and emotions)"
+    },
+    {
+      "rank": 467,
+      "slp1": "satya",
+      "deva": "सत्य",
+      "iast": "satya",
+      "gloss": "truth"
+    },
+    {
+      "rank": 472,
+      "slp1": "mUrDan",
+      "deva": "मूर्धन्",
+      "iast": "mūrdhan",
+      "gloss": "the forehead"
+    },
+    {
+      "rank": 477,
+      "slp1": "ga",
+      "deva": "ग",
+      "iast": "ga",
+      "gloss": "moving"
+    },
+    {
+      "rank": 538,
+      "slp1": "hfz",
+      "deva": "हृष्",
+      "iast": "hṛṣ",
+      "gloss": "to thrill with rapture"
+    },
+    {
+      "rank": 539,
+      "slp1": "sadfSa",
+      "deva": "सदृश",
+      "iast": "sadṛśa",
+      "gloss": "like"
+    },
+    {
+      "rank": 575,
+      "slp1": "anyonya",
+      "deva": "अन्योन्य",
+      "iast": "anyonya",
+      "gloss": "one another"
+    },
+    {
+      "rank": 577,
+      "slp1": "kumAra",
+      "deva": "कुमार",
+      "iast": "kumāra",
+      "gloss": "a child"
+    },
+    {
+      "rank": 600,
+      "slp1": "praSaMs",
+      "deva": "प्रशंस्",
+      "iast": "praśaṃs",
+      "gloss": "to proclaim"
+    },
+    {
+      "rank": 611,
+      "slp1": "Avf",
+      "deva": "आवृ",
+      "iast": "āvṛ",
+      "gloss": "to cover"
+    },
+    {
+      "rank": 633,
+      "slp1": "prasad",
+      "deva": "प्रसद्",
+      "iast": "prasad",
+      "gloss": "to fall into the power of (acc.)"
+    },
+    {
+      "rank": 647,
+      "slp1": "nArI",
+      "deva": "नारी",
+      "iast": "nārī",
+      "gloss": "a woman"
+    },
+    {
+      "rank": 657,
+      "slp1": "manu",
+      "deva": "मनु",
+      "iast": "manu",
+      "gloss": "man"
+    },
+    {
+      "rank": 686,
+      "slp1": "yakza",
+      "deva": "यक्ष",
+      "iast": "yakṣa",
+      "gloss": "name of a class of semi-divine beings (attendants of Kubera)"
+    },
+    {
+      "rank": 705,
+      "slp1": "han",
+      "deva": "हन्",
+      "iast": "han",
+      "gloss": "to strike"
+    },
+    {
+      "rank": 707,
+      "slp1": "viS",
+      "deva": "विश्",
+      "iast": "viś",
+      "gloss": "a settlement"
+    },
+    {
+      "rank": 711,
+      "slp1": "yatna",
+      "deva": "यत्न",
+      "iast": "yatna",
+      "gloss": "activity of will"
+    },
+    {
+      "rank": 713,
+      "slp1": "gir",
+      "deva": "गिर्",
+      "iast": "gir",
+      "gloss": "invocation"
+    },
+    {
+      "rank": 716,
+      "slp1": "locana",
+      "deva": "लोचन",
+      "iast": "locana",
+      "gloss": "the eye"
+    },
+    {
+      "rank": 721,
+      "slp1": "utsfj",
+      "deva": "उत्सृज्",
+      "iast": "utsṛj",
+      "gloss": "to let loose"
+    },
+    {
+      "rank": 727,
+      "slp1": "aSvin",
+      "deva": "अश्विन्",
+      "iast": "aśvin",
+      "gloss": "a cavalier"
+    },
+    {
+      "rank": 736,
+      "slp1": "nipat",
+      "deva": "निपत्",
+      "iast": "nipat",
+      "gloss": "to fly down"
+    },
+    {
+      "rank": 739,
+      "slp1": "BIma",
+      "deva": "भीम",
+      "iast": "bhīma",
+      "gloss": "Rumex Vesicarius"
+    },
+    {
+      "rank": 832,
+      "slp1": "bAla",
+      "deva": "बाल",
+      "iast": "bāla",
+      "gloss": "young"
+    },
+    {
+      "rank": 839,
+      "slp1": "upapad",
+      "deva": "उपपद्",
+      "iast": "upapad",
+      "gloss": "to go towards or against"
+    },
+    {
+      "rank": 848,
+      "slp1": "antarikza",
+      "deva": "अन्तरिक्ष",
+      "iast": "antarikṣa",
+      "gloss": "the intermediate space between heaven and earth"
+    },
+    {
+      "rank": 887,
+      "slp1": "kOnteya",
+      "deva": "कौन्तेय",
+      "iast": "kaunteya",
+      "gloss": "metron. from Kuntī"
+    },
+    {
+      "rank": 895,
+      "slp1": "vayas",
+      "deva": "वयस्",
+      "iast": "vayas",
+      "gloss": "enjoyment"
+    },
+    {
+      "rank": 909,
+      "slp1": "parAkrama",
+      "deva": "पराक्रम",
+      "iast": "parākrama",
+      "gloss": "bold advance"
+    },
+    {
+      "rank": 993,
+      "slp1": "ABaraRa",
+      "deva": "आभरण",
+      "iast": "ābharaṇa",
+      "gloss": "decorating"
+    },
+    {
+      "rank": 994,
+      "slp1": "pakzin",
+      "deva": "पक्षिन्",
+      "iast": "pakṣin",
+      "gloss": "a bird or any winged animal"
+    },
+    {
+      "rank": 1006,
+      "slp1": "samAhita",
+      "deva": "समाहित",
+      "iast": "samāhita",
+      "gloss": "put or held together joined assembled"
+    },
+    {
+      "rank": 1046,
+      "slp1": "SArdUla",
+      "deva": "शार्दूल",
+      "iast": "śārdūla",
+      "gloss": "a tiger"
+    },
+    {
+      "rank": 1052,
+      "slp1": "viSiz",
+      "deva": "विशिष्",
+      "iast": "viśiṣ",
+      "gloss": "to distinguish"
+    },
+    {
+      "rank": 1092,
+      "slp1": "Ayam",
+      "deva": "आयम्",
+      "iast": "āyam",
+      "gloss": "to stretch"
+    },
+    {
+      "rank": 1100,
+      "slp1": "samIpa",
+      "deva": "समीप",
+      "iast": "samīpa",
+      "gloss": "nearness"
+    },
+    {
+      "rank": 1124,
+      "slp1": "antika",
+      "deva": "अन्तिक",
+      "iast": "antika",
+      "gloss": "vicinity"
+    },
+    {
+      "rank": 1133,
+      "slp1": "saKI",
+      "deva": "सखी",
+      "iast": "sakhī",
+      "gloss": "a female friend or companion"
+    },
+    {
+      "rank": 1140,
+      "slp1": "mahIpati",
+      "deva": "महीपति",
+      "iast": "mahīpati",
+      "gloss": "a king"
+    },
+    {
+      "rank": 1158,
+      "slp1": "aBigam",
+      "deva": "अभिगम्",
+      "iast": "abhigam",
+      "gloss": "to go near to"
+    },
+    {
+      "rank": 1243,
+      "slp1": "mAnuza",
+      "deva": "मानुष",
+      "iast": "mānuṣa",
+      "gloss": "a man"
+    },
+    {
+      "rank": 1261,
+      "slp1": "tvar",
+      "deva": "त्वर्",
+      "iast": "tvar",
+      "gloss": "to hurry"
+    },
+    {
+      "rank": 1307,
+      "slp1": "vidyut",
+      "deva": "विद्युत्",
+      "iast": "vidyut",
+      "gloss": "a flashing thunderbolt (as the weapon of the Maruts)"
+    },
+    {
+      "rank": 1335,
+      "slp1": "vicar",
+      "deva": "विचर्",
+      "iast": "vicar",
+      "gloss": "to move in different directions"
+    },
+    {
+      "rank": 1389,
+      "slp1": "varcas",
+      "deva": "वर्चस्",
+      "iast": "varcas",
+      "gloss": "vital power"
+    },
+    {
+      "rank": 1405,
+      "slp1": "uraga",
+      "deva": "उरग",
+      "iast": "uraga",
+      "gloss": "a serpent"
+    },
+    {
+      "rank": 1466,
+      "slp1": "dfS",
+      "deva": "दृश्",
+      "iast": "dṛś",
+      "gloss": "to behold"
+    },
+    {
+      "rank": 1496,
+      "slp1": "maDya",
+      "deva": "मध्य",
+      "iast": "madhya",
+      "gloss": "the middle"
+    },
+    {
+      "rank": 1513,
+      "slp1": "sampad",
+      "deva": "सम्पद्",
+      "iast": "sampad",
+      "gloss": "to turn out well"
+    },
+    {
+      "rank": 1544,
+      "slp1": "saMgama",
+      "deva": "संगम",
+      "iast": "saṃgama",
+      "gloss": "coming together"
+    },
+    {
+      "rank": 1550,
+      "slp1": "udAra",
+      "deva": "उदार",
+      "iast": "udāra",
+      "gloss": "high"
+    },
+    {
+      "rank": 1755,
+      "slp1": "antaHpura",
+      "deva": "अन्तःपुर",
+      "iast": "antaḥpura",
+      "gloss": "the king's palace"
+    },
+    {
+      "rank": 1792,
+      "slp1": "manuja",
+      "deva": "मनुज",
+      "iast": "manuja",
+      "gloss": "a man"
+    },
+    {
+      "rank": 1893,
+      "slp1": "SrI",
+      "deva": "श्री",
+      "iast": "śrī",
+      "gloss": "light"
+    },
+    {
+      "rank": 1959,
+      "slp1": "vyAhf",
+      "deva": "व्याहृ",
+      "iast": "vyāhṛ",
+      "gloss": "to utter or pronounce a sound"
+    },
+    {
+      "rank": 2003,
+      "slp1": "mahizI",
+      "deva": "महिषी",
+      "iast": "mahiṣī",
+      "gloss": "a female buffalo"
+    },
+    {
+      "rank": 2016,
+      "slp1": "iz",
+      "deva": "इष्",
+      "iast": "iṣ",
+      "gloss": "to seek for"
+    },
+    {
+      "rank": 2113,
+      "slp1": "saMyam",
+      "deva": "संयम्",
+      "iast": "saṃyam",
+      "gloss": "to hold together"
+    },
+    {
+      "rank": 2143,
+      "slp1": "akza",
+      "deva": "अक्ष",
+      "iast": "akṣa",
+      "gloss": "a die for gambling"
+    },
+    {
+      "rank": 2175,
+      "slp1": "nala",
+      "deva": "नल",
+      "iast": "nala",
+      "gloss": "a species of reed"
+    },
+    {
+      "rank": 2185,
+      "slp1": "vivfD",
+      "deva": "विवृध्",
+      "iast": "vivṛdh",
+      "gloss": "to grow"
+    },
+    {
+      "rank": 2186,
+      "slp1": "dAsI",
+      "deva": "दासी",
+      "iast": "dāsī",
+      "gloss": "a female servant or slave"
+    },
+    {
+      "rank": 2195,
+      "slp1": "sOBAgya",
+      "deva": "सौभाग्य",
+      "iast": "saubhāgya",
+      "gloss": "welfare"
+    },
+    {
+      "rank": 2200,
+      "slp1": "sakASa",
+      "deva": "सकाश",
+      "iast": "sakāśa",
+      "gloss": "presence"
+    },
+    {
+      "rank": 2207,
+      "slp1": "guRavat",
+      "deva": "गुणवत्",
+      "iast": "guṇavat",
+      "gloss": "endowed with the five qualities or attributes of elements"
+    },
+    {
+      "rank": 2210,
+      "slp1": "upakram",
+      "deva": "उपक्रम्",
+      "iast": "upakram",
+      "gloss": "to go near"
+    },
+    {
+      "rank": 2309,
+      "slp1": "kovida",
+      "deva": "कोविद",
+      "iast": "kovida",
+      "gloss": "experienced"
+    },
+    {
+      "rank": 2324,
+      "slp1": "rahas",
+      "deva": "रहस्",
+      "iast": "rahas",
+      "gloss": "a lonely or deserted place"
+    },
+    {
+      "rank": 2511,
+      "slp1": "taTAviDa",
+      "deva": "तथाविध",
+      "iast": "tathāvidha",
+      "gloss": "of such a sort or kind"
+    },
+    {
+      "rank": 2529,
+      "slp1": "Kaga",
+      "deva": "खग",
+      "iast": "khaga",
+      "gloss": "a bird"
+    },
+    {
+      "rank": 2776,
+      "slp1": "pramadA",
+      "deva": "प्रमदा",
+      "iast": "pramadā",
+      "gloss": "a young and wanton woman"
+    },
+    {
+      "rank": 2856,
+      "slp1": "adButa",
+      "deva": "अद्भुत",
+      "iast": "adbhuta",
+      "gloss": "extraordinary"
+    },
+    {
+      "rank": 2869,
+      "slp1": "apratima",
+      "deva": "अप्रतिम",
+      "iast": "apratima",
+      "gloss": "unequalled"
+    },
+    {
+      "rank": 2929,
+      "slp1": "priya",
+      "deva": "प्रिय",
+      "iast": "priya",
+      "gloss": "love"
+    },
+    {
+      "rank": 2961,
+      "slp1": "nagarI",
+      "deva": "नगरी",
+      "iast": "nagarī",
+      "gloss": "a town"
+    },
+    {
+      "rank": 3126,
+      "slp1": "tAdfS",
+      "deva": "तादृश्",
+      "iast": "tādṛś",
+      "gloss": "such like"
+    },
+    {
+      "rank": 3186,
+      "slp1": "BrAj",
+      "deva": "भ्राज्",
+      "iast": "bhrāj",
+      "gloss": "to shine"
+    },
+    {
+      "rank": 3213,
+      "slp1": "SacI",
+      "deva": "शची",
+      "iast": "śacī",
+      "gloss": "the rendering of powerful or mighty help"
+    },
+    {
+      "rank": 3215,
+      "slp1": "satkAra",
+      "deva": "सत्कार",
+      "iast": "satkāra",
+      "gloss": "kind treatment"
+    },
+    {
+      "rank": 3216,
+      "slp1": "sundara",
+      "deva": "सुन्दर",
+      "iast": "sundara",
+      "gloss": "beautiful"
+    },
+    {
+      "rank": 3532,
+      "slp1": "samalaMkf",
+      "deva": "समलंकृ",
+      "iast": "samalaṃkṛ",
+      "gloss": "to decorate"
+    },
+    {
+      "rank": 3561,
+      "slp1": "BArata",
+      "deva": "भारत",
+      "iast": "bhārata",
+      "gloss": "actor"
+    },
+    {
+      "rank": 3647,
+      "slp1": "aNga",
+      "deva": "अङ्ग",
+      "iast": "aṅga",
+      "gloss": "having members or divisions"
+    },
+    {
+      "rank": 3653,
+      "slp1": "damayantI",
+      "deva": "दमयन्ती",
+      "iast": "damayantī",
+      "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha)"
+    },
+    {
+      "rank": 3727,
+      "slp1": "rUpavat",
+      "deva": "रूपवत्",
+      "iast": "rūpavat",
+      "gloss": "having form or colour"
+    },
+    {
+      "rank": 3737,
+      "slp1": "varavarRinI",
+      "deva": "वरवर्णिनी",
+      "iast": "varavarṇinī",
+      "gloss": "any woman"
+    },
+    {
+      "rank": 3747,
+      "slp1": "paricCada",
+      "deva": "परिच्छद",
+      "iast": "paricchada",
+      "gloss": "a cover"
+    },
+    {
+      "rank": 3783,
+      "slp1": "paryupAs",
+      "deva": "पर्युपास्",
+      "iast": "paryupās",
+      "gloss": "to sit round"
+    },
+    {
+      "rank": 3813,
+      "slp1": "jAtarUpa",
+      "deva": "जातरूप",
+      "iast": "jātarūpa",
+      "gloss": "gold"
+    },
+    {
+      "rank": 3826,
+      "slp1": "akzOhiRI",
+      "deva": "अक्षौहिणी",
+      "iast": "akṣauhiṇī",
+      "gloss": "an army consisting of ten anikinis"
+    },
+    {
+      "rank": 4061,
+      "slp1": "saPala",
+      "deva": "सफल",
+      "iast": "saphala",
+      "gloss": "together with fruits"
+    },
+    {
+      "rank": 4130,
+      "slp1": "yuj",
+      "deva": "युज्",
+      "iast": "yuj",
+      "gloss": "to yoke or join or fasten or harness (horses or a chariot)"
+    },
+    {
+      "rank": 4195,
+      "slp1": "rAkzasa",
+      "deva": "राक्षस",
+      "iast": "rākṣasa",
+      "gloss": "a Rakṣas"
+    },
+    {
+      "rank": 4276,
+      "slp1": "mUrtimat",
+      "deva": "मूर्तिमत्",
+      "iast": "mūrtimat",
+      "gloss": "having a material form"
+    },
+    {
+      "rank": 4344,
+      "slp1": "brahmaRya",
+      "deva": "ब्रह्मण्य",
+      "iast": "brahmaṇya",
+      "gloss": "relating to Brahma or Brahmā"
+    },
+    {
+      "rank": 4441,
+      "slp1": "anavadya",
+      "deva": "अनवद्य",
+      "iast": "anavadya",
+      "gloss": "faultless"
+    },
+    {
+      "rank": 4572,
+      "slp1": "samutpat",
+      "deva": "समुत्पत्",
+      "iast": "samutpat",
+      "gloss": "to fly up together"
+    },
+    {
+      "rank": 4585,
+      "slp1": "dA",
+      "deva": "दा",
+      "iast": "dā",
+      "gloss": "to give"
+    },
+    {
+      "rank": 4668,
+      "slp1": "deva",
+      "deva": "देव",
+      "iast": "deva",
+      "gloss": "a deity"
+    },
+    {
+      "rank": 4700,
+      "slp1": "garutmant",
+      "deva": "गरुत्मन्त्",
+      "iast": "garutmant",
+      "gloss": "the bird Garuḍa"
+    },
+    {
+      "rank": 4740,
+      "slp1": "nizaDa",
+      "deva": "निषध",
+      "iast": "niṣadha",
+      "gloss": "name of a mountain or chain of mountains (described as lying immediately south of Ilāvṛta…"
+    },
+    {
+      "rank": 5055,
+      "slp1": "kandarpa",
+      "deva": "कन्दर्प",
+      "iast": "kandarpa",
+      "gloss": "name of Kāma"
+    },
+    {
+      "rank": 5393,
+      "slp1": "vAdin",
+      "deva": "वादिन्",
+      "iast": "vādin",
+      "gloss": "saying"
+    },
+    {
+      "rank": 5605,
+      "slp1": "dama",
+      "deva": "दम",
+      "iast": "dama",
+      "gloss": "self-restraint"
+    },
+    {
+      "rank": 5936,
+      "slp1": "adfzwa",
+      "deva": "अदृष्ट",
+      "iast": "adṛṣṭa",
+      "gloss": "unseen"
+    },
+    {
+      "rank": 6146,
+      "slp1": "yaSas",
+      "deva": "यशस्",
+      "iast": "yaśas",
+      "gloss": "beautiful appearance"
+    },
+    {
+      "rank": 6567,
+      "slp1": "Danvin",
+      "deva": "धन्विन्",
+      "iast": "dhanvin",
+      "gloss": "armed with a bow"
+    },
+    {
+      "rank": 6617,
+      "slp1": "indriya",
+      "deva": "इन्द्रिय",
+      "iast": "indriya",
+      "gloss": "power"
+    },
+    {
+      "rank": 6784,
+      "slp1": "damana",
+      "deva": "दमन",
+      "iast": "damana",
+      "gloss": "name of a Samādhi"
+    },
+    {
+      "rank": 6816,
+      "slp1": "As",
+      "deva": "आस्",
+      "iast": "ās",
+      "gloss": "to sit"
+    },
+    {
+      "rank": 7298,
+      "slp1": "balin",
+      "deva": "बलिन्",
+      "iast": "balin",
+      "gloss": "powerful"
+    },
+    {
+      "rank": 7443,
+      "slp1": "vara",
+      "deva": "वर",
+      "iast": "vara",
+      "gloss": "choicest"
+    },
+    {
+      "rank": 7471,
+      "slp1": "haMsa",
+      "deva": "हंस",
+      "iast": "haṃsa",
+      "gloss": "a goose"
+    }
+  ]
+}

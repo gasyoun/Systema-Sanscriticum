@@ -23,6 +23,19 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   architecture, not styling; browser-verified (console clean, no 390px overflow), 7 screenshots
   ([docs/mockups/student-cabinet-remake/today-first-coach/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/today-first-coach)).
   Non-destructive; winner still an M.G. `@DECIDE`.
+- **H955: kosha last-mile pipeline, Rung B1 demo import.** New
+  `php artisan srs:import-kosha-b1-demo` (`app/Console/Commands/ImportKoshaSrsDeckB1Demo.php`)
+  imports the vendored feed `resources/data/kosha_srs_deck_b1_demo.json`
+  (kosha manifest id `kosha-srs-deck-b1-demo` — content vocabulary of the
+  Nala-1 reading pack, `core_rank`-ordered, function words stripped) into one
+  system Saraswati SRS deck (`kosha-b1-demo`), mirroring
+  `SrsSanskritDeckSeeder`/`ImportMemriseSrsDeck`'s idempotent `firstOrCreate`
+  pattern. Card insertion order == feed `rank` order (`srs_cards` has no
+  `sort_rank` column yet — a schema migration is deliberately deferred to a
+  human-reviewed production follow-up, not built here). Gated by new
+  `features.kosha_srs` flag (`KOSHA_SRS` env, OFF by default, mirrors
+  `slovar_enrichment`) — with the flag off the command writes nothing.
+  5 tests in `tests/Feature/Srs/ImportKoshaSrsDeckB1DemoTest.php`.
 
 ## [1.7.0] - 2026-07-15
 

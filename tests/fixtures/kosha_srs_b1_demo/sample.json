@@ -1,0 +1,14 @@
+{
+  "id": "kosha-srs-deck-b1-demo",
+  "source_reading_pack": "nala-1",
+  "method": "core_rank-ordered, function words stripped — wave-1a method",
+  "stats": {
+    "cards": 4
+  },
+  "cards": [
+    { "rank": 1, "slp1": "kf", "deva": "कृ", "iast": "kṛ", "gloss": "to make" },
+    { "rank": 2, "slp1": "vac", "deva": "वच्", "iast": "vac", "gloss": "to speak" },
+    { "rank": 4, "slp1": "mahat", "deva": "महत्", "iast": "mahat", "gloss": "great" },
+    { "rank": 5, "slp1": "as", "deva": "अस्", "iast": "as", "gloss": "to be" }
+  ]
+}
