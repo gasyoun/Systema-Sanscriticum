@@ -11,6 +11,20 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H959: kosha last-mile pipeline, Hop A reader-as-a-service demo.** New
+  `/reading/kosha-demo` route (`app/Http/Controllers/ReadingPackController.php`)
+  renders the vendored feed `resources/data/kosha_reading_pack_nala_1.json`
+  (kosha's `dcs-reading-pack-nala-1`) as a word-by-word reading page: each
+  token is a native `<details>`/`<summary>` disclosure (no custom JS) showing
+  lemma, morphology, and gloss on tap — no external link or runtime lookup
+  needed, every field already lives in the vendored feed. Gated by new
+  `features.kosha_reader` flag (`KOSHA_READER` env, OFF by default, mirrors
+  `slovar_enrichment`/`kosha_srs`) — with the flag off the route 404s. 4 tests
+  in `tests/Feature/ReadingPackTest.php`. Closes the reader half of
+  [`docs/LAST_MILE_PIPELINE_SPEC.md`](https://github.com/gasyoun/SanskritGrammar/blob/main/docs/LAST_MILE_PIPELINE_SPEC.md)'s
+  Hop A (Systema side); Hop B's SRS-deck import shipped separately (H955).
+
 ## [1.9.0] - 2026-07-15
 
 ### Added
