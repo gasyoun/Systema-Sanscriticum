@@ -54,6 +54,16 @@ urgency; clear price/entitlement/cancellation language; installments and benefit
 shown with the price (measured positive lift, ledger M5); no deadlines/scarcity ever
 (measured negative lift, ledger M5).
 
+### Production ruling (15-07-2026) — R29: HYBRID
+
+M.G. ruled the production direction after all four mockups shipped: **hybrid** — B «Курс как
+дом» is the chassis; grafted organs: A's «Сегодня»-band-with-homework + recovery mode, C's
+shelves/ribbons + progress rail + ownership-expansion offer, D's path-in-«Прогресс» +
+completion-lighting master offer rule + вехи. Full composition, page deltas, offer
+precedence, engineering bill, and the instrumentation-first sequence:
+[STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md).
+The direction exploration is CLOSED; A/C/D mockups remain as organ references.
+
 ## 2. The four directions
 
 All four honor R1–R20; they differ on the **architectural center of gravity** — what the

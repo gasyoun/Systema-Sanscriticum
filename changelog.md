@@ -23,6 +23,34 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   ([docs/mockups/student-cabinet-remake/journey-membership-hub/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/journey-membership-hub)).
   Non-destructive; the production-direction pick is now the only remaining M.G. `@DECIDE`.
 
+## [1.11.0] - 2026-07-15
+
+### Added
+- **Hybrid production spec for the cabinet remake (H961, ruling R29).** M.G. closed the
+  four-direction exploration: production = hybrid — B «Курс как дом» chassis + A's
+  «Сегодня»-band-with-homework and recovery mode + C's ownership shelves, progress rail and
+  ownership-expansion offer + D's path-in-«Прогресс», completion-lighting master offer rule
+  and вехи. Binding spec with page deltas vs the B v2 reference, unified offer precedence,
+  engineering bill, instrumentation-first event schema (R20 gate) and the phased sequence:
+  [docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
+  (+ sibling metadoc). Phase 0 (instrumentation baseline) queued as H962.
+
+## [1.10.0] - 2026-07-15
+
+### Added
+- **H959: kosha last-mile pipeline, Hop A reader-as-a-service demo.** New
+  `/reading/kosha-demo` route (`app/Http/Controllers/ReadingPackController.php`)
+  renders the vendored feed `resources/data/kosha_reading_pack_nala_1.json`
+  (kosha's `dcs-reading-pack-nala-1`) as a word-by-word reading page: each
+  token is a native `<details>`/`<summary>` disclosure (no custom JS) showing
+  lemma, morphology, and gloss on tap — no external link or runtime lookup
+  needed, every field already lives in the vendored feed. Gated by new
+  `features.kosha_reader` flag (`KOSHA_READER` env, OFF by default, mirrors
+  `slovar_enrichment`/`kosha_srs`) — with the flag off the route 404s. 4 tests
+  in `tests/Feature/ReadingPackTest.php`. Closes the reader half of
+  [`docs/LAST_MILE_PIPELINE_SPEC.md`](https://github.com/gasyoun/SanskritGrammar/blob/main/docs/LAST_MILE_PIPELINE_SPEC.md)'s
+  Hop A (Systema side); Hop B's SRS-deck import shipped separately (H955).
+
 ## [1.9.0] - 2026-07-15
 
 ### Added
@@ -498,7 +526,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.10.0...v1.11.0
+[1.10.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.6.0...v1.7.0

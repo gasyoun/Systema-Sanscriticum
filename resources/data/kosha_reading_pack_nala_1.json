@@ -1,0 +1,4986 @@
+{
+ "slug": "nala-1",
+ "title": "Nala 1 — Nalopākhyāna (Mahābhārata 3.50)",
+ "ref": "MBh, 3, 50",
+ "text_name": "Mahābhārata",
+ "source": "DCS (Digital Corpus of Sanskrit) — CC BY 4.0",
+ "built": "2026-07-13",
+ "stats": {
+  "sentences": 65,
+  "tokens": 439,
+  "linked_tokens": 434,
+  "link_rate_pct": 98.9,
+  "tier_counts": {
+   "exact": 434,
+   "relaxed": 2,
+   "none": 3
+  }
+ },
+ "sentences": [
+  {
+   "n": "1",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 1.1",
+   "dcs": "dcs:192530",
+   "text": "bṛhadaśva uvāca",
+   "tokens": [
+    {
+     "form": "bṛhadaśva",
+     "lemma": "bṛhadaśva",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of a Gandharva; name of various men; name of a Ṛṣi; name of a son of Anaraṇya",
+     "slp1": "bfhadaSva",
+     "href": "../w/bfhada_53va.html",
+     "tier": "exact"
+    },
+    {
+     "form": "uvāca",
+     "lemma": "vac",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to speak; to say; to tell; to declare; to proclaim; to recite; verk￼nden; to speak ill of",
+     "slp1": "vac",
+     "href": "../w/vac.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "1",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 1.2",
+   "dcs": "dcs:192531",
+   "text": "āsīd rājā nalo nāma vīrasenasuto balī",
+   "tokens": [
+    {
+     "form": "āsīd",
+     "lemma": "as",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to be; to live; to exist; to be present; to take place; to happen; to abide; to dwell; to…",
+     "slp1": "as",
+     "href": "../w/as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rājā",
+     "lemma": "rājan",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a king; sovereign; prince; chief (often applied to gods); a man of the royal tribe or the…",
+     "slp1": "rAjan",
+     "href": "../w/r_41jan.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalo",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nāma",
+     "lemma": "nāma",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "by name i.e. named; called; indeed; certainly; really; of course; quasi; only in appearan…",
+     "slp1": "nAma",
+     "href": "../w/n_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vīrasena",
+     "lemma": "vīrasena",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "name of a Dānava; name of a king of Nishadha (father of Nala); name of a king of Siṃhala;…",
+     "slp1": "vIrasena",
+     "href": "../w/v_49rasena.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sutaḥ",
+     "lemma": "suta",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a son; child; a king; name of the 5th astrological house; name of a son of the 10th Manu",
+     "slp1": "suta",
+     "href": "../w/suta.html",
+     "tier": "exact"
+    },
+    {
+     "form": "balī",
+     "lemma": "balin",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "powerful; strong; mighty; stout; robust",
+     "slp1": "balin",
+     "href": "../w/balin.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "1",
+   "sub": "3",
+   "locus": "Mahābhārata, MBh, 3, 50, 1.3",
+   "dcs": "dcs:192532",
+   "text": "upapanno guṇair iṣṭai rūpavān aśvakovidaḥ",
+   "tokens": [
+    {
+     "form": "upapanno",
+     "lemma": "upapad",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to go towards or against; to attack; to approach; to come to; to arrive at; to enter; to…",
+     "slp1": "upapad",
+     "href": "../w/upapad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "guṇair",
+     "lemma": "guṇa",
+     "upos": "NOUN",
+     "morph": "Ins Plur Masc",
+     "gloss": "a single thread or strand of a cord or twine; string or thread; rope; a garland; an auxil…",
+     "slp1": "guRa",
+     "href": "../w/gu_52a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iṣṭai",
+     "lemma": "iṣ",
+     "upos": "VERB",
+     "morph": "Ins Plur Masc",
+     "gloss": "to seek for; to desire; to intend; to assent; to concede; to choose",
+     "slp1": "iz",
+     "href": "../w/iz.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpavān",
+     "lemma": "rūpavat",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "having form or colour; formed; embodied; corporeal; having a beautiful form or colour; ha…",
+     "slp1": "rUpavat",
+     "href": "../w/r_55pavat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "aśva",
+     "lemma": "aśva",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "stallion; horse (in the game of chess); the number \"seven\" (that being the number of the…",
+     "slp1": "aSva",
+     "href": "../w/a_53va.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kovidaḥ",
+     "lemma": "kovida",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "experienced; skilled; learned in",
+     "slp1": "kovida",
+     "href": "../w/kovida.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "10",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 10.1",
+   "dcs": "dcs:192549",
+   "text": "damayantī tu rūpeṇa tejasā yaśasā śriyā",
+   "tokens": [
+    {
+     "form": "damayantī",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpeṇa",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tejasā",
+     "lemma": "tejas",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "the sharp edge (of a knife etc.); point or top of a flame or ray; glow; glare; splendour;…",
+     "slp1": "tejas",
+     "href": "../w/tejas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yaśasā",
+     "lemma": "yaśas",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "beautiful appearance; beauty; splendour; worth; honour; glory; fame; renown; an object of…",
+     "slp1": "yaSas",
+     "href": "../w/ya_53as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śriyā",
+     "lemma": "śrī",
+     "upos": "NOUN",
+     "morph": "Ins Sing Fem",
+     "gloss": "light; lustre; radiance; splendour; glory; beauty; grace; loveliness; prosperity; welfare…",
+     "slp1": "SrI",
+     "href": "../w/_53r_49.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "10",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 10.2",
+   "dcs": "dcs:192550",
+   "text": "saubhāgyena ca lokeṣu yaśaḥ prāpa sumadhyamā",
+   "tokens": [
+    {
+     "form": "saubhāgyena",
+     "lemma": "saubhāgya",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "welfare; good luck; good fortune; success; prosperity; happiness (esp. conjugal felicity)…",
+     "slp1": "sOBAgya",
+     "href": "../w/s_4f_42_41gya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "lokeṣu",
+     "lemma": "loka",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "free or open space; room; place; scope; free motion; intermediate space; a tract; region;…",
+     "slp1": "loka",
+     "href": "../w/loka.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yaśaḥ",
+     "lemma": "yaśas",
+     "upos": "NOUN",
+     "morph": "Acc Sing Neut",
+     "gloss": "beautiful appearance; beauty; splendour; worth; honour; glory; fame; renown; an object of…",
+     "slp1": "yaSas",
+     "href": "../w/ya_53as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prāpa",
+     "lemma": "prāp",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to attain to; to reach; to arrive at; to meet with; to find; to obtain; to receive; to in…",
+     "slp1": "prAp",
+     "href": "../w/pr_41p.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sumadhyamā",
+     "lemma": "sumadhyamā",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "a graceful woman",
+     "slp1": "sumaDyamA",
+     "href": "../w/suma_44yam_41.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "11",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 11.1",
+   "dcs": "dcs:192551",
+   "text": "atha tāṃ vayasi prāpte dāsīnāṃ samalaṃkṛtām",
+   "tokens": [
+    {
+     "form": "atha",
+     "lemma": "atha",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "an auspicious and inceptive particle (not easily expressed in English); now; then; moreov…",
+     "slp1": "aTa",
+     "href": "../w/a_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tāṃ",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Sing Fem",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vayasi",
+     "lemma": "vayas",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "enjoyment; food; meal; oblation; energy (both bodily and mental); strength; health; vigou…",
+     "slp1": "vayas",
+     "href": "../w/vayas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prāpte",
+     "lemma": "prāp",
+     "upos": "VERB",
+     "morph": "Loc Sing Neut",
+     "gloss": "to attain to; to reach; to arrive at; to meet with; to find; to obtain; to receive; to in…",
+     "slp1": "prAp",
+     "href": "../w/pr_41p.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dāsīnāṃ",
+     "lemma": "dāsī",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a female servant or slave; harlot; name of a plant; an altar; name of a river; Leea Hirta",
+     "slp1": "dAsI",
+     "href": "../w/d_41s_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samalaṃkṛtām",
+     "lemma": "samalaṃkṛ",
+     "upos": "VERB",
+     "morph": "Acc Sing Fem",
+     "gloss": "to decorate; to adorn",
+     "slp1": "samalaMkf",
+     "href": "../w/samala_4dkf.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "11",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 11.2",
+   "dcs": "dcs:192552",
+   "text": "śataṃ sakhīnāṃ ca tathā paryupāste śacīm iva",
+   "tokens": [
+    {
+     "form": "śataṃ",
+     "lemma": "śata",
+     "upos": "NUM",
+     "morph": "Nom Sing Neut",
+     "gloss": "a hundred; any very large number; name of a measure",
+     "slp1": "Sata",
+     "href": "../w/_53ata.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sakhīnāṃ",
+     "lemma": "sakhī",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a female friend or companion; a woman's confidante; a mistress; a woman who shares in or…",
+     "slp1": "saKI",
+     "href": "../w/sa_4b_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tathā",
+     "lemma": "tathā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "in that manner; so; thus; yes; so be it; so it shall be (particle of assent); so also; in…",
+     "slp1": "taTA",
+     "href": "../w/ta_54_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "paryupāste",
+     "lemma": "paryupās",
+     "upos": "VERB",
+     "morph": "Sing p3 Pres Ind",
+     "gloss": "to sit round; to surround; to encompass; to be present at; to share in; to partake of (ac…",
+     "slp1": "paryupAs",
+     "href": "../w/paryup_41s.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śacīm",
+     "lemma": "śacī",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "the rendering of powerful or mighty help; assistance; aid (esp. said of the deeds of Indr…",
+     "slp1": "SacI",
+     "href": "../w/_53ac_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iva",
+     "lemma": "iva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "like; in the same manner as (in this sense = yathā); as it were; as if; in a certain mann…",
+     "slp1": "iva",
+     "href": "../w/iva.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "12",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 12.1",
+   "dcs": "dcs:192553",
+   "text": "tatra sma bhrājate bhaimī sarvābharaṇabhūṣitā",
+   "tokens": [
+    {
+     "form": "tatra",
+     "lemma": "tatra",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "in that place; there (in comp.); thither; to that place; in that; therein; in that case;…",
+     "slp1": "tatra",
+     "href": "../w/tatra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sma",
+     "lemma": "sma",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "ever; always; indeed; certainly",
+     "slp1": "sma",
+     "href": "../w/sma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhrājate",
+     "lemma": "bhrāj",
+     "upos": "VERB",
+     "morph": "Sing p3 Pres Ind",
+     "gloss": "to shine; to beam; to sparkle; to glitter; to be of no account",
+     "slp1": "BrAj",
+     "href": "../w/_42r_41j.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhaimī",
+     "lemma": "bhaimī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "Bhīma's daughter i.e. Damayanti; name of the 11th day in the light half of Māgha and a fe…",
+     "slp1": "BEmI",
+     "href": "../w/_42_45m_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarva",
+     "lemma": "sarva",
+     "upos": "PRON",
+     "morph": "Cpd",
+     "gloss": "whole; entire; all; every; of all sorts; manifold; various; different; completely",
+     "slp1": "sarva",
+     "href": "../w/sarva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ābharaṇa",
+     "lemma": "ābharaṇa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "decorating; ornament; decoration (as jewels etc.); name of several works (especially ifc.)",
+     "slp1": "ABaraRa",
+     "href": "../w/_41_42ara_52a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhūṣitā",
+     "lemma": "bhūṣay",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to adorn; to embellish; to attire",
+     "resolved": false
+    }
+   ]
+  },
+  {
+   "n": "12",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 12.2",
+   "dcs": "dcs:192554",
+   "text": "sakhīmadhye 'navadyāṅgī vidyut saudāmanī yathā",
+   "tokens": [
+    {
+     "form": "sakhī",
+     "lemma": "sakhī",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a female friend or companion; a woman's confidante; a mistress; a woman who shares in or…",
+     "slp1": "saKI",
+     "href": "../w/sa_4b_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "madhye",
+     "lemma": "madhya",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "the middle; midst; centre; inside; interior; the middle of the sky; space between; midday…",
+     "slp1": "maDya",
+     "href": "../w/ma_44ya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "anavadya",
+     "lemma": "anavadya",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "faultless; unobjectionable",
+     "slp1": "anavadya",
+     "href": "../w/anavadya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "aṅgā",
+     "lemma": "aṅga",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "having members or divisions; contiguous",
+     "slp1": "aNga",
+     "href": "../w/a_4ega.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vidyut",
+     "lemma": "vidyut",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "a flashing thunderbolt (as the weapon of the Maruts); the dawn; name of the four daughter…",
+     "slp1": "vidyut",
+     "href": "../w/vidyut.html",
+     "tier": "exact"
+    },
+    {
+     "form": "saudāmanī",
+     "lemma": "saudāmanī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "lightning or a particular kind of lightning; perhaps forked lightning; name of a daughter…",
+     "slp1": "sOdAmanI",
+     "href": "../w/s_4fd_41man_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yathā",
+     "lemma": "yathā",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "according; as; like; as",
+     "slp1": "yaTA",
+     "href": "../w/ya_54_41.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "12",
+   "sub": "3",
+   "locus": "Mahābhārata, MBh, 3, 50, 12.3",
+   "dcs": "dcs:192555",
+   "text": "atīva rūpasampannā śrīr ivāyatalocanā",
+   "tokens": [
+    {
+     "form": "atīva",
+     "lemma": "atīva",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "exceedingly; very; excessively; too; quite",
+     "slp1": "atIva",
+     "href": "../w/at_49va.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpa",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sampannā",
+     "lemma": "sampad",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to turn out well; to accrue to; to amount to; to meet with; to obtain; to be absorbed in;…",
+     "slp1": "sampad",
+     "href": "../w/sampad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śrīr",
+     "lemma": "śrī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "light; lustre; radiance; splendour; glory; beauty; grace; loveliness; prosperity; welfare…",
+     "slp1": "SrI",
+     "href": "../w/_53r_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iva",
+     "lemma": "iva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "like; in the same manner as (in this sense = yathā); as it were; as if; in a certain mann…",
+     "slp1": "iva",
+     "href": "../w/iva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āyata",
+     "lemma": "āyam",
+     "upos": "VERB",
+     "morph": "Cpd",
+     "gloss": "to stretch; to lengthen out; to extend; to stretch (a bow); to put on (an arrow etc.); to…",
+     "slp1": "Ayam",
+     "href": "../w/_41yam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "locanā",
+     "lemma": "locana",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "the eye; name of a work; two; a kind of plant; cumin",
+     "slp1": "locana",
+     "href": "../w/locana.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "13",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 13.1",
+   "dcs": "dcs:192556",
+   "text": "na deveṣu na yakṣeṣu tādṛg rūpavatī kvacit",
+   "tokens": [
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "deveṣu",
+     "lemma": "deva",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "a deity; god; (rarely applied to) evil demons; the gods as the heavenly or shining ones;…",
+     "slp1": "deva",
+     "href": "../w/deva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yakṣeṣu",
+     "lemma": "yakṣa",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "name of a class of semi-divine beings (attendants of Kubera); a kind of plant; = yakṣatar…",
+     "slp1": "yakza",
+     "href": "../w/yakza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tādṛg",
+     "lemma": "tādṛś",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "such like",
+     "slp1": "tAdfS",
+     "href": "../w/t_41df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpavatī",
+     "lemma": "rūpavat",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "having form or colour; formed; embodied; corporeal; having a beautiful form or colour; ha…",
+     "slp1": "rUpavat",
+     "href": "../w/r_55pavat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kvacit",
+     "lemma": "kvacid",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "anywhere; somewhere; at any time; sometimes",
+     "resolved": false
+    }
+   ]
+  },
+  {
+   "n": "13",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 13.2",
+   "dcs": "dcs:192557",
+   "text": "mānuṣeṣv api cānyeṣu dṛṣṭapūrvā na ca śrutā",
+   "tokens": [
+    {
+     "form": "mānuṣeṣv",
+     "lemma": "mānuṣa",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "a man; human being; name of the signs of the zodiac Gemini, Virgo and Libra; people",
+     "slp1": "mAnuza",
+     "href": "../w/m_41nuza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "api",
+     "lemma": "api",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "also; moreover; besides; assuredly; surely",
+     "slp1": "api",
+     "href": "../w/api.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "anyeṣu",
+     "lemma": "anya",
+     "upos": "PRON",
+     "morph": "Loc Plur Masc",
+     "gloss": "other; another",
+     "slp1": "anya",
+     "href": "../w/anya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dṛṣṭa",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "Cpd",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pūrvā",
+     "lemma": "pūrva",
+     "upos": "PRON",
+     "morph": "Nom Sing Fem",
+     "gloss": "being before or in front fore; first; eastern; to the east of (abl.); former; prior; prec…",
+     "slp1": "pUrva",
+     "href": "../w/p_55rva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śrutā",
+     "lemma": "śru",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to hear; to listen to; to study",
+     "slp1": "Sru",
+     "href": "../w/_53ru.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "13",
+   "sub": "3",
+   "locus": "Mahābhārata, MBh, 3, 50, 13.3",
+   "dcs": "dcs:192558",
+   "text": "cittapramāthinī bālā devānām api sundarī",
+   "tokens": [
+    {
+     "form": "citta",
+     "lemma": "citta",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "attending; observing; thinking; reflecting; imagining; thought; intention; aim; wish; the…",
+     "slp1": "citta",
+     "href": "../w/citta.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pramāthinī",
+     "lemma": "pramāthin",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "stirring about; tearing; rending; troubling; harassing; destroying; striking off; used fo…",
+     "slp1": "pramATin",
+     "href": "../w/pram_41_54in.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bālā",
+     "lemma": "bāla",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "young; childish; infantine; not full-grown or developed (of per. sons and things); newly…",
+     "slp1": "bAla",
+     "href": "../w/b_41la.html",
+     "tier": "exact"
+    },
+    {
+     "form": "devānām",
+     "lemma": "deva",
+     "upos": "NOUN",
+     "morph": "Gen Plur Masc",
+     "gloss": "a deity; god; (rarely applied to) evil demons; the gods as the heavenly or shining ones;…",
+     "slp1": "deva",
+     "href": "../w/deva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "api",
+     "lemma": "api",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "also; moreover; besides; assuredly; surely",
+     "slp1": "api",
+     "href": "../w/api.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sundarī",
+     "lemma": "sundara",
+     "upos": "ADJ",
+     "morph": "Nom Sing Fem",
+     "gloss": "beautiful; handsome; lovely; charming; agreeable; noble",
+     "slp1": "sundara",
+     "href": "../w/sundara.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "14",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 14.1",
+   "dcs": "dcs:192559",
+   "text": "nalaś ca naraśārdūlo rūpeṇāpratimo bhuvi",
+   "tokens": [
+    {
+     "form": "nalaś",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nara",
+     "lemma": "nara",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a man; a male; a person; husband; hero; a man or piece at chess or draughts; the pin or g…",
+     "slp1": "nara",
+     "href": "../w/nara.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śārdūlaḥ",
+     "lemma": "śārdūla",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a tiger; a lion; a panther; leopard; the fabulous animal Śarabha; a kind of bird; any emi…",
+     "slp1": "SArdUla",
+     "href": "../w/_53_41rd_55la.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpeṇa",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "apratimaḥ",
+     "lemma": "apratima",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "unequalled; without a match; incomparable",
+     "slp1": "apratima",
+     "href": "../w/apratima.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhuvi",
+     "lemma": "bhū",
+     "upos": "NOUN",
+     "morph": "Loc Sing Fem",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "14",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 14.2",
+   "dcs": "dcs:192560",
+   "text": "kandarpa iva rūpeṇa mūrtimān abhavat svayam",
+   "tokens": [
+    {
+     "form": "kandarpa",
+     "lemma": "kandarpa",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of Kāma; love; lust; (in mus.) a particular Rāga; kind of time; membrum virile; [alc…",
+     "slp1": "kandarpa",
+     "href": "../w/kandarpa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iva",
+     "lemma": "iva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "like; in the same manner as (in this sense = yathā); as it were; as if; in a certain mann…",
+     "slp1": "iva",
+     "href": "../w/iva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpeṇa",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mūrtimān",
+     "lemma": "mūrtimat",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "having a material form; corporeal; incarnate; personified",
+     "slp1": "mUrtimat",
+     "href": "../w/m_55rtimat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "abhavat",
+     "lemma": "bhū",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    },
+    {
+     "form": "svayam",
+     "lemma": "svayam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "self; one's self (applicable to all persons); of or by one's self spontaneously; voluntar…",
+     "slp1": "svayam",
+     "href": "../w/svayam.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "15",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 15.1",
+   "dcs": "dcs:192561",
+   "text": "tasyāḥ samīpe tu nalaṃ praśaśaṃsuḥ kutūhalāt",
+   "tokens": [
+    {
+     "form": "tasyāḥ",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Gen Sing Fem",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samīpe",
+     "lemma": "samīpa",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "nearness; proximity; vicinity; presence; imminence",
+     "slp1": "samIpa",
+     "href": "../w/sam_49pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalaṃ",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "praśaśaṃsuḥ",
+     "lemma": "praśaṃs",
+     "upos": "VERB",
+     "morph": "Plur p3 Past Ind",
+     "gloss": "to proclaim; to declare; to praise; to laud; to extol; to urge on; to stimulate; to appro…",
+     "slp1": "praSaMs",
+     "href": "../w/pra_53a_4ds.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kutūhalāt",
+     "lemma": "kutūhala",
+     "upos": "NOUN",
+     "morph": "Abl Sing Neut",
+     "gloss": "curiosity; interest in any extra-ordinary matter; inclination; desire for (prati loc. or…",
+     "slp1": "kutUhala",
+     "href": "../w/kut_55hala.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "15",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 15.2",
+   "dcs": "dcs:192562",
+   "text": "naiṣadhasya samīpe tu damayantīṃ punaḥ punaḥ",
+   "tokens": [
+    {
+     "form": "naiṣadhasya",
+     "lemma": "naiṣadha",
+     "upos": "NOUN",
+     "morph": "Gen Sing Masc",
+     "gloss": "a prince of the Nishadhas (esp. name of Nala); name of a people; name of a dynasty",
+     "slp1": "nEzaDa",
+     "href": "../w/n_45za_44a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samīpe",
+     "lemma": "samīpa",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "nearness; proximity; vicinity; presence; imminence",
+     "slp1": "samIpa",
+     "href": "../w/sam_49pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damayantīṃ",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "punaḥ",
+     "lemma": "punar",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "back; home; in an opposite direction; again and again; repeatedly; further; moreover; bes…",
+     "slp1": "punar",
+     "href": "../w/punar.html",
+     "tier": "exact"
+    },
+    {
+     "form": "punaḥ",
+     "lemma": "punar",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "back; home; in an opposite direction; again and again; repeatedly; further; moreover; bes…",
+     "slp1": "punar",
+     "href": "../w/punar.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "16",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 16.1",
+   "dcs": "dcs:192563",
+   "text": "tayor adṛṣṭakāmo 'bhūc chṛṇvatoḥ satataṃ guṇān",
+   "tokens": [
+    {
+     "form": "tayor",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Gen Dual Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "adṛṣṭa",
+     "lemma": "adṛṣṭa",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "unseen; unforeseen; invisible; not experienced; unobserved; unknown; unsanctioned",
+     "slp1": "adfzwa",
+     "href": "../w/adfzwa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kāmaḥ",
+     "lemma": "kāma",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "wish; desire; longing; desire for; longing after; love; affection; object of desire or of…",
+     "slp1": "kAma",
+     "href": "../w/k_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "'bhūc",
+     "lemma": "bhū",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    },
+    {
+     "form": "chṛṇvatoḥ",
+     "lemma": "śru",
+     "upos": "VERB",
+     "morph": "Gen Dual Masc Pres",
+     "gloss": "to hear; to listen to; to study",
+     "slp1": "Sru",
+     "href": "../w/_53ru.html",
+     "tier": "exact"
+    },
+    {
+     "form": "satataṃ",
+     "lemma": "satatam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "always",
+     "slp1": "satatam",
+     "href": "../w/satatam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "guṇān",
+     "lemma": "guṇa",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a single thread or strand of a cord or twine; string or thread; rope; a garland; an auxil…",
+     "slp1": "guRa",
+     "href": "../w/gu_52a.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "16",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 16.2",
+   "dcs": "dcs:192564",
+   "text": "anyonyaṃ prati kaunteya sa vyavardhata hṛcchayaḥ",
+   "tokens": [
+    {
+     "form": "anyonyaṃ",
+     "lemma": "anyonya",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "one another; mutual; [gramm.] the word 'anyonya'; varied",
+     "slp1": "anyonya",
+     "href": "../w/anyonya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prati",
+     "lemma": "prati",
+     "upos": "ADP",
+     "morph": "",
+     "gloss": "near to; against; in opposition to; back; again; in return; down upon; upon; on; towards;…",
+     "slp1": "prati",
+     "href": "../w/prati.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kaunteya",
+     "lemma": "kaunteya",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "metron. from Kuntī; name of Yudhiṣṭhira; Bhīmasena; Arjuna; the tree Terminalia Arjuna; t…",
+     "slp1": "kOnteya",
+     "href": "../w/k_4fnteya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vyavardhata",
+     "lemma": "vivṛdh",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to grow; to increase; to swell; to become large or powerful; to thrive; to prosper; to be…",
+     "slp1": "vivfD",
+     "href": "../w/vivf_44.html",
+     "tier": "exact"
+    },
+    {
+     "form": "hṛcchayaḥ",
+     "lemma": "hṛcchaya",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "Kāmadeva; love",
+     "slp1": "hfcCaya",
+     "href": "../w/hfc_43aya.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "17",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 17.1",
+   "dcs": "dcs:192565",
+   "text": "aśaknuvan nalaḥ kāmaṃ tadā dhārayituṃ hṛdā",
+   "tokens": [
+    {
+     "form": "a",
+     "lemma": "a",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "[gramm.] the sound a; eh bien!; (ibc., negating particle); [gramm.] the root han; [gramm.…",
+     "slp1": "a",
+     "href": "../w/a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śaknuvan",
+     "lemma": "śak",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc Pres",
+     "gloss": "to be strong or powerful; to be able to or capable of or competent for; to be overcome or…",
+     "slp1": "Sak",
+     "href": "../w/_53ak.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalaḥ",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kāmaṃ",
+     "lemma": "kāma",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "wish; desire; longing; desire for; longing after; love; affection; object of desire or of…",
+     "slp1": "kAma",
+     "href": "../w/k_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tadā",
+     "lemma": "tadā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "at that time; then; in that case (often used redundantly)",
+     "slp1": "tadA",
+     "href": "../w/tad_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dhārayituṃ",
+     "lemma": "dhāray",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to hold; to keep; to possess; to maintain; die Herrschaft f￼hren; am Leben halten",
+     "resolved": false
+    },
+    {
+     "form": "hṛdā",
+     "lemma": "hṛd",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "the heart (as the seat of feelings and emotions); soul; mind (as seat of thought and inte…",
+     "slp1": "hfd",
+     "href": "../w/hfd.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "17",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 17.2",
+   "dcs": "dcs:192566",
+   "text": "antaḥpurasamīpasthe vana āste rahogataḥ",
+   "tokens": [
+    {
+     "form": "antaḥpura",
+     "lemma": "antaḥpura",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "the king's palace; the female apartments; gynaeceum; those who live in the female apartme…",
+     "slp1": "antaHpura",
+     "href": "../w/anta_48pura.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samīpa",
+     "lemma": "samīpa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "nearness; proximity; vicinity; presence; imminence",
+     "slp1": "samIpa",
+     "href": "../w/sam_49pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sthe",
+     "lemma": "stha",
+     "upos": "ADJ",
+     "morph": "Loc Sing Neut",
+     "gloss": "standing; staying; abiding; being situated in; existing or being in or on or among; occup…",
+     "slp1": "sTa",
+     "href": "../w/s_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vana",
+     "lemma": "vana",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "a forest; wood; grove; thicket; quantity of lotuses or other plants growing in a thick cl…",
+     "slp1": "vana",
+     "href": "../w/vana.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āste",
+     "lemma": "ās",
+     "upos": "VERB",
+     "morph": "Sing p3 Pres Ind",
+     "gloss": "to sit; to sit down; to rest; to lie; to be present; to exist; to inhabit; to dwell in; t…",
+     "slp1": "As",
+     "href": "../w/_41s.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rahas",
+     "lemma": "rahas",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a lonely or deserted place; loneliness; solitude; privacy; secrecy; a secret; mystery; my…",
+     "slp1": "rahas",
+     "href": "../w/rahas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "gataḥ",
+     "lemma": "gam",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to go; to move; to approach; to understand; to reside (as a disease); to elapse (of time)",
+     "slp1": "gam",
+     "href": "../w/gam.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "18",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 18.1",
+   "dcs": "dcs:192567",
+   "text": "sa dadarśa tadā haṃsāñ jātarūpaparicchadān",
+   "tokens": [
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dadarśa",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tadā",
+     "lemma": "tadā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "at that time; then; in that case (often used redundantly)",
+     "slp1": "tadA",
+     "href": "../w/tad_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsāñ",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "jātarūpa",
+     "lemma": "jātarūpa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "gold; the thorn-apple",
+     "slp1": "jAtarUpa",
+     "href": "../w/j_41tar_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "paricchadān",
+     "lemma": "paricchada",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a cover; covering; garment; dress; paraphernalia; external appendage; insignia of royalty…",
+     "slp1": "paricCada",
+     "href": "../w/paric_43ada.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "18",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 18.2",
+   "dcs": "dcs:192568",
+   "text": "vane vicaratāṃ teṣām ekaṃ jagrāha pakṣiṇam",
+   "tokens": [
+    {
+     "form": "vane",
+     "lemma": "vana",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "a forest; wood; grove; thicket; quantity of lotuses or other plants growing in a thick cl…",
+     "slp1": "vana",
+     "href": "../w/vana.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vicaratāṃ",
+     "lemma": "vicar",
+     "upos": "VERB",
+     "morph": "Gen Plur Masc Pres",
+     "gloss": "to move in different directions; to spread; to expand; to be diffused; to rove; to ramble…",
+     "slp1": "vicar",
+     "href": "../w/vicar.html",
+     "tier": "exact"
+    },
+    {
+     "form": "teṣām",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Gen Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ekaṃ",
+     "lemma": "eka",
+     "upos": "NUM",
+     "morph": "Acc Sing Masc",
+     "gloss": "one; alone; happening only once; single of its kind; excellent; sincere; little; isolated…",
+     "slp1": "eka",
+     "href": "../w/eka.html",
+     "tier": "exact"
+    },
+    {
+     "form": "jagrāha",
+     "lemma": "grah",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to seize; to take (by the hand); to grasp; to lay hold of; to arrest; to stop; to catch;…",
+     "slp1": "grah",
+     "href": "../w/grah.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pakṣiṇam",
+     "lemma": "pakṣin",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a bird or any winged animal; the bird Garuḍa as one of the 18 attendants of the sun; name…",
+     "slp1": "pakzin",
+     "href": "../w/pakzin.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "19",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 19.1",
+   "dcs": "dcs:192569",
+   "text": "tato 'ntarikṣago vācaṃ vyājahāra tadā nalam",
+   "tokens": [
+    {
+     "form": "tato",
+     "lemma": "tatas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "from that; in consequence of that; for that reason; consequently; then; after that",
+     "slp1": "tatas",
+     "href": "../w/tatas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "antarikṣa",
+     "lemma": "antarikṣa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "the intermediate space between heaven and earth; (in the Veda) the middle of the three sp…",
+     "slp1": "antarikza",
+     "href": "../w/antarikza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "gaḥ",
+     "lemma": "ga",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "moving; going in a carriage; having sexual intercourse with; reaching to; staying; being;…",
+     "slp1": "ga",
+     "href": "../w/ga.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vācaṃ",
+     "lemma": "vāc",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "speech; voice; talk; language; sound; a word; saying; phrase; sentence; statement; asseve…",
+     "slp1": "vAc",
+     "href": "../w/v_41c.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vyājahāra",
+     "lemma": "vyāhṛ",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to utter or pronounce a sound; to speak; to say to (acc.); to converse with (saha); to na…",
+     "slp1": "vyAhf",
+     "href": "../w/vy_41hf.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tadā",
+     "lemma": "tadā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "at that time; then; in that case (often used redundantly)",
+     "slp1": "tadA",
+     "href": "../w/tad_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalam",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "19",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 19.2",
+   "dcs": "dcs:192570",
+   "text": "na hantavyo 'smi te rājan kariṣyāmi hi te priyam",
+   "tokens": [
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "hantavyo",
+     "lemma": "han",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to strike; to beat; to pound; to hammer; to strike upon; to smite; to slay; to hit; to ki…",
+     "slp1": "han",
+     "href": "../w/han.html",
+     "tier": "exact"
+    },
+    {
+     "form": "'smi",
+     "lemma": "as",
+     "upos": "VERB",
+     "morph": "Sing p1 Pres Ind",
+     "gloss": "to be; to live; to exist; to be present; to take place; to happen; to abide; to dwell; to…",
+     "slp1": "as",
+     "href": "../w/as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "te",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Dat Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rājan",
+     "lemma": "rājan",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "a king; sovereign; prince; chief (often applied to gods); a man of the royal tribe or the…",
+     "slp1": "rAjan",
+     "href": "../w/r_41jan.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kariṣyāmi",
+     "lemma": "kṛ",
+     "upos": "VERB",
+     "morph": "Sing p1 Fut Ind",
+     "gloss": "to make like or similar; to consider equivalent; to reduce anything to; to cause to becom…",
+     "slp1": "kf",
+     "href": "../w/kf.html",
+     "tier": "exact"
+    },
+    {
+     "form": "hi",
+     "lemma": "hi",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "for; because; on account of",
+     "slp1": "hi",
+     "href": "../w/hi.html",
+     "tier": "exact"
+    },
+    {
+     "form": "te",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Dat Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "priyam",
+     "lemma": "priya",
+     "upos": "NOUN",
+     "morph": "Acc Sing Neut",
+     "gloss": "love; kindness; favour; pleasure",
+     "slp1": "priya",
+     "href": "../w/priya.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "2",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 2.1",
+   "dcs": "dcs:192533",
+   "text": "atiṣṭhan manujendrāṇāṃ mūrdhni devapatir yathā",
+   "tokens": [
+    {
+     "form": "atiṣṭhan",
+     "lemma": "sthā",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to stand; to station one's self; to get upon; to stay; to remain; to be intent upon; to k…",
+     "slp1": "sTA",
+     "href": "../w/s_54_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "manuja",
+     "lemma": "manuja",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a man",
+     "slp1": "manuja",
+     "href": "../w/manuja.html",
+     "tier": "exact"
+    },
+    {
+     "form": "indrāṇām",
+     "lemma": "indra",
+     "upos": "NOUN",
+     "morph": "Gen Plur Masc",
+     "gloss": "the god of the atmosphere and sky; the Indian Jupiter Pluvius or lord of rain (who in Ved…",
+     "slp1": "indra",
+     "href": "../w/indra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mūrdhni",
+     "lemma": "mūrdhan",
+     "upos": "NOUN",
+     "morph": "Loc Sing Masc",
+     "gloss": "the forehead; head in general; skull; (fig.) the highest or first part of anything; top;…",
+     "slp1": "mUrDan",
+     "href": "../w/m_55r_44an.html",
+     "tier": "exact"
+    },
+    {
+     "form": "devapatir",
+     "lemma": "devapati",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of Indra",
+     "slp1": "devapati",
+     "href": "../w/devapati.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yathā",
+     "lemma": "yathā",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "according; as; like; as",
+     "slp1": "yaTA",
+     "href": "../w/ya_54_41.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "2",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 2.2",
+   "dcs": "dcs:192534",
+   "text": "upary upari sarveṣām āditya iva tejasā",
+   "tokens": [
+    {
+     "form": "upary",
+     "lemma": "upari",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "(as a separable adverb) above; upon; on; upwards; towards the upper side of (opposed to a…",
+     "slp1": "upari",
+     "href": "../w/upari.html",
+     "tier": "exact"
+    },
+    {
+     "form": "upari",
+     "lemma": "upari",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "(as a separable adverb) above; upon; on; upwards; towards the upper side of (opposed to a…",
+     "slp1": "upari",
+     "href": "../w/upari.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarveṣām",
+     "lemma": "sarva",
+     "upos": "PRON",
+     "morph": "Gen Plur Masc",
+     "gloss": "whole; entire; all; every; of all sorts; manifold; various; different; completely",
+     "slp1": "sarva",
+     "href": "../w/sarva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āditya",
+     "lemma": "āditya",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of seven deities of the heavenly sphere; name of a god in general; name of Sūrya (th…",
+     "slp1": "Aditya",
+     "href": "../w/_41ditya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iva",
+     "lemma": "iva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "like; in the same manner as (in this sense = yathā); as it were; as if; in a certain mann…",
+     "slp1": "iva",
+     "href": "../w/iva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tejasā",
+     "lemma": "tejas",
+     "upos": "NOUN",
+     "morph": "Ins Sing Neut",
+     "gloss": "the sharp edge (of a knife etc.); point or top of a flame or ray; glow; glare; splendour;…",
+     "slp1": "tejas",
+     "href": "../w/tejas.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "20",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 20.1",
+   "dcs": "dcs:192571",
+   "text": "damayantīsakāśe tvāṃ kathayiṣyāmi naiṣadha",
+   "tokens": [
+    {
+     "form": "damayantī",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sakāśe",
+     "lemma": "sakāśa",
+     "upos": "NOUN",
+     "morph": "Loc Sing Masc",
+     "gloss": "presence; propinquity; vicinity; nearness (used in the sense of a preposition)",
+     "slp1": "sakASa",
+     "href": "../w/sak_41_53a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tvāṃ",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Acc Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kathayiṣyāmi",
+     "lemma": "kathay",
+     "upos": "VERB",
+     "morph": "Sing p1 Fut Ind",
+     "gloss": "to call; to name; to tell; to designate",
+     "slp1": "kaTay",
+     "href": "../w/ka_54ay.html",
+     "tier": "exact"
+    },
+    {
+     "form": "naiṣadha",
+     "lemma": "naiṣadha",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "a prince of the Nishadhas (esp. name of Nala); name of a people; name of a dynasty",
+     "slp1": "nEzaDa",
+     "href": "../w/n_45za_44a.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "20",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 20.2",
+   "dcs": "dcs:192572",
+   "text": "yathā tvadanyaṃ puruṣaṃ na sā maṃsyati karhicit",
+   "tokens": [
+    {
+     "form": "yathā",
+     "lemma": "yathā",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "according; as; like; as",
+     "slp1": "yaTA",
+     "href": "../w/ya_54_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tvad",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Cpd",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "anyam",
+     "lemma": "anya",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "other; another",
+     "slp1": "anya",
+     "href": "../w/anya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "puruṣaṃ",
+     "lemma": "puruṣa",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a man; male; human being (people); a person; an officer; a servant; a friend; a member of…",
+     "slp1": "puruza",
+     "href": "../w/puruza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sā",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Fem",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "maṃsyati",
+     "lemma": "man",
+     "upos": "VERB",
+     "morph": "Sing p3 Fut Ind",
+     "gloss": "to think; to believe; to imagine; to suppose; to conjecture; to regard or consider any on…",
+     "slp1": "man",
+     "href": "../w/man.html",
+     "tier": "exact"
+    },
+    {
+     "form": "karhicit",
+     "lemma": "karhicit",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "at any time",
+     "slp1": "karhicit",
+     "href": "../w/karhicit.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "21",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 21.1",
+   "dcs": "dcs:192573",
+   "text": "evam uktas tato haṃsam utsasarja mahīpatiḥ",
+   "tokens": [
+    {
+     "form": "evam",
+     "lemma": "evam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "thus; in this way; in such a manner; such",
+     "slp1": "evam",
+     "href": "../w/evam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "uktas",
+     "lemma": "vac",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to speak; to say; to tell; to declare; to proclaim; to recite; verk￼nden; to speak ill of",
+     "slp1": "vac",
+     "href": "../w/vac.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tato",
+     "lemma": "tatas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "from that; in consequence of that; for that reason; consequently; then; after that",
+     "slp1": "tatas",
+     "href": "../w/tatas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsam",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "utsasarja",
+     "lemma": "utsṛj",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to let loose; to let off or go; to set free; to open; to pour out; to emit; to send forth…",
+     "slp1": "utsfj",
+     "href": "../w/utsfj.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mahīpatiḥ",
+     "lemma": "mahīpati",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a king; a kind of big lime",
+     "slp1": "mahIpati",
+     "href": "../w/mah_49pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "21",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 21.2",
+   "dcs": "dcs:192574",
+   "text": "te tu haṃsāḥ samutpatya vidarbhān agamaṃs tataḥ",
+   "tokens": [
+    {
+     "form": "te",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsāḥ",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Nom Plur Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samutpatya",
+     "lemma": "samutpat",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to fly up together; to spring up; to ascend; to rise (as the sun); to rush upon; to attac…",
+     "slp1": "samutpat",
+     "href": "../w/samutpat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vidarbhān",
+     "lemma": "vidarbha",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "name of a country south of the Vindhya hills (now called Berar); a king of Vidarbha; a pa…",
+     "slp1": "vidarBa",
+     "href": "../w/vidar_42a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "agamaṃs",
+     "lemma": "gam",
+     "upos": "VERB",
+     "morph": "Plur p3 Past Ind",
+     "gloss": "to go; to move; to approach; to understand; to reside (as a disease); to elapse (of time)",
+     "slp1": "gam",
+     "href": "../w/gam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tataḥ",
+     "lemma": "tatas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "from that; in consequence of that; for that reason; consequently; then; after that",
+     "slp1": "tatas",
+     "href": "../w/tatas.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "22",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 22.1",
+   "dcs": "dcs:192575",
+   "text": "vidarbhanagarīṃ gatvā damayantyās tadāntike",
+   "tokens": [
+    {
+     "form": "vidarbha",
+     "lemma": "vidarbha",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "name of a country south of the Vindhya hills (now called Berar); a king of Vidarbha; a pa…",
+     "slp1": "vidarBa",
+     "href": "../w/vidar_42a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nagarīm",
+     "lemma": "nagarī",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "a town",
+     "slp1": "nagarI",
+     "href": "../w/nagar_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "gatvā",
+     "lemma": "gam",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to go; to move; to approach; to understand; to reside (as a disease); to elapse (of time)",
+     "slp1": "gam",
+     "href": "../w/gam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damayantyās",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Gen Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tadā",
+     "lemma": "tadā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "at that time; then; in that case (often used redundantly)",
+     "slp1": "tadA",
+     "href": "../w/tad_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "antike",
+     "lemma": "antika",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "vicinity; proximity",
+     "slp1": "antika",
+     "href": "../w/antika.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "22",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 22.2",
+   "dcs": "dcs:192576",
+   "text": "nipetus te garutmantaḥ sā dadarśātha tān khagān",
+   "tokens": [
+    {
+     "form": "nipetus",
+     "lemma": "nipat",
+     "upos": "VERB",
+     "morph": "Plur p3 Past Ind",
+     "gloss": "to fly down; to settle down; to descend on; to alight; to rush upon; to attack; to assail…",
+     "slp1": "nipat",
+     "href": "../w/nipat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "te",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "garutmantaḥ",
+     "lemma": "garutmant",
+     "upos": "NOUN",
+     "morph": "Nom Plur Masc",
+     "gloss": "the bird Garuḍa; a bird (in general)",
+     "slp1": "garutmant",
+     "href": "../w/garutmant.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sā",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Fem",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dadarśa",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "atha",
+     "lemma": "atha",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "an auspicious and inceptive particle (not easily expressed in English); now; then; moreov…",
+     "slp1": "aTa",
+     "href": "../w/a_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tān",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "khagān",
+     "lemma": "khaga",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a bird; name of Garuḍa; any air-moving insect (as a bee); a grasshopper; the sun; a plane…",
+     "slp1": "Kaga",
+     "href": "../w/_4baga.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "23",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 23.1",
+   "dcs": "dcs:192577",
+   "text": "sā tān adbhutarūpān vai dṛṣṭvā sakhīgaṇāvṛtā",
+   "tokens": [
+    {
+     "form": "sā",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Fem",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tān",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "adbhuta",
+     "lemma": "adbhuta",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "extraordinary; supernatural; wonderful; unerforschlich",
+     "slp1": "adButa",
+     "href": "../w/ad_42uta.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpān",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vai",
+     "lemma": "vai",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "a particle of emphasis and affirmation; f￼rwahr",
+     "slp1": "vE",
+     "href": "../w/v_45.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dṛṣṭvā",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sakhī",
+     "lemma": "sakhī",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a female friend or companion; a woman's confidante; a mistress; a woman who shares in or…",
+     "slp1": "saKI",
+     "href": "../w/sa_4b_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "gaṇa",
+     "lemma": "gaṇa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a flock; troop; multitude; number; tribe; series; class (of animate or inanimate beings);…",
+     "slp1": "gaRa",
+     "href": "../w/ga_52a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āvṛtā",
+     "lemma": "āvṛ",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to cover; to hide; to conceal; to surround; to enclose; to shut; to comprehend; to hem in…",
+     "slp1": "Avf",
+     "href": "../w/_41vf.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "23",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 23.2",
+   "dcs": "dcs:192578",
+   "text": "hṛṣṭā grahītuṃ khagamāṃs tvaramāṇopacakrame",
+   "tokens": [
+    {
+     "form": "hṛṣṭā",
+     "lemma": "hṛṣ",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to thrill with rapture; to rejoice; to exult; to be glad or pleased; to become sexually e…",
+     "slp1": "hfz",
+     "href": "../w/hfz.html",
+     "tier": "exact"
+    },
+    {
+     "form": "grahītuṃ",
+     "lemma": "grah",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to seize; to take (by the hand); to grasp; to lay hold of; to arrest; to stop; to catch;…",
+     "slp1": "grah",
+     "href": "../w/grah.html",
+     "tier": "exact"
+    },
+    {
+     "form": "khagamāṃs",
+     "lemma": "khagama",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a bird; name of a Brāhman; an arrow; a god",
+     "slp1": "Kagama",
+     "href": "../w/_4bagama.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tvaramāṇā",
+     "lemma": "tvar",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem Pres",
+     "gloss": "to hurry; to make haste; to move with speed",
+     "slp1": "tvar",
+     "href": "../w/tvar.html",
+     "tier": "exact"
+    },
+    {
+     "form": "upacakrame",
+     "lemma": "upakram",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to go near; to approach; to come to; to rush upon; to attack; to approach with any object…",
+     "slp1": "upakram",
+     "href": "../w/upakram.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "24",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 24.1",
+   "dcs": "dcs:192579",
+   "text": "atha haṃsā visasṛpuḥ sarvataḥ pramadāvane",
+   "tokens": [
+    {
+     "form": "atha",
+     "lemma": "atha",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "an auspicious and inceptive particle (not easily expressed in English); now; then; moreov…",
+     "slp1": "aTa",
+     "href": "../w/a_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsā",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Nom Plur Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "visasṛpuḥ",
+     "lemma": "visṛp",
+     "upos": "VERB",
+     "morph": "Plur p3 Past Ind",
+     "gloss": "to glide; to move along or about; to sneak; to steal; to fly about (as arrows); to be sca…",
+     "slp1": "visfp",
+     "href": "../w/visfp.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarvataḥ",
+     "lemma": "sarvatas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "from all sides; in every direction; everywhere; around (acc.); entirely; completely; thor…",
+     "slp1": "sarvatas",
+     "href": "../w/sarvatas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pramadā",
+     "lemma": "pramadā",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a young and wanton woman; any woman; the sign of the zodiac Virgo; name of 2 kinds of met…",
+     "slp1": "pramadA",
+     "href": "../w/pramad_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vane",
+     "lemma": "vana",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "a forest; wood; grove; thicket; quantity of lotuses or other plants growing in a thick cl…",
+     "slp1": "vana",
+     "href": "../w/vana.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "24",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 24.2",
+   "dcs": "dcs:192580",
+   "text": "ekaikaśas tataḥ kanyās tān haṃsān samupādravan",
+   "tokens": [
+    {
+     "form": "eka",
+     "lemma": "eka",
+     "upos": "NUM",
+     "morph": "Cpd",
+     "gloss": "one; alone; happening only once; single of its kind; excellent; sincere; little; isolated…",
+     "slp1": "eka",
+     "href": "../w/eka.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ekaśas",
+     "lemma": "ekaśas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "one by one; singly",
+     "slp1": "ekaSas",
+     "href": "../w/eka_53as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tataḥ",
+     "lemma": "tatas",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "from that; in consequence of that; for that reason; consequently; then; after that",
+     "slp1": "tatas",
+     "href": "../w/tatas.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kanyās",
+     "lemma": "kanyā",
+     "upos": "NOUN",
+     "morph": "Nom Plur Fem",
+     "gloss": "girl; virgin; daughter; sign of the zodiac Virgo; female of any animal; name of Durgā; na…",
+     "slp1": "kanyA",
+     "href": "../w/kany_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tān",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Plur Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsān",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samupādravan",
+     "lemma": "samupadru",
+     "upos": "VERB",
+     "morph": "Plur p3 Impf Ind",
+     "gloss": "to run together towards; to run up to; to assail; to attack",
+     "slp1": "samupadru",
+     "href": "../w/samupadru.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "25",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 25.1",
+   "dcs": "dcs:192581",
+   "text": "damayantī tu yaṃ haṃsaṃ samupādhāvad antike",
+   "tokens": [
+    {
+     "form": "damayantī",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yaṃ",
+     "lemma": "yad",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "what; which; who",
+     "slp1": "yad",
+     "href": "../w/yad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsaṃ",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samupādhāvad",
+     "lemma": "samupadhāv",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "",
+     "slp1": "samupaDAv",
+     "href": "../w/samupa_44_41v.html",
+     "tier": "exact"
+    },
+    {
+     "form": "antike",
+     "lemma": "antika",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "vicinity; proximity",
+     "slp1": "antika",
+     "href": "../w/antika.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "25",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 25.2",
+   "dcs": "dcs:192582",
+   "text": "sa mānuṣīṃ giraṃ kṛtvā damayantīm athābravīt",
+   "tokens": [
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mānuṣīṃ",
+     "lemma": "mānuṣa",
+     "upos": "ADJ",
+     "morph": "Acc Sing Fem",
+     "gloss": "a man; human being; name of the signs of the zodiac Gemini, Virgo and Libra; people",
+     "slp1": "mAnuza",
+     "href": "../w/m_41nuza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "giraṃ",
+     "lemma": "gir",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "invocation; addressing with praise; praise; verse; song; speaking; language; voice; words…",
+     "slp1": "gir",
+     "href": "../w/gir.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kṛtvā",
+     "lemma": "kṛ",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to make like or similar; to consider equivalent; to reduce anything to; to cause to becom…",
+     "slp1": "kf",
+     "href": "../w/kf.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damayantīm",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "atha",
+     "lemma": "atha",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "an auspicious and inceptive particle (not easily expressed in English); now; then; moreov…",
+     "slp1": "aTa",
+     "href": "../w/a_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "abravīt",
+     "lemma": "brū",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to speak; to say; to tell; to speak about any person or thing (acc. with or without prati…",
+     "slp1": "brU",
+     "href": "../w/br_55.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "26",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 26.1",
+   "dcs": "dcs:192583",
+   "text": "damayanti nalo nāma niṣadheṣu mahīpatiḥ",
+   "tokens": [
+    {
+     "form": "damayanti",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Voc Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalo",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nāma",
+     "lemma": "nāma",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "by name i.e. named; called; indeed; certainly; really; of course; quasi; only in appearan…",
+     "slp1": "nAma",
+     "href": "../w/n_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "niṣadheṣu",
+     "lemma": "niṣadha",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "name of a mountain or chain of mountains (described as lying immediately south of Ilāvṛta…",
+     "slp1": "nizaDa",
+     "href": "../w/niza_44a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mahīpatiḥ",
+     "lemma": "mahīpati",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a king; a kind of big lime",
+     "slp1": "mahIpati",
+     "href": "../w/mah_49pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "26",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 26.2",
+   "dcs": "dcs:192584",
+   "text": "aśvinoḥ sadṛśo rūpe na samās tasya mānuṣāḥ",
+   "tokens": [
+    {
+     "form": "aśvinoḥ",
+     "lemma": "aśvin",
+     "upos": "NOUN",
+     "morph": "Gen Dual Masc",
+     "gloss": "a cavalier; horse-tamer; name of two divinities (who appear in the sky before the dawn in…",
+     "slp1": "aSvin",
+     "href": "../w/a_53vin.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sadṛśo",
+     "lemma": "sadṛśa",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "like; resembling",
+     "slp1": "sadfSa",
+     "href": "../w/sadf_53a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpe",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Loc Sing Neut",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samās",
+     "lemma": "sama",
+     "upos": "PRON",
+     "morph": "Nom Plur Masc",
+     "gloss": "even; flat; level; parallel; same; similar; like; equivalent; fair; constant; ordinary; c…",
+     "slp1": "sama",
+     "href": "../w/sama.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tasya",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Gen Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mānuṣāḥ",
+     "lemma": "mānuṣa",
+     "upos": "NOUN",
+     "morph": "Nom Plur Masc",
+     "gloss": "a man; human being; name of the signs of the zodiac Gemini, Virgo and Libra; people",
+     "slp1": "mAnuza",
+     "href": "../w/m_41nuza.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "27",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 27.1",
+   "dcs": "dcs:192585",
+   "text": "tasya vai yadi bhāryā tvaṃ bhavethā varavarṇini",
+   "tokens": [
+    {
+     "form": "tasya",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Gen Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vai",
+     "lemma": "vai",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "a particle of emphasis and affirmation; f￼rwahr",
+     "slp1": "vE",
+     "href": "../w/v_45.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yadi",
+     "lemma": "yadi",
+     "upos": "SCONJ",
+     "morph": "",
+     "gloss": "in case that; if; whether",
+     "slp1": "yadi",
+     "href": "../w/yadi.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhāryā",
+     "lemma": "bhāryā",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "a wife (or the female of an animal)",
+     "slp1": "BAryA",
+     "href": "../w/_42_41ry_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tvaṃ",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Nom Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhavethā",
+     "lemma": "bhū",
+     "upos": "VERB",
+     "morph": "Sing p2 Pres Opt",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    },
+    {
+     "form": "varavarṇini",
+     "lemma": "varavarṇinī",
+     "upos": "NOUN",
+     "morph": "Voc Sing Fem",
+     "gloss": "any woman; name of Durgā; name of Lskṣmī; name of Sarasvatī; turmeric; lac; a kind of pla…",
+     "slp1": "varavarRinI",
+     "href": "../w/varavar_52in_49.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "27",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 27.2",
+   "dcs": "dcs:192586",
+   "text": "saphalaṃ te bhavej janma rūpaṃ cedaṃ sumadhyame",
+   "tokens": [
+    {
+     "form": "saphalaṃ",
+     "lemma": "saphala",
+     "upos": "ADJ",
+     "morph": "Nom Sing Neut",
+     "gloss": "together with fruits; fruitful; possessing testicles; productive; successful",
+     "slp1": "saPala",
+     "href": "../w/sa_50ala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "te",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Gen Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhavej",
+     "lemma": "bhū",
+     "upos": "VERB",
+     "morph": "Sing p3 Pres Opt",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    },
+    {
+     "form": "janma",
+     "lemma": "janman",
+     "upos": "NOUN",
+     "morph": "Nom Sing Neut",
+     "gloss": "birth; origin; existence; life; nativity; re-birth; birthplace; home; a progenitor; fathe…",
+     "slp1": "janman",
+     "href": "../w/janman.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rūpaṃ",
+     "lemma": "rūpa",
+     "upos": "NOUN",
+     "morph": "Nom Sing Neut",
+     "gloss": "any outward appearance or phenomenon or colour (often pl.); form; shape; phantom shapes;…",
+     "slp1": "rUpa",
+     "href": "../w/r_55pa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "idam",
+     "lemma": "idam",
+     "upos": "PRON",
+     "morph": "Nom Sing Neut",
+     "gloss": "this; (near deictic pronoun in Vedic)",
+     "slp1": "idam",
+     "href": "../w/idam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sumadhyame",
+     "lemma": "sumadhyamā",
+     "upos": "NOUN",
+     "morph": "Voc Sing Fem",
+     "gloss": "a graceful woman",
+     "slp1": "sumaDyamA",
+     "href": "../w/suma_44yam_41.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "28",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 28.1",
+   "dcs": "dcs:192587",
+   "text": "vayaṃ hi devagandharvamanuṣyoragarākṣasān",
+   "tokens": [
+    {
+     "form": "vayaṃ",
+     "lemma": "mad",
+     "upos": "PRON",
+     "morph": "Nom Plur",
+     "gloss": "I; we",
+     "slp1": "mad",
+     "href": "../w/mad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "hi",
+     "lemma": "hi",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "for; because; on account of",
+     "slp1": "hi",
+     "href": "../w/hi.html",
+     "tier": "exact"
+    },
+    {
+     "form": "deva",
+     "lemma": "deva",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a deity; god; (rarely applied to) evil demons; the gods as the heavenly or shining ones;…",
+     "slp1": "deva",
+     "href": "../w/deva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "gandharva",
+     "lemma": "gandharva",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a Gandharva; a singer; the Koel or black cuckoo; a sage; a horse; name of the attendant o…",
+     "slp1": "ganDarva",
+     "href": "../w/gan_44arva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "manuṣya",
+     "lemma": "manuṣya",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a man; human being; a man (as opp. to woman); a husband; a class of deceased ancestors (t…",
+     "slp1": "manuzya",
+     "href": "../w/manuzya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "uraga",
+     "lemma": "uraga",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a serpent; snake; a Nāga (semi-divine serpent usually represented with a human face); nam…",
+     "slp1": "uraga",
+     "href": "../w/uraga.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rākṣasān",
+     "lemma": "rākṣasa",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a Rakṣas; name of the 30th muhūrta; name of an astron. yoga; a kind of soma; [alchemy] a…",
+     "slp1": "rAkzasa",
+     "href": "../w/r_41kzasa.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "28",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 28.2",
+   "dcs": "dcs:192588",
+   "text": "dṛṣṭavanto na cāsmābhir dṛṣṭapūrvas tathāvidhaḥ",
+   "tokens": [
+    {
+     "form": "dṛṣṭavanto",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "Nom Plur Masc",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "na",
+     "lemma": "na",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "not; no; nor; neither; like",
+     "slp1": "na",
+     "href": "../w/na.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "asmābhiḥ",
+     "lemma": "mad",
+     "upos": "PRON",
+     "morph": "Ins Plur",
+     "gloss": "I; we",
+     "slp1": "mad",
+     "href": "../w/mad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dṛṣṭa",
+     "lemma": "dṛś",
+     "upos": "VERB",
+     "morph": "Cpd",
+     "gloss": "to behold; to look at; to regard; to consider; to see; to wait on; to visit; to see with…",
+     "slp1": "dfS",
+     "href": "../w/df_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pūrvaḥ",
+     "lemma": "pūrva",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "being before or in front fore; first; eastern; to the east of (abl.); former; prior; prec…",
+     "slp1": "pUrva",
+     "href": "../w/p_55rva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tathāvidhaḥ",
+     "lemma": "tathāvidha",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "of such a sort or kind; being in such a condition or state",
+     "slp1": "taTAviDa",
+     "href": "../w/ta_54_41vi_44a.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "29",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 29.1",
+   "dcs": "dcs:192589",
+   "text": "tvaṃ cāpi ratnaṃ nārīṇāṃ nareṣu ca nalo varaḥ",
+   "tokens": [
+    {
+     "form": "tvaṃ",
+     "lemma": "tvad",
+     "upos": "PRON",
+     "morph": "Nom Sing",
+     "gloss": "you",
+     "slp1": "tvad",
+     "href": "../w/tvad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "api",
+     "lemma": "api",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "also; moreover; besides; assuredly; surely",
+     "slp1": "api",
+     "href": "../w/api.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ratnaṃ",
+     "lemma": "ratna",
+     "upos": "NOUN",
+     "morph": "Nom Sing Neut",
+     "gloss": "a gift; present; goods; wealth; riches; a jewel; gem; treasure; precious stone; anything…",
+     "slp1": "ratna",
+     "href": "../w/ratna.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nārīṇāṃ",
+     "lemma": "nārī",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a woman; a wife; a female or any object regarded as feminine; sacrifice; name of a daught…",
+     "slp1": "nArI",
+     "href": "../w/n_41r_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nareṣu",
+     "lemma": "nara",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "a man; a male; a person; husband; hero; a man or piece at chess or draughts; the pin or g…",
+     "slp1": "nara",
+     "href": "../w/nara.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalo",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "varaḥ",
+     "lemma": "vara",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "choicest; valuable; precious; best; most excellent or eminent among; royal; princely; bet…",
+     "slp1": "vara",
+     "href": "../w/vara.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "29",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 29.2",
+   "dcs": "dcs:192590",
+   "text": "viśiṣṭāyā viśiṣṭena saṃgamo guṇavān bhavet",
+   "tokens": [
+    {
+     "form": "viśiṣṭāyā",
+     "lemma": "viśiṣ",
+     "upos": "VERB",
+     "morph": "Gen Sing Fem",
+     "gloss": "to distinguish; to make distinct or different; to particularize; to specify; to define; t…",
+     "slp1": "viSiz",
+     "href": "../w/vi_53iz.html",
+     "tier": "exact"
+    },
+    {
+     "form": "viśiṣṭena",
+     "lemma": "viśiṣ",
+     "upos": "VERB",
+     "morph": "Ins Sing Masc",
+     "gloss": "to distinguish; to make distinct or different; to particularize; to specify; to define; t…",
+     "slp1": "viSiz",
+     "href": "../w/vi_53iz.html",
+     "tier": "exact"
+    },
+    {
+     "form": "saṃgamo",
+     "lemma": "saṃgama",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "coming together; meeting (in a friendly or hostile manner); union; intercourse or associa…",
+     "slp1": "saMgama",
+     "href": "../w/sa_4dgama.html",
+     "tier": "exact"
+    },
+    {
+     "form": "guṇavān",
+     "lemma": "guṇavat",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "endowed with the five qualities or attributes of elements; endowed with good qualities or…",
+     "slp1": "guRavat",
+     "href": "../w/gu_52avat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhavet",
+     "lemma": "bhū",
+     "upos": "VERB",
+     "morph": "Sing p3 Pres Opt",
+     "gloss": "Erde; the act of arising; space; world; the earth; name for the number three; ground; soi…",
+     "slp1": "BU",
+     "href": "../w/_42_55.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "3",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 3.1",
+   "dcs": "dcs:192535",
+   "text": "brahmaṇyo vedavic chūro niṣadheṣu mahīpatiḥ",
+   "tokens": [
+    {
+     "form": "brahmaṇyo",
+     "lemma": "brahmaṇya",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "relating to Brahma or Brahmā; devoted to sacred knowledge or friendly to Brāhmans; religi…",
+     "slp1": "brahmaRya",
+     "href": "../w/brahma_52ya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "veda",
+     "lemma": "veda",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "knowledge; true or sacred knowledge or lore; knowledge of ritual; name of certain celebra…",
+     "slp1": "veda",
+     "href": "../w/veda.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vid",
+     "lemma": "vid",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "knowing; understanding; a knower",
+     "slp1": "vid",
+     "href": "../w/vid.html",
+     "tier": "exact"
+    },
+    {
+     "form": "chūro",
+     "lemma": "śūra",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a strong or mighty or valiant man; warrior; champion; hero; one who acts heroically towar…",
+     "slp1": "SUra",
+     "href": "../w/_53_55ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "niṣadheṣu",
+     "lemma": "niṣadha",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "name of a mountain or chain of mountains (described as lying immediately south of Ilāvṛta…",
+     "slp1": "nizaDa",
+     "href": "../w/niza_44a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mahīpatiḥ",
+     "lemma": "mahīpati",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a king; a kind of big lime",
+     "slp1": "mahIpati",
+     "href": "../w/mah_49pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "3",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 3.2",
+   "dcs": "dcs:192536",
+   "text": "akṣapriyaḥ satyavādī mahān akṣauhiṇīpatiḥ",
+   "tokens": [
+    {
+     "form": "akṣa",
+     "lemma": "akṣa",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a die for gambling; a cube; a seed of which rosaries are made; Eleocarpus Ganitrus; a wei…",
+     "slp1": "akza",
+     "href": "../w/akza.html",
+     "tier": "exact"
+    },
+    {
+     "form": "priyaḥ",
+     "lemma": "priya",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "love; kindness; favour; pleasure",
+     "slp1": "priya",
+     "href": "../w/priya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "satya",
+     "lemma": "satya",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "truth; sincerity; vow; dogma; the first of the four yugas",
+     "slp1": "satya",
+     "href": "../w/satya.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vādī",
+     "lemma": "vādin",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "saying; discoursing; speaking; talking; speaking or talking about (often ifc. or sometime…",
+     "slp1": "vAdin",
+     "href": "../w/v_41din.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mahān",
+     "lemma": "mahat",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "great; large; big; huge; ample; extensive; long; abundant; numerous; considerable; import…",
+     "slp1": "mahat",
+     "href": "../w/mahat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "akṣauhiṇī",
+     "lemma": "akṣauhiṇī",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "an army consisting of ten anikinis",
+     "slp1": "akzOhiRI",
+     "href": "../w/akz_4fhi_52_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "patiḥ",
+     "lemma": "pati",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "husband; master; lord; ruler; [medic.] = adhipa; a marman on the top of the head; [gramm.…",
+     "slp1": "pati",
+     "href": "../w/pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "30",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 30.1",
+   "dcs": "dcs:192591",
+   "text": "evam uktā tu haṃsena damayantī viśāṃ pate",
+   "tokens": [
+    {
+     "form": "evam",
+     "lemma": "evam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "thus; in this way; in such a manner; such",
+     "slp1": "evam",
+     "href": "../w/evam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "uktā",
+     "lemma": "vac",
+     "upos": "VERB",
+     "morph": "Nom Sing Fem",
+     "gloss": "to speak; to say; to tell; to declare; to proclaim; to recite; verk￼nden; to speak ill of",
+     "slp1": "vac",
+     "href": "../w/vac.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tu",
+     "lemma": "tu",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "do; now; then; but; and; or; name of the river Śatadru",
+     "slp1": "tu",
+     "href": "../w/tu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsena",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Ins Sing Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damayantī",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Nom Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "viśāṃ",
+     "lemma": "viś",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a settlement; homestead; house; dwelling; a community; tribe; race (also \"subjects\"); the…",
+     "slp1": "viS",
+     "href": "../w/vi_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pate",
+     "lemma": "pati",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "husband; master; lord; ruler; [medic.] = adhipa; a marman on the top of the head; [gramm.…",
+     "slp1": "pati",
+     "href": "../w/pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "30",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 30.2",
+   "dcs": "dcs:192592",
+   "text": "abravīt tatra taṃ haṃsaṃ tam apy evaṃ nalaṃ vada",
+   "tokens": [
+    {
+     "form": "abravīt",
+     "lemma": "brū",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to speak; to say; to tell; to speak about any person or thing (acc. with or without prati…",
+     "slp1": "brU",
+     "href": "../w/br_55.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tatra",
+     "lemma": "tatra",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "in that place; there (in comp.); thither; to that place; in that; therein; in that case;…",
+     "slp1": "tatra",
+     "href": "../w/tatra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "taṃ",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "haṃsaṃ",
+     "lemma": "haṃsa",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a goose; gander; swan; flamingo (or other aquatic bird); the soul or spirit (typified by…",
+     "slp1": "haMsa",
+     "href": "../w/ha_4dsa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "tam",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "apy",
+     "lemma": "api",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "also; moreover; besides; assuredly; surely",
+     "slp1": "api",
+     "href": "../w/api.html",
+     "tier": "exact"
+    },
+    {
+     "form": "evaṃ",
+     "lemma": "evam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "thus; in this way; in such a manner; such",
+     "slp1": "evam",
+     "href": "../w/evam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nalaṃ",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vada",
+     "lemma": "vad",
+     "upos": "VERB",
+     "morph": "Sing p2 Pres Imp",
+     "gloss": "to speak; to say; to tell; to talk with; to address; to recommend; to adjudge; to designa…",
+     "slp1": "vad",
+     "href": "../w/vad.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "31",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 31.1",
+   "dcs": "dcs:192593",
+   "text": "tathety uktvāṇḍajaḥ kanyāṃ vaidarbhasya viśāṃ pate",
+   "tokens": [
+    {
+     "form": "tathā",
+     "lemma": "tathā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "in that manner; so; thus; yes; so be it; so it shall be (particle of assent); so also; in…",
+     "slp1": "taTA",
+     "href": "../w/ta_54_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iti",
+     "lemma": "iti",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "in this manner; thus (in its original signification iti refers to something that has been…",
+     "slp1": "iti",
+     "href": "../w/iti.html",
+     "tier": "exact"
+    },
+    {
+     "form": "uktvā",
+     "lemma": "vac",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to speak; to say; to tell; to declare; to proclaim; to recite; verk￼nden; to speak ill of",
+     "slp1": "vac",
+     "href": "../w/vac.html",
+     "tier": "exact"
+    },
+    {
+     "form": "aṇḍajaḥ",
+     "lemma": "aṇḍaja",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a bird; a fish; a snake; a lizard; name of Brahmā",
+     "slp1": "aRqaja",
+     "href": "../w/a_52qaja.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kanyāṃ",
+     "lemma": "kanyā",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "girl; virgin; daughter; sign of the zodiac Virgo; female of any animal; name of Durgā; na…",
+     "slp1": "kanyA",
+     "href": "../w/kany_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vaidarbhasya",
+     "lemma": "vaidarbha",
+     "upos": "NOUN",
+     "morph": "Gen Sing Masc",
+     "gloss": "a king of the Vidarbhas; a gum-boil",
+     "slp1": "vEdarBa",
+     "href": "../w/v_45dar_42a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "viśāṃ",
+     "lemma": "viś",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a settlement; homestead; house; dwelling; a community; tribe; race (also \"subjects\"); the…",
+     "slp1": "viS",
+     "href": "../w/vi_53.html",
+     "tier": "exact"
+    },
+    {
+     "form": "pate",
+     "lemma": "pati",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "husband; master; lord; ruler; [medic.] = adhipa; a marman on the top of the head; [gramm.…",
+     "slp1": "pati",
+     "href": "../w/pati.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "31",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 31.2",
+   "dcs": "dcs:192594",
+   "text": "punar āgamya niṣadhān nale sarvaṃ nyavedayat",
+   "tokens": [
+    {
+     "form": "punar",
+     "lemma": "punar",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "back; home; in an opposite direction; again and again; repeatedly; further; moreover; bes…",
+     "slp1": "punar",
+     "href": "../w/punar.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āgamya",
+     "lemma": "āgam",
+     "upos": "VERB",
+     "morph": "",
+     "gloss": "to come; to make one's appearance; to come near from (abl.) or to (acc. or loc.); to arri…",
+     "slp1": "Agam",
+     "href": "../w/_41gam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "niṣadhān",
+     "lemma": "niṣadha",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "name of a mountain or chain of mountains (described as lying immediately south of Ilāvṛta…",
+     "slp1": "nizaDa",
+     "href": "../w/niza_44a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nale",
+     "lemma": "nala",
+     "upos": "NOUN",
+     "morph": "Loc Sing Masc",
+     "gloss": "a species of reed; Amphidonax Karka (8-12 feet high); a measure of length; a particular f…",
+     "slp1": "nala",
+     "href": "../w/nala.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarvaṃ",
+     "lemma": "sarva",
+     "upos": "PRON",
+     "morph": "Acc Sing Neut",
+     "gloss": "whole; entire; all; every; of all sorts; manifold; various; different; completely",
+     "slp1": "sarva",
+     "href": "../w/sarva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nyavedayat",
+     "lemma": "niveday",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to offer; to present; to give; to introduce one's self; to signify; to teach; to notify s…",
+     "resolved": false
+    }
+   ]
+  },
+  {
+   "n": "4",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 4.1",
+   "dcs": "dcs:192537",
+   "text": "īpsito varanārīṇām udāraḥ saṃyatendriyaḥ",
+   "tokens": [
+    {
+     "form": "īpsito",
+     "lemma": "īpsita",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "wished; desired",
+     "slp1": "Ipsita",
+     "href": "../w/_49psita.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vara",
+     "lemma": "vara",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "choicest; valuable; precious; best; most excellent or eminent among; royal; princely; bet…",
+     "slp1": "vara",
+     "href": "../w/vara.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nārīṇām",
+     "lemma": "nārī",
+     "upos": "NOUN",
+     "morph": "Gen Plur Fem",
+     "gloss": "a woman; a wife; a female or any object regarded as feminine; sacrifice; name of a daught…",
+     "slp1": "nArI",
+     "href": "../w/n_41r_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "udāraḥ",
+     "lemma": "udāra",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "high; lofty; great; noble; generous; honest; liberal; sincere; right; eloquent; exciting;…",
+     "slp1": "udAra",
+     "href": "../w/ud_41ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "saṃyata",
+     "lemma": "saṃyam",
+     "upos": "VERB",
+     "morph": "Cpd",
+     "gloss": "to hold together; to hold in; to hold fast; to restrain; to curb; to suppress; to control…",
+     "slp1": "saMyam",
+     "href": "../w/sa_4dyam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "indriyaḥ",
+     "lemma": "indriya",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "power; force; the quality which belongs especially to the mighty Indra; exhibition of pow…",
+     "slp1": "indriya",
+     "href": "../w/indriya.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "4",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 4.2",
+   "dcs": "dcs:192538",
+   "text": "rakṣitā dhanvināṃ śreṣṭhaḥ sākṣād iva manuḥ svayam",
+   "tokens": [
+    {
+     "form": "rakṣitā",
+     "lemma": "rakṣitṛ",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "one who guards or protects; a guard; protector; watch; sentinel",
+     "slp1": "rakzitf",
+     "href": "../w/rakzitf.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dhanvināṃ",
+     "lemma": "dhanvin",
+     "upos": "ADJ",
+     "morph": "Gen Plur Masc",
+     "gloss": "armed with a bow; a bow-man; cunning; shrewd",
+     "slp1": "Danvin",
+     "href": "../w/_44anvin.html",
+     "tier": "exact"
+    },
+    {
+     "form": "śreṣṭhaḥ",
+     "lemma": "śreṣṭha",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "most splendid or beautiful; most beautiful of or among",
+     "slp1": "SrezWa",
+     "href": "../w/_53rez_57a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sākṣād",
+     "lemma": "sākṣāt",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "with the eyes; with one's own eyes; before one's eyes; evidently; clearly; openly; manife…",
+     "slp1": "sAkzAt",
+     "href": "../w/s_41kz_41t.html",
+     "tier": "exact"
+    },
+    {
+     "form": "iva",
+     "lemma": "iva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "like; in the same manner as (in this sense = yathā); as it were; as if; in a certain mann…",
+     "slp1": "iva",
+     "href": "../w/iva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "manuḥ",
+     "lemma": "manu",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "man; mankind; the Man par excellence or the representative man and father of the human ra…",
+     "slp1": "manu",
+     "href": "../w/manu.html",
+     "tier": "exact"
+    },
+    {
+     "form": "svayam",
+     "lemma": "svayam",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "self; one's self (applicable to all persons); of or by one's self spontaneously; voluntar…",
+     "slp1": "svayam",
+     "href": "../w/svayam.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "5",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 5.1",
+   "dcs": "dcs:192539",
+   "text": "tathaivāsīd vidarbheṣu bhīmo bhīmaparākramaḥ",
+   "tokens": [
+    {
+     "form": "tathā",
+     "lemma": "tathā",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "in that manner; so; thus; yes; so be it; so it shall be (particle of assent); so also; in…",
+     "slp1": "taTA",
+     "href": "../w/ta_54_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "eva",
+     "lemma": "eva",
+     "upos": "PART",
+     "morph": "",
+     "gloss": "so; just so; exactly so (in the sense of the later evam); indeed; truly; really (often at…",
+     "slp1": "eva",
+     "href": "../w/eva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "āsīt",
+     "lemma": "as",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to be; to live; to exist; to be present; to take place; to happen; to abide; to dwell; to…",
+     "slp1": "as",
+     "href": "../w/as.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vidarbheṣu",
+     "lemma": "vidarbha",
+     "upos": "NOUN",
+     "morph": "Loc Plur Masc",
+     "gloss": "name of a country south of the Vindhya hills (now called Berar); a king of Vidarbha; a pa…",
+     "slp1": "vidarBa",
+     "href": "../w/vidar_42a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhīmo",
+     "lemma": "bhīma",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "Rumex Vesicarius; name of Rudra-Śiva; name of one of the 8 forms of Śiva; name of one of…",
+     "slp1": "BIma",
+     "href": "../w/_42_49ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhīma",
+     "lemma": "bhīma",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "Rumex Vesicarius; name of Rudra-Śiva; name of one of the 8 forms of Śiva; name of one of…",
+     "slp1": "BIma",
+     "href": "../w/_42_49ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "parākramaḥ",
+     "lemma": "parākrama",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "bold advance; attack; heroism; courage; power; strength; energy; exertion; enterprise; go…",
+     "slp1": "parAkrama",
+     "href": "../w/par_41krama.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "5",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 5.2",
+   "dcs": "dcs:192540",
+   "text": "śūraḥ sarvaguṇair yuktaḥ prajākāmaḥ sa cāprajaḥ",
+   "tokens": [
+    {
+     "form": "śūraḥ",
+     "lemma": "śūra",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a strong or mighty or valiant man; warrior; champion; hero; one who acts heroically towar…",
+     "slp1": "SUra",
+     "href": "../w/_53_55ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarva",
+     "lemma": "sarva",
+     "upos": "PRON",
+     "morph": "Cpd",
+     "gloss": "whole; entire; all; every; of all sorts; manifold; various; different; completely",
+     "slp1": "sarva",
+     "href": "../w/sarva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "guṇaiḥ",
+     "lemma": "guṇa",
+     "upos": "NOUN",
+     "morph": "Ins Plur Masc",
+     "gloss": "a single thread or strand of a cord or twine; string or thread; rope; a garland; an auxil…",
+     "slp1": "guRa",
+     "href": "../w/gu_52a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yuktaḥ",
+     "lemma": "yuj",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to yoke or join or fasten or harness (horses or a chariot); to make ready; to prepare; to…",
+     "slp1": "yuj",
+     "href": "../w/yuj.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prajā",
+     "lemma": "prajā",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "procreation; propagation; birth; offspring; children; family; race; posterity; descendant…",
+     "slp1": "prajA",
+     "href": "../w/praj_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kāmaḥ",
+     "lemma": "kāma",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "wish; desire; longing; desire for; longing after; love; affection; object of desire or of…",
+     "slp1": "kAma",
+     "href": "../w/k_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "aprajaḥ",
+     "lemma": "apraja",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "without progeny; childless",
+     "slp1": "apraja",
+     "href": "../w/apraja.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "6",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 6.1",
+   "dcs": "dcs:192541",
+   "text": "sa prajārthe paraṃ yatnam akarot susamāhitaḥ",
+   "tokens": [
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prajā",
+     "lemma": "prajā",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "procreation; propagation; birth; offspring; children; family; race; posterity; descendant…",
+     "slp1": "prajA",
+     "href": "../w/praj_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "arthe",
+     "lemma": "artha",
+     "upos": "NOUN",
+     "morph": "Loc Sing Masc",
+     "gloss": "aim; purpose; cause; motive; reason; advantage; use; utility (generally named with kāma a…",
+     "slp1": "arTa",
+     "href": "../w/ar_54a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "paraṃ",
+     "lemma": "para",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "far; remote; opposite; previous; ancient; following; final; exceeding; better or worse th…",
+     "slp1": "para",
+     "href": "../w/para.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yatnam",
+     "lemma": "yatna",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "activity of will; volition; aspiring after; performance; work; effort; exertion; energy;…",
+     "slp1": "yatna",
+     "href": "../w/yatna.html",
+     "tier": "exact"
+    },
+    {
+     "form": "akarot",
+     "lemma": "kṛ",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to make like or similar; to consider equivalent; to reduce anything to; to cause to becom…",
+     "slp1": "kf",
+     "href": "../w/kf.html",
+     "tier": "exact"
+    },
+    {
+     "form": "su",
+     "lemma": "su",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "[ibc.] good-; [ibc.] very; quite; fein",
+     "slp1": "su",
+     "href": "../w/su.html",
+     "tier": "exact"
+    },
+    {
+     "form": "samāhitaḥ",
+     "lemma": "samāhita",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "put or held together joined assembled; combined; united; joined or furnished or provided…",
+     "slp1": "samAhita",
+     "href": "../w/sam_41hita.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "6",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 6.2",
+   "dcs": "dcs:192542",
+   "text": "tam abhyagacchad brahmarṣir damano nāma bhārata",
+   "tokens": [
+    {
+     "form": "tam",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "abhyagacchad",
+     "lemma": "abhigam",
+     "upos": "VERB",
+     "morph": "Sing p3 Impf Ind",
+     "gloss": "to go near to; to approach; to follow; to cohabit; to undertake; to obtain",
+     "slp1": "aBigam",
+     "href": "../w/a_42igam.html",
+     "tier": "exact"
+    },
+    {
+     "form": "brahma",
+     "lemma": "brahman",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "one who Prays; a devot or religious man; a Brāhman who is a knower of Vedic texts or spel…",
+     "slp1": "brahman",
+     "href": "../w/brahman.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ṛṣiḥ",
+     "lemma": "ṛṣi",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "a singer of sacred hymns; an inspired poet or sage; any person who alone or with others i…",
+     "slp1": "fzi",
+     "href": "../w/fzi.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damano",
+     "lemma": "damana",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of a Samādhi; name of Yāmāyana; name of a son of Vasudeva by Rohiṇi; name of a Brahm…",
+     "slp1": "damana",
+     "href": "../w/damana.html",
+     "tier": "exact"
+    },
+    {
+     "form": "nāma",
+     "lemma": "nāma",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "by name i.e. named; called; indeed; certainly; really; of course; quasi; only in appearan…",
+     "slp1": "nAma",
+     "href": "../w/n_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhārata",
+     "lemma": "bhārata",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "actor; fire; a descendant of Bharata; name of the author of RV, V. 27; name of the sun sh…",
+     "slp1": "BArata",
+     "href": "../w/_42_41rata.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "7",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 7.1",
+   "dcs": "dcs:192543",
+   "text": "taṃ sa bhīmaḥ prajākāmas toṣayāmāsa dharmavit",
+   "tokens": [
+    {
+     "form": "taṃ",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Acc Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sa",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Nom Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhīmaḥ",
+     "lemma": "bhīma",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "Rumex Vesicarius; name of Rudra-Śiva; name of one of the 8 forms of Śiva; name of one of…",
+     "slp1": "BIma",
+     "href": "../w/_42_49ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prajā",
+     "lemma": "prajā",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "procreation; propagation; birth; offspring; children; family; race; posterity; descendant…",
+     "slp1": "prajA",
+     "href": "../w/praj_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kāmaḥ",
+     "lemma": "kāma",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "wish; desire; longing; desire for; longing after; love; affection; object of desire or of…",
+     "slp1": "kAma",
+     "href": "../w/k_41ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "toṣayāmāsa",
+     "lemma": "toṣay",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to satisfy; to please; to gratify; beschwichtigen",
+     "resolved": false
+    },
+    {
+     "form": "dharma",
+     "lemma": "dharma",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "that which is established or firm; steadfast decree; statute; ordinance; law; usage; prac…",
+     "slp1": "Darma",
+     "href": "../w/_44arma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "vid",
+     "lemma": "vid",
+     "upos": "ADJ",
+     "morph": "Nom Sing Masc",
+     "gloss": "knowing; understanding; a knower",
+     "slp1": "vid",
+     "href": "../w/vid.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "7",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 7.2",
+   "dcs": "dcs:192544",
+   "text": "mahiṣyā saha rājendra satkāreṇa suvarcasam",
+   "tokens": [
+    {
+     "form": "mahiṣyā",
+     "lemma": "mahiṣī",
+     "upos": "NOUN",
+     "morph": "Ins Sing Fem",
+     "gloss": "a female buffalo; buffalo-cow; any woman of high rank; the first or consecrated wife of a…",
+     "slp1": "mahizI",
+     "href": "../w/mahiz_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "saha",
+     "lemma": "saha",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "together with; along with; with",
+     "slp1": "saha",
+     "href": "../w/saha.html",
+     "tier": "exact"
+    },
+    {
+     "form": "rāja",
+     "lemma": "rājan",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "a king; sovereign; prince; chief (often applied to gods); a man of the royal tribe or the…",
+     "slp1": "rAjan",
+     "href": "../w/r_41jan.html",
+     "tier": "exact"
+    },
+    {
+     "form": "indraiḥ",
+     "lemma": "indra",
+     "upos": "NOUN",
+     "morph": "Voc Sing Masc",
+     "gloss": "the god of the atmosphere and sky; the Indian Jupiter Pluvius or lord of rain (who in Ved…",
+     "slp1": "indra",
+     "href": "../w/indra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "satkāreṇa",
+     "lemma": "satkāra",
+     "upos": "NOUN",
+     "morph": "Ins Sing Masc",
+     "gloss": "kind treatment; honour; favour; reverence; hospitable treatment; hospitality; feasting; f…",
+     "slp1": "satkAra",
+     "href": "../w/satk_41ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "su",
+     "lemma": "su",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "[ibc.] good-; [ibc.] very; quite; fein",
+     "slp1": "su",
+     "href": "../w/su.html",
+     "tier": "exact"
+    },
+    {
+     "form": "varcasam",
+     "lemma": "varcas",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "vital power; vigour; energy; activity; (esp.) the illuminating power of fire or the sun;…",
+     "slp1": "varcas",
+     "href": "../w/varcas.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "8",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 8.1",
+   "dcs": "dcs:192545",
+   "text": "tasmai prasanno damanaḥ sabhāryāya varaṃ dadau",
+   "tokens": [
+    {
+     "form": "tasmai",
+     "lemma": "tad",
+     "upos": "PRON",
+     "morph": "Dat Sing Masc",
+     "gloss": "this; gleicher",
+     "slp1": "tad",
+     "href": "../w/tad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "prasanno",
+     "lemma": "prasad",
+     "upos": "VERB",
+     "morph": "Nom Sing Masc",
+     "gloss": "to fall into the power of (acc.); to settle down; to grow clear and bright; to become pla…",
+     "slp1": "prasad",
+     "href": "../w/prasad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damanaḥ",
+     "lemma": "damana",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "name of a Samādhi; name of Yāmāyana; name of a son of Vasudeva by Rohiṇi; name of a Brahm…",
+     "slp1": "damana",
+     "href": "../w/damana.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sa",
+     "lemma": "sa",
+     "upos": "ADV",
+     "morph": "",
+     "gloss": "(ibc.) with",
+     "slp1": "sa",
+     "href": "../w/sa.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhāryāya",
+     "lemma": "bhāryā",
+     "upos": "NOUN",
+     "morph": "Dat Sing Masc",
+     "gloss": "a wife (or the female of an animal)",
+     "slp1": "BAryA",
+     "href": "../w/_42_41ry_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "varaṃ",
+     "lemma": "vara",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "choicest; valuable; precious; best; most excellent or eminent among; royal; princely; bet…",
+     "slp1": "vara",
+     "href": "../w/vara.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dadau",
+     "lemma": "dā",
+     "upos": "VERB",
+     "morph": "Sing p3 Past Ind",
+     "gloss": "to give; to offer to; to yield; to give (a daughter) in marriage; to pay; to give up; to…",
+     "slp1": "dA",
+     "href": "../w/d_41.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "8",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 8.2",
+   "dcs": "dcs:192546",
+   "text": "kanyāratnaṃ kumārāṃś ca trīn udārān mahāyaśāḥ",
+   "tokens": [
+    {
+     "form": "kanyā",
+     "lemma": "kanyā",
+     "upos": "NOUN",
+     "morph": "Cpd",
+     "gloss": "girl; virgin; daughter; sign of the zodiac Virgo; female of any animal; name of Durgā; na…",
+     "slp1": "kanyA",
+     "href": "../w/kany_41.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ratnam",
+     "lemma": "ratna",
+     "upos": "NOUN",
+     "morph": "Acc Sing Neut",
+     "gloss": "a gift; present; goods; wealth; riches; a jewel; gem; treasure; precious stone; anything…",
+     "slp1": "ratna",
+     "href": "../w/ratna.html",
+     "tier": "exact"
+    },
+    {
+     "form": "kumārāṃś",
+     "lemma": "kumāra",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "a child; boy; youth; son; a prince; heir-apparent associated in the kingdom with the reig…",
+     "slp1": "kumAra",
+     "href": "../w/kum_41ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "trīn",
+     "lemma": "tri",
+     "upos": "NUM",
+     "morph": "Acc Plur Masc",
+     "gloss": "three",
+     "slp1": "tri",
+     "href": "../w/tri.html",
+     "tier": "exact"
+    },
+    {
+     "form": "udārān",
+     "lemma": "udāra",
+     "upos": "ADJ",
+     "morph": "Acc Plur Masc",
+     "gloss": "high; lofty; great; noble; generous; honest; liberal; sincere; right; eloquent; exciting;…",
+     "slp1": "udAra",
+     "href": "../w/ud_41ra.html",
+     "tier": "exact"
+    },
+    {
+     "form": "mahā",
+     "lemma": "mahat",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "great; large; big; huge; ample; extensive; long; abundant; numerous; considerable; import…",
+     "slp1": "mahat",
+     "href": "../w/mahat.html",
+     "tier": "exact"
+    },
+    {
+     "form": "yaśāḥ",
+     "lemma": "yaśas",
+     "upos": "NOUN",
+     "morph": "Nom Sing Masc",
+     "gloss": "beautiful appearance; beauty; splendour; worth; honour; glory; fame; renown; an object of…",
+     "slp1": "yaSas",
+     "href": "../w/ya_53as.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "9",
+   "sub": "1",
+   "locus": "Mahābhārata, MBh, 3, 50, 9.1",
+   "dcs": "dcs:192547",
+   "text": "damayantīṃ damaṃ dāntaṃ damanaṃ ca suvarcasam",
+   "tokens": [
+    {
+     "form": "damayantīṃ",
+     "lemma": "damayantī",
+     "upos": "NOUN",
+     "morph": "Acc Sing Fem",
+     "gloss": "name of Nala's wife (daughter of Bhīma king of Vidarbha); a kind of jasmine",
+     "slp1": "damayantI",
+     "href": "../w/damayant_49.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damaṃ",
+     "lemma": "dama",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "self-restraint; selfcontrol; self-command; taming; punishment; fine; name of a brother of…",
+     "slp1": "dama",
+     "href": "../w/dama.html",
+     "tier": "exact"
+    },
+    {
+     "form": "dāntaṃ",
+     "lemma": "dānta",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "a tamed ox or steer; a donor; giver; Ficus Indica or = damanaka; name of a son of Bhīma;…",
+     "slp1": "dAnta",
+     "href": "../w/d_41nta.html",
+     "tier": "exact"
+    },
+    {
+     "form": "damanaṃ",
+     "lemma": "damana",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "name of a Samādhi; name of Yāmāyana; name of a son of Vasudeva by Rohiṇi; name of a Brahm…",
+     "slp1": "damana",
+     "href": "../w/damana.html",
+     "tier": "exact"
+    },
+    {
+     "form": "ca",
+     "lemma": "ca",
+     "upos": "CONJ",
+     "morph": "",
+     "gloss": "and; both; also; moreover; as well as",
+     "slp1": "ca",
+     "href": "../w/ca.html",
+     "tier": "exact"
+    },
+    {
+     "form": "suvarcasam",
+     "lemma": "suvarcas",
+     "upos": "NOUN",
+     "morph": "Acc Sing Masc",
+     "gloss": "name of a son of Garuḍa; name of one of Skanda's attendants; name of a son of Dhṛtarāṣṭra…",
+     "slp1": "suvarcas",
+     "href": "../w/suvarcas.html",
+     "tier": "exact"
+    }
+   ]
+  },
+  {
+   "n": "9",
+   "sub": "2",
+   "locus": "Mahābhārata, MBh, 3, 50, 9.2",
+   "dcs": "dcs:192548",
+   "text": "upapannān guṇaiḥ sarvair bhīmān bhīmaparākramān",
+   "tokens": [
+    {
+     "form": "upapannān",
+     "lemma": "upapad",
+     "upos": "VERB",
+     "morph": "Acc Plur Masc",
+     "gloss": "to go towards or against; to attack; to approach; to come to; to arrive at; to enter; to…",
+     "slp1": "upapad",
+     "href": "../w/upapad.html",
+     "tier": "exact"
+    },
+    {
+     "form": "guṇaiḥ",
+     "lemma": "guṇa",
+     "upos": "NOUN",
+     "morph": "Ins Plur Masc",
+     "gloss": "a single thread or strand of a cord or twine; string or thread; rope; a garland; an auxil…",
+     "slp1": "guRa",
+     "href": "../w/gu_52a.html",
+     "tier": "exact"
+    },
+    {
+     "form": "sarvair",
+     "lemma": "sarva",
+     "upos": "PRON",
+     "morph": "Ins Plur Masc",
+     "gloss": "whole; entire; all; every; of all sorts; manifold; various; different; completely",
+     "slp1": "sarva",
+     "href": "../w/sarva.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhīmān",
+     "lemma": "bhīma",
+     "upos": "ADJ",
+     "morph": "Acc Plur Masc",
+     "gloss": "Rumex Vesicarius; name of Rudra-Śiva; name of one of the 8 forms of Śiva; name of one of…",
+     "slp1": "BIma",
+     "href": "../w/_42_49ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "bhīma",
+     "lemma": "bhīma",
+     "upos": "ADJ",
+     "morph": "Cpd",
+     "gloss": "Rumex Vesicarius; name of Rudra-Śiva; name of one of the 8 forms of Śiva; name of one of…",
+     "slp1": "BIma",
+     "href": "../w/_42_49ma.html",
+     "tier": "exact"
+    },
+    {
+     "form": "parākramān",
+     "lemma": "parākrama",
+     "upos": "NOUN",
+     "morph": "Acc Plur Masc",
+     "gloss": "bold advance; attack; heroism; courage; power; strength; energy; exertion; enterprise; go…",
+     "slp1": "parAkrama",
+     "href": "../w/par_41krama.html",
+     "tier": "exact"
+    }
+   ]
+  }
+ ]
+}
