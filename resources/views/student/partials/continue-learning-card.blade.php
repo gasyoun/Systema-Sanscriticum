@@ -30,23 +30,25 @@
             </div>
 
             @php($cta = $action['cta'] ?? null)
+            {{-- data-track-*: baseline-телеметрия H962 (cabinet.continue.click, спека §4) --}}
+            @php($trackKind = $action['kind'] ?? 'lesson')
             @if($cta)
                 <div class="shrink-0 w-full lg:w-auto">
                     @if(($cta['method'] ?? 'GET') === 'POST')
                         <form method="POST" action="{{ $cta['url'] }}">
                             @csrf
-                            <button type="submit" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                            <button type="submit" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
                                 <span>{{ $cta['label'] }}</span>
                                 <i class="fas fa-arrow-right text-xs opacity-80"></i>
                             </button>
                         </form>
                     @elseif(($cta['method'] ?? 'GET') === 'TAB')
-                        <button type="button" @click="activeTab = 'debts'" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                        <button type="button" @click="activeTab = 'debts'" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
                             <span>{{ $cta['label'] }}</span>
                             <i class="fas fa-arrow-right text-xs opacity-80"></i>
                         </button>
                     @else
-                        <a href="{{ $cta['url'] }}" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                        <a href="{{ $cta['url'] }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
                             <span>{{ $cta['label'] }}</span>
                             <i class="fas fa-arrow-right text-xs opacity-80"></i>
                         </a>

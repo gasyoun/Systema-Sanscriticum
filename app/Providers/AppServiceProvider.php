@@ -14,6 +14,7 @@ use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
 use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentObserver;
+use App\Observers\PaymentTelemetryObserver;
 use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
 use App\Services\Lecture\LectureAiClient;
@@ -82,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Аудит финансовых операций (кто/что/когда правил платёж).
         Payment::observe(PaymentAuditObserver::class);
+
+        // Baseline-телеметрия ремейка кабинета (H962): access.renewal.complete.
+        Payment::observe(PaymentTelemetryObserver::class);
 
         // Аудит CRM-воронки (кто/что/когда правил заявку).
         Lead::observe(LeadAuditObserver::class);

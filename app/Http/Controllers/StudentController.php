@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\TrackLessonViewJob;
+use App\Models\ActivityEvent;
 use App\Models\Announcement;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
@@ -13,6 +14,7 @@ use App\Models\PranaPerk;
 use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\SubscriberMagnet;
+use App\Services\Activity\CabinetTelemetry;
 use App\Services\CertificateService;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
@@ -223,6 +225,15 @@ class StudentController extends Controller
         $subscriberMagnets = (config('features.newsletter_subscribe') && $user->isNewsletterSubscriber())
             ? SubscriberMagnet::active()->get()
             : collect();
+
+        // Baseline-телеметрия ремейка (H962, спека §4). mode: 'recovery' появится
+        // вместе с recovery-резолвером гибрида (R29.2) — до него режим один.
+        app(CabinetTelemetry::class)->emit(
+            user: $user,
+            event: ActivityEvent::CABINET_HOME_VIEW,
+            data: ['mode' => 'normal', 'debts' => $debts->count()],
+            request: request(),
+        );
 
         return view('student.dashboard', compact(
             'courses',
@@ -586,6 +597,15 @@ class StudentController extends Controller
 
             // Начисление за урок (идемпотентно по lesson_id).
             $prana->award($user, 'lesson_complete', $lesson);
+
+            // Baseline-телеметрия ремейка (H962, спека §4): ручное «усвоено».
+            // Только при НОВОМ завершении — повторный клик события не пишет.
+            app(CabinetTelemetry::class)->emit(
+                user: $user,
+                event: ActivityEvent::LESSON_MARK_MASTERED,
+                data: ['course_id' => $course->id, 'lesson_id' => $lesson->id],
+                request: request(),
+            );
 
             // Если этот урок закрыл весь курс — начисляем бонус за курс
             // (тоже идемпотентно по course_id). Гейтим по членству в группах

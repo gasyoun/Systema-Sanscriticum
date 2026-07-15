@@ -12,7 +12,9 @@
             <ul class="mt-3 space-y-2">
                 @foreach ($homeworkAlerts as $alert)
                     <li>
+                        {{-- data-track-*: baseline-телеметрия H962 (спека §4) --}}
                         <a href="{{ route('student.lesson', [$alert->course->slug, $alert->lesson_id]) }}"
+                           data-track-event="cabinet.homework.rework.click"
                            class="flex items-center justify-between gap-3 rounded-xl bg-white border border-red-100 px-4 py-2.5 hover:border-red-300 transition-colors group">
                             <span class="min-w-0">
                                 <span class="block text-sm font-bold text-gray-800 truncate">{{ $alert->lesson->title }}</span>
