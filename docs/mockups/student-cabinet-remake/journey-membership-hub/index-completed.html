@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой путь · станция пройдена — мокап «Путь» / Journey hub (H958)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index-completed.html" aria-current="page">Мой путь</a>
+    <a href="index-completed.html">Записи</a>
+    <a href="index-completed.html">Платежи</a>
+    <a href="index-completed.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Мой путь</h1>
+  <p class="muted small">состояние «I ступень пройдена» — следующая станция загорается
+  (ключевой флоу направления D)</p>
+
+  <div class="kicker">Маршрут</div>
+
+  <ol class="path">
+    <li class="done">
+      <article class="station done">
+        <p class="row spread" style="margin:0">
+          <strong>Деванагари за четыре недели</strong>
+          <span class="badge good">пройдено · 3 мая 2026</span>
+        </p>
+      </article>
+    </li>
+
+    <li class="done">
+      <article class="station done">
+        <p class="row spread" style="margin:0">
+          <strong>Грамматика санскрита — I ступень</strong>
+          <span class="badge good">пройдено · 12 декабря 2026</span>
+        </p>
+        <p class="muted small" style="margin:.2rem 0 0">16 из 16 уроков, все домашние приняты ·
+        сертификат №ГР1-2026-112 · <a href="index-completed.html">скачать PDF</a> ·
+        записи занятий I-3 — навсегда в <a href="index-completed.html">«Записях»</a></p>
+      </article>
+    </li>
+
+    <!-- THE moment of direction D: the next station lights up with the ladder offer -->
+    <li class="lit">
+      <article class="station lit">
+        <p class="row spread" style="margin:0 0 .2rem">
+          <strong>Грамматика санскрита — II ступень</strong>
+          <span class="badge gold">открыта для вас</span>
+        </p>
+        <p class="muted small" style="margin:0 0 .5rem">поток стартует 12 января · ваша группа
+        I-3 переходит вместе · 16 уроков · записи навсегда · рассрочка и льготная цена ·
+        этот пункт загорелся, потому что I ступень пройдена</p>
+        <ul class="milestones" aria-label="Вехи">
+          <li>старт потока — <strong>12 января</strong></li>
+          <li>ранняя запись без доплат — до старта, <strong>без дедлайн-таймера</strong></li>
+        </ul>
+        <p class="row" style="margin:.7rem 0 0">
+          <a class="btn" href="index-completed.html">Продолжить путь · II ступень</a>
+          <a class="small" href="index-completed.html">подумать — станция подождёт</a>
+        </p>
+      </article>
+    </li>
+
+    <li>
+      <article class="station locked-station">
+        <p class="row spread" style="margin:0">
+          <strong>Чтение текстов: Гита и Упанишады</strong>
+          <span class="badge neutral">через одну станцию</span>
+        </p>
+      </article>
+    </li>
+  </ol>
+
+  <!-- membership continuity is STRONGEST exactly here: the between-stations gap -->
+  <div class="kicker">До старта II ступени — почти месяц</div>
+  <section class="membership" aria-label="Членство Самскрте+">
+    <p class="row spread" style="margin:0 0 .3rem">
+      <span class="badge gold">скоро · осень 2026</span>
+      <span class="price">2000 ₽/мес</span>
+    </p>
+    <h2 style="margin:.2rem 0 .3rem">Не терять форму между станциями</h2>
+    <p class="muted small" style="margin:0 0 .6rem">Вся библиотека записей на время паузы:
+    повторить блоки I ступени, посмотреть «Йога-сутры» целиком. Отменяется в один клик.</p>
+    <p class="row" style="margin:0">
+      <a class="btn secondary" href="index-completed.html">Подробнее о членстве</a>
+    </p>
+  </section>
+
+  <p class="muted small">Обычное состояние пути — на странице <a href="index.html">«Мой путь»</a>.</p>
+
+  <footer class="colophon">
+    Мокап H958 · направление D · момент продажи лестницы: станция загорается ТОЛЬКО после
+    полного прохождения (R2), без таймеров и дедлайнов («станция подождёт») · членство —
+    непрерывность между платными станциями · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index-completed.html" aria-current="page"><span class="glyph">🛤</span>Путь</a>
+  <a href="index-completed.html"><span class="glyph">▶</span>Записи</a>
+  <a href="index-completed.html"><span class="glyph">?</span>Помощь</a>
+  <a href="index-completed.html"><span class="glyph">👤</span>Профиль</a>
+</nav>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой путь — мокап «Путь» / Journey hub (H958)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html" aria-current="page">Мой путь</a>
+    <a href="index.html">Записи</a>
+    <a href="index.html">Платежи</a>
+    <a href="index.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Мой путь</h1>
+  <p class="muted small">письмо → грамматика → тексты · ваш маршрут в санскрите, станциями</p>
+
+  <div class="kicker">Маршрут</div>
+
+  <ol class="path">
+    <!-- station 1: completed -->
+    <li class="done">
+      <article class="station done">
+        <p class="row spread" style="margin:0">
+          <strong>Деванагари за четыре недели</strong>
+          <span class="badge good">пройдено · 3 мая 2026</span>
+        </p>
+        <p class="muted small" style="margin:.2rem 0 0">сертификат №ДН-2026-041 ·
+        <a href="index.html">скачать PDF</a> · <a href="index.html">пересмотреть уроки</a></p>
+      </article>
+    </li>
+
+    <!-- station 2: current -->
+    <li class="current">
+      <article class="station current">
+        <p class="row spread" style="margin:0 0 .2rem">
+          <strong><a href="station.html" style="color:inherit;text-decoration:none">Грамматика санскрита — I ступень</a></strong>
+          <span class="badge live">вы здесь · блок 2 из 4</span>
+        </p>
+        <div class="progressbar" style="max-width:260px;margin:.4rem 0" role="img" aria-label="6 из 16 уроков"><span style="width:37%"></span></div>
+        <ul class="milestones" aria-label="Вехи станции">
+          <li>аттестация блока 2 — <strong>28 июля</strong></li>
+          <li>живое сегодня — <strong>19:00 МСК</strong></li>
+          <li>домашнее — <strong>на доработке</strong></li>
+        </ul>
+        <p class="row" style="margin:.7rem 0 0">
+          <a class="btn" href="station.html">Продолжить · Урок 7</a>
+          <a class="small" href="station.html">станция целиком →</a>
+        </p>
+      </article>
+    </li>
+
+    <!-- station 3: next, NOT lit (current unfinished) — honest, no pressure -->
+    <li>
+      <article class="station locked-station">
+        <p class="row spread" style="margin:0">
+          <strong>Грамматика санскрита — II ступень</strong>
+          <span class="badge neutral">следующая станция</span>
+        </p>
+        <p class="muted small" style="margin:.2rem 0 0">откроется после I ступени — примерно
+        октябрь 2026 · без дедлайна: станция подождёт вас</p>
+      </article>
+    </li>
+
+    <!-- station 4: horizon -->
+    <li>
+      <article class="station locked-station">
+        <p class="row spread" style="margin:0">
+          <strong>Чтение текстов: Гита и Упанишады</strong>
+          <span class="badge neutral">горизонт пути</span>
+        </p>
+        <p class="muted small" style="margin:.2rem 0 0">вершина лестницы — чтение в подлиннике</p>
+      </article>
+    </li>
+  </ol>
+
+  <p class="muted small">Состояние «станция пройдена» — на странице
+  <a href="index-completed.html">«путь после завершения I ступени»</a> (там загорается
+  следующая станция).</p>
+
+  <!-- membership as CONTINUITY between paid stations -->
+  <div class="kicker">Между станциями</div>
+  <section class="membership" aria-label="Членство Самскрте+">
+    <p class="row spread" style="margin:0 0 .3rem">
+      <span class="badge gold">скоро · осень 2026</span>
+      <span class="price">2000 ₽/мес <span class="muted small" style="font-family:system-ui,sans-serif;font-weight:400">или 20 000 ₽/год</span></span>
+    </p>
+    <h2 style="margin:.2rem 0 .3rem">Членство «Самскрте+» — не сходить с пути между курсами</h2>
+    <p class="muted small" style="margin:0 0 .6rem">Пока следующая станция не началась: вся
+    библиотека записей, свой темп. Живые потоки и проверка домашних остаются курсами.</p>
+    <p class="row" style="margin:0">
+      <a class="btn" href="index.html">Хочу в первый поток</a>
+      <span class="muted small">запуск осенью 2026 — оставьте заявку</span>
+    </p>
+  </section>
+
+  <!-- off-path: never shame the zig-zag student -->
+  <div class="kicker">Вне пути — и это нормально</div>
+  <article class="card offpath">
+    <p class="row spread" style="margin:0">
+      <strong>Йога-сутры Патанджали</strong>
+      <span class="badge rec">записи · в своём темпе</span>
+    </p>
+    <p class="muted small" style="margin:.2rem 0 0">14 из 24 лекций · ваш собственный маршрут
+    ценен сам по себе — путь никуда не денется · <a href="index.html">смотреть лекцию 15</a></p>
+  </article>
+  <article class="card offpath">
+    <p class="row spread" style="margin:0">
+      <strong>Бхагавад-гита: введение</strong>
+      <span class="badge danger">доступ истёк 28 июня</span>
+    </p>
+    <p class="muted small" style="margin:.2rem 0 0">9 из 12 пройдено — прогресс сохранён ·
+    <a href="index.html">продлить доступ</a> · <a href="index.html">почему закрыто?</a></p>
+  </article>
+
+  <footer class="colophon">
+    Мокап H958 · направление D «Путь» (Journey &amp; membership hub) · станция не «горит»,
+    пока текущая не пройдена — путь не давит (риск направления снят текстом «станция подождёт
+    вас») · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html" aria-current="page"><span class="glyph">🛤</span>Путь</a>
+  <a href="index.html"><span class="glyph">▶</span>Записи</a>
+  <a href="index.html"><span class="glyph">?</span>Помощь</a>
+  <a href="index.html"><span class="glyph">👤</span>Профиль</a>
+</nav>
+
+</body>
+</html>
