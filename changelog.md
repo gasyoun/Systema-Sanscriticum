@@ -11,6 +11,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Hybrid production spec for the cabinet remake (H961, ruling R29).** M.G. closed the
+  four-direction exploration: production = hybrid — B «Курс как дом» chassis + A's
+  «Сегодня»-band-with-homework and recovery mode + C's ownership shelves, progress rail and
+  ownership-expansion offer + D's path-in-«Прогресс», completion-lighting master offer rule
+  and вехи. Binding spec with page deltas vs the B v2 reference, unified offer precedence,
+  engineering bill, instrumentation-first event schema (R20 gate) and the phased sequence:
+  [docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
+  (+ sibling metadoc). Phase 0 (instrumentation baseline) queued as H962.
+
 ## [1.10.0] - 2026-07-15
 
 ### Added
