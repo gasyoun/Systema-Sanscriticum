@@ -11,6 +11,27 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H962: cabinet remake Phase 0 — instrumentation-first baseline (R20 gate).**
+  The current (pre-hybrid) student cabinet now emits the event vocabulary of
+  [`docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
+  §4 through the EXISTING `activity_events`/`ActivityTracker` pipeline (no new
+  storage): server-side `cabinet.home.view`, `lesson.mark.mastered`,
+  `access.renewal.complete` (new `PaymentTelemetryObserver`, self-service paid
+  transition only — money code untouched); client-side via first-party
+  `POST /dvaram/telemetry` (whitelist `ActivityEvent::CLIENT_CABINET_EVENTS`,
+  inline JS partial, declarative `data-track-*` blade attributes) for
+  `cabinet.continue.click`, `course.tab.view` (surface=dashboard),
+  `cabinet.homework.rework.click`, `offer.impression`/`offer.click`
+  (kind=next-block, locked lessons on the course page) and
+  `access.renewal.start` (debt CTAs). `lesson.view.heartbeat` and
+  `cabinet.live.zoom.click` are NOT double-written — the readout command
+  **`php artisan cabinet:baseline`** aggregates them from their existing tables
+  (`lesson_views`, `schedule_join_clicks`) under the §4 names and honestly
+  lists the §4 events that have no current surface. No third-party trackers;
+  no UX change. Baseline must run ≥2 weeks before the hybrid ships (R20).
+  (Fable 5 `claude-fable-5`, [H962](https://github.com/gasyoun/Uprava/blob/main/handoffs/H962-Sonnet_Systema-Sanscriticum_student-cabinet-remake-instrumentation-phase_15.07.26.md))
+
 ## [1.13.0] - 2026-07-15
 
 ### Added
