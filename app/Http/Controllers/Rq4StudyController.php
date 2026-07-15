@@ -32,10 +32,7 @@ class Rq4StudyController extends Controller
         abort_if(! config('features.rq4_study', false), 404);
     }
 
-    /**
-     * DRAFT consent text (protocol Sec6.4) — MG to review/revise before this
-     * feature is enabled in production. Not finalised.
-     */
+    /** Consent text (protocol Sec6.4) — approved by MG 15-07-2026. */
     private const CONSENT_TEXT = <<<'TEXT'
         Это исследование — часть работы Общества ревнителей санскрита над тем, как лучше учить санскриту. Вам будет показан один из двух вариантов введения в тему рядов/типов корней, затем короткий тест (несколько вопросов), и ещё раз — через 4 недели, без дополнительных материалов между тестами. Участие добровольное, результаты используются обезличенно (для анализа, не для оценки успеваемости). В любой момент можно выйти без объяснения причин.
         TEXT;
