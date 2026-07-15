@@ -44,6 +44,7 @@ Second round (14-07-2026, after reviewing mockup #1, [Systema PR #514](https://g
 | R24 | Membership card | **Полноценная карточка с ценой** (2000 ₽/мес · 20 000 ₽/год) + состав + честное «скоро» | цена публикуется по прямому рулингу (альтернатива «без цены» была явно предложена и отклонена) |
 | R25 | Fidelity | **Лёгкий JS**: рабочие табы (hash-адресация), переключатель темы (localStorage), сворачиваемые блоки | по-прежнему без внешних запросов, console-clean |
 | R26 | Mockup #3 (ruled 15-07-2026, after PR #516 merged + v1.7.0) | **Направление A «Сегодня»** (Today-first coach) | построен на визуальной системе B v2, чтобы сравнение шло по архитектуре, не по стилю; [H956](https://github.com/gasyoun/Uprava/blob/main/handoffs/H956-Fable_Systema-Sanscriticum_student-cabinet-mockup3-today-first-coach_15.07.26.md) |
+| R27 | Mockup #4 (ruled 15-07-2026, after PR #518 merged + v1.8.0) | **Направление C «Библиотека»** (Learning library) | та же общая визуальная система; полки владения, рельса прогресса (Khan), членство как карточка уровня полки; [H957](https://github.com/gasyoun/Uprava/blob/main/handoffs/H957-Fable_Systema-Sanscriticum_student-cabinet-mockup4-learning-library_15.07.26.md) |
 
 Offer guardrails (handoff-mandated, constant across directions): no dark patterns; no
 irrelevant shop carousel; at most one primary contextual offer per state; paid access/support

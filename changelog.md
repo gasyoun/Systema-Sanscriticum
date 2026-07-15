@@ -11,6 +11,22 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Student-cabinet mockup #4 — direction C «Библиотека» / Learning library (H957).** Per M.G.
+  ruling R27 (15-07-2026): the cabinet as a personal library of владения — five shelves
+  (Идут сейчас / Мои записи / Истёкшие-с-продлением / Завершённые / Материалы), expiry
+  ribbons, progress-as-navigation rail (Khan pattern) on the subject page, an
+  ownership-expansion offer after progress, and the membership card as a native shelf-level
+  slot. 3 pages on the shared design system; browser-verified (console clean, no 390px page
+  overflow — shelf scrollers are intentional), 6 screenshots
+  ([docs/mockups/student-cabinet-remake/learning-library/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/learning-library)).
+  Non-destructive; winner still an M.G. `@DECIDE`.
+
+### Fixed
+- **Mobile full-page screenshots of mockups #2/#3 regenerated:** the fixed bottom bar was
+  stitched mid-page by the capture method; it now renders at the page end (screenshots only,
+  no mockup-code change).
+
 ## [1.8.0] - 2026-07-15
 
 ### Added

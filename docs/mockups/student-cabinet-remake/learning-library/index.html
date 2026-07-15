@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Моя библиотека — мокап «Библиотека» / Learning library (H957)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html" aria-current="page">Библиотека</a>
+    <a href="schedule.html">Расписание</a>
+    <a href="index.html">Платежи</a>
+    <a href="index.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Моя библиотека</h1>
+  <p class="muted small">всё, чем вы владеете — курсы, записи, материалы; полками, как дома</p>
+
+  <!-- shelf 1: live now — ONE shelf among several (the direction's honest trade-off vs R6) -->
+  <div class="kicker">Идут сейчас</div>
+  <section class="shelf" aria-label="Идут сейчас">
+    <div class="shelf-track">
+      <article class="owned-card livec">
+        <span class="ribbon good">оплачено до 30.09</span>
+        <h3><a href="item.html" style="color:inherit;text-decoration:none">Грамматика санскрита — I ступень</a></h3>
+        <p class="muted small" style="margin:0">живой поток · группа I-3 · блок 2 из 4</p>
+        <div class="progressbar" role="img" aria-label="6 из 16"><span style="width:37%"></span></div>
+        <div class="spacer"></div>
+        <p class="row" style="margin:0">
+          <a class="btn secondary" href="item.html">Урок 7 · продолжить</a>
+        </p>
+        <p class="muted small" style="margin:0"><span class="badge live">живое сегодня, 19:00</span></p>
+      </article>
+    </div>
+  </section>
+
+  <!-- shelf 2: owned recordings — the heart of direction C -->
+  <div class="kicker">Мои записи</div>
+  <section class="shelf" aria-label="Мои записи">
+    <div class="shelf-track">
+      <article class="owned-card">
+        <span class="ribbon good">бессрочно</span>
+        <h3><a href="item.html" style="color:inherit;text-decoration:none">Йога-сутры Патанджали</a></h3>
+        <p class="muted small" style="margin:0">24 лекции · в своём темпе</p>
+        <div class="progressbar" role="img" aria-label="14 из 24"><span style="width:58%"></span></div>
+        <div class="spacer"></div>
+        <p style="margin:0"><a class="btn secondary" href="item.html">Лекция 15</a></p>
+      </article>
+      <article class="owned-card">
+        <span class="ribbon good">бессрочно</span>
+        <h3>Записи занятий I-3</h3>
+        <p class="muted small" style="margin:0">записи вашего живого потока · пополняется после занятий</p>
+        <div class="spacer"></div>
+        <p style="margin:0"><a class="btn quiet" href="item.html">Урок 7 от 7 июля</a></p>
+      </article>
+    </div>
+  </section>
+
+  <!-- shelf 3: expired WITH renewal — R4 made structural -->
+  <div class="kicker">Истёкшие — можно продлить</div>
+  <section class="shelf" aria-label="Истёкшие">
+    <div class="shelf-track">
+      <article class="owned-card expired">
+        <span class="ribbon danger">истёк 28 июня</span>
+        <h3>Бхагавад-гита: введение</h3>
+        <p class="muted small" style="margin:0">9 из 12 пройдено · конспекты и прогресс сохранены —
+        после продления продолжите с лекции 10</p>
+        <div class="spacer"></div>
+        <p class="row" style="margin:0">
+          <a class="btn quiet" href="index.html">Продлить доступ</a>
+          <a class="small" href="index.html">почему закрыто?</a>
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- shelf 4: completed -->
+  <div class="kicker">Завершённые</div>
+  <section class="shelf" aria-label="Завершённые">
+    <div class="shelf-track">
+      <article class="owned-card">
+        <span class="ribbon good">сертификат</span>
+        <h3>Деванагари за четыре недели</h3>
+        <p class="muted small" style="margin:0">пройден 3 мая 2026 · сертификат №ДН-2026-041</p>
+        <div class="spacer"></div>
+        <p class="row" style="margin:0">
+          <a class="btn quiet" href="index.html">Скачать PDF</a>
+          <a class="small" href="index.html">пересмотреть уроки</a>
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- membership: shelf-level standing card — R8 fits natively here -->
+  <div class="kicker">Членство «Самскрте+»</div>
+  <section class="membership" aria-label="Членство Самскрте+">
+    <p class="row spread" style="margin:0 0 .3rem">
+      <span class="badge gold">скоро · осень 2026</span>
+      <span class="price">2000 ₽/мес <span class="muted small" style="font-family:system-ui,sans-serif;font-weight:400">или 20 000 ₽/год</span></span>
+    </p>
+    <h2 style="margin:.2rem 0 .3rem">Вся полка записей — по подписке</h2>
+    <p class="muted small" style="margin:0 0 .6rem">Все записанные курсы и лекции, пока действует
+    членство; свой темп; живые потоки и проверка домашних остаются курсами.</p>
+    <p class="row" style="margin:0">
+      <a class="btn" href="index.html">Хочу в первый поток</a>
+      <span class="muted small">запуск осенью 2026 — оставьте заявку</span>
+    </p>
+  </section>
+
+  <div class="kicker">Материалы и инструменты</div>
+  <nav class="tools-row" aria-label="Материалы и инструменты">
+    <a href="index.html">Таблица глагольных классов (PDF)</a>
+    <a href="index.html">Конспекты уроков 5–7 (PDF)</a>
+    <a href="index.html">Словари</a>
+    <a href="index.html">Карточки для повторения</a>
+  </nav>
+
+  <footer class="colophon">
+    Мокап H957 · направление C «Библиотека» (Learning library) · владение полками:
+    живое — одна полка из пяти (осознанная жертва против R6) · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html" aria-current="page"><span class="glyph">📚</span>Библиотека</a>
+  <a href="schedule.html"><span class="glyph">🗓</span>Расписание</a>
+  <a href="index.html"><span class="glyph">?</span>Помощь</a>
+  <a href="index.html"><span class="glyph">👤</span>Профиль</a>
+</nav>
+
+</body>
+</html>
