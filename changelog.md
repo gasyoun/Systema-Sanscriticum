@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Student-cabinet mockup #5 — direction D «Путь» / Journey & membership hub (H958).** Per
+  M.G. ruling R28 (15-07-2026), completing the four-direction set: the cabinet renders the
+  school's ladder (письмо → грамматика → тексты) as a station map — done/current/next/horizon
+  nodes, milestones as learning-contour landmarks (never payment deadlines), the next station
+  «загорается» ONLY after full completion of the current one (no timers, «станция подождёт»),
+  membership as path-continuity between paid stations, and an «Вне пути — и это нормально»
+  shelf so the zig-zag student is never shamed. 3 pages (incl. the completion state with the
+  lit ladder offer) on the shared design system; browser-verified, 6 screenshots
+  ([docs/mockups/student-cabinet-remake/journey-membership-hub/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/journey-membership-hub)).
+  Non-destructive; the production-direction pick is now the only remaining M.G. `@DECIDE`.
+
 ## [1.11.0] - 2026-07-15
 
 ### Added
