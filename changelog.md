@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-15
+
 ### Added
 - **Hybrid production spec for the cabinet remake (H961, ruling R29).** M.G. closed the
   four-direction exploration: production = hybrid — B «Курс как дом» chassis + A's
