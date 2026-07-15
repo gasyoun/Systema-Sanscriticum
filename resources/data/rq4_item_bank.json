@@ -1,0 +1,265 @@
+{
+  "method": "Roots drawn from Приложение 1 (talmud_appendix1.json), restricted to the on-ramp's 4 taught rows (A1/I1/U1/R1), excluding widget_roots.json's worked examples, requiring complete ryad+tip+set tags and no homonym ambiguity. Frequency-sorted (kosha lemma_frequency.tsv rank_all) within each row; the 3 sets partition that ranking so no item repeats across sets.",
+  "on_ramp_rows": [
+    "A₁",
+    "I₁",
+    "R₁",
+    "U₁"
+  ],
+  "items_per_set": 8,
+  "candidate_pool_size": 307,
+  "shortfall_by_row": {
+    "A₁": 0,
+    "U₁": 0,
+    "I₁": 0,
+    "R₁": 0
+  },
+  "sets": {
+    "pre_test": [
+      {
+        "root": "yat",
+        "slp1": "yat",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "veṭ",
+        "set_code": "v2",
+        "whitney_ref": "yat",
+        "rank_all": 94
+      },
+      {
+        "root": "vat",
+        "slp1": "vat",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "vat",
+        "rank_all": 122
+      },
+      {
+        "root": "diś",
+        "slp1": "diS",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "diś",
+        "rank_all": 244
+      },
+      {
+        "root": "cit",
+        "slp1": "cit",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v4",
+        "whitney_ref": "cit",
+        "rank_all": 554
+      },
+      {
+        "root": "mṛd",
+        "slp1": "mfd",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "mṛd, mrad",
+        "rank_all": 435
+      },
+      {
+        "root": "ṛc",
+        "slp1": "fc",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "arc, ṛc",
+        "rank_all": 1317
+      },
+      {
+        "root": "tu",
+        "slp1": "tu",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "tu",
+        "rank_all": 10
+      },
+      {
+        "root": "u",
+        "slp1": "u",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v1",
+        "whitney_ref": "u",
+        "rank_all": 477
+      }
+    ],
+    "post_test": [
+      {
+        "root": "pac",
+        "slp1": "pac",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "pac",
+        "rank_all": 360
+      },
+      {
+        "root": "vadh",
+        "slp1": "vaD",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "vadh, badh",
+        "rank_all": 779
+      },
+      {
+        "root": "lip",
+        "slp1": "lip",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "lip, limp",
+        "rank_all": 981
+      },
+      {
+        "root": "svid",
+        "slp1": "svid",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "svid",
+        "rank_all": 1191
+      },
+      {
+        "root": "tṛp",
+        "slp1": "tfp",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v1",
+        "whitney_ref": "tṛp",
+        "rank_all": 1417
+      },
+      {
+        "root": "vṛṣ",
+        "slp1": "vfz",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v1",
+        "whitney_ref": "vṛṣ",
+        "rank_all": 1685
+      },
+      {
+        "root": "mud",
+        "slp1": "mud",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "mud",
+        "rank_all": 824
+      },
+      {
+        "root": "śuc",
+        "slp1": "Suc",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v1",
+        "whitney_ref": "śuc",
+        "rank_all": 882
+      }
+    ],
+    "retention_test": [
+      {
+        "root": "paṭh",
+        "slp1": "paW",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "paṭh",
+        "rank_all": 1288
+      },
+      {
+        "root": "sah",
+        "slp1": "sah",
+        "ryad": "A₁",
+        "tip": "II",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "sah",
+        "rank_all": 1303
+      },
+      {
+        "root": "likh",
+        "slp1": "liK",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "seṭ",
+        "set_code": "s",
+        "whitney_ref": "likh",
+        "rank_all": 1563
+      },
+      {
+        "root": "sic",
+        "slp1": "sic",
+        "ryad": "I₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "sic",
+        "rank_all": 1563
+      },
+      {
+        "root": "nṛt",
+        "slp1": "nft",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v1",
+        "whitney_ref": "nṛt",
+        "rank_all": 1985
+      },
+      {
+        "root": "tṛṣ",
+        "slp1": "tfz",
+        "ryad": "R₁",
+        "tip": "I",
+        "set": "veṭ",
+        "set_code": "v2",
+        "whitney_ref": "tṛṣ",
+        "rank_all": 2131
+      },
+      {
+        "root": "ruj",
+        "slp1": "ruj",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "ruj",
+        "rank_all": 968
+      },
+      {
+        "root": "nud",
+        "slp1": "nud",
+        "ryad": "U₁",
+        "tip": "I",
+        "set": "aniṭ",
+        "set_code": "a",
+        "whitney_ref": "nud",
+        "rank_all": 994
+      }
+    ]
+  }
+}

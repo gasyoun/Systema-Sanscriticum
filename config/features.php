@@ -143,6 +143,19 @@ return [
     'kosha_reader' => (bool) env('KOSHA_READER', false),
 
     /*
+     | RQ4 user study (H987, SanskritGrammar docs/RQ4_EVALUATION_PROTOCOL_2026.md):
+     | on-ramp-first vs Талмуд-first learning-gain/retention study. Когда ВКЛ,
+     | /rq4-study открывает согласие+анкету → распределение по группам
+     | (стратифицированная минимизация по уровню подготовки) → диагностика
+     | (ВЕНДОРНЫЙ фид resources/data/rq4_item_bank.json, kosha lemma_frequency-
+     | ранжированные корни, H984) → +4 недели напоминание через существующую
+     | ScheduledReminder-инфраструктуру. Текст согласия — черновик MG на ревью
+     | (протокол §6.4 открыт). ВЫКЛ по умолчанию — маршрут отвечает 404, никто
+     | не может записаться, пока флаг не включен человеком.
+     */
+    'rq4_study' => (bool) env('RQ4_STUDY', false),
+
+    /*
      | Подписка на рассылку (H324): GitHub-стиль инлайн-бокс «Подписаться на
      | рассылку». Не-студент вводит ТОЛЬКО email → find-or-create облегчённого
      | кабинетного User (без пароля), письмо с одноразовой magic-ссылкой в личный
