@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расписание — мокап «Библиотека» / Learning library (H957)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Библиотека</a>
+    <a href="schedule.html" aria-current="page">Расписание</a>
+    <a href="index.html">Платежи</a>
+    <a href="index.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Расписание</h1>
+  <p class="muted">Живые занятия ваших потоков. В «Библиотеке» живой курс — одна из полок;
+  здесь — его пульс.</p>
+
+  <div class="kicker">Эта неделя</div>
+
+  <section class="cal-day">
+    <h3>Сегодня · вторник, 14 июля</h3>
+    <article class="cal-item">
+      <div><span class="time">19:00</span><br><span class="tz">17:00 Лондон · 21:30 Дели</span></div>
+      <div>
+        <strong>Урок 8. Имперфект</strong> <span class="badge live">живое</span><br>
+        <span class="muted small">Грамматика санскрита — I ступень · группа I-3 · 90 мин</span>
+      </div>
+      <a class="btn" href="schedule.html">Zoom — за 10 минут</a>
+    </article>
+  </section>
+
+  <section class="cal-day">
+    <h3>Четверг, 16 июля</h3>
+    <article class="cal-item">
+      <div><span class="time">19:00</span><br><span class="tz">17:00 Лондон · 21:30 Дели</span></div>
+      <div>
+        <strong>Разбор домашних · уроки 5–7</strong> <span class="badge live">живое</span><br>
+        <span class="muted small">группа I-3 · 60 мин · приходить с вопросами</span>
+      </div>
+      <a class="btn quiet" href="schedule.html">Напомнить</a>
+    </article>
+  </section>
+
+  <div class="card">
+    <p class="muted small" style="margin:0">Пропустили занятие? Запись ложится на полку
+    «<a href="index.html">Мои записи</a>» в течение суток — догонять не нужно.
+    Подписка на календарь: <a href="schedule.html">iCal</a>.</p>
+  </div>
+
+  <footer class="colophon">
+    Мокап H957 · направление C · расписание — сервисная страница при библиотеке; слабое место
+    направления (ритм живого потока не ведёт кабинет) показано честно · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">📚</span>Библиотека</a>
+  <a href="schedule.html" aria-current="page"><span class="glyph">🗓</span>Расписание</a>
+  <a href="index.html"><span class="glyph">?</span>Помощь</a>
+  <a href="index.html"><span class="glyph">👤</span>Профиль</a>
+</nav>
+
+</body>
+</html>
