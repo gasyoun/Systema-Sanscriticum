@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-07-15
+
 ### Added
 - **H965: kosha last-mile pipeline, Hop C difficulty-score advisory consumption.**
   `/reading/kosha-demo` (same route/flag as H959's Hop A) now also reads the
