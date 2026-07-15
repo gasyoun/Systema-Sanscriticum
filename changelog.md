@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-07-15
+
 ### Added
 - **H962: cabinet remake Phase 0 — instrumentation-first baseline (R20 gate).**
   The current (pre-hybrid) student cabinet now emits the event vocabulary of
