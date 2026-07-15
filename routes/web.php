@@ -27,6 +27,7 @@ use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PublicChatController;
+use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
@@ -213,6 +214,13 @@ Route::prefix('slovar')->name('slovar.')->group(function () {
         ->where('slug', '[A-Za-z0-9\-]+')
         ->name('show');
 });
+
+// ═══════════════════════════════════════════════════════════════
+// ЧТЕНИЕ (kosha last-mile pipeline, Hop A — H959). За фича-флагом
+// features.kosha_reader, ВЫКЛ по умолчанию (404 пока не включен).
+// ═══════════════════════════════════════════════════════════════
+Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
+    ->name('reading.kosha-demo');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {

@@ -132,6 +132,17 @@ return [
     'kosha_srs' => (bool) env('KOSHA_SRS', false),
 
     /*
+     | Reader-as-a-service demo (H959, last-mile pipeline Hop A). Когда ВКЛ,
+     | /reading/kosha-demo рендерит ВЕНДОРНЫЙ статический фид
+     | resources/data/kosha_reading_pack_nala_1.json (kosha's dcs-reading-pack-nala-1,
+     | наши собственные производные данные — НЕ живая зависимость от kosha) —
+     | текст построчно, каждое слово раскрывается (native <details>) с леммой,
+     | морфологией и глоссой. ВЫКЛ по умолчанию — маршрут отвечает 404, ровно
+     | как /slovar до включения. Тот же паттерн, что и slovar_enrichment/kosha_srs.
+     */
+    'kosha_reader' => (bool) env('KOSHA_READER', false),
+
+    /*
      | Подписка на рассылку (H324): GitHub-стиль инлайн-бокс «Подписаться на
      | рассылку». Не-студент вводит ТОЛЬКО email → find-or-create облегчённого
      | кабинетного User (без пароля), письмо с одноразовой magic-ссылкой в личный
