@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сегодня · план дня — мокап «Сегодня» / Today-first coach (H956)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html" aria-current="page">Сегодня</a>
+    <a href="courses.html">Мои курсы</a>
+    <a href="index.html">Расписание</a>
+    <a href="courses.html">Записи</a>
+    <a href="index.html">Платежи</a>
+    <a href="index.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Сегодня</h1>
+  <p class="muted small">вторник, 14 июля · Москва (UTC+3) · план на ваш вечер — примерно 40 минут</p>
+
+  <div class="kicker">План дня</div>
+
+  <ol class="plan">
+    <!-- 1: continue = the spine, always first unless recovery (R5) -->
+    <li>
+      <h3>Досмотреть Урок 7 · Третий класс глаголов</h3>
+      <p class="plan-meta">Грамматика санскрита — I ступень · осталось ~25 минут · вы на 12-й минуте</p>
+      <div class="progressbar" style="max-width:240px;margin:.5rem 0 0" role="img" aria-label="64 процента просмотрено"><span style="width:64%"></span></div>
+      <p class="plan-cta"><a class="btn" href="lesson.html">Продолжить</a></p>
+    </li>
+
+    <!-- 2: due homework (returned -> «доработать») -->
+    <li>
+      <h3>Доработать домашнее к Уроку 7</h3>
+      <p class="plan-meta">куратор Анастасия вернула 11 июля · «проверьте форму 3 л. мн. ч. от dhā» · ~10 минут</p>
+      <p class="plan-cta"><a class="btn secondary" href="lesson.html">К заданию</a></p>
+    </li>
+
+    <!-- 3: nearest live (LiveChip as plan item) -->
+    <li class="live-item">
+      <h3>Живое занятие: Урок 8 · Имперфект</h3>
+      <p class="plan-meta"><span class="badge live">сегодня, 19:00 МСК</span> · группа I-3 · 17:00 Лондон · 21:30 Дели ·
+      ссылка Zoom появится здесь за 10 минут</p>
+      <p class="plan-cta"><a class="btn secondary" href="index.html">Напомнить за 30 минут</a></p>
+    </li>
+
+    <!-- 4: onboarding checklist as a plan item group (R12) -->
+    <li>
+      <h3>Первые шаги: 2 из 4</h3>
+      <details class="foldline" data-fold="a-first-steps" style="margin:.5rem 0 0;border:none;background:transparent">
+        <summary style="padding:.2rem 0;min-height:auto">осталось: Telegram-уведомления и iCal</summary>
+        <div class="fold-body" style="border:none;padding:.4rem 0 0">
+          <ol>
+            <li class="done">Заполнить профиль</li>
+            <li class="done">Открыть первый урок</li>
+            <li>Подключить Telegram-уведомления</li>
+            <li>Добавить расписание в календарь (iCal)</li>
+          </ol>
+        </div>
+      </details>
+    </li>
+
+    <!-- 5: the ONE offer, present ONLY because a progress event fired (R2) -->
+    <li class="offer-item">
+      <h3>Блок 2 почти пройден — открыть Блок 3 без паузы?</h3>
+      <p class="plan-meta">этот пункт появился, потому что вы прошли 6 из 8 уроков блока ·
+      записи остаются навсегда · рассрочка и льготная цена</p>
+      <p class="plan-cta row">
+        <a class="btn" href="index.html">Открыть Блок 3</a>
+        <a class="small" href="index.html">напомнить после Урока 8</a>
+      </p>
+    </li>
+  </ol>
+
+  <!-- transparency: the answer to direction A's «opaque authority» risk -->
+  <details class="foldline" data-fold="a-why-plan">
+    <summary>Почему такой план?</summary>
+    <div class="fold-body">
+      <p class="muted small" style="margin:0">
+        Порядок простой и всегда одинаковый: 1) незаконченный урок, 2) домашние на доработке,
+        3) сегодняшние живые занятия, 4) первые шаги, 5) один следующий шаг по курсу — и только
+        после реального прогресса. Никакой магии: план можно игнорировать и ходить через
+        <a href="courses.html">«Мои курсы»</a>.
+      </p>
+    </div>
+  </details>
+
+  <div class="kicker">Вне плана</div>
+  <p class="muted small">Курсы целиком — в <a href="courses.html">«Мои курсы»</a> (там же истёкший
+  доступ к «Бхагавад-гите» с продлением). Инструменты: <a href="index.html">словари</a> ·
+  <a href="index.html">карточки</a> · <a href="index.html">прана</a>.</p>
+
+  <footer class="colophon">
+    Мокап H956 · направление A «Сегодня» (Today-first coach) · состояние: вечер, есть незаконченный
+    урок + возвращённое домашнее + живое сегодня + прогресс-событие для оффера ·
+    другое состояние: <a href="index-debt.html">проблема доступа (recovery)</a> · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html" aria-current="page"><span class="glyph">☀</span>Сегодня</a>
+  <a href="courses.html"><span class="glyph">📚</span>Курсы</a>
+  <a href="index.html"><span class="glyph">🗓</span>Расписание</a>
+  <a href="index.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>
