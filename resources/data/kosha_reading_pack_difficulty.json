@@ -1,0 +1,81 @@
+{
+ "weights": {
+  "vocab": 0.4,
+  "sandhi": 0.2,
+  "morphology": 0.25,
+  "compound": 0.15
+ },
+ "weights_normalised": {
+  "vocab": 0.4,
+  "sandhi": 0.2,
+  "morphology": 0.25,
+  "compound": 0.15
+ },
+ "packs": [
+  {
+   "slug": "nala-3",
+   "title": "Nala 3 — Nalopākhyāna (Mahābhārata 3.52)",
+   "difficulty": 0.3182,
+   "vocab": 0.497,
+   "sandhi": 0.188,
+   "morphology": 0.2845,
+   "compound": 0.0712,
+   "content_tokens": 255.0,
+   "tokens": 351,
+   "sentences": 51,
+   "order": 1
+  },
+  {
+   "slug": "nala-1",
+   "title": "Nala 1 — Nalopākhyāna (Mahābhārata 3.50)",
+   "difficulty": 0.3195,
+   "vocab": 0.511,
+   "sandhi": 0.1526,
+   "morphology": 0.2728,
+   "compound": 0.1093,
+   "content_tokens": 356.0,
+   "tokens": 439,
+   "sentences": 65,
+   "order": 2
+  },
+  {
+   "slug": "hitopadesa-0",
+   "title": "Hitopadeśa — Prastāvikā (opening)",
+   "difficulty": 0.3281,
+   "vocab": 0.5118,
+   "sandhi": 0.1844,
+   "morphology": 0.2652,
+   "compound": 0.1344,
+   "content_tokens": 716.0,
+   "tokens": 900,
+   "sentences": 125,
+   "order": 3
+  },
+  {
+   "slug": "nala-2",
+   "title": "Nala 2 — Nalopākhyāna (Mahābhārata 3.51)",
+   "difficulty": 0.3308,
+   "vocab": 0.5163,
+   "sandhi": 0.1837,
+   "morphology": 0.2796,
+   "compound": 0.1173,
+   "content_tokens": 317.0,
+   "tokens": 392,
+   "sentences": 61,
+   "order": 4
+  },
+  {
+   "slug": "kiratarjuniya-1",
+   "title": "Kirātārjunīya 1 (Bhāravi)",
+   "difficulty": 0.3891,
+   "vocab": 0.6205,
+   "sandhi": 0.2169,
+   "morphology": 0.2804,
+   "compound": 0.1826,
+   "content_tokens": 729.0,
+   "tokens": 876,
+   "sentences": 92,
+   "order": 5
+  }
+ ]
+}

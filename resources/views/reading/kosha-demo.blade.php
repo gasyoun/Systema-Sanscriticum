@@ -19,6 +19,28 @@
         </p>
     </header>
 
+    {{-- ═════ Сложность (H965, Hop C — справочные данные, не влияют на порядок курса) ═════ --}}
+    @if($difficulty)
+        <div class="max-w-3xl mx-auto mb-8">
+            <section class="bg-[#161b28] border border-gray-700/60 rounded-2xl p-6">
+                <div class="flex items-baseline justify-between gap-4 mb-3">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-gray-500">Сложность текста</h2>
+                    <span class="text-xs text-gray-500">№{{ $difficulty['order'] }} из {{ count($rankedPacks) }} оцененных — от простого к сложному</span>
+                </div>
+                <div class="text-2xl font-extrabold text-[#E85C24]">{{ number_format($difficulty['difficulty'], 3) }}</div>
+                <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-gray-400">
+                    <div>лексика <b class="text-gray-200">{{ number_format($difficulty['vocab'], 2) }}</b></div>
+                    <div>сандхи <b class="text-gray-200">{{ number_format($difficulty['sandhi'], 2) }}</b></div>
+                    <div>морфология <b class="text-gray-200">{{ number_format($difficulty['morphology'], 2) }}</b></div>
+                    <div>сложные слова <b class="text-gray-200">{{ number_format($difficulty['compound'], 2) }}</b></div>
+                </div>
+                <p class="mt-3 text-xs text-gray-500">
+                    Оценка kosha (H949): взвешенная сумма по четырем корпусным осям — справочно, порядок курса не меняет.
+                </p>
+            </section>
+        </div>
+    @endif
+
     <div class="space-y-6 max-w-3xl mx-auto">
         @foreach($pack['sentences'] as $sentence)
             <article class="bg-[#161b28] border border-gray-700/60 rounded-2xl p-6">
@@ -44,8 +66,31 @@
         @endforeach
     </div>
 
+    @if(!empty($rankedPacks))
+        <section class="max-w-3xl mx-auto mt-14">
+            <h2 class="text-sm font-black uppercase tracking-widest text-gray-500 mb-4">Градуированное чтение — от простого к сложному</h2>
+            <p class="text-xs text-gray-500 mb-3">
+                Порядок kosha (H949), только справочно — только текст выше подключен к чтению с разбором.
+            </p>
+            <ol class="space-y-1.5">
+                @foreach($rankedPacks as $row)
+                    <li class="flex items-baseline justify-between gap-4 px-3 py-2 rounded-lg {{ ($row['slug'] ?? null) === ($pack['slug'] ?? null) ? 'bg-[#161b28] border border-[#E85C24]/40' : 'bg-[#12151f]' }}">
+                        <span class="text-gray-300 text-sm">
+                            <span class="text-gray-600 mr-2">{{ $row['order'] }}.</span>{{ $row['title'] }}
+                            @if(($row['slug'] ?? null) === ($pack['slug'] ?? null))
+                                <span class="text-[#E85C24] text-xs ml-1">(эта страница)</span>
+                            @endif
+                        </span>
+                        <span class="text-gray-500 text-xs shrink-0">{{ number_format($row['difficulty'], 3) }}</span>
+                    </li>
+                @endforeach
+            </ol>
+        </section>
+    @endif
+
     <div class="max-w-3xl mx-auto mt-14 pt-8 border-t border-gray-800 text-sm text-gray-500">
         Текст и разбор: <a href="https://www.sanskrit-linguistics.org/dcs/" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">Digital Corpus of Sanskrit</a> (CC BY 4.0), через
-        <a href="https://github.com/gasyoun/kosha" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">kosha</a>.
+        <a href="https://github.com/gasyoun/kosha" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">kosha</a>. Оценка сложности —
+        <a href="https://github.com/gasyoun/kosha/blob/main/data/difficulty/METHODS.md" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">метод kosha (H949)</a>.
     </div>
 @endsection
