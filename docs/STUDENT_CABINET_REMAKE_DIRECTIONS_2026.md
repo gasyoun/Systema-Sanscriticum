@@ -1,6 +1,6 @@
 # Student cabinet remake — M.G. rulings and four architecture directions (H822)
 
-_Created: 12-07-2026 · Last updated: 12-07-2026_
+_Created: 12-07-2026 · Last updated: 14-07-2026_
 
 Phase 3–4 of [H822](https://github.com/gasyoun/Uprava/blob/main/handoffs/H822-Fable_Systema-Sanscriticum_student-cabinet-custdev-ux-remake_12.07.26.md).
 Authored by Fable 5 (`claude-fable-5`) after a 20-question / 5-round decision interview with M.G.
@@ -33,6 +33,16 @@ Every direction below honors all of these; they are settled, not open.
 | R18 | First mockup | **Course workspace** | not the winner — the first exploration |
 | R19 | Support scope | **Полный пакет**: пикер тем + web-FAQ + «Почему закрыто?» | adopts audit D flows A+B+C |
 | R20 | Rollout | **Большой релиз после утверждения** | diverges from my staged-canary recommendation; accepted with one engineering consequence — instrumentation must ship BEFORE the switch, or the release is unmeasurable (ledger F12). Recorded, not re-litigated. |
+
+Second round (14-07-2026, after reviewing mockup #1, [Systema PR #514](https://github.com/gasyoun/Systema-Sanscriticum/pull/514) merged):
+
+| # | Question | M.G. ruling | Notes |
+|---|---|---|---|
+| R21 | Mockup #2 | **Итерация направления B** («Курс как дом») — не новое направление | A/C/D остаются документированными, без мокапов до следующего рулинга |
+| R22 | Iteration scope | **Добить недостающие слои**: библиотека записей + слот членства, календарь, прогресс+сертификат, сообщения | v2 = 8 страниц против 4 в v1 |
+| R23 | Critique of v1 | Менять **всё три**: визуальный тон/плотность · структуру страниц · тексты и названия | v2 — издательский академизм, композитная лента «Сегодня», навигация по работам |
+| R24 | Membership card | **Полноценная карточка с ценой** (2000 ₽/мес · 20 000 ₽/год) + состав + честное «скоро» | цена публикуется по прямому рулингу (альтернатива «без цены» была явно предложена и отклонена) |
+| R25 | Fidelity | **Лёгкий JS**: рабочие табы (hash-адресация), переключатель темы (localStorage), сворачиваемые блоки | по-прежнему без внешних запросов, console-clean |
 
 Offer guardrails (handoff-mandated, constant across directions): no dark patterns; no
 irrelevant shop carousel; at most one primary contextual offer per state; paid access/support

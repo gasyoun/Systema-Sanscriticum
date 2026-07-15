@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Календарь занятий — мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="calendar.html" aria-current="page">Календарь</a>
+    <a href="library.html">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html">Оплата и доступ</a>
+    <a href="messages.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Календарь занятий</h1>
+  <p class="muted row spread">
+    <span>Только ваши группы · время — Москва (UTC+3), под каждым — Лондон и Дели</span>
+    <a class="btn quiet" href="calendar.html">Подписаться (iCal)</a>
+  </p>
+
+  <div class="kicker">Эта неделя</div>
+
+  <section class="cal-day">
+    <h3>Сегодня · вторник, 14 июля</h3>
+    <article class="cal-item">
+      <div><span class="time">19:00</span><br><span class="tz">17:00 Лондон · 21:30 Дели</span></div>
+      <div>
+        <strong>Урок 8. Имперфект</strong> <span class="badge live">живое</span><br>
+        <span class="muted small">Грамматика санскрита — I ступень · группа I-3 · 90 мин</span>
+      </div>
+      <a class="btn" href="calendar.html">Zoom — за 10 минут</a>
+    </article>
+  </section>
+
+  <section class="cal-day">
+    <h3>Четверг, 16 июля</h3>
+    <article class="cal-item">
+      <div><span class="time">19:00</span><br><span class="tz">17:00 Лондон · 21:30 Дели</span></div>
+      <div>
+        <strong>Разбор домашних · уроки 5–7</strong> <span class="badge live">живое</span><br>
+        <span class="muted small">Грамматика санскрита — I ступень · группа I-3 · 60 мин · приходить с вопросами</span>
+      </div>
+      <a class="btn quiet" href="calendar.html">Напомнить</a>
+    </article>
+  </section>
+
+  <div class="kicker">Прошедшие — записи уже в библиотеке</div>
+
+  <section class="cal-day">
+    <h3>Вторник, 7 июля</h3>
+    <article class="cal-item past">
+      <div><span class="time">19:00</span></div>
+      <div>
+        <strong>Урок 7. Третий класс глаголов</strong> <span class="badge rec">запись</span><br>
+        <span class="muted small">1 ч 22 мин · вы на 12-й минуте</span>
+      </div>
+      <a class="btn secondary" href="lesson.html">Досмотреть</a>
+    </article>
+  </section>
+
+  <div class="card">
+    <p class="muted small" style="margin:0">
+      Пропустили живое занятие? Ничего страшного и догонять не нужно: запись появляется в
+      <a href="library.html">библиотеке</a> в течение суток, смотрите в своём темпе.
+    </p>
+  </div>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 · данные иллюстративные
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html" aria-current="page"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>

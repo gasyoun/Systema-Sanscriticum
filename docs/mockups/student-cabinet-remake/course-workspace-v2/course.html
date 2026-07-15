@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Грамматика санскрита — дом курса · мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html">Сегодня</a>
+    <a href="calendar.html">Календарь</a>
+    <a href="library.html">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html">Оплата и доступ</a>
+    <a href="messages.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <p class="small" style="margin:0 0 .4rem"><a href="index.html">← Сегодня</a></p>
+
+  <header class="ws-header">
+    <h1>Грамматика санскрита — I ступень</h1>
+    <p class="muted small" style="margin:.2rem 0 0">
+      <span class="badge live">живой поток · группа I-3</span>
+      <span class="badge good">оплачено до 30 сентября</span>
+      · блок 2 из 4 · 6 из 16 уроков
+    </p>
+  </header>
+
+  <!-- workspace tabs: hash-addressable, JS-switched (R9) -->
+  <nav class="ws-tabs" data-tabs aria-label="Разделы курса">
+    <a href="#obzor" data-tab="obzor">Обзор</a>
+    <a href="#uroki" data-tab="uroki">Уроки</a>
+    <a href="#materialy" data-tab="materialy">Материалы</a>
+    <a href="#dostup" data-tab="dostup">Доступ и продление</a>
+    <a href="#pomosch" data-tab="pomosch">Помощь</a>
+  </nav>
+
+  <section class="tab-panel" id="tab-obzor">
+    <section class="today-band" aria-label="Продолжить">
+      <div class="today-continue">
+        <h3>Продолжить: Урок 7 · Третий класс глаголов</h3>
+        <p class="muted small" style="margin:.1rem 0 .8rem">запись прошлого занятия · вы на 12-й минуте</p>
+        <a class="btn" href="lesson.html">Продолжить</a>
+      </div>
+      <div class="today-live">
+        <span class="badge live" style="align-self:flex-start">Ближайшее занятие</span>
+        <strong>Вторник, 14 июля, 19:00 МСК</strong>
+        <span class="small muted">Урок 8 · Имперфект · ссылка Zoom появится здесь за 10 минут</span>
+      </div>
+    </section>
+
+    <div class="kicker">Блок 2 · Настоящее время</div>
+    <div class="card">
+      <ol class="lesson-list" style="list-style:none">
+        <li>
+          <span class="lesson-num done" aria-label="пройден">✓</span>
+          <span class="lesson-title"><a href="lesson.html">Урок 5. Тематические глаголы настоящего времени</a></span>
+          <span class="badge rec">запись · в своём темпе</span>
+        </li>
+        <li>
+          <span class="lesson-num done" aria-label="пройден">✓</span>
+          <span class="lesson-title"><a href="lesson.html">Урок 6. Аккузатив и инструменталис</a></span>
+          <span class="badge rec">запись · в своём темпе</span>
+        </li>
+        <li>
+          <span class="lesson-num next">7</span>
+          <span class="lesson-title"><a href="lesson.html"><strong>Урок 7. Третий класс глаголов</strong></a> <span class="badge warn">домашнее на доработке</span></span>
+          <span class="badge rec">запись</span>
+        </li>
+        <li>
+          <span class="lesson-num">8</span>
+          <span class="lesson-title">Урок 8. Имперфект</span>
+          <span class="badge live">вт 14.07, 19:00</span>
+        </li>
+      </ol>
+    </div>
+
+    <div class="kicker">Блок 3 · Причастия и герундий</div>
+    <div class="card">
+      <ol class="lesson-list" style="list-style:none">
+        <li class="locked">
+          <span class="lesson-num" aria-label="закрыт">🔒</span>
+          <span class="lesson-title">Урок 9. Причастия настоящего времени</span>
+          <a class="small" href="access.html#why">почему закрыто?</a>
+        </li>
+        <li class="locked">
+          <span class="lesson-num" aria-label="закрыт">🔒</span>
+          <span class="lesson-title">Урок 10. Абсолютив и инфинитив</span>
+        </li>
+      </ol>
+      <p class="muted small" style="margin:.6rem 0 0">
+        Блок 3 открывается после оплаты — 4 занятия вашей группы I-3 с записями и проверкой
+        домашних. Состав и цена — во вкладке «Доступ и продление».
+      </p>
+    </div>
+
+    <!-- the ONE contextual offer, progress-gated (R2/R17) -->
+    <div class="card offer-card">
+      <h3>Блок 2 почти пройден — продолжить без паузы?</h3>
+      <p class="muted">Осталось 2 урока. Блок 3 «Причастия и герундий» — 4 занятия вашей группы,
+      записи остаются навсегда. Доступна рассрочка и льготная цена.</p>
+      <p class="row" style="margin:.7rem 0 0">
+        <a class="btn" href="access.html">Открыть Блок 3</a>
+        <a class="small" href="course.html#obzor">напомнить после Урока 8</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-uroki" hidden>
+    <div class="kicker">Все 16 уроков</div>
+    <div class="card">
+      <p class="muted small">Блок 1 (уроки 1–4) — пройден · Блок 2 (уроки 5–8) — идёт ·
+      Блоки 3–4 (уроки 9–16) — откроются после оплаты.</p>
+      <p class="small"><a href="course.html#obzor">Свернуть к текущему блоку ↑</a></p>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-materialy" hidden>
+    <div class="kicker">Материалы курса</div>
+    <div class="card">
+      <ul style="margin:.2rem 0 .2rem 1.2rem;padding:0">
+        <li><a href="course.html#materialy">Таблица глагольных классов (PDF, 2 стр.)</a></li>
+        <li><a href="course.html#materialy">Конспект уроков 5–7 (PDF)</a></li>
+        <li><a href="course.html#materialy">Аудио мантры для разминки (MP3)</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-dostup" hidden>
+    <div class="kicker">Доступ и продление</div>
+    <div class="card">
+      <p><span class="badge good">оплачено до 30 сентября</span> · блоки 1–2 из 4.</p>
+      <p class="muted small">Следующий платёж — за Блок 3, до 1 октября. Целиком, в рассрочку
+      или по льготной цене (пенсионеры, студенты, многодетные). Подробности и история платежей —
+      на странице <a href="access.html">«Оплата и доступ»</a>.</p>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-pomosch" hidden>
+    <div class="kicker">Помощь по курсу</div>
+    <div class="card">
+      <p class="muted small">Вопрос по расписанию, записи или домашнему — куратор отвечает в
+      <a href="messages.html">сообщениях</a>; к обращению автоматически приложится контекст курса.</p>
+    </div>
+  </section>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 · табы работают без перезагрузки и адресуются хэшем (#obzor…)
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>

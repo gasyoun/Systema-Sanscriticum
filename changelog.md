@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Student-cabinet mockup #2 — «Курс как дом» v2 (H954, iterates H822 direction B).** Per
+  M.G. rulings R21–R25 (14-07-2026, recorded in
+  [docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md)):
+  8 pages instead of 4 (+ библиотека записей со слотом членства «Самскрте+» 2000 ₽/мес,
+  календарь, прогресс+сертификат, помощь/сообщения), editorial-academism restyle, job-named
+  navigation («Сегодня / Календарь / Записи / Прогресс / Оплата и доступ / Помощь»), light JS
+  (hash-addressable course tabs, theme toggle, foldlines). Browser-verified: console clean on
+  all 8 pages, no 390px overflow, 11 screenshots committed
+  ([docs/mockups/student-cabinet-remake/course-workspace-v2/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/course-workspace-v2)).
+  Non-destructive; winner still an M.G. `@DECIDE`.
+
 ## [1.6.0] - 2026-07-14
 
 ### Added

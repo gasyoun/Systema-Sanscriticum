@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сегодня · кабинет — мокап «Курс как дом» v2 (H822)</title>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Самскрте<small>кабинет ученика</small></a>
+  <nav class="topnav" aria-label="Основная навигация">
+    <a href="index.html" aria-current="page">Сегодня</a>
+    <a href="calendar.html">Календарь</a>
+    <a href="library.html">Записи</a>
+    <a href="progress.html">Прогресс</a>
+    <a href="access.html">Оплата и доступ</a>
+    <a href="messages.html">Помощь</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить светлую/тёмную тему">Тема</button>
+  <span class="avatar" aria-hidden="true">ЕК</span>
+</header>
+
+<main class="page">
+  <h1>Добрый вечер, Елена</h1>
+  <p class="muted small">вторник, 14 июля · Москва (UTC+3)</p>
+
+  <!-- R5: continue + nearest live in ONE band, both above the fold -->
+  <section class="today-band" aria-label="Сегодня">
+    <div class="today-continue">
+      <h3>Урок 7 · Третий класс глаголов</h3>
+      <p class="muted small" style="margin:.1rem 0 .7rem">Грамматика санскрита — I ступень · вы остановились на 12-й минуте</p>
+      <div class="progressbar" style="max-width:260px;margin-bottom:.9rem" role="img" aria-label="Пройдено 6 из 16 уроков"><span style="width:37%"></span></div>
+      <a class="btn" href="lesson.html">Продолжить урок</a>
+    </div>
+    <div class="today-live">
+      <span class="badge live" style="align-self:flex-start">Живое занятие</span>
+      <strong>Сегодня, 19:00 МСК</strong>
+      <span class="small muted">Урок 8 · Имперфект · группа I-3<br>17:00 Лондон · 21:30 Дели</span>
+      <a class="btn secondary" href="calendar.html" style="align-self:flex-start;margin-top:.3rem">Ссылка Zoom — за 10 минут</a>
+    </div>
+  </section>
+
+  <!-- R12: checklist collapsed to one quiet line, never above the continue band -->
+  <details class="foldline" data-fold="first-steps">
+    <summary><span class="badge good">2 из 4</span> Первые шаги</summary>
+    <div class="fold-body">
+      <ol>
+        <li class="done">Заполнить профиль</li>
+        <li class="done">Открыть первый урок</li>
+        <li>Подключить Telegram-уведомления</li>
+        <li>Добавить расписание в календарь (iCal)</li>
+      </ol>
+    </div>
+  </details>
+
+  <div class="kicker">Мои курсы</div>
+
+  <article class="course-row">
+    <h3 style="margin:0"><a href="course.html" style="color:inherit;text-decoration:none">Грамматика санскрита — I ступень</a></h3>
+    <div class="cta"><a class="btn secondary" href="course.html">Открыть курс</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge live">живой поток · I-3</span>
+      <span class="badge good">оплачено до 30 сентября</span>
+      · блок 2 из 4 · 6 из 16 уроков пройдено
+    </p>
+  </article>
+
+  <article class="course-row">
+    <h3 style="margin:0"><a href="library.html" style="color:inherit;text-decoration:none">Йога-сутры Патанджали</a></h3>
+    <div class="cta"><a class="btn secondary" href="library.html">Лекция 15</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge rec">записи · в своём темпе</span>
+      <span class="badge good">доступ бессрочный</span>
+      · 14 из 24 лекций просмотрено
+    </p>
+  </article>
+
+  <!-- R4 / F3: expired stays visible, honest state, renewal path -->
+  <article class="course-row expired">
+    <h3 style="margin:0">Бхагавад-гита: введение</h3>
+    <div class="cta"><a class="btn quiet" href="access.html">Продлить доступ</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge danger">доступ истёк 28 июня</span>
+      · пройдено 9 из 12 лекций — конспекты и прогресс сохранены ·
+      <a href="access.html#why">почему закрыто?</a>
+    </p>
+  </article>
+
+  <article class="course-row">
+    <h3 style="margin:0">Деванагари за четыре недели</h3>
+    <div class="cta"><a class="btn quiet" href="lesson.html">Вводный урок</a></div>
+    <p class="entitlement" style="margin:0">
+      <span class="badge neutral">пробный урок</span>
+      · бесплатный вводный урок открыт, без ограничения по времени
+    </p>
+  </article>
+
+  <div class="kicker">Инструменты</div>
+  <nav class="tools-row" aria-label="Учебные инструменты">
+    <a href="index.html#tools">Словари</a>
+    <a href="index.html#tools">Карточки для повторения</a>
+    <a href="index.html#tools">Прана</a>
+    <a href="progress.html">Сертификаты</a>
+  </nav>
+
+  <footer class="colophon">
+    Мокап H822 · итерация v2 направления «Курс как дом» · статический прототип с лёгким JS,
+    данные иллюстративные · ОГРНИП и оферта — в подвале реального кабинета
+  </footer>
+</main>
+
+<nav class="bottombar" aria-label="Мобильная навигация">
+  <a href="index.html" aria-current="page"><span class="glyph">☀</span>Сегодня</a>
+  <a href="calendar.html"><span class="glyph">🗓</span>Календарь</a>
+  <a href="library.html"><span class="glyph">▶</span>Записи</a>
+  <a href="messages.html"><span class="glyph">?</span>Помощь</a>
+</nav>
+
+</body>
+</html>
