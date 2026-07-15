@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-07-15
+
 ### Added
 - **H959: kosha last-mile pipeline, Hop A reader-as-a-service demo.** New
   `/reading/kosha-demo` route (`app/Http/Controllers/ReadingPackController.php`)
