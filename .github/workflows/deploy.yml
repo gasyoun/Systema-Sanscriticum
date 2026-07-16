@@ -1,0 +1,49 @@
+name: Deploy production
+
+# Опция A из SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md (H478), одобрена MG:
+# GitHub Actions -> SSH -> deploy.sh, гейт — approval-правило GitHub Environment
+# "production" (ревьюер MG). Никакие агентские креды прода этот workflow не
+# держит: SSH-ключ живет только в секретах Environment "production", которые
+# заводит человек (Иван/MG) в настройках репозитория — см. docs/deploy.md
+# §CI/CD.
+#
+# push -> main ставит run в очередь "Waiting" сразу; job не стартует, пока
+# ревьюер Environment не нажмет Approve в вкладке Actions — это и есть
+# MG-confirm gate. workflow_dispatch дает ручной прогон тем же путем.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: SSH -> deploy.sh (production)
+    runs-on: ubuntu-latest
+    # Требует Environment "production" с обязательным ревьюером (MG) и
+    # секретами DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY — заводится в
+    # Settings -> Environments человеком, не этим PR. См. docs/deploy.md.
+    environment: production
+    steps:
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Run deploy.sh over SSH
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'sudo /var/www/html/deploy.sh'

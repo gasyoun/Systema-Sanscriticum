@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 11-07-2026_
+_Created: 02-07-2026 · Last updated: 16-07-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -104,6 +104,72 @@ curl -s https://samskrte.ru/online/kursy/grammatika-po-kocerginoi-gr62 | grep -o
 
 Непустой вывод = новая разметка отдается, issue
 [#193](https://github.com/gasyoun/Systema-Sanscriticum/issues/193) можно закрывать.
+
+## CI/CD — GitHub Actions → SSH → `deploy.sh` (H1046)
+
+Прежде агент не мог задеплоить вообще — прод-креды были только у Ивана (H478:
+это была развязка доступа, а не хостинга — SSH/root на проде есть с самого
+начала). [`.github/workflows/deploy.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/deploy.yml)
+закрывает разрыв **Опцией A** из
+[`SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md):
+CI по SSH запускает тот же `sudo bash deploy.sh`, что и раньше запускал Иван
+руками — сам скрипт не меняется, меняется только кто/что его вызывает.
+
+**Инвариант безопасности сохраняется: у агентов по-прежнему нет прод-кредов.**
+SSH-ключ живет только в секретах GitHub Environment `production`; job
+запускается на GitHub-раннере, не на машине агента, и ждет approval человека
+на КАЖДЫЙ прогон.
+
+### Как работает гейт (MG-confirm)
+
+1. PR смерджен в `main` → workflow ставится в очередь **"Waiting"** во вкладке
+   Actions — job физически не стартует.
+2. Ревьюер (MG) открывает run и жмет **Review deployments → Approve and
+   deploy**.
+3. Только после этого раннер поднимается, SSH'ится на прод и гоняет
+   `sudo /var/www/html/deploy.sh` — тот же ритуал (git pull --ff-only, composer/npm,
+   migrate, optimize, reload php-fpm, restart horizon, смоук), что описан выше
+   в этом файле.
+4. `workflow_dispatch` дает тот же путь вручную (Actions → Deploy production →
+   Run workflow) для внепланового деплоя между пушами в `main`.
+
+`concurrency: deploy-production` не дает второму прогону стартовать поверх
+незавершенного — следующий push просто встает в очередь на approval.
+
+### Первичная настройка (человек, один раз) — ещё НЕ сделано
+
+Этот PR добавляет только workflow-файл. Ниже — что должен завести человек
+(Иван и/или MG) в GitHub и на сервере, прежде чем прогон реально сработает;
+до этого push в `main` просто копит "Waiting"-раны без вреда.
+
+**На сервере (Иван, ~15 мин, root):**
+
+1. Создать **непривилегированного** пользователя для деплоя (не `root`
+   напрямую): `adduser deploy && mkdir -p /home/deploy/.ssh`.
+2. Сгенерировать пару ключей ed25519 **для этого назначения** (не переиспользовать
+   личный ключ), публичный — в `/home/deploy/.ssh/authorized_keys`
+   (`chmod 600`), приватный отдать в GitHub Environment secret (см. ниже),
+   больше нигде не хранить.
+3. Узкое правило `sudoers` — **только** этот скрипт, не общий root:
+   ```
+   deploy ALL=(root) NOPASSWD: /var/www/html/deploy.sh
+   ```
+   (`visudo -f /etc/sudoers.d/deploy-script`). Это тот же принцип, что H478
+   заложил в Option A — деплой-путь узкий, а не "дать агенту root".
+
+**В GitHub (MG, ~10 мин, Settings → Environments):**
+
+1. Создать Environment **`production`**.
+2. Добавить **Required reviewers** = MG (сам гейт approval).
+3. Добавить секреты Environment (не repo-secrets — они видны всем workflow'ам,
+   Environment-секреты видны только job'ам с `environment: production`):
+   - `DEPLOY_HOST` — IP/домен прода (`31.129.104.252`).
+   - `DEPLOY_USER` — `deploy` (пользователь из шага 1 выше, НЕ `root`).
+   - `DEPLOY_SSH_KEY` — приватный ключ из шага 2 (весь PEM-блок, включая
+     `-----BEGIN`/`-----END`).
+
+После этого следующий push в `main` (или ручной `workflow_dispatch`) впервые
+дойдет до реального approval-гейта.
 
 ## Откат
 

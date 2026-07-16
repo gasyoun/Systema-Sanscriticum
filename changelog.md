@@ -11,6 +11,11 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-07-16
+
+### Added
+- **H1046: CI/CD deploy pipeline (GitHub Actions → SSH → `deploy.sh`), MG-confirm gate.** New `.github/workflows/deploy.yml` — Option A of the [H478 deploy-gate decision](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md): every push to `main` (or manual `workflow_dispatch`) queues a run gated by a GitHub Environment (`production`) approval — MG must click Approve before the runner SSHes to prod and runs the existing `sudo bash deploy.sh` (unchanged). No agent holds prod credentials; the SSH key lives only in the Environment's secrets. **Server-side setup (deploy user, narrow `sudoers`, GitHub Environment + secrets) is a separate one-time human step** — see `docs/deploy.md` §CI/CD and `DEPLOY_QUEUE.md` §D1 — until done, the workflow only accumulates harmless "Waiting" runs.
+
 ## [1.16.0] - 2026-07-16
 
 ### Added

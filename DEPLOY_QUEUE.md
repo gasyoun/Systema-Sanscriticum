@@ -69,6 +69,20 @@ _Создано: 08-07-2026 · Обновлено: 16-07-2026_
 
 ---
 
+## CI/CD-деплой — настройка ключа доступа (H1046, разово)
+
+[H478](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H478-Opus_Systema-Sanscriticum_deploy_gate_permanent_fix_10.07.26.md)
+рассудил Опцию A: GitHub Actions по SSH запускает тот же `sudo bash deploy.sh`,
+что ты гонял руками — [`.github/workflows/deploy.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/deploy.yml)
+уже в `main` (H1046), но без ключа/пользователя он просто копит "Waiting"-раны
+без вреда. Подробный чек-лист: [`docs/deploy.md` §CI/CD](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md#cicd--github-actions--ssh--deploysh-h1046).
+
+| № | Вопрос / действие | Что нужно от Ивана | Зачем |
+|---|---|---|---|
+| D1 | **Завести деплой-пользователя на проде.** `adduser deploy` (не root), сгенерировать ОТДЕЛЬНУЮ пару ключей ed25519 под это назначение, публичный — в `/home/deploy/.ssh/authorized_keys`; узкий `sudoers`: `deploy ALL=(root) NOPASSWD: /var/www/html/deploy.sh` (только этот скрипт, не общий root). | ~15 минут, root-доступ. Приватный ключ — MG (уйдет в GitHub Environment secret, нигде больше не хранится). | Замыкает CI/CD-путь — каждый мердж в `main` становится деплоем без ожидания твоей доступности; агенты по-прежнему прод-кредов не держат (ключ живет только в GitHub Environment secret с approval-гейтом MG на каждый прогон). |
+
+---
+
 ## Telegram — вопросы и действия оператору (масштабирование, Phase 0)
 
 Контекст: ты (Иван) запустил userbot на сервере — импорт чата «Отдел заботы» работает
