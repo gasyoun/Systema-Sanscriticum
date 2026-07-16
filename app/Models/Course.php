@@ -53,6 +53,9 @@ class Course extends Model
         'tech_requirements',
         'meta_title',
         'meta_description',
+        // Готовая фраза в вин. падеже для финального CTA (final-cta.blade.php);
+        // пусто = дефолт «санскрит».
+        'cta_subject',
     ];
 
     public function categories(): BelongsToMany

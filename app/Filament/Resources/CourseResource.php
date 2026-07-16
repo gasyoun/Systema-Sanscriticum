@@ -272,6 +272,12 @@ class CourseResource extends Resource
                                     ->helperText('Пусто — берётся усечённое описание курса.')
                                     ->maxLength(255),
                             ]),
+
+                        Forms\Components\TextInput::make('cta_subject')
+                            ->label('Тема для финального CTA (винительный падеж)')
+                            ->helperText('Например «философию», «хинди», «календарь». Пусто — используется «Готовы начать изучать санскрит?».')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
                     ])
                     ->collapsible()
                     ->collapsed(),
