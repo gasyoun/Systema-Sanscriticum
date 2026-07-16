@@ -24,8 +24,19 @@ return [
         ? (int) env('TRUST_BOOKS_PUBLISHED')
         : 20,
 
+    // Суммарный объём серии, стр. null = плитка книг не показывает страницы.
+    'books_pages' => env('TRUST_BOOKS_PAGES') !== null
+        ? (int) env('TRUST_BOOKS_PAGES')
+        : 3834,
+
     // Собрано краудфандингом, ₽. null = не показывать плитку.
     'crowdfunding_raised_rub' => env('TRUST_CROWDFUNDING_RAISED_RUB') !== null
         ? (int) env('TRUST_CROWDFUNDING_RAISED_RUB')
         : 1_270_000,
+
+    // Доп. пожертвования меценатов сверх краудфандинга, ₽ (H1068 audit §2).
+    // null = плитка не упоминает меценатов отдельной строкой.
+    'crowdfunding_patron_topup_rub' => env('TRUST_CROWDFUNDING_PATRON_TOPUP_RUB') !== null
+        ? (int) env('TRUST_CROWDFUNDING_PATRON_TOPUP_RUB')
+        : 700_000,
 ];

@@ -11,7 +11,9 @@
     $sinceYear = (int) config('trust.since_year');
     $yearsCommunity = max(1, now()->year - $sinceYear);
     $booksPublished = config('trust.books_published');
+    $booksPages = config('trust.books_pages');
     $crowdfundingRub = config('trust.crowdfunding_raised_rub');
+    $patronTopupRub = config('trust.crowdfunding_patron_topup_rub');
     $graduatesCount = config('trust.graduates_count');
 
     $proofNumbers = array_values(array_filter([
@@ -21,11 +23,13 @@
         ],
         $booksPublished ? [
             'value' => $booksPublished.'+',
-            'label' => 'изданных книг серии Bibliotheca Sanscritica',
+            'label' => 'изданных книг серии Bibliotheca Sanscritica'
+                .($booksPages ? ' ('.number_format($booksPages, 0, '.', ' ').' стр.)' : ''),
         ] : null,
         $crowdfundingRub ? [
             'value' => number_format((int) round($crowdfundingRub / 1000), 0, '.', ' ').' тыс. ₽',
-            'label' => 'собрано краудфандингом на издание книг',
+            'label' => 'собрано краудфандингом на издание книг'
+                .($patronTopupRub ? ' + '.number_format((int) round($patronTopupRub / 1000), 0, '.', ' ').' тыс. ₽ от меценатов' : ''),
         ] : null,
         $graduatesCount ? [
             'value' => number_format($graduatesCount, 0, '.', ' ').'+',
