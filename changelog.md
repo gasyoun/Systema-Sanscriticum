@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1067: marathon 28-08 cohort RU comms pack.** New [marketing/marathon-2026-08/](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08) — two landing-copy variants (beginner-fear-focused / outcome-focused) + shared FAQ, a 5-email sequence (drafts only: prod SMTP broken, [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504)), and @samskrte channel posts with a publication-order table. Authoring-only: publish steps are queued as DEPLOY_QUEUE №25 (human-gated); the day 1–3 bot drip in `config/marathon.php` stays canonical and is not duplicated. Testimonial slots publish only with a real quote (`MARATHON_TESTIMONIAL`). Authored by Fable 5 (`claude-fable-5`), [PR #544](https://github.com/gasyoun/Systema-Sanscriticum/pull/544).
+
 ## [1.17.0] - 2026-07-16
 
 ### Added
