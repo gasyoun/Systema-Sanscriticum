@@ -11,6 +11,11 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-07-16
+
+### Added
+- **H1005: RQ4 admin stats page.** New `/admin/rq4-study-dashboard` (admin/super_admin only): enrollment count + arm split, pre/post/retention-test completion counts and percentages, and how many participants are currently due a retention reminder. Built so MG can check enrollment numbers himself — **he doesn't hold SSH credentials to the production server** (only the deploy contractor does, per `docs/deploy.md`), so an artisan-command-only report would still require going through the contractor every time. 3 tests in `tests/Feature/Rq4StudyDashboardTest.php`.
+
 ### Changed
 - **H987 follow-up: RQ4 consent text approved by MG 15-07-2026.** No wording change — `Rq4StudyController::CONSENT_TEXT` is exactly the draft reviewed in chat, only the "not finalised" doc-comment is removed. Protocol §6.4 is now the last of the 4 `@DECIDE` items ruled — the RQ4 study spec is fully decided; `features.rq4_study` still ships OFF by default (flipping it live is a separate, later call).
 
