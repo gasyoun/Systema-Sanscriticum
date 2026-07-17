@@ -19,6 +19,7 @@ use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
 use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -50,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
         // важно для тестов, где config('services.zoom.*') ставится в setUp.
         $this->app->bind(
             ZoomService::class,
+            fn () => ZoomService::fromConfig(),
+        );
+        // Шов GC-B3: до руления о смене провайдера дефолтный драйвер — Zoom.
+        $this->app->bind(
+            WebinarProvider::class,
             fn () => ZoomService::fromConfig(),
         );
     }
