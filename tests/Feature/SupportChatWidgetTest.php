@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\MarketingSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -140,5 +141,104 @@ class SupportChatWidgetTest extends TestCase
         $response->assertSee('Вопрос по этому курсу', false);
         $response->assertSee('Возникли сложности с оплатой', false);
         $response->assertSee('CONTEXT_GREETING', false);
+    }
+
+    // --- H1199: Jivo-паритет S4, необязательный телефон/почта + оффлайн-копирайт ---
+
+    public function test_contact_fields_hidden_when_lead_capture_flag_off(): void
+    {
+        config(['features.support_lead_capture' => false]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertDontSee('id="scw-email"', false);
+        $response->assertDontSee('id="scw-phone"', false);
+    }
+
+    public function test_guest_sees_optional_contact_fields_when_flag_on(): void
+    {
+        config(['features.support_lead_capture' => true]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('id="scw-email"', false);
+        $response->assertSee('id="scw-phone"', false);
+    }
+
+    public function test_logged_in_student_does_not_get_contact_fields(): void
+    {
+        config(['features.support_lead_capture' => true]);
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/');
+
+        $response->assertOk();
+        // Контакт уже известен из аккаунта — поля не показываем.
+        $response->assertDontSee('id="scw-email"', false);
+        $response->assertDontSee('id="scw-phone"', false);
+    }
+
+    public function test_online_copy_by_default_when_hours_flag_off(): void
+    {
+        config(['features.support_lead_capture' => true, 'support_hours.enabled' => false]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Здравствуйте! Напишите нам', false);
+    }
+
+    public function test_offline_copy_shown_outside_configured_business_hours(): void
+    {
+        config([
+            'features.support_lead_capture' => true,
+            'support_hours.enabled' => true,
+            'support_hours.timezone' => 'UTC',
+            'support_hours.schedule' => ['sun' => null, 'mon' => null, 'tue' => null, 'wed' => null, 'thu' => null, 'fri' => null, 'sat' => null],
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Операторы сейчас офлайн', false);
+    }
+
+    public function test_online_copy_shown_inside_configured_business_hours(): void
+    {
+        $this->travelTo(Carbon::parse('2026-07-20 12:00:00', 'UTC')); // Monday
+        config([
+            'features.support_lead_capture' => true,
+            'support_hours.enabled' => true,
+            'support_hours.timezone' => 'UTC',
+            'support_hours.schedule' => ['mon' => ['00:00', '23:59']],
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Здравствуйте! Напишите нам', false);
+    }
+
+    public function test_context_greeting_defers_to_offline_copy_when_both_apply(): void
+    {
+        // H1199 offline-копирайт важнее контекстного приветствия H1198 — оба
+        // подключены к одному #scw-intro, JS не должен затирать «офлайн».
+        config([
+            'features.support_answer_suggester' => true,
+            'features.support_lead_capture' => true,
+            'support_hours.enabled' => true,
+            'support_hours.timezone' => 'UTC',
+            'support_hours.schedule' => ['sun' => null, 'mon' => null, 'tue' => null, 'wed' => null, 'thu' => null, 'fri' => null, 'sat' => null],
+        ]);
+        MarketingSetting::create(['support_answer_suggester_enabled' => true]);
+        MarketingSetting::flushCached();
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-offline="1"', false);
+        $response->assertSee('Операторы сейчас офлайн', false);
     }
 }

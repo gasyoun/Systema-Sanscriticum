@@ -112,4 +112,75 @@ class PublicChatEndpointTest extends TestCase
 
         $response->assertOk()->assertJson(['ok' => true, 'conversation_id' => null, 'messages' => []]);
     }
+
+    // --- H1199: Jivo-паритет S4, необязательный телефон/почта → Lead-строка ---
+
+    public function test_email_and_phone_capture_a_lead_when_flag_is_on(): void
+    {
+        config(['features.support_lead_capture' => true]);
+
+        $response = $this->postJson('/chat/message', [
+            'text' => 'Вопрос про курс',
+            'name' => 'Мария',
+            'email' => 'maria@example.com',
+            'phone' => '+79995554433',
+        ]);
+
+        $response->assertOk();
+        $thread = SupportConversation::findOrFail($response->json('conversation_id'));
+
+        $this->assertNotNull($thread->lead_id);
+        $this->assertSame('maria@example.com', $thread->contact_email);
+        $this->assertSame('+79995554433', $thread->contact_phone);
+        $this->assertDatabaseHas('leads', ['email' => 'maria@example.com', 'contact' => '+79995554433']);
+    }
+
+    public function test_contact_fields_are_ignored_when_flag_is_off(): void
+    {
+        config(['features.support_lead_capture' => false]);
+
+        $response = $this->postJson('/chat/message', [
+            'text' => 'Вопрос',
+            'email' => 'off@example.com',
+        ]);
+
+        $response->assertOk();
+        $thread = SupportConversation::findOrFail($response->json('conversation_id'));
+
+        $this->assertNull($thread->lead_id);
+        $this->assertDatabaseMissing('leads', ['email' => 'off@example.com']);
+    }
+
+    public function test_message_without_contact_still_works_when_flag_is_on(): void
+    {
+        config(['features.support_lead_capture' => true]);
+
+        $response = $this->postJson('/chat/message', ['text' => 'Просто вопрос, без контактов']);
+
+        $response->assertOk();
+        $thread = SupportConversation::findOrFail($response->json('conversation_id'));
+        $this->assertNull($thread->lead_id);
+    }
+
+    public function test_invalid_email_is_rejected(): void
+    {
+        config(['features.support_lead_capture' => true]);
+
+        $this->postJson('/chat/message', ['text' => 'Х', 'email' => 'not-an-email'])
+            ->assertStatus(422);
+    }
+
+    public function test_second_message_does_not_overwrite_already_captured_lead(): void
+    {
+        config(['features.support_lead_capture' => true]);
+
+        $first = $this->postJson('/chat/message', ['text' => 'Раз', 'email' => 'a@example.com']);
+        $threadId = $first->json('conversation_id');
+
+        $this->postJson('/chat/message', ['text' => 'Два', 'email' => 'b@example.com']);
+
+        $thread = SupportConversation::findOrFail($threadId);
+        $this->assertSame('a@example.com', $thread->contact_email);
+        $this->assertDatabaseMissing('leads', ['email' => 'b@example.com']);
+    }
 }

@@ -9,6 +9,7 @@ use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
 use App\Services\Support\SupportConversationManager;
+use App\Services\Support\SupportLeadCaptureService;
 use App\Support\GuestChat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,12 +31,14 @@ use Illuminate\Http\Request;
  */
 class PublicChatController extends Controller
 {
-    public function store(Request $request, SupportConversationManager $conversations): JsonResponse
+    public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture): JsonResponse
     {
         $validated = $request->validate([
             'text' => ['required', 'string', 'max:2000'],
             'name' => ['nullable', 'string', 'max:120'],
             'page' => ['nullable', 'string', 'max:2048'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:40'],
         ]);
 
         $text = trim($validated['text']);
@@ -65,6 +68,17 @@ class PublicChatController extends Controller
 
         // Контекст посетителя (город/страница входа) для куратора — H1196.
         $this->captureVisitorContext($thread, $request, $validated['page'] ?? null);
+
+        // Необязательный телефон/почта → Lead-строка (H1199, S4). За флагом —
+        // выключено, ничего не меняется.
+        if (config('features.support_lead_capture')) {
+            $leadCapture->capture(
+                $thread,
+                $validated['name'] ?? null,
+                $validated['email'] ?? null,
+                $validated['phone'] ?? null,
+            );
+        }
 
         // Бродкаст экранированного сообщения оператору и другим клиентам треда.
         // ShouldBroadcast-событие через event() авто-бродкастится; при
