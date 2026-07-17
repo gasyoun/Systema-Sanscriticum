@@ -37,7 +37,7 @@ _Created: 17-07-2026 · Last updated: 17-07-2026_
 | 3 | Сбор контактов / заявки (лиды) | ⚠️ Частично (имя — необязательно; нет телефон/почта, нет оффлайн-формы) | [H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md) (S4) |
 | 4 | Каналы TG / VK / почта | ⚠️ Частично (TG+VK есть; почты нет; каналы не разбейджены; reply-out не проверен вживую) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5) |
 | 5 | **Город посетителя** в панели куратора | 🟢 **S1 сделан этой сессией** (см. §2) | [H1196](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1196-Opus_Systema-Sanscriticum_jivo-parity-s1of5-visitor-geo-city_17.07.26.md) (S1, Pillar 1) |
-| 6 | **Написать первым** + видеть, что делает на сайте | ❌ Нет (нужен presence-слой + проактив) | [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md) (S2, Pillar 2) |
+| 6 | **Написать первым** + видеть, что делает на сайте | 🟢 **S2 сделан этой сессией** (см. §3) | [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md) (S2, Pillar 2) |
 
 **Два «столпа» (5 и 6)** — это то, чего в подсистеме нет вообще и что уникально для Jivo. Их
 и строим в первую очередь; 2/3/4 — доведение уже существующего.
@@ -87,13 +87,54 @@ _Created: 17-07-2026 · Last updated: 17-07-2026_
 
 ---
 
-## 3. S2 — Pillar 2: проактивный монитор посетителей + оператор пишет первым (H1197)
+## 3. S2 — Pillar 2: проактивный монитор посетителей + оператор пишет первым (✅ сделано 17-07-2026, H1197)
 
 **Цель:** куратор видит **живой список посетителей на сайте прямо сейчас** (город, текущая
 страница, время на сайте, источник) — даже тех, кто ещё ничего не написал — и может **написать
 первым**; сообщение всплывает в виджете посетителя. Это второй уникальный столп Jivo.
 
-**Дизайн (переиспользует уже готовое):**
+**Что сделано** (в одном PR, за флагом `support_visitor_presence`, **OFF** по умолчанию):
+
+- Миграция [`create_support_visitor_presences_table`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_07_17_130000_create_support_visitor_presences_table.php)
+  — эфемерная строка присутствия на посетителя (ключ `guest_token`; `user_id?`,
+  `visitor_ip/city/region/country/geo_resolved_at`, `current_url`, `referrer`,
+  `first_seen_at`, `last_seen_at`).
+- [`PublicPresenceController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PublicPresenceController.php)
+  `POST /support/presence` (throttle) — heartbeat-beacon апсертит строку по `guest_token`;
+  за флагом OFF ничего не пишет (`enabled:false`); гео резолвится ОДИН раз при создании тем же
+  [`VisitorGeoResolver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/VisitorGeoResolver.php)
+  (S1) через [`ResolveVisitorPresenceGeoJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/ResolveVisitorPresenceGeoJob.php).
+  Ответ несёт `conversation_id` — так проактив куратора долетает до молчащего посетителя.
+- [`PruneStaleVisitorPresencesJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/PruneStaleVisitorPresencesJob.php)
+  каждые 5 мин выметает устаревшие (окна — [`config/support_presence.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/support_presence.php)).
+- Операторская страница [`VisitorsOnline`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/VisitorsOnline.php)
+  «Посетители онлайн» (гейт: флаг + не-преподаватель, как `Helpdesk`): живой список
+  (📍город, страница, время на сайте, `wire:poll`) + кнопка **«Написать»** — куратор пишет
+  первым, тред открывается/переоткрывается (реюз `openForGuest`/`openFor`), curator-сообщение
+  бродкастится `ChatMessageSent` в виджет.
+- Виджет [`support-chat-widget.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/support-chat-widget.blade.php)
+  шлёт presence-beacon **с первого захода** и по ответу узнаёт свой тред → подписывается и
+  **раскрывается** с сообщением оператора.
+- 20 тестов ([`SupportVisitorPresenceTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SupportVisitorPresenceTest.php)
+  9 · [`VisitorsOnlinePageTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/VisitorsOnlinePageTest.php)
+  9 · +2 render-теста виджета) + регрессии зелёные; Pint clean.
+
+**Отступление от первоначального дизайна (осознанное):** источником правды сделан beacon → таблица
+`support_visitor_presences` (HTTP-heartbeat), а НЕ Reverb presence-канал `presence-site-visitors`.
+Причины: (1) таблица + TTL-выметание были и в исходном дизайне — это артефакты heartbeat-модели, а
+не presence-канала; (2) presence-канал держит постоянный WS на каждой странице каждого посетителя
+(масштабный риск, отмеченный ниже) — beacon дешевле и полностью тестируется без запущенного Reverb;
+(3) «текущая страница» естественно ложится на POST-heartbeat, а не на членство в канале. Живость
+списка у куратора даёт `wire:poll`. Реалтайм presence-канал остаётся возможным улучшением.
+
+**Прод-включение (для Ивана, [DEPLOY_QUEUE](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)):**
+`php artisan migrate` (аддитивно) → `SUPPORT_VISITOR_PRESENCE=true` → `php artisan config:clear`
+(город появится, только если ещё и `support_visitor_geo` включён с драйвером ≠ null). Нужен рабочий
+воркер очереди (гео-джоба идёт через Horizon). **@DECIDE MG — юридический sign-off 152-ФЗ:** presence
+отслеживает анонимного посетителя (город + поведение) — самый чувствительный по приватности слой;
+включение — сознательный шаг с согласием (cookie-баннер уже есть), IP наружу оператору не светим.
+
+**Дизайн (переиспользовал уже готовое):**
 
 - **Presence-слой.** Reverb в проде (проверено), Echo подключён на витрине. Заводим Reverb
   **presence-канал** `presence-site-visitors`: виджет (и/или лёгкий beacon на всех страницах
@@ -121,9 +162,10 @@ _Created: 17-07-2026 · Last updated: 17-07-2026_
 - **Масштаб:** presence-канал на всей витрине = постоянные WS-соединения; начать можно с
   «только когда виджет открыт», расширять до всех страниц по нагрузке.
 
-**Фазировка (own PR):** (P1) таблица + presence-канал + beacon → (P2) страница «Посетители
-онлайн» read-only → (P3) кнопка «Написать» (проактив) + виджет слушает с первого захода → тесты
-на каждом шаге. Стартовая строка — в [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md).
+**Фазировка (сделана в одном PR):** (P1) таблица + beacon + гео + TTL → (P2) страница «Посетители
+онлайн» read-only → (P3) кнопка «Написать» (проактив) + виджет слушает с первого захода — тесты
+зелёные на каждом шаге. Исходная стартовая строка — в [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md)
+(🔴 EXECUTED).
 
 ---
 
