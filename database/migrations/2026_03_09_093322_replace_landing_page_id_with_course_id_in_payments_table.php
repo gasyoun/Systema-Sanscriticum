@@ -13,28 +13,43 @@ return new class extends Migration
             $table->foreignId('course_id')->nullable()->after('user_id')->constrained()->cascadeOnDelete();
         });
 
-        // 2. Аккуратно отвязываем и удаляем старую колонку лендинга.
-        // Сначала снимаем FK, затем колонку — в отдельных Schema::table, чтобы на
-        // SQLite перестройка таблицы (снятие FK) и нативный DROP COLUMN не пересеклись.
-        // Начиная с Laravel 11 Doctrine DBAL убран: SQLite использует нативный
-        // ALTER TABLE ... DROP COLUMN, который отказывается удалять колонку, всё ещё
-        // упомянутую в определении FK. dropForeign на SQLite в L11+ работает через
-        // перестройку таблицы, поэтому драйвер-специфичная ветка больше не нужна.
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropForeign(['landing_page_id']);
-        });
+        // 2. Отвязываем и удаляем старую колонку лендинга. На MySQL (продакшен, где эта
+        // миграция уже применена) dropForeign+dropColumn работают как обычно. На SQLite
+        // (тесты/CI) dropForeign безусловно бросает BadMethodCallException
+        // (Blueprint::ensureCommandsAreValid() — это НЕ зависит от Doctrine DBAL/native
+        // schema operations, вопреки прежнему комментарию здесь), а нативный
+        // ALTER TABLE ... DROP COLUMN тоже не спасает: колонка всё ещё упомянута в
+        // определении FK самой таблицы, и SQLite отказывается её удалить ("unknown
+        // column ... in foreign key definition"). Вместо удаления делаем колонку nullable
+        // через Doctrine DBAL (->change(), требует пересоздания таблицы под капотом) —
+        // иначе NOT NULL landing_page_id ломает любую вставку в payments, которая его не
+        // заполняет (весь код давно пишет course_id, не landing_page_id).
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            Schema::table('payments', function (Blueprint $table) {
+                $table->dropForeign(['landing_page_id']);
+            });
 
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn('landing_page_id');
-        });
+            Schema::table('payments', function (Blueprint $table) {
+                $table->dropColumn('landing_page_id');
+            });
+        } else {
+            Schema::table('payments', function (Blueprint $table) {
+                $table->unsignedBigInteger('landing_page_id')->nullable()->change();
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('payments', function (Blueprint $table) {
             $table->foreignId('landing_page_id')->nullable()->constrained('landing_pages')->cascadeOnDelete();
-            $table->dropForeign(['course_id']);
-            $table->dropColumn('course_id');
         });
+
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            Schema::table('payments', function (Blueprint $table) {
+                $table->dropForeign(['course_id']);
+                $table->dropColumn('course_id');
+            });
+        }
     }
 };
