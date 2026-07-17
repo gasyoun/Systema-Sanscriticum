@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Fixed
+- **H1145: `config/srs.php` default restored to `false` (R-6 baseline protection).** The default had been flipped to `true` by H447 (PR #442, commit `6267d70`) for an August-2026 pilot rationale superseded by R-5/R-6 — three other places (the same file's docblock, `routes/web.php` ~L260, `DEPLOY_QUEUE.md` #24) still asserted OFF-by-default, so an unpatched deploy would have put an SRS nav entry in front of every student and corrupted the R20 baseline. `tests/Feature/Srs/SrsFlagDefaultTest.php` pins `config('srs.enabled') === false` and `GET /dvaram/srs` → 404 with no `SRS_ENABLED` in env; full SRS suite (30 tests) and full `php artisan test` (1549 tests, 4478 assertions) green. Protects the R20 baseline — does not start it (that clock begins only when a human deploys `DEPLOY_QUEUE.md` #25).
+
 ## [1.18.0] - 2026-07-17
 ### Added
 - **GC-B3: шов `WebinarProvider` (страховка от ухода Zoom, руление R1 — BigBlueButton).** Интерфейс с тремя методами (createMeeting / fetchParticipants / normalizeWebhook); `ZoomService` реализует его без изменения поведения (вебхук-контроллер потребляет `normalizeWebhook` — разбор байт-в-байт прежний); скелет `BigBlueButtonService` с формой BBB API (бросает до развертывания Q4); провайдер-нейтральные алиасы `meeting_*` поверх `zoom_*` (реверсивная миграция, бэкфилл копией); биндинг шва на Zoom-драйвер. Авто-создание Zoom-встреч НЕ восстановлено — остается @DECIDE GC-B1. 7 unit-тестов шва; CI зеленый. [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) + деплой-строка №29 ([PR #550](https://github.com/gasyoun/Systema-Sanscriticum/pull/550), общий `php artisan migrate`). H601, Fable 5 (`claude-fable-5`).

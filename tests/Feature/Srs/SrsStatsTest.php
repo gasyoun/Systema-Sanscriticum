@@ -26,8 +26,26 @@ class SrsStatsTest extends TestCase
 
     protected function setUp(): void
     {
+        // H1145: `srs.enabled` now defaults to false (R-6). routes/web.php
+        // registers `student.srs.stats` inside `if (config('srs.enabled'))`
+        // at application boot — a config() override made after parent::setUp()
+        // is too late for that, since the route is either registered or not
+        // by the time this method's own body runs. Set the env var before
+        // booting the app so the route actually gets registered.
+        putenv('SRS_ENABLED=true');
+        $_ENV['SRS_ENABLED'] = 'true';
+        $_SERVER['SRS_ENABLED'] = 'true';
+
         parent::setUp();
         config(['srs.enabled' => true]);
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('SRS_ENABLED');
+        unset($_ENV['SRS_ENABLED'], $_SERVER['SRS_ENABLED']);
+
+        parent::tearDown();
     }
 
     private function makeDeck(int $cardCount): SrsDeck
