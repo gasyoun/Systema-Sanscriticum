@@ -11,6 +11,13 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-07-17
+### Added
+- **GC-B3: шов `WebinarProvider` (страховка от ухода Zoom, руление R1 — BigBlueButton).** Интерфейс с тремя методами (createMeeting / fetchParticipants / normalizeWebhook); `ZoomService` реализует его без изменения поведения (вебхук-контроллер потребляет `normalizeWebhook` — разбор байт-в-байт прежний); скелет `BigBlueButtonService` с формой BBB API (бросает до развертывания Q4); провайдер-нейтральные алиасы `meeting_*` поверх `zoom_*` (реверсивная миграция, бэкфилл копией); биндинг шва на Zoom-драйвер. Авто-создание Zoom-встреч НЕ восстановлено — остается @DECIDE GC-B1. 7 unit-тестов шва; CI зеленый. [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) + деплой-строка №29 ([PR #550](https://github.com/gasyoun/Systema-Sanscriticum/pull/550), общий `php artisan migrate`). H601, Fable 5 (`claude-fable-5`).
+
+### Added
+- **GC-B3: шов `WebinarProvider` (страховка от ухода Zoom, руление R1 — BigBlueButton).** Интерфейс с тремя методами (createMeeting / fetchParticipants / normalizeWebhook); `ZoomService` реализует его без изменения поведения (вебхук-контроллер потребляет `normalizeWebhook` — разбор байт-в-байт прежний); скелет `BigBlueButtonService` с формой BBB API (бросает до развертывания Q4); провайдер-нейтральные алиасы `meeting_*` поверх `zoom_*` (реверсивная миграция, бэкфилл копией); биндинг шва на Zoom-драйвер. Авто-создание Zoom-встреч НЕ восстановлено — остается @DECIDE GC-B1. 7 unit-тестов шва; CI зеленый. [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549), H601, Fable 5 (`claude-fable-5`). Деплой: [DEPLOY_QUEUE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) — общий `php artisan migrate`.
+
 ## [1.17.1] - 2026-07-17
 
 ### Added
