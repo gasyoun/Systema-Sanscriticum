@@ -11,8 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.18.1] - 2026-07-17
 ### Fixed
-- **H1145: `config/srs.php` default restored to `false` (R-6 baseline protection).** The default had been flipped to `true` by H447 (PR #442, commit `6267d70`) for an August-2026 pilot rationale superseded by R-5/R-6 — three other places (the same file's docblock, `routes/web.php` ~L260, `DEPLOY_QUEUE.md` #24) still asserted OFF-by-default, so an unpatched deploy would have put an SRS nav entry in front of every student and corrupted the R20 baseline. `tests/Feature/Srs/SrsFlagDefaultTest.php` pins `config('srs.enabled') === false` and `GET /dvaram/srs` → 404 with no `SRS_ENABLED` in env; full SRS suite (30 tests) and full `php artisan test` (1549 tests, 4478 assertions) green. Protects the R20 baseline — does not start it (that clock begins only when a human deploys `DEPLOY_QUEUE.md` #25).
+- **H1145: `config/srs.php` default restored to `false` (R-6 baseline protection).** The default had been flipped to `true` by H447 (PR #442, commit `6267d70`) for an August-2026 pilot rationale superseded by R-5/R-6 — three other places (the same file's docblock, `routes/web.php` ~L260, `DEPLOY_QUEUE.md` #24) still asserted OFF-by-default, so an unpatched deploy would have put an SRS nav entry in front of every student and corrupted the R20 baseline. `tests/Feature/Srs/SrsFlagDefaultTest.php` pins `config('srs.enabled') === false` and `GET /dvaram/srs` → 404 with no `SRS_ENABLED` in env; full SRS suite (30 tests) and full `php artisan test` (1549 tests, 4478 assertions) green. Protects the R20 baseline — does not start it (that clock begins only when a human deploys `DEPLOY_QUEUE.md` #25). [PR #553](https://github.com/gasyoun/Systema-Sanscriticum/pull/553).
 
 ## [1.18.0] - 2026-07-17
 ### Added
