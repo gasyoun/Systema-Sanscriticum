@@ -26,6 +26,16 @@ Mailable-классы для отправки email. Все письма ста�
 Тема письма — `Announcement::title`.  
 Запускается из `SendMessengerAlerts` job при включенном переключателе email в объявлении.
 
+## `MarathonWelcomeMail` / `MarathonDay1Mail` / `MarathonDay2Mail` / `MarathonDay3Mail` / `MarathonRecordingMail`
+**Очередь**: `mailing`  
+**Шаблоны**: `resources/views/emails/marathon/{welcome,day1,day2,day3,recording}.blade.php`
+
+Пять писем марафона «Консультация по онлайн-курсам ОРС» (H1148); текст рулен H1067
+([marathon-email-sequence.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-email-sequence.md)) — не редактировать при изменениях кода.
+`MarathonDay3Mail` несет оба рулевых варианта по треку (`paid`): 3а платный / 3б бесплатный.
+**Отправка сознательно НЕ подключена** — ни одного send-сайта вне `app/Mail/`; канал ждет
+ESP-гейта (H1147), Telegram-дрип остается основным. Тест: `tests/Feature/Mail/MarathonMailablesTest.php`.
+
 ---
 
 ## Добавление нового письма
