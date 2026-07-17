@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource;
+use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PublicChatController;
+use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
@@ -390,7 +392,7 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
 // --- ССЫЛКА ВХОДА ПОСЛЕ РАЗБЛОКИРОВКИ (H849) — админ выдаёт студенту, минуя
 // сломанную почту. НЕ завязано на newsletter-флаг; принимает только токены
 // назначения admin_unblock (см. StudentUnblockService::MAGIC_PURPOSE).
-Route::get('/login-link/{token}', [\App\Http\Controllers\AdminLoginLinkController::class, 'login'])
+Route::get('/login-link/{token}', [AdminLoginLinkController::class, 'login'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('admin.login-link');
@@ -541,5 +543,12 @@ Route::post('/chat/message', [PublicChatController::class, 'store'])
 Route::get('/chat/history', [PublicChatController::class, 'history'])
     ->middleware('throttle:60,1')
     ->name('chat.history');
+
+// Presence-beacon проактивного монитора посетителей (H1197, Jivo-паритет Pillar 2).
+// Публичный, rate-limited; за флагом support_visitor_presence (иначе no-op). Виджет
+// стучит сюда с интервалом support_presence.beacon_interval_seconds. Строго до catch-all.
+Route::post('/support/presence', [PublicPresenceController::class, 'ping'])
+    ->middleware('throttle:20,1')
+    ->name('support.presence');
 
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

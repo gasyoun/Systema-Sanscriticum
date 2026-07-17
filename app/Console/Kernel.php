@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Jobs\CloseStaleSessionsJob;
+use App\Jobs\PruneStaleVisitorPresencesJob;
 use App\Models\MarketingSetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -144,6 +145,16 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)         // защита от двойного запуска (если прошлый ещё не завершился)
             ->onOneServer()                  // если когда-то будет несколько серверов — запускать на одном
             ->name('close-stale-sessions');  // имя для логов и блокировки
+
+        // Вымести устаревшие строки присутствия посетителей (H1197, Jivo-паритет
+        // Pillar 2): старше support_presence.prune_after_minutes. Эфемерная таблица —
+        // персональные данные анонимного посетителя не залёживаются (152-ФЗ). Гейта
+        // по флагу тут нет: при выключенном presence таблица пуста → джоба — no-op.
+        $schedule->job(new PruneStaleVisitorPresencesJob)
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('prune-stale-visitor-presences');
 
         // --- ОБНОВЛЕНИЕ АВАТАРОК TG/VK ---
         // Раз в неделю освежаем аватарки тех, кого не синхронизировали 7+ дней
