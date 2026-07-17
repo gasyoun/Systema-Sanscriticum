@@ -7,8 +7,12 @@ namespace Tests\Feature\Support;
 use App\Events\ChatMessageSent;
 use App\Filament\Pages\Helpdesk;
 use App\Models\ChatMessage;
+use App\Models\Course;
+use App\Models\MarketingSetting;
+use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
+use App\Services\Support\SupportAnswerSuggester;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -154,5 +158,37 @@ class HelpdeskGuestChatTest extends TestCase
             fn (ChatMessageSent $e) => $e->message->role === 'curator'
                 && $e->message->user_id === $student->id,
         );
+    }
+
+    /**
+     * H1198 (Jivo-паритет S3): FAQ-суггестер даёт черновик и для гостя (только
+     * категория D, публичные тарифы) — баннер должен показаться в открытом
+     * гостевом треде тем же способом, что у студентов.
+     *
+     * @test
+     */
+    public function pending_answer_suggestion_for_a_guest_thread_shows_in_the_banner(): void
+    {
+        config(['features.support_answer_suggester' => true]);
+        MarketingSetting::create(['support_answer_suggester_enabled' => true]);
+        MarketingSetting::flushCached();
+
+        $course = Course::factory()->create();
+        $course->tariffs()->create(['title' => 'Весь курс', 'type' => 'full', 'price' => 20000, 'is_active' => true]);
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Сколько стоит курс?');
+
+        app(SupportAnswerSuggester::class)->run();
+        $this->assertDatabaseHas('support_answer_suggestions', [
+            'user_id' => null,
+            'category' => SupportAnswerSuggestion::CATEGORY_PAYMENT,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertSee('Черновик ответа')
+            ->assertSee('20 000');
     }
 }

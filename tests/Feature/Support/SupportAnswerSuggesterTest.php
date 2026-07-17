@@ -60,6 +60,25 @@ class SupportAnswerSuggesterTest extends TestCase
         ]);
     }
 
+    /** Гостевое (анонимное) сообщение веб-виджета (H1198) — user_id = NULL. */
+    private function guestMessage(string $text): ChatMessage
+    {
+        return ChatMessage::create([
+            'user_id' => null,
+            'role' => 'user',
+            'text' => $text,
+            'is_read' => false,
+        ]);
+    }
+
+    private function visibleCourseWithTariff(int $price = 15000): Course
+    {
+        $course = Course::factory()->create();
+        $course->tariffs()->create(['title' => 'Весь курс', 'type' => 'full', 'price' => $price, 'is_active' => true]);
+
+        return $course;
+    }
+
     public function test_categorize_maps_keywords_to_categories(): void
     {
         $suggester = app(SupportAnswerSuggester::class);
@@ -236,5 +255,64 @@ class SupportAnswerSuggesterTest extends TestCase
         $this->assertDatabaseHas('support_ai_reply_events', [
             'event_type' => SupportAnswerEventLogger::EVENT_SUGGESTED,
         ]);
+    }
+
+    // --- H1198 (Jivo-паритет S3): гостевой веб-тред — только категория D. ---
+
+    public function test_guest_payment_question_creates_public_pricing_draft(): void
+    {
+        $this->enableFeature();
+        $this->visibleCourseWithTariff(15000);
+        $this->guestMessage('Сколько стоит курс?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(1, $result['created']);
+        $suggestion = SupportAnswerSuggestion::first();
+        $this->assertNull($suggestion->user_id);
+        $this->assertSame(SupportAnswerSuggestion::CATEGORY_PAYMENT, $suggestion->category);
+        $this->assertStringContainsString('15 000', $suggestion->draft_text);
+        $this->assertSame('public_pricing', $suggestion->facts['type']);
+    }
+
+    public function test_guest_non_payment_question_creates_no_suggestion(): void
+    {
+        // A/B/C/E/F требуют личного зачисления (группа/расписание) — у гостя
+        // его в принципе нет, черновик не строится ни при каких данных.
+        $this->enableFeature();
+        $this->guestMessage('Есть ссылка на ближайшее занятие?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(0, $result['created']);
+        $this->assertDatabaseCount('support_answer_suggestions', 0);
+    }
+
+    public function test_guest_payment_question_with_no_visible_courses_creates_no_suggestion(): void
+    {
+        $this->enableFeature();
+        Course::factory()->hidden()->create()->tariffs()->create(['title' => 'X', 'type' => 'full', 'price' => 9000, 'is_active' => true]);
+        $this->guestMessage('Сколько стоит курс?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(0, $result['created']);
+        $this->assertDatabaseCount('support_answer_suggestions', 0);
+    }
+
+    public function test_guest_and_student_suggestions_from_the_same_scan_do_not_collide(): void
+    {
+        $this->enableFeature();
+        $this->visibleCourseWithTariff(15000);
+        [$user, $group] = $this->studentInGroup();
+        $this->futureClass($group);
+        $this->webMessage($user, 'Есть ссылка на ближайшее занятие?');
+        $this->guestMessage('Сколько стоит курс?');
+
+        $result = app(SupportAnswerSuggester::class)->run();
+
+        $this->assertSame(2, $result['created']);
+        $this->assertDatabaseHas('support_answer_suggestions', ['user_id' => $user->id, 'category' => SupportAnswerSuggestion::CATEGORY_ZOOM]);
+        $this->assertDatabaseHas('support_answer_suggestions', ['user_id' => null, 'category' => SupportAnswerSuggestion::CATEGORY_PAYMENT]);
     }
 }

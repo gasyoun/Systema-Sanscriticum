@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\MarketingSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -74,5 +75,49 @@ class SupportChatWidgetTest extends TestCase
         }
 
         return '';
+    }
+
+    // --- H1198 (Jivo-паритет S3): контекстное приветствие по странице входа. ---
+
+    public function test_context_greeting_flag_is_off_by_default(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-context-greeting="0"', false);
+    }
+
+    public function test_context_greeting_flag_reflects_the_reused_suggester_flag_when_on(): void
+    {
+        config(['features.support_answer_suggester' => true]);
+        MarketingSetting::create(['support_answer_suggester_enabled' => true]);
+        MarketingSetting::flushCached();
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-context-greeting="1"', false);
+    }
+
+    public function test_context_greeting_flag_stays_off_when_only_the_deploy_flag_is_on(): void
+    {
+        // Оба гейта нужны — как у самого FAQ-суггестера (isEnabled()): деплой-флаг
+        // включен, но админ-тумблер MarketingSetting выключен/отсутствует.
+        config(['features.support_answer_suggester' => true]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-context-greeting="0"', false);
+    }
+
+    public function test_context_greeting_script_carries_course_and_payment_copy(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Вопрос по этому курсу', false);
+        $response->assertSee('Возникли сложности с оплатой', false);
+        $response->assertSee('CONTEXT_GREETING', false);
     }
 }

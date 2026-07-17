@@ -429,13 +429,28 @@ class Helpdesk extends Page
 
     /**
      * Pending факт-черновики ответов FAQ-суггестера (support:suggest-answers, H247)
-     * для открытого студента — баннер над лентой. Куратор жмёт Принять/Изменить/
-     * Отклонить; бот сам НИЧЕГО не отправляет.
+     * для открытого студента ИЛИ гостевого треда (H1198, категория D — публичные
+     * тарифы) — баннер над лентой. Куратор жмёт Принять/Изменить/Отклонить; бот
+     * сам НИЧЕГО не отправляет.
      *
      * @return Collection<int, SupportAnswerSuggestion>
      */
     public function getPendingAnswerSuggestionsProperty(): Collection
     {
+        if ($this->activeGuestId) {
+            // Гость: нет user_id, привязка к треду — через ChatMessage.support_
+            // conversation_id (без новой колонки на support_answer_suggestions).
+            $chatMessageIds = ChatMessage::where('support_conversation_id', $this->activeGuestId)->pluck('id');
+
+            return SupportAnswerSuggestion::query()
+                ->whereNull('user_id')
+                ->where('source_type', SupportAnswerSuggestion::SOURCE_CHAT_MESSAGE)
+                ->whereIn('source_id', $chatMessageIds)
+                ->pending()
+                ->orderByDesc('id')
+                ->get();
+        }
+
         if (! $this->activeUserId) {
             return collect();
         }
