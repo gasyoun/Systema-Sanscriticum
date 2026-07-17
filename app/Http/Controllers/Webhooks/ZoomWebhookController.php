@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Services\Zoom\AttendanceRecorder;
+use App\Services\Zoom\ZoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -94,22 +95,23 @@ class ZoomWebhookController extends Controller
      */
     private function handleParticipant(Request $request, string $event): JsonResponse
     {
-        $object = (array) $request->input('payload.object', []);
-        $meetingId = isset($object['id']) ? (string) $object['id'] : '';
-        $occurrenceUuid = isset($object['uuid']) ? (string) $object['uuid'] : null;
-
-        $p = (array) ($object['participant'] ?? []);
+        // Нейтрализация payload'а живёт в драйвере (шов WebinarProvider, GC-B3);
+        // разбор идентичен прежнему инлайновому — поведение байт-в-байт.
+        $norm = app(ZoomService::class)->normalizeWebhook((array) $request->all());
+        if ($norm === null) {
+            return response()->json(['status' => 'ignored', 'event' => $event]);
+        }
 
         // Единый meeting_id курса повторяется на всех датах — занятие резолвим по
         // occurrence uuid + времени запуска/участника.
-        $eventTime = $object['start_time'] ?? ($p['join_time'] ?? null);
-
-        $schedule = Schedule::resolveForZoomEvent($meetingId, $occurrenceUuid, $eventTime);
+        $schedule = Schedule::resolveForZoomEvent(
+            $norm['meeting_id'], $norm['occurrence_uuid'], $norm['event_time'],
+        );
         if ($schedule === null) {
             return response()->json(['status' => 'ignored', 'reason' => 'schedule not found']);
         }
 
-        app(AttendanceRecorder::class)->recordWebhookEvent($schedule->id, $p, $event);
+        app(AttendanceRecorder::class)->recordWebhookEvent($schedule->id, $norm['participant'], $norm['provider_event']);
 
         return response()->json(['status' => 'ok', 'schedule_id' => $schedule->id, 'event' => $event]);
     }

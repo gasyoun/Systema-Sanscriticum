@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Zoom;
 
+use App\Services\Webinar\WebinarProvider;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +17,7 @@ use RuntimeException;
  * POST /v2/users/me/meetings. Секреты — только из config('services.zoom'),
  * в коде их нет; без полного набора кредов сервис «не сконфигурирован».
  */
-class ZoomService
+class ZoomService implements WebinarProvider
 {
     private const OAUTH_URL = 'https://zoom.us/oauth/token';
 
@@ -114,6 +115,53 @@ class ZoomService
         } while ($token !== '');
 
         return $participants;
+    }
+
+    /**
+     * Контракт WebinarProvider (GC-B3). Авто-создание Zoom-встреч было построено
+     * и СОЗНАТЕЛЬНО удалено 27-06-2026 в пользу единого ручного потока; повторное
+     * включение — открытый @DECIDE GC-B1 (rescope). Шов существует, драйвер Zoom
+     * намеренно его не реализует — не восстанавливать без руления GC-B1.
+     */
+    public function createMeeting(array $params): array
+    {
+        throw new RuntimeException(
+            'Zoom: авто-создание встреч удалено 27-06-2026 (единый ручной поток); включение — @DECIDE GC-B1.'
+        );
+    }
+
+    /** Контракт WebinarProvider: делегирует существующей выгрузке участников (Reports API). */
+    public function fetchParticipants(string $meetingRef): array
+    {
+        return $this->meetingParticipants($meetingRef);
+    }
+
+    /**
+     * Контракт WebinarProvider: нейтрализует Zoom-вебхук посещаемости.
+     * Разбор в точности повторяет прежний ZoomWebhookController::handleParticipant —
+     * контроллер теперь потребляет эту форму (поведение байт-в-байт).
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>|null
+     */
+    public function normalizeWebhook(array $payload): ?array
+    {
+        $event = isset($payload['event']) ? (string) $payload['event'] : '';
+        if ($event !== 'meeting.participant_joined' && $event !== 'meeting.participant_left') {
+            return null;
+        }
+
+        $object = (array) ($payload['payload']['object'] ?? []);
+        $p = (array) ($object['participant'] ?? []);
+
+        return [
+            'event' => $event === 'meeting.participant_joined' ? 'participant_joined' : 'participant_left',
+            'provider_event' => $event,
+            'meeting_id' => isset($object['id']) ? (string) $object['id'] : '',
+            'occurrence_uuid' => isset($object['uuid']) ? (string) $object['uuid'] : null,
+            'event_time' => $object['start_time'] ?? ($p['join_time'] ?? null),
+            'participant' => $p,
+        ];
     }
 
     /**
