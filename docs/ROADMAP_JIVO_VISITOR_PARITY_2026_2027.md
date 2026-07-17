@@ -1,6 +1,6 @@
 # Roadmap: Jivo-паритет веб-чата — visitor intelligence 2026–2027
 
-_Created: 17-07-2026 · Last updated: 17-07-2026_
+_Created: 17-07-2026 · Last updated: 18-07-2026_
 
 > Узкий roadmap **паритета с Jivo по «интеллекту посетителя»** — тому пласту, ради
 > которого Jivo и держат на [samskrtam.ru](https://samskrtam.ru): куратор видит, **из
@@ -34,7 +34,7 @@ _Created: 17-07-2026 · Last updated: 17-07-2026_
 |---|---|---|---|
 | 1 | Живой чат с оператором (real-time) | ✅ **Готово** (H536; Reverb-push в проде + фолбэк-опрос) | — (residual reply-out канарейка — S5) |
 | 2 | Авто-ответы / сценарии | ⚠️ Частично (AI-куратор + FAQ-суггестер H247 — оператору; веб-виджет без сценариев) | [H1198](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1198-Sonnet_Systema-Sanscriticum_jivo-parity-s3of5-webchat-scenarios_17.07.26.md) (S3) |
-| 3 | Сбор контактов / заявки (лиды) | ⚠️ Частично (имя — необязательно; нет телефон/почта, нет оффлайн-формы) | [H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md) (S4) |
+| 3 | Сбор контактов / заявки (лиды) | 🟢 **S4 сделано 18-07-2026** (см. §4) | [H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md) (S4) |
 | 4 | Каналы TG / VK / почта | ⚠️ Частично (TG+VK есть; почты нет; каналы не разбейджены; reply-out не проверен вживую) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5) |
 | 5 | **Город посетителя** в панели куратора | 🟢 **S1 сделан этой сессией** (см. §2) | [H1196](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1196-Opus_Systema-Sanscriticum_jivo-parity-s1of5-visitor-geo-city_17.07.26.md) (S1, Pillar 1) |
 | 6 | **Написать первым** + видеть, что делает на сайте | 🟢 **S2 сделан этой сессией** (см. §3) | [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md) (S2, Pillar 2) |
@@ -176,10 +176,19 @@ _Created: 17-07-2026 · Last updated: 17-07-2026_
   (реюз `entry_url` из S1) + завести черновики FAQ-суггестера (H247, `support_answer_suggester`) на
   веб-сторону, а не только TG. Бот НЕ отвечает сам — черновик куратору. Пересекается с
   [`ROADMAP_SUPPORT_AUTOMATION`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SUPPORT_AUTOMATION_2026_2027.md) S3/S5.
-- **S4 — захват лида (контакты)** ([H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md)):
-  необязательные телефон/почта в виджете + запись `Lead`-строки (реюз `Lead`/UTM, как
-  `newsletter_subscribe` H324), чтобы обращение из чата не терялось как лид. Оффлайн-форма «напишем
-  на почту», когда операторов нет онлайн.
+- **S4 — захват лида (контакты) — ✅ сделано 18-07-2026** ([H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md),
+  [PR #562](https://github.com/gasyoun/Systema-Sanscriticum/pull/562) merged): необязательные
+  телефон/почта в виджете + запись `Lead`-строки ([`SupportLeadCaptureService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportLeadCaptureService.php),
+  реюз `Lead`/UTM-паттерна `newsletter_subscribe` H324: UTM из `CaptureAttribution`-сессии, dedup
+  по email), идемпотентно на тред (`lead_captured_at`) — обращение из чата больше не теряется как
+  лид. Оффлайн-копирайт «Операторы сейчас офлайн — оставьте e-mail» вне деловых часов
+  ([`config/support_hours.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/support_hours.php),
+  [`App\Support\SupportAvailability`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/SupportAvailability.php));
+  отправка НЕ блокируется ни онлайн, ни офлайн (контакты остаются необязательными). Нашёл и
+  зафиксировал регрессией реальную коллизию S3↔S4: H1198's `applyContextualGreeting()` затирал
+  `#scw-intro` поверх оффлайн-копирайта — исправлено `data-offline`-гардом. Всё за флагом
+  `support_lead_capture` (ВЫКЛ по умолчанию). 24 теста / 63 assertions зелёные + 45 регрессионных
+  тестов (Helpdesk/CRM/presence/geo) без изменений.
 - **S5 — email-канал + бейджинг каналов + reply-out канарейка** ([H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md)):
   разбейджить VK/TG-student-bot как отдельные каналы в едином инбоксе; контролируемая канарейка
   reply-OUT в TG-support (WS1.3 из [`ROADMAP_TELEGRAM_SCALING`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md));
