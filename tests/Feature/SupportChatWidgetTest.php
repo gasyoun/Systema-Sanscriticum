@@ -66,6 +66,27 @@ class SupportChatWidgetTest extends TestCase
         $this->assertMatchesRegularExpression('/id="scw-name"[^>]*\shidden/', $response->getContent());
     }
 
+    public function test_presence_beacon_is_wired_when_flag_on(): void
+    {
+        config()->set('features.support_visitor_presence', true);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-presence="1"', false);
+        $response->assertSee('data-presence-url="'.route('support.presence').'"', false);
+    }
+
+    public function test_presence_beacon_is_off_when_flag_off(): void
+    {
+        config()->set('features.support_visitor_presence', false);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-presence="0"', false);
+    }
+
     /** Вырезает фрагмент вокруг hidden-инпута имени, если он есть (для негативной проверки гостя). */
     private function hiddenNameFragment(string $html): string
     {

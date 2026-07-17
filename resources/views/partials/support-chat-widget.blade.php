@@ -14,6 +14,12 @@
                      только когда VITE_REVERB_APP_KEY задан (guard в
                      resources/js/bootstrap.js) — до деплоя Reverb виджет
                      работает на light-poll фолбэке, ничего не ломается.
+      • presence   → POST {{ route('support.presence') }} с первого захода, если
+                     включён флаг support_visitor_presence (H1197, Jivo-паритет
+                     Pillar 2). Куратор видит посетителя в «Посетители онлайн» и
+                     может написать первым; ответ beacon'а несёт conversation_id —
+                     проактив куратора долетает до молчащего посетителя, и виджет
+                     раскрывается. При выключенном флаге beacon не шлётся.
 
     Безопасность: сервер отдаёт уже экранированный `html` (ChatMessage::htmlForWeb,
     whitelist без атрибутов) — рендерим его, но НИКОГДА не сырой ввод посетителя.
@@ -25,6 +31,9 @@
     data-history-url="{{ route('chat.history') }}"
     data-csrf="{{ csrf_token() }}"
     data-authed="{{ auth()->check() ? '1' : '0' }}"
+    data-presence="{{ config('features.support_visitor_presence') ? '1' : '0' }}"
+    data-presence-url="{{ route('support.presence') }}"
+    data-presence-interval="{{ (int) config('support_presence.beacon_interval_seconds', 20) }}"
     aria-live="polite"
 >
     <button
@@ -189,6 +198,14 @@
     var pollTimer = null;       // фолбэк-опрос без Echo
     var isOpen = false;
 
+    // Presence (H1197, Jivo-паритет Pillar 2): beacon-«я на сайте», чтобы куратор
+    // видел посетителя и мог написать первым. Работает только за флагом сервера.
+    var PRESENCE = root.dataset.presence === '1';
+    var PRESENCE_URL = root.dataset.presenceUrl;
+    var PRESENCE_INTERVAL = (parseInt(root.dataset.presenceInterval, 10) || 20) * 1000;
+    var beaconTimer = null;
+    var beaconStarted = false;  // первый beacon уже прошёл?
+
     function escapeText(s) {
         var d = document.createElement('div');
         d.textContent = s == null ? '' : String(s);
@@ -244,6 +261,51 @@
     }
     function stopPolling() {
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    // Presence-beacon: сообщаем серверу «посетитель на этой странице». Ответ несёт
+    // conversation_id — если куратор написал первым молчащему посетителю, тред уже
+    // создан: подтягиваем его и раскрываем виджет (Jivo «оператор пишет первым»).
+    function beacon() {
+        if (!PRESENCE || !PRESENCE_URL) return;
+        var payload = {};
+        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
+        fetch(PRESENCE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data || data.enabled === false) { stopBeacon(); return; }   // флаг выключен — не шумим
+            var firstBeacon = !beaconStarted;
+            beaconStarted = true;
+            // Тред появился, а у виджета его ещё нет → куратор открыл диалог.
+            if (data.conversation_id && !conversationId) {
+                var proactive = !firstBeacon; // появился ПОСЛЕ загрузки = проактив куратора
+                loadHistory().then(function () {
+                    // firstBeacon с уже существующим тредом = возврат: тихо подписаны,
+                    // без авто-раскрытия; проактив = раскрываем панель с сообщением.
+                    if (conversationId && proactive && !isOpen) openPanel();
+                });
+            }
+        })
+        .catch(function () { /* сеть недоступна — не шумим */ });
+    }
+
+    function startBeacon() {
+        if (!PRESENCE || !PRESENCE_URL || beaconTimer) return;
+        beacon(); // сразу, затем по интервалу
+        beaconTimer = setInterval(beacon, PRESENCE_INTERVAL);
+    }
+    function stopBeacon() {
+        if (beaconTimer) { clearInterval(beaconTimer); beaconTimer = null; }
     }
 
     function loadHistory(silent) {
@@ -336,5 +398,9 @@
     var wasOpen = false;
     try { wasOpen = localStorage.getItem(STORE_KEY) === '1'; } catch (e) {}
     if (wasOpen) openPanel();
+
+    // Presence-beacon стартует с первого захода (не только при открытой панели) —
+    // чтобы проактив куратора долетел до молчащего посетителя (H1197, Pillar 2).
+    startBeacon();
 })();
 </script>
