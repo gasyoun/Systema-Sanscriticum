@@ -19,6 +19,13 @@ use App\Models\User;
  * ответа из данных LMS (SupportAnswerFactResolver). Сам НИЧЕГО не отправляет: только
  * заводит pending SupportAnswerSuggestion и пишет событие `answer_suggested`.
  * Точная копия механики ReminderRequestDetector (H187).
+ *
+ * Гостевые веб-треды (H1198, Jivo-паритет S3): `ChatMessage.user_id` = NULL для
+ * анонимного посетителя (PublicChatController::store). У гостя нет `users`-записи
+ * и, следовательно, нет группы/зачисления — категории A/B/C/E/F завязаны именно
+ * на это и гостю в принципе недоступны. Единственная категория, для которой есть
+ * осмысленные ФАКТЫ без аккаунта, — D (публичные тарифы курсов, без
+ * персонализации): {@see SupportAnswerFactResolver::resolvePublicPricing()}.
  */
 class SupportAnswerSuggester
 {
@@ -94,6 +101,9 @@ class SupportAnswerSuggester
                 foreach ($messages as $message) {
                     $scanned++;
                     $maxId = max($maxId, $message->id);
+                    // user_id = NULL — гостевой веб-тред (H1198); maybeSuggest сам
+                    // сужает гостя до категории D (публичные тарифы, без фактов
+                    // о личном зачислении).
                     if ($this->maybeSuggest(SupportAnswerSuggestion::SOURCE_CHAT_MESSAGE, $message->id, $message->user_id, (string) $message->text)) {
                         $created++;
                     }
@@ -137,7 +147,7 @@ class SupportAnswerSuggester
 
     private function maybeSuggest(string $sourceType, int $sourceId, ?int $userId, string $text): bool
     {
-        if ($userId === null || trim($text) === '') {
+        if (trim($text) === '') {
             return false;
         }
 
@@ -150,20 +160,14 @@ class SupportAnswerSuggester
             return false;
         }
 
-        $user = User::find($userId);
-        if ($user === null) {
-            return false;
-        }
-
-        // A/B/C — строковый шаблон из фактов (без LLM). D/E/F (S5) — LLM
-        // формулирует по фактам LMS, за флагом support_ai_assist + дневным cap.
-        $resolved = in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
-            ? $this->llm->compose($category, $user, $text, $sourceType)
-            : $this->facts->resolve($category, $user);
+        $resolved = $userId === null
+            ? $this->resolveGuest($category, $sourceType)
+            : $this->resolveForUser($category, $userId, $text, $sourceType);
 
         if ($resolved === null) {
             // Категория опознана, но черновика нет: для A/B/C — нет фактов в LMS;
-            // для D/E/F — ещё и LLM выключен / достигнут дневной cap / нет ключа.
+            // для D/E/F — ещё и LLM выключен / достигнут дневной cap / нет ключа;
+            // для гостя — категория не D, либо нет видимых курсов с тарифом.
             // Пустой черновик куратору не показываем.
             return false;
         }
@@ -183,5 +187,40 @@ class SupportAnswerSuggester
         SupportAnswerEventLogger::log($suggestion, SupportAnswerEventLogger::EVENT_SUGGESTED);
 
         return true;
+    }
+
+    /**
+     * @return array{draft: string, facts: array<string, mixed>, confidence: float}|null
+     */
+    private function resolveForUser(string $category, int $userId, string $text, string $sourceType): ?array
+    {
+        $user = User::find($userId);
+        if ($user === null) {
+            return null;
+        }
+
+        // A/B/C — строковый шаблон из фактов (без LLM). D/E/F (S5) — LLM
+        // формулирует по фактам LMS, за флагом support_ai_assist + дневным cap.
+        return in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
+            ? $this->llm->compose($category, $user, $text, $sourceType)
+            : $this->facts->resolve($category, $user);
+    }
+
+    /**
+     * Гость (H1198): нет `users`-записи → нет группы/зачисления → категории
+     * A/B/C/E/F недоступны в принципе (их факты все личные). D (публичные
+     * тарифы) — единственная, для которой факт существует без аккаунта, и
+     * только на веб-канале (Telegram-support гостей структурно не бывает —
+     * scanTelegramMessages уже требует linked_user_id).
+     *
+     * @return array{draft: string, facts: array<string, mixed>, confidence: float}|null
+     */
+    private function resolveGuest(string $category, string $sourceType): ?array
+    {
+        if ($category !== SupportAnswerSuggestion::CATEGORY_PAYMENT || $sourceType !== SupportAnswerSuggestion::SOURCE_CHAT_MESSAGE) {
+            return null;
+        }
+
+        return $this->facts->resolvePublicPricing();
     }
 }

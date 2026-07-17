@@ -23,6 +23,13 @@
 
     Безопасность: сервер отдаёт уже экранированный `html` (ChatMessage::htmlForWeb,
     whitelist без атрибутов) — рендерим его, но НИКОГДА не сырой ввод посетителя.
+
+    Контекстное приветствие по странице входа (H1198, Jivo-паритет S3): за флагом
+    support_answer_suggester (тем же, что у FAQ-суггестера H247 — единый рубильник
+    "AI-assist на веб-чате"), клиентский JS подменяет статичное приветствие на
+    контекстное по URL-паттерну (курс vs оплата) БЕЗ обращения к серверу — паттерн
+    известен сразу, `entry_url` (S1/H1196) фиксируется только сервером и только
+    после первого сообщения, для приветствия ДО сообщения он не годится.
 --}}
 <div
     id="scw-root"
@@ -34,6 +41,7 @@
     data-presence="{{ config('features.support_visitor_presence') ? '1' : '0' }}"
     data-presence-url="{{ route('support.presence') }}"
     data-presence-interval="{{ (int) config('support_presence.beacon_interval_seconds', 20) }}"
+    data-context-greeting="{{ app(\App\Services\Support\SupportAnswerSuggester::class)->isEnabled() ? '1' : '0' }}"
     aria-live="polite"
 >
     <button
@@ -178,6 +186,7 @@
     var POST_URL = root.dataset.postUrl;
     var HISTORY_URL = root.dataset.historyUrl;
     var CSRF = root.dataset.csrf;
+    var CONTEXT_GREETING = root.dataset.contextGreeting === '1';
     var STORE_KEY = 'scw_open';
 
     var toggle = document.getElementById('scw-toggle');
@@ -205,6 +214,23 @@
     var PRESENCE_INTERVAL = (parseInt(root.dataset.presenceInterval, 10) || 20) * 1000;
     var beaconTimer = null;
     var beaconStarted = false;  // первый beacon уже прошёл?
+
+    // Контекстное приветствие по странице входа (H1198): URL известен сразу,
+    // без обращения к серверу — за флагом support_answer_suggester. Дефолтный
+    // текст (уже в разметке) остаётся, если флаг выключен или страница не
+    // распознана ни одним паттерном.
+    function applyContextualGreeting() {
+        if (!CONTEXT_GREETING || !intro) return;
+        var path = (location.pathname || '').toLowerCase();
+        var greeting = null;
+        if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0) {
+            greeting = 'Здравствуйте! Вопрос по этому курсу — программа, расписание, преподаватель? Мы поможем разобраться.';
+        } else if (path.indexOf('/checkout/') === 0 || path.indexOf('/payment/') === 0 || path.indexOf('/deposit/') === 0) {
+            greeting = 'Здравствуйте! Возникли сложности с оплатой? Мы поможем разобраться.';
+        }
+        if (greeting) intro.textContent = greeting;
+    }
+    applyContextualGreeting();
 
     function escapeText(s) {
         var d = document.createElement('div');

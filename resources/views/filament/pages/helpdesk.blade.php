@@ -468,6 +468,18 @@
 
         {{-- ПРАВАЯ ПАНЕЛЬ --}}
         <div class="chat-main">
+            {{-- Категории FAQ-суггестера (H247/S5/H1198) — общие для student- и
+                 guest-веток ниже, обе рендерят баннер pendingAnswerSuggestions. --}}
+            @php
+                $answerCategoryLabels = [
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_ZOOM => 'Zoom / ссылка',
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_RECORDING => 'Запись урока',
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_SCHEDULE => 'Расписание',
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_PAYMENT => 'Оплата / цена',
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_ACCESS => 'Доступ / кабинет',
+                    \App\Models\SupportAnswerSuggestion::CATEGORY_MATERIALS => 'Материалы',
+                ];
+            @endphp
             @if($activeUserId)
                 @php $activeUser = collect($usersWithChats)->firstWhere('id', $activeUserId); @endphp
 
@@ -557,13 +569,6 @@
                      (support:suggest-answers, H247). Без LLM. Бот НИЧЕГО не отправил —
                      куратор принимает/правит/отклоняет; «Принять»/«Изменить» кладут
                      текст в поле ответа ниже. --}}
-                @php
-                    $answerCategoryLabels = [
-                        \App\Models\SupportAnswerSuggestion::CATEGORY_ZOOM => 'Zoom / ссылка',
-                        \App\Models\SupportAnswerSuggestion::CATEGORY_RECORDING => 'Запись урока',
-                        \App\Models\SupportAnswerSuggestion::CATEGORY_SCHEDULE => 'Расписание',
-                    ];
-                @endphp
                 @foreach($this->pendingAnswerSuggestions as $answer)
                     <div class="answer-banner" wire:key="answer-suggestion-{{ $answer->id }}">
                         <div class="answer-banner-head">
@@ -677,6 +682,26 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Баннер: FAQ-суггестер для гостя (H1198) — только категория D
+                     (публичные тарифы, без персонализации). Тот же принцип, что
+                     у студентов выше: бот НИЧЕГО не отправил, только черновик. --}}
+                @foreach($this->pendingAnswerSuggestions as $answer)
+                    <div class="answer-banner" wire:key="answer-suggestion-{{ $answer->id }}">
+                        <div class="answer-banner-head">
+                            <span class="answer-banner-badge">💡 Черновик ответа · {{ $answerCategoryLabels[$answer->category] ?? $answer->category }}</span>
+                        </div>
+                        <div class="answer-banner-text">{{ \Illuminate\Support\Str::limit($answer->draft_text, 320) }}</div>
+                        <div class="answer-banner-meta">
+                            На вопрос: «{{ \Illuminate\Support\Str::limit($answer->detected_text, 120) }}»
+                        </div>
+                        <div class="answer-banner-actions">
+                            <button type="button" class="answer-btn-accept" wire:click="acceptAnswerSuggestion({{ $answer->id }})">Принять</button>
+                            <button type="button" class="answer-btn-edit" wire:click="editAnswerSuggestion({{ $answer->id }})">Изменить</button>
+                            <button type="button" class="answer-btn-discard" wire:click="discardAnswerSuggestion({{ $answer->id }})">Отклонить</button>
+                        </div>
+                    </div>
+                @endforeach
 
                 <div class="messages-area" wire:poll.5s>
                     @forelse($this->guestMessages as $m)

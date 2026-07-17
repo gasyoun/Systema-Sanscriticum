@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
+use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Models\SupportAnswerSuggestion;
@@ -30,6 +31,50 @@ class SupportAnswerFactResolver
             SupportAnswerSuggestion::CATEGORY_RECORDING => $this->resolveRecording($user),
             default => null,
         };
+    }
+
+    /**
+     * D (гость, H1198) — публичные тарифы видимых активных курсов, БЕЗ
+     * персонализации (`Tariff::calculateFinalPriceForUser` требует `User` — у
+     * анонимного посетителя его нет). Показывает «от» самого дешёвого активного
+     * тарифа курса — лояльность/скидки/рассрочка уточняются у куратора. Единственная
+     * категория, доступная гостю: A/B/C/E/F завязаны на личное зачисление студента
+     * (группа/расписание/материалы), у гостя таких фактов нет и быть не может.
+     *
+     * @return array{draft: string, facts: array<string, mixed>, confidence: float}|null
+     */
+    public function resolvePublicPricing(): ?array
+    {
+        $courses = Course::query()
+            ->where('is_visible', true)
+            ->where('is_active', true)
+            ->with(['tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price')])
+            ->get()
+            ->filter(fn (Course $course): bool => $course->tariffs->isNotEmpty())
+            ->values();
+
+        if ($courses->isEmpty()) {
+            return null;
+        }
+
+        $lines = $courses->map(function (Course $course): string {
+            $cheapest = $course->tariffs->first();
+            $price = number_format((float) $cheapest->price, 0, ',', ' ');
+
+            return "· «{$course->title}» — от {$price} ₽";
+        })->implode("\n");
+
+        return [
+            'draft' => "Актуальные тарифы курсов (точная цена с учётом скидок/рассрочки — уточните у куратора):\n{$lines}",
+            'facts' => [
+                'type' => 'public_pricing',
+                'courses' => $courses->map(fn (Course $course): array => [
+                    'course' => $course->title,
+                    'from_price' => (float) $course->tariffs->first()->price,
+                ])->all(),
+            ],
+            'confidence' => 0.5,
+        ];
     }
 
     /** A — ссылка + время ближайшего занятия группы студента. */
