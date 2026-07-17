@@ -293,6 +293,8 @@
         if (text === '') return;
         var payload = { text: text };
         if (nameEl && !nameEl.hidden && nameEl.value.trim() !== '') payload.name = nameEl.value.trim();
+        // Страница, с которой посетитель пишет — куратор видит контекст (H1196).
+        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
 
         sendBtn.disabled = true;
         fetch(POST_URL, {

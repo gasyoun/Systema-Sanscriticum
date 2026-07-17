@@ -26,6 +26,13 @@ class SupportConversation extends Model
         'user_id',
         'guest_token',
         'guest_name',
+        'visitor_ip',
+        'visitor_city',
+        'visitor_region',
+        'visitor_country',
+        'visitor_geo_resolved_at',
+        'entry_url',
+        'referrer',
         'status',
         'subject',
         'assigned_to',
@@ -36,6 +43,7 @@ class SupportConversation extends Model
     protected $casts = [
         'last_message_at' => 'datetime',
         'closed_at' => 'datetime',
+        'visitor_geo_resolved_at' => 'datetime',
     ];
 
     public function isOpen(): bool
@@ -57,6 +65,18 @@ class SupportConversation extends Model
         }
 
         return $this->guest_name ?: 'Гость #'.$this->id;
+    }
+
+    /**
+     * Гео-подпись посетителя для Helpdesk (H1196, Jivo-паритет Pillar 1):
+     * «Город, Страна» из того, что разрешил VisitorGeoResolver. Пусто → null
+     * (город не резолвился: флаг OFF, драйвер null, приватный IP или промах).
+     */
+    public function locationLabel(): ?string
+    {
+        $parts = array_filter([$this->visitor_city, $this->visitor_country]);
+
+        return $parts === [] ? null : implode(', ', $parts);
     }
 
     public function user(): BelongsTo

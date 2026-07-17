@@ -133,6 +133,7 @@ class Helpdesk extends Page
                     'name' => $thread->displayName(),
                     'unread' => (int) $thread->unread_count,
                     'preview' => $last ? mb_strimwidth(strip_tags($last->text), 0, 42, '…') : '',
+                    'location' => $thread->locationLabel(), // город/страна посетителя (H1196)
                 ];
             })
             ->all();

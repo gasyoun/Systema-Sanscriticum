@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Events\ChatMessageSent;
+use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
+use App\Models\SupportConversation;
 use App\Services\Support\SupportConversationManager;
 use App\Support\GuestChat;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +35,7 @@ class PublicChatController extends Controller
         $validated = $request->validate([
             'text' => ['required', 'string', 'max:2000'],
             'name' => ['nullable', 'string', 'max:120'],
+            'page' => ['nullable', 'string', 'max:2048'],
         ]);
 
         $text = trim($validated['text']);
@@ -59,6 +62,9 @@ class PublicChatController extends Controller
                 $message->created_at,
             );
         }
+
+        // Контекст посетителя (город/страница входа) для куратора — H1196.
+        $this->captureVisitorContext($thread, $request, $validated['page'] ?? null);
 
         // Бродкаст экранированного сообщения оператору и другим клиентам треда.
         // ShouldBroadcast-событие через event() авто-бродкастится; при
@@ -97,6 +103,37 @@ class PublicChatController extends Controller
             'conversation_id' => $thread->id,
             'messages' => $messages,
         ]);
+    }
+
+    /**
+     * Зафиксировать контекст посетителя в треде при ПЕРВОМ сообщении (H1196,
+     * Jivo-паритет Pillar 1): IP + страница входа + referrer — всегда (дёшево,
+     * без внешних вызовов); гео (город) — асинхронной джобой и только за флагом
+     * support_visitor_geo. Идемпотентно: если IP уже записан, тред не трогаем —
+     * контекст фиксируется от начала треда, а не переписывается каждым сообщением.
+     */
+    private function captureVisitorContext(SupportConversation $thread, Request $request, ?string $page): void
+    {
+        if ($thread->visitor_ip !== null) {
+            return;
+        }
+
+        $ip = (string) $request->ip();
+        $referrer = $request->headers->get('referer');
+
+        $thread->forceFill([
+            'visitor_ip' => $ip !== '' ? $ip : null,
+            'entry_url' => $page !== null ? mb_substr($page, 0, 2048) : null,
+            'referrer' => $referrer !== null ? mb_substr($referrer, 0, 2048) : null,
+        ])->save();
+
+        if ($ip !== '' && config('features.support_visitor_geo')) {
+            ResolveVisitorGeoJob::dispatch($thread->id, $ip, [
+                'city' => $request->headers->get('CF-IPCity'),
+                'region' => $request->headers->get('CF-Region'),
+                'country' => $request->headers->get('CF-IPCountry'),
+            ]);
+        }
     }
 
     /** @return array<string, mixed> */

@@ -456,6 +456,9 @@
                                     @endif
                                 </div>
                                 <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: 'Гость сайта' }}</div>
+                                @if(!empty($g['location']))
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">📍 {{ $g['location'] }}</div>
+                                @endif
                             </div>
                         </button>
                     @endforeach
@@ -665,7 +668,12 @@
                         <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;">Г</div>
                         <div>
                             <div style="font-weight: bold; font-size: 16px; color: #111827;">{{ $guestThread?->displayName() ?? 'Гость' }}</div>
-                            <div style="font-size: 12px; margin-top: 2px; color: #6b7280;">Аноним · веб-чат сайта</div>
+                            <div style="font-size: 12px; margin-top: 2px; color: #6b7280;">
+                                Аноним · веб-чат сайта@if($guestThread?->locationLabel()) · 📍 {{ $guestThread->locationLabel() }}@endif
+                            </div>
+                            @if($guestThread?->entry_url)
+                                <div style="font-size: 11px; margin-top: 2px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px;" title="{{ $guestThread->entry_url }}">🔗 {{ $guestThread->entry_url }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>

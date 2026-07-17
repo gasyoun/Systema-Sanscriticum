@@ -97,6 +97,18 @@ return [
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 
     /*
+     | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
+     | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
+     | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
+     | config/support_geo.php) в город/регион/страну и показывается в Helpdesk —
+     | как «из какого города пишет» в админке Jivo. ВЫКЛ по умолчанию: entry_url/
+     | referrer треда пишутся ВСЕГДА (дёшево, без внешних вызовов), но город не
+     | запрашивается, пока флаг OFF и/или драйвер support_geo = null. Внешний
+     | геопровайдер — сознательный прод-шаг (лицензия/приватность/152-ФЗ), @DECIDE MG.
+     */
+    'support_visitor_geo' => (bool) env('SUPPORT_VISITOR_GEO', false),
+
+    /*
      | Продажа записей завершённых курсов (H266, тикет M1, #190). Когда ВКЛ, лендинг
      | завершённого курса (Course::is_completed) с активным тарифом-записью
      | (Tariff::is_recording) переключает CTA с «Записаться» на «Купить запись» —
