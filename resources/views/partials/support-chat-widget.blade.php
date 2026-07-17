@@ -30,7 +30,17 @@
     контекстное по URL-паттерну (курс vs оплата) БЕЗ обращения к серверу — паттерн
     известен сразу, `entry_url` (S1/H1196) фиксируется только сервером и только
     после первого сообщения, для приветствия ДО сообщения он не годится.
+
+    Захват лида + оффлайн-форма (H1199, Jivo-паритет S4): за флагом
+    features.support_lead_capture. Телефон/почта — ВСЕГДА необязательны (роадмап
+    §4 S4), отправка не блокируется ни онлайн, ни офлайн. Вне деловых часов
+    (config/support_hours.php, App\Support\SupportAvailability) меняется только
+    копирайт — призываем оставить почту, чтобы ответили не вживую.
 --}}
+@php
+    $scwLeadCaptureEnabled = (bool) config('features.support_lead_capture');
+    $scwIsOnline = \App\Support\SupportAvailability::isOnline();
+@endphp
 <div
     id="scw-root"
     class="scw"
@@ -42,6 +52,8 @@
     data-presence-url="{{ route('support.presence') }}"
     data-presence-interval="{{ (int) config('support_presence.beacon_interval_seconds', 20) }}"
     data-context-greeting="{{ app(\App\Services\Support\SupportAnswerSuggester::class)->isEnabled() ? '1' : '0' }}"
+    data-lead-capture="{{ $scwLeadCaptureEnabled ? '1' : '0' }}"
+    data-offline="{{ ($scwLeadCaptureEnabled && ! $scwIsOnline) ? '1' : '0' }}"
     aria-live="polite"
 >
     <button
@@ -81,7 +93,12 @@
 
         <div class="scw-messages" id="scw-messages" role="log" aria-live="polite">
             <div class="scw-intro" id="scw-intro">
-                Здравствуйте! Напишите нам — ответим по курсам, оплате и занятиям.
+                @if($scwLeadCaptureEnabled && ! $scwIsOnline)
+                    Операторы сейчас офлайн. Оставьте, пожалуйста, e-mail — мы напишем вам, как
+                    только сможем ответить. Вопрос можно оставить прямо здесь.
+                @else
+                    Здравствуйте! Напишите нам — ответим по курсам, оплате и занятиям.
+                @endif
             </div>
         </div>
 
@@ -95,6 +112,26 @@
                 placeholder="Ваше имя (необязательно)"
                 @if(auth()->check()) hidden @endif
             >
+            @if($scwLeadCaptureEnabled && ! auth()->check())
+                <div class="scw-contact-row" id="scw-contact-row">
+                    <input
+                        type="email"
+                        class="scw-email"
+                        id="scw-email"
+                        name="email"
+                        maxlength="255"
+                        placeholder="{{ $scwIsOnline ? 'Почта (необязательно)' : 'Почта — напишем вам ответ' }}"
+                    >
+                    <input
+                        type="tel"
+                        class="scw-phone"
+                        id="scw-phone"
+                        name="phone"
+                        maxlength="40"
+                        placeholder="Телефон (необязательно)"
+                    >
+                </div>
+            @endif
             <div class="scw-input-row">
                 <textarea
                     class="scw-text"
@@ -160,12 +197,18 @@
         width: 100%; margin-bottom: 8px; padding: 8px 12px; border-radius: 10px; border: 1px solid #1f2937;
         background: #111827; color: #e5e7eb; font-size: 13px;
     }
+    .scw-contact-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .scw-email, .scw-phone {
+        flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid #1f2937;
+        background: #111827; color: #e5e7eb; font-size: 13px;
+    }
     .scw-input-row { display: flex; align-items: flex-end; gap: 8px; }
     .scw-text {
         flex: 1; resize: none; max-height: 120px; padding: 10px 12px; border-radius: 10px;
         border: 1px solid #1f2937; background: #111827; color: #e5e7eb; font-size: 14px; font-family: inherit; line-height: 1.4;
     }
-    .scw-name:focus, .scw-text:focus { outline: none; border-color: #E85C24; }
+    .scw-name:focus, .scw-text:focus, .scw-email:focus, .scw-phone:focus { outline: none; border-color: #E85C24; }
+    @media (max-width: 340px) { .scw-contact-row { flex-direction: column; } }
     .scw-send {
         flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; border: none; cursor: pointer;
         color: #fff; background: #E85C24; display: flex; align-items: center; justify-content: center; transition: background .15s;
@@ -187,6 +230,7 @@
     var HISTORY_URL = root.dataset.historyUrl;
     var CSRF = root.dataset.csrf;
     var CONTEXT_GREETING = root.dataset.contextGreeting === '1';
+    var OFFLINE = root.dataset.offline === '1';
     var STORE_KEY = 'scw_open';
 
     var toggle = document.getElementById('scw-toggle');
@@ -197,6 +241,9 @@
     var form = document.getElementById('scw-form');
     var textEl = document.getElementById('scw-text');
     var nameEl = document.getElementById('scw-name');
+    var emailEl = document.getElementById('scw-email');
+    var phoneEl = document.getElementById('scw-phone');
+    var contactRow = document.getElementById('scw-contact-row');
     var sendBtn = document.getElementById('scw-send');
     var badge = document.getElementById('scw-badge');
 
@@ -218,9 +265,10 @@
     // Контекстное приветствие по странице входа (H1198): URL известен сразу,
     // без обращения к серверу — за флагом support_answer_suggester. Дефолтный
     // текст (уже в разметке) остаётся, если флаг выключен или страница не
-    // распознана ни одним паттерном.
+    // распознана ни одним паттерном. Не подменяет оффлайн-копирайт (H1199) —
+    // «оставьте почту» важнее контекстного приветствия, когда операторы офлайн.
     function applyContextualGreeting() {
-        if (!CONTEXT_GREETING || !intro) return;
+        if (!CONTEXT_GREETING || !intro || OFFLINE) return;
         var path = (location.pathname || '').toLowerCase();
         var greeting = null;
         if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0) {
@@ -381,6 +429,10 @@
         if (text === '') return;
         var payload = { text: text };
         if (nameEl && !nameEl.hidden && nameEl.value.trim() !== '') payload.name = nameEl.value.trim();
+        // Необязательные телефон/почта — захват лида (H1199, S4). Не блокируем
+        // отправку, если пусто.
+        if (emailEl && !emailEl.hidden && emailEl.value.trim() !== '') payload.email = emailEl.value.trim();
+        if (phoneEl && !phoneEl.hidden && phoneEl.value.trim() !== '') payload.phone = phoneEl.value.trim();
         // Страница, с которой посетитель пишет — куратор видит контекст (H1196).
         try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
 
@@ -407,6 +459,7 @@
             conversationId = res.body.conversation_id || conversationId;
             appendMessage(res.body.message);
             if (nameEl) { nameEl.hidden = true; } // имя спрашиваем только до первого сообщения
+            if (contactRow) { contactRow.hidden = true; } // телефон/почта — тоже только до первого (H1199)
             if (conversationId && conversationId !== had) subscribeLive();
         })
         .catch(function () { sendBtn.disabled = false; alert('Сеть недоступна. Попробуйте ещё раз.'); });

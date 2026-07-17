@@ -33,6 +33,10 @@ class SupportConversation extends Model
         'visitor_geo_resolved_at',
         'entry_url',
         'referrer',
+        'lead_id',
+        'contact_email',
+        'contact_phone',
+        'lead_captured_at',
         'status',
         'subject',
         'assigned_to',
@@ -44,6 +48,7 @@ class SupportConversation extends Model
         'last_message_at' => 'datetime',
         'closed_at' => 'datetime',
         'visitor_geo_resolved_at' => 'datetime',
+        'lead_captured_at' => 'datetime',
     ];
 
     public function isOpen(): bool
@@ -82,6 +87,12 @@ class SupportConversation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** CRM-строка лида, записанная S4-захватом (H1199), если посетитель оставил контакт. */
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
     }
 
     public function assignee(): BelongsTo

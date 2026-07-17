@@ -215,4 +215,17 @@ return [
      | (интервал beacon, окно «онлайн», TTL) — в config/support_presence.php.
      */
     'support_visitor_presence' => (bool) env('SUPPORT_VISITOR_PRESENCE', false),
+
+    /*
+     | Захват лида в веб-виджете поддержки (H1199, Jivo-паритет S4/5, требование
+     | 3 из ROADMAP_JIVO_VISITOR_PARITY §1). Когда ВКЛ, форма виджета получает
+     | необязательные поля телефон/почта; при первом сообщении с заполненным
+     | контактом пишется Lead-строка (реюз паттерна newsletter_subscribe H324:
+     | UTM из CaptureAttribution-сессии, dedup по email) — SupportLeadCaptureService,
+     | идемпотентно (thread.lead_captured_at). Вне деловых часов
+     | (config/support_hours.php) виджет показывает оффлайн-копирайт «оставьте
+     | почту — напишем вам», не блокируя отправку (контакты остаются
+     | необязательными — см. роадмап). ВЫКЛ по умолчанию — деплой-рубильник.
+     */
+    'support_lead_capture' => (bool) env('SUPPORT_LEAD_CAPTURE', false),
 ];
