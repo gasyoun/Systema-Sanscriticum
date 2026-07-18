@@ -237,4 +237,12 @@ return [
      | CHECKOUT_PROMO_RESERVATIONS=true + config:cache после миграции и ревью.
      */
     'checkout_promo_reservations' => (bool) env('CHECKOUT_PROMO_RESERVATIONS', false),
+
+    /*
+     | Разрешает единственную автоматическую запись команды
+     | payments:audit-checkout-integrity --apply-safe: пересчёт promo.used_count
+     | из paid non-conditional платежей. ВЫКЛ по умолчанию; отрицательные кошельки,
+     | исторические депозиты и legacy pending команда не исправляет никогда.
+     */
+    'checkout_integrity_safe_repairs' => (bool) env('CHECKOUT_INTEGRITY_SAFE_REPAIRS', false),
 ];
