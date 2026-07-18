@@ -1,14 +1,41 @@
 # Memrise course 6679375 export — expected shape
 
-_Created: 11-07-2026 · Last updated: 11-07-2026_
+_Created: 11-07-2026 · Last updated: 18-07-2026_
 
 Destination for the **P0 export** of Memrise course
 [6679375 «Продлёнка по санскриту»](https://community-courses.memrise.com/community/course/6679375/prodlenka-po-sanskritu/)
 (H569, [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](../../../../ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md)).
-This directory is **empty on purpose** — P0 (the export itself) has not run yet;
-it needs either the [Eltaurus-Lt/CourseDump2022](https://github.com/Eltaurus-Lt/CourseDump2022)
-Chrome extension run by a human with Memrise login, or a scripted pull with
-Memrise credentials. Neither is something an agent session can do unattended.
+This directory is **empty on purpose** — P0 (the export itself) has not run yet.
+Neither the pull nor the credential can be done by an agent unattended; a human
+must run one of the two paths below.
+
+## Primary path — the scripted runner (H1146)
+
+```sh
+MEMRISE_SESSION=<cookie value>  python scripts/memrise_export.py \
+    --course 6679375 --out database/seeders/data/memrise_6679375
+python scripts/memrise_export_validate.py database/seeders/data/memrise_6679375
+```
+
+`MEMRISE_SESSION` is a Memrise session cookie, read only from the environment
+(never pass it as an argument — it would leak into shell history). The
+credential must come from a human with a Memrise login; an agent session
+cannot obtain or use one. The runner is **untested against live Memrise**
+(no agent-held credentials) and may need adjustment on first human run if
+Memrise's response shape differs from the documented API — if it fails
+outright, fall back to CourseDump2022 below. Either way, always run
+`memrise_export_validate.py` on the output before importing — it checks the
+manifest/CSV contract with no network and no credentials, so a botched
+export is caught immediately rather than at import time (possibly after the
+course is gone).
+
+## Fallback path — CourseDump2022
+
+The [Eltaurus-Lt/CourseDump2022](https://github.com/Eltaurus-Lt/CourseDump2022)
+Chrome extension, run by a human with a Memrise login. Its output still needs
+to be reshaped into the `manifest.json` + level-CSV contract below before the
+importer can read it; `memrise_export_validate.py` checks that reshaped
+output the same way it checks the scripted runner's.
 
 **P1 (the importer, `php artisan srs:import-memrise`) is already built and
 tested** against a fixture at

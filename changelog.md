@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1146 (W1-D5): Memrise course 6679375 export runner + validator (time-critical, irreversible).** Memrise is sunsetting community courses with no published shutdown date; an agent cannot obtain a Memrise login, so the deliverable shrinks the human's export step to two commands. [`scripts/memrise_export.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/memrise_export.py) (stdlib-only, credential from `MEMRISE_SESSION` env var, never argv; `--dry-run`) emits exactly the `manifest.json` + `level_NN.csv` contract already read by `php artisan srs:import-memrise` ([`ImportMemriseSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportMemriseSrsDeck.php)). [`scripts/memrise_export_validate.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/memrise_export_validate.py) checks that contract with no network and no credentials — manifest parses, every declared level file exists, every CSV header contains every manifest-declared column, no empty levels — proven against [`tests/fixtures/memrise_sample/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/memrise_sample) and against both failure modes independently (removed level file, renamed CSV header). Runner is untested against live Memrise (no agent credentials) — see [the destination README](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/memrise_6679375/README.md) for the honest boundary and the CourseDump2022 fallback. Sonnet 5 (`claude-sonnet-5`). [H1146](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1146-Sonnet_Systema-Sanscriticum_memrise-export-runner-validator-6679375_17.07.26.md).
+
 ## [1.24.0] - 2026-07-18
 
 ### Added
