@@ -135,4 +135,12 @@ return [
      | deploy-рубильник; пороги — в config/attendance.php.
      */
     'attendance_dashboard' => (bool) env('ATTENDANCE_DASHBOARD', false),
+
+    /*
+     | Авторитетная проверка активности тарифа в POST /payment/create. Когда ВКЛ,
+     | выключенный тариф возвращает 404 до создания гостя, Payment и банковской
+     | ссылки. ВЫКЛ по умолчанию: денежный PR остаётся прод-инертным до ручного
+     | включения CHECKOUT_INACTIVE_TARIFF_GUARD=true и config:cache.
+     */
+    'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', false),
 ];
