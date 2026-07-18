@@ -236,4 +236,12 @@ return [
      | включения CHECKOUT_INACTIVE_TARIFF_GUARD=true и config:cache.
      */
     'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', false),
+
+    /*
+     | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
+     | действием перечитывает и блокирует строку users, а расчёт/списание кредита
+     | использует только это DB-значение. ВЫКЛ по умолчанию; ручное включение —
+     | CHECKOUT_REFERRAL_CREDIT_LOCK=true и config:cache после ревью/деплоя.
+     */
+    'checkout_referral_credit_lock' => (bool) env('CHECKOUT_REFERRAL_CREDIT_LOCK', false),
 ];

@@ -41,9 +41,37 @@ class ReferralCreditCheckoutTest extends TestCase
         return Tariff::factory()->for(Course::factory()->create())->create(['price' => $price]);
     }
 
+    public function test_referral_lock_is_dark_by_default(): void
+    {
+        $this->assertFalse(config('features.checkout_referral_credit_lock'));
+    }
+
+    public function test_stale_authenticated_user_cannot_spend_credit_already_reduced_in_database(): void
+    {
+        config()->set('features.checkout_referral_credit_lock', true);
+
+        $user = User::factory()->create(['referral_credit' => 2000]);
+        $tariff = $this->tariff(5000);
+
+        // Guard сохраняет эту модель с 2000, затем конкурентное списание меняет
+        // авторитетную строку БД. Чекаут обязан увидеть 0 после lock+reload.
+        $this->actingAs($user);
+        User::query()->whereKey($user->id)->update(['referral_credit' => 0]);
+
+        $this->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertRedirect('https://pay.tochka.com/redirect/abc');
+
+        $payment = Payment::where('user_id', $user->id)->latest('id')->firstOrFail();
+        $this->assertSame(5000.0, (float) $payment->amount);
+        $this->assertNull($payment->referral_credit_applied);
+        $this->assertSame(0.0, (float) $user->fresh()->referral_credit);
+    }
+
     /** @test */
     public function partial_credit_reduces_price_and_is_debited_from_wallet(): void
     {
+        config()->set('features.checkout_referral_credit_lock', true);
+
         $user = User::factory()->create(['referral_credit' => 2000]);
         $tariff = $this->tariff(5000);
 
@@ -59,6 +87,8 @@ class ReferralCreditCheckoutTest extends TestCase
     /** @test */
     public function credit_covering_full_price_grants_paid_access_without_tochka(): void
     {
+        config()->set('features.checkout_referral_credit_lock', true);
+
         $user = User::factory()->create(['referral_credit' => 6000]);
         $tariff = $this->tariff(5000);
 
