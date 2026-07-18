@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H1215 (v2): «Жизненные правила для санскритологов» — ревизия по стенограммам, 40 → 45 максим.** Первый прогон живого материала школы через манифест: 17 экстракторов Sonnet 5 (`claude-sonnet-5`) прошли ~60 MB стенограмм (`Uprava/stenogrammy` + `lecture-ui/transcription`) — 28 вводных Гасунса, все 16 занятий Парибка «Йога-сутры» 2025 (приоритет MG), Куликов, Клебанов, Бюлероведение, синтаксис, ликбезы, потоки, каллиграфия, чтение (Хитопадеша/Наль/Гита/Упанишады), воспевание, детский интенсив; синтез — Fable 5 (`claude-fable-5`). Все 40 правил v1 сохранены, ~12 существенно переписаны по материалу (вход через наслушивание; «библиотека наизусть» требует переучета; своя рукописная таблица против чужой печатной; лестница словарей с Кнауэром; подстрочник-«протез» Парибка; «из санскрита вышла наука о языке, не языки»; Бетлингк по рукописям до критических изданий; сон как примета погружения), +5 новых из стенограмм (разбор слова с конца, усидчивость 70→4, возвращение после перерыва, «ворох книг», проза прежде стихов). Факт-чек пп. 26/32/33 закрыт («восьмиклассники» → «школьники» по [Arzamas](https://arzamas.academy/mag/142-zaliznyak)/[МГУ](https://msu.ru/press/smiaboutmsu/onlayn-traditsionnaya-lektsiya-akademika-andreya-zaliznyaka-o-berestyanykh-gramotakh.html)). Метадок: провенанс v2, бэклог (следующее — стенограммы выступлений 2019–2022 у MG, затем @DECIDE публикация на samskrte.ru). Текст: [docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md); [H1215](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1215-Fable_Systema-Sanscriticum_lebensregeln-sanskritologov_18.07.26.md).
+
 ## [1.21.0] - 2026-07-18
 
 ### Added
