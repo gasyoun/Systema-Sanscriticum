@@ -42,6 +42,12 @@ class PromoCode extends Model
         return $this->course_id === null || (int) $this->course_id === (int) $courseId;
     }
 
+    /** Срок жизни промо-ссылки Точки; API принимает ttl в минутах. */
+    public const PAYMENT_LINK_TTL_MINUTES = 30;
+
+    /** Буфер после истечения ссылки, пока запоздавший webhook ещё может прийти. */
+    public const WEBHOOK_BUFFER_MINUTES = 10;
+
     // Окно, в течение которого незавершённый (pending) платёж «держит» промокод
     // за пользователем — только для авторитетной проверки в момент оплаты
     // (hasRecentPendingForUser). Защищает от гонки в двух вкладках, но не
@@ -75,11 +81,49 @@ class PromoCode extends Model
             return false;
         }
 
-        return Payment::where('promo_code_id', $this->id)
+        $query = Payment::where('promo_code_id', $this->id)
             ->where('user_id', $userId)
+            ->where('status', 'pending');
+
+        if (config('features.checkout_promo_reservations')) {
+            $query->where(function ($pending): void {
+                $pending
+                    ->whereNull('payment_link_expires_at')
+                    ->orWhere('payment_link_expires_at', '>=', now()->subMinutes(self::WEBHOOK_BUFFER_MINUTES));
+            });
+        } else {
+            $query->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES));
+        }
+
+        return $query->exists();
+    }
+
+    /** Pending-платежи, которые прямо сейчас держат глобальную ёмкость кода. */
+    public function activeReservationCount(): int
+    {
+        return Payment::query()
+            ->where('promo_code_id', $this->id)
             ->where('status', 'pending')
-            ->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES))
-            ->exists();
+            ->where(function ($pending): void {
+                $pending
+                    ->whereNull('payment_link_expires_at')
+                    ->orWhere('payment_link_expires_at', '>=', now()->subMinutes(self::WEBHOOK_BUFFER_MINUTES));
+            })
+            ->count();
+    }
+
+    /** Проверка лимита с учётом уже оплаченных использований и живых броней. */
+    public function hasCapacity(): bool
+    {
+        if ($this->usage_limit === null) {
+            return true;
+        }
+
+        $reservations = config('features.checkout_promo_reservations')
+            ? $this->activeReservationCount()
+            : 0;
+
+        return $this->used_count + $reservations < $this->usage_limit;
     }
 
     // Атомарно засчитывает использование кода при подтверждённой оплате.
@@ -90,20 +134,31 @@ class PromoCode extends Model
         $this->increment('used_count');
     }
 
+    /** Освобождает оплаченное использование при обратном переходе статуса. */
+    public function releaseRedemption(): void
+    {
+        self::query()
+            ->whereKey($this->getKey())
+            ->where('used_count', '>', 0)
+            ->decrement('used_count');
+    }
+
+    /** Активность и календарный срок без проверки количественной ёмкости. */
+    public function isCurrentlyActive(): bool
+    {
+        return $this->is_active
+            && ($this->expires_at === null || ! $this->expires_at->isPast());
+    }
+
     // Метод: Проверяет, можно ли применить этот код прямо сейчас
     public function isValid(): bool
     {
-        if (! $this->is_active) {
+        if (! $this->isCurrentlyActive()) {
             return false;
         }
 
         // Проверка на количество использований
-        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) {
-            return false;
-        }
-
-        // Проверка на срок действия
-        if ($this->expires_at !== null && $this->expires_at->isPast()) {
+        if (! $this->hasCapacity()) {
             return false;
         }
 
