@@ -228,4 +228,13 @@ return [
      | необязательными — см. роадмап). ВЫКЛ по умолчанию — деплой-рубильник.
      */
     'support_lead_capture' => (bool) env('SUPPORT_LEAD_CAPTURE', false),
+
+    /*
+     | Обратимость депозитного зачёта. Когда ВКЛ, реальный переход оплаты из
+     | paid/success в failed/canceled возвращает ровно deposit_credit_applied в
+     | оплаченные deposit/trial строки (LIFO, под row-lock), сохраняя маркер
+     | покупки для аудита и повторной оплаты. ВЫКЛ по умолчанию; включение —
+     | CHECKOUT_DEPOSIT_REVERSAL=true + config:cache после ручного ревью.
+     */
+    'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', false),
 ];
