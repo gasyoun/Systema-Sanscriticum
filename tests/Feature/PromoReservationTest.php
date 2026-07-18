@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use DateTimeInterface;
 use App\Models\Course;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
 use App\Models\User;
+use DateTimeInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;

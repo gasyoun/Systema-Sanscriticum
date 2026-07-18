@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Payments;
 
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
@@ -25,7 +26,7 @@ final class TochkaPaymentService
      * @param  string  $paymentObject  Признак предмета расчёта (enum Точки): goods | service | work. Для курсов/брони — service.
      * @param  int|null  $ttlMinutes  Необязательный срок действия платёжной ссылки в минутах.
      *
-     * @throws \Illuminate\Http\Client\ConnectionException Сетевой сбой — обрабатывает вызывающий код.
+     * @throws ConnectionException Сетевой сбой — обрабатывает вызывающий код.
      */
     public function createPaymentWithReceipt(
         User $user,
