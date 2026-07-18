@@ -1,6 +1,8 @@
 # Roadmap: паритет с getcourse.ru — Q3 2026
 
-_Created: 09-07-2026 · Last updated: 10-07-2026_
+_Created: 09-07-2026 · Last updated: 18-07-2026_
+
+> **Производственная спецификация programme-of-record — [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md)** (H1144, 18-07-2026, R29-эквивалент по R-1). Этот роадмап остается **анализом-of-record** (gap-анализ + 7 рулингов MG); спецификация — **вход для сборки волны 2**: состояния всех 14 тикетов, сверенные с деревом на `9b63861`, правило границы денежного ядра (§2), производственная глубина по GC-C1/GC-C2 (§3–§4) и 8 названных развилок (§7). Где §1 спецификации расходится с §3 ниже — **верна спецификация** (сверка с деревом свежее): GC-B2 ✅ done, **GC-B3 частично сдан** ([PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) — не «Later», как в §4), GC-C1 частично (канбан+стадии сданы по `Lead`, сущности `Deal` нет).
 
 Автор-исполнитель роадмапа: Opus 4.8 (`claude-opus-4-8`), сессия H438; рулинги MG сняты и вшиты 10-07-2026 (Fable 5 `claude-fable-5`, интервью `/roadmap-interview`). Эталон сравнения — [getcourse.ru](https://getcourse.ru) (всё-в-одном платформа для онлайн-школ). getcourse **не используется** в проде samskrte.ru — берется только как reference-набор фич. Цель: закрыть каждый реально нужный gap, чтобы платформа никогда не понадобилась.
 
