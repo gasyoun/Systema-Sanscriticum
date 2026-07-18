@@ -11,6 +11,11 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-07-18
+
+### Changed
+- **H1215/H1224: «Жизненные правила» — операционная модель зафиксирована в метадоке: квартальный цикл ревизий, три недостающих источника v3, руление публикации.** По follow-up-рулениям MG 18-07-2026 (после мерджа v2): (1) документ живой, ревизия каждые ~3 месяца по мере роста корпуса — нынешние ~40 курсов `Uprava/stenogrammy` лишь малая часть всех стенограмм школы; (2) корпус v3: стенограммы выступлений 2019–2022 + интервью с санскритологами **«Ипостаси санскрита»** и **«Санскрит в Венском университете»** (в v2 не задействованы, файлов на диске нет — передает MG); (3) публикация РУЛЕНА: **раздел лендинга** samskrte.ru, не отдельная страница — внедрение вынесено в [H1224](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1224-Sonnet_Systema-Sanscriticum_lebensregeln-landing-section_18.07.26.md) (Sonnet 5, `claude-sonnet-5`), затем DEPLOY_QUEUE. Обновлен [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.meta.md) (назначение, решения, бэклог, ограничения, история). Fable 5 (`claude-fable-5`).
+
 ## [1.22.0] - 2026-07-18
 
 ### Changed
