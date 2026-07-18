@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 07-07-2026_
+_Created: 03-07-2026 · Last updated: 18-07-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -60,6 +60,43 @@ platform upgrade.
   grids); no real student PII, none purged.
 - ✅ `main` branch protection now **requires 1 approving review** + blocks force-push/deletion
   (set 05-07-2026 during H080; the one purge force-push was a temporary, immediately-reverted lift).
+
+---
+
+## Checkout money-safety follow-up (18-07-2026)
+
+Five manually reviewed, default-OFF deliveries close checkout integrity gaps discovered after
+H071. All PRs carry the money-contour no-auto-merge marker; none may be enabled before human
+review and merge:
+
+- [PR #574](https://github.com/gasyoun/Systema-Sanscriticum/pull/574) — reject inactive tariffs
+  before guest creation or any payment/bank side effect (`CHECKOUT_INACTIVE_TARIFF_GUARD`).
+- [PR #576](https://github.com/gasyoun/Systema-Sanscriticum/pull/576) — reload and lock the user
+  before calculating/debiting referral credit (`CHECKOUT_REFERRAL_CREDIT_LOCK`).
+- [PR #579](https://github.com/gasyoun/Systema-Sanscriticum/pull/579) — restore the exact deposit
+  credit on a real paid-to-reversed transition, newest consumption first and idempotently
+  (`CHECKOUT_DEPOSIT_REVERSAL`).
+- [PR #581](https://github.com/gasyoun/Systema-Sanscriticum/pull/581) — reserve limited promo
+  capacity for the 30-minute bank-link TTL plus a 10-minute webhook buffer; add
+  `payments.payment_link_expires_at`; keep legacy null-expiry reservations held; reverse and
+  reapply `used_count` exactly once (`CHECKOUT_PROMO_RESERVATIONS`).
+- [PR #582](https://github.com/gasyoun/Systema-Sanscriticum/pull/582) — dry-run-first
+  `payments:audit-checkout-integrity`; its `--apply-safe` mode changes only promo `used_count`
+  and additionally requires `CHECKOUT_INTEGRITY_SAFE_REPAIRS`. It is stacked on #581 and must be
+  retargeted to `main` after #581 merges.
+
+Deployment order: review and merge #574/#576/#579 independently; merge #581, run its migration
+while the flag remains OFF, then enable it; retarget/review/merge #582; run the audit dry-run;
+temporarily enable the safe-repair flag only for `--apply-safe`, disable it immediately afterward,
+and manually adjudicate negative wallets, historical deposit restoration, and legacy pending
+links against bank/accounting evidence. Rerun until only documented exceptions remain. The local
+production-data audit was not run during delivery because the configured MySQL endpoint at
+`127.0.0.1:3306` was unavailable.
+
+Regression evidence across the five PRs: focused suites cover inactive authenticated/guest POSTs,
+stale referral models, full/partial/multi-deposit reversal round trips, promo concurrency/expiry,
+Tochka TTL payloads, reversal counters, and audit repair scope. The combined money gate is green
+through 104 tests / 366 assertions on the stacked audit branch; Pint is clean.
 
 ---
 

@@ -163,10 +163,10 @@ class AuditCheckoutIntegrity extends Command
     private function recalculatePromoCounters(): int
     {
         return DB::transaction(function (): int {
-            $expected = $this->expectedPromoCounts();
             $updated = 0;
 
             $promos = PromoCode::query()->orderBy('id')->lockForUpdate()->get();
+            $expected = $this->expectedPromoCounts();
             foreach ($promos as $promo) {
                 $paidCount = (int) ($expected[$promo->id] ?? 0);
                 if ($promo->used_count === $paidCount) {
