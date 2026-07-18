@@ -62,6 +62,15 @@ class PaymentController extends Controller
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
         $result = DB::transaction(function () use ($request, $prana, $user, $tariff) {
+            // Auth может держать модель User, загруженную до начала транзакции.
+            // При включённом флаге перечитываем и лочим кошелёк первым действием:
+            // все расчёты и списание ниже используют один DB-authoritative снимок.
+            if (config('features.checkout_referral_credit_lock')) {
+                $user = User::query()
+                    ->whereKey($user->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
 
             $courseId = $tariff->course->id ?? null;
 
