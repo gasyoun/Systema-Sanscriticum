@@ -1,6 +1,6 @@
 # Support subsystem — what actually exists (agent reference)
 
-_Created: 01-07-2026 · Last updated: 05-07-2026_
+_Created: 01-07-2026 · Last updated: 18-07-2026_
 
 > **Update 01-07-2026 (Step 1 done):** the naming landmine below is **resolved in code** — the daily-rollup model is now [`SupportDailyRollup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SupportDailyRollup.php) (table `support_daily_rollups`, FK `support_daily_rollup_id`, aggregator `SupportDailyRollupAggregator`). The name `SupportConversation` is now **free** for the future operational thread. Display vocabulary (`conversations()` relation, `conversation_date` column, dashboard `conversations` key) was intentionally left as-is.
 
@@ -104,7 +104,7 @@ Real remaining gaps toward jivo.md Phase 0–6 parity — not decisions, punch-l
 | Web-chat analytics missing | 5 | `SupportDailyRollup`/`TelegramSupportAnalytics` only aggregate the Telegram-support side |
 | No support↔outcome correlation | 5 | No dashboard linking support topics to payment/access/attendance failures; no unresolved-after-N-hours KPI |
 | Reply-out delivery untested in production | 6 | **Import/sync path is live in prod** (Ivan operationalized the userbot — logged-in MTProto session + queue worker, confirmed 11-07-2026). What remains untested live is the **reply-OUT delivery** path: `support_unified_reply` + `DeliverSupportReply` + `TelegramSupportSyncService::deliverMessage()` are wired but the send has never been exercised. Controlled canary = WS1.3 of [ROADMAP_TELEGRAM_SCALING_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) |
-| VK/Telegram-student-bot channel tagging | 6 | Both write to `ChatMessage` but aren't distinctly badged as separate channels in the unified view |
+| ~~VK/Telegram-student-bot channel tagging~~ | 6 | **✅ Closed 18-07-2026 (H1200).** `chat_messages.source` (nullable, NULL=web) tags origin; `ProcessVkBotMessage`/`TelegramWebhookController` set `vk`/`telegram_bot`; `UnifiedMessage` gained `CHANNEL_VK`/`CHANNEL_TELEGRAM_BOT` with distinct Helpdesk badges — was previously lumped into `CHANNEL_WEB` indistinguishably. |
 | No email channel | 6 | Not started; jivo.md treats this as later-phase anyway |
 
 ## Where jivo.md is still useful

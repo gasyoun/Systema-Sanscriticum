@@ -35,7 +35,7 @@ _Created: 17-07-2026 · Last updated: 18-07-2026_
 | 1 | Живой чат с оператором (real-time) | ✅ **Готово** (H536; Reverb-push в проде + фолбэк-опрос) | — (residual reply-out канарейка — S5) |
 | 2 | Авто-ответы / сценарии | ⚠️ Частично (AI-куратор + FAQ-суггестер H247 — оператору; веб-виджет без сценариев) | [H1198](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1198-Sonnet_Systema-Sanscriticum_jivo-parity-s3of5-webchat-scenarios_17.07.26.md) (S3) |
 | 3 | Сбор контактов / заявки (лиды) | 🟢 **S4 сделано 18-07-2026** (см. §4) | [H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md) (S4) |
-| 4 | Каналы TG / VK / почта | ⚠️ Частично (TG+VK есть; почты нет; каналы не разбейджены; reply-out не проверен вживую) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5) |
+| 4 | Каналы TG / VK / почта | ⚠️ Частично (TG+VK есть, теперь **разбейджены** 18-07-2026; почты нет; reply-out канарейка — ⛔ ручной шаг человека, см. §4) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5) |
 | 5 | **Город посетителя** в панели куратора | 🟢 **S1 сделан этой сессией** (см. §2) | [H1196](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1196-Opus_Systema-Sanscriticum_jivo-parity-s1of5-visitor-geo-city_17.07.26.md) (S1, Pillar 1) |
 | 6 | **Написать первым** + видеть, что делает на сайте | 🟢 **S2 сделан этой сессией** (см. §3) | [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md) (S2, Pillar 2) |
 
@@ -189,10 +189,26 @@ _Created: 17-07-2026 · Last updated: 18-07-2026_
   `#scw-intro` поверх оффлайн-копирайта — исправлено `data-offline`-гардом. Всё за флагом
   `support_lead_capture` (ВЫКЛ по умолчанию). 24 теста / 63 assertions зелёные + 45 регрессионных
   тестов (Helpdesk/CRM/presence/geo) без изменений.
-- **S5 — email-канал + бейджинг каналов + reply-out канарейка** ([H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md)):
-  разбейджить VK/TG-student-bot как отдельные каналы в едином инбоксе; контролируемая канарейка
-  reply-OUT в TG-support (WS1.3 из [`ROADMAP_TELEGRAM_SCALING`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md));
-  inbound email как канал (later-phase и у Jivo).
+- **S5 — email-канал + бейджинг каналов + reply-out канарейка** ([H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md)),
+  **бейджинг сделан 18-07-2026, остальное 2 пункта остаются**:
+  - ✅ **Бейджинг VK/TG-student-bot** — оба писали в `chat_messages` неотличимо от веб-виджета
+    (`UnifiedMessage::CHANNEL_WEB` целиком; support-subsystem-map.md gap #6). Новая колонка
+    `chat_messages.source` (nullable, NULL=веб — обратная совместимость) + теги в
+    [`ProcessVkBotMessage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/ProcessVkBotMessage.php)
+    (`source=vk`) и [`TelegramWebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/TelegramWebhookController.php)
+    (`source=telegram_bot`); `UnifiedMessage` получил `CHANNEL_VK`/`CHANNEL_TELEGRAM_BOT` (отдельно
+    от `CHANNEL_TELEGRAM` — импортированный TG-support-аккаунт, другое хранилище) с собственными
+    бейджами в Helpdesk. 10 новых тестов / 39 assertions + 112 регрессионных тестов / 316 assertions
+    (весь `ChatMessage`-затрагиваемый кластер) без изменений.
+  - ⛔ **Reply-OUT канарейка (WS1.3)** — **НЕ выполнено, требует человека.** Контролируемый
+    прогон живого userbot-пути ([`TelegramSupportSyncService::deliverMessage()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php))
+    на реальном канарейка-чате — production-действие с реальными получателями, за пределами того,
+    что автономный агент может/должен выполнять без прямого разрешения и доступа к прод-учётке
+    Ивана. Прод-переключатель и код уже готовы (`support_unified_reply`); канарейка сама остаётся
+    ручным шагом человека, как и было задокументировано в [`ROADMAP_TELEGRAM_SCALING`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) §6 WS1.3.
+  - ⏸️ **Inbound email как канал** — later-phase и у самого Jivo (низший приоритет из трёх);
+    не начато в этом проходе, полноценная почтовая инфраструктура (входящий webhook/polling,
+    маппинг в тред) — отдельный по объёму хэндофф.
 
 ---
 

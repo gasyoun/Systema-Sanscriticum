@@ -69,4 +69,36 @@ class HelpdeskUnifiedInboxTest extends TestCase
             ->test(Helpdesk::class)
             ->assertSee('Телеграм Онли');
     }
+
+    /** H1200: VK/TG-bot messages get their own distinct channel badges, not lumped into "Кабинет". */
+    public function test_helpdesk_badges_vk_and_telegram_bot_as_distinct_channels(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $student = User::factory()->create();
+
+        ChatMessage::create([
+            'user_id' => $student->id,
+            'role' => 'user',
+            'text' => 'Вопрос из ВК-бота',
+            'is_read' => false,
+            'source' => 'vk',
+        ]);
+        ChatMessage::create([
+            'user_id' => $student->id,
+            'role' => 'user',
+            'text' => 'Вопрос из TG-бота кабинета',
+            'is_read' => false,
+            'source' => 'telegram_bot',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectUser', $student->id)
+            ->assertSee('Вопрос из ВК-бота')
+            ->assertSee('Вопрос из TG-бота кабинета')
+            ->assertSee('ВКонтакте')
+            ->assertSee('Telegram-бот')
+            ->assertSee('msg-channel vk', false)
+            ->assertSee('msg-channel telegram_bot', false);
+    }
 }

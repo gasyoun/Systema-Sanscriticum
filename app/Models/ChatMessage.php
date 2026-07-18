@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SupportText;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class ChatMessage extends Model
         'text',
         'is_read',
         'ai_state',
+        'source',
     ];
 
     protected $casts = [
@@ -32,7 +34,7 @@ class ChatMessage extends Model
      */
     public function htmlForWeb(): string
     {
-        return \App\Support\SupportText::safeHtml($this->text);
+        return SupportText::safeHtml($this->text);
     }
 
     // Сообщение принадлежит студенту

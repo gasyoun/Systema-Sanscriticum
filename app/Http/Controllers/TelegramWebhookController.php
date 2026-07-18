@@ -112,12 +112,14 @@ class TelegramWebhookController extends Controller
     {
         $adminId = config('services.telegram.admin_id');
 
-        // 1. СОХРАНЯЕМ ВОПРОС СТУДЕНТА В БАЗУ
+        // 1. СОХРАНЯЕМ ВОПРОС СТУДЕНТА В БАЗУ. source='telegram_bot' (H1200) —
+        // отличает от веб-виджета в едином инбоксе (UnifiedMessage::CHANNEL_TELEGRAM_BOT).
         ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'user',
             'text' => $question,
             'is_read' => false, // Куратор это еще не видел
+            'source' => 'telegram_bot',
         ]);
 
         // 1.5. SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ (личные данные
@@ -130,6 +132,7 @@ class TelegramWebhookController extends Controller
                 'role' => 'bot',
                 'text' => $summary,
                 'is_read' => true,
+                'source' => 'telegram_bot',
             ]);
 
             $this->sendMessage($chatId, $summary);
@@ -188,6 +191,7 @@ class TelegramWebhookController extends Controller
             'role' => 'bot',
             'text' => $answer,
             'is_read' => true,
+            'source' => 'telegram_bot',
         ]);
 
         $this->sendMessage($chatId, $answer);
