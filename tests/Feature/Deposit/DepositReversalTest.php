@@ -164,12 +164,12 @@ class DepositReversalTest extends TestCase
 
         $this->assertDepositState($deposit, null, false);
         $this->assertSame(500.0, $this->availableDeposit($user, $course));
-        Log::shouldHaveReceived('warning')->once()->with(
-            'Payment deposit restoration shortfall',
-            \Mockery::on(fn (array $context): bool => $context['payment_id'] === $purchase->id
-                && $context['deposit_credit_applied'] === 1000.0
-                && $context['restored_amount'] === 500.0
-                && $context['shortfall'] === 500.0)
+        Log::shouldHaveReceived('warning')->once()->withArgs(
+            fn (string $message, array $context): bool => $message === 'Payment deposit restoration shortfall'
+                && (int) $context['payment_id'] === $purchase->id
+                && (float) $context['deposit_credit_applied'] === 1000.0
+                && (float) $context['restored_amount'] === 500.0
+                && (float) $context['shortfall'] === 500.0
         );
     }
 
