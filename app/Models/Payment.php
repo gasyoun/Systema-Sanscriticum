@@ -447,6 +447,10 @@ class Payment extends Model
                 $payment->refundReferralCreditIfApplied();
 
                 if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
+                    if (config('features.checkout_deposit_reversal')) {
+                        $payment->restoreDepositsAfterReversal();
+                    }
+
                     // Снимаем нулевые access-only siblings этого платежа — иначе
                     // оплаченные «в кредит доступа» блоки остались бы открыты
                     // после отката основного платежа.
@@ -797,6 +801,70 @@ class Payment extends Model
             $deposit->updateQuietly([
                 'consumed_amount' => $newConsumed,
                 'deposit_consumed_at' => $newConsumed >= (float) $deposit->amount ? now() : null,
+            ]);
+        }
+    }
+
+    /**
+     * Возвращает депозитный зачёт при реальном paid/success → failed/canceled.
+     * Маркер покупки deposit_credit_applied намеренно не меняется: он остаётся
+     * аудит-следом и нужен, если платеж позже легитимно вернут в paid.
+     *
+     * Consumption создаётся FIFO, а откатывается LIFO (новейшие deposit/trial
+     * строки первыми). Легаси-покупки с null-маркером неоднозначны и пропускаются.
+     */
+    private function restoreDepositsAfterReversal(): void
+    {
+        if (! $this->user_id || ! $this->course_id || $this->deposit_credit_applied === null) {
+            return;
+        }
+
+        $expectedCents = (int) round((float) $this->deposit_credit_applied * 100);
+        if ($expectedCents <= 0) {
+            return;
+        }
+
+        $remainingCents = DB::transaction(function () use ($expectedCents): int {
+            $remaining = $expectedCents;
+
+            $deposits = self::query()
+                ->where('user_id', $this->user_id)
+                ->where('course_id', $this->course_id)
+                ->whereIn('tariff', ['deposit', 'trial'])
+                ->paid()
+                ->real()
+                ->whereNotNull('consumed_amount')
+                ->where('consumed_amount', '>', 0)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($deposits as $deposit) {
+                if ($remaining <= 0) {
+                    break;
+                }
+
+                $consumedCents = (int) round((float) $deposit->consumed_amount * 100);
+                $restoreCents = min($remaining, $consumedCents);
+                $newConsumedCents = $consumedCents - $restoreCents;
+                $remaining -= $restoreCents;
+
+                $deposit->updateQuietly([
+                    'consumed_amount' => $newConsumedCents > 0 ? $newConsumedCents / 100 : null,
+                    'deposit_consumed_at' => null,
+                ]);
+            }
+
+            return $remaining;
+        });
+
+        if ($remainingCents > 0) {
+            Log::warning('Payment deposit restoration shortfall', [
+                'payment_id' => $this->id,
+                'deposit_credit_applied' => $expectedCents / 100,
+                'restored_amount' => ($expectedCents - $remainingCents) / 100,
+                'shortfall' => $remainingCents / 100,
             ]);
         }
     }
