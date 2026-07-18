@@ -21,6 +21,16 @@ final class UnifiedMessage
 
     public const CHANNEL_TELEGRAM = 'telegram';
 
+    /** VK-бот (H1200, Jivo-паритет S5) — chat_messages.source = 'vk'. */
+    public const CHANNEL_VK = 'vk';
+
+    /**
+     * TG-student-bot (H1200, Jivo-паритет S5) — chat_messages.source =
+     * 'telegram_bot'. НЕ путать с CHANNEL_TELEGRAM — тот импортированный
+     * TG-support-аккаунт (другое хранилище, TelegramSupportMessage).
+     */
+    public const CHANNEL_TELEGRAM_BOT = 'telegram_bot';
+
     public const DIRECTION_INCOMING = 'incoming';
 
     public const DIRECTION_OUTGOING = 'outgoing';
@@ -87,7 +97,12 @@ final class UnifiedMessage
 
     public function channelLabel(): string
     {
-        return $this->channel === self::CHANNEL_TELEGRAM ? 'Telegram' : 'Кабинет';
+        return match ($this->channel) {
+            self::CHANNEL_TELEGRAM => 'Telegram',
+            self::CHANNEL_VK => 'ВКонтакте',
+            self::CHANNEL_TELEGRAM_BOT => 'Telegram-бот',
+            default => 'Кабинет',
+        };
     }
 
     public function htmlText(): string
@@ -96,8 +111,12 @@ final class UnifiedMessage
     }
 
     /**
-     * Веб-чат. direction и responderType выводятся из role — единственного
-     * источника правды на веб-стороне (user=входящее; bot=ИИ; curator=человек).
+     * Веб-чат + VK-бот + TG-student-bot — все пишут в chat_messages одинаковой
+     * формой; `source` (H1200) различает канал, NULL == веб-виджет (старые
+     * строки/виджет-контроллер source не проставляет). direction и
+     * responderType выводятся из role — единственного источника правды на
+     * веб-стороне (user=входящее; bot=ИИ; curator=человек) — так же для
+     * VK/TG-bot сообщений (тот же role-конвейер).
      */
     public static function fromChatMessage(ChatMessage $message): self
     {
@@ -109,8 +128,14 @@ final class UnifiedMessage
             default => null,
         };
 
+        $channel = match ($message->source) {
+            'vk' => self::CHANNEL_VK,
+            'telegram_bot' => self::CHANNEL_TELEGRAM_BOT,
+            default => self::CHANNEL_WEB,
+        };
+
         return new self(
-            channel: self::CHANNEL_WEB,
+            channel: $channel,
             sourceId: $message->id,
             userId: $message->user_id,
             direction: $incoming ? self::DIRECTION_INCOMING : self::DIRECTION_OUTGOING,

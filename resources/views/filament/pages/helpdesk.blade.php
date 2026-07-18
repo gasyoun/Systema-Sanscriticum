@@ -156,7 +156,7 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-        /* Бейдж канала сообщения (Кабинет / Telegram) */
+        /* Бейдж канала сообщения (Кабинет / Telegram / ВК / Telegram-бот, H1200) */
         .msg-channel {
             display: inline-block;
             margin-left: 6px;
@@ -169,6 +169,8 @@
         }
         .msg-channel.web { background: #ede9fe; color: #6d28d9; }
         .msg-channel.telegram { background: #e0f2fe; color: #0369a1; }
+        .msg-channel.vk { background: #dbeafe; color: #1d4ed8; }
+        .msg-channel.telegram_bot { background: #cffafe; color: #0e7490; }
         /* Статус операционного треда в шапке чата */
         .thread-status {
             font-size: 12px;
@@ -370,6 +372,8 @@
         .dark .thread-status.closed { background: rgba(255,255,255,.1); color: #9ca3af; }
         .dark .msg-channel.web { background: rgba(139,92,246,.25); color: #c4b5fd; }
         .dark .msg-channel.telegram { background: rgba(14,165,233,.25); color: #7dd3fc; }
+        .dark .msg-channel.vk { background: rgba(59,130,246,.25); color: #93c5fd; }
+        .dark .msg-channel.telegram_bot { background: rgba(6,182,212,.25); color: #67e8f9; }
         .dark .reminder-banner { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); }
         .dark .reminder-banner-text { color: #fcd34d; }
         .dark .reminder-banner-meta { color: #fbbf24; }

@@ -76,12 +76,14 @@ final class ProcessVkBotMessage implements ShouldQueue
 
         $adminId = config('services.telegram.admin_id');
 
-        // Сохраняем вопрос в базу
+        // Сохраняем вопрос в базу. source='vk' (H1200) — отличает от веб-виджета
+        // в едином инбоксе (UnifiedMessage::CHANNEL_VK).
         ChatMessage::create([
             'user_id' => $user->id,
             'role' => 'user',
             'text' => $text,
             'is_read' => false,
+            'source' => 'vk',
         ]);
 
         // SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ.
@@ -93,6 +95,7 @@ final class ProcessVkBotMessage implements ShouldQueue
                 'role' => 'bot',
                 'text' => $summary,
                 'is_read' => true,
+                'source' => 'vk',
             ]);
 
             $this->sendVkMessage($vkId, $summary);
@@ -149,6 +152,7 @@ final class ProcessVkBotMessage implements ShouldQueue
             'role' => 'bot',
             'text' => $answer,
             'is_read' => true,
+            'source' => 'vk',
         ]);
 
         $this->sendVkMessage($vkId, $answer);

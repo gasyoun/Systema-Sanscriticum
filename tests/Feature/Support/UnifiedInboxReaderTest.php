@@ -143,4 +143,90 @@ class UnifiedInboxReaderTest extends TestCase
         $this->assertSame('TG-сообщение', $stream[1]->text);
         $this->assertSame(UnifiedMessage::CHANNEL_TELEGRAM, $stream[1]->channel);
     }
+
+    // --- H1200: Jivo-паритет S5, VK/TG-student-bot разбейджены как отдельные каналы ---
+
+    public function test_null_source_defaults_to_web_channel(): void
+    {
+        $user = User::factory()->create();
+        $message = ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'user',
+            'text' => 'Старая строка без source',
+            'is_read' => false,
+        ]);
+
+        $unified = UnifiedMessage::fromChatMessage($message);
+
+        $this->assertSame(UnifiedMessage::CHANNEL_WEB, $unified->channel);
+        $this->assertSame('Кабинет', $unified->channelLabel());
+    }
+
+    public function test_vk_source_maps_to_vk_channel(): void
+    {
+        $user = User::factory()->create();
+        $message = ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'user',
+            'text' => 'Вопрос из ВК',
+            'is_read' => false,
+            'source' => 'vk',
+        ]);
+
+        $unified = UnifiedMessage::fromChatMessage($message);
+
+        $this->assertSame(UnifiedMessage::CHANNEL_VK, $unified->channel);
+        $this->assertSame('ВКонтакте', $unified->channelLabel());
+    }
+
+    public function test_telegram_bot_source_maps_to_telegram_bot_channel(): void
+    {
+        $user = User::factory()->create();
+        $message = ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'user',
+            'text' => 'Вопрос из TG-бота',
+            'is_read' => false,
+            'source' => 'telegram_bot',
+        ]);
+
+        $unified = UnifiedMessage::fromChatMessage($message);
+
+        $this->assertSame(UnifiedMessage::CHANNEL_TELEGRAM_BOT, $unified->channel);
+        $this->assertSame('Telegram-бот', $unified->channelLabel());
+        // Отличен от импортированного TG-support-канала (тот CHANNEL_TELEGRAM).
+        $this->assertNotSame(UnifiedMessage::CHANNEL_TELEGRAM, $unified->channel);
+    }
+
+    public function test_reader_distinguishes_all_four_channels_for_one_user(): void
+    {
+        $user = User::factory()->create();
+
+        ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'text' => 'Веб', 'is_read' => false])
+            ->forceFill(['created_at' => '2026-07-18 08:00:00'])->save();
+        ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'text' => 'ВК', 'is_read' => false, 'source' => 'vk'])
+            ->forceFill(['created_at' => '2026-07-18 08:01:00'])->save();
+        ChatMessage::create(['user_id' => $user->id, 'role' => 'user', 'text' => 'TG-бот', 'is_read' => false, 'source' => 'telegram_bot'])
+            ->forceFill(['created_at' => '2026-07-18 08:02:00'])->save();
+
+        $account = TelegramSupportAccount::create(['name' => 'support']);
+        $chat = TelegramSupportChat::create(['telegram_chat_id' => 9010, 'linked_user_id' => $user->id]);
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 9010,
+            'telegram_message_id' => 1,
+            'direction' => 'incoming',
+            'text' => 'TG-support импорт',
+            'sent_at' => '2026-07-18 08:03:00',
+        ]);
+
+        $stream = app(UnifiedInboxReader::class)->forUser($user);
+
+        $this->assertCount(4, $stream);
+        $this->assertSame(
+            [UnifiedMessage::CHANNEL_WEB, UnifiedMessage::CHANNEL_VK, UnifiedMessage::CHANNEL_TELEGRAM_BOT, UnifiedMessage::CHANNEL_TELEGRAM],
+            $stream->pluck('channel')->all(),
+        );
+    }
 }
