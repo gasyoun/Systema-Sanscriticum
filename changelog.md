@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1224: «Жизненные правила для санскритологов» — новый раздел лендинга samskrte.ru.** Новый Filament-блок конструктора `life_rules_block` (17-й в `LandingPageResource`): 45 максим из [docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md) (H1215 v2) предзаполнены дефолтом Repeater-поля — куратор просто перетаскивает блок на лендинг, текст редактируется через админку. Рендер — сплошной поток без аккордеона (по образцу шумановских Lebensregeln), свёрнутый до 7 правил с кнопкой разворота (Alpine.js, стиль `faq_block`). Раздел лендинга, не отдельная страница — руление MG 18-07-2026 ([метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.meta.md)). 4/4 теста зелёные ([`tests/Feature/LifeRulesBlockTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/LifeRulesBlockTest.php)). Sonnet 5 (`claude-sonnet-5`). [H1224](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1224-Sonnet_Systema-Sanscriticum_lebensregeln-landing-section_18.07.26.md).
+
 ## [1.23.0] - 2026-07-18
 
 ### Changed
