@@ -11,6 +11,11 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-07-18
+
+### Added
+- **H1215 (v1): «Жизненные правила для санскритологов» — 40 максим по образцу Шумана, голосом Зализняка.** Манифест школы samskrte.ru: жанровая рамка — «Musikalische Haus- und Lebensregeln» Шумана (1848), голос — RWS-регистры [zalizniak-method](https://github.com/gasyoun/RuWritingStyles/blob/main/styles/passports/zalizniak-method.yml) + [zalizniak-shkolnikov-1](https://github.com/gasyoun/RuWritingStyles/blob/main/styles/passports/zalizniak-shkolnikov-1.yml); оси: ухо vs. глаз (устная Индия против табличной Европы — опирается на диагноз «NO AUDIO» из [DIGITAL_SANSKRIT_PEDAGOGY_FIELD_2026.md](https://github.com/gasyoun/SanskritGrammar/blob/main/DIGITAL_SANSKRIT_PEDAGOGY_FIELD_2026.md) §3.7) · ежедневное ремесло · инструменты · метод · этос. Спецификация утверждена в интервью MG (3 раунда, 11 вопросов) — зафиксирована в [метадоке](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.meta.md). Текст: [docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md). Ревизия по стенограммам (выступления MG, записи курсов, интервью санскритологов) = [H1215](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1215-Fable_Systema-Sanscriticum_lebensregeln-sanskritologov_18.07.26.md). [PR #564](https://github.com/gasyoun/Systema-Sanscriticum/pull/564). Fable 5 (`claude-fable-5`).
+
 ## [1.20.0] - 2026-07-18
 
 ### Added
