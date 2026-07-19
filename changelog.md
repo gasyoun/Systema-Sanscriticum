@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.38.0] - 2026-07-20
+
 ### Added
 - **H1286: подтверждение покупки + онбординг первой недели.** Лейн волны
   revenue-copy
