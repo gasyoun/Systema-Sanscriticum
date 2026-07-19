@@ -11,6 +11,22 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Fixed
+- **Прикрепление ДЗ: файлы разных форматов больше не вытесняют друг друга.** Студентка
+  сообщила, что при отправке домашнего задания нельзя приложить фото и аудио одновременно:
+  выбрала jpg, затем добавила аудио — фотографии исчезали, и наоборот. Причина —
+  `<input type="file" multiple>` при каждом новом выборе **заменяет** свой `FileList`
+  целиком, а форма отправляла его напрямую; ни в JS, ни в Alpine не было накопителя, так
+  что на сервер уходила только последняя пачка (потеря была чисто клиентской —
+  `HomeworkService::recordSubmission` уже корректно копит файлы между отправками).
+  [`resources/views/student/partials/homework.blade.php`](resources/views/student/partials/homework.blade.php)
+  теперь держит собственный массив `File`-объектов, при каждом выборе дополняет его,
+  дедуплицирует по имени+размеру и переписывает `input.files` через `DataTransfer` —
+  формат выбора значения не имеет. Плюс: крестик для удаления отдельного файла,
+  предупреждение при превышении лимита в 10 файлов (раньше лишние молча уходили в
+  серверную валидацию), и `:key` в `x-for` больше не схлопывает одноимённые файлы.
+  Поведение чисто клиентское, PHPUnit его не покрывает — проверять вручную в кабинете.
+
 ### Changed
 - **H1295: ё-orthography normalisation sweep.** Mechanical prerequisite for the Systema
   revenue-copy wave (ruling D13/D14) — normalises existing user-facing Russian copy to the
