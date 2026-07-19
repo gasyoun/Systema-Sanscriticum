@@ -111,7 +111,30 @@
             </div>
         @elseif($hwEditable)
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
-                  x-data="{ files: [] }">
+                  x-data="{
+                      files: [],
+                      limit: 10,
+                      overflow: false,
+                      // Браузер заменяет FileList целиком при каждом выборе, поэтому копим сами
+                      // и переписываем input.files через DataTransfer — иначе на сервер уходит
+                      // только последняя пачка (фото пропадают, когда следом выбирают аудио).
+                      add(input) {
+                          const merged = [...this.files, ...Array.from(input.files)]
+                              .filter((f, i, all) => all.findIndex(g => g.name === f.name && g.size === f.size) === i);
+                          this.overflow = merged.length > this.limit;
+                          this.sync(merged.slice(0, this.limit), input);
+                      },
+                      remove(index, input) {
+                          this.overflow = false;
+                          this.sync(this.files.filter((f, i) => i !== index), input);
+                      },
+                      sync(list, input) {
+                          const dt = new DataTransfer();
+                          list.forEach(f => dt.items.add(f));
+                          input.files = dt.files;
+                          this.files = Array.from(dt.files);
+                      },
+                  }">
                 @csrf
                 @if($hwStatus === 'needs_revision')
                     <p class="text-sm text-red-600 font-semibold mb-3"><i class="fas fa-rotate-left mr-1.5"></i>Преподаватель вернул работу — внесите правки и отправьте снова.</p>
@@ -126,15 +149,24 @@
                     <label class="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-[#E85C24] hover:bg-orange-50/30 transition-colors p-6 cursor-pointer">
                         <i class="fas fa-cloud-arrow-up text-2xl text-gray-400"></i>
                         <span class="text-sm font-semibold text-gray-600">Прикрепить файлы (фото, PDF, аудио, документы)</span>
-                        <span class="text-xs text-gray-400">До 10 файлов, каждый до 30 МБ</span>
-                        <input type="file" name="files[]" multiple class="hidden"
+                        <span class="text-xs text-gray-400">До 10 файлов, каждый до 30 МБ — можно добавлять по одному, разными форматами</span>
+                        <input type="file" name="files[]" multiple class="hidden" x-ref="picker"
                                accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,.mp3,.m4a,.ogg,.wav,.doc,.docx,.txt"
-                               x-on:change="files = Array.from($event.target.files).map(f => f.name)">
+                               x-on:change="add($event.target)">
                     </label>
+                    <template x-if="overflow">
+                        <p class="mt-2 text-xs text-amber-600"><i class="fas fa-triangle-exclamation mr-1"></i>Можно прикрепить не более 10 файлов — лишние не добавлены.</p>
+                    </template>
                     <template x-if="files.length">
                         <ul class="mt-2 space-y-1">
-                            <template x-for="name in files" :key="name">
-                                <li class="text-xs text-gray-600 flex items-center gap-1.5"><i class="fas fa-file text-gray-400"></i><span x-text="name"></span></li>
+                            <template x-for="(file, index) in files" :key="file.name + file.size">
+                                <li class="text-xs text-gray-600 flex items-center gap-1.5">
+                                    <i class="fas fa-file text-gray-400"></i>
+                                    <span x-text="file.name"></span>
+                                    <button type="button" class="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+                                            x-on:click="remove(index, $refs.picker)"
+                                            :aria-label="'Убрать ' + file.name"><i class="fas fa-xmark"></i></button>
+                                </li>
                             </template>
                         </ul>
                     </template>
