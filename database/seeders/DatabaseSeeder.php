@@ -48,5 +48,9 @@ class DatabaseSeeder extends Seeder
         // Системная санскритская колода SRS (H211) — идемпотентно, безопасно при
         // пустом словаре. Данные заводятся всегда; показываются только за флагом srs.enabled.
         $this->call(SrsSanskritDeckSeeder::class);
+
+        // Корни санскрита по частотности (H1280, D4) — идемпотентно, читает
+        // committed-фикстуру, не зависит от словаря.
+        $this->call(SrsRootFrequencyDeckSeeder::class);
     }
 }

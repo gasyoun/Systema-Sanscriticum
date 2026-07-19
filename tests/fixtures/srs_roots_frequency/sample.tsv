@@ -1,0 +1,11 @@
+rank	root_iast	root_devanagari	dcs_lemma	grammar_class	attested_count	coverage_pct	top_form	gloss_ru	source
+1	1 kṛ / 2 kṛ / 3 kṛ	कृ	kṛ	1,2,6	40799	7.4241	kṛtvā	сделал	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+2	bhū	भू	bhū	1	40393	14.7743	bhavati	будет	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+3	1 as / 2 as	अस्	as	2,4	35753	21.2802	syāt	есть	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+4	vac	वच्	vac	2	33948	27.4576	uvāca	сказал	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+5	gach / gam	गम्	gam	6	18341	30.7951	gatvā	пришел	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+6	dṛś	दृश्	dṛś	4	14866	33.5002	dṛṣṭvā	увидев	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+7	1 dā / 2 dā / 3 dā / 4 dā	दा	dā	1,4	12008	35.6853	dattvā	взяв	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+8	1 vid / 2 vid	विद्	vid	1,2	11314	37.744	veda	знает	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+9	śru	श्रु	śru	4	10505	39.6556	śrutvā	услышав	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)
+10	brū	ब्रू	brū	6	9781	41.4354	abravīt	сказал	kosha/roots_frequency.json (H950) x WhitneyRoots/crosswalk/ru_root_glosses.tsv (H347)

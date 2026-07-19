@@ -11,6 +11,30 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1280 (D4): SRS-колода «Корни санскрита по частотности».** Новая системная колода
+  `sanskrit-roots-frequency` в существующем FSRS-тренажёре (H211): 570 санскритских
+  корней в порядке корпусной частотности (kosha
+  [`roots_frequency.tsv`](https://github.com/gasyoun/kosha/blob/main/data/roots/roots_frequency.tsv),
+  H950, Digital Corpus of Sanskrit — Oliver Hellwig, CC BY 4.0), с русскими глоссами
+  из WhitneyRoots'
+  [`crosswalk/ru_root_glosses.tsv`](https://github.com/gasyoun/WhitneyRoots/blob/main/crosswalk/ru_root_glosses.tsv)
+  (H347). Join committed в
+  [`database/seeders/data/build_roots_frequency_ru.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/build_roots_frequency_ru.py)
+  (readable via `indic_transliteration` for the Devanāgarī root form — `sanskrit-util`'s
+  `iast_to_devanagari` is display-only and mangles consonant-final roots, so it was not
+  used here); 59 из 629 DCS-ranked corpus roots have no RU gloss match — logged to
+  `database/seeders/data/roots_frequency_ru_unmatched.tsv`, not silently dropped. New
+  `SrsRootFrequencyDeckSeeder` (idempotent, keyed by `fields->dcs_lemma`) inserts cards
+  in rank order so `ReviewService::queueFor()`'s `orderBy('id')` new-card query serves
+  the highest-yield roots first with no new sort column needed. Feature test seeds a
+  10-root fixture and reviews one card end-to-end. No engine change. Deploy: one-time
+  `php artisan db:seed --class=SrsRootFrequencyDeckSeeder` — see
+  [DEPLOY_QUEUE №39](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md);
+  deck stays invisible to students until the existing `SRS_ENABLED` flag is on (R-6
+  baseline protection, default OFF). Sonnet 5 (`claude-sonnet-5`).
+  [H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md).
+
 ## [1.28.0] - 2026-07-19
 
 ### Added
