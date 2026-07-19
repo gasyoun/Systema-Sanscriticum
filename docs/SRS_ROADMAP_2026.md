@@ -92,15 +92,17 @@ _Unblocked by: nothing — ready._
 
 ---
 
-### Content deck queued 19-07-2026 — frequency-ranked RU root deck
+### Content deck shipped 19-07-2026 — frequency-ranked RU root deck
 
-A system deck «Корни санскрита по частотности» (935 Whitney roots × corpus token
-frequency × Russian glosses) rides the Wave-1 stack as pure content — no engine change.
-Staged via [`/ask-batch`](https://github.com/gasyoun/claude-config/blob/main/commands/ask-batch.md);
+A system deck «Корни санскрита по частотности» (570 DCS-ranked roots, out of the 935
+Whitney-hub roots — 629 have any corpus attestation at all per kosha's H950 build,
+570 of those also have an RU gloss match) rides the Wave-1 stack as pure content — no
+engine change. Staged via [`/ask-batch`](https://github.com/gasyoun/claude-config/blob/main/commands/ask-batch.md);
 plan: [`docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md)
 § D4; handoff
 [H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
-(queued).
+(shipped, code+data merged; deploy is the one-time seeder command at
+[DEPLOY_QUEUE №39](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)).
 
 ## Non-goals (considered and ruled out — do not re-propose)
 
