@@ -57,7 +57,18 @@ class SubscriberMagnetResource extends Resource
                 ->label('Файл (PDF/материал)')
                 ->disk('public')
                 ->directory('subscriber-magnets')
-                ->helperText('Загрузите файл ИЛИ укажите внешнюю ссылку ниже.'),
+                // H1345: поле было без maxSize и без acceptedFileTypes — то есть
+                // принимало файл любого размера и любого типа (включая
+                // исполняемый) в публично отдаваемый каталог. Лид-магнит — это
+                // документ, а не медиатека.
+                ->acceptedFileTypes([
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/epub+zip',
+                ])
+                ->maxSize(20480) // 20 МБ
+                ->helperText('PDF, DOC/DOCX или EPUB, до 20 МБ. Либо укажите внешнюю ссылку ниже.'),
             Forms\Components\TextInput::make('url')
                 ->label('Внешняя ссылка')->url()->maxLength(2048)
                 ->helperText('Если заполнено — используется вместо файла.'),

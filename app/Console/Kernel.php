@@ -36,6 +36,17 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('receivables-threshold-check');
 
+        // Дежурный по файловому хранилищу (H1345): после archives:cleanup (03:00)
+        // и backup:clean, чтобы мерить УЖЕ освобождённое место, а не временный
+        // пик. Алерт админам при выходе за пороги config/storage_watch.php —
+        // до этой команды рост медиа не измерялся ничем. Гейт «есть
+        // получатели» — внутри команды.
+        $schedule->command('storage:check')
+            ->dailyAt('04:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('storage-usage-check');
+
         // Недельный KPI-дайджест делегирования (H259, фаза D): сводка всех фаз
         // финдиру по понедельникам утром — «ритм обзора» с зубами. Гейт «есть
         // получатели» — внутри команды.
