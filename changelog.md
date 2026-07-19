@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.35.0] - 2026-07-19
+
 ### Added
 - **H1285: момент после оплаты — страницы success/fail вместо редиректов.** Первый
   Fable-лейн волны revenue-copy
