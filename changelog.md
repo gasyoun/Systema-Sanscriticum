@@ -34,6 +34,26 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   deck stays invisible to students until the existing `SRS_ENABLED` flag is on (R-6
   baseline protection, default OFF). Sonnet 5 (`claude-sonnet-5`).
   [H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md).
+- **H1281 (D6): «Лигатуры по частотности» — деванагари-тренажёр конъюнктов.** Новое
+  статичное семейство `public/exercises/ligatures/` в существующей `public/exercises/`
+  игротеке (не новый движок — reuse `match/engine.js`+`match/engine.css` as-is, per the
+  plan's non-goal). Данные — топ-200 санскритских лигатур (saṃyoga) по
+  корпусной частотности из VisualDCS
+  [`derived-data/Fonetika/regen-2026/ligature_freq.csv`](https://github.com/gasyoun/VisualDCS/blob/main/derived-data/Fonetika/regen-2026/ligature_freq.csv)
+  (Digital Corpus of Sanskrit — Oliver Hellwig, CC BY 4.0; kosha manifest id
+  `dcs-grapheme-frequency`), committed as
+  [`data.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/ligatures/data.js)
+  with the regen command in its header. Three cumulative frequency levels —
+  `top-10/` (all 10 shown), `top-50/` and `top-200/` (`perRound: 10`, a fresh random
+  ten each "Заново") — each a `MatchExercise.mount()` pairing the Devanāgarī glyph to
+  its IAST romanization, hint = corpus rank + % of all ligature tokens. Linked from the
+  main `/exercises/` catalogue as a fourth family; prior-art fence links out to
+  [csl-guides](https://sanskrit-lexicon.github.io/csl-guides/) for the full script
+  course rather than duplicating it. Static-only — no migration, no flag, no backend;
+  ships with the normal deploy — see
+  [DEPLOY_QUEUE №40](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
+  Sonnet 5 (`claude-sonnet-5`).
+  [H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md).
 
 ## [1.28.0] - 2026-07-19
 
