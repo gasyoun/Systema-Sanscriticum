@@ -11,6 +11,27 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1285: момент после оплаты — страницы success/fail вместо редиректов.** Первый
+  Fable-лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  `/payment/success` и `/payment/fail` — две самые эмоциональные точки воронки — не
+  рендерили ничего: успех уводил флешем в кабинет, неудача выбрасывала на главную,
+  теряя курс и возможность повтора. Теперь оба маршрута рендерят страницы
+  ([`resources/views/payment/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/resources/views/payment)):
+  успех — три состояния (подтверждено вебхуком / банк принял, ждем подтверждения,
+  с ограниченным ожиданием «если через 10 минут доступа всё еще нет — напишите…» /
+  гость с кнопкой входа), неудача — блок «Если деньги списались — не платите
+  повторно…» первым, выше фолда, затем повтор оплаты со ссылкой на курс из
+  последнего неоплаченного платежа (только чтение — статус платежа по-прежнему
+  меняет исключительно вебхук Точки). Строки и решения:
+  [`docs/copy/money-post-payment-moment-copy.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-post-payment-moment-copy.md);
+  общие строки волны 1–3 (тайминг доступа, двойное списание, канал поддержки)
+  определены в
+  [`docs/copy/_shared_strings.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/_shared_strings.md).
+  7 новых feature-тестов: рендер всех состояний, повтор к скрытому курсу уходит в
+  каталог, страницы не мутируют статус платежа.
+
 ## [1.34.0] - 2026-07-19
 
 ### Added
