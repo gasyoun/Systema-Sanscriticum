@@ -1,6 +1,15 @@
 # Plan — GetCourse-parity Wave 1 (Systema-Sanscriticum, 2026H2)
 
-_Created: 17-07-2026 · Last updated: 17-07-2026_
+_Created: 17-07-2026 · Last updated: 19-07-2026_
+
+> **R-5 timing superseded 18-07-2026 (MG ruling, [H1261](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1261-Sonnet_Systema-Sanscriticum_rq4-study-go-live_18.07.26.md)):
+> RQ4 recruitment does NOT wait for autumn — MG ruled GO now.** Only the *timing* clause of R-5
+> below is superseded; the contamination guard is unchanged and still fully binding: the
+> 28-08 R20 marathon cohort remains off-limits as an RQ4 recruitment source, RQ4 recruits a
+> separate approved Kochergina-stage cohort, and no arm-aware segmentation may leak into R20
+> analytics. §2.2's "must escalate" rule for flipping `RQ4_STUDY` is unchanged — GO is a
+> product ruling, not a credential grant; the flag flip itself still requires the established
+> deploy authority. See [DEPLOY_QUEUE №26](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) for the exact activation contract.
 
 The index of the `/ask` Phase-3 plan set for the getcourse-parity wave. Authored by
 Opus 4.8 (`claude-opus-4-8[1m]`) against human rulings taken 17-07-2026. This doc is the
