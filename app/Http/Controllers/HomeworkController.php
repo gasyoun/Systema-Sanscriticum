@@ -30,11 +30,39 @@ class HomeworkController extends Controller
 
         abort_unless((bool) $lesson->homework_enabled, 404, 'У этого урока нет домашнего задания.');
 
+        $maxFiles = (int) config('homework.max_files', 10);
+        $maxFileKb = (int) config('homework.max_file_kb', 30720);
+        $totalMaxKb = (int) config('homework.total_max_kb', 92160);
+        $extensions = implode(',', (array) config('homework.allowed_extensions', []));
+
         $validated = $request->validate([
             'action' => ['required', 'in:draft,submit'],
             'body' => ['nullable', 'string', 'max:10000'],
-            'files' => ['nullable', 'array', 'max:10'],
-            'files.*' => ['file', 'max:30720', 'mimes:pdf,jpg,jpeg,png,heic,webp,mp3,m4a,ogg,wav,doc,docx,txt'],
+            'files' => [
+                'nullable',
+                'array',
+                'max:'.$maxFiles,
+                // Суммарный вес отправки: без этой проверки превышение ловит
+                // не Laravel, а PHP/nginx — пустой страницей 413, на которой
+                // теряется уже введённый текст ответа.
+                function (string $attribute, $value, \Closure $fail) use ($request, $totalMaxKb) {
+                    $total = 0;
+                    foreach ($request->file('files', []) as $file) {
+                        if ($file && $file->isValid()) {
+                            $total += $file->getSize();
+                        }
+                    }
+
+                    if ($total > $totalMaxKb * 1024) {
+                        $fail(sprintf(
+                            'Суммарный размер файлов — %s МБ, а можно не больше %s МБ. Отправьте работу в две части или сожмите видео.',
+                            number_format($total / 1048576, 1, ',', ' '),
+                            number_format($totalMaxKb / 1024, 0, ',', ' ')
+                        ));
+                    }
+                },
+            ],
+            'files.*' => ['file', 'max:'.$maxFileKb, 'mimes:'.$extensions],
         ]);
 
         $finalize = $validated['action'] === 'submit';

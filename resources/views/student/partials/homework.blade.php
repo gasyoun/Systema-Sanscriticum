@@ -13,6 +13,15 @@
     // ничего не сдавал → показываем «скоро», форму прячем (иначе студент видит
     // форму отправки без самого задания и не понимает, что делать).
     $awaitingPrompt = ! filled($lesson->homework_prompt) && ! $homeworkSubmission;
+
+    // Лимиты загрузки берутся из config/homework.php, чтобы подпись формы,
+    // фильтр выбора файлов и серверная валидация не разъезжались между собой.
+    $hwMaxFiles = (int) config('homework.max_files', 10);
+    $hwMaxFileMb = (int) round(config('homework.max_file_kb', 30720) / 1024);
+    $hwTotalMaxMb = (int) round(config('homework.total_max_kb', 92160) / 1024);
+    $hwAccept = collect(config('homework.allowed_extensions', []))
+        ->map(fn ($ext) => '.'.$ext)
+        ->implode(',');
 @endphp
 <section class="font-nunito">
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6">
@@ -113,7 +122,7 @@
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
                   x-data="{
                       files: [],
-                      limit: 10,
+                      limit: {{ $hwMaxFiles }},
                       overflow: false,
                       // Браузер заменяет FileList целиком при каждом выборе, поэтому копим сами
                       // и переписываем input.files через DataTransfer — иначе на сервер уходит
@@ -148,14 +157,14 @@
                 <div class="mt-4">
                     <label class="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-[#E85C24] hover:bg-orange-50/30 transition-colors p-6 cursor-pointer">
                         <i class="fas fa-cloud-arrow-up text-2xl text-gray-400"></i>
-                        <span class="text-sm font-semibold text-gray-600">Прикрепить файлы (фото, PDF, аудио, документы)</span>
-                        <span class="text-xs text-gray-400">До 10 файлов, каждый до 30 МБ — можно добавлять по одному, разными форматами</span>
+                        <span class="text-sm font-semibold text-gray-600">Прикрепить файлы (фото, видео, аудио, PDF, документы)</span>
+                        <span class="text-xs text-gray-400">До {{ $hwMaxFiles }} файлов, каждый до {{ $hwMaxFileMb }} МБ, всего до {{ $hwTotalMaxMb }} МБ — можно добавлять по одному, разными форматами</span>
                         <input type="file" name="files[]" multiple class="hidden" x-ref="picker"
-                               accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,.mp3,.m4a,.ogg,.wav,.doc,.docx,.txt"
+                               accept="{{ $hwAccept }}"
                                x-on:change="add($event.target)">
                     </label>
                     <template x-if="overflow">
-                        <p class="mt-2 text-xs text-amber-600"><i class="fas fa-triangle-exclamation mr-1"></i>Можно прикрепить не более 10 файлов — лишние не добавлены.</p>
+                        <p class="mt-2 text-xs text-amber-600"><i class="fas fa-triangle-exclamation mr-1"></i>Можно прикрепить не более {{ $hwMaxFiles }} файлов — лишние не добавлены.</p>
                     </template>
                     <template x-if="files.length">
                         <ul class="mt-2 space-y-1">

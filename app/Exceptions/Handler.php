@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Throwable;
@@ -41,6 +42,20 @@ class Handler extends ExceptionHandler
             }
 
             return null; // прочие 419 — поведение по умолчанию
+        });
+
+        // Загрузка тяжелее post_max_size обрывается на уровне PHP: тело запроса
+        // отбрасывается, валидация Laravel до файлов уже не доходит, и студент
+        // получает голую страницу 413. Возвращаем его в форму с внятным текстом.
+        // Набранный ответ при этом всё равно потерян — PHP выбросил тело
+        // запроса целиком, поэтому в сообщении просим сохранить черновик.
+        $this->renderable(function (PostTooLargeException $e, Request $request) {
+            return redirect()->back()->with(
+                'error',
+                'Файлы слишком тяжёлые — сервер отклонил загрузку целиком. '
+                .'Прикрепите меньше файлов за раз или сожмите видео, '
+                .'а длинный ответ сначала сохраните черновиком.'
+            );
         });
     }
 }
