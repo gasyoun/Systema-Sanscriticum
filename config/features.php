@@ -270,4 +270,15 @@ return [
      | CHECKOUT_DEPOSIT_REVERSAL=true + config:cache после ручного ревью.
      */
     'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', false),
+
+    /*
+     | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
+     | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
+     | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —
+     | deploy-рубильник; включается после заполнения токена/секрета/chat_id в
+     | MarketingSetting (админка) и отключения privacy mode у бота (@BotFather,
+     | GTD @DO). Webhook сам fail-closed по секрету независимо от флага; пока флаг
+     | OFF, команда zapisi:send-reminders ничего не шлёт (early-return).
+     */
+    'telegram_zapisi_bot' => (bool) env('TELEGRAM_ZAPISI_BOT_ENABLED', false),
 ];

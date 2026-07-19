@@ -31,13 +31,14 @@
 | `POST /api/webhooks/vk-magnet` | `verify.vk.magnet` (`VerifyVkMagnetCallback`) | body `secret` = `MarketingSetting.vk_callback_secret`; confirmation с **anti-replay** (повтор после завершения → 403) | **fail-closed** (пусто → 403) | лид-магнит | `VkMagnetCallbackTest` (в т.ч. повторный confirmation → 403) |
 | `POST /api/webhooks/max-magnet/{secret}` | `verify.max.magnet` (`VerifyMaxMagnetWebhook`) | секрет **в URL-пути** = `MarketingSetting.max_webhook_secret` (Max Bot API не поддерживает header/body-секрет) | **fail-closed** (пусто → 403) | лид-магнит | `MaxMagnetWebhookTest` |
 | `POST /api/webhooks/lead-step` | `verify.n8n.leadstep` (`VerifyLeadStepWebhook`) | заголовок `X-Webhook-Secret` = `services.n8n.lead_step_secret` | **fail-closed** (пусто → 403) | трекинг лида | `LeadStepWebhookTest` |
+| `POST /api/webhooks/telegram-zapisi` | `verify.tg.zapisi` (`VerifyTelegramZapisiWebhook`) | `X-Telegram-Bot-Api-Secret-Token` = `MarketingSetting.zapisi_webhook_secret` | **fail-closed** с рождения (пусто → 403) | Track C (H164) — приватный class-booking чат, PII | `TelegramZapisiWebhookTest` |
 
 💰 = выдает платный доступ · 🔒 = пишет данные доступа/контента.
 
 ## Ключевые свойства
 
 - **Сравнение секретов — `hash_equals`** во всех middleware (constant-time, защита от timing-атак).
-- **Секреты шифруются в БД.** `MarketingSetting` кастует `tg_bot_token`/`tg_webhook_secret`/`vk_access_token`/`vk_callback_secret`/`max_bot_token`/`max_webhook_secret` как `encrypted` (Eloquent cast, свойство `$casts`). Утечка дампа БД не раскрывает секреты.
+- **Секреты шифруются в БД.** `MarketingSetting` кастует `tg_bot_token`/`tg_webhook_secret`/`vk_access_token`/`vk_callback_secret`/`max_bot_token`/`max_webhook_secret`/`zapisi_bot_token`/`zapisi_webhook_secret` как `encrypted` (Eloquent cast, свойство `$casts`). Утечка дампа БД не раскрывает секреты.
 - **Все деньги-/доступ-критичные эндпоинты fail-closed** (Tochka, sync-lessons, from-zoom), **как и легаси-бот-вебхуки** (Telegram, VK — с 02-07-2026). Fail-open остается только у Zoom — там это осознанный enforce-if-configured (Event Subscription URL-валидация).
 - **Идемпотентность** на эффектах: Tochka — `lockForUpdate` на платеже; from-zoom/zoom-recording — upsert по `(course_id, group_id, lesson_date)`; vk/max-magnet — по токену привязки.
 

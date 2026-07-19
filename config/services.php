@@ -142,6 +142,11 @@ return [
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
         'peer_delay_max' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MAX', 0),
+        // D11 override (Track C, Uprava/docs/DECISIONS_telegram_harvester.md): peers
+        // (@username or numeric id) for which the MadelineProto historical backfill
+        // ALSO downloads the actual media file (D4's metadata-only default stands
+        // unchanged for every other Track B peer).
+        'media_download_peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_MEDIA_DOWNLOAD_PEERS', ''))))),
     ],
 
     'vk' => [

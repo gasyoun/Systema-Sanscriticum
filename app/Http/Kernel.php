@@ -82,5 +82,7 @@ class Kernel extends HttpKernel
         'verify.vk.bot' => \App\Http\Middleware\VerifyVkBotWebhook::class,
         // --- ПАРТНЁРСКИЙ БОТ (enforce-if-configured) ---
         'verify.partner.bot' => \App\Http\Middleware\VerifyPartnerBotWebhook::class,
+        // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
+        'verify.tg.zapisi' => \App\Http\Middleware\VerifyTelegramZapisiWebhook::class,
     ];
 }

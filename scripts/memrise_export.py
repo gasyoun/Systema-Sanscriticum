@@ -73,7 +73,11 @@ def fetch_course_schema(course_id: str, session: str) -> dict:
     """
     url = f"https://community-courses.memrise.com/community/api/course/{course_id}/"
     request = urllib.request.Request(url, headers={"Cookie": f"session={session}"})
-    with urllib.request.urlopen(request) as response:  # noqa: S310 - fixed https host
+    # Semgrep's dynamic-urllib-use rule flags any f-string reaching urlopen, but the
+    # scheme and host here are a hardcoded literal ("https://community-courses.memrise.com/...");
+    # course_id only ever lands in the path segment, so it cannot redirect the request to a
+    # different host or scheme (e.g. file://) regardless of its value.
+    with urllib.request.urlopen(request) as response:  # noqa: S310 - fixed https host  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         return json.loads(response.read().decode("utf-8"))
 
 

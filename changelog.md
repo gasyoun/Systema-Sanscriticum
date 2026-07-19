@@ -23,6 +23,63 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   22 intentional exceptions remain (the «весь»/«он»/«что» pronoun-case minimal pairs, plus
   two individually-reviewed aspectual-verb risks left ё per the ambiguity default).
 
+## [1.31.0] - 2026-07-19
+
+### Added
+- **H164: Telegram Track C — @zapisi_ORSbot (class-booking bot) integration.**
+  Executes the locked D7–D11 rulings
+  ([DECISIONS_telegram_harvester.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_telegram_harvester.md#track-c--second-bot-account-zapisi_orsbot)):
+  D8 go-forward webhook capture (`POST /api/webhooks/telegram-zapisi`,
+  `verify.tg.zapisi` fail-closed secret middleware, `ProcessTelegramZapisiUpdate`
+  normalizing into the same corpus schema as Track B, tagged `account_type=bot`)
+  with D11 media download (`DownloadTelegramZapisiMedia`, Bot API `getFile` +
+  raw download — an override of Track B's D4 metadata-only default, scoped to
+  this chat only); D9 full-member-roster snapshot
+  (`telegram-harvest:roster {peer}`, `TelegramHarvestSyncService::fetchRoster`,
+  `RosterStoreWriter`) and a D11 MadelineProto-backfill media-download path
+  gated by the new `services.telegram_harvest.media_download_peers` config
+  (peer-scoped, D4 stays metadata-only for every other Track B peer); D10 a new
+  independent `zapisi_class_schedules` table + `zapisi:send-reminders`
+  (`SendZapisiBotMessageJob`, idempotent via `sent_at`, scheduled every minute,
+  gated by the new `features.telegram_zapisi_bot` deploy flag); a new
+  admin-only Filament cluster (`ZapisiClassScheduleResource` CRUD +
+  `ZapisiBotDashboard` read view over the out-of-git roster/message store) and
+  new encrypted `zapisi_bot_token`/`zapisi_webhook_secret`/`zapisi_chat_id`
+  fields on `MarketingSetting`. D7 (add the chat as a Track B peer) needs no
+  new code — Track B's existing `TELEGRAM_HARVEST_PEERS` mechanism already
+  handles it once the chat's numeric id is discovered on a live host via
+  `telegram-harvest:peers`; D8b (disable bot privacy mode via @BotFather) is a
+  human action, filed as a GTD `@DO`. 17 new feature tests (webhook secret
+  verification, normalization/store, media download, roster fetch/command,
+  reminder scheduler, D11 peer-scoped backfill download). Sonnet 5
+  (`claude-sonnet-5`). [PR #593](https://github.com/gasyoun/Systema-Sanscriticum/pull/593).
+  [H164](https://github.com/gasyoun/Uprava/blob/main/handoffs/H164-Sonnet_DO_telegram-sanskrit-corpus_zapisi_orsbot_integration_04.07.26.md).
+
+## [1.30.0] - 2026-07-19
+
+### Added
+- **H1281 (D6): «Лигатуры по частотности» — деванагари-тренажёр конъюнктов.** Новое
+  статичное семейство `public/exercises/ligatures/` в существующей `public/exercises/`
+  игротеке (не новый движок — reuse `match/engine.js`+`match/engine.css` as-is, per the
+  plan's non-goal). Данные — топ-200 санскритских лигатур (saṃyoga) по
+  корпусной частотности из VisualDCS
+  [`derived-data/Fonetika/regen-2026/ligature_freq.csv`](https://github.com/gasyoun/VisualDCS/blob/main/derived-data/Fonetika/regen-2026/ligature_freq.csv)
+  (Digital Corpus of Sanskrit — Oliver Hellwig, CC BY 4.0; kosha manifest id
+  `dcs-grapheme-frequency`), committed as
+  [`data.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/ligatures/data.js)
+  with the regen command in its header. Three cumulative frequency levels —
+  `top-10/` (all 10 shown), `top-50/` and `top-200/` (`perRound: 10`, a fresh random
+  ten each "Заново") — each a `MatchExercise.mount()` pairing the Devanāgarī glyph to
+  its IAST romanization, hint = corpus rank + % of all ligature tokens. Linked from the
+  main `/exercises/` catalogue as a fourth family; prior-art fence links out to
+  [csl-guides](https://sanskrit-lexicon.github.io/csl-guides/) for the full script
+  course rather than duplicating it. Static-only — no migration, no flag, no backend;
+  ships with the normal deploy — see
+  [DEPLOY_QUEUE №40](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
+  Sonnet 5 (`claude-sonnet-5`).
+  [H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md).
+>>>>>>> origin/main
+
 ## [1.29.0] - 2026-07-19
 
 ### Added
