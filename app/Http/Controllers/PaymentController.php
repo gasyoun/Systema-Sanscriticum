@@ -129,6 +129,25 @@ class PaymentController extends Controller
                     ->lockForUpdate()
                     ->first();
 
+                $eligibleBeforeCapacity = $promo
+                    && $promo->isCurrentlyActive()
+                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && ! $promo->redeemedByUser($user->id);
+
+                if (config('features.checkout_promo_reservations') && $eligibleBeforeCapacity) {
+                    if ($promo->hasRecentPendingForUser($user->id)) {
+                        throw ValidationException::withMessages([
+                            'promo_code' => 'У вас уже есть незавершённый заказ с этим промокодом. Завершите оплату или дождитесь истечения ссылки.',
+                        ]);
+                    }
+
+                    if (! $promo->hasCapacity()) {
+                        throw ValidationException::withMessages([
+                            'promo_code' => 'Лимит использований промокода уже занят. Оплата по показанной скидке недоступна.',
+                        ]);
+                    }
+                }
+
                 $applicable = $promo
                     && $promo->isValid()
                     && $promo->appliesToCourse($tariff->course->id ?? null)
@@ -140,7 +159,10 @@ class PaymentController extends Controller
                 // сумму, а чекаут за клик до этого показывал цену со скидкой
                 // (money-core, H071 #13). Теперь — явная ошибка вместо тихого
                 // повышения цены.
-                if ($applicable && $promo->hasRecentPendingForUser($user->id)) {
+                if (! config('features.checkout_promo_reservations')
+                    && $applicable
+                    && $promo->hasRecentPendingForUser($user->id)
+                ) {
                     throw ValidationException::withMessages([
                         'promo_code' => 'У вас уже есть незавершённый заказ с этим промокодом. Завершите оплату или отмените его, прежде чем оформлять новый.',
                     ]);
@@ -280,12 +302,17 @@ class PaymentController extends Controller
         // 6. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ — ПОСЛЕ commit (с фискализацией: чек уйдёт на email студента)
         $purpose = 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
 
+        $promoTtlMinutes = config('features.checkout_promo_reservations') && $payment->promo_code_id
+            ? PromoCode::PAYMENT_LINK_TTL_MINUTES
+            : null;
+
         try {
             $response = $tochka->createPaymentWithReceipt(
                 user: $user,
                 amount: (float) $finalPrice,
                 purpose: $purpose,
                 itemName: ($tariff->course->title ?? 'Курс').' — '.$tariff->title,
+                ttlMinutes: $promoTtlMinutes,
             );
         } catch (ConnectionException $e) {
             // Сетевой сбой / TLS / DNS / timeout. Помечаем платёж failed (наблюдатель
@@ -302,9 +329,15 @@ class PaymentController extends Controller
 
         // 7. ОБРАБАТЫВАЕМ ОТВЕТ
         if ($response->successful() && isset($response['Data']['paymentLink'])) {
-            $payment->update([
+            $paymentUpdate = [
                 'transaction_id' => $response['Data']['paymentLinkId'],
-            ]);
+            ];
+
+            if ($promoTtlMinutes !== null) {
+                $paymentUpdate['payment_link_expires_at'] = now()->addMinutes($promoTtlMinutes);
+            }
+
+            $payment->update($paymentUpdate);
 
             return redirect()->away($response['Data']['paymentLink']);
         }

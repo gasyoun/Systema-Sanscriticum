@@ -230,6 +230,23 @@ return [
     'support_lead_capture' => (bool) env('SUPPORT_LEAD_CAPTURE', false),
 
     /*
+     | Жёсткая ёмкость промокодов через timed reservations. Когда ВКЛ, живой
+     | pending держит usage slot до TTL ссылки Точки (30 мин) + webhook-буфера
+     | (10 мин), null-expiry легаси держится до ручной сверки, а paid-reversal
+     | освобождает used_count. ВЫКЛ по умолчанию; ручное включение —
+     | CHECKOUT_PROMO_RESERVATIONS=true + config:cache после миграции и ревью.
+     */
+    'checkout_promo_reservations' => (bool) env('CHECKOUT_PROMO_RESERVATIONS', false),
+
+    /*
+     | Разрешает единственную автоматическую запись команды
+     | payments:audit-checkout-integrity --apply-safe: пересчёт promo.used_count
+     | из paid non-conditional платежей. ВЫКЛ по умолчанию; отрицательные кошельки,
+     | исторические депозиты и legacy pending команда не исправляет никогда.
+     */
+    'checkout_integrity_safe_repairs' => (bool) env('CHECKOUT_INTEGRITY_SAFE_REPAIRS', false),
+
+    /*
      | Авторитетная проверка активности тарифа в POST /payment/create. Когда ВКЛ,
      | выключенный тариф возвращает 404 до создания гостя, Payment и банковской
      | ссылки. ВЫКЛ по умолчанию: денежный PR остаётся прод-инертным до ручного

@@ -51,6 +51,7 @@ class Payment extends Model
         // исходную оплату, чью выручку усекать по месяц возврата.
         'refund_of_payment_id',
         'transaction_id',
+        'payment_link_expires_at',
         // --- Полу-интегрированная валютная оплата (PayPal-заявка студента) ---
         'provider',
         'payment_method',
@@ -96,6 +97,7 @@ class Payment extends Model
         'deposit_consumed_at' => 'datetime',
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
+        'payment_link_expires_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
         'start_block' => 'integer',
@@ -435,7 +437,11 @@ class Payment extends Model
 
         // 2. Срабатывает при ИЗМЕНЕНИИ существующего платежа
         static::updated(function (Payment $payment) {
-            if ($payment->isDirty('status') && in_array($payment->status, self::PAID_STATUSES, true)) {
+            $enteredPaid = ! in_array($payment->getOriginal('status'), self::PAID_STATUSES, true);
+            if ($payment->isDirty('status')
+                && in_array($payment->status, self::PAID_STATUSES, true)
+                && (! config('features.checkout_promo_reservations') || $enteredPaid)
+            ) {
                 self::fireOnPaid($payment);
             }
 
@@ -447,6 +453,13 @@ class Payment extends Model
                 $payment->refundReferralCreditIfApplied();
 
                 if (in_array($payment->getOriginal('status'), self::PAID_STATUSES, true)) {
+                    if (config('features.checkout_promo_reservations')
+                        && ! $payment->is_conditional
+                        && $payment->promo_code_id
+                    ) {
+                        $payment->promoCode?->releaseRedemption();
+                    }
+
                     if (config('features.checkout_deposit_reversal')) {
                         $payment->restoreDepositsAfterReversal();
                     }

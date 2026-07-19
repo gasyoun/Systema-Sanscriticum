@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Payments;
 
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
@@ -23,8 +24,9 @@ final class TochkaPaymentService
      * @param  string  $itemName  Название позиции чека (курс/тариф).
      * @param  string  $paymentMethod  Признак способа расчёта (enum Точки): full_payment (полная оплата) | full_prepayment (предоплата/бронь).
      * @param  string  $paymentObject  Признак предмета расчёта (enum Точки): goods | service | work. Для курсов/брони — service.
+     * @param  int|null  $ttlMinutes  Необязательный срок действия платёжной ссылки в минутах.
      *
-     * @throws \Illuminate\Http\Client\ConnectionException Сетевой сбой — обрабатывает вызывающий код.
+     * @throws ConnectionException Сетевой сбой — обрабатывает вызывающий код.
      */
     public function createPaymentWithReceipt(
         User $user,
@@ -33,6 +35,7 @@ final class TochkaPaymentService
         string $itemName,
         string $paymentMethod = 'full_payment',
         string $paymentObject = 'service',
+        ?int $ttlMinutes = null,
     ): Response {
         $amount = round($amount, 2);
 
@@ -60,6 +63,10 @@ final class TochkaPaymentService
                 'paymentObject' => $paymentObject,
             ]],
         ];
+
+        if ($ttlMinutes !== null) {
+            $data['ttl'] = $ttlMinutes;
+        }
 
         // merchantId — обязателен, если у ИП > 1 торговой точки в Точке: без него банк
         // сам выбирает retailer'а, а от него зависит «адрес сайта» в фискальном чеке.
