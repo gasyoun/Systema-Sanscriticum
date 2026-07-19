@@ -1,6 +1,6 @@
 # SRS Flashcards Roadmap — "Anki for Sanskrit & Hindi"
 
-_Created: 05-07-2026 · Last updated: 05-07-2026_
+_Created: 05-07-2026 · Last updated: 19-07-2026_
 
 A native, web-only spaced-repetition system built into the Systema-Sanscriticum student
 cabinet — decks, cards, an FSRS scheduler, and a review loop — with no dependency on the
@@ -91,6 +91,16 @@ _Unblocked by: nothing — ready._
 - **Deliverable:** rewarded, measured SRS live for the whole student body.
 
 ---
+
+### Content deck queued 19-07-2026 — frequency-ranked RU root deck
+
+A system deck «Корни санскрита по частотности» (935 Whitney roots × corpus token
+frequency × Russian glosses) rides the Wave-1 stack as pure content — no engine change.
+Staged via [`/ask-batch`](https://github.com/gasyoun/claude-config/blob/main/commands/ask-batch.md);
+plan: [`docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md)
+§ D4; handoff
+[H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
+(queued).
 
 ## Non-goals (considered and ruled out — do not re-propose)
 
