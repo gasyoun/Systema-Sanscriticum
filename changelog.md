@@ -11,6 +11,24 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1286: подтверждение покупки + онбординг первой недели.** Лейн волны
+  revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Среди 24 mailable ни один не подтверждал покупку — момент «вы в деле» исчерпывался
+  flash-строкой. Теперь: `PurchaseConfirmationMail` — чек-приветствие на каждую реальную
+  оплату (что куплено, тариф, сумма, «доступ откроется в течение пары минут» — общая
+  строка 1 волны, ссылка на кассовый чек платежной системы); `OnboardingDay1Mail` /
+  `OnboardingDay5Mail` — «с чего начать» и мягкий чек-ин без вины. Email-канал инертен
+  до починки прод-SMTP ([#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504),
+  ESP-гейт H1147) — send-сайта у дней 1/5 сознательно нет (прецедент марафонских писем);
+  рабочая доставка дней 1/5 уже сейчас — Telegram/VK через существующий `ScheduledReminder`
+  (первая оплата конкретного курса, идемпотентно). `grantAccess()` и путь провайдера не
+  тронуты. Строки и 8 решений:
+  [`docs/copy/money-purchase-confirmation-onboarding-seq.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-purchase-confirmation-onboarding-seq.md);
+  10 новых тестов (диспатч под `Mail::fake()`, рендер с реальными значениями, контракт
+  голоса: эмодзи/срочность/ё).
+
 ## [1.37.0] - 2026-07-20
 
 ### Added
