@@ -50,8 +50,15 @@ _Created: 19-07-2026 · Last updated: 19-07-2026_
 
 Используют: H1288 (определяет), H1291 (цитирует).
 
-Сейчас в trust row чекаута стоит голое «Возврат по оферте». Замену определяет
-H1288 после рендера раздела «Порядок отказа от Договора» оферты; до его прихода
-строка НЕ определена, и лейны её не изобретают.
+Определена лейном H1288 (19-07-2026), всегда как ссылка на `/vozvrat`:
+
+> Возврат: до начала — 100%
+
+Опора — приложение №1 к оферте, п. 3.1(а): «Отказ от Услуги до момента ее
+начала» возвращается полностью, для обоих форматов («живое» участие и запись).
+Клейм проверяем дословно; частичный возврат после начала раскрывает сама
+страница [/vozvrat](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/docs/vozvrat.blade.php).
+Полный разбор и term-by-term diff:
+[money-refund-policy-student-surface.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-refund-policy-student-surface.md).
 
 _Dr. Mārcis Gasūns_

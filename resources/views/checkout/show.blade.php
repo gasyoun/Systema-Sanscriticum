@@ -457,7 +457,7 @@ document.addEventListener('alpine:init', () => {
                     <div class="hidden sm:flex items-center justify-center gap-6 text-xs text-gray-400 font-medium pt-2">
                         <span class="flex items-center gap-1.5"><i class="fas fa-shield-halved text-gray-300"></i> SSL-шифрование</span>
                         <span class="flex items-center gap-1.5"><i class="fas fa-credit-card text-gray-300"></i> Visa · MasterCard · МИР</span>
-                        <span class="flex items-center gap-1.5"><i class="fas fa-rotate text-gray-300"></i> Возврат по оферте</span>
+                        <a href="{{ route('refund.show') }}" target="_blank" class="flex items-center gap-1.5 hover:text-gray-600 transition-colors underline decoration-gray-200 underline-offset-2"><i class="fas fa-rotate text-gray-300"></i> Возврат: до начала — 100%</a>
                     </div>
                 </div>
 
