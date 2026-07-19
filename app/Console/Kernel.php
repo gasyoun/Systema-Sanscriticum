@@ -249,6 +249,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-healthcheck');
 
+        // Track C (H164, D10): @zapisi_ORSbot class-start reminders. The
+        // command itself is a no-op unless features.telegram_zapisi_bot is on.
+        $schedule->command('zapisi:send-reminders')
+            ->everyMinute()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('zapisi-send-reminders');
+
         // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
         // Куратор ставит текст + дату один раз в карточке студента (кнопка
         // «Запланировать напоминание») — дальше это дело системы, не человека.

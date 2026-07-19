@@ -11,6 +11,35 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H164: Telegram Track C — @zapisi_ORSbot (class-booking bot) integration.**
+  Executes the locked D7–D11 rulings
+  ([DECISIONS_telegram_harvester.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_telegram_harvester.md#track-c--second-bot-account-zapisi_orsbot)):
+  D8 go-forward webhook capture (`POST /api/webhooks/telegram-zapisi`,
+  `verify.tg.zapisi` fail-closed secret middleware, `ProcessTelegramZapisiUpdate`
+  normalizing into the same corpus schema as Track B, tagged `account_type=bot`)
+  with D11 media download (`DownloadTelegramZapisiMedia`, Bot API `getFile` +
+  raw download — an override of Track B's D4 metadata-only default, scoped to
+  this chat only); D9 full-member-roster snapshot
+  (`telegram-harvest:roster {peer}`, `TelegramHarvestSyncService::fetchRoster`,
+  `RosterStoreWriter`) and a D11 MadelineProto-backfill media-download path
+  gated by the new `services.telegram_harvest.media_download_peers` config
+  (peer-scoped, D4 stays metadata-only for every other Track B peer); D10 a new
+  independent `zapisi_class_schedules` table + `zapisi:send-reminders`
+  (`SendZapisiBotMessageJob`, idempotent via `sent_at`, scheduled every minute,
+  gated by the new `features.telegram_zapisi_bot` deploy flag); a new
+  admin-only Filament cluster (`ZapisiClassScheduleResource` CRUD +
+  `ZapisiBotDashboard` read view over the out-of-git roster/message store) and
+  new encrypted `zapisi_bot_token`/`zapisi_webhook_secret`/`zapisi_chat_id`
+  fields on `MarketingSetting`. D7 (add the chat as a Track B peer) needs no
+  new code — Track B's existing `TELEGRAM_HARVEST_PEERS` mechanism already
+  handles it once the chat's numeric id is discovered on a live host via
+  `telegram-harvest:peers`; D8b (disable bot privacy mode via @BotFather) is a
+  human action, filed as a GTD `@DO`. 10 new feature tests (webhook secret
+  verification, normalization/store, media download, roster fetch/command,
+  reminder scheduler). Sonnet 5 (`claude-sonnet-5`).
+  [H164](https://github.com/gasyoun/Uprava/blob/main/handoffs/H164-Sonnet_DO_telegram-sanskrit-corpus_zapisi_orsbot_integration_04.07.26.md).
+
 ## [1.30.0] - 2026-07-19
 
 ### Added

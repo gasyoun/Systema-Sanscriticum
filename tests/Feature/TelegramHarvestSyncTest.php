@@ -298,6 +298,76 @@ class TelegramHarvestSyncTest extends TestCase
         $this->assertSame(0, $again['stored']);
     }
 
+    public function test_d11_downloads_media_only_for_configured_peers(): void
+    {
+        config([
+            'services.telegram_harvest.enabled' => true,
+            'services.telegram_support.enabled' => true,
+            'services.telegram_harvest.media_download_peers' => ['@zapisi_ORSbot'],
+        ]);
+
+        $client = new class
+        {
+            /** @var array<int, array<string, mixed>> */
+            public array $downloadCalls = [];
+
+            public object $messages;
+
+            public function __construct()
+            {
+                $this->messages = new class
+                {
+                    /** @param array<string, mixed> $params @return array<string, mixed> */
+                    public function getHistory(array $params): array
+                    {
+                        return [
+                            'messages' => [
+                                ['id' => 1, 'date' => 1751360400, 'message' => 'снимок', 'media' => ['_' => 'messageMediaPhoto']],
+                            ],
+                            'users' => [],
+                        ];
+                    }
+                };
+            }
+
+            /** @return array<string, mixed> */
+            public function getInfo(int|string $peer): array
+            {
+                return ['_' => 'chat', 'id' => 999, 'title' => 'Zapisi chat'];
+            }
+
+            public function downloadToDir(array $media, string $dir): string
+            {
+                $this->downloadCalls[] = ['media' => $media, 'dir' => $dir];
+
+                return $dir.'/1.jpg';
+            }
+        };
+
+        $factory = new class($client) extends MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(MadelineClientFactory::class, $factory);
+
+        $result = app(TelegramHarvestSyncService::class)->sync(['@zapisi_ORSbot']);
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(1, $result['stored']);
+        $this->assertCount(1, $client->downloadCalls);
+        $this->assertSame($this->store.'/zapisi_media/999/2025-07-01', $client->downloadCalls[0]['dir']);
+    }
+
     public function test_rewind_command_lists_and_winds_back_cursors(): void
     {
         TelegramSupportAccount::create([
