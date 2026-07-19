@@ -11,6 +11,24 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1288: возврат — страница `/vozvrat` поверх оферты.** Лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Trust row чекаута обещал «Возврат по оферте» и не вел никуда; порядок возврата
+  существовал только внутри 8-страничного PDF. Новая страница
+  ([`resources/views/docs/vozvrat.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/docs/vozvrat.blade.php))
+  излагает приложение №1 оферты в точных терминах — 100%-случаи, формула
+  частичного возврата, поля заявления, 10 (десяти) рабочих дней — с mailto-кнопкой
+  заявления (тема и тело предзаполнены полями §4.2) и ссылками на полный PDF.
+  Trust row теперь ссылается на страницу со строкой «Возврат: до начала — 100%»
+  (общая строка 4 волны, определена в
+  [`docs/copy/_shared_strings.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/_shared_strings.md));
+  подвал всех пяти layout'ов получил ссылку «Условия возврата» через партиал
+  `footer-docs`. Term-by-term diff против дословной выдержки из оферты — приемочный
+  тест лейна — в
+  [`docs/copy/money-refund-policy-student-surface.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-refund-policy-student-surface.md);
+  4 новых feature-теста (точные сроки, ссылка из trust row, ссылка на оферту).
+
 ## [1.36.0] - 2026-07-19
 
 ### Changed
@@ -211,7 +229,6 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [DEPLOY_QUEUE №40](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
   Sonnet 5 (`claude-sonnet-5`).
   [H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md).
->>>>>>> origin/main
 
 ## [1.29.0] - 2026-07-19
 

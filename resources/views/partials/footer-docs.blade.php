@@ -24,3 +24,4 @@
         {{ $labels[$slug] ?? \Illuminate\Support\Str::headline($slug) }}
     </a>
 @endforeach
+<a href="{{ route('refund.show') }}" class="{{ $linkClass }}">Условия возврата</a>
