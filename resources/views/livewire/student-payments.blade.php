@@ -26,7 +26,7 @@
                         </div>
                         @if($paidUntil->next_payment_deadline)
                             <div class="text-[#E85C24] font-semibold mt-0.5">
-                                Следующий платёж до: {{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)
+                                Следующий платеж до: {{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)
                             </div>
                         @endif
                     </div>

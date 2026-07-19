@@ -303,7 +303,7 @@ class PartnerProgramTest extends TestCase
         $this->get('/partners')->assertNotFound();
 
         config(['partner.enabled' => true]);
-        $this->get('/partners')->assertOk()->assertSee('Партнёрская программа');
+        $this->get('/partners')->assertOk()->assertSee('Партнерская программа');
     }
 
     /** @test */

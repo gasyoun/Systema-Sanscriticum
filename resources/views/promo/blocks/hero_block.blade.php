@@ -5,7 +5,7 @@
         $regN = (int) ($data['registered_base'] ?? 0) + $page->leads()->count();
         $spotsLeft = (intdiv($regN, 10) + 1) * 10 - $regN; // до ближайшей десятки
         $registeredNote = 'Уже зарегистрировались '.$regN.' '.\App\Support\Plural::ru($regN, 'человек', 'человека', 'человек')
-            .'. Ещё '.$spotsLeft.' '.\App\Support\Plural::ru($spotsLeft, 'место', 'места', 'мест').' доступно';
+            .'. Еще '.$spotsLeft.' '.\App\Support\Plural::ru($spotsLeft, 'место', 'места', 'мест').' доступно';
     } elseif (! empty($data['registered_note'])) {
         $registeredNote = $data['registered_note'];
     }

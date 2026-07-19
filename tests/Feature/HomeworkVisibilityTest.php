@@ -136,7 +136,7 @@ class HomeworkVisibilityTest extends TestCase
         $this->actingAs($student)
             ->get(route('student.lesson', [$course->slug, $lesson->id]))
             ->assertOk()
-            ->assertSee('Задание ещё не задано')
+            ->assertSee('Задание еще не задано')
             ->assertDontSee('Отправить на проверку');
     }
 }

@@ -11,6 +11,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H1295: ё-orthography normalisation sweep.** Mechanical prerequisite for the Systema
+  revenue-copy wave (ruling D13/D14) — normalises existing user-facing Russian copy to the
+  house no-ё rule (е instead of ё, except where dropping it would collide with a different
+  word, e.g. «всё»/«все»). A one-off census script scoped to `resources/views/**`,
+  `app/Mail/**`, and Russian label values in `config/*.php` classified 297 occurrences
+  (MUST_KEEP / REVIEW / SAFE) and applied 275 ё→е replacements across 77 files; full
+  rationale, review list, and decisions-taken-unattended in
+  [`docs/copy/yo-orthography-normalisation-sweep.md`](docs/copy/yo-orthography-normalisation-sweep.md).
+  22 intentional exceptions remain (the «весь»/«он»/«что» pronoun-case minimal pairs, plus
+  two individually-reviewed aspectual-verb risks left ё per the ambiguity default).
+
 ## [1.29.0] - 2026-07-19
 
 ### Added

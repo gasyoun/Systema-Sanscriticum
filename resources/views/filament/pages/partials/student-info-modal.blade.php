@@ -52,7 +52,7 @@
                         <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #e0f2fe; color: #0369a1;">{{ $u->global_status }}</span>
                     @endif
                     @if($u->isUnreliable())
-                        <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #fee2e2; color: #dc2626;" title="{{ $u->unreliable_reason }}">⚠ Неблагонадёжный</span>
+                        <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #fee2e2; color: #dc2626;" title="{{ $u->unreliable_reason }}">⚠ Неблагонадежный</span>
                     @endif
                     @if($u->isOnline())
                         <span style="font-size: 11px; font-weight: 600; color: #16a34a;">● онлайн</span>
@@ -164,7 +164,7 @@
                     <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Посещаемость занятий</div>
                     @php
                         $attBadge = fn ($s) => match ($s) {
-                            'present' => ['пришёл', '#16a34a', '#dcfce7'],
+                            'present' => ['пришел', '#16a34a', '#dcfce7'],
                             'clicked' => ['по ссылке', '#b45309', '#fef3c7'],
                             default => ['не был', '#6b7280', '#f3f4f6'],
                         };

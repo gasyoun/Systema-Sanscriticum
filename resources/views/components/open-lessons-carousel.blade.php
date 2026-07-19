@@ -125,7 +125,7 @@
                         }
                         window.location.reload();
                     } catch (e) {
-                        this.authError = 'Ошибка сети. Попробуйте ещё раз.';
+                        this.authError = 'Ошибка сети. Попробуйте еще раз.';
                         this.authLoading = false;
                     }
                 },

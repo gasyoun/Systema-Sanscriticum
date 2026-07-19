@@ -149,7 +149,7 @@
                :class="expanded ? '' : 'line-clamp-2 sm:line-clamp-none'">
                 Уважаемые студенты! В данный момент мы активно работаем над загрузкой всех материалов.
                 Некоторые ваши курсы могут быть временно недоступны, а в открытых курсах часть уроков
-                ещё может загружаться. Приносим искренние извинения за временные неудобства —
+                еще может загружаться. Приносим искренние извинения за временные неудобства —
                 все материалы появятся в ближайшее время.
             </p>
             <button type="button" @click="expanded = !expanded"
@@ -197,10 +197,10 @@
                         <h3 class="text-lg font-bold text-gray-900 leading-tight mb-1">Telegram-бот ОРС</h3>
                         <p class="text-sm text-emerald-600 font-bold flex items-center">
                             <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Бот подключён — уведомления по учёбе приходят
+                            Бот подключен — уведомления по учебе приходят
                         </p>
                         <form method="POST" action="{{ route('student.messenger.disconnect', 'telegram') }}"
-                              onsubmit="return confirm('Отвязать Telegram-бота? Уведомления по учёбе перестанут приходить. Подключить заново можно в любой момент.');"
+                              onsubmit="return confirm('Отвязать Telegram-бота? Уведомления по учебе перестанут приходить. Подключить заново можно в любой момент.');"
                               class="mt-1.5">
                             @csrf
                             <button type="submit" class="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors">
@@ -212,7 +212,7 @@
                         <p class="text-sm text-gray-500 font-medium mb-3">Бот пишет <span class="font-bold text-gray-700">только по делу</span> — никаких рекламных рассылок.</p>
                         <ul class="space-y-1.5 text-sm text-gray-600">
                             <li class="flex items-start gap-2"><i class="fas fa-bolt text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Доступ к урокам — сразу после оплаты, без ожидания</span></li>
-                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учёбе круглосуточно</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учебе круглосуточно</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-bell text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Напоминания о занятиях и сроках оплат</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0088cc] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы живого куратора прямо в Telegram</span></li>
                         </ul>
@@ -249,10 +249,10 @@
                         <h3 class="text-lg font-bold text-gray-900 leading-tight mb-1">ВКонтакте-бот ОРС</h3>
                         <p class="text-sm text-emerald-600 font-bold flex items-center">
                             <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Бот подключён — уведомления по учёбе приходят
+                            Бот подключен — уведомления по учебе приходят
                         </p>
                         <form method="POST" action="{{ route('student.messenger.disconnect', 'vk') }}"
-                              onsubmit="return confirm('Отвязать ВК-бота? Уведомления по учёбе перестанут приходить. Подключить заново можно в любой момент.');"
+                              onsubmit="return confirm('Отвязать ВК-бота? Уведомления по учебе перестанут приходить. Подключить заново можно в любой момент.');"
                               class="mt-1.5">
                             @csrf
                             <button type="submit" class="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors">
@@ -264,7 +264,7 @@
                         <p class="text-sm text-gray-500 font-medium mb-3">Бот пишет <span class="font-bold text-gray-700">только по делу</span> — никаких рекламных рассылок.</p>
                         <ul class="space-y-1.5 text-sm text-gray-600">
                             <li class="flex items-start gap-2"><i class="fas fa-bolt text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Доступ к урокам — сразу после оплаты, без ожидания</span></li>
-                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учёбе круглосуточно</span></li>
+                            <li class="flex items-start gap-2"><i class="fas fa-robot text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>ИИ-куратор отвечает на вопросы об учебе круглосуточно</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-bell text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Напоминания о занятиях и сроках оплат</span></li>
                             <li class="flex items-start gap-2"><i class="fas fa-comments text-[#0077FF] mt-0.5 w-4 text-center shrink-0"></i><span>Ответы живого куратора прямо во ВКонтакте</span></li>
                         </ul>
@@ -430,7 +430,7 @@
                                         <div class="flex items-start gap-2">
                                             <i class="fas fa-handshake text-emerald-600 text-xs mt-0.5 shrink-0"></i>
                                             <div class="text-xs leading-snug">
-                                                <span class="font-bold text-emerald-700">Договорённость:</span>
+                                                <span class="font-bold text-emerald-700">Договоренность:</span>
                                                 <span class="text-gray-700">оплата до {{ $debt->promise->promised_at->format('d.m.Y') }}</span>
                                             </div>
                                         </div>
@@ -469,7 +469,7 @@
                                             @endif
                                             @if($paidUntil->next_payment_deadline)
                                                 <div class="mt-1">
-                                                    <span class="font-bold text-[#E85C24]">Следующий платёж до:</span>
+                                                    <span class="font-bold text-[#E85C24]">Следующий платеж до:</span>
                                                     <span class="text-gray-700">{{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)</span>
                                                 </div>
                                             @endif
@@ -706,7 +706,7 @@
                         {{-- Одиночное обещание оплаты --}}
                         <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
                             <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
-                                <i class="fas {{ $debt->promise_overdue ? 'fa-clock' : 'fa-handshake' }} mr-1"></i>{{ $debt->promise_overdue ? 'Срок оплаты прошёл' : 'Договорённость' }}
+                                <i class="fas {{ $debt->promise_overdue ? 'fa-clock' : 'fa-handshake' }} mr-1"></i>{{ $debt->promise_overdue ? 'Срок оплаты прошел' : 'Договоренность' }}
                             </div>
                             <div class="text-xs font-semibold text-gray-800 leading-snug">
                                 Оплата до {{ $debt->promise->promised_at?->format('d.m.Y') }}
@@ -791,7 +791,7 @@
                                         <input type="date" name="new_date" value="{{ $opts['reschedule']['current_date'] }}" class="flex-1 rounded border-gray-300 text-xs">
                                         <button type="submit" class="px-2.5 py-1 border border-gray-300 hover:bg-gray-50 rounded-lg text-xs font-semibold">ОК</button>
                                     </form>
-                                    <p class="mt-1 text-gray-400">Не более чем на 2 недели вперёд, один раз.</p>
+                                    <p class="mt-1 text-gray-400">Не более чем на 2 недели вперед, один раз.</p>
                                 </details>
                             @endif
                         @elseif($opts && $opts['type'] === 'tariff')

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Расчёт выплаты за блок</title>
+    <title>Расчет выплаты за блок</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: Arial, sans-serif;">
 @php
@@ -31,7 +31,7 @@
 
                     <tr>
                         <td style="padding: 36px 40px; color: #1A1A1A; font-size: 16px; line-height: 1.6;">
-                            <p style="margin: 0 0 20px;">Расчёт выплаты за блок
+                            <p style="margin: 0 0 20px;">Расчет выплаты за блок
                                 <strong>№{{ $b['block_number'] ?? '—' }}</strong>@if ($payout?->course?->title) курса «<strong>{{ $payout->course->title }}</strong>»@endif@if ($period) ({{ $period }})@endif:</p>
 
                             @php
@@ -80,7 +80,7 @@
                                 @endif
                                 @if ($totalStudents === 0 && $students === 0)
                                     <tr>
-                                        <td style="padding: 6px 0; color: #555;">Расчёт</td>
+                                        <td style="padding: 6px 0; color: #555;">Расчет</td>
                                         <td style="padding: 6px 0; text-align: right;">{{ $payout?->comment }}</td>
                                     </tr>
                                 @endif
@@ -123,7 +123,7 @@
 
                     <tr>
                         <td style="padding: 0 40px 32px; color: #9aa0a6; font-size: 12px; line-height: 1.5;">
-                            Если есть вопросы по расчёту — ответьте на это письмо.
+                            Если есть вопросы по расчету — ответьте на это письмо.
                         </td>
                     </tr>
 

@@ -16,7 +16,7 @@
 
         <p style="font-size: 18px; text-align: center;">Вас пригласили преподавать в <strong>Обществе ревнителей санскрита</strong>. Для вас открыт доступ в учебную панель в роли <strong>преподавателя</strong>.</p>
 
-        <p style="font-size: 18px;">В панели вы наполняете свои курсы и уроки, проверяете домашние работы, ведёте расписание занятий и выдаёте сертификаты ученикам.</p>
+        <p style="font-size: 18px;">В панели вы наполняете свои курсы и уроки, проверяете домашние работы, ведете расписание занятий и выдаете сертификаты ученикам.</p>
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 30px 0; border-radius: 0 4px 4px 0;">
             <h3 style="margin-top: 0; color: #8a3324; font-size: 18px; font-weight: normal;">Ваши данные для входа:</h3>

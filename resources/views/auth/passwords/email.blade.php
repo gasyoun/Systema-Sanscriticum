@@ -20,7 +20,7 @@
                 </div>
                 <h2 class="text-3xl font-extrabold mb-2 text-gray-900">Вход в кабинет</h2>
                 <p class="text-gray-500 text-sm">Уже покупали курс? Введите email, на который оформляли
-                    заказ — мы проверим ваш аккаунт и пришлём ссылку для входа.</p>
+                    заказ — мы проверим ваш аккаунт и пришлем ссылку для входа.</p>
             </div>
 
             @if (session('email_found'))
@@ -30,7 +30,7 @@
                     <p>Мы отправили ссылку для входа на <span class="font-semibold">{{ session('email_found') }}</span>.
                         Откройте письмо и задайте пароль. <span class="font-semibold">Проверьте папку «Спам»</span> —
                         письмо может попасть туда.</p>
-                    <p class="mt-2 text-green-700/80 text-xs">Не пришло за 5 минут? Отправьте запрос ещё раз ниже
+                    <p class="mt-2 text-green-700/80 text-xs">Не пришло за 5 минут? Отправьте запрос еще раз ниже
                         или <a href="https://t.me/rusamskrtam" class="underline font-semibold">напишите куратору</a>.</p>
                 </div>
             @endif

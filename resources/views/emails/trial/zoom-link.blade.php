@@ -17,7 +17,7 @@
         @if($isRecording)
             <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Запись уже открыта в вашем личном кабинете.</p>
         @else
-            <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Ждём вас на живом занятии!</p>
+            <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Ждем вас на живом занятии!</p>
         @endif
 
         <div style="background-color: #f0f9ff; border-left: 4px solid #38BDF8; padding: 20px; margin: 28px 0; border-radius: 0 4px 4px 0;">
@@ -43,7 +43,7 @@
                 <a href="{{ url('/login') }}" style="background-color: #38BDF8; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">Смотреть запись в кабинете</a>
             </div>
         @else
-            <p style="font-size: 16px; text-align: center; color: #8a3324;">Ссылку на подключение мы пришлём дополнительно — она появится в вашем личном кабинете.</p>
+            <p style="font-size: 16px; text-align: center; color: #8a3324;">Ссылку на подключение мы пришлем дополнительно — она появится в вашем личном кабинете.</p>
         @endif
 
         @unless($isRecording)

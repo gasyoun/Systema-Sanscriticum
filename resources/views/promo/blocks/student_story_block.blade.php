@@ -104,7 +104,7 @@
                         <div class="flex items-start gap-2.5 mt-4 pt-4 border-t border-dashed border-gray-200">
                             <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <p class="text-gray-500 text-sm leading-relaxed">
-                                <span class="font-bold text-gray-600">Кому не зайдёт:</span> {{ $story['not_for'] }}
+                                <span class="font-bold text-gray-600">Кому не зайдет:</span> {{ $story['not_for'] }}
                             </p>
                         </div>
                     @endif

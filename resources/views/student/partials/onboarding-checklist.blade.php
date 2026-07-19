@@ -62,7 +62,7 @@
                                     <span class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
                                         <i class="fab fa-telegram-plane"></i> Telegram
                                         <form method="POST" action="{{ route('student.messenger.disconnect', 'telegram') }}"
-                                              onsubmit="return confirm('Отвязать Telegram-бота? Уведомления по учёбе перестанут приходить. Подключить заново можно в любой момент.');"
+                                              onsubmit="return confirm('Отвязать Telegram-бота? Уведомления по учебе перестанут приходить. Подключить заново можно в любой момент.');"
                                               class="inline-flex">
                                             @csrf
                                             <button type="submit" title="Отвязать Telegram" class="ml-0.5 w-5 h-5 inline-flex items-center justify-center rounded-md text-emerald-500 hover:text-white hover:bg-red-500 transition-colors">
@@ -83,7 +83,7 @@
                                     <span class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
                                         <i class="fab fa-vk"></i> VK
                                         <form method="POST" action="{{ route('student.messenger.disconnect', 'vk') }}"
-                                              onsubmit="return confirm('Отвязать ВК-бота? Уведомления по учёбе перестанут приходить. Подключить заново можно в любой момент.');"
+                                              onsubmit="return confirm('Отвязать ВК-бота? Уведомления по учебе перестанут приходить. Подключить заново можно в любой момент.');"
                                               class="inline-flex">
                                             @csrf
                                             <button type="submit" title="Отвязать VK" class="ml-0.5 w-5 h-5 inline-flex items-center justify-center rounded-md text-emerald-500 hover:text-white hover:bg-red-500 transition-colors">

@@ -50,7 +50,7 @@
             <div class="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
                 <div class="text-sm text-gray-500 dark:text-gray-400">Ученик — один урок блока</div>
                 <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($e['student_per_lesson'], 2, '.', ' ') }} ₽</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">цена блока ÷ {{ $e['lessons'] }} (по прайсу; у каждого своя из-за скидок/зачётов)</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">цена блока ÷ {{ $e['lessons'] }} (по прайсу; у каждого своя из-за скидок/зачетов)</div>
             </div>
 
             {{-- 2. Преподаватель --}}
@@ -75,7 +75,7 @@
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">
                         {{ number_format($e['profit_per_lesson_min'], 2, '.', ' ') }} … {{ number_format($e['profit_per_lesson_max'], 2, '.', ' ') }} ₽
                     </div>
-                    <div class="mt-1 text-xs text-amber-600 dark:text-amber-400">вилка: у части платежей способ оплаты не сохранён (карта 2.9% … СБП 0.4%)</div>
+                    <div class="mt-1 text-xs text-amber-600 dark:text-amber-400">вилка: у части платежей способ оплаты не сохранен (карта 2.9% … СБП 0.4%)</div>
                 @else
                     <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($e['profit_per_lesson_max'], 2, '.', ' ') }} ₽</div>
                     <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">эквайринг по факту способа оплаты</div>

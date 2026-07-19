@@ -33,7 +33,7 @@
         ],
         [
             'icon' => 'fas fa-user-graduate',
-            'title' => 'Кто ведёт занятия',
+            'title' => 'Кто ведет занятия',
             'text' => 'Кандидат филологических наук, '.$yearsTeaching.'+ лет практики санскрита'
                 .($booksPublished ? ', автор '.$booksPublished.'+ изданных книг' : '').'.',
         ],

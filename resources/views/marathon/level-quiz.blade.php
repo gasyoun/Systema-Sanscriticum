@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto py-12 px-4">
 
     <div class="text-center mb-8">
-        <p class="text-xs font-black uppercase tracking-widest text-[#E85C24] mb-2">Перед Днём 1</p>
+        <p class="text-xs font-black uppercase tracking-widest text-[#E85C24] mb-2">Перед Днем 1</p>
         <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Какой у вас уровень санскрита?</h1>
     </div>
 

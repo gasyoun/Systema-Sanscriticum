@@ -59,7 +59,7 @@
             <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {{ $money($s['overdue']) }} · {{ $s['overdue_count'] }} шт ·
                 нед. назад {{ number_format($s['prev_overdue_pct'], 1) }}%
-                {{ $s['overdue_pct_rising'] ? '↑ растёт' : '' }}
+                {{ $s['overdue_pct_rising'] ? '↑ растет' : '' }}
             </div>
         </div>
 
@@ -139,7 +139,7 @@
 
     {{-- ── Допущения (чтобы финдир читал цифры без интерпретации) ── --}}
     <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-        <div><b>Дебиторка</b> = сумма непогашенных обещаний оплаты (active/expired с заданной суммой); рассрочка — обещания, объединённые в план (installment_group_id).</div>
+        <div><b>Дебиторка</b> = сумма непогашенных обещаний оплаты (active/expired с заданной суммой); рассрочка — обещания, объединенные в план (installment_group_id).</div>
         <div><b>Порог</b> = {{ $s['threshold_basis'] }}. Меняется в config/receivables.php без деплоя.</div>
         <div><b>Неликвид</b> = долг с просрочкой сверх {{ $s['illiquid_days'] }} дн. от обещанной даты. <b>Δ за неделю</b> восстанавливается из леджера обещаний (без снапшотов).</div>
         <div>Снимок на {{ $s['as_of'] }}.</div>

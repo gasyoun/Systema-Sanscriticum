@@ -231,7 +231,7 @@
                                 </a>
                                 <p class="text-gray-500 text-xs mt-4">Запись появится здесь после занятия.</p>
                             @else
-                                <p class="text-gray-400 text-sm">Ссылку на подключение пришлём дополнительно.</p>
+                                <p class="text-gray-400 text-sm">Ссылку на подключение пришлем дополнительно.</p>
                             @endif
                         </div>
                     @else

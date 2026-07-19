@@ -41,7 +41,7 @@
             @empty
                 <div class="h-full flex flex-col items-center justify-center text-center text-gray-400 px-6">
                     <i class="fas fa-comments text-4xl mb-3 text-gray-300"></i>
-                    <p class="text-sm">Здесь можно задать вопрос по учёбе, оплате или доступу.<br>Напишите первым сообщением — ответит ИИ-куратор.</p>
+                    <p class="text-sm">Здесь можно задать вопрос по учебе, оплате или доступу.<br>Напишите первым сообщением — ответит ИИ-куратор.</p>
                 </div>
             @endforelse
         </div>

@@ -309,7 +309,7 @@
                 @if(!empty($data['form_minimal']))
                     {{-- ─── УПРОЩЁННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
                     @php
-                        $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.';
+                        $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлем в Telegram — спросим контакт после.';
                         // {link} → кликабельная «политика конфиденциальности». e() экранирует
                         // пользовательский текст ДО подстановки служебного span — XSS-safe.
                         $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';

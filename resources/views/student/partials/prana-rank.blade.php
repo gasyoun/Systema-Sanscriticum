@@ -23,8 +23,8 @@
                 <div class="h-2 rounded-full bg-amber-500" style="width: {{ $rank['progress'] }}%"></div>
             </div>
             <p class="text-[11px] text-gray-400 mt-1">
-                Ещё {{ number_format(max(0, $rank['next_min'] - $rank['lifetime']), 0, '.', ' ') }} праны до следующего ранга.
-                Ранг растёт от накопленной праны и не падает при тратах на скидки.
+                Еще {{ number_format(max(0, $rank['next_min'] - $rank['lifetime']), 0, '.', ' ') }} праны до следующего ранга.
+                Ранг растет от накопленной праны и не падает при тратах на скидки.
             </p>
         </div>
     @else

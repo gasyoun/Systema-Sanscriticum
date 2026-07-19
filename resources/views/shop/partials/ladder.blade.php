@@ -7,7 +7,7 @@
 --}}
 <section class="mb-16 lg:mb-20" data-analytics="product-ladder">
     <h2 class="text-3xl font-bold text-white mb-3">Три ступени — от знакомства до живого курса</h2>
-    <p class="text-slate-400 mb-8 max-w-2xl">Начните бесплатно, продолжите в записи в своём темпе, присоединяйтесь к живому потоку, когда будете готовы.</p>
+    <p class="text-slate-400 mb-8 max-w-2xl">Начните бесплатно, продолжите в записи в своем темпе, присоединяйтесь к живому потоку, когда будете готовы.</p>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         {{-- Ступень 1: бесплатно --}}
@@ -36,7 +36,7 @@
                     Шаг 2 · В записи{{ $minRecordedPrice ? ' · от '.number_format($minRecordedPrice, 0, '.', ' ').' ₽' : '' }}
                 </span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Учитесь в своём темпе</h3>
+            <h3 class="text-lg font-bold text-white mb-2">Учитесь в своем темпе</h3>
             <p class="text-sm text-slate-400 leading-relaxed flex-1 mb-5">Курсы в записи — без расписания и дедлайнов. Видео остаются с вами навсегда, начать можно в любой день.</p>
             <a href="{{ $catalogUrl }}?format=recorded"
                class="inline-flex justify-center items-center w-full py-3 px-4 bg-indigo-500/15 border border-indigo-500/40 hover:bg-indigo-500 hover:text-white text-indigo-400 text-xs font-bold rounded-xl transition-all">

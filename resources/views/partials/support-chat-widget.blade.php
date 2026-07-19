@@ -260,7 +260,7 @@
     var PRESENCE_URL = root.dataset.presenceUrl;
     var PRESENCE_INTERVAL = (parseInt(root.dataset.presenceInterval, 10) || 20) * 1000;
     var beaconTimer = null;
-    var beaconStarted = false;  // первый beacon уже прошёл?
+    var beaconStarted = false;  // первый beacon уже прошел?
 
     // Контекстное приветствие по странице входа (H1198): URL известен сразу,
     // без обращения к серверу — за флагом support_answer_suggester. Дефолтный
@@ -452,7 +452,7 @@
         .then(function (res) {
             sendBtn.disabled = false;
             if (res.status === 429) { alert('Слишком часто. Попробуйте через минуту.'); return; }
-            if (!res.body || !res.body.ok) { alert('Не удалось отправить. Попробуйте ещё раз.'); return; }
+            if (!res.body || !res.body.ok) { alert('Не удалось отправить. Попробуйте еще раз.'); return; }
             textEl.value = '';
             autoGrow();
             var had = conversationId;
@@ -462,7 +462,7 @@
             if (contactRow) { contactRow.hidden = true; } // телефон/почта — тоже только до первого (H1199)
             if (conversationId && conversationId !== had) subscribeLive();
         })
-        .catch(function () { sendBtn.disabled = false; alert('Сеть недоступна. Попробуйте ещё раз.'); });
+        .catch(function () { sendBtn.disabled = false; alert('Сеть недоступна. Попробуйте еще раз.'); });
     }
 
     toggle.addEventListener('click', function () { isOpen ? closePanel() : openPanel(); });

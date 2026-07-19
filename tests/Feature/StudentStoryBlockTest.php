@@ -55,7 +55,7 @@ class StudentStoryBlockTest extends TestCase
         $response->assertSee('пришла читать мантры, боялась, что поздно в 45');
         $response->assertSee('За 8 блоков читает Бхагавадгиту в оригинале');
         // Анти-кейс-приём («кому не зайдёт») — ключевое отличие от reviews_block.
-        $response->assertSee('Кому не зайдёт:');
+        $response->assertSee('Кому не зайдет:');
         $response->assertSee('тем, кто не готов уделять 3 часа в неделю');
     }
 
@@ -74,7 +74,7 @@ class StudentStoryBlockTest extends TestCase
         $response->assertSee('Иван');
         $response->assertSee('Сдал внутренний зачёт');
         // Анти-кейс-строка не выводится, если поле пустое.
-        $response->assertDontSee('Кому не зайдёт:');
+        $response->assertDontSee('Кому не зайдет:');
     }
 
     /** @test */

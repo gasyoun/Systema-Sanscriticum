@@ -1,6 +1,6 @@
 @php
     $blockTitle    = $data['title']    ?? 'Курсы в записи';
-    $blockSubtitle = $data['subtitle'] ?? 'Учитесь в своём темпе — записи лекций с пожизненным доступом.';
+    $blockSubtitle = $data['subtitle'] ?? 'Учитесь в своем темпе — записи лекций с пожизненным доступом.';
     $blockVariant  = $data['variant']  ?? 'light';
 @endphp
 

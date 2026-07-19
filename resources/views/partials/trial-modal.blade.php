@@ -69,7 +69,7 @@
                     <i class="fas fa-broadcast-tower mr-1"></i> Это живой урок в Zoom
                 </div>
                 <p class="text-[13px] text-slate-300 leading-relaxed">
-                    Вы подключаетесь к занятию <span class="font-semibold text-white">вживую</span> — после оплаты пришлём
+                    Вы подключаетесь к занятию <span class="font-semibold text-white">вживую</span> — после оплаты пришлем
                     ссылку на Zoom и время на email. <span class="font-semibold text-white">Запись</span> появится в личном
                     кабинете уже после занятия.
                 </p>
@@ -105,7 +105,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email <span class="text-slate-500 normal-case">(сюда придёт доступ)</span></label>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email <span class="text-slate-500 normal-case">(сюда придет доступ)</span></label>
                     <input type="email" name="email" required maxlength="255"
                            value="{{ old('email') }}"
                            placeholder="you@example.com"
@@ -132,7 +132,7 @@
                 </label>
 
                 <p class="text-[11px] text-slate-500 leading-relaxed">
-                    После оплаты пришлём пароль на email — войдёте в личный кабинет и откроете пробное занятие.
+                    После оплаты пришлем пароль на email — войдете в личный кабинет и откроете пробное занятие.
                 </p>
             @endguest
 

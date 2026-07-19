@@ -28,8 +28,8 @@
         <div style="color: #9ca3af; padding: 12px;">Нет занятий или студентов за период.</div>
     @else
         <div style="display: flex; gap: 12px; margin-bottom: 10px; color: #6b7280;">
-            <span><b style="color:#16a34a;">✓</b> пришёл (Zoom)</span>
-            <span><b style="color:#b45309;">~</b> перешёл по ссылке</span>
+            <span><b style="color:#16a34a;">✓</b> пришел (Zoom)</span>
+            <span><b style="color:#b45309;">~</b> перешел по ссылке</span>
             <span><b style="color:#d1d5db;">—</b> не был</span>
         </div>
         <table style="border-collapse: collapse; white-space: nowrap;">

@@ -28,14 +28,14 @@
             </select>
         </label>
         <p class="text-xs text-gray-500 dark:text-gray-400 max-w-md">
-            Отчёты считаются из живых данных LMS (платежи, зарплаты, реклама, opex).
+            Отчеты считаются из живых данных LMS (платежи, зарплаты, реклама, opex).
             Структура — «Нескучные финансы».
         </p>
     </div>
 
     {{-- ОПиУ (P&L) — первый живой отчёт --}}
     <x-filament::section>
-        <x-slot name="heading">ОПиУ — отчёт о прибылях и убытках · {{ \Illuminate\Support\Str::ucfirst($this->getPeriodLabel()) }}</x-slot>
+        <x-slot name="heading">ОПиУ — отчет о прибылях и убытках · {{ \Illuminate\Support\Str::ucfirst($this->getPeriodLabel()) }}</x-slot>
         <x-slot name="description">Выручка − переменные − коммерческие − административные = операционная прибыль (EBITDA).</x-slot>
 
         <div class="overflow-x-auto">
@@ -97,7 +97,7 @@
             </table>
         </div>
         <p class="mt-3 text-xs text-gray-400">
-            Кассовый метод: вся сумма платежа признаётся в месяц оплаты. Ниже EBITDA
+            Кассовый метод: вся сумма платежа признается в месяц оплаты. Ниже EBITDA
             (проценты, амортизация, налог на прибыль) LMS не моделирует — чистая прибыль ≈ EBITDA.
         </p>
     </x-filament::section>
@@ -105,14 +105,14 @@
     {{-- ОПиУ по методу начисления (accrual) — выручка признаётся по месяцам блоков --}}
     <x-filament::section>
         <x-slot name="heading">ОПиУ (начисление) · {{ \Illuminate\Support\Str::ucfirst($this->getPeriodLabel()) }}</x-slot>
-        <x-slot name="description">Метод начисления: годовой курс, оплаченный сразу, признаётся долями по месяцам занятий, а не целиком в месяц оплаты. Лекарство от «прибыль есть, а денег нет».</x-slot>
+        <x-slot name="description">Метод начисления: годовой курс, оплаченный сразу, признается долями по месяцам занятий, а не целиком в месяц оплаты. Лекарство от «прибыль есть, а денег нет».</x-slot>
 
         {{-- Отложенная выручка: оплачено, но ещё не отработано — обязательство --}}
         <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
             <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                     <div class="text-sm font-semibold text-amber-800 dark:text-amber-300">Отложенная выручка (на конец периода)</div>
-                    <div class="text-xs text-amber-700/80 dark:text-amber-400/80">Оплачено кассой, но ещё не признано как выручка — обязательство перед студентами.</div>
+                    <div class="text-xs text-amber-700/80 dark:text-amber-400/80">Оплачено кассой, но еще не признано как выручка — обязательство перед студентами.</div>
                 </div>
                 <div class="text-right">
                     <div class="text-lg font-bold tabular-nums text-amber-900 dark:text-amber-200">{{ $money($deferred['deferred']) }}</div>
@@ -123,7 +123,7 @@
             </div>
             @if ($deferred['deferred'] < 0)
                 <p class="mt-2 text-xs text-amber-700/80 dark:text-amber-400/80">
-                    Значение отрицательное: выручка признана раньше кассы (поздние оплаты уже прошедших блоков) — начисленная, но ещё не полученная выручка.
+                    Значение отрицательное: выручка признана раньше кассы (поздние оплаты уже прошедших блоков) — начисленная, но еще не полученная выручка.
                 </p>
             @endif
         </div>
@@ -187,7 +187,7 @@
             </table>
         </div>
         <p class="mt-3 text-xs text-gray-400">
-            Сумма признанной выручки за всё время равна кассовой — метод начисления лишь перераспределяет её между месяцами занятий. Расходная часть у обеих вкладок одинакова.
+            Сумма признанной выручки за всё время равна кассовой — метод начисления лишь перераспределяет ее между месяцами занятий. Расходная часть у обеих вкладок одинакова.
         </p>
     </x-filament::section>
 
@@ -212,7 +212,7 @@
 
         {{-- Платёжный календарь --}}
         <x-filament::section>
-            <x-slot name="heading">Платёжный календарь · {{ $calendar['days'] }} дн.</x-slot>
+            <x-slot name="heading">Платежный календарь · {{ $calendar['days'] }} дн.</x-slot>
             <x-slot name="description">Ожидаемые приходы (обещания) минус ближайшие выплаты.</x-slot>
             <table class="w-full text-sm">
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -231,7 +231,7 @@
     {{-- Баланс (на сейчас) --}}
     <x-filament::section collapsible collapsed>
         <x-slot name="heading">Баланс — активы и обязательства (на сейчас)</x-slot>
-        <x-slot name="description">Собран из денежного ядра; полный баланс (осн. средства и т.п.) ведётся вручную в Excel.</x-slot>
+        <x-slot name="description">Собран из денежного ядра; полный баланс (осн. средства и т.п.) ведется вручную в Excel.</x-slot>
         <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
             <div><div class="text-gray-500 dark:text-gray-400">Дебиторка (долг)</div><div class="font-semibold tabular-nums">{{ $money($balance['debt']) }}</div></div>
             <div><div class="text-gray-500 dark:text-gray-400">Conditional-доступы</div><div class="font-semibold tabular-nums">{{ $balance['conditionalCount'] }} шт.</div></div>
