@@ -48,6 +48,12 @@ class MarketingSetting extends Model
         'max_bot_token',
         'max_webhook_secret',
 
+        // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164) ---
+        'zapisi_bot_username',
+        'zapisi_bot_token',
+        'zapisi_webhook_secret',
+        'zapisi_chat_id',
+
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
         'student_maintenance_enabled',
         'student_maintenance_message',
@@ -148,6 +154,8 @@ class MarketingSetting extends Model
         'vk_callback_secret' => 'encrypted',
         'max_bot_token' => 'encrypted',
         'max_webhook_secret' => 'encrypted',
+        'zapisi_bot_token' => 'encrypted',
+        'zapisi_webhook_secret' => 'encrypted',
     ];
 
     /**

@@ -134,6 +134,46 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * D9 (Track C, Uprava/docs/DECISIONS_telegram_harvester.md): full member
+     * roster for one peer via the personal-account session — the bot side
+     * (getChatAdministrators) only sees admins + observed interactors, which
+     * is insufficient for "who's in the chat".
+     *
+     * @return array<int, array{id: ?int, username: ?string, name: ?string, is_bot: bool}>
+     */
+    public function fetchRoster(string $peer): array
+    {
+        if (! $this->clientFactory->isConfigured()) {
+            return [];
+        }
+
+        $client = $this->clientFactory->open();
+        if (! method_exists($client, 'getPwrChat')) {
+            return [];
+        }
+
+        $chat = $client->getPwrChat($peer, false, true);
+        $participants = (array) ($chat['participants'] ?? []);
+
+        $roster = [];
+        foreach ($participants as $participant) {
+            $user = $participant['user'] ?? $participant;
+            if (! is_array($user) || ! isset($user['id'])) {
+                continue;
+            }
+
+            $roster[] = [
+                'id' => (int) $user['id'],
+                'username' => $user['username'] ?? null,
+                'name' => $this->displayName($user),
+                'is_bot' => (bool) ($user['bot'] ?? false),
+            ];
+        }
+
+        return $roster;
+    }
+
+    /**
      * Apply dedup + raw-store write + cursor advance to already-normalized
      * records. Shared by the live path, the --payload local-import path, and
      * tests (so the pipeline is exercisable without MadelineProto).
@@ -262,9 +302,14 @@ class TelegramHarvestSyncService
             $history = $this->fetchPeerHistory($client, $peer, $limit, $minId);
             $usersById = $this->usersById($history['users']);
 
+            $downloadMedia = $this->shouldDownloadMedia($peer, $info);
+
             foreach ($history['messages'] as $raw) {
                 $normalized = $this->normalize($raw, $info, $usersById);
                 if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
+                    if ($downloadMedia && $normalized['has_media']) {
+                        $normalized['media_local_path'] = $this->downloadMedia($client, $raw, $normalized);
+                    }
                     $messages[] = $normalized;
                 }
             }
@@ -471,7 +516,8 @@ class TelegramHarvestSyncService
 
     /**
      * D4: extract media presence + metadata from a raw MadelineProto message.
-     * Metadata only — the file itself is NEVER downloaded (a future D## if taken).
+     * Metadata only by default — the file itself is downloaded only for peers
+     * in services.telegram_harvest.media_download_peers (D11 override, Track C).
      *
      * @param  array<string, mixed>  $raw
      * @return array{has_media: bool, media_type: ?string, media_size: ?int, media_mime: ?string}
@@ -506,6 +552,65 @@ class TelegramHarvestSyncService
             'media_size' => $size,
             'media_mime' => $mime,
         ];
+    }
+
+    /**
+     * D11 override (Track C): only peers explicitly listed in
+     * services.telegram_harvest.media_download_peers get their historical
+     * media downloaded; every other Track B peer stays D4 metadata-only.
+     * Matched against however the peer was given (raw string, @username, or
+     * resolved numeric id) so either form in the config list works.
+     *
+     * @param  array{id: ?int, username: ?string}  $info
+     */
+    private function shouldDownloadMedia(string $peer, array $info): bool
+    {
+        $configured = (array) config('services.telegram_harvest.media_download_peers', []);
+        if ($configured === []) {
+            return false;
+        }
+
+        $candidates = array_filter([
+            $peer,
+            $info['username'] !== null ? '@'.$info['username'] : null,
+            $info['id'] !== null ? (string) $info['id'] : null,
+        ]);
+
+        return array_intersect($candidates, $configured) !== [];
+    }
+
+    /**
+     * D11 override (Track C): download the actual media file for a
+     * peer-backfill message. Best-effort — a failure here must not abort the
+     * harvest (the message itself still stores, metadata-only, via the
+     * normal path).
+     *
+     * @param  array<string, mixed>  $raw
+     * @param  array<string, mixed>  $normalized
+     */
+    private function downloadMedia(object $client, array $raw, array $normalized): ?string
+    {
+        $media = $raw['media'] ?? null;
+        if (! is_array($media) || $media === [] || ! method_exists($client, 'downloadToDir')) {
+            return null;
+        }
+
+        $dir = ((string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw')))
+            .'/zapisi_media/'.$normalized['telegram_chat_id'].'/'.substr((string) $normalized['sent_at'], 0, 10);
+
+        try {
+            File::ensureDirectoryExists($dir);
+
+            return (string) $client->downloadToDir($media, $dir);
+        } catch (Throwable $e) {
+            Log::warning('Telegram harvest D11 media download failed', [
+                'chat_id' => $normalized['telegram_chat_id'],
+                'message_id' => $normalized['telegram_message_id'],
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

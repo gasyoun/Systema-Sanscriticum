@@ -80,6 +80,13 @@ Route::post('/webhooks/lead-step', [\App\Http\Controllers\Webhooks\LeadStepWebho
     ->middleware('verify.n8n.leadstep')
     ->name('webhook.lead-step');
 
+// === TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ===
+// Отдельный от /telegram/webhook (user-уведомления) и /webhooks/telegram-magnet
+// (lead-magnet) эндпоинт для class-booking бота. Секрет из MarketingSetting.
+Route::post('/webhooks/telegram-zapisi', [\App\Http\Controllers\Webhooks\TelegramZapisiWebhookController::class, 'handle'])
+    ->middleware('verify.tg.zapisi')
+    ->name('webhook.zapisi.telegram');
+
 // === ПАРТНЁРСКИЙ БОТ (агентская программа) ===
 // Внешний Telegram-бот (@Partner_..._bot, ?start=agent) регистрирует партнёров
 // и запрашивает их статистику. Общий секрет — заголовок X-Partner-Bot-Secret

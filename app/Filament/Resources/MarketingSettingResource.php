@@ -407,6 +407,33 @@ class MarketingSettingResource extends Resource
                                     ->maxLength(64),
                             ])->columns(1),
                     ]),
+
+                // ==========================================
+                // TELEGRAM TRACK C: @zapisi_ORSbot (H164)
+                // ==========================================
+                Forms\Components\Section::make('🔔 @zapisi_ORSbot (записи)')
+                    ->description('Класс-букинг бот, отдельный от lead-magnet ботов выше. Токены шифруются в БД. Chat ID — обнаруживается через php artisan telegram-harvest:peers.')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\TextInput::make('zapisi_bot_username')
+                            ->label('Username бота (без @)')
+                            ->placeholder('zapisi_ORSbot')
+                            ->maxLength(100),
+                        Forms\Components\TextInput::make('zapisi_bot_token')
+                            ->label('Bot Token')
+                            ->password()
+                            ->revealable()
+                            ->placeholder('Получить у @BotFather'),
+                        Forms\Components\TextInput::make('zapisi_webhook_secret')
+                            ->label('Webhook Secret (случайная строка 32+ символов)')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Сгенерировать: php artisan tinker → Str::random(48)'),
+                        Forms\Components\TextInput::make('zapisi_chat_id')
+                            ->label('Chat ID')
+                            ->helperText('Numeric chat id этого чата (D9/D7 ключуют по нему одинаково).'),
+                    ])->columns(1),
             ]);
     }
 
