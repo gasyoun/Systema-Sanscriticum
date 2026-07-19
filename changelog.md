@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.36.0] - 2026-07-19
+
 ### Changed
 - **H1287: честный дефицит — фальшивые таймеры и «16/20 мест» убиты.** Второй
   Fable-лейн волны revenue-copy
