@@ -229,7 +229,6 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [DEPLOY_QUEUE №40](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
   Sonnet 5 (`claude-sonnet-5`).
   [H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md).
->>>>>>> origin/main
 
 ## [1.29.0] - 2026-07-19
 
