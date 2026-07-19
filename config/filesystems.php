@@ -44,6 +44,22 @@ return [
             'throw' => false,
         ],
 
+        // S3-совместимое объектное хранилище (H1345). Диск ОДИН — провайдер
+        // выбирается переменными окружения, потому что и VK Cloud, и Yandex
+        // Object Storage, и Selectel говорят на одном протоколе S3; заводить
+        // отдельный диск на каждого значило бы копировать одну и ту же секцию.
+        //
+        // Готовые наборы (полные значения — в .env.example и в
+        // docs/ROADMAP_MEDIA_STORAGE_2026_2028.md §5):
+        //   VK Cloud  : AWS_ENDPOINT=https://hb.ru-msk.vkcloud-storage.ru
+        //               AWS_DEFAULT_REGION=ru-msk
+        //   Yandex    : AWS_ENDPOINT=https://storage.yandexcloud.net
+        //               AWS_DEFAULT_REGION=ru-central1
+        // Обоим нужен AWS_USE_PATH_STYLE_ENDPOINT=true.
+        //
+        // ВАЖНО: bucket должен быть ЗАКРЫТЫМ. Публичный bucket превращает
+        // приватные работы студентов в «секретный URL» — доступ по ссылке без
+        // проверки прав. Отдача — только через temporaryUrl() с подписью.
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

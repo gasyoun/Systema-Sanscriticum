@@ -120,9 +120,13 @@ return [
             // Бэкап еженедельный (Kernel::schedule, понедельник) — 8 дней запаса
             // против «понедельник ещё не наступил» false-positive в health-check.
             'disks' => ['local', 'yandex_disk'],
+            // H1345: порог был 5000 МБ при том, что cleanup ниже режет старые
+            // бэкапы уже на 1000 МБ — значит health-check не мог сработать
+            // НИКОГДА (мёртвая тревога). Теперь он стоит чуть выше потолка
+            // уборки, и потому означает осмысленное: «уборка не справляется».
             'health_checks' => [
-                MaximumAgeInDays::class => 8,
-                MaximumStorageInMegabytes::class => 5000,
+                MaximumAgeInDays::class => (int) env('BACKUP_MAX_AGE_DAYS', 8),
+                MaximumStorageInMegabytes::class => (int) env('BACKUP_MAX_STORAGE_MB', 1200),
             ],
         ],
     ],
@@ -137,8 +141,9 @@ return [
             'keep_monthly_backups_for_months' => 4,
             'keep_yearly_backups_for_years' => 2,
 
-            // Наш лимит в 1000 МБ
-            'delete_oldest_backups_when_using_more_megabytes_than' => 1000,
+            // Наш лимит в 1000 МБ. Держать НИЖЕ BACKUP_MAX_STORAGE_MB выше:
+            // уборка — механизм, health-check — тревога о его отказе.
+            'delete_oldest_backups_when_using_more_megabytes_than' => (int) env('BACKUP_CLEANUP_MB', 1000),
         ],
 
         'tries' => 1,

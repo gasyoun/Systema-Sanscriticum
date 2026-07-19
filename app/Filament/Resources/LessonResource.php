@@ -285,8 +285,14 @@ class LessonResource extends Resource
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word (docx)
                     ])
                     ->maxSize(102400) // Максимальный вес ОДНОГО файла - 100 МБ (102400 КБ)
+                    // H1345: потолка по КОЛИЧЕСТВУ не было, а вместе с
+                    // appendFiles() это значит, что один урок мог копить
+                    // 100-мегабайтные видео без предела — крупнейший источник
+                    // роста хранилища в проекте (и, поскольку storage/app
+                    // целиком уходит в еженедельный бэкап, ещё и роста бэкапа).
+                    ->maxFiles(20)
                     ->columnSpanFull()
-                    ->helperText('Загружайте PDF, аудиолекции (MP3) или дополнительные видео. Максимум 100 МБ на файл.'),
+                    ->helperText('Загружайте PDF, аудиолекции (MP3) или дополнительные видео. Максимум 100 МБ на файл, до 20 файлов на урок.'),
 
                 // --- ДОМАШНЕЕ ЗАДАНИЕ ---
                 Forms\Components\Section::make('Домашнее задание')
@@ -313,7 +319,9 @@ class LessonResource extends Resource
                             ->downloadable()
                             ->openable()
                             ->maxSize(51200)
+                            ->maxFiles(10) // H1345: тот же незакрытый потолок по количеству
                             ->columnSpanFull()
+                            ->helperText('До 10 файлов, каждый до 50 МБ.')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
                     ])
                     ->columnSpanFull(),
