@@ -410,13 +410,26 @@ class PaymentController extends Controller
 
     public function success(Request $request)
     {
-        if (! auth()->check()) {
-            return redirect()->route('login')
-                ->with('success', 'Оплата прошла успешно! Войдите в аккаунт, чтобы начать обучение.');
+        // H1285: рендерим страницу вместо редиректа. Только чтение — статус
+        // платежа меняет исключительно вебхук Точки (см. комментарий в fail()).
+        // Точка не передаёт идентификатор заказа в redirectUrl, поэтому берём
+        // последний платёж пользователя: покупатель только что вернулся из банка.
+        $payment = null;
+
+        if (auth()->check()) {
+            $payment = Payment::query()
+                ->where('user_id', auth()->id())
+                ->with('course')
+                ->latest('id')
+                ->first();
         }
 
-        return redirect()->route('student.dashboard')
-            ->with('success', 'Оплата успешно завершена! Доступ откроется в течение пары минут.');
+        $confirmed = $payment && in_array($payment->status, Payment::PAID_STATUSES, true);
+
+        return view('payment.success', [
+            'payment' => $payment,
+            'confirmed' => $confirmed,
+        ]);
     }
 
     public function fail(Request $request)
@@ -428,6 +441,29 @@ class PaymentController extends Controller
         // затем открыть /payment/fail до вебхука и получить прану обратно, а вебхук
         // потом всё равно открыл бы доступ — двойная выгода. Плюс здесь брался
         // «последний pending» без привязки к заказу — мог свалиться не тот платёж.
-        return redirect('/')->with('error', 'Оплата была отменена или произошла ошибка. Вы можете попробовать снова.');
+        //
+        // H1285: вместо выброса на главную рендерим страницу с повтором оплаты.
+        // Курс для ссылки повтора восстанавливаем ТОЛЬКО для отображения из
+        // последнего неоплаченного платежа — неточность здесь стоит лишнего
+        // клика, а не денег. Скрытый курс отдал бы 404 — тогда ведём в каталог.
+        $course = null;
+
+        if (auth()->check()) {
+            $course = Payment::query()
+                ->where('user_id', auth()->id())
+                ->whereNotIn('status', Payment::PAID_STATUSES)
+                ->with('course')
+                ->latest('id')
+                ->first()
+                ?->course;
+
+            if ($course && ! $course->is_visible) {
+                $course = null;
+            }
+        }
+
+        return view('payment.fail', [
+            'course' => $course,
+        ]);
     }
 }
