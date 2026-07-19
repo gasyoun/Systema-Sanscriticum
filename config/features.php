@@ -245,4 +245,29 @@ return [
      | исторические депозиты и legacy pending команда не исправляет никогда.
      */
     'checkout_integrity_safe_repairs' => (bool) env('CHECKOUT_INTEGRITY_SAFE_REPAIRS', false),
+
+    /*
+     | Авторитетная проверка активности тарифа в POST /payment/create. Когда ВКЛ,
+     | выключенный тариф возвращает 404 до создания гостя, Payment и банковской
+     | ссылки. ВЫКЛ по умолчанию: денежный PR остаётся прод-инертным до ручного
+     | включения CHECKOUT_INACTIVE_TARIFF_GUARD=true и config:cache.
+     */
+    'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', false),
+
+    /*
+     | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
+     | действием перечитывает и блокирует строку users, а расчёт/списание кредита
+     | использует только это DB-значение. ВЫКЛ по умолчанию; ручное включение —
+     | CHECKOUT_REFERRAL_CREDIT_LOCK=true и config:cache после ревью/деплоя.
+     */
+    'checkout_referral_credit_lock' => (bool) env('CHECKOUT_REFERRAL_CREDIT_LOCK', false),
+
+    /*
+     | Обратимость депозитного зачёта. Когда ВКЛ, реальный переход оплаты из
+     | paid/success в failed/canceled возвращает ровно deposit_credit_applied в
+     | оплаченные deposit/trial строки (LIFO, под row-lock), сохраняя маркер
+     | покупки для аудита и повторной оплаты. ВЫКЛ по умолчанию; включение —
+     | CHECKOUT_DEPOSIT_REVERSAL=true + config:cache после ручного ревью.
+     */
+    'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', false),
 ];

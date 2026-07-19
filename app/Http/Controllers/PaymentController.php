@@ -41,18 +41,36 @@ class PaymentController extends Controller
 
         $request->validate($rules);
 
+        // Авторитетная проверка активности выполняется ДО резолва гостя: прямой
+        // POST с уже выключенным тарифом не должен создавать пользователя и не
+        // должен доходить до банка. Флаг оставляет merge прод-инертным.
+        $tariffQuery = Tariff::query()->with('course');
+
+        if (config('features.checkout_inactive_tariff_guard')) {
+            $tariffQuery->where('is_active', true);
+        }
+
+        $tariff = $tariffQuery->findOrFail($request->input('tariff_id'));
+
         // Резолв пользователя — ВНЕ транзакции. Для гостя с существующим email —
         // отказ (анти-takeover), как в DepositController/TrialController. Иначе
         // аноним мог создавать платежи на чужой аккаунт и триггерить письмо со
         // сбросом пароля владельцу (Payment::sendWelcomeEmailIfNeeded).
         $user = $this->resolveUser($request);
 
-        $tariff = Tariff::with('course')->findOrFail($request->input('tariff_id'));
-
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
         $result = DB::transaction(function () use ($request, $prana, $user, $tariff) {
+            // Auth может держать модель User, загруженную до начала транзакции.
+            // При включённом флаге перечитываем и лочим кошелёк первым действием:
+            // все расчёты и списание ниже используют один DB-authoritative снимок.
+            if (config('features.checkout_referral_credit_lock')) {
+                $user = User::query()
+                    ->whereKey($user->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
 
             $courseId = $tariff->course->id ?? null;
 
