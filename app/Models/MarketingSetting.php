@@ -81,6 +81,13 @@ class MarketingSetting extends Model
         'debt_reminder_to_email',
         'debt_reminder_subject',
         'debt_reminder_text',
+        // Лестница эскалации H1289: стадии 2–4 (стадия 1 — поля выше).
+        'debt_reminder_stage2_subject',
+        'debt_reminder_stage2_text',
+        'debt_reminder_stage3_subject',
+        'debt_reminder_stage3_text',
+        'debt_reminder_stage4_subject',
+        'debt_reminder_stage4_text',
 
         // --- ДОЛЖНИКИ ---
         'debtors_notify_years',

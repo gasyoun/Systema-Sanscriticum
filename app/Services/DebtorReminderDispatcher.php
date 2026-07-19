@@ -8,17 +8,23 @@ use App\Jobs\SendMessengerAlerts;
 use App\Mail\DebtorReminderMail;
 use App\Models\Course;
 use App\Models\User;
+use App\Support\MessagePlaceholders;
 use Illuminate\Support\Facades\Mail;
 
 /**
  * Единая точка отправки напоминания должнику: рендер плейсхолдеров и доставка
  * по доступным каналам (TG/VK/email). Используется и ручной кнопкой в разделе
  * «Должники», и авто-командой debts:remind.
+ *
+ * DEFAULT_TEXT/DEFAULT_SUBJECT — стадия 1 («мягкое напоминание») лестницы
+ * эскалации H1289; остальные стадии — App\Support\DunningStage. Закрывающая
+ * строка «просто проигнорируйте» обязана оставаться в каждом шаблоне стадии:
+ * в мессенджерах (TG/VK) нет email-футера, текст — единственный носитель.
  */
 class DebtorReminderDispatcher
 {
     /** Плейсхолдеры: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}. */
-    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт (или скоро начнётся), а оплата ещё не поступила.{paid_until}{deadline} Чтобы не потерять доступ к материалам, оформите оплату.\n\nОплатить курс: {pay_link}";
+    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт (или скоро начнётся), а оплата ещё не поступила.{paid_until}{deadline} Чтобы не потерять доступ к материалам, оформите оплату.\n\nОплатить курс: {pay_link}\n\nЕсли оплата уже внесена — просто проигнорируйте это сообщение.";
 
     public const DEFAULT_SUBJECT = 'Напоминание об оплате — {course}';
 
@@ -55,9 +61,9 @@ class DebtorReminderDispatcher
 
         $course = Course::query()->whereKey($courseId)->first(['id', 'slug', 'title']);
 
-        $replacements = \App\Support\MessagePlaceholders::forUser($user, $course, $blockNumber, $paidUntilLabel, $deadlineLabel);
+        $replacements = MessagePlaceholders::forUser($user, $course, $blockNumber, $paidUntilLabel, $deadlineLabel);
 
-        $rendered = \App\Support\MessagePlaceholders::render($textTpl, $replacements);
+        $rendered = MessagePlaceholders::render($textTpl, $replacements);
 
         if ($hasTg || $hasVk) {
             SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
