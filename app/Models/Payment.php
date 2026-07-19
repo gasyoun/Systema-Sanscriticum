@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Jobs\SendTelegramMessageJob;
 use App\Mail\CourseWelcomeMail;
 use App\Mail\DepositReceivedMail;
+use App\Mail\PurchaseConfirmationMail;
 use App\Mail\StudentWelcomeMail;
 use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
@@ -543,6 +544,12 @@ class Payment extends Model
             if (! $this->is_conditional) {
                 $this->sendWelcomeEmailIfNeeded();
                 $this->sendCourseWelcomeEmailIfFirstForCourse();
+                // H1286: чек-приветствие на каждую реальную оплату + онбординг
+                // первой недели (день 1 / день 5) на первую оплату курса.
+                // Событий оплаты в приложении нет — send добавлен в оркестратор
+                // рядом с существующими, grantAccess() не тронут (fence rule 3).
+                $this->sendPurchaseConfirmation();
+                $this->scheduleOnboardingIfFirstForCourse();
                 $this->awardPranaForPurchase();
                 // Засчитываем использование промокода только по подтверждённой
                 // оплате (раньше инкремент стоял на создании pending, из-за чего
@@ -1220,5 +1227,90 @@ class Payment extends Model
             Mail::to($student->email)
                 ->send(new CourseWelcomeMail($student, $this->course));
         }
+    }
+
+    // ==========================================
+    // ПОДТВЕРЖДЕНИЕ ПОКУПКИ — ЧЕК-ПРИВЕТСТВИЕ (H1286)
+    // ==========================================
+    // В отличие от CourseWelcomeMail (первая оплата курса) уходит на КАЖДУЮ
+    // реальную оплату: чек — атрибут транзакции, а не знакомства. Conditional
+    // отфильтрован вызывающим кодом (processSuccessfulPayment), депозит/пробное
+    // идут своими путями и сюда не попадают.
+    private function sendPurchaseConfirmation(): void
+    {
+        $student = $this->user;
+
+        if (! $student || ! $student->email) {
+            return;
+        }
+
+        // Тестовому админу чек не шлём (как welcome и course-welcome).
+        if ($student->is_admin) {
+            return;
+        }
+
+        Mail::to($student->email)->send(new PurchaseConfirmationMail($this));
+    }
+
+    // ==========================================
+    // ОНБОРДИНГ ПЕРВОЙ НЕДЕЛИ: ДЕНЬ 1 И ДЕНЬ 5 (H1286)
+    // ==========================================
+    // Прод-SMTP сломан (#504), поэтому рабочая доставка — Telegram/VK через
+    // существующий механизм ScheduledReminder (reminders:send-due, идемпотентность
+    // по sent_at). to_email сознательно false: email-версии дней 1/5 — отдельные
+    // свёрстанные Mailable (OnboardingDay1Mail/OnboardingDay5Mail), их подключит
+    // ESP-гейт (H1147); генерическим ScheduledReminderMail их не дублируем.
+    // Условие «первая оплата ИМЕННО ЭТОГО курса» — то же, что у CourseWelcomeMail:
+    // покупателю 2-го блока онбординг курса, в котором он уже занимается, не нужен.
+    private function scheduleOnboardingIfFirstForCourse(): void
+    {
+        $student = $this->user;
+
+        if (! $student || ! $this->course_id || ! $this->course) {
+            return;
+        }
+
+        if ($student->is_admin) {
+            return;
+        }
+
+        $count = $student->payments()
+            ->where('course_id', $this->course_id)
+            ->paid()
+            ->real()
+            ->whereNotIn('tariff', ['deposit', 'trial'])
+            ->count();
+
+        if ($count !== 1) {
+            return;
+        }
+
+        $title = $this->course->title;
+        $url = url('/login');
+
+        ScheduledReminder::create([
+            'user_id' => $student->id,
+            'created_by' => null,
+            'message' => "Намасте! Вчера вы оплатили курс «{$title}». "
+                ."Первый урок уже ждет в личном кабинете: {$url}. "
+                .'Начать можно с десяти минут — не обязательно проходить урок целиком.',
+            'to_telegram' => true,
+            'to_vk' => true,
+            'to_email' => false,
+            'scheduled_for' => now()->addDay()->setTime(11, 0),
+        ]);
+
+        ScheduledReminder::create([
+            'user_id' => $student->id,
+            'created_by' => null,
+            'message' => "Намасте! Несколько дней назад вы оплатили курс «{$title}». "
+                .'Если вы уже занимаетесь — просто проигнорируйте это сообщение. '
+                ."Если еще не начали — первый урок ждет в кабинете: {$url}. "
+                .'А если начать мешает что-то конкретное — напишите нам, поможем: https://t.me/rusamskrtam',
+            'to_telegram' => true,
+            'to_vk' => true,
+            'to_email' => false,
+            'scheduled_for' => now()->addDays(5)->setTime(11, 0),
+        ]);
     }
 }
