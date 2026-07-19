@@ -11,7 +11,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
-## [1.38.0] - 2026-07-20
+## [1.39.0] - 2026-07-20
 
 ### Added
 - **H1289: dunning — одно напоминание должнику стало лестницей из четырёх стадий.**
@@ -34,6 +34,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [`docs/copy/money-dunning-escalation-ladder.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-dunning-escalation-ladder.md);
   7 новых feature-тестов
   ([`tests/Feature/DunningEscalationLadderTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/DunningEscalationLadderTest.php)).
+
+## [1.38.0] - 2026-07-20
+
+### Added
 - **H1286: подтверждение покупки + онбординг первой недели.** Лейн волны
   revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
