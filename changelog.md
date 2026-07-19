@@ -12,6 +12,26 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **H1289: dunning — одно напоминание должнику стало лестницей из четырёх стадий.**
+  Лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  `debts:remind` слал один и тот же шаблон повторно, без эскалации — одна
+  температура либо пилит рано, либо шокирует поздно. Теперь стадия выбирается по
+  дедлайну оплаты (00:00 МСК дня старта блока): мягкое напоминание → «дедлайн
+  близко» (за 3 дня) → «доступ под угрозой» (после дедлайна) → «доступ закрыт»
+  (с 14-го дня просрочки); пороги —
+  [`config/dunning.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/dunning.php),
+  тексты — [`app/Support/DunningStage.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/DunningStage.php)
+  с переопределением менеджером в Marketing Settings (аддитивная миграция, 6
+  nullable-колонок). Строка «Если оплата уже внесена — просто проигнорируйте…»
+  сохранена во всех четырёх стадиях; фрагмент `{deadline}` стал честным по
+  времени («срок оплаты истек…» вместо «нужно до <прошедшей даты>»); стадия 4
+  честна по механике (материалы блока закрыты автоматически, «это не
+  отчисление» верно по построению выборки должников). Win-back после отчисления
+  не тронут (территория H219). Строки и решения:
+  [`docs/copy/money-dunning-escalation-ladder.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-dunning-escalation-ladder.md);
+  7 новых feature-тестов
+  ([`tests/Feature/DunningEscalationLadderTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/DunningEscalationLadderTest.php)).
 - **H1286: подтверждение покупки + онбординг первой недели.** Лейн волны
   revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).

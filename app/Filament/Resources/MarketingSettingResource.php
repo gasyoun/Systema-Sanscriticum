@@ -5,11 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MarketingSettingResource\Pages;
 use App\Models\MarketingSetting;
+use App\Services\DebtorReminderDispatcher;
+use App\Support\DunningStage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class MarketingSettingResource extends Resource
 {
@@ -32,7 +36,7 @@ class MarketingSettingResource extends Resource
         return MarketingSetting::count() === 0;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return false;
     }
@@ -78,7 +82,7 @@ class MarketingSettingResource extends Resource
                                 Forms\Components\Actions\Action::make('genSecret')
                                     ->icon('heroicon-m-arrow-path')
                                     ->tooltip('Сгенерировать токен')
-                                    ->action(fn (Forms\Set $set) => $set('student_maintenance_secret', \Illuminate\Support\Str::random(32)))
+                                    ->action(fn (Forms\Set $set) => $set('student_maintenance_secret', Str::random(32)))
                             ),
                     ])
                     ->collapsible(),
@@ -157,16 +161,50 @@ class MarketingSettingResource extends Resource
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                         Forms\Components\Toggle::make('debt_reminder_to_email')->label('Канал: Email')->default(true)
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Placeholder::make('dunning_ladder_hint')
+                            ->label('Лестница эскалации (H1289)')
+                            ->content('Стадия выбирается автоматически по дедлайну оплаты (00:00 МСК дня старта блока): 1 «мягкое напоминание» → 2 «дедлайн близко» (за '.config('dunning.approaching_days', 3).' дн. до) → 3 «доступ под угрозой» (после дедлайна) → 4 «доступ закрыт» (через '.config('dunning.suspended_after_days', 14).' дн. просрочки). Пустое поле = текст по умолчанию. Строку «Если оплата уже внесена — просто проигнорируйте это сообщение» сохраняйте в каждой стадии.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                         Forms\Components\TextInput::make('debt_reminder_subject')
-                            ->label('Тема письма (email)')
-                            ->placeholder(\App\Services\DebtorReminderDispatcher::DEFAULT_SUBJECT)
+                            ->label('Стадия 1 — тема письма (email)')
+                            ->placeholder(DebtorReminderDispatcher::DEFAULT_SUBJECT)
                             ->helperText('Плейсхолдеры: {name}, {course}, {block}, {pay_link}.')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                         Forms\Components\Textarea::make('debt_reminder_text')
-                            ->label('Текст напоминания')
+                            ->label('Стадия 1 — мягкое напоминание')
                             ->rows(6)
-                            ->placeholder(\App\Services\DebtorReminderDispatcher::DEFAULT_TEXT)
-                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры: {name}, {course}, {block}, {pay_link}.')
+                            ->placeholder(DebtorReminderDispatcher::DEFAULT_TEXT)
+                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\TextInput::make('debt_reminder_stage2_subject')
+                            ->label('Стадия 2 — тема письма (email)')
+                            ->placeholder(DunningStage::ApproachingDeadline->defaultSubject())
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Textarea::make('debt_reminder_stage2_text')
+                            ->label('Стадия 2 — дедлайн близко')
+                            ->rows(6)
+                            ->placeholder(DunningStage::ApproachingDeadline->defaultText())
+                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры те же, что у стадии 1.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\TextInput::make('debt_reminder_stage3_subject')
+                            ->label('Стадия 3 — тема письма (email)')
+                            ->placeholder(DunningStage::AccessAtRisk->defaultSubject())
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Textarea::make('debt_reminder_stage3_text')
+                            ->label('Стадия 3 — доступ под угрозой')
+                            ->rows(6)
+                            ->placeholder(DunningStage::AccessAtRisk->defaultText())
+                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры те же, что у стадии 1.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\TextInput::make('debt_reminder_stage4_subject')
+                            ->label('Стадия 4 — тема письма (email)')
+                            ->placeholder(DunningStage::AccessSuspended->defaultSubject())
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Textarea::make('debt_reminder_stage4_text')
+                            ->label('Стадия 4 — доступ закрыт')
+                            ->rows(6)
+                            ->placeholder(DunningStage::AccessSuspended->defaultText())
+                            ->helperText('Пусто = текст по умолчанию. Плейсхолдеры те же, что у стадии 1. Win-back после отчисления сюда не пишем — это отдельный контур (H219).')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                     ])
                     ->collapsible(),

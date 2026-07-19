@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\DebtorReminderDispatcher;
 use App\Services\DebtorsReport;
 use App\Services\StudentDebtsService;
+use App\Support\DunningStage;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,8 @@ class RemindDebtors extends Command
 
     private DebtorReminderDispatcher $dispatcher;
 
+    private MarketingSetting $settings;
+
     private int $cadence;
 
     private bool $toTg;
@@ -31,10 +34,6 @@ class RemindDebtors extends Command
     private bool $toVk;
 
     private bool $toEmail;
-
-    private string $text;
-
-    private string $subject;
 
     private Carbon $now;
 
@@ -52,13 +51,12 @@ class RemindDebtors extends Command
         }
 
         $this->dispatcher = $dispatcher;
+        $this->settings = $s;
         $lead = max(0, (int) ($s->debt_reminder_lead_days ?? 7));
         $this->cadence = max(1, (int) ($s->debt_reminder_cadence_days ?? 7));
         $this->toTg = (bool) $s->debt_reminder_to_telegram;
         $this->toVk = (bool) $s->debt_reminder_to_vk;
         $this->toEmail = (bool) $s->debt_reminder_to_email;
-        $this->text = $s->debt_reminder_text ?: DebtorReminderDispatcher::DEFAULT_TEXT;
-        $this->subject = $s->debt_reminder_subject ?: DebtorReminderDispatcher::DEFAULT_SUBJECT;
         $this->now = now();
 
         $this->remindCurrentDebtors($lead);   // просрочка / не продлил / непокрытый ref-блок
@@ -167,7 +165,10 @@ class RemindDebtors extends Command
     }
 
     /**
-     * Дедуп по (user, course, block) в окне cadence + отправка + запись лога.
+     * Дедуп по (user, course, block) в окне cadence + выбор стадии лестницы
+     * (H1289) + отправка + запись лога. Стадия считается на момент отправки по
+     * дедлайну блока; частоту по-прежнему задаёт cadence — эскалация происходит
+     * естественно, следующим напоминанием после пересечения порога.
      */
     private function deliver(User $user, int $courseId, ?int $block): void
     {
@@ -185,9 +186,14 @@ class RemindDebtors extends Command
             return;
         }
 
+        $deadline = $this->blockDeadline($courseId, $block);
+        $stage = DunningStage::fromDeadline($deadline, $this->now);
+        $textTpl = ($this->settings->{$stage->settingTextKey()} ?? null) ?: $stage->defaultText();
+        $subjectTpl = ($this->settings->{$stage->settingSubjectKey()} ?? null) ?: $stage->defaultSubject();
+
         $paidUntilLabel = $this->paidUntilLabel($user, $courseId);
-        $deadlineLabel = $this->deadlineLabel($courseId, $block);
-        $ok = $this->dispatcher->send($user, $courseId, $block, $this->text, $this->subject, $this->toTg, $this->toVk, $this->toEmail, $paidUntilLabel, $deadlineLabel);
+        $deadlineLabel = $this->deadlineLabel($deadline);
+        $ok = $this->dispatcher->send($user, $courseId, $block, $textTpl, $subjectTpl, $this->toTg, $this->toVk, $this->toEmail, $paidUntilLabel, $deadlineLabel);
 
         if ($ok) {
             DebtReminder::create([
@@ -207,7 +213,7 @@ class RemindDebtors extends Command
      * реально (не conditional) — иначе нечего показывать («не продлил» это
      * не отличит от «никогда не платил» без этого расчёта). Готовое
      * предложение-фрагмент (ведущий пробел + точка) для прямой конкатенации
-     * в DEFAULT_TEXT — см. MessagePlaceholders::forUser.
+     * в шаблон стадии — см. MessagePlaceholders::forUser.
      */
     private function paidUntilLabel(User $user, int $courseId): ?string
     {
@@ -228,16 +234,15 @@ class RemindDebtors extends Command
     }
 
     /**
-     * Дедлайн следующего платежа для {deadline}: 00:00 по Москве в день
-     * старта блока {$block}, за который сейчас напоминаем (MG rule: «до дня
-     * старта следующего модуля, до 00:00 по Москве»). Берём starts_at именно
-     * этого блока напрямую, а не next_block из paidUntilForUser — она
+     * Дедлайн платежа за блок: 00:00 по Москве в день старта блока (MG rule:
+     * «до дня старта следующего модуля, до 00:00 по Москве»). Берём starts_at
+     * именно этого блока напрямую, а не next_block из paidUntilForUser — та
      * молчит, если у студента вообще не было ни одной реальной оплаты
      * (частый случай для дебиторов), а тут дедлайн есть всегда, раз есть
-     * $block. Приложение работает в Europe/Moscow (config('app.timezone')),
-     * поэтому Carbon уже в нужном поясе без ручной конвертации.
+     * $blockNumber. Приложение работает в Europe/Moscow
+     * (config('app.timezone')), поэтому Carbon уже в нужном поясе.
      */
-    private function deadlineLabel(int $courseId, ?int $blockNumber): ?string
+    private function blockDeadline(int $courseId, ?int $blockNumber): ?Carbon
     {
         if ($blockNumber === null) {
             return null;
@@ -252,8 +257,24 @@ class RemindDebtors extends Command
             return null;
         }
 
-        $deadline = $block->starts_at->copy()->startOfDay();
+        return $block->starts_at->copy()->startOfDay();
+    }
 
-        return ' Оплатить нужно до '.$deadline->format('d.m.Y').', 00:00 (МСК).';
+    /**
+     * Фрагмент {deadline}, честный по времени: будущий дедлайн — «оплатить
+     * нужно до…», прошедший — «срок оплаты истек…» (писать должнику стадии
+     * 3–4 «нужно до <прошедшая дата>» — бессмыслица, ломающая доверие).
+     */
+    private function deadlineLabel(?Carbon $deadline): ?string
+    {
+        if ($deadline === null) {
+            return null;
+        }
+
+        if ($deadline->gt($this->now)) {
+            return ' Оплатить нужно до '.$deadline->format('d.m.Y').', 00:00 (МСК).';
+        }
+
+        return ' Срок оплаты истек '.$deadline->format('d.m.Y').'.';
     }
 }
