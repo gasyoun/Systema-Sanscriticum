@@ -11,7 +11,7 @@
     {{-- Здоровье userbot-сессий + лаг синка --}}
     <x-filament::section>
         <x-slot name="heading">Сессии userbot и лаг синка</x-slot>
-        <x-slot name="description">Последний успешный проход telegram-support:sync по каждому аккаунту; лаг больше 15 минут у включённого аккаунта подсвечивается.</x-slot>
+        <x-slot name="description">Последний успешный проход telegram-support:sync по каждому аккаунту; лаг больше 15 минут у включенного аккаунта подсвечивается.</x-slot>
 
         @if ($accounts->isEmpty())
             <p class="text-gray-400 text-sm">Аккаунты не настроены.</p>
@@ -21,7 +21,7 @@
                     <thead>
                         <tr class="text-left text-gray-500 border-b border-gray-200 dark:border-white/10">
                             <th class="py-2 pr-4">Аккаунт</th>
-                            <th class="py-2 pr-4">Включён</th>
+                            <th class="py-2 pr-4">Включен</th>
                             <th class="py-2 pr-4">Успешный синк</th>
                             <th class="py-2 pr-4">Лаг</th>
                             <th class="py-2">Последняя ошибка</th>
@@ -103,7 +103,7 @@
     <x-filament::section>
         <x-slot name="heading">Обращения к LLM ({{ $windowDays }} дн.)</x-slot>
         <x-slot name="description">
-            События журнала SupportAiReplyEvent по типам, плюс оценка расхода из usage/model в meta (доступно только для событий, записанных после H763 — более ранние честно не учитываются, а не считаются нулём).
+            События журнала SupportAiReplyEvent по типам, плюс оценка расхода из usage/model в meta (доступно только для событий, записанных после H763 — более ранние честно не учитываются, а не считаются нулем).
         </x-slot>
 
         @if ($llm['total'] === 0)

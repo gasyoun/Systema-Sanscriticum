@@ -6,8 +6,8 @@
     $guests = $data['guests'];
 
     $badge = fn (string $status) => match ($status) {
-        'present' => ['Пришёл', '#16a34a', '#dcfce7'],
-        'clicked' => ['Перешёл по ссылке', '#b45309', '#fef3c7'],
+        'present' => ['Пришел', '#16a34a', '#dcfce7'],
+        'clicked' => ['Перешел по ссылке', '#b45309', '#fef3c7'],
         default => ['Не был', '#6b7280', '#f3f4f6'],
     };
 @endphp

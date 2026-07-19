@@ -240,7 +240,7 @@
             activeEl: null,
             chapters: [],                  // [{el, start}]
             activeChapterEl: null,
-            pendingSeek: null,             // сохранённая позиция для восстановления после перезагрузки
+            pendingSeek: null,             // сохраненная позиция для восстановления после перезагрузки
             resumeTries: 0,
             lastSave: 0,
 
@@ -360,9 +360,9 @@
                     } else if (this.resumeTries < 10) {
                         this.resumeTries++;
                         this.seekRaw(this.pendingSeek);
-                        return;                           // ждём следующего тика
+                        return;                           // ждем следующего тика
                     } else {
-                        this.pendingSeek = null;          // сдаёмся
+                        this.pendingSeek = null;          // сдаемся
                     }
                 }
 

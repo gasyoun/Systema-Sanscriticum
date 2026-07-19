@@ -11,7 +11,7 @@
         {{-- Заголовок секции --}}
         <div class="max-w-3xl mx-auto text-center mb-12 lg:mb-16 flex flex-col items-center">
             <h2 class="text-2xl md:text-4xl font-extrabold text-[#101010] mb-4">
-                {{ $data['title'] ?? 'Что разберём на вебинарах' }}
+                {{ $data['title'] ?? 'Что разберем на вебинарах' }}
             </h2>
             <div class="w-24 h-1.5 bg-[#E85C24] rounded-full"></div>
 

@@ -415,7 +415,7 @@
                 @foreach ([
                     'inbox' => 'Входящие',
                     'mine' => 'Мои',
-                    'resolved' => 'Решённые',
+                    'resolved' => 'Решенные',
                 ] as $tabKey => $tabLabel)
                     <button type="button"
                         wire:click="switchTab('{{ $tabKey }}')"

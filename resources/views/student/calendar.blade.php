@@ -1,5 +1,5 @@
 @extends('layouts.student')
-@section('title', 'Моё расписание')
+@section('title', 'Мое расписание')
 @section('header', 'Календарь занятий')
 
 @section('content')
@@ -21,7 +21,7 @@
         <div class="flex-1 min-w-0">
             <p class="font-bold text-[#101010] text-sm md:text-base mb-1">
                 <i class="far fa-calendar-plus text-[#E85C24] mr-1.5"></i>
-                Подписаться на расписание в своём календаре
+                Подписаться на расписание в своем календаре
             </p>
             <p class="text-gray-500 text-xs md:text-sm">
                 Занятия и даты курса будут появляться автоматически в Google Calendar, Apple Calendar и других приложениях.
@@ -91,7 +91,7 @@
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                     </span>
-                                    Идёт сейчас
+                                    Идет сейчас
                                 </div>
                             @endif
 

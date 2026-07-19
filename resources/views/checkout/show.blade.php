@@ -63,9 +63,9 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
                 this.applyState(data.state);
-                this.promoFlash = data.message || 'Промокод применён.';
+                this.promoFlash = data.message || 'Промокод применен.';
             } catch (e) {
-                this.promoError = 'Сетевая ошибка. Попробуйте ещё раз.';
+                this.promoError = 'Сетевая ошибка. Попробуйте еще раз.';
             } finally {
                 this.promoBusy = false;
             }
@@ -274,7 +274,7 @@ document.addEventListener('alpine:init', () => {
                                     <div class="sm:col-span-2">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Email <span class="text-red-500">*</span>
-                                            <small class="text-gray-500 ml-1">(сюда придёт доступ)</small>
+                                            <small class="text-gray-500 ml-1">(сюда придет доступ)</small>
                                         </label>
                                         <input type="email" name="email" required placeholder="ivan@example.com"
                                                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
@@ -399,7 +399,7 @@ document.addEventListener('alpine:init', () => {
                                     <i class="fas fa-check-circle text-green-500 text-lg shrink-0"></i>
                                     <div class="min-w-0">
                                         <div class="text-sm font-bold text-green-800 truncate">
-                                            Промокод <span class="font-mono" x-text="$store.checkout.appliedPromo?.code"></span> применён
+                                            Промокод <span class="font-mono" x-text="$store.checkout.appliedPromo?.code"></span> применен
                                         </div>
                                         <div class="text-xs text-green-700/80" x-show="$store.checkout.promoDiscount > 0">
                                             Скидка −<span x-text="$store.checkout.format($store.checkout.promoDiscount)"></span> ₽

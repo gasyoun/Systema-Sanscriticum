@@ -59,7 +59,7 @@
             @if($course->isLive())
                 <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(244,63,94,0.5)] tracking-wider">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                    Идёт сейчас
+                    Идет сейчас
                 </span>
             @else
                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">

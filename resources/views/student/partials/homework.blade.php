@@ -107,7 +107,7 @@
         @if($awaitingPrompt)
             <div class="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
                 <i class="fas fa-hourglass-start text-amber-500 shrink-0"></i>
-                <p class="text-[13px] text-amber-800"><span class="font-bold">Задание ещё не задано.</span> Преподаватель скоро выложит условие — загляните позже.</p>
+                <p class="text-[13px] text-amber-800"><span class="font-bold">Задание еще не задано.</span> Преподаватель скоро выложит условие — загляните позже.</p>
             </div>
         @elseif($hwEditable)
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"

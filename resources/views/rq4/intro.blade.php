@@ -30,7 +30,7 @@
                     </label>
                     <select name="prior_exposure" required class="w-full rounded-lg border-gray-300">
                         <option value="none">Нет, я на этапе учебника Кочергиной (или раньше)</option>
-                        <option value="kochergina">Закончил(а) учебник Кочергиной, Зализняка ещё не проходил(а)</option>
+                        <option value="kochergina">Закончил(а) учебник Кочергиной, Зализняка еще не проходил(а)</option>
                         <option value="beyond">Уже знаком(а) с классификацией Зализняка</option>
                     </select>
                 </div>

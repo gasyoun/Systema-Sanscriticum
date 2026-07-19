@@ -83,7 +83,7 @@
                                    class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500">После сверки мы пришлём пароль на email — войдёте в личный кабинет.</p>
+                    <p class="text-xs text-gray-500">После сверки мы пришлем пароль на email — войдете в личный кабинет.</p>
                 @endguest
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

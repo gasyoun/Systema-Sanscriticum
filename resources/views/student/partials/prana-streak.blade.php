@@ -13,7 +13,7 @@
                 <h3 class="text-lg font-extrabold text-[#101010]">{{ $streak }} {{ \App\Support\Plural::ru($streak, 'день', 'дня', 'дней') }} подряд</h3>
                 @if($milestone)
                     <p class="text-gray-500 text-sm">
-                        Ещё {{ $milestone['remaining'] }} {{ \App\Support\Plural::ru($milestone['remaining'], 'день', 'дня', 'дней') }} до бонуса
+                        Еще {{ $milestone['remaining'] }} {{ \App\Support\Plural::ru($milestone['remaining'], 'день', 'дня', 'дней') }} до бонуса
                         <span class="font-bold text-[#E85C24]">+{{ number_format((int) (config('prana.streak_bonuses')[$milestone['next']] ?? 0), 0, '.', ' ') }} <x-prana-lotus /></span>.
                     </p>
                 @else

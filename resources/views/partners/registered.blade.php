@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вы в партнёрской программе — Общество ревнителей санскрита</title>
+    <title>Вы в партнерской программе — Общество ревнителей санскрита</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -29,8 +29,8 @@
                     и подтвердим условия. Ссылку ниже можно сохранить уже сейчас.
                 </p>
             @else
-                <h1 class="text-3xl font-extrabold mb-2">Партнёрский кабинет</h1>
-                <p class="text-gray-600">Партнёр: <span class="font-bold">{{ $partner->name }}</span></p>
+                <h1 class="text-3xl font-extrabold mb-2">Партнерский кабинет</h1>
+                <p class="text-gray-600">Партнер: <span class="font-bold">{{ $partner->name }}</span></p>
             @endif
         </div>
 
@@ -47,7 +47,7 @@
                 </span>
             </div>
 
-            <label class="block text-sm font-bold text-gray-700 mb-1">Ваша партнёрская ссылка</label>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Ваша партнерская ссылка</label>
             <div class="flex flex-col sm:flex-row gap-2 mb-4">
                 <input type="text" readonly value="{{ $partner->referralLink() }}" x-ref="link"
                        class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-sm font-mono outline-none">

@@ -20,13 +20,13 @@
 
         <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 28px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 6px 0; font-size: 16px;">
-                Сумма предоплаты <strong>зачтётся при оплате полного тарифа</strong> — доплатить нужно будет только разницу.
+                Сумма предоплаты <strong>зачтется при оплате полного тарифа</strong> — доплатить нужно будет только разницу.
             </p>
         </div>
 
         @if(!empty($course->chat_url))
             <p style="font-size: 16px; text-align: center; margin-bottom: 12px;">
-                Пока идёт подготовка — присоединяйтесь к чату курса:
+                Пока идет подготовка — присоединяйтесь к чату курса:
             </p>
             <div style="text-align: center; margin: 8px 0 28px;">
                 <a href="{{ $course->chat_url }}" style="background-color: #f59e0b; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">Войти в чат курса</a>

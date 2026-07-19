@@ -52,7 +52,7 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Моё обучение</h1>
+        <h1>Мое обучение</h1>
         <p style="font-size: 12px; color: #6b635b; margin-top: 4px; margin-bottom: 0;">Ученик: {{ Auth::user()->name ?? 'Гость' }}</p>
     </div>
 

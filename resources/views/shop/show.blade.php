@@ -284,7 +284,7 @@
                                     <span class="text-base font-bold text-white">{{ $block->title ?: 'Блок '.$block->number }}</span>
                                     @if($block->is_current)
                                         <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Сейчас идёт
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Сейчас идет
                                         </span>
                                     @endif
                                 </div>
@@ -361,7 +361,7 @@
                                             </span>
                                             @if($session->isLive())
                                                 <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Идёт сейчас
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Идет сейчас
                                                 </span>
                                             @endif
                                         </div>
@@ -485,7 +485,7 @@
                                 @if(! empty($trialIsRecording))
                                     Запись занятия от <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F') }}</span> — доступ откроем в личном кабинете сразу после оплаты.
                                 @else
-                                    Живое занятие <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F, H:i') }}</span> — ссылку на Zoom пришлём на email.
+                                    Живое занятие <span class="text-white font-semibold">{{ $course->trialSchedule->start->translatedFormat('d F, H:i') }}</span> — ссылку на Zoom пришлем на email.
                                 @endif
                             @else
                                 Оплатите одно занятие, чтобы оценить подачу и формат.
@@ -665,7 +665,7 @@
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                                     </span>
-                                    СЕЙЧАС ИДЁТ
+                                    СЕЙЧАС ИДЕТ
                                 </div>
                             @endif
 

@@ -49,17 +49,17 @@ return [
         ['key' => 'adhyayin', 'name' => 'Adhyāyin · изучающий', 'min' => 200],
         ['key' => 'snataka', 'name' => 'Snātaka · окончивший ступень', 'min' => 1000],
         ['key' => 'acarya', 'name' => 'Ācārya · наставник', 'min' => 3000],
-        ['key' => 'pandita', 'name' => 'Paṇḍita · учёный', 'min' => 8000],
+        ['key' => 'pandita', 'name' => 'Paṇḍita · ученый', 'min' => 8000],
     ],
 
     // Человекочитаемые подписи для истории и «как заработать».
     'reasons' => [
-        'lesson_complete' => 'Завершён урок',
+        'lesson_complete' => 'Завершен урок',
         'course_complete' => 'Курс пройден полностью',
         'open_lesson_view' => 'Просмотр открытого урока',
         'daily_login' => 'Ежедневный вход',
         'payment_success' => 'Покупка курса',
-        'referral' => 'Приглашённый друг оплатил курс',
+        'referral' => 'Приглашенный друг оплатил курс',
         'spent_on_purchase' => 'Списано при оплате',
         'spent_on_perk' => 'Покупка в магазине праны',
         'refund_failed' => 'Возврат за несостоявшуюся оплату',

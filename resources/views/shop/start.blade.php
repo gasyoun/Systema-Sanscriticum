@@ -84,7 +84,7 @@
                 @foreach([
                     'beginner' => ['icon' => 'fa-seedling', 'text' => 'Никогда не учили санскрит — или начинали и бросили. Деванагари и чтение объясняются с самого начала.'],
                     'continuing' => ['icon' => 'fa-book-open', 'text' => 'Читаете деванагари, знаете базовую грамматику. Курсы по текстам и продолжение грамматики.'],
-                    'advanced' => ['icon' => 'fa-mountain', 'text' => 'Свободно разбираете тексты со словарём. Специальные курсы: синтаксис, комментарии, сложные тексты.'],
+                    'advanced' => ['icon' => 'fa-mountain', 'text' => 'Свободно разбираете тексты со словарем. Специальные курсы: синтаксис, комментарии, сложные тексты.'],
                 ] as $levelKey => $levelInfo)
                     <a href="{{ route('shop.index', ['level' => $levelKey]) }}"
                        class="group flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 p-6 transition-all">
@@ -127,7 +127,7 @@
         <section class="mb-16 lg:mb-20 flex justify-center" data-analytics="onramp-lead">
             <x-newsletter-subscribe
                 title="Не готовы выбрать курс?"
-                blurb="Оставьте email — пришлём бесплатные материалы для первого шага и заведём личный кабинет." />
+                blurb="Оставьте email — пришлем бесплатные материалы для первого шага и заведем личный кабинет." />
         </section>
 
         {{-- ФИНАЛЬНЫЙ CTA --}}

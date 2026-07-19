@@ -31,7 +31,7 @@
 
     @if (empty($e['found']))
         <div class="rounded-xl bg-gray-50 p-6 text-gray-500 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-            За выбранный период нет привлечённых учеников (ни одной первой покупки курса).
+            За выбранный период нет привлеченных учеников (ни одной первой покупки курса).
             Маркетинг за окно: <b>{{ $money($e['spend_total']) }}</b>
             (Директ {{ $money($e['spend_direct']) }} + посты {{ $money($e['spend_posts']) }}).
             Расширьте период.
@@ -52,7 +52,7 @@
             <div class="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
                 <div class="text-sm text-gray-500 dark:text-gray-400">CAC — стоимость привлечения</div>
                 <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $money($e['cac']) }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">маркетинг ÷ {{ $e['cohort_size'] }} привлечённых</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">маркетинг ÷ {{ $e['cohort_size'] }} привлеченных</div>
             </div>
 
             {{-- LTV --}}
@@ -193,9 +193,9 @@
 
         {{-- Допущения (чтобы оператор читал цифры без интерпретации) --}}
         <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <div><b>Привлечён</b> = ученик с первой доступо-открывающей покупкой курса (без брони/пробного) в периоде.</div>
+            <div><b>Привлечен</b> = ученик с первой доступо-открывающей покупкой курса (без брони/пробного) в периоде.</div>
             <div><b>LTV</b> = сумма всех реальных оплат ученика за жизнь (кроме техрасходов и выплат ЗП; возвраты вычитаются).</div>
-            <div><b>Окупаемость</b> = CAC ÷ средний месячный доход с ученика; при свежей когорте LTV ещё не полон — число оптимистично снизу.</div>
+            <div><b>Окупаемость</b> = CAC ÷ средний месячный доход с ученика; при свежей когорте LTV еще не полон — число оптимистично снизу.</div>
         </div>
     @endif
 </x-filament-panels::page>

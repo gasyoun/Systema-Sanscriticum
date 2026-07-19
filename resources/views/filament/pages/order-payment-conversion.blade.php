@@ -66,7 +66,7 @@
                         @php($h = $p['conversion_pct'] === null ? 0 : max(4, (int) round($p['conversion_pct'])))
                         @php($lvl = $p['conversion_pct'] === null ? 'gray' : ($p['conversion_pct'] >= $s['target_pct'] ? 'success' : ($p['conversion_pct'] >= $s['warn_pct'] ? 'warning' : 'danger')))
                         <div class="flex-1 flex flex-col items-center justify-end gap-1"
-                             title="{{ $p['label'] }}: {{ $pct($p['conversion_pct']) }} — {{ $p['paid'] }}/{{ $p['orders'] }} заказов{{ $p['current'] ? ' (текущий, ещё копится)' : '' }}">
+                             title="{{ $p['label'] }}: {{ $pct($p['conversion_pct']) }} — {{ $p['paid'] }}/{{ $p['orders'] }} заказов{{ $p['current'] ? ' (текущий, еще копится)' : '' }}">
                             <span class="text-[10px] {{ $light[$lvl] }} font-semibold">{{ $p['conversion_pct'] === null ? '—' : number_format($p['conversion_pct'], 0) }}</span>
                             <div class="w-full rounded-t {{ $dot[$lvl] }} {{ $p['current'] ? 'opacity-50' : '' }}" style="height: {{ $h }}%"></div>
                             <span class="text-[10px] text-gray-400 dark:text-gray-500 {{ $p['current'] ? 'font-bold' : '' }}">{{ $p['label'] }}</span>
@@ -74,7 +74,7 @@
                     @endforeach
                 </div>
                 <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
-                    Высота = конверсия %. Полупрозрачный столбец — текущий незавершённый период (цифра ещё копится).
+                    Высота = конверсия %. Полупрозрачный столбец — текущий незавершенный период (цифра еще копится).
                 </div>
             </div>
         @endforeach
@@ -156,8 +156,8 @@
 
     {{-- ── Допущения (чтобы читать цифры без интерпретации) ── --}}
     <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-        <div><b>Оформленный заказ</b> = реальный (не conditional) платёж-заказ, кроме техрасходов/выплат ЗП и брони/пробного (config <code>conversion.excluded_tariffs</code>) — намерение купить курс.</div>
-        <div><b>Конверсия</b> считается когортно по дате оформления: из заказов периода — доля дошедших до статуса paid/success. Текущий период занижен лагом (заказы конца окна ещё легитимно «в работе»).</div>
+        <div><b>Оформленный заказ</b> = реальный (не conditional) платеж-заказ, кроме техрасходов/выплат ЗП и брони/пробного (config <code>conversion.excluded_tariffs</code>) — намерение купить курс.</div>
+        <div><b>Конверсия</b> считается когортно по дате оформления: из заказов периода — доля дошедших до статуса paid/success. Текущий период занижен лагом (заказы конца окна еще легитимно «в работе»).</div>
         <div><b>Недожатый заказ</b> = pending дольше {{ $s['unclosed']['after_days'] }} дн. Это ранний сигнал ДО дебиторки@if ($s['receivables_url']) (<a href="{{ $s['receivables_url'] }}" class="text-primary-600 dark:text-primary-400 underline">Дебиторка: план-факт</a>, H257)@endif — источник данных другой (pending-заказы, а не непогашенные обещания), логику дебиторки не дублируем.</div>
         <div>Цель/порог/окна — config/conversion.php (меняются через .env без деплоя). Снимок на {{ $s['as_of'] }}.</div>
     </div>

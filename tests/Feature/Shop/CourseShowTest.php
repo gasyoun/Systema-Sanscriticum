@@ -65,7 +65,7 @@ class CourseShowTest extends TestCase
 
         $html = $this->get('/online/kursy/'.$course->slug)->getContent();
 
-        $this->assertStringContainsString('СЕЙЧАС ИДЁТ', $html);
+        $this->assertStringContainsString('СЕЙЧАС ИДЕТ', $html);
     }
 
     /** @test */

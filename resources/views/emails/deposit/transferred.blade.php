@@ -21,7 +21,7 @@
 
         <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 28px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 6px 0; font-size: 16px;">
-                Сумма предоплаты <strong>зачтётся при оплате нового курса</strong> — доплатить нужно будет только разницу.
+                Сумма предоплаты <strong>зачтется при оплате нового курса</strong> — доплатить нужно будет только разницу.
             </p>
         </div>
 
