@@ -11,6 +11,20 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Corpus-frequency learner surfaces staged (queued, docs-only):** new plan
+  [`docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md)
+  (+ metadoc) staging two Tier-0 integrations via
+  [`/ask-batch`](https://github.com/gasyoun/claude-config/blob/main/commands/ask-batch.md):
+  a frequency-ranked RU root SRS deck
+  ([H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md),
+  kosha `roots_frequency.tsv` × WhitneyRoots RU glosses → existing FSRS stack) and a
+  conjunct-frequency Devanāgarī drill
+  ([H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md),
+  `dcs-grapheme-frequency` → `public/exercises/` family);
+  [`docs/SRS_ROADMAP_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SRS_ROADMAP_2026.md)
+  gains the content-deck row. Fable 5 (`claude-fable-5`).
+
 ## [1.27.0] - 2026-07-18
 
 ### Added
