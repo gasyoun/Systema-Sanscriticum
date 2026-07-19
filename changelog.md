@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.37.0] - 2026-07-20
+
 ### Added
 - **H1288: возврат — страница `/vozvrat` поверх оферты.** Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
