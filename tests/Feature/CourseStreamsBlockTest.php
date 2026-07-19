@@ -48,13 +48,13 @@ class CourseStreamsBlockTest extends TestCase
     }
 
     /** @test */
-    public function block_renders_timer_and_seats_counter(): void
+    public function block_with_real_deadline_and_seats_renders_honest_scarcity(): void
     {
         $course = Course::factory()->create();
         $tariff = Tariff::factory()->create(['course_id' => $course->id]);
 
         $landing = LandingPage::create([
-            'title' => 'Курс с таймером',
+            'title' => 'Курс с дедлайном',
             'slug' => 'course-with-timer',
             'is_active' => true,
             'content' => [[
@@ -73,13 +73,17 @@ class CourseStreamsBlockTest extends TestCase
         $response = $this->get('/'.$landing->slug);
 
         $response->assertOk();
-        $response->assertSee('2099-01-01 12:00:00');   // дата таймера прокинута в x-data
-        $response->assertSee('Доступно мест:');
-        $response->assertSee('Повышение цены через:');
+        $response->assertSee('Текущая цена действует до');
+        $response->assertSee('1 января, 12:00');       // дата словами вместо тикающего отсчета
+        $response->assertSee('Свободных мест:');
+        $response->assertSee('из 10');                 // реальные числа из конфига
+        $response->assertDontSee('Повышение цены через:');
+        $response->assertDontSee('Осталось мало!');
+        $response->assertDontSee('Акция');
     }
 
     /** @test */
-    public function block_without_timer_end_falls_back_and_does_not_error(): void
+    public function block_without_scarcity_config_renders_neither_deadline_nor_seats(): void
     {
         $course = Course::factory()->create();
         $tariff = Tariff::factory()->create(['course_id' => $course->id]);
@@ -98,7 +102,41 @@ class CourseStreamsBlockTest extends TestCase
             ]],
         ]);
 
-        $this->get('/'.$landing->slug)->assertOk();
+        $response = $this->get('/'.$landing->slug);
+
+        $response->assertOk();
+        $response->assertSee('Пн/Ср 19:00');
+        $response->assertDontSee('Повышение цены через:');
+        $response->assertDontSee('Текущая цена действует до');
+        $response->assertDontSee('Доступно мест:');
+        $response->assertDontSee('Свободных мест:');
+    }
+
+    /** @test */
+    public function expired_deadline_is_not_rendered(): void
+    {
+        $course = Course::factory()->create();
+        $tariff = Tariff::factory()->create(['course_id' => $course->id]);
+
+        $landing = LandingPage::create([
+            'title' => 'Курс с истекшим дедлайном',
+            'slug' => 'course-expired-timer',
+            'is_active' => true,
+            'content' => [[
+                'type' => 'course_streams_block',
+                'data' => [
+                    'timer_end' => '2020-01-01 12:00:00',
+                    'streams' => [
+                        ['name' => 'Поток 1', 'schedule' => 'Пн/Ср 19:00', 'tariff_id' => $tariff->id],
+                    ],
+                ],
+            ]],
+        ]);
+
+        $response = $this->get('/'.$landing->slug);
+
+        $response->assertOk();
+        $response->assertDontSee('Текущая цена действует до');
     }
 
     /** @test */

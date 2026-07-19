@@ -789,21 +789,20 @@ class LandingPageResource extends Resource
                                             ->default('Доступна рассрочка'),
 
                                         // === СЮДА ПЕРЕНЕСЛИ НАСТРОЙКИ ДЕФИЦИТА ===
-                                        Section::make('Настройки дефицита (Таймер и Места)')
+                                        Section::make('Настройки дефицита (Дедлайн и Места)')
+                                            ->description('Только реальные данные: что не заполнено — то не показывается. Выдуманных значений по умолчанию больше нет.')
                                             ->schema([
                                                 DateTimePicker::make('timer_end')
-                                                    ->label('Таймер до (Дата и время)')
-                                                    ->helperText('Если не заполнено — возьмется дата вебинара или +24 часа'),
+                                                    ->label('Текущая цена действует до (дата и время)')
+                                                    ->helperText('Указывайте только реальную дату изменения цены. Не заполнено или дата прошла — блок дедлайна не показывается.'),
 
                                                 Grid::make(2)->schema([
                                                     TextInput::make('seats_taken')
                                                         ->label('Занято мест')
-                                                        ->numeric()
-                                                        ->default(16),
+                                                        ->numeric(),
                                                     TextInput::make('seats_total')
                                                         ->label('Всего мест')
-                                                        ->numeric()
-                                                        ->default(20),
+                                                        ->numeric(),
                                                 ]),
                                             ])->collapsible(),
                                         // ==========================================
@@ -834,22 +833,21 @@ class LandingPageResource extends Resource
                                         TextInput::make('subtitle')
                                             ->label('Подзаголовок'),
 
-                                        // Таймер + счётчик мест (как в блоке тарифов)
-                                        Section::make('Настройки дефицита (Таймер и Места)')
+                                        // Дедлайн + счётчик мест (как в блоке тарифов)
+                                        Section::make('Настройки дефицита (Дедлайн и Места)')
+                                            ->description('Только реальные данные: что не заполнено — то не показывается. Выдуманных значений по умолчанию больше нет.')
                                             ->schema([
                                                 DateTimePicker::make('timer_end')
-                                                    ->label('Таймер до (Дата и время)')
-                                                    ->helperText('Если не заполнено — возьмётся дата вебинара или +24 часа'),
+                                                    ->label('Текущая цена действует до (дата и время)')
+                                                    ->helperText('Указывайте только реальную дату изменения цены. Не заполнено или дата прошла — блок дедлайна не показывается.'),
 
                                                 Grid::make(2)->schema([
                                                     TextInput::make('seats_taken')
                                                         ->label('Занято мест')
-                                                        ->numeric()
-                                                        ->default(16),
+                                                        ->numeric(),
                                                     TextInput::make('seats_total')
                                                         ->label('Всего мест')
-                                                        ->numeric()
-                                                        ->default(20),
+                                                        ->numeric(),
                                                 ]),
                                             ])->collapsible(),
 
