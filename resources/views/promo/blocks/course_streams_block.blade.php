@@ -24,81 +24,72 @@
         </div>
 
         {{-- ========================================== --}}
-        {{-- БЛОК ДЕФИЦИТА (Таймер + Места)             --}}
+        {{-- БЛОК ДЕФИЦИТА (только реальные данные, D4) --}}
         {{-- ========================================== --}}
-        <div class="max-w-4xl mx-auto mb-16 bg-white rounded-3xl p-1.5 shadow-[0_10px_40px_rgba(232,92,36,0.1)] border border-orange-100 relative group overflow-hidden">
+        @php
+            // Честный дефицит: рендерятся только настроенные менеджером данные.
+            // Нет реальной даты — нет дедлайна; нет реальных чисел — нет счетчика мест.
+            // Пустая конфигурация деградирует до честного списка потоков, а не до фальшивки.
+            $deadline = null;
+            if (!empty($data['timer_end'])) {
+                $deadline = \Illuminate\Support\Carbon::parse($data['timer_end']);
+                if ($deadline->isPast()) {
+                    $deadline = null; // истекший дедлайн — тоже фальшивка, не показываем
+                }
+            }
 
-            {{-- Мигающий индикатор "Акция" в углу --}}
-            <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E85C24] opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#E85C24]"></span>
-                </span>
-                <span class="text-[10px] font-black uppercase tracking-widest text-[#E85C24]">Акция</span>
-            </div>
+            $seatsTaken = $data['seats_taken'] ?? null;
+            $seatsTotal = $data['seats_total'] ?? null;
+            $showSeats = is_numeric($seatsTaken) && is_numeric($seatsTotal)
+                && (int) $seatsTotal > 0
+                && (int) $seatsTaken >= 0
+                && (int) $seatsTaken <= (int) $seatsTotal;
+            if ($showSeats) {
+                $seatsTaken = (int) $seatsTaken;
+                $seatsTotal = (int) $seatsTotal;
+                $seatsPercent = ($seatsTaken / $seatsTotal) * 100;
+            }
+        @endphp
 
+        @if($deadline || $showSeats)
+        <div class="max-w-4xl mx-auto mb-16 bg-white rounded-3xl p-1.5 shadow-[0_10px_40px_rgba(232,92,36,0.1)] border border-orange-100 relative overflow-hidden">
             <div class="bg-orange-50/50 rounded-[1.25rem] p-6 md:p-8 flex flex-col md:flex-row gap-8 md:gap-12 items-center justify-between relative z-10 border border-white/50">
 
-                {{-- 1. Таймер --}}
-                @php
-                    $timerDate = $data['timer_end'] ?? null;
-                    if(!$timerDate && isset($page) && $page->webinar_date) {
-                        $timerDate = $page->webinar_date->format('Y-m-d H:i:s');
-                    }
-                    if(!$timerDate) {
-                        $timerDate = now()->addHours(24)->format('Y-m-d H:i:s');
-                    }
-                @endphp
-
-                <div x-data="timer('{{ $timerDate }}')" x-init="init()" class="w-full md:w-1/2">
+                @if($deadline)
+                {{-- 1. Дедлайн цены: дата и что изменится, без обратного отсчета --}}
+                <div class="w-full md:w-1/2 text-center md:text-left">
                     <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3 flex items-center justify-center md:justify-start gap-2">
-                        <svg class="w-4 h-4 text-[#E85C24] animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Повышение цены через:
+                        <svg class="w-4 h-4 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Текущая цена действует до
                     </div>
-
-                    <div class="flex gap-2 sm:gap-3 justify-center md:justify-start">
-                        @foreach(['days' => 'Дн', 'hours' => 'Час', 'minutes' => 'Мин', 'seconds' => 'Сек'] as $var => $label)
-                            <div class="flex flex-col items-center">
-                                <div class="bg-white rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.05)] border-b-2 border-[#E85C24]/20 w-12 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-black text-[#101010] font-mono relative overflow-hidden group-hover:border-[#E85C24] transition-colors">
-                                    <div class="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent"></div>
-                                    <span x-text="{{ $var }}" class="relative z-10 text-shadow-sm">00</span>
-                                </div>
-                                <div class="text-[9px] sm:text-[10px] text-gray-400 mt-2 uppercase font-extrabold tracking-widest">{{ $label }}</div>
-                            </div>
-                        @endforeach
+                    <div class="text-3xl font-black text-[#101010] leading-none">
+                        {{ $deadline->format('H:i') === '00:00' ? $deadline->translatedFormat('d F') : $deadline->translatedFormat('d F, H:i') }}
                     </div>
+                    <div class="text-sm text-gray-500 mt-3">После этой даты стоимость будет выше.</div>
                 </div>
+                @endif
 
+                @if($deadline && $showSeats)
                 {{-- Разделитель --}}
                 <div class="hidden md:block w-px h-20 bg-gradient-to-b from-transparent via-orange-200 to-transparent"></div>
+                @endif
 
-                {{-- 2. Анимированный счётчик мест --}}
-                @php
-                    $taken = $data['seats_taken'] ?? 16;
-                    $total = $data['seats_total'] ?? 20;
-                    $percent = ($total > 0) ? ($taken / $total) * 100 : 80;
-                @endphp
+                @if($showSeats)
+                {{-- 2. Места: реальные числа набора из настроек блока --}}
                 <div class="w-full md:w-1/2 max-w-sm">
-                    <div class="flex items-end justify-between mb-3">
-                        <div>
-                            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1">Доступно мест:</div>
-                            <div class="text-3xl font-black text-[#101010] leading-none">{{ $total - $taken }} <span class="text-sm text-gray-400 font-bold">из {{ $total }}</span></div>
-                        </div>
-                        <div class="text-[#E85C24] font-bold text-sm bg-orange-100/50 px-2 py-1 rounded-md animate-pulse">Осталось мало!</div>
+                    <div class="mb-3">
+                        <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1">Свободных мест:</div>
+                        <div class="text-3xl font-black text-[#101010] leading-none">{{ $seatsTotal - $seatsTaken }} <span class="text-sm text-gray-400 font-bold">из {{ $seatsTotal }}</span></div>
                     </div>
-
-                    <div class="w-full bg-white rounded-full h-3.5 mb-2 border border-orange-100 overflow-hidden shadow-inner p-0.5">
-                        <div class="h-full rounded-full relative overflow-hidden transition-all duration-1000 ease-out bg-[#E85C24]" style="width: {{ $percent }}%">
-                            <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.2)_50%,rgba(255,255,255,.2)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress_1s_linear_infinite]"></div>
-                        </div>
-                    </div>
-                    <div class="text-[10px] text-gray-400 text-right font-extrabold uppercase tracking-widest">
-                        Забронировано {{ $taken }} мест
+                    <div class="w-full bg-white rounded-full h-3.5 border border-orange-100 overflow-hidden shadow-inner p-0.5">
+                        <div class="h-full rounded-full bg-[#E85C24] transition-all duration-1000 ease-out" style="width: {{ $seatsPercent }}%"></div>
                     </div>
                 </div>
+                @endif
 
             </div>
         </div>
+        @endif
 
         {{-- Карточки потоков --}}
         @php
@@ -201,40 +192,5 @@
 
     </div>
 
-    {{-- Анимация прогресс-бара и логика таймера. @once — чтобы не дублировать при нескольких блоках на странице. --}}
-    @once
-        <style>
-            @keyframes progress {
-                0% { background-position: 1rem 0; }
-                100% { background-position: 0 0; }
-            }
-        </style>
-
-        <script>
-            function timer(expiry) {
-                return {
-                    expiry: expiry,
-                    remaining: null,
-                    days: '00', hours: '00', minutes: '00', seconds: '00',
-                    init() {
-                        this.setRemaining();
-                        setInterval(() => { this.setRemaining(); }, 1000);
-                    },
-                    setRemaining() {
-                        const diff = Date.parse(this.expiry) - new Date().getTime();
-                        if (diff >= 0) {
-                            this.days = this.format(Math.floor(diff / (1000 * 60 * 60 * 24)));
-                            this.hours = this.format(Math.floor((diff / (1000 * 60 * 60)) % 24));
-                            this.minutes = this.format(Math.floor((diff / 1000 / 60) % 60));
-                            this.seconds = this.format(Math.floor((diff / 1000) % 60));
-                        } else {
-                            this.days = '00'; this.hours = '00'; this.minutes = '00'; this.seconds = '00';
-                        }
-                    },
-                    format(value) { return ("0" + value).slice(-2); }
-                }
-            }
-        </script>
-    @endonce
 </section>
 @endif

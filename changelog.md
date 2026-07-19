@@ -11,6 +11,25 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H1287: честный дефицит — фальшивые таймеры и «16/20 мест» убиты.** Второй
+  Fable-лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md),
+  постановление D4). `price_block` и `course_streams_block` без настройки
+  рендерили обратный отсчет «Повышение цены через:», сбрасывавшийся на +24 часа
+  при каждой загрузке, зашитые «16/20 мест», мигающий бейдж «Акция» и ярлык
+  «Осталось мало!». Теперь дефицит рендерится только с реальными данными:
+  настроенный дедлайн — датой словами («Текущая цена действует до 26 июля,
+  19:00»), а не тикающими цифрами; места — только при явно заполненных числах,
+  без давящих ярлыков; пустая конфигурация деградирует до честного прайса.
+  Фолбэк на дату вебинара и предзаполненные 16/20 в Filament-схеме удалены,
+  истекший дедлайн скрывается. Строки и решения:
+  [`docs/copy/money-honest-scarcity-urgency-rewrite.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-honest-scarcity-urgency-rewrite.md);
+  machine-checkable floor закреплен новым
+  [`tests/Feature/PriceBlockTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/PriceBlockTest.php)
+  (6 тестов) + переписанными сценариями
+  [`tests/Feature/CourseStreamsBlockTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/CourseStreamsBlockTest.php).
+
 ## [1.35.0] - 2026-07-19
 
 ### Added
