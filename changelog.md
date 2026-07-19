@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-07-19
+
 ### Added
 - **H1280 (D4): SRS-колода «Корни санскрита по частотности».** Новая системная колода
   `sanskrit-roots-frequency` в существующем FSRS-тренажёре (H211): 570 санскритских
