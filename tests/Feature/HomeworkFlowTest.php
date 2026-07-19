@@ -10,6 +10,7 @@ use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
+use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\User;
@@ -148,14 +149,14 @@ class HomeworkFlowTest extends TestCase
         [$course, $lesson] = $this->makeLessonWithHomework($teacher, free: false);
         $student = User::factory()->create();
 
-        \App\Models\LessonAccessGrant::create([
+        LessonAccessGrant::create([
             'user_id' => $student->id,
             'lesson_id' => $lesson->id,
             'course_id' => $course->id,
         ]);
 
         // Никаких оплаченных тарифных ключей — доступ только по гранту.
-        $this->assertTrue(\App\Models\LessonAccessGrant::userCanWatch($student, $lesson));
+        $this->assertTrue(LessonAccessGrant::userCanWatch($student, $lesson));
 
         $this->actingAs($student)->post(
             route('student.homework.store', [$course->slug, $lesson->id]),
@@ -274,5 +275,109 @@ class HomeworkFlowTest extends TestCase
         $this->assertTrue($ids->contains($courseA->id));
         $this->assertFalse($ids->contains($courseB->id), 'Препод A не должен видеть сдачи курса препода B.');
         $this->assertSame(1, HomeworkSubmissionResource::getEloquentQuery()->count(), 'Черновик не должен попадать в выборку.');
+    }
+
+    /** @test */
+    public function student_can_attach_video_to_homework(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $response = $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Ответ видеозаписью',
+                'files' => [UploadedFile::fake()->create('answer.mp4', 4096, 'video/mp4')],
+            ]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->where('lesson_id', $lesson->id)->first();
+        $this->assertNotNull($submission);
+        $file = $submission->comments->first()->files->first();
+        $this->assertSame('answer.mp4', $file->original_name);
+        Storage::disk('local')->assertExists($file->path);
+    }
+
+    /** @test */
+    public function student_can_mix_photo_audio_and_video_in_one_submission(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $response = $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Всё сразу',
+                'files' => [
+                    UploadedFile::fake()->image('photo.jpg'),
+                    UploadedFile::fake()->create('voice.mp3', 512, 'audio/mpeg'),
+                    UploadedFile::fake()->create('answer.mov', 2048, 'video/quicktime'),
+                ],
+            ]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->where('lesson_id', $lesson->id)->first();
+        $this->assertCount(3, $submission->comments->first()->files);
+    }
+
+    /** @test */
+    public function executable_files_are_still_rejected(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $response = $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Попытка',
+                'files' => [UploadedFile::fake()->create('payload.php', 8, 'application/x-php')],
+            ]
+        );
+
+        $response->assertSessionHasErrors('files.0');
+        $this->assertNull(HomeworkSubmission::where('user_id', $student->id)->first());
+    }
+
+    /** @test */
+    public function submission_over_the_total_size_cap_is_rejected_with_a_readable_error(): void
+    {
+        config(['homework.total_max_kb' => 5120]); // 5 МБ на всю отправку
+
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $response = $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Три тяжёлых видео',
+                'files' => [
+                    UploadedFile::fake()->create('a.mp4', 2048, 'video/mp4'),
+                    UploadedFile::fake()->create('b.mp4', 2048, 'video/mp4'),
+                    UploadedFile::fake()->create('c.mp4', 2048, 'video/mp4'),
+                ],
+            ]
+        );
+
+        // Каждый файл по отдельности в лимит укладывается — ловится именно сумма.
+        $response->assertSessionHasErrors('files');
+        $this->assertStringContainsString(
+            'Суммарный размер файлов',
+            session('errors')->first('files')
+        );
+        $this->assertNull(HomeworkSubmission::where('user_id', $student->id)->first());
     }
 }
