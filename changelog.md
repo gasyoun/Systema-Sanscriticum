@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-07-19
+
 ### Added
 - **H164: Telegram Track C — @zapisi_ORSbot (class-booking bot) integration.**
   Executes the locked D7–D11 rulings
@@ -35,9 +37,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   new code — Track B's existing `TELEGRAM_HARVEST_PEERS` mechanism already
   handles it once the chat's numeric id is discovered on a live host via
   `telegram-harvest:peers`; D8b (disable bot privacy mode via @BotFather) is a
-  human action, filed as a GTD `@DO`. 10 new feature tests (webhook secret
+  human action, filed as a GTD `@DO`. 17 new feature tests (webhook secret
   verification, normalization/store, media download, roster fetch/command,
-  reminder scheduler). Sonnet 5 (`claude-sonnet-5`).
+  reminder scheduler, D11 peer-scoped backfill download). Sonnet 5
+  (`claude-sonnet-5`). [PR #593](https://github.com/gasyoun/Systema-Sanscriticum/pull/593).
   [H164](https://github.com/gasyoun/Uprava/blob/main/handoffs/H164-Sonnet_DO_telegram-sanskrit-corpus_zapisi_orsbot_integration_04.07.26.md).
 
 ## [1.30.0] - 2026-07-19
