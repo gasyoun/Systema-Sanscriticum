@@ -86,6 +86,20 @@ class StudentChatService
             return;
         }
 
+        // 1.6. Self-service «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
+        if ($this->selfService->matchesHomeworkIntent($text)) {
+            $this->botSay($user, $this->selfService->homeworkSummary($user));
+
+            return;
+        }
+
+        // 1.7. Self-service /help — детерминированное меню, минуя ИИ (H1357).
+        if ($this->selfService->matchesHelpIntent($text)) {
+            $this->botSay($user, $this->selfService->helpMenu());
+
+            return;
+        }
+
         // 2. Режим человека уже включён — ИИ молчит, ждём куратора.
         if (Cache::has($this->humanModeKey($user))) {
             return;
