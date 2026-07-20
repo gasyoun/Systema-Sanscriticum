@@ -408,6 +408,11 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- H1291: возражение «время/расписание» — снято у самого расписания, а не в FAQ --}}
+            <p class="mt-6 text-sm text-slate-500 max-w-3xl" data-analytics="objection-time-microcopy">
+                Не попадаете по времени? Занятие останется в записи — вернетесь к нему, когда будет тишина. Пропуск не выбивает из курса.
+            </p>
         </section>
         @endif
 
@@ -764,6 +769,31 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                {{-- H1291: возражение «цена» — ответ рядом с ценой, микрокопией, не блоком.
+                     Каждая строка условна: блочная — только при блочных тарифах, запрос
+                     «по частям» — только при настроенном кураторском чате (как сам запрос
+                     H1290 на чекауте). Формулировки: docs/copy/money-objection-corpus-pos-microcopy.md --}}
+                <div class="mt-8 max-w-3xl space-y-2.5" data-analytics="objection-price-microcopy">
+                    @if($blockGroups->count() > 0)
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Платить за весь курс сразу не нужно: оплачиваете ближайший блок — обычно это 4 занятия — и решаете о продолжении после него.
+                        </p>
+                    @endif
+                    @if(config('services.telegram.curators_chat_id'))
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Нужно разбить оплату на части? Спросите на шаге оплаты — запрос куратору ни к чему не обязывает.
+                        </p>
+                    @endif
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Пенсионерам, студентам и многодетным — льготная цена: <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-slate-300 underline decoration-slate-600 underline-offset-2 hover:text-white transition-colors">напишите куратору в Telegram</a>.
+                    </p>
+                    <div class="pt-1 text-xs text-slate-500">
+                        <a href="{{ route('refund.show') }}" target="_blank" class="inline-flex items-center gap-1.5 hover:text-slate-300 transition-colors">
+                            <i class="fas fa-rotate text-[10px]"></i> Возврат: до начала — 100%
+                        </a>
+                    </div>
                 </div>
 
             @else

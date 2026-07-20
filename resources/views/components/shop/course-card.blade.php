@@ -211,6 +211,11 @@
                             </div>
                         </div>
                     @endif
+
+                    {{-- H1291: единица «/ блок» объяснена там же, где показана --}}
+                    @if($blockTariff)
+                        <p class="text-[10px] text-slate-500 leading-snug">Блок — обычно 4 занятия.</p>
+                    @endif
                 </div>
 
                 {{-- Бейдж "куплено" --}}
