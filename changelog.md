@@ -29,6 +29,34 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   which were failing on `origin/main` at `c81a35d` independent of any other
   in-flight PR. Removed the `created_at` special-case; percent-type events now
   roll forward through `rollForwardMonth()` exactly like the fixed schemes.
+- **H1391: checkout on phones (iPhone + Android) — four measured defects.**
+  Reported only as "checkout issue on iPhone", with no symptom named, so the
+  page was served locally and its geometry measured in a real browser at
+  360/375/430/1280 px rather than guessed at.
+  (1) **The pay button rendered as a 3-line stack.** Its flex row was
+  `nowrap`, so the line could not break *between* items and squeezed the label
+  instead — «К безопасной оплате» wrapped *inside words* to three lines and
+  the primary CTA stood **116 px** tall against an intended ~60. Reproduced on
+  **both** 360 px Android and 375 px iPhone; now one line and 88 px at 360 px
+  (56 px at 430 px), with desktop untouched.
+  (2) **The cookie bar sat on top of the bottom of every page.** It is
+  `fixed bottom-0 z-[200]` and stacks to a column on mobile — **164 px, 24.6 %
+  of a 375×667 viewport** — while `body` had no compensating padding. It now
+  reserves its own height while open and releases it on dismiss.
+  (3) **The pay button could hang forever.** The pre-submit CSRF `fetch` had
+  no timeout and the button is disabled *before* the await, so a single
+  stalled mobile connection left it permanently dead. Now bounded by a 4 s
+  `AbortController`; submission proceeds either way.
+  (4) **The prana slider was unusable by touch.** The `input[type=range]` box
+  *was* its 8 px visual track — about 18 % of the 44 px iOS minimum — with no
+  `touch-action`, so an imprecise drag resolved as a page scroll. Now a 44 px
+  hit area with the track still drawn at 8 px.
+  Also: the trust row was `hidden sm:flex`, hiding the МИР card list **and the
+  page's only link to the refund policy** on every phone — it now wraps
+  instead of hiding, and the slider thumb's `:hover` scale moved behind
+  `@media (hover: hover)` so it stops sticking after a touch drag.
+  No server-side or payment logic changed; the checkout POST path was
+  re-verified end to end (guest user + `Payment` row created).
 
 ## [1.44.0] - 2026-07-20
 
