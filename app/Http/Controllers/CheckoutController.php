@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
 use App\Models\PromoCode;
-use App\Models\Tariff; // Не забываем импортировать модель!
+use App\Models\StudentDiscount; // Не забываем импортировать модель!
+use App\Models\Tariff;
+use App\Services\CuratorNotifier;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use Illuminate\Http\JsonResponse;
@@ -90,6 +92,46 @@ class CheckoutController extends Controller
         return back()->with('success', 'Промокод успешно применен!');
     }
 
+    /**
+     * Запрос «разбить оплату на части» с чекаута (H1290, ruling D6).
+     *
+     * Ничего не создаёт в деньгах: ни PaymentPromise, ни рассрочки, ни
+     * пользователя — только уведомление кураторам через CuratorNotifier и
+     * подтверждение студенту. График согласует куратор вручную в рамках
+     * лимитов config/receivables.php (финансовое решение — fence rule 2).
+     */
+    public function requestInstallments(Request $request, Tariff $tariff, PranaService $prana, CuratorNotifier $notifier)
+    {
+        abort_unless($tariff->is_active, 404, 'Тариф недоступен для покупки.');
+
+        $validated = $request->validateWithBag('installments', [
+            // Гость анонимен — без контакта куратору некуда писать.
+            'contact' => [$request->user() ? 'nullable' : 'required', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:100'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'contact.required' => 'Оставьте контакт — Telegram, телефон или email, иначе куратору некуда написать.',
+            'contact.max' => 'Слишком длинный контакт — достаточно одного способа связи.',
+            'comment.max' => 'Слишком длинный комментарий — сократите до 1000 символов.',
+        ]);
+
+        // Та же цена, что студент видит на этой странице (лояльность + промокод).
+        $state = $this->computeState($tariff, $prana);
+
+        $notifier->installmentAskReceived(
+            $tariff->load('course'),
+            $request->user(),
+            $validated['name'] ?? null,
+            $validated['contact'] ?? null,
+            $validated['comment'] ?? null,
+            (float) $state['finalPrice'],
+        );
+
+        return redirect()
+            ->to(route('checkout.show', $tariff).'#installments')
+            ->with('installments_requested', true);
+    }
+
     // Снять промокод
     public function removePromo(Request $request, Tariff $tariff, PranaService $prana)
     {
@@ -141,7 +183,7 @@ class CheckoutController extends Controller
 
         // Персональная скидка на курс имеет приоритет над лояльностью — для подписи в UI.
         $isPersonal = $user
-            && \App\Models\StudentDiscount::activeFor($user->id, $tariff->course_id, $tariff->block_number) !== null;
+            && StudentDiscount::activeFor($user->id, $tariff->course_id, $tariff->block_number) !== null;
 
         $basePrice = (float) $tariff->price;
         $finalPrice = $tariff->calculateFinalPriceForUser($user);

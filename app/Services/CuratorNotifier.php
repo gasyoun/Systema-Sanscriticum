@@ -12,6 +12,7 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -316,6 +317,45 @@ class CuratorNotifier
             'Отменено обещаний: <b>'.$count.'</b>',
             $this->adminLink($promise->user),
         ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Студент попросил разбить оплату на части прямо с чекаута (H1290).
+     * Запрос НЕ создаёт ни PaymentPromise, ни рассрочку — только зовёт
+     * куратора; график и условия согласуются вручную в рамках лимитов
+     * config/receivables.php (ruling D6).
+     */
+    public function installmentAskReceived(
+        Tariff $tariff,
+        ?User $user,
+        ?string $name,
+        ?string $contact,
+        ?string $comment,
+        float $finalPrice,
+    ): void {
+        $lines = [
+            '🙋 <b>Запрос оплаты по частям</b> — с чекаута',
+            '',
+            $user
+                ? $this->studentLine($user)
+                : 'Студент: <b>'.($name !== null && $name !== '' ? e($name) : 'гость').'</b> (не авторизован)',
+            $this->courseLine($tariff->course),
+            'Тариф: <b>'.e((string) $tariff->title).'</b>',
+            'Цена для студента: <b>'.$this->money($finalPrice).'</b>',
+        ];
+        if ($contact !== null && $contact !== '') {
+            $lines[] = 'Связаться: '.e($contact);
+        }
+        if ($comment !== null && $comment !== '') {
+            $lines[] = 'Комментарий: '.e($comment);
+        }
+        $lines[] = '';
+        $lines[] = 'План не создан — свяжитесь со студентом и согласуйте график.';
+        if ($user) {
+            $lines[] = $this->adminLink($user);
+        }
 
         $this->dispatchToCurators($this->join($lines));
     }

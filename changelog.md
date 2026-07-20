@@ -11,6 +11,26 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1290: installments — the no-shame «разбить на части» checkout ask.**
+  Лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Механика рассрочки (`InstallmentPlanCreator` + `PaymentPromise`) была
+  полностью невидима студенту — прямой ответ на возражение ЦЕНА существовал
+  только на стороне куратора. Теперь на чекауте под кнопкой оплаты — тихая
+  точка входа «Нужно разбить оплату на части?»
+  ([`partials/installments-cta`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/installments-cta.blade.php)):
+  форма запроса зовёт куратора через существующий `CuratorNotifier`
+  (Telegram-чат) и подтверждает студенту на месте («платить сейчас ничего не
+  нужно»). **Запрос не создаёт ни `PaymentPromise`, ни рассрочку, ни
+  пользователя** (ruling D6 — условия согласует куратор в рамках лимитов
+  финдира); блок скрыт, если кураторский чат не настроен. Регистр: «оплата по
+  частям» вместо кредитно-коннотированной «рассрочки», планирование вместо
+  уступки, никаких выдуманных условий. Строки и 9 unattended-решений:
+  [`docs/copy/money-installments-no-shame-checkout-ask.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-installments-no-shame-checkout-ask.md);
+  7 новых feature-тестов
+  ([`tests/Feature/InstallmentRequestTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/InstallmentRequestTest.php)).
+
 ## [1.41.0] - 2026-07-20
 
 ### Added
