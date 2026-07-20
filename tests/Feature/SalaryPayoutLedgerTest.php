@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Group;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Services\TeacherPayoutPoster;
 use App\Services\TeacherSalaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -158,7 +160,7 @@ class SalaryPayoutLedgerTest extends TestCase
         ]);
 
         // render() компилирует blade — ловит ParseError (inline @if после слова).
-        $html = (new \App\Mail\TeacherPayoutReportMail($payout->id))->render();
+        $html = (new TeacherPayoutReportMail($payout->id))->render();
 
         $this->assertStringContainsString('Курс PayPal на 08.05.2026', $html);
         $this->assertStringContainsString('132.48 €', $html);
@@ -223,7 +225,7 @@ class SalaryPayoutLedgerTest extends TestCase
         ]);
 
         $fresh = $payout->fresh();
-        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $fresh->rate_date);
+        $this->assertInstanceOf(Carbon::class, $fresh->rate_date);
         $this->assertSame('2026-05-08', $fresh->rate_date->toDateString());
     }
 

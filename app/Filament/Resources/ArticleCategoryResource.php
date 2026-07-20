@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class ArticleCategoryResource extends Resource
 {
@@ -46,7 +47,7 @@ class ArticleCategoryResource extends Resource
                     ->afterStateUpdated(function (string $operation, ?string $state, Forms\Set $set): void {
                         // Автогенерация slug только при создании, чтобы не ломать уже работающие URL
                         if ($operation === 'create' && ! empty($state)) {
-                            $set('slug', \Illuminate\Support\Str::slug($state));
+                            $set('slug', Str::slug($state));
                         }
                     }),
 

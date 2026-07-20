@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Services\ProfitFundsService;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * «Фонды прибыли» (H259, фаза D плана noboring /cases/education).
@@ -55,7 +56,7 @@ class ProfitFunds extends Page
     {
         // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
         // DelegationKpi::getNavigationBadge (тяжёлый snapshot ронял панель в 500).
-        return \Illuminate\Support\Facades\Cache::get('nav_badge.profit_funds');
+        return Cache::get('nav_badge.profit_funds');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -70,7 +71,7 @@ class ProfitFunds extends Page
     {
         $snap = app(ProfitFundsService::class)->snapshot();
 
-        \Illuminate\Support\Facades\Cache::put(
+        Cache::put(
             'nav_badge.profit_funds',
             ($snap['reserve_level'] ?? null) === 'danger' ? '!' : null,
             now()->addMinutes(30),

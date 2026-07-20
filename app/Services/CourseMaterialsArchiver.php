@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use PhpZip\Constants\ZipCompressionMethod;
@@ -166,7 +167,7 @@ class CourseMaterialsArchiver
      * Собирает текстовый файл со ссылками на видео уроков, сгруппированный по блокам.
      * Возвращает null, если ни одной ссылки нет.
      */
-    private function buildVideoLinksFile(Course $course, \Illuminate\Support\Collection $lessons): ?string
+    private function buildVideoLinksFile(Course $course, Collection $lessons): ?string
     {
         /** @var VideoLinkNormalizer $normalizer */
         $normalizer = app(VideoLinkNormalizer::class);

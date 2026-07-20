@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Partner;
+use App\Services\PartnerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Публичный лендинг партнёрской программы + приём заявок. Все условия и цифры
@@ -49,7 +49,7 @@ class PartnerController extends Controller
                 $request->session()->put('pref', $code);
             }
             if ($request->user()) {
-                app(\App\Services\PartnerService::class)->attachPartner($request->user(), $code);
+                app(PartnerService::class)->attachPartner($request->user(), $code);
             }
         }
 

@@ -37,6 +37,21 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   deploy-рубильник `features.checkout_stale_order_expiry` (off by default,
   `CHECKOUT_STALE_ORDER_EXPIRY=true` + `config:cache` to enable).
 
+### Fixed
+- **H1355: CI green + enforcing — flaky VK deep-link assertion, secretless
+  Deploy-production job, 110 hidden Pint violations.** Three CI gaps: (1)
+  `VkAuthTokenLinkingTest`'s substring-based `ref` assertion could collide by
+  chance against a random 32-char token — now an exact query-param compare;
+  (2) `.github/workflows/deploy.yml`'s "Deploy production" job painted `main`
+  red on every push because prod SSH secrets aren't set yet (H478 gate) — now
+  skips cleanly (success, not failure) until a human wires them; (3)
+  `.github/workflows/ci.yml`'s Pint step had `continue-on-error: true` hiding
+  96 files of violations — fixed and made enforcing. Pint's own auto-fix
+  introduced a real bug (moved `use` imports below their first `::class`
+  usage in `routes/api.php`/`scripts/export-analytics-tables.php`, silently
+  resolving to the wrong namespace) — caught by the full suite and fixed by
+  hand.
+
 ## [1.43.0] - 2026-07-20
 
 ### Added

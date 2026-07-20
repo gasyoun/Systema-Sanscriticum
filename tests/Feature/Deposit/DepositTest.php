@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Deposit;
 
+use App\Mail\DepositReceivedMail;
 use App\Mail\StudentWelcomeMail;
 use App\Models\Course;
 use App\Models\Group;
@@ -102,7 +103,7 @@ class DepositTest extends TestCase
         ]);
 
         Mail::assertQueued(
-            \App\Mail\DepositReceivedMail::class,
+            DepositReceivedMail::class,
             fn ($mail) => $mail->hasTo($user->email) && $mail->course->chat_url === 'https://t.me/course_chat'
         );
     }
@@ -134,7 +135,7 @@ class DepositTest extends TestCase
 
         // Повторному студенту welcome не шлём, а подтверждение брони — да.
         Mail::assertNotQueued(StudentWelcomeMail::class);
-        Mail::assertQueued(\App\Mail\DepositReceivedMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(DepositReceivedMail::class, fn ($mail) => $mail->hasTo($user->email));
     }
 
     /** @test */

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\Activity\ActivityTracker;
 use App\Services\Prana\PranaService;
+use App\Services\StreakService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -76,9 +79,9 @@ final class TrackUserActivity
             $this->prana->awardDailyLogin($user);
 
             // Серия активных дней (streak) — обновляется раз в день (guard внутри touch()).
-            app(\App\Services\StreakService::class)->touch($user);
+            app(StreakService::class)->touch($user);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('TrackUserActivity failed', [
+            Log::warning('TrackUserActivity failed', [
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
@@ -119,7 +122,7 @@ final class TrackUserActivity
             // Edge case: юзер залогинен, но сессии нет (например, уже был залогинен
             // когда мы выкатили трекинг — Login event не срабатывал).
             // Создаём сессию "на лету".
-            $user = \App\Models\User::find($userId);
+            $user = User::find($userId);
             if ($user) {
                 $this->tracker->startSession($user, $request);
             }

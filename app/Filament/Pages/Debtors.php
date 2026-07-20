@@ -16,11 +16,14 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Services\ConditionalAccessGranter;
+use App\Services\DebtorReminderDispatcher;
 use App\Services\DebtorsReport;
+use App\Services\Discipline\DisciplineScore;
 use App\Services\DisciplineScoreService;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
 use App\Support\RoleGate;
+use Carbon\CarbonInterface;
 use Filament\Forms;
 use Filament\Infolists;
 use Filament\Notifications\Notification;
@@ -31,6 +34,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -59,7 +63,7 @@ class Debtors extends Page implements HasTable
     /** @var array<int, Payment|null> */
     private static array $paymentCache = [];
 
-    /** @var array<int, \App\Services\Discipline\DisciplineScore> */
+    /** @var array<int, DisciplineScore> */
     private static array $disciplineCache = [];
 
     /** @var array<string, list<int>>  ключ "{course_id}:{ref}:{yearSig}" */
@@ -68,7 +72,7 @@ class Debtors extends Page implements HasTable
     /** @var array<int, array<int, int>>  course_id => [block_number => year] (по starts_at) */
     private static array $blockYearsCache = [];
 
-    /** @var array<string, \Illuminate\Database\Eloquent\Collection<int, Payment>>  ключ "{user_id}:{course_id}" */
+    /** @var array<string, Collection<int, Payment>>  ключ "{user_id}:{course_id}" */
     private static array $userCoursePaymentsCache = [];
 
     /** @var array<string, array{amount:?float, missing:int}>  ключ "{user_id}:{course_id}:{yearSig}" */
@@ -255,9 +259,9 @@ class Debtors extends Page implements HasTable
                         }
                         $bits[] = '#'.$r->id;
                         if (! empty($r->last_activity_at)) {
-                            $dt = $r->last_activity_at instanceof \Carbon\CarbonInterface
+                            $dt = $r->last_activity_at instanceof CarbonInterface
                                 ? $r->last_activity_at
-                                : \Illuminate\Support\Carbon::parse($r->last_activity_at);
+                                : Carbon::parse($r->last_activity_at);
                             $bits[] = 'был '.$dt->diffForHumans();
                         }
 
@@ -758,7 +762,7 @@ class Debtors extends Page implements HasTable
         return $result;
     }
 
-    private static function disciplineFor(int $userId): \App\Services\Discipline\DisciplineScore
+    private static function disciplineFor(int $userId): DisciplineScore
     {
         if (isset(self::$disciplineCache[$userId])) {
             return self::$disciplineCache[$userId];
@@ -1280,7 +1284,7 @@ class Debtors extends Page implements HasTable
                     return;
                 }
 
-                $ok = app(\App\Services\DebtorReminderDispatcher::class)->send(
+                $ok = app(DebtorReminderDispatcher::class)->send(
                     $user,
                     (int) $r->course_id,
                     $r->ref_block_number !== null ? (int) $r->ref_block_number : null,

@@ -8,7 +8,9 @@ use App\Services\ClassAttendanceService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Actions;
+use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
@@ -16,7 +18,7 @@ use Illuminate\Support\Carbon;
  * хронических неявок, экспорт CSV. Только реюз ClassAttendanceService — вся
  * логика подсчёта уже была (forSchedule), здесь только агрегаты.
  */
-class AttendanceDashboard extends \Filament\Pages\Page
+class AttendanceDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
 
@@ -52,7 +54,7 @@ class AttendanceDashboard extends \Filament\Pages\Page
         return now()->subDays((int) config('attendance.default_window_days'));
     }
 
-    /** @return array{students: \Illuminate\Support\Collection, groups: \Illuminate\Support\Collection, courses: \Illuminate\Support\Collection, weekly: \Illuminate\Support\Collection, chronic: \Illuminate\Support\Collection} */
+    /** @return array{students: Collection, groups: Collection, courses: Collection, weekly: Collection, chronic: Collection} */
     public function report(): array
     {
         return app(ClassAttendanceService::class)->dashboard(

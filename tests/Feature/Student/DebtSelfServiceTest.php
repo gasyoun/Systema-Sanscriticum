@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\BlockAccessMaterializer;
 use App\Services\DebtPaymentResolver;
 use App\Services\StudentDebtsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -348,7 +349,7 @@ class DebtSelfServiceTest extends TestCase
         ]);
 
         // Повторный вызов материализатора (дубль вебхука) не плодит строки.
-        app(\App\Services\BlockAccessMaterializer::class)->materialize($primary->fresh());
+        app(BlockAccessMaterializer::class)->materialize($primary->fresh());
 
         $this->assertCount(1, Payment::where('transaction_id', 'access_grant_#'.$primary->id)->get());
     }

@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Services\DelegationKpiService;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * «KPI делегирования» — панель оператора (H259, фаза D, венец плана noboring
@@ -60,7 +61,7 @@ class DelegationKpi extends Page
      */
     public static function getNavigationBadge(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::get('nav_badge.delegation_kpi');
+        return Cache::get('nav_badge.delegation_kpi');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -76,7 +77,7 @@ class DelegationKpi extends Page
         $snap = app(DelegationKpiService::class)->snapshot();
 
         // Прогреваем кэш значка из уже посчитанного снимка (см. getNavigationBadge).
-        \Illuminate\Support\Facades\Cache::put(
+        Cache::put(
             'nav_badge.delegation_kpi',
             $snap['ok'] ? null : '!',
             now()->addMinutes(30),

@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\CourseFaq;
 use App\Models\Lesson;
+use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\Testimonial;
 use Illuminate\Database\Seeder;
@@ -114,12 +115,12 @@ class CourseLandingDemoSeeder extends Seeder
         $course->testimonials()->sync($ids);
 
         // Тарифы: весь курс + отдельный блок (для наглядного блока «Тарифы»).
-        \App\Models\Tariff::updateOrCreate(
+        Tariff::updateOrCreate(
             ['course_id' => $course->id, 'type' => 'full', 'block_number' => null],
             ['title' => 'Весь курс', 'price' => 24000, 'old_price' => 30000, 'is_active' => true,
                 'description' => 'Полный доступ ко всем модулям и записям навсегда.']
         );
-        \App\Models\Tariff::updateOrCreate(
+        Tariff::updateOrCreate(
             ['course_id' => $course->id, 'type' => 'block', 'block_number' => 1, 'block_half' => null],
             ['title' => 'Блок 1 · Письмо и фонетика', 'price' => 9000, 'is_active' => true]
         );

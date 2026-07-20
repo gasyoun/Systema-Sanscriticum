@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Reactivation\WinBackSender;
 use App\Services\ReactivationReport;
 use App\Support\RoleGate;
+use Carbon\CarbonInterface;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -21,6 +22,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Реактивация «уснувшей» базы — ТОЛЬКО ЧТЕНИЕ. Список кандидатов (не продлил /
@@ -95,9 +97,9 @@ class Reactivation extends Page implements HasTable
                         }
                         $bits[] = '#'.$r->id;
                         if (! empty($r->last_activity_at)) {
-                            $dt = $r->last_activity_at instanceof \Carbon\CarbonInterface
+                            $dt = $r->last_activity_at instanceof CarbonInterface
                                 ? $r->last_activity_at
-                                : \Illuminate\Support\Carbon::parse($r->last_activity_at);
+                                : Carbon::parse($r->last_activity_at);
                             $bits[] = 'был '.$dt->diffForHumans();
                         }
 

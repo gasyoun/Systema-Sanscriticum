@@ -16,6 +16,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 class TeacherPayoutResource extends Resource
 {
@@ -68,7 +69,7 @@ class TeacherPayoutResource extends Resource
             $parts[] = 'блок '.$b['block_number'];
         }
         if (! empty($b['block_period']['starts_at']) || ! empty($b['block_period']['ends_at'])) {
-            $fmt = fn (?string $d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d.m.Y') : '…';
+            $fmt = fn (?string $d) => $d ? Carbon::parse($d)->format('d.m.Y') : '…';
             $parts[] = $fmt($b['block_period']['starts_at'] ?? null).'–'.$fmt($b['block_period']['ends_at'] ?? null);
         }
         if (! empty($b['base_revenue'])) {
@@ -179,7 +180,7 @@ class TeacherPayoutResource extends Resource
                     ->label('Период')
                     ->placeholder('—')
                     ->formatStateUsing(fn (?string $state): string => $state
-                        ? \Illuminate\Support\Carbon::createFromFormat('Y-m', $state)->translatedFormat('F Y')
+                        ? Carbon::createFromFormat('Y-m', $state)->translatedFormat('F Y')
                         : '—')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('course.title')

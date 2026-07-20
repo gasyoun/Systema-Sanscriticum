@@ -72,7 +72,6 @@ jobs:
 
       - name: Laravel Pint format check
         run: ./vendor/bin/pint --test
-        continue-on-error: true
 
       - name: PHPUnit tests
         # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it

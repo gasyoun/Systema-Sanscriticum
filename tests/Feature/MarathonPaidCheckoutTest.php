@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Lead;
 use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\User;

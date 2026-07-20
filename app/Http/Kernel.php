@@ -2,7 +2,44 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CaptureAttribution;
+use App\Http\Middleware\CapturePartnerReferral;
+use App\Http\Middleware\CaptureReferral;
+use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\StudentMaintenance;
+use App\Http\Middleware\TrackUserActivity;
+use App\Http\Middleware\TrimStrings;
+use App\Http\Middleware\TrustProxies;
+use App\Http\Middleware\ValidateSignature;
+use App\Http\Middleware\VerifyCsrfToken;
+use App\Http\Middleware\VerifyLeadStepWebhook;
+use App\Http\Middleware\VerifyMaxMagnetWebhook;
+use App\Http\Middleware\VerifyPartnerBotWebhook;
+use App\Http\Middleware\VerifyTelegramBotWebhook;
+use App\Http\Middleware\VerifyTelegramMagnetWebhook;
+use App\Http\Middleware\VerifyTelegramZapisiWebhook;
+use App\Http\Middleware\VerifyVkBotWebhook;
+use App\Http\Middleware\VerifyVkMagnetCallback;
+use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
+use Illuminate\Auth\Middleware\Authorize;
+use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
+use Illuminate\Auth\Middleware\RequirePassword;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Middleware\SetCacheHeaders;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class Kernel extends HttpKernel
 {
@@ -15,12 +52,12 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
-        \App\Http\Middleware\TrustProxies::class,
-        \Illuminate\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        TrustProxies::class,
+        HandleCors::class,
+        PreventRequestsDuringMaintenance::class,
+        ValidatePostSize::class,
+        TrimStrings::class,
+        ConvertEmptyStringsToNull::class,
     ];
 
     /**
@@ -30,21 +67,21 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\CaptureReferral::class,
-            \App\Http\Middleware\CapturePartnerReferral::class,
-            \App\Http\Middleware\CaptureAttribution::class,
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            StartSession::class,
+            ShareErrorsFromSession::class,
+            VerifyCsrfToken::class,
+            SubstituteBindings::class,
+            CaptureReferral::class,
+            CapturePartnerReferral::class,
+            CaptureAttribution::class,
         ],
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ThrottleRequests::class.':api',
+            SubstituteBindings::class,
         ],
     ];
 
@@ -56,33 +93,33 @@ class Kernel extends HttpKernel
      * @var array<string, class-string|string>
      */
     protected $middlewareAliases = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
-        'signed' => \App\Http\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        'auth' => Authenticate::class,
+        'auth.basic' => AuthenticateWithBasicAuth::class,
+        'auth.session' => AuthenticateSession::class,
+        'cache.headers' => SetCacheHeaders::class,
+        'can' => Authorize::class,
+        'guest' => RedirectIfAuthenticated::class,
+        'password.confirm' => RequirePassword::class,
+        'precognitive' => HandlePrecognitiveRequests::class,
+        'signed' => ValidateSignature::class,
+        'throttle' => ThrottleRequests::class,
+        'verified' => EnsureEmailIsVerified::class,
+        'admin' => AdminMiddleware::class,
         // --- ТРЕКИНГ АКТИВНОСТИ СТУДЕНТОВ ---
-        'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+        'track.activity' => TrackUserActivity::class,
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
-        'student.maintenance' => \App\Http\Middleware\StudentMaintenance::class,
+        'student.maintenance' => StudentMaintenance::class,
         // --- LEAD-MAGNET WEBHOOKS ---
-        'verify.tg.magnet' => \App\Http\Middleware\VerifyTelegramMagnetWebhook::class,
-        'verify.vk.magnet' => \App\Http\Middleware\VerifyVkMagnetCallback::class,
-        'verify.max.magnet' => \App\Http\Middleware\VerifyMaxMagnetWebhook::class,
-        'verify.n8n.leadstep' => \App\Http\Middleware\VerifyLeadStepWebhook::class,
+        'verify.tg.magnet' => VerifyTelegramMagnetWebhook::class,
+        'verify.vk.magnet' => VerifyVkMagnetCallback::class,
+        'verify.max.magnet' => VerifyMaxMagnetWebhook::class,
+        'verify.n8n.leadstep' => VerifyLeadStepWebhook::class,
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
-        'verify.tg.bot' => \App\Http\Middleware\VerifyTelegramBotWebhook::class,
-        'verify.vk.bot' => \App\Http\Middleware\VerifyVkBotWebhook::class,
+        'verify.tg.bot' => VerifyTelegramBotWebhook::class,
+        'verify.vk.bot' => VerifyVkBotWebhook::class,
         // --- ПАРТНЁРСКИЙ БОТ (enforce-if-configured) ---
-        'verify.partner.bot' => \App\Http\Middleware\VerifyPartnerBotWebhook::class,
+        'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
-        'verify.tg.zapisi' => \App\Http\Middleware\VerifyTelegramZapisiWebhook::class,
+        'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
     ];
 }

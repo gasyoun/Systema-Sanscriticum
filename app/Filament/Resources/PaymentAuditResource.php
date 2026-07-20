@@ -9,10 +9,12 @@ use App\Models\PaymentAudit;
 use App\Support\RoleGate;
 use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class PaymentAuditResource extends Resource
 {
@@ -95,7 +97,7 @@ class PaymentAuditResource extends Resource
                     ->label('Сумма')
                     ->money('RUB', locale: 'ru')
                     ->color(fn (PaymentAudit $r): string => (float) $r->amount < 0 ? 'danger' : 'gray')
-                    ->alignment(\Filament\Support\Enums\Alignment::End),
+                    ->alignment(Alignment::End),
 
                 Tables\Columns\TextColumn::make('changes')
                     ->label('Изменения')
@@ -139,10 +141,10 @@ class PaymentAuditResource extends Resource
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['from'] ?? null) {
-                            $indicators[] = 'С '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                            $indicators[] = 'С '.Carbon::parse($data['from'])->format('d.m.Y');
                         }
                         if ($data['until'] ?? null) {
-                            $indicators[] = 'По '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                            $indicators[] = 'По '.Carbon::parse($data['until'])->format('d.m.Y');
                         }
 
                         return $indicators;

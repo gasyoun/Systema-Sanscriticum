@@ -3,14 +3,21 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\ScheduledReminder;
 use App\Models\User;
+use App\Services\Access\StudentUnblockService;
+use App\Services\Prana\PranaService;
+use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
 use App\Support\RoleGate;
 use App\Support\Roles;
+use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
@@ -21,9 +28,15 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 class UserResource extends Resource
 {
@@ -177,7 +190,7 @@ class UserResource extends Resource
                         Forms\Components\Select::make('role')
                             ->label('Роль в админке')
                             ->helperText('Без роли — обычный студент, без доступа в админку. Роль «Преподаватель» назначается через раздел «Преподаватели».')
-                            ->options(function (?\Illuminate\Database\Eloquent\Model $record) {
+                            ->options(function (?Model $record) {
                                 $all = Roles::all();
                                 if (! RoleGate::isSuperAdmin()) {
                                     // Бухгалтер имеет доступ к выплатам, которого нет у обычного
@@ -195,7 +208,7 @@ class UserResource extends Resource
                                 return $all;
                             })
                             // Серверная защита от подмены значения через DevTools/POST.
-                            ->rule(function (?\Illuminate\Database\Eloquent\Model $record) {
+                            ->rule(function (?Model $record) {
                                 $allowed = RoleGate::isSuperAdmin()
                                     ? Roles::all()
                                     : array_diff_key(Roles::all(), array_flip([Roles::SUPER_ADMIN, Roles::ADMIN, Roles::ACCOUNTANT]));
@@ -208,13 +221,13 @@ class UserResource extends Resource
                                     $keys[] = $record->role;
                                 }
 
-                                return \Illuminate\Validation\Rule::in([null, ...$keys]);
+                                return Rule::in([null, ...$keys]);
                             })
                             ->placeholder('— Студент —')
                             ->live()
                             ->visible(fn () => RoleGate::adminOnly()),
 
-                        Forms\Components\Toggle::make('is_lecture_editor')
+                        Toggle::make('is_lecture_editor')
                             ->label('Редактор лекций')
                             ->helperText('Доступ к панели сборки лекций (без доступа в админку)')
                             ->onColor('success')
@@ -227,7 +240,7 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\Placeholder::make('prana_balance_view')
                             ->label('Баланс')
-                            ->content(fn (?\App\Models\User $record) => $record
+                            ->content(fn (?User $record) => $record
                                 ? number_format((int) $record->prana_balance, 0, '.', ' ').' праны'
                                 : '—'),
                     ])
@@ -240,7 +253,7 @@ class UserResource extends Resource
      * Рендерит примечание куратора с кликабельными ссылками.
      * XSS-безопасно: сначала экранируем весь текст, затем вставляем только наши <a>.
      */
-    protected static function linkifyNote(?string $note): \Illuminate\Support\HtmlString
+    protected static function linkifyNote(?string $note): HtmlString
     {
         $html = e((string) $note);
 
@@ -292,7 +305,7 @@ class UserResource extends Resource
             $html
         );
 
-        return new \Illuminate\Support\HtmlString(nl2br($html));
+        return new HtmlString(nl2br($html));
     }
 
     /**
@@ -351,7 +364,7 @@ class UserResource extends Resource
                             ->label('Мессенджеры')
                             ->state(function (User $record): string {
                                 $fmt = fn ($d): string => $d
-                                    ? ' (с '.\Carbon\Carbon::parse($d)->format('d.m.Y').')'
+                                    ? ' (с '.Carbon::parse($d)->format('d.m.Y').')'
                                     : '';
                                 $handle = $record->telegram_username ? ' @'.$record->telegram_username : '';
                                 $tg = $record->telegram_id ? '✈ Telegram'.$handle.$fmt($record->telegram_connected_at) : '';
@@ -415,9 +428,9 @@ class UserResource extends Resource
                             ->label('Последний визит')
                             ->formatStateUsing(fn ($state): string => $state === null
                                 ? 'Никогда'
-                                : \Carbon\Carbon::parse($state)->diffForHumans())
+                                : Carbon::parse($state)->diffForHumans())
                             ->tooltip(fn ($state): ?string => $state
-                                ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
+                                ? Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
                                 : null),
 
                         TextEntry::make('activity_stats')
@@ -589,7 +602,7 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->placeholder('—')
                     ->formatStateUsing(fn ($state): ?string => $state
-                        ? \Carbon\Carbon::parse($state)->format('d.m.Y H:i')
+                        ? Carbon::parse($state)->format('d.m.Y H:i')
                         : null),
 
                 Tables\Columns\TextColumn::make('vk_connected_at')
@@ -598,7 +611,7 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->placeholder('—')
                     ->formatStateUsing(fn ($state): ?string => $state
-                        ? \Carbon\Carbon::parse($state)->format('d.m.Y H:i')
+                        ? Carbon::parse($state)->format('d.m.Y H:i')
                         : null),
 
                 // --- КОЛОНКА 3: СТАТУС ---
@@ -625,16 +638,16 @@ class UserResource extends Resource
                             return 'Никогда';
                         }
 
-                        return \Carbon\Carbon::parse($state)->diffForHumans();
+                        return Carbon::parse($state)->diffForHumans();
                     })
                     ->tooltip(fn ($state): ?string => $state
-                        ? \Carbon\Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
+                        ? Carbon::parse($state)->translatedFormat('d.m.Y H:i:s')
                         : null)
                     ->color(function ($state): string {
                         if ($state === null) {
                             return 'gray';
                         }
-                        $d = \Carbon\Carbon::parse($state);
+                        $d = Carbon::parse($state);
                         if ($d->gt(now()->subMinutes(5))) {
                             return 'success';
                         }
@@ -651,7 +664,7 @@ class UserResource extends Resource
                         if ($state === null) {
                             return 'heroicon-m-minus-circle';
                         }
-                        $d = \Carbon\Carbon::parse($state);
+                        $d = Carbon::parse($state);
                         if ($d->gt(now()->subMinutes(5))) {
                             return 'heroicon-m-signal';
                         }
@@ -785,7 +798,7 @@ class UserResource extends Resource
                 Tables\Filters\Filter::make('stuck')
                     ->label('Застрявшие (неактив./ДЗ висит)')
                     ->query(fn (Builder $query): Builder => $query->whereIn(
-                        'id', \App\Services\StuckStudentsReport::query()->select('users.id')
+                        'id', StuckStudentsReport::query()->select('users.id')
                     ))
                     ->indicator('Застрявшие'),
 
@@ -889,7 +902,7 @@ class UserResource extends Resource
                     ])
                     ->action(function (User $record, array $data) {
                         $admin = auth()->user();
-                        if (! $admin || ! \App\Support\RoleGate::adminOnly()) {
+                        if (! $admin || ! RoleGate::adminOnly()) {
                             Notification::make()->title('Недостаточно прав.')->danger()->send();
 
                             return;
@@ -899,7 +912,7 @@ class UserResource extends Resource
                         $delta = $data['direction'] === 'deduct' ? -$amount : $amount;
 
                         try {
-                            $newBalance = app(\App\Services\Prana\PranaService::class)
+                            $newBalance = app(PranaService::class)
                                 ->adminAdjust($record, $delta, $admin, $data['comment'] ?? null);
 
                             Notification::make()
@@ -916,7 +929,7 @@ class UserResource extends Resource
                                 ->danger()
                                 ->send();
                         } catch (\Throwable $e) {
-                            \Illuminate\Support\Facades\Log::error('Admin prana adjust failed', [
+                            Log::error('Admin prana adjust failed', [
                                 'user_id' => $record->id,
                                 'admin_id' => $admin->id,
                                 'delta' => $delta,
@@ -977,14 +990,14 @@ class UserResource extends Resource
                                 ->title('Новый пароль успешно отправлен на почту студента!')
                                 ->success()
                                 ->send();
-                        } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
+                        } catch (RfcComplianceException $e) {
                             Notification::make()
                                 ->title('Некорректный email')
                                 ->body("Symfony Mailer отклонил адрес «{$email}». Пароль не сброшен.")
                                 ->danger()
                                 ->send();
                         } catch (\Throwable $e) {
-                            \Illuminate\Support\Facades\Log::error('Send password failed', [
+                            Log::error('Send password failed', [
                                 'user_id' => $record->id,
                                 'email' => $email,
                                 'error' => $e->getMessage(),
@@ -1010,7 +1023,7 @@ class UserResource extends Resource
                     ->tooltip('Разблокировать (ссылка для входа)')
                     ->visible(fn () => RoleGate::adminOnly())
                     ->form([
-                        \Filament\Forms\Components\Toggle::make('reset_password')
+                        Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
                             ->helperText('Обычно не нужно: ссылка входит без пароля.')
                             ->default(false),
@@ -1032,7 +1045,7 @@ class UserResource extends Resource
                                 ->send();
                         }
 
-                        $result = app(\App\Services\Access\StudentUnblockService::class)
+                        $result = app(StudentUnblockService::class)
                             ->unblock($record, auth()->id(), (bool) ($data['reset_password'] ?? false));
 
                         $body = "Одноразовая ссылка для входа (24 ч) — передайте студенту:\n{$result['login_link']}";
@@ -1125,11 +1138,11 @@ class UserResource extends Resource
                         ->modalWidth('6xl')
                         ->modalSubmitActionLabel('Проставить пустые')
                         ->deselectRecordsAfterCompletion()
-                        ->modalContent(fn (\Illuminate\Database\Eloquent\Collection $records) => view(
+                        ->modalContent(fn (Collection $records) => view(
                             'filament.user-courses.blocks-preview-students',
                             ['rows' => self::buildBlocksPreviewForUsers($records)],
                         ))
-                        ->action(fn (\Illuminate\Database\Eloquent\Collection $records) => self::applyBlocksFromNotesForUsers($records)),
+                        ->action(fn (Collection $records) => self::applyBlocksFromNotesForUsers($records)),
 
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
@@ -1146,13 +1159,13 @@ class UserResource extends Resource
                         ->form([
                             Forms\Components\Select::make('target_group_id')
                                 ->label('Целевая группа')
-                                ->options(\App\Models\Group::query()->orderBy('name')->pluck('name', 'id'))
+                                ->options(Group::query()->orderBy('name')->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->helperText('Курс определяется по выбранной группе.'),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
-                            $group = \App\Models\Group::with('courses')->find($data['target_group_id']);
+                        ->action(function (Collection $records, array $data) {
+                            $group = Group::with('courses')->find($data['target_group_id']);
 
                             if (! $group) {
                                 Notification::make()->title('Группа не найдена')->danger()->send();
@@ -1206,7 +1219,7 @@ class UserResource extends Resource
                         ->visible(fn () => RoleGate::adminOnly())
                         ->modalHeading('Сообщение выбранным студентам')
                         ->modalSubmitActionLabel('Отправить')
-                        ->modalContent(fn (\Illuminate\Database\Eloquent\Collection $records) => view(
+                        ->modalContent(fn (Collection $records) => view(
                             'filament.users.messenger-reach',
                             self::messengerReach($records),
                         ))
@@ -1217,10 +1230,10 @@ class UserResource extends Resource
                                 ->rows(5)
                                 ->maxLength(4000)
                                 ->helperText('Можно с переносами строк. HTML-ссылки <a href> превратятся в кликабельные/текстовые автоматически.'),
-                            Forms\Components\Toggle::make('to_telegram')->label('В Telegram')->default(true),
-                            Forms\Components\Toggle::make('to_vk')->label('В VK')->default(true),
+                            Toggle::make('to_telegram')->label('В Telegram')->default(true),
+                            Toggle::make('to_vk')->label('В VK')->default(true),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                        ->action(function (Collection $records, array $data) {
                             $toTg = (bool) ($data['to_telegram'] ?? false);
                             $toVk = (bool) ($data['to_vk'] ?? false);
 
@@ -1239,7 +1252,7 @@ class UserResource extends Resource
 
                                     continue;
                                 }
-                                \App\Jobs\SendMessengerAlerts::dispatch($user, $data['message'], $toTg, $toVk);
+                                SendMessengerAlerts::dispatch($user, $data['message'], $toTg, $toVk);
                                 $sent++;
                             }
 
@@ -1261,7 +1274,7 @@ class UserResource extends Resource
                         ->modalHeading('Разослать доступы выбранным студентам?')
                         ->modalDescription('Система сгенерирует уникальные пароли и отправит письма. Студенты, которым доступ уже отправлялся (есть отметка в примечании), будут пропущены для защиты от спама.')
                         ->modalSubmitActionLabel('Да, отправить')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                        ->action(function (Collection $records) {
                             $sentCount = 0;
                             $skippedCount = 0;
                             $invalidEmails = []; // битые адреса
@@ -1289,7 +1302,7 @@ class UserResource extends Resource
                                 }
 
                                 // 3. Генерируем пароль заранее, но НЕ сохраняем до успешной отправки
-                                $newPassword = \Illuminate\Support\Str::random(8);
+                                $newPassword = Str::random(8);
 
                                 $emailText = "Намасте, {$record->name}!\n\n"
                                     ."Ваш доступ к личному кабинету обучающей платформы открыт.\n\n"
@@ -1300,24 +1313,24 @@ class UserResource extends Resource
 
                                 try {
                                     // 4. Сначала пытаемся отправить письмо
-                                    \Illuminate\Support\Facades\Mail::raw($emailText, function ($message) use ($email) {
+                                    Mail::raw($emailText, function ($message) use ($email) {
                                         $message->to($email)
                                             ->subject('Ваш доступ к обучающей платформе');
                                     });
 
                                     // 5. И только если почта ушла — сохраняем пароль и ставим штамп
                                     $record->update([
-                                        'password' => \Illuminate\Support\Facades\Hash::make($newPassword),
+                                        'password' => Hash::make($newPassword),
                                         'note' => trim(($record->note ?? '')."\n\n[Доступ отправлен: ".now()->format('d.m.Y H:i').']'),
                                     ]);
 
                                     $sentCount++;
-                                } catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
+                                } catch (RfcComplianceException $e) {
                                     // RFC-невалидный адрес, который filter_var всё-таки пропустил
                                     $invalidEmails[] = "#{$record->id} {$record->name} ({$email})";
                                 } catch (\Throwable $e) {
                                     // SMTP упал, таймаут, что угодно — логируем и идём дальше
-                                    \Illuminate\Support\Facades\Log::error('Bulk access mail failed', [
+                                    Log::error('Bulk access mail failed', [
                                         'user_id' => $record->id,
                                         'email' => $email,
                                         'error' => $e->getMessage(),
@@ -1339,7 +1352,7 @@ class UserResource extends Resource
                                 }
                             }
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Рассылка завершена')
                                 ->body($body)
                                 ->{ (count($invalidEmails) + count($failedEmails)) > 0 ? 'warning' : 'success' }()
@@ -1356,10 +1369,10 @@ class UserResource extends Resource
      * по каждому выделенному студенту — все его курсы с текущими/распознанными
      * блоками и тем, что реально проставится (только в пустые колонки).
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $users
+     * @param  Collection<int, User>  $users
      * @return list<array<string, mixed>>
      */
-    public static function buildBlocksPreviewForUsers(\Illuminate\Database\Eloquent\Collection $users): array
+    public static function buildBlocksPreviewForUsers(Collection $users): array
     {
         $users->loadMissing('courses');
         $rows = [];
@@ -1396,9 +1409,9 @@ class UserResource extends Resource
      * Применяет распознанные блоки по всем курсам выделенных студентов — только в
      * пустые колонки. Шлёт сводку-нотификацию.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $users
+     * @param  Collection<int, User>  $users
      */
-    public static function applyBlocksFromNotesForUsers(\Illuminate\Database\Eloquent\Collection $users): void
+    public static function applyBlocksFromNotesForUsers(Collection $users): void
     {
         $users->loadMissing('courses');
         $setEntry = 0;
@@ -1448,10 +1461,10 @@ class UserResource extends Resource
     /**
      * Охват рассылки по выбранным студентам — для превью в модалке.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>  $records
+     * @param  Collection<int, User>  $records
      * @return array{total: int, tg: int, vk: int, reachable: int}
      */
-    public static function messengerReach(\Illuminate\Database\Eloquent\Collection $records): array
+    public static function messengerReach(Collection $records): array
     {
         return [
             'total' => $records->count(),

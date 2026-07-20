@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PaymentResource\RelationManagers;
 
 use App\Models\PaymentAudit;
+use App\Support\RoleGate;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -78,6 +79,6 @@ class AuditsRelationManager extends RelationManager
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
         // Таймлайн — инструмент контроля владельца; менеджеру/бухгалтеру не нужен.
-        return \App\Support\RoleGate::adminOnly();
+        return RoleGate::adminOnly();
     }
 }

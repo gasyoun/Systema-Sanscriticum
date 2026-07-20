@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Filament\Resources\LeadResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Lead;
 
@@ -86,7 +87,7 @@ class LeadNotifier
     private function adminLink(): string
     {
         try {
-            $url = \App\Filament\Resources\LeadResource::getUrl('index');
+            $url = LeadResource::getUrl('index');
         } catch (\Throwable) {
             $url = url('/admin');
         }

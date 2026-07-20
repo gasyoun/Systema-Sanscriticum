@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\Lesson;
 use App\Models\LessonView;
+use App\Models\WebinarAttendance;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -74,7 +76,7 @@ class TeacherAnalytics
             ->where('is_completed', true)->distinct()->count('user_id');
         $viewsCompleted = LessonView::query()->whereIn('course_id', $courseIds)
             ->where('is_completed', true)->count();
-        $lessonsTotal = \App\Models\Lesson::query()->whereIn('course_id', $courseIds)->count();
+        $lessonsTotal = Lesson::query()->whereIn('course_id', $courseIds)->count();
 
         return [
             'opened' => $opened,
@@ -93,7 +95,7 @@ class TeacherAnalytics
     public function studentProgress(): Collection
     {
         $courseIds = $this->courseIds();
-        $totalLessons = \App\Models\Lesson::query()->whereIn('course_id', $courseIds)->count();
+        $totalLessons = Lesson::query()->whereIn('course_id', $courseIds)->count();
 
         return LessonView::query()
             ->whereIn('lesson_views.course_id', $courseIds)
@@ -131,7 +133,7 @@ class TeacherAnalytics
     {
         $courseIds = $this->courseIds();
 
-        return \App\Models\WebinarAttendance::query()
+        return WebinarAttendance::query()
             ->join('schedules', 'schedules.id', '=', 'webinar_attendances.schedule_id')
             ->whereIn('schedules.course_id', $courseIds)
             ->groupBy('schedules.id', 'schedules.title', 'schedules.start')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
+use App\Filament\Pages\Debtors;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
@@ -271,7 +272,7 @@ class PaymentPromisesRelationManager extends RelationManager
                         $refs = $report->referenceBlocks();
                         $refBlock = $refs->get((int) $r->course_id);
                         $blocks = $refBlock
-                            ? \App\Filament\Pages\Debtors::debtBlocks((int) $r->user_id, (int) $r->course_id, (int) $refBlock->number)
+                            ? Debtors::debtBlocks((int) $r->user_id, (int) $r->course_id, (int) $refBlock->number)
                             : [];
                         $info = ! empty($blocks)
                             ? $report->computeDebtAmount($r->user, (int) $r->course_id, $blocks)

@@ -19,6 +19,7 @@ class PartnerConversion extends Model
     use HasFactory;
 
     public const STATUS_ACCRUED = 'accrued';
+
     public const STATUS_PAID_OUT = 'paid_out';
 
     public const STATUSES = [

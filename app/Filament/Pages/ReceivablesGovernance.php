@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Services\ReceivablesGovernanceService;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * «Дебиторка: план-факт» (H257, фаза C плана noboring /cases/education).
@@ -57,7 +58,7 @@ class ReceivablesGovernance extends Page
     {
         // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
         // DelegationKpi::getNavigationBadge (тяжёлый snapshot ронял панель в 500).
-        return \Illuminate\Support\Facades\Cache::get('nav_badge.receivables');
+        return Cache::get('nav_badge.receivables');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -72,7 +73,7 @@ class ReceivablesGovernance extends Page
     {
         $snap = app(ReceivablesGovernanceService::class)->snapshot();
 
-        \Illuminate\Support\Facades\Cache::put(
+        Cache::put(
             'nav_badge.receivables',
             $snap['ok'] ? null : '!',
             now()->addMinutes(30),

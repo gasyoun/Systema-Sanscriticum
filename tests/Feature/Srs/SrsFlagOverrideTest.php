@@ -36,4 +36,3 @@ class SrsFlagOverrideTest extends TestCase
         $this->assertTrue(app('router')->has('student.srs.stats'));
     }
 }
-

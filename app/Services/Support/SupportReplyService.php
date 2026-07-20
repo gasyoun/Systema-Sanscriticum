@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
+use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -83,7 +84,7 @@ class SupportReplyService
         // иначе запись остаётся pending до настройки userbot (без пустого job'а).
         $queued = (bool) config('services.telegram_support.enabled');
         if ($queued) {
-            \App\Jobs\DeliverSupportReply::dispatch($message->id);
+            DeliverSupportReply::dispatch($message->id);
         }
 
         Log::info('SupportReplyService: ответ записан в TG-support', [
