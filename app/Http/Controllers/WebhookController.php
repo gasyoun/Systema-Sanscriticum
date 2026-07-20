@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\PaymentWebhookEvent;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
@@ -55,6 +56,10 @@ class WebhookController extends Controller
             // сузить эвристику. NULL = считаем такой платёж вилкой.
             $paymentMethod = $this->extractPaymentMethod($payload);
 
+            // Сумма из банка — для сверки с payments.amount (H1359, guard c).
+            // Извлекается так же оборонительно, как способ оплаты: отсутствует => null => не сверяем.
+            $reportedAmount = $this->extractReportedAmount($payload);
+
             // Логируем только статус — без полного payload (там ФИО/суммы/атрибуты
             // покупателя, которые не должны копиться в файловых логах). Трассировка
             // по номеру заказа обеспечивается сообщениями ниже.
@@ -65,6 +70,17 @@ class WebhookController extends Controller
 
             if (! $paymentId) {
                 Log::info("Вебхук: В purpose нет номера заказа. Purpose: {$purpose}");
+            }
+
+            // Идемпотентность по телу события (H1359): sha256 сырого JWT.
+            $eventHash = hash('sha256', $jwt);
+            $guard = (bool) config('features.tochka_webhook_guard');
+
+            // (a) Повтор уже виденной доставки: при включённой защите — 200-no-op,
+            // не переигрываем success-путь. Уникальный индекс event_hash — истинный
+            // страж от гонок; эта проверка лишь даёт ответить 200 без второй вставки.
+            if ($guard && PaymentWebhookEvent::where('event_hash', $eventHash)->exists()) {
+                Log::info("Вебхук: повтор доставки (event_hash) — no-op. Заказ №{$paymentId}");
 
                 return response('OK', 200);
             }
@@ -74,15 +90,60 @@ class WebhookController extends Controller
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
-            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $successStatuses, $failureStatuses) {
-                $payment = Payment::lockForUpdate()->find($paymentId);
+            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $reportedAmount, $eventHash, $guard, $successStatuses, $failureStatuses) {
+                $payment = $paymentId ? Payment::lockForUpdate()->find($paymentId) : null;
+
+                // Решение по этой доставке для журнала; по умолчанию — как раньше.
+                $decision = PaymentWebhookEvent::DECISION_APPLIED;
+                $apply = true;
 
                 if (! $payment) {
-                    Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
+                    // Подписанная доставка без совпавшего локального платежа.
+                    $decision = PaymentWebhookEvent::DECISION_UNMATCHED;
+                    $apply = false;
+                    if ($paymentId) {
+                        Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
+                    }
+                } elseif (in_array($statusFromBank, $successStatuses, true)) {
+                    // (b) Воскрешение: платёж был оплачен и затем отменён/возвращён.
+                    // Повторный/переигранный success-JWT не должен воскрешать доступ,
+                    // депозит, промо-слот и реферала (см. fireOnPaid blast radius в PR).
+                    if ($guard
+                        && ! in_array($payment->status, Payment::PAID_STATUSES, true)
+                        && $payment->hasPriorPaidTransition()
+                    ) {
+                        $decision = PaymentWebhookEvent::DECISION_REJECTED_RESURRECTION;
+                        $apply = false;
+                        Log::warning("⛔ Вебхук: отклонено воскрешение отменённого платежа №{$payment->id} (текущий статус {$payment->status}).");
+                    }
+                    // (c) Сумма из банка расходится с суммой заказа сверх допуска.
+                    elseif ($guard && $this->amountMismatches($payment, $reportedAmount)) {
+                        $decision = PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH;
+                        $apply = false;
+                        Log::warning("⛔ Вебхук: сумма банка {$reportedAmount} расходится с заказом №{$payment->id} ({$payment->amount}).");
+                    }
+                }
 
+                // Журнал: одна строка на КАЖДУЮ подписанную доставку (аддитивно, не
+                // зависит от флага). firstOrCreate — чтобы повтор при флаге OFF не
+                // ломал уникальный индекс, а сохранял идемпотентный no-op как раньше.
+                PaymentWebhookEvent::firstOrCreate(
+                    ['event_hash' => $eventHash],
+                    [
+                        'provider' => 'tochka',
+                        'payment_id' => $payment?->id,
+                        'bank_status' => $statusFromBank,
+                        'reported_amount' => $reportedAmount,
+                        'decision' => $decision,
+                        'created_at' => now(),
+                    ]
+                );
+
+                if (! $apply || ! $payment) {
                     return;
                 }
 
+                // ===== Существующее поведение (при флаге OFF — без изменений) =====
                 if (in_array($statusFromBank, $successStatuses, true)) {
                     if ($payment->status !== 'paid') {
                         $update = ['status' => 'paid'];
@@ -114,6 +175,43 @@ class WebhookController extends Controller
 
             return response('Server error', 500);
         }
+    }
+
+    /**
+     * Сумма платежа из payload Точки, в рублях, или null если поля нет.
+     *
+     * Извлекается оборонительно, как и способ оплаты (extractPaymentMethod):
+     * точное имя поля в реальном payload Точки ещё не подтверждено, поэтому
+     * пробуем известные варианты; отсутствие поля => null => сверка суммы
+     * пропускается (доступ выдаётся как раньше). Так гуард остаётся свободен от
+     * любой зависимости от живого банка/кредов.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function extractReportedAmount(array $payload): ?float
+    {
+        foreach (['amount', 'sum', 'paymentAmount', 'totalAmount', 'operationAmount'] as $k) {
+            if (isset($payload[$k]) && is_numeric($payload[$k])) {
+                return (float) $payload[$k];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Сумма из банка расходится с payments.amount сверх допуска
+     * (config('checkout.webhook_amount_tolerance'))? Сумма не пришла => не сверяем.
+     */
+    private function amountMismatches(Payment $payment, ?float $reportedAmount): bool
+    {
+        if ($reportedAmount === null) {
+            return false;
+        }
+
+        $tolerance = (float) config('checkout.webhook_amount_tolerance', 1.00);
+
+        return abs($reportedAmount - (float) $payment->amount) > $tolerance;
     }
 
     /**

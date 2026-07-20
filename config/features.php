@@ -287,6 +287,19 @@ return [
     'checkout_stale_order_expiry' => (bool) env('CHECKOUT_STALE_ORDER_EXPIRY', false),
 
     /*
+     | Защита денежного вебхука Точки (H1359). Когда ВКЛ, WebhookController
+     | отклоняет три класса опасных доставок: (a) повтор уже виденного тела
+     | события (event_hash) — идемпотентный 200-no-op; (b) success для платежа,
+     | который был оплачен и затем отменён/возвращён (resurrection) — не даёт
+     | воскресить доступ/депозит/промо/реферала; (c) сумму из банка, расходящуюся
+     | с payments.amount сверх config('checkout.webhook_amount_tolerance'). ВЫКЛ
+     | по умолчанию: журнал payment_webhook_events пишется ВСЕГДА (чисто
+     | аддитивно), но отказы — только при включённом флаге. Включение —
+     | TOCHKA_WEBHOOK_GUARD=true + config:cache после ревью.
+     */
+    'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', false),
+
+    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —

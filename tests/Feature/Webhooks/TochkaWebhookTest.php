@@ -7,6 +7,7 @@ namespace Tests\Feature\Webhooks;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Payment;
+use App\Models\PaymentWebhookEvent;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -191,5 +192,178 @@ PEM;
             'sbp' => ['sbp', 'sbp'],
             'dolyame (рассрочка)' => ['dolyame', 'dolyame'],
         ];
+    }
+
+    // ================= H1359: ledger + resurrection/amount guards =================
+
+    /**
+     * Общий фикстур: pending-платёж на курс с одной группой доступа.
+     *
+     * @return array{0: Payment, 1: User, 2: Group}
+     */
+    private function makePendingPayment(int $amount = 4800): array
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::create(['name' => 'G']);
+        $course->groups()->attach($group->id);
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => $amount,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        return [$payment, $user, $group];
+    }
+
+    /**
+     * Флаг OFF — паритет: платёж оплачен, отменён (возврат), затем повторный
+     * success-вебхук ВОСКРЕШАЕТ его обратно в paid. Это фиксирует СЕГОДНЯШНЕЕ
+     * (уязвимое) поведение — доказательство, что при выключенном флаге денежный
+     * PR прод-инертен и ничего не меняет.
+     *
+     * @test
+     */
+    public function flag_off_paid_then_failed_then_replay_still_resurrects(): void
+    {
+        config(['features.tochka_webhook_guard' => false]);
+        $this->useTestKey();
+        [$payment] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']))->assertOk();
+        $this->assertSame('paid', $payment->fresh()->status);
+
+        // Возврат админом.
+        $payment->update(['status' => 'failed']);
+        $this->assertSame('failed', $payment->fresh()->status);
+
+        // Повторная (отличающаяся телом) success-доставка того же заказа.
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid', 'paymentType' => 'card']))->assertOk();
+
+        // Без флага — воскрешение происходит, как и сегодня.
+        $this->assertSame('paid', $payment->fresh()->status);
+    }
+
+    /**
+     * Флаг ON — воскрешение отклонено: тот же сценарий paid→failed→replay
+     * оставляет платёж failed, доступ не воскресает, а журнал фиксирует отказ.
+     *
+     * @test
+     */
+    public function flag_on_replay_after_reversal_is_refused(): void
+    {
+        config(['features.tochka_webhook_guard' => true]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']))->assertOk();
+        $this->assertSame('paid', $payment->fresh()->status);
+
+        $payment->update(['status' => 'failed']);
+
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid', 'paymentType' => 'card']))->assertOk();
+
+        // Не воскрешён.
+        $this->assertSame('failed', $payment->fresh()->status);
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $payment->id,
+            'decision' => PaymentWebhookEvent::DECISION_REJECTED_RESURRECTION,
+        ]);
+    }
+
+    /**
+     * Флаг ON — повтор той же доставки (тот же event_hash) — идемпотентный
+     * no-op: второй раз группа не выдаётся, новой строки в журнале нет.
+     *
+     * @test
+     */
+    public function flag_on_duplicate_delivery_is_a_noop(): void
+    {
+        config(['features.tochka_webhook_guard' => true]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']);
+
+        $this->postJwt($jwt)->assertOk();
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertSame(1, PaymentWebhookEvent::count());
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+
+        // Тот же JWT снова — короткое замыкание, без второй строки и без дубля групп.
+        $this->postJwt($jwt)->assertOk();
+        $this->assertSame(1, PaymentWebhookEvent::count());
+        $this->assertSame(1, $user->fresh()->groups()->count());
+    }
+
+    /**
+     * Флаг ON — сумма из банка расходится с суммой заказа: доступ не выдаётся,
+     * платёж остаётся pending, журнал фиксирует rejected_amount_mismatch.
+     *
+     * @test
+     */
+    public function flag_on_amount_mismatch_grants_nothing(): void
+    {
+        config(['features.tochka_webhook_guard' => true]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment(4800);
+
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid', 'amount' => 9999]);
+        $this->postJwt($jwt)->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups->contains($group->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $payment->id,
+            'decision' => PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH,
+        ]);
+    }
+
+    /**
+     * Флаг ON — success с совпадающей суммой всё так же выдаёт доступ и пишет
+     * decision=applied. Гуард не ломает нормальный путь.
+     *
+     * @test
+     */
+    public function flag_on_matched_amount_success_grants(): void
+    {
+        config(['features.tochka_webhook_guard' => true]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment(4800);
+
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid', 'amount' => 4800]);
+        $this->postJwt($jwt)->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $payment->id,
+            'decision' => PaymentWebhookEvent::DECISION_APPLIED,
+        ]);
+    }
+
+    /**
+     * Флаг OFF — журнал пишется всё равно (чисто аддитивно): обычный success
+     * выдаёт доступ как раньше И оставляет строку decision=applied.
+     *
+     * @test
+     */
+    public function flag_off_records_ledger_row_on_delivery(): void
+    {
+        config(['features.tochka_webhook_guard' => false]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $payment->id,
+            'decision' => PaymentWebhookEvent::DECISION_APPLIED,
+        ]);
     }
 }

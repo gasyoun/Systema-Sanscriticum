@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\Payment;
+use App\Models\PaymentWebhookEvent;
 use App\Models\PromoCode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +71,43 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
             ->expectsOutputToContain('Negative referral wallets: 1')
             ->expectsOutputToContain('Reversed orders with stranded deposit credit: 1')
             ->expectsOutputToContain('Legacy pending promo links without expiry: 1')
+            ->assertSuccessful();
+    }
+
+    public function test_dry_run_reports_rejected_webhook_deliveries(): void
+    {
+        // Два отказных решения журнала (H1359) + одно applied, которое НЕ должно
+        // попасть в отчёт об отклонённых доставках.
+        PaymentWebhookEvent::create([
+            'provider' => 'tochka',
+            'payment_id' => null,
+            'event_hash' => 'hash-mismatch',
+            'bank_status' => 'paid',
+            'reported_amount' => 9999,
+            'decision' => PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH,
+            'created_at' => now(),
+        ]);
+        PaymentWebhookEvent::create([
+            'provider' => 'tochka',
+            'payment_id' => null,
+            'event_hash' => 'hash-resurrection',
+            'bank_status' => 'paid',
+            'reported_amount' => null,
+            'decision' => PaymentWebhookEvent::DECISION_REJECTED_RESURRECTION,
+            'created_at' => now(),
+        ]);
+        PaymentWebhookEvent::create([
+            'provider' => 'tochka',
+            'payment_id' => null,
+            'event_hash' => 'hash-applied',
+            'bank_status' => 'paid',
+            'reported_amount' => null,
+            'decision' => PaymentWebhookEvent::DECISION_APPLIED,
+            'created_at' => now(),
+        ]);
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Rejected webhook deliveries: 2')
             ->assertSuccessful();
     }
 
