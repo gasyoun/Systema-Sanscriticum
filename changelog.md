@@ -11,6 +11,31 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Fixed
+- **H1396 §1: промокод переживает обновление сессии в чекауте (денежный баг).**
+  Применённый промокод жил ТОЛЬКО в `session('promo_code')`; анти-419 обновление
+  CSRF-токена могло выдать новую пустую сессию, а remember-me пере-аутентифицировал
+  пользователя — он проскакивал `auth()->check()` в
+  [`PaymentController::createPayment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PaymentController.php)
+  с потерянным промокодом и уходил в банк на ПОЛНУЮ сумму, хотя кнопка показывала
+  скидку (повтор H071 #13 через другую дверь). Теперь код несётся в скрытом поле
+  формы и пере-резолвится АВТОРИТЕТНО при сабмите (клиентское значение forgeable →
+  те же правила `isCurrentlyActive`/`appliesToCourse`/`redeemedByUser`/`hasCapacity`):
+  валиден → скидка списывается заново; протух → НЕ уходим молча в банк на полную и
+  НЕ отказываем, а показываем явный экран
+  [`confirm-price`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/checkout/confirm-price.blade.php)
+  с новой ценой, и заказ создаётся только после явного подтверждения ровно на
+  показанную сумму (RULED 20-07-2026 MG). За флагом `checkout_promo_survives_session`
+  (по умолчанию OFF) — с флагом OFF `createPayment` байт-в-байт как раньше, что
+  закреплено parity-тестом; денежный PR прод-инертен до
+  `CHECKOUT_PROMO_SURVIVES_SESSION=true` + `config:cache` после ревью. Сверка
+  двойного прогона (dual-run): две независимые сессии Opus 4.8 реализовали §1
+  одинаково побайтно; выигравший лейн добавил флаг-гейт и parity-тест.
+  4 теста (`CheckoutPromoRenewalTest`), `--filter="Checkout|Promo|Payment"` + Pint
+  зелёные в CI. §2/§3/§4 — в отдельном follow-up.
+  ([PR #631](https://github.com/gasyoun/Systema-Sanscriticum/pull/631),
+  [H1396](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1396-Opus_Systema-Sanscriticum_promo-lost-on-session-renewal-full-price-charge_20.07.26.md))
+
 ## [1.49.0] - 2026-07-20
 
 ### Added
