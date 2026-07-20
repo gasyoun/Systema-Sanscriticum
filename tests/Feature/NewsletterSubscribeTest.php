@@ -31,12 +31,26 @@ class NewsletterSubscribeTest extends TestCase
         config(['features.newsletter_subscribe' => true]);
     }
 
+    /** Зашифрованная метка времени рендера формы «N секунд назад» (time-trap). */
+    private function timeTrap(int $secondsAgo = 5): string
+    {
+        return encrypt((string) (now()->timestamp - $secondsAgo));
+    }
+
+    /** Валидный «человеческий» payload: пустой honeypot + свежая метка времени. */
+    private function humanPayload(string $email, array $overrides = []): array
+    {
+        return array_merge([
+            'email' => $email,
+            'is_promo_agreed' => '1',
+            'website' => '', // honeypot пуст
+            'ff_ts' => $this->timeTrap(),
+        ], $overrides);
+    }
+
     public function test_subscribe_creates_lead_and_user_and_queues_mail(): void
     {
-        $response = $this->post('/subscribe', [
-            'email' => 'New@Example.com',
-            'is_promo_agreed' => '1',
-        ]);
+        $response = $this->post('/subscribe', $this->humanPayload('New@Example.com'));
 
         $response->assertRedirect();
         $response->assertSessionHas('newsletter_subscribed', true);
@@ -66,13 +80,59 @@ class NewsletterSubscribeTest extends TestCase
     {
         $existing = User::factory()->create(['email' => 'known@example.com']);
 
-        $this->post('/subscribe', [
-            'email' => 'known@example.com',
-            'is_promo_agreed' => '1',
-        ])->assertRedirect();
+        $this->post('/subscribe', $this->humanPayload('known@example.com'))
+            ->assertRedirect();
 
         $this->assertSame(1, User::where('email', 'known@example.com')->count());
         $this->assertNotNull($existing->fresh()->newsletter_subscribed_at);
+    }
+
+    public function test_bot_honeypot_filled_is_silently_dropped(): void
+    {
+        $response = $this->post('/subscribe', $this->humanPayload('bot@example.com', [
+            'website' => 'http://spam.example', // honeypot заполнен ботом
+        ]));
+
+        // Анти-enumeration: ответ как при успехе, но ничего не создано.
+        $response->assertRedirect();
+        $response->assertSessionHas('newsletter_subscribed', true);
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('leads', 0);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_direct_post_without_time_trap_token_is_dropped(): void
+    {
+        // Прямой POST по эндпоинту без метки рендера формы (типичный спам-бот).
+        $this->post('/subscribe', [
+            'email' => 'bot@example.com',
+            'is_promo_agreed' => '1',
+        ])->assertSessionHas('newsletter_subscribed', true);
+
+        $this->assertDatabaseCount('users', 0);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_instant_submit_is_dropped(): void
+    {
+        // Метка есть, но сабмит мгновенный (elapsed < min_fill_seconds).
+        $this->post('/subscribe', $this->humanPayload('bot@example.com', [
+            'ff_ts' => $this->timeTrap(0),
+        ]))->assertSessionHas('newsletter_subscribed', true);
+
+        $this->assertDatabaseCount('users', 0);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_blocked_disposable_domain_is_dropped(): void
+    {
+        config(['newsletter.antibot.blocked_email_domains' => ['immenseignite.info']]);
+
+        $this->post('/subscribe', $this->humanPayload('gjjefxxi@immenseignite.info'))
+            ->assertSessionHas('newsletter_subscribed', true);
+
+        $this->assertDatabaseCount('users', 0);
+        Mail::assertNothingQueued();
     }
 
     public function test_magic_link_logs_in_once_and_only_once(): void
