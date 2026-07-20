@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.46.0] - 2026-07-20
+
 ### Added
 - **Free-drill funnel is now measured — an anonymous `game_events` telemetry rail for `/exercises`** ([H1360](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1360-Opus_Systema-Sanscriticum_free-drill-funnel-instrumentation-game-events_20.07.26.md), [PR #622](https://github.com/gasyoun/Systema-Sanscriticum/pull/622)). The whole drill family (ligatures/roots/sort/match/cloze) previously stored **not one row** — `gate.js` kept its one-free-play state in `localStorage` only, and `GET /api/games/auth` was the sole server touchpoint — so the Tier-0 funnel question (how many visitors play → finish → hit the register wall → click «Начать бесплатно») was unanswerable. Added a first-party `POST /api/games/event` ingest (public web-guard, throttled, CSRF-exempt), a new `game_events` table, a `public/exercises/telemetry.js` sender (`navigator.sendBeacon`), a `games:funnel --days=N` report command, and a Filament **«Воронка тренажёров»** page (manager/admin).
   - **Anonymous by construction (privacy fence):** the table stores no student id, no IP, and no user-agent — only a short client-minted `anon_id` stripped server-side to `[A-Za-z0-9]{0,32}`. The `authenticated` flag is stamped from the web session on the server, never trusted from the client. This keeps the table out of 152-ФЗ personal-data scope.
