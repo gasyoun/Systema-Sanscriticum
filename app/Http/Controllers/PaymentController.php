@@ -52,11 +52,63 @@ class PaymentController extends Controller
 
         $tariff = $tariffQuery->findOrFail($request->input('tariff_id'));
 
+        // H1396 §1 — the checkout page survives its own session. The applied promo
+        // used to live ONLY in session('promo_code'); the anti-419 CSRF refresh mints
+        // a fresh empty session and remember-me re-auths the user, so the code was
+        // gone here and the student was charged full price while the button showed the
+        // discounted total. The code now travels in a hidden field and is re-resolved
+        // AUTHORITATIVELY (it is client-supplied and forgeable — never trusted as sent).
+        // Behind a default-OFF flag: with it off, createPayment behaves byte-identically
+        // to today (session-only), so the money PR stays prod-inert until enabled.
+        $sessionRenewalGuard = (bool) config('features.checkout_promo_survives_session');
+        $priceConfirmed = $sessionRenewalGuard && $request->boolean('promo_lapse_confirmed');
+
+        if ($sessionRenewalGuard) {
+            $carriedPromoCode = $this->carriedPromoCode($request);
+
+            if ($carriedPromoCode !== null && ! $priceConfirmed) {
+                $promo = PromoCode::where('code', $carriedPromoCode)->first();
+
+                if ($promo !== null) {
+                    // Guest (null) has redeemed nothing yet — the calendar/capacity/tariff
+                    // checks below are the ones that matter for the confirmation decision.
+                    $lapseReason = $this->promoLapseReason($promo, $tariff, auth()->user());
+
+                    if ($lapseReason !== null) {
+                        // RULED 20-07-2026 (MG): a lapsed promo must not silently proceed to
+                        // the bank at full price, nor be hard-refused — show the new total and
+                        // require an explicit confirmation before charging it.
+                        return $this->promoLapsedConfirmation($request, $tariff, $lapseReason);
+                    }
+
+                    // Still applicable — re-hydrate the session so the authoritative
+                    // transaction below applies exactly this code, one code path.
+                    session()->put('promo_code', $promo->code);
+                }
+            }
+
+            if ($priceConfirmed) {
+                // The student explicitly accepted the higher (promo-less) total.
+                session()->forget('promo_code');
+            }
+        }
+
         // Резолв пользователя — ВНЕ транзакции. Для гостя с существующим email —
         // отказ (анти-takeover), как в DepositController/TrialController. Иначе
         // аноним мог создавать платежи на чужой аккаунт и триггерить письмо со
         // сбросом пароля владельцу (Payment::sendWelcomeEmailIfNeeded).
         $user = $this->resolveUser($request);
+
+        // Re-check once more at the confirmed submit: the window between showing the
+        // confirmation and this request is itself a lapse opportunity. If the
+        // promo-less price has risen above what the confirmation screen pinned, confirm
+        // again rather than charging more than was shown (the ruling's invariant).
+        if ($priceConfirmed && $request->filled('confirmed_total')) {
+            $authoritativeFull = $tariff->calculateFinalPriceForUser($user);
+            if ($authoritativeFull > (float) $request->input('confirmed_total') + 1) {
+                return $this->promoLapsedConfirmation($request, $tariff, 'цена изменилась');
+            }
+        }
 
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
@@ -350,6 +402,79 @@ class PaymentController extends Controller
         ]);
 
         return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
+     * H1396 §1 — the promo code carried in the hidden checkout field. Falls back to
+     * the session when the field is absent (older cached forms), so behaviour is
+     * unchanged when nothing is carried. Normalised exactly like
+     * CheckoutController::normalizeCode so a forged/hand-typed value still matches.
+     */
+    private function carriedPromoCode(Request $request): ?string
+    {
+        $raw = $request->input('promo_code');
+        $code = is_string($raw) ? mb_strtoupper(trim($raw)) : '';
+
+        if ($code === '') {
+            $code = (string) session('promo_code', '');
+        }
+
+        return $code === '' ? null : $code;
+    }
+
+    /**
+     * Why a carried promo no longer applies, or null if it still does. The reason is
+     * distinguished where cheap — "промокод больше не действует" with no reason is what
+     * generates support load. Guest ($user === null) has redeemed nothing yet.
+     */
+    private function promoLapseReason(PromoCode $promo, Tariff $tariff, ?User $user): ?string
+    {
+        if (! $promo->isCurrentlyActive()) {
+            return 'срок действия промокода истёк';
+        }
+
+        if (! $promo->appliesToCourse($tariff->course->id ?? $tariff->course_id)) {
+            return 'промокод не действует для этого курса';
+        }
+
+        if ($user !== null && $promo->redeemedByUser($user->id)) {
+            return 'вы уже использовали этот промокод';
+        }
+
+        if (! $promo->hasCapacity()) {
+            return 'исчерпан лимит использований промокода';
+        }
+
+        return null;
+    }
+
+    /**
+     * The explicit-confirmation surface for a lapsed promo (MG ruling 20-07-2026).
+     * A distinct, deliberate step — NOT a re-render of the same pay button with a
+     * quietly different number. It states the new (promo-less) total, carries the
+     * original order inputs forward as hidden fields, and pins the shown total in
+     * `confirmed_total` so the eventual charge can be asserted equal to it.
+     */
+    private function promoLapsedConfirmation(Request $request, Tariff $tariff, string $reason)
+    {
+        // The promo-less total the student will now pay, computed authoritatively.
+        $newTotal = $tariff->calculateFinalPriceForUser(auth()->user());
+
+        // The lapsed code no longer helps — drop it so a later navigation does not
+        // re-show a discount that is gone.
+        session()->forget('promo_code');
+
+        $carry = $request->only([
+            'tariff_id', 'prana_amount', 'name', 'surname', 'city', 'email',
+            'wants_announcements', 'birth_year', 'signup_source', 'ref',
+        ]);
+
+        return response()->view('checkout.confirm-price', [
+            'tariff' => $tariff,
+            'reason' => $reason,
+            'newTotal' => $newTotal,
+            'carry' => $carry,
+        ]);
     }
 
     /**

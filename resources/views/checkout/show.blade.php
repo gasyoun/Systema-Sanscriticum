@@ -290,6 +290,11 @@ document.addEventListener('alpine:init', () => {
                         @csrf
                         <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
                         <input type="hidden" name="prana_amount" :value="$store.checkout.prana">
+                        {{-- H1396 §1 — carry the applied promo in the form, not only in the
+                             session: the anti-419 refresh can mint a fresh empty session and
+                             lose it, which used to charge full price silently. Re-resolved
+                             authoritatively server-side (it is client-supplied). --}}
+                        <input type="hidden" name="promo_code" value="{{ $appliedPromo?->code }}">
 
                         @guest
                             {{-- ─── Данные гостя ─── --}}
