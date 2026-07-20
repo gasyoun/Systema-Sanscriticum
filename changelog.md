@@ -15,6 +15,21 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 - **Level-quiz answer positions — the `deva` cohort's quiz graded "always tap the top option" as 6/6** ([H1387](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1387-Fable_csl-guides_quiz-answer-position-fixed-index-defect_20.07.26.md), [PR #614](https://github.com/gasyoun/Systema-Sanscriticum/pull/614)). All six items in `config('marathon.cohorts.deva.level_quiz')` carried `correct => 0`, inherited verbatim from csl-guides, where every answer was authored first and nothing shuffled. `quiz_level` therefore measured nothing about the student — on the cohort whose first intake is **28-08-2026**. Option order re-ported from the fixed upstream bank ([csl-guides PR #119](https://github.com/sanskrit-lexicon/csl-guides/pull/119)) and verified in sync item by item, so the "ported verbatim" relationship the config comment promises still holds.
   - **The tests encoded the defect as a fixture:** three hardcoded `picks = [0,0,0,0,0,0]` as the perfect run and the class docblock stated it as intended behaviour. They now derive picks from config, so a future re-port cannot silently invalidate them.
   - Two guards added — answers must not all share one option position (**confirmed to fail** against a temporarily restored all-zero config before passing on the fix), and every `correct` index must exist in its own `opts`.
+- **Salary period close: percent-scheme accrual ignored a closed month for
+  payments created before the closure timestamp, leaving CI red.**
+  `TeacherSalaryService::rollForwardEventMonth()` only rolled a `percent`/
+  `percent_per_block` accrual event forward out of a closed month when the
+  triggering payment's `created_at` was *after* the period's `closed_at`.
+  Closing a month is meant to mean "nothing more accrues here," regardless of
+  when the underlying payment was recorded — the non-percent schemes already
+  enforce that unconditionally via `remapMonths()`/`rollForwardMonth()`. The
+  event-level `created_at` comparison had no test coverage of its own and
+  directly contradicted `tests/Feature/SalaryPeriodCloseTest.php`'s three
+  scenarios (late payment roll-forward, per-teacher isolation, reopening),
+  which were failing on `origin/main` at `c81a35d` independent of any other
+  in-flight PR. Removed the `created_at` special-case; percent-type events now
+  roll forward through `rollForwardMonth()` exactly like the fixed schemes.
+
 ## [1.44.0] - 2026-07-20
 
 ### Added

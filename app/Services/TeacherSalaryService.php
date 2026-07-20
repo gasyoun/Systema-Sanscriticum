@@ -987,7 +987,7 @@ class TeacherSalaryService
                 // уже посчитан на событие) — без второго прохода по revenueEvents.
                 $studentEarliest = [];
                 foreach ($revenueEvents as $event) {
-                    $m = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
+                    $m = $this->rollForwardEventMonth($event['month'], $closed);
                     $amt = $event['amount'];
                     $revenue[$m] = ($revenue[$m] ?? 0.0) + $amt;
                     $accruedGross[$m] = ($accruedGross[$m] ?? 0.0) + $amt * ($value / 100);
@@ -1000,7 +1000,7 @@ class TeacherSalaryService
                 // На ЗП возвраты влияют только в процентных схемах.
                 $returnsByMonth = [];
                 foreach ($returnEvents as $event) {
-                    $m = $this->rollForwardEventMonth($event['month'], $event['created_at'], $closed);
+                    $m = $this->rollForwardEventMonth($event['month'], $closed);
                     $amt = $event['amount'];
                     $returnsByMonth[$m] = ($returnsByMonth[$m] ?? 0.0) + $amt;
                     $accruedReturns[$m] = ($accruedReturns[$m] ?? 0.0) + $amt * ($value / 100);
@@ -1155,23 +1155,16 @@ class TeacherSalaryService
     }
 
     /**
-     * Закрытый месяц переносит только события, созданные ПОСЛЕ закрытия.
-     * Уже существовавшие начисления остаются в своём месяце.
+     * Закрытый месяц (этого преподавателя) переносит признание в ближайший
+     * открытый — независимо от того, когда создан платёж. Закрытие периода
+     * означает «в этот месяц больше ничего не начисляем», а не только для
+     * задним числом добавленных событий.
      *
      * @param  array<string, Carbon>  $closed
      */
-    private function rollForwardEventMonth(string $month, ?Carbon $createdAt, array $closed): string
+    private function rollForwardEventMonth(string $month, array $closed): string
     {
-        $guard = 0;
-        while (isset($closed[$month]) && $guard++ < 600) {
-            if ($createdAt !== null && $createdAt->lte($closed[$month])) {
-                return $month;
-            }
-
-            $month = $this->nextMonth($month);
-        }
-
-        return $month;
+        return $this->rollForwardMonth($month, array_keys($closed));
     }
 
     /**
