@@ -58,7 +58,11 @@ class ShopController extends Controller
             ->limit(6)
             ->get();
 
-        return view('shop.index', compact('courses', 'page', 'search', 'purchasedByCourse', 'deposit', 'featuredTestimonials'));
+        // Якоря лесенки цен (H1293) — те же честные «от N ₽», что видят
+        // «С чего начать», конец статьи и хаб «Материалы».
+        $ladder = ProductLadderAnchors::resolve();
+
+        return view('shop.index', compact('courses', 'page', 'search', 'purchasedByCourse', 'deposit', 'featuredTestimonials', 'ladder'));
     }
 
     /**

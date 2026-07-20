@@ -32,6 +32,19 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [`docs/copy/money-diaspora-paypal-buyer-path.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-diaspora-paypal-buyer-path.md);
   5 новых feature-тестов в
   [`tests/Feature/PaypalClaimTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/PaypalClaimTest.php).
+- **H1293: лесенка цен с позиционированием на витрине `/online`.** Лейн волны
+  revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Витрина не показывала ни одной цены, сравнить блок с целым курсом было
+  негде. Теперь секция «Сколько стоит обучение» (`#ceny`) + кнопка-якорь
+  «Как устроены цены» на первом экране: три формата с позиционированием —
+  кому подходит, что меняется между ступенями, что выбрать, если не уверены;
+  честные «от N ₽» только из `ProductLadderAnchors` (хелпер расширен read-only
+  якорем `minLiveFullPrice` — живой курс целиком), сравнение «блок против
+  целого курса», JSON-LD `OfferCatalog` из `AggregateOffer`. Ни одной
+  захардкоженной цены (grep-floor лейна); нет тарифов — числа и schema-нода
+  не рендерятся, секция остается. Копи-док:
+  [docs/copy/money-price-ladder-narrative-page.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-price-ladder-narrative-page.md).
 
 ## [1.39.0] - 2026-07-20
 
