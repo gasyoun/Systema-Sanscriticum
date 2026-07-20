@@ -5,15 +5,25 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 md:py-16 font-sans antialiased">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div class="mb-8">
+        <div class="mb-6">
             <a href="{{ route('checkout.show', $tariff) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition mb-4">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i> Назад к оформлению
             </a>
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оплата через PayPal</h1>
             <p class="mt-2 text-base text-gray-500">
-                Для оплаты из-за рубежа: переведите оплату на наш PayPal и сообщите об этом ниже.
-                Доступ откроется после сверки платежа.
+                Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
+                поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
+                вы переводите оплату и сообщаете нам, а мы сверяем платеж вручную — обычно
+                в течение одного рабочего дня — и открываем доступ.
             </p>
+        </div>
+
+        {{-- Снятие страха двойного списания — общая строка 2 волны revenue-copy,
+             дословно из docs/copy/_shared_strings.md. Наверху страницы, не в подвале
+             (правило money-fear контракта голоса). --}}
+        <div class="mb-8 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-sm leading-relaxed">
+            Если деньги списались — не платите повторно: напишите нам, мы проверим платеж и
+            либо откроем доступ, либо вернем деньги.
         </div>
 
         @if(session('success'))
@@ -59,7 +69,7 @@
         </div>
 
         {{-- Шаг 2: сообщить об оплате --}}
-        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
+        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100 mb-6">
             <div class="flex items-center gap-3 mb-5">
                 <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">2</span>
                 <h4 class="text-base font-extrabold text-gray-900">Сообщите нам об оплате</h4>
@@ -130,6 +140,31 @@
                     <i class="fas fa-paper-plane mr-2"></i> Отправить уведомление об оплате
                 </button>
             </form>
+        </div>
+
+        {{-- Шаг 3: что будет дальше — H1292, ожидания вместо тишины --}}
+        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">3</span>
+                <h4 class="text-base font-extrabold text-gray-900">Что будет дальше</h4>
+            </div>
+            <ol class="space-y-3 text-sm text-gray-600 leading-relaxed list-none">
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">1.</span>
+                    <span>Сразу после отправки пришлем на email подтверждение, что заявка получена.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">2.</span>
+                    <span>Обычно в течение одного рабочего дня сверим платеж в PayPal и откроем доступ.
+                    Для нового аккаунта на email придет пароль от личного кабинета.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">3.</span>
+                    <span>Если рабочий день прошел, а доступа нет —
+                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
+                    обычно отвечаем в течение рабочего дня.</span>
+                </li>
+            </ol>
         </div>
     </div>
 </div>

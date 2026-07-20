@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePaypalClaimRequest;
 use App\Mail\PaypalClaimReceivedMail;
+use App\Mail\PaypalClaimStudentAckMail;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
@@ -90,9 +91,13 @@ final class PaypalClaimController extends Controller
             Mail::to($adminEmail)->send(new PaypalClaimReceivedMail($payment));
         }
 
+        // H1292: подтверждение студенту — до него подавший заявку не получал
+        // ничего и не знал, дошла ли она. Админское письмо выше не меняется.
+        Mail::to($user)->send(new PaypalClaimStudentAckMail($payment));
+
         return redirect()
             ->route('paypal.claim.show', $tariff)
-            ->with('success', 'Спасибо! Заявка на оплату через PayPal получена. Как только мы сверим платёж, откроется доступ, а пароль (для новых аккаунтов) придёт на email.');
+            ->with('success', 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Мы сверим платеж, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придет на email.');
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void
