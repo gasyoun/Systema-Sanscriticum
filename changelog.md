@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.42.0] - 2026-07-20
+
 ### Added
 - **H1290: installments — the no-shame «разбить на части» checkout ask.**
   Лейн волны revenue-copy
