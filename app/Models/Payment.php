@@ -148,6 +148,39 @@ class Payment extends Model
         return $this->hasMany(PaymentAudit::class)->latest();
     }
 
+    // Журнал доставок денежных вебхуков (H1359, append-only).
+    public function webhookEvents(): HasMany
+    {
+        return $this->hasMany(PaymentWebhookEvent::class)->latest();
+    }
+
+    /**
+     * Был ли платёж когда-либо в оплаченном статусе — по аудит-следу
+     * (PaymentAuditObserver пишет и системные webhook-изменения). Ловит и
+     * переход pending→paid (updated: status = [old, new]), и создание сразу
+     * оплаченным (created: status — скаляр-снимок). В связке с «сейчас НЕ
+     * оплачен» это и есть отменённый/возвращённый платёж, который повторный
+     * success-вебхук не должен воскрешать (H1359, guard rejected_resurrection).
+     *
+     * ВНИМАНИЕ: у PaymentAudit колонка называется `changes`, что совпадает с
+     * protected-свойством Eloquent Model::$changes (трекинг «грязных» полей).
+     * Payment и PaymentAudit — сиблинги от Model, поэтому `$audit->changes`
+     * ИЗ ЭТОГО класса читает пустое protected-свойство, а НЕ атрибут. Берём
+     * значение только через getAttribute(), иначе связь не срабатывает.
+     */
+    public function hasPriorPaidTransition(): bool
+    {
+        foreach ($this->audits()->get() as $audit) {
+            $status = $audit->getAttribute('changes')['status'] ?? null;
+            $newStatus = is_array($status) ? ($status[1] ?? null) : $status;
+            if (in_array($newStatus, self::PAID_STATUSES, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** Преподаватель, получивший этот платёж напрямую на личный счёт (для teacher_personal). */
     public function receivedByTeacher(): BelongsTo
     {
