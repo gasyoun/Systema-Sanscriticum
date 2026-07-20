@@ -454,6 +454,9 @@ document.addEventListener('alpine:init', () => {
                         </p>
                     </div>
 
+                    {{-- Оплата по частям (H1290) — под кнопкой оплаты, где сумма ощущается целиком --}}
+                    @include('partials.installments-cta', ['tariff' => $tariff])
+
                     <div class="hidden sm:flex items-center justify-center gap-6 text-xs text-gray-400 font-medium pt-2">
                         <span class="flex items-center gap-1.5"><i class="fas fa-shield-halved text-gray-300"></i> SSL-шифрование</span>
                         <span class="flex items-center gap-1.5"><i class="fas fa-credit-card text-gray-300"></i> Visa · MasterCard · МИР</span>

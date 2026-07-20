@@ -70,6 +70,13 @@ Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'
     ->name('checkout.promo');
 Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])->name('checkout.promo.remove');
 
+// Запрос «разбить оплату на части» (H1290) — уведомляет кураторов, план НЕ создаёт.
+// throttle: каждый сабмит — сообщение в кураторский чат; 3 запросов за 10 минут
+// хватает легитимному студенту (повторный сабмит после опечатки), спам отсечён.
+Route::post('/checkout/{tariff}/installments', [CheckoutController::class, 'requestInstallments'])
+    ->middleware('throttle:3,10')
+    ->name('checkout.installments');
+
 // 1. РЕДИРЕКТ (чтобы старые ссылки работали)
 Route::get('/promo/{slug}', function ($slug) {
     return redirect('/'.$slug, 301);
