@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.45.0] - 2026-07-20
+
 ### Fixed
 - **Level-quiz answer positions — the `deva` cohort's quiz graded "always tap the top option" as 6/6** ([H1387](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1387-Fable_csl-guides_quiz-answer-position-fixed-index-defect_20.07.26.md), [PR #614](https://github.com/gasyoun/Systema-Sanscriticum/pull/614)). All six items in `config('marathon.cohorts.deva.level_quiz')` carried `correct => 0`, inherited verbatim from csl-guides, where every answer was authored first and nothing shuffled. `quiz_level` therefore measured nothing about the student — on the cohort whose first intake is **28-08-2026**. Option order re-ported from the fixed upstream bank ([csl-guides PR #119](https://github.com/sanskrit-lexicon/csl-guides/pull/119)) and verified in sync item by item, so the "ported verbatim" relationship the config comment promises still holds.
   - **The tests encoded the defect as a fixture:** three hardcoded `picks = [0,0,0,0,0,0]` as the perfect run and the class docblock stated it as intended behaviour. They now derive picks from config, so a future re-port cannot silently invalidate them.
