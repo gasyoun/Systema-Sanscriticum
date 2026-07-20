@@ -11,6 +11,17 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1356: frequency-ranked root drills (top-25/50/100) in `public/exercises/root-drills/`.**
+  New match-family exercise pairing each Sanskrit verbal root (deva + IAST hint)
+  with its Russian gloss, banded by DCS corpus frequency (top-25 flat, top-50/100
+  random-10-per-round, mirroring the `ligatures/` D6 pattern). Data is generated
+  from the already-committed 570-root RU fixture
+  (`database/seeders/data/roots_frequency_ru.tsv`, H1280) by a newly **committed**
+  generator (`public/exercises/root-drills/generate.py`) — closing the gap the
+  ligatures family left open (its equivalent exporter was never committed).
+  Registered as a new family card on `public/exercises/index.html`.
+
 ## [1.42.0] - 2026-07-20
 
 ### Added
