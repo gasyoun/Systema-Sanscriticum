@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.40.0] - 2026-07-20
+
 ### Added
 - **H1292: диаспорный путь оплаты — PayPal-путь получил тайминги и подтверждение студенту.**
   Лейн волны revenue-copy
