@@ -18,5 +18,9 @@ class VerifyCsrfToken extends Middleware
         // /api/sync-lessons) живут в routes/api.php и проходят через api middleware,
         // в котором VerifyCsrfToken не используется — добавлять их сюда бессмысленно.
         '/api/heartbeat',
+        // Анонимный beacon воронки тренажёров (H1360): зарегистрирован в
+        // routes/web.php (нужна web-сессия для флага authenticated), но
+        // sendBeacon не несёт CSRF-токена — поэтому исключение.
+        '/api/games/event',
     ];
 }

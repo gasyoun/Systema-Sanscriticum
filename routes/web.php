@@ -3,6 +3,7 @@
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
+use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\SocialAuthController;
@@ -163,6 +164,14 @@ Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 // state change). See public/exercises/gate.js.
 Route::get('/api/games/auth', fn () => response()->json(['authenticated' => auth()->check()]))
     ->name('games.auth');
+
+// First-party funnel telemetry for the same free games (H1360). Public + web-guard
+// so the `authenticated` flag is read server-side from the browser session (the
+// client cannot spoof it); anonymous, no PII stored. CSRF-exempt (see
+// VerifyCsrfToken) because the beacon carries no token; throttled per IP.
+Route::post('/api/games/event', [GameTelemetryController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('games.event');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
