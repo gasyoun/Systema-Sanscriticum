@@ -572,6 +572,11 @@
         </div>
         @endif
         
+        {{-- Рекомендация школы (H1294) — в основном потоке кабинета, вне
+             геймификации: раньше блок жил во вкладке «Прана» и исчезал вместе
+             с ней при выключенной пране. --}}
+        @include('student.partials.referral')
+
     </div> {{-- Конец вкладки 1 (Мои курсы) --}}
 
     {{-- ========================================== --}}
@@ -863,8 +868,6 @@
         @include('student.partials.prana-leaderboard')
 
         @include('student.partials.prana-transfer')
-
-        @include('student.partials.referral')
 
         @php
             $balance = (int) (auth()->user()->prana_balance ?? 0);

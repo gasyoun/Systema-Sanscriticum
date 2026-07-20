@@ -121,6 +121,8 @@
     <x-public-header variant="dark" />
 
     <div class="container mx-auto px-4 relative z-10 max-w-7xl pt-10 md:pt-14">
+
+        @include('partials.referral-welcome')
         
         <div class="text-center mb-12">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">

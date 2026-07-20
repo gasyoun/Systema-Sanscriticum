@@ -77,6 +77,21 @@
                        class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                         Перейти к обучению
                     </a>
+
+                    {{-- Рекомендация школы (H1294): просьба в момент максимума
+                         доверия — сразу после подтвержденной оплаты. Строки:
+                         docs/copy/money-referral-invite-ask.md. --}}
+                    <div class="mt-10 pt-6 border-t border-gray-100 text-left">
+                        <p class="text-sm font-bold text-gray-700 mb-1">Порекомендовать школу</p>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            Если среди ваших знакомых есть человек, которому санскрит был бы в
+                            радость, — поделитесь личной ссылкой из
+                            <a href="{{ route('student.dashboard') }}#referral" class="font-semibold text-[#E85C24] hover:underline">кабинета</a>.
+                            Когда приглашенный впервые оплатит курс, мы зачислим вам
+                            {{ number_format((int) config('referral.credit_amount', 500), 0, '.', ' ') }} ₽
+                            в знак благодарности — сумма зачтется при вашей следующей покупке автоматически.
+                        </p>
+                    </div>
                 @else
                     {{-- Состояние 2: банк принял платеж, вебхук еще не подтвердил --}}
                     <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
