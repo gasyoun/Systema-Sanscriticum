@@ -4,8 +4,10 @@ namespace Tests\Feature\Shop;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\Tariff;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -86,10 +88,53 @@ class ObjectionPosMicrocopyTest extends TestCase
 
         $this->get('/online/kursy/'.$course->slug)
             ->assertOk()
-            ->assertSee('Пенсионерам, студентам и многодетным — льготная цена')
+            ->assertSee('Пенсионерам, студентам и многодетным')
+            ->assertSee('на многих курсах действует льготная цена')
             ->assertSee('https://t.me/rusamskrtam', false)
             ->assertSee('Возврат: до начала — 100%')
             ->assertSee(route('refund.show'), false);
+    }
+
+    /** @test */
+    public function block_principle_line_is_hidden_for_halves_only_course(): void
+    {
+        $course = Course::factory()->create(['slug' => 'halves-only-course']);
+        $block = CourseBlock::factory()->for($course)->create(['number' => 1]);
+        foreach ([1, 2] as $half) {
+            Tariff::factory()->for($course)->block(1)->create([
+                'course_block_id' => $block->id,
+                'block_half' => $half,
+                'price' => 2400,
+            ]);
+        }
+
+        // Целого блока к покупке нет — обещание «оплачиваете ближайший блок»
+        // было бы ложным; остальная микрокопия остается.
+        $this->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertSee('data-analytics="objection-price-microcopy"', false)
+            ->assertDontSee('Платить за весь курс сразу не нужно');
+    }
+
+    /** @test */
+    public function price_microcopy_hidden_for_full_course_purchaser(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->makeCourseWithBlockTariff('purchased-course');
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 12000,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/online/kursy/'.$course->slug)
+            ->assertOk()
+            ->assertDontSee('objection-price-microcopy')
+            ->assertDontSee('льготная цена');
     }
 
     /** @test */
@@ -157,6 +202,27 @@ class ObjectionPosMicrocopyTest extends TestCase
 
         $this->get('/online')
             ->assertOk()
+            ->assertSee($course->title)
+            ->assertDontSee('Блок — обычно 4 занятия.');
+    }
+
+    /** @test */
+    public function catalog_card_gloss_absent_when_cheapest_block_tariff_is_a_half(): void
+    {
+        $course = Course::factory()->create();
+        Tariff::factory()->for($course)->create();
+        $block = CourseBlock::factory()->for($course)->create(['number' => 1]);
+        Tariff::factory()->for($course)->block(1)->create([
+            'course_block_id' => $block->id,
+            'block_half' => 1,
+            'price' => 2400,
+        ]);
+
+        // Цена «/ блок» на карточке — половинная: глосса «4 занятия»
+        // удешевляла бы блок вдвое, поэтому не показывается.
+        $this->get('/online')
+            ->assertOk()
+            ->assertSee($course->title)
             ->assertDontSee('Блок — обычно 4 занятия.');
     }
 
@@ -168,8 +234,9 @@ class ObjectionPosMicrocopyTest extends TestCase
 
         // Регистр волны: на студенческих поверхностях — «оплата по частям»,
         // никогда «рассрочка» (кредитная коннотация; правило H1290).
+        // Стебель без первой буквы ловит и «Рассрочка», и «рассрочка».
         $this->get('/online/kursy/'.$course->slug)
             ->assertOk()
-            ->assertDontSee('рассрочк');
+            ->assertDontSee('ассрочк');
     }
 }

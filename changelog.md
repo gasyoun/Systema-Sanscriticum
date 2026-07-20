@@ -11,6 +11,27 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1291: корпус возражений — микрокопия в точке продажи (ВРЕМЯ + ЦЕНА).**
+  Последний лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)):
+  готовые формулировки плейбука возражений H474/H482 (537 из 679 возражений —
+  ВРЕМЯ и ЦЕНА) перенесены на поверхности, где возражение возникает. Карточка
+  каталога объясняет единицу цены («Блок — обычно 4 занятия», только когда
+  показанная цена — за целый блок); секция «Расписание» снимает страх пропуска
+  («Занятие останется в записи… Пропуск не выбивает из курса»); у тарифной
+  сетки — принцип поблочной оплаты (только курсам с целоблочными тарифами и не
+  в режиме продажи записей), указатель на запрос «оплата по частям» (та же
+  калитка кураторского чата, что у H1290), льготная строка с честной оговоркой
+  «на многих курсах»; «Возврат: до начала — 100%» процитирован ссылкой на
+  `/vozvrat` (shared string 4). Купившему весь курс микрокопия не показывается.
+  Чекаут сознательно не тронут — там оба возражения уже отвечены. Каждая строка
+  сверена с продуктом; «вводный разбор Гиты за 2 000 ₽» из плейбука на страницы
+  НЕ попал — такого продукта в кодовой базе нет. Строки и решения:
+  [`docs/copy/money-objection-corpus-pos-microcopy.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-objection-corpus-pos-microcopy.md);
+  13 feature-тестов
+  ([`tests/Feature/Shop/ObjectionPosMicrocopyTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Shop/ObjectionPosMicrocopyTest.php)).
+
 ## [1.48.0] - 2026-07-20
 
 ### Added
@@ -45,23 +66,6 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [`docs/copy/money-referral-invite-ask.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-referral-invite-ask.md);
   6 новых feature-тестов
   ([`tests/Feature/ReferralAskSurfacesTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralAskSurfacesTest.php)).
-- **H1291: корпус возражений — микрокопия в точке продажи (ВРЕМЯ + ЦЕНА).**
-  Последний лейн волны revenue-copy
-  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)):
-  готовые формулировки плейбука возражений H474/H482 (537 из 679 возражений —
-  ВРЕМЯ и ЦЕНА) перенесены на поверхности, где возражение возникает. Карточка
-  каталога объясняет единицу цены («Блок — обычно 4 занятия»); секция
-  «Расписание» снимает страх пропуска («Занятие останется в записи… Пропуск не
-  выбивает из курса»); у тарифной сетки — принцип поблочной оплаты, указатель на
-  запрос «оплата по частям» (под той же калиткой кураторского чата, что H1290) и
-  льготная строка; «Возврат: до начала — 100%» процитирован ссылкой на `/vozvrat`
-  (shared string 4). Чекаут сознательно не тронут — там оба возражения уже
-  отвечены. Каждая строка сверена с продуктом; «вводный разбор Гиты за 2 000 ₽»
-  из плейбука на страницы НЕ попал — такого продукта в кодовой базе нет. Строки
-  и решения:
-  [`docs/copy/money-objection-corpus-pos-microcopy.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-objection-corpus-pos-microcopy.md);
-  10 новых feature-тестов
-  ([`tests/Feature/Shop/ObjectionPosMicrocopyTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Shop/ObjectionPosMicrocopyTest.php)).
 
 ## [1.47.0] - 2026-07-20
 
