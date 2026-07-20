@@ -17,18 +17,29 @@
                 Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
             </p>
 
-            {{-- Вход для новичка (H323, beginner on-ramp) --}}
-            <a href="{{ route('shop.start') }}"
-               class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
-                <i class="fas fa-compass"></i>
-                Не знаете, с чего начать?
-            </a>
+            <div class="flex flex-wrap justify-center gap-3">
+                {{-- Вход для новичка (H323, beginner on-ramp) --}}
+                <a href="{{ route('shop.start') }}"
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
+                    <i class="fas fa-compass"></i>
+                    Не знаете, с чего начать?
+                </a>
+                {{-- Лесенка цен (H1293): общесайтовые цены видны с первого экрана --}}
+                <a href="#ceny"
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#E85C24]/60 hover:bg-[#E85C24]/5 text-[#E85C24] text-sm font-bold rounded-xl transition-all">
+                    <i class="fas fa-ruble-sign"></i>
+                    Как устроены цены
+                </a>
+            </div>
         </div>
 
         {{-- Полоса доверия (H323, social proof) --}}
         @include('shop.partials.trust-strip')
 
         @livewire('shop.course-catalog')
+
+        {{-- Лесенка цен с позиционированием (H1293) --}}
+        @include('shop.partials.price-ladder-narrative', ['ladder' => $ladder])
 
         {{-- Общесайтовые отзывы (H323, social proof) --}}
         @include('shop.partials.featured-testimonials', ['testimonials' => $featuredTestimonials])

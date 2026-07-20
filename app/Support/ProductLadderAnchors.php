@@ -10,14 +10,15 @@ use App\Models\Tariff;
 /**
  * Якоря «лесенки продуктов» (H323/H387) — единственная точка правды для всех
  * страниц, включающих shop.partials.ladder («С чего начать», конец статьи,
- * хаб «Материалы»). Цены «от N ₽» честно считаются из активных тарифов
- * видимых курсов; отсутствующая цена = null (партиал её просто не показывает).
- * Никогда не хардкодить эти числа в шаблонах/контроллерах.
+ * хаб «Материалы») и лесенку цен витрины (H1293,
+ * shop.partials.price-ladder-narrative). Цены «от N ₽» честно считаются из
+ * активных тарифов видимых курсов; отсутствующая цена = null (партиал её
+ * просто не показывает). Никогда не хардкодить эти числа в шаблонах/контроллерах.
  */
 class ProductLadderAnchors
 {
     /**
-     * @return array{freeUrl: string, minRecordedPrice: mixed, minBlockPrice: mixed, catalogUrl: string, freePreviewCourse: ?Course}
+     * @return array{freeUrl: string, minRecordedPrice: mixed, minBlockPrice: mixed, minLiveFullPrice: mixed, catalogUrl: string, freePreviewCourse: ?Course}
      */
     public static function resolve(): array
     {
@@ -34,6 +35,14 @@ class ProductLadderAnchors
             ->whereHas('course', fn ($q) => $q->where('is_visible', true)->where('format', 'recorded'))
             ->min('price');
 
+        // Живой курс целиком (H1293): full-тариф видимого живого курса — одна
+        // оплата вместо поблочных. Только чтение, ценовая логика не меняется.
+        $minLiveFullPrice = Tariff::query()
+            ->where('is_active', true)
+            ->where('type', 'full')
+            ->whereHas('course', fn ($q) => $q->where('is_visible', true)->where('format', 'live'))
+            ->min('price');
+
         // Бесплатная ступень: любой видимый курс с публичным preview-уроком.
         $freePreviewCourse = Course::query()
             ->where('is_visible', true)
@@ -45,6 +54,6 @@ class ProductLadderAnchors
             ? route('shop.course.preview', $freePreviewCourse->slug)
             : $catalogUrl;
 
-        return compact('freeUrl', 'minRecordedPrice', 'minBlockPrice', 'catalogUrl', 'freePreviewCourse');
+        return compact('freeUrl', 'minRecordedPrice', 'minBlockPrice', 'minLiveFullPrice', 'catalogUrl', 'freePreviewCourse');
     }
 }
