@@ -253,26 +253,37 @@ return [
             // the source's `answer` string within its own `options` array.
             // The August `zero` cohort never takes this (H440 §1a — nothing
             // to grade for an all-zero audience).
+            //
+            // H1387 (20-07-2026): option order re-ported after the upstream
+            // fix. Every item here previously had `correct => 0`, inherited
+            // from csl-guides, where all six answers were authored first and
+            // nothing shuffled — so a student who always tapped the top
+            // option scored 6/6 and the grade carried no signal. Upstream now
+            // permutes deterministically (scripts/_quiz-options.mjs, seeded on
+            // the item id) and guards it with `npm run verify:quiz-positions`;
+            // the orders below match that output for the `ru` locale, so the
+            // "ported verbatim" relationship above still holds. Keep them in
+            // step: re-port if the upstream bank is regenerated.
             'level_quiz' => [
                 'steps' => [
                     [
                         'text' => 'Какой звук передает эта буква деванагари: क',
-                        'opts' => ['ka', 'ta', 'ma', 'sa'],
-                        'correct' => 0,
+                        'opts' => ['sa', 'ma', 'ta', 'ka'],
+                        'correct' => 3,
                     ],
                     [
                         'text' => 'В какой паре показан краткий гласный и его долгая пара?',
-                        'opts' => ['a / ā', 'k / t', 'm / s', 'ka / ta'],
-                        'correct' => 0,
+                        'opts' => ['k / t', 'm / s', 'ka / ta', 'a / ā'],
+                        'correct' => 3,
                     ],
                     [
                         'text' => 'Какое из этого — настоящее санскритское слово (а не набор букв)?',
-                        'opts' => ['एव', 'क्ष्ठौ', 'ऴ्ऱि', 'घ्व्रॗ'],
+                        'opts' => ['एव', 'ऴ्ऱि', 'क्ष्ठौ', 'घ्व्रॗ'],
                         'correct' => 0,
                     ],
                     [
                         'text' => 'Как अन्य записывается латиницей (IAST)?',
-                        'opts' => ['anya', 'vacas', 'bṛhat', 'durbala'],
+                        'opts' => ['anya', 'bṛhat', 'durbala', 'vacas'],
                         'correct' => 0,
                     ],
                     [
@@ -282,8 +293,8 @@ return [
                     ],
                     [
                         'text' => 'Верно или нет: когда два санскритских слова стоят рядом в предложении, их звуки часто меняются, сливаясь друг с другом (это называется сандхи).',
-                        'opts' => ['Верно', 'Неверно'],
-                        'correct' => 0,
+                        'opts' => ['Неверно', 'Верно'],
+                        'correct' => 1,
                     ],
                 ],
             ],
