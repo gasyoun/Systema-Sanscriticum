@@ -11,6 +11,26 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1292: диаспорный путь оплаты — PayPal-путь получил тайминги и подтверждение студенту.**
+  Лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Для диаспорного покупателя PayPal-заявка — единственный рабочий путь, но CTA
+  обещал только «доступ откроем после сверки платежа» (без срока и причины), а
+  письмо о заявке уходило только админу — студент не получал ничего (finding F3
+  аудита [CHECKOUT_PURCHASE_UX_AUDIT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CHECKOUT_PURCHASE_UX_AUDIT_2026.md)).
+  Теперь CTA и форма-заявка называют срок («обычно в течение одного рабочего
+  дня») и причину ручной сверки; страница заявки получила блок «Что будет
+  дальше» и снятие страха двойного списания (общая строка 2) наверху; студент
+  впервые получает подтверждение — новый
+  [`PaypalClaimStudentAckMail`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Mail/PaypalClaimStudentAckMail.php)
+  (админский `PaypalClaimReceivedMail` не тронут). Фича остается за выключенным
+  `PAYPAL_CLAIM_ENABLED` (прод), прод-SMTP сломан (#504) — все инертно до
+  включения. Строки и 6 непереданных решений:
+  [`docs/copy/money-diaspora-paypal-buyer-path.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-diaspora-paypal-buyer-path.md);
+  5 новых feature-тестов в
+  [`tests/Feature/PaypalClaimTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/PaypalClaimTest.php).
+
 ## [1.39.0] - 2026-07-20
 
 ### Added

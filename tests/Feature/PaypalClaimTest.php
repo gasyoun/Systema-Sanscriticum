@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Mail\PaypalClaimReceivedMail;
+use App\Mail\PaypalClaimStudentAckMail;
 use App\Mail\StudentWelcomeMail;
 use App\Models\Course;
 use App\Models\MarketingSetting;
@@ -66,6 +67,33 @@ class PaypalClaimTest extends TestCase
     }
 
     /** @test */
+    public function claim_page_states_timeframe_and_next_steps(): void
+    {
+        $tariff = $this->blockTariff();
+
+        // H1292: страница обязана давать тайминг сверки, шаги «что будет дальше»
+        // и снятие страха двойного списания (общая строка 2 волны revenue-copy).
+        $this->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertSee('обычно')
+            ->assertSee('одного рабочего дня')
+            ->assertSee('Что будет дальше')
+            ->assertSee('не платите повторно');
+    }
+
+    /** @test */
+    public function checkout_cta_partial_states_timeframe_and_reason(): void
+    {
+        $tariff = $this->blockTariff();
+
+        // H1292: CTA на чекауте — ожидание (тайминг) + причина ручной сверки.
+        $html = view('partials.paypal-cta', ['tariff' => $tariff])->render();
+
+        $this->assertStringContainsString('одного рабочего дня', $html);
+        $this->assertStringContainsString('сверяем вручную', $html);
+    }
+
+    /** @test */
     public function guest_claim_creates_pending_paypal_payment_without_access(): void
     {
         $tariff = $this->blockTariff();
@@ -100,6 +128,70 @@ class PaypalClaimTest extends TestCase
 
         // Уведомление админу отправлено.
         Mail::assertQueued(PaypalClaimReceivedMail::class);
+    }
+
+    /** @test */
+    public function student_receives_acknowledgement_mail_on_claim(): void
+    {
+        $tariff = $this->blockTariff();
+
+        $this->post(route('paypal.claim.store', $tariff), [
+            'name' => 'Джон',
+            'email' => 'john@example.test',
+            'foreign_amount' => 50,
+            'foreign_currency' => 'USD',
+            'paypal_txn' => 'TX1',
+        ]);
+
+        // H1292: студент получает подтверждение приёма заявки…
+        Mail::assertQueued(PaypalClaimStudentAckMail::class, fn ($mail) => $mail->hasTo('john@example.test'));
+
+        // …а админское письмо продолжает уходить без изменений.
+        Mail::assertQueued(PaypalClaimReceivedMail::class, fn ($mail) => $mail->hasTo('admin@example.test'));
+    }
+
+    /** @test */
+    public function logged_in_student_receives_acknowledgement_too(): void
+    {
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create(['email' => 'student@example.test']);
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'foreign_currency' => 'EUR',
+            'paypal_txn' => 'TX-EUR',
+        ]);
+
+        Mail::assertQueued(PaypalClaimStudentAckMail::class, fn ($mail) => $mail->hasTo('student@example.test'));
+    }
+
+    /** @test */
+    public function student_ack_mail_renders_expectations(): void
+    {
+        $tariff = $this->blockTariff();
+
+        $this->post(route('paypal.claim.store', $tariff), [
+            'name' => 'Джон',
+            'email' => 'john@example.test',
+            'foreign_amount' => 50,
+            'foreign_currency' => 'USD',
+            'paypal_txn' => 'TX1',
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+
+        $html = (new PaypalClaimStudentAckMail($payment))->render();
+
+        // Маркер школы, тайминг сверки, снятие страха двойного списания,
+        // заявленная валютная сумма и канал поддержки.
+        $this->assertStringContainsString('Намасте', $html);
+        $this->assertStringContainsString('одного рабочего дня', $html);
+        $this->assertStringContainsString('не платите повторно', $html);
+        $this->assertStringContainsString('50.00 $', $html);
+        $this->assertStringContainsString('t.me/rusamskrtam', $html);
+
+        // Контракт голоса: без ё в новой копии (правило D13; «всё» здесь нет).
+        $this->assertStringNotContainsString('ё', $html);
     }
 
     /** @test */
