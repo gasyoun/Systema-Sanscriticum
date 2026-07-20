@@ -139,10 +139,47 @@ Handoff исходил из «студенческой реферальной п
 
 ## Верификация
 
-- `php artisan test` зеленый; новые проверки —
-  [tests/Feature/ReferralAskSurfacesTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralAskSurfacesTest.php)
+- Полный локальный прогон (Windows, PHP 8.3): **1729 passed, 0 failed** (816 c).
+  Новые проверки — [tests/Feature/ReferralAskSurfacesTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralAskSurfacesTest.php)
   (кабинет, оба состояния страницы успеха, именной баннер, отсутствие баннера
-  на невалидном коде, скрытие нулевых счетчиков).
+  на невалидном коде, скрытие нулевых счетчиков) — зелёные и в изоляции, и в полном прогоне.
 - `config/referral.php` не в диффе PR — проверено по `git diff --stat`.
+
+## Стоп-нота (CI) — merge заблокирован не этим лейном
+
+CI-джоб «PHP 8.3 — tests» на PR #609 падает на **3 тестах
+`SalaryPeriodCloseTest`** (`late_payment_rolls_forward_when_block_month_is_closed`
+:81, `closing_one_teacher_does_not_affect_another`:104,
+`reopening_restores_recognition_into_the_month`:117) — «Failed asserting that
+200.0/100.0 is identical to 0.0». Перезапуск джоба дал тот же результат:
+падение **детерминированное**, не инфраструктурный флейк.
+
+Диагноз — предсуществующая скрытая зависимость финансового теста от порядка
+выполнения, к копи-лейну отношения не имеющая:
+
+- `origin/main` (тот же день, v1.42.0) — джоб **зелёный**; мой коммит добавляет
+  только blade/копи-док/changelog/новый тест-файл — ни одного пути исполнения к
+  `TeacherSalaryService`.
+- Тот же `SalaryPeriodCloseTest` **падает в изоляции и локально** (Windows), но
+  **проходит в полном локальном прогоне** — значит какой-то другой тест, идущий
+  раньше по порядку, оставляет глобальное состояние, от которого молча зависит
+  Salary. На CI (Linux) порядок обхода файлов иной, чем на Windows; добавление
+  `ReferralAskSurfacesTest.php` сдвигает нумерацию так, что «прайминг»-тест
+  оказывается после Salary → красный.
+- `TeacherSalaryService` держит инстанс-кэш `$closedPeriodCache`
+  ([app/Services/TeacherSalaryService.php:87,1147](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php)),
+  который тест обходит «свежим сервисом», — вероятный, но не единственный
+  кандидат в корень.
+
+**Почему лейн остановился здесь, а не «починил».** Диагностика корня и любая
+правка — внутри финансового кода/финансового теста (ограда, правило 2: денежная
+математика; вне зоны копи-лейна). «Подкрутить» имя своего тест-файла, чтобы
+случайно не сдвигать порядок, — значит перепрятать реальный латентный баг до
+следующего PR, который сдвинет порядок иначе (тот же анти-паттерн, что «обойти
+красный сканер»). Поэтому: PR открыт, за красный CI **не мержим**, ограду не
+трогаем — решение о мерже и заведение фикс-лейна на финансовый тест за человеком.
+
+Отдельно зафиксировано: [FINDINGS](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) +
+GTD `@DECIDE`.
 
 _Dr. Mārcis Gasūns_
