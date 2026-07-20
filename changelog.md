@@ -11,6 +11,32 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1358: `payments:expire-stale-checkouts` — abandoned-checkout reaper.**
+  Pending `Payment` rows created at checkout provisionally hold resources
+  (prana spend, applied referral credit, consumed deposit credit, promo-code
+  usage slots) with nothing ever releasing them if the buyer just abandons the
+  bank tab — worse, `PaymentController` then hard-blocks a second checkout
+  attempt for the same course while the abandoned row sits there. The
+  reversal logic already existed (`Payment::booted()`'s `updated` listener
+  refunds prana/referral credit and restores deposits/promo slots on any
+  `pending → failed/canceled` transition) — it just had no trigger for
+  silently-abandoned orders. The new command finds stale `pending` payments
+  (timed promo reservations use `PromoCode::WEBHOOK_BUFFER_MINUTES` as
+  authoritative; everything else uses the new
+  `config('checkout.legacy_pending_days')`, default 30 days — deliberately
+  wide, mirroring `AuditCheckoutIntegrity`'s own caution that these rows want
+  manual-review-grade care before cancellation) and flips them to `failed`
+  under a per-row `lockForUpdate()` transaction — the same idempotency
+  pattern `WebhookController` uses — so a bank webhook landing in the same
+  instant always wins the race instead of getting reaped. Deposit/trial,
+  PayPal-pending, and conditional rows are hard-excluded (not abandoned
+  checkouts in the same sense). Scheduled every 15 minutes with `--apply`
+  (`Kernel::schedule`); without `--apply` the command only reports what it
+  would fail, independent of the gate. Live runs require the new
+  deploy-рубильник `features.checkout_stale_order_expiry` (off by default,
+  `CHECKOUT_STALE_ORDER_EXPIRY=true` + `config:cache` to enable).
+
 ## [1.43.0] - 2026-07-20
 
 ### Added
