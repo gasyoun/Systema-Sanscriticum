@@ -12,7 +12,7 @@
    coverage_pct = cumulative % of all root-tagged tokens covered up
    to and including this rank.
 
-   Regenerate: python public/exercises/root-drills/generate.py
+   Regenerate: python scripts/build_root_drill_data.py
    (after refreshing database/seeders/data/roots_frequency_ru.tsv)
    ============================================================ */
 (function (global) {
@@ -25,6 +25,7 @@
       "iast": "1 kṛ / 2 kṛ / 3 kṛ",
       "gloss_ru": "сделал",
       "top_form": "kṛtvā",
+      "grammar_class": "1,2,6",
       "coverage_pct": 7.4241
     },
     {
@@ -33,6 +34,7 @@
       "iast": "bhū",
       "gloss_ru": "будет",
       "top_form": "bhavati",
+      "grammar_class": "1",
       "coverage_pct": 14.7743
     },
     {
@@ -41,6 +43,7 @@
       "iast": "1 as / 2 as",
       "gloss_ru": "есть",
       "top_form": "syāt",
+      "grammar_class": "2,4",
       "coverage_pct": 21.2802
     },
     {
@@ -49,6 +52,7 @@
       "iast": "vac",
       "gloss_ru": "сказал",
       "top_form": "uvāca",
+      "grammar_class": "2",
       "coverage_pct": 27.4576
     },
     {
@@ -57,6 +61,7 @@
       "iast": "gach / gam",
       "gloss_ru": "пришел",
       "top_form": "gatvā",
+      "grammar_class": "6",
       "coverage_pct": 30.7951
     },
     {
@@ -65,6 +70,7 @@
       "iast": "dṛś",
       "gloss_ru": "увидев",
       "top_form": "dṛṣṭvā",
+      "grammar_class": "4",
       "coverage_pct": 33.5002
     },
     {
@@ -73,6 +79,7 @@
       "iast": "1 dā / 2 dā / 3 dā / 4 dā",
       "gloss_ru": "взяв",
       "top_form": "dattvā",
+      "grammar_class": "1,4",
       "coverage_pct": 35.6853
     },
     {
@@ -81,6 +88,7 @@
       "iast": "1 vid / 2 vid",
       "gloss_ru": "знает",
       "top_form": "veda",
+      "grammar_class": "1,2",
       "coverage_pct": 37.744
     },
     {
@@ -89,6 +97,7 @@
       "iast": "śru",
       "gloss_ru": "услышав",
       "top_form": "śrutvā",
+      "grammar_class": "4",
       "coverage_pct": 39.6556
     },
     {
@@ -97,6 +106,7 @@
       "iast": "brū",
       "gloss_ru": "сказал",
       "top_form": "abravīt",
+      "grammar_class": "6",
       "coverage_pct": 41.4354
     },
     {
@@ -105,6 +115,7 @@
       "iast": "ah",
       "gloss_ru": "сказал",
       "top_form": "āha",
+      "grammar_class": "1",
       "coverage_pct": 43.1545
     },
     {
@@ -113,6 +124,7 @@
       "iast": "sthā",
       "gloss_ru": "пребывает",
       "top_form": "sthitaḥ",
+      "grammar_class": "1",
       "coverage_pct": 44.841
     },
     {
@@ -121,6 +133,7 @@
       "iast": "jan",
       "gloss_ru": "родился",
       "top_form": "jāyate",
+      "grammar_class": "4",
       "coverage_pct": 46.5236
     },
     {
@@ -129,6 +142,7 @@
       "iast": "han",
       "gloss_ru": "убит",
       "top_form": "hanti",
+      "grammar_class": "8",
       "coverage_pct": 48.1147
     },
     {
@@ -137,6 +151,7 @@
       "iast": "yaj",
       "gloss_ru": "жертвователя",
       "top_form": "yajamānaḥ",
+      "grammar_class": "2",
       "coverage_pct": 49.3439
     },
     {
@@ -145,6 +160,7 @@
       "iast": "hu",
       "gloss_ru": "жертвуют",
       "top_form": "juhoti",
+      "grammar_class": "3",
       "coverage_pct": 50.5118
     },
     {
@@ -153,6 +169,7 @@
       "iast": "yuj",
       "gloss_ru": "союзником",
       "top_form": "yuktam",
+      "grammar_class": "1",
       "coverage_pct": 51.5914
     },
     {
@@ -161,6 +178,7 @@
       "iast": "yā",
       "gloss_ru": "идут",
       "top_form": "yāti",
+      "grammar_class": "2",
       "coverage_pct": 52.6193
     },
     {
@@ -169,6 +187,7 @@
       "iast": "1 pā / 2 pā / 3 pā",
       "gloss_ru": "Защищайте",
       "top_form": "pibet",
+      "grammar_class": "1,2,3",
       "coverage_pct": 53.6007
     },
     {
@@ -177,6 +196,7 @@
       "iast": "jñā",
       "gloss_ru": "зная",
       "top_form": "jñātvā",
+      "grammar_class": "4",
       "coverage_pct": 54.518
     },
     {
@@ -185,6 +205,7 @@
       "iast": "1 iṣ / 2 iṣ / ich",
       "gloss_ru": "хочу",
       "top_form": "icchāmi",
+      "grammar_class": "1,6",
       "coverage_pct": 55.3991
     },
     {
@@ -193,6 +214,7 @@
       "iast": "1 paś / 2 paś",
       "gloss_ru": "вижу",
       "top_form": "paśya",
+      "grammar_class": "4",
       "coverage_pct": 56.2601
     },
     {
@@ -201,6 +223,7 @@
       "iast": "man",
       "gloss_ru": "считаю",
       "top_form": "manye",
+      "grammar_class": "1",
       "coverage_pct": 57.1148
     },
     {
@@ -209,6 +232,7 @@
       "iast": "1 dhā / 2 dhā",
       "gloss_ru": "вера",
       "top_form": "dadhāti",
+      "grammar_class": "1,4",
       "coverage_pct": 57.969
     },
     {
@@ -217,6 +241,7 @@
       "iast": "smṛ",
       "gloss_ru": "считается",
       "top_form": "smṛtaḥ",
+      "grammar_class": "1",
       "coverage_pct": 58.7227
     }
   ],
@@ -227,6 +252,7 @@
       "iast": "1 kṛ / 2 kṛ / 3 kṛ",
       "gloss_ru": "сделал",
       "top_form": "kṛtvā",
+      "grammar_class": "1,2,6",
       "coverage_pct": 7.4241
     },
     {
@@ -235,6 +261,7 @@
       "iast": "bhū",
       "gloss_ru": "будет",
       "top_form": "bhavati",
+      "grammar_class": "1",
       "coverage_pct": 14.7743
     },
     {
@@ -243,6 +270,7 @@
       "iast": "1 as / 2 as",
       "gloss_ru": "есть",
       "top_form": "syāt",
+      "grammar_class": "2,4",
       "coverage_pct": 21.2802
     },
     {
@@ -251,6 +279,7 @@
       "iast": "vac",
       "gloss_ru": "сказал",
       "top_form": "uvāca",
+      "grammar_class": "2",
       "coverage_pct": 27.4576
     },
     {
@@ -259,6 +288,7 @@
       "iast": "gach / gam",
       "gloss_ru": "пришел",
       "top_form": "gatvā",
+      "grammar_class": "6",
       "coverage_pct": 30.7951
     },
     {
@@ -267,6 +297,7 @@
       "iast": "dṛś",
       "gloss_ru": "увидев",
       "top_form": "dṛṣṭvā",
+      "grammar_class": "4",
       "coverage_pct": 33.5002
     },
     {
@@ -275,6 +306,7 @@
       "iast": "1 dā / 2 dā / 3 dā / 4 dā",
       "gloss_ru": "взяв",
       "top_form": "dattvā",
+      "grammar_class": "1,4",
       "coverage_pct": 35.6853
     },
     {
@@ -283,6 +315,7 @@
       "iast": "1 vid / 2 vid",
       "gloss_ru": "знает",
       "top_form": "veda",
+      "grammar_class": "1,2",
       "coverage_pct": 37.744
     },
     {
@@ -291,6 +324,7 @@
       "iast": "śru",
       "gloss_ru": "услышав",
       "top_form": "śrutvā",
+      "grammar_class": "4",
       "coverage_pct": 39.6556
     },
     {
@@ -299,6 +333,7 @@
       "iast": "brū",
       "gloss_ru": "сказал",
       "top_form": "abravīt",
+      "grammar_class": "6",
       "coverage_pct": 41.4354
     },
     {
@@ -307,6 +342,7 @@
       "iast": "ah",
       "gloss_ru": "сказал",
       "top_form": "āha",
+      "grammar_class": "1",
       "coverage_pct": 43.1545
     },
     {
@@ -315,6 +351,7 @@
       "iast": "sthā",
       "gloss_ru": "пребывает",
       "top_form": "sthitaḥ",
+      "grammar_class": "1",
       "coverage_pct": 44.841
     },
     {
@@ -323,6 +360,7 @@
       "iast": "jan",
       "gloss_ru": "родился",
       "top_form": "jāyate",
+      "grammar_class": "4",
       "coverage_pct": 46.5236
     },
     {
@@ -331,6 +369,7 @@
       "iast": "han",
       "gloss_ru": "убит",
       "top_form": "hanti",
+      "grammar_class": "8",
       "coverage_pct": 48.1147
     },
     {
@@ -339,6 +378,7 @@
       "iast": "yaj",
       "gloss_ru": "жертвователя",
       "top_form": "yajamānaḥ",
+      "grammar_class": "2",
       "coverage_pct": 49.3439
     },
     {
@@ -347,6 +387,7 @@
       "iast": "hu",
       "gloss_ru": "жертвуют",
       "top_form": "juhoti",
+      "grammar_class": "3",
       "coverage_pct": 50.5118
     },
     {
@@ -355,6 +396,7 @@
       "iast": "yuj",
       "gloss_ru": "союзником",
       "top_form": "yuktam",
+      "grammar_class": "1",
       "coverage_pct": 51.5914
     },
     {
@@ -363,6 +405,7 @@
       "iast": "yā",
       "gloss_ru": "идут",
       "top_form": "yāti",
+      "grammar_class": "2",
       "coverage_pct": 52.6193
     },
     {
@@ -371,6 +414,7 @@
       "iast": "1 pā / 2 pā / 3 pā",
       "gloss_ru": "Защищайте",
       "top_form": "pibet",
+      "grammar_class": "1,2,3",
       "coverage_pct": 53.6007
     },
     {
@@ -379,6 +423,7 @@
       "iast": "jñā",
       "gloss_ru": "зная",
       "top_form": "jñātvā",
+      "grammar_class": "4",
       "coverage_pct": 54.518
     },
     {
@@ -387,6 +432,7 @@
       "iast": "1 iṣ / 2 iṣ / ich",
       "gloss_ru": "хочу",
       "top_form": "icchāmi",
+      "grammar_class": "1,6",
       "coverage_pct": 55.3991
     },
     {
@@ -395,6 +441,7 @@
       "iast": "1 paś / 2 paś",
       "gloss_ru": "вижу",
       "top_form": "paśya",
+      "grammar_class": "4",
       "coverage_pct": 56.2601
     },
     {
@@ -403,6 +450,7 @@
       "iast": "man",
       "gloss_ru": "считаю",
       "top_form": "manye",
+      "grammar_class": "1",
       "coverage_pct": 57.1148
     },
     {
@@ -411,6 +459,7 @@
       "iast": "1 dhā / 2 dhā",
       "gloss_ru": "вера",
       "top_form": "dadhāti",
+      "grammar_class": "1,4",
       "coverage_pct": 57.969
     },
     {
@@ -419,6 +468,7 @@
       "iast": "smṛ",
       "gloss_ru": "считается",
       "top_form": "smṛtaḥ",
+      "grammar_class": "1",
       "coverage_pct": 58.7227
     },
     {
@@ -427,6 +477,7 @@
       "iast": "1 ji / 2 ji",
       "gloss_ru": "Санджая",
       "top_form": "jita",
+      "grammar_class": "9",
       "coverage_pct": 59.4655
     },
     {
@@ -435,6 +486,7 @@
       "iast": "car",
       "gloss_ru": "движется",
       "top_form": "carati",
+      "grammar_class": "1",
       "coverage_pct": 60.1983
     },
     {
@@ -443,6 +495,7 @@
       "iast": "vad",
       "gloss_ru": "говорят",
       "top_form": "vadanti",
+      "grammar_class": "1",
       "coverage_pct": 60.9105
     },
     {
@@ -451,6 +504,7 @@
       "iast": "muc",
       "gloss_ru": "освобождается",
       "top_form": "mucyate",
+      "grammar_class": "6",
       "coverage_pct": 61.6111
     },
     {
@@ -459,6 +513,7 @@
       "iast": "1 i / 2 i",
       "gloss_ru": "идет",
       "top_form": "eti",
+      "grammar_class": "5,9",
       "coverage_pct": 62.2794
     },
     {
@@ -467,6 +522,7 @@
       "iast": "labh",
       "gloss_ru": "обретает",
       "top_form": "labhate",
+      "grammar_class": "1",
       "coverage_pct": 62.8881
     },
     {
@@ -475,6 +531,7 @@
       "iast": "1 pat / 2 pat",
       "gloss_ru": "упал",
       "top_form": "papāta",
+      "grammar_class": "1",
       "coverage_pct": 63.4564
     },
     {
@@ -483,6 +540,7 @@
       "iast": "1 hṛ / 2 hṛ / har",
       "gloss_ru": "похитил",
       "top_form": "harati",
+      "grammar_class": "2,9",
       "coverage_pct": 64.4832
     },
     {
@@ -491,6 +549,7 @@
       "iast": "sṛj",
       "gloss_ru": "выпустил",
       "top_form": "asṛjata",
+      "grammar_class": "2",
       "coverage_pct": 64.9835
     },
     {
@@ -499,6 +558,7 @@
       "iast": "1 hā / 2 hā",
       "gloss_ru": "оставив",
       "top_form": "hīna",
+      "grammar_class": "1,3",
       "coverage_pct": 65.4819
     },
     {
@@ -507,6 +567,7 @@
       "iast": "1 bhuj / 2 bhuj",
       "gloss_ru": "наслаждайся",
       "top_form": "bhuktvā",
+      "grammar_class": "6",
       "coverage_pct": 65.9777
     },
     {
@@ -515,6 +576,7 @@
       "iast": "bandh",
       "gloss_ru": "связывается",
       "top_form": "baddhvā",
+      "grammar_class": "4",
       "coverage_pct": 66.4607
     },
     {
@@ -523,6 +585,7 @@
       "iast": "1 mṛ / 2 mṛ",
       "gloss_ru": "умирает",
       "top_form": "mṛta",
+      "grammar_class": "4,9",
       "coverage_pct": 66.9365
     },
     {
@@ -531,6 +594,7 @@
       "iast": "1 vas / 2 vas / 3 vas",
       "gloss_ru": "жил",
       "top_form": "vaset",
+      "grammar_class": "1,2,6",
       "coverage_pct": 67.3984
     },
     {
@@ -539,6 +603,7 @@
       "iast": "vṛt",
       "gloss_ru": "возвращаются",
       "top_form": "vartate",
+      "grammar_class": "3",
       "coverage_pct": 67.8495
     },
     {
@@ -547,6 +612,7 @@
       "iast": "kṣip",
       "gloss_ru": "метнул",
       "top_form": "kṣipet",
+      "grammar_class": "6",
       "coverage_pct": 68.2973
     },
     {
@@ -555,6 +621,7 @@
       "iast": "tyaj",
       "gloss_ru": "оставив",
       "top_form": "tyaktvā",
+      "grammar_class": "3",
       "coverage_pct": 68.7371
     },
     {
@@ -563,6 +630,7 @@
       "iast": "śudh",
       "gloss_ru": "очищается",
       "top_form": "śuddha",
+      "grammar_class": "7",
       "coverage_pct": 69.1756
     },
     {
@@ -571,6 +639,7 @@
       "iast": "arh",
       "gloss_ru": "должен",
       "top_form": "arhasi",
+      "grammar_class": "1",
       "coverage_pct": 69.6087
     },
     {
@@ -579,6 +648,7 @@
       "iast": "nī",
       "gloss_ru": "приведи",
       "top_form": "nayet",
+      "grammar_class": "2",
       "coverage_pct": 70.0363
     },
     {
@@ -587,6 +657,7 @@
       "iast": "āp",
       "gloss_ru": "достигает",
       "top_form": "āpnoti",
+      "grammar_class": "1",
       "coverage_pct": 70.4574
     },
     {
@@ -595,6 +666,7 @@
       "iast": "dah",
       "gloss_ru": "сжигает",
       "top_form": "dagdha",
+      "grammar_class": "2",
       "coverage_pct": 70.8714
     },
     {
@@ -603,6 +675,7 @@
       "iast": "jīv",
       "gloss_ru": "живет",
       "top_form": "jīvati",
+      "grammar_class": "1",
       "coverage_pct": 71.2757
     },
     {
@@ -611,6 +684,7 @@
       "iast": "1 stu / 2 stu",
       "gloss_ru": "восхвалять",
       "top_form": "stuvanti",
+      "grammar_class": "1",
       "coverage_pct": 71.6768
     },
     {
@@ -619,6 +693,7 @@
       "iast": "pū",
       "gloss_ru": "Павамана",
       "top_form": "pavasva",
+      "grammar_class": "1",
       "coverage_pct": 72.0702
     }
   ],
@@ -629,6 +704,7 @@
       "iast": "1 kṛ / 2 kṛ / 3 kṛ",
       "gloss_ru": "сделал",
       "top_form": "kṛtvā",
+      "grammar_class": "1,2,6",
       "coverage_pct": 7.4241
     },
     {
@@ -637,6 +713,7 @@
       "iast": "bhū",
       "gloss_ru": "будет",
       "top_form": "bhavati",
+      "grammar_class": "1",
       "coverage_pct": 14.7743
     },
     {
@@ -645,6 +722,7 @@
       "iast": "1 as / 2 as",
       "gloss_ru": "есть",
       "top_form": "syāt",
+      "grammar_class": "2,4",
       "coverage_pct": 21.2802
     },
     {
@@ -653,6 +731,7 @@
       "iast": "vac",
       "gloss_ru": "сказал",
       "top_form": "uvāca",
+      "grammar_class": "2",
       "coverage_pct": 27.4576
     },
     {
@@ -661,6 +740,7 @@
       "iast": "gach / gam",
       "gloss_ru": "пришел",
       "top_form": "gatvā",
+      "grammar_class": "6",
       "coverage_pct": 30.7951
     },
     {
@@ -669,6 +749,7 @@
       "iast": "dṛś",
       "gloss_ru": "увидев",
       "top_form": "dṛṣṭvā",
+      "grammar_class": "4",
       "coverage_pct": 33.5002
     },
     {
@@ -677,6 +758,7 @@
       "iast": "1 dā / 2 dā / 3 dā / 4 dā",
       "gloss_ru": "взяв",
       "top_form": "dattvā",
+      "grammar_class": "1,4",
       "coverage_pct": 35.6853
     },
     {
@@ -685,6 +767,7 @@
       "iast": "1 vid / 2 vid",
       "gloss_ru": "знает",
       "top_form": "veda",
+      "grammar_class": "1,2",
       "coverage_pct": 37.744
     },
     {
@@ -693,6 +776,7 @@
       "iast": "śru",
       "gloss_ru": "услышав",
       "top_form": "śrutvā",
+      "grammar_class": "4",
       "coverage_pct": 39.6556
     },
     {
@@ -701,6 +785,7 @@
       "iast": "brū",
       "gloss_ru": "сказал",
       "top_form": "abravīt",
+      "grammar_class": "6",
       "coverage_pct": 41.4354
     },
     {
@@ -709,6 +794,7 @@
       "iast": "ah",
       "gloss_ru": "сказал",
       "top_form": "āha",
+      "grammar_class": "1",
       "coverage_pct": 43.1545
     },
     {
@@ -717,6 +803,7 @@
       "iast": "sthā",
       "gloss_ru": "пребывает",
       "top_form": "sthitaḥ",
+      "grammar_class": "1",
       "coverage_pct": 44.841
     },
     {
@@ -725,6 +812,7 @@
       "iast": "jan",
       "gloss_ru": "родился",
       "top_form": "jāyate",
+      "grammar_class": "4",
       "coverage_pct": 46.5236
     },
     {
@@ -733,6 +821,7 @@
       "iast": "han",
       "gloss_ru": "убит",
       "top_form": "hanti",
+      "grammar_class": "8",
       "coverage_pct": 48.1147
     },
     {
@@ -741,6 +830,7 @@
       "iast": "yaj",
       "gloss_ru": "жертвователя",
       "top_form": "yajamānaḥ",
+      "grammar_class": "2",
       "coverage_pct": 49.3439
     },
     {
@@ -749,6 +839,7 @@
       "iast": "hu",
       "gloss_ru": "жертвуют",
       "top_form": "juhoti",
+      "grammar_class": "3",
       "coverage_pct": 50.5118
     },
     {
@@ -757,6 +848,7 @@
       "iast": "yuj",
       "gloss_ru": "союзником",
       "top_form": "yuktam",
+      "grammar_class": "1",
       "coverage_pct": 51.5914
     },
     {
@@ -765,6 +857,7 @@
       "iast": "yā",
       "gloss_ru": "идут",
       "top_form": "yāti",
+      "grammar_class": "2",
       "coverage_pct": 52.6193
     },
     {
@@ -773,6 +866,7 @@
       "iast": "1 pā / 2 pā / 3 pā",
       "gloss_ru": "Защищайте",
       "top_form": "pibet",
+      "grammar_class": "1,2,3",
       "coverage_pct": 53.6007
     },
     {
@@ -781,6 +875,7 @@
       "iast": "jñā",
       "gloss_ru": "зная",
       "top_form": "jñātvā",
+      "grammar_class": "4",
       "coverage_pct": 54.518
     },
     {
@@ -789,6 +884,7 @@
       "iast": "1 iṣ / 2 iṣ / ich",
       "gloss_ru": "хочу",
       "top_form": "icchāmi",
+      "grammar_class": "1,6",
       "coverage_pct": 55.3991
     },
     {
@@ -797,6 +893,7 @@
       "iast": "1 paś / 2 paś",
       "gloss_ru": "вижу",
       "top_form": "paśya",
+      "grammar_class": "4",
       "coverage_pct": 56.2601
     },
     {
@@ -805,6 +902,7 @@
       "iast": "man",
       "gloss_ru": "считаю",
       "top_form": "manye",
+      "grammar_class": "1",
       "coverage_pct": 57.1148
     },
     {
@@ -813,6 +911,7 @@
       "iast": "1 dhā / 2 dhā",
       "gloss_ru": "вера",
       "top_form": "dadhāti",
+      "grammar_class": "1,4",
       "coverage_pct": 57.969
     },
     {
@@ -821,6 +920,7 @@
       "iast": "smṛ",
       "gloss_ru": "считается",
       "top_form": "smṛtaḥ",
+      "grammar_class": "1",
       "coverage_pct": 58.7227
     },
     {
@@ -829,6 +929,7 @@
       "iast": "1 ji / 2 ji",
       "gloss_ru": "Санджая",
       "top_form": "jita",
+      "grammar_class": "9",
       "coverage_pct": 59.4655
     },
     {
@@ -837,6 +938,7 @@
       "iast": "car",
       "gloss_ru": "движется",
       "top_form": "carati",
+      "grammar_class": "1",
       "coverage_pct": 60.1983
     },
     {
@@ -845,6 +947,7 @@
       "iast": "vad",
       "gloss_ru": "говорят",
       "top_form": "vadanti",
+      "grammar_class": "1",
       "coverage_pct": 60.9105
     },
     {
@@ -853,6 +956,7 @@
       "iast": "muc",
       "gloss_ru": "освобождается",
       "top_form": "mucyate",
+      "grammar_class": "6",
       "coverage_pct": 61.6111
     },
     {
@@ -861,6 +965,7 @@
       "iast": "1 i / 2 i",
       "gloss_ru": "идет",
       "top_form": "eti",
+      "grammar_class": "5,9",
       "coverage_pct": 62.2794
     },
     {
@@ -869,6 +974,7 @@
       "iast": "labh",
       "gloss_ru": "обретает",
       "top_form": "labhate",
+      "grammar_class": "1",
       "coverage_pct": 62.8881
     },
     {
@@ -877,6 +983,7 @@
       "iast": "1 pat / 2 pat",
       "gloss_ru": "упал",
       "top_form": "papāta",
+      "grammar_class": "1",
       "coverage_pct": 63.4564
     },
     {
@@ -885,6 +992,7 @@
       "iast": "1 hṛ / 2 hṛ / har",
       "gloss_ru": "похитил",
       "top_form": "harati",
+      "grammar_class": "2,9",
       "coverage_pct": 64.4832
     },
     {
@@ -893,6 +1001,7 @@
       "iast": "sṛj",
       "gloss_ru": "выпустил",
       "top_form": "asṛjata",
+      "grammar_class": "2",
       "coverage_pct": 64.9835
     },
     {
@@ -901,6 +1010,7 @@
       "iast": "1 hā / 2 hā",
       "gloss_ru": "оставив",
       "top_form": "hīna",
+      "grammar_class": "1,3",
       "coverage_pct": 65.4819
     },
     {
@@ -909,6 +1019,7 @@
       "iast": "1 bhuj / 2 bhuj",
       "gloss_ru": "наслаждайся",
       "top_form": "bhuktvā",
+      "grammar_class": "6",
       "coverage_pct": 65.9777
     },
     {
@@ -917,6 +1028,7 @@
       "iast": "bandh",
       "gloss_ru": "связывается",
       "top_form": "baddhvā",
+      "grammar_class": "4",
       "coverage_pct": 66.4607
     },
     {
@@ -925,6 +1037,7 @@
       "iast": "1 mṛ / 2 mṛ",
       "gloss_ru": "умирает",
       "top_form": "mṛta",
+      "grammar_class": "4,9",
       "coverage_pct": 66.9365
     },
     {
@@ -933,6 +1046,7 @@
       "iast": "1 vas / 2 vas / 3 vas",
       "gloss_ru": "жил",
       "top_form": "vaset",
+      "grammar_class": "1,2,6",
       "coverage_pct": 67.3984
     },
     {
@@ -941,6 +1055,7 @@
       "iast": "vṛt",
       "gloss_ru": "возвращаются",
       "top_form": "vartate",
+      "grammar_class": "3",
       "coverage_pct": 67.8495
     },
     {
@@ -949,6 +1064,7 @@
       "iast": "kṣip",
       "gloss_ru": "метнул",
       "top_form": "kṣipet",
+      "grammar_class": "6",
       "coverage_pct": 68.2973
     },
     {
@@ -957,6 +1073,7 @@
       "iast": "tyaj",
       "gloss_ru": "оставив",
       "top_form": "tyaktvā",
+      "grammar_class": "3",
       "coverage_pct": 68.7371
     },
     {
@@ -965,6 +1082,7 @@
       "iast": "śudh",
       "gloss_ru": "очищается",
       "top_form": "śuddha",
+      "grammar_class": "7",
       "coverage_pct": 69.1756
     },
     {
@@ -973,6 +1091,7 @@
       "iast": "arh",
       "gloss_ru": "должен",
       "top_form": "arhasi",
+      "grammar_class": "1",
       "coverage_pct": 69.6087
     },
     {
@@ -981,6 +1100,7 @@
       "iast": "nī",
       "gloss_ru": "приведи",
       "top_form": "nayet",
+      "grammar_class": "2",
       "coverage_pct": 70.0363
     },
     {
@@ -989,6 +1109,7 @@
       "iast": "āp",
       "gloss_ru": "достигает",
       "top_form": "āpnoti",
+      "grammar_class": "1",
       "coverage_pct": 70.4574
     },
     {
@@ -997,6 +1118,7 @@
       "iast": "dah",
       "gloss_ru": "сжигает",
       "top_form": "dagdha",
+      "grammar_class": "2",
       "coverage_pct": 70.8714
     },
     {
@@ -1005,6 +1127,7 @@
       "iast": "jīv",
       "gloss_ru": "живет",
       "top_form": "jīvati",
+      "grammar_class": "1",
       "coverage_pct": 71.2757
     },
     {
@@ -1013,6 +1136,7 @@
       "iast": "1 stu / 2 stu",
       "gloss_ru": "восхвалять",
       "top_form": "stuvanti",
+      "grammar_class": "1",
       "coverage_pct": 71.6768
     },
     {
@@ -1021,6 +1145,7 @@
       "iast": "pū",
       "gloss_ru": "Павамана",
       "top_form": "pavasva",
+      "grammar_class": "1",
       "coverage_pct": 72.0702
     },
     {
@@ -1029,6 +1154,7 @@
       "iast": "chid",
       "gloss_ru": "рассек",
       "top_form": "cicheda",
+      "grammar_class": "1",
       "coverage_pct": 72.4594
     },
     {
@@ -1037,6 +1163,7 @@
       "iast": "1 vṛ / 2 vṛ",
       "gloss_ru": "окруженный",
       "top_form": "vṛtaḥ",
+      "grammar_class": "1,5",
       "coverage_pct": 72.8385
     },
     {
@@ -1045,6 +1172,7 @@
       "iast": "tap",
       "gloss_ru": "греет",
       "top_form": "tapta",
+      "grammar_class": "4",
       "coverage_pct": 73.2142
     },
     {
@@ -1053,6 +1181,7 @@
       "iast": "pac",
       "gloss_ru": "перевариваю",
       "top_form": "pacet",
+      "grammar_class": "1",
       "coverage_pct": 73.5887
     },
     {
@@ -1061,6 +1190,7 @@
       "iast": "bhid",
       "gloss_ru": "разбито",
       "top_form": "bhinna",
+      "grammar_class": "3",
       "coverage_pct": 73.9612
     },
     {
@@ -1069,6 +1199,7 @@
       "iast": "1 sidh / 2 sidh",
       "gloss_ru": "устанавливается",
       "top_form": "siddham",
+      "grammar_class": "1,4",
       "coverage_pct": 74.3302
     },
     {
@@ -1077,6 +1208,7 @@
       "iast": "ās",
       "gloss_ru": "почитают",
       "top_form": "āste",
+      "grammar_class": "1,2,4",
       "coverage_pct": 74.686
     },
     {
@@ -1085,6 +1217,7 @@
       "iast": "śak",
       "gloss_ru": "способен",
       "top_form": "śakyate",
+      "grammar_class": "4",
       "coverage_pct": 75.0412
     },
     {
@@ -1093,6 +1226,7 @@
       "iast": "1 aś / 2 aś",
       "gloss_ru": "достигли",
       "top_form": "aśnute",
+      "grammar_class": "1",
       "coverage_pct": 75.3956
     },
     {
@@ -1101,6 +1235,7 @@
       "iast": "rakṣ",
       "gloss_ru": "охраняет",
       "top_form": "rakṣa",
+      "grammar_class": "4",
       "coverage_pct": 75.7467
     },
     {
@@ -1109,6 +1244,7 @@
       "iast": "1 gā / 2 gā",
       "gloss_ru": "пришел",
       "top_form": "gāyati",
+      "grammar_class": "2,4",
       "coverage_pct": 76.0944
     },
     {
@@ -1117,6 +1253,7 @@
       "iast": "vah / vāh",
       "gloss_ru": "привези",
       "top_form": "vahanti",
+      "grammar_class": "2",
       "coverage_pct": 76.4301
     },
     {
@@ -1125,6 +1262,7 @@
       "iast": "bhṛ",
       "gloss_ru": "принеси",
       "top_form": "bibharti",
+      "grammar_class": "1",
       "coverage_pct": 76.7617
     },
     {
@@ -1133,6 +1271,7 @@
       "iast": "śaṃs",
       "gloss_ru": "скажи",
       "top_form": "śaṃsati",
+      "grammar_class": "2",
       "coverage_pct": 77.0865
     },
     {
@@ -1141,6 +1280,7 @@
       "iast": "prī",
       "gloss_ru": "доволен",
       "top_form": "prītaḥ",
+      "grammar_class": "9",
       "coverage_pct": 77.4086
     },
     {
@@ -1149,6 +1289,7 @@
       "iast": "jap",
       "gloss_ru": "знатоков гимнов",
       "top_form": "japet",
+      "grammar_class": "4",
       "coverage_pct": 77.7183
     },
     {
@@ -1157,6 +1298,7 @@
       "iast": "krudh",
       "gloss_ru": "разгневанный",
       "top_form": "kruddho",
+      "grammar_class": "4",
       "coverage_pct": 78.0202
     },
     {
@@ -1165,6 +1307,7 @@
       "iast": "snā",
       "gloss_ru": "омывшись",
       "top_form": "snātvā",
+      "grammar_class": "4",
       "coverage_pct": 78.32
     },
     {
@@ -1173,6 +1316,7 @@
       "iast": "vyadh",
       "gloss_ru": "пронзил",
       "top_form": "vivyādha",
+      "grammar_class": "4",
       "coverage_pct": 78.6177
     },
     {
@@ -1181,6 +1325,7 @@
       "iast": "vṛdh",
       "gloss_ru": "возрастает",
       "top_form": "vardhate",
+      "grammar_class": "6",
       "coverage_pct": 78.9123
     },
     {
@@ -1189,6 +1334,7 @@
       "iast": "ram",
       "gloss_ru": "радуются",
       "top_form": "rataḥ",
+      "grammar_class": "4",
       "coverage_pct": 79.1949
     },
     {
@@ -1197,6 +1343,7 @@
       "iast": "bhāṣ",
       "gloss_ru": "сказал",
       "top_form": "abhāṣata",
+      "grammar_class": "1",
       "coverage_pct": 79.4737
     },
     {
@@ -1205,6 +1352,7 @@
       "iast": "1 pṛ / 2 pṛ / 3 pṛ",
       "gloss_ru": "полный",
       "top_form": "pūrṇa",
+      "grammar_class": "1,5",
       "coverage_pct": 79.7488
     },
     {
@@ -1213,6 +1361,7 @@
       "iast": "1 naś / 2 naś",
       "gloss_ru": "погибнут",
       "top_form": "naṣṭa",
+      "grammar_class": "1",
       "coverage_pct": 80.0069
     },
     {
@@ -1221,6 +1370,7 @@
       "iast": "1 jṛ / 2 jṛ",
       "gloss_ru": "стареет",
       "top_form": "jīrṇe",
+      "grammar_class": "1,6",
       "coverage_pct": 80.2642
     },
     {
@@ -1229,6 +1379,7 @@
       "iast": "bhī",
       "gloss_ru": "в страхе",
       "top_form": "bhītā",
+      "grammar_class": "1",
       "coverage_pct": 80.516
     },
     {
@@ -1237,6 +1388,7 @@
       "iast": "dviṣ",
       "gloss_ru": "ненавидит",
       "top_form": "dveṣṭi",
+      "grammar_class": "1",
       "coverage_pct": 80.7604
     },
     {
@@ -1245,6 +1397,7 @@
       "iast": "sev",
       "gloss_ru": "служит",
       "top_form": "seveta",
+      "grammar_class": "4",
       "coverage_pct": 81.0021
     },
     {
@@ -1253,6 +1406,7 @@
       "iast": "yudh",
       "gloss_ru": "в битве",
       "top_form": "yudhyasva",
+      "grammar_class": "2",
       "coverage_pct": 81.2326
     },
     {
@@ -1261,6 +1415,7 @@
       "iast": "vadh",
       "gloss_ru": "убил",
       "top_form": "vadhyaḥ",
+      "grammar_class": "4",
       "coverage_pct": 81.4575
     },
     {
@@ -1269,6 +1424,7 @@
       "iast": "dhṛ",
       "gloss_ru": "наделенный",
       "top_form": "dhṛta",
+      "grammar_class": "4",
       "coverage_pct": 81.6812
     },
     {
@@ -1277,6 +1433,7 @@
       "iast": "juṣ",
       "gloss_ru": "наслаждайся",
       "top_form": "juṣṭaṃ",
+      "grammar_class": "6",
       "coverage_pct": 81.9043
     },
     {
@@ -1285,6 +1442,7 @@
       "iast": "vraj",
       "gloss_ru": "загон",
       "top_form": "vrajet",
+      "grammar_class": "1",
       "coverage_pct": 82.123
     },
     {
@@ -1293,6 +1451,7 @@
       "iast": "1 kṣi / 2 kṣi",
       "gloss_ru": "живет",
       "top_form": "kṣīṇa",
+      "grammar_class": "4",
       "coverage_pct": 82.3379
     },
     {
@@ -1301,6 +1460,7 @@
       "iast": "bhaj",
       "gloss_ru": "почитают",
       "top_form": "bhajet",
+      "grammar_class": "1",
       "coverage_pct": 82.5497
     },
     {
@@ -1309,6 +1469,7 @@
       "iast": "dhyā",
       "gloss_ru": "сумерки",
       "top_form": "dhyātvā",
+      "grammar_class": "3",
       "coverage_pct": 82.7615
     },
     {
@@ -1317,6 +1478,7 @@
       "iast": "dham",
       "gloss_ru": "затрубили",
       "top_form": "dhamet",
+      "grammar_class": "1",
       "coverage_pct": 82.9729
     },
     {
@@ -1325,6 +1487,7 @@
       "iast": "dīp",
       "gloss_ru": "пылающий",
       "top_form": "dīpta",
+      "grammar_class": "4",
       "coverage_pct": 83.1844
     },
     {
@@ -1333,6 +1496,7 @@
       "iast": "1 śam / 2 śam / 3 śam",
       "gloss_ru": "счастье",
       "top_form": "śānta",
+      "grammar_class": "9",
       "coverage_pct": 83.3953
     },
     {
@@ -1341,6 +1505,7 @@
       "iast": "hṛṣ",
       "gloss_ru": "радостно",
       "top_form": "hṛṣṭa",
+      "grammar_class": "1",
       "coverage_pct": 83.604
     },
     {
@@ -1349,6 +1514,7 @@
       "iast": "budh",
       "gloss_ru": "узнай",
       "top_form": "buddhvā",
+      "grammar_class": "1",
       "coverage_pct": 83.8074
     },
     {
@@ -1357,6 +1523,7 @@
       "iast": "1 śī / 2 śī",
       "gloss_ru": "лежит",
       "top_form": "śete",
+      "grammar_class": "4",
       "coverage_pct": 84.0105
     },
     {
@@ -1365,6 +1532,7 @@
       "iast": "muh",
       "gloss_ru": "глупец",
       "top_form": "mūḍha",
+      "grammar_class": "4",
       "coverage_pct": 84.2112
     },
     {
@@ -1373,6 +1541,7 @@
       "iast": "svap",
       "gloss_ru": "спит",
       "top_form": "supta",
+      "grammar_class": "1",
       "coverage_pct": 84.4114
     },
     {
@@ -1381,6 +1550,7 @@
       "iast": "yach / yam",
       "gloss_ru": "подняв",
       "top_form": "yaccha",
+      "grammar_class": "6",
       "coverage_pct": 84.6103
     },
     {
@@ -1389,6 +1559,7 @@
       "iast": "mad",
       "gloss_ru": "я",
       "top_form": "matta",
+      "grammar_class": "3",
       "coverage_pct": 84.8077
     },
     {
@@ -1397,6 +1568,7 @@
       "iast": "dru",
       "gloss_ru": "ринулся",
       "top_form": "drutaṃ",
+      "grammar_class": "9",
       "coverage_pct": 85.003
     },
     {
@@ -1405,6 +1577,7 @@
       "iast": "piṣ",
       "gloss_ru": "сжимая",
       "top_form": "piṣṭvā",
+      "grammar_class": "1",
       "coverage_pct": 85.1962
     },
     {
@@ -1413,6 +1586,7 @@
       "iast": "spṛś",
       "gloss_ru": "коснулся",
       "top_form": "spṛṣṭvā",
+      "grammar_class": "6",
       "coverage_pct": 85.3889
     },
     {
@@ -1421,6 +1595,7 @@
       "iast": "viś",
       "gloss_ru": "вошел",
       "top_form": "viveśa",
+      "grammar_class": "3",
       "coverage_pct": 85.5805
     }
   ]
