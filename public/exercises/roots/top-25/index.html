@@ -42,7 +42,7 @@
   <p class="eyebrow">संस्कृतम् · धातवः · १–२५</p>
   <h1>Топ-25 корней</h1>
   <p class="about">25 самых частых санскритских глагольных корней по всему корпусу Digital Corpus of Sanskrit
-    (Oliver Hellwig, CC BY&nbsp;4.0). Соедините каждый корень с его переводом.</p>
+    (Oliver Hellwig, CC BY&nbsp;4.0). Соедините каждый корень с его самой частой словоформой в корпусе.</p>
   <div id="app"></div>
   <footer>
     Источник частотности: Digital Corpus of Sanskrit, пересчитано в
@@ -59,14 +59,14 @@
   var pairs = ROOT_BANDS.top25.map(function (row) {
     return {
       left: { text: row.devanagari, hint: row.iast },
-      right: { text: row.gloss_ru, hint: "ранг " + row.rank + " · " + row.top_form }
+      right: { text: row.top_form, hint: row.gloss_ru }
     };
   });
   MatchExercise.mount(document.getElementById("app"), {
-    task: "Соедините каждый корень слева с его переводом справа.",
+    task: "Соедините каждый корень слева с его словоформой справа.",
     feedback: "Верно! Это 25 самых частых глагольных корней санскритского корпуса.",
     leftTitle: "Корни (देवनागरी)",
-    rightTitle: "Перевод",
+    rightTitle: "Форма (топ по частоте)",
     shuffle: true,
     pairs: pairs
   });
