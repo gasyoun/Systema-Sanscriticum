@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.43.0] - 2026-07-20
+
 ### Added
 - **H1356: frequency-ranked root drills (top-25/50/100) in `public/exercises/roots/`.**
   New match-family exercise pairing each Sanskrit verbal root (deva + IAST hint)
