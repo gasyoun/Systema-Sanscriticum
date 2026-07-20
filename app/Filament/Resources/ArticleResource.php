@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ArticleResource extends Resource
@@ -168,9 +169,9 @@ class ArticleResource extends Resource
                                     // Сниппеты — рендерятся через blade-компонент
                                     Forms\Components\Placeholder::make('snippets')
                                         ->label('HTML-сниппеты для вставки')
-                                        ->content(function (?Article $record): \Illuminate\Support\HtmlString {
+                                        ->content(function (?Article $record): HtmlString {
                                             if (! $record || $record->inlineImages->isEmpty()) {
-                                                return new \Illuminate\Support\HtmlString(
+                                                return new HtmlString(
                                                     '<div style="padding:16px; background:#f3f4f6; border-radius:8px; color:#6b7280; font-size:14px;">'
                                                     .'Сохраните статью с выбранными картинками — здесь появятся готовые сниппеты для копирования.'
                                                     .'</div>'
@@ -284,7 +285,7 @@ HTML;
 </script>
 HTML;
 
-                                            return new \Illuminate\Support\HtmlString($html);
+                                            return new HtmlString($html);
                                         })
                                         ->columnSpanFull(),
                                 ]),
@@ -296,7 +297,7 @@ HTML;
                                 ->schema([
                                     Forms\Components\Placeholder::make('body_preview')
                                         ->label('')
-                                        ->content(fn (Forms\Get $get) => new \Illuminate\Support\HtmlString(
+                                        ->content(fn (Forms\Get $get) => new HtmlString(
                                             '<div class="prose max-w-none" style="padding: 16px; background: #fff; border-radius: 8px;">'
                                             .($get('body') ?: '<em style="color:#888">Пусто — начните вводить HTML в поле выше.</em>')
                                             .'</div>'
@@ -379,7 +380,7 @@ HTML;
                                 ->schema([
                                     Forms\Components\Placeholder::make('goals_list')
                                         ->label('')
-                                        ->content(new \Illuminate\Support\HtmlString(
+                                        ->content(new HtmlString(
                                             '<div style="font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.8;">'
                                             .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_time_60s</code> — 60 секунд на странице</div>'
                                             .'<div><code style="background:#f3f4f6; padding:2px 8px; border-radius:4px; color:#dc2626;">article_scroll_75</code> — доскроллил до 75% статьи</div>'

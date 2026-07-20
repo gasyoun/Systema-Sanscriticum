@@ -2,10 +2,19 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogFailedAuthentication;
+use App\Listeners\UserLoginListener;
+use App\Listeners\UserLogoutListener;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\VKontakte\VKontakteExtendSocialite;
+use SocialiteProviders\Yandex\YandexExtendSocialite;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -20,26 +29,26 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         // --- ТРЕКИНГ АКТИВНОСТИ ---
-        \Illuminate\Auth\Events\Login::class => [
-            \App\Listeners\UserLoginListener::class,
+        Login::class => [
+            UserLoginListener::class,
         ],
-        \Illuminate\Auth\Events\Logout::class => [
-            \App\Listeners\UserLogoutListener::class,
+        Logout::class => [
+            UserLogoutListener::class,
         ],
 
         // --- ЛЕНТА «ПРОБЛЕМ СО ВХОДОМ» (H849) ---
         // Неудачный Auth::attempt на /login и /shop/login → запись в access_attempts.
-        \Illuminate\Auth\Events\Failed::class => [
-            \App\Listeners\LogFailedAuthentication::class,
+        Failed::class => [
+            LogFailedAuthentication::class,
         ],
 
         // --- СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ: community-драйверы Socialite ---
         // Google идёт из коробки в laravel/socialite; VK и Yandex регистрируются
         // через событие SocialiteWasCalled (socialiteproviders/*). Конфиг —
         // services.vkontakte / services.yandex.
-        \SocialiteProviders\Manager\SocialiteWasCalled::class => [
-            \SocialiteProviders\VKontakte\VKontakteExtendSocialite::class.'@handle',
-            \SocialiteProviders\Yandex\YandexExtendSocialite::class.'@handle',
+        SocialiteWasCalled::class => [
+            VKontakteExtendSocialite::class.'@handle',
+            YandexExtendSocialite::class.'@handle',
         ],
     ];
 

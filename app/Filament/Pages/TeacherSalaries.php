@@ -1142,7 +1142,7 @@ class TeacherSalaries extends Page implements HasTable
 
     private function periodLabel(): string
     {
-        return \Illuminate\Support\Carbon::parse($this->resolvePeriod().'-01')->translatedFormat('F Y');
+        return Carbon::parse($this->resolvePeriod().'-01')->translatedFormat('F Y');
     }
 
     /**
@@ -1300,7 +1300,7 @@ class TeacherSalaries extends Page implements HasTable
 
                 return view('filament.teacher-salaries.breakdown', [
                     'teacher' => $teacher,
-                    'periodLabel' => \Illuminate\Support\Carbon::createFromFormat('Y-m', $period)->translatedFormat('F Y'),
+                    'periodLabel' => Carbon::createFromFormat('Y-m', $period)->translatedFormat('F Y'),
                     'breakdown' => $service->breakdownForTeacher($teacher, $start, $end),
                     'payments' => $service->paymentsForTeacher($teacher, $start, $end),
                 ]);
@@ -1531,11 +1531,11 @@ class TeacherSalaries extends Page implements HasTable
     }
 
     /**
-     * @return array{0: \Illuminate\Support\Carbon, 1: \Illuminate\Support\Carbon}
+     * @return array{0: Carbon, 1: Carbon}
      */
     private function periodBounds(string $period): array
     {
-        $start = \Illuminate\Support\Carbon::createFromFormat('Y-m', $period)->startOfMonth();
+        $start = Carbon::createFromFormat('Y-m', $period)->startOfMonth();
 
         return [$start, $start->copy()->endOfMonth()];
     }

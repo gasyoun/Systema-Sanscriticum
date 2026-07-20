@@ -4,6 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
+use App\Models\Course;
+use App\Models\User;
+use App\Services\CertificateService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -97,7 +100,7 @@ class CertificateResource extends Resource
                     ->live()
                     // Подставляем ФИО из профиля в редактируемое поле сертификата.
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        $set('student_name', \App\Models\User::find($state)?->name);
+                        $set('student_name', User::find($state)?->name);
                     }),
 
                 // 2. Выбор Курса (обязательно)
@@ -118,14 +121,14 @@ class CertificateResource extends Resource
                     // Серверная валидация: Filament-default Rule::exists для relationship-Select
                     // не накладывает where, поэтому преподаватель может через POST передать
                     // чужой course_id. Closure-правило учитывает и основного, и со-препода.
-                    ->rule(fn () => \App\Models\Course::teacherCourseValidationRule())
+                    ->rule(fn () => Course::teacherCourseValidationRule())
                     ->searchable()
                     ->preload()
                     ->required() // <--- ВАЖНО
                     ->live()
                     // Подставляем название курса в редактируемое поле сертификата.
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        $set('course_title', \App\Models\Course::find($state)?->title);
+                        $set('course_title', Course::find($state)?->title);
                     }),
 
                 // 3. ФИО, как оно будет напечатано в сертификате (по умолчанию из профиля).
@@ -141,7 +144,7 @@ class CertificateResource extends Resource
                 // 5. Шаблон сертификата (роспись преподавателя).
                 Forms\Components\Select::make('template')
                     ->label('Шаблон (роспись)')
-                    ->options(\App\Models\Certificate::templateOptions())
+                    ->options(Certificate::templateOptions())
                     ->default('gasuns')
                     ->required()
                     ->live(),
@@ -151,7 +154,7 @@ class CertificateResource extends Resource
                     ->visible(fn (Forms\Get $get) => $get('template') === 'sanka')
                     ->columns(3)
                     ->schema(
-                        collect(\App\Models\Certificate::EXAM_CRITERIA)
+                        collect(Certificate::EXAM_CRITERIA)
                             ->map(fn (array $crit, string $field) => Forms\Components\TextInput::make($field)
                                 ->label($crit['label'])
                                 ->numeric()
@@ -200,9 +203,9 @@ class CertificateResource extends Resource
                 Tables\Actions\Action::make('jpg')
                     ->label('JPG')
                     ->icon('heroicon-o-photo')
-                    ->visible(fn () => \App\Services\CertificateService::jpegSupported())
+                    ->visible(fn () => CertificateService::jpegSupported())
                     ->action(fn (Certificate $record) => response()->streamDownload(
-                        fn () => print app(\App\Services\CertificateService::class)->generateJpegBytes($record),
+                        fn () => print app(CertificateService::class)->generateJpegBytes($record),
                         'Certificate_'.$record->number.'.jpg',
                         ['Content-Type' => 'image/jpeg'],
                     )),

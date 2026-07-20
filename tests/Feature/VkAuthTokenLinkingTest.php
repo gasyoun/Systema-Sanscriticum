@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -32,7 +33,7 @@ class VkAuthTokenLinkingTest extends TestCase
         Http::fake(['*' => Http::response(['response' => 1], 200)]);
     }
 
-    private function vkWebhook(int $fromId, ?string $ref, string $text = 'привет'): \Illuminate\Testing\TestResponse
+    private function vkWebhook(int $fromId, ?string $ref, string $text = 'привет'): TestResponse
     {
         $message = ['from_id' => $fromId, 'text' => $text];
         if ($ref !== null) {
@@ -59,7 +60,14 @@ class VkAuthTokenLinkingTest extends TestCase
 
         // Редирект на vk.me несёт токен, а НЕ user id.
         $response->assertRedirect("https://vk.me/club12345?ref={$user->vk_auth_token}");
-        $this->assertStringNotContainsString("ref={$user->id}", $response->headers->get('Location'));
+
+        // Точное сравнение значения ref, а не substring — 32-символьный случайный
+        // токен может случайно СОДЕРЖАТЬ "ref={id}" как подстроку (напр. token
+        // начинается с той же цифры, что id), что делало assertStringNotContainsString
+        // флаки-тестом (H1355, 20-07-2026).
+        parse_str((string) parse_url($response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $this->assertSame($user->vk_auth_token, $query['ref'] ?? null);
+        $this->assertNotSame((string) $user->id, $query['ref'] ?? null);
     }
 
     /** @test */

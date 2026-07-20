@@ -9,6 +9,7 @@ use App\Models\DirectAdSpend;
 use App\Models\Lead;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Carbon;
 
 class LeadCostStatsWidget extends StatsOverviewWidget
 {
@@ -29,7 +30,7 @@ class LeadCostStatsWidget extends StatsOverviewWidget
         $minStart = DirectAdSpend::query()->min('starts_at');
         $maxEnd = DirectAdSpend::query()->max('ends_at');
         $directLeads = ($minStart && $maxEnd)
-            ? Lead::countForPeriod(\Illuminate\Support\Carbon::parse($minStart), \Illuminate\Support\Carbon::parse($maxEnd))
+            ? Lead::countForPeriod(Carbon::parse($minStart), Carbon::parse($maxEnd))
             : 0;
         $avgCostPerLead = $directLeads > 0 ? $directBudget / $directLeads : null;
 

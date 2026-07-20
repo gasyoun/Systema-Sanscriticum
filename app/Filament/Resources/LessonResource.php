@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\LessonExporter;
 use App\Filament\Resources\LessonResource\Pages;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -11,8 +12,10 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class LessonResource extends Resource
 {
@@ -121,7 +124,7 @@ class LessonResource extends Resource
                             return [];
                         }
 
-                        return \App\Models\Course::find($courseId)
+                        return Course::find($courseId)
                             ?->groups()->pluck('name', 'groups.id')->all() ?? [];
                     })
                     ->searchable()
@@ -177,7 +180,7 @@ class LessonResource extends Resource
                     // Валидация «не более одного preview на курс». Filament к голому
                     // Closure применяет evaluate() — оборачиваем во внешнее замыкание,
                     // как Course::teacherCourseValidationRule().
-                    ->rule(fn (?\App\Models\Lesson $record, Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($record, $get) {
+                    ->rule(fn (?Lesson $record, Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($record, $get) {
                         if (! $value) {
                             return;
                         }
@@ -185,7 +188,7 @@ class LessonResource extends Resource
                         if (! $courseId) {
                             return;
                         }
-                        $exists = \App\Models\Lesson::query()
+                        $exists = Lesson::query()
                             ->where('course_id', $courseId)
                             ->where('is_preview', true)
                             ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
@@ -472,15 +475,15 @@ class LessonResource extends Resource
                                 ->placeholder('Весь блок (очистить)')
                                 ->helperText('Пусто = снять разметку (урок входит в целый блок).'),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                        ->action(function (Collection $records, array $data): void {
                             foreach ($records as $record) {
                                 $record->update(['block_half' => $data['block_half'] ?? null]);
                             }
                         })
                         ->deselectRecordsAfterCompletion(),
                     // Добавляем кнопку массового экспорта:
-                    \Filament\Tables\Actions\ExportBulkAction::make()
-                        ->exporter(\App\Filament\Exports\LessonExporter::class)
+                    ExportBulkAction::make()
+                        ->exporter(LessonExporter::class)
                         ->label('Экспорт для файлов'),
                 ]),
             ])

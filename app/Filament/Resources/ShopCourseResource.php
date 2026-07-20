@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ShopCourseResource\Pages;
+use App\Filament\Resources\ShopCourseResource\RelationManagers\BlocksRelationManager;
+use App\Filament\Resources\ShopCourseResource\RelationManagers\TariffsRelationManager;
 use App\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -140,8 +142,8 @@ class ShopCourseResource extends Resource
     {
         return [
             // Используем полный и точный путь к нашему новому файлу
-            \App\Filament\Resources\ShopCourseResource\RelationManagers\TariffsRelationManager::class,
-            \App\Filament\Resources\ShopCourseResource\RelationManagers\BlocksRelationManager::class,
+            TariffsRelationManager::class,
+            BlocksRelationManager::class,
         ];
     }
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Lead extends Model
 {
@@ -162,8 +163,8 @@ class Lead extends Model
      */
     public static function countForPeriod($start, $end, ?string $utmSource = null, $landingPageId = null): int
     {
-        $start = \Illuminate\Support\Carbon::parse($start)->startOfDay();
-        $end = \Illuminate\Support\Carbon::parse($end)->endOfDay();
+        $start = Carbon::parse($start)->startOfDay();
+        $end = Carbon::parse($end)->endOfDay();
         if ($end->lt($start)) {
             return 0;
         }

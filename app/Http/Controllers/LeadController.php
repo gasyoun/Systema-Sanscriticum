@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
 use App\Models\Lead;
+use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\SocialChannelParser;
@@ -102,7 +103,7 @@ class LeadController extends Controller
         // бота: n8n зовёт /api/webhooks/lead-step (см. LeadStepMailer 'webinar_invite').
 
         // Уведомление маркетологам в Telegram (no-op, если чат не настроен).
-        app(\App\Services\LeadNotifier::class)->newLead($lead);
+        app(LeadNotifier::class)->newLead($lead);
 
         return redirect()->route('thank.you')
             ->with($flashBuilder->build($lead, $landing, $validated));

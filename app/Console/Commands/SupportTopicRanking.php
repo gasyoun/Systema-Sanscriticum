@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\SupportTopicAssignment;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 /**
  * Rank support topics by curator-time-saved potential to prioritise which
@@ -115,7 +116,7 @@ class SupportTopicRanking extends Command
     }
 
     /**
-     * @return array{0: \Illuminate\Support\Collection, 1: string}
+     * @return array{0: Collection, 1: string}
      */
     private function rankWeighted(CarbonImmutable $since, CarbonImmutable $until): array
     {
@@ -136,7 +137,7 @@ class SupportTopicRanking extends Command
     }
 
     /**
-     * @return array{0: \Illuminate\Support\Collection, 1: string}
+     * @return array{0: Collection, 1: string}
      */
     private function rankVolumeOnly(CarbonImmutable $since, CarbonImmutable $until): array
     {

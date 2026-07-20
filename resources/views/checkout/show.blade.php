@@ -113,14 +113,26 @@ document.addEventListener('alpine:init', () => {
         document.querySelectorAll('input[name=_token]').forEach((i) => { i.value = token; });
     }
 
+    // Таймаут обязателен: на мобильной сети fetch без AbortController может
+    // висеть десятками секунд. Кнопка к этому моменту уже заблокирована, и
+    // студент видит «мёртвую» кнопку оплаты — оформление встаёт намертво.
+    const TOKEN_TIMEOUT_MS = 4000;
+
     async function fetchToken() {
-        const r = await fetch(@json(route('csrf.token')), {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            cache: 'no-store',
-        });
-        const data = await r.json();
-        return data.token;
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), TOKEN_TIMEOUT_MS);
+        try {
+            const r = await fetch(@json(route('csrf.token')), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                signal: ctl.signal,
+            });
+            const data = await r.json();
+            return data.token;
+        } finally {
+            clearTimeout(timer);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -129,14 +141,28 @@ document.addEventListener('alpine:init', () => {
         const btn = document.querySelector('button[form="checkout-form"]');
         let refreshed = false;
 
+        const lock = () => { if (btn) { btn.disabled = true; btn.classList.add('opacity-70', 'cursor-wait'); } };
+        const unlock = () => { if (btn) { btn.disabled = false; btn.classList.remove('opacity-70', 'cursor-wait'); } };
+
         form.addEventListener('submit', async function (e) {
             if (refreshed) return; // второй проход — отправляем по-настоящему
             e.preventDefault();
-            if (btn) { btn.disabled = true; btn.classList.add('opacity-70', 'cursor-wait'); }
+
+            // form.submit() (в отличие от сабмита по кнопке) НЕ запускает
+            // HTML5-валидацию. Без этой проверки гость с пустым/кривым email
+            // уходил на сервер и возвращался полной перезагрузкой вместо
+            // подсказки под полем. Проверяем сами и показываем нативные ошибки.
+            if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+                form.reportValidity();
+                unlock();
+                return;
+            }
+
+            lock();
             try {
                 applyToken(await fetchToken());
             } catch (_) {
-                // сеть недоступна — токен мог и не протухнуть, всё равно пробуем отправить
+                // сеть недоступна/таймаут — токен мог и не протухнуть, всё равно пробуем отправить
             }
             refreshed = true;
             form.submit();
@@ -151,15 +177,31 @@ document.addEventListener('alpine:init', () => {
 })();
 </script>
 <style>
+    /* Полоса рисуется в 8px, но САМ input раньше был 8px высотой — то есть зона
+       касания в 5 раз меньше рекомендованных 44px (iOS HIG) / 48px (Material).
+       Промах в пару пикселей уходил в прокрутку страницы, и слайдер «не работал»
+       на телефоне. Растим элемент до 44px, а видимую полосу задаём фоном с
+       background-clip: content-box через вертикальный padding.
+       touch-action: none — чтобы горизонтальное перетаскивание не перехватывалось
+       вертикальным скроллом страницы. */
     .checkout-slider {
         -webkit-appearance: none; appearance: none;
-        width: 100%; height: 8px; border-radius: 9999px;
-        background: linear-gradient(to right,
+        width: 100%;
+        height: 44px;
+        padding: 18px 0;
+        box-sizing: border-box;
+        background-color: transparent;
+        background-image: linear-gradient(to right,
             #E85C24 0%,
             #E85C24 var(--fill, 0%),
             #FED7AA var(--fill, 0%),
             #FFEDD5 100%);
+        background-size: 100% 8px;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 9999px;
         outline: none; cursor: pointer;
+        touch-action: none;
         transition: box-shadow .2s;
     }
     .checkout-slider:focus-visible { box-shadow: 0 0 0 4px rgba(232,92,36,.25); }
@@ -170,7 +212,11 @@ document.addEventListener('alpine:init', () => {
         box-shadow: 0 4px 10px rgba(232,92,36,.35);
         cursor: grab; transition: transform .15s;
     }
-    .checkout-slider::-webkit-slider-thumb:hover { transform: scale(1.12); }
+    /* Только для мыши: на тач-экране :hover «залипает» после перетаскивания,
+       и бегунок остаётся увеличенным, пока не тапнешь в другое место. */
+    @media (hover: hover) {
+        .checkout-slider::-webkit-slider-thumb:hover { transform: scale(1.12); }
+    }
     .checkout-slider::-moz-range-thumb {
         width: 22px; height: 22px; border-radius: 9999px;
         background: #fff; border: 3px solid #E85C24;
@@ -438,13 +484,21 @@ document.addEventListener('alpine:init', () => {
 
                     {{-- ─── Кнопка оплаты ─── --}}
                     <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
+                        {{-- Мобильная вёрстка кнопки: flex-wrap + whitespace-nowrap.
+                             Раньше строка была flex-nowrap, поэтому на узком экране
+                             (360–375px) ужимался сам ТЕКСТ: «К безопасной оплате»
+                             разрывался на 3 строки, кнопка вырастала до 116px вместо ~60.
+                             Теперь перенос идёт МЕЖДУ блоками (подпись / сумма), а не
+                             внутри слов; на sm+ всё по-прежнему в одну строку. --}}
                         <button type="submit" form="checkout-form"
-                                class="w-full flex justify-center items-center py-4 px-6 rounded-2xl shadow-lg shadow-orange-200/70 text-lg sm:text-xl font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
-                            <i class="fas fa-lock mr-3 opacity-90 text-base"></i>
-                            <span>К безопасной оплате</span>
-                            <span class="mx-2 opacity-60">·</span>
-                            <span class="tabular-nums" x-text="$store.checkout.format($store.checkout.total)">{{ number_format($finalPrice, 0, '.', ' ') }}</span>
-                            <span class="ml-1.5">₽</span>
+                                class="w-full flex flex-wrap justify-center items-center gap-x-2.5 py-4 px-4 sm:px-6 rounded-2xl shadow-lg shadow-orange-200/70 text-lg sm:text-xl font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
+                            <span class="inline-flex items-center whitespace-nowrap">
+                                <i class="fas fa-lock mr-2.5 opacity-90 text-sm sm:text-base"></i>К безопасной оплате
+                            </span>
+                            <span class="hidden sm:inline opacity-60">·</span>
+                            <span class="whitespace-nowrap">
+                                <span class="tabular-nums" x-text="$store.checkout.format($store.checkout.total)">{{ number_format($finalPrice, 0, '.', ' ') }}</span><span class="ml-1.5">₽</span>
+                            </span>
                         </button>
 
                         <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
@@ -457,7 +511,11 @@ document.addEventListener('alpine:init', () => {
                     {{-- Оплата по частям (H1290) — под кнопкой оплаты, где сумма ощущается целиком --}}
                     @include('partials.installments-cta', ['tariff' => $tariff])
 
-                    <div class="hidden sm:flex items-center justify-center gap-6 text-xs text-gray-400 font-medium pt-2">
+                    {{-- Раньше блок был `hidden sm:flex`, то есть на ЛЮБОМ телефоне
+                         (<640px) скрывались и приём карт МИР, и единственная на всей
+                         странице ссылка на условия возврата. Именно на мобильных
+                         доверие к оплате нужнее всего — показываем с переносом. --}}
+                    <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-6 text-xs text-gray-400 font-medium pt-2">
                         <span class="flex items-center gap-1.5"><i class="fas fa-shield-halved text-gray-300"></i> SSL-шифрование</span>
                         <span class="flex items-center gap-1.5"><i class="fas fa-credit-card text-gray-300"></i> Visa · MasterCard · МИР</span>
                         <a href="{{ route('refund.show') }}" target="_blank" class="flex items-center gap-1.5 hover:text-gray-600 transition-colors underline decoration-gray-200 underline-offset-2"><i class="fas fa-rotate text-gray-300"></i> Возврат: до начала — 100%</a>

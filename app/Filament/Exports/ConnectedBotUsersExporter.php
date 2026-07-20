@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Exports;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
@@ -31,7 +32,7 @@ class ConnectedBotUsersExporter extends Exporter
             ExportColumn::make('telegram_connected_at')
                 ->label('TG подключён')
                 ->state(fn (User $r): ?string => $r->telegram_connected_at
-                    ? \Carbon\Carbon::parse($r->telegram_connected_at)->format('d.m.Y H:i')
+                    ? Carbon::parse($r->telegram_connected_at)->format('d.m.Y H:i')
                     : null),
 
             ExportColumn::make('has_vk')
@@ -40,7 +41,7 @@ class ConnectedBotUsersExporter extends Exporter
             ExportColumn::make('vk_connected_at')
                 ->label('VK подключён')
                 ->state(fn (User $r): ?string => $r->vk_connected_at
-                    ? \Carbon\Carbon::parse($r->vk_connected_at)->format('d.m.Y H:i')
+                    ? Carbon::parse($r->vk_connected_at)->format('d.m.Y H:i')
                     : null),
 
             ExportColumn::make('groups')

@@ -6,7 +6,9 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\LeadResource;
 use App\Filament\Resources\UserResource;
+use App\Models\Lead;
 use App\Models\PaymentPromise;
+use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\DebtorReminderDispatcher;
 use App\Services\WorkQueueReport;
@@ -14,6 +16,7 @@ use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -52,7 +55,7 @@ class WorkQueue extends Page
         return $this->reportMemo ??= app(WorkQueueReport::class);
     }
 
-    /** @return Collection<int, \App\Models\Lead> */
+    /** @return Collection<int, Lead> */
     public function getLeadsProperty(): Collection
     {
         return $this->report()->leadsToContact();
@@ -70,7 +73,7 @@ class WorkQueue extends Page
         return $this->report()->stuckStudents();
     }
 
-    /** @return Collection<int, array{conversation:\App\Models\SupportConversation, waiting_since:\Illuminate\Support\Carbon}> */
+    /** @return Collection<int, array{conversation:SupportConversation, waiting_since:Carbon}> */
     public function getSupportProperty(): Collection
     {
         return $this->report()->unansweredSupport();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\MarketingSetting;
+use App\Models\PranaTransaction;
 use App\Models\User;
 use App\Services\Prana\PranaSettings;
 use App\Services\StreakService;
@@ -75,7 +76,7 @@ class StreakServiceTest extends TestCase
         $u = $this->user(4, Carbon::today()->toDateString());
 
         $this->assertSame(4, $this->svc()->touch($u));
-        $this->assertSame(0, \App\Models\PranaTransaction::count()); // ничего не начислили
+        $this->assertSame(0, PranaTransaction::count()); // ничего не начислили
     }
 
     /** @test */

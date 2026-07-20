@@ -9,6 +9,7 @@ use App\Models\CourseBlock;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,8 +35,8 @@ class CalendarFeedTest extends TestCase
         Schedule::create([
             'title' => 'Занятие по грамматике',
             'zoom_join_url' => 'https://zoom.us/j/123456',
-            'start' => \Carbon\Carbon::parse('2026-08-10 15:00:00', 'Europe/Moscow'),
-            'end' => \Carbon\Carbon::parse('2026-08-10 16:00:00', 'Europe/Moscow'),
+            'start' => Carbon::parse('2026-08-10 15:00:00', 'Europe/Moscow'),
+            'end' => Carbon::parse('2026-08-10 16:00:00', 'Europe/Moscow'),
             'group_id' => $group->id,
         ]);
 
@@ -63,8 +64,8 @@ class CalendarFeedTest extends TestCase
         $group->courses()->attach($course->id);
 
         CourseBlock::factory()->for($course)->withDates(
-            \Carbon\Carbon::parse('2026-09-01'),
-            \Carbon\Carbon::parse('2026-09-30')
+            Carbon::parse('2026-09-01'),
+            Carbon::parse('2026-09-30')
         )->create(['title' => 'Блок 1']);
 
         $token = $user->calendarFeedToken()->token;

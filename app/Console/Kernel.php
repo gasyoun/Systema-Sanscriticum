@@ -337,6 +337,20 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('expire-stale-support-answer-suggestions');
+
+        // --- РИДЕР БРОШЕННЫХ ЧЕКАУТОВ (H1358) ---
+        // Заваливает (failed) зависшие pending-платежи старше checkout.legacy_pending_days
+        // (или webhook-буфера timed промо-брони), освобождая прану/реферальный
+        // кредит/депозит/промо-слот через Payment::booted(). Deposit/trial/paypal/
+        // conditional строки не трогает никогда. Частый слот (деньги, не «раз в сутки»
+        // дебри) с построчным row-lock против гонки с банковским вебхуком. Без --apply
+        // команда только отчитывается — гейт features.checkout_stale_order_expiry
+        // проверяется только когда --apply передан.
+        $schedule->command('payments:expire-stale-checkouts --apply')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('expire-stale-checkouts');
     }
 
     /**

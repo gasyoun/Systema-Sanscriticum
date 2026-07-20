@@ -3,8 +3,15 @@
     Самодостаточный [x-cloak] — на случай, если в layout'е его нет (как в main.blade.php).
 --}}
 <style>[x-cloak]{display:none!important}</style>
+{{--
+    Пока баннер открыт, он резервирует под себя место снизу (padding-bottom у body).
+    Он `fixed bottom-0`, а на телефоне разворачивается в колонку и занимает ~164px —
+    почти четверть экрана 375x667. Без компенсации эта полоса просто накрывала
+    нижний контент (на чекауте — зону кнопки оплаты и итоговой суммы).
+--}}
 <div x-data="{ open: false }"
      x-init="open = ! localStorage.getItem('cookie_consent_v1')"
+     x-effect="$nextTick(() => document.body.style.paddingBottom = open ? $el.offsetHeight + 'px' : '')"
      x-show="open" x-cloak x-transition.opacity
      class="fixed inset-x-0 bottom-0 z-[200] bg-[#0A0D14]/95 backdrop-blur-sm text-slate-200 border-t border-[#1F2636] px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
     <div class="container mx-auto flex flex-col sm:flex-row items-center gap-3 text-sm">

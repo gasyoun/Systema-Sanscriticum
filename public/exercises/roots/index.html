@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · Корни по частотности</title>
+<style>
+  :root { --pg:#f3ecdb; --pnl:#faf5e8; --ink:#2a2118; --soft:#6b5d47; --line:#d9cba8; --accent:#a8451f; }
+  @media (prefers-color-scheme: dark) { :root { --pg:#1c1712; --pnl:#26201a; --ink:#efe6d4; --soft:#b3a488; --line:#423628; --accent:#e07a4e; } }
+  :root[data-theme="dark"]  { --pg:#1c1712; --pnl:#26201a; --ink:#efe6d4; --soft:#b3a488; --line:#423628; --accent:#e07a4e; }
+  :root[data-theme="light"] { --pg:#f3ecdb; --pnl:#faf5e8; --ink:#2a2118; --soft:#6b5d47; --line:#d9cba8; --accent:#a8451f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pg); color: var(--ink); font-family: "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif; line-height: 1.55; }
+  .page { max-width: 820px; margin: 0 auto; padding: 34px 20px 70px; }
+  .back { display: inline-block; margin: 0 0 18px; font-size: 13px; color: var(--soft); text-decoration: none; }
+  .back:hover { color: var(--accent); }
+  .eyebrow { font-family: "Noto Sans Devanagari","Nirmala UI",serif; font-size: 14px; letter-spacing: .14em; color: var(--accent); font-weight: 600; margin: 0 0 6px; }
+  h1 { font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600; font-size: clamp(26px,4.5vw,40px); margin: 0 0 8px; text-wrap: balance; }
+  .lead { color: var(--soft); margin: 0 0 12px; max-width: 62ch; }
+  .note { margin: 0 0 28px; max-width: 62ch; font-size: 13.5px; color: var(--soft); background: var(--pnl); border: 1px solid var(--line); border-radius: 10px; padding: 12px 15px; }
+  .note a { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 16px; }
+  a.card { display: block; text-decoration: none; color: inherit; background: var(--pnl); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(60,45,20,.1), 0 6px 16px rgba(60,45,20,.07); transition: border-color .14s, transform .08s; }
+  a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  a.card .deva { font-family: "Noto Sans Devanagari","Nirmala UI",serif; font-size: 30px; margin: 0 0 8px; color: var(--accent); }
+  a.card h2 { font-family: "Iowan Old Style",Palatino,Georgia,serif; font-size: 19px; margin: 0 0 6px; }
+  a.card p { margin: 0; font-size: 13.5px; color: var(--soft); }
+  a.card .tag { display: inline-block; margin-top: 12px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--accent); }
+  footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--soft); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="../">← Все упражнения</a>
+  <p class="eyebrow">संस्कृतम् · धातवः · आवृत्तिक्रमेण</p>
+  <h1>Корни по частотности</h1>
+  <p class="lead">570 санскритских глагольных корней (dhātu), отранжированных по реальной
+    частотности в корпусе: несколько десятков корней покрывают большую часть встречающихся
+    в текстах глагольных форм, а «длинный хвост» из сотен редких — маргинален. Учите сначала
+    то, что действительно встретится вам в тексте чаще всего.</p>
+  <p class="note">Частотность рассчитана по <a href="https://www.sanskrit-linguistics.org/dcs/" target="_blank" rel="noopener">Digital Corpus of
+    Sanskrit</a> (Oliver Hellwig, CC BY&nbsp;4.0) — 570 сопоставленных корней с русским переводом,
+    источник: <a href="https://github.com/gasyoun/kosha" target="_blank" rel="noopener">kosha</a>
+    × <a href="https://github.com/sanskrit-lexicon/WhitneyRoots" target="_blank" rel="noopener">WhitneyRoots</a>.
+    Тот же набор данных используется в SRS-колоде кабинета ученика; здесь — быстрая частотная
+    тренировка без регистрации.</p>
+
+  <div class="grid">
+    <a class="card" href="top-25/">
+      <p class="deva">१–२५</p>
+      <h2>Топ-25</h2>
+      <p>Самые частые корни корпуса — kṛ, bhū, as и ещё 22. Начните отсюда.</p>
+      <span class="tag">Уровень 1</span>
+    </a>
+    <a class="card" href="top-50/">
+      <p class="deva">१–५०</p>
+      <h2>Топ-50</h2>
+      <p>50 корней, покрывающих основную массу глагольных форм; каждый раунд — случайная десятка из полного набора.</p>
+      <span class="tag">Уровень 2</span>
+    </a>
+    <a class="card" href="top-100/">
+      <p class="deva">१–१००</p>
+      <h2>Топ-100</h2>
+      <p>Сотня самых частых корней для уверенного чтения; каждый раунд — случайная десятка из 100.</p>
+      <span class="tag">Уровень 3</span>
+    </a>
+  </div>
+
+  <footer>Данные: Digital Corpus of Sanskrit (Oliver Hellwig, CC BY 4.0), пересчитано в
+    <a href="https://github.com/gasyoun/kosha" target="_blank" rel="noopener">kosha</a> ×
+    <a href="https://github.com/sanskrit-lexicon/WhitneyRoots" target="_blank" rel="noopener">WhitneyRoots</a>.
+    Systema Sanscriticum · учебный виджет. Движок: <code>match/engine.js</code> + <code>match/engine.css</code>.</footer>
+</div>
+</body>
+</html>

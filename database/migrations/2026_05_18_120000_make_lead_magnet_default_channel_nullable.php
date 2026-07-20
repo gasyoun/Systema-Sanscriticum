@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         // Чтобы откат не упал — сначала забекфилить NULL'ы дефолтом.
-        \DB::table('landing_pages')->whereNull('lead_magnet_default_channel')
+        DB::table('landing_pages')->whereNull('lead_magnet_default_channel')
             ->update(['lead_magnet_default_channel' => 'telegram']);
 
         Schema::table('landing_pages', function (Blueprint $table) {

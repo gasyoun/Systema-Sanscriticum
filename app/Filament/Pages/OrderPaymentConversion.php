@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Services\Reports\OrderPaymentConversionService;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * «Конверсия заказ→оплата» (H262, фаза F плана noboring /cases/education).
@@ -58,7 +59,7 @@ class OrderPaymentConversion extends Page
     {
         // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
         // DelegationKpi::getNavigationBadge (тяжёлый агрегат ронял панель в 500).
-        return \Illuminate\Support\Facades\Cache::get('nav_badge.order_conversion');
+        return Cache::get('nav_badge.order_conversion');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -74,7 +75,7 @@ class OrderPaymentConversion extends Page
         $snap = app(OrderPaymentConversionService::class)->snapshot();
 
         $unclosedCount = count($snap['unclosed'] ?? []);
-        \Illuminate\Support\Facades\Cache::put(
+        Cache::put(
             'nav_badge.order_conversion',
             $unclosedCount > 0 ? (string) $unclosedCount : null,
             now()->addMinutes(30),

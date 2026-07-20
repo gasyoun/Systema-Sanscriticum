@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
@@ -31,7 +32,7 @@ class VipBundleAccessKeyTest extends TestCase
         parent::setUp();
         Queue::fake();
         Mail::fake();
-        \App\Models\MarketingSetting::flushCached();
+        MarketingSetting::flushCached();
         Http::fake([
             'enter.tochka.com/*' => Http::response([
                 'Data' => ['paymentLink' => 'https://pay.tochka.com/redirect/abc', 'paymentLinkId' => 'tx_vip'],

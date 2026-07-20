@@ -6,10 +6,11 @@ namespace App\Support;
 
 use App\Models\Course;
 use App\Models\User;
+use App\Services\DebtorReminderDispatcher;
 
 /**
  * Единая подстановка плейсхолдеров {name}/{course}/{block}/{pay_link} в тексты
- * сообщений. Раньше жила прямо в {@see \App\Services\DebtorReminderDispatcher};
+ * сообщений. Раньше жила прямо в {@see DebtorReminderDispatcher};
  * вынесена сюда, чтобы её переиспользовали и общая библиотека шаблонов
  * (MessageTemplate), и реактивация, и напоминания должникам — один источник
  * правды для набора плейсхолдеров и их значений. См. H221.

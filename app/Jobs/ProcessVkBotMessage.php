@@ -103,6 +103,40 @@ final class ProcessVkBotMessage implements ShouldQueue
             return;
         }
 
+        // SELF-SERVICE: «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
+        if (app(StudentSelfService::class)->matchesHomeworkIntent($text)) {
+            $summary = app(StudentSelfService::class)->homeworkSummary($user);
+
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $summary);
+
+            return;
+        }
+
+        // SELF-SERVICE: /help — детерминированное меню, минуя ИИ (H1357).
+        if (app(StudentSelfService::class)->matchesHelpIntent($text)) {
+            $menu = app(StudentSelfService::class)->helpMenu();
+
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $menu,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $menu);
+
+            return;
+        }
+
         // ПРОВЕРКА: Если бот на паузе (отвечает человек)
         if (Cache::has("chat_human_vk_{$vkId}")) {
             if ($adminId) {

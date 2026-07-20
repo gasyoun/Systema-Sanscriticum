@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TeacherSalaryService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -66,7 +67,7 @@ class Teacher extends Model
     // возвратов). Сигнатура сохранена для back-compat (модалка TeacherResource).
     public function calculateEarnings($startDate = null, $endDate = null): float
     {
-        return app(\App\Services\TeacherSalaryService::class)
+        return app(TeacherSalaryService::class)
             ->totalForTeacher($this, $startDate, $endDate);
     }
 }

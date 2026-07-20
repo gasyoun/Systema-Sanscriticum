@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Lecture;
 
 use App\Models\LectureDraft;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
@@ -151,7 +152,7 @@ class LectureStorage
     {
         if (preg_match('/^(\d{8})_(\d{6})/', $name, $m)) {
             try {
-                $dt = \Illuminate\Support\Carbon::createFromFormat('Ymd His', $m[1].' '.$m[2]);
+                $dt = Carbon::createFromFormat('Ymd His', $m[1].' '.$m[2]);
 
                 return $dt->format('d.m.Y H:i:s').(str_contains($name, '_pre_restore') ? ' (перед откатом)' : '');
             } catch (\Throwable) {

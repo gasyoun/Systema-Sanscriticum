@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\SocialEmailNotVerifiedException;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\SocialAuthService;
@@ -49,7 +50,7 @@ class SocialAuthScaffoldTest extends TestCase
         User::factory()->create(['email' => 'match@example.test']);
 
         // Неподтверждённый email, совпавший с чужим аккаунтом = takeover → отказ.
-        $this->expectException(\App\Exceptions\SocialEmailNotVerifiedException::class);
+        $this->expectException(SocialEmailNotVerifiedException::class);
 
         app(SocialAuthService::class)
             ->findOrCreateUser('vkontakte', '222', 'match@example.test', 'V', emailVerified: false);
