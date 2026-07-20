@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkReviewedMail;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\HomeworkComment;
@@ -193,7 +194,7 @@ class HomeworkService
 
     private function reviewUrl(HomeworkSubmission $submission): string
     {
-        $resource = \App\Filament\Resources\HomeworkSubmissionResource::class;
+        $resource = HomeworkSubmissionResource::class;
 
         if (class_exists($resource)) {
             return $resource::getUrl('view', ['record' => $submission->id]);

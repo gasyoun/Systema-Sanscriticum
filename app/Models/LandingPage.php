@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class LandingPage extends Model
 {
@@ -97,19 +98,19 @@ class LandingPage extends Model
     }
 
     /** Момент открытия окна выдачи магнита (старт − offset). null, если вебинар не задан. */
-    public function magnetWindowOpensAt(): ?\Illuminate\Support\Carbon
+    public function magnetWindowOpensAt(): ?Carbon
     {
         return $this->webinar_date?->copy()->subMinutes($this->magnetLeadMinutes());
     }
 
     /** Момент закрытия окна выдачи (старт + грейс). null, если вебинар не задан. */
-    public function magnetWindowClosesAt(): ?\Illuminate\Support\Carbon
+    public function magnetWindowClosesAt(): ?Carbon
     {
         return $this->webinar_date?->copy()->addMinutes(self::MAGNET_GRACE_AFTER_START_MINUTES);
     }
 
     /** Открыто ли сейчас окно выдачи: [старт − offset; старт + грейс] включительно. */
-    public function isMagnetWindowOpen(?\Illuminate\Support\Carbon $now = null): bool
+    public function isMagnetWindowOpen(?Carbon $now = null): bool
     {
         if (! $this->hasScheduledWebinar()) {
             return false;

@@ -2,7 +2,14 @@
 
 namespace App\Providers\Filament;
 
-use Awcodes\Curator\CuratorPlugin; // <--- 1. ДОБАВИЛИ ИМПОРТ ПЛАГИНА
+use App\Filament\Pages\Dashboard; // <--- 1. ДОБАВИЛИ ИМПОРТ ПЛАГИНА
+use App\Filament\Widgets\CourseEarningsChart;
+use App\Filament\Widgets\RetentionChart;
+use App\Filament\Widgets\SalesFunnelChart;
+use App\Filament\Widgets\StuckStudentsWidget;
+use App\Filament\Widgets\StudentStatsOverview;
+use App\Filament\Widgets\UpcomingPromisesWidget;
+use Awcodes\Curator\CuratorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -10,6 +17,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -17,7 +25,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -40,8 +50,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             // --- НАЧАЛО: ПОБЕДА НАД КУРАТОРОМ + ОПТИМИЗАЦИЯ СКОРОСТИ ---
             ->renderHook(
-                \Filament\View\PanelsRenderHook::BODY_END,
-                fn () => new \Illuminate\Support\HtmlString('
+                PanelsRenderHook::BODY_END,
+                fn () => new HtmlString('
                     <style>
                         /* 1. Починка картинок в самой форме (Основной экран) - ЭТО ОСТАВЛЯЕМ, оно работает */
                         .fi-main img { max-height: 150px !important; width: auto !important; object-fit: contain !important; border-radius: 0.5rem; }
@@ -211,7 +221,7 @@ class AdminPanelProvider extends PanelProvider
 
                 // Календарный режим расписания (Google-Calendar-like): месяц/неделя/день,
                 // drag&drop и создание кликом. Редактирование — через модалку формы Schedule.
-                \Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()
+                FilamentFullCalendarPlugin::make()
                     ->selectable()   // выделение дат → создание события
                     ->editable()     // перетаскивание/resize событий
                     ->locale('ru')
@@ -233,18 +243,18 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
-                \App\Filament\Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-                \App\Filament\Widgets\StudentStatsOverview::class,
-                \App\Filament\Widgets\StuckStudentsWidget::class,
-                \App\Filament\Widgets\UpcomingPromisesWidget::class,
-                \App\Filament\Widgets\CourseEarningsChart::class,
-                \App\Filament\Widgets\SalesFunnelChart::class,
-                \App\Filament\Widgets\RetentionChart::class,
+                StudentStatsOverview::class,
+                StuckStudentsWidget::class,
+                UpcomingPromisesWidget::class,
+                CourseEarningsChart::class,
+                SalesFunnelChart::class,
+                RetentionChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Exports;
 
+use App\Filament\Pages\Debtors;
 use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
@@ -181,7 +182,7 @@ class DebtorsExporter extends Exporter
             return self::$debtAmountCache[$key];
         }
 
-        $blocks = \App\Filament\Pages\Debtors::debtBlocks(
+        $blocks = Debtors::debtBlocks(
             (int) $r->id,
             (int) $r->course_id,
             (int) $r->ref_block_number,

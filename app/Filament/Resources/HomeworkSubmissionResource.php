@@ -8,6 +8,7 @@ use App\Services\HomeworkService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\Component;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -87,7 +88,7 @@ class HomeworkSubmissionResource extends Resource
     /**
      * Поля «шаблон + комментарий» для форм проверки (массовой и одиночной).
      *
-     * @return array<int, \Filament\Forms\Components\Component>
+     * @return array<int, Component>
      */
     public static function reviewCommentFields(string $status, bool $bodyRequired): array
     {

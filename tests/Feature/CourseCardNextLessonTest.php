@@ -10,6 +10,7 @@ use App\Models\Lesson;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 /**
@@ -20,7 +21,7 @@ class CourseCardNextLessonTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return array{0: User, 1: Course, 2: \Illuminate\Support\Collection<int, Lesson>} */
+    /** @return array{0: User, 1: Course, 2: Collection<int, Lesson>} */
     private function enrolledStudentWithLessons(int $lessonCount = 3): array
     {
         $course = Course::factory()->create(['title' => 'Грамматика санскрита']);
@@ -102,6 +103,7 @@ class CourseCardNextLessonTest extends TestCase
             ->assertSee('Урок 2')
             ->assertSee(route('student.lesson', [$course->slug, $lessons[1]->id]), false);
     }
+
     /** @test */
     public function continue_learning_block_points_fresh_student_to_the_first_lesson(): void
     {

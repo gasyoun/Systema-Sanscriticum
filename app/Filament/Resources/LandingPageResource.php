@@ -24,9 +24,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form; // <-- ДОБАВЛЕНО
-use Filament\Resources\Resource;      // <-- ДОБАВЛЕНО
+use Filament\Forms\Get;      // <-- ДОБАВЛЕНО
+use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class LandingPageResource extends Resource
 {
@@ -82,12 +84,12 @@ class LandingPageResource extends Resource
                             ->label('Заметка вместо меню')
                             ->placeholder('Для участия нужен Zoom — скачать')
                             ->helperText('Показывается в шапке вместо меню. Пусто → в шапке только логотип.')
-                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                            ->visible(fn (Get $get): bool => (bool) $get('hide_default_nav')),
                         TextInput::make('header_note_url')
                             ->label('Ссылка заметки')
                             ->url()
                             ->placeholder('https://zoom.us/download')
-                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('hide_default_nav')),
+                            ->visible(fn (Get $get): bool => (bool) $get('hide_default_nav')),
                     ]),
 
                 // === Вебинар: письмо лиду + время выдачи лид-магнита ===
@@ -131,7 +133,7 @@ class LandingPageResource extends Resource
                             ->blocks([
 
                                 // 1. HERO (Первый экран - Текст по центру)
-                                Builder\Block::make('hero_block')
+                                Block::make('hero_block')
                                     ->label('1. Первый экран (Текст по центру)')
                                     ->icon('heroicon-m-star')
                                     ->schema([
@@ -157,7 +159,7 @@ class LandingPageResource extends Resource
                                         TextInput::make('button_text')
                                             ->label('Текст кнопки')
                                             ->default('Записаться')
-                                            ->visible(fn (\Filament\Forms\Get $get): bool => $get('show_button') ?? true),
+                                            ->visible(fn (Get $get): bool => $get('show_button') ?? true),
 
                                         Repeater::make('badges')
                                             ->label('Плашки под кнопкой')
@@ -183,17 +185,17 @@ class LandingPageResource extends Resource
                                             ->numeric()
                                             ->minValue(0)
                                             ->default(30)
-                                            ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('registered_dynamic')),
+                                            ->visible(fn (Get $get): bool => (bool) $get('registered_dynamic')),
 
                                         TextInput::make('registered_note')
                                             ->label('Соц. доказательство (ручной текст)')
                                             ->placeholder('✅ Уже зарегистрировались 137 человек')
                                             ->helperText('Используется, когда автосчёт выключен. Очистите поле, чтобы скрыть плашку.')
-                                            ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('registered_dynamic')),
+                                            ->visible(fn (Get $get): bool => ! $get('registered_dynamic')),
                                     ]),
 
                                 // 2. VIDEO
-                                Builder\Block::make('video_block')
+                                Block::make('video_block')
                                     ->label('2. Видео анонс')
                                     ->icon('heroicon-m-video-camera')
                                     ->schema([
@@ -213,7 +215,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 2.1. WEBINAR TRANSCRIPT (Стенограмма вебинара + синхронизация с видео)
-                                Builder\Block::make('webinar_transcript_block')
+                                Block::make('webinar_transcript_block')
                                     ->label('2.1. Стенограмма вебинара (синхрон с видео)')
                                     ->icon('heroicon-m-document-text')
                                     ->schema([
@@ -266,7 +268,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 3. AUDIENCE
-                                Builder\Block::make('audience_block')
+                                Block::make('audience_block')
                                     ->label('3. Для кого этот курс')
                                     ->icon('heroicon-m-users')
                                     ->schema([
@@ -280,7 +282,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 11.1. RECORDED COURSES (Мини-блок «Курсы в записи»)
-                                Builder\Block::make('recorded_courses_block')
+                                Block::make('recorded_courses_block')
                                     ->label('11.1. Курсы в записи (слайдер по 6)')
                                     ->icon('heroicon-m-rectangle-stack')
                                     ->schema([
@@ -301,7 +303,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 11. COURSES GRID (Сетка других курсов)
-                                Builder\Block::make('courses_grid')
+                                Block::make('courses_grid')
                                     ->label('11. Сетка курсов (Светлая)')
                                     ->icon('heroicon-m-squares-2x2') // Иконка плитки
                                     ->schema([
@@ -322,7 +324,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 13. ABOUT PLATFORM (Светлая карточка)
-                                Builder\Block::make('about_platform_light')
+                                Block::make('about_platform_light')
                                     ->label('13. Светлая карточка (О платформе/Дисклеймер)')
                                     ->icon('heroicon-m-information-circle')
                                     ->schema([
@@ -350,7 +352,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 4. RESULTS (Бенто-сетка)
-                                Builder\Block::make('results_block')
+                                Block::make('results_block')
                                     ->label('4. Результаты (Сетка карточек)')
                                     ->icon('heroicon-m-squares-2x2')
                                     ->schema([
@@ -384,7 +386,7 @@ class LandingPageResource extends Resource
                                 // ==============================================================
                                 // 13. НОВЫЙ БЛОК: ГЛАВНЫЙ ЭКРАН СО СТИКИ ФОРМОЙ И КАСТОМИЗАЦИЕЙ
                                 // ==============================================================
-                                Builder\Block::make('new_hero_with_form')
+                                Block::make('new_hero_with_form')
                                     ->label('13. Главный экран с формой (Стики/Универсальный)')
                                     ->icon('heroicon-o-document')
                                     ->schema([
@@ -443,34 +445,34 @@ class LandingPageResource extends Resource
                                                 TextInput::make('min_contact_placeholder')
                                                     ->label('Плейсхолдер поля телефона')
                                                     ->default('Телефон')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 TextInput::make('min_email_placeholder')
                                                     ->label('Плейсхолдер поля email')
                                                     ->default('Email')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 TextInput::make('min_button_text')
                                                     ->label('Текст кнопки')
                                                     ->default('Занять бесплатное место →')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 Textarea::make('min_consent_note')
                                                     ->label('Подпись под кнопкой')
                                                     ->rows(2)
                                                     ->default('Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлём в Telegram — спросим контакт после.')
                                                     ->helperText('{link} превратится в кликабельную «политику конфиденциальности». Enter — перенос строки.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 TextInput::make('min_tg_label')
                                                     ->label('Подпись опционального поля Telegram')
                                                     ->default('📩 Укажите Telegram — пришлём PDF «Алфавит деванагари» перед эфиром')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 TextInput::make('min_tg_placeholder')
                                                     ->label('Плейсхолдер поля Telegram')
                                                     ->default('@username')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => (bool) $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => (bool) $get('form_minimal')),
 
                                                 // --- ЗАГОЛОВОК/ПОДЗАГОЛОВОК (общие для обоих вариантов) ---
                                                 Textarea::make('form_title')
@@ -490,10 +492,10 @@ class LandingPageResource extends Resource
                                                     ->label('Текст кнопки отправки')
                                                     ->default('Записаться')
                                                     ->helperText('Если пусто — возьмётся текст основной кнопки.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => ! $get('form_minimal')),
 
                                                 Fieldset::make('Подписи и плейсхолдеры полей')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal'))
+                                                    ->visible(fn (Get $get): bool => ! $get('form_minimal'))
                                                     ->schema([
                                                         TextInput::make('label_name')->label('Подпись «Имя»')->default('Ваше имя'),
                                                         TextInput::make('ph_name')->label('Плейсхолдер «Имя»')->default('Имя и фамилия'),
@@ -513,7 +515,7 @@ class LandingPageResource extends Resource
                                                     ->rows(2)
                                                     ->default('Заполните это поле — и мы пришлём вам подарок в указанный мессенджер 🎁')
                                                     ->helperText('Показывается над полем «Соцсеть». Очистите поле, чтобы скрыть.')
-                                                    ->visible(fn (\Filament\Forms\Get $get): bool => ! $get('form_minimal')),
+                                                    ->visible(fn (Get $get): bool => ! $get('form_minimal')),
                                             ]),
 
                                         // --- НАСТРОЙКИ ДИЗАЙНА ---
@@ -560,7 +562,7 @@ class LandingPageResource extends Resource
                                 // ==============================================================
                                 // 14. БАННЕР-ПРИЗЫВ (Горизонтальный блок с кнопкой)
                                 // ==============================================================
-                                Builder\Block::make('cta_banner_block')
+                                Block::make('cta_banner_block')
                                     ->label('14. Горизонтальный Баннер-призыв')
                                     ->icon('heroicon-o-megaphone')
                                     ->schema([
@@ -610,7 +612,7 @@ class LandingPageResource extends Resource
                                 // ==============================================================
                                 // 14.1. КУРС ЗАВЕРШЁН — запись в продаже (кнопка → карточка курса)
                                 // ==============================================================
-                                Builder\Block::make('course_finished_block')
+                                Block::make('course_finished_block')
                                     ->label('14.1. Курс завершён → запись в продаже')
                                     ->icon('heroicon-o-archive-box')
                                     ->schema([
@@ -669,7 +671,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 5.1. WEBINAR TOPICS (Темы, которые разбираются на вебинарах)
-                                Builder\Block::make('webinar_topics_block')
+                                Block::make('webinar_topics_block')
                                     ->label('5.1. Темы вебинаров')
                                     ->icon('heroicon-m-presentation-chart-bar')
                                     ->schema([
@@ -707,7 +709,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 5.2. WEBINAR TOPICS — светлый «editorial»-вариант (строки с номерами)
-                                Builder\Block::make('webinar_topics_spotlight_block')
+                                Block::make('webinar_topics_spotlight_block')
                                     ->label('5.2. Темы вебинаров (строки с номерами)')
                                     ->icon('heroicon-m-bolt')
                                     ->schema([
@@ -748,7 +750,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 5. PROGRAM
-                                Builder\Block::make('program_block')
+                                Block::make('program_block')
                                     ->label('5. Программа курса')
                                     ->icon('heroicon-m-academic-cap')
                                     ->schema([
@@ -762,7 +764,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 6. FORMAT
-                                Builder\Block::make('format_block')
+                                Block::make('format_block')
                                     ->label('6. Формат обучения')
                                     ->icon('heroicon-m-clock')
                                     ->schema([
@@ -776,7 +778,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 7. PRICE (Тарифы + Дефицит)
-                                Builder\Block::make('price_block')
+                                Block::make('price_block')
                                     ->label('7. Стоимость (Тарифы)')
                                     ->icon('heroicon-m-currency-dollar')
                                     ->schema([
@@ -822,7 +824,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 7.1. ВЫБОР ПОТОКА (одна программа, разные дни/время → оплата тарифа со скидкой)
-                                Builder\Block::make('course_streams_block')
+                                Block::make('course_streams_block')
                                     ->label('7.1. Выбор потока (разные дни/время → оплата)')
                                     ->icon('heroicon-m-calendar-days')
                                     ->schema([
@@ -898,7 +900,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 8. REVIEWS (Отзывы + Скриншоты)
-                                Builder\Block::make('reviews_block')
+                                Block::make('reviews_block')
                                     ->label('8. Отзывы (Слайдер + Скриншоты)')
                                     ->icon('heroicon-m-chat-bubble-left-right')
                                     ->schema([
@@ -979,7 +981,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 8b. ИСТОРИИ УЧЕНИКОВ (нарративный пруф + анти-кейс)
-                                Builder\Block::make('student_story_block')
+                                Block::make('student_story_block')
                                     ->label('8б. Истории учеников (путь + анти-кейс)')
                                     ->icon('heroicon-m-user-group')
                                     ->schema([
@@ -1047,7 +1049,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 9. FORM (С ДЕФИЦИТОМ)
-                                Builder\Block::make('form_block')
+                                Block::make('form_block')
                                     ->label('9. Форма заявки (CTA + Дефицит)')
                                     ->icon('heroicon-m-envelope')
                                     ->schema([
@@ -1067,7 +1069,7 @@ class LandingPageResource extends Resource
                                             ]),
 
                                     ]),
-                                Builder\Block::make('team_block')
+                                Block::make('team_block')
                                     ->label('9. Команда (Плитка преподавателей)')
                                     ->icon('heroicon-m-users') // Иконка группы людей
                                     ->schema([
@@ -1106,7 +1108,7 @@ class LandingPageResource extends Resource
                                             ->defaultItems(4),
                                     ]),
                                 // 10. INSTRUCTOR (Преподаватель - НОВЫЙ БЛОК)
-                                Builder\Block::make('instructor_block')
+                                Block::make('instructor_block')
                                     ->label('10. Блок "О преподавателе"')
                                     ->icon('heroicon-m-user')
                                     ->schema([
@@ -1178,7 +1180,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 16. TRIAL BLOCK (Пробное занятие)
-                                Builder\Block::make('trial_block')
+                                Block::make('trial_block')
                                     ->label('16. Блок "Сомневаетесь?" (Пробный урок)')
                                     ->icon('heroicon-m-hand-raised')
                                     ->schema([
@@ -1196,7 +1198,7 @@ class LandingPageResource extends Resource
                                             ->default('Да, хочу попробовать'),
 
                                         // --- НОВЫЕ ПОЛЯ ДЛЯ НАСТРОЙКИ МОДАЛКИ ---
-                                        \Filament\Forms\Components\Fieldset::make('Настройки всплывающей формы')
+                                        Fieldset::make('Настройки всплывающей формы')
                                             ->schema([
                                                 TextInput::make('modal_title')
                                                     ->label('Заголовок формы')
@@ -1225,7 +1227,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 14. FAQ (Частые вопросы)
-                                Builder\Block::make('faq_block')
+                                Block::make('faq_block')
                                     ->label('14. FAQ (Частые вопросы)')
                                     ->icon('heroicon-m-question-mark-circle')
                                     ->schema([
@@ -1264,7 +1266,7 @@ class LandingPageResource extends Resource
                                     ]),
 
                                 // 17. ЖИЗНЕННЫЕ ПРАВИЛА (манифест школы, H1224)
-                                Builder\Block::make('life_rules_block')
+                                Block::make('life_rules_block')
                                     ->label('17. Жизненные правила для санскритологов (манифест)')
                                     ->icon('heroicon-m-book-open')
                                     ->schema([
@@ -1295,7 +1297,7 @@ class LandingPageResource extends Resource
                                                     ->required()
                                                     ->rows(3),
                                             ])
-                                            ->itemLabel(fn (array $state): ?string => \Illuminate\Support\Str::limit($state['text'] ?? '', 60))
+                                            ->itemLabel(fn (array $state): ?string => Str::limit($state['text'] ?? '', 60))
                                             ->collapsible()
                                             ->collapsed()
                                             ->reorderableWithButtons()

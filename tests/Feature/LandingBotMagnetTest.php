@@ -10,6 +10,7 @@ use App\Jobs\SendLeadMagnet;
 use App\Models\LandingBot;
 use App\Models\LandingPage;
 use App\Models\Lead;
+use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
@@ -182,7 +183,7 @@ class LandingBotMagnetTest extends TestCase
             'telegram_chat_id' => 777,
         ]);
 
-        (new SendLeadMagnet($lead->id))->handle(app(\App\Services\Messaging\DeliveryChannelManager::class));
+        (new SendLeadMagnet($lead->id))->handle(app(DeliveryChannelManager::class));
 
         Http::assertSent(fn ($request) => str_contains($request->url(), '/botlanding-bot-token/sendDocument'));
 

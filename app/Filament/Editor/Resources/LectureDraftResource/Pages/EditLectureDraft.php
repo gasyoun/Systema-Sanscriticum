@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Editor\Resources\LectureDraftResource\Pages;
 
 use App\Filament\Editor\Resources\LectureDraftResource;
+use App\Filament\Editor\Widgets\LectureProcessingWidget;
 use App\Jobs\BuildLectureHtmlJob;
 use App\Jobs\PreprocessLectureDraftJob;
 use App\Jobs\RunLectureAiJob;
@@ -17,6 +18,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Storage;
 
 class EditLectureDraft extends EditRecord
 {
@@ -25,7 +27,7 @@ class EditLectureDraft extends EditRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Editor\Widgets\LectureProcessingWidget::class,
+            LectureProcessingWidget::class,
         ];
     }
 
@@ -398,7 +400,7 @@ class EditLectureDraft extends EditRecord
             return null;
         }
 
-        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk = Storage::disk('local');
         if (! $disk->exists($relativePath)) {
             throw new \RuntimeException("Загруженный файл не найден: {$relativePath}");
         }

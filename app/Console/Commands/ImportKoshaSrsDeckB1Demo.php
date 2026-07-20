@@ -9,6 +9,7 @@ use App\Models\DictionaryWord;
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
+use Database\Seeders\SrsSanskritDeckSeeder;
 use Illuminate\Console\Command;
 use RuntimeException;
 
@@ -19,7 +20,7 @@ use RuntimeException;
  * Reads the VENDORED static feed resources/data/kosha_srs_deck_b1_demo.json
  * (kosha manifest id kosha-srs-deck-b1-demo — our own derived data, no live
  * dependency on kosha) and creates one SYSTEM SrsDeck + SrsCards, mirroring
- * {@see \App\Console\Commands\ImportMemriseSrsDeck} / {@see \Database\Seeders\SrsSanskritDeckSeeder}:
+ * {@see ImportMemriseSrsDeck} / {@see SrsSanskritDeckSeeder}:
  * Dictionary / SrsNoteType / SrsDeck / DictionaryWord / SrsCard are all
  * firstOrCreate'd keyed on stable identity, so a re-run never duplicates.
  *

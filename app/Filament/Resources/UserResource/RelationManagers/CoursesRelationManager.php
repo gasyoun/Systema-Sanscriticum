@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
+use App\Models\Course;
+use App\Models\Payment;
 use App\Services\GroupMembershipManager;
 use App\Support\CourseNoteBlockParser;
 use Filament\Forms;
@@ -10,6 +12,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class CoursesRelationManager extends RelationManager
 {
@@ -90,7 +94,7 @@ class CoursesRelationManager extends RelationManager
                     // появления записи в системе. (pivot created_at у legacy =
                     // дата импорта, поэтому опираемся на платёж.)
                     ->description(function ($record) use ($ownerId): ?string {
-                        $firstPaid = \App\Models\Payment::query()
+                        $firstPaid = Payment::query()
                             ->where('user_id', $ownerId)
                             ->where('course_id', $record->id)
                             ->paid()
@@ -98,7 +102,7 @@ class CoursesRelationManager extends RelationManager
                             ->min('created_at');
 
                         if ($firstPaid) {
-                            return 'записан '.\Illuminate\Support\Carbon::parse($firstPaid)->format('d.m.Y');
+                            return 'записан '.Carbon::parse($firstPaid)->format('d.m.Y');
                         }
 
                         return $record->pivot?->created_at
@@ -246,11 +250,11 @@ class CoursesRelationManager extends RelationManager
                     ->modalWidth('5xl')
                     ->modalSubmitActionLabel('Проставить пустые')
                     ->deselectRecordsAfterCompletion()
-                    ->modalContent(fn (\Illuminate\Support\Collection $records) => view(
+                    ->modalContent(fn (Collection $records) => view(
                         'filament.user-courses.blocks-preview',
                         ['rows' => $this->buildBlockPreview($records)],
                     ))
-                    ->action(function (\Illuminate\Support\Collection $records): void {
+                    ->action(function (Collection $records): void {
                         $setEntry = 0;
                         $setExit = 0;
                         $skipped = 0;
@@ -317,10 +321,10 @@ class CoursesRelationManager extends RelationManager
      * значения блоков vs распознанные из примечания vs что реально проставится
      * (только в пустые колонки).
      *
-     * @param  \Illuminate\Support\Collection<int, \App\Models\Course>  $records
+     * @param  Collection<int, Course>  $records
      * @return list<array<string, mixed>>
      */
-    private function buildBlockPreview(\Illuminate\Support\Collection $records): array
+    private function buildBlockPreview(Collection $records): array
     {
         return $records->map(function ($record): array {
             $parsed = CourseNoteBlockParser::parse($record->pivot?->note);

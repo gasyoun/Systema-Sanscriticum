@@ -7,6 +7,8 @@ namespace App\Services\Calendar;
 use App\Models\CourseBlock;
 use App\Models\Schedule;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Строит RFC 5545 VCALENDAR для персонального read-only фида студента
@@ -43,7 +45,7 @@ class IcsFeedBuilder
         return implode("\r\n", array_map([$this, 'fold'], $lines))."\r\n";
     }
 
-    /** @return \Illuminate\Support\Collection<int, Schedule> */
+    /** @return Collection<int, Schedule> */
     private function scheduleEvents(User $user)
     {
         $groupIds = $user->groups->pluck('id');
@@ -64,7 +66,7 @@ class IcsFeedBuilder
             ->get();
     }
 
-    /** @return \Illuminate\Support\Collection<int, CourseBlock> */
+    /** @return Collection<int, CourseBlock> */
     private function courseBlockEvents(User $user)
     {
         $courseIds = $user->groups->flatMap(fn ($group) => $group->courses->pluck('id'))
@@ -132,7 +134,7 @@ class IcsFeedBuilder
 
     private function utcStamp(\DateTimeInterface $dt): string
     {
-        return \Illuminate\Support\Carbon::instance($dt)->clone()->utc()->format('Ymd\THis\Z');
+        return Carbon::instance($dt)->clone()->utc()->format('Ymd\THis\Z');
     }
 
     private function uidHost(): string

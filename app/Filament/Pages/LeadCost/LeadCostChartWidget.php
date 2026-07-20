@@ -7,6 +7,7 @@ namespace App\Filament\Pages\LeadCost;
 use App\Models\DirectAdSpend;
 use App\Support\LeadCostReport;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Carbon;
 
 class LeadCostChartWidget extends ChartWidget
 {
@@ -45,8 +46,8 @@ class LeadCostChartWidget extends ChartWidget
         }
 
         $buckets = LeadCostReport::buckets(
-            \Illuminate\Support\Carbon::parse($start),
-            \Illuminate\Support\Carbon::parse($end),
+            Carbon::parse($start),
+            Carbon::parse($end),
             $this->filter ?? 'month',
         );
 

@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Services\PaymentImportService;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Forms\Components\Component;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +37,7 @@ class ListPayments extends ListRecords
     }
 
     /**
-     * @return array<int, \Filament\Forms\Components\Component>
+     * @return array<int, Component>
      */
     protected function getImportFormSchema(): array
     {

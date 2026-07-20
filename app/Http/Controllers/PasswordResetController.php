@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccessAttempt;
+use App\Models\User;
 use App\Services\Access\AccessAttemptLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -34,12 +35,12 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $email = \App\Models\User::normalizeEmail($request->input('email'));
+        $email = User::normalizeEmail($request->input('email'));
 
         // Плейсхолдер-адреса студентов без почты не считаем «найденными».
         $exists = $email !== ''
             && ! str_ends_with($email, '@no-email.com')
-            && \App\Models\User::where('email', $email)->exists();
+            && User::where('email', $email)->exists();
 
         if (! $exists) {
             // Лента «проблем со входом» (H849): человек пытается войти, но его
@@ -106,7 +107,7 @@ class PasswordResetController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::min(8)],
         ]);
 
-        $request->merge(['email' => \App\Models\User::normalizeEmail($request->input('email'))]);
+        $request->merge(['email' => User::normalizeEmail($request->input('email'))]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),

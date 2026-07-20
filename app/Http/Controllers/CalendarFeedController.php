@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\FeedToken;
 use App\Models\User;
 use App\Services\Calendar\IcsFeedBuilder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 
 /**
@@ -32,7 +33,7 @@ class CalendarFeedController extends Controller
     }
 
     /** Отозвать текущий токен и выдать новый (кнопка «Обновить ссылку» в кабинете). */
-    public function regenerate(): \Illuminate\Http\RedirectResponse
+    public function regenerate(): RedirectResponse
     {
         $user = auth()->user();
 

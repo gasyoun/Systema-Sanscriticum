@@ -32,14 +32,16 @@ declare(strict_types=1);
  *   mysql --batch -e "SELECT * FROM lesson_views" DB_NAME > lesson_views.tsv
  */
 
-require __DIR__.'/../vendor/autoload.php';
-
-/** @var \Illuminate\Foundation\Application $app */
-$app = require __DIR__.'/../bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+
+require __DIR__.'/../vendor/autoload.php';
+
+/** @var Application $app */
+$app = require __DIR__.'/../bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
 
 // Таблицы под две задачи из запроса: custdev-воронка и темп групп/преподавателей.
 $TABLES = [
@@ -76,6 +78,7 @@ $grandTotal = 0;
 foreach ($TABLES as $table) {
     if (! Schema::hasTable($table)) {
         fwrite(STDERR, "  · {$table}: пропуск — таблицы нет в этой БД\n");
+
         continue;
     }
 

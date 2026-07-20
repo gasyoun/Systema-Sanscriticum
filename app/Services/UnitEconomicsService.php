@@ -31,7 +31,7 @@ class UnitEconomicsService
     public function __construct(private readonly TeacherSalaryService $salary) {}
 
     /**
-     * @return array<string, mixed>  пусто (['found' => false]), если курс/блок не найдены
+     * @return array<string, mixed> пусто (['found' => false]), если курс/блок не найдены
      */
     public function forBlock(int $courseId, int $blockNumber, ?float $cacOverride = null): array
     {
