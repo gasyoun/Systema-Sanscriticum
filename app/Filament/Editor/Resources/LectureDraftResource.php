@@ -6,6 +6,7 @@ namespace App\Filament\Editor\Resources;
 
 use App\Filament\Editor\Resources\LectureDraftResource\Pages;
 use App\Models\LectureDraft;
+use App\Services\Lecture\LectureStorage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -153,7 +154,7 @@ class LectureDraftResource extends Resource
 
                 Tables\Actions\DeleteAction::make()
                     ->after(function (LectureDraft $record) {
-                        app(\App\Services\Lecture\LectureStorage::class)->deleteWorkingDir($record);
+                        app(LectureStorage::class)->deleteWorkingDir($record);
                     }),
             ])
             ->bulkActions([]);

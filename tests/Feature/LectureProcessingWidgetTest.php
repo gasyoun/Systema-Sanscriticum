@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Filament\Editor\Widgets\LectureProcessingWidget;
 use App\Models\LectureDraft;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -24,7 +25,7 @@ class LectureProcessingWidgetTest extends TestCase
         parent::setUp();
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
-        \Filament\Facades\Filament::setCurrentPanel(\Filament\Facades\Filament::getPanel('editor'));
+        Filament::setCurrentPanel(Filament::getPanel('editor'));
     }
 
     /** @test */

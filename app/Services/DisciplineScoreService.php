@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Services\Discipline\DisciplineScore;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -100,7 +101,7 @@ class DisciplineScoreService
                 if ($blockEnded && $isUnpaidDebt) {
                     $anyPromiseBefore = $promiseCreatedDates->contains(
                         fn ($createdAt): bool => $createdAt !== null
-                            && \Illuminate\Support\Carbon::parse($createdAt)->lte($block->ends_at)
+                            && Carbon::parse($createdAt)->lte($block->ends_at)
                     );
                     if (! $anyPromiseBefore) {
                         $silenceEvents++;

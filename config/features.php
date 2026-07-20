@@ -272,6 +272,21 @@ return [
     'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', false),
 
     /*
+     | Ридер (reaper) брошенных чекаутов (H1358): payments:expire-stale-checkouts
+     | переводит зависшие pending-платежи старше config('checkout.legacy_pending_days')
+     | (для чекаутов с timed промо-бронью — старше PromoCode::WEBHOOK_BUFFER_MINUTES)
+     | в failed, что через существующий Payment::booted() автоматически возвращает
+     | списанную прану, зачтённый реферальный кредит и зачтённый депозит и
+     | освобождает промо-слот. Deposit/trial/paypal/conditional строки — вне области:
+     | не трогаются никогда. Гонка с банковским вебхуком закрыта построчным
+     | lockForUpdate внутри транзакции (тот же паттерн, что и WebhookController).
+     | ВЫКЛ по умолчанию — deploy-рубильник; команда без --apply (dry-run отчёт)
+     | работает независимо от флага. Включение — CHECKOUT_STALE_ORDER_EXPIRY=true
+     | + config:cache после ревью.
+     */
+    'checkout_stale_order_expiry' => (bool) env('CHECKOUT_STALE_ORDER_EXPIRY', false),
+
+    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —

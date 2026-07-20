@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\Component;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -112,7 +113,7 @@ class DirectAdSpendsTableWidget extends TableWidget
     }
 
     /**
-     * @return array<int, \Filament\Forms\Components\Component>
+     * @return array<int, Component>
      */
     private function formSchema(): array
     {

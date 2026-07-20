@@ -3,15 +3,20 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ScheduleResource\Pages;
+use App\Models\Course;
 use App\Models\Schedule;
+use App\Services\ClassAttendanceService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class ScheduleResource extends Resource
 {
@@ -90,7 +95,7 @@ class ScheduleResource extends Resource
      * календарный виджет (ScheduleCalendarWidget) для модалок создания/редактирования —
      * та же валидация course_id по teacher_id, что и в обычной форме.
      *
-     * @return array<int, \Filament\Forms\Components\Component>
+     * @return array<int, Component>
      */
     public static function formSchema(): array
     {
@@ -144,7 +149,7 @@ class ScheduleResource extends Resource
                         // Серверная валидация: relationship-Select по умолчанию не накладывает
                         // where на Rule::exists, поэтому учитель мог бы через POST передать
                         // чужой course_id. Дополняем явным правилом по teacher_id.
-                        ->rule(fn () => \App\Models\Course::teacherCourseValidationRule())
+                        ->rule(fn () => Course::teacherCourseValidationRule())
                         ->searchable()
                         ->preload()
                         ->placeholder('Без привязки')
@@ -208,7 +213,7 @@ class ScheduleResource extends Resource
                     ->searchable()
                     ->weight('medium')
                     ->description(fn (Schedule $r): ?string => $r->description
-                        ? \Illuminate\Support\Str::limit($r->description, 120)
+                        ? Str::limit($r->description, 120)
                         : null)
                     ->url(fn (Schedule $r): ?string => $r->link)
                     ->openUrlInNewTab(),
@@ -290,7 +295,7 @@ class ScheduleResource extends Resource
                     ->visible(fn (Schedule $r): bool => $r->group_id !== null || $r->course_id !== null)
                     ->modalContent(fn (Schedule $r) => view('filament.schedule.attendance', [
                         'schedule' => $r,
-                        'data' => app(\App\Services\ClassAttendanceService::class)->forSchedule($r),
+                        'data' => app(ClassAttendanceService::class)->forSchedule($r),
                     ])),
 
                 Tables\Actions\ActionGroup::make([
@@ -298,16 +303,22 @@ class ScheduleResource extends Resource
                     Tables\Actions\ReplicateAction::make('duplicate_next_day')
                         ->label('Дублировать на завтра')
                         ->icon('heroicon-o-arrow-uturn-right')
+                        // attendances_count — виртуальный атрибут от ->counts('attendances')
+                        // в запросе списка; это не колонка таблицы, иначе INSERT падает.
+                        ->excludeAttributes(['attendances_count'])
                         ->beforeReplicaSaved(function (Schedule $replica, Schedule $original): void {
                             $replica->start = $original->start?->copy()->addDay();
                             $replica->end = $original->end?->copy()->addDay();
+                            self::resetReplicaLifecycle($replica);
                         }),
                     Tables\Actions\ReplicateAction::make('duplicate_next_week')
                         ->label('Дублировать на +неделю')
                         ->icon('heroicon-o-calendar-days')
+                        ->excludeAttributes(['attendances_count'])
                         ->beforeReplicaSaved(function (Schedule $replica, Schedule $original): void {
                             $replica->start = $original->start?->copy()->addWeek();
                             $replica->end = $original->end?->copy()->addWeek();
+                            self::resetReplicaLifecycle($replica);
                         }),
                     Tables\Actions\DeleteAction::make(),
                 ]),
@@ -326,7 +337,23 @@ class ScheduleResource extends Resource
     /**
      * «Сегодня, ср 21 мая» / «Завтра, чт 22 мая» / «пт 23 мая».
      */
-    private static function humanizeDateHeader(?\Illuminate\Support\Carbon $dt): string
+    /**
+     * Сбрасывает у копии занятия метки жизненного цикла и per-occurrence поля
+     * Zoom. При replicate модельный хук updating() не срабатывает (это insert),
+     * поэтому иначе копия унаследовала бы «уже напомнили / ссылка отправлена» и
+     * запись/UUID чужой Zoom-встречи, привязанной к оригинальному занятию.
+     */
+    private static function resetReplicaLifecycle(Schedule $replica): void
+    {
+        $replica->reminded_at = null;
+        $replica->absent_notified_at = null;
+        $replica->group_link_posted_at = null;
+        $replica->zoom_occurrence_uuid = null;
+        $replica->zoom_recording_url = null;
+        $replica->zoom_recording_received_at = null;
+    }
+
+    private static function humanizeDateHeader(?Carbon $dt): string
     {
         if ($dt === null) {
             return '—';

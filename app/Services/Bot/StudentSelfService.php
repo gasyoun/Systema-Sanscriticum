@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Bot;
 
+use App\Models\HomeworkSubmission;
 use App\Models\Schedule;
 use App\Models\User;
 
@@ -58,6 +59,139 @@ class StudentSelfService
         $aboutSelf = str_contains($t, 'мо') || str_contains($t, 'каки') || str_contains($t, 'где');
 
         return str_contains($t, 'групп') && $aboutSelf;
+    }
+
+    /**
+     * Точные фразы-команды справочного меню. Намеренно НЕ включает «помощь» —
+     * это слово уже зарезервировано под передачу живому куратору (HUMAN_TRIGGERS
+     * в TelegramWebhookController/ProcessVkBotMessage/StudentChatService), и
+     * пересечение сделало бы одно из двух поведений непредсказуемым.
+     *
+     * @var list<string>
+     */
+    private const HELP_PHRASES = [
+        '/help',
+        '/menu',
+        'меню',
+        'что ты умеешь',
+        'список команд',
+        'какие команды',
+    ];
+
+    /** Похоже ли сообщение на запрос справочного меню бота. */
+    public function matchesHelpIntent(string $text): bool
+    {
+        $t = mb_strtolower(trim($text));
+
+        if ($t === '') {
+            return false;
+        }
+
+        foreach (self::HELP_PHRASES as $phrase) {
+            if (str_contains($t, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Детерминированное справочное меню — фиксированный текст, ИИ тут не участвует.
+     */
+    public function helpMenu(): string
+    {
+        return "🤖 <b>Что я умею</b>\n\n"
+            ."📚 <b>мои группы</b> — ваши группы, курсы и ближайшее занятие\n"
+            ."📝 <b>мои задания</b> — статус домашних работ\n"
+            ."🙋 «позови куратора» — переключиться на живого человека\n\n"
+            .'Обычные вопросы по обучению, курсам, оплате и доступу я тоже понимаю — просто напишите их своими словами.';
+    }
+
+    /**
+     * Точные фразы-команды «покажи мои домашние задания».
+     *
+     * @var list<string>
+     */
+    private const HOMEWORK_PHRASES = [
+        '/homework',
+        '/myhomework',
+        '/hw',
+        'мои задания',
+        'моё задание',
+        'мое задание',
+        'мои дз',
+        'моя дз',
+        'домашние задания',
+        'домашняя работа',
+        'домашка',
+        'статус дз',
+        'статус домашки',
+        'статус домашней работы',
+    ];
+
+    /** Похоже ли сообщение на запрос статуса домашних заданий. */
+    public function matchesHomeworkIntent(string $text): bool
+    {
+        $t = mb_strtolower(trim($text));
+
+        if ($t === '') {
+            return false;
+        }
+
+        foreach (self::HOMEWORK_PHRASES as $phrase) {
+            if (str_contains($t, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Сводка по домашним заданиям студента: урок, статус, ссылка. Только уже
+     * начатые/отправленные работы (HomeworkSubmission) — какие уроки вообще
+     * требуют ДЗ, бот не отслеживает.
+     */
+    public function homeworkSummary(User $user): string
+    {
+        $submissions = HomeworkSubmission::query()
+            ->where('user_id', $user->id)
+            ->with(['lesson', 'course'])
+            ->orderByDesc('last_activity_at')
+            ->get();
+
+        if ($submissions->isEmpty()) {
+            return "📝 <b>Ваши задания</b>\n\n"
+                .'Пока нет отправленных домашних работ. Откройте урок в личном кабинете '
+                .'и отправьте задание — здесь появится его статус.';
+        }
+
+        $lines = ["📝 <b>Ваши задания</b>\n"];
+
+        foreach ($submissions as $submission) {
+            $title = $submission->lesson?->title ?? 'Урок';
+            $lines[] = self::homeworkStatusEmoji($submission->status).' <b>'.e($title).'</b> — '.e($submission->statusLabel());
+
+            if ($submission->course && $submission->lesson) {
+                $url = route('student.lesson', [$submission->course->slug, $submission->lesson_id]);
+                $lines[] = "   <a href='{$url}'>Открыть урок</a>";
+            }
+
+            $lines[] = ''; // пустая строка-разделитель между заданиями
+        }
+
+        return rtrim(implode("\n", $lines));
+    }
+
+    private static function homeworkStatusEmoji(string $status): string
+    {
+        return match ($status) {
+            HomeworkSubmission::STATUS_ACCEPTED => '✅',
+            HomeworkSubmission::STATUS_NEEDS_REVISION => '✍️',
+            HomeworkSubmission::STATUS_SUBMITTED => '🕓',
+            default => '📄',
+        };
     }
 
     /**

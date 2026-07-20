@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class LectureDraft extends Model
@@ -155,7 +156,7 @@ class LectureDraft extends Model
             return null;
         }
 
-        $age = now()->diffInSeconds(\Illuminate\Support\Carbon::parse($lock['at']), absolute: true);
+        $age = now()->diffInSeconds(Carbon::parse($lock['at']), absolute: true);
 
         return $age <= self::LOCK_TTL_SECONDS ? $lock : null;
     }

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Middleware\CaptureReferral;
 use App\Models\Course;
 use App\Models\Payment;
+use App\Models\ReferralReward;
 use App\Models\User;
 use App\Services\ReferralService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,7 +93,7 @@ class ReferralProgramTest extends TestCase
         $this->paidPayment($referred);
         $this->paidPayment($referred); // вторая оплата того же приглашённого
 
-        $this->assertSame(1, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+        $this->assertSame(1, ReferralReward::where('referred_id', $referred->id)->count());
         $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
     }
 
@@ -117,7 +118,7 @@ class ReferralProgramTest extends TestCase
         $student = User::factory()->create(['referred_by' => null]);
         $this->paidPayment($student);
 
-        $this->assertSame(0, \App\Models\ReferralReward::count());
+        $this->assertSame(0, ReferralReward::count());
     }
 
     /**
@@ -144,7 +145,7 @@ class ReferralProgramTest extends TestCase
         ], $attributes));
 
         // Ни награды, ни кредита, ни занятого разового слота.
-        $this->assertSame(0, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+        $this->assertSame(0, ReferralReward::where('referred_id', $referred->id)->count());
         $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
     }
 
@@ -203,7 +204,7 @@ class ReferralProgramTest extends TestCase
 
         // Кредит снят, строка награды удалена — разовый слот свободен.
         $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
-        $this->assertSame(0, \App\Models\ReferralReward::where('referred_id', $referred->id)->count());
+        $this->assertSame(0, ReferralReward::where('referred_id', $referred->id)->count());
 
         // Новая настоящая оплата приглашённого снова награждает.
         $this->paidPayment($referred);

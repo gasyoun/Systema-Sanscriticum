@@ -10,6 +10,7 @@ use App\Models\Lesson;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\HomeworkService;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +35,7 @@ class HomeworkVisibilityTest extends TestCase
         config(['services.telegram.student_bot_token' => 'TESTTOKEN']);
 
         $teacher = Teacher::create(['name' => 'T', 'email' => 't@example.test']);
-        $teacherUser = User::factory()->create(['role' => \App\Support\Roles::TEACHER, 'teacher_id' => $teacher->id]);
+        $teacherUser = User::factory()->create(['role' => Roles::TEACHER, 'teacher_id' => $teacher->id]);
         $course = Course::factory()->create(['teacher_id' => $teacher->id]);
         $lesson = Lesson::factory()->for($course)->create(['title' => 'Урок о дхату']);
         $student = User::factory()->create(['telegram_id' => '99887766']);
@@ -63,7 +64,7 @@ class HomeworkVisibilityTest extends TestCase
         Http::fake();
 
         $teacher = Teacher::create(['name' => 'T', 'email' => 't2@example.test']);
-        $teacherUser = User::factory()->create(['role' => \App\Support\Roles::TEACHER, 'teacher_id' => $teacher->id]);
+        $teacherUser = User::factory()->create(['role' => Roles::TEACHER, 'teacher_id' => $teacher->id]);
         $course = Course::factory()->create(['teacher_id' => $teacher->id]);
         $lesson = Lesson::factory()->for($course)->create();
         $student = User::factory()->create(['telegram_id' => null, 'vk_id' => null]);

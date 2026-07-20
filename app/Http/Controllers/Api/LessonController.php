@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Services\VideoLinkNormalizer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class LessonController extends Controller
@@ -98,7 +100,7 @@ class LessonController extends Controller
         // whereDate, иначе сравнение сырой ISO-строки с сохранённым значением
         // (Eloquent пишет date-каст как 'Y-m-d 00:00:00') не совпадёт и урок
         // продублируется при повторном прогоне того же исполнения.
-        $lessonDate = \Illuminate\Support\Carbon::parse($data['lesson_date'])->toDateString();
+        $lessonDate = Carbon::parse($data['lesson_date'])->toDateString();
         $groupId = $data['group_id'] ?? null;
 
         // Ключ идемпотентности включает group_id (для курсов, разнесённых на 2
@@ -144,7 +146,7 @@ class LessonController extends Controller
      * Fail-closed авторизация по общему секрету LESSON_SYNC_SECRET.
      * Возвращает 401-ответ при отказе либо null, если доступ разрешён.
      */
-    private function guard(Request $request): ?\Illuminate\Http\JsonResponse
+    private function guard(Request $request): ?JsonResponse
     {
         $secret = config('services.lesson_sync.secret');
 

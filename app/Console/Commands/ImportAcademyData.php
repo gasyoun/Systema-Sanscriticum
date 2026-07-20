@@ -2,9 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Course;
+use App\Models\Group;
+use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Support\CourseNameResolver;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -97,13 +103,13 @@ class ImportAcademyData extends Command
 
         $this->info('Оптимизируем кэш (читаем студентов и курсы в память)...');
         // Берем все ID в память, чтобы не делать 30 000 запросов к БД!
-        $users = \App\Models\User::pluck('id', 'name')->toArray();
-        $courses = \App\Models\Course::pluck('id', 'title')->toArray();
-        $groups = \App\Models\Group::pluck('id', 'name')->toArray();
+        $users = User::pluck('id', 'name')->toArray();
+        $courses = Course::pluck('id', 'title')->toArray();
+        $groups = Group::pluck('id', 'name')->toArray();
 
         // Нормализатор названий курсов: приводит «сырые» имена из таблицы к
         // каноническим из админки (database/data/course_aliases.csv).
-        $resolver = app(\App\Support\CourseNameResolver::class);
+        $resolver = app(CourseNameResolver::class);
 
         $this->info('Загружаем set уже существующих Payments для защиты от дубликатов...');
         $makeKey = static function ($userId, $courseId, $tariff, $amount, $createdAt): string {
@@ -116,7 +122,7 @@ class ImportAcademyData extends Command
                 ."|{$created}";
         };
 
-        $existingPaymentKeys = \Illuminate\Support\Facades\DB::table('payments')
+        $existingPaymentKeys = DB::table('payments')
             ->select('user_id', 'course_id', 'tariff', 'amount', 'created_at')
             ->get()
             ->mapWithKeys(function ($p) use ($makeKey) {
@@ -176,7 +182,7 @@ class ImportAcademyData extends Command
             $parsedDate = now();
             if (! empty($dateRaw)) {
                 try {
-                    $parsedDate = \Carbon\Carbon::parse($dateRaw);
+                    $parsedDate = Carbon::parse($dateRaw);
                 } catch (\Exception $e) {
                 }
             }
@@ -196,9 +202,9 @@ class ImportAcademyData extends Command
                         // отметим его как «ушёл бы в системные» через виртуальный id = 0.
                         $userId = 0;
                     } else {
-                        $sysUser = \App\Models\User::firstOrCreate(
+                        $sysUser = User::firstOrCreate(
                             ['email' => 'expenses@samskrte.ru'],
-                            ['name' => 'Системные расходы', 'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(10))]
+                            ['name' => 'Системные расходы', 'password' => Hash::make(Str::random(10))]
                         );
                         $userId = $sysUser->id;
                         $users['Системные расходы'] = $userId; // Кешируем, чтобы не создавать дважды
@@ -209,7 +215,7 @@ class ImportAcademyData extends Command
                     if ($dryRun) {
                         $courseId = 0;
                     } else {
-                        $sysCourse = \App\Models\Course::firstOrCreate(
+                        $sysCourse = Course::firstOrCreate(
                             ['title' => 'Прочие затраты (Технический)'],
                             ['slug' => 'system-expenses', 'is_visible' => false]
                         );
@@ -363,7 +369,7 @@ class ImportAcademyData extends Command
             // В dry-run батч не флашим — просто очищаем массив, чтобы не есть память.
             if (count($paymentsBatch) >= 1000) {
                 if (! $dryRun) {
-                    \Illuminate\Support\Facades\DB::table('payments')->insert($paymentsBatch);
+                    DB::table('payments')->insert($paymentsBatch);
                 }
                 $paymentsBatch = [];
             }
@@ -371,7 +377,7 @@ class ImportAcademyData extends Command
 
         // Загружаем остатки оплат
         if (! empty($paymentsBatch) && ! $dryRun) {
-            \Illuminate\Support\Facades\DB::table('payments')->insert($paymentsBatch);
+            DB::table('payments')->insert($paymentsBatch);
         }
 
         fclose($file);
@@ -381,14 +387,14 @@ class ImportAcademyData extends Command
         // Раздаем доступы к группам (idempotent)
         if (! empty($groupUserBatch) && ! $dryRun) {
             foreach (array_chunk($groupUserBatch, 500) as $chunk) {
-                \Illuminate\Support\Facades\DB::table('group_user')->insertOrIgnore($chunk);
+                DB::table('group_user')->insertOrIgnore($chunk);
             }
         }
 
         // Заполняем статусы «Обучается на курсах» — с защитой от понижения
         // терминального статуса и от затирания note пустотой.
         foreach ($courseUserBatch as $link) {
-            $user = \App\Models\User::find($link['user_id']);
+            $user = User::find($link['user_id']);
             if (! $user) {
                 continue;
             }
@@ -697,7 +703,7 @@ class ImportAcademyData extends Command
             $teacherId = null;
             if (! empty($teacherName)) {
                 $primaryTeacherName = trim(explode(',', $teacherName)[0]);
-                $teacher = \App\Models\Teacher::where('name', 'LIKE', '%'.$primaryTeacherName.'%')->first();
+                $teacher = Teacher::where('name', 'LIKE', '%'.$primaryTeacherName.'%')->first();
 
                 if ($teacher) {
                     $teacherId = $teacher->id;
@@ -707,10 +713,10 @@ class ImportAcademyData extends Command
             }
 
             // Создаем курс
-            $course = \App\Models\Course::updateOrCreate(
+            $course = Course::updateOrCreate(
                 ['title' => $title],
                 [
-                    'slug' => \Illuminate\Support\Str::slug($title) ?: \Illuminate\Support\Str::random(10),
+                    'slug' => Str::slug($title) ?: Str::random(10),
                     'teacher_id' => $teacherId,
                     'lessons_count' => $blocksCount > 0 ? $blocksCount * 4 : 12,
                     'salary_type' => $salaryType,
@@ -725,7 +731,7 @@ class ImportAcademyData extends Command
             // НОВОЕ: АВТОМАТИЧЕСКОЕ СОЗДАНИЕ ГРУППЫ
             // ==========================================
             // Создаем группу с точно таким же названием, как у курса (если ее еще нет)
-            $group = \App\Models\Group::firstOrCreate(
+            $group = Group::firstOrCreate(
                 ['name' => $title]
             );
 
@@ -735,7 +741,7 @@ class ImportAcademyData extends Command
 
             // Тариф: Полный курс
             if ($fullPrice > 0) {
-                \App\Models\Tariff::updateOrCreate(
+                Tariff::updateOrCreate(
                     [
                         'course_id' => $course->id,
                         'type' => 'full',
@@ -753,7 +759,7 @@ class ImportAcademyData extends Command
             if ($blockPrice > 0) {
                 if ($blocksCount > 0) {
                     for ($i = 1; $i <= $blocksCount; $i++) {
-                        \App\Models\Tariff::updateOrCreate(
+                        Tariff::updateOrCreate(
                             [
                                 'course_id' => $course->id,
                                 'type' => 'block',
@@ -768,7 +774,7 @@ class ImportAcademyData extends Command
                         $tariffsCount++;
                     }
                 } else {
-                    \App\Models\Tariff::updateOrCreate(
+                    Tariff::updateOrCreate(
                         [
                             'course_id' => $course->id,
                             'type' => 'block',

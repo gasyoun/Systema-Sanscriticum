@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use ZipArchive;
 
 class GenerateCertificatesArchive implements ShouldQueue
@@ -85,7 +86,7 @@ class GenerateCertificatesArchive implements ShouldQueue
         // Имя содержит случайный токен, а не time(): иначе имя предсказуемо
         // (group_id перебираемый + узкое окно секунд) и любой залогиненный мог бы
         // скачать чужой архив сертификатов через /force-download (IDOR).
-        $fileName = 'certificates_group_'.$this->groupId.'_'.\Illuminate\Support\Str::random(40).'.zip';
+        $fileName = 'certificates_group_'.$this->groupId.'_'.Str::random(40).'.zip';
         // Сохраняем в storage/app/public/archives
         $zipPath = storage_path('app/public/archives/'.$fileName);
 
@@ -110,7 +111,7 @@ class GenerateCertificatesArchive implements ShouldQueue
             try {
                 $pdf = $service->generatePdf($cert);
                 $pdfData = $pdf->output();
-                $safeName = \Illuminate\Support\Str::slug($cert->user->name.'-'.$cert->course->title, '_');
+                $safeName = Str::slug($cert->user->name.'-'.$cert->course->title, '_');
                 $zip->addFromString($safeName.'.pdf', $pdfData);
 
                 // JPG-дубль рядом с PDF. Если на сервере нет imagick/ghostscript —

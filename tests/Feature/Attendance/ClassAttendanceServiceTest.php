@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Attendance;
 
+use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\ScheduleJoinClick;
@@ -105,7 +106,7 @@ class ClassAttendanceServiceTest extends TestCase
     /** @test */
     public function for_group_includes_course_tied_schedules_without_group_id(): void
     {
-        $course = \App\Models\Course::factory()->create();
+        $course = Course::factory()->create();
         $group = Group::create(['name' => 'Группа 4']);
         $group->courses()->attach($course->id);
         $student = User::factory()->create();
@@ -142,7 +143,7 @@ class ClassAttendanceServiceTest extends TestCase
     /** @test */
     public function dashboard_computes_rates_by_student_group_course_and_weekly_trend(): void
     {
-        $course = \App\Models\Course::factory()->create();
+        $course = Course::factory()->create();
         $group = Group::create(['name' => 'Группа 5']);
         $group->courses()->attach($course->id);
         $present = User::factory()->create(['name' => 'Present5']);

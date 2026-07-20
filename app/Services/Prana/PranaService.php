@@ -7,6 +7,8 @@ namespace App\Services\Prana;
 use App\Models\PranaTransaction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -54,12 +56,12 @@ class PranaService
 
                 return true;
             });
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+        } catch (UniqueConstraintViolationException $e) {
             // Уже начисляли — это не ошибка.
             return false;
         } catch (\Throwable $e) {
             // Некоторые драйверы кидают QueryException с кодом 23000 вместо UniqueConstraintViolationException
-            if ($e instanceof \Illuminate\Database\QueryException && $e->getCode() === '23000') {
+            if ($e instanceof QueryException && $e->getCode() === '23000') {
                 return false;
             }
             Log::warning('PranaService::award failed', [
@@ -145,10 +147,10 @@ class PranaService
 
                 return true;
             });
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+        } catch (UniqueConstraintViolationException $e) {
             return false;
         } catch (\Throwable $e) {
-            if ($e instanceof \Illuminate\Database\QueryException && $e->getCode() === '23000') {
+            if ($e instanceof QueryException && $e->getCode() === '23000') {
                 return false;
             }
             Log::warning('PranaService::refund failed', [
@@ -410,10 +412,10 @@ class PranaService
 
                 return true;
             });
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+        } catch (UniqueConstraintViolationException $e) {
             return false;
         } catch (\Throwable $e) {
-            if ($e instanceof \Illuminate\Database\QueryException && $e->getCode() === '23000') {
+            if ($e instanceof QueryException && $e->getCode() === '23000') {
                 return false;
             }
             Log::warning('PranaService::awardDailyLogin failed', [

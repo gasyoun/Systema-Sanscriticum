@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\PaymentResource\Pages\CreatePayment;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
@@ -55,7 +56,7 @@ class HalfBlockPurchaseTest extends TestCase
     {
         // Полный конвейер цены: сначала процент лояльности от базовой цены,
         // затем зачёт депозита, затем зачёт уплаченной половины.
-        \App\Models\MarketingSetting::create([
+        MarketingSetting::create([
             'is_loyalty_active' => true,
             'wholesale_small_threshold' => 2,
             'wholesale_small_discount' => 10,

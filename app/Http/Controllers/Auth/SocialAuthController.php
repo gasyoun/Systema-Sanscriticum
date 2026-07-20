@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\SocialEmailNotVerifiedException;
 use App\Http\Controllers\Controller;
 use App\Services\SocialAuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Contracts\User;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -50,7 +52,7 @@ class SocialAuthController extends Controller
                 $oauthUser->getName() ?: $oauthUser->getNickname(),
                 $this->providerVerifiedEmail($provider, $oauthUser),
             );
-        } catch (\App\Exceptions\SocialEmailNotVerifiedException $e) {
+        } catch (SocialEmailNotVerifiedException $e) {
             return redirect()->route('login')->with(
                 'error',
                 'Этот email уже привязан к аккаунту. Войдите по паролю, а соцсеть подключите из личного кабинета.'
@@ -67,7 +69,7 @@ class SocialAuthController extends Controller
      * Для остальных (VK/Yandex через community-драйверы) email может быть
      * задан пользователем — считаем неподтверждённым, чтобы не допустить takeover.
      */
-    private function providerVerifiedEmail(string $provider, \Laravel\Socialite\Contracts\User $oauthUser): bool
+    private function providerVerifiedEmail(string $provider, User $oauthUser): bool
     {
         if ($provider !== 'google') {
             return false;

@@ -8,6 +8,7 @@ use App\Filament\Resources\UserResource;
 use App\Models\User;
 use App\Services\StuckStudentsReport;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -27,7 +28,7 @@ class StuckStudentsWidget extends BaseWidget
     public static function canView(): bool
     {
         // Куратор = админ-подобные роли (тот же гейт, что у студентов в UserResource).
-        return RoleGate::any(\App\Support\Roles::ADMIN, \App\Support\Roles::ACCOUNTANT);
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT);
     }
 
     public function table(Table $table): Table

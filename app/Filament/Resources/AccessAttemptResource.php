@@ -9,7 +9,7 @@ use App\Filament\Resources\AccessAttemptResource\Pages;
 use App\Models\AccessAttempt;
 use App\Services\Access\StudentUnblockService;
 use App\Support\RoleGate;
-use Filament\Forms;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -122,7 +122,7 @@ class AccessAttemptResource extends Resource
                         && $record->handled_at === null
                         && RoleGate::adminOnly())
                     ->form([
-                        \Filament\Forms\Components\Toggle::make('reset_password')
+                        Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
                             ->default(false),
                     ])

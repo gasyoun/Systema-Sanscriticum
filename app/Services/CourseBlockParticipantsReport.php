@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -24,7 +25,7 @@ class CourseBlockParticipantsReport
      * @return array{
      *   participants_total: int,
      *   groups: array<int, array{name: string, count: int}>,
-     *   blocks: array<int, array{number: int, title: ?string, starts_at: ?\Illuminate\Support\Carbon, whole: int, half1: int, half2: int}>,
+     *   blocks: array<int, array{number: int, title: ?string, starts_at: ?Carbon, whole: int, half1: int, half2: int}>,
      *   paid_any: int,
      *   block_numbers: array<int, int>,
      *   students: array<int, array{id: int, name: string, blocks: array<int, ?string>}>

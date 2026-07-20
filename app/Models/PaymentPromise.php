@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\CuratorNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,7 +58,7 @@ class PaymentPromise extends Model
         // общим сообщением — здесь их пропускаем, чтобы не плодить N штук.
         static::created(function (self $promise): void {
             if ($promise->installment_group_id === null) {
-                app(\App\Services\CuratorNotifier::class)->promiseCreated($promise);
+                app(CuratorNotifier::class)->promiseCreated($promise);
             }
         });
     }

@@ -15,6 +15,63 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 - **Level-quiz answer positions — the `deva` cohort's quiz graded "always tap the top option" as 6/6** ([H1387](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1387-Fable_csl-guides_quiz-answer-position-fixed-index-defect_20.07.26.md), [PR #614](https://github.com/gasyoun/Systema-Sanscriticum/pull/614)). All six items in `config('marathon.cohorts.deva.level_quiz')` carried `correct => 0`, inherited verbatim from csl-guides, where every answer was authored first and nothing shuffled. `quiz_level` therefore measured nothing about the student — on the cohort whose first intake is **28-08-2026**. Option order re-ported from the fixed upstream bank ([csl-guides PR #119](https://github.com/sanskrit-lexicon/csl-guides/pull/119)) and verified in sync item by item, so the "ported verbatim" relationship the config comment promises still holds.
   - **The tests encoded the defect as a fixture:** three hardcoded `picks = [0,0,0,0,0,0]` as the perfect run and the class docblock stated it as intended behaviour. They now derive picks from config, so a future re-port cannot silently invalidate them.
   - Two guards added — answers must not all share one option position (**confirmed to fail** against a temporarily restored all-zero config before passing on the fix), and every `correct` index must exist in its own `opts`.
+## [1.44.0] - 2026-07-20
+
+### Added
+- **H1358: `payments:expire-stale-checkouts` — abandoned-checkout reaper.**
+  Pending `Payment` rows created at checkout provisionally hold resources
+  (prana spend, applied referral credit, consumed deposit credit, promo-code
+  usage slots) with nothing ever releasing them if the buyer just abandons the
+  bank tab — worse, `PaymentController` then hard-blocks a second checkout
+  attempt for the same course while the abandoned row sits there. The
+  reversal logic already existed (`Payment::booted()`'s `updated` listener
+  refunds prana/referral credit and restores deposits/promo slots on any
+  `pending → failed/canceled` transition) — it just had no trigger for
+  silently-abandoned orders. The new command finds stale `pending` payments
+  (timed promo reservations use `PromoCode::WEBHOOK_BUFFER_MINUTES` as
+  authoritative; everything else uses the new
+  `config('checkout.legacy_pending_days')`, default 30 days — deliberately
+  wide, mirroring `AuditCheckoutIntegrity`'s own caution that these rows want
+  manual-review-grade care before cancellation) and flips them to `failed`
+  under a per-row `lockForUpdate()` transaction — the same idempotency
+  pattern `WebhookController` uses — so a bank webhook landing in the same
+  instant always wins the race instead of getting reaped. Deposit/trial,
+  PayPal-pending, and conditional rows are hard-excluded (not abandoned
+  checkouts in the same sense). Scheduled every 15 minutes with `--apply`
+  (`Kernel::schedule`); without `--apply` the command only reports what it
+  would fail, independent of the gate. Live runs require the new
+  deploy-рубильник `features.checkout_stale_order_expiry` (off by default,
+  `CHECKOUT_STALE_ORDER_EXPIRY=true` + `config:cache` to enable).
+
+### Fixed
+- **H1355: CI green + enforcing — flaky VK deep-link assertion, secretless
+  Deploy-production job, 110 hidden Pint violations.** Three CI gaps: (1)
+  `VkAuthTokenLinkingTest`'s substring-based `ref` assertion could collide by
+  chance against a random 32-char token — now an exact query-param compare;
+  (2) `.github/workflows/deploy.yml`'s "Deploy production" job painted `main`
+  red on every push because prod SSH secrets aren't set yet (H478 gate) — now
+  skips cleanly (success, not failure) until a human wires them; (3)
+  `.github/workflows/ci.yml`'s Pint step had `continue-on-error: true` hiding
+  96 files of violations — fixed and made enforcing. Pint's own auto-fix
+  introduced a real bug (moved `use` imports below their first `::class`
+  usage in `routes/api.php`/`scripts/export-analytics-tables.php`, silently
+  resolving to the wrong namespace) — caught by the full suite and fixed by
+  hand.
+
+## [1.43.0] - 2026-07-20
+
+### Added
+- **H1356: frequency-ranked root drills (top-25/50/100) in `public/exercises/roots/`.**
+  New match-family exercise pairing each Sanskrit verbal root (deva + IAST hint)
+  with its most frequent attested form (RU gloss as hint), banded by DCS corpus
+  frequency (top-25 flat, top-50/100 random-10-per-round, mirroring the
+  `ligatures/` D6 pattern). Data is generated from the already-committed
+  570-root RU fixture (`database/seeders/data/roots_frequency_ru.tsv`, H1280) by
+  a newly **committed** generator (`scripts/build_root_drill_data.py`, with a
+  `--check` drift mode) — closing the gap the ligatures family left open (its
+  equivalent exporter was never committed). Registered as a new family card on
+  `public/exercises/index.html`; anti-drift coverage in
+  `tests/Feature/Exercises/RootDrillPagesTest.php`.
 
 ## [1.42.0] - 2026-07-20
 

@@ -70,7 +70,7 @@ return new class extends Migration
 
                 try {
                     $updates[$col] = Crypt::decryptString($value);
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Уже plaintext — пропускаем.
                 }
             }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -104,7 +105,7 @@ class Lesson extends Model
         return $this->belongsTo(Group::class);
     }
 
-    public function homeworkSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function homeworkSubmissions(): HasMany
     {
         return $this->hasMany(HomeworkSubmission::class);
     }
@@ -222,7 +223,7 @@ class Lesson extends Model
         return $q->whereNot(fn (Builder $w) => $w->withCoreMaterials());
     }
 
-    public function scopeFree(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeFree(Builder $query): Builder
     {
         return $query->where('is_free', true);
     }
@@ -272,11 +273,11 @@ class Lesson extends Model
      * общие для всех групп курса) ИЛИ привязанные к группе студента. Нужно для
      * курсов, разнесённых на 2 независимых потока.
      */
-    public function scopeForUserGroups(\Illuminate\Database\Eloquent\Builder $query, $user): \Illuminate\Database\Eloquent\Builder
+    public function scopeForUserGroups(Builder $query, $user): Builder
     {
         $groupIds = $user?->groups->pluck('id')->all() ?? [];
 
-        return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($groupIds) {
+        return $query->where(function (Builder $q) use ($groupIds) {
             $q->whereNull('group_id');
             if (! empty($groupIds)) {
                 $q->orWhereIn('group_id', $groupIds);
@@ -294,7 +295,7 @@ class Lesson extends Model
         return $user !== null && $user->groups->pluck('id')->contains($this->group_id);
     }
 
-    public function scopeShownOnMain(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeShownOnMain(Builder $query): Builder
     {
         return $query->where('show_on_main', true)
             ->where('is_free', true)

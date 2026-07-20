@@ -140,6 +140,40 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // 1.6. SELF-SERVICE: «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
+        if (app(StudentSelfService::class)->matchesHomeworkIntent($question)) {
+            $summary = app(StudentSelfService::class)->homeworkSummary($user);
+
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+
+            $this->sendMessage($chatId, $summary);
+
+            return;
+        }
+
+        // 1.7. SELF-SERVICE: /help — детерминированное меню, минуя ИИ (H1357).
+        if (app(StudentSelfService::class)->matchesHelpIntent($question)) {
+            $menu = app(StudentSelfService::class)->helpMenu();
+
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $menu,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+
+            $this->sendMessage($chatId, $menu);
+
+            return;
+        }
+
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {

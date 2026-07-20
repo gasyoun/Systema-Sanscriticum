@@ -39,7 +39,7 @@ return new class extends Migration
                 Schema::table($table, function (Blueprint $blueprint) use ($index) {
                     $blueprint->dropIndex($index);
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Индекс отсутствует — это и есть целевое состояние.
             }
         }

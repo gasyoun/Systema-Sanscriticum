@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Resources\UserResource;
+use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -99,7 +100,7 @@ class StudentProgressCardTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('admin'));
         $this->actingAs($admin);
 
-        Livewire::test(\App\Filament\Resources\UserResource\Pages\ViewUser::class, [
+        Livewire::test(ViewUser::class, [
             'record' => $student->getRouteKey(),
         ])
             ->assertOk()

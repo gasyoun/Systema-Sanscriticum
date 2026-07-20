@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Jobs\SendMessengerAlerts;
+use App\Mail\ScheduledReminderMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Разовое напоминание студенту на конкретную дату/время, поставленное
@@ -34,12 +38,12 @@ class ScheduledReminder extends Model
         'sent_at' => 'datetime',
     ];
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function creator(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -68,11 +72,11 @@ class ScheduledReminder extends Model
         }
 
         if ($hasTg || $hasVk) {
-            \App\Jobs\SendMessengerAlerts::dispatch($user, $this->message, $hasTg, $hasVk);
+            SendMessengerAlerts::dispatch($user, $this->message, $hasTg, $hasVk);
         }
         if ($hasEmail) {
-            \Illuminate\Support\Facades\Mail::to($user->email)
-                ->queue(new \App\Mail\ScheduledReminderMail($this->message, $user->name));
+            Mail::to($user->email)
+                ->queue(new ScheduledReminderMail($this->message, $user->name));
         }
 
         return true;

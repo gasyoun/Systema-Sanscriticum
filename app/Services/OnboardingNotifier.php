@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\User;
@@ -122,7 +123,7 @@ class OnboardingNotifier
     private function adminLink(User $user): string
     {
         try {
-            $url = \App\Filament\Resources\UserResource::getUrl('edit', ['record' => $user->id]);
+            $url = UserResource::getUrl('edit', ['record' => $user->id]);
         } catch (\Throwable) {
             $url = url('/admin');
         }

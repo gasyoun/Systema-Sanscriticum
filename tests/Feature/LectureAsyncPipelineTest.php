@@ -8,6 +8,9 @@ use App\Jobs\BuildLectureHtmlJob;
 use App\Jobs\PreprocessLectureDraftJob;
 use App\Jobs\RunLectureAiJob;
 use App\Models\LectureDraft;
+use App\Services\Lecture\LectureAiClient;
+use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Lecture\LectureStorage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -94,7 +97,7 @@ class LectureAsyncPipelineTest extends TestCase
         $draft->markProcessing('Препроцесс и первая сборка');
 
         (new PreprocessLectureDraftJob($draft->id, 'transcript.txt', null, 1))
-            ->handle(app(\App\Services\Lecture\LectureStorage::class), app(\App\Services\Lecture\LectureBuilderClient::class));
+            ->handle(app(LectureStorage::class), app(LectureBuilderClient::class));
 
         $draft->refresh();
         $this->assertSame(LectureDraft::STATUS_BUILT, $draft->status); // прошёл и render
@@ -112,14 +115,14 @@ class LectureAsyncPipelineTest extends TestCase
         $owning = $this->draft();
         $owning->markProcessing('Сборка HTML');
         (new BuildLectureHtmlJob($owning->id, ownsProcessing: true))->handle(
-            app(\App\Services\Lecture\LectureStorage::class), app(\App\Services\Lecture\LectureBuilderClient::class)
+            app(LectureStorage::class), app(LectureBuilderClient::class)
         );
         $this->assertFalse($owning->fresh()->isProcessing());
 
         $nested = $this->draft();
         $nested->markProcessing('Препроцесс и первая сборка');
         (new BuildLectureHtmlJob($nested->id, ownsProcessing: false))->handle(
-            app(\App\Services\Lecture\LectureStorage::class), app(\App\Services\Lecture\LectureBuilderClient::class)
+            app(LectureStorage::class), app(LectureBuilderClient::class)
         );
         $this->assertTrue($nested->fresh()->isProcessing(), 'вложенная сборка не должна снимать флаг владельца');
     }
@@ -134,7 +137,7 @@ class LectureAsyncPipelineTest extends TestCase
         $draft->markProcessing('ИИ: корректура текста');
 
         (new RunLectureAiJob($draft->id, 'correct', '', ['max_paragraphs' => 5]))->handle(
-            app(\App\Services\Lecture\LectureStorage::class), app(\App\Services\Lecture\LectureAiClient::class)
+            app(LectureStorage::class), app(LectureAiClient::class)
         );
 
         $draft->refresh();
@@ -152,7 +155,7 @@ class LectureAsyncPipelineTest extends TestCase
 
         try {
             (new RunLectureAiJob($draft->id, 'structure'))->handle(
-                app(\App\Services\Lecture\LectureStorage::class), app(\App\Services\Lecture\LectureAiClient::class)
+                app(LectureStorage::class), app(LectureAiClient::class)
             );
             $this->fail('ожидалось исключение от упавшей AI-задачи');
         } catch (\Throwable $e) {

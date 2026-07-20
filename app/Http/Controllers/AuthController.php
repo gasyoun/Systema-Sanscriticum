@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +36,7 @@ class AuthController extends Controller
 
         // Логин по нормализованному email: хранится lowercase+trim, поэтому и при
         // входе приводим ввод к тому же виду (иначе «Anna@Mail.ru» не найдёт аккаунт).
-        $credentials['email'] = \App\Models\User::normalizeEmail($credentials['email']);
+        $credentials['email'] = User::normalizeEmail($credentials['email']);
 
         // Попытка входа
         if (Auth::attempt($credentials)) {
@@ -79,7 +80,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $credentials['email'] = \App\Models\User::normalizeEmail($credentials['email']);
+        $credentials['email'] = User::normalizeEmail($credentials['email']);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return response()->json([

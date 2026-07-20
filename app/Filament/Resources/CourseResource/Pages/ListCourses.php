@@ -7,6 +7,7 @@ namespace App\Filament\Resources\CourseResource\Pages;
 use App\Filament\Exports\CourseExporter;
 use App\Filament\Resources\CourseResource;
 use Filament\Actions;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Resources\Pages\ListRecords;
 
 class ListCourses extends ListRecords
@@ -24,7 +25,7 @@ class ListCourses extends ListRecords
                 ->color('gray')
                 ->exporter(CourseExporter::class)
                 ->formats([
-                    \Filament\Actions\Exports\Enums\ExportFormat::Csv,
+                    ExportFormat::Csv,
                 ])
                 ->fileName(fn () => 'courses-'.now()->format('Y-m-d_H-i-s')),
         ];

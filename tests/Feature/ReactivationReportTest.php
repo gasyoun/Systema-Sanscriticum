@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\ReactivationTemplate;
+use App\Filament\Pages\Reactivation;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Group;
@@ -152,7 +153,7 @@ class ReactivationReportTest extends TestCase
         $this->paid($renewed, 1, 3); // не продлил
         $this->makeNoPaymentDebtor(); // без оплат
 
-        $page = new \App\Filament\Pages\Reactivation;
+        $page = new Reactivation;
         $summary = $page->summary();
 
         $this->assertSame(2, $summary['total']);
@@ -170,7 +171,7 @@ class ReactivationReportTest extends TestCase
         $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
 
         Livewire::actingAs($admin)
-            ->test(\App\Filament\Pages\Reactivation::class)
+            ->test(Reactivation::class)
             ->assertSuccessful()
             ->assertCanSeeTableRecords([$notRenewed]);
     }

@@ -9,6 +9,7 @@ use App\Services\GoalCheckinService;
 use App\Support\RoleGate;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * «Check-in целей» — standup-петля прогресса делегированных лидов (H376,
@@ -48,7 +49,7 @@ class GoalCheckins extends Page
     {
         // Из кэша, без синхронного пересчёта на каждой загрузке админки — см.
         // DelegationKpi::getNavigationBadge (тяжёлый snapshot ронял панель в 500).
-        return \Illuminate\Support\Facades\Cache::get('nav_badge.goal_checkins');
+        return Cache::get('nav_badge.goal_checkins');
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -72,7 +73,7 @@ class GoalCheckins extends Page
     {
         $snap = app(GoalCheckinService::class)->snapshot();
 
-        \Illuminate\Support\Facades\Cache::put(
+        Cache::put(
             'nav_badge.goal_checkins',
             $snap['ok'] ? null : '!',
             now()->addMinutes(30),

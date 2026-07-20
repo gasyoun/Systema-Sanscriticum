@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
 use App\Models\SupportConversation;
+use App\Models\User;
 use App\Services\Support\UnifiedInboxReader;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -76,7 +78,7 @@ class WorkQueueReport
     /**
      * Застрявшие / риск оттока — переиспользуем существующий отчёт.
      *
-     * @return Collection<int, \App\Models\User>
+     * @return Collection<int, User>
      */
     public function stuckStudents(): Collection
     {
@@ -90,7 +92,7 @@ class WorkQueueReport
      * Открытые треды поддержки, где последнее сообщение — входящее и висит
      * дольше SLA (человек ещё не ответил).
      *
-     * @return Collection<int, array{conversation: SupportConversation, waiting_since: \Illuminate\Support\Carbon}>
+     * @return Collection<int, array{conversation: SupportConversation, waiting_since: Carbon}>
      */
     public function unansweredSupport(): Collection
     {
