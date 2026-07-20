@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.44.0] - 2026-07-20
+
 ### Added
 - **H1358: `payments:expire-stale-checkouts` — abandoned-checkout reaper.**
   Pending `Payment` rows created at checkout provisionally hold resources
