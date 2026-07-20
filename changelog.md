@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.49.0] - 2026-07-20
+
 ### Added
 - **H1291: корпус возражений — микрокопия в точке продажи (ВРЕМЯ + ЦЕНА).**
   Последний лейн волны revenue-copy
