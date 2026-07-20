@@ -11,6 +11,24 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1294: рекомендация школы — просьба «пригласите друга» без бонусной рамки.**
+  Лейн волны revenue-copy
+  ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
+  Существовавший блок «Приглашайте друзей» (иконка подарка, «вам начислят
+  500 ₽» первым предложением, внутри вкладки «Прана») переписан в рамку
+  рекомендации учителя: кредит — «в знак благодарности», механика объяснена
+  до конца, нулевые счетчики скрыты; блок перенесен в основную вкладку
+  кабинета (раньше исчезал при выключенной пране). Достроены недостающие
+  поверхности: тихая просьба на странице успешной оплаты (только
+  подтвержденное состояние), готовое личное сообщение для отправки знакомому
+  и именная встреча приглашенного на главной («{Имя} рекомендует вам нашу
+  школу») по валидному `?ref`-коду. `config/referral.php` и логика начисления
+  не тронуты. Строки и решения:
+  [`docs/copy/money-referral-invite-ask.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-referral-invite-ask.md);
+  6 новых feature-тестов
+  ([`tests/Feature/ReferralAskSurfacesTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralAskSurfacesTest.php)).
+
 ## [1.47.0] - 2026-07-20
 
 ### Security
