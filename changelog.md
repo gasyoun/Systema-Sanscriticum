@@ -11,7 +11,24 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.48.0] - 2026-07-20
+
 ### Added
+- **H1357: детерминированный `/help` и «мои задания» в боте — до передачи `CuratorAi`.**
+  `StudentSelfService` получил `matchesHelpIntent`/`helpMenu()` и
+  `matchesHomeworkIntent`/`homeworkSummary()` по образцу уже существующего
+  `matchesGroupsIntent`/`groupsSummary` — фиксированный текст и данные из БД,
+  без обращения к LLM, так что куратор-ИИ никогда не придумывает статус
+  домашнего задания. Подключено во всех трёх каналах, где уже стоит эта
+  развилка: `TelegramWebhookController::processStudentQuestion`,
+  `ProcessVkBotMessage::handle` (VK) и `StudentChatService::respond`
+  (веб-чат). `/help` намеренно не включает «помощь» — это слово уже занято
+  триггером передачи живому куратору (`HUMAN_TRIGGERS`) во всех трёх
+  контроллерах. 29+112 тестов (`StudentSelfServiceIntentTest`,
+  `StudentSelfServiceHomeworkTest`, полный набор `--filter=Bot`) зелёные,
+  Pint чист.
+  ([PR #610](https://github.com/gasyoun/Systema-Sanscriticum/pull/610),
+  [H1357](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1357-Sonnet_Systema-Sanscriticum_bot-deterministic-help-and-homework-status_20.07.26.md)).
 - **H1294: рекомендация школы — просьба «пригласите друга» без бонусной рамки.**
   Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
