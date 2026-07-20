@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Payment;
+use App\Models\PaymentWebhookEvent;
 use App\Models\PromoCode;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -34,6 +35,7 @@ class AuditCheckoutIntegrity extends Command
         $strandedDeposits = $this->reversedOrdersWithConsumedDeposits();
         $promoMismatches = $this->promoCounterMismatches();
         $legacyReservations = $this->legacyPendingPromoReservations();
+        $rejectedWebhooks = $this->rejectedWebhookDeliveries();
 
         $this->report(
             'Negative referral wallets',
@@ -54,6 +56,11 @@ class AuditCheckoutIntegrity extends Command
             'Legacy pending promo links without expiry',
             ['payment_id', 'user_id', 'promo_id', 'created_at'],
             $legacyReservations,
+        );
+        $this->report(
+            'Rejected webhook deliveries',
+            ['event_id', 'payment_id', 'decision', 'bank_status', 'reported_amount', 'created_at'],
+            $rejectedWebhooks,
         );
 
         if ($applySafe) {
@@ -146,6 +153,28 @@ class AuditCheckoutIntegrity extends Command
                 $payment->user_id,
                 $payment->promo_code_id,
                 $payment->created_at?->toDateTimeString(),
+            ]);
+    }
+
+    /**
+     * Отклонённые денежные вебхуки (H1359) — чтобы операторы видели воскрешения
+     * и расхождения сумм без доступа к БД. Только чтение журнала.
+     */
+    private function rejectedWebhookDeliveries(): Collection
+    {
+        return PaymentWebhookEvent::query()
+            ->whereIn('decision', PaymentWebhookEvent::REJECTED_DECISIONS)
+            ->orderBy('id')
+            ->get(['id', 'payment_id', 'decision', 'bank_status', 'reported_amount', 'created_at'])
+            ->map(fn (PaymentWebhookEvent $event): array => [
+                $event->id,
+                $event->payment_id,
+                $event->decision,
+                $event->bank_status,
+                $event->reported_amount === null
+                    ? ''
+                    : number_format((float) $event->reported_amount, 2, '.', ''),
+                $event->created_at?->toDateTimeString(),
             ]);
     }
 

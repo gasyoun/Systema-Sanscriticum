@@ -29,4 +29,14 @@ return [
      | CHECKOUT_LEGACY_PENDING_DAYS в .env, дефолт 30.
      */
     'legacy_pending_days' => (int) env('CHECKOUT_LEGACY_PENDING_DAYS', 30),
+
+    /*
+     | Допуск (в рублях) при сверке суммы из вебхука Точки с payments.amount
+     | (H1359, guard tochka_webhook_guard). Если банк прислал сумму и она
+     | расходится с суммой заказа более чем на этот допуск — доступ не выдаётся
+     | (decision=rejected_amount_mismatch). Небольшой ненулевой дефолт покрывает
+     | копеечное округление; сумма отсутствует в payload => сверка пропускается.
+     | CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE в .env, дефолт 1.00.
+     */
+    'webhook_amount_tolerance' => (float) env('CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE', 1.00),
 ];
