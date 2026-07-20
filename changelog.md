@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.47.0] - 2026-07-20
+
 ### Security
 - **H1359: Tochka payment-webhook now has an idempotency ledger + resurrection/amount-mismatch grant guards** ([H1359](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1359-Opus_Systema-Sanscriticum_tochka-webhook-delivery-ledger-and-grant-guards_20.07.26.md)). `WebhookController::handleTochkaWebhook` — the single automatic «оплачено → доступ» trigger in prod — granted on the bank's word alone: a re-delivered or replayed success JWT re-ran the entire paid path (`Payment::fireOnPaid` → access re-grant, deposit re-consumption, promo-slot double-burn via `PromoCode::markRedeemed`, referral re-reward) because `!== 'paid'` treated a **reversed** payment like a fresh pending one; the bank-reported amount was never compared to `payments.amount`; and no ledger existed for money webhooks.
   - **New append-only ledger** `payment_webhook_events` (one row per unique signature-valid delivery, keyed by `event_hash` = sha256 of the raw JWT body; `decision` ∈ applied / duplicate / rejected_resurrection / rejected_amount_mismatch / unmatched). Recorded on **every** signature-valid delivery, additively — no behaviour change with the flag off.
