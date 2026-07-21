@@ -273,9 +273,17 @@ class TelegramHarvestSyncService
 
         try {
             File::ensureDirectoryExists($dir);
-            $client->downloadToFile($chat['photo'], $file);
+            $result = $client->downloadToFile($chat['photo'], $file);
+            // ДИАГНОСТИКА (временно): что реально вернул downloadToFile и записался ли файл.
+            Log::warning('Telegram harvest roster: avatar diag', [
+                'peer' => $peer,
+                'photo_type' => $chat['photo']['_'] ?? null,
+                'result' => is_string($result) ? $result : gettype($result),
+                'exists' => File::exists($file),
+                'size' => File::exists($file) ? File::size($file) : 0,
+            ]);
         } catch (Throwable $e) {
-            Log::warning('Telegram harvest roster: avatar download failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+            Log::warning('Telegram harvest roster: avatar download failed', ['peer' => $peer, 'photo_type' => $chat['photo']['_'] ?? null, 'error' => $e->getMessage()]);
         }
     }
 
