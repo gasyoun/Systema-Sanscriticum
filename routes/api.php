@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinetController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
+use App\Http\Controllers\Api\PublicScheduleController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
@@ -30,6 +31,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// === ПУБЛИЧНЫЙ ФИД РАСПИСАНИЯ (H1427, wave 1b) ===
+// Без аутентификации, для встраиваемого виджета samskrtam.ru/raspisanie.
+// Строгий allowlist полей в PublicScheduleResource; троттлинг 30/мин; кэш 5 мин.
+Route::get('/public/schedule', [PublicScheduleController::class, 'index'])
+    ->middleware('throttle:30,1')
+    ->name('api.public.schedule');
 
 // === МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Sanctum personal access tokens) ===
 Route::prefix('v1')->group(function () {

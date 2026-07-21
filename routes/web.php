@@ -31,6 +31,7 @@ use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
+use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
@@ -158,6 +159,11 @@ Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name
 // Публичный «Пример урока»: отдаёт ТОЛЬКО preview-урок этого курса (is_preview),
 // без auth. Никакого lesson-id в URL — гость не может запросить произвольный урок.
 Route::get('/online/kursy/{course:slug}/preview', [ShopController::class, 'preview'])->name('shop.course.preview');
+
+// === ВСТРАИВАЕМЫЙ ВИДЖЕТ РАСПИСАНИЯ (H1427, wave 1b) ===
+// Голый HTML-документ без layout/auth; клиентский JS тянет /api/public/schedule.
+// frame-ancestors выставляется прямо на ответе (см. PublicWidgetController) — только этот роут.
+Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->name('widgets.schedule');
 
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
