@@ -25,6 +25,8 @@ final class TochkaPaymentService
      * @param  string  $paymentMethod  Признак способа расчёта (enum Точки): full_payment (полная оплата) | full_prepayment (предоплата/бронь).
      * @param  string  $paymentObject  Признак предмета расчёта (enum Точки): goods | service | work. Для курсов/брони — service.
      * @param  int|null  $ttlMinutes  Необязательный срок действия платёжной ссылки в минутах.
+     * @param  string|null  $redirectUrl  URL возврата при успехе (H1396 §3: подписанный, с id заказа). null → прежний неподписанный route('payment.success').
+     * @param  string|null  $failRedirectUrl  URL возврата при отказе. null → прежний route('payment.fail').
      *
      * @throws ConnectionException Сетевой сбой — обрабатывает вызывающий код.
      */
@@ -36,6 +38,8 @@ final class TochkaPaymentService
         string $paymentMethod = 'full_payment',
         string $paymentObject = 'service',
         ?int $ttlMinutes = null,
+        ?string $redirectUrl = null,
+        ?string $failRedirectUrl = null,
     ): Response {
         $amount = round($amount, 2);
 
@@ -44,8 +48,8 @@ final class TochkaPaymentService
             'amount' => $amount,
             'purpose' => $purpose,
             'paymentMode' => ['sbp', 'card'],
-            'redirectUrl' => route('payment.success'),
-            'failRedirectUrl' => route('payment.fail'),
+            'redirectUrl' => $redirectUrl ?? route('payment.success'),
+            'failRedirectUrl' => $failRedirectUrl ?? route('payment.fail'),
             // Контакт покупателя — чтобы чек ушёл студенту, а не на дефолтную почту руководителя.
             'Client' => array_filter([
                 'email' => $user->email,

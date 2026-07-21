@@ -11,6 +11,38 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1396 §§2–4: чекаут переживает свою сессию (не-денежная половина).** Три
+  дефекта, общий корень с §1 — «страница чекаута живёт дольше собственной сессии»,
+  каждый за флагом (по умолчанию OFF), кроме §4-троттла (обычное усиление, которое
+  уже есть у всех соседних роутов).
+  - **§2 — тупик при истёкшей сессии без remember-me.** Залогиненный студент, чья
+    сессия протухла между показом и сабмитом, приходил в
+    [`PaymentController::createPayment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PaymentController.php)
+    уже гостем; форму ему показывали БЕЗ гостевых полей (они в `@guest`), поэтому
+    guest-required валидация сыпала четыре ошибки на невиданных полях, а свой же email
+    ловил жёсткий отказ. Теперь скрытая метка `checkout_authed=1` из `@auth`-формы
+    распознаёт это состояние и уводит студента на `/login` с intended-возвратом к
+    оплате того же тарифа. За флагом `checkout_session_lapse_relogin`.
+  - **§3 — идентификация возврата из банка по подписанному id заказа.**
+    [`TochkaPaymentService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Payments/TochkaPaymentService.php)
+    слал неподписанные `redirectUrl`/`failRedirectUrl`, а `success()` опознавал заказ
+    по `auth()->id()` + `latest('id')` — что ломалось в in-app WebView (Telegram),
+    где редирект из банка уходит в другую cookie jar: реально оплативший студент
+    попадал на гостевой экран «Войдите в аккаунт», а при двух pending выбирался НЕ тот
+    заказ. Теперь возврат несёт `URL::signedRoute` с payment id, и `success`/`fail`
+    опознают точный заказ по валидной подписи, переживая потерю cookie. За флагом
+    `checkout_signed_return_url`.
+  - **§4 — троттл `/csrf-token`.** Единственный роут web-группы без троттла; с
+    `SESSION_DRIVER=file` каждый безкукисный хит писал новый session-файл. Добавлен
+    `throttle:30,1` — как у соседних чекаут-роутов
+    ([`routes/web.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php)).
+
+  8 тестов (`CheckoutSessionRenewalHardeningTest`), `--filter="Checkout|Promo|Payment"`
+  (241) + Pint зелёные. Флаги: `CHECKOUT_SESSION_LAPSE_RELOGIN` /
+  `CHECKOUT_SIGNED_RETURN_URL` = true + `config:cache` после ревью.
+  ([H1396](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1396-Opus_Systema-Sanscriticum_promo-lost-on-session-renewal-full-price-charge_20.07.26.md))
+
 ## [1.49.1] - 2026-07-21
 
 ### Fixed
