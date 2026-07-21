@@ -260,6 +260,17 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-healthcheck');
 
+        // D9 (Track C): раз в час юзербот снимает ростер каждой учебной группы с
+        // telegram_chat_id → «Состав чата» на дашборде «Записи (бот)» заполняется
+        // сам. Редкий слот: держит общий замок сессии на весь проход, ежеминутный
+        // telegram-support:sync это переживёт (деградирует в session_busy → повтор).
+        // No-op при выключенном харвесте/support или неконфигурной MadelineProto.
+        $schedule->command('telegram-harvest:roster-groups')
+            ->hourly()
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('telegram-harvest-roster-groups');
+
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
         // из расписания (Schedule → group.telegram_chat_id). No-op, пока не включён
         // features.telegram_zapisi_bot; окно и дедуп (zapisi_reminded_at) — внутри команды.
