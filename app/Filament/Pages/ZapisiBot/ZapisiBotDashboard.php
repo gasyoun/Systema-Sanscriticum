@@ -7,6 +7,10 @@ namespace App\Filament\Pages\ZapisiBot;
 use App\Filament\Clusters\ZapisiBot;
 use App\Models\Group;
 use App\Support\RoleGate;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -17,12 +21,14 @@ use Illuminate\Support\Facades\File;
  * straight from the out-of-git store (never a DB table — PII/rights per the
  * Legal gate, this is a private booking chat, not a publishable group).
  *
- * Мультичат: слева список учебных групп с заполненным telegram_chat_id, справа —
- * состав+сообщения выбранной группы (мастер/деталь, как Helpdesk). Реестр чатов =
- * учебные группы (Group.telegram_chat_id), тот же источник, что и у напоминаний.
+ * Мультичат: выпадающий список с поиском по учебным группам с заданным
+ * telegram_chat_id (реестр чатов = группы, тот же источник, что и у напоминаний),
+ * ниже — состав+сообщения выбранной группы. Дип-линк ?group=<id>.
  */
-class ZapisiBotDashboard extends Page
+class ZapisiBotDashboard extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static ?string $cluster = ZapisiBot::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
@@ -37,8 +43,8 @@ class ZapisiBotDashboard extends Page
 
     protected static string $view = 'filament.pages.zapisi-bot.dashboard';
 
-    /** id выбранной учебной группы (левая панель). */
-    public ?int $selectedGroupId = null;
+    /** Состояние формы-селектора: ['group_id' => <id>]. */
+    public array $data = [];
 
     public static function canAccess(): bool
     {
@@ -49,11 +55,28 @@ class ZapisiBotDashboard extends Page
     {
         $groups = $this->groups;
 
-        // Дип-линк ?group=<id>, иначе первая группа со списка (как Helpdesk::mount).
+        // Дип-линк ?group=<id>, иначе первая группа со списка.
         $requested = (int) request('group', 0);
-        $this->selectedGroupId = $groups->contains('id', $requested)
+        $default = $groups->contains('id', $requested)
             ? $requested
             : $groups->first()?->id;
+
+        $this->form->fill(['group_id' => $default]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Select::make('group_id')
+                    ->label('Чат группы')
+                    ->options(fn (): Collection => $this->groups->pluck('name', 'id'))
+                    ->searchable()
+                    ->native(false)
+                    ->live()
+                    ->placeholder('Выберите группу'),
+            ])
+            ->statePath('data');
     }
 
     /** Учебные группы с заданным Telegram-чатом — реестр чатов бота. */
@@ -66,18 +89,11 @@ class ZapisiBotDashboard extends Page
             ->get(['id', 'name', 'telegram_chat_id']);
     }
 
-    public function selectGroup(int $groupId): void
-    {
-        $this->selectedGroupId = $groupId;
-    }
-
     public function getSelectedGroupProperty(): ?Group
     {
-        if ($this->selectedGroupId === null) {
-            return null;
-        }
+        $id = $this->data['group_id'] ?? null;
 
-        return $this->groups->firstWhere('id', $this->selectedGroupId);
+        return $id ? $this->groups->firstWhere('id', (int) $id) : null;
     }
 
     /** @return array{count: int, fetched_at: ?string, members: array<int, array<string, mixed>>}|null */
