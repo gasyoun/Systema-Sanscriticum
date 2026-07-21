@@ -33,6 +33,7 @@ class Schedule extends Model
         'course_id',
         'reminded_at',
         'group_link_posted_at',
+        'zapisi_reminded_at',
         'absent_notified_at',
         'zoom_meeting_id',
         'zoom_occurrence_uuid',
@@ -47,6 +48,7 @@ class Schedule extends Model
         'end' => 'datetime',
         'reminded_at' => 'datetime',
         'group_link_posted_at' => 'datetime',
+        'zapisi_reminded_at' => 'datetime',
         'absent_notified_at' => 'datetime',
         'zoom_recording_received_at' => 'datetime',
     ];
@@ -62,6 +64,7 @@ class Schedule extends Model
                 $schedule->reminded_at = null;
                 $schedule->absent_notified_at = null;
                 $schedule->group_link_posted_at = null;
+                $schedule->zapisi_reminded_at = null;
             }
         });
     }

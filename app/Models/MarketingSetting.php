@@ -53,6 +53,8 @@ class MarketingSetting extends Model
         'zapisi_bot_token',
         'zapisi_webhook_secret',
         'zapisi_chat_id',
+        'zapisi_reminder_lead_minutes',
+        'zapisi_reminder_template',
 
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
         'student_maintenance_enabled',
@@ -163,6 +165,7 @@ class MarketingSetting extends Model
         'max_webhook_secret' => 'encrypted',
         'zapisi_bot_token' => 'encrypted',
         'zapisi_webhook_secret' => 'encrypted',
+        'zapisi_reminder_lead_minutes' => 'integer',
     ];
 
     /**
