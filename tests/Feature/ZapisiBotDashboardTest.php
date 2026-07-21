@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Roles;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -79,5 +80,34 @@ class ZapisiBotDashboardTest extends TestCase
         Livewire::test(ZapisiBotDashboard::class)
             ->assertSet('data.group_id', null)
             ->assertSee('telegram_chat_id');
+    }
+
+    public function test_shows_selected_chat_id(): void
+    {
+        $this->admin();
+        Group::create(['name' => 'Группа A', 'telegram_chat_id' => '-100111']);
+
+        Livewire::test(ZapisiBotDashboard::class)
+            ->assertSee('chat_id:')
+            ->assertSee('-100111');
+    }
+
+    public function test_renders_avatar_data_uri_when_file_present(): void
+    {
+        $this->admin();
+        $store = storage_path('framework/testing/zbd-'.uniqid());
+        config(['services.telegram_harvest.store_path' => $store]);
+
+        $g = Group::create(['name' => 'Группа A', 'telegram_chat_id' => '-100111']);
+        File::ensureDirectoryExists($store.'/roster/avatars');
+        File::put($store.'/roster/avatars/-100111.jpg', 'JPEG');
+
+        try {
+            $component = Livewire::test(ZapisiBotDashboard::class)->assertSet('data.group_id', $g->id);
+            $this->assertSame('data:image/jpeg;base64,'.base64_encode('JPEG'), $component->instance()->avatar);
+            $component->assertSee('<img', false);
+        } finally {
+            File::deleteDirectory($store);
+        }
     }
 }

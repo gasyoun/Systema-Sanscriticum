@@ -114,6 +114,22 @@ class ZapisiBotDashboard extends Page implements HasForms
         return is_array($decoded) ? $decoded : null;
     }
 
+    /** Аватар чата (out-of-git) как base64 data-URI, либо null. */
+    public function getAvatarProperty(): ?string
+    {
+        $chatId = $this->chatId();
+        if ($chatId === null) {
+            return null;
+        }
+
+        $file = $this->storePath().'/roster/avatars/'.$chatId.'.jpg';
+        if (! File::exists($file)) {
+            return null;
+        }
+
+        return 'data:image/jpeg;base64,'.base64_encode(File::get($file));
+    }
+
     /** @return array<int, array<string, mixed>> most recent messages first, capped at 50 */
     public function getRecentMessagesProperty(): array
     {

@@ -16,10 +16,20 @@
         @if ($this->selectedGroup)
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div class="fi-section rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
-                    <h2 class="text-base font-semibold mb-4">
-                        Состав чата
-                        <span class="text-sm font-normal text-gray-500">— {{ $this->selectedGroup->name }}</span>
-                    </h2>
+                    <div class="flex items-center gap-3 mb-4">
+                        @if ($this->avatar)
+                            <img src="{{ $this->avatar }}" alt="" class="h-11 w-11 rounded-full object-cover shrink-0">
+                        @else
+                            <div class="h-11 w-11 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-semibold text-gray-400 shrink-0">
+                                {{ mb_strtoupper(mb_substr($this->selectedGroup->name, 0, 1)) }}
+                            </div>
+                        @endif
+                        <div class="min-w-0">
+                            <h2 class="text-base font-semibold truncate">Состав чата</h2>
+                            <div class="text-xs text-gray-500 truncate">{{ $this->selectedGroup->name }}</div>
+                            <div class="text-xs text-gray-400">chat_id: <code>{{ $this->chatId }}</code></div>
+                        </div>
+                    </div>
 
                     @if (! $this->roster)
                         <p class="text-sm text-gray-500">
