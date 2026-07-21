@@ -1,0 +1,607 @@
+{
+  "course_id": "6508023",
+  "course_name": "\"Руководство к санскриту\" Г. Бюлера",
+  "source_url": "https://community-courses.memrise.com/community/course/6508023/",
+  "language": "sa",
+  "exported_at": "2026-07-22",
+  "columns": {
+    "col_a": "col_a",
+    "col_b": "col_b"
+  },
+  "levels": [
+    {
+      "index": 1,
+      "name": "Level 1",
+      "file": "level_01.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Level 2",
+      "file": "level_02.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "Level 3",
+      "file": "level_03.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "Level 4",
+      "file": "level_04.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "Level 5",
+      "file": "level_05.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 6,
+      "name": "Level 6",
+      "file": "level_06.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 7,
+      "name": "Level 7",
+      "file": "level_07.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 8,
+      "name": "Level 8",
+      "file": "level_08.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 9,
+      "name": "Level 9",
+      "file": "level_09.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 10,
+      "name": "Level 10",
+      "file": "level_10.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 11,
+      "name": "Level 11",
+      "file": "level_11.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 12,
+      "name": "Level 12",
+      "file": "level_12.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 13,
+      "name": "Level 13",
+      "file": "level_13.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 14,
+      "name": "Level 14",
+      "file": "level_14.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 15,
+      "name": "Level 15",
+      "file": "level_15.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 16,
+      "name": "Level 16",
+      "file": "level_16.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 17,
+      "name": "Level 17",
+      "file": "level_17.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 18,
+      "name": "Level 18",
+      "file": "level_18.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 19,
+      "name": "Level 19",
+      "file": "level_19.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 20,
+      "name": "Level 20",
+      "file": "level_20.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 21,
+      "name": "Level 21",
+      "file": "level_21.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 22,
+      "name": "Level 22",
+      "file": "level_22.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 23,
+      "name": "Level 23",
+      "file": "level_23.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 24,
+      "name": "Level 24",
+      "file": "level_24.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 25,
+      "name": "Level 25",
+      "file": "level_25.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 26,
+      "name": "Level 26",
+      "file": "level_26.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 27,
+      "name": "Level 27",
+      "file": "level_27.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 28,
+      "name": "Level 28",
+      "file": "level_28.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 29,
+      "name": "Level 29",
+      "file": "level_29.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 30,
+      "name": "Level 30",
+      "file": "level_30.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 31,
+      "name": "Level 31",
+      "file": "level_31.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 32,
+      "name": "Level 32",
+      "file": "level_32.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 33,
+      "name": "Level 33",
+      "file": "level_33.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 34,
+      "name": "Level 34",
+      "file": "level_34.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 35,
+      "name": "Level 35",
+      "file": "level_35.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 36,
+      "name": "Level 36",
+      "file": "level_36.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 37,
+      "name": "Level 37",
+      "file": "level_37.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 38,
+      "name": "Level 38",
+      "file": "level_38.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 39,
+      "name": "Level 39",
+      "file": "level_39.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 40,
+      "name": "Level 40",
+      "file": "level_40.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 41,
+      "name": "Level 41",
+      "file": "level_41.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 42,
+      "name": "Level 42",
+      "file": "level_42.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 43,
+      "name": "Level 43",
+      "file": "level_43.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 44,
+      "name": "Level 44",
+      "file": "level_44.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 45,
+      "name": "Level 45",
+      "file": "level_45.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 46,
+      "name": "Level 46",
+      "file": "level_46.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 47,
+      "name": "Level 47",
+      "file": "level_47.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 48,
+      "name": "Level 48",
+      "file": "level_48.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 49,
+      "name": "Level 49",
+      "file": "level_49.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 50,
+      "name": "Level 50",
+      "file": "level_50.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 51,
+      "name": "Level 51",
+      "file": "level_51.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 52,
+      "name": "Level 52",
+      "file": "level_52.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 53,
+      "name": "Level 53",
+      "file": "level_53.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 54,
+      "name": "Level 54",
+      "file": "level_54.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 55,
+      "name": "Level 55",
+      "file": "level_55.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 56,
+      "name": "Level 56",
+      "file": "level_56.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 57,
+      "name": "Level 57",
+      "file": "level_57.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 58,
+      "name": "Level 58",
+      "file": "level_58.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 59,
+      "name": "Level 59",
+      "file": "level_59.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 60,
+      "name": "Level 60",
+      "file": "level_60.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 61,
+      "name": "Level 61",
+      "file": "level_61.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 62,
+      "name": "Level 62",
+      "file": "level_62.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 63,
+      "name": "Level 63",
+      "file": "level_63.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 64,
+      "name": "Level 64",
+      "file": "level_64.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 65,
+      "name": "Level 65",
+      "file": "level_65.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 66,
+      "name": "Level 66",
+      "file": "level_66.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    }
+  ]
+}
