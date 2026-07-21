@@ -75,18 +75,20 @@ class SnapshotGroupRostersTest extends TestCase
             public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 return [
-                    'photo' => ['_' => 'photo', 'id' => 1],
+                    // В v8 photo — Media-объект со своим downloadToFile($path).
+                    'photo' => new class
+                    {
+                        public function downloadToFile(string $file): string
+                        {
+                            File::put($file, 'JPEGBYTES');
+
+                            return $file;
+                        }
+                    },
                     'participants' => [
                         ['user' => ['id' => 1, 'username' => 'u'.$peer, 'first_name' => 'U']],
                     ],
                 ];
-            }
-
-            public function downloadToFile(mixed $media, string $path): string
-            {
-                File::put($path, 'JPEGBYTES');
-
-                return $path;
             }
         };
     }
