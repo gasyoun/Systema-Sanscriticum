@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.50.1] - 2026-07-21
+
 ### Changed
 - **Годовой роадмап сверен с фактом (H1417).** [`docs/ROADMAP_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md)
   отставал на 300+ коммитов от содержательной редакции 07-07-2026. Добавлен §1a-снимок
