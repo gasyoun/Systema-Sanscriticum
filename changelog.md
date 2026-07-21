@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.49.1] - 2026-07-21
+
 ### Fixed
 - **H1396 §1: промокод переживает обновление сессии в чекауте (денежный баг).**
   Применённый промокод жил ТОЛЬКО в `session('promo_code')`; анти-419 обновление
