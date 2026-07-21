@@ -1,0 +1,58 @@
+{
+  "course_id": "6517849",
+  "course_name": "",
+  "source_url": "https://community-courses.memrise.com/community/course/6517849/",
+  "language": "sa",
+  "exported_at": "2026-07-22",
+  "columns": {
+    "col_a": "col_a",
+    "col_b": "col_b"
+  },
+  "levels": [
+    {
+      "index": 1,
+      "name": "Level 1",
+      "file": "level_01.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Level 2",
+      "file": "level_02.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "Level 3",
+      "file": "level_03.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "Level 4",
+      "file": "level_04.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "Level 5",
+      "file": "level_05.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    }
+  ]
+}
