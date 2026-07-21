@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str; // <--- 1. Важный импорт
 
 class Group extends Model
 {
+    use HasFactory;
+
     /** Статус набора (H162): forming = набирается, active = идёт обучение, archived = завершена. */
     public const STATUSES = [
         'forming' => 'Набирается',
@@ -105,5 +109,27 @@ class Group extends Model
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
+    }
+
+    /**
+     * Направления группы (H1426): производная величина, не поле — набор категорий
+     * всех курсов группы. Группа, чьи курсы относятся к нескольким категориям,
+     * попадает под каждую (без синтетического «смешанного» бакета).
+     *
+     * @return Collection<int, Category>
+     */
+    public function directions(): Collection
+    {
+        return $this->courses->flatMap(fn (Course $c) => $c->categories)->unique('id')->values();
+    }
+
+    /** Группы, которые ведёт данный преподаватель (основной или со-препод, через courses()). */
+    public function scopeLedBy($query, ?int $teacherId)
+    {
+        if ($teacherId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas('courses', fn ($q) => $q->forTeacher($teacherId));
     }
 }

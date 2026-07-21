@@ -52,5 +52,9 @@ class DatabaseSeeder extends Seeder
         // Корни санскрита по частотности (H1280, D4) — идемпотентно, читает
         // committed-фикстуру, не зависит от словаря.
         $this->call(SrsRootFrequencyDeckSeeder::class);
+
+        // Черновая таксономия направлений курсов (H1426) — идемпотентно; MG
+        // пересматривает/переименовывает через CategoryResource после посева.
+        $this->call(CategorySeeder::class);
     }
 }
