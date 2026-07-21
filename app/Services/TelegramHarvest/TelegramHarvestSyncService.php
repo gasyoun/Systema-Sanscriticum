@@ -242,7 +242,38 @@ class TelegramHarvestSyncService
             ];
         }
 
+        $this->downloadChatAvatar($client, $peer, $chat);
+
         return $roster;
+    }
+
+    /**
+     * Best-effort: фото чата (getPwrChat()['photo']) → roster/avatars/{peer}.jpg
+     * через ту же сессию, что и ростер (как downloadMedia). Сбой аватара НЕ роняет
+     * ростер. Свежий (моложе 7 дней) не перекачиваем — экономим RPC при hourly.
+     *
+     * @param  array<string, mixed>  $chat
+     */
+    private function downloadChatAvatar(object $client, string $peer, array $chat): void
+    {
+        if (empty($chat['photo']) || ! method_exists($client, 'downloadToFile')) {
+            return;
+        }
+
+        $storePath = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
+        $dir = $storePath.'/roster/avatars';
+        $file = $dir.'/'.$peer.'.jpg';
+
+        if (File::exists($file) && File::lastModified($file) >= now()->subDays(7)->getTimestamp()) {
+            return;
+        }
+
+        try {
+            File::ensureDirectoryExists($dir);
+            $client->downloadToFile($chat['photo'], $file);
+        } catch (Throwable $e) {
+            Log::warning('Telegram harvest roster: avatar download failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+        }
     }
 
     /**

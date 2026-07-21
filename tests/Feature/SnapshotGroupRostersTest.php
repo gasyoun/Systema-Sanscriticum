@@ -74,9 +74,19 @@ class SnapshotGroupRostersTest extends TestCase
 
             public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
             {
-                return ['participants' => [
-                    ['user' => ['id' => 1, 'username' => 'u'.$peer, 'first_name' => 'U']],
-                ]];
+                return [
+                    'photo' => ['_' => 'photo', 'id' => 1],
+                    'participants' => [
+                        ['user' => ['id' => 1, 'username' => 'u'.$peer, 'first_name' => 'U']],
+                    ],
+                ];
+            }
+
+            public function downloadToFile(mixed $media, string $path): string
+            {
+                File::put($path, 'JPEGBYTES');
+
+                return $path;
             }
         };
     }
@@ -99,6 +109,10 @@ class SnapshotGroupRostersTest extends TestCase
 
         $decoded = json_decode(File::get($this->store.'/roster/-100111.json'), true);
         $this->assertSame(1, $decoded['count']);
+
+        // Аватар чата скачан рядом с ростером.
+        $this->assertFileExists($this->store.'/roster/avatars/-100111.jpg');
+        $this->assertSame('JPEGBYTES', File::get($this->store.'/roster/avatars/-100111.jpg'));
     }
 
     public function test_noop_when_harvest_disabled(): void
