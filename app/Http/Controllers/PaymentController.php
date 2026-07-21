@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +25,29 @@ class PaymentController extends Controller
 {
     public function createPayment(Request $request, PranaService $prana, TochkaPaymentService $tochka)
     {
+        // H1396 §2 — a logged-in student whose session lapsed between page load and
+        // submit (the same anti-419 renewal window as §1) arrives here unauthenticated.
+        // The form they were shown carried NO guest identity fields — those render only
+        // inside @guest — so the default guest-required validation below would fire four
+        // errors on fields they never saw, then hard-refuse their own email as "already
+        // registered". A plain 419 was strictly more usable. Detect the state via the
+        // checkout_authed marker the @auth form emits and send them to log back in with a
+        // return to the same checkout, instead of rendering a guest form they never had.
+        // Behind a default-OFF flag: with it off, behaviour is byte-identical to today.
+        if (config('features.checkout_session_lapse_relogin')
+            && ! auth()->check()
+            && $request->boolean('checkout_authed')
+        ) {
+            $tariffId = $request->input('tariff_id');
+            $intended = $tariffId
+                ? route('checkout.show', $tariffId)
+                : route('shop.index');
+            session()->put('url.intended', $intended);
+
+            return redirect()->route('login')
+                ->with('error', 'Сессия истекла, пока вы оформляли заказ. Войдите снова — мы вернём вас к оплате.');
+        }
+
         $rules = [
             'tariff_id' => 'required|exists:tariffs,id',
             'prana_amount' => 'nullable|integer|min:0',
@@ -358,6 +382,18 @@ class PaymentController extends Controller
             ? PromoCode::PAYMENT_LINK_TTL_MINUTES
             : null;
 
+        // H1396 §3 — hand the bank a SIGNED return URL carrying this payment's id, so
+        // identification survives a lost session cookie (in-app WebView → external
+        // browser is a different cookie jar) and two pending orders never resolve to the
+        // wrong one. Behind a default-OFF flag; when off, the service falls back to the
+        // legacy unsigned paramless routes and behaviour is unchanged.
+        $signedRedirectUrl = null;
+        $signedFailRedirectUrl = null;
+        if (config('features.checkout_signed_return_url')) {
+            $signedRedirectUrl = URL::signedRoute('payment.success', ['payment' => $payment->id]);
+            $signedFailRedirectUrl = URL::signedRoute('payment.fail', ['payment' => $payment->id]);
+        }
+
         try {
             $response = $tochka->createPaymentWithReceipt(
                 user: $user,
@@ -365,6 +401,8 @@ class PaymentController extends Controller
                 purpose: $purpose,
                 itemName: ($tariff->course->title ?? 'Курс').' — '.$tariff->title,
                 ttlMinutes: $promoTtlMinutes,
+                redirectUrl: $signedRedirectUrl,
+                failRedirectUrl: $signedFailRedirectUrl,
             );
         } catch (ConnectionException $e) {
             // Сетевой сбой / TLS / DNS / timeout. Помечаем платёж failed (наблюдатель
@@ -537,17 +575,7 @@ class PaymentController extends Controller
     {
         // H1285: рендерим страницу вместо редиректа. Только чтение — статус
         // платежа меняет исключительно вебхук Точки (см. комментарий в fail()).
-        // Точка не передаёт идентификатор заказа в redirectUrl, поэтому берём
-        // последний платёж пользователя: покупатель только что вернулся из банка.
-        $payment = null;
-
-        if (auth()->check()) {
-            $payment = Payment::query()
-                ->where('user_id', auth()->id())
-                ->with('course')
-                ->latest('id')
-                ->first();
-        }
+        $payment = $this->resolveReturnPayment($request);
 
         $confirmed = $payment && in_array($payment->status, Payment::PAID_STATUSES, true);
 
@@ -571,9 +599,16 @@ class PaymentController extends Controller
         // Курс для ссылки повтора восстанавливаем ТОЛЬКО для отображения из
         // последнего неоплаченного платежа — неточность здесь стоит лишнего
         // клика, а не денег. Скрытый курс отдал бы 404 — тогда ведём в каталог.
+        //
+        // H1396 §3 — если банк вернул подписанный id заказа, берём курс именно того
+        // платежа (переживает потерю сессии/куки); иначе — прежний путь по последнему
+        // неоплаченному платежу авторизованного юзера.
         $course = null;
 
-        if (auth()->check()) {
+        $signed = $this->signedReturnPayment($request);
+        if ($signed !== null) {
+            $course = $signed->course;
+        } elseif (auth()->check()) {
             $course = Payment::query()
                 ->where('user_id', auth()->id())
                 ->whereNotIn('status', Payment::PAID_STATUSES)
@@ -581,14 +616,61 @@ class PaymentController extends Controller
                 ->latest('id')
                 ->first()
                 ?->course;
+        }
 
-            if ($course && ! $course->is_visible) {
-                $course = null;
-            }
+        if ($course && ! $course->is_visible) {
+            $course = null;
         }
 
         return view('payment.fail', [
             'course' => $course,
         ]);
+    }
+
+    /**
+     * H1396 §3 — the order the student returned from the bank on.
+     *
+     * Prefers the signed payment id the bank echoed back (survives a lost session
+     * cookie: an in-app WebView hands off to an external browser with a different
+     * cookie jar), and only then falls back to the legacy "latest payment of the
+     * authenticated user", which showed the wrong order when two were pending and a
+     * guest "log in" screen to a student who genuinely paid. Returns null when
+     * neither identifies an order.
+     */
+    private function resolveReturnPayment(Request $request): ?Payment
+    {
+        $signed = $this->signedReturnPayment($request);
+        if ($signed !== null) {
+            return $signed;
+        }
+
+        if (auth()->check()) {
+            return Payment::query()
+                ->where('user_id', auth()->id())
+                ->with('course')
+                ->latest('id')
+                ->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * The payment named by a *valid* signed return URL, or null. The signature is an
+     * HMAC over the full URL, so a present, valid signature proves the id was minted by
+     * us (in createPayment) and not tampered — the link is unguessable and reached the
+     * student only via their own bank redirect. Gated by a default-OFF flag; with it
+     * off, signed ids are ignored and the session-based path is used.
+     */
+    private function signedReturnPayment(Request $request): ?Payment
+    {
+        if (! config('features.checkout_signed_return_url')
+            || ! $request->hasValidSignature()
+            || ! $request->filled('payment')
+        ) {
+            return null;
+        }
+
+        return Payment::query()->with('course')->find($request->query('payment'));
     }
 }

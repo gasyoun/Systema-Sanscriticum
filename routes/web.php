@@ -58,7 +58,14 @@ use Illuminate\Support\Facades\Storage;
 */
 
 // Свежий CSRF-токен (анти-419 на чекауте: форма подтягивает токен текущей сессии перед сабмитом)
-Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))->name('csrf.token');
+// throttle:30,1 (H1396 §4) — раньше единственный роут в web-группе БЕЗ троттла, тогда как
+// у всех соседних чекаут-роутов он есть. С SESSION_DRIVER=file каждый безкукисный хит
+// заставляет StartSession писать НОВЫЙ session-файл — то есть неаутентифицированный
+// примитив заполнения диска/inode. 30/мин с запасом хватает легитимному анти-419 потоку
+// (один хит на сабмит + обновление из bfcache), спам отсечён.
+Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))
+    ->middleware('throttle:30,1')
+    ->name('csrf.token');
 
 // Страница оформления заказа (Checkout)
 Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('checkout.show');

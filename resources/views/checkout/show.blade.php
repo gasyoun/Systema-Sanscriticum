@@ -296,6 +296,17 @@ document.addEventListener('alpine:init', () => {
                              authoritatively server-side (it is client-supplied). --}}
                         <input type="hidden" name="promo_code" value="{{ $appliedPromo?->code }}">
 
+                        @auth
+                            {{-- H1396 §2 — mark that this form was rendered for a logged-in
+                                 student. The guest identity fields render only in @guest, so if
+                                 this student's session lapses before submit they arrive at
+                                 payment.create unauthenticated with NO name/email fields — the
+                                 default guest-required validation would then fire errors on
+                                 fields they never saw. This marker lets the controller route the
+                                 lapsed session back through login instead. --}}
+                            <input type="hidden" name="checkout_authed" value="1">
+                        @endauth
+
                         @guest
                             {{-- ─── Данные гостя ─── --}}
                             <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">

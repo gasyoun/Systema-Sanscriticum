@@ -326,4 +326,35 @@ return [
      | OFF, команда zapisi:send-reminders ничего не шлёт (early-return).
      */
     'telegram_zapisi_bot' => (bool) env('TELEGRAM_ZAPISI_BOT_ENABLED', false),
+
+    /*
+     | Возврат к входу при истёкшей сессии в чекауте (H1396 §2). Залогиненный
+     | студент, чья сессия протухла между показом страницы и сабмитом, приходит в
+     | POST /payment/create уже НЕ авторизованным. Форму ему показывали БЕЗ гостевых
+     | полей (они рендерятся только в @guest), поэтому дефолтная guest-required
+     | валидация выдавала четыре ошибки на полях, которых он не видел, а если он
+     | вводил свой же email — жёсткий отказ «у вас уже есть аккаунт». Обычный 419 был
+     | строго удобнее. Когда ВКЛ: такой сабмит (скрытая метка checkout_authed=1 без
+     | активной сессии) уводит студента на /login с intended-возвратом к оплате того
+     | же тарифа, вместо гостевой формы, которую он не видел. ВЫКЛ по умолчанию —
+     | deploy-рубильник; включение CHECKOUT_SESSION_LAPSE_RELOGIN=true + config:cache.
+     */
+    'checkout_session_lapse_relogin' => (bool) env('CHECKOUT_SESSION_LAPSE_RELOGIN', false),
+
+    /*
+     | Подписанный URL возврата из банка (H1396 §3). TochkaPaymentService слал банку
+     | неподписанные redirectUrl/failRedirectUrl, а PaymentController::success()
+     | опознавал заказ по auth()->id() + latest('id') — Точка не передаёт id заказа
+     | обратно. В in-app WebView (Telegram) редирект из банка может уйти в
+     | SFSafariViewController/Safari — ДРУГУЮ cookie jar: реально оплативший студент
+     | попадал на гостевой экран «Войдите в аккаунт» для аккаунта с авто-сгенерённым
+     | паролем, которого он никогда не задавал; плюс «последний платёж юзера» показывал
+     | НЕ тот заказ при двух pending. Когда ВКЛ: возврат несёт подписанный payment id
+     | (URL::signedRoute), и success/fail опознают точный заказ по валидной подписи,
+     | переживая потерю cookie; при OFF или без подписи — прежнее поведение по сессии.
+     | secure у config/session.php фактически false → SameSite=None/Partitioned здесь
+     | НЕ вариант без починки этого (см. §3 брифа). ВЫКЛ по умолчанию — deploy-рубильник;
+     | включение CHECKOUT_SIGNED_RETURN_URL=true + config:cache после ревью.
+     */
+    'checkout_signed_return_url' => (bool) env('CHECKOUT_SIGNED_RETURN_URL', false),
 ];
