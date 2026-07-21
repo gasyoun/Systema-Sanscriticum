@@ -450,7 +450,7 @@ class MarketingSettingResource extends Resource
                 // TELEGRAM TRACK C: @zapisi_ORSbot (H164)
                 // ==========================================
                 Forms\Components\Section::make('🔔 @zapisi_ORSbot (записи)')
-                    ->description('Класс-букинг бот, отдельный от lead-magnet ботов выше. Токены шифруются в БД. Chat ID — обнаруживается через php artisan telegram-harvest:peers.')
+                    ->description('Класс-букинг бот, отдельный от lead-magnet ботов выше. Токены шифруются в БД. Чаты берутся из учебных групп (Group.telegram_chat_id); напоминания шлются из расписания.')
                     ->collapsible()
                     ->collapsed()
                     ->schema([
@@ -468,9 +468,19 @@ class MarketingSettingResource extends Resource
                             ->password()
                             ->revealable()
                             ->helperText('Сгенерировать: php artisan tinker → Str::random(48)'),
-                        Forms\Components\TextInput::make('zapisi_chat_id')
-                            ->label('Chat ID')
-                            ->helperText('Numeric chat id этого чата (D9/D7 ключуют по нему одинаково).'),
+                        Forms\Components\TextInput::make('zapisi_reminder_lead_minutes')
+                            ->label('Напоминать о занятии за, мин')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(1440)
+                            ->suffix('мин')
+                            ->default(60)
+                            ->helperText('За сколько минут до начала занятия бот напомнит в чат группы (zapisi:remind-classes). Чат берётся из группы (Group.telegram_chat_id).'),
+                        Forms\Components\Textarea::make('zapisi_reminder_template')
+                            ->label('Шаблон напоминания')
+                            ->rows(3)
+                            ->placeholder('Напоминаем: занятие «{title}» у группы {group} начнётся сегодня в {time} (МСК).')
+                            ->helperText('Плейсхолдеры: {title} — название занятия, {time} — время, {group} — группа, {link} — ссылка подключения. Пусто = шаблон по умолчанию.'),
                     ])->columns(1),
             ]);
     }
