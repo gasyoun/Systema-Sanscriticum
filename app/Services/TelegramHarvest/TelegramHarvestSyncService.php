@@ -148,11 +148,83 @@ class TelegramHarvestSyncService
         }
 
         $client = $this->clientFactory->open();
+        $this->primePeerDatabase($client);
+
+        return $this->pwrRoster($client, $peer);
+    }
+
+    /**
+     * Снять ростеры сразу для набора peer'ов за ОДНО открытие сессии (один
+     * прайминг peer-базы + цикл). Используется командой telegram-harvest:roster-groups.
+     *
+     * @param  array<int, string>  $peers
+     * @return array<string, array<int, array<string, mixed>>> peer => roster (только непустые)
+     */
+    public function fetchGroupRosters(array $peers): array
+    {
+        if (! $this->clientFactory->isConfigured()) {
+            return [];
+        }
+
+        $client = $this->clientFactory->open();
+        $this->primePeerDatabase($client);
+
+        $out = [];
+        foreach ($peers as $peer) {
+            $peer = (string) $peer;
+            if ($peer === '') {
+                continue;
+            }
+
+            $roster = $this->pwrRoster($client, $peer);
+            if ($roster !== []) {
+                $out[$peer] = $roster;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Прайминг внутренней peer-базы сессии: getDialogIds() кэширует все диалоги
+     * аккаунта (включая группы, где он состоит). Без этого getPwrChat по «сырому»
+     * -100… id падает с "This peer is not present in the internal peer database".
+     * Ошибку прайминга глотаем — pwrRoster всё равно попробует и залогирует свою.
+     */
+    private function primePeerDatabase(object $client): void
+    {
+        if (! method_exists($client, 'getDialogIds')) {
+            return;
+        }
+
+        try {
+            $client->getDialogIds();
+        } catch (Throwable $e) {
+            Log::warning('Telegram harvest roster: peer-DB prime failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Ростер одного peer'а: getPwrChat + нормализация участников, в try/catch —
+     * один недоступный/чужой чат (peer-not-present, приватность) не должен ронять
+     * весь батч. Пустой массив = «не сняли» (аккаунт не в чате / пустой чат).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function pwrRoster(object $client, string $peer): array
+    {
         if (! method_exists($client, 'getPwrChat')) {
             return [];
         }
 
-        $chat = $client->getPwrChat($peer, false, true);
+        try {
+            $chat = $client->getPwrChat($peer, false, true);
+        } catch (Throwable $e) {
+            Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+
+            return [];
+        }
+
         $participants = (array) ($chat['participants'] ?? []);
 
         $roster = [];
