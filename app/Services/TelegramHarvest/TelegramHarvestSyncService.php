@@ -245,7 +245,7 @@ class TelegramHarvestSyncService
             ];
         }
 
-        $this->downloadChatAvatar($client, $peer, $chat);
+        $this->downloadChatAvatar($peer, $chat);
 
         return $roster;
     }
@@ -257,9 +257,14 @@ class TelegramHarvestSyncService
      *
      * @param  array<string, mixed>  $chat
      */
-    private function downloadChatAvatar(object $client, string $peer, array $chat): void
+    private function downloadChatAvatar(string $peer, array $chat): void
     {
-        if (empty($chat['photo']) || ! method_exists($client, 'downloadToFile')) {
+        // В MadelineProto v8 getPwrChat()['photo'] — это Media-объект (Photo) со
+        // СВОИМ методом downloadToFile(string $path). Раньше звали
+        // $client->downloadToFile($photo,…) — client такой Media-объект как media
+        // не принимал и молча не писал файл. Правильно — метод самого объекта.
+        $photo = $chat['photo'] ?? null;
+        if (! is_object($photo) || ! method_exists($photo, 'downloadToFile')) {
             return;
         }
 
@@ -273,17 +278,9 @@ class TelegramHarvestSyncService
 
         try {
             File::ensureDirectoryExists($dir);
-            $result = $client->downloadToFile($chat['photo'], $file);
-            // ДИАГНОСТИКА (временно): что реально вернул downloadToFile и записался ли файл.
-            Log::warning('Telegram harvest roster: avatar diag', [
-                'peer' => $peer,
-                'photo_type' => $chat['photo']['_'] ?? null,
-                'result' => is_string($result) ? $result : gettype($result),
-                'exists' => File::exists($file),
-                'size' => File::exists($file) ? File::size($file) : 0,
-            ]);
+            $photo->downloadToFile($file);
         } catch (Throwable $e) {
-            Log::warning('Telegram harvest roster: avatar download failed', ['peer' => $peer, 'photo_type' => $chat['photo']['_'] ?? null, 'error' => $e->getMessage()]);
+            Log::warning('Telegram harvest roster: avatar download failed', ['peer' => $peer, 'error' => $e->getMessage()]);
         }
     }
 
