@@ -12,6 +12,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Промо-согласие (152-ФЗ) на обеих триал-формах захвата лида (H1429).** Форма
+  `promo/blocks/trial_block` и универсальная модалка `components/trial-modal`
+  постили в `leads.store` только с обязательной ПДн-галочкой — рекламной
+  (`is_promo_agreed`) не было, так что их лиды всегда сохранялись с
+  `is_promo_agreed=false` и не могли быть законно включены в отложенную рассылку
+  (напр. сентябрьское напоминание). Добавлена вторая, необязательная галочка
+  согласия на рассылку по эталону `promo/blocks/form_block`. **Известный
+  companion-разрыв (не в этом PR):** путь рассылки в мессенджеры
+  (`AnnouncementDispatcher` → `SendMessengerAlerts`) не гейтит Telegram/VK по
+  согласию, а у `User` нет флага согласия на мессенджеры — см. `@DECIDE` в GTD.
 - **Roadmap: teacher-load report + public schedule widget.** Layered `/ask` plan
   ([PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md) +
   ROADMAP/ARCHITECTURE/IMPLEMENTATION/VERIFICATION siblings) for an admin
