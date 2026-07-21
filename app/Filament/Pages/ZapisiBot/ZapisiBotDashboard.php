@@ -28,7 +28,7 @@ class ZapisiBotDashboard extends Page
 
     protected static ?string $title = '@zapisi_ORSbot';
 
-    protected static ?string $slug = '/';
+    protected static ?string $slug = 'dashboard';
 
     protected static string $view = 'filament.pages.zapisi-bot.dashboard';
 
