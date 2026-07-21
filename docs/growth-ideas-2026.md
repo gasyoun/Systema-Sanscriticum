@@ -85,7 +85,7 @@ VK, YouTube, CRM студентов, международные платежи; 
    _✅ ДОСТАВЛЕНО (07-07-2026, H324): email-only подписка на рассылку заводит
    кабинетного `User` через одноразовую magic-ссылку и пишет `Lead`-строку с UTM —
    лид→пользователь→оплата больше не рвется на входе. За флагом `newsletter_subscribe`
-   (ВЫКЛ). См. [docs/newsletter-subscribe.md](newsletter-subscribe.md)._
+   (ВЫКЛ). См. [docs/newsletter-subscribe.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/newsletter-subscribe.m)._
 15. **Telegram как канал удержания** (новое, CUSTDEV 03-07-2026). Telegram
    дает микрообъем переходов, но рекордную лояльность (посетители ходят на
    сайт многократно, вовлеченность выше всех каналов). Есть: lead-magnet бот

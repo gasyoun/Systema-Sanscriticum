@@ -5,10 +5,10 @@ _Created: 06-07-2026 · Last updated: 06-07-2026_
 Этот документ — **точка входа** в финансовый функционал админ-панели ОРС (Общества
 ревнителей санскрита). Рассчитан на человека, который **никогда не открывал панель**:
 здесь только карта «что где лежит» и кто это видит. Подробные пошаговые инструкции —
-в [`accountant-guide.md`](accountant-guide.md), на который каждый раздел ниже ссылается.
+в [`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/accountant-guide.m), на который каждый раздел ниже ссылается.
 
-> Общая (нефинансовая) часть админ-панели описана в [`admin-manual.md`](admin-manual.md).
-> Как студент видит долги/оплату со своей стороны (личный кабинет) — [`student-manual.md`](student-manual.md) §§4–5.
+> Общая (нефинансовая) часть админ-панели описана в [`admin-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/admin-manual.m).
+> Как студент видит долги/оплату со своей стороны (личный кабинет) — [`student-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/student-manual.m) §§4–5.
 
 ---
 
@@ -50,7 +50,7 @@ ruling MG в H116: владелец-админ тоже должен видет�
 
 ### 2.1. Операционные (только бухгалтер + супер-админ)
 
-Пошагово — [`accountant-guide.md`](accountant-guide.md) §§1–4k:
+Пошагово — [`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/accountant-guide.m) §§1–4k:
 
 - [Финансы (транзакции)](accountant-guide.md#2-раздел-финансы-транзакции) — все денежные движения: оплаты, брони, расходы/возвраты, выплаты ЗП.
 - [Зарплаты преподавателей](accountant-guide.md#3-раздел-зарплаты-преподавателей) — калькулятор выплаты по блоку, авансы (§4a), прямые платежи (§4b), фикс-vs-процент (§4j), два преподавателя на курсе (§4k).
@@ -99,7 +99,7 @@ ruling MG в H116: владелец-админ тоже должен видет�
 ---
 
 *Документ — обзорная точка входа; вся пошаговая инструкция и глоссарий — в
-[`accountant-guide.md`](accountant-guide.md). При расхождении интерфейса с описанием —
+[`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/accountant-guide.m). При расхождении интерфейса с описанием —
 сверьтесь с кодом (`RoleGate::*` соответствующего ресурса) или сообщите администратору.*
 
 _Dr. Mārcis Gasūns_
