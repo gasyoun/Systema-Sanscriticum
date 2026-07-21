@@ -19,6 +19,22 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   iframe-embeddable schedule widget, aimed at replacing the hand-typed
   `samskrtam.ru/raspisanie/` page. No code yet — plan only; wave-1 handoffs
   minted for execution.
+- **Public schedule feed + embeddable widget (wave 1b, H1427).** New unauthenticated
+  read-only feed `GET /api/public/schedule`
+  ([`PublicScheduleController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Api/PublicScheduleController.php))
+  behind a strict field-allowlist Resource
+  ([`PublicScheduleResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Resources/PublicScheduleResource.php)
+  — never emits `link`, `zoom_join_url`/`zoom_start_url`, or numeric ids), throttled 30/min and
+  cached 5 min; plus a bare, iframe-embeddable widget page `GET /widgets/schedule`
+  ([`PublicWidgetController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PublicWidgetController.php)
+  + [Blade](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/widgets/schedule.blade.php)
+  + [vanilla JS](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/widgets/schedule.js))
+  that renders a direction/teacher-filterable, weekday-grouped schedule and posts its height to the
+  parent for iframe auto-resize, with `Content-Security-Policy: frame-ancestors` scoped to
+  `samskrtam.ru` on that one response. Copy-paste embed artifact:
+  [`docs/copy/public-schedule-widget-embed.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/public-schedule-widget-embed.md).
+  Additive, inert-until-visited; pasting onto the live `samskrtam.ru/raspisanie/` page stays a
+  separate explicit human go-ahead.
 
 ## [1.50.1] - 2026-07-21
 
