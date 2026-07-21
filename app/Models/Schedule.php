@@ -164,9 +164,12 @@ class Schedule extends Model
             });
 
             // Иначе ближайшее по времени старта в пределах ±12 часов.
+            // abs(): в Carbon 3 diffInSeconds знаковый и возвращает float —
+            // без модуля фильтр «±12ч» и сортировка «ближайшее» ломаются, а
+            // строгий тип int (был для Carbon 2) даёт TypeError на float.
             $match ??= $candidates
-                ->filter(fn (self $s): bool => $s->start->diffInSeconds($when) <= 12 * 3600)
-                ->sortBy(fn (self $s): int => $s->start->diffInSeconds($when))
+                ->filter(fn (self $s): bool => abs($s->start->diffInSeconds($when)) <= 12 * 3600)
+                ->sortBy(fn (self $s): float => abs($s->start->diffInSeconds($when)))
                 ->first();
 
             if ($match) {

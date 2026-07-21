@@ -74,4 +74,35 @@ class ScheduleZoomResolveTest extends TestCase
     {
         $this->assertNull(Schedule::resolveForZoomEvent('does-not-exist', 'occ', now()->toIso8601String()));
     }
+
+    /**
+     * @test
+     *
+     * Регресс (Carbon 3): в ветке «ближайшее по времени» diffInSeconds стал
+     * знаковым float — замыкание с `: int` падало TypeError, а знак ломал выбор
+     * ближайшего слота. Событие вне окна ±30м у всех, но в пределах ±12ч.
+     */
+    public function picks_nearest_schedule_when_no_window_matches(): void
+    {
+        $course = Course::factory()->create(['zoom_meeting_id' => '424242']);
+        $when = now();
+
+        $near = Schedule::create([
+            'title' => 'Ближе', 'course_id' => $course->id,
+            'start' => $when->copy()->addHours(3),   // |Δ| = 3ч, вне окна
+        ]);
+        Schedule::create([
+            'title' => 'Дальше', 'course_id' => $course->id,
+            'start' => $when->copy()->addHours(8),   // |Δ| = 8ч
+        ]);
+        Schedule::create([
+            'title' => 'За пределами ±12ч', 'course_id' => $course->id,
+            'start' => $when->copy()->addHours(20),  // отфильтровано
+        ]);
+
+        $resolved = Schedule::resolveForZoomEvent('424242', null, $when->toIso8601String());
+
+        $this->assertNotNull($resolved);
+        $this->assertSame($near->id, $resolved->id);
+    }
 }
