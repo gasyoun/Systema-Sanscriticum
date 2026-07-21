@@ -11,6 +11,15 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Roadmap: teacher-load report + public schedule widget.** Layered `/ask` plan
+  ([PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md) +
+  ROADMAP/ARCHITECTURE/IMPLEMENTATION/VERIFICATION siblings) for an admin
+  «преподаватель × группы × направление» analytics page and a reusable public
+  iframe-embeddable schedule widget, aimed at replacing the hand-typed
+  `samskrtam.ru/raspisanie/` page. No code yet — plan only; wave-1 handoffs
+  minted for execution.
+
 ## [1.50.1] - 2026-07-21
 
 ### Changed
