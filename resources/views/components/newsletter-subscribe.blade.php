@@ -55,6 +55,18 @@
 
             <form method="POST" action="{{ route('newsletter.subscribe') }}">
                 @csrf
+                {{-- Анти-бот honeypot: человек этого поля не видит и не заполняет;
+                     заполнено → отправку тихо отбрасываем на сервере. --}}
+                <div aria-hidden="true"
+                    style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden;">
+                    <label>Оставьте это поле пустым
+                        <input type="text" name="website" tabindex="-1" autocomplete="off" value="">
+                    </label>
+                </div>
+                {{-- Анти-бот time-trap: зашифрованная метка времени рендера формы
+                     (привязана к APP_KEY, подделать нельзя). Сервер отклоняет
+                     мгновенные сабмиты и прямые POST без метки. --}}
+                <input type="hidden" name="ff_ts" value="{{ encrypt((string) now()->timestamp) }}">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <input type="email" name="email" required placeholder="you@example.com"
                         value="{{ old('email') }}"
