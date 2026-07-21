@@ -72,7 +72,7 @@ class SnapshotGroupRostersTest extends TestCase
                 return [];
             }
 
-            public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 return [
                     'photo' => ['_' => 'photo', 'id' => 1],
@@ -155,7 +155,7 @@ class SnapshotGroupRostersTest extends TestCase
                 return [];
             }
 
-            public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 if (! $this->primed) {
                     throw new \RuntimeException('This peer is not present in the internal peer database');
@@ -182,7 +182,7 @@ class SnapshotGroupRostersTest extends TestCase
                 return [];
             }
 
-            public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 throw new \RuntimeException('This peer is not present in the internal peer database');
             }
@@ -190,5 +190,30 @@ class SnapshotGroupRostersTest extends TestCase
         $this->fakeFactory($client);
 
         $this->assertSame([], app(TelegramHarvestSyncService::class)->fetchRoster('-100111'));
+    }
+
+    public function test_fetch_roster_requests_full_participant_fetch(): void
+    {
+        // Регресс: getPwrChat должен вызываться с fullfetch=true — иначе participants
+        // не разворачиваются в ['user'=>{id...}] и ростер пуст («0 снято»).
+        $client = new class
+        {
+            public function getDialogIds(): array
+            {
+                return [];
+            }
+
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
+            {
+                if (! $fullFetch) {
+                    return ['participants' => [['user_id' => 1]]]; // без 'user' → наш ростер пуст
+                }
+
+                return ['participants' => [['user' => ['id' => 1, 'first_name' => 'U']]]];
+            }
+        };
+        $this->fakeFactory($client);
+
+        $this->assertCount(1, app(TelegramHarvestSyncService::class)->fetchRoster('-100111'));
     }
 }

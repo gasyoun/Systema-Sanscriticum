@@ -218,7 +218,10 @@ class TelegramHarvestSyncService
         }
 
         try {
-            $chat = $client->getPwrChat($peer, false, true);
+            // fullfetch=true ОБЯЗАТЕЛЕН: только он разворачивает participants в
+            // ['user' => {...}] (PeerHandler::getPwrChat, гейт по $fullfetch), иначе
+            // у участников нет id и ростер выходит пустым. Раньше стоял false → «0 снято».
+            $chat = $client->getPwrChat($peer, true);
         } catch (Throwable $e) {
             Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
 

@@ -54,7 +54,7 @@ class TelegramZapisiRosterTest extends TestCase
     {
         $client = new class
         {
-            public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 return [
                     'participants' => [
@@ -94,7 +94,7 @@ class TelegramZapisiRosterTest extends TestCase
     {
         $client = new class
         {
-            public function getPwrChat(int|string $peer, bool $fullFetch, bool $send): array
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
             {
                 return ['participants' => [
                     ['user' => ['id' => 7, 'username' => 'anya', 'first_name' => 'Аня']],
