@@ -66,6 +66,13 @@ class TelegramWebhookController extends Controller
             elseif ($text === '/start') {
                 $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
             }
+            // Отписка от рекламной рассылки (152-ФЗ: право отзыва согласия обязательно,
+            // т.к. существующие пользователи грандфазерятся в согласие). Гасит ТОЛЬКО
+            // рекламные анонсы (wants_messenger_announcements) — транзакционные
+            // уведомления по учёбе идут мимо этого флага и продолжают приходить.
+            elseif ($this->isUnsubscribeCommand($text)) {
+                $this->handleUnsubscribe($chatId);
+            }
             // ==========================================
             // КУРАТОР-КОМАНДЫ (/долги — S4 H250; /группа, /кто — S6 H816) — отдельная
             // ветка от студенческого AI-чата: неавторизованным (не куратор/не привязан)
@@ -251,6 +258,47 @@ class TelegramWebhookController extends Controller
             : app(DebtorsBotCommand::class)->reply($curator, $text);
 
         $this->sendMessage($chatId, $reply);
+    }
+
+    // ==========================================
+    // Отписка от рекламной рассылки (152-ФЗ). Триггеры — только явные формы, чтобы
+    // не спутать с обычным вопросом студенту ИИ-агенту (голое «стоп» намеренно НЕ ловим).
+    // ==========================================
+    private function isUnsubscribeCommand(string $text): bool
+    {
+        $normalized = mb_strtolower(trim($text));
+
+        return in_array($normalized, [
+            '/stop',
+            '/unsubscribe',
+            'отписаться',
+            'отписаться от рассылки',
+            'отписка',
+            'стоп рассылка',
+            'стоп рассылку',
+        ], true);
+    }
+
+    private function handleUnsubscribe($chatId): void
+    {
+        $user = User::where('telegram_id', $chatId)->first();
+
+        // Не привязан — не подтверждаем существование команды сверх вежливого ответа.
+        if (! $user) {
+            $this->sendMessage($chatId, 'Этот чат не привязан к аккаунту Академии, рекламные рассылки сюда и так не приходят.');
+
+            return;
+        }
+
+        if (! $user->wants_messenger_announcements) {
+            $this->sendMessage($chatId, 'Вы уже отписаны от рекламных рассылок. Важные уведомления по учёбе продолжают приходить.');
+
+            return;
+        }
+
+        $user->forceFill(['wants_messenger_announcements' => false])->save();
+
+        $this->sendMessage($chatId, '🔕 Готово — вы отписаны от рекламных рассылок. Важные уведомления по учёбе (расписание, доступы, ответы куратора) продолжат приходить.');
     }
 
     // ==========================================

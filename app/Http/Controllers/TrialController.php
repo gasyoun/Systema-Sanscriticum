@@ -132,6 +132,8 @@ final class TrialController extends Controller
             'name' => $fullName,
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
+            // Новый аккаунт = opt-in по той же галочке согласия на рассылку (152-ФЗ).
+            'wants_messenger_announcements' => $request->boolean('wants_announcements'),
         ]);
 
         $attribution = app(AttributionService::class);

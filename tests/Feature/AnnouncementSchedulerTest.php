@@ -20,10 +20,11 @@ class AnnouncementSchedulerTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function recipient(): User
+    private function recipient(array $overrides = []): User
     {
-        // Получатель мессенджер-рассылки (email не проверяем — тестируем TG-канал).
-        return User::factory()->create();
+        // Получатель мессенджер-рассылки С СОГЛАСИЕМ на анонсы в мессенджеры
+        // (152-ФЗ гейт; email не проверяем — тестируем TG-канал).
+        return User::factory()->create(array_merge(['wants_messenger_announcements' => true], $overrides));
     }
 
     private function scheduledAnnouncement(?string $scheduledAt, array $overrides = []): Announcement
@@ -112,5 +113,33 @@ class AnnouncementSchedulerTest extends TestCase
 
         Bus::assertDispatched(SendMessengerAlerts::class, 1);
         $this->assertNotNull($announcement->fresh()->dispatched_at);
+    }
+
+    public function test_messenger_broadcast_skips_user_without_consent(): void
+    {
+        Bus::fake();
+        // Пользователь БЕЗ согласия на анонсы в мессенджеры (152-ФЗ).
+        User::factory()->create(['wants_messenger_announcements' => false]);
+        $announcement = $this->scheduledAnnouncement(now()->subMinute()->toDateTimeString());
+
+        $this->artisan('announcements:dispatch-due')->assertSuccessful();
+
+        // Гейт не пустил рекламную рассылку в мессенджеры.
+        Bus::assertNotDispatched(SendMessengerAlerts::class);
+        // Но dispatched_at ставится — анонс обработан (для тех, у кого email/согласие).
+        $this->assertNotNull($announcement->fresh()->dispatched_at);
+    }
+
+    public function test_messenger_broadcast_reaches_only_consenting_users(): void
+    {
+        Bus::fake();
+        $this->recipient(); // согласие = true
+        User::factory()->create(['wants_messenger_announcements' => false]); // без согласия
+        $this->scheduledAnnouncement(now()->subMinute()->toDateTimeString());
+
+        $this->artisan('announcements:dispatch-due')->assertSuccessful();
+
+        // Ровно один джоб — на согласившегося получателя.
+        Bus::assertDispatched(SendMessengerAlerts::class, 1);
     }
 }
