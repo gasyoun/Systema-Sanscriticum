@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.51.0] - 2026-07-22
+
 ### Added
 - **Kochergina lesson 1 → dedicated SRS deck (H1431).** New
   `srs:import-kochergina-lesson1` artisan command maps the already-sourced
