@@ -3,6 +3,16 @@
 /public/build
 /public/hot
 /public/storage
+
+# Публикуемые ассеты пакетов — build-артефакты, пересобираются на деплое
+# (deploy.sh: `php artisan filament:assets`), в git НЕ хранятся. Хранение
+# приводило к дрейфу: закоммиченные ассеты устаревали относительно версии
+# пакета и ломали Livewire-гидрацию (вход в админку «поле обязательно»).
+# Livewire 3 отдаёт свой livewire.js маршрутом (@livewireScripts) —
+# public/vendor/livewire не используется приложением.
+/public/css/filament
+/public/js/filament
+/public/vendor/livewire
 /storage/*.key
 /vendor
 .env

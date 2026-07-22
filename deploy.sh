@@ -74,6 +74,14 @@ say "npm ci && npm run build"
 npm ci --silent
 npm run build
 
+# Публикуем ассеты Filament (public/{css,js}/filament) — это build-артефакты,
+# в git не хранятся (см. .gitignore). Без этого шага после git-деплоя они бы
+# отсутствовали/устаревали → рассинхрон версии Livewire и «поле обязательно» на
+# входе в админку (реальный инцидент при переезде на новый сервер, июль 2026).
+# Livewire-ассеты не публикуем: Livewire 3 отдаёт livewire.js маршрутом.
+say "php artisan filament:assets"
+php artisan filament:assets
+
 # ── 3. Maintenance (опционально) + миграции ──────────────────────────────────
 if [ "$USE_DOWN" = 1 ]; then
   say "php artisan down"
