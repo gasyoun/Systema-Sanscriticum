@@ -715,6 +715,13 @@ class UserResource extends Resource
                     ->alignment('center')
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                Tables\Columns\IconColumn::make('wants_messenger_announcements')
+                    ->label('Анонсы в мессенджеры')
+                    ->boolean()
+                    ->sortable()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('prana_balance')
                     ->label('Прана')
                     ->badge()
@@ -765,6 +772,13 @@ class UserResource extends Resource
                     ->placeholder('Все студенты')
                     ->trueLabel('Согласились на анонсы')
                     ->falseLabel('Отказались от анонсов'),
+
+                // --- Согласие на анонсы в мессенджеры (152-ФЗ гейт TG/VK-рассылки) ---
+                Tables\Filters\TernaryFilter::make('wants_messenger_announcements')
+                    ->label('Согласие на анонсы в мессенджеры')
+                    ->placeholder('Все студенты')
+                    ->trueLabel('Согласились на анонсы')
+                    ->falseLabel('Отписались от анонсов'),
 
                 // --- Состоит в группе (пул для разнесения по группам курса) ---
                 Tables\Filters\SelectFilter::make('group')

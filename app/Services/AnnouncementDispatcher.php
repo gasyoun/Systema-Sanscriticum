@@ -39,7 +39,10 @@ class AnnouncementDispatcher
                 Mail::to($user->email)->queue(new AnnouncementMail($announcement, $user));
             }
 
-            if ($announcement->send_to_telegram || $announcement->send_to_vk) {
+            // 152-ФЗ: рекламная рассылка в мессенджеры — только с согласием
+            // (зеркало email-гейта выше). Транзакционные уведомления идут
+            // мимо диспетчера анонсов и этим флагом НЕ ограничены.
+            if (($announcement->send_to_telegram || $announcement->send_to_vk) && $user->wants_messenger_announcements) {
                 SendMessengerAlerts::dispatch(
                     $user,
                     $this->messageText($announcement),
