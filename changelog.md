@@ -12,6 +12,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Kochergina lesson 1 → dedicated SRS deck (H1431).** New
+  `srs:import-kochergina-lesson1` artisan command maps the already-sourced
+  `database/seeders/data/memrise_6502608/level_02.csv` (Занятие I vocabulary,
+  cross-checked against the digitized textbook) onto a dedicated system
+  `SrsDeck` (`kochergina-lesson-1`, note type `kochergina_l1`, fields
+  `devanagari`/`iast`/`translation_ru`/`translation_en`/`notes` per
+  `ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md` P1), separate from the generic
+  `srs:import-memrise` per-level decks for the same course. Grammar-class tags
+  (`(m)`/`(n)`/`(m,n)`) in the Russian gloss are extracted into `notes` without
+  dropping them from `translation_ru`. Idempotent; 7 feature tests, full Srs
+  suite green. Behind the existing `SRS_ENABLED=false` gate; the import itself
+  is a one-time manual deploy step, not auto-seeded.
 - **Гейт согласия на рекламную рассылку в мессенджеры (152-ФЗ, H1430).** Путь
   рассылки анонсов `AnnouncementDispatcher` гейтил только email
   (`wants_email_announcements`), а Telegram/VK — ничем, и у `User` не было флага

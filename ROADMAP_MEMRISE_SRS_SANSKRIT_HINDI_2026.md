@@ -1,6 +1,6 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 11-07-2026_
+_Created: 11-07-2026 · Last updated: 22-07-2026_
 
 Bring the full Memrise learning loop — spaced-repetition review, every test mode,
 gamification, and user mnemonics — into the [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)
@@ -101,6 +101,19 @@ go dark. Export before anything else.
   `translation_ru`, `translation_en`, `notes`). Reconcile with the parallel
   `Lesson.flash_cards` JSON already on lessons — decide migrate-into-SRS vs keep-separate
   (see Open Questions Q1).
+  **Kochergina lesson 1 shipped 22-07-2026 (H1431):** `srs:import-kochergina-lesson1`
+  reads `database/seeders/data/memrise_6502608/level_02.csv` (verified against the
+  textbook's Занятие I, Упражнение II) into a dedicated system deck
+  (`kochergina-lesson-1`, note type `kochergina_l1`) mapped onto exactly this field
+  set — `devanagari`/`translation_en` stay absent per row (source has neither; the
+  UI already tolerates missing fields, same as the existing Memrise cyrillic-only
+  rows) and `notes` carries the textbook's parenthetical grammar-class tag
+  (`(m)`/`(n)`/`(m,n)`) extracted from the gloss without dropping it from
+  `translation_ru`. Deliberately **separate from** the generic
+  `srs:import-memrise` decks for the same Memrise course (6502608) — the two
+  pipelines coexist, per this section's own "dedicated deck" design. Q1
+  (`Lesson.flash_cards` reconciliation) is still open — this lesson-1 deck did
+  not touch `Lesson.flash_cards`.
 - **Importer:** an artisan command + seeder that reads the P0 export, upserts
   `DictionaryWord` rows (dedup on IAST/`slug`), creates a **system deck** per Memrise level,
   and creates `SrsCard`s linked via `SrsCard.source_word_id`. Follow the existing Filament
