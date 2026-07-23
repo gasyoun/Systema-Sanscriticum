@@ -1,6 +1,11 @@
 # PLAN — Closing the Anton operational gaps (Systema-Sanscriticum, 2026 H2)
 
-_Created: 22-07-2026 · Last updated: 22-07-2026_
+_Created: 22-07-2026 · Last updated: 23-07-2026_
+
+> **Follow-on (23-07-2026):** H1452 clips landed on main; the broader lecture→content
+> product loop (ranker, ContentCandidate, social/FAQ/long-form/study, pilot auto-publish)
+> is the umbrella
+> [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
 
 This is the cover/index for a layered `/ask` execution plan. It answers one question —
 **"what does Anton (a yoga/movement online school) have that we don't, and what should we
