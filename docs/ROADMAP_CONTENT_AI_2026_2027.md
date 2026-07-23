@@ -1,6 +1,6 @@
 # Roadmap: Content-Ops Inbox & Weekly Content AI 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 07-07-2026 · Last updated: 07-07-2026_
+_Created: 07-07-2026 · Last updated: 23-07-2026_
 
 > Narrow roadmap for the **Postmypost-inspired** slice of support/marketing: unifying public
 > social engagement (VK/Instagram comments, story replies) alongside the existing private
@@ -277,5 +277,13 @@ Dependency chain: **S2 (SUP roadmap) → CAI3 → CAI4 → CAI5/CAI6 → CAI7**;
   same session as this roadmap.
 - Pointer added to `docs/ROADMAP_2026_2027.md`'s specialized-roadmaps table (§ header) alongside
   the SUPPORT_AUTOMATION/SRS/SEO/SECURITY/PRANA rows.
+- **Related (not this roadmap's tickets):** Anton ops-gaps Wave 4 clip pipeline (H1452) —
+  n8n/ffmpeg lecture fragments → VK Video/Clips, recorded as `LectureClip`, free-3 staff
+  surface. Implementation:
+  [`docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md);
+  n8n JSON:
+  [`docs/n8n/lecture-clip-extract.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/lecture-clip-extract.workflow.json).
+  Distinct from the weekly content-gap AI drafts above — that stream drafts FAQ/social
+  *text*; H1452 reuses existing lecture *video* timecodes as cut boundaries.
 
 _Dr. Mārcis Gasūns_

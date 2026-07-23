@@ -122,3 +122,70 @@ Webhook ─┬─► Telegram: sendPhoto (канал)
 > ⚠️ Цепочка загрузки фото в ВК (multipart `formBinaryData`) чувствительна к версии нод
 > n8n — после импорта прогоните воркфлоу один раз и при необходимости поправьте поле
 > бинарного аплоада. Telegram-ветка работает «из коробки».
+
+---
+
+# n8n: нарезка клипов лекций → VK Video/Clips (H1452 Wave 4)
+
+Воркфлоу [`lecture-clip-extract.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/lecture-clip-extract.workflow.json)
+принимает из Laravel job `DispatchLectureClipExtractionJob` спаны, уже вычисленные
+`ClipSpanPlanner` из **существующих** AI-таймкодов (без пересчёта границ), режет
+ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips и callback'ом
+пишет `LectureClip` в Laravel.
+
+## Payload Laravel → n8n
+
+```json
+{
+  "action": "clip_lecture",
+  "lesson_id": 42,
+  "lesson_title": "…",
+  "video_url": "…",
+  "youtube_url": "…",
+  "rutube_url": "…",
+  "spans": [
+    { "start_seconds": 0, "end_seconds": 90, "title": "Тема — фрагмент 1: …" }
+  ],
+  "callback_url": "https://<домен>/api/webhooks/lecture-clip-callback"
+}
+```
+
+Заголовок `X-Webhook-Secret` = `N8N_CLIP_EXTRACT_SECRET`.
+
+## Callback n8n → Laravel
+
+`POST {callback_url}` с `X-Webhook-Secret: N8N_CLIP_CALLBACK_SECRET` и телом:
+
+```json
+{
+  "lesson_id": 42,
+  "clips": [
+    {
+      "start_seconds": 0,
+      "end_seconds": 90,
+      "title": "…",
+      "vk_video_id": "456239017",
+      "vk_owner_id": "-12345"
+    }
+  ]
+}
+```
+
+Флаг `CLIP_MARKETING_ENABLED=false` → Laravel callback 404; job early-return.
+**Никогда не коммитьте живые VK-токены** — ноды ffmpeg/VK в JSON — плейсхолдеры.
+
+## Настройка после импорта
+
+1. Import `lecture-clip-extract.workflow.json`.
+2. Заменить URL ffmpeg-worker и VK-uploader (или переписать ноды на native VK API).
+3. Env n8n: `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
+4. Activate, copy Production webhook URL.
+5. Laravel `.env`:
+   ```
+   CLIP_MARKETING_ENABLED=false
+   N8N_CLIP_EXTRACT_WEBHOOK=https://<n8n>/webhook/lecture-clip-extract
+   N8N_CLIP_EXTRACT_SECRET=<secret>
+   N8N_CLIP_CALLBACK_SECRET=<secret>
+   ```
+   `php artisan config:cache`. Flip `CLIP_MARKETING_ENABLED=true` only after a
+   staging dry-run (see `DEPLOY_QUEUE.md` №46).

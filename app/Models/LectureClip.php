@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -35,6 +36,12 @@ class LectureClip extends Model
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    /** Staff-marked free/public surface only (editorial ~3 per lecture). */
+    public function scopeFree(Builder $query): Builder
+    {
+        return $query->where('is_free', true);
     }
 
     public function durationSeconds(): int

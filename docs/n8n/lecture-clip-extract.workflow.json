@@ -1,0 +1,133 @@
+{
+  "name": "Lecture clip extract (H1452) — ffmpeg + VK + Laravel callback",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lecture-clip-extract",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-400, 0],
+      "webhookId": "lecture-clip-extract"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Laravel DispatchLectureClipExtractionJob payload.\n// action=clip_lecture, lesson_id, video_url/youtube_url/rutube_url, spans[], callback_url.\nconst body = $input.first().json.body ?? $input.first().json;\nif (body.action !== 'clip_lecture') {\n  throw new Error('unexpected action: ' + (body.action ?? 'missing'));\n}\nconst spans = Array.isArray(body.spans) ? body.spans : [];\nif (!spans.length) {\n  throw new Error('no spans — nothing to cut');\n}\n// Emit one item per span for the ffmpeg/VK loop. Real ffmpeg/VK credentials\n// stay operator-owned (D12: agents never ship live VK tokens).\nreturn spans.map((s, i) => ({\n  json: {\n    lesson_id: body.lesson_id,\n    lesson_title: body.lesson_title ?? '',\n    video_url: body.video_url || body.youtube_url || body.rutube_url || '',\n    callback_url: body.callback_url,\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title || ('clip-' + (i + 1)),\n    index: i + 1,\n  },\n}));"
+      },
+      "id": "a2222222-2222-2222-2222-222222222222",
+      "name": "Expand spans",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-160, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FFMPEG_CUT_URL || 'https://REPLACE_WITH_FFMPEG_WORKER/cut' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source_url\": \"{{ $json.video_url }}\",\n  \"start_seconds\": {{ $json.start_seconds }},\n  \"end_seconds\": {{ $json.end_seconds }},\n  \"title\": {{ JSON.stringify($json.title) }}\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "a3333333-3333-3333-3333-333333333333",
+      "name": "ffmpeg cut (placeholder HTTP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [80, 0],
+      "notes": "Replace with your ffmpeg worker or Execute Command node. Output should include a local/file URL for VK upload."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VK_VIDEO_UPLOAD_URL || 'https://REPLACE_WITH_VK_UPLOADER/upload' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"file_url\": \"{{ $json.file_url || $json.cut_url || '' }}\",\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"lesson_id\": {{ $json.lesson_id }}\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "a4444444-4444-4444-4444-444444444444",
+      "name": "VK Video upload (placeholder HTTP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 0],
+      "notes": "Replace with real VK Video/Clips API (video.save + upload). Map response to vk_video_id + vk_owner_id."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Aggregate per-span results for a single Laravel callback.\nconst items = $input.all();\nconst first = items[0]?.json ?? {};\nconst clips = items.map((it) => {\n  const j = it.json;\n  return {\n    start_seconds: j.start_seconds,\n    end_seconds: j.end_seconds,\n    title: j.title,\n    vk_video_id: String(j.vk_video_id ?? j.id ?? j.video_id ?? ''),\n    vk_owner_id: String(j.vk_owner_id ?? j.owner_id ?? ''),\n  };\n});\nreturn [{\n  json: {\n    callback_url: first.callback_url,\n    body: {\n      lesson_id: first.lesson_id,\n      clips,\n    },\n  },\n}];"
+      },
+      "id": "a5555555-5555-5555-5555-555555555555",
+      "name": "Aggregate clips",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{ $env.N8N_CLIP_CALLBACK_SECRET || 'REPLACE_WITH_LARAVEL_N8N_CLIP_CALLBACK_SECRET' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a6666666-6666-6666-6666-666666666666",
+      "name": "Laravel callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Expand spans", "type": "main", "index": 0 }]]
+    },
+    "Expand spans": {
+      "main": [[{ "node": "ffmpeg cut (placeholder HTTP)", "type": "main", "index": 0 }]]
+    },
+    "ffmpeg cut (placeholder HTTP)": {
+      "main": [[{ "node": "VK Video upload (placeholder HTTP)", "type": "main", "index": 0 }]]
+    },
+    "VK Video upload (placeholder HTTP)": {
+      "main": [[{ "node": "Aggregate clips", "type": "main", "index": 0 }]]
+    },
+    "Aggregate clips": {
+      "main": [[{ "node": "Laravel callback", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
