@@ -40,6 +40,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VkController;
 use App\Models\LandingPage;
@@ -259,6 +260,13 @@ Route::prefix('slovar')->name('slovar.')->group(function () {
 // ═══════════════════════════════════════════════════════════════
 Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
     ->name('reading.kosha-demo');
+
+// ═══════════════════════════════════════════════════════════════
+// H1463 — Sanskrit-HUB L5 /transliterate playground (Workstream A v0).
+// features.hub_transliterate, ВЫКЛ по умолчанию (404 пока не включен).
+// ═══════════════════════════════════════════════════════════════
+Route::get('/transliterate', [TransliterateController::class, 'show'])
+    ->name('hub.transliterate');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {

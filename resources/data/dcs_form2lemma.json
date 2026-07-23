@@ -1,0 +1,1374 @@
+{
+  "source": "DCS form2lemma slice (E27-style) via Systema kosha_reading_pack_nala_1.json (DCS-attested tokens; H959 pack). Full E27 not fetchable this session — autonomy default (a): >=200 real cited forms.",
+  "source_artifact": "resources/data/kosha_reading_pack_nala_1.json",
+  "key_convention": "SanskritGlossary::normalizeKey — NFC, lower-case, trim",
+  "built_by": "Grok 4.5 (grok-4.5) via xAI — H1463 2026-07-23",
+  "claude_verify_after": "Opus/Claude: re-check slice provenance, cascade order, and that form keys match SanskritGlossary::normalizeKey round-trip.",
+  "entry_count": 341,
+  "entries": {
+    "bṛhadaśva": {
+      "lemma": "bṛhadaśva",
+      "pos": "Nom Sing Masc"
+    },
+    "uvāca": {
+      "lemma": "vac",
+      "pos": "Sing p3 Past Ind"
+    },
+    "āsīd": {
+      "lemma": "as",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "rājā": {
+      "lemma": "rājan",
+      "pos": "Nom Sing Masc"
+    },
+    "nalo": {
+      "lemma": "nala",
+      "pos": "Nom Sing Masc"
+    },
+    "nāma": {
+      "lemma": "nāma",
+      "pos": ""
+    },
+    "vīrasena": {
+      "lemma": "vīrasena",
+      "pos": "Cpd"
+    },
+    "sutaḥ": {
+      "lemma": "suta",
+      "pos": "Nom Sing Masc"
+    },
+    "balī": {
+      "lemma": "balin",
+      "pos": "Nom Sing Masc"
+    },
+    "upapanno": {
+      "lemma": "upapad",
+      "pos": "Nom Sing Masc"
+    },
+    "guṇair": {
+      "lemma": "guṇa",
+      "pos": "Ins Plur Masc"
+    },
+    "iṣṭai": {
+      "lemma": "iṣ",
+      "pos": "Ins Plur Masc"
+    },
+    "rūpavān": {
+      "lemma": "rūpavat",
+      "pos": "Nom Sing Masc"
+    },
+    "aśva": {
+      "lemma": "aśva",
+      "pos": "Cpd"
+    },
+    "kovidaḥ": {
+      "lemma": "kovida",
+      "pos": "Nom Sing Masc"
+    },
+    "damayantī": {
+      "lemma": "damayantī",
+      "pos": "Nom Sing Fem"
+    },
+    "tu": {
+      "lemma": "tu",
+      "pos": ""
+    },
+    "rūpeṇa": {
+      "lemma": "rūpa",
+      "pos": "Ins Sing Neut"
+    },
+    "tejasā": {
+      "lemma": "tejas",
+      "pos": "Ins Sing Neut"
+    },
+    "yaśasā": {
+      "lemma": "yaśas",
+      "pos": "Ins Sing Neut"
+    },
+    "śriyā": {
+      "lemma": "śrī",
+      "pos": "Ins Sing Fem"
+    },
+    "saubhāgyena": {
+      "lemma": "saubhāgya",
+      "pos": "Ins Sing Neut"
+    },
+    "ca": {
+      "lemma": "ca",
+      "pos": ""
+    },
+    "lokeṣu": {
+      "lemma": "loka",
+      "pos": "Loc Plur Masc"
+    },
+    "yaśaḥ": {
+      "lemma": "yaśas",
+      "pos": "Acc Sing Neut"
+    },
+    "prāpa": {
+      "lemma": "prāp",
+      "pos": "Sing p3 Past Ind"
+    },
+    "sumadhyamā": {
+      "lemma": "sumadhyamā",
+      "pos": "Nom Sing Fem"
+    },
+    "atha": {
+      "lemma": "atha",
+      "pos": ""
+    },
+    "tāṃ": {
+      "lemma": "tad",
+      "pos": "Acc Sing Fem"
+    },
+    "vayasi": {
+      "lemma": "vayas",
+      "pos": "Loc Sing Neut"
+    },
+    "prāpte": {
+      "lemma": "prāp",
+      "pos": "Loc Sing Neut"
+    },
+    "dāsīnāṃ": {
+      "lemma": "dāsī",
+      "pos": "Gen Plur Fem"
+    },
+    "samalaṃkṛtām": {
+      "lemma": "samalaṃkṛ",
+      "pos": "Acc Sing Fem"
+    },
+    "śataṃ": {
+      "lemma": "śata",
+      "pos": "Nom Sing Neut"
+    },
+    "sakhīnāṃ": {
+      "lemma": "sakhī",
+      "pos": "Gen Plur Fem"
+    },
+    "tathā": {
+      "lemma": "tathā",
+      "pos": ""
+    },
+    "paryupāste": {
+      "lemma": "paryupās",
+      "pos": "Sing p3 Pres Ind"
+    },
+    "śacīm": {
+      "lemma": "śacī",
+      "pos": "Acc Sing Fem"
+    },
+    "iva": {
+      "lemma": "iva",
+      "pos": ""
+    },
+    "tatra": {
+      "lemma": "tatra",
+      "pos": ""
+    },
+    "sma": {
+      "lemma": "sma",
+      "pos": ""
+    },
+    "bhrājate": {
+      "lemma": "bhrāj",
+      "pos": "Sing p3 Pres Ind"
+    },
+    "bhaimī": {
+      "lemma": "bhaimī",
+      "pos": "Nom Sing Fem"
+    },
+    "sarva": {
+      "lemma": "sarva",
+      "pos": "Cpd"
+    },
+    "ābharaṇa": {
+      "lemma": "ābharaṇa",
+      "pos": "Cpd"
+    },
+    "bhūṣitā": {
+      "lemma": "bhūṣay",
+      "pos": "Nom Sing Fem"
+    },
+    "sakhī": {
+      "lemma": "sakhī",
+      "pos": "Cpd"
+    },
+    "madhye": {
+      "lemma": "madhya",
+      "pos": "Loc Sing Neut"
+    },
+    "anavadya": {
+      "lemma": "anavadya",
+      "pos": "Cpd"
+    },
+    "aṅgā": {
+      "lemma": "aṅga",
+      "pos": "Nom Sing Fem"
+    },
+    "vidyut": {
+      "lemma": "vidyut",
+      "pos": "Nom Sing Fem"
+    },
+    "saudāmanī": {
+      "lemma": "saudāmanī",
+      "pos": "Nom Sing Fem"
+    },
+    "yathā": {
+      "lemma": "yathā",
+      "pos": ""
+    },
+    "atīva": {
+      "lemma": "atīva",
+      "pos": ""
+    },
+    "rūpa": {
+      "lemma": "rūpa",
+      "pos": "Cpd"
+    },
+    "sampannā": {
+      "lemma": "sampad",
+      "pos": "Nom Sing Fem"
+    },
+    "śrīr": {
+      "lemma": "śrī",
+      "pos": "Nom Sing Fem"
+    },
+    "āyata": {
+      "lemma": "āyam",
+      "pos": "Cpd"
+    },
+    "locanā": {
+      "lemma": "locana",
+      "pos": "Nom Sing Fem"
+    },
+    "na": {
+      "lemma": "na",
+      "pos": ""
+    },
+    "deveṣu": {
+      "lemma": "deva",
+      "pos": "Loc Plur Masc"
+    },
+    "yakṣeṣu": {
+      "lemma": "yakṣa",
+      "pos": "Loc Plur Masc"
+    },
+    "tādṛg": {
+      "lemma": "tādṛś",
+      "pos": "Nom Sing Fem"
+    },
+    "rūpavatī": {
+      "lemma": "rūpavat",
+      "pos": "Nom Sing Fem"
+    },
+    "kvacit": {
+      "lemma": "kvacid",
+      "pos": ""
+    },
+    "mānuṣeṣv": {
+      "lemma": "mānuṣa",
+      "pos": "Loc Plur Masc"
+    },
+    "api": {
+      "lemma": "api",
+      "pos": ""
+    },
+    "anyeṣu": {
+      "lemma": "anya",
+      "pos": "Loc Plur Masc"
+    },
+    "dṛṣṭa": {
+      "lemma": "dṛś",
+      "pos": "Cpd"
+    },
+    "pūrvā": {
+      "lemma": "pūrva",
+      "pos": "Nom Sing Fem"
+    },
+    "śrutā": {
+      "lemma": "śru",
+      "pos": "Nom Sing Fem"
+    },
+    "citta": {
+      "lemma": "citta",
+      "pos": "Cpd"
+    },
+    "pramāthinī": {
+      "lemma": "pramāthin",
+      "pos": "Nom Sing Fem"
+    },
+    "bālā": {
+      "lemma": "bāla",
+      "pos": "Nom Sing Fem"
+    },
+    "devānām": {
+      "lemma": "deva",
+      "pos": "Gen Plur Masc"
+    },
+    "sundarī": {
+      "lemma": "sundara",
+      "pos": "Nom Sing Fem"
+    },
+    "nalaś": {
+      "lemma": "nala",
+      "pos": "Nom Sing Masc"
+    },
+    "nara": {
+      "lemma": "nara",
+      "pos": "Cpd"
+    },
+    "śārdūlaḥ": {
+      "lemma": "śārdūla",
+      "pos": "Nom Sing Masc"
+    },
+    "apratimaḥ": {
+      "lemma": "apratima",
+      "pos": "Nom Sing Masc"
+    },
+    "bhuvi": {
+      "lemma": "bhū",
+      "pos": "Loc Sing Fem"
+    },
+    "kandarpa": {
+      "lemma": "kandarpa",
+      "pos": "Nom Sing Masc"
+    },
+    "mūrtimān": {
+      "lemma": "mūrtimat",
+      "pos": "Nom Sing Masc"
+    },
+    "abhavat": {
+      "lemma": "bhū",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "svayam": {
+      "lemma": "svayam",
+      "pos": ""
+    },
+    "tasyāḥ": {
+      "lemma": "tad",
+      "pos": "Gen Sing Fem"
+    },
+    "samīpe": {
+      "lemma": "samīpa",
+      "pos": "Loc Sing Neut"
+    },
+    "nalaṃ": {
+      "lemma": "nala",
+      "pos": "Acc Sing Masc"
+    },
+    "praśaśaṃsuḥ": {
+      "lemma": "praśaṃs",
+      "pos": "Plur p3 Past Ind"
+    },
+    "kutūhalāt": {
+      "lemma": "kutūhala",
+      "pos": "Abl Sing Neut"
+    },
+    "naiṣadhasya": {
+      "lemma": "naiṣadha",
+      "pos": "Gen Sing Masc"
+    },
+    "damayantīṃ": {
+      "lemma": "damayantī",
+      "pos": "Acc Sing Fem"
+    },
+    "punaḥ": {
+      "lemma": "punar",
+      "pos": ""
+    },
+    "tayor": {
+      "lemma": "tad",
+      "pos": "Gen Dual Masc"
+    },
+    "adṛṣṭa": {
+      "lemma": "adṛṣṭa",
+      "pos": "Cpd"
+    },
+    "kāmaḥ": {
+      "lemma": "kāma",
+      "pos": "Nom Sing Masc"
+    },
+    "'bhūc": {
+      "lemma": "bhū",
+      "pos": "Sing p3 Past Ind"
+    },
+    "chṛṇvatoḥ": {
+      "lemma": "śru",
+      "pos": "Gen Dual Masc Pres"
+    },
+    "satataṃ": {
+      "lemma": "satatam",
+      "pos": ""
+    },
+    "guṇān": {
+      "lemma": "guṇa",
+      "pos": "Acc Plur Masc"
+    },
+    "anyonyaṃ": {
+      "lemma": "anyonya",
+      "pos": "Acc Sing Masc"
+    },
+    "prati": {
+      "lemma": "prati",
+      "pos": ""
+    },
+    "kaunteya": {
+      "lemma": "kaunteya",
+      "pos": "Voc Sing Masc"
+    },
+    "sa": {
+      "lemma": "tad",
+      "pos": "Nom Sing Masc"
+    },
+    "vyavardhata": {
+      "lemma": "vivṛdh",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "hṛcchayaḥ": {
+      "lemma": "hṛcchaya",
+      "pos": "Nom Sing Masc"
+    },
+    "a": {
+      "lemma": "a",
+      "pos": ""
+    },
+    "śaknuvan": {
+      "lemma": "śak",
+      "pos": "Nom Sing Masc Pres"
+    },
+    "nalaḥ": {
+      "lemma": "nala",
+      "pos": "Nom Sing Masc"
+    },
+    "kāmaṃ": {
+      "lemma": "kāma",
+      "pos": "Acc Sing Masc"
+    },
+    "tadā": {
+      "lemma": "tadā",
+      "pos": ""
+    },
+    "dhārayituṃ": {
+      "lemma": "dhāray",
+      "pos": ""
+    },
+    "hṛdā": {
+      "lemma": "hṛd",
+      "pos": "Ins Sing Neut"
+    },
+    "antaḥpura": {
+      "lemma": "antaḥpura",
+      "pos": "Cpd"
+    },
+    "samīpa": {
+      "lemma": "samīpa",
+      "pos": "Cpd"
+    },
+    "sthe": {
+      "lemma": "stha",
+      "pos": "Loc Sing Neut"
+    },
+    "vana": {
+      "lemma": "vana",
+      "pos": "Loc Sing Neut"
+    },
+    "āste": {
+      "lemma": "ās",
+      "pos": "Sing p3 Pres Ind"
+    },
+    "rahas": {
+      "lemma": "rahas",
+      "pos": "Cpd"
+    },
+    "gataḥ": {
+      "lemma": "gam",
+      "pos": "Nom Sing Masc"
+    },
+    "dadarśa": {
+      "lemma": "dṛś",
+      "pos": "Sing p3 Past Ind"
+    },
+    "haṃsāñ": {
+      "lemma": "haṃsa",
+      "pos": "Acc Plur Masc"
+    },
+    "jātarūpa": {
+      "lemma": "jātarūpa",
+      "pos": "Cpd"
+    },
+    "paricchadān": {
+      "lemma": "paricchada",
+      "pos": "Acc Plur Masc"
+    },
+    "vane": {
+      "lemma": "vana",
+      "pos": "Loc Sing Neut"
+    },
+    "vicaratāṃ": {
+      "lemma": "vicar",
+      "pos": "Gen Plur Masc Pres"
+    },
+    "teṣām": {
+      "lemma": "tad",
+      "pos": "Gen Plur Masc"
+    },
+    "ekaṃ": {
+      "lemma": "eka",
+      "pos": "Acc Sing Masc"
+    },
+    "jagrāha": {
+      "lemma": "grah",
+      "pos": "Sing p3 Past Ind"
+    },
+    "pakṣiṇam": {
+      "lemma": "pakṣin",
+      "pos": "Acc Sing Masc"
+    },
+    "tato": {
+      "lemma": "tatas",
+      "pos": ""
+    },
+    "antarikṣa": {
+      "lemma": "antarikṣa",
+      "pos": "Cpd"
+    },
+    "gaḥ": {
+      "lemma": "ga",
+      "pos": "Nom Sing Masc"
+    },
+    "vācaṃ": {
+      "lemma": "vāc",
+      "pos": "Acc Sing Fem"
+    },
+    "vyājahāra": {
+      "lemma": "vyāhṛ",
+      "pos": "Sing p3 Past Ind"
+    },
+    "nalam": {
+      "lemma": "nala",
+      "pos": "Acc Sing Masc"
+    },
+    "hantavyo": {
+      "lemma": "han",
+      "pos": "Nom Sing Masc"
+    },
+    "'smi": {
+      "lemma": "as",
+      "pos": "Sing p1 Pres Ind"
+    },
+    "te": {
+      "lemma": "tvad",
+      "pos": "Dat Sing"
+    },
+    "rājan": {
+      "lemma": "rājan",
+      "pos": "Voc Sing Masc"
+    },
+    "kariṣyāmi": {
+      "lemma": "kṛ",
+      "pos": "Sing p1 Fut Ind"
+    },
+    "hi": {
+      "lemma": "hi",
+      "pos": ""
+    },
+    "priyam": {
+      "lemma": "priya",
+      "pos": "Acc Sing Neut"
+    },
+    "atiṣṭhan": {
+      "lemma": "sthā",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "manuja": {
+      "lemma": "manuja",
+      "pos": "Cpd"
+    },
+    "indrāṇām": {
+      "lemma": "indra",
+      "pos": "Gen Plur Masc"
+    },
+    "mūrdhni": {
+      "lemma": "mūrdhan",
+      "pos": "Loc Sing Masc"
+    },
+    "devapatir": {
+      "lemma": "devapati",
+      "pos": "Nom Sing Masc"
+    },
+    "upary": {
+      "lemma": "upari",
+      "pos": ""
+    },
+    "upari": {
+      "lemma": "upari",
+      "pos": ""
+    },
+    "sarveṣām": {
+      "lemma": "sarva",
+      "pos": "Gen Plur Masc"
+    },
+    "āditya": {
+      "lemma": "āditya",
+      "pos": "Nom Sing Masc"
+    },
+    "sakāśe": {
+      "lemma": "sakāśa",
+      "pos": "Loc Sing Masc"
+    },
+    "tvāṃ": {
+      "lemma": "tvad",
+      "pos": "Acc Sing"
+    },
+    "kathayiṣyāmi": {
+      "lemma": "kathay",
+      "pos": "Sing p1 Fut Ind"
+    },
+    "naiṣadha": {
+      "lemma": "naiṣadha",
+      "pos": "Voc Sing Masc"
+    },
+    "tvad": {
+      "lemma": "tvad",
+      "pos": "Cpd"
+    },
+    "anyam": {
+      "lemma": "anya",
+      "pos": "Acc Sing Masc"
+    },
+    "puruṣaṃ": {
+      "lemma": "puruṣa",
+      "pos": "Acc Sing Masc"
+    },
+    "sā": {
+      "lemma": "tad",
+      "pos": "Nom Sing Fem"
+    },
+    "maṃsyati": {
+      "lemma": "man",
+      "pos": "Sing p3 Fut Ind"
+    },
+    "karhicit": {
+      "lemma": "karhicit",
+      "pos": ""
+    },
+    "evam": {
+      "lemma": "evam",
+      "pos": ""
+    },
+    "uktas": {
+      "lemma": "vac",
+      "pos": "Nom Sing Masc"
+    },
+    "haṃsam": {
+      "lemma": "haṃsa",
+      "pos": "Acc Sing Masc"
+    },
+    "utsasarja": {
+      "lemma": "utsṛj",
+      "pos": "Sing p3 Past Ind"
+    },
+    "mahīpatiḥ": {
+      "lemma": "mahīpati",
+      "pos": "Nom Sing Masc"
+    },
+    "haṃsāḥ": {
+      "lemma": "haṃsa",
+      "pos": "Nom Plur Masc"
+    },
+    "samutpatya": {
+      "lemma": "samutpat",
+      "pos": ""
+    },
+    "vidarbhān": {
+      "lemma": "vidarbha",
+      "pos": "Acc Plur Masc"
+    },
+    "agamaṃs": {
+      "lemma": "gam",
+      "pos": "Plur p3 Past Ind"
+    },
+    "tataḥ": {
+      "lemma": "tatas",
+      "pos": ""
+    },
+    "vidarbha": {
+      "lemma": "vidarbha",
+      "pos": "Cpd"
+    },
+    "nagarīm": {
+      "lemma": "nagarī",
+      "pos": "Acc Sing Fem"
+    },
+    "gatvā": {
+      "lemma": "gam",
+      "pos": ""
+    },
+    "damayantyās": {
+      "lemma": "damayantī",
+      "pos": "Gen Sing Fem"
+    },
+    "antike": {
+      "lemma": "antika",
+      "pos": "Loc Sing Neut"
+    },
+    "nipetus": {
+      "lemma": "nipat",
+      "pos": "Plur p3 Past Ind"
+    },
+    "garutmantaḥ": {
+      "lemma": "garutmant",
+      "pos": "Nom Plur Masc"
+    },
+    "tān": {
+      "lemma": "tad",
+      "pos": "Acc Plur Masc"
+    },
+    "khagān": {
+      "lemma": "khaga",
+      "pos": "Acc Plur Masc"
+    },
+    "adbhuta": {
+      "lemma": "adbhuta",
+      "pos": "Cpd"
+    },
+    "rūpān": {
+      "lemma": "rūpa",
+      "pos": "Acc Plur Masc"
+    },
+    "vai": {
+      "lemma": "vai",
+      "pos": ""
+    },
+    "dṛṣṭvā": {
+      "lemma": "dṛś",
+      "pos": ""
+    },
+    "gaṇa": {
+      "lemma": "gaṇa",
+      "pos": "Cpd"
+    },
+    "āvṛtā": {
+      "lemma": "āvṛ",
+      "pos": "Nom Sing Fem"
+    },
+    "hṛṣṭā": {
+      "lemma": "hṛṣ",
+      "pos": "Nom Sing Fem"
+    },
+    "grahītuṃ": {
+      "lemma": "grah",
+      "pos": ""
+    },
+    "khagamāṃs": {
+      "lemma": "khagama",
+      "pos": "Acc Plur Masc"
+    },
+    "tvaramāṇā": {
+      "lemma": "tvar",
+      "pos": "Nom Sing Fem Pres"
+    },
+    "upacakrame": {
+      "lemma": "upakram",
+      "pos": "Sing p3 Past Ind"
+    },
+    "haṃsā": {
+      "lemma": "haṃsa",
+      "pos": "Nom Plur Masc"
+    },
+    "visasṛpuḥ": {
+      "lemma": "visṛp",
+      "pos": "Plur p3 Past Ind"
+    },
+    "sarvataḥ": {
+      "lemma": "sarvatas",
+      "pos": ""
+    },
+    "pramadā": {
+      "lemma": "pramadā",
+      "pos": "Cpd"
+    },
+    "eka": {
+      "lemma": "eka",
+      "pos": "Cpd"
+    },
+    "ekaśas": {
+      "lemma": "ekaśas",
+      "pos": ""
+    },
+    "kanyās": {
+      "lemma": "kanyā",
+      "pos": "Nom Plur Fem"
+    },
+    "haṃsān": {
+      "lemma": "haṃsa",
+      "pos": "Acc Plur Masc"
+    },
+    "samupādravan": {
+      "lemma": "samupadru",
+      "pos": "Plur p3 Impf Ind"
+    },
+    "yaṃ": {
+      "lemma": "yad",
+      "pos": "Acc Sing Masc"
+    },
+    "haṃsaṃ": {
+      "lemma": "haṃsa",
+      "pos": "Acc Sing Masc"
+    },
+    "samupādhāvad": {
+      "lemma": "samupadhāv",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "mānuṣīṃ": {
+      "lemma": "mānuṣa",
+      "pos": "Acc Sing Fem"
+    },
+    "giraṃ": {
+      "lemma": "gir",
+      "pos": "Acc Sing Fem"
+    },
+    "kṛtvā": {
+      "lemma": "kṛ",
+      "pos": ""
+    },
+    "damayantīm": {
+      "lemma": "damayantī",
+      "pos": "Acc Sing Fem"
+    },
+    "abravīt": {
+      "lemma": "brū",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "damayanti": {
+      "lemma": "damayantī",
+      "pos": "Voc Sing Fem"
+    },
+    "niṣadheṣu": {
+      "lemma": "niṣadha",
+      "pos": "Loc Plur Masc"
+    },
+    "aśvinoḥ": {
+      "lemma": "aśvin",
+      "pos": "Gen Dual Masc"
+    },
+    "sadṛśo": {
+      "lemma": "sadṛśa",
+      "pos": "Nom Sing Masc"
+    },
+    "rūpe": {
+      "lemma": "rūpa",
+      "pos": "Loc Sing Neut"
+    },
+    "samās": {
+      "lemma": "sama",
+      "pos": "Nom Plur Masc"
+    },
+    "tasya": {
+      "lemma": "tad",
+      "pos": "Gen Sing Masc"
+    },
+    "mānuṣāḥ": {
+      "lemma": "mānuṣa",
+      "pos": "Nom Plur Masc"
+    },
+    "yadi": {
+      "lemma": "yadi",
+      "pos": ""
+    },
+    "bhāryā": {
+      "lemma": "bhāryā",
+      "pos": "Nom Sing Fem"
+    },
+    "tvaṃ": {
+      "lemma": "tvad",
+      "pos": "Nom Sing"
+    },
+    "bhavethā": {
+      "lemma": "bhū",
+      "pos": "Sing p2 Pres Opt"
+    },
+    "varavarṇini": {
+      "lemma": "varavarṇinī",
+      "pos": "Voc Sing Fem"
+    },
+    "saphalaṃ": {
+      "lemma": "saphala",
+      "pos": "Nom Sing Neut"
+    },
+    "bhavej": {
+      "lemma": "bhū",
+      "pos": "Sing p3 Pres Opt"
+    },
+    "janma": {
+      "lemma": "janman",
+      "pos": "Nom Sing Neut"
+    },
+    "rūpaṃ": {
+      "lemma": "rūpa",
+      "pos": "Nom Sing Neut"
+    },
+    "idam": {
+      "lemma": "idam",
+      "pos": "Nom Sing Neut"
+    },
+    "sumadhyame": {
+      "lemma": "sumadhyamā",
+      "pos": "Voc Sing Fem"
+    },
+    "vayaṃ": {
+      "lemma": "mad",
+      "pos": "Nom Plur"
+    },
+    "deva": {
+      "lemma": "deva",
+      "pos": "Cpd"
+    },
+    "gandharva": {
+      "lemma": "gandharva",
+      "pos": "Cpd"
+    },
+    "manuṣya": {
+      "lemma": "manuṣya",
+      "pos": "Cpd"
+    },
+    "uraga": {
+      "lemma": "uraga",
+      "pos": "Cpd"
+    },
+    "rākṣasān": {
+      "lemma": "rākṣasa",
+      "pos": "Acc Plur Masc"
+    },
+    "dṛṣṭavanto": {
+      "lemma": "dṛś",
+      "pos": "Nom Plur Masc"
+    },
+    "asmābhiḥ": {
+      "lemma": "mad",
+      "pos": "Ins Plur"
+    },
+    "pūrvaḥ": {
+      "lemma": "pūrva",
+      "pos": "Nom Sing Masc"
+    },
+    "tathāvidhaḥ": {
+      "lemma": "tathāvidha",
+      "pos": "Nom Sing Masc"
+    },
+    "ratnaṃ": {
+      "lemma": "ratna",
+      "pos": "Nom Sing Neut"
+    },
+    "nārīṇāṃ": {
+      "lemma": "nārī",
+      "pos": "Gen Plur Fem"
+    },
+    "nareṣu": {
+      "lemma": "nara",
+      "pos": "Loc Plur Masc"
+    },
+    "varaḥ": {
+      "lemma": "vara",
+      "pos": "Nom Sing Masc"
+    },
+    "viśiṣṭāyā": {
+      "lemma": "viśiṣ",
+      "pos": "Gen Sing Fem"
+    },
+    "viśiṣṭena": {
+      "lemma": "viśiṣ",
+      "pos": "Ins Sing Masc"
+    },
+    "saṃgamo": {
+      "lemma": "saṃgama",
+      "pos": "Nom Sing Masc"
+    },
+    "guṇavān": {
+      "lemma": "guṇavat",
+      "pos": "Nom Sing Masc"
+    },
+    "bhavet": {
+      "lemma": "bhū",
+      "pos": "Sing p3 Pres Opt"
+    },
+    "brahmaṇyo": {
+      "lemma": "brahmaṇya",
+      "pos": "Nom Sing Masc"
+    },
+    "veda": {
+      "lemma": "veda",
+      "pos": "Cpd"
+    },
+    "vid": {
+      "lemma": "vid",
+      "pos": "Nom Sing Masc"
+    },
+    "chūro": {
+      "lemma": "śūra",
+      "pos": "Nom Sing Masc"
+    },
+    "akṣa": {
+      "lemma": "akṣa",
+      "pos": "Cpd"
+    },
+    "priyaḥ": {
+      "lemma": "priya",
+      "pos": "Nom Sing Masc"
+    },
+    "satya": {
+      "lemma": "satya",
+      "pos": "Cpd"
+    },
+    "vādī": {
+      "lemma": "vādin",
+      "pos": "Nom Sing Masc"
+    },
+    "mahān": {
+      "lemma": "mahat",
+      "pos": "Nom Sing Masc"
+    },
+    "akṣauhiṇī": {
+      "lemma": "akṣauhiṇī",
+      "pos": "Cpd"
+    },
+    "patiḥ": {
+      "lemma": "pati",
+      "pos": "Nom Sing Masc"
+    },
+    "uktā": {
+      "lemma": "vac",
+      "pos": "Nom Sing Fem"
+    },
+    "haṃsena": {
+      "lemma": "haṃsa",
+      "pos": "Ins Sing Masc"
+    },
+    "viśāṃ": {
+      "lemma": "viś",
+      "pos": "Gen Plur Fem"
+    },
+    "pate": {
+      "lemma": "pati",
+      "pos": "Voc Sing Masc"
+    },
+    "taṃ": {
+      "lemma": "tad",
+      "pos": "Acc Sing Masc"
+    },
+    "tam": {
+      "lemma": "tad",
+      "pos": "Acc Sing Masc"
+    },
+    "apy": {
+      "lemma": "api",
+      "pos": ""
+    },
+    "evaṃ": {
+      "lemma": "evam",
+      "pos": ""
+    },
+    "vada": {
+      "lemma": "vad",
+      "pos": "Sing p2 Pres Imp"
+    },
+    "iti": {
+      "lemma": "iti",
+      "pos": ""
+    },
+    "uktvā": {
+      "lemma": "vac",
+      "pos": ""
+    },
+    "aṇḍajaḥ": {
+      "lemma": "aṇḍaja",
+      "pos": "Nom Sing Masc"
+    },
+    "kanyāṃ": {
+      "lemma": "kanyā",
+      "pos": "Acc Sing Fem"
+    },
+    "vaidarbhasya": {
+      "lemma": "vaidarbha",
+      "pos": "Gen Sing Masc"
+    },
+    "punar": {
+      "lemma": "punar",
+      "pos": ""
+    },
+    "āgamya": {
+      "lemma": "āgam",
+      "pos": ""
+    },
+    "niṣadhān": {
+      "lemma": "niṣadha",
+      "pos": "Acc Plur Masc"
+    },
+    "nale": {
+      "lemma": "nala",
+      "pos": "Loc Sing Masc"
+    },
+    "sarvaṃ": {
+      "lemma": "sarva",
+      "pos": "Acc Sing Neut"
+    },
+    "nyavedayat": {
+      "lemma": "niveday",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "īpsito": {
+      "lemma": "īpsita",
+      "pos": "Nom Sing Masc"
+    },
+    "vara": {
+      "lemma": "vara",
+      "pos": "Cpd"
+    },
+    "nārīṇām": {
+      "lemma": "nārī",
+      "pos": "Gen Plur Fem"
+    },
+    "udāraḥ": {
+      "lemma": "udāra",
+      "pos": "Nom Sing Masc"
+    },
+    "saṃyata": {
+      "lemma": "saṃyam",
+      "pos": "Cpd"
+    },
+    "indriyaḥ": {
+      "lemma": "indriya",
+      "pos": "Nom Sing Masc"
+    },
+    "rakṣitā": {
+      "lemma": "rakṣitṛ",
+      "pos": "Nom Sing Masc"
+    },
+    "dhanvināṃ": {
+      "lemma": "dhanvin",
+      "pos": "Gen Plur Masc"
+    },
+    "śreṣṭhaḥ": {
+      "lemma": "śreṣṭha",
+      "pos": "Nom Sing Masc"
+    },
+    "sākṣād": {
+      "lemma": "sākṣāt",
+      "pos": ""
+    },
+    "manuḥ": {
+      "lemma": "manu",
+      "pos": "Nom Sing Masc"
+    },
+    "eva": {
+      "lemma": "eva",
+      "pos": ""
+    },
+    "āsīt": {
+      "lemma": "as",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "vidarbheṣu": {
+      "lemma": "vidarbha",
+      "pos": "Loc Plur Masc"
+    },
+    "bhīmo": {
+      "lemma": "bhīma",
+      "pos": "Nom Sing Masc"
+    },
+    "bhīma": {
+      "lemma": "bhīma",
+      "pos": "Cpd"
+    },
+    "parākramaḥ": {
+      "lemma": "parākrama",
+      "pos": "Nom Sing Masc"
+    },
+    "śūraḥ": {
+      "lemma": "śūra",
+      "pos": "Nom Sing Masc"
+    },
+    "guṇaiḥ": {
+      "lemma": "guṇa",
+      "pos": "Ins Plur Masc"
+    },
+    "yuktaḥ": {
+      "lemma": "yuj",
+      "pos": "Nom Sing Masc"
+    },
+    "prajā": {
+      "lemma": "prajā",
+      "pos": "Cpd"
+    },
+    "aprajaḥ": {
+      "lemma": "apraja",
+      "pos": "Nom Sing Masc"
+    },
+    "arthe": {
+      "lemma": "artha",
+      "pos": "Loc Sing Masc"
+    },
+    "paraṃ": {
+      "lemma": "para",
+      "pos": "Acc Sing Masc"
+    },
+    "yatnam": {
+      "lemma": "yatna",
+      "pos": "Acc Sing Masc"
+    },
+    "akarot": {
+      "lemma": "kṛ",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "su": {
+      "lemma": "su",
+      "pos": ""
+    },
+    "samāhitaḥ": {
+      "lemma": "samāhita",
+      "pos": "Nom Sing Masc"
+    },
+    "abhyagacchad": {
+      "lemma": "abhigam",
+      "pos": "Sing p3 Impf Ind"
+    },
+    "brahma": {
+      "lemma": "brahman",
+      "pos": "Cpd"
+    },
+    "ṛṣiḥ": {
+      "lemma": "ṛṣi",
+      "pos": "Nom Sing Masc"
+    },
+    "damano": {
+      "lemma": "damana",
+      "pos": "Nom Sing Masc"
+    },
+    "bhārata": {
+      "lemma": "bhārata",
+      "pos": "Voc Sing Masc"
+    },
+    "bhīmaḥ": {
+      "lemma": "bhīma",
+      "pos": "Nom Sing Masc"
+    },
+    "toṣayāmāsa": {
+      "lemma": "toṣay",
+      "pos": "Sing p3 Past Ind"
+    },
+    "dharma": {
+      "lemma": "dharma",
+      "pos": "Cpd"
+    },
+    "mahiṣyā": {
+      "lemma": "mahiṣī",
+      "pos": "Ins Sing Fem"
+    },
+    "saha": {
+      "lemma": "saha",
+      "pos": ""
+    },
+    "rāja": {
+      "lemma": "rājan",
+      "pos": "Cpd"
+    },
+    "indraiḥ": {
+      "lemma": "indra",
+      "pos": "Voc Sing Masc"
+    },
+    "satkāreṇa": {
+      "lemma": "satkāra",
+      "pos": "Ins Sing Masc"
+    },
+    "varcasam": {
+      "lemma": "varcas",
+      "pos": "Acc Sing Masc"
+    },
+    "tasmai": {
+      "lemma": "tad",
+      "pos": "Dat Sing Masc"
+    },
+    "prasanno": {
+      "lemma": "prasad",
+      "pos": "Nom Sing Masc"
+    },
+    "damanaḥ": {
+      "lemma": "damana",
+      "pos": "Nom Sing Masc"
+    },
+    "bhāryāya": {
+      "lemma": "bhāryā",
+      "pos": "Dat Sing Masc"
+    },
+    "varaṃ": {
+      "lemma": "vara",
+      "pos": "Acc Sing Masc"
+    },
+    "dadau": {
+      "lemma": "dā",
+      "pos": "Sing p3 Past Ind"
+    },
+    "kanyā": {
+      "lemma": "kanyā",
+      "pos": "Cpd"
+    },
+    "ratnam": {
+      "lemma": "ratna",
+      "pos": "Acc Sing Neut"
+    },
+    "kumārāṃś": {
+      "lemma": "kumāra",
+      "pos": "Acc Plur Masc"
+    },
+    "trīn": {
+      "lemma": "tri",
+      "pos": "Acc Plur Masc"
+    },
+    "udārān": {
+      "lemma": "udāra",
+      "pos": "Acc Plur Masc"
+    },
+    "mahā": {
+      "lemma": "mahat",
+      "pos": "Cpd"
+    },
+    "yaśāḥ": {
+      "lemma": "yaśas",
+      "pos": "Nom Sing Masc"
+    },
+    "damaṃ": {
+      "lemma": "dama",
+      "pos": "Acc Sing Masc"
+    },
+    "dāntaṃ": {
+      "lemma": "dānta",
+      "pos": "Acc Sing Masc"
+    },
+    "damanaṃ": {
+      "lemma": "damana",
+      "pos": "Acc Sing Masc"
+    },
+    "suvarcasam": {
+      "lemma": "suvarcas",
+      "pos": "Acc Sing Masc"
+    },
+    "upapannān": {
+      "lemma": "upapad",
+      "pos": "Acc Plur Masc"
+    },
+    "sarvair": {
+      "lemma": "sarva",
+      "pos": "Ins Plur Masc"
+    },
+    "bhīmān": {
+      "lemma": "bhīma",
+      "pos": "Acc Plur Masc"
+    },
+    "parākramān": {
+      "lemma": "parākrama",
+      "pos": "Acc Plur Masc"
+    }
+  }
+}
