@@ -25,7 +25,7 @@ class CampaignHtmlRendererTest extends TestCase
             'pixel_token' => 'the-token',
         ]);
 
-        $rendered = (new CampaignHtmlRenderer())->render($campaign->body_html, $recipient);
+        $rendered = (new CampaignHtmlRenderer)->render($campaign->body_html, $recipient);
 
         $this->assertStringContainsString('/e/c/the-token/', $rendered);
         $this->assertStringNotContainsString('href="https://example.com/course"', $rendered);
@@ -45,7 +45,7 @@ class CampaignHtmlRendererTest extends TestCase
             'pixel_token' => 'tok2',
         ]);
 
-        $rendered = (new CampaignHtmlRenderer())->render($campaign->body_html, $recipient);
+        $rendered = (new CampaignHtmlRenderer)->render($campaign->body_html, $recipient);
 
         $this->assertStringContainsString('href="mailto:hi@example.com"', $rendered);
     }

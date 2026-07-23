@@ -25,7 +25,7 @@ class EnforceMailSendingGuardsTest extends TestCase
 
     private function eventFor(string ...$recipients): MessageSending
     {
-        $email = new Email();
+        $email = new Email;
         foreach ($recipients as $recipient) {
             $email->addTo($recipient);
         }
@@ -39,7 +39,7 @@ class EnforceMailSendingGuardsTest extends TestCase
         SuppressedEmail::suppress('bounced@example.com', 'hard_bounce');
         RateLimiter::clear('mail-send-throttle');
 
-        $result = (new EnforceMailSendingGuards())->handle($this->eventFor('bounced@example.com'));
+        $result = (new EnforceMailSendingGuards)->handle($this->eventFor('bounced@example.com'));
 
         $this->assertFalse($result);
     }
@@ -48,7 +48,7 @@ class EnforceMailSendingGuardsTest extends TestCase
     {
         RateLimiter::clear('mail-send-throttle');
 
-        $result = (new EnforceMailSendingGuards())->handle($this->eventFor('fine@example.com'));
+        $result = (new EnforceMailSendingGuards)->handle($this->eventFor('fine@example.com'));
 
         $this->assertTrue($result);
     }
@@ -58,7 +58,7 @@ class EnforceMailSendingGuardsTest extends TestCase
         config(['mail.throttle_per_minute' => 2]);
         RateLimiter::clear('mail-send-throttle');
 
-        $guard = new EnforceMailSendingGuards();
+        $guard = new EnforceMailSendingGuards;
 
         $this->assertTrue($guard->handle($this->eventFor('a@example.com')));
         $this->assertTrue($guard->handle($this->eventFor('b@example.com')));

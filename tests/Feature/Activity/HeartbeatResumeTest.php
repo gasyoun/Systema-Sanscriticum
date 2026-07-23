@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use App\Models\LessonView;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -108,7 +109,7 @@ class HeartbeatResumeTest extends TestCase
     /** @test */
     public function migration_is_additive_and_existing_lesson_view_columns_are_untouched(): void
     {
-        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumns('lesson_views', [
+        $this->assertTrue(Schema::hasColumns('lesson_views', [
             'open_count',
             'total_time_on_page',
             'is_completed',
