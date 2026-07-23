@@ -14,6 +14,12 @@ _Created: 07-07-2026 · Last updated: 23-07-2026_
 > [`docs/support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) —
 > and product framing — [`docs/jivo.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md) —
 > are companions to this file; read both before implementing any ticket below.
+>
+> **Lecture-sourced content engine (23-07-2026):** weekly video/transcript/timecode products
+> (clips → social → FAQ → long-form → study) are planned under the umbrella
+> [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+> That plan reuses CAI4–7 shapes but **does not take CAI3 support-gaps as wave-1 input**
+> (lecture-only data ruling). Keep this file for public-comment inbox + support-gap signal.
 
 **Origin:** comparison request 07-07-2026 (postmypost.io/ru/inbox vs. Systema's existing
 messenger-support-chat slice) → `/roadmap-interview` session (Sonnet 5 `claude-sonnet-5`),
@@ -277,13 +283,5 @@ Dependency chain: **S2 (SUP roadmap) → CAI3 → CAI4 → CAI5/CAI6 → CAI7**;
   same session as this roadmap.
 - Pointer added to `docs/ROADMAP_2026_2027.md`'s specialized-roadmaps table (§ header) alongside
   the SUPPORT_AUTOMATION/SRS/SEO/SECURITY/PRANA rows.
-- **Related (not this roadmap's tickets):** Anton ops-gaps Wave 4 clip pipeline (H1452) —
-  n8n/ffmpeg lecture fragments → VK Video/Clips, recorded as `LectureClip`, free-3 staff
-  surface. Implementation:
-  [`docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md);
-  n8n JSON:
-  [`docs/n8n/lecture-clip-extract.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/lecture-clip-extract.workflow.json).
-  Distinct from the weekly content-gap AI drafts above — that stream drafts FAQ/social
-  *text*; H1452 reuses existing lecture *video* timecodes as cut boundaries.
 
 _Dr. Mārcis Gasūns_

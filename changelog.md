@@ -20,6 +20,14 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   Kinescope — reuses W2 `video-resume.js` kinescope adapter. Comparison memo
   `docs/KINESCOPE_PILOT_COMPARISON_2026.md`; DEPLOY_QUEUE №48.
   **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override).
+- **n8n lecture content engine plan (H2 2026).** Layered `/ask` plan for turning weekly
+  lecture video + transcript + AI timecodes into five sequenced products (clips → social
+  text → FAQ → long-form → student materials) under one `ContentCandidate` backbone,
+  reusing H1452 clip plumbing and CuratorAi. Docs:
+  [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
+  + ROADMAP / ARCHITECTURE / IMPLEMENTATION / VERIFICATION + metadoc. Cross-linked from
+  Content-AI and Anton ops-gaps plans. Execution handoffs H1547–H1551 (Uprava).
+  Grok 4.5 (`grok-4.5`).
 - **Sanskrit-HUB L5 Workstream-A v0 — `/transliterate` + cascade lemmatizer (H1463).**
   Flag `hub_transliterate` / `HUB_TRANSLITERATE` (OFF by default):
   `GET /transliterate` playground (IAST → Devanāgarī + SLP1 via vendored
