@@ -8,6 +8,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/css/article.css', // ← стили страницы статьи
+                'resources/js/transliterate.js', // ← плейграунд /transliterate (H1463)
             ],
             refresh: true,
         }),

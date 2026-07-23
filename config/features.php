@@ -155,6 +155,20 @@ return [
     'kosha_reader' => (bool) env('KOSHA_READER', false),
 
     /*
+     | Sanskrit-HUB L5 workstream A, v0 (H1463): плейграунд транслитерации
+     | /transliterate. Когда ВКЛ, маршрут рендерит клиентский конвертер
+     | IAST→деванагари+SLP1 на ВЕНДОРНОМ транскодере sanskrit-util
+     | (resources/js/vendor/sanskrit-util.js — канонический sanskrit-lexicon/
+     | sanskrit-util, НЕ самописная таблица; путь to_slp1→slp1_to_devanagari).
+     | ВЫКЛ по умолчанию — маршрут отвечает 404, ровно как /slovar до Wave 0.
+     | Тот же deploy-рубильник, что и kosha_reader. Снятие noindex и индексация
+     | /transliterate — прод-шаг человека, этим флагом не управляется. Каскадный
+     | лемматизатор (App\Services\Nlp\CascadeLemmatizer) — внутренний, без
+     | маршрута, этим флагом не гейтится.
+     */
+    'hub_transliterate' => (bool) env('HUB_TRANSLITERATE', false),
+
+    /*
      | RQ4 user study (H987, SanskritGrammar docs/RQ4_EVALUATION_PROTOCOL_2026.md):
      | on-ramp-first vs Талмуд-first learning-gain/retention study. Когда ВКЛ,
      | /rq4-study открывает согласие+анкету → распределение по группам

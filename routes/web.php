@@ -33,6 +33,7 @@ use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ReadingPackController;
+use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
@@ -258,6 +259,14 @@ Route::prefix('slovar')->name('slovar.')->group(function () {
 // ═══════════════════════════════════════════════════════════════
 Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
     ->name('reading.kosha-demo');
+
+// ═══════════════════════════════════════════════════════════════
+// ТРАНСЛИТЕРАЦИЯ (Sanskrit-HUB L5 workstream A, v0 — H1463). Клиентский
+// плейграунд IAST→деванагари+SLP1 на вендорном sanskrit-util. За фича-флагом
+// features.hub_transliterate, ВЫКЛ по умолчанию (404 пока не включен).
+// ═══════════════════════════════════════════════════════════════
+Route::get('/transliterate', [TransliterateController::class, 'show'])
+    ->name('hub.transliterate');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {

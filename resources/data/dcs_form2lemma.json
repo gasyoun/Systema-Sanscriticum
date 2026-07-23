@@ -1,0 +1,7347 @@
+{
+ "source": "DCS form2lemma (E27)",
+ "provenance": {
+  "handoff": "H1463",
+  "stage": "dcs (cascade stage 1 of 3; vidyut/heritage stages stubbed in v0)",
+  "bulk_source": "kosha data/concordance/morph_attest_AG.tsv (DCS E27, 401369 rows, CC BY 4.0) — strided real slice",
+  "demo_source": "resources/data/kosha_reading_pack_nala_1.json (kosha dcs-reading-pack-nala-1) — supplies UPOS + coherent reader overlap",
+  "key_convention": "SanskritGlossary::normalizeKey() — NFC + trim + lower-case on the IAST surface form",
+  "license": "DCS is CC BY 4.0; this derivative slice ships under the same terms",
+  "note": "v0 stage-1 slice, NOT full E27 coverage; the KPI is a form resolved end-to-end, not full recall."
+ },
+ "counts": {
+  "total": 2329,
+  "from_reading_pack": 341,
+  "from_e27_slice": 1988
+ },
+ "entries": {
+  "bṛhadaśva": {
+   "lemma": "bṛhadaśva",
+   "pos": "NOUN"
+  },
+  "uvāca": {
+   "lemma": "vac",
+   "pos": "VERB"
+  },
+  "āsīd": {
+   "lemma": "as",
+   "pos": "VERB"
+  },
+  "rājā": {
+   "lemma": "rājan",
+   "pos": "NOUN"
+  },
+  "nalo": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "nāma": {
+   "lemma": "nāma",
+   "pos": "ADV"
+  },
+  "vīrasena": {
+   "lemma": "vīrasena",
+   "pos": "NOUN"
+  },
+  "sutaḥ": {
+   "lemma": "suta",
+   "pos": "NOUN"
+  },
+  "balī": {
+   "lemma": "balin",
+   "pos": "ADJ"
+  },
+  "upapanno": {
+   "lemma": "upapad",
+   "pos": "VERB"
+  },
+  "guṇair": {
+   "lemma": "guṇa",
+   "pos": "NOUN"
+  },
+  "iṣṭai": {
+   "lemma": "iṣ",
+   "pos": "VERB"
+  },
+  "rūpavān": {
+   "lemma": "rūpavat",
+   "pos": "ADJ"
+  },
+  "aśva": {
+   "lemma": "aśva",
+   "pos": "NOUN"
+  },
+  "kovidaḥ": {
+   "lemma": "kovida",
+   "pos": "ADJ"
+  },
+  "damayantī": {
+   "lemma": "damayantī",
+   "pos": "NOUN"
+  },
+  "tu": {
+   "lemma": "tu",
+   "pos": "PART"
+  },
+  "rūpeṇa": {
+   "lemma": "rūpa",
+   "pos": "NOUN"
+  },
+  "tejasā": {
+   "lemma": "tejas",
+   "pos": "NOUN"
+  },
+  "yaśasā": {
+   "lemma": "yaśas",
+   "pos": "NOUN"
+  },
+  "śriyā": {
+   "lemma": "śrī",
+   "pos": "NOUN"
+  },
+  "saubhāgyena": {
+   "lemma": "saubhāgya",
+   "pos": "NOUN"
+  },
+  "ca": {
+   "lemma": "ca",
+   "pos": "CONJ"
+  },
+  "lokeṣu": {
+   "lemma": "loka",
+   "pos": "NOUN"
+  },
+  "yaśaḥ": {
+   "lemma": "yaśas",
+   "pos": "NOUN"
+  },
+  "prāpa": {
+   "lemma": "prāp",
+   "pos": "VERB"
+  },
+  "sumadhyamā": {
+   "lemma": "sumadhyamā",
+   "pos": "NOUN"
+  },
+  "atha": {
+   "lemma": "atha",
+   "pos": "ADV"
+  },
+  "tāṃ": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "vayasi": {
+   "lemma": "vayas",
+   "pos": "NOUN"
+  },
+  "prāpte": {
+   "lemma": "prāp",
+   "pos": "VERB"
+  },
+  "dāsīnāṃ": {
+   "lemma": "dāsī",
+   "pos": "NOUN"
+  },
+  "samalaṃkṛtām": {
+   "lemma": "samalaṃkṛ",
+   "pos": "VERB"
+  },
+  "śataṃ": {
+   "lemma": "śata",
+   "pos": "NUM"
+  },
+  "sakhīnāṃ": {
+   "lemma": "sakhī",
+   "pos": "NOUN"
+  },
+  "tathā": {
+   "lemma": "tathā",
+   "pos": "ADV"
+  },
+  "paryupāste": {
+   "lemma": "paryupās",
+   "pos": "VERB"
+  },
+  "śacīm": {
+   "lemma": "śacī",
+   "pos": "NOUN"
+  },
+  "iva": {
+   "lemma": "iva",
+   "pos": "PART"
+  },
+  "tatra": {
+   "lemma": "tatra",
+   "pos": "ADV"
+  },
+  "sma": {
+   "lemma": "sma",
+   "pos": "PART"
+  },
+  "bhrājate": {
+   "lemma": "bhrāj",
+   "pos": "VERB"
+  },
+  "bhaimī": {
+   "lemma": "bhaimī",
+   "pos": "NOUN"
+  },
+  "sarva": {
+   "lemma": "sarva",
+   "pos": "PRON"
+  },
+  "ābharaṇa": {
+   "lemma": "ābharaṇa",
+   "pos": "NOUN"
+  },
+  "bhūṣitā": {
+   "lemma": "bhūṣay",
+   "pos": "VERB"
+  },
+  "sakhī": {
+   "lemma": "sakhī",
+   "pos": "NOUN"
+  },
+  "madhye": {
+   "lemma": "madhya",
+   "pos": "NOUN"
+  },
+  "anavadya": {
+   "lemma": "anavadya",
+   "pos": "ADJ"
+  },
+  "aṅgā": {
+   "lemma": "aṅga",
+   "pos": "ADJ"
+  },
+  "vidyut": {
+   "lemma": "vidyut",
+   "pos": "NOUN"
+  },
+  "saudāmanī": {
+   "lemma": "saudāmanī",
+   "pos": "NOUN"
+  },
+  "yathā": {
+   "lemma": "yathā",
+   "pos": "PART"
+  },
+  "atīva": {
+   "lemma": "atīva",
+   "pos": "ADV"
+  },
+  "rūpa": {
+   "lemma": "rūpa",
+   "pos": "NOUN"
+  },
+  "sampannā": {
+   "lemma": "sampad",
+   "pos": "VERB"
+  },
+  "śrīr": {
+   "lemma": "śrī",
+   "pos": "NOUN"
+  },
+  "āyata": {
+   "lemma": "āyam",
+   "pos": "VERB"
+  },
+  "locanā": {
+   "lemma": "locana",
+   "pos": "NOUN"
+  },
+  "na": {
+   "lemma": "na",
+   "pos": "PART"
+  },
+  "deveṣu": {
+   "lemma": "deva",
+   "pos": "NOUN"
+  },
+  "yakṣeṣu": {
+   "lemma": "yakṣa",
+   "pos": "NOUN"
+  },
+  "tādṛg": {
+   "lemma": "tādṛś",
+   "pos": "ADJ"
+  },
+  "rūpavatī": {
+   "lemma": "rūpavat",
+   "pos": "ADJ"
+  },
+  "kvacit": {
+   "lemma": "kvacid",
+   "pos": "ADV"
+  },
+  "mānuṣeṣv": {
+   "lemma": "mānuṣa",
+   "pos": "NOUN"
+  },
+  "api": {
+   "lemma": "api",
+   "pos": "PART"
+  },
+  "anyeṣu": {
+   "lemma": "anya",
+   "pos": "PRON"
+  },
+  "dṛṣṭa": {
+   "lemma": "dṛś",
+   "pos": "VERB"
+  },
+  "pūrvā": {
+   "lemma": "pūrva",
+   "pos": "PRON"
+  },
+  "śrutā": {
+   "lemma": "śru",
+   "pos": "VERB"
+  },
+  "citta": {
+   "lemma": "citta",
+   "pos": "NOUN"
+  },
+  "pramāthinī": {
+   "lemma": "pramāthin",
+   "pos": "ADJ"
+  },
+  "bālā": {
+   "lemma": "bāla",
+   "pos": "ADJ"
+  },
+  "devānām": {
+   "lemma": "deva",
+   "pos": "NOUN"
+  },
+  "sundarī": {
+   "lemma": "sundara",
+   "pos": "ADJ"
+  },
+  "nalaś": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "nara": {
+   "lemma": "nara",
+   "pos": "NOUN"
+  },
+  "śārdūlaḥ": {
+   "lemma": "śārdūla",
+   "pos": "NOUN"
+  },
+  "apratimaḥ": {
+   "lemma": "apratima",
+   "pos": "ADJ"
+  },
+  "bhuvi": {
+   "lemma": "bhū",
+   "pos": "NOUN"
+  },
+  "kandarpa": {
+   "lemma": "kandarpa",
+   "pos": "NOUN"
+  },
+  "mūrtimān": {
+   "lemma": "mūrtimat",
+   "pos": "ADJ"
+  },
+  "abhavat": {
+   "lemma": "bhū",
+   "pos": "VERB"
+  },
+  "svayam": {
+   "lemma": "svayam",
+   "pos": "ADV"
+  },
+  "tasyāḥ": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "samīpe": {
+   "lemma": "samīpa",
+   "pos": "NOUN"
+  },
+  "nalaṃ": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "praśaśaṃsuḥ": {
+   "lemma": "praśaṃs",
+   "pos": "VERB"
+  },
+  "kutūhalāt": {
+   "lemma": "kutūhala",
+   "pos": "NOUN"
+  },
+  "naiṣadhasya": {
+   "lemma": "naiṣadha",
+   "pos": "NOUN"
+  },
+  "damayantīṃ": {
+   "lemma": "damayantī",
+   "pos": "NOUN"
+  },
+  "punaḥ": {
+   "lemma": "punar",
+   "pos": "ADV"
+  },
+  "tayor": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "adṛṣṭa": {
+   "lemma": "adṛṣṭa",
+   "pos": "ADJ"
+  },
+  "kāmaḥ": {
+   "lemma": "kāma",
+   "pos": "NOUN"
+  },
+  "'bhūc": {
+   "lemma": "bhū",
+   "pos": "VERB"
+  },
+  "chṛṇvatoḥ": {
+   "lemma": "śru",
+   "pos": "VERB"
+  },
+  "satataṃ": {
+   "lemma": "satatam",
+   "pos": "ADV"
+  },
+  "guṇān": {
+   "lemma": "guṇa",
+   "pos": "NOUN"
+  },
+  "anyonyaṃ": {
+   "lemma": "anyonya",
+   "pos": "PRON"
+  },
+  "prati": {
+   "lemma": "prati",
+   "pos": "ADP"
+  },
+  "kaunteya": {
+   "lemma": "kaunteya",
+   "pos": "NOUN"
+  },
+  "sa": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "vyavardhata": {
+   "lemma": "vivṛdh",
+   "pos": "VERB"
+  },
+  "hṛcchayaḥ": {
+   "lemma": "hṛcchaya",
+   "pos": "NOUN"
+  },
+  "a": {
+   "lemma": "a",
+   "pos": "PART"
+  },
+  "śaknuvan": {
+   "lemma": "śak",
+   "pos": "VERB"
+  },
+  "nalaḥ": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "kāmaṃ": {
+   "lemma": "kāma",
+   "pos": "NOUN"
+  },
+  "tadā": {
+   "lemma": "tadā",
+   "pos": "ADV"
+  },
+  "dhārayituṃ": {
+   "lemma": "dhāray",
+   "pos": "VERB"
+  },
+  "hṛdā": {
+   "lemma": "hṛd",
+   "pos": "NOUN"
+  },
+  "antaḥpura": {
+   "lemma": "antaḥpura",
+   "pos": "NOUN"
+  },
+  "samīpa": {
+   "lemma": "samīpa",
+   "pos": "NOUN"
+  },
+  "sthe": {
+   "lemma": "stha",
+   "pos": "ADJ"
+  },
+  "vana": {
+   "lemma": "vana",
+   "pos": "NOUN"
+  },
+  "āste": {
+   "lemma": "ās",
+   "pos": "VERB"
+  },
+  "rahas": {
+   "lemma": "rahas",
+   "pos": "NOUN"
+  },
+  "gataḥ": {
+   "lemma": "gam",
+   "pos": "VERB"
+  },
+  "dadarśa": {
+   "lemma": "dṛś",
+   "pos": "VERB"
+  },
+  "haṃsāñ": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "jātarūpa": {
+   "lemma": "jātarūpa",
+   "pos": "NOUN"
+  },
+  "paricchadān": {
+   "lemma": "paricchada",
+   "pos": "NOUN"
+  },
+  "vane": {
+   "lemma": "vana",
+   "pos": "NOUN"
+  },
+  "vicaratāṃ": {
+   "lemma": "vicar",
+   "pos": "VERB"
+  },
+  "teṣām": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "ekaṃ": {
+   "lemma": "eka",
+   "pos": "NUM"
+  },
+  "jagrāha": {
+   "lemma": "grah",
+   "pos": "VERB"
+  },
+  "pakṣiṇam": {
+   "lemma": "pakṣin",
+   "pos": "NOUN"
+  },
+  "tato": {
+   "lemma": "tatas",
+   "pos": "ADV"
+  },
+  "antarikṣa": {
+   "lemma": "antarikṣa",
+   "pos": "NOUN"
+  },
+  "gaḥ": {
+   "lemma": "ga",
+   "pos": "ADJ"
+  },
+  "vācaṃ": {
+   "lemma": "vāc",
+   "pos": "NOUN"
+  },
+  "vyājahāra": {
+   "lemma": "vyāhṛ",
+   "pos": "VERB"
+  },
+  "nalam": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "hantavyo": {
+   "lemma": "han",
+   "pos": "VERB"
+  },
+  "'smi": {
+   "lemma": "as",
+   "pos": "VERB"
+  },
+  "te": {
+   "lemma": "tvad",
+   "pos": "PRON"
+  },
+  "rājan": {
+   "lemma": "rājan",
+   "pos": "NOUN"
+  },
+  "kariṣyāmi": {
+   "lemma": "kṛ",
+   "pos": "VERB"
+  },
+  "hi": {
+   "lemma": "hi",
+   "pos": "PART"
+  },
+  "priyam": {
+   "lemma": "priya",
+   "pos": "NOUN"
+  },
+  "atiṣṭhan": {
+   "lemma": "sthā",
+   "pos": "VERB"
+  },
+  "manuja": {
+   "lemma": "manuja",
+   "pos": "NOUN"
+  },
+  "indrāṇām": {
+   "lemma": "indra",
+   "pos": "NOUN"
+  },
+  "mūrdhni": {
+   "lemma": "mūrdhan",
+   "pos": "NOUN"
+  },
+  "devapatir": {
+   "lemma": "devapati",
+   "pos": "NOUN"
+  },
+  "upary": {
+   "lemma": "upari",
+   "pos": "ADV"
+  },
+  "upari": {
+   "lemma": "upari",
+   "pos": "ADV"
+  },
+  "sarveṣām": {
+   "lemma": "sarva",
+   "pos": "PRON"
+  },
+  "āditya": {
+   "lemma": "āditya",
+   "pos": "NOUN"
+  },
+  "sakāśe": {
+   "lemma": "sakāśa",
+   "pos": "NOUN"
+  },
+  "tvāṃ": {
+   "lemma": "tvad",
+   "pos": "PRON"
+  },
+  "kathayiṣyāmi": {
+   "lemma": "kathay",
+   "pos": "VERB"
+  },
+  "naiṣadha": {
+   "lemma": "naiṣadha",
+   "pos": "NOUN"
+  },
+  "tvad": {
+   "lemma": "tvad",
+   "pos": "PRON"
+  },
+  "anyam": {
+   "lemma": "anya",
+   "pos": "PRON"
+  },
+  "puruṣaṃ": {
+   "lemma": "puruṣa",
+   "pos": "NOUN"
+  },
+  "sā": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "maṃsyati": {
+   "lemma": "man",
+   "pos": "VERB"
+  },
+  "karhicit": {
+   "lemma": "karhicit",
+   "pos": "ADV"
+  },
+  "evam": {
+   "lemma": "evam",
+   "pos": "ADV"
+  },
+  "uktas": {
+   "lemma": "vac",
+   "pos": "VERB"
+  },
+  "haṃsam": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "utsasarja": {
+   "lemma": "utsṛj",
+   "pos": "VERB"
+  },
+  "mahīpatiḥ": {
+   "lemma": "mahīpati",
+   "pos": "NOUN"
+  },
+  "haṃsāḥ": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "samutpatya": {
+   "lemma": "samutpat",
+   "pos": "VERB"
+  },
+  "vidarbhān": {
+   "lemma": "vidarbha",
+   "pos": "NOUN"
+  },
+  "agamaṃs": {
+   "lemma": "gam",
+   "pos": "VERB"
+  },
+  "tataḥ": {
+   "lemma": "tatas",
+   "pos": "ADV"
+  },
+  "vidarbha": {
+   "lemma": "vidarbha",
+   "pos": "NOUN"
+  },
+  "nagarīm": {
+   "lemma": "nagarī",
+   "pos": "NOUN"
+  },
+  "gatvā": {
+   "lemma": "gam",
+   "pos": "VERB"
+  },
+  "damayantyās": {
+   "lemma": "damayantī",
+   "pos": "NOUN"
+  },
+  "antike": {
+   "lemma": "antika",
+   "pos": "NOUN"
+  },
+  "nipetus": {
+   "lemma": "nipat",
+   "pos": "VERB"
+  },
+  "garutmantaḥ": {
+   "lemma": "garutmant",
+   "pos": "NOUN"
+  },
+  "tān": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "khagān": {
+   "lemma": "khaga",
+   "pos": "NOUN"
+  },
+  "adbhuta": {
+   "lemma": "adbhuta",
+   "pos": "ADJ"
+  },
+  "rūpān": {
+   "lemma": "rūpa",
+   "pos": "NOUN"
+  },
+  "vai": {
+   "lemma": "vai",
+   "pos": "PART"
+  },
+  "dṛṣṭvā": {
+   "lemma": "dṛś",
+   "pos": "VERB"
+  },
+  "gaṇa": {
+   "lemma": "gaṇa",
+   "pos": "NOUN"
+  },
+  "āvṛtā": {
+   "lemma": "āvṛ",
+   "pos": "VERB"
+  },
+  "hṛṣṭā": {
+   "lemma": "hṛṣ",
+   "pos": "VERB"
+  },
+  "grahītuṃ": {
+   "lemma": "grah",
+   "pos": "VERB"
+  },
+  "khagamāṃs": {
+   "lemma": "khagama",
+   "pos": "NOUN"
+  },
+  "tvaramāṇā": {
+   "lemma": "tvar",
+   "pos": "VERB"
+  },
+  "upacakrame": {
+   "lemma": "upakram",
+   "pos": "VERB"
+  },
+  "haṃsā": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "visasṛpuḥ": {
+   "lemma": "visṛp",
+   "pos": "VERB"
+  },
+  "sarvataḥ": {
+   "lemma": "sarvatas",
+   "pos": "ADV"
+  },
+  "pramadā": {
+   "lemma": "pramadā",
+   "pos": "NOUN"
+  },
+  "eka": {
+   "lemma": "eka",
+   "pos": "NUM"
+  },
+  "ekaśas": {
+   "lemma": "ekaśas",
+   "pos": "ADV"
+  },
+  "kanyās": {
+   "lemma": "kanyā",
+   "pos": "NOUN"
+  },
+  "haṃsān": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "samupādravan": {
+   "lemma": "samupadru",
+   "pos": "VERB"
+  },
+  "yaṃ": {
+   "lemma": "yad",
+   "pos": "PRON"
+  },
+  "haṃsaṃ": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "samupādhāvad": {
+   "lemma": "samupadhāv",
+   "pos": "VERB"
+  },
+  "mānuṣīṃ": {
+   "lemma": "mānuṣa",
+   "pos": "ADJ"
+  },
+  "giraṃ": {
+   "lemma": "gir",
+   "pos": "NOUN"
+  },
+  "kṛtvā": {
+   "lemma": "kṛ",
+   "pos": "VERB"
+  },
+  "damayantīm": {
+   "lemma": "damayantī",
+   "pos": "NOUN"
+  },
+  "abravīt": {
+   "lemma": "brū",
+   "pos": "VERB"
+  },
+  "damayanti": {
+   "lemma": "damayantī",
+   "pos": "NOUN"
+  },
+  "niṣadheṣu": {
+   "lemma": "niṣadha",
+   "pos": "NOUN"
+  },
+  "aśvinoḥ": {
+   "lemma": "aśvin",
+   "pos": "NOUN"
+  },
+  "sadṛśo": {
+   "lemma": "sadṛśa",
+   "pos": "ADJ"
+  },
+  "rūpe": {
+   "lemma": "rūpa",
+   "pos": "NOUN"
+  },
+  "samās": {
+   "lemma": "sama",
+   "pos": "PRON"
+  },
+  "tasya": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "mānuṣāḥ": {
+   "lemma": "mānuṣa",
+   "pos": "NOUN"
+  },
+  "yadi": {
+   "lemma": "yadi",
+   "pos": "SCONJ"
+  },
+  "bhāryā": {
+   "lemma": "bhāryā",
+   "pos": "NOUN"
+  },
+  "tvaṃ": {
+   "lemma": "tvad",
+   "pos": "PRON"
+  },
+  "bhavethā": {
+   "lemma": "bhū",
+   "pos": "VERB"
+  },
+  "varavarṇini": {
+   "lemma": "varavarṇinī",
+   "pos": "NOUN"
+  },
+  "saphalaṃ": {
+   "lemma": "saphala",
+   "pos": "ADJ"
+  },
+  "bhavej": {
+   "lemma": "bhū",
+   "pos": "VERB"
+  },
+  "janma": {
+   "lemma": "janman",
+   "pos": "NOUN"
+  },
+  "rūpaṃ": {
+   "lemma": "rūpa",
+   "pos": "NOUN"
+  },
+  "idam": {
+   "lemma": "idam",
+   "pos": "PRON"
+  },
+  "sumadhyame": {
+   "lemma": "sumadhyamā",
+   "pos": "NOUN"
+  },
+  "vayaṃ": {
+   "lemma": "mad",
+   "pos": "PRON"
+  },
+  "deva": {
+   "lemma": "deva",
+   "pos": "NOUN"
+  },
+  "gandharva": {
+   "lemma": "gandharva",
+   "pos": "NOUN"
+  },
+  "manuṣya": {
+   "lemma": "manuṣya",
+   "pos": "NOUN"
+  },
+  "uraga": {
+   "lemma": "uraga",
+   "pos": "NOUN"
+  },
+  "rākṣasān": {
+   "lemma": "rākṣasa",
+   "pos": "NOUN"
+  },
+  "dṛṣṭavanto": {
+   "lemma": "dṛś",
+   "pos": "VERB"
+  },
+  "asmābhiḥ": {
+   "lemma": "mad",
+   "pos": "PRON"
+  },
+  "pūrvaḥ": {
+   "lemma": "pūrva",
+   "pos": "PRON"
+  },
+  "tathāvidhaḥ": {
+   "lemma": "tathāvidha",
+   "pos": "ADJ"
+  },
+  "ratnaṃ": {
+   "lemma": "ratna",
+   "pos": "NOUN"
+  },
+  "nārīṇāṃ": {
+   "lemma": "nārī",
+   "pos": "NOUN"
+  },
+  "nareṣu": {
+   "lemma": "nara",
+   "pos": "NOUN"
+  },
+  "varaḥ": {
+   "lemma": "vara",
+   "pos": "ADJ"
+  },
+  "viśiṣṭāyā": {
+   "lemma": "viśiṣ",
+   "pos": "VERB"
+  },
+  "viśiṣṭena": {
+   "lemma": "viśiṣ",
+   "pos": "VERB"
+  },
+  "saṃgamo": {
+   "lemma": "saṃgama",
+   "pos": "NOUN"
+  },
+  "guṇavān": {
+   "lemma": "guṇavat",
+   "pos": "ADJ"
+  },
+  "bhavet": {
+   "lemma": "bhū",
+   "pos": "VERB"
+  },
+  "brahmaṇyo": {
+   "lemma": "brahmaṇya",
+   "pos": "ADJ"
+  },
+  "veda": {
+   "lemma": "veda",
+   "pos": "NOUN"
+  },
+  "vid": {
+   "lemma": "vid",
+   "pos": "ADJ"
+  },
+  "chūro": {
+   "lemma": "śūra",
+   "pos": "NOUN"
+  },
+  "akṣa": {
+   "lemma": "akṣa",
+   "pos": "NOUN"
+  },
+  "priyaḥ": {
+   "lemma": "priya",
+   "pos": "ADJ"
+  },
+  "satya": {
+   "lemma": "satya",
+   "pos": "NOUN"
+  },
+  "vādī": {
+   "lemma": "vādin",
+   "pos": "ADJ"
+  },
+  "mahān": {
+   "lemma": "mahat",
+   "pos": "ADJ"
+  },
+  "akṣauhiṇī": {
+   "lemma": "akṣauhiṇī",
+   "pos": "NOUN"
+  },
+  "patiḥ": {
+   "lemma": "pati",
+   "pos": "NOUN"
+  },
+  "uktā": {
+   "lemma": "vac",
+   "pos": "VERB"
+  },
+  "haṃsena": {
+   "lemma": "haṃsa",
+   "pos": "NOUN"
+  },
+  "viśāṃ": {
+   "lemma": "viś",
+   "pos": "NOUN"
+  },
+  "pate": {
+   "lemma": "pati",
+   "pos": "NOUN"
+  },
+  "taṃ": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "tam": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "apy": {
+   "lemma": "api",
+   "pos": "PART"
+  },
+  "evaṃ": {
+   "lemma": "evam",
+   "pos": "ADV"
+  },
+  "vada": {
+   "lemma": "vad",
+   "pos": "VERB"
+  },
+  "iti": {
+   "lemma": "iti",
+   "pos": "PART"
+  },
+  "uktvā": {
+   "lemma": "vac",
+   "pos": "VERB"
+  },
+  "aṇḍajaḥ": {
+   "lemma": "aṇḍaja",
+   "pos": "NOUN"
+  },
+  "kanyāṃ": {
+   "lemma": "kanyā",
+   "pos": "NOUN"
+  },
+  "vaidarbhasya": {
+   "lemma": "vaidarbha",
+   "pos": "NOUN"
+  },
+  "punar": {
+   "lemma": "punar",
+   "pos": "ADV"
+  },
+  "āgamya": {
+   "lemma": "āgam",
+   "pos": "VERB"
+  },
+  "niṣadhān": {
+   "lemma": "niṣadha",
+   "pos": "NOUN"
+  },
+  "nale": {
+   "lemma": "nala",
+   "pos": "NOUN"
+  },
+  "sarvaṃ": {
+   "lemma": "sarva",
+   "pos": "PRON"
+  },
+  "nyavedayat": {
+   "lemma": "niveday",
+   "pos": "VERB"
+  },
+  "īpsito": {
+   "lemma": "īpsita",
+   "pos": "ADJ"
+  },
+  "vara": {
+   "lemma": "vara",
+   "pos": "ADJ"
+  },
+  "nārīṇām": {
+   "lemma": "nārī",
+   "pos": "NOUN"
+  },
+  "udāraḥ": {
+   "lemma": "udāra",
+   "pos": "ADJ"
+  },
+  "saṃyata": {
+   "lemma": "saṃyam",
+   "pos": "VERB"
+  },
+  "indriyaḥ": {
+   "lemma": "indriya",
+   "pos": "NOUN"
+  },
+  "rakṣitā": {
+   "lemma": "rakṣitṛ",
+   "pos": "ADJ"
+  },
+  "dhanvināṃ": {
+   "lemma": "dhanvin",
+   "pos": "ADJ"
+  },
+  "śreṣṭhaḥ": {
+   "lemma": "śreṣṭha",
+   "pos": "ADJ"
+  },
+  "sākṣād": {
+   "lemma": "sākṣāt",
+   "pos": "ADV"
+  },
+  "manuḥ": {
+   "lemma": "manu",
+   "pos": "NOUN"
+  },
+  "eva": {
+   "lemma": "eva",
+   "pos": "PART"
+  },
+  "āsīt": {
+   "lemma": "as",
+   "pos": "VERB"
+  },
+  "vidarbheṣu": {
+   "lemma": "vidarbha",
+   "pos": "NOUN"
+  },
+  "bhīmo": {
+   "lemma": "bhīma",
+   "pos": "NOUN"
+  },
+  "bhīma": {
+   "lemma": "bhīma",
+   "pos": "ADJ"
+  },
+  "parākramaḥ": {
+   "lemma": "parākrama",
+   "pos": "NOUN"
+  },
+  "śūraḥ": {
+   "lemma": "śūra",
+   "pos": "NOUN"
+  },
+  "guṇaiḥ": {
+   "lemma": "guṇa",
+   "pos": "NOUN"
+  },
+  "yuktaḥ": {
+   "lemma": "yuj",
+   "pos": "VERB"
+  },
+  "prajā": {
+   "lemma": "prajā",
+   "pos": "NOUN"
+  },
+  "aprajaḥ": {
+   "lemma": "apraja",
+   "pos": "ADJ"
+  },
+  "arthe": {
+   "lemma": "artha",
+   "pos": "NOUN"
+  },
+  "paraṃ": {
+   "lemma": "para",
+   "pos": "PRON"
+  },
+  "yatnam": {
+   "lemma": "yatna",
+   "pos": "NOUN"
+  },
+  "akarot": {
+   "lemma": "kṛ",
+   "pos": "VERB"
+  },
+  "su": {
+   "lemma": "su",
+   "pos": "ADV"
+  },
+  "samāhitaḥ": {
+   "lemma": "samāhita",
+   "pos": "ADJ"
+  },
+  "abhyagacchad": {
+   "lemma": "abhigam",
+   "pos": "VERB"
+  },
+  "brahma": {
+   "lemma": "brahman",
+   "pos": "NOUN"
+  },
+  "ṛṣiḥ": {
+   "lemma": "ṛṣi",
+   "pos": "NOUN"
+  },
+  "damano": {
+   "lemma": "damana",
+   "pos": "NOUN"
+  },
+  "bhārata": {
+   "lemma": "bhārata",
+   "pos": "NOUN"
+  },
+  "bhīmaḥ": {
+   "lemma": "bhīma",
+   "pos": "NOUN"
+  },
+  "toṣayāmāsa": {
+   "lemma": "toṣay",
+   "pos": "VERB"
+  },
+  "dharma": {
+   "lemma": "dharma",
+   "pos": "NOUN"
+  },
+  "mahiṣyā": {
+   "lemma": "mahiṣī",
+   "pos": "NOUN"
+  },
+  "saha": {
+   "lemma": "saha",
+   "pos": "ADV"
+  },
+  "rāja": {
+   "lemma": "rājan",
+   "pos": "NOUN"
+  },
+  "indraiḥ": {
+   "lemma": "indra",
+   "pos": "NOUN"
+  },
+  "satkāreṇa": {
+   "lemma": "satkāra",
+   "pos": "NOUN"
+  },
+  "varcasam": {
+   "lemma": "varcas",
+   "pos": "NOUN"
+  },
+  "tasmai": {
+   "lemma": "tad",
+   "pos": "PRON"
+  },
+  "prasanno": {
+   "lemma": "prasad",
+   "pos": "VERB"
+  },
+  "damanaḥ": {
+   "lemma": "damana",
+   "pos": "NOUN"
+  },
+  "bhāryāya": {
+   "lemma": "bhāryā",
+   "pos": "NOUN"
+  },
+  "varaṃ": {
+   "lemma": "vara",
+   "pos": "NOUN"
+  },
+  "dadau": {
+   "lemma": "dā",
+   "pos": "VERB"
+  },
+  "kanyā": {
+   "lemma": "kanyā",
+   "pos": "NOUN"
+  },
+  "ratnam": {
+   "lemma": "ratna",
+   "pos": "NOUN"
+  },
+  "kumārāṃś": {
+   "lemma": "kumāra",
+   "pos": "NOUN"
+  },
+  "trīn": {
+   "lemma": "tri",
+   "pos": "NUM"
+  },
+  "udārān": {
+   "lemma": "udāra",
+   "pos": "ADJ"
+  },
+  "mahā": {
+   "lemma": "mahat",
+   "pos": "ADJ"
+  },
+  "yaśāḥ": {
+   "lemma": "yaśas",
+   "pos": "NOUN"
+  },
+  "damaṃ": {
+   "lemma": "dama",
+   "pos": "NOUN"
+  },
+  "dāntaṃ": {
+   "lemma": "dānta",
+   "pos": "NOUN"
+  },
+  "damanaṃ": {
+   "lemma": "damana",
+   "pos": "NOUN"
+  },
+  "suvarcasam": {
+   "lemma": "suvarcas",
+   "pos": "NOUN"
+  },
+  "upapannān": {
+   "lemma": "upapad",
+   "pos": "VERB"
+  },
+  "sarvair": {
+   "lemma": "sarva",
+   "pos": "PRON"
+  },
+  "bhīmān": {
+   "lemma": "bhīma",
+   "pos": "ADJ"
+  },
+  "parākramān": {
+   "lemma": "parākrama",
+   "pos": "NOUN"
+  },
+  "ā": {
+   "lemma": "ā"
+  },
+  "ābharā": {
+   "lemma": "ābhṛ"
+  },
+  "ābhyaḥ": {
+   "lemma": "idam"
+  },
+  "ādhūnvasva": {
+   "lemma": "ādhū"
+  },
+  "ādhmanadbhiḥ": {
+   "lemma": "ādham"
+  },
+  "ākhaṇaḥ": {
+   "lemma": "ākhaṇa"
+  },
+  "ākhyāyikaiḥ": {
+   "lemma": "ākhyāyikā"
+  },
+  "āṇḍābhyām": {
+   "lemma": "āṇḍa"
+  },
+  "āśaṃsantaḥ": {
+   "lemma": "āśaṃs"
+  },
+  "āśirbhir": {
+   "lemma": "āśis"
+  },
+  "āśrayāśaḥ": {
+   "lemma": "āśrayāśa"
+  },
+  "āśvāsayantī": {
+   "lemma": "āśvāsay"
+  },
+  "āthām": {
+   "lemma": "āthām"
+  },
+  "ācāmen": {
+   "lemma": "ācam"
+  },
+  "ācchinnām": {
+   "lemma": "ācchid"
+  },
+  "ācareyuḥ": {
+   "lemma": "ācar"
+  },
+  "āddhvam": {
+   "lemma": "ās"
+  },
+  "ādahanasya": {
+   "lemma": "ādahana"
+  },
+  "ādiśam": {
+   "lemma": "ādiś"
+  },
+  "ādityās": {
+   "lemma": "āditya"
+  },
+  "ādyāv": {
+   "lemma": "ādya"
+  },
+  "āgamās": {
+   "lemma": "āgama"
+  },
+  "āgatāyāḥ": {
+   "lemma": "āgam"
+  },
+  "āgnimārutena": {
+   "lemma": "āgnimāruta"
+  },
+  "āhūryaḥ": {
+   "lemma": "āhūrya"
+  },
+  "āhatalakṣaṇāḥ": {
+   "lemma": "āhatalakṣaṇa"
+  },
+  "āhriyamāṇānāṃ": {
+   "lemma": "āhṛ"
+  },
+  "āhvayen": {
+   "lemma": "āhvā"
+  },
+  "ājñāteṣu": {
+   "lemma": "ājñā"
+  },
+  "ājyābhyām": {
+   "lemma": "ājya"
+  },
+  "ākāraka": {
+   "lemma": "ākāraka"
+  },
+  "ākarakoṣṭhī": {
+   "lemma": "ākarakoṣṭhī"
+  },
+  "ākrāmasi": {
+   "lemma": "ākram"
+  },
+  "ākrośat": {
+   "lemma": "ākruś"
+  },
+  "ākṣipantaṃ": {
+   "lemma": "ākṣip"
+  },
+  "ālakṣyeta": {
+   "lemma": "ālakṣay"
+  },
+  "āli": {
+   "lemma": "āli"
+  },
+  "ālokitaṃ": {
+   "lemma": "ālokay"
+  },
+  "āmalasārake": {
+   "lemma": "āmalasāraka"
+  },
+  "āmṛśantaḥ": {
+   "lemma": "āmṛś"
+  },
+  "āmuro": {
+   "lemma": "āmur"
+  },
+  "ānakā": {
+   "lemma": "ānaka"
+  },
+  "ānarteṣu": {
+   "lemma": "ānarta"
+  },
+  "āntam": {
+   "lemma": "ānta"
+  },
+  "āpāṇḍu": {
+   "lemma": "āpāṇḍu"
+  },
+  "āpūritam": {
+   "lemma": "āpūray"
+  },
+  "āparāntakaṃ": {
+   "lemma": "āparāntaka"
+  },
+  "āpir": {
+   "lemma": "āpi"
+  },
+  "āptaiś": {
+   "lemma": "āpta"
+  },
+  "āpyaṃ": {
+   "lemma": "āpya"
+  },
+  "ārāva": {
+   "lemma": "ārāva"
+  },
+  "āraṇyaḥ": {
+   "lemma": "āraṇya"
+  },
+  "ārambhakāni": {
+   "lemma": "ārambhaka"
+  },
+  "ārdrikāyāḥ": {
+   "lemma": "ārdrikā"
+  },
+  "ārohamāṇā": {
+   "lemma": "āruh"
+  },
+  "ārta": {
+   "lemma": "ārta"
+  },
+  "āruke": {
+   "lemma": "āruka"
+  },
+  "āsāṃcakrur": {
+   "lemma": "ās"
+  },
+  "āsphoṭayata": {
+   "lemma": "āsphoṭay"
+  },
+  "āsaktyā": {
+   "lemma": "āsakti"
+  },
+  "āsecyam": {
+   "lemma": "āsic"
+  },
+  "āspṛtāḥ": {
+   "lemma": "āspṛ"
+  },
+  "āsurir": {
+   "lemma": "āsurī"
+  },
+  "ātanacmi": {
+   "lemma": "ātañc"
+  },
+  "ātiṣṭhad": {
+   "lemma": "āsthā"
+  },
+  "ātmana": {
+   "lemma": "āśis"
+  },
+  "ātureṇa": {
+   "lemma": "ātura"
+  },
+  "āvabhṛtham": {
+   "lemma": "āvabhṛtha"
+  },
+  "āvaraṇinaḥ": {
+   "lemma": "āvaraṇin"
+  },
+  "āvasathīyam": {
+   "lemma": "āvasathīya"
+  },
+  "āvedyate": {
+   "lemma": "āveday"
+  },
+  "āviśan": {
+   "lemma": "āviś"
+  },
+  "āviṣkṛṇoti": {
+   "lemma": "āviṣkṛ"
+  },
+  "āyāmam": {
+   "lemma": "āyāma"
+  },
+  "āyanāya": {
+   "lemma": "āyana"
+  },
+  "āyavabhiḥ": {
+   "lemma": "āyavan"
+  },
+  "āyutaḥ": {
+   "lemma": "āyuta"
+  },
+  "bhāṅgābhiḥ": {
+   "lemma": "bhāṅgā"
+  },
+  "bhāgavatyāṃ": {
+   "lemma": "bhāgavata"
+  },
+  "bhāmā": {
+   "lemma": "bhāma"
+  },
+  "bhāratīm": {
+   "lemma": "bhāratī"
+  },
+  "bhāsantaṃ": {
+   "lemma": "bhās"
+  },
+  "bhāva": {
+   "lemma": "bhāva"
+  },
+  "bhāviteṣu": {
+   "lemma": "bhāvay"
+  },
+  "bhāṣiṣyanti": {
+   "lemma": "bhāṣ"
+  },
+  "bhīmabalo": {
+   "lemma": "bhīmabala"
+  },
+  "bhīṣito": {
+   "lemma": "bhīṣay"
+  },
+  "bhūkhaga": {
+   "lemma": "bhūkhaga"
+  },
+  "bhūmikam": {
+   "lemma": "bhūmikā"
+  },
+  "bhūpate": {
+   "lemma": "bhūpati"
+  },
+  "bhūtādis": {
+   "lemma": "bhūtādi"
+  },
+  "bhūtavṛkṣā": {
+   "lemma": "bhūtavṛkṣā"
+  },
+  "bhūyiṣṭhābhir": {
+   "lemma": "bhūyiṣṭha"
+  },
+  "bhaṅgo": {
+   "lemma": "bhaṅga"
+  },
+  "bhadradāru": {
+   "lemma": "bhadradāru"
+  },
+  "bhagadattaṃ": {
+   "lemma": "bhagadatta"
+  },
+  "bhagnayā": {
+   "lemma": "bhañj"
+  },
+  "bhaktasya": {
+   "lemma": "bhaj"
+  },
+  "bhakṣayiṣyāvo": {
+   "lemma": "bhakṣay"
+  },
+  "bhalla": {
+   "lemma": "bhalla"
+  },
+  "bharatena": {
+   "lemma": "bharata"
+  },
+  "bharvati": {
+   "lemma": "bharv"
+  },
+  "bhavādṛśān": {
+   "lemma": "bhavādṛśa"
+  },
+  "bhavatīnāṃ": {
+   "lemma": "bhavat"
+  },
+  "bhaviṣye": {
+   "lemma": "bhū"
+  },
+  "bhaṣet": {
+   "lemma": "bhaṣ"
+  },
+  "bheruṇḍaḥ": {
+   "lemma": "bheruṇḍa"
+  },
+  "bhṛgūn": {
+   "lemma": "bhṛgu"
+  },
+  "bhṛtyavatāṃ": {
+   "lemma": "bhṛtyavat"
+  },
+  "bhikṣuṇībhiḥ": {
+   "lemma": "bhikṣuṇī"
+  },
+  "bhitter": {
+   "lemma": "bhitti"
+  },
+  "bhoginyo": {
+   "lemma": "bhoginī"
+  },
+  "bhojyavatkā": {
+   "lemma": "bhojyavatka"
+  },
+  "bhrāmayad": {
+   "lemma": "bhrāmay"
+  },
+  "bhrūṇāny": {
+   "lemma": "bhrūṇa"
+  },
+  "bhramaya": {
+   "lemma": "bhramay"
+  },
+  "bhug": {
+   "lemma": "bhuj"
+  },
+  "bhujyai": {
+   "lemma": "bhuji"
+  },
+  "bhuvanebhyo": {
+   "lemma": "bhuvana"
+  },
+  "chāgo": {
+   "lemma": "chāga"
+  },
+  "chadāḥ": {
+   "lemma": "chada"
+  },
+  "chandasi": {
+   "lemma": "chandas"
+  },
+  "chardikā": {
+   "lemma": "chardikā"
+  },
+  "chedi": {
+   "lemma": "chedin"
+  },
+  "chindīta": {
+   "lemma": "chid"
+  },
+  "chuchundaryāḥ": {
+   "lemma": "chuchundarī"
+  },
+  "dhānābhyaś": {
+   "lemma": "dhānā"
+  },
+  "dhārāṭo": {
+   "lemma": "dhārāṭa"
+  },
+  "dhārayiṣṇuḥ": {
+   "lemma": "dhārayiṣṇu"
+  },
+  "dhāser": {
+   "lemma": "dhāsi"
+  },
+  "dhātuvāde": {
+   "lemma": "dhātuvāda"
+  },
+  "dhīmann": {
+   "lemma": "dhīmat"
+  },
+  "dhautapāpaṃ": {
+   "lemma": "dhautapāpa"
+  },
+  "dhūmrāśvaḥ": {
+   "lemma": "dhūmrāśva"
+  },
+  "dhūrtamāyā": {
+   "lemma": "dhūrtamāyā"
+  },
+  "dhamanya": {
+   "lemma": "dhamanī"
+  },
+  "dhanasya": {
+   "lemma": "dhana"
+  },
+  "dhanuṣmataḥ": {
+   "lemma": "dhanuṣmat"
+  },
+  "dharaiḥ": {
+   "lemma": "dhara"
+  },
+  "dharmaṇaspatiḥ": {
+   "lemma": "dharmaṇaspati"
+  },
+  "dharmasūnuḥ": {
+   "lemma": "dharmasūnu"
+  },
+  "dhartraś": {
+   "lemma": "dhartra"
+  },
+  "dhayantikā": {
+   "lemma": "dhayantika"
+  },
+  "dhṛtena": {
+   "lemma": "dhṛ"
+  },
+  "dhitsathaḥ": {
+   "lemma": "dhits"
+  },
+  "dhmāyate": {
+   "lemma": "dham"
+  },
+  "dhunayaḥ": {
+   "lemma": "dhuni"
+  },
+  "dhvaṃsamāna": {
+   "lemma": "dhvaṃs"
+  },
+  "dhyāmakaiḥ": {
+   "lemma": "dhyāmaka"
+  },
+  "aiṇeyaṃ": {
+   "lemma": "aiṇeya"
+  },
+  "aikyena": {
+   "lemma": "aikya"
+  },
+  "aindraturīyo": {
+   "lemma": "aindraturīya"
+  },
+  "ghāṇa": {
+   "lemma": "ghāṇa"
+  },
+  "ghaṇṭākarṇena": {
+   "lemma": "ghaṇṭākarṇa"
+  },
+  "gharmajalam": {
+   "lemma": "gharmajala"
+  },
+  "ghaṭikā": {
+   "lemma": "ghaṭikā"
+  },
+  "ghṛtaścyutaḥ": {
+   "lemma": "ghṛtaścyut"
+  },
+  "ghoḍā": {
+   "lemma": "ghoḍā"
+  },
+  "ghoṣy": {
+   "lemma": "ghuṣ"
+  },
+  "īśānayor": {
+   "lemma": "īśāna"
+  },
+  "īdṛgvidha": {
+   "lemma": "īdṛgvidha"
+  },
+  "īkṣyate": {
+   "lemma": "īkṣ"
+  },
+  "īritām": {
+   "lemma": "īray"
+  },
+  "īﾱā": {
+   "lemma": "īḍā"
+  },
+  "khādatā": {
+   "lemma": "khād"
+  },
+  "khaṇḍānāṃ": {
+   "lemma": "khaṇḍa"
+  },
+  "khadyotaḥ": {
+   "lemma": "khadyota"
+  },
+  "khanīnetro": {
+   "lemma": "khanīnetra"
+  },
+  "kharau": {
+   "lemma": "khara"
+  },
+  "khaṭvāṅgaṃ": {
+   "lemma": "khaṭvāṅga"
+  },
+  "kho": {
+   "lemma": "kha"
+  },
+  "ṅasi": {
+   "lemma": "ṅasi"
+  },
+  "audumbarīḥ": {
+   "lemma": "audumbara"
+  },
+  "aupapādukam": {
+   "lemma": "aupapāduka"
+  },
+  "auttama": {
+   "lemma": "auttama"
+  },
+  "phālgunim": {
+   "lemma": "phālguni"
+  },
+  "phalada": {
+   "lemma": "phalada"
+  },
+  "phaligam": {
+   "lemma": "phaliga"
+  },
+  "ḍhaukayet": {
+   "lemma": "ḍhaukay"
+  },
+  "śākhoṭakī": {
+   "lemma": "śākhoṭaka"
+  },
+  "śācīn": {
+   "lemma": "śāci"
+  },
+  "śākuntalo": {
+   "lemma": "śākuntala"
+  },
+  "śāliśūkas": {
+   "lemma": "śāliśūka"
+  },
+  "śāmya": {
+   "lemma": "śam"
+  },
+  "śāpo": {
+   "lemma": "śāpa"
+  },
+  "śārikā": {
+   "lemma": "śārikā"
+  },
+  "śāsyaḥ": {
+   "lemma": "śās"
+  },
+  "śaikhinaṃ": {
+   "lemma": "śaikhina"
+  },
+  "śailasaṃbhūtaṃ": {
+   "lemma": "śailasambhūta"
+  },
+  "śīṅo": {
+   "lemma": "śīṅ"
+  },
+  "śīrṣṇīm": {
+   "lemma": "śīrṣan"
+  },
+  "śītalāsu": {
+   "lemma": "śītala"
+  },
+  "śaudrād": {
+   "lemma": "śaudra"
+  },
+  "śūkaḥ": {
+   "lemma": "śūka"
+  },
+  "śūnyām": {
+   "lemma": "śūnya"
+  },
+  "śaṃbho": {
+   "lemma": "śambhu"
+  },
+  "śaṃstavyaḥ": {
+   "lemma": "śaṃs"
+  },
+  "śaṅkhinaś": {
+   "lemma": "śaṅkhin"
+  },
+  "śapharaṃ": {
+   "lemma": "śaphara"
+  },
+  "śaśibinduḥ": {
+   "lemma": "śaśibindu"
+  },
+  "śabdāyata": {
+   "lemma": "śabdāy"
+  },
+  "śakalaṃ": {
+   "lemma": "śakala"
+  },
+  "śakranandanaḥ": {
+   "lemma": "śakranandana"
+  },
+  "śaktyavatare": {
+   "lemma": "śaktyavatara"
+  },
+  "śalāka": {
+   "lemma": "śalākā"
+  },
+  "śambhu": {
+   "lemma": "śambhu"
+  },
+  "śambaraiḥ": {
+   "lemma": "śambara"
+  },
+  "śapām": {
+   "lemma": "śap"
+  },
+  "śarāvo": {
+   "lemma": "śarāva"
+  },
+  "śaraṇyān": {
+   "lemma": "śaraṇya"
+  },
+  "śarmann": {
+   "lemma": "śarman"
+  },
+  "śastravanti": {
+   "lemma": "śastravat"
+  },
+  "śatadhṛtau": {
+   "lemma": "śatadhṛti"
+  },
+  "śatapadīm": {
+   "lemma": "śatapadī"
+  },
+  "śatrughātinam": {
+   "lemma": "śatrughātin"
+  },
+  "śayanāsanāt": {
+   "lemma": "śayanāsana"
+  },
+  "śepe": {
+   "lemma": "śap"
+  },
+  "śṛṅgārabhūṣaṇaṃ": {
+   "lemma": "śṛṅgārabhūṣaṇa"
+  },
+  "śṛṇudhvaṃ": {
+   "lemma": "śru"
+  },
+  "śikhāya": {
+   "lemma": "śikhā"
+  },
+  "śiśāno": {
+   "lemma": "śā"
+  },
+  "śithilīkṛta": {
+   "lemma": "śithilīkṛ"
+  },
+  "śikṣataṃ": {
+   "lemma": "śikṣ"
+  },
+  "śila": {
+   "lemma": "śila"
+  },
+  "śirās": {
+   "lemma": "śira"
+  },
+  "śiti": {
+   "lemma": "śit"
+  },
+  "śivatanau": {
+   "lemma": "śivatanu"
+  },
+  "ślāghāyāḥ": {
+   "lemma": "ślāghā"
+  },
+  "śleṣmaṇaḥ": {
+   "lemma": "śleṣmaṇa"
+  },
+  "śnuṣṭiḥ": {
+   "lemma": "śnuṣṭi"
+  },
+  "śodhanaṃ": {
+   "lemma": "śodhana"
+  },
+  "śoṇitotthaṃ": {
+   "lemma": "śoṇitottha"
+  },
+  "śokāḥ": {
+   "lemma": "śoka"
+  },
+  "śrāmaṇakena": {
+   "lemma": "śrāmaṇaka"
+  },
+  "śrāveṇa": {
+   "lemma": "śarāva"
+  },
+  "śrīkān": {
+   "lemma": "śrīka"
+  },
+  "śrīvṛkṣam": {
+   "lemma": "śrīvṛkṣa"
+  },
+  "śramāc": {
+   "lemma": "śrama"
+  },
+  "śravasya": {
+   "lemma": "śravasya"
+  },
+  "śreyaskāmo": {
+   "lemma": "śreyaskāma"
+  },
+  "śroṇyāḥ": {
+   "lemma": "śroṇi"
+  },
+  "śrutīnāṃ": {
+   "lemma": "śruti"
+  },
+  "śruṣṭigau": {
+   "lemma": "śruṣṭigu"
+  },
+  "śuṇṭhi": {
+   "lemma": "śuṇṭhī"
+  },
+  "śucīny": {
+   "lemma": "śuci"
+  },
+  "śuddhavidyāyāḥ": {
+   "lemma": "śuddhavidyā"
+  },
+  "śuklapuṣpā": {
+   "lemma": "śuklapuṣpā"
+  },
+  "śuktimatyām": {
+   "lemma": "śuktimatī"
+  },
+  "śunaḥsakha": {
+   "lemma": "śunaḥsakha"
+  },
+  "śuṣyate": {
+   "lemma": "śuṣ"
+  },
+  "śvaśrūś": {
+   "lemma": "śvaśrū"
+  },
+  "śvavatāṃ": {
+   "lemma": "śvavat"
+  },
+  "śvetamūlakaḥ": {
+   "lemma": "śvetamūlaka"
+  },
+  "śyāmānāṃ": {
+   "lemma": "śyāma"
+  },
+  "śyenajitaṃ": {
+   "lemma": "śyenajit"
+  },
+  "ūhivāṃsaṃ": {
+   "lemma": "vah"
+  },
+  "ūrdhvanālam": {
+   "lemma": "ūrdhvanāla"
+  },
+  "ūrjas": {
+   "lemma": "ūrj"
+  },
+  "ūtayaḥ": {
+   "lemma": "ūti"
+  },
+  "_": {
+   "lemma": "āśu"
+  },
+  "abhāsayat": {
+   "lemma": "bhāsay"
+  },
+  "abhīvartas": {
+   "lemma": "abhīvarta"
+  },
+  "abhartṛkā": {
+   "lemma": "abhartṛkā"
+  },
+  "abhibhāṣi": {
+   "lemma": "abhibhāṣin"
+  },
+  "abhidhāvati": {
+   "lemma": "abhidhāv"
+  },
+  "abhighoṣam": {
+   "lemma": "abhighoṣa"
+  },
+  "abhiśrutā": {
+   "lemma": "abhiśru"
+  },
+  "abhidravatām": {
+   "lemma": "abhidru"
+  },
+  "abhigatāṃ": {
+   "lemma": "abhigam"
+  },
+  "abhijānāti": {
+   "lemma": "abhijñā"
+  },
+  "abhijitau": {
+   "lemma": "abhiji"
+  },
+  "abhilāṣā": {
+   "lemma": "abhilāṣa"
+  },
+  "abhimantāram": {
+   "lemma": "abhimantṛ"
+  },
+  "abhimukhīm": {
+   "lemma": "abhimukha"
+  },
+  "abhiniścitaḥ": {
+   "lemma": "abhiniścita"
+  },
+  "abhiniviṣṭānām": {
+   "lemma": "abhiniviś"
+  },
+  "abhipadmināṃ": {
+   "lemma": "abhipadma"
+  },
+  "abhiprāyāya": {
+   "lemma": "abhiprāya"
+  },
+  "abhipravrajan": {
+   "lemma": "abhipravraj"
+  },
+  "abhiramyatām": {
+   "lemma": "abhiram"
+  },
+  "abhisaṃbuddha": {
+   "lemma": "abhisaṃbudh"
+  },
+  "abhisaṃvṛtaṃ": {
+   "lemma": "abhisaṃvṛ"
+  },
+  "abhitāpaḥ": {
+   "lemma": "abhitāpa"
+  },
+  "abhivāritaḥ": {
+   "lemma": "abhivāray"
+  },
+  "abhivayasaḥ": {
+   "lemma": "abhivayas"
+  },
+  "abhivyañjana": {
+   "lemma": "abhivyañjana"
+  },
+  "abhiṣṭhitāḥ": {
+   "lemma": "abhiṣṭhā"
+  },
+  "abhiṣoṣyanto": {
+   "lemma": "abhiṣu"
+  },
+  "abhrakaṃ": {
+   "lemma": "abhraka"
+  },
+  "abhyāgamanāya": {
+   "lemma": "abhyāgamana"
+  },
+  "abhyāvartata": {
+   "lemma": "abhyāvṛt"
+  },
+  "abhyañjati": {
+   "lemma": "abhyañj"
+  },
+  "abhyantareṇa": {
+   "lemma": "abhyantara"
+  },
+  "abhyardito": {
+   "lemma": "abhyarday"
+  },
+  "abhyavaiti": {
+   "lemma": "abhyave"
+  },
+  "abhyaṣecayan": {
+   "lemma": "abhiṣecay"
+  },
+  "abhyujjigamiṣur": {
+   "lemma": "abhyujjigamiṣu"
+  },
+  "abhyupetya": {
+   "lemma": "abhyupe"
+  },
+  "adhāvatāṃ": {
+   "lemma": "dhāv"
+  },
+  "adhaḥśayyī": {
+   "lemma": "adhaḥśayyin"
+  },
+  "adharmiṇām": {
+   "lemma": "adharmin"
+  },
+  "adhicaras": {
+   "lemma": "adhicara"
+  },
+  "adhikāra": {
+   "lemma": "adhikāra"
+  },
+  "adhimokṣaḥ": {
+   "lemma": "adhimokṣa"
+  },
+  "adhirohitum": {
+   "lemma": "adhiruh"
+  },
+  "adhiṣṭhātāraḥ": {
+   "lemma": "adhiṣṭhātṛ"
+  },
+  "adhvānam": {
+   "lemma": "adhvan"
+  },
+  "adhyāpya": {
+   "lemma": "adhyāpay"
+  },
+  "adhyaśnīyāt": {
+   "lemma": "adhyaś"
+  },
+  "adhyeṣituṃ": {
+   "lemma": "adhyeṣay"
+  },
+  "akhaṇḍaiḥ": {
+   "lemma": "akhaṇḍa"
+  },
+  "aṃśumālinaḥ": {
+   "lemma": "aṃśumālin"
+  },
+  "aṅgāni": {
+   "lemma": "aṅga"
+  },
+  "aṅgalopāṃ": {
+   "lemma": "aṅgalopā"
+  },
+  "aṅgulīyaiḥ": {
+   "lemma": "aṅgulīya"
+  },
+  "aṅkoṭa": {
+   "lemma": "aṅkoṭa"
+  },
+  "aṇḍasya": {
+   "lemma": "aṇḍa"
+  },
+  "aśaṅkaḥ": {
+   "lemma": "aśaṅka"
+  },
+  "aśapan": {
+   "lemma": "śap"
+  },
+  "aśite": {
+   "lemma": "aś"
+  },
+  "aśmaryā": {
+   "lemma": "aśmarī"
+  },
+  "aśokeśa": {
+   "lemma": "aśokeśa"
+  },
+  "aśuśruma": {
+   "lemma": "śru"
+  },
+  "aśvakān": {
+   "lemma": "aśvaka"
+  },
+  "aśvavat": {
+   "lemma": "aśvavat"
+  },
+  "añcitau": {
+   "lemma": "añcay"
+  },
+  "abbhriṇe": {
+   "lemma": "abbhriṇa"
+  },
+  "abjayoḥ": {
+   "lemma": "abja"
+  },
+  "acchāvāko": {
+   "lemma": "acchāvāka"
+  },
+  "acarantīṃ": {
+   "lemma": "acarat"
+  },
+  "acittapājāḥ": {
+   "lemma": "acittapājas"
+  },
+  "addhātayaḥ": {
+   "lemma": "addhāti"
+  },
+  "adakṣe": {
+   "lemma": "adakṣa"
+  },
+  "adṛśyantyāṃ": {
+   "lemma": "adṛśyantī"
+  },
+  "adriṃ": {
+   "lemma": "adri"
+  },
+  "adyam": {
+   "lemma": "ad"
+  },
+  "agamam": {
+   "lemma": "gam"
+  },
+  "agnīdhe": {
+   "lemma": "agnīdh"
+  },
+  "agnihotreṇa": {
+   "lemma": "agnihotra"
+  },
+  "agniṣṭhā": {
+   "lemma": "agniṣṭhā"
+  },
+  "agrathitāni": {
+   "lemma": "agrathita"
+  },
+  "agryayoḥ": {
+   "lemma": "agrya"
+  },
+  "ahaṃkāreṣu": {
+   "lemma": "ahaṃkāra"
+  },
+  "ahatena": {
+   "lemma": "ahata"
+  },
+  "ahitaiḥ": {
+   "lemma": "ahita"
+  },
+  "ajānām": {
+   "lemma": "aja"
+  },
+  "ajñāna": {
+   "lemma": "ajñāna"
+  },
+  "ajamodām": {
+   "lemma": "ajamodā"
+  },
+  "ajeyo": {
+   "lemma": "ajeya"
+  },
+  "ajvaram": {
+   "lemma": "ajvara"
+  },
+  "akaḥ": {
+   "lemma": "kṛ"
+  },
+  "akartām": {
+   "lemma": "kṛ"
+  },
+  "akṛṣyetām": {
+   "lemma": "kṛṣ"
+  },
+  "aktāni": {
+   "lemma": "añj"
+  },
+  "akṣī": {
+   "lemma": "akṣa"
+  },
+  "akṣarapaṅktis": {
+   "lemma": "akṣarapaṅkti"
+  },
+  "akṣor": {
+   "lemma": "akṣi"
+  },
+  "alaṃkārikaṃ": {
+   "lemma": "alaṃkārika"
+  },
+  "alakṣaṇo": {
+   "lemma": "alakṣaṇa"
+  },
+  "alim": {
+   "lemma": "ali"
+  },
+  "alpeṣv": {
+   "lemma": "alpa"
+  },
+  "ambhasaś": {
+   "lemma": "ambhas"
+  },
+  "amaṃsata": {
+   "lemma": "man"
+  },
+  "amarāhvayaiḥ": {
+   "lemma": "amarāhvaya"
+  },
+  "amatiḥ": {
+   "lemma": "amati"
+  },
+  "ambujau": {
+   "lemma": "ambuja"
+  },
+  "amṛtāndhasaḥ": {
+   "lemma": "amṛtāndhas"
+  },
+  "amitena": {
+   "lemma": "amita"
+  },
+  "amnas": {
+   "lemma": "amnas"
+  },
+  "anādhṛṣṭi": {
+   "lemma": "anādhṛṣṭi"
+  },
+  "anāgāstvaṃ": {
+   "lemma": "anāgāstva"
+  },
+  "anāpṛṣṭam": {
+   "lemma": "anāpṛṣṭa"
+  },
+  "anāvṛttim": {
+   "lemma": "anāvṛtti"
+  },
+  "andhasvatyaḥ": {
+   "lemma": "andhasvat"
+  },
+  "anūḍhānāṃ": {
+   "lemma": "anūḍhā"
+  },
+  "anūpaviśanti": {
+   "lemma": "anūpaviś"
+  },
+  "anabhyasteṣu": {
+   "lemma": "anabhyasta"
+  },
+  "anajyāt": {
+   "lemma": "añj"
+  },
+  "anantarayā": {
+   "lemma": "anantara"
+  },
+  "anaparādhināṃ": {
+   "lemma": "anaparādhin"
+  },
+  "anarhadbhyaḥ": {
+   "lemma": "anarhat"
+  },
+  "anavacchidite": {
+   "lemma": "anavacchidita"
+  },
+  "anekāñ": {
+   "lemma": "aneka"
+  },
+  "aniśitāḥ": {
+   "lemma": "aniśita"
+  },
+  "anirūpita": {
+   "lemma": "anirūpita"
+  },
+  "anivartyena": {
+   "lemma": "anivartya"
+  },
+  "anokaho": {
+   "lemma": "anokaha"
+  },
+  "antarāṃsā": {
+   "lemma": "antarāṃsa"
+  },
+  "antaraṅgasya": {
+   "lemma": "antaraṅga"
+  },
+  "antaritaiḥ": {
+   "lemma": "antari"
+  },
+  "antikena": {
+   "lemma": "antika"
+  },
+  "anubhava": {
+   "lemma": "anubhava"
+  },
+  "anuśaṃsanti": {
+   "lemma": "anuśaṃs"
+  },
+  "anubandhi": {
+   "lemma": "anubandhin"
+  },
+  "anudāttānām": {
+   "lemma": "anudātta"
+  },
+  "anugāpana": {
+   "lemma": "anugāpana"
+  },
+  "anugrāhikā": {
+   "lemma": "anugrāhaka"
+  },
+  "anujñātas": {
+   "lemma": "anujñā"
+  },
+  "anukampī": {
+   "lemma": "anukampin"
+  },
+  "anukuryāt": {
+   "lemma": "anukṛ"
+  },
+  "anumantrāḥ": {
+   "lemma": "anumantra"
+  },
+  "anunītas": {
+   "lemma": "anunī"
+  },
+  "anupūrvaśas": {
+   "lemma": "anupūrvaśas"
+  },
+  "anuparikrāmet": {
+   "lemma": "anuparikram"
+  },
+  "anuprabhūtaḥ": {
+   "lemma": "anuprabhū"
+  },
+  "anuprayacchethāḥ": {
+   "lemma": "anuprayam"
+  },
+  "anurakṣet": {
+   "lemma": "anurakṣ"
+  },
+  "anusaṃjvaret": {
+   "lemma": "anusaṃjvar"
+  },
+  "anusṛṣṭam": {
+   "lemma": "anusṛj"
+  },
+  "anutsāhaḥ": {
+   "lemma": "anutsāha"
+  },
+  "anuvadiṣyate": {
+   "lemma": "anuvad"
+  },
+  "anuveṣṭya": {
+   "lemma": "anuveṣṭay"
+  },
+  "anuvratam": {
+   "lemma": "anuvrata"
+  },
+  "anuyuñjadhvaṃ": {
+   "lemma": "anuyuj"
+  },
+  "anvādhi": {
+   "lemma": "anvādhi"
+  },
+  "anvāsanam": {
+   "lemma": "anvāsana"
+  },
+  "anvagacchad": {
+   "lemma": "anugam"
+  },
+  "anvavardhanta": {
+   "lemma": "anuvṛdh"
+  },
+  "anveṣṭavyaḥ": {
+   "lemma": "anviṣ"
+  },
+  "anyad": {
+   "lemma": "anya"
+  },
+  "apāghnātām": {
+   "lemma": "apahan"
+  },
+  "apākṛtīs": {
+   "lemma": "apākṛti"
+  },
+  "apāsanam": {
+   "lemma": "apāsana"
+  },
+  "apīḍanāt": {
+   "lemma": "apīḍana"
+  },
+  "apadhyāto": {
+   "lemma": "apadhyā"
+  },
+  "apacārāt": {
+   "lemma": "apacāra"
+  },
+  "apadravyāḥ": {
+   "lemma": "apadravya"
+  },
+  "apahartāraṃ": {
+   "lemma": "apahartṛ"
+  },
+  "apakarṣitum": {
+   "lemma": "apakṛṣ"
+  },
+  "apalāyine": {
+   "lemma": "apalāyin"
+  },
+  "apaplavaṃ": {
+   "lemma": "apaplava"
+  },
+  "aparāyaṇam": {
+   "lemma": "aparāyaṇa"
+  },
+  "aparimitāḥ": {
+   "lemma": "aparimita"
+  },
+  "apasalī": {
+   "lemma": "apasalī"
+  },
+  "apatarpaṇam": {
+   "lemma": "apatarpaṇa"
+  },
+  "apavartate": {
+   "lemma": "apavṛt"
+  },
+  "apekṣate": {
+   "lemma": "apekṣ"
+  },
+  "apigṛhya": {
+   "lemma": "apigrah"
+  },
+  "apohane": {
+   "lemma": "apohana"
+  },
+  "aprathayas": {
+   "lemma": "prathay"
+  },
+  "apramādasya": {
+   "lemma": "apramāda"
+  },
+  "apratimau": {
+   "lemma": "apratima"
+  },
+  "aprayojanam": {
+   "lemma": "aprayojana"
+  },
+  "apunaruktaḥ": {
+   "lemma": "apunarukta"
+  },
+  "arāteḥ": {
+   "lemma": "arāti"
+  },
+  "ardharātrakam": {
+   "lemma": "ardharātraka"
+  },
+  "arṇasam": {
+   "lemma": "arṇasa"
+  },
+  "arthavādānām": {
+   "lemma": "arthavāda"
+  },
+  "araṇīkasya": {
+   "lemma": "araṇīka"
+  },
+  "aramāvahi": {
+   "lemma": "ram"
+  },
+  "arcanau": {
+   "lemma": "arcana"
+  },
+  "arcya": {
+   "lemma": "arcay"
+  },
+  "arhann": {
+   "lemma": "arhant"
+  },
+  "ariṣṭakarmā": {
+   "lemma": "ariṣṭakarman"
+  },
+  "arkavatyā": {
+   "lemma": "arkavat"
+  },
+  "arudhyetām": {
+   "lemma": "rudh"
+  },
+  "aruṣoḥ": {
+   "lemma": "arus"
+  },
+  "asādhuṃ": {
+   "lemma": "asādhu"
+  },
+  "asthāj": {
+   "lemma": "sthā"
+  },
+  "asūyethāḥ": {
+   "lemma": "asūy"
+  },
+  "asaṃdiṣṭaḥ": {
+   "lemma": "asaṃdiṣṭa"
+  },
+  "asaṃskṛtaṃ": {
+   "lemma": "asaṃskṛta"
+  },
+  "asahiṣṇuḥ": {
+   "lemma": "asahiṣṇu"
+  },
+  "asan": {
+   "lemma": "asan"
+  },
+  "aser": {
+   "lemma": "asi"
+  },
+  "asitaiḥ": {
+   "lemma": "asita"
+  },
+  "asnātaḥ": {
+   "lemma": "asnāta"
+  },
+  "astaud": {
+   "lemma": "stu"
+  },
+  "astuvata": {
+   "lemma": "stu"
+  },
+  "asvāminam": {
+   "lemma": "asvāmin"
+  },
+  "atārima": {
+   "lemma": "tṛ"
+  },
+  "atandriṇā": {
+   "lemma": "atandrin"
+  },
+  "atibhavati": {
+   "lemma": "atibhū"
+  },
+  "atithimatyau": {
+   "lemma": "atithimat"
+  },
+  "atigo": {
+   "lemma": "atiga"
+  },
+  "atikramaṇīyasya": {
+   "lemma": "atikram"
+  },
+  "atinidrāyāṃ": {
+   "lemma": "atinidrā"
+  },
+  "atiprayacchati": {
+   "lemma": "atiprayam"
+  },
+  "atisthaulya": {
+   "lemma": "atisthaulya"
+  },
+  "atitiṣṭhati": {
+   "lemma": "atiṣṭhā"
+  },
+  "atiyāthaḥ": {
+   "lemma": "atiyā"
+  },
+  "attāraḥ": {
+   "lemma": "attṛ"
+  },
+  "atyaśanaṃ": {
+   "lemma": "atyaśana"
+  },
+  "atyeṣyanti": {
+   "lemma": "atī"
+  },
+  "avākalpayat": {
+   "lemma": "avakalpay"
+  },
+  "avāruhad": {
+   "lemma": "avaruh"
+  },
+  "avīvaran": {
+   "lemma": "vṛ"
+  },
+  "avadhāryaḥ": {
+   "lemma": "avadhāray"
+  },
+  "avaśī": {
+   "lemma": "avaśin"
+  },
+  "avabudhyāmi": {
+   "lemma": "avabudh"
+  },
+  "avadārite": {
+   "lemma": "avadāray"
+  },
+  "avagāhya": {
+   "lemma": "avagāh"
+  },
+  "avahīnāḥ": {
+   "lemma": "avahā"
+  },
+  "avakāśavatī": {
+   "lemma": "avakāśavat"
+  },
+  "avakṣārayaty": {
+   "lemma": "avakṣāray"
+  },
+  "avalguja": {
+   "lemma": "avalguja"
+  },
+  "avamārṣṭy": {
+   "lemma": "avamṛj"
+  },
+  "avanīdhara": {
+   "lemma": "avanīdhara"
+  },
+  "avantisundaryā": {
+   "lemma": "avantisundarī"
+  },
+  "avarīvān": {
+   "lemma": "avarīvant"
+  },
+  "avaruddhaḥ": {
+   "lemma": "avarudh"
+  },
+  "avasthātaḥ": {
+   "lemma": "avasthā"
+  },
+  "avasiñcan": {
+   "lemma": "avasic"
+  },
+  "avatīrṇā": {
+   "lemma": "avatṛ"
+  },
+  "avavāda": {
+   "lemma": "avavāda"
+  },
+  "avekṣā": {
+   "lemma": "avekṣā"
+  },
+  "avṛtti": {
+   "lemma": "avṛtti"
+  },
+  "aviśodhyasya": {
+   "lemma": "aviśodhya"
+  },
+  "avihiṃsataḥ": {
+   "lemma": "avihiṃsat"
+  },
+  "avināśāt": {
+   "lemma": "avināśa"
+  },
+  "avisaraṇāt": {
+   "lemma": "avisaraṇa"
+  },
+  "avrīḍāyamānayoḥ": {
+   "lemma": "avrīḍāyamāna"
+  },
+  "avyakte": {
+   "lemma": "avyakta"
+  },
+  "aṭṭahāsinam": {
+   "lemma": "aṭṭahāsin"
+  },
+  "ayacchat": {
+   "lemma": "yam"
+  },
+  "ayodhayata": {
+   "lemma": "yodhay"
+  },
+  "ayuktaiḥ": {
+   "lemma": "ayukta"
+  },
+  "aṣṭādaśe": {
+   "lemma": "aṣṭādaśa"
+  },
+  "aṣṭamīṃ": {
+   "lemma": "aṣṭamī"
+  },
+  "bādhatāṃ": {
+   "lemma": "bādh"
+  },
+  "bāhirika": {
+   "lemma": "bāhirika"
+  },
+  "bāhyata": {
+   "lemma": "bāhyatas"
+  },
+  "bāliśyāt": {
+   "lemma": "bāliśya"
+  },
+  "baiḍāla": {
+   "lemma": "baiḍāla"
+  },
+  "babhāra": {
+   "lemma": "bhṛ"
+  },
+  "baṃhiṣṭhaṃ": {
+   "lemma": "baṃhiṣṭha"
+  },
+  "bahavaś": {
+   "lemma": "bahu"
+  },
+  "bahugataḥ": {
+   "lemma": "bahugati"
+  },
+  "bahutvac": {
+   "lemma": "bahutvac"
+  },
+  "balābalam": {
+   "lemma": "balābala"
+  },
+  "baladaś": {
+   "lemma": "balada"
+  },
+  "balipucchaka": {
+   "lemma": "balipucchaka"
+  },
+  "bandhayati": {
+   "lemma": "bandhay"
+  },
+  "barbaro": {
+   "lemma": "barbara"
+  },
+  "baṭ": {
+   "lemma": "baṭ"
+  },
+  "bṛhadiṣor": {
+   "lemma": "bṛhadiṣu"
+  },
+  "bṛhatkṣatrasya": {
+   "lemma": "bṛhatkṣatra"
+  },
+  "bibhratī": {
+   "lemma": "bhṛ"
+  },
+  "bimbo": {
+   "lemma": "bimba"
+  },
+  "bodhanīṃ": {
+   "lemma": "bodhanī"
+  },
+  "brāhmā": {
+   "lemma": "brāhma"
+  },
+  "brāhmye": {
+   "lemma": "brāhmya"
+  },
+  "brahmaṇo": {
+   "lemma": "brahman"
+  },
+  "brahmajapaṃ": {
+   "lemma": "brahmajapa"
+  },
+  "brahmasattre": {
+   "lemma": "brahmasattra"
+  },
+  "bruvāṇaś": {
+   "lemma": "brū"
+  },
+  "budhnāsaḥ": {
+   "lemma": "budhna"
+  },
+  "buddhimatoḥ": {
+   "lemma": "buddhimat"
+  },
+  "cālanīṃ": {
+   "lemma": "cālanī"
+  },
+  "cārair": {
+   "lemma": "cāra"
+  },
+  "cārumati": {
+   "lemma": "cārumat"
+  },
+  "cāturvedyo": {
+   "lemma": "cāturvedya"
+  },
+  "caityāḥ": {
+   "lemma": "caitya"
+  },
+  "caureṇa": {
+   "lemma": "caura"
+  },
+  "cūrṇena": {
+   "lemma": "cūrṇa"
+  },
+  "caṇḍāle": {
+   "lemma": "caṇḍāla"
+  },
+  "cakānāḥ": {
+   "lemma": "kan"
+  },
+  "cakrakam": {
+   "lemma": "cakraka"
+  },
+  "cakrivasaḥ": {
+   "lemma": "kṛ"
+  },
+  "calantam": {
+   "lemma": "cal"
+  },
+  "campakavatī": {
+   "lemma": "campakavatī"
+  },
+  "candrakāntaś": {
+   "lemma": "candrakānta"
+  },
+  "capalāyāḥ": {
+   "lemma": "capala"
+  },
+  "caramāṇās": {
+   "lemma": "car"
+  },
+  "carito": {
+   "lemma": "car"
+  },
+  "carukā": {
+   "lemma": "carukā"
+  },
+  "caturāṇām": {
+   "lemma": "catura"
+  },
+  "caturasrakam": {
+   "lemma": "caturasraka"
+  },
+  "caturvidhe": {
+   "lemma": "caturvidha"
+  },
+  "catuṣpadāyām": {
+   "lemma": "catuṣpada"
+  },
+  "cayaṃ": {
+   "lemma": "caya"
+  },
+  "cetasikaṃ": {
+   "lemma": "cetasika"
+  },
+  "ceṣṭitasya": {
+   "lemma": "ceṣṭita"
+  },
+  "cikīrṣitā": {
+   "lemma": "cikīrṣ"
+  },
+  "cikvireṇa": {
+   "lemma": "cikkira"
+  },
+  "cintayiṣyaty": {
+   "lemma": "cintay"
+  },
+  "cirasthāyi": {
+   "lemma": "cirasthāyin"
+  },
+  "citrāyudho": {
+   "lemma": "citrāyudha"
+  },
+  "citrarathena": {
+   "lemma": "citraratha"
+  },
+  "ciṭiciṭiḥ": {
+   "lemma": "ciṭiciṭi"
+  },
+  "corayed": {
+   "lemma": "coray"
+  },
+  "cumbitā": {
+   "lemma": "cumb"
+  },
+  "d": {
+   "lemma": "d"
+  },
+  "dāhayāmi": {
+   "lemma": "dāhay"
+  },
+  "dān": {
+   "lemma": "dān"
+  },
+  "dāpite": {
+   "lemma": "dāpay"
+  },
+  "dārayor": {
+   "lemma": "dāra"
+  },
+  "dārṣadvatam": {
+   "lemma": "dārṣadvata"
+  },
+  "dātyūhaḥ": {
+   "lemma": "dātyūha"
+  },
+  "daityā": {
+   "lemma": "daityā"
+  },
+  "daivyāni": {
+   "lemma": "daivya"
+  },
+  "dīkṣatām": {
+   "lemma": "dīkṣ"
+  },
+  "dīpanīya": {
+   "lemma": "dīpanīya"
+  },
+  "dīpyakānām": {
+   "lemma": "dīpyaka"
+  },
+  "dīrghamukha": {
+   "lemma": "dīrghamukha"
+  },
+  "dīvyet": {
+   "lemma": "dīv"
+  },
+  "dauṣvapnyaṃ": {
+   "lemma": "dauḥṣvapnya"
+  },
+  "dūteṣu": {
+   "lemma": "dūta"
+  },
+  "dabhaṃs": {
+   "lemma": "dabh"
+  },
+  "dadhimanthān": {
+   "lemma": "dadhimantha"
+  },
+  "daṃpatibhyām": {
+   "lemma": "dampati"
+  },
+  "daṇḍapāṇiṃ": {
+   "lemma": "daṇḍapāṇi"
+  },
+  "daśagaṅgāṃ": {
+   "lemma": "daśagaṅgā"
+  },
+  "daśarathāt": {
+   "lemma": "daśaratha"
+  },
+  "dadarśatuḥ": {
+   "lemma": "dṛś"
+  },
+  "dagdhodarasya": {
+   "lemma": "dagdhodara"
+  },
+  "dakṣaś": {
+   "lemma": "dakṣa"
+  },
+  "dakṣiṇaḥ": {
+   "lemma": "dakṣiṇa"
+  },
+  "damanī": {
+   "lemma": "damana"
+  },
+  "dantakāṣṭhānāṃ": {
+   "lemma": "dantakāṣṭha"
+  },
+  "dardharṣy": {
+   "lemma": "dhardhṛ"
+  },
+  "darśayeyuḥ": {
+   "lemma": "darśay"
+  },
+  "darpaśāta": {
+   "lemma": "darpaśāta"
+  },
+  "dattātreyāya": {
+   "lemma": "dattātreya"
+  },
+  "daṣṭa": {
+   "lemma": "daṣṭa"
+  },
+  "dedīpyamānā": {
+   "lemma": "dedīpy"
+  },
+  "devāhvam": {
+   "lemma": "devāhvā"
+  },
+  "devaśreṣṭho": {
+   "lemma": "devaśreṣṭha"
+  },
+  "devakaś": {
+   "lemma": "devaka"
+  },
+  "devarāmā": {
+   "lemma": "devarāmā"
+  },
+  "devatena": {
+   "lemma": "devata"
+  },
+  "devikā": {
+   "lemma": "devikā"
+  },
+  "dṛḍhabala": {
+   "lemma": "dṛḍhabala"
+  },
+  "dṛśyataḥ": {
+   "lemma": "dṛś"
+  },
+  "dṛṣṭavaty": {
+   "lemma": "dṛś"
+  },
+  "diśim": {
+   "lemma": "diś"
+  },
+  "diggajaiḥ": {
+   "lemma": "diggaja"
+  },
+  "dititanaya": {
+   "lemma": "dititanaya"
+  },
+  "divasakṛti": {
+   "lemma": "divasakṛt"
+  },
+  "divye": {
+   "lemma": "divya"
+  },
+  "dolāyaṃtreṇa": {
+   "lemma": "dolāyantra"
+  },
+  "drākṣa": {
+   "lemma": "drākṣa"
+  },
+  "drahyad": {
+   "lemma": "drahyat"
+  },
+  "draviṇavan": {
+   "lemma": "draviṇavat"
+  },
+  "droṇyaḥ": {
+   "lemma": "droṇya"
+  },
+  "drupadena": {
+   "lemma": "drupada"
+  },
+  "duḥkhitān": {
+   "lemma": "duḥkhita"
+  },
+  "duḥsvapnāt": {
+   "lemma": "duḥsvapna"
+  },
+  "dugdhavad": {
+   "lemma": "dugdhavat"
+  },
+  "dundubho": {
+   "lemma": "dundubha"
+  },
+  "durbhāṣitānām": {
+   "lemma": "durbhāṣita"
+  },
+  "duranvayām": {
+   "lemma": "duranvaya"
+  },
+  "durduhā": {
+   "lemma": "durduha"
+  },
+  "durhṛdinī": {
+   "lemma": "durhṛdin"
+  },
+  "durmade": {
+   "lemma": "durmada"
+  },
+  "duroṇam": {
+   "lemma": "duroṇa"
+  },
+  "durvibhāvyaḥ": {
+   "lemma": "durvibhāvya"
+  },
+  "duvasanāso": {
+   "lemma": "duvasana"
+  },
+  "duṣprakṛtir": {
+   "lemma": "duṣprakṛti"
+  },
+  "dvāḥsu": {
+   "lemma": "dvār"
+  },
+  "dvārapālaḥ": {
+   "lemma": "dvārapāla"
+  },
+  "dvairūpye": {
+   "lemma": "dvairūpya"
+  },
+  "dvayair": {
+   "lemma": "dvaya"
+  },
+  "dviguṇāt": {
+   "lemma": "dviguṇa"
+  },
+  "dvijendraḥ": {
+   "lemma": "dvijendra"
+  },
+  "dvirado": {
+   "lemma": "dvirada"
+  },
+  "dviṣanti": {
+   "lemma": "dviṣ"
+  },
+  "dyotate": {
+   "lemma": "dyut"
+  },
+  "ebhir": {
+   "lemma": "idam"
+  },
+  "ekādaśavidham": {
+   "lemma": "ekādaśavidha"
+  },
+  "ekāya": {
+   "lemma": "eka"
+  },
+  "ekaśo": {
+   "lemma": "ekaśas"
+  },
+  "ekapatnīṃ": {
+   "lemma": "ekapatnī"
+  },
+  "ekavīraiḥ": {
+   "lemma": "ekavīra"
+  },
+  "elāpattra": {
+   "lemma": "elāpattra"
+  },
+  "erire": {
+   "lemma": "er"
+  },
+  "etayā": {
+   "lemma": "e"
+  },
+  "evaṃvṛtta": {
+   "lemma": "evaṃvṛtta"
+  },
+  "eṣitvā": {
+   "lemma": "eṣay"
+  },
+  "ṛṇacit": {
+   "lemma": "ṛṇacit"
+  },
+  "ṛddha": {
+   "lemma": "ṛdh"
+  },
+  "ṛkṇavahīṃ": {
+   "lemma": "ṛkṇavaha"
+  },
+  "ṛtaś": {
+   "lemma": "ṛta"
+  },
+  "ṛtvikṣu": {
+   "lemma": "ṛtvij"
+  },
+  "ṛṣvebhiḥ": {
+   "lemma": "ṛṣva"
+  },
+  "gāṇḍivāt": {
+   "lemma": "gāṇḍiva"
+  },
+  "gāndhārapaṅko": {
+   "lemma": "gāndhārapaṅka"
+  },
+  "gāsyanti": {
+   "lemma": "gā"
+  },
+  "gāyatī": {
+   "lemma": "gā"
+  },
+  "gītam": {
+   "lemma": "gīta"
+  },
+  "gaurītīrtham": {
+   "lemma": "gaurītīrtha"
+  },
+  "gūhathāḥ": {
+   "lemma": "guh"
+  },
+  "gaṅgarakṣitaḥ": {
+   "lemma": "gaṅgarakṣita"
+  },
+  "gaṇeśānaḥ": {
+   "lemma": "gaṇeśāna"
+  },
+  "gaṇyatām": {
+   "lemma": "gaṇay"
+  },
+  "gadavatāṃ": {
+   "lemma": "gadavat"
+  },
+  "gajānanaṃ": {
+   "lemma": "gajānana"
+  },
+  "galatkuṣṭhaṃ": {
+   "lemma": "galatkuṣṭha"
+  },
+  "gaminaḥ": {
+   "lemma": "gamin"
+  },
+  "gandhakāt": {
+   "lemma": "gandhaka"
+  },
+  "gandharveṇa": {
+   "lemma": "gandharva"
+  },
+  "garāgarī": {
+   "lemma": "garāgarī"
+  },
+  "garbhiṇyā": {
+   "lemma": "garbhin"
+  },
+  "garhayasi": {
+   "lemma": "garhay"
+  },
+  "gartavatīm": {
+   "lemma": "gartavat"
+  },
+  "gatīr": {
+   "lemma": "gati"
+  },
+  "gavīḍāṃ": {
+   "lemma": "gavīḍā"
+  },
+  "gehād": {
+   "lemma": "geha"
+  },
+  "gṛṇīte": {
+   "lemma": "gṛ"
+  },
+  "gṛhṇīyāl": {
+   "lemma": "grah"
+  },
+  "gṛhataraṃ": {
+   "lemma": "gṛhatara"
+  },
+  "giret": {
+   "lemma": "gṛ"
+  },
+  "glānībhūtaḥ": {
+   "lemma": "glānībhū"
+  },
+  "goṇībhir": {
+   "lemma": "goṇī"
+  },
+  "gokṣurakaś": {
+   "lemma": "gokṣuraka"
+  },
+  "gomedasya": {
+   "lemma": "gomeda"
+  },
+  "gopāyitavyā": {
+   "lemma": "gopāy"
+  },
+  "gopyā": {
+   "lemma": "gopī"
+  },
+  "govṛṣāḥ": {
+   "lemma": "govṛṣa"
+  },
+  "grāhiṇyāḥ": {
+   "lemma": "grāhin"
+  },
+  "grāmyadharmam": {
+   "lemma": "grāmyadharma"
+  },
+  "grīṣmapuṣpī": {
+   "lemma": "grīṣmapuṣpī"
+  },
+  "grahanāśanaḥ": {
+   "lemma": "grahanāśana"
+  },
+  "grasitām": {
+   "lemma": "gras"
+  },
+  "guṇavadbhir": {
+   "lemma": "guṇavat"
+  },
+  "gudajam": {
+   "lemma": "gudaja"
+  },
+  "guhyavidyā": {
+   "lemma": "guhyavidyā"
+  },
+  "guḍām": {
+   "lemma": "guḍa"
+  },
+  "gurutaraṃ": {
+   "lemma": "gurutara"
+  },
+  "hārair": {
+   "lemma": "hāra"
+  },
+  "hāsamāne": {
+   "lemma": "hā"
+  },
+  "haimantikābhyām": {
+   "lemma": "haimantika"
+  },
+  "hīrakān": {
+   "lemma": "hīraka"
+  },
+  "haṃsadvāraṃ": {
+   "lemma": "haṃsadvāra"
+  },
+  "hallīsakaṃ": {
+   "lemma": "hallīsaka"
+  },
+  "hanugrahe": {
+   "lemma": "hanugraha"
+  },
+  "haraṇe": {
+   "lemma": "haraṇa"
+  },
+  "hariṇo": {
+   "lemma": "hariṇa"
+  },
+  "haritālasya": {
+   "lemma": "haritāla"
+  },
+  "haryajvāyanāya": {
+   "lemma": "haryajvāyana"
+  },
+  "hasato": {
+   "lemma": "has"
+  },
+  "hastinām": {
+   "lemma": "hastin"
+  },
+  "havanīṃ": {
+   "lemma": "havanī"
+  },
+  "haviṣyam": {
+   "lemma": "haviṣya"
+  },
+  "heṃ": {
+   "lemma": "heṃ"
+  },
+  "hemavallyā": {
+   "lemma": "hemavallī"
+  },
+  "heṣamāṇo": {
+   "lemma": "heṣ"
+  },
+  "hṛdyāt": {
+   "lemma": "hṛdya"
+  },
+  "hṛṣyed": {
+   "lemma": "hṛṣ"
+  },
+  "hiṃsyamānam": {
+   "lemma": "hiṃs"
+  },
+  "himāri": {
+   "lemma": "himāri"
+  },
+  "hiraṇmayaḥ": {
+   "lemma": "hiraṇmaya"
+  },
+  "hiraṇyaya": {
+   "lemma": "hiraṇyaya"
+  },
+  "homīyaiḥ": {
+   "lemma": "homīya"
+  },
+  "hoṣyati": {
+   "lemma": "hu"
+  },
+  "hrasvagavedhukā": {
+   "lemma": "hrasvagavedhukā"
+  },
+  "hutān": {
+   "lemma": "hu"
+  },
+  "idhānā": {
+   "lemma": "indh"
+  },
+  "icchamānāś": {
+   "lemma": "iṣ"
+  },
+  "ijyaḥ": {
+   "lemma": "yaj"
+  },
+  "imāni": {
+   "lemma": "idam"
+  },
+  "indrāri": {
+   "lemma": "indrāri"
+  },
+  "indraprastham": {
+   "lemma": "indraprastha"
+  },
+  "indriyena": {
+   "lemma": "indriya"
+  },
+  "iraṃmadam": {
+   "lemma": "iraṃmad"
+  },
+  "ite": {
+   "lemma": "i"
+  },
+  "iyasyate": {
+   "lemma": "iyasy"
+  },
+  "iṣudhi": {
+   "lemma": "iṣudhi"
+  },
+  "iṣṭatamā": {
+   "lemma": "iṣṭatama"
+  },
+  "jāgaraiḥ": {
+   "lemma": "jāgara"
+  },
+  "jālān": {
+   "lemma": "jāla"
+  },
+  "jāmbavatīpatiḥ": {
+   "lemma": "jāmbavatīpati"
+  },
+  "jānaye": {
+   "lemma": "jānī"
+  },
+  "jārite": {
+   "lemma": "jāray"
+  },
+  "jātaveśmani": {
+   "lemma": "jātaveśman"
+  },
+  "jāyamānāṃ": {
+   "lemma": "jan"
+  },
+  "jīmūtayor": {
+   "lemma": "jīmūta"
+  },
+  "jīvīni": {
+   "lemma": "jīvin"
+  },
+  "jīvaraktam": {
+   "lemma": "jīvarakta"
+  },
+  "jīyante": {
+   "lemma": "jyā"
+  },
+  "jñāpayato": {
+   "lemma": "jñāpay"
+  },
+  "jñeṣam": {
+   "lemma": "jñā"
+  },
+  "jaṅgiḍa": {
+   "lemma": "jaṅgiḍa"
+  },
+  "jagatā": {
+   "lemma": "jagant"
+  },
+  "jahāsi": {
+   "lemma": "hā"
+  },
+  "jalāgamaḥ": {
+   "lemma": "jalāgama"
+  },
+  "jalajambukaḥ": {
+   "lemma": "jalajambukā"
+  },
+  "jalpanaṃ": {
+   "lemma": "jalpana"
+  },
+  "jambūr": {
+   "lemma": "jambu"
+  },
+  "janalokāt": {
+   "lemma": "janaloka"
+  },
+  "janayantyo": {
+   "lemma": "janay"
+  },
+  "janiṣye": {
+   "lemma": "jan"
+  },
+  "japamānas": {
+   "lemma": "jap"
+  },
+  "jarāyukam": {
+   "lemma": "jarāyuka"
+  },
+  "jarjarāya": {
+   "lemma": "jarjara"
+  },
+  "jaṭāmāṃsīṃ": {
+   "lemma": "jaṭāmāṃsī"
+  },
+  "jayantaṃ": {
+   "lemma": "jayanta"
+  },
+  "jetum": {
+   "lemma": "ji"
+  },
+  "jighnato": {
+   "lemma": "han"
+  },
+  "jihmaṃ": {
+   "lemma": "jihma"
+  },
+  "jinena": {
+   "lemma": "jina"
+  },
+  "joṣaṇā": {
+   "lemma": "joṣaṇā"
+  },
+  "juhvad": {
+   "lemma": "hu"
+  },
+  "jvālāyanaḥ": {
+   "lemma": "jvālāyana"
+  },
+  "jvaranidānaṃ": {
+   "lemma": "jvaranidāna"
+  },
+  "jyeṣṭham": {
+   "lemma": "jyeṣṭha"
+  },
+  "jyotiṣṭvāya": {
+   "lemma": "jyotiṣṭva"
+  },
+  "kāṇṭheviddhibhyaḥ": {
+   "lemma": "kāṇṭheviddhi"
+  },
+  "kāśirājaṃ": {
+   "lemma": "kāśirāja"
+  },
+  "kāñjīrāṇām": {
+   "lemma": "kāñjīra"
+  },
+  "kākadantikā": {
+   "lemma": "kākadantikā"
+  },
+  "kākutstho": {
+   "lemma": "kākutstha"
+  },
+  "kālacakraṃ": {
+   "lemma": "kālacakra"
+  },
+  "kālasūryam": {
+   "lemma": "kālasūrya"
+  },
+  "kālyān": {
+   "lemma": "kālya"
+  },
+  "kāmakalā": {
+   "lemma": "kāmakalā"
+  },
+  "kāmayitavyā": {
+   "lemma": "kāmay"
+  },
+  "kāmyam": {
+   "lemma": "kāmya"
+  },
+  "kāntimān": {
+   "lemma": "kāntimat"
+  },
+  "kārūṣakāḥ": {
+   "lemma": "kārūṣaka"
+  },
+  "kārayeta": {
+   "lemma": "kāray"
+  },
+  "kārpaṇya": {
+   "lemma": "kārpaṇya"
+  },
+  "kāryatamaṃ": {
+   "lemma": "kāryatama"
+  },
+  "kāsikaṃ": {
+   "lemma": "kāsika"
+  },
+  "kāyikam": {
+   "lemma": "kāyika"
+  },
+  "kaikeyyai": {
+   "lemma": "kaikeyī"
+  },
+  "kīlām": {
+   "lemma": "kīlā"
+  },
+  "kīrtis": {
+   "lemma": "kīrti"
+  },
+  "kauśalyāyāṃ": {
+   "lemma": "kauśalyā"
+  },
+  "kaulmudam": {
+   "lemma": "kaulmuda"
+  },
+  "kausitān": {
+   "lemma": "kausita"
+  },
+  "kūjanaiḥ": {
+   "lemma": "kūjana"
+  },
+  "kūrmaś": {
+   "lemma": "kūrma"
+  },
+  "kaṃsād": {
+   "lemma": "kaṃsa"
+  },
+  "kaṇṭhā": {
+   "lemma": "kaṇṭha"
+  },
+  "kaṇḍūyana": {
+   "lemma": "kaṇḍūyana"
+  },
+  "kaṇṭakite": {
+   "lemma": "kaṇṭakita"
+  },
+  "kathaṃvīryā": {
+   "lemma": "kathaṃvīrya"
+  },
+  "kathyatām": {
+   "lemma": "kathay"
+  },
+  "kacche": {
+   "lemma": "kaccha"
+  },
+  "kadrukām": {
+   "lemma": "kadrukā"
+  },
+  "kakutstha": {
+   "lemma": "kakutstha"
+  },
+  "kalāyakhañjaṃ": {
+   "lemma": "kalāyakhañja"
+  },
+  "kalandakanivāpe": {
+   "lemma": "kalandakanivāpa"
+  },
+  "kalinda": {
+   "lemma": "kalinda"
+  },
+  "kalpa": {
+   "lemma": "kalpa"
+  },
+  "kalpena": {
+   "lemma": "kalpa"
+  },
+  "kalyate": {
+   "lemma": "kalay"
+  },
+  "kamiṣyanta": {
+   "lemma": "kam"
+  },
+  "kanīyasīṃ": {
+   "lemma": "kanīyas"
+  },
+  "kandarālaś": {
+   "lemma": "kandarāla"
+  },
+  "kanyakubjasya": {
+   "lemma": "kanyakubja"
+  },
+  "kaper": {
+   "lemma": "kapi"
+  },
+  "kapolaṃ": {
+   "lemma": "kapola"
+  },
+  "karīṣa": {
+   "lemma": "karīṣa"
+  },
+  "karṇikāraḥ": {
+   "lemma": "karṇikāra"
+  },
+  "karaṇeṣu": {
+   "lemma": "karaṇa"
+  },
+  "kararuhāḥ": {
+   "lemma": "kararuha"
+  },
+  "kareṇavaḥ": {
+   "lemma": "kareṇu"
+  },
+  "karkaṭa": {
+   "lemma": "karkaṭa"
+  },
+  "karmandī": {
+   "lemma": "karmandin"
+  },
+  "kartāraṃ": {
+   "lemma": "kartṛ"
+  },
+  "karṣī": {
+   "lemma": "karṣin"
+  },
+  "kasyāṃcit": {
+   "lemma": "kaścit"
+  },
+  "kavacī": {
+   "lemma": "kavacin"
+  },
+  "kaṭāni": {
+   "lemma": "kaṭa"
+  },
+  "kaṭukena": {
+   "lemma": "kaṭuka"
+  },
+  "kaṣṭatamaḥ": {
+   "lemma": "kaṣṭatama"
+  },
+  "keśikaḥ": {
+   "lemma": "keśika"
+  },
+  "kesarāt": {
+   "lemma": "kesara"
+  },
+  "kevalībhūtaḥ": {
+   "lemma": "kevalībhū"
+  },
+  "kṛśānubhiḥ": {
+   "lemma": "kṛśānu"
+  },
+  "kṛmīṇām": {
+   "lemma": "kṛmi"
+  },
+  "kṛpam": {
+   "lemma": "kṛp"
+  },
+  "kṛtaghnānāṃ": {
+   "lemma": "kṛtaghna"
+  },
+  "kṛtavarmaṇi": {
+   "lemma": "kṛtavarman"
+  },
+  "kṛttivāsasaḥ": {
+   "lemma": "kṛttivāsas"
+  },
+  "kṛṣṇāv": {
+   "lemma": "kṛṣṇa"
+  },
+  "kṛṣṇapiṅgalam": {
+   "lemma": "kṛṣṇapiṅgala"
+  },
+  "kṛṣṭim": {
+   "lemma": "kṛṣṭi"
+  },
+  "kiṃnarās": {
+   "lemma": "kiṃnara"
+  },
+  "kiñca": {
+   "lemma": "kiṃca"
+  },
+  "kinnarya": {
+   "lemma": "kiṃnarī"
+  },
+  "kiṭṭāḥ": {
+   "lemma": "kiṭṭa"
+  },
+  "kleśatamaṃ": {
+   "lemma": "kleśatama"
+  },
+  "koṇālaka": {
+   "lemma": "koṇālaka"
+  },
+  "kokebhyaḥ": {
+   "lemma": "koka"
+  },
+  "kopayat": {
+   "lemma": "kopay"
+  },
+  "koṭikāśyaṃ": {
+   "lemma": "koṭikāśya"
+  },
+  "krāma": {
+   "lemma": "kram"
+  },
+  "krīḍanako": {
+   "lemma": "krīḍanaka"
+  },
+  "krauḍi": {
+   "lemma": "krauḍi"
+  },
+  "kramataḥ": {
+   "lemma": "kramatas"
+  },
+  "kravyādī": {
+   "lemma": "kravyādī"
+  },
+  "kriyāvatāṃ": {
+   "lemma": "kriyāvat"
+  },
+  "krośatīm": {
+   "lemma": "kruś"
+  },
+  "kte": {
+   "lemma": "kta"
+  },
+  "kuṇḍalau": {
+   "lemma": "kuṇḍala"
+  },
+  "kuśalam": {
+   "lemma": "kuśala"
+  },
+  "kuñjarāñ": {
+   "lemma": "kuñjara"
+  },
+  "kuhakaiḥ": {
+   "lemma": "kuhaka"
+  },
+  "kulācāram": {
+   "lemma": "kulācāra"
+  },
+  "kulaṭānām": {
+   "lemma": "kulaṭā"
+  },
+  "kumārayoḥ": {
+   "lemma": "kumāra"
+  },
+  "kumbhayoḥ": {
+   "lemma": "kumbha"
+  },
+  "kunda": {
+   "lemma": "kunda"
+  },
+  "kuḍavo": {
+   "lemma": "kuḍava"
+  },
+  "kuruṅgiṇī": {
+   "lemma": "kuruṅgiṇī"
+  },
+  "kuryād": {
+   "lemma": "niḥkṣip"
+  },
+  "kutūhalinīnām": {
+   "lemma": "kutūhalin"
+  },
+  "kuṭīprāveśikam": {
+   "lemma": "kuṭīprāveśika"
+  },
+  "kuṣītakāt": {
+   "lemma": "kuṣītaka"
+  },
+  "kvathitais": {
+   "lemma": "kvathita"
+  },
+  "kṣārabandho": {
+   "lemma": "kṣārabandha"
+  },
+  "kṣīrāyāḥ": {
+   "lemma": "kṣīra"
+  },
+  "kṣīrodanvati": {
+   "lemma": "kṣīrodanvant"
+  },
+  "kṣamāṇām": {
+   "lemma": "kṣama"
+  },
+  "kṣapatāṃ": {
+   "lemma": "kṣap"
+  },
+  "kṣatra": {
+   "lemma": "kṣatra"
+  },
+  "kṣayas": {
+   "lemma": "kṣaya"
+  },
+  "kṣepsyase": {
+   "lemma": "kṣip"
+  },
+  "kṣiṇomi": {
+   "lemma": "kṣi"
+  },
+  "kṣitibhṛtā": {
+   "lemma": "kṣitibhṛt"
+  },
+  "kṣobhitāḥ": {
+   "lemma": "kṣobhay"
+  },
+  "kṣudrābhiḥ": {
+   "lemma": "kṣudra"
+  },
+  "kṣupopodaka": {
+   "lemma": "kṣupopodaka"
+  },
+  "lāgharako": {
+   "lemma": "lāgharaka"
+  },
+  "lālasā": {
+   "lemma": "lālasa"
+  },
+  "līlakaṃ": {
+   "lemma": "līlaka"
+  },
+  "labhanta": {
+   "lemma": "labh"
+  },
+  "laṅghanabṛṃhaṇīyam": {
+   "lemma": "laṅghanabṛṃhaṇīya"
+  },
+  "lagnaḥ": {
+   "lemma": "lag"
+  },
+  "lakṣaṇavatīm": {
+   "lemma": "lakṣaṇavat"
+  },
+  "lakṣyān": {
+   "lemma": "lakṣya"
+  },
+  "lambadantā": {
+   "lemma": "lambadantā"
+  },
+  "latākarañjāḥ": {
+   "lemma": "latākarañja"
+  },
+  "layād": {
+   "lemma": "laya"
+  },
+  "lehaiḥ": {
+   "lemma": "leha"
+  },
+  "letterausjhjh]": {
+   "lemma": "mahāvīra"
+  },
+  "liṅgeśvaram": {
+   "lemma": "liṅgeśvara"
+  },
+  "lipyase": {
+   "lemma": "lip"
+  },
+  "lohais": {
+   "lemma": "loha"
+  },
+  "lohityāṃ": {
+   "lemma": "lohityā"
+  },
+  "lokasya": {
+   "lemma": "loka"
+  },
+  "lomaśamūlikā": {
+   "lemma": "lomaśamūlikā"
+  },
+  "luśaś": {
+   "lemma": "luśa"
+  },
+  "mādhavāḥ": {
+   "lemma": "mādhava"
+  },
+  "māṃsaiḥ": {
+   "lemma": "māṃsa"
+  },
+  "māṇḍavīṃ": {
+   "lemma": "māṇḍavī"
+  },
+  "māgadhīm": {
+   "lemma": "māgadhī"
+  },
+  "mākṣikāḥ": {
+   "lemma": "mākṣika"
+  },
+  "mālyāḥ": {
+   "lemma": "mālya"
+  },
+  "mānasāv": {
+   "lemma": "mānasa"
+  },
+  "māninīm": {
+   "lemma": "māninī"
+  },
+  "māpayema": {
+   "lemma": "māpay"
+  },
+  "mārgaśīrṣī": {
+   "lemma": "mārgaśīrṣī"
+  },
+  "mārjayanti": {
+   "lemma": "mārjay"
+  },
+  "māsā": {
+   "lemma": "māsa"
+  },
+  "mātaṅgavatā": {
+   "lemma": "mātaṅgavat"
+  },
+  "mātrī": {
+   "lemma": "mātra"
+  },
+  "māyāyā": {
+   "lemma": "māyā"
+  },
+  "maindena": {
+   "lemma": "mainda"
+  },
+  "mīmāṃsyaṃ": {
+   "lemma": "mīmāṃs"
+  },
+  "maulā": {
+   "lemma": "maula"
+  },
+  "mūkīkāras": {
+   "lemma": "mūkīkāra"
+  },
+  "mūlyaṃ": {
+   "lemma": "mūlya"
+  },
+  "mūrdhnoḥ": {
+   "lemma": "mūrdhan"
+  },
+  "mūtrāśayaṃ": {
+   "lemma": "mūtrāśaya"
+  },
+  "madhūḥ": {
+   "lemma": "madhu"
+  },
+  "madhukaro": {
+   "lemma": "madhukara"
+  },
+  "madhurāṇām": {
+   "lemma": "madhura"
+  },
+  "madhyāhnaṃ": {
+   "lemma": "madhyāhna"
+  },
+  "madhyataḥ": {
+   "lemma": "madhya"
+  },
+  "maṅgalāyai": {
+   "lemma": "maṅgalā"
+  },
+  "maṇināgeśvaratīrthamāhātmyavarṇanaṃ": {
+   "lemma": "maṇināgeśvaratīrthamāhātmyavarṇana"
+  },
+  "maṇḍapā": {
+   "lemma": "maṇḍapa"
+  },
+  "mathyamāne": {
+   "lemma": "math"
+  },
+  "madīyaiḥ": {
+   "lemma": "madīya"
+  },
+  "madena": {
+   "lemma": "mada"
+  },
+  "magadhāḥ": {
+   "lemma": "magadha"
+  },
+  "mahāśāntir": {
+   "lemma": "mahāśānti"
+  },
+  "mahāgaṅgām": {
+   "lemma": "mahāgaṅgā"
+  },
+  "mahākarañjas": {
+   "lemma": "mahākarañja"
+  },
+  "mahāmokṣaṃ": {
+   "lemma": "mahāmokṣa"
+  },
+  "mahāpāriṣadeśvaraḥ": {
+   "lemma": "mahāpāriṣadeśvara"
+  },
+  "mahārasāḥ": {
+   "lemma": "mahārasa"
+  },
+  "mahātejasā": {
+   "lemma": "mahātejas"
+  },
+  "mahāvyāhṛtīnāṃ": {
+   "lemma": "mahāvyāhṛti"
+  },
+  "mahīruham": {
+   "lemma": "mahīruha"
+  },
+  "mahata": {
+   "lemma": "mahant"
+  },
+  "mahi": {
+   "lemma": "mahi"
+  },
+  "mahoragaiḥ": {
+   "lemma": "mahoraga"
+  },
+  "makakān": {
+   "lemma": "makaka"
+  },
+  "malamallaka": {
+   "lemma": "malamallaka"
+  },
+  "mamanthū": {
+   "lemma": "math"
+  },
+  "mantharayā": {
+   "lemma": "mantharā"
+  },
+  "manasvinyo": {
+   "lemma": "manasvin"
+  },
+  "mandasānas": {
+   "lemma": "mand"
+  },
+  "manogatīḥ": {
+   "lemma": "manogati"
+  },
+  "mantavaḥ": {
+   "lemma": "mantu"
+  },
+  "mantrebhiḥ": {
+   "lemma": "mantra"
+  },
+  "manvānaiḥ": {
+   "lemma": "man"
+  },
+  "marīcaḥ": {
+   "lemma": "marīca"
+  },
+  "mardayan": {
+   "lemma": "marday"
+  },
+  "martān": {
+   "lemma": "marta"
+  },
+  "marutvatīyām": {
+   "lemma": "marutvatīya"
+  },
+  "maskarin": {
+   "lemma": "maskarin"
+  },
+  "matsathā": {
+   "lemma": "mad"
+  },
+  "matyāḥ": {
+   "lemma": "mati"
+  },
+  "me": {
+   "lemma": "mad"
+  },
+  "meghanādatīrthamāhātmyavarṇanaṃ": {
+   "lemma": "meghanādatīrthamāhātmyavarṇana"
+  },
+  "medaskam": {
+   "lemma": "medaska"
+  },
+  "melita": {
+   "lemma": "melay"
+  },
+  "mṛṇālam": {
+   "lemma": "mṛṇāla"
+  },
+  "mṛdulāṃ": {
+   "lemma": "mṛdula"
+  },
+  "mṛgacarmajam": {
+   "lemma": "mṛgacarmaja"
+  },
+  "mṛgyatāṃ": {
+   "lemma": "mṛgay"
+  },
+  "mṛtapaṃ": {
+   "lemma": "mṛtapa"
+  },
+  "mṛṣṭam": {
+   "lemma": "mṛj"
+  },
+  "mithunābhyāṃ": {
+   "lemma": "mithuna"
+  },
+  "mimanthiṣum": {
+   "lemma": "mimanthiṣu"
+  },
+  "mitradevasya": {
+   "lemma": "mitradeva"
+  },
+  "mleccham": {
+   "lemma": "mleccha"
+  },
+  "modamāno": {
+   "lemma": "mud"
+  },
+  "moktavyā": {
+   "lemma": "muc"
+  },
+  "mriyamāṇaiḥ": {
+   "lemma": "mṛ"
+  },
+  "mukhebhagāḥ": {
+   "lemma": "mukhebhagā"
+  },
+  "muñcasva": {
+   "lemma": "muc"
+  },
+  "mudgarāṇāṃ": {
+   "lemma": "mudgara"
+  },
+  "muhyanty": {
+   "lemma": "muh"
+  },
+  "mukulita": {
+   "lemma": "mukulita"
+  },
+  "munikharjūrikā": {
+   "lemma": "munikharjūrikā"
+  },
+  "muṣṇan": {
+   "lemma": "muṣ"
+  },
+  "nābhipadma": {
+   "lemma": "nābhipadma"
+  },
+  "nāthaya": {
+   "lemma": "nāthay"
+  },
+  "nāgaḥ": {
+   "lemma": "nāga"
+  },
+  "nāgatīrtham": {
+   "lemma": "nāgatīrtha"
+  },
+  "nālyā": {
+   "lemma": "nāla"
+  },
+  "nānāvidhe": {
+   "lemma": "nānāvidha"
+  },
+  "nārāyaṇābhyām": {
+   "lemma": "nārāyaṇa"
+  },
+  "nāsābhyāṃ": {
+   "lemma": "nāsā"
+  },
+  "nāṭakīyām": {
+   "lemma": "nāṭakīyā"
+  },
+  "naimittikaṃ": {
+   "lemma": "naimittika"
+  },
+  "naivārasya": {
+   "lemma": "naivāra"
+  },
+  "nīcy": {
+   "lemma": "nyāñc"
+  },
+  "nīlaratnaṃ": {
+   "lemma": "nīlaratna"
+  },
+  "nīrasam": {
+   "lemma": "nīrasa"
+  },
+  "naumi": {
+   "lemma": "nū"
+  },
+  "nakhaiḥ": {
+   "lemma": "nakha"
+  },
+  "naddhaiḥ": {
+   "lemma": "nah"
+  },
+  "nagarā": {
+   "lemma": "nagara"
+  },
+  "naktabhojanam": {
+   "lemma": "naktabhojana"
+  },
+  "nalas": {
+   "lemma": "nala"
+  },
+  "namasvat": {
+   "lemma": "namasvat"
+  },
+  "nandāyīṃ": {
+   "lemma": "nandāyī"
+  },
+  "nanṛtuḥ": {
+   "lemma": "nṛt"
+  },
+  "naradevaiḥ": {
+   "lemma": "naradeva"
+  },
+  "nariṣyantasya": {
+   "lemma": "nariṣyanta"
+  },
+  "natiś": {
+   "lemma": "nati"
+  },
+  "navanītena": {
+   "lemma": "navanīta"
+  },
+  "nayāthaḥ": {
+   "lemma": "nī"
+  },
+  "naṣṭasya": {
+   "lemma": "naś"
+  },
+  "netrārir": {
+   "lemma": "netrāri"
+  },
+  "nṛhares": {
+   "lemma": "nṛhari"
+  },
+  "nṛtuḥ": {
+   "lemma": "nṛtu"
+  },
+  "nidhāsyantaḥ": {
+   "lemma": "nidhā"
+  },
+  "nighnasya": {
+   "lemma": "nighna"
+  },
+  "niḥkṣārā": {
+   "lemma": "niḥkṣāra"
+  },
+  "niḥsṛtau": {
+   "lemma": "niḥsṛ"
+  },
+  "nikhilena": {
+   "lemma": "nikhila"
+  },
+  "niścakrāma": {
+   "lemma": "niṣkram"
+  },
+  "niśitaṃ": {
+   "lemma": "niśā"
+  },
+  "nibodhet": {
+   "lemma": "nibudh"
+  },
+  "nidarśanāḥ": {
+   "lemma": "nidarśana"
+  },
+  "nigadet": {
+   "lemma": "nigad"
+  },
+  "nigrahaṇaṃ": {
+   "lemma": "nigrahaṇa"
+  },
+  "nihnutya": {
+   "lemma": "nihnu"
+  },
+  "nikaṭībhūtaṃ": {
+   "lemma": "nikaṭībhū"
+  },
+  "nikumbha": {
+   "lemma": "nikumbha"
+  },
+  "nimīlita": {
+   "lemma": "nimīlay"
+  },
+  "nimeṣakāḥ": {
+   "lemma": "nimeṣaka"
+  },
+  "nimuṣṭikaḥ": {
+   "lemma": "nimuṣṭika"
+  },
+  "ninditau": {
+   "lemma": "nind"
+  },
+  "nipīḍitam": {
+   "lemma": "nipīḍay"
+  },
+  "nirāśaṅkā": {
+   "lemma": "nirāśaṅka"
+  },
+  "nirāmayaiḥ": {
+   "lemma": "nirāmaya"
+  },
+  "nirbhartsitaḥ": {
+   "lemma": "nirbhartsay"
+  },
+  "nirgharṣāt": {
+   "lemma": "nirgharṣa"
+  },
+  "nirṇejakasya": {
+   "lemma": "nirṇejaka"
+  },
+  "nirabhra": {
+   "lemma": "nirabhra"
+  },
+  "niranugrahā": {
+   "lemma": "niranugraha"
+  },
+  "niravāghnan": {
+   "lemma": "niravahan"
+  },
+  "nirbandhunā": {
+   "lemma": "nirbandhu"
+  },
+  "nirdiśyate": {
+   "lemma": "nirdiś"
+  },
+  "nirgantum": {
+   "lemma": "nirgam"
+  },
+  "nirindriyām": {
+   "lemma": "nirindriya"
+  },
+  "nirmāṃsaiś": {
+   "lemma": "nirmāṃsa"
+  },
+  "nirmanthana": {
+   "lemma": "nirmanthana"
+  },
+  "nirmuktasya": {
+   "lemma": "nirmuc"
+  },
+  "nirudgāra": {
+   "lemma": "nirudgāra"
+  },
+  "nirutsukā": {
+   "lemma": "nirutsuka"
+  },
+  "nirvairaḥ": {
+   "lemma": "nirvaira"
+  },
+  "nirveṣṭu": {
+   "lemma": "nirveṣṭu"
+  },
+  "nirvindhyāyāḥ": {
+   "lemma": "nirvindhyā"
+  },
+  "niryātam": {
+   "lemma": "niryā"
+  },
+  "nistīrṇa": {
+   "lemma": "nistṛ"
+  },
+  "nitambī": {
+   "lemma": "nitambin"
+  },
+  "nivārayati": {
+   "lemma": "nivāray"
+  },
+  "nivartamānāny": {
+   "lemma": "nivṛt"
+  },
+  "niveśau": {
+   "lemma": "niveśa"
+  },
+  "nivṛttān": {
+   "lemma": "nivṛt"
+  },
+  "niyacchasi": {
+   "lemma": "niyam"
+  },
+  "niyogasya": {
+   "lemma": "niyoga"
+  },
+  "niyuvānā": {
+   "lemma": "niyu"
+  },
+  "niṣṭhitāṃś": {
+   "lemma": "niṣṭhā"
+  },
+  "niṣeddhum": {
+   "lemma": "niṣidh"
+  },
+  "niṣkāsa": {
+   "lemma": "niṣkāsa"
+  },
+  "niṣkiñcanānāṃ": {
+   "lemma": "niṣkiṃcana"
+  },
+  "niṣpādyā": {
+   "lemma": "niṣpāday"
+  },
+  "niṣpeṣaṇe": {
+   "lemma": "niṣpeṣaṇa"
+  },
+  "niṣṭyāyai": {
+   "lemma": "niṣṭyā"
+  },
+  "nyāgan": {
+   "lemma": "nyāgam"
+  },
+  "nyañjyāt": {
+   "lemma": "nyañj"
+  },
+  "nyasel": {
+   "lemma": "nyas"
+  },
+  "nyubjya": {
+   "lemma": "nyubj"
+  },
+  "ojasvī": {
+   "lemma": "ojasvin"
+  },
+  "oṣṭhyāḥ": {
+   "lemma": "oṣṭhya"
+  },
+  "pāṃsunā": {
+   "lemma": "pāṃsu"
+  },
+  "pāṇḍavaḥ": {
+   "lemma": "pāṇḍu"
+  },
+  "pāśajālaṃ": {
+   "lemma": "pāśajāla"
+  },
+  "pāñcālānām": {
+   "lemma": "pāñcāla"
+  },
+  "pādāṃśikaiḥ": {
+   "lemma": "pādāṃśika"
+  },
+  "pādukāḥ": {
+   "lemma": "pādukā"
+  },
+  "pālāśyāṃ": {
+   "lemma": "pālāśa"
+  },
+  "pālitair": {
+   "lemma": "pālay"
+  },
+  "pāpāya": {
+   "lemma": "pāpa"
+  },
+  "pārāśaraṃ": {
+   "lemma": "pārāśara"
+  },
+  "pārthivā": {
+   "lemma": "pārthiva"
+  },
+  "pārameśvara": {
+   "lemma": "pārameśvara"
+  },
+  "pārijātakasya": {
+   "lemma": "pārijātaka"
+  },
+  "pāryād": {
+   "lemma": "pārya"
+  },
+  "pātakāny": {
+   "lemma": "pātaka"
+  },
+  "pātnīvatena": {
+   "lemma": "pātnīvata"
+  },
+  "pāvanānāṃ": {
+   "lemma": "pāvana"
+  },
+  "pāṭyante": {
+   "lemma": "pāṭay"
+  },
+  "paiśācān": {
+   "lemma": "paiśāca"
+  },
+  "pīṭhī": {
+   "lemma": "pīṭhī"
+  },
+  "pīḍayiṣyanti": {
+   "lemma": "pīḍay"
+  },
+  "pītapuṣpakaḥ": {
+   "lemma": "pītapuṣpaka"
+  },
+  "pauṃsyebhiś": {
+   "lemma": "pauṃsya"
+  },
+  "pauraṃdaraṃ": {
+   "lemma": "pauraṃdara"
+  },
+  "pautrasya": {
+   "lemma": "pautra"
+  },
+  "pūjanam": {
+   "lemma": "pūjana"
+  },
+  "pūpāṃ": {
+   "lemma": "pūpā"
+  },
+  "pūrṇimāyāṃ": {
+   "lemma": "pūrṇimā"
+  },
+  "pūrvāḥ": {
+   "lemma": "pūrvā"
+  },
+  "pūrvapakṣam": {
+   "lemma": "pūrvapakṣa"
+  },
+  "pūtā": {
+   "lemma": "pū"
+  },
+  "pūyavahaḥ": {
+   "lemma": "pūyavaha"
+  },
+  "paṅktyo": {
+   "lemma": "paṅkti"
+  },
+  "paścā": {
+   "lemma": "paścā"
+  },
+  "paśupatī": {
+   "lemma": "paśupati"
+  },
+  "paśyate": {
+   "lemma": "dṛś"
+  },
+  "pathye": {
+   "lemma": "pathyā"
+  },
+  "pañcānām": {
+   "lemma": "pañcan"
+  },
+  "pañcadaśyāṃ": {
+   "lemma": "pañcadaśa"
+  },
+  "pañcamitram": {
+   "lemma": "pañcamitra"
+  },
+  "pañcaviṃśaiḥ": {
+   "lemma": "pañcaviṃśa"
+  },
+  "pacyanti": {
+   "lemma": "pac"
+  },
+  "padavyaḥ": {
+   "lemma": "padavī"
+  },
+  "padmasaṃbhavaḥ": {
+   "lemma": "padmasaṃbhava"
+  },
+  "paktiṃ": {
+   "lemma": "pakti"
+  },
+  "pakṣati": {
+   "lemma": "pakṣati"
+  },
+  "palālyā": {
+   "lemma": "palālī"
+  },
+  "pallavo": {
+   "lemma": "pallava"
+  },
+  "papṛkṣeṇyam": {
+   "lemma": "papṛkṣeṇya"
+  },
+  "parāṅmukheṇa": {
+   "lemma": "parāṅmukha"
+  },
+  "parājeṣyāmi": {
+   "lemma": "parāji"
+  },
+  "parāparāyā": {
+   "lemma": "parāparā"
+  },
+  "parāvatas": {
+   "lemma": "parāvat"
+  },
+  "parīkṣid": {
+   "lemma": "parīkṣit"
+  },
+  "parīyāya": {
+   "lemma": "parī"
+  },
+  "paraś": {
+   "lemma": "paras"
+  },
+  "parameśāna": {
+   "lemma": "parameśāna"
+  },
+  "paratantreṣu": {
+   "lemma": "paratantra"
+  },
+  "paribhakṣaṇāt": {
+   "lemma": "paribhakṣaṇa"
+  },
+  "paridhāpayanti": {
+   "lemma": "paridhāpay"
+  },
+  "pariṇāhāni": {
+   "lemma": "pariṇāha"
+  },
+  "pariśīlayantu": {
+   "lemma": "pariśīlay"
+  },
+  "pariśriteṣu": {
+   "lemma": "pariśri"
+  },
+  "paricchettum": {
+   "lemma": "paricchid"
+  },
+  "paridāhakābhiḥ": {
+   "lemma": "paridāhaka"
+  },
+  "parigaṇanā": {
+   "lemma": "parigaṇana"
+  },
+  "parihāryāṇām": {
+   "lemma": "parihṛ"
+  },
+  "parijñātasya": {
+   "lemma": "parijñā"
+  },
+  "parikartike": {
+   "lemma": "parikartikā"
+  },
+  "parikṣīyate": {
+   "lemma": "parikṣi"
+  },
+  "parimārjitam": {
+   "lemma": "parimārjay"
+  },
+  "parimoṣaṇam": {
+   "lemma": "parimoṣaṇa"
+  },
+  "paripālakān": {
+   "lemma": "paripālaka"
+  },
+  "paripacyate": {
+   "lemma": "paripac"
+  },
+  "pariprayantaṃ": {
+   "lemma": "paripre"
+  },
+  "parisaṃvatsaraṃ": {
+   "lemma": "parisaṃvatsara"
+  },
+  "paristaraṇīyān": {
+   "lemma": "paristṛ"
+  },
+  "parittā": {
+   "lemma": "paritta"
+  },
+  "parivāritā": {
+   "lemma": "parivāray"
+  },
+  "parivartitaḥ": {
+   "lemma": "parivartay"
+  },
+  "parivṛttaṃ": {
+   "lemma": "parivṛt"
+  },
+  "pariṣauti": {
+   "lemma": "pariṣū"
+  },
+  "pariṣṭobhatyā": {
+   "lemma": "pariṣṭubh"
+  },
+  "parvaṇā": {
+   "lemma": "parvan"
+  },
+  "paryākrāmanta": {
+   "lemma": "paryākram"
+  },
+  "paryabhramanta": {
+   "lemma": "paribhram"
+  },
+  "paryanto": {
+   "lemma": "paryanta"
+  },
+  "paryavasthānena": {
+   "lemma": "paryavasthāna"
+  },
+  "paryupāsata": {
+   "lemma": "paryupās"
+  },
+  "patīṃl": {
+   "lemma": "pati"
+  },
+  "patatriṇīḥ": {
+   "lemma": "patatrin"
+  },
+  "patmabhiḥ": {
+   "lemma": "patman"
+  },
+  "patteḥ": {
+   "lemma": "patti"
+  },
+  "pavamānaś": {
+   "lemma": "pavamāna"
+  },
+  "paṭālike": {
+   "lemma": "paṭālika"
+  },
+  "paṭṭiśān": {
+   "lemma": "paṭṭiśa"
+  },
+  "pe": {
+   "lemma": "pa"
+  },
+  "peṣitābhiḥ": {
+   "lemma": "peṣay"
+  },
+  "pṛthagvidhāni": {
+   "lemma": "pṛthagvidha"
+  },
+  "pṛthulākṣa": {
+   "lemma": "pṛthulākṣa"
+  },
+  "pṛcchyantāṃ": {
+   "lemma": "pracch"
+  },
+  "pṛṣṭhato": {
+   "lemma": "pṛṣṭhatas"
+  },
+  "pidhānaṃ": {
+   "lemma": "pidhāna"
+  },
+  "piṇḍa": {
+   "lemma": "piṇḍa"
+  },
+  "piśaṅgāni": {
+   "lemma": "piśaṅga"
+  },
+  "pibat": {
+   "lemma": "pā"
+  },
+  "pinākaḥ": {
+   "lemma": "pināka"
+  },
+  "pipiśe": {
+   "lemma": "piś"
+  },
+  "pitūnām": {
+   "lemma": "pitu"
+  },
+  "pitryāṃ": {
+   "lemma": "pitrya"
+  },
+  "piṣṭaiś": {
+   "lemma": "piṣ"
+  },
+  "plakṣam": {
+   "lemma": "plakṣa"
+  },
+  "pluṣṭaṃ": {
+   "lemma": "pluṣṭa"
+  },
+  "poṣam": {
+   "lemma": "poṣa"
+  },
+  "prāṇānt": {
+   "lemma": "prāṇa"
+  },
+  "prāṇayātrāṃ": {
+   "lemma": "prāṇayātrā"
+  },
+  "prāśnan": {
+   "lemma": "prāś"
+  },
+  "prācetaso": {
+   "lemma": "prācetasa"
+  },
+  "prāduṣkaraṇaṃ": {
+   "lemma": "prāduṣkaraṇa"
+  },
+  "prājāpatyābhyaḥ": {
+   "lemma": "prājāpatya"
+  },
+  "prākṛtīr": {
+   "lemma": "prākṛta"
+  },
+  "prāpam": {
+   "lemma": "prāpa"
+  },
+  "prāptayoḥ": {
+   "lemma": "prāp"
+  },
+  "prārthyate": {
+   "lemma": "prārthay"
+  },
+  "prāstasya": {
+   "lemma": "prās"
+  },
+  "prātilomyaṃ": {
+   "lemma": "prātilomya"
+  },
+  "prāvṛtām": {
+   "lemma": "prāvṛ"
+  },
+  "prāyaścittaṃ": {
+   "lemma": "prāyaścitta"
+  },
+  "prīṇayiṣyāmi": {
+   "lemma": "prīṇay"
+  },
+  "prabhākaro": {
+   "lemma": "prabhākara"
+  },
+  "prabhūmān": {
+   "lemma": "prabhūmat"
+  },
+  "prabhaviṣṇor": {
+   "lemma": "prabhaviṣṇu"
+  },
+  "pradhānam": {
+   "lemma": "pradhāna"
+  },
+  "pradhvaṃsanāt": {
+   "lemma": "pradhvaṃsana"
+  },
+  "praṇādaḥ": {
+   "lemma": "praṇāda"
+  },
+  "praṇamyā": {
+   "lemma": "praṇam"
+  },
+  "praṇetāra": {
+   "lemma": "praṇī"
+  },
+  "praśāmyate": {
+   "lemma": "praśāmay"
+  },
+  "praśamanā": {
+   "lemma": "praśamana"
+  },
+  "praśrabdheḥ": {
+   "lemma": "praśrabdhi"
+  },
+  "pratheya": {
+   "lemma": "prath"
+  },
+  "prabrūhi": {
+   "lemma": "prabrū"
+  },
+  "pracchannasya": {
+   "lemma": "pracchad"
+  },
+  "pracaskanda": {
+   "lemma": "praskand"
+  },
+  "pradānābhyām": {
+   "lemma": "pradāna"
+  },
+  "pradīyamānān": {
+   "lemma": "pradā"
+  },
+  "pradarśayiṣyamāṇa": {
+   "lemma": "pradarśay"
+  },
+  "pradoṣān": {
+   "lemma": "pradoṣa"
+  },
+  "praga": {
+   "lemma": "prage"
+  },
+  "prahāritaḥ": {
+   "lemma": "prahāray"
+  },
+  "praharṣiṇīṃ": {
+   "lemma": "praharṣin"
+  },
+  "prahlāda": {
+   "lemma": "prahlāda"
+  },
+  "prajāpatau": {
+   "lemma": "prajāpati"
+  },
+  "prajñāpāramitāyā": {
+   "lemma": "prajñāpāramitā"
+  },
+  "prajalpitāyām": {
+   "lemma": "prajalp"
+  },
+  "prajvalitaiḥ": {
+   "lemma": "prajval"
+  },
+  "prakālayet": {
+   "lemma": "prakālay"
+  },
+  "prakampita": {
+   "lemma": "prakamp"
+  },
+  "prakṛtayaḥ": {
+   "lemma": "prakṛti"
+  },
+  "prakrāntaṃ": {
+   "lemma": "prakram"
+  },
+  "prakṣālitam": {
+   "lemma": "prakṣālay"
+  },
+  "pralīnair": {
+   "lemma": "pralī"
+  },
+  "praliptayā": {
+   "lemma": "pralip"
+  },
+  "pramādyet": {
+   "lemma": "pramad"
+  },
+  "pramathyamāneṣu": {
+   "lemma": "pramath"
+  },
+  "pramṛṇa": {
+   "lemma": "pramṛṇa"
+  },
+  "pramukhān": {
+   "lemma": "pramukha"
+  },
+  "prapādukā": {
+   "lemma": "prapāduka"
+  },
+  "prapañcāya": {
+   "lemma": "prapañca"
+  },
+  "prapede": {
+   "lemma": "prapad"
+  },
+  "prarugṇam": {
+   "lemma": "praruj"
+  },
+  "prasāribhiḥ": {
+   "lemma": "prasārin"
+  },
+  "prasthitānāṃ": {
+   "lemma": "prasthā"
+  },
+  "prasahānām": {
+   "lemma": "prasaha"
+  },
+  "prasarpakebhyo": {
+   "lemma": "prasarpaka"
+  },
+  "prasṛtau": {
+   "lemma": "prasṛ"
+  },
+  "praspaṣṭa": {
+   "lemma": "prapaś"
+  },
+  "prasuptāḥ": {
+   "lemma": "prasvap"
+  },
+  "pratāpitaḥ": {
+   "lemma": "pratāpay"
+  },
+  "pratīkṣau": {
+   "lemma": "pratīkṣa"
+  },
+  "pratūrṇa": {
+   "lemma": "pratṛ"
+  },
+  "pratṛdya": {
+   "lemma": "pratṛd"
+  },
+  "pratighoṣiṇyaḥ": {
+   "lemma": "pratighoṣin"
+  },
+  "pratibandhakaḥ": {
+   "lemma": "pratibandhaka"
+  },
+  "pratidīyatām": {
+   "lemma": "pratidā"
+  },
+  "pratigṛhṇīta": {
+   "lemma": "pratigrah"
+  },
+  "pratihartuḥ": {
+   "lemma": "pratihartṛ"
+  },
+  "pratikārāṇām": {
+   "lemma": "pratikāra"
+  },
+  "pratilabhec": {
+   "lemma": "pratilabh"
+  },
+  "pratimṛṣyate": {
+   "lemma": "pratimṛṣ"
+  },
+  "pratiniyatā": {
+   "lemma": "pratiniyam"
+  },
+  "pratipadyāmaha": {
+   "lemma": "pratipad"
+  },
+  "pratipratiḥ": {
+   "lemma": "pratiprati"
+  },
+  "pratisaṃkhyātuṃ": {
+   "lemma": "pratisaṃkhyā"
+  },
+  "pratisarā": {
+   "lemma": "pratisarā"
+  },
+  "prativīraṃ": {
+   "lemma": "prativīra"
+  },
+  "prativindhyataḥ": {
+   "lemma": "prativindhya"
+  },
+  "pratiṣṭhāpayet": {
+   "lemma": "pratiṣṭhāpay"
+  },
+  "pratiṣiddhaṃ": {
+   "lemma": "pratiṣidh"
+  },
+  "pratyāśrutāni": {
+   "lemma": "pratyāśruta"
+  },
+  "pratyānahyati": {
+   "lemma": "pratyānah"
+  },
+  "pratyabhāc": {
+   "lemma": "pratibhā"
+  },
+  "pratyagṛhṇān": {
+   "lemma": "pratigrah"
+  },
+  "pratyapāniti": {
+   "lemma": "pratyāpān"
+  },
+  "pratyavamarśanam": {
+   "lemma": "pratyavamarśana"
+  },
+  "pratyayo": {
+   "lemma": "pratyaya"
+  },
+  "pratyudyamāya": {
+   "lemma": "pratyudyama"
+  },
+  "pravā": {
+   "lemma": "pravā"
+  },
+  "pravāsānāṃ": {
+   "lemma": "pravāsa"
+  },
+  "pravahām": {
+   "lemma": "pravaha"
+  },
+  "pravartakānām": {
+   "lemma": "pravartaka"
+  },
+  "pravasita": {
+   "lemma": "pravas"
+  },
+  "pravekṣyāmo": {
+   "lemma": "praviś"
+  },
+  "pravṛttavān": {
+   "lemma": "pravṛt"
+  },
+  "praviciniṣyati": {
+   "lemma": "pravici"
+  },
+  "praviṣṭāsu": {
+   "lemma": "praviś"
+  },
+  "pravyāhṛtā": {
+   "lemma": "pravyāhṛ"
+  },
+  "prayātavyo": {
+   "lemma": "prayā"
+  },
+  "prayatiṣye": {
+   "lemma": "prayat"
+  },
+  "prayokṣyate": {
+   "lemma": "prayuj"
+  },
+  "pre": {
+   "lemma": "pra"
+  },
+  "premāṇaṃ": {
+   "lemma": "preman"
+  },
+  "pretim": {
+   "lemma": "preti"
+  },
+  "priyā": {
+   "lemma": "priya"
+  },
+  "priyatarau": {
+   "lemma": "priyatara"
+  },
+  "prokṣaṇīm": {
+   "lemma": "prokṣaṇī"
+  },
+  "proṣṭhapadyāṃ": {
+   "lemma": "proṣṭhapada"
+  },
+  "puṃsuvanam": {
+   "lemma": "puṃsuvana"
+  },
+  "puṇyanāmā": {
+   "lemma": "puṇyanāman"
+  },
+  "pulastyaṃ": {
+   "lemma": "pulastya"
+  },
+  "punarāgamana": {
+   "lemma": "punarāgamana"
+  },
+  "purāṇāḥ": {
+   "lemma": "purāṇa"
+  },
+  "purūcīm": {
+   "lemma": "purūcī"
+  },
+  "purastādudarkaṃ": {
+   "lemma": "purastādudarka"
+  },
+  "puroḍāś": {
+   "lemma": "puroḍās"
+  },
+  "puruṣābhyām": {
+   "lemma": "puruṣa"
+  },
+  "putrā": {
+   "lemma": "putra"
+  },
+  "puttikā": {
+   "lemma": "puttikā"
+  },
+  "puṣkaradvīpam": {
+   "lemma": "puṣkaradvīpa"
+  },
+  "puṣpaketuḥ": {
+   "lemma": "puṣpaketu"
+  },
+  "puṣṭiṃ": {
+   "lemma": "puṣṭi"
+  },
+  "ḍiṇḍamaṃ": {
+   "lemma": "ḍiṇḍama"
+  },
+  "rāghavasya": {
+   "lemma": "rāghava"
+  },
+  "rāhūgaṇa": {
+   "lemma": "rāhūgaṇa"
+  },
+  "rājadhūrto": {
+   "lemma": "rājadhūrta"
+  },
+  "rājante": {
+   "lemma": "rāj"
+  },
+  "rājataiḥ": {
+   "lemma": "rājata"
+  },
+  "rājyānāṃ": {
+   "lemma": "rājya"
+  },
+  "rāmaṇyakam": {
+   "lemma": "rāmaṇyaka"
+  },
+  "rātrābhyām": {
+   "lemma": "rātra"
+  },
+  "rāyaspoṣo": {
+   "lemma": "rāyaspoṣa"
+  },
+  "raucanikīṃ": {
+   "lemma": "raucanika"
+  },
+  "rūḍhānām": {
+   "lemma": "ruh"
+  },
+  "rūpatva": {
+   "lemma": "rūpatva"
+  },
+  "raghaṭo": {
+   "lemma": "raghaṭ"
+  },
+  "raṇatām": {
+   "lemma": "raṇ"
+  },
+  "rathai": {
+   "lemma": "ratha"
+  },
+  "rathirai": {
+   "lemma": "rathira"
+  },
+  "radam": {
+   "lemma": "rada"
+  },
+  "rajastūr": {
+   "lemma": "rajastur"
+  },
+  "raktānāṃ": {
+   "lemma": "rañj"
+  },
+  "raktaparṇake": {
+   "lemma": "raktaparṇaka"
+  },
+  "rakṣaṇād": {
+   "lemma": "rakṣaṇa"
+  },
+  "rakṣitavatī": {
+   "lemma": "rakṣ"
+  },
+  "ramaṇīyāḥ": {
+   "lemma": "ramaṇīya"
+  },
+  "ramyaiḥ": {
+   "lemma": "ramya"
+  },
+  "rasā": {
+   "lemma": "rasā"
+  },
+  "rasagarbhaṃ": {
+   "lemma": "rasagarbha"
+  },
+  "rasavatīr": {
+   "lemma": "rasavat"
+  },
+  "ratipriyā": {
+   "lemma": "ratipriyā"
+  },
+  "ravaṇāt": {
+   "lemma": "ravaṇa"
+  },
+  "reṇuḥ": {
+   "lemma": "reṇu"
+  },
+  "reto": {
+   "lemma": "retas"
+  },
+  "riktāni": {
+   "lemma": "ric"
+  },
+  "rodhān": {
+   "lemma": "rodha"
+  },
+  "rocis": {
+   "lemma": "rocis"
+  },
+  "rohaṇī": {
+   "lemma": "rohaṇī"
+  },
+  "rombhyaḥ": {
+   "lemma": "roman"
+  },
+  "roṣākṣepo": {
+   "lemma": "roṣākṣepa"
+  },
+  "rucirān": {
+   "lemma": "rucira"
+  },
+  "rudrāś": {
+   "lemma": "rudra"
+  },
+  "rujāḥ": {
+   "lemma": "rujā"
+  },
+  "rundhataḥ": {
+   "lemma": "rudh"
+  },
+  "sādhāraṇa": {
+   "lemma": "sādhāraṇa"
+  },
+  "sādhikāre": {
+   "lemma": "sādhikāra"
+  },
+  "sādhyebhyo": {
+   "lemma": "sādhya"
+  },
+  "sāṃsparśikāni": {
+   "lemma": "sāṃsparśika"
+  },
+  "sādayaḥ": {
+   "lemma": "sādi"
+  },
+  "sāhaśravaso": {
+   "lemma": "sāhaśravasa"
+  },
+  "sākṛtatvād": {
+   "lemma": "sākṛtatva"
+  },
+  "sāmānyaśabdānāṃ": {
+   "lemma": "sāmānyaśabda"
+  },
+  "sāmarthyena": {
+   "lemma": "sāmarthya"
+  },
+  "sāmudri": {
+   "lemma": "sāmudri"
+  },
+  "sānukūlāṃ": {
+   "lemma": "sānukūla"
+  },
+  "sāraṅgā": {
+   "lemma": "sāraṅga"
+  },
+  "sārasvatyo": {
+   "lemma": "sārasvatya"
+  },
+  "sārvasurabhiṇā": {
+   "lemma": "sārvasurabhi"
+  },
+  "sāttvikam": {
+   "lemma": "sāttvika"
+  },
+  "sāvitryaḥ": {
+   "lemma": "sāvitra"
+  },
+  "saindhavasya": {
+   "lemma": "saindhava"
+  },
+  "sīmāntāt": {
+   "lemma": "sīmānta"
+  },
+  "skhalataḥ": {
+   "lemma": "skhal"
+  },
+  "saubaleyena": {
+   "lemma": "saubaleya"
+  },
+  "saumanasaḥ": {
+   "lemma": "saumanasa"
+  },
+  "saurabhī": {
+   "lemma": "saurabhī"
+  },
+  "sauvarcalaṃ": {
+   "lemma": "sauvarcala"
+  },
+  "sphaṭikayoḥ": {
+   "lemma": "sphaṭika"
+  },
+  "sphuṭat": {
+   "lemma": "sphuṭ"
+  },
+  "sthānīyaiḥ": {
+   "lemma": "sthānīya"
+  },
+  "sthāsyasi": {
+   "lemma": "sthā"
+  },
+  "sthūlau": {
+   "lemma": "sthūla"
+  },
+  "sthalakūrmayantraṃ": {
+   "lemma": "sthalakūrmayantra"
+  },
+  "sthirībhūta": {
+   "lemma": "sthirībhū"
+  },
+  "sūcīmukho": {
+   "lemma": "sūcīmukha"
+  },
+  "sūkarikāyāḥ": {
+   "lemma": "sūkarikā"
+  },
+  "sūnṛtāvat": {
+   "lemma": "sūnṛtāvat"
+  },
+  "sūryānanaṃ": {
+   "lemma": "sūryānana"
+  },
+  "sūtaśatrur": {
+   "lemma": "sūtaśatru"
+  },
+  "sūtrasthāna": {
+   "lemma": "sūtrasthāna"
+  },
+  "sabhya": {
+   "lemma": "sabhya"
+  },
+  "sakhyās": {
+   "lemma": "sakhī"
+  },
+  "saṃbhakṣayiṣyāmi": {
+   "lemma": "saṃbhakṣay"
+  },
+  "saṃbhriyamāṇāyām": {
+   "lemma": "sambhṛ"
+  },
+  "saṃdhanājit": {
+   "lemma": "saṃdhanājit"
+  },
+  "saṃghātaiḥ": {
+   "lemma": "saṃghāta"
+  },
+  "saṃkhyaiḥ": {
+   "lemma": "saṃkhya"
+  },
+  "saṃśitāya": {
+   "lemma": "saṃśita"
+  },
+  "saṃśrayeṇa": {
+   "lemma": "saṃśraya"
+  },
+  "saṃbodhayan": {
+   "lemma": "sambodhay"
+  },
+  "saṃcaratī": {
+   "lemma": "saṃcar"
+  },
+  "saṃdīptāḥ": {
+   "lemma": "saṃdīp"
+  },
+  "saṃdeśyāt": {
+   "lemma": "saṃdiś"
+  },
+  "saṃgītāḥ": {
+   "lemma": "saṃgīta"
+  },
+  "saṃgṛhītāni": {
+   "lemma": "saṃgrah"
+  },
+  "saṃhāraḥ": {
+   "lemma": "saṃhāra"
+  },
+  "saṃhṛtaḥ": {
+   "lemma": "saṃhṛ"
+  },
+  "saṃjīvana": {
+   "lemma": "saṃjīvana"
+  },
+  "saṃjagmuḥ": {
+   "lemma": "saṃgam"
+  },
+  "saṃkīrtanaṃ": {
+   "lemma": "saṃkīrtana"
+  },
+  "saṃkaṭāḥ": {
+   "lemma": "saṃkaṭa"
+  },
+  "saṃkrīḍamānānām": {
+   "lemma": "saṃkrīḍ"
+  },
+  "saṃkṣepas": {
+   "lemma": "saṃkṣepa"
+  },
+  "saṃmānanā": {
+   "lemma": "saṃmānana"
+  },
+  "saṃmatena": {
+   "lemma": "samman"
+  },
+  "saṃmuhyāmi": {
+   "lemma": "sammuh"
+  },
+  "saṃnibhāni": {
+   "lemma": "saṃnibha"
+  },
+  "saṃnipātayet": {
+   "lemma": "saṃnipātay"
+  },
+  "saṃniyama": {
+   "lemma": "saṃniyama"
+  },
+  "saṃpātinā": {
+   "lemma": "sampātin"
+  },
+  "saṃpatya": {
+   "lemma": "sampat"
+  },
+  "saṃprabodhayaty": {
+   "lemma": "saṃprabodhay"
+  },
+  "saṃprasādayan": {
+   "lemma": "saṃprasāday"
+  },
+  "saṃpriyo": {
+   "lemma": "sampriya"
+  },
+  "saṃrakṣitaḥ": {
+   "lemma": "saṃrakṣ"
+  },
+  "saṃsāraviṣakathanaṃ": {
+   "lemma": "saṃsāraviṣakathana"
+  },
+  "saṃsthitikā": {
+   "lemma": "saṃsthitika"
+  },
+  "saṃsevyāḥ": {
+   "lemma": "saṃsev"
+  },
+  "saṃskārayāmāsa": {
+   "lemma": "saṃskāray"
+  },
+  "saṃsparśanaṃ": {
+   "lemma": "saṃsparśana"
+  },
+  "saṃstasya": {
+   "lemma": "saṃsta"
+  },
+  "saṃtāpe": {
+   "lemma": "saṃtāpa"
+  },
+  "saṃtarpayati": {
+   "lemma": "saṃtarpay"
+  },
+  "saṃtoṣyā": {
+   "lemma": "saṃtoṣay"
+  },
+  "saṃvāhane": {
+   "lemma": "saṃvāhana"
+  },
+  "saṃvarṇayitavyaṃ": {
+   "lemma": "saṃvarṇay"
+  },
+  "saṃveśam": {
+   "lemma": "saṃveśa"
+  },
+  "saṃvibhāgi": {
+   "lemma": "saṃvibhāgin"
+  },
+  "saṃvindate": {
+   "lemma": "saṃvid"
+  },
+  "saṃyamaiḥ": {
+   "lemma": "saṃyama"
+  },
+  "saṃyuddhaṃ": {
+   "lemma": "saṃyuddha"
+  },
+  "saṅkalpa": {
+   "lemma": "saṃkalpa"
+  },
+  "sabrahmacāriṇī": {
+   "lemma": "sabrahmacārin"
+  },
+  "sadāmattakā": {
+   "lemma": "sadāmattaka"
+  },
+  "sadasyaṃ": {
+   "lemma": "sadasya"
+  },
+  "sadyomaraṇaṃ": {
+   "lemma": "sadyomaraṇa"
+  },
+  "sahāyavantaṃ": {
+   "lemma": "sahāyavat"
+  },
+  "sahajayā": {
+   "lemma": "sahaja"
+  },
+  "sahasrārciḥ": {
+   "lemma": "sahasrārcis"
+  },
+  "sahasriṇo": {
+   "lemma": "sahasrin"
+  },
+  "sahodanāni": {
+   "lemma": "sahodana"
+  },
+  "sajjamānayā": {
+   "lemma": "sañj"
+  },
+  "sakṛdvīraḥ": {
+   "lemma": "sakṛdvīra"
+  },
+  "salilarāśi": {
+   "lemma": "salilarāśi"
+  },
+  "samāśleṣa": {
+   "lemma": "samāśleṣa"
+  },
+  "samādadhīta": {
+   "lemma": "samādhā"
+  },
+  "samāhatāḥ": {
+   "lemma": "samāhan"
+  },
+  "samākrāntaḥ": {
+   "lemma": "samākram"
+  },
+  "samānayā": {
+   "lemma": "samāna"
+  },
+  "samāptāyāṃ": {
+   "lemma": "samāp"
+  },
+  "samārurukṣāṃcakrur": {
+   "lemma": "samārurukṣ"
+  },
+  "samāvartanīyaḥ": {
+   "lemma": "samāvṛt"
+  },
+  "samāyatya": {
+   "lemma": "samāyat"
+  },
+  "sambhavanti": {
+   "lemma": "sambhū"
+  },
+  "samīkuruta": {
+   "lemma": "samīkṛ"
+  },
+  "samūhināṃ": {
+   "lemma": "samūhin"
+  },
+  "samabhyadhatta": {
+   "lemma": "samabhidhā"
+  },
+  "samaśnuvatīḥ": {
+   "lemma": "samaś"
+  },
+  "samajayaṃs": {
+   "lemma": "saṃji"
+  },
+  "samantato": {
+   "lemma": "samantataḥ"
+  },
+  "samanvārabdheṣv": {
+   "lemma": "samanvārabh"
+  },
+  "samarcanāt": {
+   "lemma": "samarcanā"
+  },
+  "samaste": {
+   "lemma": "samasta"
+  },
+  "samavāyiṣu": {
+   "lemma": "samavāyin"
+  },
+  "samaveto": {
+   "lemma": "samave"
+  },
+  "samebhyo": {
+   "lemma": "sama"
+  },
+  "samidhāṃ": {
+   "lemma": "samidh"
+  },
+  "sammardaiḥ": {
+   "lemma": "sammarda"
+  },
+  "sampīta": {
+   "lemma": "sampā"
+  },
+  "sampattayas": {
+   "lemma": "sampatti"
+  },
+  "sampracakratuḥ": {
+   "lemma": "samprakṛ"
+  },
+  "samprapīḍya": {
+   "lemma": "samprapīḍay"
+  },
+  "sampraveṣṭite": {
+   "lemma": "sampraveṣṭay"
+  },
+  "samubdhaṃ": {
+   "lemma": "samubh"
+  },
+  "samudbhāsamānā": {
+   "lemma": "samudbhās"
+  },
+  "samuddeśam": {
+   "lemma": "samuddeśa"
+  },
+  "samudrekaḥ": {
+   "lemma": "samudreka"
+  },
+  "samunnata": {
+   "lemma": "samunnata"
+  },
+  "samupanaya": {
+   "lemma": "samupanī"
+  },
+  "samutkarṣe": {
+   "lemma": "samutkarṣa"
+  },
+  "samuttīryamāṇāsu": {
+   "lemma": "samuttṛ"
+  },
+  "sandhānam": {
+   "lemma": "saṃdhāna"
+  },
+  "saniṣāmahe": {
+   "lemma": "san"
+  },
+  "sapātrī": {
+   "lemma": "sapātrī"
+  },
+  "saptāha": {
+   "lemma": "saptāha"
+  },
+  "saptamīsnapanaṃ": {
+   "lemma": "saptamīsnapana"
+  },
+  "saptaviṃśe": {
+   "lemma": "saptaviṃśa"
+  },
+  "sarandhraṃ": {
+   "lemma": "sarandhra"
+  },
+  "saritpatim": {
+   "lemma": "saritpati"
+  },
+  "sarpanta": {
+   "lemma": "sṛp"
+  },
+  "sarvānubhūtiḥ": {
+   "lemma": "sarvānubhūti"
+  },
+  "sarvakālodbhavaṃ": {
+   "lemma": "sarvakālodbhava"
+  },
+  "sarvatra": {
+   "lemma": "sarvatra"
+  },
+  "sasitam": {
+   "lemma": "sasita"
+  },
+  "satatasamitābhiyuktena": {
+   "lemma": "satatasamitābhiyukta"
+  },
+  "satsu": {
+   "lemma": "as"
+  },
+  "satvataḥ": {
+   "lemma": "satvata"
+  },
+  "satyataḥ": {
+   "lemma": "satya"
+  },
+  "savarṇeṣu": {
+   "lemma": "savarṇa"
+  },
+  "sayauvanāḥ": {
+   "lemma": "sayauvana"
+  },
+  "senāpatiṣu": {
+   "lemma": "senāpati"
+  },
+  "sevinyā": {
+   "lemma": "sevin"
+  },
+  "sṛjante": {
+   "lemma": "sṛj"
+  },
+  "sṛṣṭer": {
+   "lemma": "sṛṣṭi"
+  },
+  "siṃhanādinī": {
+   "lemma": "siṃhanādinī"
+  },
+  "siddhāntaḥ": {
+   "lemma": "siddhānta"
+  },
+  "siddhena": {
+   "lemma": "sidh"
+  },
+  "sindhudvīpād": {
+   "lemma": "sindhudvīpa"
+  },
+  "siraḥ": {
+   "lemma": "sirā"
+  },
+  "siteṣu": {
+   "lemma": "sita"
+  },
+  "skandanty": {
+   "lemma": "skand"
+  },
+  "smaranty": {
+   "lemma": "smṛ"
+  },
+  "smṛtinā": {
+   "lemma": "smṛti"
+  },
+  "snātvāḥ": {
+   "lemma": "snā"
+  },
+  "snigdhāṃ": {
+   "lemma": "snigdha"
+  },
+  "sodaryeṇa": {
+   "lemma": "sodarya"
+  },
+  "somaputrāt": {
+   "lemma": "somaputra"
+  },
+  "sottaram": {
+   "lemma": "sottara"
+  },
+  "sparśana": {
+   "lemma": "sparśana"
+  },
+  "spṛśyamānāṃ": {
+   "lemma": "spṛś"
+  },
+  "srāveṇa": {
+   "lemma": "srāva"
+  },
+  "sravan": {
+   "lemma": "sru"
+  },
+  "srukṣu": {
+   "lemma": "sruc"
+  },
+  "staṃbhanaṃ": {
+   "lemma": "stambhana"
+  },
+  "stana": {
+   "lemma": "stan"
+  },
+  "stavanena": {
+   "lemma": "stavana"
+  },
+  "stoko": {
+   "lemma": "stoka"
+  },
+  "strībhiḥ": {
+   "lemma": "strī"
+  },
+  "stutyaṃ": {
+   "lemma": "stu"
+  },
+  "subhikṣa": {
+   "lemma": "subhikṣa"
+  },
+  "sukhāyāḥ": {
+   "lemma": "sukha"
+  },
+  "suśītalaiḥ": {
+   "lemma": "suśītala"
+  },
+  "sucaritrā": {
+   "lemma": "sucaritrā"
+  },
+  "sudoṣṇāḥ": {
+   "lemma": "sudoṣṇa"
+  },
+  "sugrīvo": {
+   "lemma": "sugrīva"
+  },
+  "sukeśīṃ": {
+   "lemma": "sukeśī"
+  },
+  "sulekas": {
+   "lemma": "suleka"
+  },
+  "sumedhasām": {
+   "lemma": "sumedhas"
+  },
+  "sunandī": {
+   "lemma": "sunandin"
+  },
+  "supārśvas": {
+   "lemma": "supārśva"
+  },
+  "suprajaso": {
+   "lemma": "suprajas"
+  },
+  "surālayām": {
+   "lemma": "surālaya"
+  },
+  "surabhijihvā": {
+   "lemma": "surabhijihvā"
+  },
+  "surasādinā": {
+   "lemma": "surasādi"
+  },
+  "susthira": {
+   "lemma": "susthira"
+  },
+  "sutīkṣṇaḥ": {
+   "lemma": "sutīkṣṇa"
+  },
+  "suvāmi": {
+   "lemma": "sū"
+  },
+  "suvarṇeṣu": {
+   "lemma": "suvarṇa"
+  },
+  "suvrataś": {
+   "lemma": "suvrata"
+  },
+  "suṣupsayā": {
+   "lemma": "suṣupsā"
+  },
+  "svāśiraḥ": {
+   "lemma": "svāśir"
+  },
+  "svāhākṛte": {
+   "lemma": "svāhākṛta"
+  },
+  "svātīṣu": {
+   "lemma": "svāti"
+  },
+  "svabhāvam": {
+   "lemma": "svabhāva"
+  },
+  "svacchayā": {
+   "lemma": "svaccha"
+  },
+  "svanayan": {
+   "lemma": "svanay"
+  },
+  "svarbhānur": {
+   "lemma": "svarbhānu"
+  },
+  "svarasā": {
+   "lemma": "svarasā"
+  },
+  "svaroḥ": {
+   "lemma": "svaru"
+  },
+  "svastikāre": {
+   "lemma": "svastikāra"
+  },
+  "svayaṃgrahaḥ": {
+   "lemma": "svayaṃgraha"
+  },
+  "svedanena": {
+   "lemma": "svedana"
+  },
+  "syūtā": {
+   "lemma": "sīv"
+  },
+  "tāṇḍavam": {
+   "lemma": "tāṇḍava"
+  },
+  "tālamūla": {
+   "lemma": "tālamūla"
+  },
+  "tāmrāt": {
+   "lemma": "tāmra"
+  },
+  "tānvaḥ": {
+   "lemma": "tānva"
+  },
+  "tāpyaṃ": {
+   "lemma": "tap"
+  },
+  "tārṇa": {
+   "lemma": "tārṇa"
+  },
+  "tārkṣyaṃ": {
+   "lemma": "tārkṣya"
+  },
+  "tāvatsu": {
+   "lemma": "tāvat"
+  },
+  "tairyagyonīn": {
+   "lemma": "tairyagyoni"
+  },
+  "tīrthaiś": {
+   "lemma": "tīrtha"
+  },
+  "tūṇāc": {
+   "lemma": "tūṇa"
+  },
+  "tūṣṇīṃbhūtena": {
+   "lemma": "tūṣṇīṃbhūta"
+  },
+  "tathātvena": {
+   "lemma": "tathātva"
+  },
+  "takmanā": {
+   "lemma": "takman"
+  },
+  "talpe": {
+   "lemma": "talpa"
+  },
+  "tanūjaṃ": {
+   "lemma": "tanūja"
+  },
+  "tanmātrebhyaḥ": {
+   "lemma": "tanmātra"
+  },
+  "tanubhṛto": {
+   "lemma": "tanubhṛt"
+  },
+  "tapāti": {
+   "lemma": "tap"
+  },
+  "tape": {
+   "lemma": "tap"
+  },
+  "tapyāmi": {
+   "lemma": "tap"
+  },
+  "taraṅgiṇya": {
+   "lemma": "taraṃgiṇī"
+  },
+  "tariṣyaṃs": {
+   "lemma": "tṛ"
+  },
+  "tarpayaty": {
+   "lemma": "tarpay"
+  },
+  "tasthānā": {
+   "lemma": "sthā"
+  },
+  "tatavatyā": {
+   "lemma": "tatavat"
+  },
+  "tavakṣīryā": {
+   "lemma": "tavakṣīrī"
+  },
+  "tejanīr": {
+   "lemma": "tejanī"
+  },
+  "tṛṇāmlaṃ": {
+   "lemma": "tṛṇāmla"
+  },
+  "tṛptīr": {
+   "lemma": "tṛpti"
+  },
+  "tṛṣṇajam": {
+   "lemma": "tṛṣṇaj"
+  },
+  "tiktakadruma": {
+   "lemma": "tiktakadruma"
+  },
+  "tilvas": {
+   "lemma": "tilva"
+  },
+  "tiraścya": {
+   "lemma": "tiryañc"
+  },
+  "tiryakṣv": {
+   "lemma": "tiryañc"
+  },
+  "tiṣṭhantam": {
+   "lemma": "sthā"
+  },
+  "tor": {
+   "lemma": "tu"
+  },
+  "trāṇānām": {
+   "lemma": "trāṇa"
+  },
+  "trāyantyaḥ": {
+   "lemma": "trāyantī"
+  },
+  "traividyāḥ": {
+   "lemma": "traividya"
+  },
+  "trayīr": {
+   "lemma": "traya"
+  },
+  "tridhāmn": {
+   "lemma": "tridhāman"
+  },
+  "triśṛṅgo": {
+   "lemma": "triśṛṅga"
+  },
+  "trihāyaṇaṃ": {
+   "lemma": "trihāyaṇa"
+  },
+  "trinavatitamo": {
+   "lemma": "trinavatitama"
+  },
+  "trisitā": {
+   "lemma": "trisitā"
+  },
+  "triyāmāṃ": {
+   "lemma": "triyāmā"
+  },
+  "tryaṅgāṇām": {
+   "lemma": "tryaṅga"
+  },
+  "tubarakāḥ": {
+   "lemma": "tubaraka"
+  },
+  "tulayitvā": {
+   "lemma": "tulay"
+  },
+  "turāṣāﾱ": {
+   "lemma": "turāṣāh"
+  },
+  "turyātītam": {
+   "lemma": "turyātīta"
+  },
+  "tuṣodakaiḥ": {
+   "lemma": "tuṣodaka"
+  },
+  "tva": {
+   "lemma": "tva"
+  },
+  "tvarayituṃ": {
+   "lemma": "tvaray"
+  },
+  "tyāginam": {
+   "lemma": "tyāgin"
+  },
+  "tyebhir": {
+   "lemma": "tya"
+  },
+  "uṇḍukaḥ": {
+   "lemma": "uṇḍuka"
+  },
+  "ucchedī": {
+   "lemma": "ucchedin"
+  },
+  "ucchrayati": {
+   "lemma": "ucchri"
+  },
+  "uccāvacam": {
+   "lemma": "uccāvaca"
+  },
+  "ucitaṃ": {
+   "lemma": "uc"
+  },
+  "udārāṇām": {
+   "lemma": "udāra"
+  },
+  "udbhāvitaḥ": {
+   "lemma": "udbhāvay"
+  },
+  "uddhūta": {
+   "lemma": "uddhū"
+  },
+  "uddhir": {
+   "lemma": "uddhi"
+  },
+  "udīcyām": {
+   "lemma": "udañc"
+  },
+  "udadheḥ": {
+   "lemma": "udadhi"
+  },
+  "udakaḥ": {
+   "lemma": "udaka"
+  },
+  "udapāṭyanta": {
+   "lemma": "utpāṭay"
+  },
+  "udayā": {
+   "lemma": "udaya"
+  },
+  "uddāna": {
+   "lemma": "uddāna"
+  },
+  "udgārāya": {
+   "lemma": "udgāra"
+  },
+  "udgṛhya": {
+   "lemma": "udgrah"
+  },
+  "udumbalaṃ": {
+   "lemma": "udumbala"
+  },
+  "udvaheyam": {
+   "lemma": "udvah"
+  },
+  "udvṛtya": {
+   "lemma": "udvṛ"
+  },
+  "udyatatare": {
+   "lemma": "udyatatara"
+  },
+  "ugreṣu": {
+   "lemma": "ugra"
+  },
+  "ujjvalita": {
+   "lemma": "ujjval"
+  },
+  "uktyā": {
+   "lemma": "ukti"
+  },
+  "ulkānām": {
+   "lemma": "ulkā"
+  },
+  "ulupam": {
+   "lemma": "ulupa"
+  },
+  "unmīlat": {
+   "lemma": "unmīl"
+  },
+  "unmattayā": {
+   "lemma": "unmad"
+  },
+  "unnīyamāna": {
+   "lemma": "unnī"
+  },
+  "upādhamat": {
+   "lemma": "upadham"
+  },
+  "upācared": {
+   "lemma": "upācar"
+  },
+  "upājahruś": {
+   "lemma": "upāhṛ"
+  },
+  "upānayat": {
+   "lemma": "upanī"
+  },
+  "upāsakena": {
+   "lemma": "upāsaka"
+  },
+  "upāvaharaṇāt": {
+   "lemma": "upāvaharaṇa"
+  },
+  "upāyaṃ": {
+   "lemma": "upāya"
+  },
+  "upadhābhir": {
+   "lemma": "upadhā"
+  },
+  "upaḍhaukayanti": {
+   "lemma": "upaḍhaukay"
+  },
+  "upaśoṣaṇe": {
+   "lemma": "upaśoṣaṇa"
+  },
+  "upacīyamāne": {
+   "lemma": "upaci"
+  },
+  "upadagdham": {
+   "lemma": "upadah"
+  },
+  "upadiṣṭaiḥ": {
+   "lemma": "upadiś"
+  },
+  "upagantavai": {
+   "lemma": "upagam"
+  },
+  "upahartavye": {
+   "lemma": "upahṛ"
+  },
+  "upajīva": {
+   "lemma": "upajīv"
+  },
+  "upakāravantaḥ": {
+   "lemma": "upakāravat"
+  },
+  "upakrāmanti": {
+   "lemma": "upakram"
+  },
+  "upalabhyam": {
+   "lemma": "upalabh"
+  },
+  "upaliptam": {
+   "lemma": "upalip"
+  },
+  "upamucya": {
+   "lemma": "upamuc"
+  },
+  "upaneyāḥ": {
+   "lemma": "upanī"
+  },
+  "upaniṣkaram": {
+   "lemma": "upaniṣkara"
+  },
+  "upapannasya": {
+   "lemma": "upapanna"
+  },
+  "uparāsa": {
+   "lemma": "upara"
+  },
+  "uparudhyamānam": {
+   "lemma": "uparudh"
+  },
+  "upasthitaḥ": {
+   "lemma": "upasthā"
+  },
+  "upasaṃpannāṃ": {
+   "lemma": "upasaṃpad"
+  },
+  "upasargāś": {
+   "lemma": "upasarga"
+  },
+  "upasṛṣṭeṣu": {
+   "lemma": "upasṛj"
+  },
+  "upastutaś": {
+   "lemma": "upastu"
+  },
+  "upavājayantaḥ": {
+   "lemma": "upavājay"
+  },
+  "upavasitām": {
+   "lemma": "upavas"
+  },
+  "upayāntam": {
+   "lemma": "upayā"
+  },
+  "upayokṣyāmahe": {
+   "lemma": "upayuj"
+  },
+  "upetāni": {
+   "lemma": "upe"
+  },
+  "upottamaḥ": {
+   "lemma": "upottama"
+  },
+  "uraśchadān": {
+   "lemma": "uraśchada"
+  },
+  "urvīm": {
+   "lemma": "urvī"
+  },
+  "utthāpayāmāsa": {
+   "lemma": "utthāpay"
+  },
+  "utkaṇṭhitām": {
+   "lemma": "utkaṇṭh"
+  },
+  "utkṛṣya": {
+   "lemma": "utkṛṣ"
+  },
+  "utkṣipati": {
+   "lemma": "utkṣip"
+  },
+  "utpīḍaiḥ": {
+   "lemma": "utpīḍa"
+  },
+  "utpatatāṃ": {
+   "lemma": "utpat"
+  },
+  "utsādano": {
+   "lemma": "utsādana"
+  },
+  "utsargāḥ": {
+   "lemma": "utsarga"
+  },
+  "utsṛṣṭasya": {
+   "lemma": "utsṛj"
+  },
+  "uttāritaḥ": {
+   "lemma": "uttāray"
+  },
+  "uttapane": {
+   "lemma": "uttapana"
+  },
+  "uttaranti": {
+   "lemma": "uttṛ"
+  },
+  "uttiṣṭhatsu": {
+   "lemma": "utthā"
+  },
+  "uṣṇena": {
+   "lemma": "uṣṇa"
+  },
+  "uṣṭreṣu": {
+   "lemma": "uṣṭra"
+  },
+  "vāñchāmi": {
+   "lemma": "vāñch"
+  },
+  "vācikair": {
+   "lemma": "vācika"
+  },
+  "vāditrāṇāṃ": {
+   "lemma": "vāditra"
+  },
+  "vāhakāś": {
+   "lemma": "vāhaka"
+  },
+  "vājānāṃ": {
+   "lemma": "vāja"
+  },
+  "vājimedhāya": {
+   "lemma": "vājimedha"
+  },
+  "vāladhibhiḥ": {
+   "lemma": "vāladhi"
+  },
+  "vāmadevam": {
+   "lemma": "vāmadeva"
+  },
+  "vānaradhvajaḥ": {
+   "lemma": "vānaradhvaja"
+  },
+  "vārāṇasyāṃ": {
+   "lemma": "vārāṇasī"
+  },
+  "vārayāmāsatuḥ": {
+   "lemma": "vāray"
+  },
+  "vāritam": {
+   "lemma": "vāray"
+  },
+  "vāruṇyaḥ": {
+   "lemma": "vāruṇī"
+  },
+  "vāsanāṃ": {
+   "lemma": "vāsanā"
+  },
+  "vāsebhyaḥ": {
+   "lemma": "vāsa"
+  },
+  "vāsukes": {
+   "lemma": "vāsuki"
+  },
+  "vātapitta": {
+   "lemma": "vātapitta"
+  },
+  "vāvṛdhānās": {
+   "lemma": "vṛdh"
+  },
+  "vāyavyāya": {
+   "lemma": "vāyavya"
+  },
+  "vaidhṛtye": {
+   "lemma": "vaidhṛtya"
+  },
+  "vaiśvānarāt": {
+   "lemma": "vaiśvānara"
+  },
+  "vaicitryam": {
+   "lemma": "vaicitrya"
+  },
+  "vaidyarājo": {
+   "lemma": "vaidyarāja"
+  },
+  "vaikṛtaka": {
+   "lemma": "vaikṛtaka"
+  },
+  "vaipulye": {
+   "lemma": "vaipulya"
+  },
+  "vairiñcya": {
+   "lemma": "vairiñcya"
+  },
+  "vaiviktyena": {
+   "lemma": "vaiviktya"
+  },
+  "vīṇe": {
+   "lemma": "vīṇā"
+  },
+  "vīḍvī": {
+   "lemma": "vīḍu"
+  },
+  "vīravatī": {
+   "lemma": "vīravat"
+  },
+  "vītaṃ": {
+   "lemma": "vīta"
+  },
+  "vadheyuḥ": {
+   "lemma": "vadh"
+  },
+  "vaṃśajam": {
+   "lemma": "vaṃśaja"
+  },
+  "vaṇijakaḥ": {
+   "lemma": "vaṇijaka"
+  },
+  "vaśitvena": {
+   "lemma": "vaśitva"
+  },
+  "vacanīyaḥ": {
+   "lemma": "vac"
+  },
+  "vadataḥ": {
+   "lemma": "vad"
+  },
+  "vahateṣ": {
+   "lemma": "vahati"
+  },
+  "vajrāṅkuśa": {
+   "lemma": "vajrāṅkuśa"
+  },
+  "vajraraso": {
+   "lemma": "vajrarasa"
+  },
+  "vaktavye": {
+   "lemma": "vaktavya"
+  },
+  "vakṣyata": {
+   "lemma": "vac"
+  },
+  "valitorukam": {
+   "lemma": "valitoruka"
+  },
+  "vamathuḥ": {
+   "lemma": "vamathu"
+  },
+  "vanaukasau": {
+   "lemma": "vanaukas"
+  },
+  "vanaspatiṣv": {
+   "lemma": "vanaspati"
+  },
+  "vanecarān": {
+   "lemma": "vanecara"
+  },
+  "vapāvān": {
+   "lemma": "vapāvat"
+  },
+  "vaḍavām": {
+   "lemma": "vaḍabā"
+  },
+  "varāṭī": {
+   "lemma": "varāṭī"
+  },
+  "vardhayate": {
+   "lemma": "vardhay"
+  },
+  "varṇavatī": {
+   "lemma": "varṇavatī"
+  },
+  "varadaḥ": {
+   "lemma": "varada"
+  },
+  "varco": {
+   "lemma": "varcas"
+  },
+  "varjitā": {
+   "lemma": "varjay"
+  },
+  "vartamāne": {
+   "lemma": "vṛt"
+  },
+  "vartitavān": {
+   "lemma": "vartay"
+  },
+  "varyāṇi": {
+   "lemma": "varya"
+  },
+  "varṣayatho": {
+   "lemma": "varṣay"
+  },
+  "vasūn": {
+   "lemma": "vasu"
+  },
+  "vasavānaṃ": {
+   "lemma": "vasavāna"
+  },
+  "vastra": {
+   "lemma": "vastra"
+  },
+  "vasukam": {
+   "lemma": "vasuka"
+  },
+  "vatsajātiḥ": {
+   "lemma": "vatsajāti"
+  },
+  "vavarṣū": {
+   "lemma": "vṛṣ"
+  },
+  "vayantau": {
+   "lemma": "ve"
+  },
+  "vaṣṭu": {
+   "lemma": "vaś"
+  },
+  "veṇusaudhe": {
+   "lemma": "veṇusaudha"
+  },
+  "vedaṃ": {
+   "lemma": "veda"
+  },
+  "vedayor": {
+   "lemma": "veda"
+  },
+  "vegavāhanaḥ": {
+   "lemma": "vegavāhana"
+  },
+  "vepathūni": {
+   "lemma": "vepathu"
+  },
+  "vetsyāmi": {
+   "lemma": "vid"
+  },
+  "veṣṭyamānam": {
+   "lemma": "veṣṭay"
+  },
+  "vṛścikahāriṇī": {
+   "lemma": "vṛścikahāriṇī"
+  },
+  "vṛddhayor": {
+   "lemma": "vṛddha"
+  },
+  "vṛkodarāya": {
+   "lemma": "vṛkodara"
+  },
+  "vṛtā": {
+   "lemma": "vṛta"
+  },
+  "vṛttapucchā": {
+   "lemma": "vṛttapṛcchā"
+  },
+  "vṛṣṇiyāvata": {
+   "lemma": "vṛṣṇyāvat"
+  },
+  "vṛṣalena": {
+   "lemma": "vṛṣala"
+  },
+  "vibhāgāt": {
+   "lemma": "vibhāga"
+  },
+  "vibhītakānām": {
+   "lemma": "vibhītaka"
+  },
+  "vibhajann": {
+   "lemma": "vibhaj"
+  },
+  "vibhidyamānaḥ": {
+   "lemma": "vibhid"
+  },
+  "vibhvo": {
+   "lemma": "vibhu"
+  },
+  "vidhūpāyat": {
+   "lemma": "vidhūpay"
+  },
+  "vidhṛtir": {
+   "lemma": "vidhṛti"
+  },
+  "vidhyasi": {
+   "lemma": "vyadh"
+  },
+  "vikhidantīḥ": {
+   "lemma": "vikhid"
+  },
+  "viśālākṣīṃ": {
+   "lemma": "viśālākṣī"
+  },
+  "viśadbhiḥ": {
+   "lemma": "viś"
+  },
+  "viśeṣaṇāt": {
+   "lemma": "viśeṣaṇa"
+  },
+  "viśleṣaṇaḥ": {
+   "lemma": "viśleṣaṇa"
+  },
+  "viśrāmyeta": {
+   "lemma": "viśram"
+  },
+  "viśuddhāc": {
+   "lemma": "viśudh"
+  },
+  "viśvāvasau": {
+   "lemma": "viśvāvasu"
+  },
+  "viśvakarma": {
+   "lemma": "viśvakarman"
+  },
+  "viśvatobāhur": {
+   "lemma": "viśvatobāhu"
+  },
+  "vibodhitā": {
+   "lemma": "vibodhay"
+  },
+  "vicchāyaṃ": {
+   "lemma": "vicchāya"
+  },
+  "vicarāma": {
+   "lemma": "vicar"
+  },
+  "vicṛtā": {
+   "lemma": "vicṛt"
+  },
+  "vicitreṣu": {
+   "lemma": "vicitra"
+  },
+  "viddhāsu": {
+   "lemma": "vyadh"
+  },
+  "vidadate": {
+   "lemma": "vidā"
+  },
+  "videvaṃ": {
+   "lemma": "videva"
+  },
+  "vidrutānāṃ": {
+   "lemma": "vidru"
+  },
+  "vidviṣṭa": {
+   "lemma": "vidviṣ"
+  },
+  "vidyotate": {
+   "lemma": "vidyut"
+  },
+  "vigamo": {
+   "lemma": "vigama"
+  },
+  "viguṇo": {
+   "lemma": "viguṇa"
+  },
+  "vihara": {
+   "lemma": "vihṛ"
+  },
+  "vihitān": {
+   "lemma": "vidhā"
+  },
+  "vijñānānām": {
+   "lemma": "vijñāna"
+  },
+  "vijñeyās": {
+   "lemma": "vijñā"
+  },
+  "vijeṣāya": {
+   "lemma": "vijeṣa"
+  },
+  "vikāṅkṣasva": {
+   "lemma": "vikāṅkṣ"
+  },
+  "vikalasya": {
+   "lemma": "vikala"
+  },
+  "vikarṣasi": {
+   "lemma": "vikṛṣ"
+  },
+  "vikṛṣṭaṃ": {
+   "lemma": "vikṛṣ"
+  },
+  "vikrīḍitaṃ": {
+   "lemma": "vikrīḍ"
+  },
+  "vikriyataḥ": {
+   "lemma": "vikṛ"
+  },
+  "vikṣiptākṣiptakaṃ": {
+   "lemma": "vikṣiptākṣiptaka"
+  },
+  "vilagna": {
+   "lemma": "vilag"
+  },
+  "vilasitaiḥ": {
+   "lemma": "vilasita"
+  },
+  "vilokayann": {
+   "lemma": "vilokay"
+  },
+  "vimāno": {
+   "lemma": "vimāna"
+  },
+  "vimarśiṇī": {
+   "lemma": "vimarśin"
+  },
+  "viminvanti": {
+   "lemma": "vimi"
+  },
+  "vimuñcantaḥ": {
+   "lemma": "vimuc"
+  },
+  "vināśena": {
+   "lemma": "vināśa"
+  },
+  "vinaṅkṣyatha": {
+   "lemma": "vinaś"
+  },
+  "vinayiṣyati": {
+   "lemma": "vinī"
+  },
+  "viniḥsṛtena": {
+   "lemma": "viniḥsṛ"
+  },
+  "vininditam": {
+   "lemma": "vinind"
+  },
+  "vinirvartya": {
+   "lemma": "vinirvṛt"
+  },
+  "viniyujyate": {
+   "lemma": "viniyuj"
+  },
+  "vipācayet": {
+   "lemma": "vipācay"
+  },
+  "vipadas": {
+   "lemma": "vipad"
+  },
+  "viparyāsād": {
+   "lemma": "viparyāsa"
+  },
+  "vipluṣo": {
+   "lemma": "vipluṣa"
+  },
+  "viprakurvanti": {
+   "lemma": "viprakṛ"
+  },
+  "vipraviddhān": {
+   "lemma": "vipravyadh"
+  },
+  "viḍaṅgāḥ": {
+   "lemma": "viḍaṅga"
+  },
+  "virājita": {
+   "lemma": "virāj"
+  },
+  "viratha": {
+   "lemma": "viratha"
+  },
+  "viramaḥ": {
+   "lemma": "virama"
+  },
+  "virikto": {
+   "lemma": "viric"
+  },
+  "virujo": {
+   "lemma": "viruja"
+  },
+  "visaṃvādāt": {
+   "lemma": "visaṃvāda"
+  },
+  "visasruḥ": {
+   "lemma": "visṛ"
+  },
+  "vismayana": {
+   "lemma": "vismayana"
+  },
+  "visrastam": {
+   "lemma": "visraṃs"
+  },
+  "vitīrṇena": {
+   "lemma": "vitṛ"
+  },
+  "vitatāv": {
+   "lemma": "vitan"
+  },
+  "vittamam": {
+   "lemma": "vittama"
+  },
+  "vivāsanaṃ": {
+   "lemma": "vivāsana"
+  },
+  "vivakṣitum": {
+   "lemma": "vivakṣ"
+  },
+  "vivarta": {
+   "lemma": "vivarta"
+  },
+  "vivevidad": {
+   "lemma": "vivevid"
+  },
+  "viviṃśo": {
+   "lemma": "viviṃśa"
+  },
+  "viṭaṅkinam": {
+   "lemma": "viṭaṅkin"
+  },
+  "viyukto": {
+   "lemma": "viyuj"
+  },
+  "viṣṇucakreṇa": {
+   "lemma": "viṣṇucakra"
+  },
+  "viṣaṇṇaṃ": {
+   "lemma": "viṣad"
+  },
+  "viṣavallī": {
+   "lemma": "viṣavallī"
+  },
+  "viṣuvat": {
+   "lemma": "viṣuvant"
+  },
+  "viṣyandamānaṃ": {
+   "lemma": "viṣyand"
+  },
+  "vrīhayo": {
+   "lemma": "vrīhi"
+  },
+  "vrajantīṣv": {
+   "lemma": "vraj"
+  },
+  "vrayo": {
+   "lemma": "vrayas"
+  },
+  "vyāghramadana": {
+   "lemma": "vyāghramadana"
+  },
+  "vyāharant": {
+   "lemma": "vyāhṛ"
+  },
+  "vyākriyamāṇeṣu": {
+   "lemma": "vyākṛ"
+  },
+  "vyānaśus": {
+   "lemma": "vyaś"
+  },
+  "vyāpnuvat": {
+   "lemma": "vyāp"
+  },
+  "vyāvartitam": {
+   "lemma": "vyāvartay"
+  },
+  "vyūha": {
+   "lemma": "vyūha"
+  },
+  "vyaṃsayāmāsa": {
+   "lemma": "vyaṃsay"
+  },
+  "vyañjanāc": {
+   "lemma": "vyañjana"
+  },
+  "vyaharatām": {
+   "lemma": "vihṛ"
+  },
+  "vyaktyāḥ": {
+   "lemma": "vyakti"
+  },
+  "vyapadeśānām": {
+   "lemma": "vyapadeśa"
+  },
+  "vyapoha": {
+   "lemma": "vyapoh"
+  },
+  "vyastayā": {
+   "lemma": "vyasta"
+  },
+  "vyatisārya": {
+   "lemma": "vyatisāray"
+  },
+  "vyavacchinnāḥ": {
+   "lemma": "vyavacchid"
+  },
+  "vyavasthānaiḥ": {
+   "lemma": "vyavasthāna"
+  },
+  "vyaye": {
+   "lemma": "vye"
+  },
+  "vyudakā": {
+   "lemma": "vyudaka"
+  },
+  "vyuṣṭimanti": {
+   "lemma": "vyuṣṭimat"
+  },
+  "yāṃ": {
+   "lemma": "yāṃ"
+  },
+  "yācyaḥ": {
+   "lemma": "yāc"
+  },
+  "yājñikam": {
+   "lemma": "yājñika"
+  },
+  "yāmañ": {
+   "lemma": "yāman"
+  },
+  "yāpanān": {
+   "lemma": "yāpana"
+  },
+  "yātayāmāny": {
+   "lemma": "yātayāma"
+  },
+  "yāvakān": {
+   "lemma": "yāvaka"
+  },
+  "yaugandharāyaṇam": {
+   "lemma": "yaugaṃdharāyaṇa"
+  },
+  "yūpān": {
+   "lemma": "yūpa"
+  },
+  "yaśasvin": {
+   "lemma": "yaśasvin"
+  },
+  "yathāgotrakulakalpam": {
+   "lemma": "yathāgotrakulakalpam"
+  },
+  "yathārthayā": {
+   "lemma": "yathārtha"
+  },
+  "yathāyathaṃ": {
+   "lemma": "yathāyatham"
+  },
+  "yadavo": {
+   "lemma": "yadu"
+  },
+  "yajñaś": {
+   "lemma": "yajña"
+  },
+  "yajñiyair": {
+   "lemma": "yajñiya"
+  },
+  "yajiṣṭha": {
+   "lemma": "yajiṣṭha"
+  },
+  "yakṣan": {
+   "lemma": "yaj"
+  },
+  "yamakas": {
+   "lemma": "yamaka"
+  },
+  "yantraka": {
+   "lemma": "yantraka"
+  },
+  "yatarathā": {
+   "lemma": "yatarathā"
+  },
+  "yavāgūr": {
+   "lemma": "yavāgū"
+  },
+  "yavanena": {
+   "lemma": "yavana"
+  },
+  "yaṣṭvā": {
+   "lemma": "yaj"
+  },
+  "yodho": {
+   "lemma": "yodha"
+  },
+  "yogebhiḥ": {
+   "lemma": "yoga"
+  },
+  "yojaya": {
+   "lemma": "yojay"
+  },
+  "yopayāmasi": {
+   "lemma": "yopay"
+  },
+  "yudhyamānau": {
+   "lemma": "yudh"
+  },
+  "yugalāt": {
+   "lemma": "yugala"
+  },
+  "yuktārtha": {
+   "lemma": "yuktārtha"
+  },
+  "yuvabhir": {
+   "lemma": "yuvan"
+  },
+  "yuyutsuṃ": {
+   "lemma": "yuyutsu"
+  },
+  "ṣaṇṇavatir": {
+   "lemma": "ṣaṇṇavati"
+  },
+  "ṣaḍguṇān": {
+   "lemma": "ṣaḍguṇa"
+  },
+  "ṣaṭtriṃśam": {
+   "lemma": "ṣaṭtriṃśa"
+  },
+  "ṣoḍaśī": {
+   "lemma": "ṣoḍaśa"
+  }
+ }
+}
