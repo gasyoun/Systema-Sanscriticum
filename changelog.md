@@ -21,7 +21,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   per lecture) + header «Нарезать лекцию». Importable workflow
   `docs/n8n/lecture-clip-extract.workflow.json` (ffmpeg/VK nodes are operator
   placeholders — no live VK tokens in repo). IMPLEMENTATION:
-  `docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md`. DEPLOY_QUEUE №46.
+  `docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md`. DEPLOY_QUEUE №47.
   Tests: `tests/Feature/LectureClips/*`, `tests/Unit/Lecture/ClipSpanPlannerTest`.
   No money-code; no real VK posts in CI (`Http::fake`).
 - **In-video resume — «продолжить с HH:MM» (H1450, Anton ops-gaps W2).** Три

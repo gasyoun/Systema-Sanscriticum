@@ -188,4 +188,4 @@ ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips
    N8N_CLIP_CALLBACK_SECRET=<secret>
    ```
    `php artisan config:cache`. Flip `CLIP_MARKETING_ENABLED=true` only after a
-   staging dry-run (see `DEPLOY_QUEUE.md` №46).
+   staging dry-run (see `DEPLOY_QUEUE.md` №47).
