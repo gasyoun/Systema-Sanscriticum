@@ -369,4 +369,16 @@ return [
      | EMAIL_CAMPAIGNS=true + config:cache после реальной сегментации на staging.
      */
     'email_campaigns' => (bool) env('EMAIL_CAMPAIGNS', false),
+
+    /*
+     | In-video resume (H1450, Anton ops-gaps W2): «продолжить с HH:MM» в плеере
+     | урока + прогресс-сигнал max_position_seconds. Позиция копится в
+     | lesson_views ВСЕГДА через существующий POST /api/heartbeat (аддитивные
+     | колонки, ничего не меняет для старых запросов без position/duration) —
+     | флаг управляет только клиентским JS: пока ВЫКЛ, плеер не шлёт position/
+     | duration и не показывает баннер «продолжить», ведёт себя ровно как до
+     | H1450. Один адаптер на хост (YouTube/RuTube/VK/Kinescope/Vimeo, D8),
+     | деградирует без ошибки, если у хоста нет API текущей позиции.
+     */
+    'video_resume' => (bool) env('VIDEO_RESUME', false),
 ];

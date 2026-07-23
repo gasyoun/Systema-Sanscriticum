@@ -82,13 +82,34 @@ final class HeartbeatController extends Controller
             ])->save();
         }
 
+        $updates = [
+            'last_heartbeat_at' => now(),
+            'total_time_on_page' => DB::raw('total_time_on_page + '.(int) $delta),
+        ];
+
+        // In-video resume (H1450, W2). position/duration необязательны — хост без
+        // API текущей позиции (или флаг video_resume выключен на клиенте) просто
+        // не шлёт их, и запись ведёт себя ровно как раньше.
+        //
+        // max_position_seconds монотонный: считаем в PHP через $view (firstOrNew
+        // уже загрузил существующую строку на hot-path), а не SQL GREATEST — та
+        // функция не портируется на SQLite (тесты), только на MySQL.
+        $position = $request->validated('position');
+        if ($position !== null) {
+            $position = (int) $position;
+            $updates['last_position_seconds'] = $position;
+            $updates['max_position_seconds'] = max((int) ($view->max_position_seconds ?? 0), $position);
+        }
+
+        $duration = $request->validated('duration');
+        if ($duration !== null) {
+            $updates['video_duration_seconds'] = (int) $duration;
+        }
+
         // Инкрементим счётчик и пишем heartbeat. Одним запросом, через DB::table для скорости.
         DB::table('lesson_views')
             ->where('id', $view->id)
-            ->update([
-                'last_heartbeat_at' => now(),
-                'total_time_on_page' => DB::raw('total_time_on_page + '.(int) $delta),
-            ]);
+            ->update($updates);
 
         // Заодно тикаем heartbeat активной сессии (чтобы cron-закрыватель не убил её).
         // Юзер на странице урока = сессия живая.

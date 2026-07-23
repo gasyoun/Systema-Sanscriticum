@@ -12,6 +12,19 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **In-video resume — «продолжить с HH:MM» (H1450, Anton ops-gaps W2).** Три
+  аддитивные колонки на `lesson_views` (`last_position_seconds`,
+  `max_position_seconds` — монотонный прогресс-сигнал, никогда не убывает даже
+  при перемотке назад, `video_duration_seconds`) пишутся через уже существующий
+  `POST /api/heartbeat` — новый эндпоинт не понадобился, только два
+  необязательных поля в теле запроса. Host-agnostic JS-слой
+  (`public/js/video-resume.js`) даёт по одному адаптеру на YouTube/RuTube/VK/
+  Kinescope/Vimeo (D8) — сегодня в плеере урока реально рендерятся только
+  YouTube и RuTube, остальные три деградируют в no-op до появления
+  соответствующих плееров (заготовка для W3 Kinescope-пилота, который явно
+  переиспользует этот же Kinescope-адаптер). Флаг `video_resume` (config/
+  features.php) ВЫКЛЮЧЕН по умолчанию — пока OFF, плеер и heartbeat ведут себя
+  байт-в-байт как раньше.
 - **Transactional email revival + homegrown campaign engine, Wave 1 (H1449).**
   Closes the first of three genuine Anton-parity gaps (email/resume/clips —
   `docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md`). Part A (reuse, don't rebuild):
