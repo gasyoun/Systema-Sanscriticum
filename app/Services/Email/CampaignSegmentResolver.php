@@ -112,6 +112,6 @@ class CampaignSegmentResolver
             'reason' => $reason,
         ]);
 
-        return new Collection();
+        return new Collection;
     }
 }

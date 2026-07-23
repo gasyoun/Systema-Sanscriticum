@@ -8,6 +8,7 @@ use App\Filament\Resources\CampaignResource\Pages;
 use App\Models\Campaign;
 use App\Models\Course;
 use App\Services\Email\CampaignSender;
+use App\Support\RoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -37,32 +38,32 @@ class CampaignResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     public static function canViewAny(): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     public static function canCreate(): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     public static function canEdit($record): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     public static function canDelete($record): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     public static function canDeleteAny(): bool
     {
-        return static::isFlagEnabled() && \App\Support\RoleGate::adminOnly();
+        return static::isFlagEnabled() && RoleGate::adminOnly();
     }
 
     private static function isFlagEnabled(): bool
