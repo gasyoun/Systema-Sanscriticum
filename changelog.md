@@ -12,6 +12,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Sanskrit-HUB L5 Workstream-A v0 — `/transliterate` + cascade lemmatizer (H1463).**
+  Flag `hub_transliterate` / `HUB_TRANSLITERATE` (OFF by default):
+  `GET /transliterate` playground (IAST → Devanāgarī + SLP1 via vendored
+  `resources/js/vendor/sanskrit-util.js`, Vite entry `transliterate.js`).
+  Internal `App\Services\Nlp\CascadeLemmatizer` (DCS → vidyut → Heritage; stage 1
+  reads `resources/data/dcs_form2lemma.json` — 341 DCS-attested forms from the
+  Nala-1 reading pack slice; stages 2/3 interface-stubbed). No HTTP route for
+  the lemmatizer. Tests: `TransliteratePlaygroundTest`, `CascadeLemmatizerTest`.
+  **Executor:** Grok 4.5 (`grok-4.5`) via xAI (user-authorized override of the
+  Opus 4.8 handoff lock). **Claude/Opus: verify after** — cascade order, key
+  normalizer parity with `SanskritGlossary::normalizeKey`, slice provenance,
+  and that the playground never uses `iast_to_devanagari`.
 - **Lecture clip marketing pipeline, Wave 4 (H1452).** Flag-gated
   (`clip_marketing` / `CLIP_MARKETING_ENABLED`, OFF by default) n8n orchestration:
   `ClipSpanPlanner` reuses existing AI transcript timecodes (no recompute) →

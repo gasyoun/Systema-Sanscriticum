@@ -155,6 +155,15 @@ return [
     'kosha_reader' => (bool) env('KOSHA_READER', false),
 
     /*
+     | Sanskrit-HUB L5 Workstream-A v0 (H1463): /transliterate playground +
+     | internal CascadeLemmatizer. Когда ВКЛ, /transliterate рендерит клиентский
+     | IAST→деванагари+SLP1 playground на vendored sanskrit-util (CDSL).
+     | ВЫКЛ по умолчанию — маршрут отвечает 404 (prod-inert, как kosha_reader).
+     | Lemmatizer HTTP route нет — только внутренний сервис.
+     */
+    'hub_transliterate' => (bool) env('HUB_TRANSLITERATE', false),
+
+    /*
      | RQ4 user study (H987, SanskritGrammar docs/RQ4_EVALUATION_PROTOCOL_2026.md):
      | on-ramp-first vs Талмуд-first learning-gain/retention study. Когда ВКЛ,
      | /rq4-study открывает согласие+анкету → распределение по группам
