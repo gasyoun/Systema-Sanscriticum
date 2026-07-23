@@ -11,6 +11,38 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Transactional email revival + homegrown campaign engine, Wave 1 (H1449).**
+  Closes the first of three genuine Anton-parity gaps (email/resume/clips —
+  `docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md`). Part A (reuse, don't rebuild):
+  a global `App\Listeners\Email\EnforceMailSendingGuards` on every outgoing
+  Mailable — a `SuppressedEmail` list (hard-bounce/unsubscribe) that's checked
+  before every send, and a `config('mail.throttle_per_minute')` per-minute
+  send throttle (mailbox providers rate-limit/suspend on bulk send, unlike a
+  dedicated ESP). `mail:scan-bounces` (D11: scheduled IMAP scan, hourly,
+  no-op until `mail.bounce_scan.enabled`/host/creds are set) suppresses hard
+  bounces it finds. `docs/mail-esp.md` updated with the D6 ruling: mail.ru/
+  Yandex 360 mailbox SMTP is the default transport (already covered by the
+  existing generic-SMTP `Option A`), transport-agnostic so it can later be
+  overridden to Postmark/Mailgun-as-relay (R1) with zero campaign-engine
+  changes. Part B, entirely behind the new `email_campaigns` flag (OFF by
+  default — `CampaignResource` hidden, `/e/o`/`/e/c` tracking routes 404,
+  `CampaignSender`/`SendCampaignRecipient` early-return): `Campaign` +
+  `CampaignRecipient` models (additive migrations, indexed
+  `(campaign_id, opened_at)`), `CampaignSegmentResolver` (all-subscribers /
+  a course's students / a lead-stage, fail-safe empty on an unrecognised
+  filter — never all-users), token-scoped open-pixel + click-redirect
+  tracking endpoints (no PII in the URL; the click target is an
+  app-encrypted opaque token, not attacker-controlled input — no open
+  redirect possible), `CampaignHtmlRenderer` (link/pixel rewriter),
+  `CampaignSender::send()`/`resend()` (Anton's "догон" — resend to
+  `opened_at IS NULL` recipients, linked via `resend_of_id`), and a Filament
+  `CampaignResource` modeled on `AnnouncementResource` (compose, pick
+  segment, send, open/click stats, "Догнать неоткрывших" action). All new
+  mail uses `Mail::fake()`-safe/`array`-transport tests — no live sends.
+  `changelog.md`/`DEPLOY_QUEUE.md` carry the activation prerequisites
+  (mailbox creds, SPF/DKIM/DMARC, migrations, flag flip).
+
 ## [1.51.0] - 2026-07-22
 
 ### Added

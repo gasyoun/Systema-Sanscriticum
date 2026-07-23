@@ -357,4 +357,16 @@ return [
      | включение CHECKOUT_SIGNED_RETURN_URL=true + config:cache после ревью.
      */
     'checkout_signed_return_url' => (bool) env('CHECKOUT_SIGNED_RETURN_URL', false),
+
+    /*
+     | Homegrown email-campaign engine (H1449 W1b, Anton ops-gaps plan): compose
+     | a рассылка, segment recipients, per-recipient open/click tracking, и
+     | «Догнать неоткрывших» (resend to non-openers). Когда ВЫКЛ (по умолчанию):
+     | CampaignResource скрыт из Filament, /e/o и /e/c ничего не трекают (404),
+     | CampaignSender/SendCampaignRecipient ничего не отправляют (early-return) —
+     | прод-инертен byte-в-byte. Транспорт-агностичен: письма идут через тот же
+     | mail-мейлер, что и транзакционные (см. docs/mail-esp.md, D6). Включение —
+     | EMAIL_CAMPAIGNS=true + config:cache после реальной сегментации на staging.
+     */
+    'email_campaigns' => (bool) env('EMAIL_CAMPAIGNS', false),
 ];

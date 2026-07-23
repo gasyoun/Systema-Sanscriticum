@@ -114,6 +114,46 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Per-minute send throttle (H1449 A2)
+    |--------------------------------------------------------------------------
+    |
+    | A mailbox-relay provider (mail.ru / Yandex 360, D6 ruling — see
+    | docs/mail-esp.md) rate-limits and can throttle/suspend on bulk send,
+    | unlike a dedicated ESP. App\Listeners\Email\EnforceMailSendingGuards
+    | rejects (does not queue/retry) any send once this many messages have
+    | gone out in the current rolling minute — a safety valve for both
+    | transactional mail and the campaign engine (H1449 W1b).
+    |
+    */
+
+    'throttle_per_minute' => (int) env('MAIL_THROTTLE_PER_MINUTE', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bounce mailbox scan (H1449 A3)
+    |--------------------------------------------------------------------------
+    |
+    | D11 default: mail.ru/Yandex 360 bounce-webhook support could not be
+    | confirmed without a live spike (S1 in docs/VERIFICATION_SYSTEMA_ANTON_OPS_GAPS.md),
+    | so bounce capture is a scheduled IMAP scan of the sending mailbox
+    | instead (`php artisan mail:scan-bounces`, App\Console\Commands\ScanBounces).
+    | Uses PHP's built-in ext-imap (no new composer dependency) — if the
+    | extension isn't loaded, the command logs and no-ops, so it is safe to
+    | schedule before the extension is actually enabled on the server.
+    | Wiring the real mailbox (host/credentials) is an activation-time step —
+    | see DEPLOY_QUEUE.md.
+    |
+    */
+
+    'bounce_scan' => [
+        'enabled' => (bool) env('MAIL_BOUNCE_SCAN_ENABLED', false),
+        'host' => env('MAIL_BOUNCE_IMAP_HOST'), // e.g. {imap.mail.ru:993/imap/ssl}INBOX
+        'username' => env('MAIL_BOUNCE_IMAP_USERNAME'),
+        'password' => env('MAIL_BOUNCE_IMAP_PASSWORD'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |

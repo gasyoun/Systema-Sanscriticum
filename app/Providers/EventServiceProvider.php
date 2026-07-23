@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\Email\EnforceMailSendingGuards;
 use App\Listeners\LogFailedAuthentication;
 use App\Listeners\UserLoginListener;
 use App\Listeners\UserLogoutListener;
@@ -11,6 +12,7 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Event;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\VKontakte\VKontakteExtendSocialite;
@@ -49,6 +51,11 @@ class EventServiceProvider extends ServiceProvider
         SocialiteWasCalled::class => [
             VKontakteExtendSocialite::class.'@handle',
             YandexExtendSocialite::class.'@handle',
+        ],
+
+        // --- ПОЧТА: суппрессия + троттлинг для КАЖДОГО исходящего письма (H1449 A2) ---
+        MessageSending::class => [
+            EnforceMailSendingGuards::class,
         ],
     ];
 
