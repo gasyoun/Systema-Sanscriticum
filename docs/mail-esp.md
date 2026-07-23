@@ -1,6 +1,6 @@
 # Transactional email — ESP setup contract
 
-_Created: 18-07-2026 · Last updated: 18-07-2026_
+_Created: 18-07-2026 · Last updated: 22-07-2026_
 
 Vendor-agnostic setup contract for production transactional email
 ([issue #504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504)),
@@ -11,6 +11,21 @@ vendor choice, account creation, and prod secret are a human `@DECIDE`; see
 [GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md).
 This doc does not claim mail is delivered — only that the installable path is
 documented and provable offline. `#504` stays open until a human completes it.
+
+**D6 ruling (H1449, redirects the ESP-first framing of H1147):** the default
+production transport is a **real mailbox over SMTP** (mail.ru / Yandex 360),
+not an ESP account — `Option A` below already covers this with zero extra
+code, since a mailbox's SMTP endpoint is just another `smtp` mailer target.
+This is deliberately homegrown to match H1449's campaign engine, which is
+transport-agnostic by design: **R1 escalation** — if staging shows poor
+mailbox deliverability/throttling at campaign volume, a human can override D6
+to an ESP-as-relay (Postmark/Mailgun, `Option B`/`Option C` below, already
+installed) without touching any campaign-engine code. See
+[`docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md)
+and [`docs/VERIFICATION_SYSTEMA_ANTON_OPS_GAPS.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_ANTON_OPS_GAPS.md)
+risk R1. The new `MAIL_THROTTLE_PER_MINUTE` env (H1449 A2, enforced by
+`App\Listeners\Email\EnforceMailSendingGuards`) exists specifically because a
+mailbox — unlike a dedicated ESP — rate-limits/suspends on bulk send.
 
 ## Why `mailpit` in prod is the actual bug
 
@@ -31,14 +46,15 @@ SMTP-relay ESP (Unisender, SendGrid, Mailgun SMTP, Postmark SMTP, Amazon SES SMT
 installed (`symfony/mailgun-mailer`, `symfony/postmark-mailer`, both via
 `symfony/http-client`) for ESPs that prefer their HTTP API over SMTP. Pick ONE.
 
-### Option A — generic SMTP relay (works with almost any ESP)
+### Option A — generic SMTP relay (works with almost any ESP, and with a real mailbox)
 
 ```
 MAIL_MAILER=smtp
-MAIL_HOST=<esp-smtp-host>          # e.g. smtp.sendgrid.net, smtp.eu.mailgun.org
+MAIL_HOST=<esp-or-mailbox-smtp-host> # e.g. smtp.sendgrid.net, smtp.eu.mailgun.org,
+                                      #      smtp.mail.ru, smtp.yandex.ru (D6 default)
 MAIL_PORT=587
-MAIL_USERNAME=<esp-username-or-api-key>
-MAIL_PASSWORD=<esp-password-or-api-secret>
+MAIL_USERNAME=<esp-username-or-api-key, or the mailbox address>
+MAIL_PASSWORD=<esp-password-or-api-secret, or the mailbox password/app-password>
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="<verified sender on your domain>"
 MAIL_FROM_NAME="${APP_NAME}"

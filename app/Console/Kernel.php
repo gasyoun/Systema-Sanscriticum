@@ -22,6 +22,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('promises:expire')
             ->dailyAt('03:30');
 
+        // Сканирование ящика на предмет hard bounce (H1449 A3) — суппрессия
+        // адреса на будущее. Не пишет ничего пока mail.bounce_scan.enabled=false.
+        $schedule->command('mail:scan-bounces')
+            ->hourly();
+
         // Пересчёт авто-флага «неблагонадёжный» — после promises:expire,
         // чтобы вновь просроченные обещания сразу учитывались в пороге.
         $schedule->command('unreliable:recount')

@@ -16,6 +16,7 @@ use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
+use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
@@ -422,6 +423,15 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// --- ТРЕКИНГ РАССЫЛОК (H1449 B4) — оба самогейтятся по email_campaigns (404 при OFF).
+// Токен резолвит CampaignRecipient на сервере — PII в URL никогда не попадает.
+Route::get('/e/o/{token}.gif', [EmailTrackingController::class, 'openPixel'])
+    ->where('token', '[A-Za-z0-9\-]+')
+    ->name('email.track.open');
+Route::get('/e/c/{token}/{link}', [EmailTrackingController::class, 'click'])
+    ->where(['token' => '[A-Za-z0-9\-]+', 'link' => '[A-Za-z0-9\-_]+'])
+    ->name('email.track.click');
 // --- ССЫЛКА ВХОДА ПОСЛЕ РАЗБЛОКИРОВКИ (H849) — админ выдаёт студенту, минуя
 // сломанную почту. НЕ завязано на newsletter-флаг; принимает только токены
 // назначения admin_unblock (см. StudentUnblockService::MAGIC_PURPOSE).
