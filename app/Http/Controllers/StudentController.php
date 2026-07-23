@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
+use App\Models\LessonView;
 use App\Models\Payment;
 use App\Models\PranaPerk;
 use App\Models\PranaRedemption;
@@ -532,6 +533,23 @@ class StudentController extends Controller
         $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
         $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
 
+        // In-video resume (H1450, W2). Пока флаг video_resume выключен, JS ничего
+        // не шлёт и баннер «продолжить» не показывается — эти переменные лежат
+        // в вью мёртвым грузом, ровно как до H1450.
+        $videoResumeEnabled = (bool) config('features.video_resume');
+        $resumePosition = null;
+        $resumeDuration = null;
+        if ($videoResumeEnabled) {
+            $lessonView = LessonView::where('user_id', $user->id)
+                ->where('lesson_id', $lesson->id)
+                ->first();
+
+            if ($lessonView && ! $lessonView->is_completed && (int) $lessonView->last_position_seconds > 0) {
+                $resumePosition = (int) $lessonView->last_position_seconds;
+                $resumeDuration = $lessonView->video_duration_seconds ? (int) $lessonView->video_duration_seconds : null;
+            }
+        }
+
         // Запись ещё не залита (живое занятие только состоится — например, пробное).
         // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
         // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
@@ -562,7 +580,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration'));
     }
 
     /**

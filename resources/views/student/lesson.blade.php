@@ -7,6 +7,15 @@
 
 <div x-data="lessonHeartbeat({ lessonId: {{ $lesson->id }} })" x-init="init()" class="hidden"></div>
 
+{{-- video-resume.js — общий адаптерный слой для currentTime/seekTo (транскрипт-
+     синхронизация использовала этот же код инлайново до H1450, вынесено без
+     изменения поведения). Грузится ВСЕГДА, независимо от флага video_resume —
+     флаг решает только показ баннера «продолжить» и отправку позиции в
+     heartbeat (см. onVideoTick() выше). --}}
+@push('scripts')
+    <script src="{{ asset('js/video-resume.js') }}?v={{ filemtime(public_path('js/video-resume.js')) }}" defer></script>
+@endpush
+
 <style>
     /* ============================================ */
     /* GRID-ЛЕЙАУТ УРОКА                            */
@@ -102,30 +111,43 @@
 {{-- ГЛАВНЫЙ КОНТЕЙНЕР (Умный Flexbox с 3 Табами) --}}
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
-     x-data="{ 
+     x-data="{
          player: '{{ $cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none') }}',
-         currentTime: 0, 
-         autoScroll: true, 
+         currentTime: 0,
+         videoDuration: {{ $resumeDuration ?? 'null' }},
+         videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
+         resumeOffered: {{ $resumePosition ? (int) $resumePosition : 'null' }},
+         autoScroll: true,
          searchQuery: '',
          activeTab: '{{ $hasTranscript ? 'transcript' : ($hasAttachments ? 'materials' : 'notes') }}',
-         
+
+         activePlayerId() {
+             return this.player === 'youtube' ? 'youtube-player' : (this.player === 'rutube' ? 'rutube-player' : null);
+         },
+
          init() {
+             // Один общий парсер postMessage на все хосты, живущие на этом
+             // транспорте (YouTube/RuTube) — адаптеры в video-resume.js.
              window.addEventListener('message', (event) => {
+                 if (!window.VideoResumeAdapters) return;
                  try {
                      let data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                     if (data.type === 'player:currentTime') { this.currentTime = data.data.time; }
-                     if (data.event === 'infoDelivery' && data.info && data.info.currentTime !== undefined) { this.currentTime = data.info.currentTime; }
+                     let adapter = window.VideoResumeAdapters[this.player];
+                     let parsed = adapter && adapter.parseMessage ? adapter.parseMessage(data) : null;
+                     if (parsed) { this.onVideoTick(parsed); }
                  } catch (e) {}
              });
 
              setInterval(() => {
-                 if (this.player === 'youtube') {
-                     let yt = document.getElementById('youtube-player');
-                     if(yt && yt.contentWindow) { yt.contentWindow.postMessage(JSON.stringify({event: 'listening', id: 1}), '*'); }
-                 } else if (this.player === 'rutube') {
-                     let rt = document.getElementById('rutube-player');
-                     if(rt && rt.contentWindow) { rt.contentWindow.postMessage(JSON.stringify({type: 'player:getCurrentTime', data: {}}), '*'); }
-                 }
+                 if (!window.VideoResumeAdapters) return;
+                 let id = this.activePlayerId();
+                 let iframe = id ? document.getElementById(id) : null;
+                 let adapter = window.VideoResumeAdapters[this.player];
+                 if (!iframe || !adapter || !adapter.poll) return;
+                 // pull-модель (RuTube/VK/Kinescope/Vimeo) шлёт время через onTick;
+                 // push-модель (YouTube) просто подтверждает подписку — реальное
+                 // время прилетит через 'message' и onVideoTick() выше.
+                 adapter.poll(iframe, (tick) => this.onVideoTick(tick));
              }, 500);
 
              setInterval(() => {
@@ -140,6 +162,20 @@
                      }
                  }
              }, 800);
+         },
+
+         onVideoTick({ time, duration }) {
+             this.currentTime = time;
+             if (duration) { this.videoDuration = duration; }
+
+             // Мост к heartbeat (public/js/lesson-heartbeat.js слушает это же
+             // событие) — только когда флаг включён, чтобы при video_resume=false
+             // heartbeat вообще не знал о позиции (D10: прод-инертность).
+             if (this.videoResumeEnabled) {
+                 window.dispatchEvent(new CustomEvent('lesson-video-tick', {
+                     detail: { position: Math.round(time), duration: duration ? Math.round(duration) : null },
+                 }));
+             }
          },
 
          matches(text) {
@@ -167,20 +203,19 @@
              this.autoScroll = false;
              setTimeout(() => { if (this.searchQuery === '') this.autoScroll = true; }, 3000);
 
-             let activePlayerId = this.player === 'youtube' ? 'youtube-player' : (this.player === 'rutube' ? 'rutube-player' : null);
-             if (!activePlayerId) return;
+             this.resumeOffered = null;
 
-             let iframe = document.getElementById(activePlayerId);
-             if (!iframe) return;
-
-             if (this.player === 'youtube') {
-                 iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [sec, true] }), '*');
-                 iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-             } else if (this.player === 'rutube') {
-                 iframe.contentWindow.postMessage(JSON.stringify({ type: 'player:setCurrentTime', data: { time: sec } }), '*');
-                 iframe.contentWindow.postMessage(JSON.stringify({ type: 'player:play', data: {} }), '*');
+             let id = this.activePlayerId();
+             let iframe = id ? document.getElementById(id) : null;
+             let adapter = window.VideoResumeAdapters && window.VideoResumeAdapters[this.player];
+             if (iframe && adapter && adapter.seek) {
+                 adapter.seek(iframe, sec);
              }
              window.scrollTo({ top: 0, behavior: 'smooth' });
+         },
+
+         resumePlayback() {
+             if (this.resumeOffered) { this.seekTo(this.resumeOffered); }
          }
      }">
 
@@ -209,6 +244,27 @@
                             allowfullscreen 
                             allow="autoplay; encrypted-media">
                     </iframe>
+                @endif
+
+                {{-- «Продолжить с HH:MM» (H1450, video_resume). Показывается только пока
+                     resumeOffered не сброшен (первый seekTo — свой или чужой — прячет её). --}}
+                @if($videoResumeEnabled && $resumePosition)
+                    @php
+                        $resumeLabel = sprintf('%02d:%02d', intdiv($resumePosition, 60), $resumePosition % 60);
+                    @endphp
+                    <div x-show="resumeOffered" x-cloak
+                         class="absolute bottom-4 left-4 right-4 sm:right-auto z-10 flex items-center gap-3 bg-black/80 backdrop-blur rounded-2xl px-4 py-3 shadow-xl border border-white/10">
+                        <i class="fas fa-history text-[#E85C24]"></i>
+                        <span class="text-white text-sm font-bold">Продолжить с {{ $resumeLabel }}?</span>
+                        <button type="button" @click="resumePlayback()"
+                                class="px-3 py-1.5 rounded-lg bg-[#E85C24] hover:bg-[#d04a15] text-white text-xs font-extrabold uppercase tracking-wide transition-colors">
+                            Продолжить
+                        </button>
+                        <button type="button" @click="resumeOffered = null" title="Начать с начала"
+                                class="text-gray-400 hover:text-white text-xs">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 @endif
 
                 <div x-show="player === 'none'" class="absolute inset-0 flex items-center justify-center bg-[#19191C] px-6">

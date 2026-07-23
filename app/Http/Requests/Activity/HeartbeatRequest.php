@@ -27,6 +27,12 @@ final class HeartbeatRequest extends FormRequest
             // Источник heartbeat — для аналитики. Нужен чтобы отличать
             // обычный тик от "beacon" при закрытии вкладки.
             'source' => ['sometimes', 'string', 'in:tick,beacon'],
+
+            // In-video resume (H1450, W2). Оба необязательны — хосты без API
+            // текущей позиции (или флаг video_resume выключен) просто не шлют их,
+            // и heartbeat работает ровно как раньше.
+            'position' => ['sometimes', 'integer', 'min:0'],
+            'duration' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 }

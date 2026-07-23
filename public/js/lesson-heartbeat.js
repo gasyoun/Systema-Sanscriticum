@@ -25,9 +25,16 @@ window.lessonHeartbeat = function (config) {
 
         // Id интервала для остановки
         intervalId: null,
-        
+
         // Последний тик — в миллисекундах (для точного подсчёта дельты)
         lastTickTime: null,
+
+        // In-video resume (H1450, W2). Заполняются событием 'lesson-video-tick',
+        // которое диспатчит lesson.blade.php САМ только когда флаг video_resume
+        // включён — при выключенном флаге этот слушатель просто никогда не
+        // срабатывает, и heartbeat шлёт ровно то же тело запроса, что до H1450.
+        videoPosition: null,
+        videoDuration: null,
 
         init() {
             if (!this.lessonId || !this.csrfToken) {
@@ -39,6 +46,11 @@ window.lessonHeartbeat = function (config) {
 
             // Запускаем тиккер раз в секунду (лёгкий)
             this.intervalId = setInterval(() => this.tick(), 1000);
+
+            window.addEventListener('lesson-video-tick', (event) => {
+                this.videoPosition = event.detail.position;
+                if (event.detail.duration) { this.videoDuration = event.detail.duration; }
+            });
 
             // Обработчики видимости вкладки
             document.addEventListener('visibilitychange', () => {
@@ -103,11 +115,7 @@ window.lessonHeartbeat = function (config) {
                         'X-CSRF-TOKEN': this.csrfToken,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({
-                        lesson_id: this.lessonId,
-                        delta_seconds: delta,
-                        source: 'tick',
-                    }),
+                    body: JSON.stringify(this.payload(delta, 'tick')),
                 });
             } catch (e) {
                 // Молчим — не спамим консоль юзеру
@@ -122,16 +130,31 @@ window.lessonHeartbeat = function (config) {
             const delta = Math.min(Math.round(this.accumulatedSeconds), MAX_SEND);
             if (delta < 1) return;
 
-            const payload = JSON.stringify({
-                lesson_id: this.lessonId,
-                delta_seconds: delta,
-                source: 'beacon',
-                _token: this.csrfToken, // beacon не может слать кастомные заголовки
-            });
+            const body = this.payload(delta, 'beacon');
+            body._token = this.csrfToken; // beacon не может слать кастомные заголовки
 
             // sendBeacon требует Blob с content-type
-            const blob = new Blob([payload], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(body)], { type: 'application/json' });
             navigator.sendBeacon('/api/heartbeat', blob);
+        },
+
+        /**
+         * Тело запроса heartbeat. position/duration добавляются ТОЛЬКО если
+         * пришло хотя бы одно событие 'lesson-video-tick' — иначе (флаг
+         * video_resume выключен, или видео вообще не воспроизводилось) тело
+         * запроса идентично тому, что было до H1450.
+         */
+        payload(delta, source) {
+            const body = {
+                lesson_id: this.lessonId,
+                delta_seconds: delta,
+                source: source,
+            };
+
+            if (this.videoPosition !== null) { body.position = this.videoPosition; }
+            if (this.videoDuration !== null) { body.duration = this.videoDuration; }
+
+            return body;
         },
     };
 };

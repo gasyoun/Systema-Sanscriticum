@@ -22,6 +22,9 @@ class LessonView extends Model
         'open_count',
         'total_time_on_page',
         'is_completed',
+        'last_position_seconds',
+        'max_position_seconds',
+        'video_duration_seconds',
     ];
 
     protected $casts = [
@@ -31,6 +34,9 @@ class LessonView extends Model
         'open_count' => 'integer',
         'total_time_on_page' => 'integer',
         'is_completed' => 'boolean',
+        'last_position_seconds' => 'integer',
+        'max_position_seconds' => 'integer',
+        'video_duration_seconds' => 'integer',
     ];
 
     public function user(): BelongsTo
