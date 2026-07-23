@@ -12,6 +12,14 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
+  Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
+  `config/video.php` `kinescope_pilot_course_id`. `VideoEmbed` recognises
+  kinescope.io URLs; lesson player renders a Kinescope iframe + Player SDK
+  only when the flag is on, the course matches, and `lesson.video_url` is
+  Kinescope — reuses W2 `video-resume.js` kinescope adapter. Comparison memo
+  `docs/KINESCOPE_PILOT_COMPARISON_2026.md`; DEPLOY_QUEUE №48.
+  **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override).
 - **Sanskrit-HUB L5 Workstream-A v0 — `/transliterate` + cascade lemmatizer (H1463).**
   Flag `hub_transliterate` / `HUB_TRANSLITERATE` (OFF by default):
   `GET /transliterate` playground (IAST → Devanāgarī + SLP1 via vendored

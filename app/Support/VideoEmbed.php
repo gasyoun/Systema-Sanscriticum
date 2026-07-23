@@ -7,7 +7,11 @@ namespace App\Support;
 /**
  * Парсер ссылок на видео в embed-URL и постеры.
  * Используется в карусели «Открытые занятия» на главной и в блоке cta_banner_block.
- * Поддерживает YouTube, RuTube, VK Video, Vimeo.
+ * Поддерживает YouTube, RuTube, VK Video, Vimeo, Kinescope (H1451).
+ *
+ * Kinescope-пилот в плеере урока scoped отдельно: flag + course id
+ * (см. KinescopePilot / config/video.php). Сам парсер URL всегда
+ * распознаёт Kinescope-ссылки.
  */
 final class VideoEmbed
 {
@@ -46,7 +50,17 @@ final class VideoEmbed
             return "https://player.vimeo.com/video/{$id}?autoplay=1";
         }
 
+        if ($id = self::kinescopeId($url)) {
+            return "https://kinescope.io/embed/{$id}";
+        }
+
         return null;
+    }
+
+    /** True when the URL is a recognised Kinescope watch/embed link. */
+    public static function isKinescope(?string $url): bool
+    {
+        return self::kinescopeId($url) !== null;
     }
 
     /**
@@ -103,6 +117,25 @@ final class VideoEmbed
     private static function vimeoId(string $url): ?string
     {
         if (preg_match('/vimeo\.com\/(\d+)/i', $url, $m)) {
+            return $m[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Kinescope video id from common URL shapes:
+     * - https://kinescope.io/{id}
+     * - https://kinescope.io/embed/{id}
+     * - https://kinescope.io/video/{id}
+     */
+    public static function kinescopeId(?string $url): ?string
+    {
+        if (! $url) {
+            return null;
+        }
+
+        if (preg_match('/kinescope\.io\/(?:embed\/|video\/)?([A-Za-z0-9_-]{6,})/i', $url, $m)) {
             return $m[1];
         }
 

@@ -7,6 +7,10 @@
 
 <div x-data="lessonHeartbeat({ lessonId: {{ $lesson->id }} })" x-init="init()" class="hidden"></div>
 
+@if(!empty($kinescopeEmbedUrl))
+    {{-- Kinescope Player SDK (H1451 W3) — enables W2 video-resume kinescope adapter --}}
+    <script src="https://player.kinescope.io/latest/iframe.player.js" defer></script>
+@endif
 {{-- video-resume.js — общий адаптерный слой для currentTime/seekTo (транскрипт-
      синхронизация использовала этот же код инлайново до H1450, вынесено без
      изменения поведения). Грузится ВСЕГДА, независимо от флага video_resume —
@@ -86,6 +90,10 @@
         }
     }
 
+    // --- Kinescope pilot (H1451 W3): only when flag + pilot course + video_url ---
+    $kinescopeEmbedUrl = $kinescopeEmbedUrl ?? null;
+    $kinescopePilotActive = !empty($kinescopeEmbedUrl);
+
     // --- ПАРСЕР ТАЙМКОДОВ ---
     // function_exists-guard: вью включается дважды в одном PHP-процессе (например,
     // в нескольких тест-кейсах в рамках одного php artisan test), без guard'а
@@ -112,7 +120,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none') }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none')) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -122,7 +130,10 @@
          activeTab: '{{ $hasTranscript ? 'transcript' : ($hasAttachments ? 'materials' : 'notes') }}',
 
          activePlayerId() {
-             return this.player === 'youtube' ? 'youtube-player' : (this.player === 'rutube' ? 'rutube-player' : null);
+             if (this.player === 'kinescope') return 'kinescope-player';
+             if (this.player === 'youtube') return 'youtube-player';
+             if (this.player === 'rutube') return 'rutube-player';
+             return null;
          },
 
          init() {
@@ -246,6 +257,17 @@
                     </iframe>
                 @endif
 
+                @if($kinescopePilotActive)
+                    <iframe x-show="player === 'kinescope'"
+                            id="kinescope-player"
+                            src="{{ $kinescopeEmbedUrl }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
+                            allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write;"
+                            referrerpolicy="strict-origin-when-cross-origin">
+                    </iframe>
+                @endif
+
                 {{-- «Продолжить с HH:MM» (H1450, video_resume). Показывается только пока
                      resumeOffered не сброшен (первый seekTo — свой или чужой — прячет её). --}}
                 @if($videoResumeEnabled && $resumePosition)
@@ -304,12 +326,19 @@
                 <div class="flex items-center text-gray-500 text-[10px] font-bold uppercase tracking-widest">
                     <i class="fas fa-server mr-2"></i> Источник видео
                 </div>
-                <div class="flex gap-2">
-                    @if($cleanRutubeId && $cleanYoutubeId)
-                        <button @click="player = 'rutube'" :class="player === 'rutube' ? 'bg-[#0057b7] text-white shadow-[0_0_15px_rgba(0,87,183,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                <div class="flex gap-2 flex-wrap">
+                    @if($kinescopePilotActive)
+                        <button type="button" @click="player = 'kinescope'" :class="player === 'kinescope' ? 'bg-[#E85C24] text-white shadow-[0_0_15px_rgba(232,92,36,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                            <i class="fas fa-film mr-2 text-sm"></i> Kinescope
+                        </button>
+                    @endif
+                    @if($cleanRutubeId && ($cleanYoutubeId || $kinescopePilotActive))
+                        <button type="button" @click="player = 'rutube'" :class="player === 'rutube' ? 'bg-[#0057b7] text-white shadow-[0_0_15px_rgba(0,87,183,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
-                        <button @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                    @endif
+                    @if($cleanYoutubeId && ($cleanRutubeId || $kinescopePilotActive))
+                        <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>
                     @endif

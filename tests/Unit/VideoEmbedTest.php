@@ -37,9 +37,25 @@ class VideoEmbedTest extends TestCase
     }
 
     /** @test */
+    public function parses_kinescope_forms(): void
+    {
+        $id = 'aB12cd34ef';
+        foreach ([
+            "https://kinescope.io/{$id}",
+            "https://kinescope.io/embed/{$id}",
+            "https://kinescope.io/video/{$id}",
+        ] as $url) {
+            $this->assertSame("https://kinescope.io/embed/{$id}", VideoEmbed::embed($url), $url);
+            $this->assertTrue(VideoEmbed::isKinescope($url), $url);
+            $this->assertSame($id, VideoEmbed::kinescopeId($url), $url);
+        }
+    }
+
+    /** @test */
     public function returns_null_for_unknown(): void
     {
         $this->assertNull(VideoEmbed::embed('https://example.com/foo'));
         $this->assertNull(VideoEmbed::poster('https://rutube.ru/shorts/8655e8b38e8677d177f6d377357d71b8/'));
+        $this->assertFalse(VideoEmbed::isKinescope('https://youtube.com/watch?v=abc12345678'));
     }
 }
