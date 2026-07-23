@@ -537,6 +537,10 @@ class StudentController extends Controller
         // не шлёт и баннер «продолжить» не показывается — эти переменные лежат
         // в вью мёртвым грузом, ровно как до H1450.
         $videoResumeEnabled = (bool) config('features.video_resume');
+        $kinescopeEmbedUrl = \App\Support\KinescopePilot::embedForCourse(
+            $lesson->video_url,
+            $course->id ?? null
+        );
         $resumePosition = null;
         $resumeDuration = null;
         if ($videoResumeEnabled) {
@@ -580,7 +584,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl'));
     }
 
     /**

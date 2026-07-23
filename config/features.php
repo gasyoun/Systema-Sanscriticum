@@ -392,6 +392,15 @@ return [
     'video_resume' => (bool) env('VIDEO_RESUME', false),
 
     /*
+     | Kinescope pilot on ONE flagship course (H1451, Anton ops-gaps W3).
+     | Когда ВКЛ + video.kinescope_pilot_course_id совпадает с course.id,
+     | плеер урока рендерит Kinescope iframe из lesson.video_url (если URL
+     | kinescope.io) и подключает Player SDK (reuse W2 video-resume adapter).
+     | Все остальные курсы/хосты — без изменений. ВЫКЛ по умолчанию.
+     */
+    'kinescope_pilot' => (bool) env('KINESCOPE_PILOT', false),
+
+    /*
      | Клип-маркетинг (H1452, Wave 4 Anton ops-gaps): n8n/ffmpeg нарезает
      | опубликованную лекцию по уже существующим AI-таймкодам (без пересчёта
      | границ) на самостоятельные фрагменты и грузит их в VK Video/Clips;
