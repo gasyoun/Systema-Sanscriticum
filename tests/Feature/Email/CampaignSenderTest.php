@@ -8,6 +8,7 @@ use App\Jobs\SendCampaignRecipient;
 use App\Models\Campaign;
 use App\Models\SuppressedEmail;
 use App\Models\User;
+use App\Services\Email\CampaignHtmlRenderer;
 use App\Services\Email\CampaignSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -115,7 +116,7 @@ class CampaignSenderTest extends TestCase
         ]);
 
         config(['features.email_campaigns' => false]);
-        (new SendCampaignRecipient($recipient->id))->handle(app(\App\Services\Email\CampaignHtmlRenderer::class));
+        (new SendCampaignRecipient($recipient->id))->handle(app(CampaignHtmlRenderer::class));
 
         $recipient->refresh();
         $this->assertNull($recipient->sent_at);

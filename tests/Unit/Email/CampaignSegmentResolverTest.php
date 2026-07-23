@@ -24,7 +24,7 @@ class CampaignSegmentResolverTest extends TestCase
         User::factory()->create(['wants_email_announcements' => true, 'email' => 'yes@example.com']);
         User::factory()->create(['wants_email_announcements' => false, 'email' => 'no@example.com']);
 
-        $result = (new CampaignSegmentResolver())->resolve(['type' => 'all_subscribers']);
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'all_subscribers']);
 
         $this->assertCount(1, $result);
         $this->assertSame('yes@example.com', $result->first()->email);
@@ -41,7 +41,7 @@ class CampaignSegmentResolverTest extends TestCase
         $outsider = User::factory()->create(['wants_email_announcements' => true]);
         $otherCourse->users()->attach($outsider->id);
 
-        $result = (new CampaignSegmentResolver())->resolve(['type' => 'course', 'course_id' => $course->id]);
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'course', 'course_id' => $course->id]);
 
         $this->assertCount(1, $result);
         $this->assertSame($student->id, $result->first()->id);
@@ -54,7 +54,7 @@ class CampaignSegmentResolverTest extends TestCase
         User::factory()->create(['email' => 'lead@example.com']);
         User::factory()->create(['email' => 'unrelated@example.com']);
 
-        $result = (new CampaignSegmentResolver())->resolve(['type' => 'lead_stage', 'stage' => 'qualified']);
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'lead_stage', 'stage' => 'qualified']);
 
         $this->assertCount(1, $result);
         $this->assertSame('lead@example.com', $result->first()->email);
@@ -64,7 +64,7 @@ class CampaignSegmentResolverTest extends TestCase
     {
         User::factory()->count(3)->create(['wants_email_announcements' => true]);
 
-        $result = (new CampaignSegmentResolver())->resolve(['type' => 'something_undefined']);
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'something_undefined']);
 
         $this->assertCount(0, $result);
     }
@@ -73,7 +73,7 @@ class CampaignSegmentResolverTest extends TestCase
     {
         User::factory()->count(3)->create(['wants_email_announcements' => true]);
 
-        $result = (new CampaignSegmentResolver())->resolve(null);
+        $result = (new CampaignSegmentResolver)->resolve(null);
 
         $this->assertCount(0, $result);
     }
@@ -82,7 +82,7 @@ class CampaignSegmentResolverTest extends TestCase
     {
         User::factory()->count(2)->create(['wants_email_announcements' => true]);
 
-        $result = (new CampaignSegmentResolver())->resolve(['type' => 'course']);
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'course']);
 
         $this->assertCount(0, $result);
     }
