@@ -110,6 +110,11 @@ class Lesson extends Model
         return $this->hasMany(HomeworkSubmission::class);
     }
 
+    public function clips(): HasMany
+    {
+        return $this->hasMany(LectureClip::class);
+    }
+
     // ===================================================================
     // МАТЕРИАЛЫ УРОКА — единый источник правды (для статистики/витрины).
     // PHP-аксессоры используют колонки модели; query-скоупы дублируют ту

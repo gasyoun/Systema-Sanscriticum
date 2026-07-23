@@ -75,6 +75,12 @@ return [
         // payload в этот n8n-вебхук, n8n постит. Секрет уходит в X-Webhook-Secret.
         'monthly_schedule_webhook' => env('N8N_MONTHLY_SCHEDULE_WEBHOOK'),
         'monthly_schedule_secret' => env('N8N_MONTHLY_SCHEDULE_SECRET'),
+        // «Нарежь лекцию на клипы» (H1452): Laravel шлёт лекцию + AI-таймкод-спаны
+        // в этот n8n-вебхук (сам ffmpeg/VK-аплоад — вне Laravel), секрет — в
+        // X-Webhook-Secret. Callback обратно защищён отдельным секретом.
+        'clip_extract_webhook' => env('N8N_CLIP_EXTRACT_WEBHOOK'),
+        'clip_extract_secret' => env('N8N_CLIP_EXTRACT_SECRET'),
+        'clip_callback_secret' => env('N8N_CLIP_CALLBACK_SECRET'),
     ],
 
     'telegram' => [

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
+use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
 use App\Http\Controllers\Webhooks\TelegramMagnetWebhookController;
 use App\Http\Controllers\Webhooks\TelegramZapisiWebhookController;
@@ -96,6 +97,13 @@ Route::post('/webhooks/max-magnet/{secret}', [MaxMagnetWebhookController::class,
 Route::post('/webhooks/lead-step', [LeadStepWebhookController::class, 'handle'])
     ->middleware('verify.n8n.leadstep')
     ->name('webhook.lead-step');
+
+// «Клипы нарезаны» (H1452, Wave 4) — n8n зовёт после ffmpeg-нарезки + VK-аплоада.
+// Секрет в X-Webhook-Secret (services.n8n.clip_callback_secret); маршрут сам
+// отвечает 404 при выключенном features.clip_marketing (см. контроллер).
+Route::post('/webhooks/lecture-clip-callback', [LectureClipCallbackWebhookController::class, 'handle'])
+    ->middleware('verify.n8n.clipcallback')
+    ->name('webhook.lecture-clip-callback');
 
 // === TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ===
 // Отдельный от /telegram/webhook (user-уведомления) и /webhooks/telegram-magnet
