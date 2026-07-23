@@ -12,6 +12,18 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Lecture clip marketing pipeline, Wave 4 (H1452).** Flag-gated
+  (`clip_marketing` / `CLIP_MARKETING_ENABLED`, OFF by default) n8n orchestration:
+  `ClipSpanPlanner` reuses existing AI transcript timecodes (no recompute) →
+  `DispatchLectureClipExtractionJob` POSTs spans to n8n → secret-guarded
+  `POST /api/webhooks/lecture-clip-callback` writes `LectureClip` rows (idempotent
+  on lesson+span) → Filament `LectureClipResource` for staff `is_free` (~3 free
+  per lecture) + header «Нарезать лекцию». Importable workflow
+  `docs/n8n/lecture-clip-extract.workflow.json` (ffmpeg/VK nodes are operator
+  placeholders — no live VK tokens in repo). IMPLEMENTATION:
+  `docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE4.md`. DEPLOY_QUEUE №47.
+  Tests: `tests/Feature/LectureClips/*`, `tests/Unit/Lecture/ClipSpanPlannerTest`.
+  No money-code; no real VK posts in CI (`Http::fake`).
 - **In-video resume — «продолжить с HH:MM» (H1450, Anton ops-gaps W2).** Три
   аддитивные колонки на `lesson_views` (`last_position_seconds`,
   `max_position_seconds` — монотонный прогресс-сигнал, никогда не убывает даже

@@ -381,4 +381,17 @@ return [
      | деградирует без ошибки, если у хоста нет API текущей позиции.
      */
     'video_resume' => (bool) env('VIDEO_RESUME', false),
+
+    /*
+     | Клип-маркетинг (H1452, Wave 4 Anton ops-gaps): n8n/ffmpeg нарезает
+     | опубликованную лекцию по уже существующим AI-таймкодам (без пересчёта
+     | границ) на самостоятельные фрагменты и грузит их в VK Video/Clips;
+     | callback пишет LectureClip-строки, куратор в Filament отмечает ~3
+     | бесплатных на лекцию. Когда ВЫКЛ: исходящий "нарежь лекцию" вебхук не
+     | диспатчится, входящий callback-роут отдаёт 404, LectureClipResource
+     | скрыт — прод-инертно. Включение требует VK-приложения с Video/Wall
+     | скоупом (человеческий шаг, см. DEPLOY_QUEUE.md) —
+     | CLIP_MARKETING_ENABLED=true + config:cache после ревью.
+     */
+    'clip_marketing' => (bool) env('CLIP_MARKETING_ENABLED', false),
 ];
