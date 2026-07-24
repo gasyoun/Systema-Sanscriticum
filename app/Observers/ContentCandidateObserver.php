@@ -24,6 +24,8 @@ use App\Services\Content\SocialDraftGenerator;
  * - faq_draft candidate accepted → KnowledgeFaqPublisher appends to the
  *   cabinet knowledge file (Accept IS the knowledge publish; no public
  *   auto-publish, no extra flag — H1549 Wave 3 / D3).
+ * - study_artifact / article: Accept is editorial only — no dispatch
+ *   (H1550/H1551; VERIFICATION E2: study never on pilot publish).
  *
  * Social/mail jobs are themselves the flag gate (content_auto_publish_pilot /
  * content_email_oneshot, early-return when OFF) — dispatching unconditionally
@@ -76,5 +78,7 @@ class ContentCandidateObserver
         if ($candidate->type === ContentCandidate::TYPE_FAQ_DRAFT) {
             $this->knowledgeFaqPublisher->publish($candidate);
         }
+
+        // TYPE_STUDY_ARTIFACT / TYPE_ARTICLE: intentional no-op (staff review only).
     }
 }
