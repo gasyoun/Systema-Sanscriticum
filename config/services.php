@@ -81,6 +81,11 @@ return [
         'clip_extract_webhook' => env('N8N_CLIP_EXTRACT_WEBHOOK'),
         'clip_extract_secret' => env('N8N_CLIP_EXTRACT_SECRET'),
         'clip_callback_secret' => env('N8N_CLIP_CALLBACK_SECRET'),
+        // Content engine Wave 2 (H1548): один социальный пост — ВК-стена
+        // (с прикреплённым клипом) + зеркало в ТГ-канал — тот же
+        // webhook-forward паттерн, что monthly_schedule/clip_extract.
+        'social_post_webhook' => env('N8N_SOCIAL_POST_WEBHOOK'),
+        'social_post_secret' => env('N8N_SOCIAL_POST_SECRET'),
     ],
 
     'telegram' => [
