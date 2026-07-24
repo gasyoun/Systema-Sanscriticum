@@ -76,7 +76,7 @@ From [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/
 
 **Offline smoke (manual / Feature):**
 
-1. Feature tests assert manifest JSON fields, offline HTML, SW body, and dashboard HTML contains `manifest` + `serviceWorker` — see `tests/Feature/PwaManifestTest.php`.
+1. Feature tests assert manifest JSON fields, offline HTML, SW body, and dashboard HTML contains `manifest` + `serviceWorker` — see `tests/Feature/PwaShellAssetsTest.php`.
 2. Browser: open `/dvaram` once online → Application → Service Workers registered → DevTools Network offline → navigate → `offline.html` shows.
 
 **Not claimed:** pixel-perfect maskable icons (logo reused); full offline lesson content cache (deliberately out of scope — authenticated HTML must not be precached).
@@ -94,7 +94,7 @@ From [`.ai_state.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/
 |---|---|
 | Dated audit covers every student-cabinet route | This document § inventory |
 | Real defects fixed | D1–D4 committed |
-| Valid PWA manifest | `manifest.webmanifest` + `PwaManifestTest` |
+| Valid PWA manifest | `manifest.webmanifest` + `PwaShellAssetsTest` |
 | Offline-load smoke | `offline.html` + SW + Feature test + manual steps above |
 
 _Dr. Mārcis Gasūns_
