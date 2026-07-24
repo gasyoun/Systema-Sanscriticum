@@ -12,6 +12,12 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Cabinet hybrid Phase 4 — R20 flag-flip release pack (H1582).** Does **not** enable
+  the hybrid in prod. Adds [docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md)
+  (GO/NO-GO gates, walkthrough §3, activate/revert, KPI readout),
+  `php artisan cabinet:hybrid-readiness`, DEPLOY_QUEUE **№52**, `.env.example`
+  `CABINET_HYBRID=false`. Baseline clock from №25 (21-07-2026) → earliest mechanical
+  GO ~04-08-2026; human C+D still required. Executor: Grok 4.5 (`grok-4.5`) via xAI.
 - **Cabinet hybrid Phase 3 — Прогресс ladder + lighting + course vehi (H1573, R29.6–R29.8).**
   `config/grammar_ladder.php` + `GrammarLadder`: station map on hybrid «Прогресс»
   (письмо → грамматика I/II → тексты), completion lighting, ladder offer only after
