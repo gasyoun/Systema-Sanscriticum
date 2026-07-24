@@ -16,6 +16,7 @@ use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\SubscriberMagnet;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\Cabinet\GrammarLadder;
 use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
@@ -343,7 +344,7 @@ class StudentController extends Controller
     }
 
     /**
-     * «Прогресс» (hybrid job-nav). Station map lands in Phase 3.
+     * «Прогресс» (hybrid job-nav). Phase 3: grammar ladder + lighting (H1573).
      */
     public function progress()
     {
@@ -352,11 +353,49 @@ class StudentController extends Controller
         $user = auth()->user();
         $certificates = $user->certificates()->with('course')->orderByDesc('created_at')->get();
         $recovery = app(RecoveryStateResolver::class)->resolve($user);
+        $suppressOffers = $recovery->suppressOffers();
+        $ladder = app(GrammarLadder::class)->forUser($user);
+        $ladderOffer = $suppressOffers ? null : $ladder['ladder_offer'];
+
+        $telemetry = app(CabinetTelemetry::class);
+        $telemetry->emit(
+            user: $user,
+            event: ActivityEvent::PATH_STATION_VIEW,
+            data: [
+                'n' => count($ladder['stations']),
+                'lit' => count($ladder['lit_keys']),
+                'mode' => $recovery->mode(),
+            ],
+            request: request(),
+        );
+        foreach ($ladder['lit_keys'] as $key) {
+            $telemetry->emit(
+                user: $user,
+                event: ActivityEvent::PATH_STATION_LIT_IMPRESSION,
+                data: ['station' => $key],
+                request: request(),
+            );
+        }
+        if ($ladderOffer) {
+            $telemetry->emit(
+                user: $user,
+                event: ActivityEvent::OFFER_IMPRESSION,
+                data: [
+                    'kind' => 'ladder',
+                    'to' => $ladderOffer->to_key,
+                    'state' => $recovery->mode(),
+                ],
+                request: request(),
+            );
+        }
 
         return view('student.hybrid.progress', [
             'certificates' => $certificates,
             'recovery' => $recovery,
-            'suppressOffers' => $recovery->suppressOffers(),
+            'suppressOffers' => $suppressOffers,
+            'stations' => $ladder['stations'],
+            'ladderOffer' => $ladderOffer,
+            'litKeys' => $ladder['lit_keys'],
         ]);
     }
 
@@ -677,6 +716,8 @@ class StudentController extends Controller
         if (config('features.cabinet_hybrid')) {
             $recovery = app(RecoveryStateResolver::class)->resolve($user);
             $completedLessonIds = $user->completedLessons->pluck('id')->all();
+            // R29.8: block start/end landmarks — orientation only, never pay deadlines.
+            $landmarks = app(GrammarLadder::class)->landmarksForCourse($course);
 
             return view('student.hybrid.course', [
                 'course' => $course,
@@ -686,6 +727,7 @@ class StudentController extends Controller
                 'completedLessonIds' => $completedLessonIds,
                 'recovery' => $recovery,
                 'suppressOffers' => $recovery->suppressOffers(),
+                'landmarks' => $landmarks,
             ]);
         }
 

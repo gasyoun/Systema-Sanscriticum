@@ -34,6 +34,8 @@ class CabinetBaselineReport extends Command
         ActivityEvent::COURSE_TAB_VIEW,
         ActivityEvent::LIBRARY_SHELF_VIEW,
         ActivityEvent::LIBRARY_RAIL_JUMP,
+        ActivityEvent::PATH_STATION_VIEW,
+        ActivityEvent::PATH_STATION_LIT_IMPRESSION,
         ActivityEvent::OFFER_IMPRESSION,
         ActivityEvent::OFFER_CLICK,
         ActivityEvent::ACCESS_RENEWAL_START,
@@ -44,8 +46,6 @@ class CabinetBaselineReport extends Command
     private const NO_CURRENT_SURFACE = [
         'offer.purchase' => 'атрибуция покупки к офферу — после чекаут-attribution',
         'support.topic.pick' => 'у виджета поддержки нет выбора темы',
-        'path.station.view' => 'лестница пути — только в гибриде (R29.6)',
-        'path.station.lit.impression' => 'лестница пути — только в гибриде (R29.6)',
     ];
 
     public function handle(): int
