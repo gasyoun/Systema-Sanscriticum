@@ -1,6 +1,6 @@
 # Kinescope pilot comparison — native vs iframe+API (2026)
 
-_Created: 23-07-2026 · Last updated: 23-07-2026_
+_Created: 23-07-2026 · Last updated: 24-07-2026_
 
 Short decision memo for **Wave 3** (H1451 / Anton ops-gaps). One flagship course
 only (D4). Not a catalogue migration. Architecture:
@@ -8,6 +8,18 @@ only (D4). Not a catalogue migration. Architecture:
 Build: [IMPLEMENTATION W3](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_ANTON_OPS_GAPS_WAVE3.md).
 
 **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override, user-authorized).
+**True redo:** 24-07-2026 — adversarial re-pass after first merge (#665).
+
+---
+
+## True-redo audit (24-07-2026)
+
+| Finding | Fix in redo |
+|---|---|
+| `.env.example` omitted VIDEO_RESUME / KINESCOPE_* | Documented with DEPLOY_QUEUE pointers |
+| Staff may paste kinescope.io into `youtube_url` | `KinescopePilot::candidateUrlFromLesson` + `embedForLesson` |
+| Path regex could accept reserved segments (`login`) | `VideoEmbed::kinescopeId` reserved-list + stricter boundary |
+| Query/fragment on watch URLs | Strip via regex `(?:[/?#]|$)` |
 
 ---
 
@@ -16,7 +28,7 @@ Build: [IMPLEMENTATION W3](https://github.com/gasyoun/Systema-Sanscriticum/blob/
 | Layer | Behaviour |
 |---|---|
 | Scope | `features.kinescope_pilot` + `video.kinescope_pilot_course_id` |
-| Source | `Lesson.video_url` must be a Kinescope URL |
+| Source | First Kinescope URL among `video_url` → `youtube_url` → `rutube_url` |
 | Render | `#kinescope-player` iframe → `https://kinescope.io/embed/{id}` |
 | SDK | `player.kinescope.io/latest/iframe.player.js` loaded only when pilot active |
 | Resume | Reuses W2 `VideoResumeAdapters.kinescope` + heartbeat when `video_resume` ON |

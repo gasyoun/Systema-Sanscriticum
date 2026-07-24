@@ -58,4 +58,23 @@ class VideoEmbedTest extends TestCase
         $this->assertNull(VideoEmbed::poster('https://rutube.ru/shorts/8655e8b38e8677d177f6d377357d71b8/'));
         $this->assertFalse(VideoEmbed::isKinescope('https://youtube.com/watch?v=abc12345678'));
     }
+
+    /** @test */
+    public function kinescope_rejects_reserved_path_segments(): void
+    {
+        foreach (['login', 'settings', 'dashboard', 'pricing', 'embed'] as $seg) {
+            $this->assertFalse(VideoEmbed::isKinescope("https://kinescope.io/{$seg}"), $seg);
+            $this->assertNull(VideoEmbed::embed("https://kinescope.io/{$seg}"), $seg);
+        }
+    }
+
+    /** @test */
+    public function kinescope_strips_query_and_fragment(): void
+    {
+        $id = 'aB12cd34ef';
+        $this->assertSame(
+            "https://kinescope.io/embed/{$id}",
+            VideoEmbed::embed("https://kinescope.io/{$id}?utm=1#t=10")
+        );
+    }
 }

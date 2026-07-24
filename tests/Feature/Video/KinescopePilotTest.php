@@ -150,4 +150,33 @@ class KinescopePilotTest extends TestCase
             ->assertOk()
             ->assertDontSee('id="kinescope-player"', false);
     }
+
+    /** @test */
+    public function lesson_page_picks_up_kinescope_misfiled_in_youtube_url(): void
+    {
+        config(['features.kinescope_pilot' => true]);
+
+        $course = Course::factory()->create();
+        config(['video.kinescope_pilot_course_id' => $course->id]);
+
+        $user = User::factory()->create();
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+        ]);
+        $lesson = Lesson::factory()->for($course)->free()->create([
+            'video_url' => null,
+            'youtube_url' => 'https://kinescope.io/misfiledYoutube1',
+            'block_number' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('student.lesson', ['slug' => $course->slug, 'lessonId' => $lesson->id]))
+            ->assertOk()
+            ->assertSee('id="kinescope-player"', false)
+            ->assertSee('kinescope.io/embed/misfiledYoutube1', false);
+    }
 }
