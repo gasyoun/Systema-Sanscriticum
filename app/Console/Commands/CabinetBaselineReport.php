@@ -32,6 +32,8 @@ class CabinetBaselineReport extends Command
         ActivityEvent::CABINET_HOMEWORK_REWORK_CLICK,
         ActivityEvent::LESSON_MARK_MASTERED,
         ActivityEvent::COURSE_TAB_VIEW,
+        ActivityEvent::LIBRARY_SHELF_VIEW,
+        ActivityEvent::LIBRARY_RAIL_JUMP,
         ActivityEvent::OFFER_IMPRESSION,
         ActivityEvent::OFFER_CLICK,
         ActivityEvent::ACCESS_RENEWAL_START,
@@ -40,8 +42,6 @@ class CabinetBaselineReport extends Command
 
     /** События §4 без нынешней поверхности в кабинете — чтобы отчёт был честным про охват. */
     private const NO_CURRENT_SURFACE = [
-        'library.shelf.view' => 'страницы «Записи» ещё нет (Phase 2 гибрида)',
-        'library.rail.jump' => 'страницы «Записи» ещё нет (Phase 2 гибрида)',
         'offer.purchase' => 'атрибуция покупки к офферу — после чекаут-attribution',
         'support.topic.pick' => 'у виджета поддержки нет выбора темы',
         'path.station.view' => 'лестница пути — только в гибриде (R29.6)',

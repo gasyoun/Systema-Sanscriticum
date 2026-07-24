@@ -71,6 +71,12 @@ class ActivityEvent extends Model
 
     public const COURSE_TAB_VIEW = 'course.tab.view';
 
+    /** Phase 2 «Записи» shelves (H1572 / R29.3). */
+    public const LIBRARY_SHELF_VIEW = 'library.shelf.view';
+
+    /** Phase 2 progress rail jump (H1572 / R29.4). */
+    public const LIBRARY_RAIL_JUMP = 'library.rail.jump';
+
     public const OFFER_IMPRESSION = 'offer.impression';
 
     public const OFFER_CLICK = 'offer.click';
@@ -88,6 +94,8 @@ class ActivityEvent extends Model
         self::CABINET_CONTINUE_CLICK,
         self::CABINET_HOMEWORK_REWORK_CLICK,
         self::COURSE_TAB_VIEW,
+        self::LIBRARY_SHELF_VIEW,
+        self::LIBRARY_RAIL_JUMP,
         self::OFFER_IMPRESSION,
         self::OFFER_CLICK,
         self::ACCESS_RENEWAL_START,

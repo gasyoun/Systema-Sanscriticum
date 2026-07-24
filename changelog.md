@@ -12,6 +12,12 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Cabinet hybrid Phase 2 — Записи shelves + lapse + rail + ownership offer (H1572, R29.3–R29.5).**
+  Behind `cabinet_hybrid`: `LapseDetector` (debt gap → first-class lapsed state),
+  `RecordingsCatalog` shelves (watching / owned / lapsed / completed), progress rail
+  for recording courses without homework, R29.5 ownership offer (suppressed in recovery),
+  membership «скоро» slot on Записи. Telemetry `library.shelf.view` + `library.rail.jump`.
+  Tests: `HybridPhase2Test` (7). Executor: Grok 4.5 (`grok-4.5`) via xAI.
 - **Cabinet hybrid Phase 1 chassis + recovery-mode resolver (H1481, R29.0–R29.2).**
   Flag cabinet_hybrid / CABINET_HYBRID (OFF by default, R20 deploy gate).
   Job-named student nav (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ /
