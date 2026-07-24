@@ -24,7 +24,7 @@ class PwaShellAssetsTest extends TestCase
     /** @test */
     public function manifest_file_has_required_fields(): void
     {
-        $path = $this->root() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'manifest.webmanifest';
+        $path = $this->root().DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'manifest.webmanifest';
         $this->assertFileExists($path);
 
         $json = json_decode((string) file_get_contents($path), true);
@@ -40,15 +40,15 @@ class PwaShellAssetsTest extends TestCase
     /** @test */
     public function offline_shell_and_service_worker_files_exist(): void
     {
-        $offline = $this->root() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'offline.html';
-        $sw = $this->root() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'sw.js';
+        $offline = $this->root().DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'offline.html';
+        $sw = $this->root().DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'sw.js';
 
         $this->assertFileExists($offline);
         $this->assertFileExists($sw);
 
         $offlineHtml = (string) file_get_contents($offline);
-        $this->assertStringContainsString("Нет подключения", $offlineHtml);
-        $this->assertStringContainsString("ОРС LMS", $offlineHtml);
+        $this->assertStringContainsString('Нет подключения', $offlineHtml);
+        $this->assertStringContainsString('ОРС LMS', $offlineHtml);
 
         $swBody = (string) file_get_contents($sw);
         $this->assertStringContainsString('ors-cabinet-shell-v1', $swBody);
@@ -59,10 +59,10 @@ class PwaShellAssetsTest extends TestCase
     public function student_layout_links_manifest_and_registers_sw(): void
     {
         $layout = $this->root()
-            . DIRECTORY_SEPARATOR . 'resources'
-            . DIRECTORY_SEPARATOR . 'views'
-            . DIRECTORY_SEPARATOR . 'layouts'
-            . DIRECTORY_SEPARATOR . 'student.blade.php';
+            .DIRECTORY_SEPARATOR.'resources'
+            .DIRECTORY_SEPARATOR.'views'
+            .DIRECTORY_SEPARATOR.'layouts'
+            .DIRECTORY_SEPARATOR.'student.blade.php';
 
         $this->assertFileExists($layout);
         $html = (string) file_get_contents($layout);
