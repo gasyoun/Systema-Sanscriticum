@@ -16,6 +16,7 @@ use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\SubscriberMagnet;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
 use App\Services\CertificateService;
@@ -293,7 +294,7 @@ class StudentController extends Controller
     }
 
     /**
-     * «Записи» (hybrid job-nav). Phase 1 chassis only — shelves land in Phase 2.
+     * «Записи» (hybrid job-nav). Phase 2: ownership shelves + rail + offer (H1572).
      */
     public function library()
     {
@@ -301,10 +302,43 @@ class StudentController extends Controller
 
         $user = auth()->user();
         $recovery = app(RecoveryStateResolver::class)->resolve($user);
+        $catalog = app(RecordingsCatalog::class)->forUser($user);
+        $suppressOffers = $recovery->suppressOffers();
+
+        // Server-side shelf impressions (one event per non-empty shelf).
+        $telemetry = app(CabinetTelemetry::class);
+        foreach ($catalog['shelves'] as $shelf => $cards) {
+            if ($cards->isNotEmpty()) {
+                $telemetry->emit(
+                    user: $user,
+                    event: ActivityEvent::LIBRARY_SHELF_VIEW,
+                    data: ['shelf' => $shelf, 'n' => $cards->count()],
+                    request: request(),
+                );
+            }
+        }
+
+        $ownershipOffer = $suppressOffers ? null : $catalog['ownership_offer'];
+        if ($ownershipOffer) {
+            $telemetry->emit(
+                user: $user,
+                event: ActivityEvent::OFFER_IMPRESSION,
+                data: [
+                    'kind' => 'ownership',
+                    'course_id' => $ownershipOffer->course->id,
+                    'eligibility' => 'progress_gated',
+                    'state' => $recovery->mode(),
+                ],
+                request: request(),
+            );
+        }
 
         return view('student.hybrid.library', [
             'recovery' => $recovery,
-            'suppressOffers' => $recovery->suppressOffers(),
+            'suppressOffers' => $suppressOffers,
+            'shelves' => $catalog['shelves'],
+            'ownershipOffer' => $ownershipOffer,
+            'lapses' => $catalog['lapses'],
         ]);
     }
 
