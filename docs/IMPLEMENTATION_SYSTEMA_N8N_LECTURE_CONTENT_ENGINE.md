@@ -155,11 +155,12 @@ php artisan test --filter=LectureClip
    `resources/knowledge/faq.md` pattern).
 3. Tests.
 
-### Wave 4 Long-form
+### Wave 4 Long-form (H1550 — shipped)
 
-1. `ArticleDraftGenerator` weekly pack from new lessons.
-2. Draft-only; markdown export optional.
-3. Tests + QuotePolicy on any embedded quotes.
+1. `ArticleDraftGenerator` — per-lesson outline + `composeWeeklyPack` (`content:compose-article-drafts` / `--weekly`).
+2. Draft-only Filament; `toMarkdown()` export helper.
+3. Tests `ArticleDraftGeneratorTest` + QuotePolicy on quote; body ratio/length dump guard (D2).
+4. LessonObserver drafts when `CONTENT_FROM_LECTURES=true`. DEPLOY_QUEUE **№54**.
 
 ### Wave 5 Study materials
 

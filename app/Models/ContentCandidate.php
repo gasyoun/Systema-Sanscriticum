@@ -11,10 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Единая review/publish-единица n8n-контент-движка лекций (H1547, Wave 1 of 5).
- * Wave 1 создаёт только type=clip (зеркало LectureClip через
- * ContentCandidateSync); social_post/faq_draft/article/study_artifact/
- * email_blast — будущие waves 2-5, схема уже это предусматривает (delta 1,
- * ARCHITECTURE §2), чтобы не форкать таблицу пять раз.
+ * Wave 1: type=clip (зеркало LectureClip через ContentCandidateSync).
+ * Wave 2: social_post + email_blast (H1548). Wave 3: faq_draft (H1549).
+ * Wave 4: article (H1550). study_artifact — Wave 5 (H1551).
  */
 class ContentCandidate extends Model
 {

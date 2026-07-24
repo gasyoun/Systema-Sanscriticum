@@ -6,20 +6,25 @@ namespace App\Observers;
 
 use App\Jobs\DispatchLectureClipExtractionJob;
 use App\Models\Lesson;
+use App\Services\Content\ArticleDraftGenerator;
 use App\Services\Content\FaqDraftGenerator;
 
 /**
- * Publish-on-lesson-publish trigger (H1547 Wave 1 + H1549 Wave 3).
+ * Publish-on-lesson-publish trigger (H1547 Wave 1 + H1549 Wave 3 + H1550 Wave 4).
  * Model-level so it fires regardless of which surface (Filament, API)
  * flips `is_published`.
  *
  * Clip extraction: gated by `content_from_lectures` AND `clip_marketing`
- * (both OFF by default). FAQ drafts (Wave 3): gated by `content_from_lectures`
- * alone — draft-only, Accept in Filament is the knowledge publish gate.
+ * (both OFF by default). FAQ drafts (Wave 3) and article drafts (Wave 4):
+ * gated by `content_from_lectures` alone — draft-only; Filament Accept is
+ * the staff gate (FAQ → knowledge; article stays editorial draft).
  */
 class LessonObserver
 {
-    public function __construct(private readonly FaqDraftGenerator $faqDraftGenerator) {}
+    public function __construct(
+        private readonly FaqDraftGenerator $faqDraftGenerator,
+        private readonly ArticleDraftGenerator $articleDraftGenerator,
+    ) {}
 
     public function updated(Lesson $lesson): void
     {
@@ -32,12 +37,14 @@ class LessonObserver
 
         $this->maybeDispatchExtraction($lesson);
         $this->maybeDraftFaq($lesson);
+        $this->maybeDraftArticle($lesson);
     }
 
     public function created(Lesson $lesson): void
     {
         $this->maybeDispatchExtraction($lesson);
         $this->maybeDraftFaq($lesson);
+        $this->maybeDraftArticle($lesson);
     }
 
     private function maybeDispatchExtraction(Lesson $lesson): void
@@ -73,5 +80,18 @@ class LessonObserver
         }
 
         $this->faqDraftGenerator->draftForLesson($lesson);
+    }
+
+    private function maybeDraftArticle(Lesson $lesson): void
+    {
+        if (! config('features.content_from_lectures')) {
+            return;
+        }
+
+        if (! $lesson->is_published || empty($lesson->transcript_file)) {
+            return;
+        }
+
+        $this->articleDraftGenerator->draftForLesson($lesson);
     }
 }
