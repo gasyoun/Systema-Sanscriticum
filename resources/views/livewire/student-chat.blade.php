@@ -1,6 +1,6 @@
 {{-- Веб-чат поддержки: опрос раз в 10с подтягивает ответ ИИ из очереди и реплики куратора. --}}
 <div class="font-nunito max-w-3xl mx-auto" wire:poll.10s>
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col" style="height: 70vh; min-height: 460px;">
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col" style="height: min(70vh, calc(100dvh - 11rem)); min-height: 280px;">
 
         {{-- Шапка --}}
         <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 shrink-0">
@@ -9,7 +9,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Чат поддержки</h3>
-                <p class="text-[13px] text-gray-500">Сначала отвечает ИИ-куратор. Напишите «позови куратора» — подключится человек.</p>
+                <p class="text-[12px] sm:text-[13px] text-gray-500 leading-snug">Сначала отвечает ИИ-куратор. Напишите «позови куратора» — подключится человек.</p>
             </div>
         </div>
 

@@ -2,7 +2,14 @@
 <html lang="ru" class="h-full bg-[#F4F1EA]">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#E85C24">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ОРС LMS">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Обучение') | ОРС LMS</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
@@ -254,7 +261,9 @@
     @endauth
 
     {{-- === КОНТАКТЫ (телефон + email) === --}}
+    <div class="hidden sm:block">
     @include('partials.contacts-bar', ['variant' => 'light'])
+    </div>
 
     {{-- Разделитель (только если что-то слева есть) --}}
     @if(config('social.phone') || config('social.email'))
@@ -285,18 +294,12 @@
             </a>
         @endforeach
     </div>
-
-    {{-- Аватарка для мобилок --}}
-    <div class="lg:hidden">
-        <div class="w-10 h-10 rounded-xl bg-[#1A1A1A] text-white flex items-center justify-center font-extrabold shadow-md">
-            {{ substr(Auth::user()->name, 0, 1) }}
-        </div>
-    </div>
+    {{-- H1488: mobile avatar removed — sidebar profile frees header width on <375px --}}
 </div>
 </header>
 
         {{-- Основная рабочая область --}}
-        <main class="flex-1 overflow-y-auto bg-[#F4F1EA] p-4 sm:p-8 relative custom-scrollbar">
+        <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#F4F1EA] p-4 sm:p-8 relative custom-scrollbar">
             <div class="max-w-7xl mx-auto">
                 @yield('content')
             </div>
@@ -314,5 +317,13 @@
     {{-- Глобальные скрипты (если на странице инициализируется компонент lessonHeartbeat,
          он сработает автоматически через Alpine x-data) --}}
     <script src="{{ asset('js/lesson-heartbeat.js') }}?v={{ filemtime(public_path('js/lesson-heartbeat.js')) }}" defer></script>
+{{-- H1488: PWA service worker — network-first navigations, offline shell fallback --}}
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register(@json(asset('sw.js')), { scope: '/' }).catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>
