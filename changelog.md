@@ -18,6 +18,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
 
 ### Added
+- **VK/ORS content calendar plan (H2).** Layered /ask from k-ors archive signals: five waves (import → evergreen → Systema bridge → forward drafts → n8n auto-pilot), monthly Filament review, ≥20 posts/month target. Docs: [PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md). Grok 4.5 (grok-4.5).
 - **Операторский мануал RU: клипы лекций + n8n.** [docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) — еженедельная эксплуатация; установка: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666). Grok 4.5 (grok-4.5).
 - **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
   Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
