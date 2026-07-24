@@ -15,10 +15,8 @@ use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 /**
- * End-to-end Wave 1 → Wave 2 wiring through ContentCandidateObserver: marking
- * a clip free auto-drafts a social post; accepting that draft dispatches the
- * publish job. Isolated from the actual n8n HTTP call (Bus::fake) — that
- * path is covered by PublishSocialPostJobTest.
+ * End-to-end Wave 1 → Wave 2/3 wiring through ContentCandidateObserver.
+ * Isolated from the actual n8n HTTP call (Bus::fake).
  */
 class ContentCandidateChainTest extends TestCase
 {
@@ -33,17 +31,14 @@ class ContentCandidateChainTest extends TestCase
             'lesson_id' => $lesson->id,
             'start_seconds' => 0,
             'end_seconds' => 90,
-            'title' => 'Клип про алфавит',
+            'title' => 'Фрагмент про алфавит',
         ]);
 
-        // Wave 1: mark_free-equivalent — flips is_free, ContentCandidateSync
-        // mirrors it to status=accepted on the clip candidate.
         $clip->update(['is_free' => true]);
 
         $clipCandidate = ContentCandidate::where('lecture_clip_id', $clip->id)->firstOrFail();
         $this->assertSame(ContentCandidate::STATUS_ACCEPTED, $clipCandidate->status);
 
-        // Wave 2: ContentCandidateObserver should have auto-drafted a social post.
         $socialDraft = ContentCandidate::where('parent_id', $clipCandidate->id)
             ->where('type', ContentCandidate::TYPE_SOCIAL_POST)
             ->first();
@@ -52,7 +47,6 @@ class ContentCandidateChainTest extends TestCase
 
         Bus::assertNotDispatched(PublishSocialPostJob::class);
 
-        // Staff accepts the draft in Filament (the "accept" table action).
         $socialDraft->update(['status' => ContentCandidate::STATUS_ACCEPTED]);
 
         Bus::assertDispatched(PublishSocialPostJob::class, fn ($job) => $job->contentCandidateId === $socialDraft->id);
@@ -65,7 +59,7 @@ class ContentCandidateChainTest extends TestCase
         $digest = ContentCandidate::create([
             'type' => ContentCandidate::TYPE_EMAIL_BLAST,
             'status' => ContentCandidate::STATUS_DRAFT,
-            'title' => 'Дайджест недели',
+            'title' => 'Недельный дайджест',
             'body' => 'Текст дайджеста',
         ]);
 
@@ -74,5 +68,34 @@ class ContentCandidateChainTest extends TestCase
         $digest->update(['status' => ContentCandidate::STATUS_ACCEPTED]);
 
         Bus::assertDispatched(SendContentOneShotMailJob::class, fn ($job) => $job->contentCandidateId === $digest->id);
+    }
+
+    public function test_accepting_faq_draft_writes_knowledge_without_support_topic(): void
+    {
+        $path = storage_path('framework/testing/faq_chain_'.uniqid('', true).'.md');
+        config(['content.lecture_faq_path' => $path]);
+
+        try {
+            $draft = ContentCandidate::create([
+                'type' => ContentCandidate::TYPE_FAQ_DRAFT,
+                'status' => ContentCandidate::STATUS_DRAFT,
+                'title' => 'Что такое висарга?',
+                'body' => 'Это h на конце слова.',
+                'channel_target' => 'cabinet_faq',
+            ]);
+
+            $draft->update(['status' => ContentCandidate::STATUS_ACCEPTED]);
+
+            $draft->refresh();
+            $this->assertSame(ContentCandidate::STATUS_PUBLISHED, $draft->status);
+            $this->assertFileExists($path);
+            $this->assertStringContainsString('висарга', (string) file_get_contents($path));
+            // C3: no SupportTopic seed required for the Accept → knowledge path.
+            $this->assertDatabaseCount('content_candidates', 1);
+        } finally {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
     }
 }
