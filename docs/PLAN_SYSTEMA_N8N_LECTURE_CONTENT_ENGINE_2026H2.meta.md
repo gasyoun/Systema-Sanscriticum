@@ -46,5 +46,6 @@ timecode data (n8n + lecture AI) into five sequenced content products under one
 |---|---|---|
 | 23-07-2026 | Created from full `/ask` interview | Grok 4.5 (`grok-4.5`) |
 | 24-07-2026 | Wave 1 (H1547) executed: `ContentCandidate`, `SpanRanker`, `QuotePolicy`, `LessonObserver`/`LectureClipObserver` sync, thin Filament resource, DEPLOY_QUEUE №49 | Sonnet 5 (`claude-sonnet-5`) |
+| 24-07-2026 | Wave 2 (H1548) executed: `SocialDraftGenerator`, `PublishSocialPostJob` (VK wall + TG mirror via n8n webhook), `EmailBlastComposer` + `SendContentOneShotMailJob`, `ContentCandidateObserver` chain, Filament Accept action, DEPLOY_QUEUE №50 | Sonnet 5 (`claude-sonnet-5`) |
 
 _Dr. Mārcis Gasūns_

@@ -39,6 +39,26 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   [docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
   §6 step 2. **Money-adjacent (offer suppression)** — flag default OFF; enable only
   after review + config:cache. Executor: Grok 4.5 (grok-4.5) via xAI (Opus-lock override).
+- **n8n lecture content engine — Wave 2 of 5 (H1548).** `SocialDraftGenerator`
+  drafts a `social_post` ContentCandidate for every free clip — quote grounded
+  in the actual transcript sentence inside the clip's own span (never
+  invented, never the full lecture body), CuratorAi text when an OpenRouter
+  key is configured, deterministic template fallback otherwise.
+  `PublishSocialPostJob` posts VK wall (with the free clip's video attached)
+  + a Telegram mirror in one call, via a new n8n webhook (same
+  webhook-forward shape as `clip_extract`/`monthly_schedule`) — QuotePolicy
+  hard-fails a too-long quote before it ever posts. `ContentCandidateObserver`
+  chains the flow off the existing "accepted" transition: marking a clip
+  free auto-drafts the social post; accepting the draft in Filament dispatches
+  the publish job (self-gated by `content_auto_publish_pilot`, OFF).
+  `EmailBlastComposer` (+ `content:compose-weekly-digest` command) composes a
+  weekly `email_blast` digest from clips accepted in the last 7 days;
+  `SendContentOneShotMailJob` sends it to the existing `newsletter_subscribed_at`
+  segment (H324) once accepted, gated by `content_email_oneshot` (August
+  activation, depends on live SMTP per H1449/#504) — no new campaign domain
+  model beyond the candidate itself. DEPLOY_QUEUE №51. Waves 3–5 remain
+  queued as Uprava H1549–H1551. **Executor:** Sonnet 5 (`claude-sonnet-5`).
+
 - **n8n lecture content engine — Wave 1 of 5 (H1547).** `ContentCandidate`
   model/migration — the unified review/publish unit for everything the
   content engine will generate from lectures (clip now, social/faq/article/

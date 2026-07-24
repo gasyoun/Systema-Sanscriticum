@@ -16,11 +16,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 
 /**
- * Thin review surface for ContentCandidate (H1547, Wave 1). Wave 1 only ever
- * populates type=clip rows (mirrored from LectureClip by
- * ContentCandidateSync) — no live-publish buttons exist yet, those arrive
- * with the auto-publish pilot flag in Wave 2. "Mark free" here also flips
- * the underlying LectureClip so the two stay in sync in either direction.
+ * Thin review surface for ContentCandidate (H1547 Wave 1, H1548 Wave 2).
+ * "Mark free" (clip type) also flips the underlying LectureClip so the two
+ * stay in sync in either direction, then auto-drafts a social_post via
+ * ContentCandidateObserver. "Accept" (non-clip types: social_post/
+ * email_blast/…) is the human review gate — accepting a social_post
+ * dispatches PublishSocialPostJob, accepting an email_blast dispatches
+ * SendContentOneShotMailJob (both self-gated by their own OFF-by-default
+ * flag, so accepting here never actually posts/sends until activation).
  */
 class ContentCandidateResource extends Resource
 {
@@ -95,6 +98,13 @@ class ContentCandidateResource extends Resource
                 Tables\Filters\SelectFilter::make('lesson_id')->label('Лекция')->relationship('lesson', 'title'),
             ])
             ->actions([
+                Tables\Actions\Action::make('accept')
+                    ->label('Принять')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (ContentCandidate $record): bool => $record->type !== ContentCandidate::TYPE_CLIP
+                        && $record->status === ContentCandidate::STATUS_DRAFT)
+                    ->action(fn (ContentCandidate $record) => $record->update(['status' => ContentCandidate::STATUS_ACCEPTED])),
                 Tables\Actions\Action::make('mark_free')
                     ->label('Сделать бесплатным')
                     ->icon('heroicon-o-gift')

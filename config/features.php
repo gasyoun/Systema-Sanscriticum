@@ -449,4 +449,21 @@ return [
      | student.dashboard без hybrid-маршрутов (library/progress/access → 404).
      */
     'cabinet_hybrid' => (bool) env('CABINET_HYBRID', false),
+
+    /*
+     | Content engine Wave 2 (H1548): пилот авто-публикации социальных постов
+     | (ВК-стена с прикреплённым клипом + зеркало в ТГ-канал), n8n-вебхук —
+     | тот же паттерн, что monthly_schedule_webhook/clip_extract. Когда ВЫКЛ:
+     | PublishSocialPostJob ранний возврат, ни одного реального поста. ВКЛ
+     | требует живого n8n-пайплайна + VK wall/video скоупов (см. DEPLOY_QUEUE.md).
+     */
+    'content_auto_publish_pilot' => (bool) env('CONTENT_AUTO_PUBLISH_PILOT', false),
+
+    /*
+     | Content engine Wave 2 (H1548): разовая рассылка `email_blast`-кандидатов
+     | подписчикам newsletter_subscribe (H324). Августовская активация —
+     | зависит от живого SMTP (см. H1449/#504). Когда ВЫКЛ: SendContentOneShotMailJob
+     | ранний возврат, писем не уходит.
+     */
+    'content_email_oneshot' => (bool) env('CONTENT_EMAIL_ONESHOT', false),
 ];
