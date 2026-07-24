@@ -18,6 +18,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
 
 ### Added
+- **Операторский мануал RU: клипы лекций + n8n.** [docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) — еженедельная эксплуатация; установка: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666). Grok 4.5 (grok-4.5).
 - **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
   Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
   `config/video.php` `kinescope_pilot_course_id`. `VideoEmbed` recognises

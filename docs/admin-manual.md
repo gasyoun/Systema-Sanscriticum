@@ -1,6 +1,8 @@
 # Руководство администратора — функции последнего месяца (06.06–06.07.2026)
 
-_Created: 06-07-2026 · Last updated: 07-07-2026_
+_Created: 06-07-2026 · Last updated: 24-07-2026_
+
+> **Клипы лекций / n8n:** операторское руководство — [MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md); установка n8n — [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666).
 
 Документ описывает **новые/измененные admin-панельные функции**, слитые в `main` за
 последний месяц (с 06.06.2026 по 06.07.2026), для роли **администратор/супер-админ**
