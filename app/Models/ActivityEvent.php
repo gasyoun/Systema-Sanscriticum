@@ -77,6 +77,12 @@ class ActivityEvent extends Model
     /** Phase 2 progress rail jump (H1572 / R29.4). */
     public const LIBRARY_RAIL_JUMP = 'library.rail.jump';
 
+    /** Phase 3 ladder station map (H1573 / R29.6). */
+    public const PATH_STATION_VIEW = 'path.station.view';
+
+    /** Phase 3 lit station impression (H1573 / R29.7). */
+    public const PATH_STATION_LIT_IMPRESSION = 'path.station.lit.impression';
+
     public const OFFER_IMPRESSION = 'offer.impression';
 
     public const OFFER_CLICK = 'offer.click';
@@ -96,6 +102,7 @@ class ActivityEvent extends Model
         self::COURSE_TAB_VIEW,
         self::LIBRARY_SHELF_VIEW,
         self::LIBRARY_RAIL_JUMP,
+        self::PATH_STATION_VIEW,
         self::OFFER_IMPRESSION,
         self::OFFER_CLICK,
         self::ACCESS_RENEWAL_START,

@@ -12,6 +12,13 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Cabinet hybrid Phase 3 — Прогресс ladder + lighting + course vehi (H1573, R29.6–R29.8).**
+  `config/grammar_ladder.php` + `GrammarLadder`: station map on hybrid «Прогресс»
+  (письмо → грамматика I/II → тексты), completion lighting, ladder offer only after
+  station complete («станция подождёт», no timers), suppressed in recovery; course-home
+  landmarks from `CourseBlock` dates (orientation only). Telemetry
+  `path.station.view` / `path.station.lit.impression`. Tests: `HybridPhase3Test`.
+  Executor: Grok 4.5 (`grok-4.5`) via xAI.
 - **VK/ORS content calendar Wave 1 (H1564).** ContentCalendarSlot + import/seed artisan commands + Filament «Календарь контента» behind CONTENT_CALENDAR_ENABLED (OFF). Reuses H1547 ContentCandidate (calendar_slot_id). Fixtures + tests; no live VK. Grok 4.5 (grok-4.5) override of Sonnet lock.
 - **SRS Wave 2 authoring UI (H1487).** Filament `SrsDeckResource` +
   `SrsCardResource` (teacher CRUD, course/lesson attach, paste bulk-add,

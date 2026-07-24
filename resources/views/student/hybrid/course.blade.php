@@ -7,6 +7,7 @@
 @php
     $completedLessonIds = $completedLessonIds ?? [];
     $suppressOffers = $suppressOffers ?? false;
+    $landmarks = $landmarks ?? [];
     $total = $lessons->count();
     $completed = collect($completedLessonIds)->intersect($lessons->pluck('id'))->count();
     $percent = $total > 0 ? (int) round(($completed / $total) * 100) : 0;
@@ -26,6 +27,25 @@
             {{ $completed }} из {{ $total }} уроков · {{ $percent }}%
         </p>
     </header>
+
+    {{-- R29.8 «место курса на пути» — orientation landmarks, never payment deadlines --}}
+    @if (count($landmarks) > 0)
+        <section class="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm" data-course-landmarks aria-label="Место курса на пути">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Место курса на пути</p>
+            <ul class="space-y-2">
+                @foreach ($landmarks as $lm)
+                    <li class="flex flex-wrap items-baseline gap-2 text-sm">
+                        <span class="font-bold text-[#101010]">{{ $lm->label }}</span>
+                        @if ($lm->at)
+                            <span class="text-gray-500">{{ $lm->at->timezone(config('app.timezone'))->translatedFormat('d F Y') }}</span>
+                        @endif
+                        <span class="text-[10px] uppercase tracking-widest text-gray-400">ориентир</span>
+                    </li>
+                @endforeach
+            </ul>
+            <p class="text-xs text-gray-400 mt-3">Это вехи контура, не сроки оплаты.</p>
+        </section>
+    @endif
 
     {{-- R9 workspace tabs, hash-addressable --}}
     <nav class="ws-tabs flex flex-wrap gap-1 border-b border-gray-200 mb-6" data-tabs aria-label="Разделы курса">
