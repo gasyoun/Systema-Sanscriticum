@@ -414,7 +414,6 @@ return [
     'clip_marketing' => (bool) env('CLIP_MARKETING_ENABLED', false),
 
     /*
-/*
      | Content engine (n8n lecture content, Wave 1 of 5): мастер-флаг генерации
      | ContentCandidate из лекций — ranked-span dispatch в DispatchLectureClip-
      | ExtractionJob и sync LectureClip → ContentCandidate. Когда ВЫКЛ:
@@ -424,6 +423,21 @@ return [
      | (social/faq/article/study generators) читают этот же флаг.
      */
     'content_from_lectures' => (bool) env('CONTENT_FROM_LECTURES', false),
+
+    /*
+     | VK/ORS content calendar (H1564, plan PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR):
+     | import vk-ors derived CSVs, seed monthly slots, Filament «Календарь
+     | контента». Когда ВЫКЛ: команды seed/import safe no-op или работают
+     | без UI; ресурс календаря скрыт. Авто-публикация в ВК — отдельный
+     | флаг content_calendar_autopilot (Wave 5, H1568), не этот.
+     */
+    'content_calendar' => (bool) env('CONTENT_CALENDAR_ENABLED', false),
+
+    /*
+     | Auto-publish due calendar slots via n8n (H1568 Wave 5). Default OFF.
+     | W1 does not read this flag.
+     */
+    'content_calendar_autopilot' => (bool) env('CONTENT_CALENDAR_AUTOPILOT', false),
 
     /*
      | Гибридный кабинет R29 (H1481, Phase 1 chassis): job-named nav

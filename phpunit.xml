@@ -19,6 +19,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Worktree .env often has empty APP_KEY; Livewire list-page smokes need encrypt. -->
+        <env name="APP_KEY" value="base64:2fl+KtvkdphvQyEfjOzf3mJCEJnA8otCLK5LpM/V8Xw="/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="DB_CONNECTION" value="sqlite"/>

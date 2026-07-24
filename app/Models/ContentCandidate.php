@@ -30,6 +30,9 @@ class ContentCandidate extends Model
 
     public const TYPE_EMAIL_BLAST = 'email_blast';
 
+    /** Calendar / wall post body (H1564 content calendar). */
+    public const TYPE_VK_POST = 'vk_post';
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_ACCEPTED = 'accepted';
@@ -40,12 +43,15 @@ class ContentCandidate extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    public const STATUS_SCHEDULED = 'scheduled';
+
     protected $fillable = [
         'type',
         'status',
         'lesson_id',
         'lecture_clip_id',
         'parent_id',
+        'calendar_slot_id',
         'title',
         'body',
         'quote',
@@ -81,6 +87,11 @@ class ContentCandidate extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    public function calendarSlot(): BelongsTo
+    {
+        return $this->belongsTo(ContentCalendarSlot::class, 'calendar_slot_id');
     }
 
     public function scopeDraft(Builder $query): Builder
