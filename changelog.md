@@ -11,6 +11,12 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
+  multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
+  path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
+  knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
+
 ### Added
 - **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
   Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +

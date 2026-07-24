@@ -1,6 +1,6 @@
 # IMPLEMENTATION — Wave 3 (Kinescope pilot)
 
-_Created: 23-07-2026 · Last updated: 23-07-2026_
+_Created: 23-07-2026 · Last updated: 24-07-2026_
 
 File-level build sequence for **Wave 3 only** (D9). Architecture:
 [docs/ARCHITECTURE_SYSTEMA_ANTON_OPS_GAPS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_ANTON_OPS_GAPS.md)
@@ -10,7 +10,15 @@ File-level build sequence for **Wave 3 only** (D9). Architecture:
 Kinescope adapter in `public/js/video-resume.js`.
 
 **Executor:** Grok 4.5 (`grok-4.5`) via xAI — user-authorized override of the
-Sonnet 5 handoff lock (same standing override as H1450).
+Sonnet 5 handoff lock (same standing override as H1450). **True redo 24-07-2026**
+(user: “true redo” after first merge #665).
+
+### True-redo delta (24-07-2026)
+
+- `KinescopePilot::candidateUrlFromLesson` / `embedForLesson` — multi-field resolve.
+- `VideoEmbed::kinescopeId` reserved-segment reject + query/fragment-safe match.
+- `.env.example` — `VIDEO_RESUME` / `KINESCOPE_PILOT` / `KINESCOPE_PILOT_COURSE_ID`.
+- Extra unit + feature tests (misfiled youtube_url, reserved paths).
 
 ---
 

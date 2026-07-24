@@ -537,8 +537,10 @@ class StudentController extends Controller
         // не шлёт и баннер «продолжить» не показывается — эти переменные лежат
         // в вью мёртвым грузом, ровно как до H1450.
         $videoResumeEnabled = (bool) config('features.video_resume');
-        $kinescopeEmbedUrl = \App\Support\KinescopePilot::embedForCourse(
-            $lesson->video_url,
+        // H1451 W3 (true-redo): multi-field resolve — video_url preferred, then
+        // youtube_url / rutube_url if staff pasted a kinescope.io link there.
+        $kinescopeEmbedUrl = \App\Support\KinescopePilot::embedForLesson(
+            $lesson,
             $course->id ?? null
         );
         $resumePosition = null;
@@ -558,7 +560,7 @@ class StudentController extends Controller
         // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
         // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
         $upcomingSession = null;
-        if (empty($youtubeId) && empty($rutubeId) && empty($lesson->video_url) && $lesson->lesson_date) {
+        if (empty($youtubeId) && empty($rutubeId) && empty($kinescopeEmbedUrl) && empty($lesson->video_url) && $lesson->lesson_date) {
             $upcomingSession = Schedule::query()
                 ->where('course_id', $course->id)
                 ->where('group_id', $lesson->group_id)

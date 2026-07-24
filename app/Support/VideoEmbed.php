@@ -128,6 +128,9 @@ final class VideoEmbed
      * - https://kinescope.io/{id}
      * - https://kinescope.io/embed/{id}
      * - https://kinescope.io/video/{id}
+     *
+     * Rejects reserved first path segments (login, settings, …) so a mis-pasted
+     * marketing URL never becomes a fake video id (H1451 true-redo harden).
      */
     public static function kinescopeId(?string $url): ?string
     {
@@ -135,10 +138,24 @@ final class VideoEmbed
             return null;
         }
 
-        if (preg_match('/kinescope\.io\/(?:embed\/|video\/)?([A-Za-z0-9_-]{6,})/i', $url, $m)) {
-            return $m[1];
+        // Delimiter ~ so # is free inside the char class (query/fragment boundary).
+        if (! preg_match(
+            '~kinescope\.io/(?:embed/|video/)?([A-Za-z0-9_-]{6,})(?:[/?#]|$)~i',
+            $url,
+            $m
+        )) {
+            return null;
         }
 
-        return null;
+        $id = $m[1];
+        $reserved = [
+            'embed', 'video', 'login', 'signup', 'settings', 'dashboard',
+            'account', 'pricing', 'docs', 'help', 'api', 'admin', 'app',
+        ];
+        if (in_array(strtolower($id), $reserved, true)) {
+            return null;
+        }
+
+        return $id;
     }
 }
