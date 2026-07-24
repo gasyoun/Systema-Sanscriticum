@@ -9,45 +9,48 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * H1488 — PWA shell smoke: manifest + offline page + SW + student layout link.
+ * H1488 — PWA shell smoke.
+ *
+ * Laravel's HTTP kernel does not serve public/ static files the way nginx does,
+ * so shell assets are asserted on disk; the student layout is asserted via an
+ * authenticated cabinet render.
  */
 class PwaManifestTest extends TestCase
 {
     use RefreshDatabase;
 
     /** @test */
-    public function manifest_is_served_with_required_fields(): void
+    public function manifest_file_has_required_fields(): void
     {
-        $response = $this->get('/manifest.webmanifest');
+        $path = public_path('manifest.webmanifest');
+        $this->assertFileExists($path);
 
-        $response->assertOk();
-
-        $json = $response->json();
+        $json = json_decode((string) file_get_contents($path), true);
         $this->assertIsArray($json);
         $this->assertSame('/dvaram', $json['start_url'] ?? null);
         $this->assertSame('standalone', $json['display'] ?? null);
         $this->assertSame('#E85C24', $json['theme_color'] ?? null);
         $this->assertNotEmpty($json['name'] ?? null);
-        $this->assertNotEmpty($json['icons'] ?? null);
-        $this->assertIsArray($json['icons']);
+        $this->assertIsArray($json['icons'] ?? null);
+        $this->assertNotEmpty($json['icons']);
     }
 
     /** @test */
-    public function offline_shell_page_is_served(): void
+    public function offline_shell_and_service_worker_files_exist(): void
     {
-        $this->get('/offline.html')
-            ->assertOk()
-            ->assertSee('Нет подключения', false)
-            ->assertSee('ОРС LMS', false);
-    }
+        $offline = public_path('offline.html');
+        $sw = public_path('sw.js');
 
-    /** @test */
-    public function service_worker_script_is_served(): void
-    {
-        $this->get('/sw.js')
-            ->assertOk()
-            ->assertSee('ors-cabinet-shell-v1', false)
-            ->assertSee('/offline.html', false);
+        $this->assertFileExists($offline);
+        $this->assertFileExists($sw);
+
+        $offlineHtml = (string) file_get_contents($offline);
+        $this->assertStringContainsString('Нет подключения', $offlineHtml);
+        $this->assertStringContainsString('ОРС LMS', $offlineHtml);
+
+        $swBody = (string) file_get_contents($sw);
+        $this->assertStringContainsString('ors-cabinet-shell-v1', $swBody);
+        $this->assertStringContainsString('/offline.html', $swBody);
     }
 
     /** @test */
@@ -64,5 +67,6 @@ class PwaManifestTest extends TestCase
         $this->assertStringContainsString('theme-color', $html);
         $this->assertStringContainsString('serviceWorker', $html);
         $this->assertStringContainsString('sw.js', $html);
+        $this->assertStringContainsString('viewport-fit=cover', $html);
     }
 }
