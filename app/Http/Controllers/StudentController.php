@@ -23,6 +23,7 @@ use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
 use App\Support\Badges;
+use App\Support\KinescopePilot;
 use App\Support\OnboardingChecklist;
 use App\Support\PranaLeaderboard;
 use App\Support\TranscriptParser;
@@ -539,7 +540,7 @@ class StudentController extends Controller
         $videoResumeEnabled = (bool) config('features.video_resume');
         // H1451 W3 (true-redo): multi-field resolve — video_url preferred, then
         // youtube_url / rutube_url if staff pasted a kinescope.io link there.
-        $kinescopeEmbedUrl = \App\Support\KinescopePilot::embedForLesson(
+        $kinescopeEmbedUrl = KinescopePilot::embedForLesson(
             $lesson,
             $course->id ?? null
         );
