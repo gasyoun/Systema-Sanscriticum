@@ -136,6 +136,13 @@
                 Карточки
             </a>
 
+            {{-- H1487 Wave 2 — student private-deck editor --}}
+            <a href="{{ route('student.srs.decks') }}"
+               class="{{ request()->routeIs('student.srs.decks') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-pen-to-square mr-3 w-5 text-center {{ request()->routeIs('student.srs.decks') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Мои колоды
+            </a>
+
             {{-- H447 — статистика по карточкам, тот же флаг --}}
             <a href="{{ route('student.srs.stats') }}"
                class="{{ request()->routeIs('student.srs.stats') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">

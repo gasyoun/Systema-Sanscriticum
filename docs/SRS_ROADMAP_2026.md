@@ -1,6 +1,6 @@
 # SRS Flashcards Roadmap — "Anki for Sanskrit & Hindi"
 
-_Created: 05-07-2026 · Last updated: 19-07-2026_
+_Created: 05-07-2026 · Last updated: 24-07-2026_
 
 A native, web-only spaced-repetition system built into the Systema-Sanscriticum student
 cabinet — decks, cards, an FSRS scheduler, and a review loop — with no dependency on the
@@ -66,10 +66,10 @@ _Unblocked by: nothing — ready._
 - Behind a `srs_enabled` feature flag (off in prod).
 - **Deliverable:** one Sanskrit system deck reviewable end-to-end by a flagged account.
 
-### Wave 2 — Authoring · _Unblocked by: Wave 1 data model._
-- Filament `SrsDeckResource` + `SrsCardResource` (teacher CRUD, bulk add, CSV/paste import, "seed from Dictionary" action).
-- Attach a deck to a course/lesson (nullable `course_id`/`lesson_id`).
-- Student self-authored private decks (`SrsDeckEditor` Livewire).
+### Wave 2 — Authoring · _Unblocked by: Wave 1 data model._ · **shipped H1487**
+- ~~Filament `SrsDeckResource` + `SrsCardResource` (teacher CRUD, bulk add, CSV/paste import, "seed from Dictionary" action).~~
+- ~~Attach a deck to a course/lesson (nullable `course_id`/`lesson_id`).~~
+- ~~Student self-authored private decks (`SrsDeckEditor` Livewire).~~
 - **Deliverable:** teachers curate decks; students build personal decks; decks attach to lessons.
 
 ### Wave 3 — Language polish + audio · _Unblocked by: Waves 1–2._

@@ -27,6 +27,16 @@ class SrsController extends Controller
     }
 
     /**
+     * H1487 Wave 2 — student private-deck authoring UI (Livewire SrsDeckEditor).
+     */
+    public function decks(): View
+    {
+        abort_unless((bool) config('srs.enabled'), 404);
+
+        return view('student.srs-decks');
+    }
+
+    /**
      * H447 — per-trainer stats dashboard. Progress bar per deck (cards with
      * a review state vs total cards in the deck), correct/incorrect ratio,
      * and a short error list (last 10 non-Good/Easy grades) sourced entirely

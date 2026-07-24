@@ -309,6 +309,10 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         // H447 — per-trainer stats dashboard, same gate as the review route.
         Route::get('/dvaram/srs/stats', [SrsController::class, 'stats'])
             ->name('student.srs.stats');
+
+        // H1487 Wave 2 — student private-deck editor.
+        Route::get('/dvaram/srs/decks', [SrsController::class, 'decks'])
+            ->name('student.srs.decks');
     }
 
     // H987 — RQ4 user study (on-ramp-first vs Талмуд-first). За фича-флагом
