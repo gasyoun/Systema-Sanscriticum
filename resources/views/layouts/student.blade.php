@@ -81,13 +81,40 @@
         {{-- Навигация --}}
         <div class="flex-1 overflow-y-auto sidebar-scroll p-4 flex flex-col gap-2">
             
-            {{-- Основные ссылки --}}
-            <a href="{{ route('student.dashboard') }}" 
+            {{-- Основные ссылки — R29 job-named nav when cabinet_hybrid (H1481) --}}
+            @if (config('features.cabinet_hybrid'))
+            <a href="{{ route('student.dashboard') }}"
                class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-th-large mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i> 
+                <i class="fas fa-sun mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Сегодня
+            </a>
+            <a href="{{ route('student.calendar') }}"
+               class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Календарь
+            </a>
+            <a href="{{ route('student.library') }}"
+               class="{{ request()->routeIs('student.library') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-play-circle mr-3 w-5 text-center {{ request()->routeIs('student.library') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Записи
+            </a>
+            <a href="{{ route('student.progress') }}"
+               class="{{ request()->routeIs('student.progress') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.progress') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Прогресс
+            </a>
+            <a href="{{ route('student.access') }}"
+               class="{{ request()->routeIs('student.access') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-credit-card mr-3 w-5 text-center {{ request()->routeIs('student.access') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                Оплата и доступ
+            </a>
+            @else
+            <a href="{{ route('student.dashboard') }}"
+               class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-th-large mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
                 Кабинет
             </a>
-            
+
             <a href="{{ route('student.calendar') }}"
                class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
                 <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
@@ -99,6 +126,7 @@
                 <i class="fas fa-lock-open mr-3 w-5 text-center {{ request()->routeIs('student.open-lessons') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
                 Открытые уроки
             </a>
+            @endif
 
             {{-- Карточки SRS (H211) — только при включённом флаге srs.enabled --}}
             @if (config('srs.enabled'))
@@ -116,19 +144,12 @@
             </a>
             @endif
 
-            {{-- Сообщения --}}
-            <a href="{{ route('student.messages') }}" 
-   class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold 
-          {{ request()->routeIs('student.messages') ? 'bg-[#E85C24] text-white shadow-[0_4px_15px_rgba(232,92,36,0.3)]' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900' }}">
-    
-    <div class="relative">
-        <i class="fas fa-envelope text-lg"></i>
-        {{-- Красная точка-уведомление (пока фейковая, потом сделаем динамической) --}}
-        <span class="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-    </div>
-    
-    <span>Сообщения</span>
-</a>
+            {{-- Помощь / Сообщения (R29 job name when hybrid) --}}
+            <a href="{{ route('student.messages') }}"
+               class="{{ request()->routeIs('student.messages') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-life-ring mr-3 w-5 text-center {{ request()->routeIs('student.messages') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+                {{ config('features.cabinet_hybrid') ? 'Помощь' : 'Сообщения' }}
+            </a>
         
             {{-- БЛОК КУРСОВ (Спойлер/Аккордеон) --}}
             @if($menuCourses->isNotEmpty())

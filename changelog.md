@@ -12,6 +12,21 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Cabinet hybrid Phase 1 chassis + recovery-mode resolver (H1481, R29.0–R29.2).**
+  Flag cabinet_hybrid / CABINET_HYBRID (OFF by default, R20 deploy gate).
+  Job-named student nav (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ /
+  Помощь); hybrid home with «Сегодня» band (continue + nearest live + homework-rework
+  only when returned); course workspace hash-addressable tabs; routes /library,
+  /progress, /access (404 while flag off). Server-side
+  App\Services\Cabinet\RecoveryStateResolver: declined/canceled payment or expired
+  promise → recovery banner, unconditional offer suppression, owned/live access kept;
+  bare pending is not recovery (webhook-delay trap). Telemetry cabinet.home.view
+  now carries mode: normal|recovery + 
+eason. Feature tests:
+  	ests/Feature/Cabinet/HybridPhase1Test.php (11 cases). Spec:
+  [docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
+  §6 step 2. **Money-adjacent (offer suppression)** — flag default OFF; enable only
+  after review + config:cache. Executor: Grok 4.5 (grok-4.5) via xAI (Opus-lock override).
 - **n8n lecture content engine — Wave 1 of 5 (H1547).** `ContentCandidate`
   model/migration — the unified review/publish unit for everything the
   content engine will generate from lectures (clip now, social/faq/article/
@@ -34,9 +49,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
   path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
   knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
-
-### Added
-- **VK/ORS content calendar plan (H2).** Layered /ask from k-ors archive signals: five waves (import → evergreen → Systema bridge → forward drafts → n8n auto-pilot), monthly Filament review, ≥20 posts/month target. Docs: [PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md). Grok 4.5 (grok-4.5).
+- **VK/ORS content calendar plan (H2).** Layered /ask from 
 - **Операторский мануал RU: клипы лекций + n8n.** [docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) — еженедельная эксплуатация; установка: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666). Grok 4.5 (grok-4.5).
 - **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
   Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
@@ -46,6 +59,14 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   Kinescope — reuses W2 `video-resume.js` kinescope adapter. Comparison memo
   `docs/KINESCOPE_PILOT_COMPARISON_2026.md`; DEPLOY_QUEUE №48.
   **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override).
+
+### Changed
+- **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
+  multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
+  path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
+  knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
+
+### Added (continued)
 - **n8n lecture content engine plan (H2 2026).** Layered `/ask` plan for turning weekly
   lecture video + transcript + AI timecodes into five sequenced products (clips → social
   text → FAQ → long-form → student materials) under one `ContentCandidate` backbone,
