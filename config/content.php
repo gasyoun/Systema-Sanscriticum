@@ -5,12 +5,11 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
-    | n8n lecture content engine (Wave 1+)
+    | vk-ors derived data directory (H1564)
     |--------------------------------------------------------------------------
-    |
-    | SpanRanker top-N: сколько лучших спанов из ClipSpanPlanner реально идёт
-    | в n8n на нарезку (было — весь пак до 12). Curator "expand" может
-    | передать N явно, это лишь дефолт диспатча.
+    | Directory containing activity_by_month.csv, top_posts_by_likes.csv, etc.
+    | from IndologyScholars/vk-ors/data/processed. Prefer storage/app/vk_ors
+    | after content:import-vk-ors.
     */
-    'clip_rank_n' => (int) env('CONTENT_CLIP_RANK_N', 5),
+    'vk_ors_data_path' => env('VK_ORS_DATA_PATH', storage_path('app/vk_ors')),
 ];

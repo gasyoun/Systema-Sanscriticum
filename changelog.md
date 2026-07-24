@@ -12,6 +12,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **VK/ORS content calendar Wave 1 (H1564).** ContentCalendarSlot + import/seed artisan commands + Filament «Календарь контента» behind CONTENT_CALENDAR_ENABLED (OFF). Reuses H1547 ContentCandidate (calendar_slot_id). Fixtures + tests; no live VK. Grok 4.5 (grok-4.5) override of Sonnet lock.
 - **SRS Wave 2 authoring UI (H1487).** Filament `SrsDeckResource` +
   `SrsCardResource` (teacher CRUD, course/lesson attach, paste bulk-add,
   "seed from Dictionary" action, CSV import via `SrsCardImporter`) plus
