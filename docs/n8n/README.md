@@ -189,3 +189,15 @@ ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips
    ```
    `php artisan config:cache`. Flip `CLIP_MARKETING_ENABLED=true` only after a
    staging dry-run (see `DEPLOY_QUEUE.md` №47).
+
+---
+
+# Клипы лекций (эксплуатация)
+
+Пошаговая **установка** n8n/ffmpeg/VK для Ивана: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666).
+
+**Как пользоваться после включения** (админ + оператор): 
+[docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md).
+
+JSON воркфлоу: lecture-clip-extract.workflow.json (импорт → Active → секреты в Laravel N8N_CLIP_*).
+
