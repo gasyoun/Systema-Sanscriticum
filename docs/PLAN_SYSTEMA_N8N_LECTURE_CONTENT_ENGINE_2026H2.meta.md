@@ -1,6 +1,6 @@
 # Metadoc — PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2
 
-_Created: 23-07-2026 · Last updated: 23-07-2026_
+_Created: 23-07-2026 · Last updated: 24-07-2026_
 
 ## Purpose
 
@@ -45,5 +45,6 @@ timecode data (n8n + lecture AI) into five sequenced content products under one
 | Date | Change | Model |
 |---|---|---|
 | 23-07-2026 | Created from full `/ask` interview | Grok 4.5 (`grok-4.5`) |
+| 24-07-2026 | Wave 1 (H1547) executed: `ContentCandidate`, `SpanRanker`, `QuotePolicy`, `LessonObserver`/`LectureClipObserver` sync, thin Filament resource, DEPLOY_QUEUE №49 | Sonnet 5 (`claude-sonnet-5`) |
 
 _Dr. Mārcis Gasūns_

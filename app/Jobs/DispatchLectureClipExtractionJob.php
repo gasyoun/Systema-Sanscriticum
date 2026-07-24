@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Lesson;
+use App\Services\Content\SpanRanker;
 use App\Services\Lecture\ClipSpanPlanner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Прод-инертна, пока флаг features.clip_marketing выключен — ранний возврат,
  * никакой реальный VK-пост никогда не инициируется из теста/CI.
+ *
+ * H1547 (Wave 1): spans теперь top-N (SpanRanker, default 5), не весь пак
+ * до 12 — payload-форма к n8n не изменилась, изменился только объём.
  */
 final class DispatchLectureClipExtractionJob implements ShouldQueue
 {
@@ -53,7 +57,7 @@ final class DispatchLectureClipExtractionJob implements ShouldQueue
             return;
         }
 
-        $spans = ClipSpanPlanner::planSpans($lesson);
+        $spans = SpanRanker::rank(ClipSpanPlanner::planSpans($lesson));
         if ($spans === []) {
             Log::warning('DispatchLectureClipExtractionJob: нет AI-таймкодов для нарезки.', [
                 'lesson_id' => $this->lessonId,

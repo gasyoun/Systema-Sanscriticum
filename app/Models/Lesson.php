@@ -115,6 +115,11 @@ class Lesson extends Model
         return $this->hasMany(LectureClip::class);
     }
 
+    public function contentCandidates(): HasMany
+    {
+        return $this->hasMany(ContentCandidate::class);
+    }
+
     // ===================================================================
     // МАТЕРИАЛЫ УРОКА — единый источник правды (для статистики/витрины).
     // PHP-аксессоры используют колонки модели; query-скоупы дублируют ту

@@ -1,0 +1,38 @@
+{
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "words": [
+              {"word": "Начнём", "punctuated_word": "Начнём", "start": 0.0, "end": 1.0},
+              {"word": "с", "punctuated_word": "с", "start": 1.0, "end": 1.2},
+              {"word": "основ", "punctuated_word": "основ.", "start": 1.2, "end": 2.0},
+              {"word": "Санскритская", "punctuated_word": "Санскритская", "start": 30.0, "end": 30.5},
+              {"word": "грамматика", "punctuated_word": "грамматика", "start": 30.5, "end": 31.5},
+              {"word": "устроена", "punctuated_word": "устроена", "start": 31.5, "end": 32.2},
+              {"word": "иначе", "punctuated_word": "иначе.", "start": 32.2, "end": 33.0},
+              {"word": "Разберём", "punctuated_word": "Разберём", "start": 130.0, "end": 130.5},
+              {"word": "падежи", "punctuated_word": "падежи", "start": 130.5, "end": 131.2},
+              {"word": "подробно", "punctuated_word": "подробно.", "start": 131.2, "end": 132.0},
+              {"word": "Именительный", "punctuated_word": "Именительный", "start": 260.0, "end": 260.6},
+              {"word": "и", "punctuated_word": "и", "start": 260.6, "end": 260.7},
+              {"word": "винительный", "punctuated_word": "винительный.", "start": 260.7, "end": 261.5},
+              {"word": "Переходим", "punctuated_word": "Переходим", "start": 400.0, "end": 400.5},
+              {"word": "к", "punctuated_word": "к", "start": 400.5, "end": 400.6},
+              {"word": "глаголам", "punctuated_word": "глаголам.", "start": 400.6, "end": 401.4},
+              {"word": "Спряжение", "punctuated_word": "Спряжение", "start": 520.0, "end": 520.6},
+              {"word": "в", "punctuated_word": "в", "start": 520.6, "end": 520.7},
+              {"word": "настоящем", "punctuated_word": "настоящем", "start": 520.7, "end": 521.3},
+              {"word": "времени", "punctuated_word": "времени.", "start": 521.3, "end": 522.0},
+              {"word": "Завершаем", "punctuated_word": "Завершаем", "start": 650.0, "end": 650.5},
+              {"word": "лекцию", "punctuated_word": "лекцию", "start": 650.5, "end": 651.0},
+              {"word": "кратким", "punctuated_word": "кратким", "start": 651.0, "end": 651.5},
+              {"word": "резюме", "punctuated_word": "резюме.", "start": 651.5, "end": 652.2}
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
