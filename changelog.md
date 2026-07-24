@@ -12,7 +12,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
-- **C3 mobile viewport audit + PWA shell (H1488).** Dated inventory of every student-cabinet route at 320–390 px; fixes header density on <375 px, support-chat short-viewport height, main `overflow-x-hidden`; ships `public/manifest.webmanifest` + `public/sw.js` + `public/offline.html` linked from student layout; Feature smoke `PwaManifestTest`; optional Playwright script `scripts/mobile_viewport_audit.mjs`. Report: [docs/MOBILE_VIEWPORT_CABINET_AUDIT_2026-07-24.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MOBILE_VIEWPORT_CABINET_AUDIT_2026-07-24.md). Executor: Grok 4.5 (`grok-4.5`) override of Sonnet lock.
+- **C3 mobile viewport audit + PWA shell (H1488).** Dated inventory of every student-cabinet route at 320–390 px; fixes header density on <375 px, support-chat short-viewport height, main `overflow-x-hidden`; ships `public/manifest.webmanifest` + `public/sw.js` + `public/offline.html` linked from student layout; Feature smoke `PwaShellAssetsTest`; optional Playwright script `scripts/mobile_viewport_audit.mjs`. Report: [docs/MOBILE_VIEWPORT_CABINET_AUDIT_2026-07-24.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MOBILE_VIEWPORT_CABINET_AUDIT_2026-07-24.md). Executor: Grok 4.5 (`grok-4.5`) override of Sonnet lock.
 - **Cabinet hybrid Phase 4 — R20 flag-flip release pack (H1582).** Does **not** enable
   the hybrid in prod. Adds [docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md)
   (GO/NO-GO gates, walkthrough §3, activate/revert, KPI readout),
