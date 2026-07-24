@@ -119,20 +119,37 @@ class BotKnowledgeBase
     }
 
     /**
-     * Сырое содержимое FAQ-файла (с потолком по размеру). Кэшируется.
+     * Сырое содержимое FAQ-файлов (с потолком по размеру). Кэшируется.
+     * Основной ORS-export (`faq.md`) + lecture-sourced sibling
+     * (`faq_from_lectures.md`, H1549 Wave 3 / KnowledgeFaqPublisher).
      */
     public function faq(): string
     {
         return Cache::remember(self::FAQ_CACHE_KEY, self::FAQ_CACHE_TTL, function (): string {
-            $path = resource_path(self::FAQ_PATH);
-            if (! is_file($path)) {
+            $chunks = [];
+
+            $mainPath = resource_path(self::FAQ_PATH);
+            if (is_file($mainPath)) {
+                $main = trim((string) file_get_contents($mainPath));
+                if ($main !== '') {
+                    $chunks[] = $main;
+                }
+            }
+
+            $lecturePath = config('content.lecture_faq_path', resource_path('knowledge/faq_from_lectures.md'));
+            if (is_string($lecturePath) && is_file($lecturePath)) {
+                $lecture = trim((string) file_get_contents($lecturePath));
+                // Skip empty scaffold (header-only) so it does not dilute the main FAQ.
+                if ($lecture !== '' && str_contains($lecture, '### ')) {
+                    $chunks[] = $lecture;
+                }
+            }
+
+            if ($chunks === []) {
                 return 'FAQ временно недоступен.';
             }
 
-            $content = trim((string) file_get_contents($path));
-            if ($content === '') {
-                return 'FAQ временно недоступен.';
-            }
+            $content = implode("\n\n---\n\n", $chunks);
 
             if (mb_strlen($content) > self::FAQ_CHAR_CAP) {
                 $content = mb_substr($content, 0, self::FAQ_CHAR_CAP)."\n\n…(база знаний обрезана по размеру)";

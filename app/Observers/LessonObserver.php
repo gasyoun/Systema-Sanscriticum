@@ -6,19 +6,21 @@ namespace App\Observers;
 
 use App\Jobs\DispatchLectureClipExtractionJob;
 use App\Models\Lesson;
+use App\Services\Content\FaqDraftGenerator;
 
 /**
- * Publish-on-lesson-publish trigger (H1547, Wave 1, IMPLEMENTATION step 6).
- * No existing Lesson-publish observer/listener was found (grepped
- * app/Observers + Filament resources) — this is a new one, model-level so it
- * fires regardless of which surface (Filament, API) flips `is_published`.
+ * Publish-on-lesson-publish trigger (H1547 Wave 1 + H1549 Wave 3).
+ * Model-level so it fires regardless of which surface (Filament, API)
+ * flips `is_published`.
  *
- * Gated by `content_from_lectures` (this wave's master switch) AND
- * `clip_marketing` (H1452's own flag, unchanged) — both OFF by default, so
- * this is prod-inert until an explicit activation step.
+ * Clip extraction: gated by `content_from_lectures` AND `clip_marketing`
+ * (both OFF by default). FAQ drafts (Wave 3): gated by `content_from_lectures`
+ * alone — draft-only, Accept in Filament is the knowledge publish gate.
  */
 class LessonObserver
 {
+    public function __construct(private readonly FaqDraftGenerator $faqDraftGenerator) {}
+
     public function updated(Lesson $lesson): void
     {
         // Only the become-published transition, not every unrelated save —
@@ -29,11 +31,13 @@ class LessonObserver
         }
 
         $this->maybeDispatchExtraction($lesson);
+        $this->maybeDraftFaq($lesson);
     }
 
     public function created(Lesson $lesson): void
     {
         $this->maybeDispatchExtraction($lesson);
+        $this->maybeDraftFaq($lesson);
     }
 
     private function maybeDispatchExtraction(Lesson $lesson): void
@@ -56,5 +60,18 @@ class LessonObserver
         }
 
         DispatchLectureClipExtractionJob::dispatch($lesson->id);
+    }
+
+    private function maybeDraftFaq(Lesson $lesson): void
+    {
+        if (! config('features.content_from_lectures')) {
+            return;
+        }
+
+        if (! $lesson->is_published || empty($lesson->transcript_file)) {
+            return;
+        }
+
+        $this->faqDraftGenerator->draftForLesson($lesson);
     }
 }
