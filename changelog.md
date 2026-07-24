@@ -12,6 +12,12 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **SRS Wave 2 authoring UI (H1487).** Filament `SrsDeckResource` +
+  `SrsCardResource` (teacher CRUD, course/lesson attach, paste bulk-add,
+  "seed from Dictionary" action, CSV import via `SrsCardImporter`) plus
+  student private-deck Livewire `SrsDeckEditor` at `/dvaram/srs/decks`.
+  Behind existing `srs.enabled` / `SRS_ENABLED` flag (default off). Feature
+  tests in `tests/Feature/Srs/SrsAuthoringTest.php`. Grok 4.5 (`grok-4.5`).
 - **Cabinet hybrid Phase 2 — Записи shelves + lapse + rail + ownership offer (H1572, R29.3–R29.5).**
   Behind `cabinet_hybrid`: `LapseDetector` (debt gap → first-class lapsed state),
   `RecordingsCatalog` shelves (watching / owned / lapsed / completed), progress rail
@@ -27,9 +33,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
   App\Services\Cabinet\RecoveryStateResolver: declined/canceled payment or expired
   promise → recovery banner, unconditional offer suppression, owned/live access kept;
   bare pending is not recovery (webhook-delay trap). Telemetry cabinet.home.view
-  now carries mode: normal|recovery + 
-eason. Feature tests:
-  	ests/Feature/Cabinet/HybridPhase1Test.php (11 cases). Spec:
+  now carries mode: normal|recovery + reason. Feature tests:
+  tests/Feature/Cabinet/HybridPhase1Test.php (11 cases). Spec:
   [docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
   §6 step 2. **Money-adjacent (offer suppression)** — flag default OFF; enable only
   after review + config:cache. Executor: Grok 4.5 (grok-4.5) via xAI (Opus-lock override).

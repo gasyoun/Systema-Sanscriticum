@@ -36,6 +36,16 @@ class SrsDeck extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    public function lesson(): BelongsTo
+    {
+        return $this->belongsTo(Lesson::class, 'lesson_id');
+    }
+
     public function cards(): HasMany
     {
         return $this->hasMany(SrsCard::class, 'deck_id');

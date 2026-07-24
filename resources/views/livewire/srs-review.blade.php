@@ -13,14 +13,21 @@
             <p class="text-gray-500">Интервальные повторения — учите санскрит по чуть-чуть каждый день.</p>
         </div>
 
-        @if($decks->count() > 1)
-            <select wire:model.live="deckId"
-                    class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium cursor-pointer">
-                @foreach($decks as $d)
-                    <option value="{{ $d->id }}">{{ $d->name }}</option>
-                @endforeach
-            </select>
-        @endif
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {{-- url() not route(): Livewire unit tests boot without SRS route registration --}}
+            <a href="{{ url('/dvaram/srs/decks') }}"
+               class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
+                Мои колоды
+            </a>
+            @if($decks->count() > 1)
+                <select wire:model.live="deckId"
+                        class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium cursor-pointer">
+                    @foreach($decks as $d)
+                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                    @endforeach
+                </select>
+            @endif
+        </div>
     </div>
 
     {{-- Счётчик оставшихся --}}
