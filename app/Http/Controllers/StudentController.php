@@ -16,6 +16,8 @@ use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\SubscriberMagnet;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\Cabinet\RecoveryState;
+use App\Services\Cabinet\RecoveryStateResolver;
 use App\Services\CertificateService;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
@@ -28,6 +30,8 @@ use App\Support\OnboardingChecklist;
 use App\Support\PranaLeaderboard;
 use App\Support\TranscriptParser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class StudentController extends Controller
 {
@@ -228,16 +232,25 @@ class StudentController extends Controller
             ? SubscriberMagnet::active()->get()
             : collect();
 
-        // Baseline-телеметрия ремейка (H962, спека §4). mode: 'recovery' появится
-        // вместе с recovery-резолвером гибрида (R29.2) — до него режим один.
+        // R29.2 / H1481: recovery-state predicate (declined payment / expired
+        // promise). When cabinet_hybrid is OFF the resolver still runs so
+        // telemetry mode is truthful once the flag flips without a second deploy.
+        $recovery = app(RecoveryStateResolver::class)->resolve($user);
+        $suppressOffers = $recovery->suppressOffers();
+
+        // Baseline-телеметрия ремейка (H962, спека §4). mode: normal|recovery.
         app(CabinetTelemetry::class)->emit(
             user: $user,
             event: ActivityEvent::CABINET_HOME_VIEW,
-            data: ['mode' => 'normal', 'debts' => $debts->count()],
+            data: [
+                'mode' => $recovery->mode(),
+                'debts' => $debts->count(),
+                'reason' => $recovery->reason,
+            ],
             request: request(),
         );
 
-        return view('student.dashboard', compact(
+        $viewData = compact(
             'courses',
             'nextLessonByCourseId',
             'certificates',
@@ -256,9 +269,170 @@ class StudentController extends Controller
             'onboarding',
             'homeworkAlerts',
             'subscriberMagnets',
-
             'continueLearningAction',
-        ));
+            'recovery',
+            'suppressOffers',
+        );
+
+        // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
+        // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
+        if (config('features.cabinet_hybrid')) {
+            $nearestLive = $this->nearestLiveForUser($user);
+            $viewData['nearestLive'] = $nearestLive;
+            $viewData['todayBand'] = $this->buildTodayBand(
+                $continueLearningAction,
+                $nearestLive,
+                $homeworkAlerts,
+                $recovery,
+            );
+
+            return view('student.hybrid.home', $viewData);
+        }
+
+        return view('student.dashboard', $viewData);
+    }
+
+    /**
+     * «Записи» (hybrid job-nav). Phase 1 chassis only — shelves land in Phase 2.
+     */
+    public function library()
+    {
+        abort_unless((bool) config('features.cabinet_hybrid'), 404);
+
+        $user = auth()->user();
+        $recovery = app(RecoveryStateResolver::class)->resolve($user);
+
+        return view('student.hybrid.library', [
+            'recovery' => $recovery,
+            'suppressOffers' => $recovery->suppressOffers(),
+        ]);
+    }
+
+    /**
+     * «Прогресс» (hybrid job-nav). Station map lands in Phase 3.
+     */
+    public function progress()
+    {
+        abort_unless((bool) config('features.cabinet_hybrid'), 404);
+
+        $user = auth()->user();
+        $certificates = $user->certificates()->with('course')->orderByDesc('created_at')->get();
+        $recovery = app(RecoveryStateResolver::class)->resolve($user);
+
+        return view('student.hybrid.progress', [
+            'certificates' => $certificates,
+            'recovery' => $recovery,
+            'suppressOffers' => $recovery->suppressOffers(),
+        ]);
+    }
+
+    /**
+     * «Оплата и доступ» (hybrid job-nav). Feeds R29.2 recovery CTA.
+     */
+    public function access()
+    {
+        abort_unless((bool) config('features.cabinet_hybrid'), 404);
+
+        $user = auth()->user();
+        $debtsService = app(StudentDebtsService::class);
+        $debts = $debtsService->forUser($user);
+        $debtPayResolver = app(DebtPaymentResolver::class);
+        $debtPayOptions = $debts->mapWithKeys(
+            fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d, $user)]
+        );
+        $recovery = app(RecoveryStateResolver::class)->resolve($user);
+
+        // Access page is always offer-suppressed (R2 / B v2 access.html).
+        return view('student.hybrid.access', [
+            'debts' => $debts,
+            'debtPayOptions' => $debtPayOptions,
+            'recovery' => $recovery,
+            'suppressOffers' => true,
+        ]);
+    }
+
+    /**
+     * R29.1 «Сегодня» composite band: continue + nearest live + homework rework
+     * (third element only when homework was returned for revision).
+     *
+     * @param  array<string, mixed>  $continueLearningAction
+     * @param  Collection<int, HomeworkSubmission>  $homeworkAlerts
+     * @return array{continue: ?array, live: ?array, homework: ?array}
+     */
+    private function buildTodayBand(
+        array $continueLearningAction,
+        ?array $nearestLive,
+        $homeworkAlerts,
+        RecoveryState $recovery,
+    ): array {
+        // In recovery, the banner owns the primary CTA — continue band still
+        // surfaces owned learning, but never a debt-upsell kind.
+        $continue = $continueLearningAction;
+        if ($recovery->active && ($continue['kind'] ?? null) === 'debt') {
+            $continue = null;
+        }
+
+        $homework = null;
+        $hw = $homeworkAlerts->first();
+        if ($hw) {
+            $homework = [
+                'kind' => 'homework_rework',
+                'title' => 'Доработать домашнее',
+                'body' => $hw->course->title ?? 'Курс',
+                'meta' => $hw->lesson->title ?? null,
+                'cta' => [
+                    'label' => 'Открыть урок',
+                    'url' => route('student.lesson', [$hw->course->slug, $hw->lesson->id]),
+                    'method' => 'GET',
+                ],
+            ];
+        }
+
+        return [
+            'continue' => $continue,
+            'live' => $nearestLive,
+            'homework' => $homework,
+        ];
+    }
+
+    /**
+     * Nearest upcoming live class the student can attend (owned group membership).
+     *
+     * @return array{title: string, meta: string, start: Carbon, url: string}|null
+     */
+    private function nearestLiveForUser($user): ?array
+    {
+        $groupIds = $user->groups->pluck('id');
+        if ($groupIds->isEmpty()) {
+            return null;
+        }
+
+        $event = Schedule::with(['course', 'group'])
+            ->whereIn('group_id', $groupIds)
+            ->where(function ($query) {
+                $query->where('end', '>=', now())
+                    ->orWhere(function ($q) {
+                        $q->whereNull('end')
+                            ->where('start', '>=', now()->subHours(Schedule::DEFAULT_DURATION_HOURS));
+                    });
+            })
+            ->orderBy('start')
+            ->first();
+
+        if (! $event) {
+            return null;
+        }
+
+        $when = $event->start->isToday()
+            ? 'Сегодня, '.$event->start->format('H:i')
+            : $event->start->translatedFormat('d F, H:i');
+
+        return [
+            'title' => $event->title ?: ($event->course->title ?? 'Живое занятие'),
+            'meta' => $when.($event->group ? ' · '.$event->group->name : ''),
+            'start' => $event->start,
+            'url' => route('student.calendar'),
+        ];
     }
 
     /**
@@ -465,6 +639,21 @@ class StudentController extends Controller
         $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
+
+        if (config('features.cabinet_hybrid')) {
+            $recovery = app(RecoveryStateResolver::class)->resolve($user);
+            $completedLessonIds = $user->completedLessons->pluck('id')->all();
+
+            return view('student.hybrid.course', [
+                'course' => $course,
+                'lessons' => $lessons,
+                'unlockedTariffs' => $unlockedTariffs,
+                'grantedLessonIds' => $grantedLessonIds,
+                'completedLessonIds' => $completedLessonIds,
+                'recovery' => $recovery,
+                'suppressOffers' => $recovery->suppressOffers(),
+            ]);
+        }
 
         return view('student.course', compact('course', 'lessons', 'unlockedTariffs', 'grantedLessonIds'));
     }

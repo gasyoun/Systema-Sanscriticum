@@ -323,6 +323,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
 
+    // H1481 hybrid chassis (R29 Phase 1): job-named pages. Controllers 404 when
+    // features.cabinet_hybrid is OFF so prod is unchanged until the flag flips.
+    Route::get('/library', [StudentController::class, 'library'])->name('student.library');
+    Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
+    Route::get('/access', [StudentController::class, 'access'])->name('student.access');
+
     Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');
     Route::get('/course/{slug}/lesson/{lessonId}', [StudentController::class, 'showLesson'])->name('student.lesson');
 

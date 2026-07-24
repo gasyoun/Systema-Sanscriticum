@@ -414,6 +414,7 @@ return [
     'clip_marketing' => (bool) env('CLIP_MARKETING_ENABLED', false),
 
     /*
+/*
      | Content engine (n8n lecture content, Wave 1 of 5): мастер-флаг генерации
      | ContentCandidate из лекций — ranked-span dispatch в DispatchLectureClip-
      | ExtractionJob и sync LectureClip → ContentCandidate. Когда ВЫКЛ:
@@ -423,4 +424,15 @@ return [
      | (social/faq/article/study generators) читают этот же флаг.
      */
     'content_from_lectures' => (bool) env('CONTENT_FROM_LECTURES', false),
+
+    /*
+     | Гибридный кабинет R29 (H1481, Phase 1 chassis): job-named nav
+     | (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ / Помощь),
+     | workspace-табы с hash-адресацией, лента «Сегодня» с homework-rework,
+     | server-side recovery-state resolver (R29.2). ВЫКЛ по умолчанию —
+     | deploy-рубильник R20: прод не меняется, пока CABINET_HYBRID=true
+     | + config:cache после ревью. Пока OFF — старый layouts.student и
+     | student.dashboard без hybrid-маршрутов (library/progress/access → 404).
+     */
+    'cabinet_hybrid' => (bool) env('CABINET_HYBRID', false),
 ];
