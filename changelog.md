@@ -11,6 +11,24 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **n8n lecture content engine — Wave 1 of 5 (H1547).** `ContentCandidate`
+  model/migration — the unified review/publish unit for everything the
+  content engine will generate from lectures (clip now, social/faq/article/
+  study in waves 2–5). `SpanRanker` (heuristic top-N, default 5) narrows
+  `ClipSpanPlanner`'s output before it reaches n8n. `QuotePolicy` guards
+  against a full-transcript leak through any future "public quote" field
+  (≤2 sentences, hard-fail). `LessonObserver` dispatches
+  `DispatchLectureClipExtractionJob` on the publish transition, idempotent
+  (skips if `LectureClip` rows already exist), gated by both
+  `content_from_lectures` (new) and `clip_marketing` (H1452, unchanged).
+  `LectureClipObserver` + `ContentCandidateSync` mirror every `LectureClip`
+  into a `ContentCandidate` row regardless of flags (cheap idempotent
+  upsert, not a publish action) — staff marking a clip free flips it to
+  `accepted`. Thin `ContentCandidateResource` (Filament, admin-only, gated
+  by `content_from_lectures`) for review. DEPLOY_QUEUE №49. Waves 2–5
+  tracked as Uprava H1548–H1551. **Executor:** Sonnet 5 (`claude-sonnet-5`).
+
 ### Changed
 - **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
   multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved

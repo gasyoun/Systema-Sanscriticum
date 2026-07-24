@@ -7,11 +7,15 @@ use App\Models\ArticleView;
 use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Lead;
+use App\Models\LectureClip;
+use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
+use App\Observers\LectureClipObserver;
+use App\Observers\LessonObserver;
 use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\PaymentTelemetryObserver;
@@ -102,6 +106,12 @@ class AppServiceProvider extends ServiceProvider
         LandingPage::observe(SitemapCacheInvalidator::class);
         Course::observe(SitemapCacheInvalidator::class);
         Article::observe(SitemapCacheInvalidator::class);
+
+        // n8n lecture content engine (H1547, Wave 1): публикация лекции →
+        // ranked-span нарезка (если флаги ВКЛ); LectureClip → ContentCandidate
+        // зеркалирование (всегда, дешёвая идемпотентная запись).
+        Lesson::observe(LessonObserver::class);
+        LectureClip::observe(LectureClipObserver::class);
 
         // Мини-блок «Курсы в записи»: главная, legacy-лендинги и builder-блок
         View::composer(['main', 'promo.show', 'promo.legacy', 'promo.blocks.recorded_courses_block'], function ($view): void {

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Один физически вырезанный n8n/ffmpeg фрагмент лекции, загруженный в VK
@@ -36,6 +37,11 @@ class LectureClip extends Model
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function contentCandidate(): HasOne
+    {
+        return $this->hasOne(ContentCandidate::class);
     }
 
     /** Staff-marked free/public surface only (editorial ~3 per lecture). */

@@ -412,4 +412,15 @@ return [
      | CLIP_MARKETING_ENABLED=true + config:cache после ревью.
      */
     'clip_marketing' => (bool) env('CLIP_MARKETING_ENABLED', false),
+
+    /*
+     | Content engine (n8n lecture content, Wave 1 of 5): мастер-флаг генерации
+     | ContentCandidate из лекций — ranked-span dispatch в DispatchLectureClip-
+     | ExtractionJob и sync LectureClip → ContentCandidate. Когда ВЫКЛ:
+     | LessonObserver не диспатчит нарезку, ContentCandidateSync всё ещё
+     | зеркалит существующие LectureClip-строки (дешёвая идемпотентная запись,
+     | не публикация), но Filament-ресурс ContentCandidate скрыт. Wave 2–5
+     | (social/faq/article/study generators) читают этот же флаг.
+     */
+    'content_from_lectures' => (bool) env('CONTENT_FROM_LECTURES', false),
 ];
