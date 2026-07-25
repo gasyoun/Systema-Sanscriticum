@@ -1,6 +1,6 @@
 # support-subsystem-map.meta.md — metadoc about `support-subsystem-map`
 
-_Created: 13-07-2026 · Last updated: 13-07-2026_
+_Created: 13-07-2026 · Last updated: 25-07-2026_
 
 Companion record for [support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) — the ground-truth agent reference for the Systema-Sanscriticum support subsystem. This metadoc holds what is *around* the document (purpose, provenance, backlog, caveats); it does not restate the subsystem facts the subject enumerates.
 
