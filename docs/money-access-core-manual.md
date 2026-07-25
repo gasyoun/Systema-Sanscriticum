@@ -538,10 +538,20 @@ the blind spot:
   reversed* entirely before that date has no audit rows ⇒ the guard cannot see its
   prior paid state ⇒ a differently-bodied success JWT for it would be applied even
   with the flag ON (the `event_hash` dedup only blocks byte-identical replays).
-- All *current* status writes go through Eloquent `update()` (events fire; verified
-  by sweep — no `updateQuietly`/mass-update touches `payments.status`), so the trail
-  is complete going forward. Direct SQL or future `withoutEvents` writes would
-  reopen the gap.
+- Status *transitions* all go through Eloquent `update()` (events fire; verified by
+  sweep — no `updateQuietly`/mass-update touches `payments.status`). But several
+  paths **create payments already-paid via `withoutEvents`**, so they get no
+  `created` audit snapshot: silent promise fulfillment
+  ([PromiseFulfillment::fulfil()](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/PromiseFulfillment.php)
+  with `silent=true` — **real money**), access-only siblings (§1.5), conditional
+  grants (§1.6). Combined with the next point, such a payment stays invisible to
+  the guard even post-observer.
+- `hasPriorPaidTransition()` inspects only the **new** value of each audit diff
+  (`$status[1]`). A normal lifecycle leaves a `pending→paid` row (new = paid ⇒
+  detected). A *silently-created* paid payment that is later reversed leaves only a
+  `paid→failed` diff — whose new value is `failed` — so its prior paid state is
+  **not** detected. Cheap no-schema hardening (also inspecting the *old* value,
+  `$status[0]`) is folded into the queued fix below.
 
 A robust fix is a dedicated `payments.first_paid_at` column with a backfill — a
 **schema change**, which this wave must not author (programme ruling D16). Queued as
