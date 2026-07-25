@@ -1,6 +1,6 @@
 # Metadoc — GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md
 
-_Created: 18-07-2026 · Last updated: 18-07-2026_
+_Created: 18-07-2026 · Last updated: 25-07-2026_
 
 The companion record for
 [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md).
@@ -55,8 +55,9 @@ would have shipped two wrong rows and missed the document's most valuable findin
 - **§1 is a snapshot at `9b63861`.** Parity state moves. Re-verify before treating a row as current;
   the method is one read-only agent per ticket with an instruction never to assert absence without
   naming the search it ran.
-- **§3–§4 are the only production-depth sections.** Wave-3/4 rows are pointers, not designs. Do not
-  build GC-D1 or GC-A1 from this document.
+- **§3–§4 are the only production-depth sections.** Wave-3/4 rows were pointers, not designs — GC-A1
+  shipped anyway (25-07-2026, H1637, built directly from its own ticket text + reuse base, not from a
+  production-depth section here). Do not build GC-D1 from this document; it still lacks that depth.
 - **All eight forks in §7 are open.** The document deliberately resolves none. Anything downstream of
   F2 (the `Deal`-vs-`Lead` shape) is provisional — including parts of §3 and §5.
 - **§2.4 corrects the boundary rule's own parenthetical** against the tree ("5 statuses" are DB rows
@@ -97,6 +98,7 @@ would have shipped two wrong rows and missed the document's most valuable findin
 
 | Date | Change | By |
 |---|---|---|
+| 25-07-2026 | GC-A1 row flipped `NOT_BUILT` → `DONE` (H1637: `segments` migration + `Segment` model + `SegmentResource` + `marketing_segments` flag, built independently of the Wave 2-3 forks per MG ruling). Wave-map bookkeeping note added; flag-registry table annotated. | Sonnet 5 (`claude-sonnet-5`) |
 | 18-07-2026 | Created with the subject document (H1144, W1-D1). 14 tickets verified + adversarially audited; §2 precedence ladder authored; 8 forks named, none resolved. | Opus 4.8 (`claude-opus-4-8`) |
 
 _Dr. Mārcis Gasūns_
