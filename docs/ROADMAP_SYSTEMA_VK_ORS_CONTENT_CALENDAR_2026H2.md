@@ -1,6 +1,6 @@
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
-_Created: 24-07-2026 · Last updated: 24-07-2026_
+_Created: 24-07-2026 · Last updated: 25-07-2026_
 
 Index: [`docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 
@@ -47,7 +47,7 @@ Five sequential waves = five PRs = five handoffs.
 
 ---
 
-## Wave 2 — Evergreen recycle
+## Wave 2 — Evergreen recycle ✅ DONE (H1565, 25-07-2026)
 
 **Unblocks:** ≥ half of the ≥20/month bar without NEW copy.
 
@@ -56,6 +56,13 @@ Five sequential waves = five PRs = five handoffs.
 2. De-dupe: no re-use of same source post_id within 6 months.
 3. Slot body = **verbatim** original text (D17) + preserve permalink in meta.
 4. Status `scheduled` with `publish_at` spaced across the month (e.g. 3–4/week).
+
+Built as `EvergreenScorer` + artisan `content:fill-evergreen {YYYY-MM}`; topic
+keyword patterns ported from `IndologyScholars/vk-ors/vk_ors_archive/insights.py`
+TOPICS (the source CSV has no per-post topic column). De-dupe window is checked
+against `ContentCalendarSlot.source_ref` within ±6 months of the target month.
+`publish_at` spacing reuses W1's seeded `slot_date` spread (no new spacing logic
+needed) via `ContentCalendarSlot::markKept()`. DEPLOY_QUEUE №56.
 
 ---
 
