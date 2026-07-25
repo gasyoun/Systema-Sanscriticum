@@ -1,6 +1,6 @@
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
-_Created: 24-07-2026 · Last updated: 25-07-2026_
+_Created: 24-07-2026 · Last updated: 25-07-2026 (H1566, Wave 3)_
 
 Index: [`docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 
@@ -66,7 +66,7 @@ needed) via `ContentCalendarSlot::markKept()`. DEPLOY_QUEUE №56.
 
 ---
 
-## Wave 3 — Systema bridge
+## Wave 3 — Systema bridge ✅ DONE (H1566, 25-07-2026)
 
 **Unblocks:** live product signal.
 
@@ -79,6 +79,24 @@ needed) via `ContentCalendarSlot::markKept()`. DEPLOY_QUEUE №56.
 
 No duplicate of H1452 media cut — only **calendar rows** pointing at existing
 artifacts.
+
+Built as `SystemaCalendarBridge` (`bridgeClips()` + `bridgeScheduleDigest()`)
++ artisan `content:bridge-systema {YYYY-MM}`. Shipped: `clip_tease` fill from
+free `LectureClip`s already mirrored into an accepted `ContentCandidate`
+(H1547's `ContentCandidateSync`), deduped by clip id already used elsewhere,
+VK permalink in `meta.link` when n8n has already set `vk_owner_id`/
+`vk_video_id`; one monthly `event` digest slot for the **current** month,
+reusing the existing `MonthlyScheduleDigest` service (the live
+`schedule:post-monthly` poster's course/schedule/copy logic — prior art found
+mid-build, not re-derived) rather than a second `Schedule` query, so the
+calendar digest can never disagree with the live poster about which courses
+are running. `MonthlyScheduleDigest` is current-month-only by design
+(`Carbon::now()`); bridging a non-current target month no-ops. **Default log
+(D22):** per-class `schedule_note` (change-tracking) and `faq_tease` deferred
+— `Schedule` carries no diff primitive yet and neither is required by W3's
+DoD (C1/C2 in
+[VERIFICATION](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_VK_ORS_CONTENT_CALENDAR.md));
+a monthly digest was chosen over per-change tracking. DEPLOY_QUEUE №57.
 
 ---
 
