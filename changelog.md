@@ -11,6 +11,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1644 pedagogy hop smoke (Grok 4.5 grok-4.5, 25-07-2026).** Artisan pedagogy:sync-sg-export copies SanskritGrammar data/pedagogy_export (schema major >=1, sha256-checked) into 
+esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag OFF. Tests: SyncPedagogyExportFromSgTest (2) + php artisan test --filter=Rq4 (11) green.
+
 ### Changed
 - **H1623 docs-freshness (Grok 4.5 grok-4.5, 25-07-2026):** metadoc freshness sync for docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.meta.md, docs/deploy.meta.md, docs/support-subsystem-map.meta.md.
 
