@@ -478,4 +478,18 @@ return [
      | query while OFF. Включение — MARKETING_SEGMENTS=true + config:cache.
      */
     'marketing_segments' => (bool) env('MARKETING_SEGMENTS', false),
+
+    /*
+     | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
+     | (H1405 C2). Ветка целого блока в Tariff::upgradeRefundsForUser видит
+     | только Расход-строки с покрывающим диапазоном блоков, а админ-форма
+     | обнуляет start/end при выборе «Расход» — реальный возврат за половину
+     | блока не уменьшал зачёт при докупке целого блока (школа теряла сумму
+     | возврата второй раз). Когда ВКЛ: возврат, привязанный через
+     | refund_of_payment_id к оплаченной половине покупаемого блока, тоже
+     | уменьшает зачёт. ВЫКЛ по умолчанию — поведение байт-в-байт прежнее;
+     | включение UPGRADE_CREDIT_REFUND_LINK=true + config:clear после ревью
+     | финдира.
+     */
+    'upgrade_credit_refund_link' => (bool) env('UPGRADE_CREDIT_REFUND_LINK', false),
 ];
