@@ -345,7 +345,7 @@ deliveries are journaled too), `bank_status`, `reported_amount`, `decision`:
 | `decision` | Meaning |
 |---|---|
 | `applied` | delivery applied — status/access updated as normal |
-| `duplicate` | same body already seen — idempotent no-op |
+| `duplicate` | **reserved, never persisted**: a repeat delivery is answered 200 and leaves **no** new row (guard ON short-circuits before the insert; guard OFF `firstOrCreate` no-ops on the existing row) — the original delivery's row is the record, the unique `event_hash` index the backstop |
 | `rejected_resurrection` | success for a paid-then-reversed payment — refused |
 | `rejected_amount_mismatch` | bank amount diverges from the order beyond tolerance — refused |
 | `unmatched` | valid signature but no local payment matched |
@@ -646,8 +646,10 @@ php artisan payments:audit-checkout-integrity
 
 ### 11.2 «Студент говорит, что платил дважды»
 
-В журнале вебхуков будет либо `duplicate` (повтор доставки — денег дважды не было),
-либо два разных платежа. Второй случай — возврат через штатную процедуру §11.4.
+Повтор доставки НЕ оставляет второй строки в журнале (первая строка `applied` и
+есть запись о ней) — значит: один платёж + одна строка `applied` = деньги были
+списаны один раз, паника ложная. Два разных платежа (два ряда в «Финансах») —
+действительно двойная оплата: возврат через штатную процедуру §11.4.
 
 ### 11.3 Завис pending / брошенные заказы
 
