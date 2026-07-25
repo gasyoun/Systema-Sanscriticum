@@ -56,5 +56,9 @@ class DatabaseSeeder extends Seeder
         // Черновая таксономия направлений курсов (H1426) — идемпотентно; MG
         // пересматривает/переименовывает через CategoryResource после посева.
         $this->call(CategorySeeder::class);
+
+        // Три встроенных сегмента GC-A1 (H1637) — идемпотентно; видны только
+        // за флагом marketing_segments.
+        $this->call(SegmentSeeder::class);
     }
 }

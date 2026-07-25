@@ -1,6 +1,6 @@
 # GetCourse-parity — production spec (the R29-equivalent for the parity programme)
 
-_Created: 18-07-2026 · Last updated: 18-07-2026_
+_Created: 18-07-2026 · Last updated: 25-07-2026_
 
 The production ruling of the getcourse-parity programme, required by **R-1**
 ([PLAN §1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md)):
@@ -61,7 +61,7 @@ demoted GC-A3 (§1 ⚠) under audit.
 | **GC-D3** progress gating | D | **NOT_BUILT** | 3 | [`Lesson::isUnlockedBy`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Lesson.php) lines 255–262 is still exactly the preview short-circuit plus the tariff-key check. No per-course opt-in column. Depends on GC-D1. |
 | **GC-D2** homework scoring | D | **NOT_BUILT** | 3 | `HomeworkSubmission` `$fillable` carries status + review metadata only; no score/rubric column, no later ALTER. Nearest precedent for nullable decimal scores: the certificates exam-scores migration. |
 | **GC-D4** auto-certificates + progress showcase | D | **NOT_BUILT** | 3 — tail | `CertificateService` is a 124-line PDF/JPEG renderer with zero issuance criteria; certificates are created by hand via a bare Filament `CreateRecord`. Quiz-pass half of the criterion has no substrate (depends on GC-D1). |
-| **GC-A1** segment engine | A | **NOT_BUILT** | 4 — head | No `Segment` model/resource/table. Reuse base (`ReactivationReport`, `DebtorsReport`, `StuckStudentsReport`) exists and is exactly what the ticket says to wrap. |
+| **GC-A1** segment engine | A | **DONE** (25-07-2026, H1637) | 4 — head, shipped | `segments` migration + [`Segment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Segment.php) model + [`SegmentResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/SegmentResource.php) (Filament) behind `marketing_segments` (default `false`). Three built-in segments (`SegmentSeeder`) wrap `ReactivationReport`/`DebtorsReport`/`StuckStudentsReport` query-for-query; custom segments evaluate a typed, AND-combined `criteria` JSON column (group/last-activity/completed-lesson/tariff-owned/attendance/lead-status/debtor/UTM). 14 tests ([`SegmentTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SegmentTest.php)) including a boundary-rule guard (SQL-verb + row-count invariant) that fails if evaluation ever writes to ranks 1-5. |
 | **GC-A2** unified channel router | A | **NOT_BUILT** | 4 | No `MessageRouter`, no per-user channel preference. `DebtorReminderDispatcher::send()` still takes three booleans and fans out. **But** `app/Services/Messaging/` already has a `DeliveryChannel` contract + manager keyed telegram/vk/max — the transport layer exists, the routing layer does not. |
 | **GC-A3** campaigns with tracking | A | ⚠ **NOT_BUILT** (audit demoted from PARTIAL) | Later (Q4) | No `Campaign` model, no throttle, no open/click tracking, no per-campaign unsubscribe. `Announcement` channels + scheduler (H816) and `MessageTemplate` (H221) predate the ticket and are its named reuse base — not delivery. Both prerequisites (A1, A2) absent. |
 | **GC-A4** linear automation flows | A | **NOT_BUILT** | Later (Q4) | `AutomationFlow` has only ever appeared as roadmap prose. The marathon drip remains hardcoded against `config/marathon.php`, exactly as the ticket describes the problem. |
@@ -74,6 +74,12 @@ This preserves H438 §4's ordering (cheap webinar wins → CRM → quizzes → m
 ruling that CRM precedes quizzes. **GC-C1 as wave-2 head is a settled ruling and is not re-opened
 here.** The only change to the roadmap's own sequencing is bookkeeping: B2 and most of B3 have
 since shipped, so the "Now" bucket is spent.
+
+**Bookkeeping (25-07-2026, H1637):** Wave 4 head (GC-A1) has shipped — see the composition table
+above. It was built independently of Waves 2-3 (per MG's in-chat ruling), which are still stuck on
+GC-C1's Deal/kanban fork and GC-B1's Zoom-auto-create fork respectively; GC-A1 carried no open fork
+of its own. Wave 4's remaining member, GC-A2 (unified channel router), is unaffected and still
+`NOT_BUILT`.
 
 ---
 
@@ -352,7 +358,7 @@ House conventions, verified across the 20 existing keys:
 | GC-C3 | — | — | **Anomaly:** `crm_reminders` already exists and gates the pre-existing reminder command. Reusing it silently widens its meaning — §7 F6. |
 | GC-B3 | `webinar_provider_abstraction` | `false` | **Owed retroactively** — the seam shipped unflagged against the roadmap's blanket "всё за фича-флагом" rule. §7 F8. |
 | GC-D1 / D2 / D3 / D4 | `quizzes` · `homework_scoring` · `progress_gating` · `auto_certificates` | `false` | |
-| GC-A1 / A2 / A3 / A4 | `marketing_segments` · `unified_channel_router` · `marketing_campaigns` · `marketing_automation_flows` | `false` | |
+| GC-A1 / A2 / A3 / A4 | `marketing_segments` · `unified_channel_router` · `marketing_campaigns` · `marketing_automation_flows` | `false` | `marketing_segments` **shipped 25-07-2026 (H1637)** — flag now live in `config/features.php`, default unchanged (`false`). |
 
 Two hygiene facts a wave-2 handoff should carry:
 
