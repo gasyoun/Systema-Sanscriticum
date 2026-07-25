@@ -478,4 +478,19 @@ return [
      | query while OFF. Включение — MARKETING_SEGMENTS=true + config:cache.
      */
     'marketing_segments' => (bool) env('MARKETING_SEGMENTS', false),
+
+    /*
+     | GetCourse-паритет GC-C1 (H1641): СДЕЛКИ — отдельная сущность Deal с
+     | настраиваемыми стадиями (deal_stages) и канбан-доской DealKanbanBoard,
+     | плюс мост «состоявшаяся оплата → закрытие сделки»
+     | (PaymentDealBridgeObserver). Ранг 4 лестницы полномочий
+     | (docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §2.2): наблюдает денежное
+     | ядро и НИКОГДА его не авторизует — ни доступа, ни цены, ни отмены
+     | платежа. Lead/LeadStage/LeadKanbanBoard (H451) не трогаются: сделка ≠
+     | лид, у одного человека может быть несколько сделок. ВЫКЛ по умолчанию —
+     | deploy-рубильник: пока флаг OFF, доска не регистрируется и недоступна,
+     | а мост от оплаты делает ранний возврат (ни одной строки в deals).
+     | Включение — CRM_PIPELINE_BOARD=true + config:cache.
+     */
+    'crm_pipeline_board' => (bool) env('CRM_PIPELINE_BOARD', false),
 ];

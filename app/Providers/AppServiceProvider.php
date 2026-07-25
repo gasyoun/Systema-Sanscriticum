@@ -19,6 +19,7 @@ use App\Observers\LeadAuditObserver;
 use App\Observers\LectureClipObserver;
 use App\Observers\LessonObserver;
 use App\Observers\PaymentAuditObserver;
+use App\Observers\PaymentDealBridgeObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\PaymentTelemetryObserver;
 use App\Observers\ScheduleObserver;
@@ -98,6 +99,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Baseline-телеметрия ремейка кабинета (H962): access.renewal.complete.
         Payment::observe(PaymentTelemetryObserver::class);
+
+        // GC-C1 (H1641): состоявшаяся оплата закрывает сделку. Ранг 4 —
+        // только читает денежный переход, пишет в deals/deal_transitions.
+        // Инертен, пока crm_pipeline_board ВЫКЛ.
+        Payment::observe(PaymentDealBridgeObserver::class);
 
         // Аудит CRM-воронки (кто/что/когда правил заявку).
         Lead::observe(LeadAuditObserver::class);
