@@ -104,7 +104,7 @@ class Deal extends Model
      */
     public static function blocksRollbackToFirstStage(?int $currentStageId, int $newStageId): bool
     {
-        $first = DealStage::first();
+        $first = DealStage::firstStage();
         if ($first === null || $newStageId !== $first->id || $currentStageId === null) {
             return false;
         }

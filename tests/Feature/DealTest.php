@@ -44,7 +44,7 @@ class DealTest extends TestCase
 
     private function firstStage(): DealStage
     {
-        return DealStage::first() ?? $this->fail('deal_stages пуста');
+        return DealStage::firstStage() ?? $this->fail('deal_stages пуста');
     }
 
     /** Обычная продажа курса: не расход, не депозит, не пробное, не марафон, не conditional. */
@@ -199,6 +199,98 @@ class DealTest extends TestCase
         app(PaymentDealBridgeObserver::class)->created($payment);
 
         $this->assertSame(1, Deal::query()->count(), 'мост не идемпотентен: сделка задвоилась');
+    }
+
+    // --- Регрессии по находкам adversarial-ревью H1641 ------------------
+
+    /**
+     * @test
+     *
+     * Дефект 1 ревью: ветка сопоставления по лиду игнорировала курс и брала
+     * самую старую открытую сделку — оплата курса B закрывала сделку по курсу A.
+     */
+    public function payment_closes_the_deal_for_its_own_course_not_the_oldest_one(): void
+    {
+        $lead = Lead::query()->create([
+            'name' => 'Ольга', 'contact' => 'o@example.org', 'email' => 'o@example.org', 'status' => 'new',
+        ]);
+        $courseA = Course::factory()->create(['is_active' => true]);
+        $courseB = Course::factory()->create(['is_active' => true]);
+
+        $dealA = Deal::factory()->create(['lead_id' => $lead->id, 'course_id' => $courseA->id, 'amount' => 1000]);
+        $dealB = Deal::factory()->create(['lead_id' => $lead->id, 'course_id' => $courseB->id, 'amount' => 9000]);
+
+        $this->makeSale(['lead_id' => $lead->id, 'course_id' => $courseB->id, 'amount' => 9000]);
+
+        $this->assertNull($dealA->refresh()->closed_at, 'закрыта сделка по ЧУЖОМУ курсу');
+        $this->assertNotNull($dealB->refresh()->closed_at, 'сделка по оплаченному курсу осталась открытой');
+        $this->assertSame(2, Deal::query()->count());
+    }
+
+    /** @test */
+    public function payment_never_closes_a_deal_belonging_to_a_different_course(): void
+    {
+        $user = User::factory()->create();
+        $courseA = Course::factory()->create(['is_active' => true]);
+        $courseB = Course::factory()->create(['is_active' => true]);
+        $dealA = Deal::factory()->create(['user_id' => $user->id, 'course_id' => $courseA->id]);
+
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $courseB->id]);
+
+        $this->assertNull($dealA->refresh()->closed_at);
+        // Продажа курса B зафиксирована собственной сделкой, а не чужой.
+        $this->assertSame(1, Deal::query()->where('course_id', $courseB->id)->count());
+    }
+
+    /**
+     * @test
+     *
+     * Дефект 2 ревью: рассрочка (несколько платежей по одной продаже)
+     * раздувала воронку — каждый взнос заводил отдельную выигранную сделку.
+     */
+    public function instalments_for_one_sale_do_not_inflate_the_funnel(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400]);
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400]);
+
+        $this->assertSame(1, Deal::query()->count(), 'второй взнос завёл вторую выигранную сделку');
+    }
+
+    /** @test */
+    public function reversal_does_not_resurrect_a_deal_a_human_moved_off_the_won_stage(): void
+    {
+        $payment = $this->makeSale();
+        $deal = Deal::query()->where('source_payment_id', $payment->id)->firstOrFail();
+
+        // Человек увёл сделку в «Проиграна» уже после автозакрытия.
+        $lost = DealStage::query()->where('is_lost', true)->firstOrFail();
+        $deal->moveToStage($lost, User::factory()->create()->id);
+
+        $payment->update(['status' => 'canceled']);
+
+        $deal->refresh();
+        $this->assertSame($lost->id, $deal->stage_id, 'реверс перетёр решение человека');
+        $this->assertNull($deal->source_payment_id, 'привязка к откатанному платежу должна сниматься всегда');
+    }
+
+    /**
+     * @test
+     *
+     * Ранг 4 не имеет права вето над рангом 1: падение моста не должно
+     * утаскивать за собой подтверждённый платёж.
+     */
+    public function a_failing_bridge_never_breaks_the_payment_itself(): void
+    {
+        // Роняем мост изнутри: убираем таблицу, на которую он пишет.
+        DB::statement('DROP TABLE deal_transitions');
+
+        $payment = $this->makeSale();
+
+        $this->assertTrue($payment->exists);
+        $this->assertSame('paid', $payment->fresh()->status, 'платёж пострадал от падения моста сделок');
     }
 
     /** @test */

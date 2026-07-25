@@ -40,8 +40,12 @@ return new class extends Migration
             // 'won' | 'lost' | свободная причина менеджера.
             $table->string('closed_reason')->nullable();
             // Платёж, закрывший сделку. Ключ идемпотентности моста; НЕ денежная
-            // связь — сделка ничего в payments не пишет.
-            $table->foreignId('source_payment_id')->nullable()->constrained('payments')->nullOnDelete();
+            // связь — сделка ничего в payments не пишет. UNIQUE: проверка
+            // «есть ли уже сделка по этому платежу» и вставка не атомарны, и
+            // вне вебхука (Filament/artisan) строку платежа никто не лочит —
+            // индекс закрывает гонку на уровне БД. NULL допускается многократно,
+            // что и нужно после реверса (снимаем привязку).
+            $table->foreignId('source_payment_id')->nullable()->unique()->constrained('payments')->nullOnDelete();
             $table->timestamps();
 
             $table->index('stage_id');

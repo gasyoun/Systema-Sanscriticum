@@ -48,8 +48,14 @@ class DealStage extends Model
         return static::query()->where('is_won', true)->ordered()->first();
     }
 
-    /** Первая стадия воронки — куда возвращается сделка при реверсе платежа. */
-    public static function first(): ?self
+    /**
+     * Первая стадия воронки — куда возвращается сделка при реверсе платежа.
+     *
+     * Имя НЕ `first()`: так оно перекрывало бы статический форвардинг Eloquent
+     * к `Builder::first($columns)` с другой сигнатурой и другим смыслом —
+     * ловушка для будущих вызывающих (найдено adversarial-ревью H1641).
+     */
+    public static function firstStage(): ?self
     {
         return static::query()->ordered()->first();
     }

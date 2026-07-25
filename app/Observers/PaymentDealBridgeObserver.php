@@ -8,6 +8,8 @@ use App\Models\Deal;
 use App\Models\DealStage;
 use App\Models\DealTransition;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Мост «состоявшаяся оплата → сделка» (GC-C1 / H1641).
@@ -30,6 +32,11 @@ use App\Models\Payment;
  *     самим (qualifiesAsSale ниже);
  *  3. предикат события — wasChanged('status'), как у двух соседних аддитивных
  *     обсерверов (развилка F4 спеки §7, решена в пользу wasChanged).
+ *
+ * ИЗВЕСТНОЕ ОГРАНИЧЕНИЕ (не дефект, вынесено человеку): погашение «обещания»
+ * снимает is_conditional БЕЗ смены статуса, поэтому updated() такой платёж не
+ * увидит и сделку по нему не заведёт. Пропущенная продажа в воронке, не порча
+ * данных; чинить — только расширением предиката, что трогает денежный путь.
  */
 class PaymentDealBridgeObserver
 {
@@ -51,6 +58,15 @@ class PaymentDealBridgeObserver
         $this->sync($payment);
     }
 
+    /**
+     * РАНГ 4 НЕ ИМЕЕТ ПРАВА ВЕТО НАД РАНГОМ 1. Обсервер вызывается внутри
+     * транзакции вебхука Точки (WebhookController оборачивает переход статуса
+     * в DB::transaction), поэтому НЕОБРАБОТАННОЕ исключение отсюда откатило бы
+     * ПОДТВЕРЖДЁННЫЙ БАНКОМ ПЛАТЁЖ. Самый реальный сценарий — флаг включили
+     * раньше, чем прогнали миграции: «no such table: deals» отменяет оплату.
+     * Ловим всё и логируем: сделка — производная сущность, её потеря никогда
+     * не должна стоить денежной строки (найдено adversarial-ревью H1641).
+     */
     private function sync(Payment $payment): void
     {
         // Флаг ВЫКЛ по умолчанию → на проде мост инертен.
@@ -58,23 +74,33 @@ class PaymentDealBridgeObserver
             return;
         }
 
-        if (in_array($payment->status, self::REVERSAL_STATUSES, true)) {
-            $this->reopenDealClosedBy($payment);
+        try {
+            if (in_array($payment->status, self::REVERSAL_STATUSES, true)) {
+                $this->reopenDealClosedBy($payment);
 
-            return;
+                return;
+            }
+
+            if (! $this->qualifiesAsSale($payment)) {
+                return;
+            }
+
+            $this->closeOrRecordDeal($payment);
+        } catch (\Throwable $e) {
+            Log::error('GC-C1: мост сделок упал, платёж не тронут', [
+                'payment_id' => $payment->id,
+                'exception' => $e->getMessage(),
+            ]);
         }
-
-        if (! $this->qualifiesAsSale($payment)) {
-            return;
-        }
-
-        $this->closeOrRecordDeal($payment);
     }
 
     /**
      * Тот же набор исключений, что применяет Payment::fireOnPaid, плюс
      * is_conditional. Бухгалтерская строка, депозит, пробное занятие и
      * марафон «с проверкой» продажей курса не являются и сделку не закрывают.
+     *
+     * Нулевые access-only siblings (BlockAccessMaterializer) сюда не доходят:
+     * они создаются внутри Payment::withoutEvents(), обсерверы по ним молчат.
      */
     private function qualifiesAsSale(Payment $payment): bool
     {
@@ -103,66 +129,124 @@ class PaymentDealBridgeObserver
         $deal = $this->findOpenDealFor($payment);
 
         if ($deal !== null) {
-            $deal->update(['source_payment_id' => $payment->id]);
-            $deal->moveToStage($won, null, Deal::REASON_WON);
+            // Обе записи — одним атомарным шагом: иначе падение на moveToStage
+            // оставило бы сделку с проставленным ключом идемпотентности, но
+            // навсегда незакрытой.
+            DB::transaction(function () use ($deal, $payment, $won): void {
+                $deal->update(['source_payment_id' => $payment->id]);
+                $deal->moveToStage($won, null, Deal::REASON_WON);
+            });
 
+            return;
+        }
+
+        // Рассрочка/доплата/поблочная покупка — это НЕСКОЛЬКО платежей по ОДНОЙ
+        // продаже. Если выигранная сделка по этому же человеку и курсу уже есть,
+        // второй платёж не заводит вторую сделку, иначе воронка раздувалась бы
+        // на каждом взносе (найдено adversarial-ревью H1641).
+        //
+        // Цена решения: повторная покупка ТОГО ЖЕ курса спустя время тоже не
+        // заведёт вторую сделку. Осознанный размен в пользу неинфляции отчётов;
+        // вынесено человеку вместе с развилкой F9.
+        if ($this->alreadyRecordedAsSale($payment)) {
             return;
         }
 
         // Открытой сделки нет (прямая покупка без ведения по воронке) —
         // фиксируем состоявшуюся продажу сразу выигранной сделкой, иначе
         // отчётность по воронке слепа к прямым продажам.
-        $deal = Deal::create([
-            'lead_id' => $payment->lead_id,
-            'user_id' => $payment->user_id,
-            'course_id' => $payment->course_id,
-            'amount' => $payment->amount ?? 0,
-            'currency' => 'RUB',
-            'stage_id' => $won->id,
-            'closed_at' => now(),
-            'closed_reason' => Deal::REASON_WON,
-            'source_payment_id' => $payment->id,
-        ]);
+        DB::transaction(function () use ($payment, $won): void {
+            $deal = Deal::create([
+                'lead_id' => $payment->lead_id,
+                'user_id' => $payment->user_id,
+                'course_id' => $payment->course_id,
+                'amount' => $payment->amount ?? 0,
+                'currency' => 'RUB',
+                'stage_id' => $won->id,
+                'closed_at' => now(),
+                'closed_reason' => Deal::REASON_WON,
+                'source_payment_id' => $payment->id,
+            ]);
 
-        DealTransition::create([
-            'deal_id' => $deal->id,
-            'from_stage_id' => null,
-            'to_stage_id' => $won->id,
-            'user_id' => null,
-            'created_at' => now(),
-        ]);
+            DealTransition::create([
+                'deal_id' => $deal->id,
+                'from_stage_id' => null,
+                'to_stage_id' => $won->id,
+                'user_id' => null,
+                'created_at' => now(),
+            ]);
+        });
     }
 
     /**
      * Сопоставление платежа с уже ведущейся сделкой. lead_id — приоритетный
      * ключ (так тикет и сформулирован), но спека сама отмечает в §4.1, что
-     * payments.lead_id почти всегда пуст, поэтому есть запасной путь по
-     * user_id + course_id. Ничего не пишем — только ищем.
+     * payments.lead_id почти всегда пуст, поэтому есть запасной путь по user_id.
+     *
+     * КУРС — РАЗЛИЧАЮЩИЙ ПРИЗНАК И ПО ЛИДУ ТОЖЕ. Смысл отдельной сущности Deal
+     * ровно в том, что у одного человека может быть НЕСКОЛЬКО сделок (второй
+     * курс, апгрейд тарифа); закрывать оплатой курса B сделку по курсу A —
+     * запись не в ту строку. Раньше ветка по лиду брала просто самую старую
+     * открытую сделку и делала именно это (найдено adversarial-ревью H1641).
+     *
+     * Ничего не пишем — только ищем.
      */
     private function findOpenDealFor(Payment $payment): ?Deal
     {
+        $base = Deal::query()->open();
+
         if ($payment->lead_id) {
-            return Deal::query()->open()
-                ->where('lead_id', $payment->lead_id)
-                ->oldest()
-                ->first();
+            $base->where('lead_id', $payment->lead_id);
+        } elseif ($payment->user_id) {
+            $base->where('user_id', $payment->user_id);
+        } else {
+            return null;
         }
 
-        if ($payment->user_id) {
-            return Deal::query()->open()
-                ->where('user_id', $payment->user_id)
-                ->when($payment->course_id, fn ($q) => $q->where('course_id', $payment->course_id))
-                ->oldest()
-                ->first();
+        if (! $payment->course_id) {
+            return $base->oldest()->first();
         }
 
-        return null;
+        $exact = (clone $base)->where('course_id', $payment->course_id)->oldest()->first();
+        if ($exact !== null) {
+            return $exact;
+        }
+
+        // Сделка, у которой курс ещё не проставлен, может быть «той самой».
+        // Сделку по ДРУГОМУ курсу этим платежом не трогаем никогда.
+        return (clone $base)->whereNull('course_id')->oldest()->first();
+    }
+
+    /** Уже есть выигранная сделка по этому же человеку и курсу? */
+    private function alreadyRecordedAsSale(Payment $payment): bool
+    {
+        $query = Deal::query()
+            ->whereNotNull('closed_at')
+            ->where('closed_reason', Deal::REASON_WON);
+
+        if ($payment->lead_id) {
+            $query->where('lead_id', $payment->lead_id);
+        } elseif ($payment->user_id) {
+            $query->where('user_id', $payment->user_id);
+        } else {
+            return false;
+        }
+
+        if ($payment->course_id) {
+            $query->where('course_id', $payment->course_id);
+        }
+
+        return $query->exists();
     }
 
     /**
      * Реверс: платёж откатили из paid. Продажи не было — сделка, закрытая
-     * этим платежом, возвращается в первую стадию воронки и снова считается
-     * открытой. Ранг 1 прав, сделка была устаревшей (спека §2.1).
+     * этим платежом, возвращается в первую стадию воронки. Ранг 1 прав,
+     * сделка была устаревшей (спека §2.1).
+     *
+     * НО решение человека важнее автомата: если сделку уже увели с выигрышной
+     * стадии руками (например, в «Проиграна»), мы её не воскрешаем — только
+     * снимаем привязку к платежу (найдено adversarial-ревью H1641).
      */
     private function reopenDealClosedBy(Payment $payment): void
     {
@@ -171,14 +255,17 @@ class PaymentDealBridgeObserver
             return;
         }
 
-        $first = DealStage::first();
-        if ($first === null) {
+        $won = DealStage::won();
+        $first = DealStage::firstStage();
+
+        // Снимаем ключ идемпотентности всегда: если платёж позже снова станет
+        // paid, сделка должна закрыться заново.
+        $deal->update(['source_payment_id' => null]);
+
+        if ($won === null || $first === null || $deal->stage_id !== $won->id) {
             return;
         }
 
-        // Снимаем ключ идемпотентности: если платёж позже снова станет paid,
-        // сделка должна закрыться заново.
-        $deal->update(['source_payment_id' => null]);
         $deal->moveToStage($first, null);
     }
 }
