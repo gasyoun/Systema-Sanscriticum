@@ -32,4 +32,13 @@ return [
     */
     'lecture_faq_path' => env('CONTENT_LECTURE_FAQ_PATH')
         ?: resource_path('knowledge/faq_from_lectures.md'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | VK/ORS content calendar — Wave 4 forward drafts (H1567)
+    |--------------------------------------------------------------------------
+    | Cost cap: max ForwardDraftGenerator fills (and therefore CuratorAi calls)
+    | per content:fill-forward run, mirrors ArticleDraftGenerator::WEEKLY_LESSON_LIMIT.
+    */
+    'forward_draft_max_per_run' => (int) env('CONTENT_FORWARD_DRAFT_MAX_PER_RUN', 10),
 ];

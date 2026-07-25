@@ -466,4 +466,16 @@ return [
      | ранний возврат, писем не уходит.
      */
     'content_email_oneshot' => (bool) env('CONTENT_EMAIL_ONESHOT', false),
+
+    /*
+     | GetCourse-parity GC-A1 segment engine (H1637): saved named data-driven
+     | filters (group/behavior/attendance/lead-status/debtor/UTM) over
+     | students, foundation for future GC-A2/A3/A4. Rank 6 of the parity
+     | ladder (docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §2.2) — read-only
+     | over ranks 1-5, never writes payments/access/lead/stage. ВЫКЛ по
+     | умолчанию — deploy-рубильник: SegmentResource is hidden and
+     | Segment::matchingStudentsQuery() returns an unconditionally-empty
+     | query while OFF. Включение — MARKETING_SEGMENTS=true + config:cache.
+     */
+    'marketing_segments' => (bool) env('MARKETING_SEGMENTS', false),
 ];
