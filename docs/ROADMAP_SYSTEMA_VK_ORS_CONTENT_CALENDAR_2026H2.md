@@ -1,6 +1,6 @@
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
-_Created: 24-07-2026 · Last updated: 25-07-2026_
+_Created: 24-07-2026 · Last updated: 25-07-2026 (H1567 Wave 4)_
 
 Index: [`docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 
@@ -82,7 +82,7 @@ artifacts.
 
 ---
 
-## Wave 4 — Forward drafts (NEW copy)
+## Wave 4 — Forward drafts (NEW copy) ✅ DONE (H1567, 25-07-2026)
 
 **Unblocks:** remaining empty slots.
 
@@ -90,6 +90,15 @@ artifacts.
    FAQ-style micro-answer (facts from LMS resolvers where available).
 2. Status stays `draft` until monthly Keep → `scheduled`.
 3. Skip-review rule: NEW never auto-publishes (D12).
+
+Built as `ForwardDraftGenerator` + artisan `content:fill-forward {YYYY-MM}`.
+"LMS resolvers" resolved to: `DictionaryWord` (dictionary tip), `Schedule`+`Course`
+(event promo), and the "Новичкам" section of `resources/knowledge/faq.md` (FAQ
+micro-answer — deliberately outside the money/policy FAQ sections, so a public
+teaser never reads like payment/policy guidance); reading-group tease has no
+LMS-backed fact source and stays templated. Cost cap:
+`content.forward_draft_max_per_run` (default 10, mirrors
+`ArticleDraftGenerator::WEEKLY_LESSON_LIMIT`). DEPLOY_QUEUE №57.
 
 ---
 
