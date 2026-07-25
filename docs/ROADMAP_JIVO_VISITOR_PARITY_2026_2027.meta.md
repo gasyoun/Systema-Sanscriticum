@@ -1,6 +1,6 @@
 # Metadoc — ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md
 
-_Created: 17-07-2026 · Last updated: 17-07-2026 (S2 executed)_
+_Created: 17-07-2026 · Last updated: 25-07-2026_
 
 **Purpose.** Companion record for [`ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md)
 — the roadmap for closing the one Jivo capability our self-hosted web-chat lacks:

@@ -1,6 +1,6 @@
 # deploy.meta.md — метадок о `deploy`
 
-_Created: 13-07-2026 · Last updated: 13-07-2026_
+_Created: 13-07-2026 · Last updated: 25-07-2026_
 
 Метадок-спутник для [`docs/deploy.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) — держит контекст ВОКРУГ документа (назначение, происхождение, бэклог улучшений, ограничения), не пересказывая его содержание.
 

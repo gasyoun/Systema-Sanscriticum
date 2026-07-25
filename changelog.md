@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **H1623 docs-freshness (Grok 4.5 grok-4.5, 25-07-2026):** metadoc freshness sync for docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.meta.md, docs/deploy.meta.md, docs/support-subsystem-map.meta.md.
+
 ### Added
 - **n8n lecture content engine — Wave 5 student study artifacts (H1551).** StudyArtifactGenerator builds type=study_artifact drafts (kinds: summary / card_seeds / homework) from transcript spans; body hard-capped (MAX_BODY_CHARS + ratio vs source); QuotePolicy on summary quote; channel staff_study; **never** selected by PublishSocialPostJob / SendContentOneShotMailJob (type guards + observer no-op on Accept). Artisan content:compose-study-artifacts; LessonObserver drafts when CONTENT_FROM_LECTURES=true. Filament «Контент-кандидаты» staff review (filter already had study type). DEPLOY_QUEUE **№55**. Tests: StudyArtifactGeneratorTest (E1/E2). Executor: Grok 4.5 (grok-4.5) Sonnet-lock override.
 - **n8n lecture content engine — Wave 4 long-form articles (H1550).** `ArticleDraftGenerator` builds type=`article` drafts (per-lesson outline + optional `--weekly` pack) from transcript spans via ClipSpanPlanner; body hard-capped (`MAX_BODY_CHARS` + ratio vs source); `QuotePolicy` on quote; never a full transcript dump. Artisan `content:compose-article-drafts`; LessonObserver drafts when `CONTENT_FROM_LECTURES=true`. Draft-only Filament (no auto-publish). DEPLOY_QUEUE **№54**. Tests: `ArticleDraftGeneratorTest` (D1/D2). Executor: Grok 4.5 (`grok-4.5`) Sonnet-lock override.
