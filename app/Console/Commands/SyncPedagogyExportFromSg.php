@@ -128,7 +128,7 @@ class SyncPedagogyExportFromSg extends Command
     {
         $opt = $this->option('path');
         if (is_string($opt) && $opt !== '') {
-            return rtrim($opt, "\\/");
+            return rtrim($opt, '\\/');
         }
 
         // Default: ../SanskritGrammar/data/pedagogy_export relative to this repo root.

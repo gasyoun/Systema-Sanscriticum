@@ -77,11 +77,24 @@ class WebinarProviderSeamTest extends TestCase
         $this->assertNull($zoom->normalizeWebhook([]));
     }
 
-    public function test_zoom_create_meeting_stays_removed_per_gc_b1(): void
+    /**
+     * GC-B1 rescope (H1642, MG-руление 19-07-2026 → опция (b)): `createMeeting()`
+     * больше не перманентно удалён — за флагом `zoom_auto_create` он делает
+     * реальный вызов Zoom API (см. `tests/Feature/ZoomAutoCreateTest.php`,
+     * которому нужен контейнер Laravel + `Http::fake` — недоступно в этом чистом
+     * PHPUnit-юните). Что этот юнит-тест ещё МОЖЕТ проверить без сети: гвард
+     * кредов срабатывает ДО любого сетевого вызова, как и во всех остальных
+     * методах ZoomService — сохраняем тест как «страховку от полной пустоты»,
+     * а не удаляем. Per-schedule авто-создание НЕ возвращается — это отдельно
+     * закрыто `ZoomAutoCreateTest::test_per_schedule_creation_direct_schedule_never_calls_zoom`.
+     */
+    public function test_create_meeting_requires_configured_credentials(): void
     {
+        $unconfigured = new ZoomService(accountId: null, clientId: null, clientSecret: null);
+
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('GC-B1');
-        $this->zoom()->createMeeting(['topic' => 'x']);
+        $this->expectExceptionMessage('не сконфигурирован');
+        $unconfigured->createMeeting(['topic' => 'x']);
     }
 
     public function test_bbb_skeleton_methods_throw_until_q4_deployment(): void
