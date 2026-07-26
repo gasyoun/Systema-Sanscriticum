@@ -13,13 +13,17 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ### Added
 - **PWG Arzamas-longread «Петербургский словарь» — wave-1 build (H1620).** Полный материал-пак [docs/materials/pwg-arzamas/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/pwg-arzamas): SOURCE.md (20 глав, ~4 500 слов, Arzamas-регистр), FACTS.md (138 строк claim→source, все `verified`/`hedged`), ASSETS.md (rights-таблица: 9 PD-изображений + 2 авторских SVG в `public/images/materials/pwg/`), детерминированный рендерер `build_body.py` (Markdown→`body.html`, ≥15 h2 gate), DECISIONS_LOG/FOLLOWUPS/bibliography. Данные обогащены по live-ревью MG: статистика csl-atlas (801 790 `<ls>`-цитат, приставочные семьи vi-/ā-/sam-, «худеющие» статьи −14,3 %/декаду, контраст с пунским PD-словарём ≈2280 г.), архивная глава Вигасина («Дело о санскритском словаре»: Уваров и латынь, гонорары, тираж), некролог Ольденбурга, статьи A33/A40/A50/Stache-Weiske; портрет Даля снят (заменят генерируемые инфографики, FOLLOWUPS W2-4); сюжет «Коссович против Бётлингка» вынесен в план второй заметки (W2-5). Импорт: artisan `materials:import-pwg-arzamas {--publish}` (идемпотентный upsert по slug `peterburgskiy-slovar-pwg`, staging обложки на public-диск, reading_time). Тесты: `PwgArzamasMaterialTest` (5, 22 assertions, идемпотентность + 404 черновика + ≥15 h2 + карточка хаба). RWS-советы `sanskrit`+`indology` (DeepSeek `deepseek-v4-pro`; алиас `deepseek-chat` умер — папиркаты поданы), Majors закрыты ([rws/MAJORS_RESOLUTION.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/rws/MAJORS_RESOLUTION.md)). Публикация в прод — по Step 10 (README runbook при отсутствии prod-CLI). Executor: Fable 5 (`claude-fable-5`).
-- **H1644 pedagogy hop smoke (Grok 4.5 grok-4.5, 25-07-2026).** Artisan pedagogy:sync-sg-export copies SanskritGrammar data/pedagogy_export (schema major >=1, sha256-checked) into 
-esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag OFF. Tests: SyncPedagogyExportFromSgTest (2) + php artisan test --filter=Rq4 (11) green.
 
-### Changed
-- **H1623 docs-freshness (Grok 4.5 grok-4.5, 25-07-2026):** metadoc freshness sync for docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.meta.md, docs/deploy.meta.md, docs/support-subsystem-map.meta.md.
+- **Online Sanskrit games multi-wave plan (`/ask`, 26-07-2026).** Layered PLAN + ROADMAP + ARCHITECTURE + IMPLEMENTATION (Wave 1) + VERIFICATION for games built on existing Systema assets (`/exercises` engines, frequency roots, Kochergina/SRS fixtures, lead-magnet funnel, Sanskrit-HUB ladder). Invent catalogue **28** game IDs in three sections (asset-pedagogy · viral LM · engine-fill). Wave-1 fence: extend engines only, no audio/multiplayer. Deferred handoffs H1678–H1680 (platform+P0, P1 packs, SRS onboarding). Index: [docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
+
+## [1.52.0] - 2026-07-26
 
 ### Added
+
+- **GetCourse-parity F9 — сводная доска продаж как АЛЬТЕРНАТИВНЫЙ третий UI (H1658).** Развилка F9 спеки §7 («что делать с доской заявок теперь, когда есть доска сделок») **закрыта MG 26-07-2026** вариантом (а)+(в) аддитивно: обе существующие доски — «Заявки — доска» ([`LeadKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/LeadKanbanBoard.php), H451) и «Сделки — доска» ([`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), H1641) — остаются нетронутыми, а общий слой стадий строится ТРЕТЬИМ представлением рядом. Это НЕ вариант (б) (убрать доску заявок) и НЕ разрушительная форма варианта (в): физического сведения `lead_stages` и `deal_stages` в одну таблицу нет — это развилка **F3**, уже решённая в пользу отдельных таблиц (строковый `key` ↔ числовой `id`, миграция трогала бы живые `leads`). **Ни одной миграции**; `leads.status`, `lead_stages`, `LeadResource`, `Lead::statuses()`, `RemindLeadsForFollowup` не тронуты. Новая страница [`UnifiedSalesBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/UnifiedSalesBoard.php) (slug `sales-board`, группа «Продажи», sort 70 — над обеими досками) поверх [`UnifiedSalesStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedSalesStage.php) — словаря из четырёх общих колонок (Новые · В работе · Выиграно · Проиграно), который живёт ТОЛЬКО в слое представления и ни во что не записывается (закреплено тестом `the_common_vocabulary_is_never_persisted_into_either_stage_table`). Value-класс, а не массив в `config/`: у словаря есть поведение (сопоставление в обе стороны + подбор целевой стадии), а часть его ВЫВОДИТСЯ из живых строк и не пережила бы `config:cache`. Асимметрия сторон намеренная: **сделки** раскладываются структурно, из данных (`is_won` → «Выиграно», `is_lost` → «Проиграно», первая по `position` → «Новые», остальные → «В работе»), поэтому своя стадия админа не требует правки кода; **заявки** так вывести нельзя — `lead_stages` несёт только `is_final` и не отличает «Конверсию» от «Отказа», для них явная таблица ключей. Незнакомая стадия с любой стороны падает в «В работе», а не исчезает с доски. Карточки различаются бейджем «Заявка»/«Сделка» и составным DOM-id (`lead-12` / `deal-12`) — числовые ключи двух сущностей пересекаются, и без этого drag-drop переносил бы не ту запись. Перенос пишет в РОДНУЮ сущность: заявка — `leads.status` напрямую (и её `lead_audits`, как на одиночной доске), сделка — через `Deal::moveToStage()`, чтобы журнал `deal_transitions` продолжал наполняться и подписываться менеджером. Оба гарда `blocksRollbackToFirstStage` отклоняют откат ровно как на одиночных досках. Перенос ВНУТРИ одной колонки — сознательный no-op: объединённая колонка не имеет права молча понизить «Квалифицирован» до «В работе» или записать лишнюю строку перехода. За тем же флагом `crm_pipeline_board` (default `false`) плюс тот же `RoleGate::any(ADMIN, MANAGER)` — **своего флага не заводили**, это та же поверхность GC-C1. Тесты: `UnifiedSalesBoardTest` (15). Спека §7 F9 переписана как решение (исходная формулировка сохранена ниже), строка GC-C1 в §1 и метадок обновлены. Executor: Opus 5 (`claude-opus-5[1m]`) — лок хендоффа на Sonnet 5 не соблюдён, запуск человеком напрямую.
+- **VK/ORS content calendar — Wave 5: auto-pilot (H1568, PLAN closer).** `content:publish-due` (hourly ticker, `app/Console/Kernel.php`) posts every `scheduled` `ContentCalendarSlot` whose `publish_at` is due to a new n8n webhook (`CalendarPublishService`) — same webhook-forward shape as `PublishSocialPostJob`/`PostMonthlySchedule`, VK-only text `wall.post` per D10 (no TG mirror). n8n workflow JSON: [`docs/n8n/vk-calendar-post.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/vk-calendar-post.workflow.json). Success marks the slot `published` and mirrors any linked `ContentCandidate`; a non-2xx response leaves the slot `scheduled` for retry on the next hourly tick — no silent drop. Cancel-window enforcement (D15, `ContentCalendarSlot::canCancel()`) was already wired from W1 into the Filament bulk action; this wave adds the first direct unit coverage of its 24h boundary. Flag-gated behind `content_calendar_autopilot` (`CONTENT_CALENDAR_AUTOPILOT`, default OFF) — command no-ops while off; `N8N_CALENDAR_POST_WEBHOOK`/`_SECRET` unset → warn + no-op. No new migration. Tests: `PublishDueContentCommandTest` (5: E1 flag-off no-op, webhook-unset no-op, due-only publish + candidate mirror, failed-response keeps scheduled, never touches `api.vk.com`) + `ContentCalendarSlotCancelTest` (7, `canCancel()` boundary). DEPLOY_QUEUE №60. Executor: Sonnet 5 (`claude-sonnet-5`).
+- **H1644 pedagogy hop smoke (Grok 4.5 grok-4.5, 25-07-2026).** Artisan pedagogy:sync-sg-export copies SanskritGrammar data/pedagogy_export (schema major >=1, sha256-checked) into
+esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag OFF. Tests: SyncPedagogyExportFromSgTest (2) + php artisan test --filter=Rq4 (11) green.
 - **GetCourse-parity GC-B1 rescope — одна recurring Zoom-встреча НА КУРС (H1642).** Развилка F1 (per-schedule авто-создание vs. единая-ссылка модель) была **закрыта MG 19-07-2026** на недельном `@DECIDE`-листе → опция (b): рескоуп на «авто-создание ОДНОЙ recurring-встречи на курс», единая-ссылка модель (`eda8059`, 27-06-2026) стоит нетронутой, per-schedule авто-создание НЕ возвращается. Триггер — первая генерация потока занятий курса (`ScheduleGenerator::generate()`): если у курса ещё нет `zoom_meeting_id` и явной ссылки в форме не задано, вызывается `ZoomService::createMeeting()` (реальный вызов Zoom API, `type=8` — recurring без фиксированного времени) и результат сохраняется через уже существующий `Course::setZoomLinkAttribute()` (парсер meeting_id из `join_url` переиспользован, не задублирован). Идемпотентно — маркер уже-созданной встречи — `courses.zoom_meeting_id`; повторная генерация потока для того же курса Zoom API не дёргает. `WebinarProvider`-шов (GC-B3) не тронут — `ZoomService::createMeeting()` остаётся его единственной живой реализацией. Всё за флагом `zoom_auto_create` (default `false`) — пока OFF, `ScheduleGenerator` ведёт себя байт-в-байт как раньше. **Рескоуп-преемник теста-замка:** `WebinarProviderSeamTest::test_zoom_create_meeting_stays_removed_per_gc_b1` заменён на `test_create_meeting_requires_configured_credentials` (тот же гвард кредов, без сети — реальный вызов Zoom API теперь тестируется отдельно, `Http::fake` требует контейнер Laravel). Тесты: `ZoomAutoCreateTest` (5 — флаг выкл/вкл/идемпотентность/ручной путь Filament не тронут/per-schedule-guard — прямое создание `Schedule` в обход генератора Zoom API не дёргает). Полный Feature-набор зелёный, Pint чист. Executor: Sonnet 5 (`claude-sonnet-5`).
 - **GetCourse-parity GC-C1 — сделки (`Deal`) + канбан + мост от оплаты (H1641, Wave 2 head).** Развилка F2 (две противоречащих записи решений: «расширить `Lead`» vs «отдельная сущность `Deal`») была **закрыта MG ещё 21-07-2026** на недельном `@DECIDE`-листе в пользу отдельной сущности, но неделю не доезжала до документов — `DECISIONS_roadmap_forks_2026H2.md` §R2 теперь помечен superseded. Аддитивно: миграции `deal_stages` (5 засеянных стадий, ровно одна `is_won`) / `deals` / `deal_transitions` (append-only, СОЗНАТЕЛЬНО без FK — переживает удаление сделки, приём `lead_audits`), модели `Deal`/`DealStage`/`DealTransition` с гардом отката финальной стадии (зеркало `Lead::blocksRollbackToFirstStage`), доска `DealKanbanBoard` (форма скопирована с `LeadKanbanBoard`, `$statusEnum` намеренно опущен — `stage_id` не enum-каст), и `PaymentDealBridgeObserver` — ОТДЕЛЬНЫЙ обсервер по прецеденту `PaymentAuditObserver`/`PaymentTelemetryObserver`, предикат `wasChanged('status')` (развилка F4). Мост повторяет набор исключений `Payment::fireOnPaid` (расход/ЗП/депозит/пробное/марафон/`is_conditional`), идемпотентен по `source_payment_id`, а на реверсе платежа снова ОТКРЫВАЕТ сделку (ранг 1 прав, сделка была устаревшей). Всё за флагом `crm_pipeline_board` (default `false`) — пока OFF, доска недоступна и в `deals` не пишется ни строки. **`LeadKanbanBoard`/`LeadStage` (H451) НЕ тронуты** — их судьба вынесена новой развилкой F9 спеки. Тесты: `DealTest` (25) + `DealFlagDefaultTest` (3, пиннит дефолт флага — дыра §6 закрыта), включая guard денежной границы: мост не пишет НИ В ОДНУ таблицу кроме `deals`/`deal_transitions` и не конвертирует лид обычной покупки (§2.4). **По итогам обязательного adversarial-ревью (свежий контекст, Opus 5 `claude-opus-5`) исправлено ДО мерджа, каждая правка закрыта регрессионным тестом:** (1) ветка сопоставления по лиду игнорировала курс — оплата курса B закрывала сделку по курсу A, т.е. запись не в ту строку; курс теперь различающий признак и по лиду тоже; (2) рассрочка заводила отдельную выигранную сделку на каждый взнос и раздувала воронку — второй платёж по тому же человеку и курсу сделку больше не плодит (цена: повторная покупка того же курса тоже не заведёт вторую — размен вынесен человеку); (3) необработанное исключение моста внутри транзакции вебхука Точки откатило бы ПОДТВЕРЖДЁННЫЙ БАНКОМ платёж (ранг 4 не имеет права вето над рангом 1) — `sync()` целиком в try/catch с логом; (4) реверс перетирал решение человека, воскрешая сделку, уведённую руками в «Проиграна»; (5) `UNIQUE` на `source_payment_id` против гонки check-then-insert вне вебхука; (6) двухшаговое закрытие обёрнуто в транзакцию; (7) `DealStage::first()` → `firstStage()` — перекрывал статический форвардинг Eloquent. Полный Feature-набор **1910 зелёный**.
 - **Upgrade-credit refund-link attribution — flag-gated, default OFF (H1405 C2, PR #695).** `Tariff::upgradeRefundsForUser` block branch additionally nets «Расход» rows linked via `refund_of_payment_id` to a paid half of the purchased block when `features.upgrade_credit_refund_link` is ON (`UPGRADE_CREDIT_REFUND_LINK`, default OFF — flag-OFF parity test pins today's behavior). Closes the over-credit where a form-created refund (start/end auto-nulled by PaymentResource) stayed invisible to the netting. Tests: `UpgradeCreditRefundLinkTest` (6). Executor: Fable 5 (`claude-fable-5`).
@@ -92,7 +96,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
   activation, depends on live SMTP per H1449/#504) — no new campaign domain
   model beyond the candidate itself. DEPLOY_QUEUE №51. Waves 3–5 remain
   queued as Uprava H1549–H1551. **Executor:** Sonnet 5 (`claude-sonnet-5`).
-
 - **n8n lecture content engine — Wave 1 of 5 (H1547).** `ContentCandidate`
   model/migration — the unified review/publish unit for everything the
   content engine will generate from lectures (clip now, social/faq/article/
@@ -109,30 +112,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
   `accepted`. Thin `ContentCandidateResource` (Filament, admin-only, gated
   by `content_from_lectures`) for review. DEPLOY_QUEUE №49. Waves 2–5
   tracked as Uprava H1548–H1551. **Executor:** Sonnet 5 (`claude-sonnet-5`).
-
-### Changed
-- **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
-  multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
-  path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
-  knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
-- **VK/ORS content calendar plan (H2).** Layered /ask from 
-- **Операторский мануал RU: клипы лекций + n8n.** [docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) — еженедельная эксплуатация; установка: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666). Grok 4.5 (grok-4.5).
-- **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
-  Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
-  `config/video.php` `kinescope_pilot_course_id`. `VideoEmbed` recognises
-  kinescope.io URLs; lesson player renders a Kinescope iframe + Player SDK
-  only when the flag is on, the course matches, and `lesson.video_url` is
-  Kinescope — reuses W2 `video-resume.js` kinescope adapter. Comparison memo
-  `docs/KINESCOPE_PILOT_COMPARISON_2026.md`; DEPLOY_QUEUE №48.
-  **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override).
-
-### Changed
-- **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
-  multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
-  path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
-  knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
-
-### Added (continued)
 - **n8n lecture content engine plan (H2 2026).** Layered `/ask` plan for turning weekly
   lecture video + transcript + AI timecodes into five sequenced products (clips → social
   text → FAQ → long-form → student materials) under one `ContentCandidate` backbone,
@@ -208,6 +187,29 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
   mail uses `Mail::fake()`-safe/`array`-transport tests — no live sends.
   `changelog.md`/`DEPLOY_QUEUE.md` carry the activation prerequisites
   (mailbox creds, SPF/DKIM/DMARC, migrations, flag flip).
+
+### Changed
+
+- **GC-C1 — одна продажа определяется группой рассрочки, а не парой «человек + курс» (H1659).** Развилка F9 (второй вопрос) закрыта MG 26-07-2026 в пользу опции **(в) — явный маркер**. Эвристика H1641 «выигранная сделка по этому человеку и курсу уже есть → второй платёж молчит» гасила инфляцию воронки на взносах, но той же ценой прятала НАСТОЯЩУЮ повторную покупку того же курса. Заменена явной цепочкой `Payment` → `linked_promise_id` → `PaymentPromise` → `installment_group_id` (плюс обратная ветвь `payment_promises.fulfilled_payment_id`, которую `PromiseAutoFulfiller` проставляет внутри `fireOnPaid`, то есть ДО обсерверов). Два платежа — одна продажа тогда и только тогда, когда их обещания делят непустую группу; платёж без группы снова заводит собственную сделку. Аддитивная миграция `deals.installment_group_id` (nullable uuid + index, без FK — это uuid-метка на `payment_promises`, а не первичный ключ таблицы): группа материализуется на сделке при её создании/закрытии, чтобы следующий взнос находил свою продажу ОДНИМ индексированным запросом, а не перепрохождением цепочки на каждом платеже. **Проверка группы поднята ВЫШЕ поиска открытой сделки** — взнос по уже учтённому плану обязан быть немым целиком, иначе он закрыл бы собой чужую открытую сделку по тому же курсу (тот же класс «записи не в ту строку», что ревью H1641 уже ловило в `findOpenDealFor()`); свою же сделку группа находит напрямую по `deals.installment_group_id`, поэтому взнос после реверса первого платежа закрывает именно переоткрытую сделку плана, а не заводит вторую. Идемпотентность по `source_payment_id` не ослаблена — это гарантия про ОДИН платёж, ортогональная группировке. Мост остался читателем `payments`/`payment_promises`: список таблиц в тесте денежной границы расширен `payment_promises`. _Поправка по итогам ревью: в той фикстуре обещаний нет, так что групповую ветку тот тест не проходил — реальное покрытие добавлено записью в «Fixed» выше._ **Известное ограничение, оставлено осознанно:** менеджерское «Подтвердить оплату» ([`PromiseFulfillment::fulfil`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/PromiseFulfillment.php)) создаёт платёж и лишь ПОТОМ связывает обещание, поэтому на момент обсервера ни одной из двух связей ещё нет и такой взнос выглядит самостоятельной продажей. _Поправка по итогам ревью: ограничение оказалось не краем, а основным ручным сценарием (3 сделки вместо 1) и закрыто третьим переходом цепочки — см. «Fixed» выше._ Тесты: `DealTest` 31 метод / 30 кейсов (6 новых; три из них падают на `origin/main` — проверено откатом обсервера: взносы одного плана → одна сделка, повторная покупка без рассрочки → ДВЕ, взнос не закрывает чужую открытую сделку; плюс обратная ветвь связи, обещание без группы, возврат-с-повторной-оплатой). Executor: Opus 5 (`claude-opus-5`).
+- **H1623 docs-freshness (Grok 4.5 grok-4.5, 25-07-2026):** metadoc freshness sync for docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.meta.md, docs/deploy.meta.md, docs/support-subsystem-map.meta.md.
+- **H1451 true redo (24-07-2026).** Hardened Kinescope pilot after first merge:
+  multi-field URL resolve (`video_url` → `youtube_url` → `rutube_url`), reserved
+  path-segment reject in `VideoEmbed::kinescopeId`, `.env.example` activation
+  knobs, extra tests. Executor: Grok 4.5 (`grok-4.5`) via xAI.
+- **VK/ORS content calendar plan (H2).** Layered /ask from
+- **Операторский мануал RU: клипы лекций + n8n.** [docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) — еженедельная эксплуатация; установка: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666). Grok 4.5 (grok-4.5).
+- **Kinescope pilot on one flagship course — Anton ops-gaps Wave 3 (H1451).**
+  Flag `kinescope_pilot` / `KINESCOPE_PILOT` (OFF by default) +
+  `config/video.php` `kinescope_pilot_course_id`. `VideoEmbed` recognises
+  kinescope.io URLs; lesson player renders a Kinescope iframe + Player SDK
+  only when the flag is on, the course matches, and `lesson.video_url` is
+  Kinescope — reuses W2 `video-resume.js` kinescope adapter. Comparison memo
+  `docs/KINESCOPE_PILOT_COMPARISON_2026.md`; DEPLOY_QUEUE №48.
+  **Executor:** Grok 4.5 (`grok-4.5`) via xAI (Sonnet-lock override).
+
+### Fixed
+
+- **GC-C1 — две регрессии H1659, найденные обязательным adversarial-ревью (Opus 5 `claude-opus-5`) уже ПОСЛЕ мерджа [PR #705](https://github.com/gasyoun/Systema-Sanscriticum/pull/705).** Ревью вернулось после мерджа; оба дефекта измерены прогоном, оба регрессировали против до-H1659 поведения. **(1) Кураторское «Подтвердить оплату» заводило по сделке НА КАЖДЫЙ взнос** — измерено 3 сделки против 1: [`PromiseFulfillment::fulfil`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/PromiseFulfillment.php) создаёт платёж и лишь ПОТОМ связывает обещание, поэтому на момент обсервера нет ни прямой, ни обратной связи, а снятая эвристика «человек + курс» была единственным, что прикрывало этот путь; и это не край, а основной ручной сценарий закрытия рассрочки ([`Debtors.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Debtors.php), [`PaymentPromisesRelationManager.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/UserResource/RelationManagers/PaymentPromisesRelationManager.php)). Добавлен **третий переход** цепочки — план с НЕПОГАШЕННЫМИ (`active`/`expired`) обещаниями по этому же человеку и курсу. Это НЕ возврат эвристики: план должен существовать и быть ещё не закрыт, поэтому полностью оплаченный план прошлого года повторную покупку больше не глушит (закреплено отдельным тестом `a_fully_paid_plan_no_longer_suppresses_a_later_repurchase`); остаточная цена — покупка курса, по которому прямо сейчас висит неоплаченный план, относится к этому плану. **(2) Платёж мог «угнать» открытую сделку, помеченную ЧУЖИМ планом** — измерено 2 сделки против 1: взнос плана G2 закрывал сделку плана G1 чужими деньгами, штампа G2 не получал, следующий взнос G2 заводил вторую сделку, а будущий взнос G1 упёрся бы в «уже закрыта» и был бы молча съеден. `findOpenDealFor()` теперь получает группу платежа и **никогда не переиспользует сделку с ЧУЖИМ непустым штампом плана**; платёж без группы сделки планов не трогает вовсе. **(3) Тест денежной границы не покрывал групповую ветку** (фикстура строилась без обещаний, `payment_promises` проверялась на пустой таблице) — добавлен `bridge_stays_read_only_while_walking_the_instalment_group`, реально проходящий по коду H1659. Полный вердикт ревью (7 REFUTED, включая рантайм-доказательство отсутствия записей вне `deals`/`deal_transitions` и fault-injection на «ранг 4 не ветирует ранг 1») — [комментарием к PR #705](https://github.com/gasyoun/Systema-Sanscriticum/pull/705#issuecomment-5082410482). Тесты: `DealTest` 34 кейса, из них 4 новых; два (кураторское закрытие взносов, угон чужой сделки) измеренно падают на `main` до этой правки — проверено откатом обсервера на `origin/main` и прогоном. Полный Feature-набор **1932** зелёный, Pint чист. Executor: Opus 5 (`claude-opus-5`).
 
 ## [1.51.0] - 2026-07-22
 
@@ -1584,7 +1586,51 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.52.0...HEAD
+[1.52.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.51.0...v1.52.0
+[1.51.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.50.1...v1.51.0
+[1.50.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.50.0...v1.50.1
+[1.50.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.49.1...v1.50.0
+[1.49.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.49.0...v1.49.1
+[1.49.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.48.0...v1.49.0
+[1.48.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.47.0...v1.48.0
+[1.47.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.46.0...v1.47.0
+[1.46.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.45.0...v1.46.0
+[1.45.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.44.0...v1.45.0
+[1.44.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.43.0...v1.44.0
+[1.43.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.42.0...v1.43.0
+[1.42.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.41.0...v1.42.0
+[1.41.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.40.0...v1.41.0
+[1.40.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.39.0...v1.40.0
+[1.39.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.38.0...v1.39.0
+[1.38.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.37.0...v1.38.0
+[1.37.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.36.0...v1.37.0
+[1.36.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.35.0...v1.36.0
+[1.35.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.34.0...v1.35.0
+[1.34.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.33.0...v1.34.0
+[1.33.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.32.0...v1.33.0
+[1.32.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.31.0...v1.32.0
+[1.31.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.30.0...v1.31.0
+[1.30.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.29.0...v1.30.0
+[1.29.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.28.0...v1.29.0
+[1.28.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.27.0...v1.28.0
+[1.27.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.26.0...v1.27.0
+[1.26.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.25.0...v1.26.0
+[1.25.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.24.0...v1.25.0
+[1.24.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.23.0...v1.24.0
+[1.23.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.22.0...v1.23.0
+[1.22.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.21.0...v1.22.0
+[1.21.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.20.0...v1.21.0
+[1.20.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.19.0...v1.20.0
+[1.19.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.18.1...v1.19.0
+[1.18.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.18.0...v1.18.1
+[1.18.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.17.1...v1.18.0
+[1.17.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.17.0...v1.17.1
+[1.17.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.16.0...v1.17.0
+[1.16.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.15.0...v1.16.0
+[1.15.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.14.0...v1.15.0
+[1.14.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.13.0...v1.14.0
+[1.13.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.9.0...v1.10.0
@@ -1599,5 +1645,5 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.2.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.1
+[1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.0
