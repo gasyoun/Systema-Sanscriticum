@@ -89,7 +89,7 @@ authored in this wave).
 | # | Improvement | Why | Status |
 |---|---|---|---|
 | 1 | Close C1: confirm `reported_amount` on one real ledger row after `TOCHKA_WEBHOOK_GUARD` is ON in prod | Turns the amount guard from best-effort into verified | open (`@DECIDE` / prod observation) |
-| 2 | Close C3 durably: `payments.first_paid_at` + backfill (+ the no-schema `$status[0]` old-value check) | Removes the pre-08-06-2026 audit blind spot AND the `withoutEvents` create-as-paid blind spot (silent promise fulfillment) of the resurrection guard | queued handoff H1645 (schema change, D16) |
+| 2 | Close C3 durably: `payments.first_paid_at` + backfill (+ the no-schema `$status[0]` old-value check) | Removes the pre-08-06-2026 audit blind spot AND the `withoutEvents` create-as-paid blind spot (silent promise fulfillment) of the resurrection guard | fix merged (H1645); prod migrate + backfill pending, DEPLOY_QUEUE row 61 |
 | 3 | Admin form: auto-fill `start_block`/`end_block` (or keep them) on `Расход` linked via `refund_of_payment_id` | Removes the C2 data-entry gap at the source, complements the flag-gated netting fix | open |
 | 4 | Add a `payment_webhook_events` retention/dashboard note once volume data exists | Ledger is append-only and unbounded | open |
 | 5 | Worked full-course upgrade example once `full_course_block_credit` is turned ON in prod | §4.7 covers the always-on half→block path only | open |
