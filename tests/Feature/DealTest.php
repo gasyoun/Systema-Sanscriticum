@@ -275,6 +275,59 @@ class DealTest extends TestCase
         $this->assertSame(1, Deal::query()->where('course_id', $courseB->id)->count());
     }
 
+    /**
+     * @test
+     *
+     * ГРУППОВОЙ БЛИЗНЕЦ теста выше — то, чего у него не было (найдено
+     * adversarial-ревью H1659, ruling H1690 в пользу прочтения «б»).
+     *
+     * Фикстура соседнего теста обещаний не содержит, поэтому он проверяет
+     * только findOpenDealFor, а ветка группы от инварианта «курс — различающий
+     * признак» была тихо освобождена: сделку искали ОДНИМ where по группе.
+     * Сценарий ревью воспроизведён целиком: сделка плана G реверсится, человек
+     * переводит её на другой курс, приходит второй взнос того же плана.
+     *
+     * Правильное поведение: деньги за курс A ложатся на сделку по курсу A.
+     * Решение человека о курсе не перетирается, а НАСТОЯЩАЯ продажа курса A из
+     * воронки не исчезает — цена в виде второй сделки на ту же группу принята
+     * осознанно и видима, в отличие от молчаливой записи не в ту строку.
+     */
+    public function instalment_never_closes_a_deal_its_plan_no_longer_matches_by_course(): void
+    {
+        $user = User::factory()->create();
+        $courseA = Course::factory()->create(['is_active' => true]);
+        $courseB = Course::factory()->create(['is_active' => true]);
+        [$group, $promises] = $this->makeInstalmentPlan($user, $courseA, [2400, 2400]);
+
+        $first = $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $courseA->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[0]->id,
+        ]);
+
+        $deal = Deal::query()->firstOrFail();
+        $this->assertSame($group, $deal->installment_group_id);
+
+        // Реверс возвращает сделку в работу, штамп плана на ней остаётся.
+        $first->update(['status' => 'canceled']);
+        // ...и человек руками переводит её на другой курс.
+        $deal->update(['course_id' => $courseB->id]);
+
+        // Второй взнос плана — это по-прежнему деньги за курс A.
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $courseA->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[1]->id,
+        ]);
+
+        $deal->refresh();
+        $this->assertNull($deal->closed_at, 'взнос закрыл сделку, переведённую человеком на ЧУЖОЙ курс');
+        $this->assertSame($courseB->id, $deal->course_id, 'решение человека о курсе перетёрто');
+
+        $own = Deal::query()->where('course_id', $courseA->id)->get();
+        $this->assertCount(1, $own, 'продажа курса A не зафиксирована собственной сделкой');
+        $this->assertSame($group, $own->first()->installment_group_id);
+        $this->assertNotNull($own->first()->closed_at);
+    }
+
     // --- H1659: одна продажа = одна группа рассрочки -----------------------
 
     /**
@@ -390,38 +443,56 @@ class DealTest extends TestCase
     /**
      * @test
      *
-     * Вторая ветвь цепочки: payment_promises.fulfilled_payment_id. Её ставит
-     * PromiseAutoFulfiller внутри fireOnPaid, то есть ДО обсерверов — поэтому
-     * группа видна и без linked_promise_id на самом платеже. Платёж создаём
-     * молча и зовём мост руками, иначе связь не успела бы возникнуть.
+     * Вторая ветвь цепочки: payment_promises.fulfilled_payment_id.
+     *
+     * H1690 ПЕРЕПИСАЛ ЭТОТ ТЕСТ НА РЕАЛЬНЫЙ ПУТЬ. Прежняя версия строила связь
+     * руками через withoutEvents и звала обсервер напрямую — то есть заверяла
+     * порядок, которого продакшен на первой доставке не производит вовсе
+     * (найдено adversarial-ревью H1659). Там, где обратную связь ставит
+     * PromiseAutoFulfiller, он сам выходит на пустом linked_promise_id, так что
+     * первый переход уже вернул ту же группу и второй холостой.
+     *
+     * Настоящий и единственный живой случай — кураторский платёж
+     * PromiseFulfillment::fulfil (связывает обещание ПОСЛЕ создания платежа),
+     * который откатили и провели заново: прямой связи у него нет никогда, а
+     * третий переход к этому моменту уже молчит, потому что обещание FULFILLED
+     * и реверс его обратно в active не возвращает.
+     *
+     * План намеренно из ОДНОГО взноса: будь в нём второе active-обещание,
+     * группу вернул бы unmetPlanFor и тест проверял бы не тот переход.
      */
     public function instalment_is_recognised_through_the_reverse_promise_link(): void
     {
         $user = User::factory()->create();
         $course = Course::factory()->create(['is_active' => true]);
-        [, $promises] = $this->makeInstalmentPlan($user, $course, [2400, 2400]);
+        [$group, $promises] = $this->makeInstalmentPlan($user, $course, [2400]);
 
-        $this->makeSale([
-            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
-            'linked_promise_id' => $promises[0]->id,
-        ]);
-
-        $second = Payment::withoutEvents(fn () => Payment::create([
-            'user_id' => $user->id,
-            'course_id' => $course->id,
+        $payment = app(PromiseFulfillment::class)->fulfil($promises[0], [
             'amount' => 2400,
-            'tariff' => 'full',
-            'status' => 'paid',
-        ]));
-        $promises[1]->update([
-            'status' => PaymentPromise::STATUS_FULFILLED,
-            'fulfilled_at' => now(),
-            'fulfilled_payment_id' => $second->id,
+            'start_block' => 1,
+            'end_block' => 1,
         ]);
 
-        app(PaymentDealBridgeObserver::class)->created($second);
+        $deal = Deal::query()->firstOrFail();
+        $this->assertSame($group, $deal->installment_group_id);
+        $this->assertSame(
+            PaymentPromise::STATUS_FULFILLED,
+            $promises[0]->refresh()->status,
+            'третий переход обязан молчать — иначе тест проверяет не обратную связь'
+        );
 
-        $this->assertSame(1, Deal::query()->count(), 'обратная связь обещания не распознана как взнос');
+        // Реверс: сделка снова открыта и отвязана от платежа.
+        $payment->update(['status' => 'canceled']);
+        $this->assertNull($deal->refresh()->closed_at);
+
+        // Повторная оплата. linked_promise_id нет, обещание уже FULFILLED —
+        // группу способен вернуть ТОЛЬКО обратный переход. Без него платёж
+        // считался бы «сам себе продажей» и завёл бы вторую сделку.
+        $payment->update(['status' => 'paid']);
+
+        $this->assertSame(1, Deal::query()->count(), 'обратная связь обещания не распознана — взнос завёл вторую сделку');
+        $this->assertNotNull($deal->refresh()->closed_at);
+        $this->assertSame($group, $deal->installment_group_id);
     }
 
     /**
