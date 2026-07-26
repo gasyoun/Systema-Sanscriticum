@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 25-07-2026_
+_Created: 25-07-2026 · Last updated: 26-07-2026_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
