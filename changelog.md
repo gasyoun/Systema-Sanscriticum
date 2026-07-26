@@ -11,7 +11,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
-## [1.56.0] - 2026-07-26
+## [1.57.0] - 2026-07-26
 
 ### Added
 - **Kossovich-заметка: галерея 16 самас в гл. 10 (M12).** По указанию MG («запиши все, лишние потом перенесу в запас») в гл. 10 влит полный шорт-лист FOLLOWUPS K-6 — 16 самас с неочевидными русскими переводами Коссовича, каждая глосса дословно из [kow.jsonl](https://github.com/gasyoun/SanskritLexicography/blob/master/RussianTranslation/src/kow.jsonl) (ключи проверены): gavākṣa «бычий глаз»=окно, anekaja «рождающийся не за один раз»=птица, amṛtasodara «брат амброзии»=конь, budhavāra «день Меркурия»=середа, vitṛṣṇatā «нечувствование жажды»=довольство и др.; рамочный пример kṛtajña помечен в FACTS как общесанскритский (буквы «к» в словаре нет). FACTS +2 строки (K10-6/K10-7), FOLLOWUPS K-6 → done, DECISIONS M12; ~4 000 слов, ~20 мин чтения. Executor: Fable 5 (`claude-fable-5`).
