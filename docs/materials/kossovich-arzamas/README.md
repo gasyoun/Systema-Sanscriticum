@@ -17,7 +17,7 @@ Sibling: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1620-Fabl
 
 | File | Role |
 |---|---|
-| [SOURCE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/SOURCE.md) | Full essay, pure Markdown, 15 chapters as `## N.` headings |
+| [SOURCE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/SOURCE.md) | Full essay, pure Markdown, 16 chapters as `## N.` headings |
 | [meta.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/meta.json) | Article frontmatter: title, subtitle, excerpt, slug, meta_* |
 | [FACTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/FACTS.md) | claim → source rows (K-*/KA-*) |
 | [ASSETS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/ASSETS.md) | image rights table (B-*) |
@@ -46,7 +46,7 @@ Markdown images whose following italic line becomes the `<figcaption>`.
 2. On the server: `php artisan materials:import-kossovich-arzamas --publish`
 3. **Then** re-import the FIRST piece so its ch. 16 link to this one goes live:
    `php artisan materials:import-pwg-arzamas` (idempotent, keeps published state).
-4. Smoke: `https://samskrte.ru/s/rossiya-i-sanskritskiy-slovar` (TOC 15 items,
+4. Smoke: `https://samskrte.ru/s/rossiya-i-sanskritskiy-slovar` (TOC 16 items,
    4 images load) and the card on `https://samskrte.ru/online/materialy`.
 
 _Dr. Mārcis Gasūns_
