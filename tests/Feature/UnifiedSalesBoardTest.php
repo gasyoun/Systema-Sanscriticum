@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\DealKanbanBoard;
+use App\Filament\Pages\LeadKanbanBoard;
 use App\Filament\Pages\UnifiedSalesBoard;
 use App\Models\Deal;
 use App\Models\DealStage;
@@ -379,8 +381,8 @@ class UnifiedSalesBoardTest extends TestCase
         $this->manager();
 
         // Рулинг F9 аддитивен: сводная доска НЕ заменяет ни одну из двух.
-        $this->assertTrue(\App\Filament\Pages\LeadKanbanBoard::canAccess());
-        $this->assertTrue(\App\Filament\Pages\DealKanbanBoard::canAccess());
+        $this->assertTrue(LeadKanbanBoard::canAccess());
+        $this->assertTrue(DealKanbanBoard::canAccess());
         $this->assertTrue(UnifiedSalesBoard::canAccess());
     }
 

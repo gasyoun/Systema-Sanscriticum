@@ -14,7 +14,7 @@
 @endphp
 
 <div
-    id="{{ \App\Filament\Pages\UnifiedSalesBoard::cardId($record) }}"
+    id="{{ static::cardId($record) }}"
     class="record bg-white dark:bg-gray-700 rounded-lg px-4 py-2 cursor-grab font-medium text-gray-600 dark:text-gray-200"
 >
     <span
@@ -24,7 +24,7 @@
             'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-100' => ! $isLead,
         ])
     >
-        {{ \App\Filament\Pages\UnifiedSalesBoard::kindLabel($record) }}
+        {{ static::kindLabel($record) }}
     </span>
 
     <div>{{ $record->{static::$recordTitleAttribute} }}</div>
