@@ -25,10 +25,17 @@
   a.card p { margin: 0; font-size: 13.5px; color: var(--soft); }
   a.card .tag { display: inline-block; margin-top: 12px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--accent); }
   footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--soft); }
+  .sgx-locale-toggle { display: flex; gap: 6px; margin: 0 0 14px; }
+  .sgx-locale-btn {
+    font: 600 12px/1 "Segoe UI",system-ui,sans-serif; letter-spacing: .06em; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--pnl); color: var(--soft); cursor: pointer;
+  }
+  .sgx-locale-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
 <div class="page">
+  <div id="locale-toggle"></div>
   <p class="eyebrow">संस्कृतम् · क्रीडाभ्यासाः</p>
   <h1>Игры-упражнения по санскриту</h1>
   <p class="lead">Интерактивные тренажёры для изучающих санскрит — перетаскивание, касание и клавиатура, подсказки и мгновенная проверка. Всё работает прямо в браузере.</p>
