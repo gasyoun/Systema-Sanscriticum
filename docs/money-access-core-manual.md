@@ -545,7 +545,7 @@ bounds of the (now-closed) blind spot:
   diff (`$status[1]`). A *silently-created* paid payment later reversed left only a
   `paid→failed` diff — new value `failed` — so its prior-paid state went undetected.
 
-**Fix (H1645, [PR — см. changelog]):** a dedicated `payments.first_paid_at` column
+**Fix (H1645, [PR #712](https://github.com/gasyoun/Systema-Sanscriticum/pull/712)):** a dedicated `payments.first_paid_at` column
 (additive, nullable — programme ruling D16: agents never run this migration against
 prod, DEPLOY_QUEUE №60 is Ivan's step) is the new source of truth for
 `hasPriorPaidTransition()`. It is stamped once, on the first entry into a paid status,
