@@ -48,6 +48,10 @@ class Payment extends Model
         'consumed_amount',
         'deposit_credit_applied',
         'status',
+        // Момент первого входа в оплаченный статус — резервная опора
+        // resurrection-guard'а, не зависящая от payment_audits (H1645).
+        // Стамповается один раз (fireOnPaid) и никогда не перезаписывается.
+        'first_paid_at',
         // Возврат за конкретный платёж (H352): у платежа-«Расход» указывает
         // исходную оплату, чью выручку усекать по месяц возврата.
         'refund_of_payment_id',
