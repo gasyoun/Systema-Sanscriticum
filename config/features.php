@@ -507,4 +507,21 @@ return [
      | финдира.
      */
     'upgrade_credit_refund_link' => (bool) env('UPGRADE_CREDIT_REFUND_LINK', false),
+
+    /*
+     | GetCourse-паритет GC-B1 rescope (H1642): авто-создание ОДНОЙ recurring
+     | Zoom-встречи НА КУРС (никогда не на `Schedule`) — единый-ручной-поток
+     | модель (`eda8059`, 27-06-2026) стоит, per-schedule авто-создание НЕ
+     | возвращается (см. `docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md` §7 F1,
+     | MG-руление 19-07-2026 → опция (b)). Триггер — первая генерация потока
+     | занятий курса (`ScheduleGenerator::generate()`) для курса без
+     | `zoom_meeting_id`; идемпотентно — повторная генерация встречу не дублирует.
+     | ВЫКЛ по умолчанию — deploy-рубильник: пока флаг OFF,
+     | `ScheduleGenerator` ведёт себя байт-в-байт как раньше (ссылка занятия
+     | берётся из уже сохранённого `Course::zoom_link`, если он есть, иначе
+     | пусто — как до этого хэндоффа), `ZoomService::createMeeting()` вызывается
+     | только при ВКЛ. Включение — ZOOM_AUTO_CREATE=true + config:cache после
+     | ревью (креды OAuth уже настроены, см. `services.zoom`).
+     */
+    'zoom_auto_create' => (bool) env('ZOOM_AUTO_CREATE', false),
 ];

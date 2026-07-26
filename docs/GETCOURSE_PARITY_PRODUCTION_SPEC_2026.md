@@ -53,7 +53,7 @@ demoted GC-A3 (§1 ⚠) under audit.
 |---|---|---|---|---|
 | **GC-B2** attendance dashboard | B | **DONE** | — shipped | Flag [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) line 193, default `false`; [`AttendanceDashboard.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/AttendanceDashboard.php); `ClassAttendanceService::dashboard()`; 3 tests; commit `cfef7e2` = [PR #444](https://github.com/gasyoun/Systema-Sanscriticum/pull/444). Audit confirmed the ticket's falsifiable constraint (reuse `forSchedule()` row-wise, no new counting logic) holds. |
 | **GC-B3** webinar provider seam | B | ⚠ **PARTIAL** (roadmap says "Later"; audit demoted from DONE) | 2 — finish | [`WebinarProvider.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Webinar/WebinarProvider.php), `ZoomService implements`, BBB skeleton, `meeting_*` alias columns — all shipped in `b4d8a2c` = [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549). **Three gaps:** no `webinar_provider_abstraction` flag; the container binding has **zero consumers** ([`ZoomWebhookController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Webhooks/ZoomWebhookController.php) line 100 resolves the concrete `ZoomService`); no `services.bbb` block, so `isConfigured()` is structurally always false. |
-| **GC-B1** per-schedule Zoom auto-create | B | **REMOVED** — live `@DECIDE` | none | Removed in [`eda8059`](https://github.com/gasyoun/Systema-Sanscriticum/commit/eda8059e8ae16086ee0ef22f6b78c4a91def3b71) (27-06-2026) for the single-course-link model. `ZoomService::createMeeting` throws, citing the open decision; `test_zoom_create_meeting_stays_removed_per_gc_b1` **locks the absence**. Zero writes to `zoom_join_url`/`zoom_start_url` anywhere. See §7 F1. |
+| **GC-B1** one recurring Zoom meeting per course | B | **DONE** (26-07-2026, H1642) | 2 — shipped | Rescoped 19-07-2026 (MG, weekly `@DECIDE` → option (b)): auto-create ONE recurring meeting **per course**, never per `Schedule` — the single-course-link model (`eda8059`, 27-06-2026) stands. `ZoomService::createMeeting()` now makes a real Zoom API call (`type=8` recurring); trigger is the first schedule-stream generation (`ScheduleGenerator::generate()`) for a course without `zoom_meeting_id`, idempotent on that column. Flag `zoom_auto_create` (default `false`). Tests: `ZoomAutoCreateTest` (5) + rescoped `WebinarProviderSeamTest::test_create_meeting_requires_configured_credentials`. See §7 F1. |
 | **GC-C1** `Deal` + kanban | C | **DONE** (25-07-2026, H1641) | 2 — shipped | F2 ruled by MG 21-07-2026 → separate `Deal` entity. Shipped: [`Deal`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Deal.php)/[`DealStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealStage.php)/[`DealTransition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealTransition.php), `deals`/`deal_stages`/`deal_transitions` migrations, [`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php), flag `crm_pipeline_board` (default `false`). `LeadKanbanBoard`/`LeadStage` (H451) deliberately **untouched** — see §7 F9, the one question this ticket did NOT resolve. |
 | **GC-C2** manager sales attribution | C | **NOT_BUILT** | **2** (§4) | `manager_sales_report` absent; `OrderPaymentConversionService` groups by course and channel only (lines 223, 246). Across the whole tree `assigned_to` is read by **zero** reports. |
 | **GC-C3** `FollowUpTask` | C | **NOT_BUILT** | 3 — tail | `FollowUpTask` occurs exactly once repo-wide: the roadmap line defining it. Flag `crm_reminders` **does** exist (line 67, default `false`) but gates the pre-existing [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php), not this ticket. See §7 F6. |
@@ -68,7 +68,8 @@ demoted GC-A3 (§1 ⚠) under audit.
 
 **Wave map.** Wave 1 = this document (no parity feature ships — R-1's accepted cost).
 **Wave 2 = GC-C1 → GC-C2**, plus the small GC-B3 finish. Wave 3 = GC-D1 → GC-D3 → GC-D2 → GC-D4 →
-GC-C3. Wave 4 = GC-A1 → GC-A2. Later = GC-A3, GC-A4. GC-B1 has no wave until a human rules.
+GC-C3. Wave 4 = GC-A1 → GC-A2. Later = GC-A3, GC-A4. GC-B1 shipped 26-07-2026 (H1642), outside the
+numbered waves — it was rescoped and queued independently once F1 was ruled (see bookkeeping below).
 
 This preserves H438 §4's ordering (cheap webinar wins → CRM → quizzes → marketing) and H438 §5.6's
 ruling that CRM precedes quizzes. **GC-C1 as wave-2 head is a settled ruling and is not re-opened
@@ -86,10 +87,10 @@ still `NOT_BUILT`.
 docs — the week-long stall was a propagation gap, not an open question.
 [`DECISIONS_roadmap_forks_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md)
 §R2 is now marked superseded. **Wave 2 head GC-C1 has shipped** (this pass); GC-C2 is now the head
-of the remaining wave-2 work. GC-B1 is rescoped and queued as
-[H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md),
-still `REMOVED` in the tree until that ships. One genuinely new fork opened in the process: **F9**
-(the fate of the now-parallel `LeadKanbanBoard`).
+of the remaining wave-2 work. **GC-B1 has now shipped too** (26-07-2026,
+[H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md)) —
+one recurring meeting per course, behind `zoom_auto_create` (default `false`). One genuinely new
+fork opened in the process: **F9** (the fate of the now-parallel `LeadKanbanBoard`).
 
 ---
 
@@ -389,12 +390,13 @@ surfacing no open question would have skipped the analysis. Nothing below is pre
 
 **F1 · GC-B1 — per-schedule Zoom auto-create vs. the single-link model. ✅ RESOLVED 19-07-2026
 (MG, weekly `@DECIDE` sheet) → option (b): rescope to "auto-create ONE recurring meeting per
-course", matching the shipped single-link model.** Per-schedule `ZoomService::createMeeting()` is
-NOT re-added and the 27-06-2026 rewrite stands. The ruling sat unapplied in
-[`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)
-for a week; build queued as
-[H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md).
-Until that ships the tree state below still holds. _Original framing, kept for the record:_
+course", matching the shipped single-link model. ✅ BUILT 26-07-2026
+([H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md)).**
+Per-schedule `ZoomService::createMeeting()` is NOT re-added and the 27-06-2026 rewrite stands —
+`createMeeting()` now performs a real Zoom API call (`type=8` recurring), but the only caller is
+`ScheduleGenerator::generate()` at the point where a course's schedule stream is first generated
+and the course has no `zoom_meeting_id` yet; idempotent on that column. Flag `zoom_auto_create`
+(default `false`). _Original framing, kept for the record:_
 
 Auto-create was built and deliberately removed in
 [`eda8059`](https://github.com/gasyoun/Systema-Sanscriticum/commit/eda8059e8ae16086ee0ef22f6b78c4a91def3b71);

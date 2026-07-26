@@ -7,6 +7,7 @@ namespace App\Services\Schedule;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
+use App\Services\Zoom\ZoomService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ final class ScheduleGenerator
 
     public function __construct(
         private readonly TemplateRenderer $renderer,
+        private readonly ZoomService $zoom,
     ) {}
 
     /**
@@ -31,9 +33,25 @@ final class ScheduleGenerator
             ? $config->startDate->copy()
             : $today->copy();
 
+        $course = $config->courseId ? Course::find($config->courseId) : null;
+
+        // GC-B1 rescope (H1642): «первая генерация потока» — единственный трек,
+        // за которым закреплено авто-создание. Если явной ссылки в форме нет,
+        // курс есть и ещё БЕЗ своей recurring-встречи — создаём ОДНУ на курс
+        // (никогда — на Schedule). Идемпотентно: наличие zoom_meeting_id — маркер
+        // «встреча уже есть», второй раз не создаём. Флаг ВЫКЛ ⇒ этот блок
+        // no-op, поведение байт-в-байт как до H1642.
+        if (
+            $config->link === null
+            && $course !== null
+            && ! $course->zoom_meeting_id
+            && config('features.zoom_auto_create', false)
+        ) {
+            $this->autoCreateCourseMeeting($course);
+        }
+
         // Ссылка занятия: явная из модалки, иначе единая Zoom-ссылка курса.
-        $link = $config->link
-            ?: ($config->courseId ? Course::find($config->courseId)?->zoom_link : null);
+        $link = $config->link ?: $course?->zoom_link;
 
         return DB::transaction(function () use ($config, $today, $cutoff, $link) {
             // 1. preserve: режем только будущие; иначе — всё по группе
@@ -109,5 +127,22 @@ final class ScheduleGenerator
 
             return $created;
         });
+    }
+
+    /**
+     * GC-B1 rescope (H1642): создаёт ОДНУ recurring Zoom-встречу на курс и
+     * сохраняет через `Course::setZoomLinkAttribute()` — meeting_id из
+     * `join_url` выводится тем же мутатором, что и при ручном вводе в
+     * Filament, парсер не дублируется. Исключение Zoom API намеренно
+     * пробрасывается наружу (как и все остальные методы ZoomService) —
+     * `ListSchedules::runGeneration()` уже ловит `\Throwable` и показывает
+     * админу danger-уведомление вместо тихого проглатывания.
+     */
+    private function autoCreateCourseMeeting(Course $course): void
+    {
+        $meeting = $this->zoom->createMeeting(['topic' => $course->title]);
+
+        $course->zoom_link = $meeting['join_url'];
+        $course->save();
     }
 }

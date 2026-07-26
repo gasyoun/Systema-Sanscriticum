@@ -118,16 +118,52 @@ class ZoomService implements WebinarProvider
     }
 
     /**
-     * Контракт WebinarProvider (GC-B3). Авто-создание Zoom-встреч было построено
-     * и СОЗНАТЕЛЬНО удалено 27-06-2026 в пользу единого ручного потока; повторное
-     * включение — открытый @DECIDE GC-B1 (rescope). Шов существует, драйвер Zoom
-     * намеренно его не реализует — не восстанавливать без руления GC-B1.
+     * Контракт WebinarProvider (GC-B3). Реализовано за флагом `zoom_auto_create`
+     * (H1642, GC-B1 rescope, MG-руление 19-07-2026 → опция (b)): создаём РОВНО
+     * ОДНУ recurring-встречу — единый-ручной-поток модель (`eda8059`,
+     * 27-06-2026) стоит, per-schedule авто-создание НЕ возвращается. Вызывающая
+     * сторона (`ScheduleGenerator`) отвечает за идемпотентность (не звать, если
+     * у курса уже есть `zoom_meeting_id`) — этот метод сам не проверяет курс,
+     * он не знает о моделях.
+     *
+     * `type = 8` (recurring, без фиксированного времени) — Zoom не требует
+     * расписания повторов для этого типа; жёстко фиксируем, параметр `type` в
+     * $params игнорируется, чтобы вызов не мог случайно создать одноразовую
+     * встречу.
+     *
+     * @param  array<string, mixed>  $params  минимум 'topic'; необязательно 'settings'
+     * @return array{id: string, join_url: string, start_url?: string}
      */
     public function createMeeting(array $params): array
     {
-        throw new RuntimeException(
-            'Zoom: авто-создание встреч удалено 27-06-2026 (единый ручной поток); включение — @DECIDE GC-B1.'
-        );
+        $this->assertConfigured();
+
+        $payload = array_merge([
+            'settings' => [
+                'join_before_host' => true,
+                'waiting_room' => false,
+            ],
+        ], $params, [
+            'type' => 8,
+        ]);
+
+        $response = $this->apiRequest()->post(self::API_BASE.'/users/me/meetings', $payload);
+
+        if (! $response->successful()) {
+            throw new RuntimeException("Zoom: не удалось создать встречу (HTTP {$response->status()})");
+        }
+
+        $id = $response->json('id');
+        $joinUrl = $response->json('join_url');
+        if ($id === null || ! is_string($joinUrl) || $joinUrl === '') {
+            throw new RuntimeException('Zoom: ответ создания встречи без id/join_url');
+        }
+
+        return array_filter([
+            'id' => (string) $id,
+            'join_url' => $joinUrl,
+            'start_url' => is_string($response->json('start_url')) ? $response->json('start_url') : null,
+        ], static fn ($v) => $v !== null);
     }
 
     /** Контракт WebinarProvider: делегирует существующей выгрузке участников (Reports API). */
