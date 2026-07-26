@@ -553,10 +553,26 @@ the blind spot:
   **not** detected. Cheap no-schema hardening (also inspecting the *old* value,
   `$status[0]`) is folded into the queued fix below.
 
-A robust fix is a dedicated `payments.first_paid_at` column with a backfill — a
-**schema change**, which this wave must not author (programme ruling D16). Queued as
-its own handoff instead; until then the limitation stands documented here and in the
-metadoc.
+**Fix (H1645, merged):** a nullable `payments.first_paid_at` timestamp, stamped once
+(`fireOnPaid`, `updateQuietly` so no observer recurses) on the first transition into
+`PAID_STATUSES` — including create-as-paid — and written directly into the create
+payloads of the three `withoutEvents` paths (silent `PromiseFulfillment::fulfil()`,
+`BlockAccessMaterializer`, `ConditionalAccessGranter`) that fire no `created` event at
+all. `hasPriorPaidTransition()` now checks `first_paid_at !== null` first, falling back
+to the audit walk while the column is unbackfilled; the audit walk itself was hardened
+to inspect **both** sides of each status diff (`$status[0]` and `$status[1]`), so a
+`paid→failed` row now proves prior-paid on its own (previously only the new value was
+checked). Both changes make detection a strict superset of the old behavior, so no new
+feature flag was needed — the resurrection guard's existing `TOCHKA_WEBHOOK_GUARD` flag
+still gates the only behavior change. A one-shot idempotent, dry-run-by-default backfill
+command (`php artisan payments:backfill-first-paid-at [--apply]`) fills the column for
+existing rows from the earliest audit evidence, or from `created_at` when a payment is
+currently paid with zero audit trail. **The genuinely unrecoverable residue stays
+documented, not silently dropped:** a payment paid *and* reversed entirely before
+08-06-2026, with zero rows in `payment_audits`, has no evidence anywhere and stays
+`first_paid_at = null` forever — the command prints its count (not rows) on every run.
+The migration and backfill command are **not** run against prod by an agent (D16) — see
+[DEPLOY_QUEUE.md row 61](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
 
 ---
 
