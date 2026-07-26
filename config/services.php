@@ -86,6 +86,11 @@ return [
         // webhook-forward паттерн, что monthly_schedule/clip_extract.
         'social_post_webhook' => env('N8N_SOCIAL_POST_WEBHOOK'),
         'social_post_secret' => env('N8N_SOCIAL_POST_SECRET'),
+        // VK/ORS content calendar Wave 5 auto-pilot (H1568): content:publish-due
+        // posts one due ContentCalendarSlot at a time — same webhook-forward
+        // pattern as monthly_schedule/social_post, VK-only (D10, no TG mirror).
+        'calendar_post_webhook' => env('N8N_CALENDAR_POST_WEBHOOK'),
+        'calendar_post_secret' => env('N8N_CALENDAR_POST_SECRET'),
     ],
 
     'telegram' => [

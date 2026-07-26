@@ -192,6 +192,64 @@ ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips
 
 ---
 
+# n8n: VK content calendar auto-pilot (H1568, Wave 5)
+
+Воркфлоу [`vk-calendar-post.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/vk-calendar-post.workflow.json)
+принимает один готовый пост из Laravel и публикует его на стене сообщества
+ВКонтакте (текст, без картинки — VK-only per D10, TG-зеркала здесь нет в
+отличие от social_post W2).
+
+## Кто инициирует
+
+Laravel — команда `content:publish-due` (планировщик: **ежечасно**, см.
+`app/Console/Kernel.php`), реализация в `App\Services\Content\CalendarPublishService`.
+Каждый час выбирает все `content_calendar_slots` со статусом `scheduled` и
+`publish_at <= now()`, шлёт POST на вебхук ПО ОДНОМУ на слот. Прод-инертно,
+пока `features.content_calendar_autopilot` (`CONTENT_CALENDAR_AUTOPILOT`) OFF
+(дефолт) — команда делает `no-op`, HTTP не уходит.
+
+## Payload, который шлёт Laravel
+
+```json
+{
+  "action": "vk_calendar_post",
+  "calendar_slot_id": 42,
+  "slot_type": "evergreen",
+  "text_vk": "…",
+  "source_kind": "vk_ors_post",
+  "source_ref": "wall-88831040_12345",
+  "publish_at": "2026-08-01T09:00:00+00:00"
+}
+```
+
+Заголовок `X-Webhook-Secret` = `N8N_CALENDAR_POST_SECRET`.
+
+## Успех / отказ
+
+`wall.post` успешен → Laravel помечает слот `published` и любой связанный
+`ContentCandidate` тоже `published`. Не-2xx ответ → слот **остаётся**
+`scheduled` и будет повторён на следующем часовом тике — тихого дропа нет.
+
+## Настройка после импорта
+
+1. **Импорт** `vk-calendar-post.workflow.json` (Workflows → Import from File).
+2. **VK**: в ноде `VK: wall.post` заменить `REPLACE_VK_GROUP_ID` (числовой ID
+   сообщества) и `REPLACE_VK_GROUP_TOKEN` (community access token с правом
+   `wall`). `owner_id` = `-<GROUP_ID>` (минус уже стоит в шаблоне).
+3. **Активировать**, скопировать *Production* URL вебхука.
+4. **Laravel** `.env`:
+   ```
+   N8N_CALENDAR_POST_WEBHOOK=https://<ваш-n8n>/webhook/vk-calendar-post
+   N8N_CALENDAR_POST_SECRET=<любой_секрет>
+   ```
+   `php artisan config:cache`. Секрет — в заголовке `X-Webhook-Secret`, на
+   ноде Webhook включите *Header Auth* с тем же значением.
+5. Только после смоука на staging: `CONTENT_CALENDAR_AUTOPILOT=true` →
+   `php artisan config:clear`. Ручной прогон одного тика:
+   `php artisan content:publish-due`.
+
+---
+
 # Клипы лекций (эксплуатация)
 
 Пошаговая **установка** n8n/ffmpeg/VK для Ивана: [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666).
