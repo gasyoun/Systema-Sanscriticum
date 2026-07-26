@@ -1,0 +1,235 @@
+name: Uptime — samskrte.ru
+
+# Внешний монитор прода. Работает на инфраструктуре GitHub, а НЕ на самом
+# сервере, поэтому переживает его падение — проверка, запущенная на самой
+# машине, о собственной смерти сообщить не может.
+#
+# Заведён после простоя 24–26.07.2026 (issue #730): сайт лежал двое суток,
+# и об этом никто не знал. Причина — контейнер был выключен; снаружи это
+# выглядело как «ping проходит, весь TCP закрыт», потому что IP остаётся
+# за хостом Proxmox.
+#
+# ── Что нужно настроить руками ОДИН раз ───────────────────────────────────
+# Settings → Secrets and variables → Actions → New repository secret:
+#   TELEGRAM_BOT_TOKEN — токен бота от @BotFather
+#   TELEGRAM_CHAT_ID   — id чата или группы, куда слать тревогу
+# Без этих секретов монитор всё равно работает: он заведёт issue, просто не
+# пришлёт сообщение в Telegram.
+#
+# ── Как проверить, что тревога реально доходит ────────────────────────────
+# Actions → этот workflow → Run workflow → force_alert = true.
+# Ненастроенное оповещение хуже отсутствующего: оно создаёт ложное спокойствие.
+#
+# ── Защита от спама ───────────────────────────────────────────────────────
+# Состояние хранится в самом issue с меткой uptime-alert:
+#   упал  → создаётся issue + одно сообщение в Telegram;
+#   лежит → монитор молчит (issue уже открыт);
+#   встал → issue закрывается + одно сообщение с длительностью простоя.
+# То есть за пятичасовой простой придёт ровно два сообщения, а не тридцать.
+#
+# Прогон помечается упавшим, когда сайт недоступен, — GitHub сам шлёт письмо
+# о падении планового workflow, это резервный канал оповещения помимо Telegram.
+#
+# Репозиторий публичный, поэтому минуты Actions не расходуются.
+
+on:
+  schedule:
+    # Раз в 10 минут. Планировщик GitHub не точен и под нагрузкой
+    # опаздывает на 5–15 минут — для «сайт лежит» этого достаточно.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      force_alert:
+        description: 'Прогнать путь тревоги не трогая сайт (проверка Telegram)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime-samskrte
+  cancel-in-progress: false
+
+env:
+  TARGET_URL: https://samskrte.ru/
+  # Проверяем не только код ответа, но и живой текст на странице: это ловит
+  # случай «отвечает 200, а отдаёт пустую страницу или заглушку хостера».
+  KEYWORD: Общество ревнителей санскрита
+  ALERT_LABEL: uptime-alert
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  probe:
+    name: Проба сайта
+    runs-on: ubuntu-latest
+    steps:
+      - name: Проверить доступность и содержимое
+        id: probe
+        env:
+          FORCE_ALERT: ${{ inputs.force_alert }}
+        run: |
+          set -uo pipefail
+
+          if [ "${FORCE_ALERT:-}" = "true" ]; then
+            echo "status=down" >> "$GITHUB_OUTPUT"
+            echo "detail=ТЕСТОВЫЙ прогон (force_alert) — сайт не проверялся" >> "$GITHUB_OUTPUT"
+            echo "::notice::Тестовый прогон тревоги"
+            exit 0
+          fi
+
+          # Три попытки: одиночный сбой сети на раннере не должен
+          # поднимать ложную тревогу.
+          status=down
+          detail=""
+          for attempt in 1 2 3; do
+            body=$(mktemp)
+            err=$(mktemp)
+            code=$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' "$TARGET_URL" 2>"$err") || code=000
+
+            if [ "$code" = "200" ] && grep -qF "$KEYWORD" "$body"; then
+              status=up
+              detail="HTTP 200, ключевое слово на месте (попытка $attempt)"
+              break
+            fi
+
+            if [ "$code" = "200" ]; then
+              detail="HTTP 200, но ключевого слова на странице нет"
+            elif [ "$code" = "000" ]; then
+              detail="соединение не установлено: $(tr -d '\n\"' < "$err" | head -c 160)"
+            else
+              detail="HTTP $code"
+            fi
+
+            if [ "$attempt" != "3" ]; then sleep 20; fi
+          done
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "detail=$detail" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Проба: $status"
+            echo "$detail"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Срок действия TLS-сертификата
+        if: ${{ inputs.force_alert != true }}
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          host=$(echo "$TARGET_URL" | sed -E 's#https?://##; s#/.*##')
+          end=$(echo | openssl s_client -servername "$host" -connect "$host:443" 2>/dev/null \
+                | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+          if [ -z "$end" ]; then
+            echo "Сертификат прочитать не удалось" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+          echo "TLS-сертификат истекает через $days дн. ($end)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$days" -lt 14 ]; then
+            echo "::warning::TLS-сертификат samskrte.ru истекает через $days дн."
+          fi
+
+      - name: Найти открытую тревогу
+        id: existing
+        run: |
+          set -uo pipefail
+          gh label create "$ALERT_LABEL" --color B60205 \
+            --description "Автоматическая тревога внешнего монитора доступности" 2>/dev/null || true
+          number=$(gh issue list --label "$ALERT_LABEL" --state open --limit 1 \
+                    --json number --jq '.[0].number // empty' 2>/dev/null || echo "")
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # ── САЙТ УПАЛ, тревоги ещё нет → завести issue ────────────────────────
+      - name: Завести issue о простое
+        id: open_issue
+        if: steps.probe.outputs.status == 'down' && steps.existing.outputs.number == ''
+        env:
+          DETAIL: ${{ steps.probe.outputs.detail }}
+        run: |
+          set -uo pipefail
+          stamp=$(date -u '+%d-%m-%Y %H:%M')
+
+          body=$(mktemp)
+          {
+            echo "Внешний монитор не смог получить рабочую страницу."
+            echo
+            echo "**Что увидел:** ${DETAIL}"
+            echo "**Когда:** ${stamp} UTC"
+            echo "**Проверял:** \`${TARGET_URL}\` с раннера GitHub, три попытки с интервалом 20 с"
+            echo
+            echo "## Куда смотреть"
+            echo
+            echo "Это LXC-контейнер на Proxmox. Если снаружи \`ping\` проходит, а весь"
+            echo "TCP закрыт — контейнер, скорее всего, **выключен**: IP остаётся за"
+            echo "хостом, принимать TCP некому. Проверять надо на хосте, а не внутри."
+            echo
+            echo '```'
+            echo "curl -sI --max-time 15 https://samskrte.ru/"
+            echo "ssh root@193.232.229.92 'uptime; df -h; systemctl --failed'"
+            echo '```'
+            echo
+            echo "Разбор прошлого такого простоя: #730"
+            echo
+            echo "_Issue заведён автоматически и закроется сам, как только сайт ответит._"
+          } > "$body"
+
+          url=$(gh issue create \
+                 --title "🔴 samskrte.ru недоступен (${stamp} UTC)" \
+                 --label "$ALERT_LABEL" \
+                 --body-file "$body")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Заведено: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Сообщить в Telegram о простое
+        if: steps.probe.outputs.status == 'down' && steps.existing.outputs.number == ''
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DETAIL: ${{ steps.probe.outputs.detail }}
+          ISSUE_URL: ${{ steps.open_issue.outputs.url }}
+        run: |
+          set -uo pipefail
+          if [ -z "${TOKEN:-}" ] || [ -z "${CHAT:-}" ]; then
+            echo "::warning::Секреты Telegram не заданы — сообщение не отправлено, issue всё равно заведён"
+            exit 0
+          fi
+          text=$(printf '🔴 samskrte.ru недоступен\n%s\n%s UTC\n%s' \
+                   "$DETAIL" "$(date -u '+%d-%m-%Y %H:%M')" "$ISSUE_URL")
+          curl -sS --max-time 20 -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${CHAT}" \
+            --data-urlencode "text=${text}" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null
+
+      # ── САЙТ ОТВЕЧАЕТ, но тревога открыта → закрыть ───────────────────────
+      - name: Закрыть тревогу и сообщить о восстановлении
+        if: steps.probe.outputs.status == 'up' && steps.existing.outputs.number != ''
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DETAIL: ${{ steps.probe.outputs.detail }}
+          NUMBER: ${{ steps.existing.outputs.number }}
+        run: |
+          set -uo pipefail
+          opened=$(gh issue view "$NUMBER" --json createdAt --jq '.createdAt')
+          mins=$(( ( $(date +%s) - $(date -d "$opened" +%s) ) / 60 ))
+
+          gh issue comment "$NUMBER" \
+            --body "✅ Сайт отвечает: ${DETAIL}. Простой длился ~${mins} мин. Закрываю."
+          gh issue close "$NUMBER"
+          echo "Закрыт issue #${NUMBER}, простой ~${mins} мин" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "${TOKEN:-}" ] || [ -z "${CHAT:-}" ]; then exit 0; fi
+          curl -sS --max-time 20 -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${CHAT}" \
+            --data-urlencode "text=✅ samskrte.ru снова отвечает. Простой ~${mins} мин." \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null
+
+      - name: Провалить прогон, если сайт лежит
+        if: steps.probe.outputs.status == 'down'
+        env:
+          DETAIL: ${{ steps.probe.outputs.detail }}
+        run: |
+          echo "Сайт недоступен: ${DETAIL}"
+          exit 1
