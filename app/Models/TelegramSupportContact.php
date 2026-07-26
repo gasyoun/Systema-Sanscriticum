@@ -30,7 +30,11 @@ class TelegramSupportContact extends Model
             }
 
             $chat = $contact->chat;
-            if ($chat && $chat->linked_user_id !== $contact->linked_user_id) {
+            // Multi-user groups: не перетирать chat.linked_user_id последним отправителем.
+            // Линк sender→User живёт на contact; chat.linked_user_id — только private.
+            if ($chat
+                && ($chat->type === null || $chat->type === 'private')
+                && $chat->linked_user_id !== $contact->linked_user_id) {
                 $chat->forceFill(['linked_user_id' => $contact->linked_user_id])->save();
             }
         });

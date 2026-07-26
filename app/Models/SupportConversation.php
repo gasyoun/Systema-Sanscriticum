@@ -22,6 +22,11 @@ class SupportConversation extends Model
 
     public const STATUS_CLOSED = 'closed';
 
+    /** Ops-очередь: тех. вопросы из userbot (ЛС/учебные группы). */
+    public const QUEUE_TECHNICAL = 'technical';
+
+    public const QUEUE_GENERAL = 'general';
+
     protected $fillable = [
         'user_id',
         'guest_token',
@@ -38,8 +43,12 @@ class SupportConversation extends Model
         'contact_phone',
         'lead_captured_at',
         'status',
+        'queue',
         'subject',
         'assigned_to',
+        'source_telegram_chat_id',
+        'source_telegram_message_id',
+        'source_chat_type',
         'last_message_at',
         'closed_at',
     ];
@@ -54,6 +63,11 @@ class SupportConversation extends Model
     public function isOpen(): bool
     {
         return $this->status !== self::STATUS_CLOSED;
+    }
+
+    public function isTechnical(): bool
+    {
+        return $this->queue === self::QUEUE_TECHNICAL;
     }
 
     /** Тред анонимного веб-посетителя (нет user_id, есть session-токен, H536). */

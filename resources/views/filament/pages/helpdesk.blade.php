@@ -409,19 +409,20 @@
                 <span style="background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px;">{{ count($usersWithChats) }}</span>
             </div>
 
-            {{-- Вкладки статусов: Входящие (открыт/без ответственного) · Мои · Решённые --}}
+            {{-- Вкладки: Входящие · Мои · Техника · Решённые --}}
             @php $tabCounts = $this->tabCounts; @endphp
             <div class="chat-tabs">
                 @foreach ([
                     'inbox' => 'Входящие',
                     'mine' => 'Мои',
+                    'tech' => 'Техника',
                     'resolved' => 'Решенные',
                 ] as $tabKey => $tabLabel)
                     <button type="button"
                         wire:click="switchTab('{{ $tabKey }}')"
                         class="chat-tab {{ $activeTab === $tabKey ? 'active' : '' }}">
                         {{ $tabLabel }}
-                        <span class="chat-tab-count">{{ $tabCounts[$tabKey] }}</span>
+                        <span class="chat-tab-count">{{ $tabCounts[$tabKey] ?? 0 }}</span>
                     </button>
                 @endforeach
             </div>
@@ -502,7 +503,7 @@
                         </button>
                         @php $thread = $this->thread; @endphp
                         @if($thread)
-                            <div style="font-size: 12px; margin-top: 2px;">
+                            <div style="font-size: 12px; margin-top: 2px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
                                 <span class="thread-status {{ $thread->status }}">
                                     @switch($thread->status)
                                         @case('open') Открыт @break
@@ -510,6 +511,14 @@
                                         @default Закрыт
                                     @endswitch
                                 </span>
+                                @if($thread->queue === \App\Models\SupportConversation::QUEUE_TECHNICAL)
+                                    <span style="background: #7c3aed; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px;">Техника</span>
+                                    @if($thread->source_chat_type && $thread->source_chat_type !== 'private')
+                                        <span style="color: #6b7280;">группа · peer {{ $thread->source_telegram_chat_id }}</span>
+                                    @elseif($thread->source_chat_type === 'private')
+                                        <span style="color: #6b7280;">ЛС</span>
+                                    @endif
+                                @endif
                             </div>
                         @endif
                         @if(config('features.crm_cockpit'))

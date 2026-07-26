@@ -132,6 +132,16 @@ return [
         // (и SupportObservability, и telegram-support:healthcheck читают отсюда —
         // один порог, не два разных магических числа).
         'stale_after_minutes' => (int) env('TELEGRAM_SUPPORT_STALE_AFTER_MINUTES', 15),
+        // Очередь «Техника» — канон в config/support_tech.php; зеркало здесь
+        // для чтения из services.telegram_support.* (см. TechnicalIssueRouter).
+        'tech_assignee_user_id' => env('SUPPORT_TECH_ASSIGNEE_USER_ID')
+            ? (int) env('SUPPORT_TECH_ASSIGNEE_USER_ID')
+            : null,
+        'tech_group_peers' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TELEGRAM_SUPPORT_TECH_GROUP_PEERS', '')),
+        ))),
+        'username' => ltrim((string) env('TELEGRAM_SUPPORT_USERNAME', ''), '@') ?: null,
     ],
 
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).

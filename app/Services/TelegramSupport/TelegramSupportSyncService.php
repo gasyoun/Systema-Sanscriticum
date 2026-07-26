@@ -10,6 +10,7 @@ use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\SupportConversationManager;
+use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
@@ -26,6 +27,7 @@ class TelegramSupportSyncService
         private readonly SupportDailyRollupAggregator $aggregator,
         private readonly SupportContactUserAutoLinker $autoLinker,
         private readonly SupportConversationManager $conversations,
+        private readonly TechnicalIssueRouter $techRouter,
     ) {}
 
     public function sync(): array
@@ -248,6 +250,12 @@ class TelegramSupportSyncService
         $affectedDates->unique()->each(fn (string $date) => $this->aggregator->aggregateDate($date));
         $linkResult = $this->autoLinker->linkUnlinkedContacts();
 
+        // После авто-линка повторно прогоняем recent incoming без треда — sender мог
+        // только что получить linked_user_id.
+        if (($linkResult['linked'] ?? 0) > 0) {
+            $this->rerouteUnlinkedIncoming();
+        }
+
         return [
             'status' => 'ok',
             'synced' => $synced,
@@ -271,9 +279,15 @@ class TelegramSupportSyncService
         $linkedUser = $this->linkedUserFromTelegramId($telegramUserId);
 
         $chat = TelegramSupportChat::firstOrNew(['telegram_chat_id' => $chatId]);
+        $chatType = (string) ($payload['chat_type'] ?? $chat->type ?? 'private');
+        $isPrivate = $chatType === 'private';
+
         $chat->fill([
-            'linked_user_id' => $chat->linked_user_id ?: $linkedUser?->id,
-            'type' => (string) ($payload['chat_type'] ?? $chat->type ?? 'private'),
+            // Multi-user group: не цеплять linked_user_id к «последнему отправителю».
+            'linked_user_id' => $isPrivate
+                ? ($chat->linked_user_id ?: $linkedUser?->id)
+                : $chat->linked_user_id,
+            'type' => $chatType ?: ($chat->type ?? 'private'),
             'title' => $payload['chat_title'] ?? $chat->title,
             'username' => $payload['chat_username'] ?? $chat->username,
             'first_seen_at' => $chat->first_seen_at
@@ -287,6 +301,14 @@ class TelegramSupportSyncService
 
         $contact = $this->upsertContact($chat, $payload, $sentAt, $linkedUser, $direction);
         $responder = $this->resolveResponder($payload, $direction);
+
+        // reply-to-bot: если reply_to_msg_id — наше исходящее в этом чате.
+        if ($direction === 'incoming' && empty($payload['reply_to_bot'])) {
+            $replyToId = (int) ($payload['reply_to_msg_id'] ?? 0);
+            if ($replyToId > 0 && $this->isOutgoingSupportMessage($chatId, $replyToId)) {
+                $payload['reply_to_bot'] = true;
+            }
+        }
 
         $message = TelegramSupportMessage::updateOrCreate(
             [
@@ -319,13 +341,58 @@ class TelegramSupportSyncService
             );
         }
 
-        // Привязываем к операционному треду, если чат/контакт сведён с пользователем.
-        $linkedUserId = $chat->linked_user_id ?: $contact?->linked_user_id;
-        if ($linkedUserId) {
-            $this->conversations->recordMessage($linkedUserId, $message, $message->sent_at);
+        $linkedUserId = $contact?->linked_user_id
+            ?: ($isPrivate ? $chat->linked_user_id : null)
+            ?: $linkedUser?->id;
+
+        if ($direction === 'incoming') {
+            $this->techRouter->handleIncoming($message, $payload, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
+        } elseif ($linkedUserId && $isPrivate) {
+            // Исходящие в ЛС по-прежнему цепляем к треду (история ответов).
+            $this->conversations->recordMessage((int) $linkedUserId, $message, $message->sent_at);
         }
 
         return $message;
+    }
+
+    private function isOutgoingSupportMessage(int $telegramChatId, int $telegramMessageId): bool
+    {
+        return TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $telegramChatId)
+            ->where('telegram_message_id', $telegramMessageId)
+            ->where('direction', 'outgoing')
+            ->exists();
+    }
+
+    /**
+     * После auto-link: входящие без support_conversation_id, у которых contact
+     * уже linked — повторно отдать в TechnicalIssueRouter.
+     */
+    private function rerouteUnlinkedIncoming(): void
+    {
+        TelegramSupportMessage::query()
+            ->where('direction', 'incoming')
+            ->whereNull('support_conversation_id')
+            ->whereNotNull('telegram_support_contact_id')
+            ->whereHas('contact', fn ($q) => $q->whereNotNull('linked_user_id'))
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get()
+            ->each(function (TelegramSupportMessage $message): void {
+                $payload = is_array($message->raw_payload) ? $message->raw_payload : [];
+                $payload['direction'] = 'incoming';
+                $payload['text'] = $message->text;
+                $payload['telegram_chat_id'] = $message->telegram_chat_id;
+                $payload['telegram_message_id'] = $message->telegram_message_id;
+                $chatType = (string) ($payload['chat_type'] ?? $message->chat?->type ?? 'private');
+                $linkedUserId = $message->contact?->linked_user_id;
+                $this->techRouter->handleIncoming(
+                    $message,
+                    $payload,
+                    $linkedUserId ? (int) $linkedUserId : null,
+                    $chatType,
+                );
+            });
     }
 
     private function linkedUserFromTelegramId(mixed $telegramUserId): ?User
@@ -357,7 +424,8 @@ class TelegramSupportSyncService
         $this->backfillContactProfiles($client);
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
-        $dialogs = $this->limitedDialogs($client->getDialogIds());
+        $self = $this->resolveSelfIdentity($client);
+        $dialogs = $this->dialogsWithTechGroups($client, $this->limitedDialogs($client->getDialogIds()));
         $messages = [];
         $peerState = $account->sync_state['peers'] ?? [];
 
@@ -377,9 +445,10 @@ class TelegramSupportSyncService
                 'hash' => 0,
             ]);
             $usersById = $this->usersById($history['users'] ?? []);
+            $chatsById = $this->chatsById($history['chats'] ?? []);
 
             foreach (($history['messages'] ?? []) as $message) {
-                $normalized = $this->normalizeMadelineMessage($peer, $message, $usersById);
+                $normalized = $this->normalizeMadelineMessage($peer, $message, $usersById, $chatsById, $self);
                 if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
                     $messages[] = $normalized;
                 }
@@ -432,7 +501,7 @@ class TelegramSupportSyncService
      *
      * @return array{status: string, telegram_message_id?: int|null}
      */
-    public function deliverMessage(int $chatId, string $text): array
+    public function deliverMessage(int $chatId, string $text, ?int $replyToMsgId = null): array
     {
         if (! config('services.telegram_support.enabled')) {
             return ['status' => 'disabled'];
@@ -447,10 +516,15 @@ class TelegramSupportSyncService
             return ['status' => 'missing_madelineproto'];
         }
 
-        $result = $this->openClient($clientClass)->messages->sendMessage([
+        $params = [
             'peer' => $chatId,
             'message' => $text,
-        ]);
+        ];
+        if ($replyToMsgId !== null && $replyToMsgId > 0) {
+            $params['reply_to_msg_id'] = $replyToMsgId;
+        }
+
+        $result = $this->openClient($clientClass)->messages->sendMessage($params);
 
         return ['status' => 'ok', 'telegram_message_id' => $this->extractSentMessageId($result)];
     }
@@ -502,10 +576,17 @@ class TelegramSupportSyncService
     /**
      * @param  array<string, mixed>  $message
      * @param  array<int, array<string, mixed>>  $usersById
+     * @param  array<int, array<string, mixed>>  $chatsById
+     * @param  array{id: ?int, username: ?string}  $self
      * @return array<string, mixed>|null
      */
-    private function normalizeMadelineMessage(mixed $peer, array $message, array $usersById = []): ?array
-    {
+    private function normalizeMadelineMessage(
+        mixed $peer,
+        array $message,
+        array $usersById = [],
+        array $chatsById = [],
+        array $self = ['id' => null, 'username' => null],
+    ): ?array {
         if (! isset($message['id']) || ! isset($message['date'])) {
             return null;
         }
@@ -515,15 +596,19 @@ class TelegramSupportSyncService
             return null;
         }
 
-        $chatId = $this->extractTelegramId($message['peer_id'] ?? $peer);
+        $peerRef = $message['peer_id'] ?? $peer;
+        $chatId = $this->extractTelegramId($peerRef);
         if ($chatId === null) {
             return null;
         }
+        $chatType = $this->resolveChatType($peerRef, $chatId);
         $telegramUserId = $this->extractTelegramId($message['from_id'] ?? null);
-        if (! $telegramUserId && empty($message['out']) && $this->isPrivatePeer($message['peer_id'] ?? $peer)) {
+        if (! $telegramUserId && empty($message['out']) && $chatType === 'private') {
             $telegramUserId = $chatId;
         }
         $sender = $telegramUserId ? ($usersById[$telegramUserId] ?? null) : null;
+        $chatMeta = $chatsById[abs($chatId)] ?? $chatsById[$chatId] ?? null;
+        $replyToMsgId = $this->extractReplyToMsgId($message);
 
         return [
             'telegram_chat_id' => $chatId,
@@ -534,17 +619,187 @@ class TelegramSupportSyncService
             'sent_at' => CarbonImmutable::createFromTimestamp((int) $message['date'], config('app.timezone'))->toDateTimeString(),
             'contact_name' => $sender ? $this->displayName($sender) : null,
             'contact_username' => $sender['username'] ?? null,
+            'chat_type' => $chatType,
+            'chat_title' => $chatMeta['title'] ?? null,
+            'chat_username' => $chatMeta['username'] ?? null,
+            'reply_to_msg_id' => $replyToMsgId,
+            'mentioned_bot' => $this->messageMentionsSelf($message, $self),
             'raw_madeline' => $message,
         ];
     }
 
     private function isPrivatePeer(mixed $value): bool
     {
-        if (is_int($value) || is_string($value)) {
-            return true;
+        if (is_array($value)) {
+            return isset($value['user_id']);
         }
 
-        return is_array($value) && isset($value['user_id']);
+        if (is_int($value) || is_string($value)) {
+            return (int) $value > 0;
+        }
+
+        return false;
+    }
+
+    private function resolveChatType(mixed $peerRef, int $chatId): string
+    {
+        if (is_array($peerRef)) {
+            if (isset($peerRef['user_id'])) {
+                return 'private';
+            }
+            if (isset($peerRef['chat_id'])) {
+                return 'group';
+            }
+            if (isset($peerRef['channel_id'])) {
+                return 'supergroup';
+            }
+        }
+
+        if ($chatId > 0) {
+            return 'private';
+        }
+
+        // -100… → megagroup/channel peer id convention
+        if ($chatId <= -1000000000000) {
+            return 'supergroup';
+        }
+
+        return 'group';
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     */
+    private function extractReplyToMsgId(array $message): ?int
+    {
+        $reply = $message['reply_to'] ?? null;
+        if (is_array($reply) && isset($reply['reply_to_msg_id'])) {
+            return (int) $reply['reply_to_msg_id'];
+        }
+        if (isset($message['reply_to_msg_id'])) {
+            return (int) $message['reply_to_msg_id'];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     * @param  array{id: ?int, username: ?string}  $self
+     */
+    private function messageMentionsSelf(array $message, array $self): bool
+    {
+        $text = (string) ($message['message'] ?? '');
+        $username = $self['username'] ?: config('services.telegram_support.username');
+        $selfId = $self['id'] ?? null;
+
+        if ($username) {
+            $username = ltrim((string) $username, '@');
+            if ($username !== '' && preg_match('/@'.preg_quote($username, '/').'\b/iu', $text)) {
+                return true;
+            }
+        }
+
+        foreach ($message['entities'] ?? [] as $entity) {
+            if (! is_array($entity)) {
+                continue;
+            }
+            $type = (string) ($entity['_'] ?? '');
+            if ($type === 'messageEntityMentionName' && $selfId && (int) ($entity['user_id'] ?? 0) === (int) $selfId) {
+                return true;
+            }
+            if ($type === 'messageEntityMention' && $username) {
+                $offset = (int) ($entity['offset'] ?? 0);
+                $length = (int) ($entity['length'] ?? 0);
+                if ($length > 0) {
+                    $mention = ltrim(mb_substr($text, $offset, $length), '@');
+                    if (strcasecmp($mention, ltrim((string) $username, '@')) === 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array{id: ?int, username: ?string}
+     */
+    private function resolveSelfIdentity(object $client): array
+    {
+        try {
+            if (! method_exists($client, 'getSelf')) {
+                return ['id' => null, 'username' => config('services.telegram_support.username')];
+            }
+            $self = $client->getSelf();
+            if (! is_array($self)) {
+                return ['id' => null, 'username' => config('services.telegram_support.username')];
+            }
+
+            return [
+                'id' => isset($self['id']) ? (int) $self['id'] : null,
+                'username' => isset($self['username']) ? (string) $self['username'] : config('services.telegram_support.username'),
+            ];
+        } catch (Throwable) {
+            return ['id' => null, 'username' => config('services.telegram_support.username')];
+        }
+    }
+
+    /**
+     * Top-N dialogs ∪ allowlist учебных групп (config tech_group_peers).
+     *
+     * @param  array<int, mixed>  $dialogs
+     * @return array<int, mixed>
+     */
+    private function dialogsWithTechGroups(object $client, array $dialogs): array
+    {
+        $peers = config('services.telegram_support.tech_group_peers', []);
+        if (! is_array($peers) || $peers === []) {
+            return $dialogs;
+        }
+
+        $seen = [];
+        foreach ($dialogs as $dialog) {
+            $id = $this->extractTelegramId($dialog);
+            if ($id !== null) {
+                $seen[$id] = true;
+            }
+        }
+
+        foreach ($peers as $peer) {
+            $peer = is_string($peer) || is_int($peer) ? $peer : null;
+            if ($peer === null || $peer === '') {
+                continue;
+            }
+            $id = $this->extractTelegramId($peer);
+            if ($id !== null && isset($seen[$id])) {
+                continue;
+            }
+            // @username — оставляем как peer-строку; Madeline getHistory примет.
+            $dialogs[] = is_numeric($peer) ? (int) $peer : $peer;
+            if ($id !== null) {
+                $seen[$id] = true;
+            }
+        }
+
+        return $dialogs;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $chats
+     * @return array<int, array<string, mixed>>
+     */
+    private function chatsById(array $chats): array
+    {
+        $indexed = [];
+        foreach ($chats as $chat) {
+            if (isset($chat['id'])) {
+                $indexed[(int) $chat['id']] = $chat;
+            }
+        }
+
+        return $indexed;
     }
 
     /**

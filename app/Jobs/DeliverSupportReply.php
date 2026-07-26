@@ -49,7 +49,12 @@ class DeliverSupportReply implements ShouldQueue
             return; // уже доставлено
         }
 
-        $result = $sync->deliverMessage((int) $message->telegram_chat_id, (string) $message->text);
+        $replyTo = isset($payload['reply_to_msg_id']) ? (int) $payload['reply_to_msg_id'] : null;
+        $result = $sync->deliverMessage(
+            (int) $message->telegram_chat_id,
+            (string) $message->text,
+            $replyTo && $replyTo > 0 ? $replyTo : null,
+        );
 
         if (($result['status'] ?? null) !== 'ok') {
             // Окружение не готово (disabled/unconfigured/missing) — оставляем pending, не ретраим.

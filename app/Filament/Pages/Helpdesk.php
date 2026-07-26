@@ -67,7 +67,7 @@ class Helpdesk extends Page
 
     public $newMessage = '';
 
-    /** Активная вкладка списка диалогов: inbox | mine | resolved. */
+    /** Активная вкладка списка диалогов: inbox | mine | tech | resolved. */
     public $activeTab = 'inbox';
 
     /** Чья карточка открыта в модалке инфо (null = закрыта). */
@@ -89,11 +89,12 @@ class Helpdesk extends Page
 
     public function loadUsersList()
     {
-        // Диалоги — веб-чат ИЛИ импортированный TG-support, сведённый на пользователя.
+        // Диалоги — веб-чат ИЛИ импортированный TG-support ИЛИ ops-тред (техника из групп).
         $query = User::query()
             ->where(function ($query): void {
                 $query->whereHas('chatMessages')
-                    ->orWhereHas('linkedSupportChats');
+                    ->orWhereHas('linkedSupportChats')
+                    ->orWhereHas('supportConversations');
             })
             ->tap(fn ($query) => $this->applyTabFilter($query))
             ->withCount(['chatMessages as unread_count' => function ($query) {
@@ -144,6 +145,7 @@ class Helpdesk extends Page
      * операционный тред пользователя (SupportConversation):
      *   inbox    — не закрыт и без ответственного (или треда ещё нет) → «входящие»;
      *   mine     — назначен на текущего куратора;
+     *   tech     — queue=technical, открыт;
      *   resolved — тред закрыт.
      */
     protected function applyTabFilter($query): void
@@ -152,6 +154,9 @@ class Helpdesk extends Page
 
         match ($this->activeTab) {
             'mine' => $query->whereHas('latestSupportConversation', fn ($q) => $q->where('assigned_to', $meId)),
+            'tech' => $query->whereHas('latestSupportConversation', fn ($q) => $q
+                ->where('queue', SupportConversation::QUEUE_TECHNICAL)
+                ->where('status', '!=', SupportConversation::STATUS_CLOSED)),
             'resolved' => $query->whereHas('latestSupportConversation', fn ($q) => $q->where('status', SupportConversation::STATUS_CLOSED)),
             default => $query->where(function ($outer): void {
                 $outer->whereDoesntHave('supportConversations')
@@ -165,7 +170,7 @@ class Helpdesk extends Page
     /** Переключить вкладку списка диалогов и перечитать список. */
     public function switchTab(string $tab): void
     {
-        $this->activeTab = in_array($tab, ['inbox', 'mine', 'resolved'], true) ? $tab : 'inbox';
+        $this->activeTab = in_array($tab, ['inbox', 'mine', 'tech', 'resolved'], true) ? $tab : 'inbox';
         $this->loadUsersList();
     }
 
@@ -173,14 +178,16 @@ class Helpdesk extends Page
      * Счётчики диалогов по вкладкам (для бейджей над списком). Считаем по тем же
      * критериям, что и applyTabFilter, но без изменения активного списка.
      *
-     * @return array{inbox:int, mine:int, resolved:int}
+     * @return array{inbox:int, mine:int, tech:int, resolved:int}
      */
     public function getTabCountsProperty(): array
     {
         $meId = auth()->id();
 
         $base = fn () => User::query()->where(function ($query): void {
-            $query->whereHas('chatMessages')->orWhereHas('linkedSupportChats');
+            $query->whereHas('chatMessages')
+                ->orWhereHas('linkedSupportChats')
+                ->orWhereHas('supportConversations');
         });
 
         return [
@@ -191,6 +198,9 @@ class Helpdesk extends Page
                         ->whereNull('assigned_to'));
             })->count(),
             'mine' => $base()->whereHas('latestSupportConversation', fn ($q) => $q->where('assigned_to', $meId))->count(),
+            'tech' => $base()->whereHas('latestSupportConversation', fn ($q) => $q
+                ->where('queue', SupportConversation::QUEUE_TECHNICAL)
+                ->where('status', '!=', SupportConversation::STATUS_CLOSED))->count(),
             'resolved' => $base()->whereHas('latestSupportConversation', fn ($q) => $q->where('status', SupportConversation::STATUS_CLOSED))->count(),
         ];
     }
@@ -610,9 +620,10 @@ class Helpdesk extends Page
         $curator = auth()->user();
         $alias = $curator?->curatorDisplayName() ?? 'Куратор';
 
-        // Единый ответ (за флагом): если разговор живёт в импортированном TG-support,
-        // пишем туда, а не в веб-чат. Веб/бот-каналы идут прежним путём ниже.
-        if (config('features.support_unified_reply')) {
+        // Единый ответ (за флагом) ИЛИ очередь «Техника»: peer = source_telegram_chat_id.
+        $thread = app(SupportConversationManager::class)->currentFor($user);
+        $forceTechTg = $thread?->isTechnical() === true;
+        if (config('features.support_unified_reply') || $forceTechTg) {
             $router = app(SupportReplyService::class);
             if ($router->activeChannel($user) === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
                 && $router->replyViaSupportChannel($user, $this->newMessage, $curator)) {

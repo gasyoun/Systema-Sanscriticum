@@ -6,6 +6,7 @@ namespace App\Services\Support;
 
 use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
+use App\Models\SupportConversation;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
@@ -15,7 +16,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Маршрутизация ответа куратора в тот канал, где живёт разговор (см.
- * docs/support-subsystem-map.md). Активируется фича-флагом support_unified_reply.
+ * docs/support-subsystem-map.md). Активируется фича-флагом support_unified_reply
+ * или для очереди queue=technical (ответ всегда через userbot в source peer).
  *
  * Веб/бот-каналы отвечает как прежде сам Helpdesk (ChatMessage + bot API). Этот
  * сервис добавляет ветку для импортированного TG-support (userbot): пишет
@@ -35,6 +37,11 @@ class SupportReplyService
     public function activeChannel(User|int $user): string
     {
         $userId = $user instanceof User ? $user->id : $user;
+
+        $thread = $this->conversations->currentFor($userId);
+        if ($thread?->isTechnical() && $thread->source_telegram_chat_id) {
+            return self::CHANNEL_TELEGRAM_SUPPORT;
+        }
 
         $lastWebAt = ChatMessage::query()
             ->where('user_id', $userId)
@@ -56,14 +63,12 @@ class SupportReplyService
 
     /**
      * Записать ответ куратора в импортированный TG-support как исходящее и
-     * привязать к треду. Доставка через userbot пока не подключена (pending).
+     * привязать к треду. Peer: source_telegram_chat_id треда → иначе last TG msg.
      */
     public function replyViaSupportChannel(User $user, string $text, ?User $curator): ?TelegramSupportMessage
     {
-        $chat = TelegramSupportChat::query()
-            ->where('linked_user_id', $user->id)
-            ->orderByDesc('last_message_at')
-            ->first();
+        $thread = $this->conversations->currentFor($user);
+        $chat = $this->resolveTargetChat($user, $thread);
 
         if (! $chat) {
             return null;
@@ -76,12 +81,20 @@ class SupportReplyService
             return null;
         }
 
-        $message = $this->createPendingOutgoing($accountId, $chat, $text, $curator);
+        $replyToMsgId = $thread?->source_telegram_message_id
+            ? (int) $thread->source_telegram_message_id
+            : null;
+
+        $message = $this->createPendingOutgoing(
+            (int) $accountId,
+            $chat,
+            $text,
+            $curator,
+            $replyToMsgId,
+        );
 
         $this->conversations->recordMessage($user, $message, $message->sent_at);
 
-        // Реальную доставку через userbot ставим в очередь только когда он включён;
-        // иначе запись остаётся pending до настройки userbot (без пустого job'а).
         $queued = (bool) config('services.telegram_support.enabled');
         if ($queued) {
             DeliverSupportReply::dispatch($message->id);
@@ -91,10 +104,42 @@ class SupportReplyService
             'user_id' => $user->id,
             'chat_id' => $chat->telegram_chat_id,
             'message_id' => $message->id,
+            'reply_to_msg_id' => $replyToMsgId,
             'delivery_queued' => $queued,
         ]);
 
         return $message;
+    }
+
+    private function resolveTargetChat(User $user, ?SupportConversation $thread): ?TelegramSupportChat
+    {
+        if ($thread?->source_telegram_chat_id) {
+            $bySource = TelegramSupportChat::query()
+                ->where('telegram_chat_id', (int) $thread->source_telegram_chat_id)
+                ->first();
+            if ($bySource) {
+                return $bySource;
+            }
+        }
+
+        $lastMsg = TelegramSupportMessage::query()
+            ->with('chat')
+            ->where('direction', 'incoming')
+            ->where(function ($query) use ($user) {
+                $query->whereHas('chat', fn ($q) => $q->where('linked_user_id', $user->id))
+                    ->orWhereHas('contact', fn ($q) => $q->where('linked_user_id', $user->id));
+            })
+            ->orderByDesc('sent_at')
+            ->first();
+
+        if ($lastMsg?->chat) {
+            return $lastMsg->chat;
+        }
+
+        return TelegramSupportChat::query()
+            ->where('linked_user_id', $user->id)
+            ->orderByDesc('last_message_at')
+            ->first();
     }
 
     /**
@@ -108,6 +153,7 @@ class SupportReplyService
         TelegramSupportChat $chat,
         string $text,
         ?User $curator,
+        ?int $replyToMsgId = null,
     ): TelegramSupportMessage {
         for ($attempt = 0; ; $attempt++) {
             try {
@@ -121,7 +167,11 @@ class SupportReplyService
                     'responder_type' => 'human',
                     'responder_user_id' => $curator?->id,
                     'text' => $text,
-                    'raw_payload' => ['pending_delivery' => true, 'via' => 'helpdesk_unified_reply'],
+                    'raw_payload' => array_filter([
+                        'pending_delivery' => true,
+                        'via' => 'helpdesk_unified_reply',
+                        'reply_to_msg_id' => $replyToMsgId,
+                    ], static fn ($v) => $v !== null),
                     'sent_at' => now(),
                 ]);
             } catch (QueryException $e) {
