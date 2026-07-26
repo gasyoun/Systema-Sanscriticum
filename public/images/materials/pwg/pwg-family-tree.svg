@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Georgia, 'Times New Roman', serif">
+  <style>
+    .box { fill: #faf6ee; stroke: #8a6d3b; stroke-width: 1.5; rx: 8; }
+    .root { fill: #f0e6d2; stroke: #6b4f1d; stroke-width: 2.5; }
+    .t { fill: #2b2115; font-size: 17px; }
+    .b { font-weight: bold; font-size: 19px; }
+    .s { fill: #6b5d49; font-size: 14px; font-style: italic; }
+    .edge { stroke: #8a6d3b; stroke-width: 1.8; fill: none; }
+  </style>
+  <text x="450" y="36" text-anchor="middle" class="t b" font-size="24">Семья Петербургского словаря</text>
+
+  <rect class="box root" x="270" y="70" width="360" height="86" rx="10"/>
+  <text x="450" y="102" text-anchor="middle" class="t b">Большой Петербургский словарь (PWG)</text>
+  <text x="450" y="126" text-anchor="middle" class="t">Бётлингк и Рот · 7 томов · 1855–1875</text>
+  <text x="450" y="146" text-anchor="middle" class="s">санскрит → немецкий, с цитатами</text>
+
+  <path class="edge" d="M340 156 C 300 200, 220 210, 185 240"/>
+  <path class="edge" d="M450 156 L 450 240"/>
+  <path class="edge" d="M560 156 C 600 200, 680 210, 715 240"/>
+
+  <rect class="box" x="60" y="240" width="250" height="80" rx="8"/>
+  <text x="185" y="270" text-anchor="middle" class="t b">«Малый Петербургский» (PW)</text>
+  <text x="185" y="292" text-anchor="middle" class="t">Бётлингк · 7 томов · 1879–1889</text>
+  <text x="185" y="311" text-anchor="middle" class="s">короче, без цитат, шире охват</text>
+
+  <rect class="box" x="325" y="240" width="250" height="80" rx="8"/>
+  <text x="450" y="270" text-anchor="middle" class="t b">Монье-Вильямс (MW)</text>
+  <text x="450" y="292" text-anchor="middle" class="t">Оксфорд · 1872, перераб. 1899</text>
+  <text x="450" y="311" text-anchor="middle" class="s">санскрит → английский</text>
+
+  <rect class="box" x="590" y="240" width="250" height="80" rx="8"/>
+  <text x="715" y="270" text-anchor="middle" class="t b">Апте (AP90)</text>
+  <text x="715" y="292" text-anchor="middle" class="t">Пуна · 1890</text>
+  <text x="715" y="311" text-anchor="middle" class="s">для индийского читателя</text>
+
+  <path class="edge" d="M185 320 L 185 400"/>
+  <path class="edge" d="M450 320 L 450 400"/>
+
+  <rect class="box" x="60" y="400" width="250" height="80" rx="8"/>
+  <text x="185" y="430" text-anchor="middle" class="t b">«Дополнения» Шмидта (SCH)</text>
+  <text x="185" y="452" text-anchor="middle" class="t">Ганновер · 1928</text>
+  <text x="185" y="471" text-anchor="middle" class="s">Nachträge к обоим петербургским</text>
+
+  <rect class="box" x="325" y="400" width="250" height="80" rx="8"/>
+  <text x="450" y="430" text-anchor="middle" class="t b">Цифровые словари (CDSL)</text>
+  <text x="450" y="452" text-anchor="middle" class="t">Кёльн · с 1994 · 43 словаря</text>
+  <text x="450" y="471" text-anchor="middle" class="s">вся семья — в открытом доступе</text>
+
+  <text x="450" y="530" text-anchor="middle" class="s">Стрелки — преемственность материала: младшие словари строились на петербургском фундаменте</text>
+</svg>
