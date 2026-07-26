@@ -1,6 +1,6 @@
 # Metadoc — GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md
 
-_Created: 18-07-2026 · Last updated: 25-07-2026_
+_Created: 18-07-2026 · Last updated: 26-07-2026_
 
 The companion record for
 [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md).
@@ -58,8 +58,14 @@ would have shipped two wrong rows and missed the document's most valuable findin
 - **§3–§4 are the only production-depth sections.** Wave-3/4 rows were pointers, not designs — GC-A1
   shipped anyway (25-07-2026, H1637, built directly from its own ticket text + reuse base, not from a
   production-depth section here). Do not build GC-D1 from this document; it still lacks that depth.
-- **All eight forks in §7 are open.** The document deliberately resolves none. Anything downstream of
-  F2 (the `Deal`-vs-`Lead` shape) is provisional — including parts of §3 and §5.
+- **§7 was authored with all eight forks open** — the document deliberately resolved none. Three
+  have since been ruled and folded back in: **F1** (19-07-2026 → GC-B1 rescope, shipped H1642),
+  **F2** (21-07-2026 → separate `Deal`, shipped H1641), **F9** (26-07-2026 → keep both boards +
+  an additive third shared-stage board, shipped H1658). F3 is settled by construction (separate
+  stage tables). The remaining forks — F4–F8 — are still open, and anything downstream of them is
+  provisional. Each ruled fork keeps its original framing inline, so the section reads as a
+  decision log rather than a to-do list; check the fork's own leading paragraph, not this bullet,
+  for its current state.
 - **§2.4 corrects the boundary rule's own parenthetical** against the tree ("5 statuses" are DB rows
   now; plain course payments do not auto-convert their lead). The invariant is quoted verbatim and
   unaltered; only its stale description of `Lead` is annotated.
@@ -98,6 +104,7 @@ would have shipped two wrong rows and missed the document's most valuable findin
 
 | Date | Change | By |
 |---|---|---|
+| 26-07-2026 | **F9 ruled + implemented** (H1658): both existing boards kept, shared stage layer shipped as an additive third board (`UnifiedSalesBoard` over `UnifiedSalesStage`), view layer only — no migration, no physical merge of `lead_stages`/`deal_stages` (that stays F3, settled). §7 F9 rewritten as a decision record with the original framing kept below it; §1 GC-C1 row and §7's preamble updated; the "all eight forks are open" limitation above corrected to name F1/F2/F9 as ruled. | Opus 5 (`claude-opus-5[1m]`) |
 | 25-07-2026 | GC-A1 row flipped `NOT_BUILT` → `DONE` (H1637: `segments` migration + `Segment` model + `SegmentResource` + `marketing_segments` flag, built independently of the Wave 2-3 forks per MG ruling). Wave-map bookkeeping note added; flag-registry table annotated. | Sonnet 5 (`claude-sonnet-5`) |
 | 18-07-2026 | Created with the subject document (H1144, W1-D1). 14 tickets verified + adversarially audited; §2 precedence ladder authored; 8 forks named, none resolved. | Opus 4.8 (`claude-opus-4-8`) |
 
