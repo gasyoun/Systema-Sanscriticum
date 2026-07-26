@@ -99,6 +99,7 @@ class Payment extends Model
         'discount_amount' => 'decimal:2',
         'foreign_amount' => 'decimal:2',
         'referral_credit_applied' => 'decimal:2',
+        'first_paid_at' => 'datetime',
         'deposit_consumed_at' => 'datetime',
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
