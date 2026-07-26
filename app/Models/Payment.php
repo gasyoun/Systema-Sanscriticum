@@ -539,6 +539,18 @@ class Payment extends Model
      */
     private static function fireOnPaid(Payment $payment): void
     {
+        // H1645: штамп момента первого входа в оплаченный статус — резервная
+        // опора resurrection-guard'а (hasPriorPaidTransition), не зависящая от
+        // payment_audits. Один раз, никогда не перезаписывается; updateQuietly
+        // отключает события Payment на время записи — без этого сработал бы
+        // весь observer-стек ещё раз (PaymentAuditObserver и т.п.) на пустом
+        // изменении статуса, а static::updated мог бы рекурсивно вызвать
+        // fireOnPaid снова (status уже не dirty, поэтому цикла нет, но лишний
+        // проход и шум в аудите не нужны).
+        if ($payment->first_paid_at === null) {
+            $payment->updateQuietly(['first_paid_at' => now()]);
+        }
+
         // Системный расход / возврат и выплата ЗП преподавателю — только
         // бухгалтерская строка. Никакого доступа, писем, праны, Telegram.
         if ($payment->isExpense() || $payment->isSalaryPayout()) {
