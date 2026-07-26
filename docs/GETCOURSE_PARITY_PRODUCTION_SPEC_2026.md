@@ -531,7 +531,8 @@ as an `MG @DECIDE` row.
 (1) *Boards:* **(a)+(c) additively** — both existing boards stay untouched; the shared layer is
 built as a SEPARATE alternative UI, a third view. No physical merge of `lead_stages`/`deal_stages`
 (that is fork F3, whose migration would touch live `leads`) — unification in the presentation
-layer only → H1658. (2) *Instalments:* **explicit marker.** The H1641 mitigation ("a won deal for
+layer only → H1658, **implemented the same day**; the shipped shape is described at the head of
+this fork. (2) *Instalments:* **explicit marker.** The H1641 mitigation ("a won deal for
 this person + this course already exists → the second payment creates nothing") suppressed genuine
 repurchases along with instalment inflation; it is replaced by the `Payment` →
 `linked_promise_id` → `PaymentPromise` → `installment_group_id` chain, with the resolved group
