@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Online Sanskrit games, Wave 1 — 5-play gate + CTA→register KPI + three P0 packs (H1678).** `/exercises` gate widened from one global free play to **5 free plays per drill family** (`gate.js`, `sgx_plays_v2` localStorage key, family = first path segment under `/exercises/`); authenticated users stay ungated. `GameEvent::ctaRegistrationRate()` computes the play→register KPI (locked D6: ≥15% of CTA clickers merge into an authenticated user within 7 days) from the **existing** `anon_id`/`authenticated` columns — deliberately without adding a `user_id` column, since `game_events` is intentionally kept outside the 152-ФЗ perimeter (see `the_table_stores_no_ip_or_user_agent_by_design`); surfaced in `games:funnel` and the Filament «Воронка тренажёров» page. New shared `public/exercises/locale.js` (RU/EN string picker + toggle, default RU, falls back to RU when EN copy is missing). Three P0 packs: **G-C01** `sort/vowel-length` (24 curated CV syllables, short vs long vowel, no Devanāgarī), **G-C02** `match/iast-cyrillic` (40 pairs reused from the genders/verb-roots packs + a documented pedagogical Cyrillic transliteration), **G-C03** `match/kochergina-l1` (20 words from the H1431 Kochergina lesson-1 export, `database/seeders/data/memrise_6502608/level_02.csv`). Catalogue cards + free-banner copy updated. Non-goals held: P1 packs (H1679), SRS onboarding (H1680), csl-guides, new engines, audio, multiplayer — `SRS_ENABLED` untouched.
+
 ## [1.54.0] - 2026-07-26
 
 ### Added

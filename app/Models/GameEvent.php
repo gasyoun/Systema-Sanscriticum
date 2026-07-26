@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -116,7 +117,7 @@ class GameEvent extends Model
                 ->where('anon_id', $anonId)
                 ->where('authenticated', true)
                 ->where('created_at', '>=', $firstClick)
-                ->where('created_at', '<=', \Carbon\Carbon::parse($firstClick)->addDays(7))
+                ->where('created_at', '<=', Carbon::parse($firstClick)->addDays(7))
                 ->exists();
 
             if ($mergedIn) {
