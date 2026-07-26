@@ -1,6 +1,6 @@
 # GetCourse-parity — production spec (the R29-equivalent for the parity programme)
 
-_Created: 18-07-2026 · Last updated: 25-07-2026_
+_Created: 18-07-2026 · Last updated: 26-07-2026_
 
 The production ruling of the getcourse-parity programme, required by **R-1**
 ([PLAN §1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md)):
@@ -54,7 +54,7 @@ demoted GC-A3 (§1 ⚠) under audit.
 | **GC-B2** attendance dashboard | B | **DONE** | — shipped | Flag [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) line 193, default `false`; [`AttendanceDashboard.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/AttendanceDashboard.php); `ClassAttendanceService::dashboard()`; 3 tests; commit `cfef7e2` = [PR #444](https://github.com/gasyoun/Systema-Sanscriticum/pull/444). Audit confirmed the ticket's falsifiable constraint (reuse `forSchedule()` row-wise, no new counting logic) holds. |
 | **GC-B3** webinar provider seam | B | ⚠ **PARTIAL** (roadmap says "Later"; audit demoted from DONE) | 2 — finish | [`WebinarProvider.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Webinar/WebinarProvider.php), `ZoomService implements`, BBB skeleton, `meeting_*` alias columns — all shipped in `b4d8a2c` = [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549). **Three gaps:** no `webinar_provider_abstraction` flag; the container binding has **zero consumers** ([`ZoomWebhookController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Webhooks/ZoomWebhookController.php) line 100 resolves the concrete `ZoomService`); no `services.bbb` block, so `isConfigured()` is structurally always false. |
 | **GC-B1** one recurring Zoom meeting per course | B | **DONE** (26-07-2026, H1642) | 2 — shipped | Rescoped 19-07-2026 (MG, weekly `@DECIDE` → option (b)): auto-create ONE recurring meeting **per course**, never per `Schedule` — the single-course-link model (`eda8059`, 27-06-2026) stands. `ZoomService::createMeeting()` now makes a real Zoom API call (`type=8` recurring); trigger is the first schedule-stream generation (`ScheduleGenerator::generate()`) for a course without `zoom_meeting_id`, idempotent on that column. Flag `zoom_auto_create` (default `false`). Tests: `ZoomAutoCreateTest` (5) + rescoped `WebinarProviderSeamTest::test_create_meeting_requires_configured_credentials`. See §7 F1. |
-| **GC-C1** `Deal` + kanban | C | **DONE** (25-07-2026, H1641) | 2 — shipped | F2 ruled by MG 21-07-2026 → separate `Deal` entity. Shipped: [`Deal`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Deal.php)/[`DealStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealStage.php)/[`DealTransition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealTransition.php), `deals`/`deal_stages`/`deal_transitions` migrations, [`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php), flag `crm_pipeline_board` (default `false`). `LeadKanbanBoard`/`LeadStage` (H451) deliberately **untouched** — see §7 F9, the one question this ticket did NOT resolve. |
+| **GC-C1** `Deal` + kanban | C | **DONE** (25-07-2026, H1641) | 2 — shipped | F2 ruled by MG 21-07-2026 → separate `Deal` entity. Shipped: [`Deal`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Deal.php)/[`DealStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealStage.php)/[`DealTransition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealTransition.php), `deals`/`deal_stages`/`deal_transitions` migrations, [`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php), flag `crm_pipeline_board` (default `false`). `LeadKanbanBoard`/`LeadStage` (H451) deliberately **untouched** — the one question this ticket did NOT resolve, opened as §7 F9 and **ruled + implemented 26-07-2026** (H1658): both boards stay, and a THIRD board [`UnifiedSalesBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/UnifiedSalesBoard.php) shows leads and deals in four shared columns ([`UnifiedSalesStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedSalesStage.php)) — view layer only, same flag, no migration. |
 | **GC-C2** manager sales attribution | C | **NOT_BUILT** | **2** (§4) | `manager_sales_report` absent; `OrderPaymentConversionService` groups by course and channel only (lines 223, 246). Across the whole tree `assigned_to` is read by **zero** reports. |
 | **GC-C3** `FollowUpTask` | C | **NOT_BUILT** | 3 — tail | `FollowUpTask` occurs exactly once repo-wide: the roadmap line defining it. Flag `crm_reminders` **does** exist (line 67, default `false`) but gates the pre-existing [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php), not this ticket. See §7 F6. |
 | **GC-D1** quiz engine, translit-aware | D | **NOT_BUILT** | 3 — head | No `Quiz`/`Question`/`QuizAttempt` model or table. Only grading code is `MarathonController::completeLevelQuiz()` (config-driven). **No runtime IAST/Cyrillic/Devanāgarī → SLP1 transcoder exists in `app/`** — SLP1 appears only as pre-computed data. See §7 F7. |
@@ -90,7 +90,9 @@ docs — the week-long stall was a propagation gap, not an open question.
 of the remaining wave-2 work. **GC-B1 has now shipped too** (26-07-2026,
 [H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md)) —
 one recurring meeting per course, behind `zoom_auto_create` (default `false`). One genuinely new
-fork opened in the process: **F9** (the fate of the now-parallel `LeadKanbanBoard`).
+fork opened in the process: **F9** (the fate of the now-parallel `LeadKanbanBoard`) — **ruled and
+implemented 26-07-2026** (H1658): both boards stay, and the shared stage layer ships as an
+additional third board, in the view layer only.
 
 ---
 
@@ -478,8 +480,38 @@ abstraction + flip the roadmap row) or record deliberately that the seam is sche
 until BBB lands in Q4. The roadmap row still says "Later" while the CHANGELOG and DEPLOY_QUEUE record
 it as shipped — those disagree today.
 
-**F9 · What becomes of `LeadKanbanBoard` now that a `Deal` board exists? NEW, opened 25-07-2026
-by H1641, deliberately NOT resolved by it.** F2's ruling settled the *architecture* (build `Deal`)
+**F9 · What becomes of `LeadKanbanBoard` now that a `Deal` board exists? RULED 26-07-2026 by MG →
+(a) + (c) additively; IMPLEMENTED the same day by [H1658](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1658-Sonnet_Systema-Sanscriticum_crm-unified-stage-board-alt-ui_26.07.26.md).**
+The ruling keeps **both** existing boards — «Заявки — доска» and «Сделки — доска» stay exactly as
+they are, neither retired nor hidden — and additionally builds the shared-stage layer as an
+**alternative third UI**. It is explicitly *not* option (b), and *not* the destructive reading of
+option (c): there is **no physical merge** of `lead_stages` and `deal_stages`. That merge is fork
+**F3**, already settled in favour of separate tables — the string `key` ↔ numeric `id`
+incompatibility would need a migration touching live `leads`. The unification lives in the **view
+layer only**; no migration of any kind was made, and `leads.status`, `lead_stages`,
+`LeadResource`, `Lead::statuses()` and `RemindLeadsForFollowup` are untouched.
+
+Shipped: [`UnifiedSalesBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/UnifiedSalesBoard.php)
+(slug `sales-board`, nav group «Продажи», sort 70 — above both existing boards) over
+[`UnifiedSalesStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedSalesStage.php),
+a view-only vocabulary of four common columns — Новые · В работе · Выиграно · Проиграно — that maps
+each side's stages on and is **never persisted into either stage table** (pinned by
+`UnifiedSalesBoardTest::the_common_vocabulary_is_never_persisted_into_either_stage_table`). Deal
+stages map **structurally** from live data (`is_won` → Выиграно, `is_lost` → Проиграно, first by
+`position` → Новые, rest → В работе), so an admin-added stage needs no code change; lead stages
+need an explicit key table because `lead_stages` carries only `is_final` and cannot tell
+«Конверсия» from «Отказ». An unknown stage on either side falls back to «В работе» rather than
+vanishing from the board. Cards carry a «Заявка»/«Сделка» badge and a composite DOM id
+(`lead-12` / `deal-12`) because the two key spaces overlap. Drag-drop writes back to the owning
+entity — `leads.status` directly, deals through `Deal::moveToStage()` so `deal_transitions` keeps
+its journal — and both `blocksRollbackToFirstStage` guards refuse exactly as on the single boards.
+A move *within* one column (e.g. «Квалифицирован» → «В работе») is a deliberate no-op, so a merged
+column cannot silently demote a card or write a spurious transition row. Gated behind the same
+`crm_pipeline_board` flag plus the same `RoleGate` — **no new flag**, this is the same GC-C1
+surface. Tests: `UnifiedSalesBoardTest` (15).
+
+_Original framing, kept for the record — it is why this fork existed._ F2's ruling settled the
+*architecture* (build `Deal`)
 but said nothing about the board H451 already shipped. The tree now carries **two** drag-drop
 boards in the same `Продажи` nav group: «Заявки — доска» over `Lead.status`/`lead_stages`
 (unflagged, live) and «Сделки — доска» over `Deal.stage_id`/`deal_stages` (behind
