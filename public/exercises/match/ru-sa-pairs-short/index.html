@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · Найдите пару</title>
+<link rel="stylesheet" href="../engine.css">
+<style>
+  body { margin: 0; background: var(--page-bg, #f3ecdb); }
+  @media (prefers-color-scheme: dark) { body { background: #1c1712; } }
+  :root[data-theme="dark"] body { background: #1c1712; }
+  :root[data-theme="light"] body { background: #f3ecdb; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+  .eyebrow {
+    font-family: "Noto Sans Devanagari","Nirmala UI",serif;
+    font-size: 13px; letter-spacing: .16em; color: #a8451f; font-weight: 600; margin: 0 0 6px;
+  }
+  @media (prefers-color-scheme: dark) { .eyebrow { color: #e07a4e; } }
+  :root[data-theme="dark"] .eyebrow { color: #e07a4e; }
+  h1 {
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 18px; color: #2a2118; text-wrap: balance;
+  }
+  @media (prefers-color-scheme: dark) { h1 { color: #efe6d4; } }
+  :root[data-theme="dark"] h1 { color: #efe6d4; }
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #d9cba8; font-size: 12.5px; color: #6b5d47; }
+  footer a { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #423628; color: #b3a488; } footer a { color: #e07a4e; } }
+  :root[data-theme="dark"] footer { border-color: #423628; color: #b3a488; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">संस्कृतम् · युग्मानि</p>
+  <h1>Найдите пару</h1>
+  <div id="app"></div>
+  <footer>
+    6 коротких фраз: русский ↔ санскрит.
+    <!-- LearningApps source: https://learningapps.org/display?v=pmmtidqy525 -->
+    Учебный виджет Systema&nbsp;Sanscriticum.
+  </footer>
+</div>
+
+<script src="/exercises/gate.js" defer></script>
+<script src="/exercises/telemetry.js" data-drill="match" data-band="ru-sa-pairs-short" defer></script>
+<script src="../engine.js"></script>
+<script>
+  MatchExercise.mount(document.getElementById("app"), {
+    task: "Найдите перевод — соедините русскую фразу с санскритской.",
+    feedback: "Здорово, ты верно выполнил задание.",
+    leftTitle: "Русский",
+    rightTitle: "Санскрит",
+    shuffle: true,
+    pairs: [
+      { left: { text: "Этот слон видит кувшин." }, right: { text: "अयं गजः पात्रं पश्यति ।" } }
+      { left: { text: "Ты пишешь, я читаю." }, right: { text: "त्वं लिखसि, अहं पठामि" } }
+      { left: { text: "Те два коня едят фрукты." }, right: { text: "तौ अश्वौ फलानि खादतः" } }
+      { left: { text: "Я пишу, ты читаешь." }, right: { text: "अहं लिखामि, त्वं पठसि" } }
+      { left: { text: "Ученики кланяются." }, right: { text: "छात्राः नमन्ति" } }
+      { left: { text: "Эти девушки поют." }, right: { text: "इमाः कन्याः गायन्ति" } }
+    ]
+  });
+</script>
+</body>
+</html>
