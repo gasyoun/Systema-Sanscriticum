@@ -138,6 +138,69 @@ class GamesFunnelTelemetryTest extends TestCase
     }
 
     /** @test */
+    public function games_funnel_command_reports_cta_to_register_conversion(): void
+    {
+        GameEvent::create([
+            'anon_id' => 'clicker1', 'drill' => 'sort', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subHours(2),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'clicker1', 'drill' => 'sort', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subHour(),
+        ]);
+
+        $this->artisan('games:funnel --days=14')
+            ->assertExitCode(0)
+            ->expectsOutputToContain('CTA -> регистрация: 1/1');
+    }
+
+    /** @test */
+    public function cta_registration_rate_merges_via_authenticated_flag_not_a_user_id_column(): void
+    {
+        // H1678 D6/D10: KPI is computed from the SAME anon_id later carrying
+        // authenticated=true — game_events never stores a user_id (R20/152-ФЗ).
+        GameEvent::create([
+            'anon_id' => 'guestA', 'drill' => 'match', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(2),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'guestA', 'drill' => 'match', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subDay(),
+        ]);
+        // A second clicker who never comes back authenticated.
+        GameEvent::create([
+            'anon_id' => 'guestB', 'drill' => 'match', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(2),
+        ]);
+
+        $rate = GameEvent::ctaRegistrationRate(now()->subDays(14));
+
+        $this->assertSame(2, $rate['clickers']);
+        $this->assertSame(1, $rate['registered']);
+        $this->assertSame(50.0, $rate['rate']);
+        $this->assertTrue($rate['baseline_only']); // sample < 50
+    }
+
+    /** @test */
+    public function cta_registration_rate_ignores_a_merge_outside_the_seven_day_window(): void
+    {
+        GameEvent::create([
+            'anon_id' => 'guestLate', 'drill' => 'roots', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(10),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'guestLate', 'drill' => 'roots', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subDays(2), // 8 days after the click
+        ]);
+
+        $rate = GameEvent::ctaRegistrationRate(now()->subDays(14));
+
+        $this->assertSame(1, $rate['clickers']);
+        $this->assertSame(0, $rate['registered']);
+        $this->assertSame(0.0, $rate['rate']);
+    }
+
+    /** @test */
     public function funnel_page_is_visible_to_manager_and_admin_but_not_teacher(): void
     {
         $this->actingAs(User::factory()->create(['role' => Roles::MANAGER]));
