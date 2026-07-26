@@ -63,4 +63,16 @@ class GamesFunnel extends Page
             'cta' => array_sum(array_column($rows, 'cta')),
         ];
     }
+
+    /**
+     * CTA -> register KPI (H1678, locked D6): ≥15% of CTA clickers merge
+     * into an authenticated user within 7 days; below 50 clickers it's a
+     * baseline reading, not a pass/fail signal (see GameEvent::ctaRegistrationRate).
+     *
+     * @return array{clickers:int, registered:int, rate:?float, baseline_only:bool}
+     */
+    public function getConversionProperty(): array
+    {
+        return GameEvent::ctaRegistrationRate(now()->subDays(max(1, $this->days)));
+    }
 }
