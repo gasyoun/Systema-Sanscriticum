@@ -9,6 +9,7 @@ use App\Models\DealStage;
 use App\Models\DealTransition;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -47,21 +48,17 @@ use Illuminate\Support\Facades\Log;
  * делят непустой installment_group_id (его ставит InstallmentPlanCreator).
  * Платёж без группы — сам себе продажа, повторная покупка снова заводит сделку.
  *
- * Цепочка до группы у платежа двусторонняя, и обе стороны читаются:
+ * Цепочка до группы у платежа читается тремя переходами, в этом порядке:
  *   1. payments.linked_promise_id → payment_promises.installment_group_id —
  *      прямая, ставится ещё на создании платежа (DebtPaymentController);
  *   2. payment_promises.fulfilled_payment_id = payments.id — обратная, её
  *      проставляет PromiseAutoFulfiller внутри fireOnPaid, то есть ДО
- *      обсерверов (факт 1 выше), поэтому к нашему вызову она уже видна.
+ *      обсерверов (факт 1 выше), поэтому к нашему вызову она уже видна;
+ *   3. план с НЕПОГАШЕННЫМИ обещаниями по этому человеку и курсу — для
+ *      кураторского «Подтвердить оплату», которое связывает обещание уже
+ *      ПОСЛЕ создания платежа, так что к обсерверу связи ещё нет (см.
+ *      unmetPlanFor: почему это не возврат эвристики «человек + курс»).
  * Ничего из этого мы не пишем — обе таблицы только читаем.
- *
- * ВТОРОЕ ИЗВЕСТНОЕ ОГРАНИЧЕНИЕ: менеджерское «Подтвердить оплату»
- * (PromiseFulfillment::fulfil) создаёт платёж и лишь ПОТОМ проставляет
- * обещанию fulfilled_payment_id — на момент обсервера ни одной из двух связей
- * ещё нет, и такой взнос выглядит самостоятельной продажей. Чинить это можно
- * только со стороны PromiseFulfillment (передавать linked_promise_id в payload),
- * а это денежный путь, который H1659 трогать запрещено. Завышение воронки на
- * ручном закрытии рассрочки, не порча данных.
  */
 class PaymentDealBridgeObserver
 {
@@ -188,7 +185,7 @@ class PaymentDealBridgeObserver
             }
         }
 
-        $deal = $this->findOpenDealFor($payment);
+        $deal = $this->findOpenDealFor($payment, $group);
 
         if ($deal !== null) {
             $this->closeDealWith($deal, $payment, $won, $group);
@@ -256,11 +253,27 @@ class PaymentDealBridgeObserver
      * запись не в ту строку. Раньше ветка по лиду брала просто самую старую
      * открытую сделку и делала именно это (найдено adversarial-ревью H1641).
      *
+     * ГРУППА РАССРОЧКИ — ТАКОЙ ЖЕ РАЗЛИЧАЮЩИЙ ПРИЗНАК (найдено adversarial-
+     * ревью H1659). Сделка, помеченная ЧУЖИМ планом, этому платежу не своя:
+     * переиспользовать её значило бы закрыть чужой план чужими деньгами, а
+     * заодно навсегда оставить на ней штамп плана, который её не оплачивал —
+     * следующий взнос настоящего владельца упёрся бы в «уже закрыта» и был бы
+     * молча съеден. Свою сделку группа находит РАНЬШЕ, отдельной веткой
+     * closeOrRecordDeal; сюда доходят только сделки без плана (и, оборонительно,
+     * со своим). Платёж БЕЗ группы не трогает сделки планов вовсе.
+     *
      * Ничего не пишем — только ищем.
      */
-    private function findOpenDealFor(Payment $payment): ?Deal
+    private function findOpenDealFor(Payment $payment, ?string $group): ?Deal
     {
         $base = Deal::query()->open();
+
+        $base->where(function (Builder $q) use ($group): void {
+            $q->whereNull('installment_group_id');
+            if ($group !== null) {
+                $q->orWhere('installment_group_id', $group);
+            }
+        });
 
         if ($payment->lead_id) {
             $base->where('lead_id', $payment->lead_id);
@@ -319,6 +332,50 @@ class PaymentDealBridgeObserver
         $group = PaymentPromise::query()
             ->where('fulfilled_payment_id', $payment->id)
             ->whereNotNull('installment_group_id')
+            ->value('installment_group_id');
+
+        if ($group !== null && $group !== '') {
+            return (string) $group;
+        }
+
+        return $this->unmetPlanFor($payment);
+    }
+
+    /**
+     * ТРЕТИЙ ПЕРЕХОД — план с НЕПОГАШЕННЫМИ взносами по этому же человеку и
+     * курсу. Нужен потому, что кураторское «Подтвердить оплату»
+     * (PromiseFulfillment::fulfil) создаёт платёж и лишь ПОТОМ связывает
+     * обещание: на момент обсервера ни прямой, ни обратной связи ещё нет.
+     * Без этого перехода основной ручной сценарий закрытия рассрочки заводил
+     * бы по выигранной сделке НА КАЖДЫЙ взнос — измерено adversarial-ревью
+     * H1659 как 3 сделки против 1 до H1659.
+     *
+     * ЭТО НЕ ВОЗВРАТ ЭВРИСТИКИ «человек + курс». Разница ровно в том, чего
+     * требует рулинг: сначала должен СУЩЕСТВОВАТЬ план рассрочки, и он должен
+     * быть ещё не закрыт. Полностью оплаченный план прошлого года повторную
+     * покупку того же курса больше не глушит — обещаний в статусе
+     * active/expired у него нет, переход возвращает null, платёж заводит свою
+     * сделку. Старая эвристика глушила такую покупку всегда.
+     *
+     * Остаточная цена, принятая осознанно: покупка курса, по которому у
+     * человека ПРЯМО СЕЙЧАС висит неоплаченный план, будет отнесена к этому
+     * плану. Это и есть более вероятное прочтение (человек гасит долг), а
+     * альтернатива — молча удвоить воронку на каждом кураторском взносе.
+     *
+     * Только чтение. Порядок по promised_at: если планов почему-то два, берём
+     * самый ранний — тот же порядок, что у PromiseAutoFulfiller::coveredPromises.
+     */
+    private function unmetPlanFor(Payment $payment): ?string
+    {
+        if (! $payment->user_id || ! $payment->course_id) {
+            return null;
+        }
+
+        $group = PaymentPromise::query()
+            ->forPair((int) $payment->user_id, (int) $payment->course_id)
+            ->whereNotNull('installment_group_id')
+            ->whereIn('status', [PaymentPromise::STATUS_ACTIVE, PaymentPromise::STATUS_EXPIRED])
+            ->orderBy('promised_at')
             ->value('installment_group_id');
 
         return ($group !== null && $group !== '') ? (string) $group : null;
