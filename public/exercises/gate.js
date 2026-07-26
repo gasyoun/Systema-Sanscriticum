@@ -1,8 +1,14 @@
 /* ============================================================
    Free-games funnel gate.
-   Anonymous visitors get ONE free completed game; the next play
-   attempt shows a soft "register a free cabinet to continue" wall.
-   Logged-in students are never gated.
+   Anonymous visitors get FIVE free completed plays PER DRILL
+   FAMILY (H1678 — widened from the original one-global-play
+   gate, `sort`/`match`/`cloze`/... each get their own budget);
+   the 6th attempt in a family shows a soft "register a free
+   cabinet to continue" wall. Logged-in students are never gated.
+
+   Family = first path segment under /exercises/ (e.g.
+   /exercises/sort/genders/ -> "sort"), so it needs no per-page
+   configuration.
 
    Soft gate: state lives in localStorage — a funnel NUDGE, not a
    hard paywall (clearable, per-device). That is intentional: the
@@ -16,13 +22,35 @@
 (function () {
   "use strict";
 
-  var KEY = "sgx_played_v1";
+  var PLAYS_KEY = "sgx_plays_v2";
+  var FREE_PLAYS_PER_FAMILY = 5;
   var AUTH_URL = "/api/games/auth";
   var REGISTER_URL = "/online/konsultaciya"; // free 3-day diagnostic marathon = a free cabinet
   var LOGIN_URL = "/login";
 
-  function played() { try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; } }
-  function markPlayed() { try { localStorage.setItem(KEY, "1"); } catch (e) {} }
+  function family() {
+    var parts = location.pathname.split("/").filter(Boolean);
+    var i = parts.indexOf("exercises");
+    return (i > -1 && parts[i + 1]) ? parts[i + 1] : "unknown";
+  }
+
+  function readPlays() {
+    try {
+      var v = JSON.parse(localStorage.getItem(PLAYS_KEY) || "{}");
+      return (v && typeof v === "object") ? v : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function playCount(fam) { return readPlays()[fam] || 0; }
+  function recordPlay(fam) {
+    try {
+      var plays = readPlays();
+      plays[fam] = (plays[fam] || 0) + 1;
+      localStorage.setItem(PLAYS_KEY, JSON.stringify(plays));
+    } catch (e) {}
+  }
+  function gated(fam) { return playCount(fam) >= FREE_PLAYS_PER_FAMILY; }
 
   function injectStyles() {
     if (document.getElementById("sgx-gate-style")) return;
@@ -62,7 +90,7 @@
       '<div class="sgx-gate-card">' +
         '<div class="sgx-gate-om" aria-hidden="true">🕉</div>' +
         '<h2>Понравилось?</h2>' +
-        '<p>Первая игра — бесплатно. ' +
+        '<p>Пять игр в этой серии — бесплатно. ' +
         'Чтобы продолжить и открыть все тренажёры, ' +
         'заведите бесплатный кабинет ученика.</p>' +
         '<a class="sgx-gate-primary" href="' + REGISTER_URL + '">Начать бесплатно</a>' +
@@ -72,13 +100,13 @@
     document.body.style.overflow = "hidden";
   }
 
-  // After the one free win, intercept any further play action → wall.
-  function armReplayGate() {
+  // Once a family's budget is spent, intercept any further play action -> wall.
+  function armReplayGate(fam) {
     document.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest("button");
       if (!b) return;
       var t = (b.textContent || "").trim();
-      if (t === "Заново" || t === "Проверить") {
+      if ((t === "Заново" || t === "Проверить") && gated(fam)) {
         e.preventDefault();
         e.stopPropagation();
         showWall();
@@ -86,24 +114,27 @@
     }, true);
   }
 
-  // Let the visitor finish exactly one game, then arm the gate.
-  function watchFirstCompletion() {
+  // Count each completed round toward this family's budget (edge-triggered:
+  // `.feedback.show` toggles off/on per round, see sort/match engine.js).
+  function watchCompletions(fam) {
+    var wasShown = false;
     var obs = new MutationObserver(function () {
-      if (document.querySelector(".feedback.show")) {
-        markPlayed();
-        obs.disconnect();
-        armReplayGate();
-      }
+      var shown = !!document.querySelector(".feedback.show");
+      if (shown && !wasShown) recordPlay(fam);
+      wasShown = shown;
     });
     obs.observe(document.body, {
       subtree: true, attributes: true, attributeFilter: ["class"], childList: true
     });
+    wasShown = !!document.querySelector(".feedback.show"); // don't double-count an already-solved state
   }
 
   function start(authed) {
-    if (authed) return;                    // logged-in students: never gated
-    if (played()) { showWall(); return; }  // came back for a second game → wall
-    watchFirstCompletion();                // first visit: one free game, then arm
+    if (authed) return;              // logged-in students: never gated
+    var fam = family();
+    if (gated(fam)) { showWall(); return; }
+    watchCompletions(fam);
+    armReplayGate(fam);
   }
 
   fetch(AUTH_URL, { headers: { "Accept": "application/json" }, credentials: "same-origin" })
