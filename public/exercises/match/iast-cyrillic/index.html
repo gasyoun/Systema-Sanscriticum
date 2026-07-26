@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · IAST ↔ кириллица</title>
+<link rel="stylesheet" href="../engine.css">
+<style>
+  body { margin: 0; background: #f3ecdb; }
+  @media (prefers-color-scheme: dark) { body { background: #1c1712; } }
+  :root[data-theme="dark"] body { background: #1c1712; }
+  :root[data-theme="light"] body { background: #f3ecdb; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+  .eyebrow {
+    font-family: "Noto Sans Devanagari","Nirmala UI",serif;
+    font-size: 13px; letter-spacing: .16em; color: #a8451f; font-weight: 600; margin: 0 0 6px;
+  }
+  @media (prefers-color-scheme: dark) { .eyebrow { color: #e07a4e; } }
+  :root[data-theme="dark"] .eyebrow { color: #e07a4e; }
+  h1 {
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 12px; color: #2a2118; text-wrap: balance;
+  }
+  @media (prefers-color-scheme: dark) { h1 { color: #efe6d4; } }
+  :root[data-theme="dark"] h1 { color: #efe6d4; }
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #d9cba8; font-size: 12.5px; color: #6b5d47; }
+  footer a { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #423628; color: #b3a488; } footer a { color: #e07a4e; } }
+  :root[data-theme="dark"] footer { border-color: #423628; color: #b3a488; }
+  .sgx-locale-toggle { display: flex; gap: 6px; margin: 0 0 14px; }
+  .sgx-locale-btn {
+    font: 600 12px/1 "Segoe UI",system-ui,sans-serif; letter-spacing: .06em; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid #d9cba8; background: #faf5e8; color: #6b5d47; cursor: pointer;
+  }
+  .sgx-locale-btn.active { background: #a8451f; border-color: #a8451f; color: #fff; }
+  @media (prefers-color-scheme: dark) { .sgx-locale-btn { border-color: #423628; background: #26201a; color: #b3a488; } .sgx-locale-btn.active { background: #e07a4e; border-color: #e07a4e; color: #1c1712; } }
+</style>
+</head>
+<body>
+<!--
+  Provenance (H1678 A4): all 40 IAST forms are reused verbatim from two
+  already-shipped packs in this repo — sort/genders/index.html (24 nouns)
+  and match/verb-roots/index.html (11 verb forms + 5 roots) — not new
+  vocabulary. The Cyrillic column is this pack's own addition: a
+  simplified pedagogical transliteration (not a scholarly diacritic
+  system), authored 26-07-2026 —
+    vowels: a/ā->а/а̄, i/ī->и/ӣ, u/ū->у/ӯ, ṛ->ри (long ṝ->рӣ), e->е, o->о
+    consonants: c->ч, j->дж, ñ->нь, ṭ/ḍ/ṇ merged with т/д/н (retroflex
+      not distinguished from dental in Cyrillic — an A0 simplification),
+      ś/ṣ->ш (not distinguished from each other), s->с, h->х, y+vowel->
+      "й"+vowel or the Russian iotated letter (я/ю) where that reads more
+      naturally (e.g. sūrya->сӯрья)
+    visarga ḥ->х, anusvāra ṃ->м
+  Spot-checked all 40 rows before shipping (logged in the H1678 PR body).
+-->
+<div class="page">
+  <div id="locale-toggle"></div>
+  <p class="eyebrow">संस्कृतम् · लिप्यन्तरणम्</p>
+  <h1>IAST ↔ кириллица</h1>
+  <div id="app"></div>
+  <footer>
+    40 слов, уже знакомых по упражнениям «Роды существительных» и «Найди пару
+    для глагола» — теперь в паре с их кириллическим чтением. Соедините
+    латиницу (IAST) с кириллицей. Учебный виджет Systema&nbsp;Sanscriticum.
+  </footer>
+</div>
+
+<script src="/exercises/gate.js" defer></script>
+<script src="/exercises/telemetry.js" data-drill="match" data-band="iast-cyrillic" defer></script>
+<script src="/exercises/locale.js"></script>
+<script src="../engine.js"></script>
+<script>
+  var I18N = {
+    ru: {
+      task: "Соедините санскритское слово в IAST (латиница) с его кириллическим чтением. " +
+            "Нажмите карточку, затем её пару — или перетащите одну на другую.",
+      feedback: "Задание решено верно. Все слова прочитаны правильно."
+    },
+    en: {
+      task: "Match each Sanskrit word in IAST (Latin) with its Cyrillic reading. " +
+            "Click a card, then its pair — or drag one onto the other.",
+      feedback: "All done — every word is matched to its Cyrillic reading."
+    }
+  };
+
+  SgxLocale.renderToggle(document.getElementById("locale-toggle"));
+
+  MatchExercise.mount(document.getElementById("app"), {
+    task: SgxLocale.pick(I18N, "task"),
+    feedback: SgxLocale.pick(I18N, "feedback"),
+    leftTitle: "IAST",
+    rightTitle: "Кириллица",
+    perRound: 10,
+    pairs: [
+      { left: { text: "ajaḥ" },     right: { text: "аджах" } },
+      { left: { text: "gajaḥ" },    right: { text: "гаджах" } },
+      { left: { text: "aśvaḥ" },    right: { text: "ашвах" } },
+      { left: { text: "naraḥ" },    right: { text: "нарах" } },
+      { left: { text: "devaḥ" },    right: { text: "девах" } },
+      { left: { text: "vṛkṣaḥ" },   right: { text: "врикшах" } },
+      { left: { text: "sūryaḥ" },   right: { text: "сӯрьях" } },
+      { left: { text: "bālaḥ" },    right: { text: "ба̄лах" } },
+      { left: { text: "bālā" },     right: { text: "ба̄ла̄" } },
+      { left: { text: "mālā" },     right: { text: "ма̄ла̄" } },
+      { left: { text: "jihvā" },    right: { text: "джихва̄" } },
+      { left: { text: "nāsā" },     right: { text: "на̄са̄" } },
+      { left: { text: "kanyā" },    right: { text: "канья̄" } },
+      { left: { text: "nadī" },     right: { text: "надӣ" } },
+      { left: { text: "senā" },     right: { text: "сена̄" } },
+      { left: { text: "latā" },     right: { text: "лата̄" } },
+      { left: { text: "pātram" },   right: { text: "па̄трам" } },
+      { left: { text: "netram" },   right: { text: "нетрам" } },
+      { left: { text: "viśvam" },   right: { text: "вишвам" } },
+      { left: { text: "mukham" },   right: { text: "мукхам" } },
+      { left: { text: "phalam" },   right: { text: "пхалам" } },
+      { left: { text: "jalam" },    right: { text: "джалам" } },
+      { left: { text: "vanam" },    right: { text: "ванам" } },
+      { left: { text: "pustakam" }, right: { text: "пустакам" } },
+      { left: { text: "sphurati" }, right: { text: "спхурати" } },
+      { left: { text: "paṭhati" },  right: { text: "патхати" } },
+      { left: { text: "gacchati" }, right: { text: "гаччхати" } },
+      { left: { text: "vikasati" }, right: { text: "викасати" } },
+      { left: { text: "lasati" },   right: { text: "ласати" } },
+      { left: { text: "mlāyati" },  right: { text: "мла̄йати" } },
+      { left: { text: "puṣpyati" }, right: { text: "пушпьяти" } },
+      { left: { text: "vadati" },   right: { text: "вадати" } },
+      { left: { text: "phalati" },  right: { text: "пхалати" } },
+      { left: { text: "tiṣṭhati" }, right: { text: "тиштхати" } },
+      { left: { text: "karoti" },   right: { text: "кароти" } },
+      { left: { text: "sphur-" },   right: { text: "спхур-" } },
+      { left: { text: "paṭh-" },    right: { text: "патх-" } },
+      { left: { text: "gam-" },     right: { text: "гам-" } },
+      { left: { text: "vikas-" },   right: { text: "викас-" } },
+      { left: { text: "las-" },     right: { text: "лас-" } }
+    ]
+  });
+</script>
+</body>
+</html>
