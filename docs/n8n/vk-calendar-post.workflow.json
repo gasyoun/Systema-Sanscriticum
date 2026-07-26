@@ -1,0 +1,52 @@
+{
+  "name": "VK content calendar — auto-pilot post (vk_calendar_post)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vk-calendar-post",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "20000000-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-360, 200],
+      "webhookId": "vk-calendar-post"
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/wall.post",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "owner_id", "value": "-REPLACE_VK_GROUP_ID" },
+            { "name": "from_group", "value": "1" },
+            { "name": "access_token", "value": "REPLACE_VK_GROUP_TOKEN" },
+            { "name": "v", "value": "5.131" },
+            { "name": "message", "value": "={{ $json.body.text_vk }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20000000-0000-0000-0000-000000000002",
+      "name": "VK: wall.post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 200]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "VK: wall.post", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

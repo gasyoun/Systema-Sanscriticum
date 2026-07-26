@@ -154,6 +154,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('post-monthly-schedule');
 
+        // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
+        // posts every due `scheduled` slot via n8n. No-op while
+        // features.content_calendar_autopilot is OFF (default).
+        $schedule->command('content:publish-due')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('publish-due-content-calendar');
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new CloseStaleSessionsJob)
