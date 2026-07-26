@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Вторая Arzamas-заметка «Россия и санскритский словарь: Коссович против Бётлингка» (H1696).** Материал-пак [docs/materials/kossovich-arzamas/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/kossovich-arzamas) — сюжет, сознательно вырезанный из первой заметки (её FOLLOWUPS W2-5 / DECISIONS_LOG L9): русский контекст PWG — Уваров и латынь, славянофильская санскритомания («шуба» из śubh, «старый хрен» Хомякова), санскрито-русский словарь Коссовича (1854, «за исключением ошибок» по Бётлингку), фельетон Ламанского о «ста тысячах рублей», защита Булича, «до словаря и после словаря» Ольденбурга — и реабилитация торса числами A43 (9 592 уникальных слова из 13 144, крупнейший уникальный вклад русской словарной семьи). SOURCE.md 16 глав (~3 700 слов), FACTS.md 87 строк claim→source (архивный слой честно атрибутирован Вигасину как вторичному источнику), ASSETS.md (3 новых PD-портрета: Уваров/Голике-1833 — обложка, автопортрет Хомякова-1842, Коссович-1880; повторное использование портрета Бётлингка из pwg-пака; 1 честный отказ), DECISIONS_LOG M1–M11, FOLLOWUPS KW2-1…KW2-6, детерминированный `build_body.py` (≥12 h2 gate). Импорт: artisan `materials:import-kossovich-arzamas {--publish}` — тонкий сабкласс PWG-команды (пути/порог подняты в protected-свойства родителя, поведение PWG-команды не изменено); slug `rossiya-i-sanskritskiy-slovar`. Взаимная ссылка добавлена в гл. 16 первой заметки (re-import идемпотентен). Тесты: `KossovichArzamasMaterialTest` (6, включая сосуществование обоих лонгридов) + `PwgArzamasMaterialTest` — 11 passed, 48 assertions. RWS-советы `sanskrit`+`general` (DeepSeek `deepseek-v4-pro`), Majors разобраны по findings. Публикация в прод — по README runbook пака. Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.53.0] - 2026-07-26
 
 ### Added

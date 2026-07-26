@@ -31,15 +31,18 @@ class ImportPwgArzamasMaterial extends Command
 
     protected $description = 'Upsert the PWG Arzamas longread article from docs/materials/pwg-arzamas/';
 
-    private const MIN_H2 = 15;
+    /** Pack directory (repo-relative) and h2 floor — overridden by sibling material commands. */
+    protected string $packDir = 'docs/materials/pwg-arzamas';
+
+    protected int $minH2 = 15;
 
     private const WORDS_PER_MINUTE = 200;
 
     public function handle(): int
     {
         try {
-            $bodyPath = $this->option('body') ?: base_path('docs/materials/pwg-arzamas/body.html');
-            $metaPath = $this->option('meta') ?: base_path('docs/materials/pwg-arzamas/meta.json');
+            $bodyPath = $this->option('body') ?: base_path($this->packDir.'/body.html');
+            $metaPath = $this->option('meta') ?: base_path($this->packDir.'/meta.json');
 
             $body = $this->readFile($bodyPath);
             $meta = json_decode($this->readFile($metaPath), true, 512, JSON_THROW_ON_ERROR);
@@ -51,9 +54,9 @@ class ImportPwgArzamasMaterial extends Command
             }
 
             $h2Count = substr_count($body, '<h2');
-            if ($h2Count < self::MIN_H2) {
+            if ($h2Count < $this->minH2) {
                 throw new RuntimeException(
-                    "body.html has only {$h2Count} <h2> chapters (ACCEPT A1 needs >= ".self::MIN_H2.')'
+                    "body.html has only {$h2Count} <h2> chapters (ACCEPT needs >= {$this->minH2})"
                 );
             }
 
