@@ -130,5 +130,6 @@ authored in this wave).
 | 25-07-2026 | Manual + metadoc authored; C1/C2/C3 claim-verified; 4 spot-runs recorded | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | §9 C3 amended after the adversarial pass: `withoutEvents` create-as-paid paths (silent promise fulfillment) + the new-value-only audit walk make the guard blind to silently-created paid payments — "trail complete going forward" retracted | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | Adversarial ledger complete: 45/47 CONFIRMED; §5.2 `duplicate` row + §11.2 RU guidance corrected (the `duplicate` decision constant is never persisted — a replay leaves no ledger row) | Fable 5 (`claude-fable-5`), H1405 |
+| 26-07-2026 | §9 C3 fix merged: `payments.first_paid_at` (write-path stamp + 3 `withoutEvents` create-as-paid payloads) + old-value audit-diff hardening + backfill command; guard's `hasPriorPaidTransition()` now checks the column first, audit walk as fallback — backlog row 2 updated, prod migrate/backfill queued as DEPLOY_QUEUE row 61 | Sonnet 5 (`claude-sonnet-5`), H1645 |
 
 _Dr. Mārcis Gasūns_
