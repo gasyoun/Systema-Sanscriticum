@@ -348,12 +348,39 @@ class Tariff extends Model
         if ($this->type === 'block') {
             $block = (int) $this->block_number;
 
-            $query->whereNotNull('start_block')
-                ->where('start_block', '<=', $block)
-                ->where(function ($q) use ($block) {
-                    $q->whereNull('end_block')
-                        ->orWhere('end_block', '>=', $block);
+            // Диапазонная атрибуция: возврат покрывает блок своим start..end.
+            $range = function ($q) use ($block) {
+                $q->whereNotNull('start_block')
+                    ->where('start_block', '<=', $block)
+                    ->where(function ($e) use ($block) {
+                        $e->whereNull('end_block')
+                            ->orWhere('end_block', '>=', $block);
+                    });
+            };
+
+            if (config('features.upgrade_credit_refund_link')) {
+                // Расход-возврат из админ-формы создаётся БЕЗ диапазона (форма
+                // обнуляет start/end при выборе «Расход»), поэтому диапазонная
+                // ветка его не видит и зачёт докупки не уменьшается — школа
+                // теряла сумму возврата второй раз (H1405 C2). За флагом
+                // добавляем атрибуцию по ссылке «Возврат за платёж №…»:
+                // возврат, привязанный к ОПЛАЧЕННОЙ половине этого блока,
+                // уменьшает зачёт. Возврат без диапазона и без ссылки остаётся
+                // невидимым — операционное правило: заполнять ссылку всегда
+                // (runbook §11.4 мануала money-access-core).
+                $halves = ['block_'.$block.'_h1', 'block_'.$block.'_h2'];
+
+                $query->where(function ($q) use ($range, $halves) {
+                    $q->where($range)
+                        ->orWhereHas('refundOf', function ($original) use ($halves) {
+                            $original->whereIn('tariff', $halves)
+                                ->paid()
+                                ->real();
+                        });
                 });
+            } else {
+                $query->where($range);
+            }
         }
 
         return (float) $query->sum('amount');
