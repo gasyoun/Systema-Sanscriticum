@@ -528,7 +528,7 @@ containment set. Residual: a refund created with *neither* a block range *nor* a
 `refund_of_payment_id` link remains invisible — the runbook (§11.4) therefore tells
 the operator to always fill «Возврат за платёж №…» when refunding.
 
-### C3 — resurrection guard depends on the audit trail: **documented limitation**
+### C3 — resurrection guard depends on the audit trail: **fix merged, pending prod migrate/backfill**
 
 `hasPriorPaidTransition()` (guard §5.3b) reads `payment_audits`. Verified bounds of
 the blind spot:
