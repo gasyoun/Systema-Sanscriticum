@@ -546,14 +546,25 @@ class Payment extends Model
     {
         // H1645: штамп момента первого входа в оплаченный статус — резервная
         // опора resurrection-guard'а (hasPriorPaidTransition), не зависящая от
-        // payment_audits. Один раз, никогда не перезаписывается; updateQuietly
-        // отключает события Payment на время записи — без этого сработал бы
-        // весь observer-стек ещё раз (PaymentAuditObserver и т.п.) на пустом
-        // изменении статуса, а static::updated мог бы рекурсивно вызвать
-        // fireOnPaid снова (status уже не dirty, поэтому цикла нет, но лишний
-        // проход и шум в аудите не нужны).
+        // payment_audits. Один раз, никогда не перезаписывается.
+        //
+        // ВНИМАНИЕ: fireOnPaid вызывается ИЗНУТРИ static::updated — одного из
+        // НЕСКОЛЬКИХ слушателей события 'updated' (PaymentObserver и другие
+        // регистрируются отдельно). Нельзя стампить через $payment->save()/
+        // updateQuietly() — они вызывают syncOriginal()/syncChanges() на ЭТОМ
+        // же инстансе и тем самым портят isDirty('status')/wasChanged('status')
+        // для слушателей, которые выполнятся ПОСЛЕ нас в том же проходе
+        // диспетчера (PaymentObserver::updated проверяет isDirty('status') —
+        // с save() внутри fireOnPaid реферальная/партнёрская награда переставала
+        // начисляться на pending->paid переходе). setAttribute() — только
+        // in-memory, без events и без синка $original; персист — отдельным
+        // withoutEvents-запросом, не через текущий инстанс.
         if ($payment->first_paid_at === null) {
-            $payment->updateQuietly(['first_paid_at' => now()]);
+            $timestamp = now();
+            Payment::withoutEvents(
+                fn () => Payment::query()->whereKey($payment->getKey())->update(['first_paid_at' => $timestamp])
+            );
+            $payment->setAttribute('first_paid_at', $timestamp);
         }
 
         // Системный расход / возврат и выплата ЗП преподавателю — только
