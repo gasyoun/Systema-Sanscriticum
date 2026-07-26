@@ -11,6 +11,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+
+- **Online Sanskrit games multi-wave plan (`/ask`, 26-07-2026).** Layered PLAN + ROADMAP + ARCHITECTURE + IMPLEMENTATION (Wave 1) + VERIFICATION for games built on existing Systema assets (`/exercises` engines, frequency roots, Kochergina/SRS fixtures, lead-magnet funnel, Sanskrit-HUB ladder). Invent catalogue **28** game IDs in three sections (asset-pedagogy · viral LM · engine-fill). Wave-1 fence: extend engines only, no audio/multiplayer. Deferred handoffs H1678–H1680 (platform+P0, P1 packs, SRS onboarding). Index: [docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.52.0] - 2026-07-26
 
 ### Added
