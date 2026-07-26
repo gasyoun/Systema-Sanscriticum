@@ -40,6 +40,7 @@ class Deal extends Model
         'closed_at',
         'closed_reason',
         'source_payment_id',
+        'installment_group_id',
     ];
 
     protected $casts = [

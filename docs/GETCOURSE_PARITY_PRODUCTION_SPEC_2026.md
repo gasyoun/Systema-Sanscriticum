@@ -494,6 +494,18 @@ on in production, otherwise managers meet two boards with no guidance. Mirrored 
 [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)
 as an `MG @DECIDE` row.
 
+**RULED 26-07-2026 — both questions of that row, rulings R5/R6 in
+[`Uprava/docs/DECISIONS_roadmap_forks_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md).**
+(1) *Boards:* **(a)+(c) additively** — both existing boards stay untouched; the shared layer is
+built as a SEPARATE alternative UI, a third view. No physical merge of `lead_stages`/`deal_stages`
+(that is fork F3, whose migration would touch live `leads`) — unification in the presentation
+layer only → H1658. (2) *Instalments:* **explicit marker.** The H1641 mitigation ("a won deal for
+this person + this course already exists → the second payment creates nothing") suppressed genuine
+repurchases along with instalment inflation; it is replaced by the `Payment` →
+`linked_promise_id` → `PaymentPromise` → `installment_group_id` chain, with the resolved group
+materialised on an additive nullable `deals.installment_group_id` → H1659. Neither ruling flips
+the prod flag: `crm_pipeline_board` stays default OFF.
+
 ---
 
 ## 8. Sequence — one handoff per step

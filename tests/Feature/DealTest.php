@@ -11,16 +11,21 @@ use App\Models\DealStage;
 use App\Models\DealTransition;
 use App\Models\Lead;
 use App\Models\Payment;
+use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Observers\PaymentDealBridgeObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * GC-C1 сделки + канбан + мост от оплаты (H1641). Покрывает:
+ * GC-C1 сделки + канбан + мост от оплаты (H1641, группировка взносов H1659).
+ * Покрывает:
  *  (a) модель и гард финальных стадий;
  *  (b) мост: создание/закрытие, исключения, идемпотентность, реверс;
+ *  (b2) что считается ОДНОЙ продажей — по installment_group_id, не по
+ *       «человек + курс» (H1659);
  *  (c) флаг crm_pipeline_board — значение по умолчанию И наблюдаемое поведение;
  *  (d) правило денежной границы — мост не пишет ни в один ранг 1-5.
  */
@@ -57,6 +62,33 @@ class DealTest extends TestCase
             'tariff' => 'full',
             'status' => 'paid',
         ], $attrs));
+    }
+
+    /**
+     * План рассрочки: N обещаний с общим installment_group_id — ровно то, что
+     * создаёт InstallmentPlanCreator. Строим строки напрямую, чтобы тест не
+     * зависел от уведомлений куратора (для строк с группой они и так молчат).
+     *
+     * @param  list<float|int>  $amounts
+     * @return array{0: string, 1: list<PaymentPromise>}
+     */
+    private function makeInstalmentPlan(User $user, Course $course, array $amounts): array
+    {
+        $group = (string) Str::uuid();
+
+        $promises = [];
+        foreach ($amounts as $i => $amount) {
+            $promises[] = PaymentPromise::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'promised_at' => now()->addMonths($i)->toDateString(),
+                'amount' => $amount,
+                'status' => PaymentPromise::STATUS_ACTIVE,
+                'installment_group_id' => $group,
+            ]);
+        }
+
+        return [$group, $promises];
     }
 
     // ---------------------------------------------------------------
@@ -242,21 +274,175 @@ class DealTest extends TestCase
         $this->assertSame(1, Deal::query()->where('course_id', $courseB->id)->count());
     }
 
+    // --- H1659: одна продажа = одна группа рассрочки -----------------------
+
     /**
      * @test
      *
-     * Дефект 2 ревью: рассрочка (несколько платежей по одной продаже)
+     * Дефект 2 ревью H1641: рассрочка (несколько платежей по одной продаже)
      * раздувала воронку — каждый взнос заводил отдельную выигранную сделку.
+     * Признак «одна продажа» теперь ЯВНЫЙ: общий installment_group_id обещаний
+     * (ruling 26-07-2026), а не догадка «тот же человек + тот же курс».
      */
-    public function instalments_for_one_sale_do_not_inflate_the_funnel(): void
+    public function instalments_of_one_plan_produce_a_single_deal(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        [$group, $promises] = $this->makeInstalmentPlan($user, $course, [2400, 2400]);
+
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[0]->id,
+        ]);
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[1]->id,
+        ]);
+
+        $this->assertSame(1, Deal::query()->count(), 'второй взнос завёл вторую выигранную сделку');
+        $this->assertSame($group, Deal::query()->firstOrFail()->installment_group_id);
+    }
+
+    /**
+     * @test
+     *
+     * ЦЕНА ПРЕЖНЕЙ ЭВРИСТИКИ, которую и покупает ruling: повторная покупка того
+     * же курса без рассрочки — ОТДЕЛЬНАЯ продажа. На эвристике «человек + курс»
+     * этот тест падал: вторая сделка не заводилась и реальный повторный доход
+     * был не виден в воронке.
+     */
+    public function repurchase_of_the_same_course_without_an_instalment_link_mints_a_second_deal(): void
     {
         $user = User::factory()->create();
         $course = Course::factory()->create(['is_active' => true]);
 
-        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400]);
-        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400]);
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 4800]);
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 4800]);
 
-        $this->assertSame(1, Deal::query()->count(), 'второй взнос завёл вторую выигранную сделку');
+        $this->assertSame(2, Deal::query()->count(), 'повторная покупка снова спрятана от воронки');
+        $this->assertSame(2, Deal::query()->whereNotNull('closed_at')->count());
+    }
+
+    /**
+     * @test
+     *
+     * Обещание без группы (одиночная договорённость об оплате, не рассрочка) —
+     * не признак «это второй взнос уже учтённой продажи».
+     */
+    public function payment_linked_to_a_promise_without_a_group_is_its_own_sale(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'amount' => 4800]);
+
+        $solo = PaymentPromise::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'promised_at' => now()->addMonth()->toDateString(),
+            'amount' => 4800,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+        $this->assertNull($solo->installment_group_id);
+
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 4800,
+            'linked_promise_id' => $solo->id,
+        ]);
+
+        $this->assertSame(2, Deal::query()->count());
+        $this->assertNull(Deal::query()->latest('id')->firstOrFail()->installment_group_id);
+    }
+
+    /**
+     * @test
+     *
+     * ПОРЯДОК ШАГОВ. Взнос по уже учтённому плану обязан быть немым ЦЕЛИКОМ:
+     * не только не создавать вторую сделку, но и не закрывать собой чужую
+     * открытую сделку по тому же курсу. Стой проверка группы после
+     * findOpenDealFor(), второй взнос закрыл бы менеджерскую сделку под
+     * будущий апгрейд — та же «запись не в ту строку», что ловило ревью H1641.
+     */
+    public function second_instalment_never_closes_an_unrelated_open_deal_for_the_same_course(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        [, $promises] = $this->makeInstalmentPlan($user, $course, [2400, 2400]);
+
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[0]->id,
+        ]);
+
+        // Менеджер завёл вторую, ещё не закрытую сделку по тому же курсу.
+        $unrelated = Deal::factory()->create(['user_id' => $user->id, 'course_id' => $course->id]);
+
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[1]->id,
+        ]);
+
+        $this->assertNull($unrelated->refresh()->closed_at, 'взнос закрыл чужую открытую сделку');
+        $this->assertSame(2, Deal::query()->count(), 'взнос завёл третью сделку');
+    }
+
+    /**
+     * @test
+     *
+     * Вторая ветвь цепочки: payment_promises.fulfilled_payment_id. Её ставит
+     * PromiseAutoFulfiller внутри fireOnPaid, то есть ДО обсерверов — поэтому
+     * группа видна и без linked_promise_id на самом платеже. Платёж создаём
+     * молча и зовём мост руками, иначе связь не успела бы возникнуть.
+     */
+    public function instalment_is_recognised_through_the_reverse_promise_link(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        [, $promises] = $this->makeInstalmentPlan($user, $course, [2400, 2400]);
+
+        $this->makeSale([
+            'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 2400,
+            'linked_promise_id' => $promises[0]->id,
+        ]);
+
+        $second = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 2400,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]));
+        $promises[1]->update([
+            'status' => PaymentPromise::STATUS_FULFILLED,
+            'fulfilled_at' => now(),
+            'fulfilled_payment_id' => $second->id,
+        ]);
+
+        app(PaymentDealBridgeObserver::class)->created($second);
+
+        $this->assertSame(1, Deal::query()->count(), 'обратная связь обещания не распознана как взнос');
+    }
+
+    /**
+     * @test
+     *
+     * Возврат и повторная оплата ТОГО ЖЕ платежа — одна продажа, а не две.
+     * Раньше это прикрывала эвристика «человек + курс»; после её снятия
+     * держится на переоткрытии сделки (реверс снимает source_payment_id,
+     * сделка остаётся открытой и находится снова).
+     */
+    public function refund_then_repayment_of_the_same_payment_does_not_double_count(): void
+    {
+        $payment = $this->makeSale();
+        $this->assertSame(1, Deal::query()->count());
+
+        $payment->update(['status' => 'canceled']);
+        $payment->update(['status' => 'paid']);
+
+        $this->assertSame(1, Deal::query()->count(), 'возврат с последующей оплатой задвоил продажу');
+        $deal = Deal::query()->firstOrFail();
+        $this->assertNotNull($deal->closed_at);
+        $this->assertSame($payment->id, $deal->source_payment_id);
     }
 
     /** @test */
@@ -366,7 +552,9 @@ class DealTest extends TestCase
         Deal::query()->delete();
         DealTransition::query()->delete();
 
-        $rankTables = ['payments', 'users', 'leads', 'courses', 'lead_stages', 'course_user', 'lesson_user', 'group_user'];
+        // payment_promises добавлена в H1659: мост читает цепочку до группы
+        // рассрочки и обязан оставаться по ней ТОЛЬКО читателем.
+        $rankTables = ['payments', 'payment_promises', 'users', 'leads', 'courses', 'lead_stages', 'course_user', 'lesson_user', 'group_user'];
         $countsBefore = collect($rankTables)->mapWithKeys(fn (string $t) => [$t => DB::table($t)->count()]);
 
         $offending = [];
