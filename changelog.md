@@ -11,6 +11,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+
+- **LearningApps to Systema: 7 drills + table engine + decode helper (H1710).** New family public/exercises/table/ (TableExercise.mount, LA tool 270) with verb-conjugation grid + masc. -i nominative; five thin drills (sort/verb-person-number, cloze/interrogative-accusative, cloze/demonstrative-pronouns, match/ru-sa-sentences, match/ru-sa-pairs-short). Helper scripts/decode_learningapps.py. Skill /learningapps-port. Executor: Grok 4.5 (grok-4.5).
+
 ## [1.56.0] - 2026-07-26
 
 ### Added
@@ -20,6 +24,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ### Added
 - **Kossovich-заметка: mining-pass M11 — 16 глав, образцы статей словаря, переиздания (H1696 follow-up).** Из escrow-ветки `h1696-kossovich-arzamas-2099` (параллельная попытка H1696) в канонический текст влиты проверенные по первоисточникам пассажи: биография Коссовича по статье Ольденбурга («Этюды» ~1705–1730 — источник, не найденный в первом проходе: Полоцк, «замечательный пример автодидакта», метод «скользил по грамматике»), «решётка кириллицы», латинский «фиговый листок» (мост к гл. 8 первой заметки), четырёхлетняя программа с храмами Ориссы, контраст поглощения 70,9 %/23,6 % (A43), финальные формулы. НОВАЯ гл. 10 «Внутри словаря: „яблоко" из амалаки» — образцы статей из оцифровки kow.jsonl (attā ~ «отец»/«тетя» с пометой «Гильф.» в самой статье, āmalaka ~ «яблоко», aruṇa ~ «румяный», anuśāsitar «на-каз-атель» — против настоящих когнатов aham~азъ, agra~острый, asthi~ость; вторая запись Коссовича и первая запись PWG — одно и то же «восклицаніе состраданія»). По указанию MG добавлены [вступительная лекция 1859 г.](https://samskrtam.ru/kossovich-vstupitelnaya-lekciya-1859) и краудфандинговые переиздания словаря ([planeta.ru/sanskrit](https://planeta.ru/campaigns/sanskrit), 3-е изд. 2017) и «Легенды об охотнике» ([planeta.ru/ohotnik](https://planeta.ru/campaigns/ohotnik), 2018). FACTS +17 строк (K3-9…K16-5, включая kow-ключи, проверенные по файлу), DECISIONS M11, MAJORS-леджер дополнен пост-советной секцией; expected_min_h2 15→16. Тесты: 11 passed (49 assertions). Executor: Fable 5 (`claude-fable-5`).
+
+### Added
 
 
 ## [1.54.0] - 2026-07-26
