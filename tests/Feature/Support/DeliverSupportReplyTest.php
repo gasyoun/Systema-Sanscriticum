@@ -11,6 +11,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportReplyService;
+use App\Services\Support\TechnicalIssueRouter;
 use App\Services\TelegramSupport\SupportContactUserAutoLinker;
 use App\Services\TelegramSupport\SupportDailyRollupAggregator;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
@@ -36,7 +37,7 @@ class DeliverSupportReplyTest extends TestCase
      */
     private function bindFakeSync(): void
     {
-        $sync = new class(app(SupportDailyRollupAggregator::class), app(SupportContactUserAutoLinker::class), app(SupportConversationManager::class)) extends TelegramSupportSyncService
+        $sync = new class(app(SupportDailyRollupAggregator::class), app(SupportContactUserAutoLinker::class), app(SupportConversationManager::class), app(TechnicalIssueRouter::class)) extends TelegramSupportSyncService
         {
             protected function openClient(string $clientClass): object
             {
