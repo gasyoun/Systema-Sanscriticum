@@ -167,20 +167,22 @@ class GamesFunnelTelemetryTest extends TestCase
     /** @test */
     public function gate_js_gating_state_is_untouched_by_telemetry(): void
     {
-        // Контракт H1360: gate.js не трогаем, а telemetry.js — пассивный наблюдатель.
+        // Контракт H1360/H1678: gate.js и telemetry.js остаются независимы —
+        // gate.js не вызывает телеметрию напрямую, telemetry.js не читает/не
+        // пишет gate-состояние (per-family счётчик из H1678).
         $base = base_path('public/exercises');
         $gate = file_get_contents($base.'/gate.js');
         $telemetry = file_get_contents($base.'/telemetry.js');
 
-        // gate.js сохраняет свой ключ и поведение и НЕ вызывает телеметрию.
-        $this->assertStringContainsString('sgx_played_v1', $gate);
+        // gate.js хранит свой ключ (5 игр на семейство, H1678) и не вызывает телеметрию.
+        $this->assertStringContainsString('sgx_plays_v2', $gate);
         $this->assertStringContainsString('showWall', $gate);
         $this->assertStringNotContainsString('telemetry', $gate);
         $this->assertStringNotContainsString('/api/games/event', $gate);
 
         // telemetry.js использует ДРУГОЙ ключ и не читает/не пишет gate-состояние.
         $this->assertStringContainsString('sgx_anon_v1', $telemetry);
-        $this->assertStringNotContainsString('sgx_played_v1', $telemetry);
+        $this->assertStringNotContainsString('sgx_plays_v2', $telemetry);
     }
 
     private function seedEvents(string $drill, ?string $band, string $event, int $n): void
