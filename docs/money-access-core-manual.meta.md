@@ -1,6 +1,6 @@
 # money-access-core-manual.meta.md — metadoc for `money-access-core-manual`
 
-_Created: 25-07-2026 · Last updated: 25-07-2026_
+_Created: 25-07-2026 · Last updated: 26-07-2026_
 
 Companion record for
 [money-access-core-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md) —
