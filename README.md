@@ -145,13 +145,28 @@ draft → submitted → (needs_revision → submitted)* → accepted
 
 ### Бесплатные игры-упражнения (`/exercises/`)
 
-Статические браузерные тренажеры по санскриту (сортировка по группам, поиск пар,
-cloze-подстановка) под `public/exercises/` — index-каталог + отдельные движки.
+Статические браузерные тренажёры по санскриту под
+[`public/exercises/`](public/exercises/) — index-каталог + семейства движков
+(без сборки, offline/iframe-safe). Живой каталог на проде:
+[samskrte.ru/exercises/](https://samskrte.ru/exercises/index.html).
+
+| Семейство | Движок | Примеры |
+|---|---|---|
+| **Сортировки** | `sort/` | роды; существительное↔местоимение; спряжение по лицу/числу |
+| **Пары** | `match/` | корень↔форма; RU↔SA предложения |
+| **Пропуски** | `cloze/` | глагол в контексте; указательные; вопросительный аккузатив |
+| **Таблицы** | `table/` (H1710) | парадигма спряжения; номинатив м.р. на -i |
+| **Лигатуры / корни** | match + data.js | top-10/50/200 лигатур; top-25/50/100 корней по DCS |
+
 Мягкий воронковый гейт: аноним проходит **одну** игру бесплатно, дальше — ненавязчивое
-предложение «зарегистрируйте бесплатный кабинет, чтобы продолжить»; залогиненные
-студенты не гейтятся. Состояние — в `localStorage` (nudge, не DRM), авторизация
-читается пробой `/api/games/auth` (`games.auth`), так что гейт работает и на голом
-статик-хостинге. Файл гейта: [public/exercises/gate.js](public/exercises/gate.js).
+предложение «зарегистрируйте бесплатный кабинет, чтобы продолжить»; **залогиненные
+студенты не гейтятся** и видят все тренажёры. Состояние — в `localStorage` (nudge, не DRM),
+авторизация читается пробой `/api/games/auth`. Гейт:
+[public/exercises/gate.js](public/exercises/gate.js). Порт с LearningApps:
+[`/learningapps-port`](https://github.com/gasyoun/claude-config/blob/main/commands/learningapps-port.md),
+хелпер [`scripts/decode_learningapps.py`](scripts/decode_learningapps.py).
+Карта для куратора/студента:
+[`docs/student-manual.md`](docs/student-manual.md) §12.
 
 ---
 
@@ -578,10 +593,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   и «теплого хвоста» в Telegram, бесплатный + платный tripwire-трек
   ([MarathonController.php](app/Http/Controllers/MarathonController.php),
   [config/marathon.php](config/marathon.php)).
-- [x] **Бесплатные игры-упражнения** — статические браузерные тренажеры (sort / match /
-  cloze) под `public/exercises/` с мягким воронковым гейтом «одна игра бесплатно →
-  зарегистрируйся» ([public/exercises/gate.js](public/exercises/gate.js), проба
-  `/api/games/auth`).
+- [x] **Бесплатные игры-упражнения** — статические тренажёры sort / match / cloze / **table**
+  (+ лигатуры и корни по частотности) под `public/exercises/` с мягким гейтом
+  «одна игра бесплатно → зарегистрируйся»; студенты в кабинете — без гейта
+  ([public/exercises/gate.js](public/exercises/gate.js); H1710 batch 26-07-2026).
 - [x] **SRS-движок (Saraswati trainer)** — нативные интервальные повторения «Anki для
   санскрита» с планировщиком FSRS, страница повторений и статистики, за флагом
   `SRS_ENABLED` (по умолчанию ON, пилот август 2026;
