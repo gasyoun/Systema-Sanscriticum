@@ -52,8 +52,10 @@ class PromiseFulfillment
             ];
 
             if ($silent) {
+                // H1645: withoutEvents подавляет static::saving — штампуем
+                // напрямую, иначе резурекшн-гвард не увидит силент-платёж.
                 /** @var Payment $payment */
-                $payment = Payment::withoutEvents(fn () => Payment::create($payload));
+                $payment = Payment::withoutEvents(fn () => Payment::create($payload + ['first_paid_at' => now()]));
                 $this->runSilentHooks($payment, $promise);
             } else {
                 $payment = Payment::create($payload);

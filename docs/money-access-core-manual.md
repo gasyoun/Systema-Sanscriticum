@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 25-07-2026_
+_Created: 25-07-2026 · Last updated: 26-07-2026 (H1645 — §9 C3 fixed)_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
@@ -360,10 +360,11 @@ With the flag OFF the ledger still records everything but **behavior is unchange
 - **(a) Duplicate delivery** (same `event_hash`) → 200 no-op before the transaction;
   the unique index remains the race-proof backstop.
 - **(b) Resurrection** — a success JWT for a payment that is *not currently paid* but
-  **has a prior paid transition in its audit trail** (`hasPriorPaidTransition()`,
-  reading `payment_audits`) is refused: a replayed/late success must not resurrect
-  access, deposit consumption, the promo slot or the referral reward. **The guard is
-  only as good as the audit trail — defect C3, §9.**
+  **has ever been paid** (`hasPriorPaidTransition()`) is refused: a replayed/late
+  success must not resurrect access, deposit consumption, the promo slot or the
+  referral reward. Source of truth is `payments.first_paid_at` (H1645, §9 C3 —
+  fixed); while unbackfilled for a given row it falls back to the `payment_audits`
+  walk (inspecting both old and new status values of each diff, not just new).
 - **(c) Amount mismatch** — if the payload carries an amount and
   `|bank − payments.amount| > checkout.webhook_amount_tolerance` (default 1.00 ₽,
   `CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE`), access is refused. Amount extraction is
@@ -528,35 +529,39 @@ containment set. Residual: a refund created with *neither* a block range *nor* a
 `refund_of_payment_id` link remains invisible — the runbook (§11.4) therefore tells
 the operator to always fill «Возврат за платёж №…» when refunding.
 
-### C3 — resurrection guard depends on the audit trail: **documented limitation**
+### C3 — resurrection guard audit-trail blind spot: **fixed (H1645)**
 
-`hasPriorPaidTransition()` (guard §5.3b) reads `payment_audits`. Verified bounds of
-the blind spot:
+`hasPriorPaidTransition()` (guard §5.3b) used to read `payment_audits` only. Verified
+bounds of the (now-closed) blind spot:
 
 - `PaymentAuditObserver` has existed since **08-06-2026** (migration
   `2026_06_08_120000_create_payment_audits_table.php`). A payment that was paid *and
-  reversed* entirely before that date has no audit rows ⇒ the guard cannot see its
-  prior paid state ⇒ a differently-bodied success JWT for it would be applied even
-  with the flag ON (the `event_hash` dedup only blocks byte-identical replays).
-- Status *transitions* all go through Eloquent `update()` (events fire; verified by
-  sweep — no `updateQuietly`/mass-update touches `payments.status`). But several
-  paths **create payments already-paid via `withoutEvents`**, so they get no
-  `created` audit snapshot: silent promise fulfillment
-  ([PromiseFulfillment::fulfil()](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/PromiseFulfillment.php)
-  with `silent=true` — **real money**), access-only siblings (§1.5), conditional
-  grants (§1.6). Combined with the next point, such a payment stays invisible to
-  the guard even post-observer.
-- `hasPriorPaidTransition()` inspects only the **new** value of each audit diff
-  (`$status[1]`). A normal lifecycle leaves a `pending→paid` row (new = paid ⇒
-  detected). A *silently-created* paid payment that is later reversed leaves only a
-  `paid→failed` diff — whose new value is `failed` — so its prior paid state is
-  **not** detected. Cheap no-schema hardening (also inspecting the *old* value,
-  `$status[0]`) is folded into the queued fix below.
+  reversed* entirely before that date has no audit rows.
+- Several paths **create payments already-paid via `withoutEvents`** (silent promise
+  fulfillment — [PromiseFulfillment::fulfil()](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/PromiseFulfillment.php)
+  with `silent=true`, real money — access-only siblings §1.5, conditional grants
+  §1.6), so they got no `created` audit snapshot either.
+- `hasPriorPaidTransition()` used to inspect only the **new** value of each audit
+  diff (`$status[1]`). A *silently-created* paid payment later reversed left only a
+  `paid→failed` diff — new value `failed` — so its prior-paid state went undetected.
 
-A robust fix is a dedicated `payments.first_paid_at` column with a backfill — a
-**schema change**, which this wave must not author (programme ruling D16). Queued as
-its own handoff instead; until then the limitation stands documented here and in the
-metadoc.
+**Fix (H1645, [PR — см. changelog]):** a dedicated `payments.first_paid_at` column
+(additive, nullable — programme ruling D16: agents never run this migration against
+prod, DEPLOY_QUEUE №60 is Ivan's step) is the new source of truth for
+`hasPriorPaidTransition()`. It is stamped once, on the first entry into a paid status,
+by `Payment::booted()`'s `saving` hook for the normal event-driven path, and directly
+in the `withoutEvents` create payloads for the three silent paths above (they suppress
+model events, so the hook never fires for them). The audit-diff inspection is also
+hardened to check **both** old and new status values (`$status[0]`/`$status[1]`), so
+even the still-audit-only fallback catches a `paid→failed` row. A one-shot idempotent
+backfill command (`payments:backfill-first-paid-at`, dry-run by default, `--apply` to
+write) recovers `first_paid_at` for pre-existing rows from the earliest audit proving
+prior-paid, falling back to `created_at` for currently-paid rows with no audit trail.
+**Residual:** a payment paid *and* reversed entirely before 08-06-2026 with genuinely
+no trace (no audit row, currently not paid) cannot be recovered by anything — the
+backfill command reports this count explicitly rather than silently leaving it
+unaccounted for. Tests: `FirstPaidAtTest` (4 cases) + existing `TochkaWebhookTest` (13)
+stay green.
 
 ---
 

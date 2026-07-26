@@ -82,6 +82,9 @@ class BlockAccessMaterializer
                     'end_block' => $n,
                     'is_conditional' => false,
                     'transaction_id' => self::GRANT_PREFIX.$payment->id,
+                    // H1645: withoutEvents подавляет static::saving — штампуем
+                    // напрямую, иначе резурекшн-гвард не увидит эту sibling-строку.
+                    'first_paid_at' => now(),
                 ]));
 
                 $ownedKeys[$key] = true; // защита от повтора внутри одного прогона

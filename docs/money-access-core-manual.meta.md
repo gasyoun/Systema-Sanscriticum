@@ -1,6 +1,6 @@
 # money-access-core-manual.meta.md — metadoc for `money-access-core-manual`
 
-_Created: 25-07-2026 · Last updated: 25-07-2026_
+_Created: 25-07-2026 · Last updated: 26-07-2026_
 
 Companion record for
 [money-access-core-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md) —
@@ -89,7 +89,7 @@ authored in this wave).
 | # | Improvement | Why | Status |
 |---|---|---|---|
 | 1 | Close C1: confirm `reported_amount` on one real ledger row after `TOCHKA_WEBHOOK_GUARD` is ON in prod | Turns the amount guard from best-effort into verified | open (`@DECIDE` / prod observation) |
-| 2 | Close C3 durably: `payments.first_paid_at` + backfill (+ the no-schema `$status[0]` old-value check) | Removes the pre-08-06-2026 audit blind spot AND the `withoutEvents` create-as-paid blind spot (silent promise fulfillment) of the resurrection guard | queued handoff H1645 (schema change, D16) |
+| 2 | Close C3 durably: `payments.first_paid_at` + backfill (+ the no-schema `$status[0]` old-value check) | Removes the pre-08-06-2026 audit blind spot AND the `withoutEvents` create-as-paid blind spot (silent promise fulfillment) of the resurrection guard | fix merged (H1645), pending prod migrate/backfill — DEPLOY_QUEUE №60 |
 | 3 | Admin form: auto-fill `start_block`/`end_block` (or keep them) on `Расход` linked via `refund_of_payment_id` | Removes the C2 data-entry gap at the source, complements the flag-gated netting fix | open |
 | 4 | Add a `payment_webhook_events` retention/dashboard note once volume data exists | Ledger is append-only and unbounded | open |
 | 5 | Worked full-course upgrade example once `full_course_block_credit` is turned ON in prod | §4.7 covers the always-on half→block path only | open |
@@ -100,7 +100,10 @@ authored in this wave).
   PRs after that date may outdate specific sections — the staleness detector
   ([Uprava/tools/manual_staleness.py](https://github.com/gasyoun/Uprava/blob/main/tools/manual_staleness.py))
   tracks this via the block above.
-- §9 C1/C3 are open limitations by design (ruled, not overlooked).
+- §9 C1 is an open limitation by design (ruled, not overlooked); C3 fix is merged
+  (H1645) and pending only the prod migrate/backfill step (DEPLOY_QUEUE №60) — a
+  genuinely-traceless pre-08-06-2026 paid-then-reversed payment with no audit row
+  remains an acknowledged residual (backfill reports its count, never silently).
 - Loyalty thresholds and several operational toggles live in the `MarketingSetting`
   DB row — their *values* are runtime state and are deliberately not documented.
 
@@ -130,5 +133,6 @@ authored in this wave).
 | 25-07-2026 | Manual + metadoc authored; C1/C2/C3 claim-verified; 4 spot-runs recorded | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | §9 C3 amended after the adversarial pass: `withoutEvents` create-as-paid paths (silent promise fulfillment) + the new-value-only audit walk make the guard blind to silently-created paid payments — "trail complete going forward" retracted | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | Adversarial ledger complete: 45/47 CONFIRMED; §5.2 `duplicate` row + §11.2 RU guidance corrected (the `duplicate` decision constant is never persisted — a replay leaves no ledger row) | Fable 5 (`claude-fable-5`), H1405 |
+| 26-07-2026 | §9 C3 fix merged (H1645): `payments.first_paid_at` + idempotent backfill command + old-value audit hardening; backlog row 2 bumped to "fix merged, pending prod migrate/backfill"; DEPLOY_QUEUE №60 added | Sonnet 5 (`claude-sonnet-5`), H1645 |
 
 _Dr. Mārcis Gasūns_

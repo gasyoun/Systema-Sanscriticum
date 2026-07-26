@@ -298,6 +298,9 @@ class ConditionalAccessGranter
             'transaction_id' => 'promise_grant_#'.$promise->id,
             'is_conditional' => true,
             'linked_promise_id' => $promise->id,
+            // H1645: withoutEvents подавляет static::saving — штампуем
+            // напрямую, иначе резурекшн-гвард не увидит этот conditional-грант.
+            'first_paid_at' => now(),
         ]));
     }
 

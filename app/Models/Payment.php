@@ -73,6 +73,12 @@ class Payment extends Model
         'payer_note',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
+        // H1645: штамп первого входа в paid-статус. Не форма — только
+        // системные withoutEvents-пути (BlockAccessMaterializer,
+        // ConditionalAccessGranter, силент PromiseFulfillment) пишут его
+        // напрямую в payload, потому что там события модели подавлены и
+        // static::saving-хук ниже не срабатывает.
+        'first_paid_at',
     ];
 
     /** Деньги пришли в кассу школы (обычный платёж). */
@@ -99,6 +105,7 @@ class Payment extends Model
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
         'payment_link_expires_at' => 'datetime',
+        'first_paid_at' => 'datetime',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
         'start_block' => 'integer',
@@ -155,12 +162,16 @@ class Payment extends Model
     }
 
     /**
-     * Был ли платёж когда-либо в оплаченном статусе — по аудит-следу
-     * (PaymentAuditObserver пишет и системные webhook-изменения). Ловит и
-     * переход pending→paid (updated: status = [old, new]), и создание сразу
-     * оплаченным (created: status — скаляр-снимок). В связке с «сейчас НЕ
+     * Был ли платёж когда-либо в оплаченном статусе. В связке с «сейчас НЕ
      * оплачен» это и есть отменённый/возвращённый платёж, который повторный
      * success-вебхук не должен воскрешать (H1359, guard rejected_resurrection).
+     *
+     * Источник истины — `first_paid_at` (H1645): прямой, независимый от
+     * аудита штамп первого входа в оплаченный статус, проставляется на
+     * КАЖДОМ пути создания/перехода в paid, включая `withoutEvents`
+     * (см. Payment::booted и §9 C3 money-access-core-manual.md). Пока
+     * колонка не забэкфиллена для старых платежей — fallback на аудит-след
+     * (PaymentAuditObserver, существует только с 08-06-2026).
      *
      * ВНИМАНИЕ: у PaymentAudit колонка называется `changes`, что совпадает с
      * protected-свойством Eloquent Model::$changes (трекинг «грязных» полей).
@@ -170,10 +181,28 @@ class Payment extends Model
      */
     public function hasPriorPaidTransition(): bool
     {
+        if ($this->first_paid_at !== null) {
+            return true;
+        }
+
         foreach ($this->audits()->get() as $audit) {
             $status = $audit->getAttribute('changes')['status'] ?? null;
-            $newStatus = is_array($status) ? ($status[1] ?? null) : $status;
-            if (in_array($newStatus, self::PAID_STATUSES, true)) {
+
+            if (! is_array($status)) {
+                // created/deleted снимок: голый скаляр, не [old, new]-диф.
+                if (in_array($status, self::PAID_STATUSES, true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            // updated-диф: смотрим И старое, И новое значение (H1645
+            // hardening) — paid→failed строка тоже доказывает «был оплачен»,
+            // хотя сам переход уводит ИЗ paid (старая проверка только нового
+            // значения это пропускала).
+            if (in_array($status[0] ?? null, self::PAID_STATUSES, true)
+                || in_array($status[1] ?? null, self::PAID_STATUSES, true)) {
                 return true;
             }
         }
@@ -458,6 +487,29 @@ class Payment extends Model
             } else {
                 $payment->received_account = self::RECEIVED_SCHOOL;
                 $payment->received_by_teacher_id = null;
+            }
+        });
+
+        // 0b. H1645: штампуем first_paid_at РОВНО ОДИН РАЗ, на первый вход в
+        // paid-статус (создание сразу оплаченным ИЛИ переход pending→paid).
+        // Никогда не перезаписываем уже проставленное значение. Покрывает
+        // только события-путь — withoutEvents-создания (см. $fillable-коммент
+        // выше) сами кладут значение в payload, потому что этот хук для них
+        // не срабатывает.
+        static::saving(function (Payment $payment): void {
+            if ($payment->first_paid_at !== null) {
+                return;
+            }
+
+            if (! in_array($payment->status, self::PAID_STATUSES, true)) {
+                return;
+            }
+
+            $wasAlreadyPaid = $payment->exists
+                && in_array($payment->getOriginal('status'), self::PAID_STATUSES, true);
+
+            if (! $wasAlreadyPaid) {
+                $payment->first_paid_at = now();
             }
         });
 
