@@ -167,13 +167,37 @@ class Payment extends Model
      * Payment и PaymentAudit — сиблинги от Model, поэтому `$audit->changes`
      * ИЗ ЭТОГО класса читает пустое protected-свойство, а НЕ атрибут. Берём
      * значение только через getAttribute(), иначе связь не срабатывает.
+     *
+     * H1645: `first_paid_at` — прямая, независимая от аудита опора — проверяется
+     * первой. Она стамповается write-путём (fireOnPaid + create-as-paid payloads)
+     * и бэкфиллится командой `payments:backfill-first-paid-at`, так что покрывает
+     * и «до-аудитную» эпоху (PaymentAuditObserver существует только с 08-06-2026),
+     * и withoutEvents-пути создания уже-оплаченных платежей, невидимые аудиту.
+     * Аудит-обход остаётся фолбэком, пока колонка не забэкфилена, и теперь
+     * инспектирует ОБЕ стороны диффа ($status[0] и $status[1]) — было: только
+     * новое значение, из-за чего запись paid→failed (новое = failed) была
+     * невидима, хотя старое значение доказывает, что платёж был оплачен.
      */
     public function hasPriorPaidTransition(): bool
     {
+        if ($this->first_paid_at !== null) {
+            return true;
+        }
+
         foreach ($this->audits()->get() as $audit) {
             $status = $audit->getAttribute('changes')['status'] ?? null;
-            $newStatus = is_array($status) ? ($status[1] ?? null) : $status;
-            if (in_array($newStatus, self::PAID_STATUSES, true)) {
+
+            if (! is_array($status)) {
+                if (in_array($status, self::PAID_STATUSES, true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (in_array($status[0] ?? null, self::PAID_STATUSES, true)
+                || in_array($status[1] ?? null, self::PAID_STATUSES, true)
+            ) {
                 return true;
             }
         }
