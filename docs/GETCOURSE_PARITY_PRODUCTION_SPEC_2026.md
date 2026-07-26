@@ -54,7 +54,7 @@ demoted GC-A3 (§1 ⚠) under audit.
 | **GC-B2** attendance dashboard | B | **DONE** | — shipped | Flag [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) line 193, default `false`; [`AttendanceDashboard.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/AttendanceDashboard.php); `ClassAttendanceService::dashboard()`; 3 tests; commit `cfef7e2` = [PR #444](https://github.com/gasyoun/Systema-Sanscriticum/pull/444). Audit confirmed the ticket's falsifiable constraint (reuse `forSchedule()` row-wise, no new counting logic) holds. |
 | **GC-B3** webinar provider seam | B | ⚠ **PARTIAL** (roadmap says "Later"; audit demoted from DONE) | 2 — finish | [`WebinarProvider.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Webinar/WebinarProvider.php), `ZoomService implements`, BBB skeleton, `meeting_*` alias columns — all shipped in `b4d8a2c` = [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549). **Three gaps:** no `webinar_provider_abstraction` flag; the container binding has **zero consumers** ([`ZoomWebhookController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Webhooks/ZoomWebhookController.php) line 100 resolves the concrete `ZoomService`); no `services.bbb` block, so `isConfigured()` is structurally always false. |
 | **GC-B1** per-schedule Zoom auto-create | B | **REMOVED** — live `@DECIDE` | none | Removed in [`eda8059`](https://github.com/gasyoun/Systema-Sanscriticum/commit/eda8059e8ae16086ee0ef22f6b78c4a91def3b71) (27-06-2026) for the single-course-link model. `ZoomService::createMeeting` throws, citing the open decision; `test_zoom_create_meeting_stays_removed_per_gc_b1` **locks the absence**. Zero writes to `zoom_join_url`/`zoom_start_url` anywhere. See §7 F1. |
-| **GC-C1** `Deal` + kanban | C | **PARTIAL** | **2 — head** (§3) | No `Deal` model, no `deals` table, no `crm_pipeline_board` flag, no bridge — on **any** ref, ever. But the *data-driven stages + drag-drop kanban* slice named in the ticket text **is** shipped and production-wired as [`LeadKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/LeadKanbanBoard.php) + [`LeadStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/LeadStage.php) (H451). See §7 F2 — a live contradiction governs this. |
+| **GC-C1** `Deal` + kanban | C | **DONE** (25-07-2026, H1641) | 2 — shipped | F2 ruled by MG 21-07-2026 → separate `Deal` entity. Shipped: [`Deal`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Deal.php)/[`DealStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealStage.php)/[`DealTransition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealTransition.php), `deals`/`deal_stages`/`deal_transitions` migrations, [`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php), flag `crm_pipeline_board` (default `false`). `LeadKanbanBoard`/`LeadStage` (H451) deliberately **untouched** — see §7 F9, the one question this ticket did NOT resolve. |
 | **GC-C2** manager sales attribution | C | **NOT_BUILT** | **2** (§4) | `manager_sales_report` absent; `OrderPaymentConversionService` groups by course and channel only (lines 223, 246). Across the whole tree `assigned_to` is read by **zero** reports. |
 | **GC-C3** `FollowUpTask` | C | **NOT_BUILT** | 3 — tail | `FollowUpTask` occurs exactly once repo-wide: the roadmap line defining it. Flag `crm_reminders` **does** exist (line 67, default `false`) but gates the pre-existing [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php), not this ticket. See §7 F6. |
 | **GC-D1** quiz engine, translit-aware | D | **NOT_BUILT** | 3 — head | No `Quiz`/`Question`/`QuizAttempt` model or table. Only grading code is `MarathonController::completeLevelQuiz()` (config-driven). **No runtime IAST/Cyrillic/Devanāgarī → SLP1 transcoder exists in `app/`** — SLP1 appears only as pre-computed data. See §7 F7. |
@@ -76,10 +76,20 @@ here.** The only change to the roadmap's own sequencing is bookkeeping: B2 and m
 since shipped, so the "Now" bucket is spent.
 
 **Bookkeeping (25-07-2026, H1637):** Wave 4 head (GC-A1) has shipped — see the composition table
-above. It was built independently of Waves 2-3 (per MG's in-chat ruling), which are still stuck on
-GC-C1's Deal/kanban fork and GC-B1's Zoom-auto-create fork respectively; GC-A1 carried no open fork
-of its own. Wave 4's remaining member, GC-A2 (unified channel router), is unaffected and still
-`NOT_BUILT`.
+above. It was built independently of Waves 2-3 (per MG's in-chat ruling), which were then still
+stuck on GC-C1's Deal/kanban fork and GC-B1's Zoom-auto-create fork respectively; GC-A1 carried no
+open fork of its own. Wave 4's remaining member, GC-A2 (unified channel router), is unaffected and
+still `NOT_BUILT`.
+
+**Bookkeeping (25-07-2026, H1641):** F1 and F2 turned out to have been **ruled by MG on the
+20-07-2026 weekly `@DECIDE` sheet** (F1 on 19-07, F2 on 21-07) and simply never applied to these
+docs — the week-long stall was a propagation gap, not an open question.
+[`DECISIONS_roadmap_forks_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md)
+§R2 is now marked superseded. **Wave 2 head GC-C1 has shipped** (this pass); GC-C2 is now the head
+of the remaining wave-2 work. GC-B1 is rescoped and queued as
+[H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md),
+still `REMOVED` in the tree until that ships. One genuinely new fork opened in the process: **F9**
+(the fate of the now-parallel `LeadKanbanBoard`).
 
 ---
 
@@ -353,7 +363,7 @@ House conventions, verified across the 20 existing keys:
 
 | Ticket | Flag | Default | Notes |
 |---|---|---|---|
-| GC-C1 | `crm_pipeline_board` | `false` | Gates the `Deal` board. Note §7 F2 may change what it gates. |
+| GC-C1 | `crm_pipeline_board` | `false` | ✅ Shipped 25-07-2026 (H1641). Gates **both** `DealKanbanBoard` and `PaymentDealBridgeObserver`'s write path — while OFF the bridge early-returns and not one `deals` row is written. Default pinned by `DealFlagDefaultTest` (config value + admin-visible surface), closing the §6 hygiene gap for this flag. |
 | GC-C2 | `manager_sales_report` | `false` | |
 | GC-C3 | — | — | **Anomaly:** `crm_reminders` already exists and gates the pre-existing reminder command. Reusing it silently widens its meaning — §7 F6. |
 | GC-B3 | `webinar_provider_abstraction` | `false` | **Owed retroactively** — the seam shipped unflagged against the roadmap's blanket "всё за фича-флагом" rule. §7 F8. |
@@ -377,8 +387,16 @@ Naming forks is this document's job. **Resolving them is a human's** (PLAN §2.2
 forks would be a red flag: R-1's whole premise is that this programme is under-specified, so a pass
 surfacing no open question would have skipped the analysis. Nothing below is pre-empted.
 
-**F1 · GC-B1 — per-schedule Zoom auto-create vs. the single-link model.** Carried forward, still
-live. Auto-create was built and deliberately removed in
+**F1 · GC-B1 — per-schedule Zoom auto-create vs. the single-link model. ✅ RESOLVED 19-07-2026
+(MG, weekly `@DECIDE` sheet) → option (b): rescope to "auto-create ONE recurring meeting per
+course", matching the shipped single-link model.** Per-schedule `ZoomService::createMeeting()` is
+NOT re-added and the 27-06-2026 rewrite stands. The ruling sat unapplied in
+[`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)
+for a week; build queued as
+[H1642](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1642-Sonnet_Systema-Sanscriticum_getcourse-gc-b1-zoom-recurring-meeting_25.07.26.md).
+Until that ships the tree state below still holds. _Original framing, kept for the record:_
+
+Auto-create was built and deliberately removed in
 [`eda8059`](https://github.com/gasyoun/Systema-Sanscriticum/commit/eda8059e8ae16086ee0ef22f6b78c4a91def3b71);
 implementing the ticket as written would silently revert a considered decision, and a regression test
 now locks the removal. **New detail:** what was removed was a *manual admin action*
@@ -388,7 +406,15 @@ say what the June single-link model got wrong, or reformulate the ticket (e.g. o
 per course at stream generation). Until then it is out of scope.
 
 **F2 · GC-C1 — two live decision records disagree about the shape, and the tree implements the
-older one.** The most consequential fork in this document.
+older one. ✅ RESOLVED 21-07-2026 (MG, weekly `@DECIDE` sheet) → option (a): the reversal is
+confirmed, a separate `Deal` entity is built; §R2 marked superseded 25-07-2026 (H1641).** Built and
+merged the same day — `Deal`/`DealStage`/`DealTransition`, `DealKanbanBoard`,
+`PaymentDealBridgeObserver`, flag `crm_pipeline_board`. `LeadKanbanBoard`/`LeadStage` were left
+**exactly as they were**: what becomes of them is NOT part of this ruling and is now tracked
+separately as **F9** below. _Original framing, kept for the record — it is why this fork survived
+a week:_
+
+The most consequential fork in this document.
 
 - [`Uprava/docs/DECISIONS_roadmap_forks_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md)
   §R2 (10-07-2026, H448) rules **"extend `Lead`"**, reasoning that a `Deal` entity would re-plumb
@@ -449,6 +475,22 @@ webhook resolves the concrete `ZoomService`, and `services.bbb` does not exist, 
 abstraction + flip the roadmap row) or record deliberately that the seam is schema-and-interface only
 until BBB lands in Q4. The roadmap row still says "Later" while the CHANGELOG and DEPLOY_QUEUE record
 it as shipped — those disagree today.
+
+**F9 · What becomes of `LeadKanbanBoard` now that a `Deal` board exists? NEW, opened 25-07-2026
+by H1641, deliberately NOT resolved by it.** F2's ruling settled the *architecture* (build `Deal`)
+but said nothing about the board H451 already shipped. The tree now carries **two** drag-drop
+boards in the same `Продажи` nav group: «Заявки — доска» over `Lead.status`/`lead_stages`
+(unflagged, live) and «Сделки — доска» over `Deal.stage_id`/`deal_stages` (behind
+`crm_pipeline_board`, default OFF). That is coherent — a lead is a person/interest, a deal is one
+potential sale, and one person may have several — but it is two boards a manager must learn, and
+nobody has ruled whether that is the intended end state. Three options, all cheap while the new
+board is still flag-OFF: **(a)** keep both permanently and document the division of labour in the
+UI; **(b)** retire `LeadKanbanBoard` once `Deal` proves out, leaving `LeadResource`'s flat table
+for lead triage; **(c)** promote stages into one shared layer serving both. Not urgent — nothing
+is broken and no data is at risk — but it should be ruled before `crm_pipeline_board` is switched
+on in production, otherwise managers meet two boards with no guidance. Mirrored to
+[`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)
+as an `MG @DECIDE` row.
 
 ---
 
