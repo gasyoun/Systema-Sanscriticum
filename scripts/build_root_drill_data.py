@@ -32,7 +32,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_TSV = REPO_ROOT / "database" / "seeders" / "data" / "roots_frequency_ru.tsv"
-OUT_JS = REPO_ROOT / "public" / "exercises" / "roots" / "data.js"
+OUT_JS = REPO_ROOT / "public" / "lila" / "roots" / "data.js"
 
 BANDS = {"top25": 25, "top50": 50, "top100": 100}
 
