@@ -23,11 +23,13 @@ class GameEvent extends Model
         'drill',
         'band',
         'event',
+        'payload',
         'authenticated',
         'created_at',
     ];
 
     protected $casts = [
+        'payload' => 'array',
         'authenticated' => 'boolean',
         'created_at' => 'datetime',
     ];
@@ -41,12 +43,16 @@ class GameEvent extends Model
 
     public const GATE_CTA_CLICK = 'gate_cta_click'; // клик «Начать бесплатно»
 
+    // H1680 — увиденные в раунде леммы (payload.items), сид для onboarding-from-games.
+    public const ITEM_SEEN = 'item_seen';
+
     /** Белый список: всё, что не отсюда, приёмник отклоняет 422. */
     public const EVENTS = [
         self::START,
         self::COMPLETE,
         self::GATE_SHOWN,
         self::GATE_CTA_CLICK,
+        self::ITEM_SEEN,
     ];
 
     /**

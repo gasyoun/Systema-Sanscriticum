@@ -39,6 +39,42 @@
         </div>
     @endif
 
+    {{-- H1680 — Wave 2: onboarding-from-games SRS import. Fires once per
+         browser (localStorage dedupe key below) on first dashboard load
+         after login/registration; no-op server-side while srs.enabled is
+         OFF or this guest never played /lila. --}}
+    @if (config('srs.enabled'))
+        <div x-data="{ show: false, count: 0 }" x-show="show" x-cloak
+             x-init="setTimeout(() => show = false, 6000)"
+             x-on:srs-onboarding-imported.window="count = $event.detail.count; show = true"
+             class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+            <span><i class="fas fa-check-circle mr-1.5"></i>Добавили <span x-text="count"></span> слов в повторения</span>
+            <button type="button" x-on:click="show = false" class="text-green-500 hover:text-green-700"><i class="fas fa-times"></i></button>
+        </div>
+        <script>
+        (function () {
+            try {
+                var ANON_KEY = 'sgx_anon_v1';
+                var DONE_KEY = 'sgx_srs_onboarding_done_v1';
+                var anonId = localStorage.getItem(ANON_KEY);
+                if (!anonId || localStorage.getItem(DONE_KEY)) return;
+
+                fetch('{{ route('games.srs-onboarding-import') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ anon_id: anonId }),
+                    credentials: 'same-origin'
+                }).then(function (r) { return r.json(); }).then(function (data) {
+                    localStorage.setItem(DONE_KEY, '1');
+                    if (data && data.imported > 0) {
+                        window.dispatchEvent(new CustomEvent('srs-onboarding-imported', { detail: { count: data.imported } }));
+                    }
+                }).catch(function () {});
+            } catch (e) {}
+        })();
+        </script>
+    @endif
+
     @include('student.partials.continue-learning-card')
 
     @include('student.partials.subscriber-shelf')

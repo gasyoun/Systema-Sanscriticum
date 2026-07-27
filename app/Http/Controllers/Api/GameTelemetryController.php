@@ -41,6 +41,7 @@ class GameTelemetryController extends Controller
                 'drill' => $this->slug($request->input('drill'), 40) ?? 'unknown',
                 'band' => $this->slug($request->input('band'), 40),
                 'event' => $event,
+                'payload' => $this->payload($request, $event),
                 // Сервер — единственный источник правды по залогиненности:
                 // клиент не может это подделать.
                 'authenticated' => $request->user() !== null,
@@ -75,5 +76,39 @@ class GameTelemetryController extends Controller
         $clean = trim((string) $value);
 
         return $clean === '' ? null : mb_substr($clean, 0, $max);
+    }
+
+    /**
+     * H1680 — `item_seen` только: до 20 {iast, ru} пар, обе стороны отрезаны
+     * до безопасной длины через тот же {@see slug()}. Любое другое имя
+     * события или отсутствие валидного payload.items -> null (не пишем
+     * пустой json без нужды).
+     *
+     * @return array{items: list<array{iast:string, ru:string}>}|null
+     */
+    private function payload(Request $request, string $event): ?array
+    {
+        if ($event !== GameEvent::ITEM_SEEN) {
+            return null;
+        }
+
+        $items = $request->input('payload.items');
+        if (! is_array($items)) {
+            return null;
+        }
+
+        $clean = [];
+        foreach (array_slice($items, 0, 20) as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $iast = $this->slug($item['iast'] ?? null, 64);
+            if ($iast === null) {
+                continue;
+            }
+            $clean[] = ['iast' => $iast, 'ru' => $this->slug($item['ru'] ?? null, 160) ?? ''];
+        }
+
+        return $clean === [] ? null : ['items' => $clean];
     }
 }

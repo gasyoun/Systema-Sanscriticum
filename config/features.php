@@ -524,4 +524,14 @@ return [
      | ревью (креды OAuth уже настроены, см. `services.zoom`).
      */
     'zoom_auto_create' => (bool) env('ZOOM_AUTO_CREATE', false),
+
+    /*
+     | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
+     | page linking to short /lila drills — DISTINCT from the FSRS review loop
+     | (srs.enabled, /dvaram/srs) and orthogonal to it. Когда ВЫКЛ (по умолчанию):
+     | route not registered (404) and the nav entry is hidden. ВЫКЛ по умолчанию —
+     | Architecture §5: "any cabinet/SRS surfacing remains OFF by default".
+     | Включение — GAMES_SKILL_DRILLS=true + config:cache после ревью.
+     */
+    'games_skill_drills' => (bool) env('GAMES_SKILL_DRILLS', false),
 ];

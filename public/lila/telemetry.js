@@ -53,8 +53,9 @@
     }
   }
 
-  function send(event) {
+  function send(event, itemPayload) {
     var payload = { anon_id: anonId(), drill: DRILL, band: BAND, event: event };
+    if (itemPayload) payload.payload = itemPayload;
     try {
       var body = JSON.stringify(payload);
       if (navigator.sendBeacon) {
@@ -76,6 +77,21 @@
 
   // One "play" per page load.
   send("start");
+
+  // H1680 — opt-in only: a page may expose `window.SGX_SEEN_ITEMS =
+  // [{iast, ru}, ...]` (the items it actually shows this load) BEFORE this
+  // deferred script runs; if present, one `item_seen` is sent alongside
+  // "start", feeding the onboarding-from-games SRS import. Absent (the
+  // default for every pack that hasn't opted in) -> no new request, no
+  // behavior change.
+  (function () {
+    var items = window.SGX_SEEN_ITEMS;
+    if (!Array.isArray(items) || items.length === 0) return;
+    var clean = items.slice(0, 20).map(function (it) {
+      return { iast: String((it && it.iast) || ""), ru: String((it && it.ru) || "") };
+    }).filter(function (it) { return it.iast !== ""; });
+    if (clean.length > 0) send("item_seen", { items: clean });
+  })();
 
   var sentComplete = false;
   var sentGate = false;
