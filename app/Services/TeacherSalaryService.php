@@ -51,8 +51,12 @@ class TeacherSalaryService
      * Депозиты (брони) и пробные ВХОДЯТ в базу — это реальные деньги курса.
      * Двойного счёта нет: при покупке курса депозит/пробное зачитываются в
      * цену, и полный платёж пишется уже за их вычетом (Tariff::calculateFinalPriceForUser).
+     *
+     * Публичная — MutualSettlementService (H1730) исключает те же тарифы из
+     * суммы «оплачено как ученик», и заводить там СВОЮ копию списка нельзя:
+     * разъехавшись, две копии дали бы две разные «правды» об одних деньгах.
      */
-    private const NON_REVENUE_TARIFFS = ['Расход', 'salary_payout'];
+    public const NON_REVENUE_TARIFFS = ['Расход', 'salary_payout'];
 
     private const EXPENSE_TARIFF = 'Расход';
 
