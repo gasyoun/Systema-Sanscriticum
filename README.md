@@ -148,7 +148,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
 Статические браузерные тренажёры по санскриту под
 [`public/exercises/`](public/exercises/) — index-каталог + семейства движков
 (без сборки, offline/iframe-safe). Живой каталог на проде:
-[samskrte.ru/exercises/](https://samskrte.ru/exercises/index.html).
+[samskrte.ru/exercises/](https://samskrte.ru/exercises/).
 
 | Семейство | Движок | Примеры |
 |---|---|---|

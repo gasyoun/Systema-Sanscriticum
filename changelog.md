@@ -12,6 +12,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Nginx: index index.php index.html for /exercises/ directory URLs (H1710 follow-up).** Bare paths like /exercises/table/ no longer 403; docs/links drop forced index.html. Executor: Grok 4.5 (grok-4.5).
 
 - **H1710 docs: student-manual §12 + README exercises table + Telegram drafts.** Кураторская карта игр-упражнений (docs/student-manual.md §12), расширен блок /exercises/ в README, черновики постов канала в marketing/exercises-telegram-posts.md. Executor: Grok 4.5 (grok-4.5).
 
