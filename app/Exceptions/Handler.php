@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -40,7 +41,21 @@ class Handler extends ExceptionHandler
         // встроенным браузером мессенджера и обычным), и вместо понятного
         // повтора студент упирался в голую страницу без выхода — это и
         // читалось как «сайт не пускает».
-        $this->renderable(function (TokenMismatchException $e, Request $request) {
+        //
+        // Ловим ОБЁРТКУ, а не сам TokenMismatchException. Handler::render()
+        // сначала прогоняет исключение через prepareException(), и тот меняет
+        // TokenMismatchException на HttpException(419, ..., previous: $e), и
+        // только ПОТОМ вызывает renderable-колбэки (Laravel 12,
+        // vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php,
+        // render() строки 616–620). Колбэк с типом TokenMismatchException не
+        // срабатывает никогда — ветка чекаута ниже пролежала мёртвой с
+        // 25-06-2026 (295ea8b8), теста на неё не было, и «мягкий ретрай на
+        // оплате» всё это время оставался обещанием в комментарии.
+        $this->renderable(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419 || ! $e->getPrevious() instanceof TokenMismatchException) {
+                return null; // прочие HttpException — поведение по умолчанию
+            }
+
             if ($request->routeIs('payment.create', 'checkout.*')) {
                 return redirect()->back()->with(
                     'error',
