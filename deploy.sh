@@ -119,13 +119,16 @@ else
   php artisan horizon:terminate || echo "Horizon не запущен — пропускаю."
 fi
 
-# ── 6b. Track C: рестарт long-polling демона @zapisi_ORSbot ─────────────────
+# ── 6b. Track C: рестарт АВАРИЙНОГО поллера @zapisi_ORSbot, если он запущен ──
 # Тот же случай, что и с Horizon: долгоживущий процесс держит старый код, пока
-# его не перезапустить. Демон не критичен для сайта (без него не приходят
-# сообщения бот-чата), поэтому не fail, а предупреждение. Программа появляется
-# в supervisor после установки deploy/supervisor/zapisi-poll.conf.
-if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll >/dev/null 2>&1; then
-  say "Рестарт zapisi-poll"
+# его не перезапустить.
+#
+# Условие именно «сейчас RUNNING», а не «программа известна supervisor'у»:
+# `supervisorctl restart` на ОСТАНОВЛЕННОЙ программе её ЗАПУСКАЕТ, а поллер в
+# рабочем режиме запускаться не должен — он снимает вебхук и уводит бота с
+# штатной дорожки. Программа стоит с autostart=false ровно поэтому.
+if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll 2>/dev/null | grep -q RUNNING; then
+  say "Рестарт zapisi-poll (аварийный поллер запущен)"
   supervisorctl restart zapisi-poll || echo "ВНИМАНИЕ: zapisi-poll не перезапустился — апдейты бота могут не приходить."
 fi
 

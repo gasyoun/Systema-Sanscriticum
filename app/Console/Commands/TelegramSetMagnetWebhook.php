@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\LandingPage;
 use App\Models\MarketingSetting;
 use App\Services\Messaging\TelegramDeliveryChannel;
+use App\Support\TelegramWebhooks;
 use Illuminate\Console\Command;
 
 final class TelegramSetMagnetWebhook extends Command
@@ -34,10 +35,11 @@ final class TelegramSetMagnetWebhook extends Command
             return self::FAILURE;
         }
 
-        $url = rtrim((string) config('app.url'), '/').'/api/webhooks/telegram-magnet';
+        // Общий входной узел, а не app.url — см. App\Support\TelegramWebhooks.
+        $url = TelegramWebhooks::url('/api/webhooks/telegram-magnet');
 
         $this->info("Регистрируем глобальный webhook: {$url}");
-        $telegram->setWebhook($url, $secret);
+        $telegram->setWebhook($url, $secret, ['message'], TelegramWebhooks::certificateContents());
         $this->info('✓ Telegram magnet webhook (глобальный) установлен.');
 
         return self::SUCCESS;
@@ -71,7 +73,7 @@ final class TelegramSetMagnetWebhook extends Command
         // callback_query обязателен — в n8n-анкете есть inline-кнопки.
         $telegram
             ->usingCredentials($bot->tg_bot_token, $bot->tg_bot_username)
-            ->setWebhook($url, (string) $bot->tg_webhook_secret, ['message', 'callback_query']);
+            ->setWebhook($url, (string) $bot->tg_webhook_secret, ['message', 'callback_query'], TelegramWebhooks::certificateContents());
 
         $this->info('✓ Webhook бота лендинга установлен.');
 

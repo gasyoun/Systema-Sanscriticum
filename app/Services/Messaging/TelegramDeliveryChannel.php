@@ -106,15 +106,28 @@ final class TelegramDeliveryChannel implements DeliveryChannel
     /**
      * @param  list<string>  $allowedUpdates  Боту с n8n-анкетой нужны и callback_query
      *                                        (inline-кнопки), иначе они молча не работают.
+     * @param  string|null  $certificate  PEM входного узла, если его сертификат
+     *                                    самоподписанный: Telegram примет такой
+     *                                    вебхук только вместе с загруженным файлом.
      */
-    public function setWebhook(string $url, string $secret, array $allowedUpdates = ['message']): void
+    public function setWebhook(string $url, string $secret, array $allowedUpdates = ['message'], ?string $certificate = null): void
     {
-        $response = Http::post("https://api.telegram.org/bot{$this->token}/setWebhook", [
+        $endpoint = "https://api.telegram.org/bot{$this->token}/setWebhook";
+        $fields = [
             'url' => $url,
             'secret_token' => $secret,
             'max_connections' => 40,
-            'allowed_updates' => $allowedUpdates,
-        ]);
+        ];
+
+        if ($certificate === null) {
+            $response = Http::post($endpoint, $fields + ['allowed_updates' => $allowedUpdates]);
+        } else {
+            // В multipart Laravel разворачивает вложенный массив в повторяющиеся
+            // части `allowed_updates[]`, а Bot API их не разбирает — ему нужна
+            // JSON-строка. В обычном (JSON) запросе, наоборот, годится массив.
+            $response = Http::attach('certificate', $certificate, 'tg-webhook.pem')
+                ->post($endpoint, $fields + ['allowed_updates' => json_encode($allowedUpdates)]);
+        }
 
         if (! ($response->json('ok') ?? false)) {
             throw new RuntimeException('Telegram setWebhook error: '.$response->body());
