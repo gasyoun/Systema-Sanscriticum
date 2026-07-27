@@ -13,10 +13,12 @@ use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\MarketingSetting;
+use App\Models\MutualSettlement;
 use App\Models\SalaryClosedPeriod;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Services\CurrencyRateProvider;
+use App\Services\MutualSettlementService;
 use App\Services\TeacherPayoutPoster;
 use App\Services\TeacherSalaryService;
 use App\Support\RoleGate;
@@ -417,6 +419,31 @@ class TeacherSalaries extends Page implements HasTable
                                 : ' — укажите курс на дату, чтобы зачесть');
                     }),
 
+                // === Взаимозачёт преподаватель-ученик (H1730 B5) ===
+                // Зафиксированный неизрасходованный акт вычитается из итога ДО
+                // создания выплаты — деньги не выходят из школы и не возвращаются,
+                // значит НПД не теряется на каждом проходе (ruling MG 27-07-2026).
+                Forms\Components\Select::make('mutual_settlement_id')
+                    ->label('Взаимозачёт (акт преподаватель-ученик)')
+                    ->visible(fn (Forms\Get $get) => ! empty($this->availableSettlementItems($get)))
+                    ->live()
+                    ->options(function (Forms\Get $get): array {
+                        return collect($this->availableSettlementItems($get))
+                            ->mapWithKeys(fn (array $s) => [
+                                $s['settlement_id'] => 'Акт #'.$s['settlement_id']
+                                    .' · '.($s['period_from'] ?? '—').'—'.($s['period_to'] ?? '—')
+                                    .($s['block_number'] ? ' · блок '.$s['block_number'] : '')
+                                    .' — '.number_format($s['offset_amount'], 2, '.', ' ').' ₽',
+                            ])->all();
+                    })
+                    ->helperText('Зафиксированные акты этого преподавателя, ещё не зачтённые ни в одной выплате. '
+                        .'Вычитается из итога как есть, в рублях. Один акт дважды не зачтётся.'),
+
+                Forms\Components\Placeholder::make('settlement_offset_preview')
+                    ->label('Зачёт по акту взаимозачёта')
+                    ->visible(fn (Forms\Get $get) => $this->settlementOffset($get) > 0)
+                    ->content(fn (Forms\Get $get): string => '− '.number_format($this->settlementOffset($get), 2, '.', ' ').' ₽'),
+
                 Forms\Components\Placeholder::make('preview')
                     ->label('Итог к выплате')
                     ->content(function (Forms\Get $get): string {
@@ -437,8 +464,14 @@ class TeacherSalaries extends Page implements HasTable
                         $directOffset = $this->directOffsetRub($get);
 
                         $grossTotal = TeacherSalaryService::blockPayoutTotal(base: $base, coef: $coef, teacherPct: $pct, extrasTotal: $extrasTotal, surcharge: $surcharge, deduction: $deduction, priorBlocksTotal: $priorBlocksTotal, directOffset: $directOffset);
-                        $advanceOffset = $this->advanceOffsetForTotal($get, $grossTotal);
-                        $total = max(0, round($grossTotal - $advanceOffset, 2));
+                        // Взаимозачёт вычитается ПЕРЕД авансом: аванс — деньги, уже
+                        // выданные на руки, и зачитывать их сверх того, что реально
+                        // остаётся к выплате, нельзя. Без акта $afterSettlement равен
+                        // $grossTotal, и ветка аванса считает ровно как считала.
+                        $settlementOffset = min($grossTotal, $this->settlementOffset($get));
+                        $afterSettlement = max(0, round($grossTotal - $settlementOffset, 2));
+                        $advanceOffset = $this->advanceOffsetForTotal($get, $afterSettlement);
+                        $total = max(0, round($afterSettlement - $advanceOffset, 2));
 
                         $formula = $this->formulaText($state, $coef, $extrasTotal, $surcharge, $deduction);
                         if ($priorBlocksTotal > 0) {
@@ -449,6 +482,9 @@ class TeacherSalaries extends Page implements HasTable
                             $formula .= ' − прямые платежи '.number_format($this->directOffsetForeign($get), 2, '.', ' ')
                                 .' '.TeacherPayout::currencySymbol($get('payout_currency'))
                                 .' ('.number_format($directOffset, 0, '.', ' ').' ₽)';
+                        }
+                        if ($settlementOffset > 0) {
+                            $formula .= ' − взаимозачёт '.number_format($settlementOffset, 0, '.', ' ').' ₽';
                         }
                         if ($advanceOffset > 0) {
                             $formula .= ' − аванс '.number_format($advanceOffset, 0, '.', ' ').' ₽';
@@ -557,11 +593,25 @@ class TeacherSalaries extends Page implements HasTable
                     $directOffsetRub = round($directOffsetForeign * (float) ($data['exchange_rate'] ?? 0), 2);
 
                     $grossTotal = TeacherSalaryService::blockPayoutTotal(base: $base, coef: $coef, teacherPct: $pct, extrasTotal: $extrasTotal, surcharge: $surcharge, deduction: $deduction, priorBlocksTotal: $priorBlocksTotal, directOffset: $directOffsetRub);
+
+                    // Взаимозачёт преподаватель-ученик (H1730 B5): выбранный акт
+                    // деривим ЗАНОВО из доступных, не доверяя клиенту, — иначе
+                    // подменённым id можно было бы зачесть чужой или уже
+                    // израсходованный акт.
+                    $teacherForSettlement = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
+                    $settlementId = ($data['mutual_settlement_id'] ?? null) ? (int) $data['mutual_settlement_id'] : null;
+                    $settlementItem = ($teacherForSettlement && $settlementId)
+                        ? collect(app(MutualSettlementService::class)->availableForTeacher($teacherForSettlement))
+                            ->firstWhere('settlement_id', $settlementId)
+                        : null;
+                    $settlementOffset = $settlementItem ? min($grossTotal, round((float) $settlementItem['offset_amount'], 2)) : 0.0;
+                    $afterSettlement = max(0, round($grossTotal - $settlementOffset, 2));
+
                     $teacherForAdvances = $data['teacher_id'] ? Teacher::find($data['teacher_id']) : null;
                     $advanceOffset = $teacherForAdvances
-                        ? min($grossTotal, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
+                        ? min($afterSettlement, round(array_sum(array_column(app(TeacherSalaryService::class)->outstandingAdvanceItems($teacherForAdvances), 'remaining')), 2))
                         : 0.0;
-                    $total = max(0, round($grossTotal - $advanceOffset, 2));
+                    $total = max(0, round($afterSettlement - $advanceOffset, 2));
 
                     $blockNumber = (int) $data['block_number'];
                     $courseId = (int) $data['course_id'];
@@ -597,6 +647,13 @@ class TeacherSalaries extends Page implements HasTable
                             number_format($directOffsetForeign, 2, '.', ' '),
                             TeacherPayout::currencySymbol($data['payout_currency'] ?: null),
                             number_format($directOffsetRub, 0, '.', ' '),
+                        );
+                    }
+                    if ($settlementOffset > 0) {
+                        $comment .= sprintf(
+                            ' − взаимозачёт (акт #%d) %s ₽',
+                            $settlementItem['settlement_id'],
+                            number_format($settlementOffset, 0, '.', ' '),
                         );
                     }
                     if ($advanceOffset > 0) {
@@ -671,11 +728,44 @@ class TeacherSalaries extends Page implements HasTable
                             'direct_receipts' => $directLines,
                             'direct_offset_foreign' => $directOffsetForeign,
                             'direct_offset_rub' => $directOffsetRub,
+                            // Взаимозачёт преподаватель-ученик: какой акт зачтён и на
+                            // какую сумму (аудит — по нему сверяется акт и выплата).
+                            'mutual_settlement_id' => $settlementItem['settlement_id'] ?? null,
+                            'mutual_settlement_offset' => $settlementOffset,
+                            'mutual_settlement' => $settlementItem,
                             'advance_offset' => $advanceOffset,
                             'advance_settlements' => [],
                             'gross_before_advances' => $grossTotal,
                         ],
                     ]);
+
+                    // Помечаем акт израсходованным. Условный update внутри consume()
+                    // — гарантия однократности на уровне данных. Если акт увели
+                    // параллельно, зачёт из выплаты снимаем, а не молчим: иначе
+                    // преподаватель недополучил бы деньги без следа в аудите.
+                    if ($payout && $settlementItem) {
+                        $settlement = MutualSettlement::find($settlementItem['settlement_id']);
+                        $claimed = $settlement && app(MutualSettlementService::class)->consume($settlement, (int) $payout->id);
+
+                        if (! $claimed) {
+                            $breakdown = $payout->breakdown ?? [];
+                            $breakdown['mutual_settlement_id'] = null;
+                            $breakdown['mutual_settlement_offset'] = 0.0;
+                            $breakdown['mutual_settlement'] = null;
+                            $breakdown['mutual_settlement_conflict'] = $settlementItem['settlement_id'];
+                            $payout->updateQuietly([
+                                'amount' => round((float) $payout->amount + $settlementOffset, 2),
+                                'breakdown' => $breakdown,
+                            ]);
+                            $settlementOffset = 0.0;
+
+                            Notification::make()
+                                ->title('Акт взаимозачёта уже был зачтён')
+                                ->body('Акт #'.$settlementItem['settlement_id'].' успели зачесть в другой выплате — зачёт из этой выплаты снят, сумма возвращена.')
+                                ->warning()
+                                ->send();
+                        }
+                    }
 
                     if ($payout && $teacherForAdvances && $advanceOffset > 0) {
                         $advanceSettlement = app(TeacherSalaryService::class)
@@ -810,7 +900,44 @@ class TeacherSalaries extends Page implements HasTable
             directOffset: $this->directOffsetRub($get),
         );
 
-        return max(0, round($gross - $this->advanceOffsetForTotal($get, $gross), 2));
+        // Тот же порядок, что в preview: взаимозачёт, затем аванс от остатка.
+        $afterSettlement = max(0, round($gross - min($gross, $this->settlementOffset($get)), 2));
+
+        return max(0, round($afterSettlement - $this->advanceOffsetForTotal($get, $afterSettlement), 2));
+    }
+
+    /** Request-scoped мемо доступных актов взаимозачёта (по преподавателю). */
+    private array $settlementsMemo = [];
+
+    /**
+     * Зафиксированные неизрасходованные акты выбранного преподавателя (H1730 B5).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function availableSettlementItems(Forms\Get $get): array
+    {
+        $teacherId = $get('teacher_id') ? (int) $get('teacher_id') : null;
+        if (! $teacherId || ! ($teacher = Teacher::find($teacherId))) {
+            return [];
+        }
+
+        return $this->settlementsMemo[$teacherId] ??= app(MutualSettlementService::class)->availableForTeacher($teacher);
+    }
+
+    /**
+     * Сумма зачёта по выбранному акту (₽). Деривим по id из доступных, не
+     * доверяя клиенту, — тот же приём, что у прямых платежей.
+     */
+    private function settlementOffset(Forms\Get $get): float
+    {
+        $id = $get('mutual_settlement_id') ? (int) $get('mutual_settlement_id') : null;
+        if (! $id) {
+            return 0.0;
+        }
+
+        $item = collect($this->availableSettlementItems($get))->firstWhere('settlement_id', $id);
+
+        return $item ? round((float) $item['offset_amount'], 2) : 0.0;
     }
 
     private function advanceOffsetForTotal(Forms\Get $get, float $total): float
