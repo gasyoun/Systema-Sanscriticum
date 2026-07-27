@@ -244,6 +244,8 @@ _Created: 06-07-2026 · Last updated: 27-07-2026_
 
 **Где открыть.** Каталог:
 [https://samskrte.ru/lila/](https://samskrte.ru/lila/).
+**Полное HTML-руководство** (каталог, жесты, FAQ, для куратора):
+[docs/lila-games-manual.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/lila-games-manual.html).
 Прямые ссылки на семейства и отдельные игры — в таблице ниже. В шапке сайта и в
 боковом меню кабинета (если включено в вёрстке) пункт «Игры» / «Упражнения» ведёт
 туда же.

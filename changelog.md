@@ -12,6 +12,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **HTML-мануал по играм Лила (docs/lila-games-manual.html).** Полное руководство: доступ гость/студент, шесть семейств, каталог ссылок, жесты, FAQ, блок для куратора; метадок lila-games-manual.meta.md; ссылка из student-manual §12. Executor: Grok 4.5 (grok-4.5).
+
+### Added
 - **Rename free drills path public/exercises/ → public/lila/ (URL /lila/).** Nav, gate/telemetry scripts, tests, manuals, Telegram drafts; nginx 301 /exercises/ → /lila/. Executor: Grok 4.5 (grok-4.5).
 - **Nginx: index index.php index.html for /lila/ directory URLs (H1710 follow-up).** Bare paths like /lila/table/ no longer 403; docs/links drop forced index.html. Executor: Grok 4.5 (grok-4.5).
 
