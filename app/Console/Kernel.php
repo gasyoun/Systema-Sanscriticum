@@ -299,9 +299,13 @@ class Kernel extends ConsoleKernel
         // сам. Редкий слот: держит общий замок сессии на весь проход, ежеминутный
         // telegram-support:sync это переживёт (деградирует в session_busy → повтор).
         // No-op при выключенном харвесте/support или неконфигурной MadelineProto.
+        // TTL замка выводится из watchdog-таймаута прохода — тот же инвариант,
+        // что у telegram-support:sync выше: заход умирает раньше, чем замок
+        // протухнет и пустит второй экземпляр на ту же MTProto-сессию.
+        $rosterLockMinutes = (int) ceil(((int) config('services.telegram_harvest.roster_timeout_seconds', 600)) / 60) + 5;
         $schedule->command('telegram-harvest:roster-groups')
             ->hourly()
-            ->withoutOverlapping(30)
+            ->withoutOverlapping($rosterLockMinutes)
             ->onOneServer()
             ->name('telegram-harvest-roster-groups');
 

@@ -157,10 +157,17 @@ class TelegramHarvestSyncService
      * Снять ростеры сразу для набора peer'ов за ОДНО открытие сессии (один
      * прайминг peer-базы + цикл). Используется командой telegram-harvest:roster-groups.
      *
+     * $onRoster вызывается сразу по каждому снятому peer'у — чтобы прерванный
+     * проход не обнулял уже сделанную работу: getPwrChat по супергруппе идёт
+     * рекурсивным алфавитным поиском и может занять минуты, а при флуд-лимите
+     * MadelineProto вообще уходит в сон (см. комментарий в pwrRoster). Без
+     * пописьменной выдачи таймаут на пятой группе выбрасывал бы и первые четыре.
+     *
      * @param  array<int, string>  $peers
+     * @param  null|callable(string, array<int, array<string, mixed>>): void  $onRoster
      * @return array<string, array<int, array<string, mixed>>> peer => roster (только непустые)
      */
-    public function fetchGroupRosters(array $peers): array
+    public function fetchGroupRosters(array $peers, ?callable $onRoster = null): array
     {
         if (! $this->clientFactory->isConfigured()) {
             return [];
@@ -179,6 +186,10 @@ class TelegramHarvestSyncService
             $roster = $this->pwrRoster($client, $peer);
             if ($roster !== []) {
                 $out[$peer] = $roster;
+
+                if ($onRoster !== null) {
+                    $onRoster($peer, $roster);
+                }
             }
         }
 
@@ -221,6 +232,13 @@ class TelegramHarvestSyncService
             // fullfetch=true ОБЯЗАТЕЛЕН: только он разворачивает participants в
             // ['user' => {...}] (PeerHandler::getPwrChat, гейт по $fullfetch), иначе
             // у участников нет id и ростер выходит пустым. Раньше стоял false → «0 снято».
+            //
+            // Ограничить время этого вызова настройками НЕЛЬЗЯ: PeerHandler
+            // жёстко задаёт channels.getParticipants floodWaitLimit=86400, а
+            // ResponseHandler отдаёт приоритет per-call значению над
+            // Settings\RPC::setFloodTimeout(). При флуде MadelineProto СПИТ, а не
+            // бросает — единственный честный потолок здесь снаружи, watchdog
+            // команды (см. SnapshotGroupRosters).
             $chat = $client->getPwrChat($peer, true);
         } catch (Throwable $e) {
             Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
@@ -237,17 +255,78 @@ class TelegramHarvestSyncService
                 continue;
             }
 
+            if ($this->hasLeftChat($participant)) {
+                continue;
+            }
+
             $roster[] = [
                 'id' => (int) $user['id'],
                 'username' => $user['username'] ?? null,
                 'name' => $this->displayName($user),
                 'is_bot' => (bool) ($user['bot'] ?? false),
+                'role' => $this->participantRole($participant),
             ];
         }
 
         $this->downloadChatAvatar($peer, $chat);
 
         return $roster;
+    }
+
+    /**
+     * Выбыл ли участник из чата.
+     *
+     * Зачем вообще фильтровать: для супергруппы MadelineProto собирает
+     * participants тремя фильтрами сразу — `channelParticipantsSearch` +
+     * `channelParticipantsKicked` + `channelParticipantsBanned`
+     * (PeerHandler::recurseAlphabetSearchParticipants), потому что условие
+     * остановки рекурсии считает и выбывших. Пока их не отсеять, ушедшие
+     * числятся в составе вечно: 27.07.2026 дашборд показывал 15 участников при
+     * 11 реальных — ровно четверо выбывших.
+     *
+     * Почему не «role === banned»: `channelParticipantBanned#d5f0ad91` несёт
+     * флаг `left:flags.0?true` (TL_telegram_v225.tl:764) и покрывает ДВА разных
+     * состояния — выбывшего (`left`) и просто ограниченного в правах, который
+     * всё ещё в чате. Отсекаем только первого. Отдельный
+     * `channelParticipantLeft#1b03f006` (там же, строка 765) роли не получает
+     * вовсе (PeerHandler switch его не знает) — ловим по конструктору.
+     *
+     * @param  array<string, mixed>  $participant
+     */
+    private function hasLeftChat(array $participant): bool
+    {
+        $constructor = (string) ($participant['_'] ?? '');
+
+        if ($constructor === 'channelParticipantLeft') {
+            return true;
+        }
+
+        if ($constructor === 'channelParticipantBanned') {
+            return ! empty($participant['left']);
+        }
+
+        // Форма без конструктора (обычная группа / фикстуры): роль там бывает
+        // только user/admin/creator, но подстрахуемся тем же признаком.
+        return ($participant['role'] ?? null) === 'banned' && ! empty($participant['left']);
+    }
+
+    /**
+     * Роль участника как её отдаёт MadelineProto (`user`/`admin`/`creator`), с
+     * одной поправкой: оставшийся в чате `banned` — это ограниченный в правах,
+     * а не изгнанный (изгнанных уже отсеял {@see hasLeftChat}), поэтому пишем
+     * ему честное `restricted`. null — когда роли нет вовсе.
+     *
+     * @param  array<string, mixed>  $participant
+     */
+    private function participantRole(array $participant): ?string
+    {
+        $role = $participant['role'] ?? null;
+
+        if ($role === 'banned') {
+            return 'restricted';
+        }
+
+        return is_string($role) && $role !== '' ? $role : null;
     }
 
     /**

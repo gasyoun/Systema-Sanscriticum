@@ -7,6 +7,7 @@ namespace App\Filament\Pages\ZapisiBot;
 use App\Filament\Clusters\ZapisiBot;
 use App\Models\Group;
 use App\Support\RoleGate;
+use Carbon\CarbonImmutable;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -96,7 +97,16 @@ class ZapisiBotDashboard extends Page implements HasForms
         return $id ? $this->groups->firstWhere('id', (int) $id) : null;
     }
 
-    /** @return array{count: int, fetched_at: ?string, members: array<int, array<string, mixed>>}|null */
+    /**
+     * Снимок состава + его возраст. Возраст здесь не украшение: снимок пишет
+     * часовой `telegram-harvest:roster-groups` через MTProto-сессию, и любой его
+     * сбой (сессия занята/выключена/зависла) оставляет СТАРЫЙ файл нетронутым.
+     * До 27.07.2026 страница рисовала такой файл как ни в чём не бывало — состав
+     * пятидневной давности выглядел текущим, и расхождение с Telegram заметил
+     * только человек, сравнив глазами.
+     *
+     * @return array{count: int, fetched_at: ?string, members: array<int, array<string, mixed>>, fetched_at_human: ?string, is_stale: bool, stale_after_hours: int}|null
+     */
     public function getRosterProperty(): ?array
     {
         $chatId = $this->chatId();
@@ -110,8 +120,63 @@ class ZapisiBotDashboard extends Page implements HasForms
         }
 
         $decoded = json_decode(File::get($file), true);
+        if (! is_array($decoded)) {
+            return null;
+        }
 
-        return is_array($decoded) ? $decoded : null;
+        $staleAfterHours = (int) config('services.telegram_harvest.roster_stale_after_hours', 6);
+        $fetchedAt = $this->parseTimestamp($decoded['fetched_at'] ?? null);
+
+        $decoded['stale_after_hours'] = $staleAfterHours;
+        $decoded['fetched_at_human'] = $fetchedAt?->diffForHumans();
+        // Снимок без разбираемой даты считаем протухшим: «не знаем, когда сняли»
+        // ближе к протухшему, чем к свежему.
+        $decoded['is_stale'] = $staleAfterHours > 0
+            && ($fetchedAt === null || $fetchedAt->lt(now()->subHours($staleAfterHours)));
+
+        return $decoded;
+    }
+
+    /**
+     * Свежесть потока сообщений. Тот же вопрос, что и у ростера, но для другой
+     * дорожки (Bot API webhook → очередь → стор): «Последние сообщения» показывают
+     * последние 50 записей независимо от их возраста, поэтому замолчавший вебхук
+     * выглядит на экране точно так же, как тихий чат. Именно так пропажа
+     * сообщений с 22.07.2026 продержалась незамеченной пять дней.
+     *
+     * @return array{last_sent_at: ?string, last_sent_human: ?string, is_silent: bool, silence_after_hours: int}
+     */
+    public function getCorpusFreshnessProperty(): array
+    {
+        $silenceAfterHours = (int) config('services.telegram_harvest.corpus_silence_after_hours', 48);
+
+        $latest = null;
+        foreach ($this->recentMessages as $message) {
+            $sentAt = $this->parseTimestamp($message['sent_at'] ?? null);
+            if ($sentAt !== null && ($latest === null || $sentAt->gt($latest))) {
+                $latest = $sentAt;
+            }
+        }
+
+        return [
+            'last_sent_at' => $latest?->toIso8601String(),
+            'last_sent_human' => $latest?->diffForHumans(),
+            // Пустой чат (сообщений нет вовсе) — не повод кричать: тишину меряем
+            // только когда есть от чего отсчитывать.
+            'is_silent' => $silenceAfterHours > 0
+                && $latest !== null
+                && $latest->lt(now()->subHours($silenceAfterHours)),
+            'silence_after_hours' => $silenceAfterHours,
+        ];
+    }
+
+    private function parseTimestamp(mixed $value): ?CarbonImmutable
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        return rescue(fn () => CarbonImmutable::parse($value), null, false);
     }
 
     /** Аватар чата (out-of-git) как base64 data-URI, либо null. */

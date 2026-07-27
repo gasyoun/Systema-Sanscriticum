@@ -1,6 +1,6 @@
 # Telegram userbot / MTProto runner — inventory (Phase 0.1)
 
-_Created: 11-07-2026 · Last updated: 27-07-2026 (§4.1 — инцидент EMFILE и предохранители синка)_
+_Created: 11-07-2026 · Last updated: 27-07-2026 (§4.1 — инцидент EMFILE; §4.2 — неправда на вкладке «Записи (бот)»)_
 
 > **P0.1** узел карты
 > [`IMPLEMENTATION_MAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_MAP_TELEGRAM_SCALING_2026_2027.md)
@@ -52,6 +52,11 @@ _Created: 11-07-2026 · Last updated: 27-07-2026 (§4.1 — инцидент EMF
 | 1 | `telegram-support:sync` | [`SyncTelegramSupport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramSupport.php) | **Да** — `everyMinute`, `withoutOverlapping(<таймаут+5 мин>)`, `onOneServer` ([`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)); TTL выведен из watchdog-таймаута, см. §4.1 | `withMadelineSessionLock()` (live-путь) | Импорт чата «Отдел заботы» + пересборка дневной support-аналитики; reply-out за флагом |
 | 2 | `telegram-harvest:sync` | [`SyncTelegramHarvest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramHarvest.php) | **Нет** — только ручной запуск с хоста | `withMadelineSessionLock()` (live-путь) | Track B: персональный харвест санскрит-групп/каналов/ЛС в корпус вне git |
 | 3 | `telegram-harvest:peers` | [`DiscoverTelegramHarvestPeers`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/DiscoverTelegramHarvestPeers.php) | **Нет** — ручной запуск | `withMadelineSessionLock()` | Read-only список диалогов аккаунта для наполнения `TELEGRAM_HARVEST_PEERS` |
+| 4 | `telegram-harvest:roster-groups` | [`SnapshotGroupRosters`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SnapshotGroupRosters.php) | **Да** — `hourly`, `withoutOverlapping(<таймаут+5 мин>)`, `onOneServer` | `withMadelineSessionLock()` + watchdog `roster_timeout_seconds` | D9 (Track C): состав всех учебных групп с `telegram_chat_id` → `roster/{chat_id}.json` для вкладки «Записи (бот)» |
+| 5 | `telegram-harvest:roster` | [`FetchTelegramHarvestRoster`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/FetchTelegramHarvestRoster.php) | **Нет** — ручной запуск по одному чату | `withMadelineSessionLock()` | То же, но для одного peer'а (ручная доснимка) |
+
+_Строки 4-5 добавлены 27-07-2026: ростер-дорожка Track C появилась после первой
+редакции документа, а держит она **ту же** сессию, что и первые три команды._
 
 **У всех трёх есть офлайн-путь `--payload=<json>`**, который вообще не открывает MadelineProto
 (локальный импорт нормализованных сообщений) — этот путь безопасен всегда и lock не берёт.
@@ -78,8 +83,9 @@ no-op с `Log::warning`). Это осознанно **сильнее**, чем L
 сессии — именно так на проде и появились два IPC-демона (см. docblock трейта).
 
 ### 3.3. Планировщик
-Единственная запись MTProto в
-[`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php):
+В [`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)
+**две** записи MTProto — обе делят одну сессию (правка 27-07-2026: раньше здесь
+значилась «единственная», ростер-дорожки ещё не существовало):
 
 ```php
 $syncLockMinutes = (int) ceil(((int) config('services.telegram_support.sync_timeout_seconds', 120)) / 60) + 5;
@@ -88,11 +94,18 @@ $schedule->command('telegram-support:sync')
     ->withoutOverlapping($syncLockMinutes)
     ->onOneServer()
     ->name('telegram-support-sync');
+
+$rosterLockMinutes = (int) ceil(((int) config('services.telegram_harvest.roster_timeout_seconds', 600)) / 60) + 5;
+$schedule->command('telegram-harvest:roster-groups')
+    ->hourly()
+    ->withoutOverlapping($rosterLockMinutes)
+    ->onOneServer()
+    ->name('telegram-harvest-roster-groups');
 ```
 
-TTL замка не константа: он **выводится** из потолка времени самого захода, иначе
-зависший заход переживает собственный замок и на сессии появляется второй экземпляр
-(так и случилось 27.07.2026 — см. §4.1).
+TTL замка ни у одной из них не константа: он **выводится** из потолка времени
+самого захода, иначе зависший заход переживает собственный замок и на сессии
+появляется второй экземпляр (так и случилось 27.07.2026 — см. §4.1).
 
 Команда — **no-op**, пока `TELEGRAM_SUPPORT_ENABLED=true` не выставлен и не заданы
 Client-API credentials. Харвестер (`telegram-harvest:sync`/`:peers`) в планировщик
@@ -159,6 +172,49 @@ _Дописано 27-07-2026 по факту разбора на проде._
 [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)
 §Telegram. Заодно инцидент закрывает часть §5: раннер на проде — **cron `www-data` →
 `schedule:run`** (как и предполагал D2), `horizon` и `reverb` живут под **supervisor**.
+
+### 4.2. Инцидент 27.07.2026 — вкладка «Записи (бот)» показывала неправду
+
+_Дописано 27-07-2026 по жалобе оператора._
+
+В тот же день оператор заметил на вкладке «Записи (бот)» две вещи: состав чата
+показывал **15 участников при 11 реальных**, а «Последние сообщения» стояли с
+**22.07**. Разбор показал, что это **три независимые проблемы**, и только одна из
+них — продолжение §4.1.
+
+**1. Завышенный состав — баг нормализации, а не устаревший снимок.** Для
+супергруппы MadelineProto собирает `participants` тремя фильтрами сразу —
+`channelParticipantsSearch` + `channelParticipantsKicked` + `channelParticipantsBanned`
+(`PeerHandler::recurseAlphabetSearchParticipants`), потому что условие остановки
+рекурсии считает и выбывших. `pwrRoster` брал всех подряд и выбрасывал поле
+`role`, так что ушедшие числились в составе вечно — дельта 15−11 = ровно четверо
+выбывших. Фильтр устроен по флагу, а не по роли: `channelParticipantBanned#d5f0ad91`
+несёт `left:flags.0?true` (`TL_telegram_v225.tl:764`) и покрывает **два** разных
+состояния — изгнанного (`left`) и ограниченного в правах, который всё ещё в чате.
+Отсекается только первый; второй остаётся с честной ролью `restricted`.
+
+**2. Замерший снимок — следствие §4.1.** Ростер снимает часовой
+`telegram-harvest:roster-groups` через ту же MTProto-сессию, что и support-синк.
+Сессия зависла вечером 26.07, а утром 27.07 сработал аварийный
+`TELEGRAM_SUPPORT_ENABLED=false` — при нём команда тихо выходит. Файл ростера при
+любом сбое остаётся нетронутым, а страница рисовала его без единой оговорки: снимок
+пятидневной давности выглядел текущим. Теперь возраст снимка виден, а протухший
+(порог `roster_stale_after_hours`) помечен явно.
+
+**3. Пропавшие сообщения — другая дорожка.** Сообщения приходят через **Bot API
+webhook** (`/api/webhooks/telegram-zapisi` → очередь `webhooks` →
+`HarvestStoreWriter`), MTProto там не участвует вовсе, так что к §4.1 это
+отношения не имеет — вероятная причина в перерегистрации/секрете/TLS вебхука после
+переезда прода. Кодом это не чинится, но молчание дорожки больше не невидимо:
+дашборд показывает возраст последнего сообщения и предупреждает после
+`corpus_silence_after_hours`.
+
+**Профилактика того же класса отказа:** `roster-groups` получил watchdog
+(`roster_timeout_seconds`) и пишет ростеры **по мере снятия**, а не пачкой в конце —
+прерванный проход больше не обнуляет уже сделанное. Ограничить сам `getPwrChat`
+настройками нельзя: `channels.getParticipants` вызывается с жёстко зашитым
+`floodWaitLimit = 86400`, и при флуде MadelineProto **спит**, а не бросает —
+watchdog здесь единственный честный потолок.
 
 ---
 
