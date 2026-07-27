@@ -119,6 +119,16 @@ else
   php artisan horizon:terminate || echo "Horizon не запущен — пропускаю."
 fi
 
+# ── 6b. Track C: рестарт long-polling демона @zapisi_ORSbot ─────────────────
+# Тот же случай, что и с Horizon: долгоживущий процесс держит старый код, пока
+# его не перезапустить. Демон не критичен для сайта (без него не приходят
+# сообщения бот-чата), поэтому не fail, а предупреждение. Программа появляется
+# в supervisor после установки deploy/supervisor/zapisi-poll.conf.
+if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll >/dev/null 2>&1; then
+  say "Рестарт zapisi-poll"
+  supervisorctl restart zapisi-poll || echo "ВНИМАНИЕ: zapisi-poll не перезапустился — апдейты бота могут не приходить."
+fi
+
 if [ "$USE_DOWN" = 1 ]; then
   say "php artisan up"
   php artisan up
