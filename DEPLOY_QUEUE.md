@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 27-07-2026 (H1678 row №61 online-games Wave 1)_
+_Создано: 08-07-2026 · Обновлено: 27-07-2026 (H1735 agent deploy access + prod pull to 5049b4c)
 
 **21-07-2026: MG подтвердил в чате — Иван прогнал деплой на проде сегодня.** Базовый
 шаг (№1, `php artisan migrate` + `sudo bash deploy.sh`) и все пункты, не требующие
@@ -10,7 +10,7 @@ _Создано: 08-07-2026 · Обновлено: 27-07-2026 (H1678 row №61 o
 отдельно; гадать по ним нельзя (см. H788).
 
 Всё, что **влито в `main`, но еще не выкачено на прод**, с точными командами для
-сервера. Прод — **root-VPS (Ubuntu, Beget)**; деплой делает человек на сервере (**у агента нет доступа** — это ограничение прав, а не хостинга). Обычный путь — `sudo bash deploy.sh`. _Исправлено 10-07-2026 (H478): прежняя формулировка «по FTP, без SSH» неверна — SSH/root есть._
+сервера. Прод — **root-VPS (Ubuntu, Beget, `193.232.229.92` / host `samskrtam150`)**; **агентский root-SSH доступ подтверждён 27-07-2026 (H1735)** — `ssh root@193.232.229.92` + `sudo bash /var/www/html/deploy.sh`. GitHub Actions Environment secrets `DEPLOY_*` still empty (workflow skips); direct SSH is the live path. Обычный путь — `sudo bash deploy.sh`. _Исправлено 10-07-2026 (H478): прежняя формулировка «по FTP, без SSH» неверна — SSH/root есть._
 Это список-передача для Ивана: что и в каком порядке запустить.
 
 **Обозначения**
@@ -24,6 +24,15 @@ _Создано: 08-07-2026 · Обновлено: 27-07-2026 (H1678 row №61 o
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+## Agent deploy log (H1735, 27-07-2026)
+
+- Triggered GHA `Deploy production` → skipped (no `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY` on Environment `production`).
+- Direct SSH as `root@193.232.229.92` succeeded (local `~/.ssh/id_ed25519`).
+- `deploy.sh` ran: ff-only pull `3f03fc4..5049b4c`, composer ok, vite build ok, migrate `2026_07_27_120000_add_payload_to_game_events_table` **Ran**, php8.3-fpm reload, horizon restart.
+- External smoke `https://samskrte.ru/` from the VPS timed out (curl 28 / HTTP 000) — likely egress/DNS hairpin; local `Host: samskrte.ru` → `http://127.0.0.1/` returned **301**. Code + migrations are on prod at `5049b4c`.
+- Money-contour flag flips still require fin-dir / `@DECIDE` — not flipped this pass.
+
 
 ---
 
