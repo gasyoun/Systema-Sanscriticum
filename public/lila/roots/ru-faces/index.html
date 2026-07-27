@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · Корни: по-русски</title>
+<link rel="stylesheet" href="../../match/engine.css">
+<style>
+  body { margin: 0; background: #f3ecdb; }
+  @media (prefers-color-scheme: dark) { body { background: #1c1712; } }
+  :root[data-theme="dark"] body { background: #1c1712; }
+  :root[data-theme="light"] body { background: #f3ecdb; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+  .back { display: inline-block; margin: 0 0 14px; font-size: 13px; color: #6b5d47; text-decoration: none; }
+  .back:hover { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { .back { color: #b3a488; } .back:hover { color: #e07a4e; } }
+  :root[data-theme="dark"] .back { color: #b3a488; }
+  .eyebrow {
+    font-family: "Noto Sans Devanagari","Nirmala UI",serif;
+    font-size: 13px; letter-spacing: .16em; color: #a8451f; font-weight: 600; margin: 0 0 6px;
+  }
+  @media (prefers-color-scheme: dark) { .eyebrow { color: #e07a4e; } }
+  :root[data-theme="dark"] .eyebrow { color: #e07a4e; }
+  h1 {
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 8px; color: #2a2118; text-wrap: balance;
+  }
+  @media (prefers-color-scheme: dark) { h1 { color: #efe6d4; } }
+  :root[data-theme="dark"] h1 { color: #efe6d4; }
+  .about { margin: 0 0 18px; max-width: 68ch; font-size: 13.5px; color: #6b5d47; }
+  @media (prefers-color-scheme: dark) { .about { color: #b3a488; } }
+  :root[data-theme="dark"] .about { color: #b3a488; }
+  .sgx-locale-toggle { display: flex; gap: 6px; margin: 0 0 14px; }
+  .sgx-locale-btn {
+    font: 600 12px/1 "Segoe UI",system-ui,sans-serif; letter-spacing: .06em; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid #d9cba8; background: #faf5e8; color: #6b5d47; cursor: pointer;
+  }
+  .sgx-locale-btn.active { background: #a8451f; border-color: #a8451f; color: #fff; }
+  @media (prefers-color-scheme: dark) { .sgx-locale-btn { border-color: #423628; background: #26201a; color: #b3a488; } }
+  :root[data-theme="dark"] .sgx-locale-btn { border-color: #423628; background: #26201a; color: #b3a488; }
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #d9cba8; font-size: 12.5px; color: #6b5d47; }
+  footer a { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #423628; color: #b3a488; } footer a { color: #e07a4e; } }
+  :root[data-theme="dark"] footer { border-color: #423628; color: #b3a488; }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="../">← Уровни корней</a>
+  <div id="locale-toggle"></div>
+  <p class="eyebrow">संस्कृतम् · धातवः · रूसीभाषया</p>
+  <h1 id="pg-h1">Топ-25 корней по-русски</h1>
+  <p class="about" id="pg-about">Те же 25 самых частых санскритских глагольных корней (Digital Corpus of Sanskrit,
+    Oliver Hellwig, CC BY&nbsp;4.0) — но карточки на этот раз без деванагари: соедините русский перевод
+    с санскритским корнем (IAST). Подходит тем, кто ещё не читает деванагари.</p>
+  <div id="app"></div>
+  <footer>
+    Источник частотности: Digital Corpus of Sanskrit, пересчитано в
+    <a href="https://github.com/gasyoun/kosha" target="_blank" rel="noopener">kosha</a> ×
+    <a href="https://github.com/sanskrit-lexicon/WhitneyRoots" target="_blank" rel="noopener">WhitneyRoots</a>.
+    Учебный виджет Systema&nbsp;Sanscriticum.
+  </footer>
+</div>
+
+<script src="/lila/gate.js" defer></script>
+<script src="/lila/telemetry.js" data-drill="roots" data-band="ru-faces" defer></script>
+<script src="/lila/locale.js"></script>
+<script src="../data.js"></script>
+<script src="../../match/engine.js"></script>
+<script>
+  var I18N = {
+    ru: {
+      h1: "Топ-25 корней по-русски",
+      about: "Те же 25 самых частых санскритских глагольных корней (Digital Corpus of Sanskrit, " +
+             "Oliver Hellwig, CC BY 4.0) — но карточки на этот раз без деванагари: соедините русский " +
+             "перевод с санскритским корнем (IAST). Подходит тем, кто ещё не читает деванагари.",
+      task: "Соедините русский перевод корня слева с самим корнем (IAST) справа.",
+      feedback: "Верно! Это 25 самых частых глагольных корней санскритского корпуса.",
+      leftTitle: "Перевод (RU)",
+      rightTitle: "Корень (IAST)"
+    },
+    en: {
+      h1: "Top-25 roots in Russian",
+      about: "The same 25 most frequent Sanskrit verbal roots (Digital Corpus of Sanskrit, " +
+             "Oliver Hellwig, CC BY 4.0) — no Devanāgarī needed this time: match the Russian " +
+             "gloss with the Sanskrit root (IAST). For learners who don't read Devanāgarī yet.",
+      task: "Match each root's Russian gloss on the left with the root itself (IAST) on the right.",
+      feedback: "Correct! These are the 25 most frequent verbal roots in the Sanskrit corpus.",
+      leftTitle: "Gloss (RU)",
+      rightTitle: "Root (IAST)"
+    }
+  };
+
+  document.getElementById("pg-h1").textContent = SgxLocale.pick(I18N, "h1");
+  document.getElementById("pg-about").textContent = SgxLocale.pick(I18N, "about");
+  SgxLocale.renderToggle(document.getElementById("locale-toggle"));
+
+  var pairs = ROOT_BANDS.top25.map(function (row) {
+    return {
+      left: { text: row.gloss_ru },
+      right: { text: row.iast, hint: row.top_form }
+    };
+  });
+  MatchExercise.mount(document.getElementById("app"), {
+    task: SgxLocale.pick(I18N, "task"),
+    feedback: SgxLocale.pick(I18N, "feedback"),
+    leftTitle: SgxLocale.pick(I18N, "leftTitle"),
+    rightTitle: SgxLocale.pick(I18N, "rightTitle"),
+    shuffle: true,
+    pairs: pairs
+  });
+</script>
+</body>
+</html>
