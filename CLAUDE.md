@@ -165,6 +165,42 @@ exists. `GroupResource`'s "Предпочтения" action reads them straight 
 the source data is free text) so the curator can eyeball the popular slot before
 fixing a group's date.
 
+### Group Reviewers (проверяющие домашек по группам)
+
+H1729: преподаватель мог проверять домашки только тех курсов, где он **основной**
+препод (`course.teacher_id`). Чтобы дать человеку проверку чужих групп, нужен был
+грант, не касающийся зарплаты.
+
+`group_reviewer` — pivot `groups` × **`users`** (не `teachers`!). Привязка к
+`users.id` сознательна: `homework_submissions.reviewed_by` уже указывает туда, а
+главное — со-препод в pivot `course_teacher` попадает в `Course::salaryTermsFor()`
+(возвращает `['type' => $co->pivot->salary_type, ...]`, то есть **не** `null`), и
+`TeacherSalaryService` начал бы начислять проверяющему ЗП с выручки чужих курсов.
+**Никогда не выдавайте доступ к домашкам через `course_teacher`** — это закрыто
+регрессионным тестом `grant_does_not_accrue_salary_for_the_reviewer`.
+
+Правило видимости — `HomeworkSubmission::scopeInReviewableGroups()`, единственный
+источник правды (им же питается `reviewGroupIds()` для уведомлений): у урока
+проставлена `group_id` — сверяем по ней; урок общий — требуем, чтобы **нашлась**
+группа из гранта, в которой состоит автор работы **И** к которой привязан курс
+работы. Без второй половины проверяющий группы 60 увидел бы работы того же ученика
+по чужому курсу — ученик может состоять в нескольких группах. Своя работа в свою
+очередь проверки не попадает никогда.
+
+Грант расширяет ровно две поверхности: очередь домашек (`HomeworkSubmissionResource`,
+ветка `orWhere` **рядом** со «своими курсами», не вместо — препод может вести своё и
+проверять чужое) и состав группы (`StudentGroupResource`). Курсы, уроки, расписание,
+сертификаты и карточки учеников грантом не открываются. `AttendanceDashboard`
+править не пришлось: он вообще не скоупится по `teacher_id` — любой `role=teacher`
+уже видит посещаемость всех групп (предсуществующее поведение, не вводится здесь).
+
+Уведомления — `HomeworkNotifier`: проверяющим с `notify=true` идут колокольчик
+(`sendToDatabase`), письмо и Telegram (каналы в `config/homework.php`), а
+преподавателю курса персональные письма **заменяются** недельной сводкой
+`homework:reviewer-digest` — но только если у группы есть активный проверяющий;
+курсы без проверяющих ведут себя ровно как раньше. Раздаёт гранты только админ
+(действие «Проверяющие» в `GroupResource`).
+
 ### Investment Model (NPV / IRR / payback)
 
 The phase-E superstructure of the noboring `/cases/education` plan (H261),

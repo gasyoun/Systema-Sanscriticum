@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkReviewedMail;
-use App\Mail\HomeworkSubmittedMail;
 use App\Models\HomeworkComment;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -162,18 +161,13 @@ class HomeworkService
         }
     }
 
+    /**
+     * Маршрутизация вести о сдаче вынесена в HomeworkNotifier (H1729): получателей
+     * стало двое — преподаватель курса и проверяющие подшефной группы.
+     */
     private function notifyTeacher(HomeworkSubmission $submission, bool $isResubmission = false): void
     {
-        $email = $submission->course?->teacher?->email;
-
-        if (! $email) {
-            Log::info("HomeworkService: у курса #{$submission->course_id} нет email преподавателя — уведомление о сдаче пропущено.");
-
-            return;
-        }
-
-        $reviewUrl = $this->reviewUrl($submission);
-        Mail::to($email)->send(new HomeworkSubmittedMail($submission, $reviewUrl, $isResubmission));
+        app(HomeworkNotifier::class)->submitted($submission, $isResubmission);
     }
 
     private function notifyStudent(HomeworkSubmission $submission, HomeworkComment $review): void

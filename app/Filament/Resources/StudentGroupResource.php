@@ -59,9 +59,16 @@ class StudentGroupResource extends Resource
             return true;
         }
 
-        return $user->isTeacher()
-            && $user->teacher_id
-            && $record->courses()->where('teacher_id', $user->teacher_id)->exists();
+        if (! $user->isTeacher()) {
+            return false;
+        }
+
+        if ($user->teacher_id && $record->courses()->where('teacher_id', $user->teacher_id)->exists()) {
+            return true;
+        }
+
+        // Грант проверяющего (H1729) открывает состав подшефной группы.
+        return in_array((int) $record->id, $user->reviewableGroupIds(), true);
     }
 
     public static function canCreate(): bool
@@ -87,13 +94,18 @@ class StudentGroupResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
-            if (! $user->teacher_id) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereHas('courses', function (Builder $q) use ($user) {
-                    $q->where('teacher_id', $user->teacher_id);
-                });
-            }
+            $reviewableGroupIds = $user->reviewableGroupIds();
+
+            $query->where(function (Builder $q) use ($user, $reviewableGroupIds) {
+                $user->teacher_id
+                    ? $q->whereHas('courses', fn (Builder $c) => $c->where('teacher_id', $user->teacher_id))
+                    : $q->whereRaw('1 = 0');
+
+                // Подшефные группы по гранту (H1729) — состав виден так же, как свои.
+                if ($reviewableGroupIds !== []) {
+                    $q->orWhereIn('groups.id', $reviewableGroupIds);
+                }
+            });
         }
 
         return $query;

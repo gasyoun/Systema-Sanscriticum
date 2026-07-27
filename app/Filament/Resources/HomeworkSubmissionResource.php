@@ -48,7 +48,10 @@ class HomeworkSubmissionResource extends Resource
         return false;
     }
 
-    /** Проверять может админ или преподаватель курса этой работы. */
+    /**
+     * Проверять может админ, преподаватель курса этой работы или проверяющий
+     * по гранту на её группу (H1729).
+     */
     public static function canReview($record): bool
     {
         $user = auth()->user();
@@ -58,10 +61,26 @@ class HomeworkSubmissionResource extends Resource
         if ($user->isAdminLike()) {
             return true;
         }
+        if (! $user->isTeacher()) {
+            return false;
+        }
 
-        return $user->isTeacher()
-            && $user->teacher_id
-            && optional($record->course)->teacher_id === $user->teacher_id;
+        if ($user->teacher_id && optional($record->course)->teacher_id === $user->teacher_id) {
+            return true;
+        }
+
+        // Свою собственную работу проверяющий не выносит на вердикт никогда.
+        if ((int) $record->user_id === (int) $user->id) {
+            return false;
+        }
+
+        foreach ($record->reviewGroupIds() as $groupId) {
+            if ($user->canReviewGroup($groupId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -149,13 +168,26 @@ class HomeworkSubmissionResource extends Resource
 
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
-            if (! $user->teacher_id) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereHas('course', function ($q) use ($user) {
-                    $q->where('teacher_id', $user->teacher_id);
-                });
-            }
+            $reviewableGroupIds = $user->reviewableGroupIds();
+
+            $query->where(function (Builder $q) use ($user, $reviewableGroupIds) {
+                // Ветка «свои курсы» — как было: основной преподаватель курса.
+                if ($user->teacher_id) {
+                    $q->whereHas('course', fn (Builder $c) => $c->where('teacher_id', $user->teacher_id));
+                } else {
+                    $q->whereRaw('1 = 0');
+                }
+
+                // Ветка «подшефные группы» (H1729). Именно ИЛИ, а не вместо:
+                // преподаватель может вести свои курсы и параллельно проверять
+                // чужие группы по гранту.
+                if ($reviewableGroupIds !== []) {
+                    $q->orWhere(function (Builder $r) use ($user, $reviewableGroupIds) {
+                        $r->inReviewableGroups($reviewableGroupIds)
+                            ->where('homework_submissions.user_id', '!=', $user->id);
+                    });
+                }
+            });
         }
 
         return $query;
@@ -235,11 +267,22 @@ class HomeworkSubmissionResource extends Resource
 
                 Tables\Filters\SelectFilter::make('course')
                     ->label('Курс')
+                    // Выборка фильтра обязана совпадать с выборкой таблицы: иначе
+                    // в фильтре не окажется курсов, работы по которым видны.
                     ->relationship('course', 'title', function (Builder $query) {
                         $user = auth()->user();
-                        if ($user && $user->isTeacher() && ! $user->isAdminLike() && $user->teacher_id) {
-                            $query->where('teacher_id', $user->teacher_id);
+                        if (! $user || ! $user->isTeacher() || $user->isAdminLike()) {
+                            return;
                         }
+                        $groupIds = $user->reviewableGroupIds();
+                        $query->where(function (Builder $q) use ($user, $groupIds) {
+                            $user->teacher_id
+                                ? $q->where('teacher_id', $user->teacher_id)
+                                : $q->whereRaw('1 = 0');
+                            if ($groupIds !== []) {
+                                $q->orWhereHas('groups', fn (Builder $g) => $g->whereIn('groups.id', $groupIds));
+                            }
+                        });
                     })
                     ->searchable()
                     ->preload(),
@@ -248,9 +291,24 @@ class HomeworkSubmissionResource extends Resource
                     ->label('Урок')
                     ->relationship('lesson', 'title', function (Builder $query) {
                         $user = auth()->user();
-                        if ($user && $user->isTeacher() && ! $user->isAdminLike() && $user->teacher_id) {
-                            $query->whereHas('course', fn (Builder $q) => $q->where('teacher_id', $user->teacher_id));
+                        if (! $user || ! $user->isTeacher() || $user->isAdminLike()) {
+                            return;
                         }
+                        $groupIds = $user->reviewableGroupIds();
+                        $query->where(function (Builder $q) use ($user, $groupIds) {
+                            $user->teacher_id
+                                ? $q->whereHas('course', fn (Builder $c) => $c->where('teacher_id', $user->teacher_id))
+                                : $q->whereRaw('1 = 0');
+                            if ($groupIds !== []) {
+                                // Урок подшефной группы — напрямую; общий урок курса
+                                // подшефной группы — через привязку курса к группе.
+                                $q->orWhereIn('group_id', $groupIds)
+                                    ->orWhere(function (Builder $l) use ($groupIds) {
+                                        $l->whereNull('group_id')
+                                            ->whereHas('course.groups', fn (Builder $g) => $g->whereIn('groups.id', $groupIds));
+                                    });
+                            }
+                        });
                     })
                     ->searchable()
                     ->preload(),
