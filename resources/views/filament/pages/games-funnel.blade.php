@@ -25,6 +25,28 @@
             За последние {{ $this->days }} дн. Анонимно, без PII (H1360).
         </div>
 
+        {{-- CTA -> регистрация (H1678, цель D6: ≥15% при выборке ≥50) --}}
+        @php $conv = $this->conversion; @endphp
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">CTA → регистрация</div>
+            @if ($conv['clickers'] === 0)
+                <div class="mt-1 text-lg text-gray-500 dark:text-gray-400">Пока нет кликов «Начать бесплатно» в окне.</div>
+            @else
+                <div class="mt-1 text-3xl font-bold text-gray-950 dark:text-white">
+                    {{ $conv['registered'] }} / {{ $conv['clickers'] }} = {{ $conv['rate'] }}%
+                </div>
+                <div class="mt-1 text-sm {{ $conv['baseline_only'] ? 'text-gray-500 dark:text-gray-400' : ($conv['rate'] >= 15 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400') }}">
+                    @if ($conv['baseline_only'])
+                        Выборка &lt; 50 — baseline, KPI ещё не судим.
+                    @elseif ($conv['rate'] >= 15)
+                        Цель ≥15% достигнута.
+                    @else
+                        Ниже цели 15%.
+                    @endif
+                </div>
+            @endif
+        </div>
+
         {{-- Разбивка по тренажёрам --}}
         <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
             <table class="w-full text-sm">

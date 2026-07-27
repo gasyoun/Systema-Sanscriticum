@@ -138,6 +138,69 @@ class GamesFunnelTelemetryTest extends TestCase
     }
 
     /** @test */
+    public function games_funnel_command_reports_cta_to_register_conversion(): void
+    {
+        GameEvent::create([
+            'anon_id' => 'clicker1', 'drill' => 'sort', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subHours(2),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'clicker1', 'drill' => 'sort', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subHour(),
+        ]);
+
+        $this->artisan('games:funnel --days=14')
+            ->assertExitCode(0)
+            ->expectsOutputToContain('CTA -> регистрация: 1/1');
+    }
+
+    /** @test */
+    public function cta_registration_rate_merges_via_authenticated_flag_not_a_user_id_column(): void
+    {
+        // H1678 D6/D10: KPI is computed from the SAME anon_id later carrying
+        // authenticated=true — game_events never stores a user_id (R20/152-ФЗ).
+        GameEvent::create([
+            'anon_id' => 'guestA', 'drill' => 'match', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(2),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'guestA', 'drill' => 'match', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subDay(),
+        ]);
+        // A second clicker who never comes back authenticated.
+        GameEvent::create([
+            'anon_id' => 'guestB', 'drill' => 'match', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(2),
+        ]);
+
+        $rate = GameEvent::ctaRegistrationRate(now()->subDays(14));
+
+        $this->assertSame(2, $rate['clickers']);
+        $this->assertSame(1, $rate['registered']);
+        $this->assertSame(50.0, $rate['rate']);
+        $this->assertTrue($rate['baseline_only']); // sample < 50
+    }
+
+    /** @test */
+    public function cta_registration_rate_ignores_a_merge_outside_the_seven_day_window(): void
+    {
+        GameEvent::create([
+            'anon_id' => 'guestLate', 'drill' => 'roots', 'event' => GameEvent::GATE_CTA_CLICK,
+            'authenticated' => false, 'created_at' => now()->subDays(10),
+        ]);
+        GameEvent::create([
+            'anon_id' => 'guestLate', 'drill' => 'roots', 'event' => GameEvent::START,
+            'authenticated' => true, 'created_at' => now()->subDays(2), // 8 days after the click
+        ]);
+
+        $rate = GameEvent::ctaRegistrationRate(now()->subDays(14));
+
+        $this->assertSame(1, $rate['clickers']);
+        $this->assertSame(0, $rate['registered']);
+        $this->assertSame(0.0, $rate['rate']);
+    }
+
+    /** @test */
     public function funnel_page_is_visible_to_manager_and_admin_but_not_teacher(): void
     {
         $this->actingAs(User::factory()->create(['role' => Roles::MANAGER]));
@@ -167,20 +230,22 @@ class GamesFunnelTelemetryTest extends TestCase
     /** @test */
     public function gate_js_gating_state_is_untouched_by_telemetry(): void
     {
-        // Контракт H1360: gate.js не трогаем, а telemetry.js — пассивный наблюдатель.
+        // Контракт H1360/H1678: gate.js и telemetry.js остаются независимы —
+        // gate.js не вызывает телеметрию напрямую, telemetry.js не читает/не
+        // пишет gate-состояние (per-family счётчик из H1678).
         $base = base_path('public/lila');
         $gate = file_get_contents($base.'/gate.js');
         $telemetry = file_get_contents($base.'/telemetry.js');
 
-        // gate.js сохраняет свой ключ и поведение и НЕ вызывает телеметрию.
-        $this->assertStringContainsString('sgx_played_v1', $gate);
+        // gate.js хранит свой ключ (5 игр на семейство, H1678) и не вызывает телеметрию.
+        $this->assertStringContainsString('sgx_plays_v2', $gate);
         $this->assertStringContainsString('showWall', $gate);
         $this->assertStringNotContainsString('telemetry', $gate);
         $this->assertStringNotContainsString('/api/games/event', $gate);
 
         // telemetry.js использует ДРУГОЙ ключ и не читает/не пишет gate-состояние.
         $this->assertStringContainsString('sgx_anon_v1', $telemetry);
-        $this->assertStringNotContainsString('sgx_played_v1', $telemetry);
+        $this->assertStringNotContainsString('sgx_plays_v2', $telemetry);
     }
 
     private function seedEvents(string $drill, ?string $band, string $event, int $n): void

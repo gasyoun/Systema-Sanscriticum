@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Санскрит · Краткие и долгие гласные</title>
+<link rel="stylesheet" href="../engine.css">
+<style>
+  body { margin: 0; background: var(--page-bg, #f3ecdb); }
+  @media (prefers-color-scheme: dark) { body { background: #1c1712; } }
+  :root[data-theme="dark"] body { background: #1c1712; }
+  :root[data-theme="light"] body { background: #f3ecdb; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+  .eyebrow {
+    font-family: "Noto Sans Devanagari","Nirmala UI",serif;
+    font-size: 13px; letter-spacing: .16em; color: #a8451f; font-weight: 600; margin: 0 0 6px;
+  }
+  @media (prefers-color-scheme: dark) { .eyebrow { color: #e07a4e; } }
+  :root[data-theme="dark"] .eyebrow { color: #e07a4e; }
+  h1 {
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 40px); margin: 0 0 12px; color: #2a2118; text-wrap: balance;
+  }
+  @media (prefers-color-scheme: dark) { h1 { color: #efe6d4; } }
+  :root[data-theme="dark"] h1 { color: #efe6d4; }
+  footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #d9cba8; font-size: 12.5px; color: #6b5d47; }
+  footer a { color: #a8451f; }
+  @media (prefers-color-scheme: dark) { footer { border-color: #423628; color: #b3a488; } footer a { color: #e07a4e; } }
+  :root[data-theme="dark"] footer { border-color: #423628; color: #b3a488; }
+  .sgx-locale-toggle { display: flex; gap: 6px; margin: 0 0 14px; }
+  .sgx-locale-btn {
+    font: 600 12px/1 "Segoe UI",system-ui,sans-serif; letter-spacing: .06em; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid #d9cba8; background: #faf5e8; color: #6b5d47; cursor: pointer;
+  }
+  .sgx-locale-btn.active { background: #a8451f; border-color: #a8451f; color: #fff; }
+  @media (prefers-color-scheme: dark) { .sgx-locale-btn { border-color: #423628; background: #26201a; color: #b3a488; } .sgx-locale-btn.active { background: #e07a4e; border-color: #e07a4e; color: #1c1712; } }
+</style>
+</head>
+<body>
+<!--
+  Provenance (H1678 A4): curated phonology pairs, not dictionary words —
+  24 CV syllables built from 3 onset consonants (k, t, n) x 4 vowel
+  qualities (a, i, u, ṛ), each in its short and long form, to teach the
+  short/long vowel contrast without needing Devanāgarī (A0). No RU gloss
+  is attached because these are not meaningful words (per D15, phonology
+  pairs are exempt from the gloss spot-check). "text" = IAST; "hint" =
+  a simplified pedagogical Cyrillic reading (macron marks vowel length;
+  ṛ -> "ри"/"рӣ"), authored 26-07-2026, not a scholarly transliteration
+  standard.
+-->
+<div class="page">
+  <div id="locale-toggle"></div>
+  <p class="eyebrow">संस्कृतम् · स्वराः</p>
+  <h1>Краткие и долгие гласные</h1>
+  <div id="app"></div>
+  <footer>
+    24 слога — по 3 согласных (k, t, n) на каждый из 4 гласных (a, i, u, ṛ) в
+    краткой и долгой форме. Распределите слоги по длительности гласного.
+    Учебный виджет Systema&nbsp;Sanscriticum.
+  </footer>
+</div>
+
+<script src="/lila/gate.js" defer></script>
+<script src="/lila/telemetry.js" data-drill="sort" data-band="vowel-length" defer></script>
+<script src="/lila/locale.js"></script>
+<script src="../engine.js"></script>
+<script>
+  var I18N = {
+    ru: {
+      task: "Распределите слоги по длительности гласного: краткий или долгий. " +
+            "Перетащите карточку в столбец — или коснитесь карточки, затем столбца.",
+      feedback: "Задание выполнено верно. Все слоги на своих местах."
+    },
+    en: {
+      task: "Sort each syllable by vowel length: short or long. " +
+            "Drag a card into a column — or tap a card, then the column.",
+      feedback: "All done — every syllable is in the right column."
+    }
+  };
+
+  SgxLocale.renderToggle(document.getElementById("locale-toggle"));
+
+  SortExercise.mount(document.getElementById("app"), {
+    task: SgxLocale.pick(I18N, "task"),
+    feedback: SgxLocale.pick(I18N, "feedback"),
+    perRound: 6,
+    groups: [
+      {
+        label: "Краткий гласный", sub: "hrasva · short",
+        items: [
+          { text: "ka",  hint: "ка" },
+          { text: "ki",  hint: "ки" },
+          { text: "ku",  hint: "ку" },
+          { text: "kṛ",  hint: "кри" },
+          { text: "ta",  hint: "та" },
+          { text: "ti",  hint: "ти" },
+          { text: "tu",  hint: "ту" },
+          { text: "tṛ",  hint: "три" },
+          { text: "na",  hint: "на" },
+          { text: "ni",  hint: "ни" },
+          { text: "nu",  hint: "ну" },
+          { text: "nṛ",  hint: "нри" }
+        ]
+      },
+      {
+        label: "Долгий гласный", sub: "dīrgha · long",
+        items: [
+          { text: "kā",  hint: "ка̄" },
+          { text: "kī",  hint: "кӣ" },
+          { text: "kū",  hint: "кӯ" },
+          { text: "kṝ",  hint: "крӣ" },
+          { text: "tā",  hint: "та̄" },
+          { text: "tī",  hint: "тӣ" },
+          { text: "tū",  hint: "тӯ" },
+          { text: "tṝ",  hint: "трӣ" },
+          { text: "nā",  hint: "на̄" },
+          { text: "nī",  hint: "нӣ" },
+          { text: "nū",  hint: "нӯ" },
+          { text: "nṝ",  hint: "нрӣ" }
+        ]
+      }
+    ]
+  });
+</script>
+</body>
+</html>

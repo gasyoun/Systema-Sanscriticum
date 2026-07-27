@@ -65,6 +65,22 @@ class GamesFunnelReport extends Command
             }
         }
 
+        $conversion = GameEvent::ctaRegistrationRate($since);
+        if ($conversion['clickers'] === 0) {
+            $this->line('CTA -> регистрация: пока нет кликов «Начать бесплатно» в окне.');
+        } else {
+            $note = $conversion['baseline_only']
+                ? ' (выборка < 50 — baseline, KPI ещё не судим)'
+                : ($conversion['rate'] >= 15.0 ? ' (цель ≥15% достигнута)' : ' (ниже цели 15%)');
+            $this->line(sprintf(
+                'CTA -> регистрация: %d/%d = %s%%%s',
+                $conversion['registered'],
+                $conversion['clickers'],
+                $conversion['rate'],
+                $note,
+            ));
+        }
+
         return self::SUCCESS;
     }
 
