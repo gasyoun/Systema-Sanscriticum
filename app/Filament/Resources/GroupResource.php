@@ -5,9 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Models\Group;
+use App\Models\User;
 use App\Services\ClassAttendanceService;
 use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -198,6 +200,57 @@ class GroupResource extends Resource
                             app(GroupRecruitmentNotifier::class)->notifyShortfall($record);
                             app(CuratorNotifier::class)->groupUnderEnrolled($record);
                         }
+                    }),
+
+                // Грант «проверяющий ↔ группа» (H1729): кто, кроме преподавателя
+                // курса, видит и проверяет домашки этой группы. Раздаёт только
+                // админ — преподаватель себе грант выдать не может.
+                Tables\Actions\Action::make('reviewers')
+                    ->label('Проверяющие')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->modalHeading(fn (Group $record): string => 'Проверяющие домашек — '.$record->name)
+                    ->modalSubmitActionLabel('Сохранить')
+                    ->fillForm(fn (Group $record): array => [
+                        'reviewer_ids' => $record->reviewers()->pluck('users.id')->all(),
+                        'can_review' => true,
+                        'notify' => true,
+                    ])
+                    ->form([
+                        Forms\Components\Select::make('reviewer_ids')
+                            ->label('Кто проверяет')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->options(fn (): array => User::query()
+                                ->whereIn('role', [Roles::TEACHER, Roles::ADMIN, Roles::SUPER_ADMIN])
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->helperText('Грант даёт доступ к домашкам и составу этой группы. На зарплату не влияет.'),
+
+                        Forms\Components\Toggle::make('can_review')
+                            ->label('Может выносить вердикт')
+                            ->helperText('Выключено — только смотреть и комментировать, принять/вернуть не сможет.')
+                            ->default(true),
+
+                        Forms\Components\Toggle::make('notify')
+                            ->label('Оповещать о новых работах')
+                            ->default(true),
+                    ])
+                    ->action(function (Group $record, array $data): void {
+                        $pivot = [
+                            'can_review' => (bool) ($data['can_review'] ?? true),
+                            'notify' => (bool) ($data['notify'] ?? true),
+                            'assigned_by' => auth()->id(),
+                            'assigned_at' => now(),
+                        ];
+
+                        $record->reviewers()->sync(
+                            collect($data['reviewer_ids'] ?? [])
+                                ->mapWithKeys(fn ($id) => [(int) $id => $pivot])
+                                ->all()
+                        );
                     }),
 
                 Tables\Actions\EditAction::make(),

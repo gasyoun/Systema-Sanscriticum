@@ -41,4 +41,34 @@ return [
         'mp4', 'mov', 'webm',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Проверяющие по группам (H1729)
+    |--------------------------------------------------------------------------
+    |
+    | Механизм общий, а включение — данными: у кого нет строк в group_reviewer,
+    | для того ничего не меняется. `enabled` тут — аварийный выключатель, чтобы
+    | погасить фичу целиком без отката миграции.
+    |
+    */
+
+    'reviewers' => [
+        'enabled' => (bool) env('HOMEWORK_REVIEWERS_ENABLED', true),
+
+        // Каналы оповещения проверяющего о новой сданной работе.
+        // Допустимые: database (колокольчик в админке), mail, telegram.
+        'notify_channels' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('HOMEWORK_REVIEWER_CHANNELS', 'database,mail,telegram')),
+        ))),
+
+        // Недельная сводка преподавателю курса вместо письма на каждую работу.
+        // Заменяет персональные письма ТОЛЬКО для групп с активным проверяющим.
+        'digest_enabled' => (bool) env('HOMEWORK_REVIEWER_DIGEST_ENABLED', true),
+
+        // День недели (1 = понедельник) и время отправки сводки.
+        'digest_day' => (int) env('HOMEWORK_REVIEWER_DIGEST_DAY', 1),
+        'digest_time' => env('HOMEWORK_REVIEWER_DIGEST_TIME', '09:00'),
+    ],
+
 ];

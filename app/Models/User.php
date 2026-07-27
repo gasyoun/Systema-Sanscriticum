@@ -354,6 +354,55 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     // ==========================================
+    // ГРАНТ ПРОВЕРЯЮЩЕГО ДОМАШЕК (H1729)
+    // ==========================================
+
+    /**
+     * Группы, домашки которых пользователь проверяет по гранту. Живёт отдельно
+     * от преподавания: грант НЕ делает его преподавателем курса и не участвует
+     * в Course::salaryTermsFor(), поэтому ЗП по нему не начисляется.
+     */
+    public function reviewedGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_reviewer')
+            ->withPivot(['can_review', 'notify', 'assigned_by', 'assigned_at'])
+            ->withTimestamps();
+    }
+
+    /** @var array<int>|null Мемо на инстанс — выборка дёргается на каждый рендер таблицы. */
+    private ?array $reviewableGroupIdsMemo = null;
+
+    /**
+     * ID групп, домашки которых этот пользователь вправе видеть по гранту.
+     * Пустой массив, когда фича выключена или грантов нет.
+     *
+     * @return array<int>
+     */
+    public function reviewableGroupIds(): array
+    {
+        if (! config('homework.reviewers.enabled')) {
+            return [];
+        }
+
+        return $this->reviewableGroupIdsMemo ??= $this->reviewedGroups()
+            ->pluck('groups.id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /** Грант на группу есть и он позволяет выносить вердикт. */
+    public function canReviewGroup(int $groupId): bool
+    {
+        if (! in_array($groupId, $this->reviewableGroupIds(), true)) {
+            return false;
+        }
+
+        $grant = $this->reviewedGroups()->where('groups.id', $groupId)->first();
+
+        return $grant !== null && (bool) $grant->pivot->can_review;
+    }
+
+    // ==========================================
     // СВЯЗИ ДЛЯ LMS (НЕ ТРОГАЕМ, ВСЁ БЕЗОПАСНО)
     // ==========================================
     public function groups(): BelongsToMany

@@ -106,6 +106,18 @@ class Group extends Model
         return $this->belongsToMany(Course::class, 'course_group');
     }
 
+    /**
+     * Проверяющие домашек этой группы (H1729): пользователи, которым выдан грант
+     * на проверку, независимо от того, ведут ли они её курсы. Связь идёт к User,
+     * а не к Teacher, чтобы грант не попадал в зарплатный контур.
+     */
+    public function reviewers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'group_reviewer')
+            ->withPivot(['can_review', 'notify', 'assigned_by', 'assigned_at'])
+            ->withTimestamps();
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);

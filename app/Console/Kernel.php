@@ -61,6 +61,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('finance-kpi-digest');
 
+        // Недельная сводка преподавателю по домашкам, которые за него проверяет
+        // проверяющий по гранту (H1729) — та же понедельничная утренняя рамка.
+        // Гейты (фича включена, сводка включена, есть что показать) — в команде.
+        $schedule->command('homework:reviewer-digest')
+            ->weeklyOn(
+                (int) config('homework.reviewers.digest_day', 1),
+                (string) config('homework.reviewers.digest_time', '09:00'),
+            )
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('homework-reviewer-digest');
+
         // Еженедельный goal check-in (H376): фиксирует темп каждой активной
         // цели и шлёт дайджест при отставании — та же понедельничная утренняя
         // рамка, что и KPI-дайджест.
