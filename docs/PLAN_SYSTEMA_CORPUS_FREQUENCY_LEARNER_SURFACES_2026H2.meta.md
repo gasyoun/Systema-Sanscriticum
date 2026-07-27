@@ -29,7 +29,7 @@ all six decisions elicited from a human in that session's interview.
 2. After D6 ships: decide whether the ligature drill should feed Prana rewards like the
    SRS loop does (deliberately out of scope in v1).
 3. The H1281 slug says `marathon-…` but the current `main` has no Marathon letter-drill
-   surface — the drill lands in `public/exercises/`. If a Marathon quiz surface later
+   surface — the drill lands in `public/lila/`. If a Marathon quiz surface later
    materializes, wire the same data there and note it here.
 4. Hindi wave: neither surface handles Hindi; revisit when SRS Wave 4 opens.
 

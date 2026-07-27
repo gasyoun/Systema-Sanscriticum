@@ -43,19 +43,27 @@ _Created: 02-07-2026 · Last updated: 27-07-2026_
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
 
-## Nginx: статика `/exercises/` (index.html)
+## Nginx: статика `/lila/` (index.html) + redirect с `/exercises/`
 
-Каталог `public/exercises/**` — HTML-тренажёры без Laravel. В vhost
-`/etc/nginx/sites-enabled/samskrte.ru` директива `index` **должна** включать
-`index.html`, иначе `/exercises/table/` (хвостовой слэш) отдаёт **403**, а
-`/exercises/table/index.html` — 200:
+Каталог `public/lila/**` — HTML-тренажёры без Laravel (URL `/lila/`; до 27-07-2026
+было `public/exercises/` → `/exercises/`). В vhost
+`/etc/nginx/sites-enabled/samskrte.ru`:
+
+1. **`index`** must include `index.html` so directory URLs work:
 
 ```nginx
 index index.php index.html;
 ```
 
-Выставлено на проде 27-07-2026 (H1710 follow-up). После правки: `nginx -t && systemctl reload nginx`.
-Бэкап vhost: `samskrte.ru.bak-h1710-index` рядом с сайтом (на сервере).
+2. **Permanent redirect** old bookmarks:
+
+```nginx
+location ^~ /exercises {
+    rewrite ^/exercises(.*)$ /lila$1 permanent;
+}
+```
+
+После правки: `nginx -t && systemctl reload nginx`.
 
 ## Первичная настройка (один раз)
 

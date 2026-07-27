@@ -2,7 +2,7 @@
 
 _Created: 26-07-2026 · Last updated: 26-07-2026_
 
-**Goal.** Turn Systema’s real pedagogical assets (static exercise engines, dictionary/SRS fixtures, frequency roots, lead-magnet funnel, Sanskrit-HUB ladder) into a **tiered portfolio of online games**: Wave 1 free A0 funnel on `/exercises` + csl-guides wrappers; Wave 2 cabinet skill drills + register→SRS onboarding; Wave 3 hub pedagogy and any net-new engines. This `/ask` pass authors the layered plan and invent catalogue only — **no product code ships in this session**.
+**Goal.** Turn Systema’s real pedagogical assets (static exercise engines, dictionary/SRS fixtures, frequency roots, lead-magnet funnel, Sanskrit-HUB ladder) into a **tiered portfolio of online games**: Wave 1 free A0 funnel on `/lila` + csl-guides wrappers; Wave 2 cabinet skill drills + register→SRS onboarding; Wave 3 hub pedagogy and any net-new engines. This `/ask` pass authors the layered plan and invent catalogue only — **no product code ships in this session**.
 
 **Execution index for future agents:** start here, then the four layer docs below.
 
@@ -27,7 +27,7 @@ _Created: 26-07-2026 · Last updated: 26-07-2026_
 | D4 | Engine policy | **Extend existing engines first** | sort / match / cloze / ligatures / roots already ship offline. |
 | D5 | Wave-1 fence | **No net-new engines · no audio · no multiplayer** | Strictest fence; needs-engine ideas park to Wave 3+. |
 | D6 | Wave-1 success metric | **Play → register**, refined to **≥15% of CTA clickers complete registration** | Mid-funnel KPI; baseline still needed for full play→register. |
-| D7 | Product surface | **Systema `/exercises` + csl-guides LM thin wrappers** | Dual acquisition; Systema is canonical (D11). |
+| D7 | Product surface | **Systema `/lila` + csl-guides LM thin wrappers** | Dual acquisition; Systema is canonical (D11). |
 | D8 | Free drills ↔ SRS | **On register: import “seen” lemmas into system Onboarding deck** | Magic continuity without merging game UX into FSRS. |
 | D9 | Content SoT | **Commit fixtures in Systema** (`data.js` / TSV + generators) | Same pattern as roots frequency drills. |
 | D10 | Guest identity | **localStorage UUID + `game_events`** | Stitch multi-session anonymous play; merge on auth. |
@@ -51,7 +51,7 @@ _Created: 26-07-2026 · Last updated: 26-07-2026_
 1. **On ambiguity:** apply the marked default in this plan / IMPLEMENTATION step; append a one-line log under the handoff’s Dev Notes; continue. Do not invent a fourth option.
 2. **Stop (halt the handoff):** about to change payments, tariffs, access grants, money webhooks; about to enable `SRS_ENABLED` / games flags on production without a DEPLOY_QUEUE row; about to overwrite reviewed fixtures without a `--check` generator path; about to touch `csl-orig` or secrets in `.env`.
 3. **Commit authority:** standard handoff autonomy — worktree off `origin/main`, commit, PR, merge. Flag defaults **OFF**. Production enable is human via DEPLOY_QUEUE.
-4. **Fence:** only `public/exercises/**`, `public/exercises/gate.js`, `telemetry.js`, games API/telemetry/SRS onboarding import paths, `docs/**`, related tests/config. No money contour. No multiplayer. No audio/TTS jobs in Wave 1.
+4. **Fence:** only `public/lila/**`, `public/lila/gate.js`, `telemetry.js`, games API/telemetry/SRS onboarding import paths, `docs/**`, related tests/config. No money contour. No multiplayer. No audio/TTS jobs in Wave 1.
 5. **Worktree:** always `git worktree add -b <branch> ../Systema-Sanscriticum-h###-<pid> origin/main`; remove worktree after PR lands.
 6. **Queue order:** do not self-start from ambient GTD; run only when a human names the handoff / `/go`, and only after money/GC Tier-0 capacity is free (D22).
 
@@ -61,7 +61,7 @@ _Created: 26-07-2026 · Last updated: 26-07-2026_
 
 | Piece | Verdict | Evidence |
 |---|---|---|
-| Sort / match / cloze engines | **Reuse** | `public/exercises/{sort,match,cloze}/engine.js` |
+| Sort / match / cloze engines | **Reuse** | `public/lila/{sort,match,cloze}/engine.js` |
 | Ligatures + roots frequency drills | **Reuse + pack** | H1281 / H1356 families; `build_root_drill_data.py` |
 | Gate + funnel telemetry | **Extend** | `gate.js`, `game_events`, H1360 `games:funnel` |
 | SRS FSRS stack | **Reuse** | Saraswati; onboarding deck is new *content + import*, not new scheduler |

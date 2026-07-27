@@ -143,12 +143,12 @@ draft → submitted → (needs_revision → submitted)* → accepted
 [config/marathon.php](config/marathon.php),
 [DeliverDueMarathonContent.php](app/Console/Commands/DeliverDueMarathonContent.php).
 
-### Бесплатные игры-упражнения (`/exercises/`)
+### Бесплатные игры-упражнения (`/lila/`)
 
 Статические браузерные тренажёры по санскриту под
-[`public/exercises/`](public/exercises/) — index-каталог + семейства движков
+[`public/lila/`](public/lila/) — index-каталог + семейства движков
 (без сборки, offline/iframe-safe). Живой каталог на проде:
-[samskrte.ru/exercises/](https://samskrte.ru/exercises/).
+[samskrte.ru/lila/](https://samskrte.ru/lila/).
 
 | Семейство | Движок | Примеры |
 |---|---|---|
@@ -162,7 +162,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
 предложение «зарегистрируйте бесплатный кабинет, чтобы продолжить»; **залогиненные
 студенты не гейтятся** и видят все тренажёры. Состояние — в `localStorage` (nudge, не DRM),
 авторизация читается пробой `/api/games/auth`. Гейт:
-[public/exercises/gate.js](public/exercises/gate.js). Порт с LearningApps:
+[public/lila/gate.js](public/lila/gate.js). Порт с LearningApps:
 [`/learningapps-port`](https://github.com/gasyoun/claude-config/blob/main/commands/learningapps-port.md),
 хелпер [`scripts/decode_learningapps.py`](scripts/decode_learningapps.py).
 Карта для куратора/студента:
@@ -594,9 +594,9 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   ([MarathonController.php](app/Http/Controllers/MarathonController.php),
   [config/marathon.php](config/marathon.php)).
 - [x] **Бесплатные игры-упражнения** — статические тренажёры sort / match / cloze / **table**
-  (+ лигатуры и корни по частотности) под `public/exercises/` с мягким гейтом
+  (+ лигатуры и корни по частотности) под `public/lila/` с мягким гейтом
   «одна игра бесплатно → зарегистрируйся»; студенты в кабинете — без гейта
-  ([public/exercises/gate.js](public/exercises/gate.js); H1710 batch 26-07-2026).
+  ([public/lila/gate.js](public/lila/gate.js); H1710 batch 26-07-2026).
 - [x] **SRS-движок (Saraswati trainer)** — нативные интервальные повторения «Anki для
   санскрита» с планировщиком FSRS, страница повторений и статистики, за флагом
   `SRS_ENABLED` (по умолчанию ON, пилот август 2026;

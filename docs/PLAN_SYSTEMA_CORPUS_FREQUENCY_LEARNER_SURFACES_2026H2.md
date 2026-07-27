@@ -24,7 +24,7 @@ asset↔use-case context:
 | 2 | D4 data source | **kosha's shipped W2b export** ([`data/roots/roots_frequency.tsv`](https://github.com/gasyoun/kosha/blob/main/data/roots/roots_frequency.tsv), H950) + [WhitneyRoots](https://github.com/gasyoun/WhitneyRoots) RU root glosses (H347) — consume, never re-derive frequency or glosses here |
 | 3 | D4 delivery | **A system SRS deck** via the existing FSRS stack ([`app/Services/Srs/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/app/Services/Srs), seeder pattern of [`database/seeders/SrsSanskritDeckSeeder.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/SrsSanskritDeckSeeder.php)) — no new engine, per the SRS roadmap non-goals |
 | 4 | D6 data source | **`dcs-grapheme-frequency`** (akshara 7,347 / conjunct 999 frequency tables, VisualDCS `derived-data/Fonetika/regen-2026/`, registered in [`kosha/data/manifest/datasets.json`](https://github.com/gasyoun/kosha/blob/main/data/manifest/datasets.json)) — the same order the Nagari teaching layer uses |
-| 5 | D6 delivery | **A new script-drill exercise in the existing [`public/exercises/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/exercises) family** (cloze/match/sort pattern) — the current tree has no letter-drill surface on `main`, so this is an add-alongside, not a rewrite |
+| 5 | D6 delivery | **A new script-drill exercise in the existing [`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila) family** (cloze/match/sort pattern) — the current tree has no letter-drill surface on `main`, so this is an add-alongside, not a rewrite |
 | 6 | Rights | Root glosses: WhitneyRoots RU layer is org-owned — publishable. Frequency tables: derived from DCS — attribute DCS (Hellwig) on the surface's about/notes block |
 
 ## D4 — Frequency-ranked RU root deck ([H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md), Sonnet)
@@ -54,17 +54,17 @@ review the deck end-to-end; DCS attribution present in the deck description.
 ## D6 — Conjunct-frequency script drill ([H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md), Sonnet)
 
 **What ships:** a static exercise «Лигатуры по частотности» in
-[`public/exercises/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/exercises)
+[`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila)
 — recognize/match Devanāgarī conjuncts presented most-frequent-first, so learners drill
 the ~50 ligatures that cover the bulk of real text before the long tail.
 
 1. **Data**: export the top conjuncts (with romanization + frequency band) from the
-   `dcs-grapheme-frequency` tables into a committed `public/exercises/ligatures/data.js`
+   `dcs-grapheme-frequency` tables into a committed `public/lila/ligatures/data.js`
    (static, no backend — matches the exercises pattern); document the regeneration
    command in the file header.
 2. **Exercise**: clone the closest existing mechanic (match or sort) from
-   [`public/exercises/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/exercises)
-   into `public/exercises/ligatures/`; levels = frequency bands (top-10 → top-50 →
+   [`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila)
+   into `public/lila/ligatures/`; levels = frequency bands (top-10 → top-50 →
    top-200); reuse `gate.js` access gating as the siblings do.
 3. **Prior-art fence**: [csl-guides](https://github.com/sanskrit-lexicon/csl-guides) owns
    the general devanāgarī/transliteration quizzes — this drill is Systema-specific

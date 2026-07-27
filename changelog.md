@@ -12,9 +12,10 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
-- **Nginx: index index.php index.html for /exercises/ directory URLs (H1710 follow-up).** Bare paths like /exercises/table/ no longer 403; docs/links drop forced index.html. Executor: Grok 4.5 (grok-4.5).
+- **Rename free drills path public/exercises/ → public/lila/ (URL /lila/).** Nav, gate/telemetry scripts, tests, manuals, Telegram drafts; nginx 301 /exercises/ → /lila/. Executor: Grok 4.5 (grok-4.5).
+- **Nginx: index index.php index.html for /lila/ directory URLs (H1710 follow-up).** Bare paths like /lila/table/ no longer 403; docs/links drop forced index.html. Executor: Grok 4.5 (grok-4.5).
 
-- **H1710 docs: student-manual §12 + README exercises table + Telegram drafts.** Кураторская карта игр-упражнений (docs/student-manual.md §12), расширен блок /exercises/ в README, черновики постов канала в marketing/exercises-telegram-posts.md. Executor: Grok 4.5 (grok-4.5).
+- **H1710 docs: student-manual §12 + README exercises table + Telegram drafts.** Кураторская карта игр-упражнений (docs/student-manual.md §12), расширен блок /lila/ в README, черновики постов канала в marketing/lila-telegram-posts.md. Executor: Grok 4.5 (grok-4.5).
 
 ## [1.57.0] - 2026-07-26
 
@@ -23,7 +24,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ### Added
 
-- **LearningApps to Systema: 7 drills + table engine + decode helper (H1710).** New family public/exercises/table/ (TableExercise.mount, LA tool 270) with verb-conjugation grid + masc. -i nominative; five thin drills (sort/verb-person-number, cloze/interrogative-accusative, cloze/demonstrative-pronouns, match/ru-sa-sentences, match/ru-sa-pairs-short). Helper scripts/decode_learningapps.py. Skill /learningapps-port. Executor: Grok 4.5 (grok-4.5).
+- **LearningApps to Systema: 7 drills + table engine + decode helper (H1710).** New family public/lila/table/ (TableExercise.mount, LA tool 270) with verb-conjugation grid + masc. -i nominative; five thin drills (sort/verb-person-number, cloze/interrogative-accusative, cloze/demonstrative-pronouns, match/ru-sa-sentences, match/ru-sa-pairs-short). Helper scripts/decode_learningapps.py. Skill /learningapps-port. Executor: Grok 4.5 (grok-4.5).
 
 ## [1.56.0] - 2026-07-26
 
@@ -48,7 +49,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ### Added
 - **PWG Arzamas-longread «Петербургский словарь» — wave-1 build (H1620).** Полный материал-пак [docs/materials/pwg-arzamas/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/pwg-arzamas): SOURCE.md (20 глав, ~4 500 слов, Arzamas-регистр), FACTS.md (138 строк claim→source, все `verified`/`hedged`), ASSETS.md (rights-таблица: 9 PD-изображений + 2 авторских SVG в `public/images/materials/pwg/`), детерминированный рендерер `build_body.py` (Markdown→`body.html`, ≥15 h2 gate), DECISIONS_LOG/FOLLOWUPS/bibliography. Данные обогащены по live-ревью MG: статистика csl-atlas (801 790 `<ls>`-цитат, приставочные семьи vi-/ā-/sam-, «худеющие» статьи −14,3 %/декаду, контраст с пунским PD-словарём ≈2280 г.), архивная глава Вигасина («Дело о санскритском словаре»: Уваров и латынь, гонорары, тираж), некролог Ольденбурга, статьи A33/A40/A50/Stache-Weiske; портрет Даля снят (заменят генерируемые инфографики, FOLLOWUPS W2-4); сюжет «Коссович против Бётлингка» вынесен в план второй заметки (W2-5). Импорт: artisan `materials:import-pwg-arzamas {--publish}` (идемпотентный upsert по slug `peterburgskiy-slovar-pwg`, staging обложки на public-диск, reading_time). Тесты: `PwgArzamasMaterialTest` (5, 22 assertions, идемпотентность + 404 черновика + ≥15 h2 + карточка хаба). RWS-советы `sanskrit`+`indology` (DeepSeek `deepseek-v4-pro`; алиас `deepseek-chat` умер — папиркаты поданы), Majors закрыты ([rws/MAJORS_RESOLUTION.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/rws/MAJORS_RESOLUTION.md)). Публикация в прод — по Step 10 (README runbook при отсутствии prod-CLI). Executor: Fable 5 (`claude-fable-5`).
 
-- **Online Sanskrit games multi-wave plan (`/ask`, 26-07-2026).** Layered PLAN + ROADMAP + ARCHITECTURE + IMPLEMENTATION (Wave 1) + VERIFICATION for games built on existing Systema assets (`/exercises` engines, frequency roots, Kochergina/SRS fixtures, lead-magnet funnel, Sanskrit-HUB ladder). Invent catalogue **28** game IDs in three sections (asset-pedagogy · viral LM · engine-fill). Wave-1 fence: extend engines only, no audio/multiplayer. Deferred handoffs H1678–H1680 (platform+P0, P1 packs, SRS onboarding). Index: [docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
+- **Online Sanskrit games multi-wave plan (`/ask`, 26-07-2026).** Layered PLAN + ROADMAP + ARCHITECTURE + IMPLEMENTATION (Wave 1) + VERIFICATION for games built on existing Systema assets (`/lila` engines, frequency roots, Kochergina/SRS fixtures, lead-magnet funnel, Sanskrit-HUB ladder). Invent catalogue **28** game IDs in three sections (asset-pedagogy · viral LM · engine-fill). Wave-1 fence: extend engines only, no audio/multiplayer. Deferred handoffs H1678–H1680 (platform+P0, P1 packs, SRS onboarding). Index: [docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Fixed
 - **CI на `main` починен: `DeliverSupportReplyTest` получает четвёртую зависимость `TelegramSupportSyncService` ([PR #726](https://github.com/gasyoun/Systema-Sanscriticum/pull/726), [issue #725](https://github.com/gasyoun/Systema-Sanscriticum/issues/725)).** Коммит [`95a61d4`](https://github.com/gasyoun/Systema-Sanscriticum/commit/95a61d4) добавил сервису четвёртый параметр конструктора (`TechnicalIssueRouter`), но анонимный наследник в тесте продолжал строить его с тремя — три кейса падали с `ArgumentCountError`, и job «PHP 8.3 — tests» был красным на `main` с этого коммита (зелёный на [`7b18267`](https://github.com/gasyoun/Systema-Sanscriticum/commit/7b18267)). Коммит ушёл в `main` напрямую, без PR, поэтому его ничто не сгейтило. Все четыре зависимости резолвятся контейнером — правка в две строки, продакшен-код не тронут. Обнаружено при прогоне полного Feature-набора для #724. Executor: Opus 5 (`claude-opus-5[1m]`).
@@ -458,7 +459,7 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 
 ### Added
 - **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
-- **Free-drill funnel is now measured — an anonymous `game_events` telemetry rail for `/exercises`** ([H1360](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1360-Opus_Systema-Sanscriticum_free-drill-funnel-instrumentation-game-events_20.07.26.md), [PR #622](https://github.com/gasyoun/Systema-Sanscriticum/pull/622)). The whole drill family (ligatures/roots/sort/match/cloze) previously stored **not one row** — `gate.js` kept its one-free-play state in `localStorage` only, and `GET /api/games/auth` was the sole server touchpoint — so the Tier-0 funnel question (how many visitors play → finish → hit the register wall → click «Начать бесплатно») was unanswerable. Added a first-party `POST /api/games/event` ingest (public web-guard, throttled, CSRF-exempt), a new `game_events` table, a `public/exercises/telemetry.js` sender (`navigator.sendBeacon`), a `games:funnel --days=N` report command, and a Filament **«Воронка тренажёров»** page (manager/admin).
+- **Free-drill funnel is now measured — an anonymous `game_events` telemetry rail for `/lila`** ([H1360](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1360-Opus_Systema-Sanscriticum_free-drill-funnel-instrumentation-game-events_20.07.26.md), [PR #622](https://github.com/gasyoun/Systema-Sanscriticum/pull/622)). The whole drill family (ligatures/roots/sort/match/cloze) previously stored **not one row** — `gate.js` kept its one-free-play state in `localStorage` only, and `GET /api/games/auth` was the sole server touchpoint — so the Tier-0 funnel question (how many visitors play → finish → hit the register wall → click «Начать бесплатно») was unanswerable. Added a first-party `POST /api/games/event` ingest (public web-guard, throttled, CSRF-exempt), a new `game_events` table, a `public/lila/telemetry.js` sender (`navigator.sendBeacon`), a `games:funnel --days=N` report command, and a Filament **«Воронка тренажёров»** page (manager/admin).
   - **Anonymous by construction (privacy fence):** the table stores no student id, no IP, and no user-agent — only a short client-minted `anon_id` stripped server-side to `[A-Za-z0-9]{0,32}`. The `authenticated` flag is stamped from the web session on the server, never trusted from the client. This keeps the table out of 152-ФЗ personal-data scope.
   - **`gate.js` untouched:** `telemetry.js` is a passive DOM observer of the wall and completion signals gate.js already produces, so the gate's own gating behaviour stays byte-for-byte unchanged (asserted by test). It uses a distinct `localStorage` key (`sgx_anon_v1`) and never reads or writes the gate's `sgx_played_v1`.
 
@@ -559,7 +560,7 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 
 ### Added
 - **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
-- **H1356: frequency-ranked root drills (top-25/50/100) in `public/exercises/roots/`.**
+- **H1356: frequency-ranked root drills (top-25/50/100) in `public/lila/roots/`.**
   New match-family exercise pairing each Sanskrit verbal root (deva + IAST hint)
   with its most frequent attested form (RU gloss as hint), banded by DCS corpus
   frequency (top-25 flat, top-50/100 random-10-per-round, mirroring the
@@ -568,7 +569,7 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
   a newly **committed** generator (`scripts/build_root_drill_data.py`, with a
   `--check` drift mode) — closing the gap the ligatures family left open (its
   equivalent exporter was never committed). Registered as a new family card on
-  `public/exercises/index.html`; anti-drift coverage in
+  `public/lila/index.html`; anti-drift coverage in
   `tests/Feature/Exercises/RootDrillPagesTest.php`.
 
 ## [1.42.0] - 2026-07-20
@@ -888,19 +889,19 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ### Added
 - **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1281 (D6): «Лигатуры по частотности» — деванагари-тренажёр конъюнктов.** Новое
-  статичное семейство `public/exercises/ligatures/` в существующей `public/exercises/`
+  статичное семейство `public/lila/ligatures/` в существующей `public/lila/`
   игротеке (не новый движок — reuse `match/engine.js`+`match/engine.css` as-is, per the
   plan's non-goal). Данные — топ-200 санскритских лигатур (saṃyoga) по
   корпусной частотности из VisualDCS
   [`derived-data/Fonetika/regen-2026/ligature_freq.csv`](https://github.com/gasyoun/VisualDCS/blob/main/derived-data/Fonetika/regen-2026/ligature_freq.csv)
   (Digital Corpus of Sanskrit — Oliver Hellwig, CC BY 4.0; kosha manifest id
   `dcs-grapheme-frequency`), committed as
-  [`data.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/exercises/ligatures/data.js)
+  [`data.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/ligatures/data.js)
   with the regen command in its header. Three cumulative frequency levels —
   `top-10/` (all 10 shown), `top-50/` and `top-200/` (`perRound: 10`, a fresh random
   ten each "Заново") — each a `MatchExercise.mount()` pairing the Devanāgarī glyph to
   its IAST romanization, hint = corpus rank + % of all ligature tokens. Linked from the
-  main `/exercises/` catalogue as a fourth family; prior-art fence links out to
+  main `/lila/` catalogue as a fourth family; prior-art fence links out to
   [csl-guides](https://sanskrit-lexicon.github.io/csl-guides/) for the full script
   course rather than duplicating it. Static-only — no migration, no flag, no backend;
   ships with the normal deploy — see
@@ -948,7 +949,7 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
   kosha `roots_frequency.tsv` × WhitneyRoots RU glosses → existing FSRS stack) and a
   conjunct-frequency Devanāgarī drill
   ([H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md),
-  `dcs-grapheme-frequency` → `public/exercises/` family);
+  `dcs-grapheme-frequency` → `public/lila/` family);
   [`docs/SRS_ROADMAP_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SRS_ROADMAP_2026.md)
   gains the content-deck row. Fable 5 (`claude-fable-5`).
 

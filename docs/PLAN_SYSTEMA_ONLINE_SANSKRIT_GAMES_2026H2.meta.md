@@ -35,7 +35,7 @@ Companion metadoc for the online Sanskrit games layered plan — the execution i
 - [SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md)
 - [ROADMAP_LEAD_MAGNETS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_LEAD_MAGNETS_2026.md)
 - [SRS_ROADMAP_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SRS_ROADMAP_2026.md)
-- Existing engines: [public/exercises/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/exercises)
+- Existing engines: [public/lila/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila)
 
 ## Ranked improvement backlog
 

@@ -237,13 +237,13 @@ _Created: 06-07-2026 · Last updated: 27-07-2026_
 
 ---
 
-## 12. Бесплатные игры-упражнения (`/exercises/`)
+## 12. Лила — бесплатные игры-упражнения (`/lila/`)
 
 Отдельный блок от кабинета (не вкладка `/dvaram`): короткие браузерные тренажёры
 по санскриту — без установки, на телефоне и на компьютере.
 
 **Где открыть.** Каталог:
-[https://samskrte.ru/exercises/](https://samskrte.ru/exercises/).
+[https://samskrte.ru/lila/](https://samskrte.ru/lila/).
 Прямые ссылки на семейства и отдельные игры — в таблице ниже. В шапке сайта и в
 боковом меню кабинета (если включено в вёрстке) пункт «Игры» / «Упражнения» ведёт
 туда же.
@@ -262,15 +262,15 @@ _Created: 06-07-2026 · Last updated: 27-07-2026_
 
 | Семейство | Что делает студент | Примеры (прод) |
 |---|---|---|
-| **Сортировки** | Перетаскивает (или тапает) слова в нужную группу | [Роды](https://samskrte.ru/exercises/sort/genders/); [лицо/число глагола](https://samskrte.ru/exercises/sort/verb-person-number/) |
-| **Пары** | Соединяет левую карточку с правой (клик-клик или drag) | [Корень ↔ форма](https://samskrte.ru/exercises/match/verb-roots/); [перевод RU↔SA](https://samskrte.ru/exercises/match/ru-sa-sentences/) |
-| **Пропуски** | В предложении выбирает форму из списка | [Глагол в контексте](https://samskrte.ru/exercises/cloze/verb-fill/); [указательные](https://samskrte.ru/exercises/cloze/demonstrative-pronouns/); [вопросительный аккузатив](https://samskrte.ru/exercises/cloze/interrogative-accusative/) |
-| **Таблицы** | Кладёт формы из пула в ячейки парадигмы | [Спряжение (таблица)](https://samskrte.ru/exercises/table/verb-conjugation-grid/); [номинатив -i](https://samskrte.ru/exercises/table/masc-i-nominative/) |
-| **Лигатуры / корни** | Пары по частотности в корпусе | [Лигатуры](https://samskrte.ru/exercises/ligatures/); [корни](https://samskrte.ru/exercises/roots/) |
+| **Сортировки** | Перетаскивает (или тапает) слова в нужную группу | [Роды](https://samskrte.ru/lila/sort/genders/); [лицо/число глагола](https://samskrte.ru/lila/sort/verb-person-number/) |
+| **Пары** | Соединяет левую карточку с правой (клик-клик или drag) | [Корень ↔ форма](https://samskrte.ru/lila/match/verb-roots/); [перевод RU↔SA](https://samskrte.ru/lila/match/ru-sa-sentences/) |
+| **Пропуски** | В предложении выбирает форму из списка | [Глагол в контексте](https://samskrte.ru/lila/cloze/verb-fill/); [указательные](https://samskrte.ru/lila/cloze/demonstrative-pronouns/); [вопросительный аккузатив](https://samskrte.ru/lila/cloze/interrogative-accusative/) |
+| **Таблицы** | Кладёт формы из пула в ячейки парадигмы | [Спряжение (таблица)](https://samskrte.ru/lila/table/verb-conjugation-grid/); [номинатив -i](https://samskrte.ru/lila/table/masc-i-nominative/) |
+| **Лигатуры / корни** | Пары по частотности в корпусе | [Лигатуры](https://samskrte.ru/lila/ligatures/); [корни](https://samskrte.ru/lila/roots/) |
 
 ### 12.3. Подводные камни
 
-- Ссылки с хвостовым слэшем (`/exercises/table/`) и с `index.html` оба работают
+- Ссылки с хвостовым слэшем (`/lila/table/`) и с `index.html` оба работают
   (nginx `index index.php index.html` — с 27-07-2026).
 - «Заново» не сбрасывает правильность ответа — только порядок карточек/вариантов.
 - Гостевой гейт — **на устройстве**: другой браузер / очистка storage = снова одна
@@ -279,7 +279,7 @@ _Created: 06-07-2026 · Last updated: 27-07-2026_
 Технический контур (гейты, телеметрия, порт с LearningApps) — в
 [`README.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/README.md)
 § «Бесплатные игры-упражнения» и в
-[`public/exercises/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/exercises).
+[`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila).
 
 ---
 
@@ -303,7 +303,7 @@ _Created: 06-07-2026 · Last updated: 27-07-2026_
 ничего дополнительно подтверждать не нужно (§9).
 
 **Где бесплатные игры по санскриту.**
-Каталог [samskrte.ru/exercises/](https://samskrte.ru/exercises/) (§12). В
+Каталог [samskrte.ru/lila/](https://samskrte.ru/lila/) (§12). В
 кабинете гейта нет; без входа — одна законченная игра, потом предложение
 зарегистрироваться.
 

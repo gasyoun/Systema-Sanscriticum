@@ -7,7 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Одно анонимное событие воронки бесплатных тренажёров /exercises (H1360).
+ * Одно анонимное событие воронки бесплатных тренажёров /lila (H1360).
  *
  * Append-only, без updated_at (как ActivityEvent). Никакого student-идентификатора,
  * ни IP, ни user-agent — только короткий anon_id с клиента (см. миграцию).
