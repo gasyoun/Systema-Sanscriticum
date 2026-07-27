@@ -8,7 +8,7 @@ use App\Models\GameEvent;
 use Illuminate\Console\Command;
 
 /**
- * Отчёт по воронке бесплатных тренажёров /exercises (H1360).
+ * Отчёт по воронке бесплатных тренажёров /lila (H1360).
  *
  * plays -> completes -> walls -> CTA за N дней, по одной строке на (drill, band).
  * Честность про охват (как cabinet:baseline): семейства тренажёров, у которых за
@@ -19,9 +19,9 @@ class GamesFunnelReport extends Command
 {
     protected $signature = 'games:funnel {--days=14 : Окно отчёта, дней назад от сегодня}';
 
-    protected $description = 'Воронка бесплатных тренажёров /exercises: показы -> решения -> стена -> CTA за N дней (H1360)';
+    protected $description = 'Воронка бесплатных тренажёров /lila: показы -> решения -> стена -> CTA за N дней (H1360)';
 
-    /** Известные семейства тренажёров (по каталогу public/exercises/). */
+    /** Известные семейства тренажёров (по каталогу public/lila/). */
     private const KNOWN_DRILLS = ['ligatures', 'roots', 'sort', 'match', 'cloze', 'index'];
 
     public function handle(): int

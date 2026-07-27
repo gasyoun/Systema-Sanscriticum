@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Первопартийный приёмник событий воронки бесплатных тренажёров /exercises (H1360).
+ * Первопартийный приёмник событий воронки бесплатных тренажёров /lila (H1360).
  *
  * POST /api/games/event { anon_id?, drill, band?, event } — публичный (web-guard,
  * потому что флаг authenticated берётся из браузерной сессии, а не с клиента),

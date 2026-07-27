@@ -48,7 +48,7 @@ pass         = rate ≥ 0.15 when cta_clickers ≥ 50; else "baseline only, do n
 | Telemetry | `completed` event with correct `drill` id |
 | Provenance | HTML/README cites fixture path or “curated phonology” |
 | Gloss quality (if RU meanings) | Spot-check ≥20 rows logged in PR body |
-| Catalogue linked | Card on `/exercises/` |
+| Catalogue linked | Card on `/lila/` |
 
 ### Wave 1b — csl-guides
 

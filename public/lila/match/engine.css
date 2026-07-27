@@ -1,0 +1,135 @@
+/* ============================================================
+   Match-the-pairs exercise engine — shared styles.
+   Palm-leaf-manuscript theme, light + dark. Sibling to
+   sort/engine.css — theme tokens lifted verbatim so the two
+   exercise families read as one system.
+   Consumed by drills (public/lila/match/<slug>/index.html).
+   ============================================================ */
+
+.matchx {
+  --ground: #f3ecdb;
+  --panel: #faf5e8;
+  --ink: #2a2118;
+  --ink-soft: #6b5d47;
+  --line: #d9cba8;
+  --accent: #a8451f;
+  --good: #3f7d3f;
+  --bad: #b23b2e;
+  --shadow: 0 1px 2px rgba(60,45,20,.12), 0 6px 18px rgba(60,45,20,.10);
+  --radius: 10px;
+  --serif: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --sans: "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --deva: "Noto Sans Devanagari","Nirmala UI","Kohinoor Devanagari","Mangal",var(--serif);
+
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .matchx {
+    --ground:#1c1712; --panel:#26201a; --ink:#efe6d4; --ink-soft:#b3a488;
+    --line:#423628; --accent:#e07a4e; --good:#7cc17c; --bad:#e0796c;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.35);
+  }
+}
+/* explicit theme toggles win over the media query in both directions */
+:root[data-theme="light"] .matchx {
+  --ground:#f3ecdb; --panel:#faf5e8; --ink:#2a2118; --ink-soft:#6b5d47;
+  --line:#d9cba8; --accent:#a8451f; --good:#3f7d3f; --bad:#b23b2e;
+  --shadow: 0 1px 2px rgba(60,45,20,.12), 0 6px 18px rgba(60,45,20,.10);
+}
+:root[data-theme="dark"] .matchx {
+  --ground:#1c1712; --panel:#26201a; --ink:#efe6d4; --ink-soft:#b3a488;
+  --line:#423628; --accent:#e07a4e; --good:#7cc17c; --bad:#e0796c;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.35);
+}
+
+/* ---- layout ---- */
+.matchx * { box-sizing: border-box; }
+
+.matchx .task {
+  font-size: 16px; color: var(--ink-soft); margin: 0 0 18px; max-width: 62ch;
+}
+
+.matchx .toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 20px;
+}
+.matchx button {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  box-shadow: var(--shadow); transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.matchx button:hover { border-color: var(--accent); }
+.matchx button:active { transform: translateY(1px); }
+.matchx button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.matchx button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.matchx button.ghost { background: transparent; box-shadow: none; }
+.matchx .spacer { flex: 1 1 auto; }
+.matchx .score {
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px;
+  color: var(--ink-soft); white-space: nowrap;
+}
+
+.matchx .board {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; align-items: start;
+}
+@media (max-width: 620px) { .matchx .board { gap: 12px 16px; } }
+
+.matchx .col { min-width: 0; }
+.matchx .col-title {
+  font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600; margin: 0 0 12px;
+}
+.matchx .col-drop { display: flex; flex-direction: column; gap: 10px; }
+
+.matchx .card {
+  position: relative; user-select: none; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 11px 16px 9px; box-shadow: var(--shadow); text-align: center;
+  transition: box-shadow .12s, border-color .12s, opacity .12s;
+}
+.matchx .card:hover { border-color: var(--accent); }
+.matchx .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.matchx .card.dragging { opacity: .45; }
+.matchx .card.over { border-color: var(--accent); border-style: dashed; }
+.matchx .card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.matchx .card.linked { border-color: var(--link); box-shadow: 0 0 0 2px var(--link), var(--shadow); }
+
+.matchx .card .word { font-size: 25px; line-height: 1.2; color: var(--ink); display: block; }
+.matchx .side-l .card .word { font-family: var(--deva); }
+.matchx .side-r .card .word { font-family: var(--serif); font-style: italic; font-size: 22px; }
+.matchx .card .hint { display: none; font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; line-height: 1.35; }
+.matchx.show-hints .card .hint { display: block; }
+
+/* link badge (numbered, coloured to the connection) top-left */
+.matchx .card .badge {
+  position: absolute; top: -8px; left: -8px; width: 20px; height: 20px;
+  border-radius: 50%; font-size: 12px; font-weight: 700; color: #fff;
+  background: var(--link); display: none; align-items: center; justify-content: center;
+  line-height: 1; box-shadow: var(--shadow);
+}
+.matchx .card.linked .badge { display: flex; }
+
+/* correctness mark top-right (overrides link colour on check) */
+.matchx .card.correct { border-color: var(--good); box-shadow: 0 0 0 2px var(--good), var(--shadow); }
+.matchx .card.wrong   { border-color: var(--bad);  box-shadow: 0 0 0 2px var(--bad), var(--shadow); }
+.matchx .card .mark {
+  position: absolute; top: -8px; right: -8px; width: 20px; height: 20px;
+  border-radius: 50%; font-size: 13px; font-weight: 700; color: #fff;
+  display: none; align-items: center; justify-content: center; line-height: 1;
+}
+.matchx .card.correct .mark { display: flex; background: var(--good); }
+.matchx .card.wrong .mark   { display: flex; background: var(--bad); }
+
+.matchx .feedback {
+  margin-top: 22px; border-radius: var(--radius); padding: 14px 18px;
+  font-weight: 600; display: none; align-items: center; gap: 10px;
+  background: color-mix(in srgb, var(--good) 16%, var(--panel));
+  border: 1px solid var(--good); color: var(--ink);
+}
+.matchx .feedback.show { display: flex; }
+.matchx .feedback .om { font-family: var(--deva); font-size: 22px; color: var(--good); }
+
+@media (prefers-reduced-motion: reduce) { .matchx * { transition: none !important; } }

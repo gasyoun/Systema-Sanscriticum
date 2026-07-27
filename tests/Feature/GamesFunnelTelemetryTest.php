@@ -15,7 +15,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * H1360 — анонимная воронка бесплатных тренажёров /exercises:
+ * H1360 — анонимная воронка бесплатных тренажёров /lila:
  * приёмник /api/games/event, агрегат games:funnel, Filament-страница,
  * и приватный контракт (никаких IP/UA/PII).
  */
@@ -168,7 +168,7 @@ class GamesFunnelTelemetryTest extends TestCase
     public function gate_js_gating_state_is_untouched_by_telemetry(): void
     {
         // Контракт H1360: gate.js не трогаем, а telemetry.js — пассивный наблюдатель.
-        $base = base_path('public/exercises');
+        $base = base_path('public/lila');
         $gate = file_get_contents($base.'/gate.js');
         $telemetry = file_get_contents($base.'/telemetry.js');
 

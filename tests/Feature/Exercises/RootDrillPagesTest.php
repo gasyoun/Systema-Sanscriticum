@@ -24,7 +24,7 @@ class RootDrillPagesTest extends TestCase
 
     private function bands(): array
     {
-        $data = file_get_contents(public_path('exercises/roots/data.js'));
+        $data = file_get_contents(public_path('lila/roots/data.js'));
         preg_match('/global\.ROOT_BANDS\s*=\s*(\{.*\});/s', $data, $m);
         $this->assertNotEmpty($m, 'data.js must define global.ROOT_BANDS = {...};');
 
@@ -34,20 +34,20 @@ class RootDrillPagesTest extends TestCase
     /** @test */
     public function the_family_index_and_all_three_band_pages_exist(): void
     {
-        $this->assertFileExists(public_path('exercises/roots/index.html'));
-        $this->assertFileExists(public_path('exercises/roots/top-25/index.html'));
-        $this->assertFileExists(public_path('exercises/roots/top-50/index.html'));
-        $this->assertFileExists(public_path('exercises/roots/top-100/index.html'));
-        $this->assertFileExists(public_path('exercises/roots/data.js'));
+        $this->assertFileExists(public_path('lila/roots/index.html'));
+        $this->assertFileExists(public_path('lila/roots/top-25/index.html'));
+        $this->assertFileExists(public_path('lila/roots/top-50/index.html'));
+        $this->assertFileExists(public_path('lila/roots/top-100/index.html'));
+        $this->assertFileExists(public_path('lila/roots/data.js'));
     }
 
     /** @test */
     public function every_band_page_references_the_free_games_gate(): void
     {
         foreach (['top-25', 'top-50', 'top-100'] as $band) {
-            $html = file_get_contents(public_path("exercises/roots/{$band}/index.html"));
+            $html = file_get_contents(public_path("lila/roots/{$band}/index.html"));
             $this->assertStringContainsString(
-                '/exercises/gate.js',
+                '/lila/gate.js',
                 $html,
                 "roots/{$band}/index.html must load the free-games gate"
             );

@@ -15,7 +15,7 @@ roots_frequency_ru_unmatched.tsv, never in the main fixture).
 Run from the repo root:
     python scripts/build_root_drill_data.py
 
-Use --check to verify public/exercises/roots/data.js is up to date with the
+Use --check to verify public/lila/roots/data.js is up to date with the
 fixture without writing (exits non-zero on drift; for CI/pre-merge use).
 
 Regenerate whenever database/seeders/data/roots_frequency_ru.tsv is rebuilt

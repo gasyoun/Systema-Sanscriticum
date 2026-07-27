@@ -160,7 +160,7 @@ Starters: see PLAN index § Handoffs.
 kosha roots_frequency / Whitney RU ──► roots data.js ──► G-C04/C06, G-A05
 Kochergina / Memrise CSV ────────────► G-C03, SRS decks
 DictionaryWord ──────────────────────► G-C07, system SRS
-public/exercises engines ────────────► all Wave-1 packs
+public/lila engines ────────────► all Wave-1 packs
 game_events + gate.js ───────────────► funnel KPI (D6)
 Srs* models ─────────────────────────► Wave-2 onboarding deck only
 csl-guides LM fleet ─────────────────► Wave-1b wrappers (D7/D17)

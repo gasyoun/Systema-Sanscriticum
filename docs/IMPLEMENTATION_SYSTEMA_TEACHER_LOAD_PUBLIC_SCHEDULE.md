@@ -112,7 +112,7 @@ before choosing — don't prematurely rewrite a working reused method).
 New `app/Http/Controllers/PublicWidgetController.php`, route `GET /widgets/schedule` (no auth
 middleware, no main-site layout — a bare HTML document). New
 `resources/views/widgets/schedule.blade.php` + a small vanilla-JS/Alpine script (inline or
-`public/widgets/schedule.js`, matching the `public/exercises/telemetry.js` convention already
+`public/widgets/schedule.js`, matching the `public/lila/telemetry.js` convention already
 in the repo) that fetches step 7's endpoint and renders a filterable table (direction dropdown,
 teacher dropdown, weekday grouping matching the current `raspisanie/` layout). Auto-resizing
 iframe: post the rendered document height via `window.parent.postMessage(...)` on load and on

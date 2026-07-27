@@ -173,10 +173,10 @@ Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->na
 Route::get('/shop/course/{slug}', fn ($slug) => redirect()->route('shop.course.show', $slug, 301));
 Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 
-// Auth-state probe for the free static games under public/exercises/ — lets
+// Auth-state probe for the free static games under public/lila/ — lets
 // gate.js skip the "register" wall for logged-in students. Public, web-guard
 // (session cookie) so it reflects the browser's own login; no CSRF (GET, no
-// state change). See public/exercises/gate.js.
+// state change). See public/lila/gate.js.
 Route::get('/api/games/auth', fn () => response()->json(['authenticated' => auth()->check()]))
     ->name('games.auth');
 

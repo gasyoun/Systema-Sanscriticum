@@ -11,7 +11,7 @@ Index: [PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Acquisition surfaces                                        │
-│  /exercises/* (Systema, canonical)  │  csl-guides LM pages   │
+│  /lila/* (Systema, canonical)  │  csl-guides LM pages   │
 │  static HTML + engine.js + data.js  │  embed/link wrappers   │
 └───────────────┬─────────────────────┴───────────┬───────────┘
                 │ gate.js (5 plays/family)          │
@@ -49,8 +49,8 @@ Per family, prefer the roots pattern:
 | Artifact | Role |
 |---|---|
 | `database/seeders/data/<pack>.tsv` or JSON | Source of truth for generators |
-| `scripts/build_<pack>_drill_data.py` | Emits `public/exercises/<family>/data.js`; supports `--check` |
-| `public/exercises/<family>/<slug>/index.html` | Mounts engine with config |
+| `scripts/build_<pack>_drill_data.py` | Emits `public/lila/<family>/data.js`; supports `--check` |
+| `public/lila/<family>/<slug>/index.html` | Mounts engine with config |
 
 **Card face policy (A0):** primary `cyrillic` + `iast`; `devanagari` optional/secondary; `translation_ru` required for gloss games; EN gloss optional behind UI toggle.
 

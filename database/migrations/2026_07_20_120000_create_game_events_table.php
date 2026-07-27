@@ -7,7 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Анонимная воронка бесплатных тренажёров /exercises (H1360).
+ * Анонимная воронка бесплатных тренажёров /lila (H1360).
  *
  * Отдельная таблица, а НЕ activity_events: тот рельс auth-only
  * (activity_events.user_id NOT NULL, CabinetTelemetry::emit(User $user,...)),
