@@ -39,6 +39,16 @@
         </div>
     @endif
 
+    @if (session('games_onboarding_status'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
+             class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+            <span><i class="fas fa-check-circle mr-1.5"></i>{{ session('games_onboarding_status') }}</span>
+            <button type="button" x-on:click="show = false" class="text-green-500 hover:text-green-700"><i class="fas fa-times"></i></button>
+        </div>
+    @endif
+
+    @include('student.partials.skill-drills')
+
     @include('student.partials.continue-learning-card')
 
     @include('student.partials.subscriber-shelf')

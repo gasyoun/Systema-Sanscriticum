@@ -55,10 +55,14 @@ class GamesFunnelTelemetryTest extends TestCase
     public function the_table_stores_no_ip_or_user_agent_by_design(): void
     {
         // Приватный контракт H1360: в game_events физически нет колонок для PII.
+        // `user_id` больше не входит в этот контракт (H1680, MG-руление):
+        // ставится ТОЛЬКО когда сессия уже аутентифицирована — это то же
+        // самое "залогиненный получает свою же запись", что и everywhere
+        // else, а не новый PII-канал. См. GamesOnboardingImporterTest.
         $this->assertFalse(Schema::hasColumn('game_events', 'ip_address'));
         $this->assertFalse(Schema::hasColumn('game_events', 'ip'));
         $this->assertFalse(Schema::hasColumn('game_events', 'user_agent'));
-        $this->assertFalse(Schema::hasColumn('game_events', 'user_id'));
+        $this->assertTrue(Schema::hasColumn('game_events', 'user_id'));
     }
 
     /** @test */
@@ -75,13 +79,27 @@ class GamesFunnelTelemetryTest extends TestCase
     /** @test */
     public function authenticated_hit_is_flagged_server_side(): void
     {
-        $this->actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $this->postJson(self::URL, [
             'anon_id' => 'anon0002', 'drill' => 'cloze', 'band' => 'verb-fill', 'event' => 'complete',
         ])->assertNoContent();
 
-        $this->assertTrue(GameEvent::first()->authenticated);
+        $row = GameEvent::first();
+        $this->assertTrue($row->authenticated);
+        // H1680: user_id stamped on the row's OWN write when authenticated.
+        $this->assertSame($user->id, $row->user_id);
+    }
+
+    /** @test */
+    public function anonymous_hit_carries_no_user_id(): void
+    {
+        $this->postJson(self::URL, [
+            'anon_id' => 'anon0003', 'drill' => 'cloze', 'event' => 'start',
+        ])->assertNoContent();
+
+        $this->assertNull(GameEvent::first()->user_id);
     }
 
     /** @test */
@@ -158,7 +176,9 @@ class GamesFunnelTelemetryTest extends TestCase
     public function cta_registration_rate_merges_via_authenticated_flag_not_a_user_id_column(): void
     {
         // H1678 D6/D10: KPI is computed from the SAME anon_id later carrying
-        // authenticated=true — game_events never stores a user_id (R20/152-ФЗ).
+        // authenticated=true. `game_events.user_id` exists as of H1680 (for
+        // SRS onboarding import), but this KPI still has no reason to touch
+        // it — the method/test name and behaviour are unchanged.
         GameEvent::create([
             'anon_id' => 'guestA', 'drill' => 'match', 'event' => GameEvent::GATE_CTA_CLICK,
             'authenticated' => false, 'created_at' => now()->subDays(2),

@@ -524,4 +524,14 @@ return [
      | ревью (креды OAuth уже настроены, см. `services.zoom`).
      */
     'zoom_auto_create' => (bool) env('ZOOM_AUTO_CREATE', false),
+
+    /*
+     | H1680 Wave 2: cabinet skill-drill strip — links to a curated set of
+     | short /lila free-play drills from the student dashboard (NOT the FSRS
+     | review loop at /dvaram/srs, independent of srs.enabled). ВЫКЛ по
+     | умолчанию — deploy-рубильник: пока флаг OFF, dashboard.blade.php не
+     | рендерит student.partials.skill-drills вовсе. Включение —
+     | GAMES_CABINET_SKILL_DRILLS=true + config:cache после ревью.
+     */
+    'games_cabinet_skill_drills' => (bool) env('GAMES_CABINET_SKILL_DRILLS', false),
 ];

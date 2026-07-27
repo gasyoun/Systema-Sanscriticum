@@ -29,9 +29,22 @@
                 </div>
             @endif
 
-            <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
+            <form action="{{ route('login.post') }}" method="POST" class="space-y-5" id="login-form">
                 @csrf
-                
+                {{-- H1680: если это устройство уже играло в бесплатные /lila-тренажёры
+                     анонимно, передаём тот же anon_id из localStorage — сервер
+                     свяжет прошлые события с этим аккаунтом при первом входе
+                     (UserLoginListener). Отсутствие поля/значения безвредно. --}}
+                <input type="hidden" name="anon_id" id="anon_id_field">
+                <script>
+                  (function () {
+                    try {
+                      var v = localStorage.getItem("sgx_anon_v1");
+                      if (v) document.getElementById("anon_id_field").value = v;
+                    } catch (e) {}
+                  })();
+                </script>
+
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="email">
                         Email адрес

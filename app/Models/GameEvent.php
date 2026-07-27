@@ -10,8 +10,16 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Одно анонимное событие воронки бесплатных тренажёров /lila (H1360).
  *
- * Append-only, без updated_at (как ActivityEvent). Никакого student-идентификатора,
- * ни IP, ни user-agent — только короткий anon_id с клиента (см. миграцию).
+ * Append-only, без updated_at (как ActivityEvent). Ни IP, ни user-agent —
+ * только короткий anon_id с клиента (см. миграцию create_game_events_table).
+ *
+ * `user_id` (H1680, nullable) — 152-FZ периметр это не расширяет: это то же
+ * самое "уже аутентифицированный пользователь получает свою же запись", что
+ * и везде в приложении. Ставится ТОЛЬКО когда сессия аутентифицирована
+ * (GameTelemetryController — на новой записи; GamesOnboardingImporter —
+ * бэкафиллом на прежние anon_id-строки при первом логине). Нужен для H1680
+ * SRS-онбординга ("какие паки этот пользователь реально доиграл до конца") —
+ * до H1680 такой связи не было вовсе.
  */
 class GameEvent extends Model
 {
@@ -20,6 +28,7 @@ class GameEvent extends Model
 
     protected $fillable = [
         'anon_id',
+        'user_id',
         'drill',
         'band',
         'event',
@@ -85,13 +94,11 @@ class GameEvent extends Model
      * Play -> register KPI (H1678, locked D6/D10): among distinct anon_id
      * that clicked the register CTA in the window, the share that later
      * carries an `authenticated=true` event within 7 days of their first
-     * click. This is the guest -> user "merge" signal — deliberately
-     * computed from the existing `authenticated` flag rather than adding a
-     * `user_id` column, because `game_events` is intentionally kept
-     * outside the 152-FZ perimeter (no PII, see the create-table
-     * migration and `the_table_stores_no_ip_or_user_agent_by_design`):
-     * knowing THAT a guest later authenticated is enough for the KPI —
-     * WHO they are is not needed and must not be stored here.
+     * click. This is the guest -> user "merge" signal, computed from the
+     * existing `authenticated` flag (not `user_id`) since it only needs to
+     * know THAT a guest later authenticated, not WHO they are — kept this
+     * way even after H1680 added `user_id` for the onboarding-import use
+     * case, since this KPI has no reason to touch it.
      *
      * @return array{clickers:int, registered:int, rate:?float, baseline_only:bool}
      */
