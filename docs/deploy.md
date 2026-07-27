@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 16-07-2026_
+_Created: 02-07-2026 · Last updated: 27-07-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -42,6 +42,20 @@ _Created: 02-07-2026 · Last updated: 16-07-2026_
    terminate только там, где supervisor отсутствует.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
+
+## Nginx: статика `/exercises/` (index.html)
+
+Каталог `public/exercises/**` — HTML-тренажёры без Laravel. В vhost
+`/etc/nginx/sites-enabled/samskrte.ru` директива `index` **должна** включать
+`index.html`, иначе `/exercises/table/` (хвостовой слэш) отдаёт **403**, а
+`/exercises/table/index.html` — 200:
+
+```nginx
+index index.php index.html;
+```
+
+Выставлено на проде 27-07-2026 (H1710 follow-up). После правки: `nginx -t && systemctl reload nginx`.
+Бэкап vhost: `samskrte.ru.bak-h1710-index` рядом с сайтом (на сервере).
 
 ## Первичная настройка (один раз)
 

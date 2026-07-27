@@ -1,13 +1,13 @@
 # Telegram-посты — бесплатные игры-упражнения (`/exercises/`)
 
-_Created: 26-07-2026 · Last updated: 26-07-2026_
+_Created: 26-07-2026 · Last updated: 27-07-2026_
 
 Черновики для канала [@samskrte](https://t.me/samskrte) (и при желании
 пересылки в учебные чаты). Вставляются **вручную**. Стиль как у
 [marathon-telegram-posts](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-telegram-posts.md):
 «вы», не больше одного эмодзи на пост, без ложной срочности.
 
-**Каталог:** https://samskrte.ru/exercises/index.html  
+**Каталог:** https://samskrte.ru/exercises/  
 **Студенты в кабинете** — все игры без ограничений.  
 **Гости** — первая законченная игра бесплатно, дальше мягкое приглашение
 завести бесплатный кабинет.
@@ -27,7 +27,7 @@ H1710 · Grok 4.5 (`grok-4.5`).
 Открываете в браузере — на телефоне или на компьютере. Залогинены в кабинет —
 все тренажёры сразу; без регистрации можно пройти одну игру целиком.
 
-Каталог: https://samskrte.ru/exercises/index.html
+Каталог: https://samskrte.ru/exercises/
 
 ---
 
@@ -38,7 +38,7 @@ H1710 · Grok 4.5 (`grok-4.5`).
 В каталоге: сортировки, пары, пропуски в предложении и заполнение таблиц-парадигм.
 Удобно между уроками или в транспорте.
 
-https://samskrte.ru/exercises/index.html
+https://samskrte.ru/exercises/
 
 ---
 
@@ -46,9 +46,9 @@ https://samskrte.ru/exercises/index.html
 
 Сегодня — таблица спряжения: разложите формы по лицу и числу.
 
-https://samskrte.ru/exercises/table/verb-conjugation-grid/index.html
+https://samskrte.ru/exercises/table/verb-conjugation-grid/
 
-Остальные игры — в общем каталоге: https://samskrte.ru/exercises/index.html
+Остальные игры — в общем каталоге: https://samskrte.ru/exercises/
 
 ---
 
@@ -57,7 +57,7 @@ https://samskrte.ru/exercises/table/verb-conjugation-grid/index.html
 В кабинете открыты все браузерные тренажёры: роды, корни, лигатуры, спряжение,
 местоимения, перевод фраз. Удобно 10–15 минут повторения между занятиями.
 
-Каталог: https://samskrte.ru/exercises/index.html
+Каталог: https://samskrte.ru/exercises/
 
 (Если вы уже вошли в кабинет — гейта «одна игра» для вас нет.)
 

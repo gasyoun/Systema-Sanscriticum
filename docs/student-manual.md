@@ -1,6 +1,6 @@
 # Полное руководство студента — личный кабинет
 
-_Created: 06-07-2026 · Last updated: 26-07-2026_
+_Created: 06-07-2026 · Last updated: 27-07-2026_
 
 Полный справочник по личному кабинету студента: все вкладки, кнопки и механики,
 как они видны студенту сегодня. Это техническая версия для куратора/разработчика —
@@ -243,7 +243,7 @@ _Created: 06-07-2026 · Last updated: 26-07-2026_
 по санскриту — без установки, на телефоне и на компьютере.
 
 **Где открыть.** Каталог:
-[https://samskrte.ru/exercises/index.html](https://samskrte.ru/exercises/index.html).
+[https://samskrte.ru/exercises/](https://samskrte.ru/exercises/).
 Прямые ссылки на семейства и отдельные игры — в таблице ниже. В шапке сайта и в
 боковом меню кабинета (если включено в вёрстке) пункт «Игры» / «Упражнения» ведёт
 туда же.
@@ -262,16 +262,16 @@ _Created: 06-07-2026 · Last updated: 26-07-2026_
 
 | Семейство | Что делает студент | Примеры (прод) |
 |---|---|---|
-| **Сортировки** | Перетаскивает (или тапает) слова в нужную группу | [Роды](https://samskrte.ru/exercises/sort/genders/index.html); [лицо/число глагола](https://samskrte.ru/exercises/sort/verb-person-number/index.html) |
-| **Пары** | Соединяет левую карточку с правой (клик-клик или drag) | [Корень ↔ форма](https://samskrte.ru/exercises/match/verb-roots/index.html); [перевод RU↔SA](https://samskrte.ru/exercises/match/ru-sa-sentences/index.html) |
-| **Пропуски** | В предложении выбирает форму из списка | [Глагол в контексте](https://samskrte.ru/exercises/cloze/verb-fill/index.html); [указательные](https://samskrte.ru/exercises/cloze/demonstrative-pronouns/index.html); [вопросительный аккузатив](https://samskrte.ru/exercises/cloze/interrogative-accusative/index.html) |
-| **Таблицы** | Кладёт формы из пула в ячейки парадигмы | [Спряжение (таблица)](https://samskrte.ru/exercises/table/verb-conjugation-grid/index.html); [номинатив -i](https://samskrte.ru/exercises/table/masc-i-nominative/index.html) |
-| **Лигатуры / корни** | Пары по частотности в корпусе | [Лигатуры](https://samskrte.ru/exercises/ligatures/index.html); [корни](https://samskrte.ru/exercises/roots/index.html) |
+| **Сортировки** | Перетаскивает (или тапает) слова в нужную группу | [Роды](https://samskrte.ru/exercises/sort/genders/); [лицо/число глагола](https://samskrte.ru/exercises/sort/verb-person-number/) |
+| **Пары** | Соединяет левую карточку с правой (клик-клик или drag) | [Корень ↔ форма](https://samskrte.ru/exercises/match/verb-roots/); [перевод RU↔SA](https://samskrte.ru/exercises/match/ru-sa-sentences/) |
+| **Пропуски** | В предложении выбирает форму из списка | [Глагол в контексте](https://samskrte.ru/exercises/cloze/verb-fill/); [указательные](https://samskrte.ru/exercises/cloze/demonstrative-pronouns/); [вопросительный аккузатив](https://samskrte.ru/exercises/cloze/interrogative-accusative/) |
+| **Таблицы** | Кладёт формы из пула в ячейки парадигмы | [Спряжение (таблица)](https://samskrte.ru/exercises/table/verb-conjugation-grid/); [номинатив -i](https://samskrte.ru/exercises/table/masc-i-nominative/) |
+| **Лигатуры / корни** | Пары по частотности в корпусе | [Лигатуры](https://samskrte.ru/exercises/ligatures/); [корни](https://samskrte.ru/exercises/roots/) |
 
 ### 12.3. Подводные камни
 
-- Ссылки лучше давать **с `index.html` в конце** (так надёжнее на проде; «голый» путь
-  `/exercises/table/` иногда упирается в настройки nginx).
+- Ссылки с хвостовым слэшем (`/exercises/table/`) и с `index.html` оба работают
+  (nginx `index index.php index.html` — с 27-07-2026).
 - «Заново» не сбрасывает правильность ответа — только порядок карточек/вариантов.
 - Гостевой гейт — **на устройстве**: другой браузер / очистка storage = снова одна
   бесплатная игра. Для студента в кабинете это не важно.
@@ -303,7 +303,7 @@ _Created: 06-07-2026 · Last updated: 26-07-2026_
 ничего дополнительно подтверждать не нужно (§9).
 
 **Где бесплатные игры по санскриту.**
-Каталог [samskrte.ru/exercises](https://samskrte.ru/exercises/index.html) (§12). В
+Каталог [samskrte.ru/exercises/](https://samskrte.ru/exercises/) (§12). В
 кабинете гейта нет; без входа — одна законченная игра, потом предложение
 зарегистрироваться.
 
