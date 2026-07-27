@@ -572,7 +572,7 @@ documented, not silently dropped:** a payment paid *and* reversed entirely befor
 08-06-2026, with zero rows in `payment_audits`, has no evidence anywhere and stays
 `first_paid_at = null` forever — the command prints its count (not rows) on every run.
 The migration and backfill command are **not** run against prod by an agent (D16) — see
-[DEPLOY_QUEUE.md row 61](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
+[DEPLOY_QUEUE.md row 62](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md).
 
 ---
 
