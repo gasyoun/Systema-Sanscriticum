@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лила — руководство по играм-упражнениям · Systema Sanscriticum</title>
+<style>
+    @page {
+        margin: 28mm 16mm 22mm 16mm;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: "DejaVu Sans", "Segoe UI", system-ui, sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.5;
+        color: #2b2b2b;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ---------- Обложка ---------- */
+    .cover {
+        page-break-after: always;
+        text-align: center;
+        padding-top: 52mm;
+    }
+    .cover .kicker {
+        letter-spacing: 4px;
+        font-size: 11pt;
+        color: #a8451f;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+    .cover h1 {
+        font-size: 32pt;
+        color: #1f2937;
+        margin: 0 0 6px 0;
+        line-height: 1.15;
+    }
+    .cover h2 {
+        font-size: 14pt;
+        font-weight: normal;
+        color: #6b7280;
+        margin: 0 0 28px 0;
+    }
+    .cover .rule {
+        width: 90px;
+        height: 4px;
+        background: #a8451f;
+        margin: 26px auto;
+    }
+    .cover .om {
+        font-family: "Noto Sans Devanagari", "Nirmala UI", serif;
+        font-size: 48pt;
+        color: #a8451f;
+        margin-bottom: 10px;
+    }
+    .cover .foot {
+        margin-top: 48mm;
+        color: #9ca3af;
+        font-size: 9.5pt;
+    }
+
+    /* ---------- Заголовки ---------- */
+    h2.section {
+        font-size: 16pt;
+        color: #ffffff;
+        background: #a8451f;
+        padding: 9px 14px;
+        margin: 0 0 14px 0;
+        border-radius: 5px;
+        page-break-after: avoid;
+    }
+    h3 {
+        font-size: 12.5pt;
+        color: #92400e;
+        margin: 20px 0 6px 0;
+        padding-bottom: 4px;
+        border-bottom: 2px solid #fde68a;
+        page-break-after: avoid;
+    }
+    h4 {
+        font-size: 11pt;
+        color: #1f2937;
+        margin: 14px 0 4px 0;
+        page-break-after: avoid;
+    }
+    p { margin: 6px 0; }
+    ul, ol { margin: 6px 0 6px 0; padding-left: 20px; }
+    li { margin: 3px 0; }
+    strong { color: #1f2937; }
+    a { color: #a8451f; }
+    code {
+        font-family: "DejaVu Sans Mono", Consolas, monospace;
+        background: #f3f4f6;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 9.5pt;
+        color: #a8451f;
+    }
+
+    .lead {
+        font-size: 11pt;
+        color: #4b5563;
+    }
+
+    /* ---------- Блоки-врезки ---------- */
+    .box {
+        padding: 10px 14px;
+        border-radius: 5px;
+        margin: 12px 0;
+        page-break-inside: avoid;
+    }
+    .tip   { background: #ecfdf5; border-left: 4px solid #10b981; }
+    .warn  { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .note  { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .free  { background: #fff7ed; border-left: 4px solid #a8451f; }
+    .box .t { font-weight: bold; display: block; margin-bottom: 3px; }
+    .tip .t  { color: #047857; }
+    .warn .t { color: #b91c1c; }
+    .note .t { color: #1d4ed8; }
+    .free .t { color: #9a3412; }
+
+    /* ---------- Таблицы ---------- */
+    table.grid {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        page-break-inside: avoid;
+    }
+    table.grid th {
+        background: #92400e;
+        color: #fff;
+        text-align: left;
+        padding: 7px 9px;
+        font-size: 9.5pt;
+    }
+    table.grid td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 9px;
+        font-size: 9.5pt;
+        vertical-align: top;
+    }
+    table.grid tr:nth-child(even) td { background: #faf7f2; }
+
+    .pill {
+        display: inline-block;
+        background: #fef3c7;
+        color: #92400e;
+        border-radius: 10px;
+        padding: 1px 9px;
+        font-size: 8.5pt;
+        font-weight: bold;
+    }
+    .pill.ok  { background: #d1fae5; color: #065f46; }
+    .pill.no  { background: #fee2e2; color: #991b1b; }
+    .pill.fam { background: #ffedd5; color: #9a3412; }
+
+    .section-wrap { page-break-before: always; }
+
+    /* ---------- Оглавление ---------- */
+    .toc { page-break-after: always; }
+    .toc li { margin: 7px 0; font-size: 11pt; }
+    .toc .num {
+        display: inline-block;
+        width: 26px;
+        height: 26px;
+        background: #a8451f;
+        color: #fff;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 26px;
+        font-size: 10pt;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .step {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 5px;
+        padding: 4px 12px;
+        margin: 10px 0;
+        page-break-inside: avoid;
+    }
+
+    .url {
+        font-family: "DejaVu Sans Mono", Consolas, monospace;
+        font-size: 8.5pt;
+        word-break: break-all;
+        color: #6b7280;
+    }
+
+    footer.doc-foot {
+        margin-top: 28px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        font-size: 9pt;
+        color: #9ca3af;
+    }
+
+    @media screen {
+        body { max-width: 820px; margin: 0 auto; padding: 24px 18px 60px; }
+        .cover { padding-top: 24mm; min-height: auto; }
+        .cover .foot { margin-top: 28mm; }
+        .section-wrap, .toc, .cover { page-break-before: auto; page-break-after: auto; }
+        h2.section { margin-top: 28px; }
+    }
+    @media print {
+        a { color: inherit; text-decoration: none; }
+        .url { color: #4b5563; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ========================= ОБЛОЖКА ========================= -->
+<div class="cover">
+    <div class="om" aria-hidden="true">क्रीडा</div>
+    <div class="kicker">Система «Санскритикум» · samskrte.ru</div>
+    <h1>Лила</h1>
+    <div class="rule"></div>
+    <h2>Руководство по бесплатным<br>играм-упражнениям по санскриту</h2>
+    <p class="lead" style="max-width:42ch;margin:0 auto;">
+        Каталог, как играть в каждое семейство, доступ для гостя и студента,
+        ссылки для кураторов и частые вопросы.
+    </p>
+    <div class="foot">
+        Внутренний и студенческий документ · версия 1.0 · 27-07-2026<br>
+        Живой каталог: <strong>https://samskrte.ru/lila/</strong>
+    </div>
+</div>
+
+<!-- ========================= ОГЛАВЛЕНИЕ ========================= -->
+<div class="toc">
+    <h2 class="section">Содержание</h2>
+    <ul style="list-style:none; padding-left:0;">
+        <li><span class="num">1</span> Что такое Лила</li>
+        <li><span class="num">2</span> Как открыть и кто что видит</li>
+        <li><span class="num">3</span> Общие кнопки и жесты</li>
+        <li><span class="num">4</span> Полный каталог игр</li>
+        <li><span class="num">5</span> Семейства: как играть</li>
+        <li><span class="num">6</span> Для преподавателя и куратора</li>
+        <li><span class="num">7</span> Подводные камни и FAQ</li>
+        <li><span class="num">8</span> Куда смотреть дальше</li>
+    </ul>
+</div>
+
+<!-- ========================= 1 ========================= -->
+<div>
+    <h2 class="section">1. Что такое Лила</h2>
+    <p class="lead"><strong>Лила</strong> (санскр. <em>līlā</em> — «игра») — набор коротких
+    браузерных тренажёров по санскриту на сайте школы. Это <strong>не</strong> вкладка
+    кабинета «Мои курсы» и не SRS-карточки: отдельные страницы, которые открываются
+    по ссылке и работают на телефоне и на компьютере без установки.</p>
+
+    <div class="free box">
+        <span class="t">Бесплатный вход</span>
+        Первая <strong>законченная</strong> игра — без регистрации. Если понравится,
+        можно завести бесплатный кабинет ученика и играть дальше без ограничений.
+        Студент, уже вошедший в кабинет, гейта не видит.
+    </div>
+
+    <h3>Чем Лила отличается от других инструментов школы</h3>
+    <table class="grid">
+        <thead>
+            <tr>
+                <th>Инструмент</th>
+                <th>Зачем</th>
+                <th>Где</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Лила</strong> (игры)</td>
+                <td>5–15 минут навыка: роды, пары, пропуски, таблицы, частотные корни</td>
+                <td><a href="https://samskrte.ru/lila/">/lila/</a></td>
+            </tr>
+            <tr>
+                <td>Кабинет / курсы</td>
+                <td>Видеоуроки, ДЗ, расписание, доступы</td>
+                <td><code>/dvaram</code> и курсы</td>
+            </tr>
+            <tr>
+                <td>SRS (Сарасвати)</td>
+                <td>Интервальное повторение словаря (как Anki)</td>
+                <td>Кабинет, при включённом SRS</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note box">
+        <span class="t">Технически</span>
+        Каждая игра — статическая HTML-страница: один движок
+        (<code>engine.js</code> + <code>engine.css</code>) на семейство, без сборки
+        и без обязательной сети после загрузки. Работает offline и во
+        <code>&lt;iframe&gt;</code>.
+    </div>
+</div>
+
+<!-- ========================= 2 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">2. Как открыть и кто что видит</h2>
+
+    <h3>Каталог</h3>
+    <p>Главная страница Лилы:</p>
+    <p class="url"><a href="https://samskrte.ru/lila/">https://samskrte.ru/lila/</a></p>
+    <p>Оттуда — карточки шести семейств. В шапке сайта и в меню кабинета
+    (если пункт включён) «Игры» / «Упражнения» ведут туда же.</p>
+
+    <h3>Доступ</h3>
+    <table class="grid">
+        <thead>
+            <tr>
+                <th>Кто</th>
+                <th>Что видит</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="pill ok">Студент в кабинете</span></td>
+                <td>Все тренажёры без ограничений. Гейт «одна игра» <strong>не</strong> срабатывает.</td>
+            </tr>
+            <tr>
+                <td><span class="pill">Гость без входа</span></td>
+                <td>Одна <strong>законченная</strong> игра бесплатно. При следующей попытке —
+                мягкое окно «заведите бесплатный кабинет» (кнопки «Начать бесплатно» /
+                «Уже занимаюсь — войти»).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="warn box">
+        <span class="t">Это nudge, не замок</span>
+        Состояние гостя хранится в <code>localStorage</code> браузера на устройстве.
+        Другой браузер, режим инкогнито или очистка данных сайта снова дадут
+        одну бесплатную игру. Цель — пригласить в кабинет, а не DRM.
+    </div>
+
+    <h3>С чего начать новичку (A0)</h3>
+    <ol>
+        <li><a href="https://samskrte.ru/lila/sort/genders/">Роды существительных</a> — сортировка пум / стри / напунсака.</li>
+        <li><a href="https://samskrte.ru/lila/match/ru-sa-pairs-short/">Найдите пару</a> — короткие RU↔SA фразы.</li>
+        <li><a href="https://samskrte.ru/lila/ligatures/top-10/">Лигатуры · топ-10</a> — самые частые связки деванагари.</li>
+        <li><a href="https://samskrte.ru/lila/roots/top-25/">Корни · топ-25</a> — самые нужные глагольные корни по корпусу.</li>
+    </ol>
+</div>
+
+<!-- ========================= 3 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">3. Общие кнопки и жесты</h2>
+    <p class="lead">Во всех семействах логика одна: расставьте или соедините →
+    <strong>Проверить</strong> → смотрите ✓/✕ → <strong>Заново</strong> перемешивает.</p>
+
+    <table class="grid">
+        <thead>
+            <tr>
+                <th>Элемент</th>
+                <th>Что делает</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Проверить</strong></td>
+                <td>Отмечает каждую карточку / пару / пропуск зелёным или красным; показывает счёт.</td>
+            </tr>
+            <tr>
+                <td><strong>Заново</strong></td>
+                <td>Перемешивает порядок карточек или вариантов. <em>Не меняет</em> правильные ответы — только расклад.</td>
+            </tr>
+            <tr>
+                <td><strong>Показать подсказки</strong></td>
+                <td>Если в наборе есть подсказки (IAST, русский глосс) — показывает их под карточкой.</td>
+            </tr>
+            <tr>
+                <td>Тема (светлая / тёмная)</td>
+                <td>Учитывает системную тему; на многих страницах есть явный переключатель.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Управление</h3>
+    <ul>
+        <li><strong>Мышь:</strong> перетаскивание или клик-клик (сначала объект, потом цель).</li>
+        <li><strong>Сенсор:</strong> тап по карточке, затем тап по группе / ячейке / паре.</li>
+        <li><strong>Клавиатура:</strong> Tab между карточками, Enter/Space — выбрать и закрепить.</li>
+    </ul>
+
+    <div class="tip box">
+        <span class="t">Доступность</span>
+        Движки рассчитаны на клавиатуру и <code>prefers-reduced-motion</code>
+        (меньше анимации, если так настроена система).
+    </div>
+</div>
+
+<!-- ========================= 4 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">4. Полный каталог игр</h2>
+    <p class="lead">Актуальный список на <a href="https://samskrte.ru/lila/">samskrte.ru/lila/</a>.
+    Ниже — все игры по семействам со ссылками (удобно копировать в чат).</p>
+
+    <h3>Сортировки <span class="pill fam">sort</span></h3>
+    <table class="grid">
+        <thead>
+            <tr><th>Игра</th><th>Что тренирует</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Роды существительных</td>
+                <td>Пуллинга / стрили́нга / напунсакали́нга</td>
+                <td class="url"><a href="https://samskrte.ru/lila/sort/genders/">…/sort/genders/</a></td>
+            </tr>
+            <tr>
+                <td>Существительное и местоимение</td>
+                <td>Согласование по роду (saḥ / sā / tat)</td>
+                <td class="url"><a href="https://samskrte.ru/lila/sort/noun-pronoun/">…/sort/noun-pronoun/</a></td>
+            </tr>
+            <tr>
+                <td>Спряжение · лицо и число</td>
+                <td>Разложить формы глагола по лицу и числу</td>
+                <td class="url"><a href="https://samskrte.ru/lila/sort/verb-person-number/">…/sort/verb-person-number/</a></td>
+            </tr>
+            <tr>
+                <td>Генератор сортировок</td>
+                <td>Свой набор групп → превью и скачать HTML (для преподавателя)</td>
+                <td class="url"><a href="https://samskrte.ru/lila/sort/generator/">…/sort/generator/</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Пары <span class="pill fam">match</span></h3>
+    <table class="grid">
+        <thead>
+            <tr><th>Игра</th><th>Что тренирует</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Найди пару для глагола</td>
+                <td>Корень (dhātu) ↔ форма 3 л. ед. ч. настоящего</td>
+                <td class="url"><a href="https://samskrte.ru/lila/match/verb-roots/">…/match/verb-roots/</a></td>
+            </tr>
+            <tr>
+                <td>Перевод с русского</td>
+                <td>Русская фраза ↔ санскритское предложение</td>
+                <td class="url"><a href="https://samskrte.ru/lila/match/ru-sa-sentences/">…/match/ru-sa-sentences/</a></td>
+            </tr>
+            <tr>
+                <td>Найдите пару</td>
+                <td>Короткие пары RU ↔ SA</td>
+                <td class="url"><a href="https://samskrte.ru/lila/match/ru-sa-pairs-short/">…/match/ru-sa-pairs-short/</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Пропуски <span class="pill fam">cloze</span></h3>
+    <table class="grid">
+        <thead>
+            <tr><th>Игра</th><th>Что тренирует</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Выберите нужный глагол</td>
+                <td>Глагол в контексте предложения (выпадающий список)</td>
+                <td class="url"><a href="https://samskrte.ru/lila/cloze/verb-fill/">…/cloze/verb-fill/</a></td>
+            </tr>
+            <tr>
+                <td>Аккузатив вопросительных</td>
+                <td>Вопросительные местоимения в аккузативе</td>
+                <td class="url"><a href="https://samskrte.ru/lila/cloze/interrogative-accusative/">…/cloze/interrogative-accusative/</a></td>
+            </tr>
+            <tr>
+                <td>Указательные местоимения</td>
+                <td>Указательные местоимения в контексте</td>
+                <td class="url"><a href="https://samskrte.ru/lila/cloze/demonstrative-pronouns/">…/cloze/demonstrative-pronouns/</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Таблицы <span class="pill fam">table</span></h3>
+    <table class="grid">
+        <thead>
+            <tr><th>Игра</th><th>Что тренирует</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Спряжение глаголов (таблица)</td>
+                <td>Парадигма: положить формы в ячейки лица/числа</td>
+                <td class="url"><a href="https://samskrte.ru/lila/table/verb-conjugation-grid/">…/table/verb-conjugation-grid/</a></td>
+            </tr>
+            <tr>
+                <td>Номинатив м.р. на -i</td>
+                <td>Номинатив мужского рода основ на -i (ед./дв./мн.)</td>
+                <td class="url"><a href="https://samskrte.ru/lila/table/masc-i-nominative/">…/table/masc-i-nominative/</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Лигатуры по частотности <span class="pill fam">ligatures</span></h3>
+    <p>Пары лигатур в порядке реальной частотности в Digital Corpus of Sanskrit (DCS).
+    Начинайте с малого диапазона.</p>
+    <table class="grid">
+        <thead>
+            <tr><th>Диапазон</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Топ-10</td><td class="url"><a href="https://samskrte.ru/lila/ligatures/top-10/">…/ligatures/top-10/</a></td></tr>
+            <tr><td>Топ-50</td><td class="url"><a href="https://samskrte.ru/lila/ligatures/top-50/">…/ligatures/top-50/</a></td></tr>
+            <tr><td>Топ-200</td><td class="url"><a href="https://samskrte.ru/lila/ligatures/top-200/">…/ligatures/top-200/</a></td></tr>
+        </tbody>
+    </table>
+    <p class="url">Каталог семейства: <a href="https://samskrte.ru/lila/ligatures/">https://samskrte.ru/lila/ligatures/</a></p>
+
+    <h3>Корни по частотности <span class="pill fam">roots</span></h3>
+    <p>Глагольные корни (dhātu), отранжированные по частотности в корпусе
+    (данные kosha × WhitneyRoots). На карточке — деванагари-корень ↔ частая форма;
+    в подсказках — IAST и русский глосс.</p>
+    <table class="grid">
+        <thead>
+            <tr><th>Диапазон</th><th>Ссылка</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Топ-25 (все сразу)</td><td class="url"><a href="https://samskrte.ru/lila/roots/top-25/">…/roots/top-25/</a></td></tr>
+            <tr><td>Топ-50 (по 10 за раунд)</td><td class="url"><a href="https://samskrte.ru/lila/roots/top-50/">…/roots/top-50/</a></td></tr>
+            <tr><td>Топ-100 (по 10 за раунд)</td><td class="url"><a href="https://samskrte.ru/lila/roots/top-100/">…/roots/top-100/</a></td></tr>
+        </tbody>
+    </table>
+    <p class="url">Каталог семейства: <a href="https://samskrte.ru/lila/roots/">https://samskrte.ru/lila/roots/</a></p>
+</div>
+
+<!-- ========================= 5 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">5. Семейства: как играть</h2>
+
+    <h3>5.1. Сортировки</h3>
+    <p>На доске — карточки слов и несколько групп (колонок). Каждую карточку
+    нужно положить в правильную группу.</p>
+    <div class="step">
+        <p><strong>Шаги:</strong><br>
+        1. Прочитайте задание над доской.<br>
+        2. Перетащите карточку в группу <em>или</em> тапните карточку, затем группу.<br>
+        3. Нажмите <strong>Проверить</strong> — верные и неверные подсветятся.<br>
+        4. Исправьте ошибки и проверьте снова, либо <strong>Заново</strong> для нового раунда.</p>
+    </div>
+
+    <h3>5.2. Пары</h3>
+    <p>Две колонки. Каждый элемент слева соединяется ровно с одним справа.</p>
+    <div class="step">
+        <p><strong>Шаги:</strong><br>
+        1. Кликните карточку слева, затем её пару справа (или перетащите одну на другую).<br>
+        2. Появится цветной номер связи. Чтобы разорвать — кликните уже связанную карточку.<br>
+        3. <strong>Проверить</strong> → счёт «верно K / M».<br>
+        4. <strong>Заново</strong> перемешивает обе колонки независимо.</p>
+    </div>
+
+    <h3>5.3. Пропуски</h3>
+    <p>В тексте — выпадающие списки. В каждом — несколько вариантов формы;
+    нужно выбрать правильный.</p>
+    <div class="step">
+        <p><strong>Шаги:</strong><br>
+        1. Откройте каждый список и выберите форму.<br>
+        2. При необходимости включите подсказки (русский глосс под пропуском).<br>
+        3. <strong>Проверить</strong> → ✓/✕ у каждого пропуска.<br>
+        4. <strong>Заново</strong> перемешивает порядок вариантов в списках (ответ тот же).</p>
+    </div>
+
+    <h3>5.4. Таблицы</h3>
+    <p>Парадигма (сетка). Заголовки строк/столбцов закреплены; пустые ячейки
+    нужно заполнить формами из общего пула карточек внизу.</p>
+    <div class="step">
+        <p><strong>Шаги:</strong><br>
+        1. Возьмите форму из пула (клик или drag).<br>
+        2. Положите в нужную ячейку (клик по ячейке или drop).<br>
+        3. Заполните всю таблицу → <strong>Проверить</strong>.<br>
+        4. Неверные ячейки можно переложить; <strong>Заново</strong> вернёт формы в пул в новом порядке.</p>
+    </div>
+
+    <h3>5.5. Лигатуры и корни</h3>
+    <p>Это те же <strong>пары</strong> (движок match), но данные — частотные:
+    сначала самые полезные лигатуры или корни. На больших диапазонах (50/100/200)
+    за раунд показывается выборка, чтобы доска оставалась играбельной —
+    <strong>Заново</strong> берёт новую выборку.</p>
+</div>
+
+<!-- ========================= 6 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">6. Для преподавателя и куратора</h2>
+
+    <h3>Как давать ссылку студентам</h3>
+    <ul>
+        <li>Предпочитайте <strong>прямую ссылку на игру</strong>, а не только каталог —
+            студент сразу попадает в задание.</li>
+        <li>Работают и «голый» путь со слэшем в конце
+            (<code>https://samskrte.ru/lila/table/</code>), и с <code>index.html</code>.</li>
+        <li>В учебном чате можно сказать: «зайдите в кабинет — гейта не будет».</li>
+        <li>Для гостей (реклама, марафон): одна законченная игра, затем мягкий призыв
+            зарегистрироваться.</li>
+    </ul>
+
+    <h3>Генератор своих сортировок</h3>
+    <p>Страница <a href="https://samskrte.ru/lila/sort/generator/">/lila/sort/generator/</a>:</p>
+    <ol>
+        <li>Задайте группы (метка, подпись).</li>
+        <li>Добавьте слова: по одному на строку, формат <code>текст | подсказка</code>.</li>
+        <li><strong>Собрать и показать</strong> — живое превью.</li>
+        <li><strong>Скачать HTML</strong> — самодостаточный файл для хостинга
+            или <strong>Копировать JSON</strong> — для вставки в ручную страницу.</li>
+    </ol>
+
+    <div class="note box">
+        <span class="t">Черновики постов в канал</span>
+        Готовые тексты для Telegram: в репозитории
+        <code>marketing/lila-telegram-posts.md</code>
+        (ранее <code>exercises-telegram-posts.md</code>).
+        Один фокус на пост, без лишних CTA.
+    </div>
+
+    <h3>Мини-план урока (10–15 минут)</h3>
+    <div class="step">
+        <p>☐ 3 мин — разминка: <a href="https://samskrte.ru/lila/sort/genders/">роды</a> или <a href="https://samskrte.ru/lila/ligatures/top-10/">лигатуры top-10</a><br>
+        ☐ 5–7 мин — целевая тема урока (например <a href="https://samskrte.ru/lila/table/verb-conjugation-grid/">таблица спряжения</a>)<br>
+        ☐ 3 мин — «Заново» и повтор ошибок вслух<br>
+        ☐ Ссылка в чат группы на ту же игру «на дом 5 минут»</p>
+    </div>
+</div>
+
+<!-- ========================= 7 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">7. Подводные камни и FAQ</h2>
+
+    <h4>После первой игры появилось окно «Понравилось?»</h4>
+    <p>Вы гость и уже завершили одну игру на этом устройстве. Войдите в кабинет
+    или зарегистрируйтесь — для вошедших гейта нет. В инкогнито / другом браузере
+    счётчик сбросится (это ожидаемо).</p>
+
+    <h4>«Заново» не меняет правильный ответ</h4>
+    <p>Да: перемешивается только порядок карточек или пунктов списка. Это сделано
+    намеренно — можно тренировать тот же набор без заучивания позиций.</p>
+
+    <h4>Не вижу пункт «Игры» в меню кабинета</h4>
+    <p>Откройте каталог напрямую: <a href="https://samskrte.ru/lila/">https://samskrte.ru/lila/</a>.
+    Пункт меню зависит от вёрстки; сами игры от него не зависят.</p>
+
+    <h4>Это то же, что LearningApps?</h4>
+    <p>Часть игр портирована с LearningApps (форматы «сортировка», «пары»,
+    «пропуски», «таблица») на собственные движки школы: свой дизайн, работа
+    без внешнего сервиса, общий гейт и телеметрия воронки.</p>
+
+    <h4>Старый адрес /exercises/</h4>
+    <p>Каталог переименован в <strong>/lila/</strong>. Если где-то осталась ссылка
+    на <code>/exercises/…</code>, замените префикс на <code>/lila/</code>.</p>
+
+    <div class="warn box">
+        <span class="t">Не путать с оплатой курсов</span>
+        Лила — бесплатный слой навыка. Оплата тарифов, доступы к видеоурокам
+        и долги — другие разделы кабинета (см. студенческий мануал).
+    </div>
+</div>
+
+<!-- ========================= 8 ========================= -->
+<div class="section-wrap">
+    <h2 class="section">8. Куда смотреть дальше</h2>
+    <table class="grid">
+        <thead>
+            <tr><th>Документ / место</th><th>Для кого</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="https://samskrte.ru/lila/">Живой каталог /lila/</a></td>
+                <td>Все</td>
+            </tr>
+            <tr>
+                <td><a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md">docs/student-manual.md</a> §12</td>
+                <td>Студент / куратор (краткая карта в общем мануале)</td>
+            </tr>
+            <tr>
+                <td><a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/README.md">README.md</a> · блок «Лила»</td>
+                <td>Разработчик / деплой</td>
+            </tr>
+            <tr>
+                <td><a href="https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila">public/lila/</a> · README семейств</td>
+                <td>Автор новых упражнений</td>
+            </tr>
+            <tr>
+                <td><a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md">План online games 2026H2</a></td>
+                <td>Продукт: волны, KPI, очередь пакетов</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="tip box" style="margin-top:18px;">
+        <span class="t">Остались вопросы?</span>
+        По доступу к курсам, оплатам и техническим сбоям — в поддержку школы
+        (чат в кабинете). По содержанию конкретной игры — куратору группы
+        или преподавателю.
+    </div>
+
+    <footer class="doc-foot">
+        Systema Sanscriticum · Лила · руководство v1.0 · 27-07-2026<br>
+        Создано: 27-07-2026 · Последнее обновление: 27-07-2026<br>
+        Grok 4.5 (<code>grok-4.5</code>) · Dr. Mārcis Gasūns
+    </footer>
+</div>
+
+</body>
+</html>
