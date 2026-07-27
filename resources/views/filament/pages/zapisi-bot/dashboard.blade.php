@@ -37,9 +37,21 @@
                             <code>php artisan telegram-harvest:roster {{ $this->chatId }}</code> на хосте.
                         </p>
                     @else
-                        <p class="text-xs text-gray-500 mb-3">
-                            {{ $this->roster['count'] }} участник(ов), снято {{ $this->roster['fetched_at'] }}
+                        <p @class(['text-xs text-gray-500', 'mb-1' => $this->roster['is_stale'], 'mb-3' => ! $this->roster['is_stale']])>
+                            {{ $this->roster['count'] }} участник(ов), снято
+                            {{ $this->roster['fetched_at_human'] ?? 'неизвестно когда' }}
+                            @if ($this->roster['fetched_at'])
+                                <span class="text-gray-400">({{ $this->roster['fetched_at'] }})</span>
+                            @endif
                         </p>
+
+                        @if ($this->roster['is_stale'])
+                            <p class="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-xs text-danger-700 dark:bg-danger-400/10 dark:text-danger-400">
+                                Снимок протух (старше {{ $this->roster['stale_after_hours'] }} ч) — состав мог измениться.
+                                Обновляет <code>telegram-harvest:roster-groups</code> раз в час; ему нужна включённая
+                                MTProto-сессия (<code>TELEGRAM_SUPPORT_ENABLED</code>).
+                            </p>
+                        @endif
                         <ul class="divide-y divide-gray-100 dark:divide-gray-800 max-h-96 overflow-y-auto">
                             @foreach ($this->roster['members'] as $member)
                                 <li class="py-2 text-sm flex justify-between">
@@ -62,6 +74,18 @@
                             и/или активный вебхук бота).
                         </p>
                     @else
+                        <p @class(['text-xs text-gray-500', 'mb-1' => $this->corpusFreshness['is_silent'], 'mb-3' => ! $this->corpusFreshness['is_silent']])>
+                            последнее сообщение {{ $this->corpusFreshness['last_sent_human'] ?? '—' }}
+                        </p>
+
+                        @if ($this->corpusFreshness['is_silent'])
+                            <p class="mb-3 rounded-lg bg-warning-50 px-3 py-2 text-xs text-warning-700 dark:bg-warning-400/10 dark:text-warning-400">
+                                Новых сообщений нет дольше {{ $this->corpusFreshness['silence_after_hours'] }} ч.
+                                Если в чате при этом пишут — проверьте вебхук бота:
+                                <code>getWebhookInfo</code> и <code>php artisan zapisi:set-webhook</code>.
+                            </p>
+                        @endif
+
                         <ul class="divide-y divide-gray-100 dark:divide-gray-800 max-h-96 overflow-y-auto">
                             @foreach ($this->recentMessages as $message)
                                 <li class="py-2 text-sm">

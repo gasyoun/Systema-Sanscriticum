@@ -104,4 +104,17 @@ class MadelineSyncGuardsTest extends TestCase
         // планировщика протухнет и пустит второй экземпляр на ту же сессию.
         $this->assertGreaterThan($timeout, $event->expiresAt * 60);
     }
+
+    /** Тот же инвариант для часового снятия ростеров — сессия у них общая. */
+    public function test_roster_groups_scheduler_lock_outlives_its_watchdog_timeout(): void
+    {
+        $event = collect(app(Schedule::class)->events())
+            ->first(fn ($event) => str_contains((string) $event->command, 'telegram-harvest:roster-groups'));
+
+        $this->assertNotNull($event, 'telegram-harvest:roster-groups пропал из планировщика.');
+
+        $timeout = (int) config('services.telegram_harvest.roster_timeout_seconds');
+        $this->assertGreaterThan(0, $timeout);
+        $this->assertGreaterThan($timeout, $event->expiresAt * 60);
+    }
 }

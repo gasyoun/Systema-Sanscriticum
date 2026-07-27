@@ -3,11 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Console\Concerns\LocksMadelineSession;
+use App\Exceptions\MadelineSyncTimedOut;
 use App\Models\Group;
 use App\Services\Telegram\MadelineClientFactory;
+use App\Services\Telegram\MadelineSessionReaper;
+use App\Services\Telegram\MadelineSyncWatchdog;
 use App\Services\TelegramHarvest\RosterStoreWriter;
 use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 /**
  * D9 (Track C): снимает ростер (состав участников) СРАЗУ для всех учебных групп
@@ -29,8 +33,12 @@ class SnapshotGroupRosters extends Command
 
     protected $description = 'Снимает ростер всех учебных групп с telegram_chat_id через юзербот (MadelineProto), один проход под замком сессии.';
 
-    public function handle(TelegramHarvestSyncService $harvest, MadelineClientFactory $clientFactory): int
-    {
+    public function handle(
+        TelegramHarvestSyncService $harvest,
+        MadelineClientFactory $clientFactory,
+        MadelineSyncWatchdog $watchdog,
+        MadelineSessionReaper $reaper,
+    ): int {
         if (! config('services.telegram_harvest.enabled')) {
             $this->info('Telegram harvest выключен (TELEGRAM_HARVEST_ENABLED) — пропуск.');
 
@@ -63,23 +71,55 @@ class SnapshotGroupRosters extends Command
             return self::SUCCESS;
         }
 
-        // Весь проход — под ОДНИМ замком: сессия открывается один раз (иначе
-        // второй демон крадёт IPC-сокеты). null = сессию держит другая команда.
-        $rosters = $this->withMadelineSessionLock(fn (): array => $harvest->fetchGroupRosters($peers));
+        $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
+        $writer = new RosterStoreWriter($path);
+
+        // Пишем КАЖДЫЙ ростер сразу, а не пачкой в конце: проход по всем группам
+        // идёт минутами, и прерванный (таймаут/флуд) не должен обнулять уже
+        // снятое.
+        $written = 0;
+        $writeRoster = function (string $peer, array $roster) use ($writer, &$written): void {
+            $writer->write($peer, $roster);
+            $written++;
+        };
+
+        // Потолок времени всего прохода: у getPwrChat своего таймаута нет, при
+        // флуд-лимите MadelineProto уходит в сон на часы и держит общую сессию —
+        // тот же класс отказа, что 27.07.2026 положил telegram-support:sync.
+        $timeout = (int) config('services.telegram_harvest.roster_timeout_seconds', 600);
+        if (! $watchdog->arm($timeout) && $timeout > 0 && $this->getOutput()->isVerbose()) {
+            $this->warn('Watchdog недоступен (нет расширения pcntl) — проход идёт без потолка времени.');
+        }
+
+        try {
+            // Весь проход — под ОДНИМ замком: сессия открывается один раз (иначе
+            // второй демон крадёт IPC-сокеты). null = сессию держит другая команда.
+            $rosters = $this->withMadelineSessionLock(
+                fn (): array => $harvest->fetchGroupRosters($peers, $writeRoster),
+            );
+        } catch (MadelineSyncTimedOut $e) {
+            // Замок уже отпущен раскруткой стека; прибираем демона своей сессии,
+            // чтобы он не пережил нас и не держал дескрипторы.
+            $reaper->killDaemons();
+            $reaper->clearIpcArtifacts();
+
+            Log::error('Telegram harvest roster-groups timed out — process stopped by watchdog', [
+                'timeout_seconds' => $e->timeoutSeconds,
+                'rosters_written' => $written,
+                'peers' => count($peers),
+            ]);
+
+            $this->error("Ростеры: timeout после {$e->timeoutSeconds} с — снято {$written} из ".count($peers).', демон сессии сброшен.');
+
+            return self::FAILURE;
+        } finally {
+            $watchdog->disarm();
+        }
 
         if ($rosters === null) {
             $this->warn('Telegram harvest roster-groups: session_busy (сессию держит другая команда). Повтор позже.');
 
             return self::SUCCESS;
-        }
-
-        $path = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
-        $writer = new RosterStoreWriter($path);
-
-        $written = 0;
-        foreach ($rosters as $peer => $roster) {
-            $writer->write((string) $peer, $roster);
-            $written++;
         }
 
         $skipped = count($peers) - $written;

@@ -170,6 +170,22 @@ return [
         // falls back to the default; env(key, default) keeps the '' and the writer
         // would then build paths from filesystem root (/corpus/… → mkdir denied).
         'store_path' => env('TELEGRAM_HARVEST_STORE_PATH') ?: storage_path('app/telegram-harvest/raw'),
+        // Через сколько часов снимок состава чата считается протухшим (0 —
+        // не помечать). Снимок пишет часовой telegram-harvest:roster-groups, и
+        // при любом его сбое СТАРЫЙ файл остаётся лежать как есть — дашборд
+        // «Записи (бот)» помечает такой снимок, а не выдаёт за текущий.
+        'roster_stale_after_hours' => (int) env('TELEGRAM_HARVEST_ROSTER_STALE_AFTER_HOURS', 6),
+        // Через сколько часов молчания в чате (нет новых сообщений в corpus)
+        // дашборд предупреждает о возможной поломке вебхука (0 — не мерить).
+        // Дорожка сообщений — Bot API webhook, она независима от MTProto-сессии,
+        // и её молчание внешне неотличимо от «в чате просто тихо».
+        'corpus_silence_after_hours' => (int) env('TELEGRAM_HARVEST_CORPUS_SILENCE_AFTER_HOURS', 48),
+        // Потолок времени одного прохода telegram-harvest:roster-groups (секунды,
+        // 0 — без потолка). Заметно больше, чем у support-синка: проход обходит
+        // все группы, а getPwrChat по супергруппе идёт рекурсивным алфавитным
+        // поиском. Kernel::schedule() выводит TTL замка отсюда — зависший проход
+        // обязан умереть раньше, чем замок протухнет и пустит второй экземпляр.
+        'roster_timeout_seconds' => (int) env('TELEGRAM_HARVEST_ROSTER_TIMEOUT_SECONDS', 600),
         // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
