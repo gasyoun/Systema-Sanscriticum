@@ -132,6 +132,12 @@ return [
         // (и SupportObservability, и telegram-support:healthcheck читают отсюда —
         // один порог, не два разных магических числа).
         'stale_after_minutes' => (int) env('TELEGRAM_SUPPORT_STALE_AFTER_MINUTES', 15),
+        // Потолок времени одного захода синка (секунды, 0 — без потолка).
+        // Зависший заход обязан умереть РАНЬШЕ, чем протухнет замок
+        // ->withoutOverlapping() планировщика: иначе на одной MTProto-сессии
+        // окажутся два экземпляра, каждый со своим IPC-демоном. Kernel::schedule()
+        // выводит TTL замка отсюда, так что инвариант держится сам.
+        'sync_timeout_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_SECONDS', 120),
         // Очередь «Техника» — канон в config/support_tech.php; зеркало здесь
         // для чтения из services.telegram_support.* (см. TechnicalIssueRouter).
         'tech_assignee_user_id' => env('SUPPORT_TECH_ASSIGNEE_USER_ID')

@@ -2,6 +2,7 @@
 
 namespace App\Services\TelegramSupport;
 
+use App\Exceptions\MadelineSyncTimedOut;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportResponderMapping;
 use App\Models\TelegramSupportAccount;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
+use App\Services\Telegram\MadelineSessionReaper;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
@@ -28,6 +30,7 @@ class TelegramSupportSyncService
         private readonly SupportContactUserAutoLinker $autoLinker,
         private readonly SupportConversationManager $conversations,
         private readonly TechnicalIssueRouter $techRouter,
+        private readonly MadelineSessionReaper $reaper,
     ) {}
 
     public function sync(): array
@@ -66,7 +69,21 @@ class TelegramSupportSyncService
             $this->updateSyncState($account->refresh(), $messages);
 
             return $this->finish($account, $result, true, $messages);
+        } catch (MadelineSyncTimedOut $e) {
+            // Watchdog прервал зависший заход. Лечится не записью в last_sync_error,
+            // а завершением процесса и сбросом демона — это делает сама команда,
+            // поэтому пробрасываем, не маскируя рядовой ошибкой синка.
+            throw $e;
         } catch (Throwable $e) {
+            // Кончились файловые дескрипторы: демон сессии почти наверняка
+            // осиротел, а автозагрузчик уже не может подтянуть классы — на этом
+            // же исключении ломается и распознавание мёртвого IPC (оно ищет
+            // Amp-обёртки, которые PHP не сумел загрузить). Отдельная ветка
+            // перед IPC-веткой, иначе заход молча уходит в общий fail().
+            if ($this->isFileDescriptorExhaustion($e)) {
+                return $this->recoverFromFdExhaustion($account, $e);
+            }
+
             // Мёртвый IPC-канал — отдельная ветка: убить зависший демон и почистить
             // сокет, но НЕ ретраить в этом же процессе (он уже держит мёртвый IPC
             // в памяти — повтор бесполезен). Восстановится следующий свежий запуск.
@@ -109,8 +126,8 @@ class TelegramSupportSyncService
      */
     private function recoverFromDeadIpc(TelegramSupportAccount $account, Throwable $e): array
     {
-        $killed = $this->killStaleMadelineDaemon();
-        $removed = $this->clearStaleMadelineIpc();
+        $killed = $this->reaper->killDaemons();
+        $removed = $this->reaper->clearIpcArtifacts();
 
         Log::warning('Telegram support sync: dead MadelineProto IPC — reset daemon, will reconnect next run', [
             'killed_processes' => $killed,
@@ -124,6 +141,37 @@ class TelegramSupportSyncService
         ])->save();
 
         return ['status' => 'session_recovering', 'synced' => 0];
+    }
+
+    /**
+     * Восстановление после исчерпания файловых дескрипторов (EMFILE). Точка
+     * отказа не в нашем коде: amphp держит по сокету на соединение, и когда
+     * дескрипторы кончаются, падает даже `include()` автозагрузчика — в логах
+     * это выглядит как «include(.../revolt/event-loop/.../UncaughtThrowable.php):
+     * Failed to open stream: Too many open files», хотя исходное исключение было
+     * другим. Делаем то же, что при мёртвом IPC (сбрасываем демона сессии), но
+     * пишем оператору ЧЕСТНУЮ причину: без поднятия LimitNOFILE у cron/supervisor
+     * следующий заход упрётся в тот же потолок.
+     *
+     * @return array<string, mixed>
+     */
+    private function recoverFromFdExhaustion(TelegramSupportAccount $account, Throwable $e): array
+    {
+        $killed = $this->reaper->killDaemons();
+        $removed = $this->reaper->clearIpcArtifacts();
+
+        Log::error('Telegram support sync: out of file descriptors — reset daemon, raise LimitNOFILE', [
+            'killed_processes' => $killed,
+            'removed_files' => $removed,
+            'error' => $e->getMessage(),
+        ]);
+
+        $account->forceFill([
+            'last_synced_at' => now(),
+            'last_sync_error' => 'Too many open files: закончились файловые дескрипторы, демон сессии сброшен. Поднимите LimitNOFILE у cron/supervisor.',
+        ])->save();
+
+        return ['status' => 'fd_exhausted', 'synced' => 0];
     }
 
     private function isMadelineAuthRestart(Throwable $e): bool
@@ -154,74 +202,25 @@ class TelegramSupportSyncService
     }
 
     /**
-     * Удаляет осиротевший IPC-сокет/состояние сессии, НЕ трогая учётные данные
-     * (safe.php и прочие *.php лежат рядом — их удаление разлогинило бы аккаунт).
-     * После этого следующий new API()->start() поднимет свежий демон. Безопасно
-     * под session-локом команды (см. LocksMadelineSession) — конкурентного демона
-     * в этот момент нет. Аналог ручного `rm <session>/*.ipc` из ранбука прода.
-     *
-     * @return array<int, string> реально удалённые файлы (для логов диагностики)
+     * Признак исчерпания файловых дескрипторов процесса (EMFILE), по всей цепочке
+     * previous. Хватает одного маркера: PHP дописывает «Too many open files» и в
+     * провал автозагрузки, в который EMFILE вырождается первым делом
+     * («include(.../UncaughtThrowable.php): Failed to open stream: Too many open
+     * files» — ровно эта строка легла в last_sync_error на проде 27.07.2026).
+     * Проверять сам «Failed to open stream» нельзя: под него попал бы любой
+     * отсутствующий файл.
      */
-    protected function clearStaleMadelineIpc(): array
+    private function isFileDescriptorExhaustion(Throwable $e): bool
     {
-        $session = MadelineClientFactory::sessionPath();
+        $current = $e;
 
-        // v8: сессия — это КАТАЛОГ (X.madeline) с IPC-артефактами внутри.
-        if (! is_dir($session)) {
-            return [];
-        }
-
-        $targets = [];
-        foreach (['ipc', 'callback.ipc', 'ipcState.php'] as $name) {
-            $targets[] = $session.DIRECTORY_SEPARATOR.$name;
-        }
-        foreach ((glob($session.DIRECTORY_SEPARATOR.'*.ipc') ?: []) as $path) {
-            $targets[] = $path;
-        }
-
-        $removed = [];
-        foreach (array_unique($targets) as $path) {
-            if (is_file($path) && @unlink($path)) {
-                $removed[] = basename($path);
+        do {
+            if (str_contains($current->getMessage(), 'Too many open files')) {
+                return true;
             }
-        }
+        } while ($current = $current->getPrevious());
 
-        return $removed;
-    }
-
-    /**
-     * Убивает зависший фоновый демон MadelineProto (SIGTERM), исключая собственный
-     * процесс и родителя. Только POSIX; если exec/posix недоступны (или отключены в
-     * disable_functions) — тихий no-op (тогда работает лишь чистка сокета). Аналог
-     * ручного `pkill -f madeline` из ранбука прод-окружения. Безопасно под
-     * session-локом: у аккаунта один общий демон, конкурентной команды сейчас нет.
-     *
-     * @return int сколько процессов получили сигнал (для логов диагностики)
-     */
-    protected function killStaleMadelineDaemon(): int
-    {
-        if (PHP_OS_FAMILY === 'Windows' || ! function_exists('exec') || ! function_exists('posix_kill')) {
-            return 0;
-        }
-
-        $self = function_exists('getmypid') ? (int) getmypid() : 0;
-        $parent = function_exists('posix_getppid') ? posix_getppid() : 0;
-
-        $lines = [];
-        @exec('pgrep -f madeline 2>/dev/null', $lines);
-
-        $killed = 0;
-        foreach ($lines as $line) {
-            $pid = (int) trim($line);
-            if ($pid <= 0 || $pid === $self || $pid === $parent) {
-                continue;
-            }
-            if (@posix_kill($pid, 15)) { // SIGTERM
-                $killed++;
-            }
-        }
-
-        return $killed;
+        return false;
     }
 
     /**

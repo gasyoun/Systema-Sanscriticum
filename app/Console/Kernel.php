@@ -259,9 +259,17 @@ class Kernel extends ConsoleKernel
 
         // Telegram support-account analytics. The command is a no-op unless
         // TELEGRAM_SUPPORT_ENABLED=true and Telegram Client API credentials exist.
+        //
+        // TTL замка ВЫВОДИТСЯ из watchdog-таймаута команды, а не задан числом:
+        // ->withoutOverlapping() снимает замок по истечении TTL, даже если
+        // держатель ещё жив, и тогда на одной MTProto-сессии оказываются два
+        // экземпляра. Пока таймаут < TTL, зависший заход умирает первым. Ровно
+        // этот инвариант был нарушен на проде 27.07.2026 (заход висел часами при
+        // TTL 10 мин → десять параллельных синков → EMFILE).
+        $syncLockMinutes = (int) ceil(((int) config('services.telegram_support.sync_timeout_seconds', 120)) / 60) + 5;
         $schedule->command('telegram-support:sync')
             ->everyMinute()
-            ->withoutOverlapping(10)
+            ->withoutOverlapping($syncLockMinutes)
             ->onOneServer()
             ->name('telegram-support-sync');
 
