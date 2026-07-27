@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -78,5 +79,57 @@ class GameEvent extends Model
                 'cta' => (int) $row->cta,
             ])
             ->all();
+    }
+
+    /**
+     * Play -> register KPI (H1678, locked D6/D10): among distinct anon_id
+     * that clicked the register CTA in the window, the share that later
+     * carries an `authenticated=true` event within 7 days of their first
+     * click. This is the guest -> user "merge" signal — deliberately
+     * computed from the existing `authenticated` flag rather than adding a
+     * `user_id` column, because `game_events` is intentionally kept
+     * outside the 152-FZ perimeter (no PII, see the create-table
+     * migration and `the_table_stores_no_ip_or_user_agent_by_design`):
+     * knowing THAT a guest later authenticated is enough for the KPI —
+     * WHO they are is not needed and must not be stored here.
+     *
+     * @return array{clickers:int, registered:int, rate:?float, baseline_only:bool}
+     */
+    public static function ctaRegistrationRate(\DateTimeInterface $since): array
+    {
+        $firstClicks = static::query()
+            ->where('event', self::GATE_CTA_CLICK)
+            ->where('created_at', '>=', $since)
+            ->whereNotNull('anon_id')
+            ->selectRaw('anon_id, MIN(created_at) as first_click')
+            ->groupBy('anon_id')
+            ->pluck('first_click', 'anon_id');
+
+        $clickers = $firstClicks->count();
+
+        if ($clickers === 0) {
+            return ['clickers' => 0, 'registered' => 0, 'rate' => null, 'baseline_only' => true];
+        }
+
+        $registered = 0;
+        foreach ($firstClicks as $anonId => $firstClick) {
+            $mergedIn = static::query()
+                ->where('anon_id', $anonId)
+                ->where('authenticated', true)
+                ->where('created_at', '>=', $firstClick)
+                ->where('created_at', '<=', Carbon::parse($firstClick)->addDays(7))
+                ->exists();
+
+            if ($mergedIn) {
+                $registered++;
+            }
+        }
+
+        return [
+            'clickers' => $clickers,
+            'registered' => $registered,
+            'rate' => round($registered / $clickers * 100, 1),
+            'baseline_only' => $clickers < 50,
+        ];
     }
 }

@@ -25,16 +25,41 @@
   a.card p { margin: 0; font-size: 13.5px; color: var(--soft); }
   a.card .tag { display: inline-block; margin-top: 12px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--accent); }
   footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--soft); }
+  .sgx-locale-toggle { display: flex; gap: 6px; margin: 0 0 14px; }
+  .sgx-locale-btn {
+    font: 600 12px/1 "Segoe UI",system-ui,sans-serif; letter-spacing: .06em; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--pnl); color: var(--soft); cursor: pointer;
+  }
+  .sgx-locale-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
 <div class="page">
+  <div id="locale-toggle"></div>
   <p class="eyebrow">संस्कृतम् · लीला</p>
   <h1>Лила — игры-упражнения по санскриту</h1>
   <p class="lead">Интерактивные тренажёры для изучающих санскрит — перетаскивание, касание и клавиатура, подсказки и мгновенная проверка. Всё работает прямо в браузере.</p>
-  <p class="free">🎉 Первая игра — бесплатно и без регистрации. Понравится — заведите бесплатный кабинет ученика и занимайтесь дальше.</p>
+  <p class="free">🎉 Пять игр в каждой серии — бесплатно и без регистрации. Понравится — заведите бесплатный кабинет ученика и занимайтесь дальше.</p>
 
   <div class="grid">
+    <a class="card" href="sort/vowel-length/">
+      <p class="deva">ह्रस्व · दीर्घ</p>
+      <h2>Краткие и долгие гласные</h2>
+      <p>24 слога — почувствуйте разницу между кратким и долгим гласным. Без деванагари, для начинающих.</p>
+      <span class="tag">Новое</span>
+    </a>
+    <a class="card" href="match/iast-cyrillic/">
+      <p class="deva">IAST ↔ अ आ इ</p>
+      <h2>IAST ↔ кириллица</h2>
+      <p>40 слов: соедините латинскую транслитерацию с кириллическим чтением.</p>
+      <span class="tag">Новое</span>
+    </a>
+    <a class="card" href="match/kochergina-l1/">
+      <p class="deva">कोचेर्गिना १</p>
+      <h2>Кочергина, урок 1</h2>
+      <p>20 слов первого урока учебника В.А. Кочергиной — соедините слово с переводом.</p>
+      <span class="tag">Новое</span>
+    </a>
     <a class="card" href="sort/">
       <p class="deva">पुं · स्त्री · नपुं</p>
       <h2>Сортировки по группам</h2>
@@ -76,5 +101,7 @@
   <footer>Systema Sanscriticum · учебные виджеты. Каждое семейство — один <code>engine.js</code> + <code>engine.css</code>, без сборки и сети.</footer>
 </div>
 <script src="/lila/telemetry.js" data-drill="index" defer></script>
+<script src="/lila/locale.js"></script>
+<script>SgxLocale.renderToggle(document.getElementById("locale-toggle"));</script>
 </body>
 </html>
