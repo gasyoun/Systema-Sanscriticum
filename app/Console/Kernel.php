@@ -401,6 +401,25 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('expire-stale-checkouts');
+
+        // --- ПУЛЬС ПЛАНИРОВЩИКА (H1713) ---
+        // Дёргает уникальный URL на healthchecks.io; тревогу поднимает МОЛЧАНИЕ,
+        // а не ошибка, поэтому сторож переживает смерть всего сервера — в
+        // отличие от любой проверки, живущей на самой машине (простой #730 длился
+        // двое суток именно поэтому). Заодно проверяет Horizon: «сайт отвечает, а
+        // очереди стоят» внешний монитор доступности увидеть не может.
+        //
+        // evenInMaintenanceMode: на время выкладки пульс не должен пропадать,
+        // иначе каждый деплой = ложная тревога. onOneServer НЕ ставим сознательно:
+        // пульс обязан идти, даже если Redis-лок недоступен, — а именно лежащий
+        // Redis и есть один из отслеживаемых отказов.
+        //
+        // Пусто в HEARTBEAT_PING_URL → команда ничего не шлёт (fail-open).
+        $schedule->command('heartbeat:ping')
+            ->cron((string) config('heartbeat.cron', '*/5 * * * *'))
+            ->withoutOverlapping(5)
+            ->evenInMaintenanceMode()
+            ->name('scheduler-heartbeat');
     }
 
     /**
