@@ -1084,6 +1084,27 @@ class StudentController extends Controller
         return view('student.open-lessons', compact('lessons'));
     }
 
+    /**
+     * H1680 — Wave 2: cabinet skill-drill strip. Links out to the existing
+     * free /lila drills, DISTINCT from the FSRS review loop at /dvaram/srs —
+     * short single-item practice, no spaced-repetition scheduling here.
+     * Static curated list (the drills themselves live in public/lila/, not
+     * in the DB) — matches the "not FSRS" scope of this handoff.
+     */
+    public function skillDrills()
+    {
+        $drills = [
+            ['family' => 'sort', 'label' => 'Гласные: долгие и краткие', 'url' => '/lila/sort/vowel-length/'],
+            ['family' => 'match', 'label' => 'IAST ↔ кириллица', 'url' => '/lila/match/iast-cyrillic/'],
+            ['family' => 'match', 'label' => 'Кочергина, урок 1', 'url' => '/lila/match/kochergina-l1/'],
+            ['family' => 'roots', 'label' => 'Корни: топ-25', 'url' => '/lila/roots/top-25/'],
+            ['family' => 'ligatures', 'label' => 'Лигатуры: топ-10', 'url' => '/lila/ligatures/top-10/'],
+            ['family' => 'cloze', 'label' => 'Ранг корня: клоуз', 'url' => '/lila/cloze/root-rank/'],
+        ];
+
+        return view('student.skill-drills', compact('drills'));
+    }
+
     public function messages()
     {
         $user = auth()->user();

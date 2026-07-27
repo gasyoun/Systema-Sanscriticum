@@ -3,6 +3,7 @@
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
+use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
@@ -188,6 +189,13 @@ Route::post('/api/games/event', [GameTelemetryController::class, 'store'])
     ->middleware('throttle:60,1')
     ->name('games.event');
 
+// H1680 — Wave 2: onboarding-from-games SRS import. Auth-only (it only ever
+// reads the CALLER's own game_events, matched by the anon_id they post back);
+// throttled like the other games endpoints. No-op while srs.enabled is OFF.
+Route::post('/api/games/srs-onboarding-import', [GamesSrsOnboardingController::class, 'store'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('games.srs-onboarding-import');
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1')
@@ -313,6 +321,16 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         // H1487 Wave 2 — student private-deck editor.
         Route::get('/dvaram/srs/decks', [SrsController::class, 'decks'])
             ->name('student.srs.decks');
+    }
+
+    // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS
+    // review loop above (/dvaram/srs) — short /lila drills linked from the
+    // cabinet, no spaced-repetition scheduling here. Behind its own flag
+    // (default OFF, Architecture §5: "any cabinet/SRS surfacing remains
+    // OFF by default"), independent of srs.enabled.
+    if (config('features.games_skill_drills')) {
+        Route::get('/dvaram/skill-drills', [StudentController::class, 'skillDrills'])
+            ->name('student.skill-drills');
     }
 
     // H987 — RQ4 user study (on-ramp-first vs Талмуд-first). За фича-флагом

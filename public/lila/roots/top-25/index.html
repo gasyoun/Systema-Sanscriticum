@@ -63,6 +63,12 @@
       right: { text: row.top_form, hint: row.gloss_ru }
     };
   });
+  // H1680 — opt-in for telemetry.js's item_seen (onboarding-from-games SRS
+  // seed). Must be set before telemetry.js's deferred script runs; this
+  // inline script executes during parsing, ahead of any `defer` script.
+  window.SGX_SEEN_ITEMS = ROOT_BANDS.top25.map(function (row) {
+    return { iast: row.iast, ru: row.gloss_ru };
+  });
   MatchExercise.mount(document.getElementById("app"), {
     task: "Соедините каждый корень слева с его словоформой справа.",
     feedback: "Верно! Это 25 самых частых глагольных корней санскритского корпуса.",
