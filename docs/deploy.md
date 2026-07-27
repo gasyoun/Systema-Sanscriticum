@@ -40,6 +40,11 @@ _Created: 02-07-2026 · Last updated: 27-07-2026_
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
    не циклит (PID-ы не меняются, старый код продолжает крутиться); фолбэк на
    terminate только там, где supervisor отсутствует.
+8b. `supervisorctl restart zapisi-poll` — тот же случай долгоживущего процесса:
+   long-polling демон @zapisi_ORSbot иначе останется на старом коде. Шаг
+   пропускается, если программа не установлена (конфиг — `deploy/supervisor/zapisi-poll.conf`,
+   ставится один раз, см. `DEPLOY_QUEUE.md` T7). Не `fail`: без демона сайт
+   работает, молчит только приём сообщений бот-чата.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
 

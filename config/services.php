@@ -197,6 +197,26 @@ return [
         'media_download_peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_MEDIA_DOWNLOAD_PEERS', ''))))),
     ],
 
+    // Track C (@zapisi_ORSbot). Токен/username/секрет живут в MarketingSetting
+    // (админка), здесь — только поведение приёма апдейтов.
+    //
+    // Апдейты забирает long polling (zapisi:poll), а не вебхук: Telegram не может
+    // достучаться до прода — входящие из его подсетей не проходят, при том что
+    // сайт снаружи открывается и вебхуки Точки доходят (разбор 27.07.2026 в
+    // docs/telegram-userbot-inventory.md §4.3). Исходящий канал до Telegram уже
+    // обеспечен sshuttle-туннелем, поллинг ходит по нему.
+    'telegram_zapisi' => [
+        // Сколько Telegram держит соединение, ожидая новых апдейтов. Клиентский
+        // таймаут строится от этого значения (+запас) внутри канала.
+        'poll_timeout_seconds' => (int) env('TELEGRAM_ZAPISI_POLL_TIMEOUT_SECONDS', 50),
+        // Плановый выход демона, после которого supervisor поднимает свежий
+        // процесс — иначе после деплоя поллер остаётся на старом коде.
+        'poll_max_lifetime_seconds' => (int) env('TELEGRAM_ZAPISI_POLL_MAX_LIFETIME_SECONDS', 3600),
+        // Пауза после ошибки getUpdates, чтобы не молотить впустую при
+        // недоступности Telegram (туннель упал, сеть моргнула).
+        'poll_retry_seconds' => (int) env('TELEGRAM_ZAPISI_POLL_RETRY_SECONDS', 10),
+    ],
+
     'vk' => [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),

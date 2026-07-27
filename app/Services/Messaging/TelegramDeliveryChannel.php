@@ -120,4 +120,56 @@ final class TelegramDeliveryChannel implements DeliveryChannel
             throw new RuntimeException('Telegram setWebhook error: '.$response->body());
         }
     }
+
+    /**
+     * Снимает вебхук. Обязательный шаг перед long polling: пока вебхук
+     * зарегистрирован, getUpdates отвечает 409 Conflict — Telegram отдаёт
+     * апдейты ровно одним способом.
+     */
+    public function deleteWebhook(): void
+    {
+        $response = Http::post("https://api.telegram.org/bot{$this->token}/deleteWebhook");
+
+        if (! ($response->json('ok') ?? false)) {
+            throw new RuntimeException('Telegram deleteWebhook error: '.$response->body());
+        }
+    }
+
+    /**
+     * @return array<string, mixed> тело result из getWebhookInfo
+     */
+    public function getWebhookInfo(): array
+    {
+        $response = Http::timeout(15)->get("https://api.telegram.org/bot{$this->token}/getWebhookInfo");
+
+        if (! ($response->json('ok') ?? false)) {
+            throw new RuntimeException('Telegram getWebhookInfo error: '.$response->body());
+        }
+
+        return (array) $response->json('result', []);
+    }
+
+    /**
+     * Long polling: держит соединение до $timeout секунд, пока Telegram не
+     * отдаст апдейты. Клиентский таймаут заведомо больше серверного, иначе
+     * запрос рвётся раньше, чем приходит ответ, и апдейты кажутся потерянными.
+     *
+     * @param  array<int, string>  $allowedUpdates
+     * @return array<int, array<string, mixed>>
+     */
+    public function getUpdates(int $offset, int $timeout = 50, array $allowedUpdates = ['message']): array
+    {
+        $response = Http::timeout($timeout + 15)
+            ->post("https://api.telegram.org/bot{$this->token}/getUpdates", [
+                'offset' => $offset,
+                'timeout' => $timeout,
+                'allowed_updates' => $allowedUpdates,
+            ]);
+
+        if (! ($response->json('ok') ?? false)) {
+            throw new RuntimeException('Telegram getUpdates error: '.$response->body());
+        }
+
+        return (array) $response->json('result', []);
+    }
 }
