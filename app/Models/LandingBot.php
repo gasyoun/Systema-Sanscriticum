@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\TelegramWebhooks;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -53,10 +54,14 @@ class LandingBot extends Model
         return $this->belongsTo(LandingPage::class);
     }
 
-    /** Полный URL вебхука этого бота (на него регистрируется setWebhook). */
+    /**
+     * Полный URL вебхука этого бота (на него регистрируется setWebhook).
+     * Строится от общего входного узла, а не от app.url: Telegram не всегда
+     * достукивается до прода напрямую (см. App\Support\TelegramWebhooks).
+     */
     public function webhookUrl(): string
     {
-        return rtrim((string) config('app.url'), '/').'/api/webhooks/telegram-magnet/'.$this->webhook_key;
+        return TelegramWebhooks::url('/api/webhooks/telegram-magnet/'.$this->webhook_key);
     }
 
     /** Готов ли бот принимать/отдавать (есть username + token). */

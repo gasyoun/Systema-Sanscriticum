@@ -49,16 +49,30 @@ $token = config('services.telegram.student_bot_token')   // STUDENT_TELEGRAM_BOT
 | `POST /api/vk-webhook` | `Api\VkBotController@handle` | Входящие от VK-бота |
 | `GET /telegram/connect` (auth) | `TelegramController@connect` | Генерирует deep-link и редиректит студента в бота (имя роута `telegram.connect`) |
 
-> ⚠️ **Безопасность:** у `/api/telegram/webhook` сейчас **нет проверки секрета**
-> (`X-Telegram-Bot-Api-Secret-Token`). VK подтверждается через `confirm_code`
-> (`services.vk.confirm_code`). Лид-магнитные вебхуки (`/api/webhooks/*-magnet`) —
-> отдельные и к кабинетному боту отношения не имеют.
+> ⚠️ **Безопасность:** `/api/telegram/webhook` защищён middleware `verify.tg.bot`
+> ([`VerifyTelegramBotWebhook`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Middleware/VerifyTelegramBotWebhook.php)),
+> fail-closed по `TELEGRAM_BOT_WEBHOOK_SECRET`: пустой секрет → 403 всем. Поэтому
+> при регистрации вебхука **обязательно** передавать тот же `secret_token` — иначе
+> получится живой вебхук, отбивающий каждый апдейт (снаружи неотличимо от тишины).
+> _Правка 27-07-2026: раньше здесь значилось «проверки секрета нет» — это устарело
+> и провоцировало регистрацию без секрета._
 
-**Установка вебхука бота кабинета** делается вручную (artisan-команды для него нет):
+**Установка вебхука бота кабинета** — общей командой, вместе с остальными ботами:
 
 ```bash
-curl "https://api.telegram.org/bot<STUDENT_TELEGRAM_BOT_TOKEN>/setWebhook?url=https://<домен>/api/telegram/webhook"
+php artisan telegram:webhooks          # показать, куда смотрит каждый бот
+php artisan telegram:webhooks --set    # перерегистрировать всех на входной узел
 ```
+
+Команда сама берёт токен (`STUDENT_TELEGRAM_BOT_TOKEN` с фолбэком на
+`TELEGRAM_BOT_TOKEN`), секрет и нужные `allowed_updates` (`message` +
+`callback_query` — контроллер разбирает оба). Адрес строится от
+`TELEGRAM_WEBHOOK_BASE_URL`; пусто → `APP_URL`.
+
+Раньше вебхук ставился руками через `curl`, и это стоило дорого: когда входной
+узел переехал, кабинетного бота перерегистрировали, а @zapisi_ORSbot забыли — он
+пять дней не получал сообщений, и заметить это было нечем
+([инвентарь §4.3](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md)).
 
 ---
 

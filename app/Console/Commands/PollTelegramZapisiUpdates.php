@@ -10,6 +10,7 @@ use App\Services\Messaging\TelegramDeliveryChannel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -35,9 +36,10 @@ class PollTelegramZapisiUpdates extends Command
 {
     protected $signature = 'zapisi:poll
         {--once : Один заход getUpdates и выход (для проверки/тестов)}
-        {--max-seconds= : Сколько секунд жить перед плановым выходом (по умолчанию из конфига)}';
+        {--max-seconds= : Сколько секунд жить перед плановым выходом (по умолчанию из конфига)}
+        {--release-webhook : Снять зарегистрированный вебхук и забирать апдейты поллингом}';
 
-    protected $description = 'Long polling апдейтов @zapisi_ORSbot (замена вебхука там, где Telegram не может достучаться до сервера).';
+    protected $description = 'АВАРИЙНЫЙ приём апдейтов @zapisi_ORSbot поллингом — когда входной узел вебхуков недоступен. Штатно апдейты приходят вебхуком.';
 
     /** Ключ курсора: update_id, с которого продолжаем. Подтверждает приём Telegram'у. */
     private const OFFSET_KEY = 'zapisi:poll:offset';
@@ -48,6 +50,16 @@ class PollTelegramZapisiUpdates extends Command
     {
         if (! config('features.telegram_zapisi_bot')) {
             $this->info('Track C (@zapisi_ORSbot) выключен через TELEGRAM_ZAPISI_BOT_ENABLED — пропуск.');
+
+            return self::SUCCESS;
+        }
+
+        // Свой рубильник, отдельный от трека: поллинг — аварийный режим, штатно
+        // апдейты приходят вебхуком. Дефолт false, чтобы случайный запуск
+        // (в т.ч. `supervisorctl restart` остановленной программы) не уводил
+        // бота с вебхука молча.
+        if (! config('services.telegram_zapisi.poll_enabled', false)) {
+            $this->info('Аварийный поллинг выключен (TELEGRAM_ZAPISI_POLL_ENABLED) — штатно апдейты забирает вебхук.');
 
             return self::SUCCESS;
         }
@@ -125,9 +137,13 @@ class PollTelegramZapisiUpdates extends Command
     }
 
     /**
-     * Снимает вебхук, если он есть. getWebhookInfo сначала — чтобы не дёргать
-     * deleteWebhook на каждом рестарте демона и оставить след в логе ровно
-     * тогда, когда переключение действительно произошло.
+     * Освобождает вебхук — но ТОЛЬКО по явному флагу.
+     *
+     * Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict: Telegram
+     * отдаёт апдейты ровно одним способом. Раньше команда снимала вебхук молча
+     * при каждом старте — то есть один случайный запуск процесса тихо уводил
+     * бота с рабочей дорожки, и заметить это было нечем. Теперь переключение —
+     * осознанное действие оператора.
      */
     private function releaseWebhook(TelegramDeliveryChannel $client): void
     {
@@ -135,6 +151,14 @@ class PollTelegramZapisiUpdates extends Command
 
         if ($url === '') {
             return;
+        }
+
+        if (! $this->option('release-webhook')) {
+            throw new RuntimeException(
+                "У бота зарегистрирован вебхук ({$url}) — апдейты идут через него. "
+                .'Поллинг снял бы его и переключил дорожку. Если это и нужно, запустите с --release-webhook; '
+                .'вернуть вебхук обратно: php artisan telegram:webhooks --set'
+            );
         }
 
         $client->deleteWebhook();

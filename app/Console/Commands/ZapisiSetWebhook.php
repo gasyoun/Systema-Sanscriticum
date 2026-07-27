@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\MarketingSetting;
 use App\Services\Messaging\TelegramDeliveryChannel;
+use App\Support\TelegramWebhooks;
 use Illuminate\Console\Command;
 
 /**
@@ -36,7 +37,10 @@ final class ZapisiSetWebhook extends Command
             return self::FAILURE;
         }
 
-        $url = rtrim((string) config('app.url'), '/').'/api/webhooks/telegram-zapisi';
+        // Не app.url: вебхуки регистрируются на общий входной узел, если он задан
+        // (см. App\Support\TelegramWebhooks). Разъезд этого адреса по командам и
+        // стоил Track C пяти дней тишины 22-27.07.2026.
+        $url = TelegramWebhooks::url('/api/webhooks/telegram-zapisi');
 
         $this->info("Регистрируем webhook @zapisi_ORSbot: {$url}");
 
@@ -44,7 +48,7 @@ final class ZapisiSetWebhook extends Command
         // (группа шлёт message, канал — channel_post). callback_query не нужен.
         $telegram
             ->usingCredentials($token, $username)
-            ->setWebhook($url, $secret, ['message', 'channel_post']);
+            ->setWebhook($url, $secret, ['message', 'channel_post'], TelegramWebhooks::certificateContents());
 
         $this->info('✓ Webhook @zapisi_ORSbot установлен.');
 

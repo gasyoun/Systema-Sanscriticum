@@ -25,7 +25,11 @@ class PollTelegramZapisiUpdatesTest extends TestCase
 
     private function enableBot(): void
     {
-        config(['features.telegram_zapisi_bot' => true]);
+        config([
+            'features.telegram_zapisi_bot' => true,
+            // Аварийный поллинг по умолчанию выключен — в тестах включаем явно.
+            'services.telegram_zapisi.poll_enabled' => true,
+        ]);
         MarketingSetting::create([
             'zapisi_bot_username' => 'zapisi_ORSbot',
             'zapisi_bot_token' => 'BOT-TOKEN-123',
@@ -87,18 +91,46 @@ class PollTelegramZapisiUpdatesTest extends TestCase
     }
 
     /**
-     * Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict — Telegram
-     * отдаёт апдейты ровно одним способом, поэтому вебхук снимается явно.
+     * Вебхук — штатная дорожка. Поллер снял бы его и переключил приём молча,
+     * поэтому без явного флага он обязан отказаться стартовать: один случайный
+     * запуск процесса иначе уводит бота с работающего вебхука.
      */
-    public function test_existing_webhook_is_removed_before_polling(): void
+    public function test_refuses_to_start_while_a_webhook_is_registered(): void
     {
         $this->enableBot();
         Bus::fake();
-        $this->fakeTelegram([], 'https://samskrte.ru/api/webhooks/telegram-zapisi');
+        $this->fakeTelegram([], 'https://103.112.71.201/api/webhooks/telegram-zapisi');
+
+        $this->artisan('zapisi:poll --once')->assertFailed();
+
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/deleteWebhook'));
+    }
+
+    /** Снятие вебхука — только осознанным флагом (аварийный режим). */
+    public function test_releases_the_webhook_only_with_the_explicit_flag(): void
+    {
+        $this->enableBot();
+        Bus::fake();
+        $this->fakeTelegram([], 'https://103.112.71.201/api/webhooks/telegram-zapisi');
+
+        $this->artisan('zapisi:poll --once --release-webhook')->assertSuccessful();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/deleteWebhook'));
+    }
+
+    /** Рубильник аварийного режима выключен → команда молчит и ничего не трогает. */
+    public function test_is_a_noop_when_emergency_polling_is_disabled(): void
+    {
+        config([
+            'features.telegram_zapisi_bot' => true,
+            'services.telegram_zapisi.poll_enabled' => false,
+        ]);
+        MarketingSetting::create(['zapisi_bot_token' => 'BOT-TOKEN-123']);
+        Http::fake();
 
         $this->artisan('zapisi:poll --once')->assertSuccessful();
 
-        Http::assertSent(fn ($request) => str_contains($request->url(), '/deleteWebhook'));
+        Http::assertNothingSent();
     }
 
     /** Вебхука нет — лишний вызов deleteWebhook на каждом рестарте не нужен. */
@@ -126,7 +158,10 @@ class PollTelegramZapisiUpdatesTest extends TestCase
 
     public function test_missing_token_fails_loudly_without_calling_telegram(): void
     {
-        config(['features.telegram_zapisi_bot' => true]);
+        config([
+            'features.telegram_zapisi_bot' => true,
+            'services.telegram_zapisi.poll_enabled' => true,
+        ]);
         MarketingSetting::create(['zapisi_bot_username' => 'zapisi_ORSbot']);
         Http::fake();
 
