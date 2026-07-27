@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -33,12 +34,55 @@ class Handler extends ExceptionHandler
         // Мягкий ретрай вместо голого «419 Page Expired» на чекауте/оплате.
         // Студент остаётся авторизован (remember-me), поэтому возвращаем его
         // обратно на чекаут со свежим токеном и понятным сообщением.
-        $this->renderable(function (TokenMismatchException $e, Request $request) {
+        //
+        // То же самое — на входе (/login, /shop/login): токен протухает
+        // (вкладка простояла дольше жизни сессии, повторный сабмит по
+        // уже открытой странице после первой неудачи, hand-off между
+        // встроенным браузером мессенджера и обычным), и вместо понятного
+        // повтора студент упирался в голую страницу без выхода — это и
+        // читалось как «сайт не пускает».
+        //
+        // Ловим ОБЁРТКУ, а не сам TokenMismatchException. Handler::render()
+        // сначала прогоняет исключение через prepareException(), и тот меняет
+        // TokenMismatchException на HttpException(419, ..., previous: $e), и
+        // только ПОТОМ вызывает renderable-колбэки (Laravel 12,
+        // vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php,
+        // render() строки 616–620). Колбэк с типом TokenMismatchException не
+        // срабатывает никогда — ветка чекаута ниже пролежала мёртвой с
+        // 25-06-2026 (295ea8b8), теста на неё не было, и «мягкий ретрай на
+        // оплате» всё это время оставался обещанием в комментарии.
+        $this->renderable(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419 || ! $e->getPrevious() instanceof TokenMismatchException) {
+                return null; // прочие HttpException — поведение по умолчанию
+            }
+
             if ($request->routeIs('payment.create', 'checkout.*')) {
                 return redirect()->back()->with(
                     'error',
                     'Сессия обновилась — нажмите «К безопасной оплате» ещё раз.'
                 );
+            }
+
+            // /login — обычный POST формы. Redirect::back несёт свежий CSRF-
+            // токен на той же странице, так что повторный сабмит проходит.
+            if ($request->routeIs('login.post')) {
+                return redirect()->back()->with(
+                    'error',
+                    'Сессия обновилась — введите данные ещё раз.'
+                );
+            }
+
+            // /shop/login — модалка на Alpine, шлёт fetch() с Accept: json и
+            // сама читает {success,message}. Redirect сюда не годится: fetch
+            // тихо пройдёт по 302 и получит HTML вместо JSON, а CSRF-токен в
+            // <meta> у модалки всё равно останется старым без перезагрузки
+            // страницы — поэтому явно просим обновить страницу, а не «попробуйте
+            // ещё раз» (повтор без reload гарантированно провалится тем же 419).
+            if ($request->routeIs('shop.login')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Сессия обновилась — обновите страницу (F5) и попробуйте войти ещё раз.',
+                ], 419);
             }
 
             return null; // прочие 419 — поведение по умолчанию
