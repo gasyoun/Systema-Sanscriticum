@@ -65,20 +65,60 @@
 
 <script src="/lila/gate.js" defer></script>
 <script src="/lila/telemetry.js" data-drill="ligatures" data-band="top-10" defer></script>
+<script src="/lila/locale.js"></script>
 <script src="../data.js"></script>
 <script src="../../match/engine.js"></script>
 <script>
+  // Practical RU transliteration of each conjunct's consonant cluster (not a
+  // generated field in data.js — a small hand-curated map, same convention
+  // as the standalone match/iast-cyrillic pack: y -> й, ṣ -> ш).
+  var CYRILLIC_HINT = {
+    pr: "пр", sy: "сй", tr: "тр", nt: "нт", "kṣ": "кш",
+    ty: "тй", rv: "рв", st: "ст", tv: "тв", tt: "тт"
+  };
+
+  var I18N = {
+    ru: {
+      h1: "Топ-10 лигатур",
+      about: "10 самых частых санскритских лигатур по всему корпусу Digital Corpus of Sanskrit " +
+             "(Oliver Hellwig, CC BY 4.0) — вместе они покрывают около трети всех вхождений лигатур " +
+             "в реальном тексте. Соедините каждую лигатуру с её транслитерацией (IAST); кириллическое " +
+             "чтение — в подсказке.",
+      task: "Соедините каждую лигатуру слева с её транслитерацией (IAST) справа.",
+      feedback: "Верно! Это 10 самых частых лигатур санскритского корпуса.",
+      leftTitle: "Лигатуры (देवनागरी)",
+      rightTitle: "Транслитерация (IAST)"
+    },
+    en: {
+      h1: "Top-10 ligatures",
+      about: "The 10 most frequent Sanskrit conjunct clusters across the whole Digital Corpus of " +
+             "Sanskrit (Oliver Hellwig, CC BY 4.0) — together they cover about a third of all ligature " +
+             "occurrences in real text. Match each ligature with its transliteration (IAST); a Cyrillic " +
+             "reading is in the hint.",
+      task: "Match each ligature on the left with its transliteration (IAST) on the right.",
+      feedback: "Correct! These are the 10 most frequent ligatures in the Sanskrit corpus.",
+      leftTitle: "Ligatures (देवनागरी)",
+      rightTitle: "Transliteration (IAST)"
+    }
+  };
+
+  document.getElementById("pg-h1").textContent = SgxLocale.pick(I18N, "h1");
+  document.getElementById("pg-about").textContent = SgxLocale.pick(I18N, "about");
+  SgxLocale.renderToggle(document.getElementById("locale-toggle"));
+
   var pairs = LIGATURE_BANDS.top10.map(function (row) {
+    var cyr = CYRILLIC_HINT[row.iast] || "";
+    var hint = "ранг " + row.rank + " · " + row.pct + "% всех лигатур" + (cyr ? " · рус. " + cyr : "");
     return {
       left: { text: row.devanagari },
-      right: { text: row.iast, hint: "ранг " + row.rank + " · " + row.pct + "% всех лигатур" }
+      right: { text: row.iast, hint: hint }
     };
   });
   MatchExercise.mount(document.getElementById("app"), {
-    task: "Соедините каждую лигатуру слева с её транслитерацией (IAST) справа.",
-    feedback: "Верно! Это 10 самых частых лигатур санскритского корпуса.",
-    leftTitle: "Лигатуры (देवनागरी)",
-    rightTitle: "Транслитерация (IAST)",
+    task: SgxLocale.pick(I18N, "task"),
+    feedback: SgxLocale.pick(I18N, "feedback"),
+    leftTitle: SgxLocale.pick(I18N, "leftTitle"),
+    rightTitle: SgxLocale.pick(I18N, "rightTitle"),
     shuffle: true,
     pairs: pairs
   });
