@@ -1,6 +1,6 @@
 # Telegram userbot / MTProto runner — inventory (Phase 0.1)
 
-_Created: 11-07-2026 · Last updated: 11-07-2026_
+_Created: 11-07-2026 · Last updated: 27-07-2026 (§4.1 — инцидент EMFILE и предохранители синка)_
 
 > **P0.1** узел карты
 > [`IMPLEMENTATION_MAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_MAP_TELEGRAM_SCALING_2026_2027.md)
@@ -49,7 +49,7 @@ _Created: 11-07-2026 · Last updated: 11-07-2026_
 
 | # | Команда | Класс | В планировщике? | Lock | Назначение |
 |---|---|---|---|---|---|
-| 1 | `telegram-support:sync` | [`SyncTelegramSupport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramSupport.php) | **Да** — `everyMinute`, `withoutOverlapping(10)`, `onOneServer` ([`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)) | `withMadelineSessionLock()` (live-путь) | Импорт чата «Отдел заботы» + пересборка дневной support-аналитики; reply-out за флагом |
+| 1 | `telegram-support:sync` | [`SyncTelegramSupport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramSupport.php) | **Да** — `everyMinute`, `withoutOverlapping(<таймаут+5 мин>)`, `onOneServer` ([`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)); TTL выведен из watchdog-таймаута, см. §4.1 | `withMadelineSessionLock()` (live-путь) | Импорт чата «Отдел заботы» + пересборка дневной support-аналитики; reply-out за флагом |
 | 2 | `telegram-harvest:sync` | [`SyncTelegramHarvest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramHarvest.php) | **Нет** — только ручной запуск с хоста | `withMadelineSessionLock()` (live-путь) | Track B: персональный харвест санскрит-групп/каналов/ЛС в корпус вне git |
 | 3 | `telegram-harvest:peers` | [`DiscoverTelegramHarvestPeers`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/DiscoverTelegramHarvestPeers.php) | **Нет** — ручной запуск | `withMadelineSessionLock()` | Read-only список диалогов аккаунта для наполнения `TELEGRAM_HARVEST_PEERS` |
 
@@ -82,12 +82,17 @@ no-op с `Log::warning`). Это осознанно **сильнее**, чем L
 [`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php):
 
 ```php
+$syncLockMinutes = (int) ceil(((int) config('services.telegram_support.sync_timeout_seconds', 120)) / 60) + 5;
 $schedule->command('telegram-support:sync')
     ->everyMinute()
-    ->withoutOverlapping(10)
+    ->withoutOverlapping($syncLockMinutes)
     ->onOneServer()
     ->name('telegram-support-sync');
 ```
+
+TTL замка не константа: он **выводится** из потолка времени самого захода, иначе
+зависший заход переживает собственный замок и на сессии появляется второй экземпляр
+(так и случилось 27.07.2026 — см. §4.1).
 
 Команда — **no-op**, пока `TELEGRAM_SUPPORT_ENABLED=true` не выставлен и не заданы
 Client-API credentials. Харвестер (`telegram-harvest:sync`/`:peers`) в планировщик
@@ -114,6 +119,46 @@ Client-API credentials. Харвестер (`telegram-harvest:sync`/`:peers`) в
 раз в минуту → срабатывает `everyMinute`-`telegram-support:sync`, под lock`ом), и **нет**
 отдельного долгоживущего MadelineProto-процесса на той же сессии. Подтверждение того, что
 на проде именно так, — это ответ Ивана на **T1** (§5).
+
+### 4.1. Инцидент 27.07.2026 — «два демона» изнутри репозитория (EMFILE)
+
+_Дописано 27-07-2026 по факту разбора на проде._
+
+Риск §4 сработал, но **не** от внешнего вне-git демона, как ожидалось, — источником
+параллельных сессий оказался сам планировщик. Цепочка:
+
+1. Заход `telegram-support:sync` завис (сеть/IPC) и не завершился ни за минуту, ни за час.
+2. `->withoutOverlapping(10)` снимает замок по TTL, **даже если держатель жив**. Через
+   10 минут стартовал второй экземпляр, ещё через 10 — третий. К 07:10 их было **десять**,
+   каждый со своим IPC-демоном на одной сессии.
+3. `killStaleMadelineDaemon()` тогда искал процессы по `pgrep -f madeline`, то есть каждый
+   экземпляр убивал демонов **всех остальных**; те немедленно поднимались заново —
+   самоподдерживающийся цикл (в `ps` это видно как пачка воркеров с одинаковым временем
+   старта).
+4. Дескрипторы кончились (`LimitNOFILE` = 1024 у `cron.service`): упал даже `include()`
+   автозагрузчика, и в `last_sync_error` легло
+   `include(.../revolt/event-loop/.../UncaughtThrowable.php): Failed to open stream: Too many open files`.
+   Распознавание мёртвого IPC при этом не сработало — оно ищет Amp-обёртки, которые PHP
+   в тот момент уже не мог загрузить.
+
+Что изменено в коде (все три — предохранители, а не косметика):
+
+- **Потолок времени захода.** [`MadelineSyncWatchdog`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSyncWatchdog.php)
+  (`pcntl_alarm`, `services.telegram_support.sync_timeout_seconds`, дефолт 120 с) бросает
+  `MadelineSyncTimedOut` — именно исключение, а не `exit()`, иначе `finally` не отработал бы
+  и кэш-замок `madeline-session` (TTL 900 с) завис бы на 15 минут. TTL замка планировщика
+  теперь **выводится** из этого таймаута в `Kernel::schedule()`, так что инвариант
+  «заход умирает раньше, чем протухнет замок» держится сам, а не держится на памяти автора.
+- **Точечный сброс демона.** [`MadelineSessionReaper`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSessionReaper.php)
+  (вынесен из sync-сервиса) фильтрует `pgrep` по **пути сессии**, а не по слову «madeline».
+- **Ветка EMFILE.** Исчерпание дескрипторов распознаётся отдельно от мёртвого IPC и пишет
+  оператору честную причину со ссылкой на `LimitNOFILE`, а не уходит в общий `fail()`.
+
+Серверная часть (потолок `LimitNOFILE` у `cron`/`supervisor`, наличие `pcntl` в CLI) кодом
+не чинится — вынесена оператору как **T6** в
+[`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)
+§Telegram. Заодно инцидент закрывает часть §5: раннер на проде — **cron `www-data` →
+`schedule:run`** (как и предполагал D2), `horizon` и `reverb` живут под **supervisor**.
 
 ---
 

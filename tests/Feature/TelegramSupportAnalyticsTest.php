@@ -423,6 +423,46 @@ class TelegramSupportAnalyticsTest extends TestCase
         $this->assertNull($account->last_successful_sync_at);
     }
 
+    public function test_madelineproto_sync_flags_file_descriptor_exhaustion_separately(): void
+    {
+        $this->skipWithoutMadelineProto();
+
+        config([
+            'app.timezone' => 'Europe/Moscow',
+            'services.telegram_support.enabled' => true,
+            'services.telegram_support.api_id' => '12345',
+            'services.telegram_support.api_hash' => 'hash',
+            'services.telegram_support.client_class' => FakeMadelineProtoClient::class,
+            'services.telegram_support.history_limit' => 50,
+            'services.telegram_support.dialog_limit' => 20,
+            'services.telegram_support.profile_backfill_limit' => 20,
+            // Чужой каталог: reaper не должен трогать боевую сессию из теста.
+            'services.telegram_support.session' => storage_path('framework/testing/fd-exhausted.madeline'),
+        ]);
+
+        FakeMadelineProtoClient::$histories = [];
+        FakeMadelineProtoClient::$lastHistoryRequests = [];
+        // Дословно то, что легло в last_sync_error на проде 27.07.2026: EMFILE
+        // проявился как провал автозагрузки внутри Revolt, а не как внятная
+        // ошибка сети. Раньше это уходило в общий fail() и выглядело загадкой.
+        FakeMadelineProtoClient::$startFailures = [
+            'include(/var/www/html/vendor/revolt/event-loop/src/EventLoop/UncaughtThrowable.php): Failed to open stream: Too many open files',
+        ];
+        FakeMadelineProtoClient::$startCalls = 0;
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('fd_exhausted', $result['status']);
+        $this->assertSame(0, $result['synced']);
+        // Никакого in-process retry: дескрипторы от повтора не появятся.
+        $this->assertSame(1, FakeMadelineProtoClient::$startCalls);
+
+        $account = TelegramSupportAccount::where('name', 'support')->firstOrFail();
+        $this->assertStringContainsString('Too many open files', (string) $account->last_sync_error);
+        $this->assertStringContainsString('LimitNOFILE', (string) $account->last_sync_error);
+        $this->assertNull($account->last_successful_sync_at);
+    }
+
     public function test_madelineproto_sync_limits_dialogs_per_run_to_avoid_flooding(): void
     {
         $this->skipWithoutMadelineProto();
