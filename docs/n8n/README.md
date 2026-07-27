@@ -190,6 +190,14 @@ ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips
    `php artisan config:cache`. Flip `CLIP_MARKETING_ENABLED=true` only after a
    staging dry-run (see `DEPLOY_QUEUE.md` №47).
 
+> **Не переключайте ноду Webhook в «When Last Node Finishes».** Она стоит в
+> режиме **«Immediately» (`onReceived`)** намеренно: нарезка ffmpeg + аплоад в VK
+> идут асинхронно (минуты), а результат возвращается ОТДЕЛЬНЫМ callback'ом
+> (n8n → Laravel, см. выше). `DispatchLectureClipExtractionJob` зовёт вебхук с
+> `Http::timeout(15)` и `tries=3` — в режиме «last node» запрос всегда отваливался
+> бы по таймауту, джоба ретраилась трижды, и n8n резал бы и грузил в ВК по три
+> копии каждого клипа.
+
 ---
 
 # n8n: VK content calendar auto-pilot (H1568, Wave 5)

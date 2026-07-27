@@ -5,8 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "lecture-clip-extract",
-        "responseMode": "lastNode",
-        "responseData": "firstEntryJson",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "a1111111-1111-1111-1111-111111111111",
@@ -14,7 +13,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [-400, 0],
-      "webhookId": "lecture-clip-extract"
+      "webhookId": "lecture-clip-extract",
+      "notes": "Respond immediately (onReceived): the ffmpeg→VK→callback chain runs async and reports back via the Laravel callback node. Laravel's DispatchLectureClipExtractionJob calls this webhook with Http::timeout(15) and tries=3 — with responseMode=lastNode it would ALWAYS time out (ffmpeg node alone allows 600s), retry 3×, and cut+upload every clip to VK three times."
     },
     {
       "parameters": {
@@ -52,7 +52,7 @@
         "url": "={{ $env.VK_VIDEO_UPLOAD_URL || 'https://REPLACE_WITH_VK_UPLOADER/upload' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"file_url\": \"{{ $json.file_url || $json.cut_url || '' }}\",\n  \"title\": {{ JSON.stringify($json.title) }},\n  \"lesson_id\": {{ $json.lesson_id }}\n}",
+        "jsonBody": "={\n  \"file_url\": \"{{ $json.file_url || $json.cut_url || '' }}\",\n  \"title\": {{ JSON.stringify($('Expand spans').item.json.title) }},\n  \"lesson_id\": {{ $('Expand spans').item.json.lesson_id }}\n}",
         "options": {
           "timeout": 300000
         }
@@ -68,7 +68,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// Aggregate per-span results for a single Laravel callback.\nconst items = $input.all();\nconst first = items[0]?.json ?? {};\nconst clips = items.map((it) => {\n  const j = it.json;\n  return {\n    start_seconds: j.start_seconds,\n    end_seconds: j.end_seconds,\n    title: j.title,\n    vk_video_id: String(j.vk_video_id ?? j.id ?? j.video_id ?? ''),\n    vk_owner_id: String(j.vk_owner_id ?? j.owner_id ?? ''),\n  };\n});\nreturn [{\n  json: {\n    callback_url: first.callback_url,\n    body: {\n      lesson_id: first.lesson_id,\n      clips,\n    },\n  },\n}];"
+        "jsCode": "// Aggregate per-span results for a single Laravel callback.\n// The two HTTP Request nodes replace $json with their own response, so the\n// original span fields (lesson_id, start/end, title, callback_url) no longer\n// exist on the incoming items — read them back from the source node by index\n// (the pipeline is linear and 1:1, so order is preserved). VK ids come from\n// the current items (the VK upload response).\nconst vkItems = $input.all();\nconst spans = $('Expand spans').all();\nconst clips = vkItems.map((it, i) => {\n  const s = spans[i] ? spans[i].json : {};\n  const v = it.json;\n  return {\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title,\n    vk_video_id: String(v.vk_video_id ?? v.id ?? v.video_id ?? ''),\n    vk_owner_id: String(v.vk_owner_id ?? v.owner_id ?? ''),\n  };\n});\nconst first = spans[0] ? spans[0].json : {};\nreturn [{\n  json: {\n    callback_url: first.callback_url,\n    body: {\n      lesson_id: first.lesson_id,\n      clips,\n    },\n  },\n}];"
       },
       "id": "a5555555-5555-5555-5555-555555555555",
       "name": "Aggregate clips",
