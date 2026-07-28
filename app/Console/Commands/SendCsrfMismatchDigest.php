@@ -17,8 +17,8 @@ use Illuminate\Console\Command;
  * ручного чтения: считает записи канала csrf_mismatch (config/logging.php)
  * за окно, показывает разбивку по маршрутам и алертит админов, только если
  * суммарное число вышло за config/csrf.php::digest_threshold — тот же
- * паттерн, что {@see \App\Console\Commands\CheckStorageUsage} и
- * {@see \App\Console\Commands\CheckReceivablesThreshold}.
+ * паттерн, что {@see CheckStorageUsage} и
+ * {@see CheckReceivablesThreshold}.
  *
  * Ниже порога — молчит: ежедневный отчёт, который шлётся всегда, это отчёт,
  * который никто не читает.

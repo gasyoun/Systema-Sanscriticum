@@ -15,11 +15,11 @@ use Tests\TestCase;
  * H1773 — csrf:mismatch-digest replaces the manual nginx-log read that was
  * the only way anyone found out about the 27-07-2026 419 incident. Covers
  * both sides of the threshold boundary (silent below, alerts above) by the
- * same pattern as {@see \Tests\Feature\StorageUsageWatchdogTest}.
+ * same pattern as {@see StorageUsageWatchdogTest}.
  *
  * Seeds log lines by writing the channel's JSON format directly to disk
  * rather than through Log::channel('csrf_mismatch')->warning(...) (already
- * exercised end-to-end by {@see \Tests\Feature\CsrfMismatchTelemetryTest}):
+ * exercised end-to-end by {@see CsrfMismatchTelemetryTest}):
  * Monolog's RotatingFileHandler keeps the file open for the life of the
  * LogManager instance, and on Windows an open handle from one test can leave
  * the next test's unlink()+reopen of the same dated path denied. Writing the

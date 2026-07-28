@@ -15,7 +15,7 @@ use Tests\TestCase;
  * PII, and never turn a recoverable 419 into a 500 if the log channel itself
  * is broken (fail-open, same posture as the scheduler heartbeat, H1713).
  *
- * Reuses {@see \Tests\Feature\LoginTokenMismatchGracefulRetryTest}'s
+ * Reuses {@see LoginTokenMismatchGracefulRetryTest}'s
  * VerifyCsrfToken rebind: Laravel's CSRF middleware skips verification
  * entirely during unit tests (runningUnitTests()), so this forces the real
  * check to actually exercise Handler::register()'s renderable.
