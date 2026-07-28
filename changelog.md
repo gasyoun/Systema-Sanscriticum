@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Smoke-менеджер из `.env` — `users:ensure-test-manager`.** Узкий `role=manager` для проверки входа и CRM без выдачи super_admin (те остаются у Гасунса и Ивана). `TEST_MANAGER_EMAIL` / `TEST_MANAGER_PASSWORD` / `TEST_MANAGER_NAME` в `.env` (шаблон в `.env.example`); пароль только на сервере, в git не попадает. Команда идемпотентна: создаёт или пере-синхронизирует пароль; no-op при пустом пароле; отказывается перезаписывать super_admin/admin/accountant/teacher и чужой student-email. 6 тестов. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.59.1] - 2026-07-28
 
 ### Fixed

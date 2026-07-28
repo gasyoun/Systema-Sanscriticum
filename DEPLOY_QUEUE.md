@@ -41,6 +41,18 @@ _Создано: 08-07-2026 · Обновлено: 28-07-2026 (H1765 вход/ч
 - H1765 smoke on the actual surfaces: `POST /shop/login` with a bad token → **419 + `{"success":false,"message":"Сессия обновилась — обновите страницу (F5)…"}`** (was `CSRF token mismatch.`); `POST /login` → **302 → /login**; `POST /payment/create` → **302 → /checkout/1** — i.e. the checkout branch that had been dead since 25-06-2026 is live on prod for the first time.
 - Money-contour flag flips still require fin-dir / `@DECIDE` — **not flipped this pass** (unchanged).
 
+### Smoke-менеджер (после выката с `users:ensure-test-manager`, H1775)
+
+1. В `/var/www/html/.env` (или где живёт prod `.env`):
+   - `TEST_MANAGER_EMAIL=smoke-manager@samskrte.ru` (или другой свободный)
+   - `TEST_MANAGER_PASSWORD=<длинный секрет, не в git>`
+   - опц. `TEST_MANAGER_NAME="Smoke Manager"`
+2. `php artisan config:clear && php artisan users:ensure-test-manager`
+3. Внешний smoke: `POST /login` (кабинет) и `/admin/login` (Filament CRM).  
+   С `/login` менеджер уходит в student-кабинет (`is_admin=false`) — ожидаемо; панель — через `/admin/login`.
+4. Super-admin не трогать: команда **откажется** перезаписать email с role super_admin/admin.
+
+
 
 ---
 
