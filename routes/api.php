@@ -58,6 +58,9 @@ Route::prefix('v1')->group(function () {
 
 Route::post('/sync-lessons', [LessonController::class, 'sync']);
 Route::post('/lessons/from-zoom', [LessonController::class, 'storeFromZoom']);
+// Расшифровка Deepgram из того же сценария: без неё нарезка клипов пуста.
+Route::post('/lessons/{lesson}/transcript', [LessonController::class, 'storeTranscript'])
+    ->name('api.lessons.transcript');
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->middleware('verify.tg.bot');

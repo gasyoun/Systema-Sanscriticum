@@ -34,7 +34,7 @@ final class TranscriptParser
 
         return Cache::rememberForever($cacheKey, function () use ($path): array {
             $data = json_decode(Storage::disk('public')->get($path), true);
-            $words = self::extractWords(is_array($data) ? $data : []);
+            $words = self::wordsFrom(is_array($data) ? $data : []);
 
             $sentences = [];
             $currentSentence = '';
@@ -71,10 +71,14 @@ final class TranscriptParser
      *  - чистый ответ Deepgram:            { results: { channels: [...] } }
      *  - экспорт n8n (массив item-ов):     [ { json: { results: {...} } } ] или [ { results: {...} } ]
      *
+     * Публичный: приёмная ручка транскрипта (LessonController::storeTranscript)
+     * проверяет этим же разбором, есть ли в теле хоть одно слово, — чтобы не
+     * записать уроку пустой транскрипт и не выдать его за готовый к нарезке.
+     *
      * @param  array<mixed>  $data
      * @return array<int, array<string, mixed>>
      */
-    private static function extractWords(array $data): array
+    public static function wordsFrom(array $data): array
     {
         // n8n заворачивает каждый item в массив, полезная нагрузка часто под ключом "json".
         $root = $data;
