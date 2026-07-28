@@ -420,6 +420,20 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(5)
             ->evenInMaintenanceMode()
             ->name('scheduler-heartbeat');
+
+        // --- ПУЛЬС КАБИНЕТА (H1777) ---
+        // Homepage-uptime и heartbeat:ping не видят «/ отвечает 200, а /dvaram
+        // 500 / Auth сломан / Filament не пускает менеджера». Login smoke-
+        // менеджера (TEST_MANAGER_*) + GET ключевых поверхностей in-process.
+        // evenInMaintenanceMode: выкладка не должна глушить сторож.
+        // onOneServer НЕ ставим: как у heartbeat, Redis-лок не должен гасить
+        // проверку (лежащий Redis — соседний сигнал, не причина молчать).
+        // Без TEST_MANAGER_PASSWORD — no-op SUCCESS (fail-open).
+        $schedule->command('cabinet:probe')
+            ->cron((string) config('cabinet_probe.cron', '*/15 * * * *'))
+            ->withoutOverlapping(10)
+            ->evenInMaintenanceMode()
+            ->name('cabinet-health-probe');
     }
 
     /**
