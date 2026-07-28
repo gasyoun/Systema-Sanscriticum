@@ -43,7 +43,6 @@ class ProbeCabinetHealth extends Command
 
     protected $description = 'Пульс кабинета: login smoke-менеджера + /dvaram/messages/calendar/open-lessons/admin (+ hybrid if on)';
 
-
     public function handle(): int
     {
         if (\PHP_OS_FAMILY === 'Windows' && \function_exists('sapi_windows_cp_set')) {
@@ -97,7 +96,6 @@ class ProbeCabinetHealth extends Command
         // валился из-за сторожа. Сигнал — /fail, TG или лог.
         return self::SUCCESS;
     }
-
 
     /**
      * @return list<string>
@@ -312,7 +310,7 @@ class ProbeCabinetHealth extends Command
             if (! $force && $wasDown && $lastAt !== null) {
                 $elapsed = now()->diffInMinutes($lastAt, absolute: true);
                 if ($elapsed < $cooldown) {
-                    $this->comment("TG-cooldown: следующий алерт через ~".($cooldown - (int) $elapsed).' мин.');
+                    $this->comment('TG-cooldown: следующий алерт через ~'.($cooldown - (int) $elapsed).' мин.');
 
                     return;
                 }
@@ -390,4 +388,3 @@ class ProbeCabinetHealth extends Command
         return array_values(array_filter(array_map('strval', $parts), static fn (string $id): bool => $id !== ''));
     }
 }
-
