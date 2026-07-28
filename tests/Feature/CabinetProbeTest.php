@@ -32,11 +32,16 @@ class CabinetProbeTest extends TestCase
         config()->set('cabinet_probe.ping_url', self::PING);
         config()->set('cabinet_probe.timeout', 5);
         config()->set('cabinet_probe.telegram_chat_id', ''); // TG off unless a test enables it
+        config()->set('cabinet_probe.telegram_soft_chat_id', '');
         config()->set('services.telegram.bot_token', '');
+        config()->set('services.test_student.password', ''); // H1794 student branch off unless a test enables it
         config()->set('features.cabinet_hybrid', false);
         Cache::forget('cabinet_probe:was_down');
         Cache::forget('cabinet_probe:last_tg_alert_at');
 
+        // Legacy H1777 tests isolate manager surfaces; public/student covered in CabinetProbeHardeningTest.
+        config()->set('cabinet_probe.public_surfaces', []);
+        config()->set('cabinet_probe.student_surfaces', []);
         // Always-on student surfaces (no hybrid 404s).
         config()->set('cabinet_probe.surfaces', [
             ['name' => 'student.dashboard', 'label' => 'cabinet /dvaram'],
@@ -76,9 +81,14 @@ class CabinetProbeTest extends TestCase
 
     public function test_no_op_when_password_missing(): void
     {
+        // H1794: without manager password the auth branch is skipped; public/student
+        // lists are empty in this suite — no healthchecks HTTP either when ping cleared.
         config([
             'services.test_manager.email' => 'smoke@example.com',
             'services.test_manager.password' => '',
+            'services.test_student.password' => '',
+            'cabinet_probe.public_surfaces' => [],
+            'cabinet_probe.ping_url' => '',
         ]);
         Http::fake();
 

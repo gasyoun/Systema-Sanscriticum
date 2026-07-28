@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Composer\Autoload\ClassLoader;
 
 /**
  * Worktree-safe autoload: when vendor/ is a Windows junction to the main
@@ -11,7 +12,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $loader = require $root.'/vendor/autoload.php';
 
-if ($loader instanceof \Composer\Autoload\ClassLoader) {
+if ($loader instanceof ClassLoader) {
     $loader->setPsr4('App\\', [$root.'/app']);
     $loader->setPsr4('Database\\Factories\\', [$root.'/database/factories']);
     $loader->setPsr4('Database\\Seeders\\', [$root.'/database/seeders']);

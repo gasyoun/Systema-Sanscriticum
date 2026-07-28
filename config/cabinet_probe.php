@@ -6,42 +6,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Пульс кабинета — login + ключевые поверхности (H1777)
+    | Пульс кабинета (H1777 + H1794 hardening)
     |--------------------------------------------------------------------------
     |
-    | Закрывает дыру, которую homepage-uptime и heartbeat:ping не видят:
-    | «сайт отдаёт 200 на /», а /login, /dvaram или Filament лежат с 500 /
-    | пустым Auth / Whoops. Раз в cron планировщик логинит smoke-менеджера
-    | (TEST_MANAGER_*) in-process и дёргает несколько GET-поверхностей.
+    | In-process login + surfaces + optional student smoke + public URLs.
+    | History → cabinet_probe_runs. TG + optional healthchecks.io.
     |
-    | Fail-open: без TEST_MANAGER_PASSWORD команда no-op и SUCCESS; любая
-    | сетевая ошибка healthchecks/Telegram не роняет слот планировщика.
-    |
-    | Тревоги (можно комбинировать):
-    |   1) CABINET_PROBE_PING_URL — healthchecks.io (silence → alert)
-    |   2) CABINET_PROBE_TELEGRAM_CHAT_ID — TG-чат(ы) через основной бот
-    |      (TELEGRAM_BOT_TOKEN). По умолчанию = ADMIN_TELEGRAM_ID.
-    |      Несколько id через запятую. Пусто явно — TG выключен.
+    | Deferred (explicit non-goals H1794): Playwright browser smoke;
+    | auto-restart php-fpm; public status page.
     |
     */
 
-    // Пусто = не пинговать внешний сторож (сам probe всё равно логирует).
     'ping_url' => (string) env('CABINET_PROBE_PING_URL', ''),
 
-    // Telegram chat_id(s) for failure + recovery. Default ADMIN_TELEGRAM_ID.
-    // Set CABINET_PROBE_TELEGRAM_CHAT_ID= (empty) to disable TG even if admin is set.
+    // Critical alerts (down/recovery). Default ADMIN_TELEGRAM_ID.
     'telegram_chat_id' => env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),
 
-    // Не слать повторный «болен» чаще, чем раз в N минут (пока кабинет лежит).
+    // Soft-only failures (optional surfaces). Empty → same as critical.
+    'telegram_soft_chat_id' => env('CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID', ''),
+
     'telegram_cooldown_minutes' => (int) env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
 
-    // Частота. 15 мин: тяжелее, чем heartbeat:ping (рендер Blade/Filament),
-    // но достаточно, чтобы «кабинет лежит» не ждал GitHub-крона часами.
     'cron' => (string) env('CABINET_PROBE_CRON', '*/15 * * * *'),
 
     'timeout' => (int) env('CABINET_PROBE_TIMEOUT', 15),
 
-    // Маркеры, по которым страница считается «упавшей», даже при HTTP 200.
+    // Keep last N rows in cabinet_probe_runs (prune after each write).
+    'history_keep' => (int) env('CABINET_PROBE_HISTORY_KEEP', 500),
+
     'error_markers' => [
         'Whoops',
         'Server Error',
@@ -51,28 +43,41 @@ return [
         'SQLSTATE[',
     ],
 
-    /*
-    | Маршруты, которые обязаны отвечать 2xx после успешного login.
-    | name — Laravel route name; uri — запасной путь.
-    | panel=true: Filament (/admin) — менеджер must canAccessPanel.
-    |
-    | НЕ включаем /library|/progress|/access: они 404, пока
-    | features.cabinet_hybrid = OFF (hybrid chassis, H1481). Hybrid-поверхности
-    | добавляются динамически в cabinet:probe, когда флаг включён.
-    */
+    // Guest GETs (no auth) — critical.
+    'public_surfaces' => [
+        ['uri' => '/login', 'label' => 'public /login', 'severity' => 'critical'],
+        ['uri' => '/online', 'label' => 'public /online (vitrine)', 'severity' => 'critical'],
+    ],
+
+    // After manager login — critical unless marked soft.
     'surfaces' => [
-        ['name' => 'student.dashboard', 'label' => 'cabinet /dvaram'],
-        ['name' => 'student.messages', 'label' => 'cabinet /messages'],
-        ['name' => 'student.calendar', 'label' => 'cabinet /calendar'],
-        ['name' => 'student.open-lessons', 'label' => 'cabinet /open-lessons'],
-        ['uri' => '/admin', 'label' => 'filament /admin', 'panel' => true],
+        ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ['name' => 'student.messages', 'label' => 'manager /messages', 'severity' => 'critical'],
+        ['name' => 'student.calendar', 'label' => 'manager /calendar', 'severity' => 'critical'],
+        ['name' => 'student.open-lessons', 'label' => 'manager /open-lessons', 'severity' => 'critical'],
+        ['uri' => '/admin', 'label' => 'filament /admin', 'panel' => true, 'severity' => 'critical'],
     ],
 
-    // Добавляются к surfaces, только если features.cabinet_hybrid = true.
+    // Only when features.cabinet_hybrid = true — soft (hybrid chassis optional).
     'hybrid_surfaces' => [
-        ['name' => 'student.library', 'label' => 'cabinet /library (hybrid)'],
-        ['name' => 'student.progress', 'label' => 'cabinet /progress (hybrid)'],
-        ['name' => 'student.access', 'label' => 'cabinet /access (hybrid)'],
+        ['name' => 'student.library', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ['name' => 'student.progress', 'label' => 'hybrid /progress', 'severity' => 'soft'],
+        ['name' => 'student.access', 'label' => 'hybrid /access', 'severity' => 'soft'],
     ],
 
+    // After student login (TEST_STUDENT_*) — critical for student path.
+    'student_surfaces' => [
+        ['name' => 'student.dashboard', 'label' => 'student /dvaram', 'severity' => 'critical'],
+        ['name' => 'student.messages', 'label' => 'student /messages', 'severity' => 'critical'],
+        ['name' => 'student.open-lessons', 'label' => 'student /open-lessons', 'severity' => 'critical'],
+    ],
+
+    // Ops runbook appended to TG alerts.
+    'runbook' => [
+        'ssh root@193.232.229.92',
+        'cd /var/www/html && php artisan cabinet:probe',
+        'systemctl status php8.3-fpm nginx --no-pager',
+        'df -h /',
+        'tail -n 50 storage/logs/laravel.log',
+    ],
 ];

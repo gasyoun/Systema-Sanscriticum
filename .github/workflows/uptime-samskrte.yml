@@ -70,6 +70,9 @@ env:
   # Проверяем не только код ответа, но и живой текст на странице: это ловит
   # случай «отвечает 200, а отдаёт пустую страницу или заглушку хостера».
   KEYWORD: Общество ревнителей санскрита
+  # H1794: multi-URL guest probe (homepage + /login + /online). Authenticated
+  # cabinet is cabinet:probe on the server — not GHA (no student secrets here).
+  # REAL cadence is hours not 10m — see cron comment above.
   ALERT_LABEL: uptime-alert
   GH_TOKEN: ${{ github.token }}
   GH_REPO: ${{ github.repository }}
@@ -79,7 +82,7 @@ jobs:
     name: Проба сайта
     runs-on: ubuntu-latest
     steps:
-      - name: Проверить доступность и содержимое
+      - name: Проверить доступность и содержимое (home + login + online)
         id: probe
         env:
           FORCE_ALERT: ${{ inputs.force_alert }}
@@ -93,29 +96,45 @@ jobs:
             exit 0
           fi
 
-          # Три попытки: одиночный сбой сети на раннере не должен
-          # поднимать ложную тревогу.
+          # Три URL: homepage (keyword), /login (form), /online (vitrine).
+          # Три попытки на весь пакет: одиночный сетевой сбой раннера ≠ down.
           status=down
           detail=""
           for attempt in 1 2 3; do
-            body=$(mktemp)
-            err=$(mktemp)
-            code=$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' "$TARGET_URL" 2>"$err") || code=000
+            fail=""
+            # 1) home + keyword
+            body=$(mktemp); err=$(mktemp)
+            code=$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' "https://samskrte.ru/" 2>"$err") || code=000
+            if [ "$code" != "200" ]; then
+              fail="home HTTP $code"
+            elif ! grep -qF "$KEYWORD" "$body"; then
+              fail="home 200 без ключевого слова"
+            fi
+            # 2) /login — 200 + password field
+            if [ -z "$fail" ]; then
+              body=$(mktemp); err=$(mktemp)
+              code=$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' "https://samskrte.ru/login" 2>"$err") || code=000
+              if [ "$code" != "200" ]; then
+                fail="login HTTP $code"
+              elif ! grep -qiE 'password|type="password"|name="password"' "$body"; then
+                fail="login 200 без поля пароля"
+              fi
+            fi
+            # 3) /online vitrine — 200 (keyword optional: page may be marketing)
+            if [ -z "$fail" ]; then
+              body=$(mktemp); err=$(mktemp)
+              code=$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' "https://samskrte.ru/online" 2>"$err") || code=000
+              if [ "$code" != "200" ] && [ "$code" != "301" ] && [ "$code" != "302" ]; then
+                fail="online HTTP $code"
+              fi
+            fi
 
-            if [ "$code" = "200" ] && grep -qF "$KEYWORD" "$body"; then
+            if [ -z "$fail" ]; then
               status=up
-              detail="HTTP 200, ключевое слово на месте (попытка $attempt)"
+              detail="home+login+online OK (попытка $attempt)"
               break
             fi
-
-            if [ "$code" = "200" ]; then
-              detail="HTTP 200, но ключевого слова на странице нет"
-            elif [ "$code" = "000" ]; then
-              detail="соединение не установлено: $(tr -d '\n\"' < "$err" | head -c 160)"
-            else
-              detail="HTTP $code"
-            fi
-
+            detail="$fail (попытка $attempt)"
             if [ "$attempt" != "3" ]; then sleep 20; fi
           done
 
@@ -124,7 +143,11 @@ jobs:
           {
             echo "### Проба: $status"
             echo "$detail"
+            echo
+            echo "URLs: https://samskrte.ru/ · https://samskrte.ru/login · https://samskrte.ru/online"
+            echo "Auth cabinet: server-side \`cabinet:probe\` (H1794), not this workflow."
           } >> "$GITHUB_STEP_SUMMARY"
+
 
       - name: Срок действия TLS-сертификата
         if: ${{ inputs.force_alert != true }}
