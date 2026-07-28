@@ -3,16 +3,27 @@
 @section('title', 'Консультация по онлайн-курсам Общества ревнителей санскрита')
 
 @section('content')
+@php
+    /** @var array $copy H1067 — default A, switch B via MARATHON_LANDING_COPY_VARIANT */
+    $v = $copy['variant'] ?? [];
+    $heroTitle = $v['hero_title'] ?? 'Пойми, как устроен санскрит, и выбери свой курс';
+    $heroSubtitle = $v['hero_subtitle'] ?? '3 дня, ~15 минут в день, в своем темпе.';
+    $cta = $v['cta'] ?? 'Записаться';
+    $benefitsHeading = $v['benefits_heading'] ?? '';
+    $benefits = $v['benefits'] ?? [];
+    $days = $copy['days'] ?? [];
+    $faq = $copy['faq'] ?? [];
+    $testimonial = trim((string) ($copy['testimonial'] ?? ''));
+@endphp
 <div class="max-w-2xl mx-auto py-12 px-4">
 
-    {{-- Anti-urgency hero — no countdown, no "spots left", evergreen entry any day. --}}
+    {{-- H1067 anti-urgency hero — no countdown, no "spots left", evergreen entry any day. --}}
     <div class="text-center mb-10">
         <h1 class="text-3xl md:text-4xl font-black text-[#1A1A1A] mb-4">
-            Пойми, как устроен санскрит, и выбери свой курс
+            {{ $heroTitle }}
         </h1>
         <p class="text-gray-600 text-lg font-medium">
-            3 дня, ~15 минут в день, в своем темпе. Личный маршрут, а не общий поток —
-            начать можно в любой день.
+            {{ $heroSubtitle }}
         </p>
     </div>
 
@@ -62,6 +73,40 @@
         </div>
     @endif
 
+    @if (!empty($benefits))
+        <section class="mb-10 space-y-4">
+            @if ($benefitsHeading !== '')
+                <h2 class="text-xl font-extrabold text-[#1A1A1A]">{{ $benefitsHeading }}</h2>
+            @endif
+            @foreach ($benefits as $benefit)
+                <div class="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <p class="font-bold text-[#1A1A1A] mb-1">{{ $benefit['title'] }}</p>
+                    <p class="text-gray-600 text-sm leading-relaxed">{{ $benefit['body'] }}</p>
+                </div>
+            @endforeach
+        </section>
+    @endif
+
+    @if (!empty($days))
+        <section class="mb-10">
+            <h2 class="text-xl font-extrabold text-[#1A1A1A] mb-4">Как устроены три дня</h2>
+            <ol class="space-y-3 list-decimal list-inside">
+                @foreach ($days as $day)
+                    <li class="text-gray-700">
+                        <span class="font-bold text-[#1A1A1A]">{{ $day['title'] }}</span>
+                        <span class="text-sm text-gray-600 block ml-5 mt-0.5">{{ $day['body'] }}</span>
+                    </li>
+                @endforeach
+            </ol>
+        </section>
+    @endif
+
+    @if ($testimonial !== '')
+        <blockquote class="mb-10 p-6 bg-orange-50/50 border-l-4 border-[#E85C24] rounded-r-2xl text-gray-700 italic">
+            {{ $testimonial }}
+        </blockquote>
+    @endif
+
     <form method="POST" action="{{ route('marathon.register') }}" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6">
         @csrf
 
@@ -109,9 +154,28 @@
         </div>
 
         <button type="submit" class="w-full px-6 py-3.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
-            Записаться
+            {{ $cta }}
         </button>
     </form>
+
+    @if (!empty($faq))
+        <section class="mt-12 space-y-3" x-data="{ open: null }">
+            <h2 class="text-xl font-extrabold text-[#1A1A1A] mb-4">Частые вопросы</h2>
+            @foreach ($faq as $i => $item)
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <button type="button"
+                            class="w-full text-left p-4 font-bold text-[#1A1A1A] flex justify-between gap-3"
+                            @click="open === {{ $i }} ? open = null : open = {{ $i }}">
+                        <span>{{ $item['q'] }}</span>
+                        <span class="text-[#E85C24]" x-text="open === {{ $i }} ? '−' : '+'"></span>
+                    </button>
+                    <div class="px-4 pb-4 text-sm text-gray-600 leading-relaxed" x-show="open === {{ $i }}" x-cloak>
+                        {{ $item['a'] }}
+                    </div>
+                </div>
+            @endforeach
+        </section>
+    @endif
 
 </div>
 @endsection

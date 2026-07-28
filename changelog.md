@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **H1067 publish path — landing A first, then B; channel posts via magnet bot.** Public `/online/konsultaciya` now renders ruled H1067 copy from `config/marathon_landing_copy.php` (default variant **A** «страхи новичка»; switch to **B** with `MARATHON_LANDING_COPY_VARIANT=b` + `config:clear`). Artisan: `marathon:apply-landing-copy {a|b}` upserts Filament `LandingPage`; `marathon:publish-channel-posts [--post=N] [--live]` posts to @samskrte using `MarketingSetting.tg_bot_token` (dry-run by default; post 5 needs `MARATHON_TESTIMONIAL`). DEPLOY_QUEUE №27 updated. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.62.2] - 2026-07-28
 
 ### Fixed
