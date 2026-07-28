@@ -206,6 +206,7 @@
     </footer>
 
     {{-- ═══════════════ МОДАЛКА ЛОГИНА + AJAX LOGOUT ═══════════════ --}}
+    @include('partials.csrf-token-refresh')
     @include('partials.shop-login-modal')
 
 <script>

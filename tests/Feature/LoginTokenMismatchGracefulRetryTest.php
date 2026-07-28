@@ -77,7 +77,7 @@ class LoginTokenMismatchGracefulRetryTest extends TestCase
         $response->assertJson([
             'success' => false,
         ]);
-        $this->assertStringContainsString('обновите страницу', $response->json('message'));
+        $this->assertStringContainsString('попробуйте войти ещё раз', $response->json('message'));
     }
 
     /**

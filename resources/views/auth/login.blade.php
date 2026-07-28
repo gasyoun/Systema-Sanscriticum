@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Вход в кабинет | ОРС LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -36,7 +37,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
+            <form action="{{ route('login.post') }}" method="POST" id="login-form" class="space-y-5">
                 @csrf
                 
                 <div>
@@ -94,6 +95,41 @@
             </p>
         </div>
     </div>
+
+    @include('partials.csrf-token-refresh')
+    <script>
+        // H1774 — анти-419 на входе: та же вкладка-простояла-дольше-жизни-сессии
+        // проблема, что и на чекауте (295ea8b8). Подтягиваем свежий токен перед
+        // сабмитом и при возврате страницы из bfcache.
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('login-form');
+                if (!form) return;
+                const btn = form.querySelector('button[type="submit"]');
+                let refreshed = false;
+
+                form.addEventListener('submit', async function (e) {
+                    if (refreshed) return; // второй проход — отправляем по-настоящему
+                    e.preventDefault();
+
+                    if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    if (btn) btn.disabled = true;
+                    await window.CsrfTokenRefresh.refresh();
+                    refreshed = true;
+                    form.submit();
+                });
+            });
+
+            window.addEventListener('pageshow', function (e) {
+                if (!e.persisted) return;
+                window.CsrfTokenRefresh.refresh();
+            });
+        })();
+    </script>
 
 </body>
 </html>
