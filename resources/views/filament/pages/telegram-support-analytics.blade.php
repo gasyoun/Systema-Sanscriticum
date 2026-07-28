@@ -114,7 +114,7 @@
                         >
                             <div class="flex items-center justify-between gap-3">
                                 <strong class="truncate text-gray-950 dark:text-white">{{ $title }}</strong>
-                                <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ $conversation->last_message_at?->format('H:i') }}</span>
+                                <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ \App\Support\ChatTimestamp::label($conversation->last_message_at) }}</span>
                             </div>
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300">in {{ $conversation->incoming_count }}</span>

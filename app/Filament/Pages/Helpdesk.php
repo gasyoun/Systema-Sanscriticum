@@ -345,6 +345,7 @@ class Helpdesk extends Page
         // Простой stdClass ронял страницу пятисоткой — «Call to undefined method».
         if ($thread->source_telegram_chat_id !== null) {
             return $thread->telegramMessages()
+                ->orderBy('sent_at') // импорт мог идти пачками вразнобой, id ≠ хронология
                 ->orderBy('id')
                 ->get()
                 ->map(function (TelegramSupportMessage $message): ChatMessage {
