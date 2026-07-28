@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Таблица покрытия источника Кочергиной по всем 40 занятиям (H1789).** H1764 подставляет в условие ДЗ блок «Упражнения» из оцифровки, но до сих пор никто не мерил, у каких занятий этот блок вообще есть. Промер на контракте `KocherginaExerciseSource::forLesson()`: текст извлекается для **35 занятий из 40**, а у 11, 20, 27, 34 и 40 строки `Упражнения` в источнике нет — там пойдёт штатная отсылочная формулировка (A8), и это не деградация. Для волны 1 (занятия 1–5) текст есть у всех пяти: блоки 1 270…2 420 символов, 4–5 заданий на занятие. Размеры по всем занятиям — медиана 2 411, разброс 1 270…4 167; выбросов больше 4× медианы нет, то есть граница «до следующего заголовка занятия» нигде не съела посторонний раздел. Таблица легла в [IMPLEMENTATION_SYSTEMA_HOMEWORK_AUTO_OPEN_WAVE1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_HOMEWORK_AUTO_OPEN_WAVE1.md) как снимок для эксплуатации; канонический экземпляр и разбор особенностей оцифровки (дублирующиеся заголовки XI/XX/XXVII/XXXIV в хрестоматии, пять разных форм маркера задания) — в репозитории источника, [EXERCISE_BLOCK_COVERAGE_KOCHERGINA_2026.md](https://github.com/gasyoun/SanskritGrammar/blob/main/KocherginaUchebnik_1998/EXERCISE_BLOCK_COVERAGE_KOCHERGINA_2026.md) ([PR #553](https://github.com/gasyoun/SanskritGrammar/pull/553)). Кода не меняет — только измерение и документация; текст учебника (D14) не переносится. Executor: Opus 5 1M (`claude-opus-5[1m]`).
+
 ### Changed
 - **Тексты TG-алертов cabinet:probe — по-русски + полные URL.** Сообщения «болен / снова жив» с https://samskrte.ru/ , https://samskrte.ru/dvaram , https://samskrte.ru/login , https://samskrte.ru/admin . Executor: Grok 4.5 (`grok-4.5`).
 
