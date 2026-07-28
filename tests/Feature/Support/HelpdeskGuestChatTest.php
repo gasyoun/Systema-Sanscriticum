@@ -11,6 +11,9 @@ use App\Models\Course;
 use App\Models\MarketingSetting;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
+use App\Models\TelegramSupportAccount;
+use App\Models\TelegramSupportChat;
+use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\SupportAnswerSuggester;
 use App\Support\Roles;
@@ -62,6 +65,50 @@ class HelpdeskGuestChatTest extends TestCase
             // техвопросы из Telegram-чатов от непривязанных авторов.
             ->assertSee('Без привязки')
             ->assertSee('Аня');
+    }
+
+    /**
+     * Открытие телеграм-треда роняло страницу пятисоткой: лента общая и зовёт на
+     * элементах методы модели (htmlForWeb), а сообщения подставлялись голыми
+     * объектами. Тест открывает тред целиком — именно этого шага не хватало.
+     */
+    public function test_opening_a_telegram_thread_renders_its_messages(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+
+        $thread = SupportConversation::create([
+            'source_telegram_chat_id' => -100556,
+            'source_telegram_user_id' => 777,
+            'guest_name' => 'Игорь (Хинди гр.2)',
+            'queue' => SupportConversation::QUEUE_TECHNICAL,
+            'status' => SupportConversation::STATUS_OPEN,
+            'last_message_at' => now(),
+        ]);
+
+        $account = TelegramSupportAccount::create(['name' => 'support']);
+        $chat = TelegramSupportChat::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_chat_id' => -100556,
+            'type' => 'supergroup',
+            'title' => 'Хинди гр.2',
+        ]);
+        TelegramSupportMessage::create([
+            'support_conversation_id' => $thread->id,
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => -100556,
+            'telegram_message_id' => 9001,
+            'direction' => 'incoming',
+            'text' => 'Не могу войти в кабинет',
+            'sent_at' => now(),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertSet('activeGuestId', $thread->id)
+            ->assertSee('Не могу войти в кабинет')
+            ->assertSee('ответ уйдёт в Telegram-чат');
     }
 
     /** Техвопрос из Telegram-чата виден в том же списке, с пометкой источника. */
