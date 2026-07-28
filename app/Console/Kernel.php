@@ -431,6 +431,17 @@ class Kernel extends ConsoleKernel
             ->evenInMaintenanceMode()
             ->name('scheduler-heartbeat');
 
+        // --- ДАЙДЖЕСТ CSRF-НЕСОВПАДЕНИЙ (H1773) ---
+        // Ежедневно, окно по умолчанию — 1 сутки (config/csrf.php): та же
+        // частота, что у receivables:check/storage:check. Алерт админам —
+        // только при превышении порога; гейт «есть получатели» — внутри
+        // команды.
+        $schedule->command('csrf:mismatch-digest')
+            ->dailyAt('04:25')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('csrf-mismatch-digest');
+
         // --- ПУЛЬС КАБИНЕТА (H1777) ---
         // Homepage-uptime и heartbeat:ping не видят «/ отвечает 200, а /dvaram
         // 500 / Auth сломан / Filament не пускает менеджера». Login smoke-

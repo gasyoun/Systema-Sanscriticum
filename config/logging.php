@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -121,6 +122,19 @@ return [
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
+        ],
+
+        // CSRF-несовпадение (H1773): одна строка на инцидент, разбираемая
+        // csrf:mismatch-digest — заменяет ручное чтение nginx-логов после
+        // жалоб. JSON-построчно, чтобы дайджест парсил без regex по
+        // человекочитаемому формату. Retention отдельно от окна дайджеста —
+        // должен покрывать самое широкое --days, с которым реально смотрят.
+        'csrf_mismatch' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/csrf-mismatch.log'),
+            'level' => 'warning',
+            'days' => (int) env('CSRF_MISMATCH_LOG_RETENTION_DAYS', 30),
+            'formatter' => JsonFormatter::class,
         ],
 
         'emergency' => [

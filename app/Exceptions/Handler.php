@@ -6,6 +6,8 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -56,6 +58,8 @@ class Handler extends ExceptionHandler
                 return null; // прочие HttpException — поведение по умолчанию
             }
 
+            $this->logCsrfMismatch($request);
+
             if ($request->routeIs('payment.create', 'checkout.*')) {
                 return redirect()->back()->with(
                     'error',
@@ -101,5 +105,57 @@ class Handler extends ExceptionHandler
                 .'а длинный ответ сначала сохраните черновиком.'
             );
         });
+    }
+
+    /**
+     * H1773 — до 28-07-2026 CSRF-несовпадение нигде не логировалось: про
+     * инцидент 27-07-2026 (голый 419 на /login и /shop/login весь день)
+     * узнали только потому, что человек вручную прочитал nginx-логи после
+     * жалоб. Теперь каждое несовпадение оставляет одну структурированную
+     * запись — материал для `csrf:mismatch-digest`.
+     *
+     * Никакого IP, сырого User-Agent или user_id (тот же контракт приватности,
+     * что у game_events, H1360) — только маршрут, метод, факт авторизации и
+     * грубая корзина клиента.
+     *
+     * Обёрнуто в try/catch намеренно: сломанный канал логов не должен
+     * превращать восстанавливаемый 419 в 500 (тот же fail-open, что у
+     * scheduler heartbeat, H1713).
+     */
+    private function logCsrfMismatch(Request $request): void
+    {
+        try {
+            Log::channel('csrf_mismatch')->warning('CSRF token mismatch', [
+                'route' => $request->route()?->getName(),
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'authenticated' => Auth::check(),
+                'expects_json' => $request->expectsJson(),
+                'client_bucket' => $this->clientBucket($request->userAgent()),
+            ]);
+        } catch (Throwable) {
+            // Fail-open: логирование телеметрии не должно ронять ответ.
+        }
+    }
+
+    /**
+     * Грубая, не PII-раскрывающая классификация клиента: встроенный браузер
+     * мессенджера (см. комментарий про shop.login выше — там токен в <meta>
+     * не обновляется без полной перезагрузки страницы) против обычного.
+     */
+    private function clientBucket(?string $userAgent): string
+    {
+        if (! $userAgent) {
+            return 'unknown';
+        }
+
+        $inAppMarkers = ['Telegram', 'VK/', 'com.vkontakte', 'FBAN', 'FBAV', 'Instagram', 'MicroMessenger', 'WhatsApp'];
+        foreach ($inAppMarkers as $marker) {
+            if (str_contains($userAgent, $marker)) {
+                return 'in_app_messenger';
+            }
+        }
+
+        return 'browser';
     }
 }
