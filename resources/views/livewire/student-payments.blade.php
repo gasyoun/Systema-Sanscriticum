@@ -126,8 +126,8 @@
                 <div class="w-20 h-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-4">
                     <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">История оплат пуста</h3>
-                <p class="text-gray-500">У вас пока нет ни одного совершенного платежа.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Пока ни одной оплаты</h3>
+                <p class="text-gray-500">Здесь появится история ваших оплат — сразу после первого платежа.</p>
             </div>
         @endif
 
