@@ -302,13 +302,12 @@ class ProbeCabinetHealth extends Command
             if (! $wasDown) {
                 return; // всё и так было нормально — молчим
             }
-            $text = "✅ <b>Кабинет снова жив</b>\n"
-                ."Сайт: https://samskrte.ru/\n"
-                ."Кабинет: https://samskrte.ru/dvaram\n"
-                ."Вход: https://samskrte.ru/login\n"
-                ."Админка: https://samskrte.ru/admin\n"
+            $text = "✅ <b>Личный кабинет снова работает</b>\n"
                 ."\n"
-                .'Проверка cabinet:probe прошла: вход smoke-менеджера и ключевые страницы снова отвечают 2xx.';
+                .$this->telegramUrlBlock()
+                ."\n"
+                ."Проверка прошла: вход smoke-менеджера и ключевые страницы снова отвечают.\n"
+                .'Поднять сервер может только Артём (@t3t3r1n) — отвечает нечасто, поднимает небыстро.';
         } else {
             $lastAt = Cache::get(self::CACHE_LAST_ALERT_AT);
             if (! $force && $wasDown && $lastAt !== null) {
@@ -323,15 +322,14 @@ class ProbeCabinetHealth extends Command
                 static fn (string $f): string => '• '.e($f),
                 array_slice($failures, 0, 8),
             );
-            $text = "🚨 <b>Кабинет болен</b>\n"
-                ."Сайт: https://samskrte.ru/\n"
-                ."Кабинет: https://samskrte.ru/dvaram\n"
-                ."Вход: https://samskrte.ru/login\n"
-                ."Админка: https://samskrte.ru/admin\n"
+            $text = "🚨 <b>Личный кабинет не работает</b>\n"
+                ."\n"
+                .$this->telegramUrlBlock()
                 ."\n"
                 ."Что упало:\n"
                 .implode("\n", $lines)
                 ."\n\n"
+                ."Поднять сервер может только Артём (@t3t3r1n) — отвечает нечасто, поднимает небыстро.\n"
                 .'На сервере: <code>php artisan cabinet:probe</code>';
         }
 
@@ -397,4 +395,15 @@ class ProbeCabinetHealth extends Command
 
         return array_values(array_filter(array_map('strval', $parts), static fn (string $id): bool => $id !== ''));
     }
+
+    /** Общий блок ссылок для TG-алертов (полные URL). */
+    private function telegramUrlBlock(): string
+    {
+        return "Сам сайт: https://samskrte.ru\n"
+            ."Вход: https://samskrte.ru/login\n"
+            ."Кабинет: https://samskrte.ru/dvaram\n"
+            ."Админка: https://samskrte.ru/admin\n"
+            ."Витрина: https://samskrte.ru/online\n";
+    }
 }
+
