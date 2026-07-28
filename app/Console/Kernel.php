@@ -175,6 +175,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('publish-due-content-calendar');
 
+        // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
+        // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход
+        // лишь доносит его с задержкой не больше часа. Прод-инертна, пока
+        // homework.auto_open.course_slugs пуст (значение по умолчанию).
+        $schedule->command('homework:auto-open')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('auto-open-homework');
+
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new CloseStaleSessionsJob)

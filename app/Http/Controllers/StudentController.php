@@ -842,9 +842,14 @@ class StudentController extends Controller
         // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
         $transcriptSentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
 
-        // Домашняя работа этого студента по уроку (если задание включено)
+        // Открыт ли приём работ ИМЕННО ДЛЯ ЭТОГО студента (H1764). Считается
+        // один раз здесь и передаётся в шаблон: витрина и серверный гейт
+        // обязаны отвечать на этот вопрос одинаково.
+        $homeworkOpen = $lesson->homeworkOpenFor($user);
+
+        // Домашняя работа этого студента по уроку (если приём открыт)
         $homeworkSubmission = null;
-        if ($lesson->homework_enabled) {
+        if ($homeworkOpen) {
             $homeworkSubmission = $user->homeworkSubmissions()
                 ->where('lesson_id', $lesson->id)
                 ->with(['comments.files', 'comments.author'])
@@ -852,7 +857,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl'));
     }
 
     /**
