@@ -30,8 +30,25 @@ final class EvergreenScorer
         'текст' => '/махабхарат|рамаян|\bгита\b|бхагавад|шлок|стих|перевод|упаниш|веды|ведийск|пуран|коммент/iu',
     ];
 
-    /** Promo exclusion (IMPLEMENTATION doc defaults log, tuned for W2). */
-    private const PROMO_PATTERN = '/скидк|\bруб\b|₽|запис.{0,20}марафон|марафон.{0,20}цена/iu';
+    /**
+     * Promo exclusion, retuned against the full wall corpus (H1754,
+     * docs/VOICE_CONTRACT_ORS_VK_WALL_RU.md §9). The W2 guess keyed on words the
+     * wall barely uses (скидк ×3 in 11 years, марафон ×4, промокод ×0); the
+     * measured promo vocabulary is enrolment/price talk: запис-forms (79 missed
+     * posts), регистрац- (31), оплат- (19), стоимост- (16), рублей/руб. Strict
+     * superset of the old pattern: 196 vs 78 hits on 5,450 texts, 0 lost.
+     * Explicit lookarounds instead of \b — PCRE2 word boundaries around
+     * Cyrillic are ASCII unless the build enables UCP, so \bруб\b is
+     * build-dependent. Guarded non-hits: неоплатонизм, записи лекций,
+     * ЗАПИСЫВАЛИСЬ, за рубежом, Рублёв, оценка, сцена.
+     */
+    private const PROMO_PATTERN = '/скидк|промокод|рассрочк|₽'.
+        '|(?<![а-яёa-z])руб(?![а-яёa-z])'.
+        '|рубл(?:ей|я|ём|ь(?![а-яёa-z]))'.
+        '|стоимост'.
+        '|(?<![а-яёa-z])(?:пред)?оплат'.
+        '|запис(?:аться|ывайтесь|ывайся|ь\s+на\s)|запиш(?:итесь|ись)'.
+        '|регистрац/iu';
 
     /**
      * @param  list<CsvRow>  $topPosts  rows from top_posts_by_likes.csv

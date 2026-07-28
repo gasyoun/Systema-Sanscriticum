@@ -1,6 +1,6 @@
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
-_Created: 24-07-2026 · Last updated: 25-07-2026 (H1566 Wave 3, H1567 Wave 4)_
+_Created: 24-07-2026 · Last updated: 28-07-2026 (H1754 voice contract; earlier: H1566 Wave 3, H1567 Wave 4)_
 
 Index: [`docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 
@@ -118,6 +118,13 @@ LMS-backed fact source and stays templated. Cost cap:
 `content.forward_draft_max_per_run` (default 10, mirrors
 `ArticleDraftGenerator::WEEKLY_LESSON_LIMIT`). DEPLOY_QUEUE №57.
 
+**Voice pass (H1754, 28-07-2026):** the four template families + CuratorAi
+prompts rewritten to the measured editorial voice contract
+[docs/VOICE_CONTRACT_ORS_VK_WALL_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VOICE_CONTRACT_ORS_VK_WALL_RU.md)
+(derived from the full 7,608-post vk-ors corpus, 2022+ slice n=2,799);
+`EvergreenScorer::PROMO_PATTERN` retuned against real post text (78 → 196 hits,
+strict superset, 0 lost exclusions).
+
 ---
 
 ## Wave 5 — Auto-pilot
@@ -139,6 +146,7 @@ LMS-backed fact source and stays templated. Cost cap:
 | Step | Who |
 |---|---|
 | Refresh vk-ors CSVs in IndologyScholars | Editor/agent |
+| NEW copy per the [voice contract](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VOICE_CONTRACT_ORS_VK_WALL_RU.md) | ✅ agent (H1754, 28-07-2026) |
 | Import on Systema staging | Ivan/agent |
 | Filament smoke month view | Admin |
 | n8n VK post workflow + token | Ivan ([#666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666) sibling) |
