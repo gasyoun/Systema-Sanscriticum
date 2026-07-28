@@ -53,6 +53,75 @@ class RemindZapisiClassesTest extends TestCase
         Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 
+    /**
+     * Сообщение уходит с parse_mode=HTML, поэтому один амперсанд в названии курса
+     * заставлял Telegram отвергнуть ЗАПРОС ЦЕЛИКОМ («can't parse entities») —
+     * напоминание не приходило вообще, и наружу это никак не проявлялось.
+     */
+    public function test_special_characters_in_names_are_escaped(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Хинди & урду', 'telegram_chat_id' => '-100']);
+        Schedule::create([
+            'title' => 'Грамматика <начальная> & чтение',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Грамматика &lt;начальная&gt; &amp; чтение')
+                && str_contains($job->text, 'Хинди &amp; урду')
+                // Разметку шаблона экранирование не трогает.
+                && str_contains($job->text, '<b>');
+        });
+    }
+
+    /** Разметка из шаблона доходит как есть — это и даёт форматирование. */
+    public function test_custom_template_keeps_its_markup(): void
+    {
+        Queue::fake();
+        config(['features.telegram_zapisi_bot' => true]);
+        MarketingSetting::create([
+            'zapisi_reminder_lead_minutes' => 60,
+            'zapisi_reminder_template' => "<b>{title}</b>\n<i>{group}</i> в {time}\n{join}",
+        ]);
+
+        $group = Group::create(['name' => 'Группа 61', 'telegram_chat_id' => '-100']);
+        Schedule::create([
+            'title' => 'Грамматика',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://us06web.zoom.us/j/123',
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, '<b>Грамматика</b>')
+                && str_contains($job->text, '<i>Группа 61</i>')
+                && str_contains($job->text, '<a href="https://us06web.zoom.us/j/123">Подключиться к занятию</a>');
+        });
+    }
+
+    /** Ссылки нет — {join} пустой, чтобы не висело «Подключиться» в никуда. */
+    public function test_join_placeholder_is_empty_without_a_link(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Группа 61', 'telegram_chat_id' => '-100']);
+        Schedule::create(['title' => 'Грамматика', 'start' => now()->addMinutes(10), 'group_id' => $group->id]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => ! str_contains($job->text, 'Подключиться к занятию')
+            && ! str_contains($job->text, '<a href'));
+    }
+
     public function test_skips_when_flag_off(): void
     {
         Queue::fake();
