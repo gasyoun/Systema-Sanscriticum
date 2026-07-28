@@ -71,4 +71,64 @@ return [
         'digest_time' => env('HOMEWORK_REVIEWER_DIGEST_TIME', '09:00'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1)
+    |--------------------------------------------------------------------------
+    |
+    | Открытие считается от момента, когда у урока ВПЕРВЫЕ появилась запись
+    | (`lessons.recording_attached_at`): +delay_hours, затем выравнивание на
+    | ближайший align_hour:00 по Москве. Ни одного числа в коде — все они здесь.
+    |
+    | `course_slugs` по умолчанию ПУСТ: механизм общий, включение — данными,
+    | ровно как у проверяющих групп выше. Пока курс не назван явно, команда
+    | homework:auto-open не открывает ничего, и выкатка безопасна по умолчанию.
+    |
+    */
+
+    'auto_open' => [
+        // Аварийный выключатель всей фичи — гасит её без отката миграции.
+        'enabled' => (bool) env('HOMEWORK_AUTO_OPEN_ENABLED', true),
+
+        // Слаги курсов в пилоте. Пусто = ни одного курса, фича спит.
+        'course_slugs' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('HOMEWORK_AUTO_OPEN_COURSES', '')),
+        ))),
+
+        // Какие занятия учебника участвуют (lessons.textbook_lesson).
+        'textbook_lessons' => array_values(array_filter(array_map(
+            'intval',
+            array_filter(array_map(
+                'trim',
+                explode(',', (string) env('HOMEWORK_AUTO_OPEN_LESSONS', '1,2,3,4,5')),
+            )),
+        ))),
+
+        // Выдержка после появления записи, часы (D3).
+        'delay_hours' => (int) env('HOMEWORK_AUTO_OPEN_DELAY_HOURS', 12),
+
+        // Час МСК, на который выравнивается открытие: не шлём пуши ночью.
+        'align_hour' => (int) env('HOMEWORK_AUTO_OPEN_ALIGN_HOUR', 9),
+
+        // Каналы пуша об открытии. Письма тут нет сознательно (D9): письмо
+        // после каждого занятия — шум. Допустимые: telegram, vk.
+        'notify_channels' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('HOMEWORK_AUTO_OPEN_CHANNELS', 'telegram,vk')),
+        ))),
+
+        // D8 — закрытие предыдущего ДЗ при открытии следующего. Волна 2;
+        // включается отдельно и осознанно, после спайка по опоздавшим сдачам.
+        'close_previous' => (bool) env('HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS', false),
+
+        // Оцифровка учебника Кочергиной — источник текста упражнений.
+        // Читается из СОСЕДНЕГО клона: текст 1998 года под охраной авторского
+        // права и в этот публичный репозиторий не копируется (D6, D14).
+        'source_path' => env(
+            'KOCHERGINA_SOURCE_PATH',
+            base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_unicode.mdx'),
+        ),
+    ],
+
 ];
