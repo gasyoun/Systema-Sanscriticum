@@ -406,4 +406,3 @@ class ProbeCabinetHealth extends Command
             ."Витрина: https://samskrte.ru/online\n";
     }
 }
-
