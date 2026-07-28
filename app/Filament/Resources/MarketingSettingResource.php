@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Console\Commands\RemindZapisiClasses;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MarketingSettingResource\Pages;
 use App\Models\MarketingSetting;
@@ -13,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class MarketingSettingResource extends Resource
@@ -478,9 +480,19 @@ class MarketingSettingResource extends Resource
                             ->helperText('За сколько минут до начала занятия бот напомнит в чат группы (zapisi:remind-classes). Чат берётся из группы (Group.telegram_chat_id).'),
                         Forms\Components\Textarea::make('zapisi_reminder_template')
                             ->label('Шаблон напоминания')
-                            ->rows(3)
-                            ->placeholder('Напоминаем: занятие «{title}» у группы {group} начнётся сегодня в {time} (МСК).')
-                            ->helperText('Плейсхолдеры: {title} — название занятия, {time} — время, {group} — группа, {link} — ссылка подключения. Пусто = шаблон по умолчанию.'),
+                            ->rows(5)
+                            ->placeholder(RemindZapisiClasses::DEFAULT_TEMPLATE)
+                            ->helperText(new HtmlString(
+                                'Плейсхолдеры: <code>{title}</code> — название занятия, <code>{time}</code> — время, '
+                                .'<code>{group}</code> — группа, <code>{join}</code> — готовая ссылка «Подключиться к занятию» '
+                                .'(пусто, если ссылки нет), <code>{link}</code> — сам адрес.<br>'
+                                .'Можно форматировать: <code>&lt;b&gt;жирный&lt;/b&gt;</code>, <code>&lt;i&gt;курсив&lt;/i&gt;</code>, '
+                                .'<code>&lt;u&gt;подчёркнутый&lt;/u&gt;</code>, <code>&lt;s&gt;зачёркнутый&lt;/s&gt;</code>, '
+                                .'<code>&lt;code&gt;моноширинный&lt;/code&gt;</code>, <code>&lt;a href="{link}"&gt;текст ссылки&lt;/a&gt;</code>, '
+                                .'перенос строки — обычным Enter. Другие теги Telegram не поймёт и отвергнет сообщение целиком.<br>'
+                                .'Подставляемые значения экранируются автоматически, так что «&amp;» в названии курса ничего не сломает. '
+                                .'Пусто = шаблон по умолчанию.'
+                            )),
                     ])->columns(1),
             ]);
     }

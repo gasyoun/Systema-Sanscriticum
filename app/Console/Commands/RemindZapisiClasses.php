@@ -27,6 +27,16 @@ class RemindZapisiClasses extends Command
 
     protected $description = 'Напоминает о занятии в чат группы через @zapisi_ORSbot за N минут до старта, один раз на событие.';
 
+    /**
+     * Шаблон по умолчанию. Сообщение уходит с parse_mode=HTML, поэтому разметка
+     * работает и здесь, и в пользовательском шаблоне из админки — раньше дефолт был
+     * сплошной строкой, и напоминание выглядело стеной текста. Стиль тот же, что у
+     * соседнего classes:post-group-link (см. PostClassLinkToGroupChat::buildText).
+     */
+    public const DEFAULT_TEMPLATE = "🔔 <b>Скоро занятие</b>\n\n"
+        ."Занятие <b>«{title}»</b> у группы {group} начнётся сегодня в <b>{time}</b> (МСК).\n\n"
+        .'{join}';
+
     public function handle(): int
     {
         if (! config('features.telegram_zapisi_bot')) {
@@ -51,7 +61,7 @@ class RemindZapisiClasses extends Command
 
         $template = trim((string) ($settings?->zapisi_reminder_template ?? '')) !== ''
             ? (string) $settings->zapisi_reminder_template
-            : 'Напоминаем: занятие «{title}» у группы {group} начнётся сегодня в {time} (МСК).';
+            : self::DEFAULT_TEMPLATE;
 
         $sent = 0;
 
@@ -78,15 +88,33 @@ class RemindZapisiClasses extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * Подстановки ЭКРАНИРУЮТСЯ: сообщение уходит с parse_mode=HTML, и один
+     * амперсанд в названии курса («Грамматика & чтение») заставлял Telegram
+     * отвергнуть весь запрос с «can't parse entities» — напоминание не уходило
+     * вовсе, а в логах оседало предупреждение джоба. Разметку задаёт шаблон,
+     * данные — только текст.
+     *
+     * {join} — готовая ссылка-кнопка: пустая строка, когда подключаться некуда,
+     * чтобы в сообщении не оставалось висящего «Подключиться» в никуда.
+     */
     private function renderText(Schedule $schedule, Group $group, string $template): string
     {
-        $link = $schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link);
+        $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
 
         return strtr($template, [
-            '{title}' => (string) ($schedule->title ?: 'Занятие'),
+            '{title}' => $this->escape($schedule->title ?: 'Занятие'),
             '{time}' => $schedule->start->format('H:i'),
-            '{group}' => (string) ($group->name ?? ''),
-            '{link}' => (string) ($link ?? ''),
+            '{group}' => $this->escape((string) ($group->name ?? '')),
+            '{link}' => $this->escape($link),
+            '{join}' => $link !== ''
+                ? '<a href="'.$this->escape($link).'">Подключиться к занятию</a>'
+                : '',
         ]);
+    }
+
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 }
