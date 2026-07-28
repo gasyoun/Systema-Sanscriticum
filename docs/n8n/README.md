@@ -130,8 +130,13 @@ Webhook ─┬─► Telegram: sendPhoto (канал)
 Воркфлоу [`lecture-clip-extract.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/lecture-clip-extract.workflow.json)
 принимает из Laravel job `DispatchLectureClipExtractionJob` спаны, уже вычисленные
 `ClipSpanPlanner` из **существующих** AI-таймкодов (без пересчёта границ), режет
-ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips и callback'ом
-пишет `LectureClip` в Laravel.
+ffmpeg, грузит фрагменты в VK Video и callback'ом пишет `LectureClip` в Laravel.
+
+**Где выполняется тяжёлое.** Нарезка и заливка идут одной SSH-командой на том же
+хосте, где живёт `yt-dlp` ZOOM-сценария (кред `n8n`, каталог `/data/clips`):
+исходник качается **один раз на лекцию**, каждый спан режется `ffmpeg -c copy`
+(без перекодирования), заливается в VK прямо с хоста и тут же удаляется. Через
+n8n гигабайты не гоняются вовсе — наружу выходит только JSON с id ролика.
 
 ## Payload Laravel → n8n
 
