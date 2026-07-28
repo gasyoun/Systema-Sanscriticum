@@ -661,11 +661,23 @@
          x-transition:enter-start="opacity-0 translate-y-4"
          x-transition:enter-end="opacity-100 translate-y-0">
 
+        @php
+            $debtsWithPlan = $debts->contains(fn ($d) => $d->promise_active || $d->promise_overdue);
+            $debtsWithoutPlan = $debts->contains(fn ($d) => ! $d->promise_active && ! $d->promise_overdue);
+        @endphp
         <div class="mb-5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#E85C24]/20 rounded-xl px-4 py-3 flex items-center gap-3">
             <i class="fas fa-exclamation-triangle text-[#E85C24] shrink-0"></i>
             <p class="text-sm text-gray-700 leading-snug">
-                <span class="font-bold text-gray-900">Есть неоплаченные блоки.</span>
-                Чтобы доступ оставался активным, оформите недостающие.
+                @if($debtsWithPlan && ! $debtsWithoutPlan)
+                    <span class="font-bold text-gray-900">У вас согласована рассрочка.</span>
+                    Вносите платежи по графику или погасите остаток сразу — как вам удобнее.
+                @elseif($debtsWithPlan && $debtsWithoutPlan)
+                    <span class="font-bold text-gray-900">Есть неоплаченные блоки и рассрочка.</span>
+                    По рассрочке платите по графику, остальные блоки можно оплатить сразу — доступ откроется автоматически.
+                @else
+                    <span class="font-bold text-gray-900">Есть неоплаченные блоки.</span>
+                    Оплатите блок — доступ откроется автоматически.
+                @endif
             </p>
         </div>
 
@@ -924,6 +936,10 @@
                     <p class="text-sm text-gray-400 mt-3 max-w-md leading-relaxed">
                         {{ $rate }} праны = 1 ₽ скидки. Списать можно до {{ $maxPct }}% стоимости любого курса.
                     </p>
+                    <a href="{{ route('help.prana-balance') }}"
+                       class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-300 hover:text-white transition-colors mt-2">
+                        <i class="fas fa-circle-question"></i> Почему баланс уменьшился?
+                    </a>
                 </div>
                 <a href="{{ route('shop.index') }}"
                    class="inline-flex items-center justify-center px-6 py-3.5 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-sm font-extrabold rounded-xl transition-all shadow-lg shadow-orange-900/30 hover:-translate-y-0.5">

@@ -348,6 +348,10 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // H1481 hybrid chassis (R29 Phase 1): job-named pages. Controllers 404 when
     // features.cabinet_hybrid is OFF so prod is unchanged until the flag flips.
     Route::get('/library', [StudentController::class, 'library'])->name('student.library');
+
+    // Короткая help-страница «Почему баланс праны уменьшился?» (H1756) —
+    // закрывает частый вопрос поддержки про сгорание/списания праны.
+    Route::view('/help/prana-balance', 'help.prana-balance')->name('help.prana-balance');
     Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
     Route::get('/access', [StudentController::class, 'access'])->name('student.access');
 

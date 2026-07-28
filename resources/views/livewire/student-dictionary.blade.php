@@ -19,7 +19,7 @@
                        wire:model.live.debounce.300ms="search" 
                        type="text" 
                        class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all text-base font-medium" 
-                       placeholder="Введите слово (например: satya, истина, सत्)...">
+                       placeholder="Ищите деванагари, IAST, кириллицей или переводом: सत्य, satya, сатья, истина">
             </div>
 
             {{-- Фильтр --}}

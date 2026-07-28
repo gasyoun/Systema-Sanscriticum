@@ -70,6 +70,11 @@
                     @endforeach
                 </ul>
             </div>
+        @else
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Мои покупки</p>
+                <p class="text-sm text-gray-500">Здесь появятся ваши покупки за прану.</p>
+            </div>
         @endif
     </div>
 @endif

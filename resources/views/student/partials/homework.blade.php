@@ -2,10 +2,14 @@
     $hwStatus = $homeworkSubmission->status ?? null;
     $hwEditable = ! $homeworkSubmission || $homeworkSubmission->isEditableByStudent();
     $hwBadge = match($hwStatus) {
-        'submitted' => ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке'],
-        'needs_revision' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку'],
-        'accepted' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'fa-circle-check', 'Принято'],
-        'draft' => ['bg-gray-100 text-gray-600 border-gray-200', 'fa-pen', 'Черновик'],
+        'submitted' => ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке',
+            'Работа у куратора — ждите ответа, мы сообщим на почту.'],
+        'needs_revision' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку',
+            'Куратор вернул работу с комментариями — прочитайте замечания и отправьте снова.'],
+        'accepted' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'fa-circle-check', 'Принято',
+            'Задание зачтено — можно двигаться дальше.'],
+        'draft' => ['bg-gray-100 text-gray-600 border-gray-200', 'fa-pen', 'Черновик',
+            'Черновик сохранен, но еще не отправлен — дополните и отправьте, когда будете готовы.'],
         default => null,
     };
     $hwRefFiles = is_array($lesson->homework_attachments) ? $lesson->homework_attachments : [];
@@ -38,7 +42,8 @@
                 </div>
             </div>
             @if($hwBadge)
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap shrink-0 {{ $hwBadge[0] }}">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap shrink-0 cursor-help {{ $hwBadge[0] }}"
+                      title="{{ $hwBadge[3] }}">
                     <i class="fas {{ $hwBadge[1] }}"></i> {{ $hwBadge[2] }}
                 </span>
             @endif

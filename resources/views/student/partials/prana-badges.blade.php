@@ -39,4 +39,8 @@
             @endforeach
         </div>
     </div>
+@else
+    <div class="mb-6 rounded-2xl border border-dashed border-amber-200 bg-white p-5 text-center">
+        <p class="text-gray-500 text-sm">Здесь появятся ваши достижения — они открываются автоматически по мере учебы.</p>
+    </div>
 @endif
