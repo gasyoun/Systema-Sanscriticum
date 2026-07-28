@@ -62,7 +62,11 @@ class ViewHomeworkSubmission extends ViewRecord
                 ->color('success')
                 ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
                 ->form([
-                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_ACCEPTED, bodyRequired: false),
+                    ...HomeworkSubmissionResource::reviewCommentFields(
+                        HomeworkSubmission::STATUS_ACCEPTED,
+                        bodyRequired: false,
+                        draftKey: HomeworkSubmissionResource::reviewDraftKey($this->getRecord(), HomeworkSubmission::STATUS_ACCEPTED),
+                    ),
                     $this->feedbackFilesField(),
                 ])
                 ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_ACCEPTED, $data)),
@@ -73,7 +77,11 @@ class ViewHomeworkSubmission extends ViewRecord
                 ->color('danger')
                 ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
                 ->form([
-                    ...HomeworkSubmissionResource::reviewCommentFields(HomeworkSubmission::STATUS_NEEDS_REVISION, bodyRequired: true),
+                    ...HomeworkSubmissionResource::reviewCommentFields(
+                        HomeworkSubmission::STATUS_NEEDS_REVISION,
+                        bodyRequired: true,
+                        draftKey: HomeworkSubmissionResource::reviewDraftKey($this->getRecord(), HomeworkSubmission::STATUS_NEEDS_REVISION),
+                    ),
                     $this->feedbackFilesField(),
                 ])
                 ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_NEEDS_REVISION, $data)),

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\HomeworkSubmissionResource\Pages;
+use App\Models\HomeworkComment;
 use App\Models\HomeworkSubmission;
 use App\Services\HomeworkService;
 use App\Support\RoleGate;
@@ -15,6 +16,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Js;
 
 class HomeworkSubmissionResource extends Resource
 {
@@ -107,9 +109,13 @@ class HomeworkSubmissionResource extends Resource
     /**
      * Поля «шаблон + комментарий» для форм проверки (массовой и одиночной).
      *
+     * $draftKey задан → отзыв переживает закрытие модалки (черновик в localStorage
+     * браузера, см. reviewDraftKey()). Для массовой проверки ключа нет: он должен
+     * быть привязан к конкретной работе, а там произвольный набор выделенных строк.
+     *
      * @return array<int, Component>
      */
-    public static function reviewCommentFields(string $status, bool $bodyRequired): array
+    public static function reviewCommentFields(string $status, bool $bodyRequired, ?string $draftKey = null): array
     {
         return [
             Forms\Components\Select::make('template')
@@ -124,8 +130,70 @@ class HomeworkSubmissionResource extends Resource
                     ? 'Комментарий студенту (необязательно)'
                     : 'Что нужно исправить')
                 ->rows(4)
-                ->required($bodyRequired),
+                ->required($bodyRequired)
+                ->when(
+                    $draftKey !== null,
+                    fn (Forms\Components\Textarea $field): Forms\Components\Textarea => $field
+                        ->extraAlpineAttributes(static::reviewDraftAttributes($draftKey)),
+                ),
         ];
+    }
+
+    /**
+     * Alpine-обвязка черновика поверх штатного скоупа Filament-Textarea: у него уже
+     * есть переменная `state`, связанная с Livewire через $wire.$entangle, поэтому
+     * восстановление — обычное присваивание, без записи в DOM и без dispatch('input').
+     *
+     * Восстанавливаем ТОЛЬКО в пустое поле: выбор «Шаблона ответа» вызывает
+     * $set('body', ...) и перерисовку, и черновик не должен затирать то, что
+     * человек уже написал руками.
+     *
+     * @return array<string, string>
+     */
+    private static function reviewDraftAttributes(string $draftKey): array
+    {
+        $key = Js::from($draftKey);
+        $ttl = 24 * 60 * 60 * 1000; // сутки: дольше черновик отзыва не живёт
+
+        return [
+            // Пустое поле = черновика нет, иначе «стёр текст» осталось бы навсегда.
+            'x-on:input.debounce.500ms' => <<<JS
+                state
+                    ? localStorage.setItem({$key}, JSON.stringify({ v: state, t: Date.now() }))
+                    : localStorage.removeItem({$key})
+            JS,
+            'x-init' => <<<JS
+                \$nextTick(() => {
+                    try {
+                        const saved = JSON.parse(localStorage.getItem({$key}) ?? 'null');
+                        if (saved?.v && ! state && (Date.now() - saved.t) < {$ttl}) {
+                            state = saved.v;
+                        }
+                    } catch (e) {
+                        localStorage.removeItem({$key});
+                    }
+                })
+            JS,
+        ];
+    }
+
+    /**
+     * Ключ черновика отзыва. Версионируется числом уже сделанных проверок этой
+     * работы, и это же решает вопрос «когда чистить»: успешная проверка создаёт
+     * HomeworkComment(type=review), счётчик растёт, следующая модалка получает
+     * ДРУГОЙ ключ — старый черновик просто перестаёт быть виден. Никакого JS-плумбинга
+     * и никакой гонки с редиректом после сохранения.
+     *
+     * Считаем именно review-комментарии: иначе новое сообщение студента в треде
+     * обнулило бы валидный черновик преподавателя.
+     */
+    public static function reviewDraftKey(HomeworkSubmission $record, string $status): string
+    {
+        $reviewCount = $record->comments()
+            ->where('type', HomeworkComment::TYPE_REVIEW)
+            ->count();
+
+        return "hw-review-draft:{$record->id}:{$status}:{$reviewCount}";
     }
 
     /**

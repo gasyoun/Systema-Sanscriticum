@@ -28,6 +28,7 @@ use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -89,6 +90,21 @@ class AppServiceProvider extends ServiceProvider
 
         // 3. Локаль
         Carbon::setLocale('ru');
+
+        // Модалки админки не закрываются кликом по затемнению. Закрытие вызывает
+        // unmountAction() → array_pop(mountedActionsData), то есть введённые данные
+        // стираются НА СЕРВЕРЕ: перехватить и вернуть их нечем. Случай из жизни —
+        // преподаватель писал длинный отзыв к домашней работе, случайно кликнул мимо
+        // и потерял текст целиком.
+        //
+        // Esc сознательно оставлен рабочим: это WAI-ARIA-паттерн диалога и осознанный
+        // жест, в отличие от случайного клика. Закрыть модалку по-прежнему можно
+        // крестиком, кнопкой отмены и Esc.
+        //
+        // Правило глобальное (обе панели + любые x-filament::modal). Если конкретному
+        // действию старое поведение нужно — вернуть точечно:
+        // ->closeModalByClickingAway(true) перекрывает этот дефолт.
+        Modal::closedByClickingAway(false);
 
         ArticleView::observe(ArticleViewObserver::class);
 
