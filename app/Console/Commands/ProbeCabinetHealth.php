@@ -303,8 +303,12 @@ class ProbeCabinetHealth extends Command
                 return; // всё и так было нормально — молчим
             }
             $text = "✅ <b>Кабинет снова жив</b>\n"
-                ."samskrte.ru · cabinet:probe\n"
-                .'Smoke-login + поверхности снова 2xx.';
+                ."Сайт: https://samskrte.ru/\n"
+                ."Кабинет: https://samskrte.ru/dvaram\n"
+                ."Вход: https://samskrte.ru/login\n"
+                ."Админка: https://samskrte.ru/admin\n"
+                ."\n"
+                .'Проверка cabinet:probe прошла: вход smoke-менеджера и ключевые страницы снова отвечают 2xx.';
         } else {
             $lastAt = Cache::get(self::CACHE_LAST_ALERT_AT);
             if (! $force && $wasDown && $lastAt !== null) {
@@ -320,9 +324,15 @@ class ProbeCabinetHealth extends Command
                 array_slice($failures, 0, 8),
             );
             $text = "🚨 <b>Кабинет болен</b>\n"
-                ."samskrte.ru · cabinet:probe\n"
+                ."Сайт: https://samskrte.ru/\n"
+                ."Кабинет: https://samskrte.ru/dvaram\n"
+                ."Вход: https://samskrte.ru/login\n"
+                ."Админка: https://samskrte.ru/admin\n"
+                ."\n"
+                ."Что упало:\n"
                 .implode("\n", $lines)
-                ."\n\n<code>php artisan cabinet:probe</code>";
+                ."\n\n"
+                .'На сервере: <code>php artisan cabinet:probe</code>';
         }
 
         if ($this->option('dry')) {
