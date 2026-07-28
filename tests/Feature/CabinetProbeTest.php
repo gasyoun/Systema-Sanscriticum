@@ -221,7 +221,7 @@ class CabinetProbeTest extends TestCase
         Artisan::call('cabinet:probe');
         Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage')
             && ($r['chat_id'] ?? null) == '999001'
-            && str_contains((string) ($r['text'] ?? ''), 'Кабинет болен'));
+            && str_contains((string) ($r['text'] ?? ''), 'Личный кабинет не работает'));
 
         // Second fail within cooldown — no extra send.
         Http::fake([
@@ -252,6 +252,6 @@ class CabinetProbeTest extends TestCase
 
         $code = Artisan::call('cabinet:probe');
         $this->assertSame(0, $code);
-        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова жив'));
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова работает'));
     }
 }
