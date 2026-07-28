@@ -619,7 +619,7 @@
                                 <div class="msg-bubble {{ $message->bubbleClass() }}">
                                     {!! $message->htmlText() !!}
                                 </div>
-                                <div class="msg-time" title="{{ $message->sentAt->format('d.m.Y H:i') }}">{{ $message->sentAt->format('H:i') }}</div>
+                                <div class="msg-time" title="{{ \App\Support\ChatTimestamp::full($message->sentAt) }}">{{ \App\Support\ChatTimestamp::label($message->sentAt) }}</div>
                             </div>
                         </div>
                     @empty
@@ -741,7 +741,7 @@
                         <div class="msg-wrapper {{ $m->role }}">
                             <div class="msg-content">
                                 <div class="msg-bubble {{ $m->role }}-bubble">{!! $m->htmlForWeb() !!}</div>
-                                <div class="msg-time" title="{{ $m->created_at?->format('d.m.Y H:i') }}">{{ $m->created_at?->format('H:i') }}</div>
+                                <div class="msg-time" title="{{ \App\Support\ChatTimestamp::full($m->created_at) }}">{{ \App\Support\ChatTimestamp::label($m->created_at) }}</div>
                             </div>
                         </div>
                     @empty

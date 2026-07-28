@@ -57,7 +57,7 @@
                                 <span>
                                     {{ $message->role === 'user' ? 'Студент' : ($message->role === 'bot' ? '🤖 ИИ-Куратор' : '👨‍🏫 '.($message->answeredBy?->name ?? 'Куратор')) }}
                                 </span>
-                                <span title="{{ $message->created_at->format('d.m.Y H:i') }}">{{ $message->created_at->format('H:i') }}</span>
+                                <span title="{{ \App\Support\ChatTimestamp::full($message->created_at) }}">{{ \App\Support\ChatTimestamp::label($message->created_at) }}</span>
                             </div>
                             <div class="text-sm leading-relaxed whitespace-pre-wrap">{!! $message->htmlForWeb() !!}</div>
                         </div>
