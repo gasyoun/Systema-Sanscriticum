@@ -7,10 +7,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Services\VideoLinkNormalizer;
+use App\Support\TranscriptParser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class LessonController extends Controller
 {
@@ -139,6 +141,60 @@ class LessonController extends Controller
             'status' => 'success',
             'lesson_id' => $lesson->id,
             'created' => $wasCreated,
+        ]);
+    }
+
+    /**
+     * Приём расшифровки Deepgram из того же n8n-сценария обработки записи.
+     *
+     * Транскрипт с таймкодами — единственный источник границ для нарезки клипов
+     * (`ClipSpanPlanner` читает только `lesson.transcript_file`). До появления
+     * этой ручки Deepgram-ответ оседал в Google Drive и в субтитрах Rutube, а в
+     * LMS не попадал: на проде transcript_file был пуст у всех 1666 уроков, и
+     * «Нарезать лекцию» гарантированно давала пустой список спанов.
+     *
+     * Тело — сырой ответ Deepgram (или обёртка n8n): формат разбирает
+     * TranscriptParser, он же кэширует по mtime, поэтому перезаливка сама
+     * инвалидирует кэш плеера и лендинга.
+     */
+    public function storeTranscript(Request $request, Lesson $lesson)
+    {
+        if ($unauthorized = $this->guard($request)) {
+            return $unauthorized;
+        }
+
+        $payload = $request->input('transcript', $request->all());
+
+        if (! is_array($payload) || TranscriptParser::wordsFrom($payload) === []) {
+            // Молча сохранить пустышку хуже, чем отказать: урок выглядел бы
+            // готовым к нарезке, а спанов бы не было.
+            Log::warning('Lesson transcript: в теле нет слов Deepgram', [
+                'lesson_id' => $lesson->id,
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'no Deepgram words in payload (results.channels[0].alternatives[0].words)',
+            ], 422);
+        }
+
+        $path = 'transcripts/lesson-'.$lesson->id.'.json';
+        Storage::disk('public')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
+
+        $lesson->forceFill(['transcript_file' => $path])->save();
+
+        $sentences = TranscriptParser::sentencesFromPublicFile($path);
+
+        Log::info('Lesson transcript: сохранён', [
+            'lesson_id' => $lesson->id,
+            'sentences' => count($sentences),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'lesson_id' => $lesson->id,
+            'transcript_file' => $path,
+            'sentences' => count($sentences),
         ]);
     }
 
