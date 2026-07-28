@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **Тексты TG-алертов cabinet:probe — по-русски + полные URL.** Сообщения «болен / снова жив» с https://samskrte.ru/ , https://samskrte.ru/dvaram , https://samskrte.ru/login , https://samskrte.ru/admin . Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.62.0] - 2026-07-28
 
 ### Added
