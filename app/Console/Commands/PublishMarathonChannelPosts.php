@@ -14,6 +14,7 @@ use Throwable;
  * H1067 publish step 2 — channel posts to @samskrte.
  *
  * Bot: MarketingSetting.tg_bot_token / tg_bot_username (magnet bot, usually
+ *
  * @samskrte) — the same bot used for the Day 1–3 drip deep-link. That bot
  * must be an *administrator* of the channel with Post Messages permission.
  * Not the student-cabinet bot, not the zapisi booking bot.
@@ -53,6 +54,7 @@ final class PublishMarathonChannelPosts extends Command
 
             if (! empty($meta['requires_testimonial']) && trim((string) config('marathon.testimonial', '')) === '') {
                 $this->warn("Skip post {$n}: needs MARATHON_TESTIMONIAL (never invent).");
+
                 continue;
             }
 
