@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\DownloadTelegramZapisiMedia;
+use App\Jobs\ForwardUpdateToN8n;
 use App\Jobs\ProcessTelegramZapisiUpdate;
+use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
@@ -52,6 +54,73 @@ class ProcessTelegramZapisiUpdateTest extends TestCase
         $this->assertSame('ivan', $record['author_username']);
         $this->assertFalse($record['has_media']);
         $this->assertSame('Занятие сегодня в 18:00', $record['text']);
+    }
+
+    /**
+     * У бота ровно один вебхук: пока его держал n8n, наш прод не видел сообщений.
+     * Теперь вебхук наш, а n8n получает тот же поток форвардом — иначе его
+     * сценарий записи названий остался бы без данных.
+     */
+    public function test_update_is_forwarded_to_n8n_when_url_is_set(): void
+    {
+        Bus::fake();
+        MarketingSetting::create(['zapisi_n8n_forward_url' => 'http://192.168.200.91/webhook/abc']);
+
+        $update = [
+            'message' => [
+                'message_id' => 601,
+                'date' => 1751360400,
+                'text' => 'Тема занятия',
+                'chat' => ['id' => -1009988, 'type' => 'supergroup'],
+                'from' => ['id' => 42],
+            ],
+        ];
+
+        (new ProcessTelegramZapisiUpdate($update))->handle();
+
+        Bus::assertDispatched(ForwardUpdateToN8n::class, fn (ForwardUpdateToN8n $job): bool => $job->url === 'http://192.168.200.91/webhook/abc'
+            && $job->update === $update);
+    }
+
+    /**
+     * Форвард идёт ДО фильтров: сообщение без текста и медиа наш корпус
+     * отбрасывает, но n8n сам решает, что ему интересно.
+     */
+    public function test_update_filtered_out_locally_is_still_forwarded(): void
+    {
+        Bus::fake();
+        MarketingSetting::create(['zapisi_n8n_forward_url' => 'http://192.168.200.91/webhook/abc']);
+
+        (new ProcessTelegramZapisiUpdate([
+            'message' => [
+                'message_id' => 602,
+                'date' => 1751360400,
+                'chat' => ['id' => -1009988, 'type' => 'supergroup'],
+                'from' => ['id' => 42],
+                // ни текста, ни медиа — в корпус не попадёт
+            ],
+        ]))->handle();
+
+        Bus::assertDispatched(ForwardUpdateToN8n::class);
+    }
+
+    /** Адрес не задан — ничего никуда не шлём. */
+    public function test_no_forward_when_url_is_empty(): void
+    {
+        Bus::fake();
+        MarketingSetting::create(['zapisi_n8n_forward_url' => null]);
+
+        (new ProcessTelegramZapisiUpdate([
+            'message' => [
+                'message_id' => 603,
+                'date' => 1751360400,
+                'text' => 'Привет',
+                'chat' => ['id' => -1009988, 'type' => 'supergroup'],
+                'from' => ['id' => 42],
+            ],
+        ]))->handle();
+
+        Bus::assertNotDispatched(ForwardUpdateToN8n::class);
     }
 
     public function test_media_message_dispatches_download_job(): void
