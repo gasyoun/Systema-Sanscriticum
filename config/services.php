@@ -291,6 +291,15 @@ return [
         'password' => env('ADMIN_PASSWORD'),
     ],
 
+    // Smoke-менеджер для проверки входа / CRM (не super_admin).
+    // php artisan users:ensure-test-manager — идемпотентно, пароль только из .env.
+    'test_manager' => [
+        'email' => env('TEST_MANAGER_EMAIL', 'smoke-manager@samskrte.ru'),
+        'password' => env('TEST_MANAGER_PASSWORD'),
+        'name' => env('TEST_MANAGER_NAME', 'Smoke Manager'),
+    ],
+
+
     'lecture_builder' => [
         'url' => env('LECTURE_BUILDER_URL', 'http://127.0.0.1:5001'),
         'token' => env('LECTURE_BUILDER_TOKEN'),
