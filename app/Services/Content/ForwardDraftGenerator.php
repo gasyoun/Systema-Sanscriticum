@@ -8,6 +8,7 @@ use App\Models\DictionaryWord;
 use App\Models\Schedule;
 use App\Services\Bot\CuratorAi;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Drafts NEW copy for empty `forward`-type ContentCalendarSlot rows (H1567,
@@ -283,7 +284,19 @@ final class ForwardDraftGenerator
         ]);
 
         $generated = $generated !== null ? trim($generated) : '';
+        if ($generated === '') {
+            return $base;
+        }
 
-        return $generated !== '' ? $generated : $base;
+        $violation = VoiceContractLinter::violation($generated);
+        if ($violation !== null) {
+            Log::info('ForwardDraftGenerator: CuratorAi polish violated the voice contract, falling back to base', [
+                'rule' => $violation,
+            ]);
+
+            return $base;
+        }
+
+        return $generated;
     }
 }
