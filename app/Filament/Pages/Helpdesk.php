@@ -340,20 +340,24 @@ class Helpdesk extends Page
         }
 
         // Техвопрос из Telegram-чата: переписка в telegram_support_messages.
-        // Приводим к той же форме, что ждёт вьюха гостевого треда (role/text),
-        // чтобы не плодить второй шаблон ленты.
+        // Отдаём НЕСОХРАНЁННЫЕ ChatMessage, а не голые объекты: шаблон ленты общий
+        // и зовёт на элементах методы модели (htmlForWeb() экранирует текст).
+        // Простой stdClass ронял страницу пятисоткой — «Call to undefined method».
         if ($thread->source_telegram_chat_id !== null) {
             return $thread->telegramMessages()
                 ->orderBy('id')
                 ->get()
-                ->map(function (TelegramSupportMessage $message): object {
-                    return (object) [
-                        'id' => $message->id,
-                        'role' => $message->direction === 'outgoing' ? 'curator' : 'user',
+                ->map(function (TelegramSupportMessage $message): ChatMessage {
+                    $view = new ChatMessage([
                         'text' => (string) $message->text,
-                        'created_at' => $message->sent_at,
-                        'answeredBy' => null,
-                    ];
+                        'role' => $message->direction === 'outgoing' ? 'curator' : 'user',
+                    ]);
+
+                    $view->id = $message->id;
+                    $view->created_at = $message->sent_at;
+                    $view->exists = false; // ничего не сохраняем, это только для вывода
+
+                    return $view;
                 });
         }
 
