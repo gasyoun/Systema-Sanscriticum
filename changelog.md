@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **Срок жизни сессии поднят со 120 минут до 1440 (сутки) — H1765/H1774.** Ruling MG 28-07-2026 по следам разбора «419 Page Expired» на входе. Двухчасовая сессия означала, что вкладка, простоявшая обед, гарантированно ловит протухший CSRF-токен на сабмите: H1765 сделал этот случай проходимым (внятное сообщение вместо тупика), но не редким. Сутки убирают массовый сценарий «вкладка простояла ночь/обед», а не сутки-плюс — потому что на той же сессии сидят обе админки Filament, и держать её живой неделями на общем компьютере дороже, чем выигрыш в удобстве. Здесь меняется **только `.env.example`** (дефолт для новых окружений); на проде это правка `.env` + `php artisan optimize:clear && php artisan optimize`, шаг оператора. Остаточные источники промахов — bfcache и переход из встроенного браузера мессенджера в обычный — сроком сессии не лечатся и закрываются отдельно в [H1774](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1774-Sonnet_Systema-Sanscriticum_csrf-token-refresh-login-and-shop-modal_28.07.26.md) переиспользованием `GET /csrf-token`. Executor: Opus 5 1M (`claude-opus-5[1m]`).
+
 ### Added
 - **Smoke-менеджер из `.env` — `users:ensure-test-manager`.** Узкий `role=manager` для проверки входа и CRM без выдачи super_admin (те остаются у Гасунса и Ивана). `TEST_MANAGER_EMAIL` / `TEST_MANAGER_PASSWORD` / `TEST_MANAGER_NAME` в `.env` (шаблон в `.env.example`); пароль только на сервере, в git не попадает. Команда идемпотентна: создаёт или пере-синхронизирует пароль; no-op при пустом пароле; отказывается перезаписывать super_admin/admin/accountant/teacher и чужой student-email. 6 тестов. Executor: Grok 4.5 (`grok-4.5`).
 

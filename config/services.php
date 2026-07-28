@@ -299,7 +299,6 @@ return [
         'name' => env('TEST_MANAGER_NAME', 'Smoke Manager'),
     ],
 
-
     'lecture_builder' => [
         'url' => env('LECTURE_BUILDER_URL', 'http://127.0.0.1:5001'),
         'token' => env('LECTURE_BUILDER_TOKEN'),
