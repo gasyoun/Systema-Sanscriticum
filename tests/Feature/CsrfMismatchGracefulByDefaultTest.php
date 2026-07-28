@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Encryption\Encrypter;
-use Monolog\Handler\NullHandler;
+use Tests\Concerns\IsolatesCsrfMismatchLog;
 use Tests\TestCase;
 
 /**
@@ -32,6 +32,8 @@ use Tests\TestCase;
  */
 class CsrfMismatchGracefulByDefaultTest extends TestCase
 {
+    use IsolatesCsrfMismatchLog;
+
     /** Текст по умолчанию для обычного сабмита формы. */
     private const DEFAULT_HTML = 'Сессия обновилась — отправьте форму ещё раз.';
 
@@ -39,26 +41,21 @@ class CsrfMismatchGracefulByDefaultTest extends TestCase
     private const DEFAULT_JSON = 'Сессия обновилась — обновите страницу (F5) и попробуйте ещё раз.';
 
     /**
-     * Телеметрия H1773 пишет JSON-строки в НАСТОЯЩИЙ файл
-     * (`storage/logs/csrf-mismatch-*.log`), а `CsrfMismatchTelemetryTest`
-     * читает этот файл обратно и требует в нём РОВНО одну запись. На Windows
-     * файл с живым дескриптором Monolog не удаляется, поэтому `@unlink` в его
-     * setUp молча проваливается, и записи любого класса, отработавшего
-     * раньше, попадают в чужой счёт. Этот класс сортируется перед ним
-     * (`Graceful` < `Telemetry`) — то есть ломал бы его на ровном месте.
+     * Эти тесты бьют по настоящему CSRF-несовпадению, поэтому попутно пишут в
+     * канал телеметрии H1773. Проверяется здесь контракт ОТВЕТА, а не
+     * телеметрия (она закреплена своим тестом) — но записи всё равно нельзя
+     * ронять в общий файл: `CsrfMismatchTelemetryTest` читает его и требует
+     * ровно одну запись.
      *
-     * Здесь проверяется контракт ОТВЕТА, а не телеметрия (она закреплена
-     * своим тестом), поэтому канал уводится в никуда. Хрупкость самого
-     * порядко-зависимого теста этим не лечится — она отмечена в PR.
+     * Изначально (H1771) канал уводился в `NullHandler` — обход у одного
+     * вызывающего. Теперь используется общая изоляция каталога (#824),
+     * лечащая причину: и гонку между процессами paratest, и её
+     * однопроцессного двойника на Windows.
      */
     protected function setUp(): void
     {
         parent::setUp();
-
-        config(['logging.channels.csrf_mismatch' => [
-            'driver' => 'monolog',
-            'handler' => NullHandler::class,
-        ]]);
+        $this->isolateCsrfMismatchLog();
     }
 
     private function forceRealCsrfVerification(): void
