@@ -8,6 +8,7 @@ use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
 use App\Models\User;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
@@ -65,6 +66,73 @@ class HomeworkNotifier
             ->flatMap(fn (Group $group) => $group->reviewers)
             ->filter(fn (User $reviewer) => (bool) $reviewer->pivot->notify)
             ->reject(fn (User $reviewer) => (int) $reviewer->id === (int) $submission->user_id)
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Открылся приём ДЗ по уроку (H1764, D9) — студентам в мессенджеры.
+     *
+     * Получатели: активный состав группы урока; у общего урока (group_id пуст) —
+     * все активные студенты групп курса. Каналы — из
+     * `homework.auto_open.notify_channels`, письма среди них нет сознательно:
+     * письмо после каждого занятия превращается в шум.
+     *
+     * Форма и обработка ошибок скопированы с `HomeworkService::pushReviewToMessengers`:
+     * падение канала пишется в лог и НЕ роняет открытие урока.
+     */
+    public function opened(Lesson $lesson): void
+    {
+        $channels = (array) config('homework.auto_open.notify_channels', []);
+        if ($channels === []) {
+            return;
+        }
+
+        $course = $lesson->course;
+        if (! $course) {
+            return;
+        }
+
+        $lessonUrl = route('student.lesson', [$course->slug, $lesson->id]);
+        $title = $lesson->title ? " «{$lesson->title}»" : '';
+        $text = "📝 Открылось домашнее задание к уроку{$title}\n{$lessonUrl}";
+
+        foreach ($this->studentsFor($lesson) as $student) {
+            try {
+                if (in_array('telegram', $channels, true) && $student->telegram_id) {
+                    $student->sendTelegramMessage($text);
+                }
+                if (in_array('vk', $channels, true) && $student->vk_id) {
+                    $student->sendVkMessage($text);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Homework auto-open push failed', [
+                    'lesson_id' => $lesson->id,
+                    'user_id' => $student->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Кому уходит весть об открытии.
+     *
+     * @return Collection<int, User>
+     */
+    private function studentsFor(Lesson $lesson): Collection
+    {
+        if ($lesson->group_id) {
+            return Group::with('activeUsers')
+                ->find($lesson->group_id)
+                ?->activeUsers
+                ->values() ?? collect();
+        }
+
+        return Group::whereHas('courses', fn ($q) => $q->whereKey($lesson->course_id))
+            ->with('activeUsers')
+            ->get()
+            ->flatMap(fn (Group $group) => $group->activeUsers)
             ->unique('id')
             ->values();
     }

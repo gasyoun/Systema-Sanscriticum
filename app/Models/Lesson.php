@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\HomeworkAutoOpener;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,10 @@ class Lesson extends Model
         'homework_enabled',
         'homework_prompt',
         'homework_attachments',
+        // Занятие учебника (D7) — единственная из колонок автооткрытия, которую
+        // заполняет человек. Остальные четыре ставит только автомат, и массовое
+        // присваивание из формы им противопоказано.
+        'textbook_lesson',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив
@@ -55,6 +60,11 @@ class Lesson extends Model
         'duration_seconds' => 'integer',
         'homework_enabled' => 'boolean',
         'homework_attachments' => 'array',
+        'textbook_lesson' => 'integer',
+        'recording_attached_at' => 'datetime',
+        'homework_opens_at' => 'datetime',
+        'homework_auto_opened_at' => 'datetime',
+        'homework_closed_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -91,6 +101,16 @@ class Lesson extends Model
                 }
 
                 $lesson->block_number = 1;
+            }
+
+            // Точка отсчёта автооткрытия ДЗ (H1764, D2): момент, когда у урока
+            // ВПЕРВЫЕ появилась запись. Ставится РОВНО ОДИН РАЗ — перезаливка
+            // видео её не двигает, иначе замена битой записи уносила бы ДЗ
+            // вперёд на сутки. `homework_opens_at` материализуется здесь же,
+            // чтобы админ видел «когда», а не выводил это в уме.
+            if ($lesson->hasVideo() && blank($lesson->recording_attached_at)) {
+                $lesson->recording_attached_at = now();
+                $lesson->homework_opens_at = HomeworkAutoOpener::opensAtFor($lesson->recording_attached_at);
             }
         });
     }
@@ -144,6 +164,62 @@ class Lesson extends Model
     public function hasHomeworkMaterial(): bool
     {
         return (bool) $this->homework_enabled && filled($this->homework_prompt);
+    }
+
+    /**
+     * Открыт ли приём работ по этому уроку ДЛЯ ЭТОГО студента — единственная
+     * точка правды (H1764). Ею пользуются и серверный гейт `HomeworkController`,
+     * и витрина кабинета: две копии этого условия неизбежно разъедутся.
+     *
+     * = ДЗ включено И (приём не закрыт ИЛИ у студента есть точечный грант).
+     *
+     * Грантов в волне 1 ещё нет — ветка всегда даёт false, поэтому закрытый
+     * урок закрыт для всех. Метод написан сразу в финальной форме, чтобы
+     * волна 2 включала D12 внутри него, а не правила все вызывающие стороны.
+     */
+    public function homeworkOpenFor(?User $user): bool
+    {
+        if (! $this->homework_enabled) {
+            return false;
+        }
+
+        if (blank($this->homework_closed_at)) {
+            return true;
+        }
+
+        return $this->homeworkGrantExistsFor($user);
+    }
+
+    /** Точечный грант на закрытый приём (D12) — заводится волной 2. */
+    private function homeworkGrantExistsFor(?User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Уроки, которые пора открыть автоматом (H1764): курс в охвате пилота,
+     * занятие учебника в списке, ДЗ ещё не включено, автомат его не открывал
+     * и расчётный момент открытия уже наступил.
+     *
+     * Пустой `course_slugs` (значение по умолчанию) даёт заведомо пустую
+     * выборку — фича спит, пока курс не назван явно.
+     */
+    public function scopeAutoOpenCandidates(Builder $query): Builder
+    {
+        $slugs = (array) config('homework.auto_open.course_slugs', []);
+        $textbookLessons = (array) config('homework.auto_open.textbook_lessons', []);
+
+        if ($slugs === [] || $textbookLessons === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->whereHas('course', fn (Builder $c) => $c->whereIn('slug', $slugs))
+            ->whereIn('textbook_lesson', $textbookLessons)
+            ->where('homework_enabled', false)
+            ->whereNull('homework_auto_opened_at')
+            ->whereNotNull('homework_opens_at')
+            ->where('homework_opens_at', '<=', now());
     }
 
     public function hasFlashcards(): bool

@@ -28,7 +28,9 @@ class HomeworkController extends Controller
 
         $this->ensureLessonAccessible($user, $course, $lesson);
 
-        abort_unless((bool) $lesson->homework_enabled, 404, 'У этого урока нет домашнего задания.');
+        // Серверный гейт приёма — через единственную точку правды на модели
+        // (H1764). Без него закрытие приёма обходится прямым POST мимо витрины.
+        abort_unless($lesson->homeworkOpenFor($user), 404, 'У этого урока нет домашнего задания.');
 
         $maxFiles = (int) config('homework.max_files', 10);
         $maxFileKb = (int) config('homework.max_file_kb', 30720);

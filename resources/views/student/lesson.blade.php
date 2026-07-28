@@ -509,7 +509,7 @@
         @endif
 
         {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
-        @if($lesson->homework_enabled)
+        @if($homeworkOpen ?? $lesson->homework_enabled)
             @include('student.partials.homework')
         @else
             {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или ещё нет. --}}

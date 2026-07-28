@@ -326,6 +326,24 @@ class LessonResource extends Resource
                             ->columnSpanFull()
                             ->helperText('До 10 файлов, каждый до 50 МБ.')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('homework_enabled')),
+
+                        // --- АВТООТКРЫТИЕ (H1764) ---
+                        // Единственное поле контура, которое заполняет человек.
+                        // Без него урок в пилот не попадает: --dry-run покажет
+                        // пустой список, и это сигнал, а не тишина.
+                        Forms\Components\TextInput::make('textbook_lesson')
+                            ->label('Занятие учебника Кочергиной')
+                            ->helperText('Номер занятия, 1–40. Нужен для автооткрытия приёма ДЗ; пусто — урок в автооткрытии не участвует.')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(40),
+
+                        Forms\Components\Placeholder::make('homework_opens_at_display')
+                            ->label('Приём откроется автоматически')
+                            ->content(fn (?Lesson $record): string => $record?->homework_opens_at
+                                ? $record->homework_opens_at->timezone('Europe/Moscow')->format('d.m.Y H:i').' МСК'
+                                : 'Пока не рассчитано — момент появляется, когда у урока впервые загружена запись.')
+                            ->helperText('Считается автоматически: запись + выдержка, с выравниванием на утро. Вручную не редактируется.'),
                     ])
                     ->columnSpanFull(),
             ]);
