@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\MarketingSetting;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -37,6 +38,13 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
     public function handle(): void
     {
+        // Дублируем апдейт в n8n ДО любых фильтров: у бота может быть ровно один
+        // вебхук, и пока его держал n8n, наш прод не видел сообщений. Теперь вебхук
+        // наш, а n8n получает тот же поток, что раньше слал ему Telegram — иначе
+        // его сценарий («ловим названия» → Google Sheets) остался бы без данных.
+        // Отсекать здесь ничего нельзя: n8n сам решает, что ему интересно.
+        $this->forwardToN8n();
+
         $message = $this->update['message'] ?? $this->update['channel_post'] ?? null;
         if (! $message || ! isset($message['chat']['id'], $message['message_id'], $message['date'])) {
             return;
@@ -123,6 +131,21 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         }
 
         return $empty;
+    }
+
+    /**
+     * Форвард в n8n — отдельным джобом (та же очередь `webhooks`), чтобы недоступный
+     * n8n не мешал записи сообщения в корпус: у форварда свои ретраи и своя судьба.
+     */
+    private function forwardToN8n(): void
+    {
+        $url = trim((string) (MarketingSetting::cached()?->zapisi_n8n_forward_url ?? ''));
+
+        if ($url === '') {
+            return;
+        }
+
+        ForwardUpdateToN8n::dispatch($url, $this->update);
     }
 
     private function storeWriter(): HarvestStoreWriter

@@ -55,6 +55,7 @@ class MarketingSetting extends Model
         'zapisi_chat_id',
         'zapisi_reminder_lead_minutes',
         'zapisi_reminder_template',
+        'zapisi_n8n_forward_url',
 
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
         'student_maintenance_enabled',
