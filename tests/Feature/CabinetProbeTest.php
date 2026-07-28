@@ -255,4 +255,3 @@ class CabinetProbeTest extends TestCase
         Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова жив'));
     }
 }
-

@@ -41,7 +41,6 @@ return [
 
     'timeout' => (int) env('CABINET_PROBE_TIMEOUT', 15),
 
-
     // Маркеры, по которым страница считается «упавшей», даже при HTTP 200.
     'error_markers' => [
         'Whoops',
