@@ -188,6 +188,41 @@ class ForwardDraftFillTest extends TestCase
         $this->assertSame('CuratorAi-polished text', $draft['body']);
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function voiceContractViolationsProvider(): array
+    {
+        return [
+            'banned phrase (§3)' => ['Не упустите шанс — читаем санскритские тексты вместе.'],
+            'emoji (§5)' => ['Читаем санскритские тексты вместе 🎉 присоединяйтесь.'],
+            'hashtag (§7)' => ['Читаем санскритские тексты вместе. #санскрит'],
+            'question first line (§4)' => ["Хотите читать санскритские тексты в оригинале?\nПрисоединяйтесь к клубу."],
+            'markdown markers' => ['Читаем **санскритские** тексты вместе в клубе.'],
+            'length far outside §8' => [str_repeat('Читаем санскритские тексты вместе. ', 100)],
+        ];
+    }
+
+    /**
+     * @dataProvider voiceContractViolationsProvider
+     */
+    public function test_curator_ai_polish_falls_back_to_base_on_voice_contract_violation(string $violatingText): void
+    {
+        config(['services.openrouter.api_key' => 'test-key']);
+        Http::fake([
+            'openrouter.ai/*' => Http::response([
+                'choices' => [['message' => ['content' => $violatingText]]],
+                'model' => 'test-model',
+            ]),
+        ]);
+
+        $generator = app(ForwardDraftGenerator::class);
+        $draft = $generator->draft('reading_group_tease');
+
+        $this->assertNotSame($violatingText, $draft['body']);
+        $this->assertStringContainsString('Читательский клуб ОРС', $draft['body']);
+    }
+
     public function test_fill_forward_noops_when_flag_off_without_force(): void
     {
         config(['features.content_calendar' => false]);
