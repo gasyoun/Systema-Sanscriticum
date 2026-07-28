@@ -9,6 +9,7 @@ use App\Support\Roles;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\IsolatesCsrfMismatchLog;
 use Tests\TestCase;
 
 /**
@@ -28,12 +29,13 @@ use Tests\TestCase;
  */
 class CsrfMismatchDigestTest extends TestCase
 {
+    use IsolatesCsrfMismatchLog;
     use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->purgeCsrfMismatchLogs();
+        $this->isolateCsrfMismatchLog();
     }
 
     protected function tearDown(): void
@@ -42,16 +44,9 @@ class CsrfMismatchDigestTest extends TestCase
         parent::tearDown();
     }
 
-    private function purgeCsrfMismatchLogs(): void
-    {
-        foreach (glob(storage_path('logs/csrf-mismatch-*.log')) ?: [] as $file) {
-            @unlink($file);
-        }
-    }
-
     private function seedMismatches(int $count, string $route = 'login.post', ?string $datetime = null): void
     {
-        $file = storage_path('logs/csrf-mismatch-'.now()->format('Y-m-d').'.log');
+        $file = $this->csrfMismatchLogPathForToday();
         $lines = [];
         for ($i = 0; $i < $count; $i++) {
             $lines[] = json_encode([

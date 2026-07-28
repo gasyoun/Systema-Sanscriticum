@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Encryption\Encrypter;
+use Tests\Concerns\IsolatesCsrfMismatchLog;
 use Tests\TestCase;
 
 /**
@@ -28,10 +29,12 @@ use Tests\TestCase;
  */
 class CsrfMismatchTelemetryTest extends TestCase
 {
+    use IsolatesCsrfMismatchLog;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->purgeCsrfMismatchLogs();
+        $this->isolateCsrfMismatchLog();
     }
 
     protected function tearDown(): void
@@ -40,20 +43,13 @@ class CsrfMismatchTelemetryTest extends TestCase
         parent::tearDown();
     }
 
-    private function purgeCsrfMismatchLogs(): void
-    {
-        foreach (glob(storage_path('logs/csrf-mismatch-*.log')) ?: [] as $file) {
-            @unlink($file);
-        }
-    }
-
     /**
      * @return list<array<string, mixed>>
      */
     private function loggedEntries(): array
     {
         $entries = [];
-        foreach (glob(storage_path('logs/csrf-mismatch-*.log')) ?: [] as $file) {
+        foreach ($this->csrfMismatchLogFiles() as $file) {
             foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
                 $decoded = json_decode($line, true);
                 if (is_array($decoded)) {
