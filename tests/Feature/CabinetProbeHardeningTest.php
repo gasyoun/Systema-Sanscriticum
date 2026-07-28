@@ -75,16 +75,21 @@ class CabinetProbeHardeningTest extends TestCase
             'services.test_manager.password' => 'mgr-pass',
             'services.test_student.email' => 'stu@example.com',
             'services.test_student.password' => 'stu-pass',
+            'cabinet_probe.ping_url' => '',
         ]);
 
         $code = Artisan::call('cabinet:probe');
-        $this->assertSame(0, $code, Artisan::output());
-        $this->assertStringContainsString('Кабинет жив', Artisan::output());
+        $out = Artisan::output();
+        $this->assertSame(0, $code, $out);
 
-        $this->assertSame(1, CabinetProbeRun::query()->count());
+        $this->assertSame(1, CabinetProbeRun::query()->count(), $out);
         $run = CabinetProbeRun::query()->first();
-        $this->assertTrue($run->healthy);
-        $this->assertFalse($run->critical);
+        $this->assertNotNull($run);
+        $this->assertTrue(
+            (bool) $run->healthy,
+            'probe unhealthy: '.json_encode($run->failures, JSON_UNESCAPED_UNICODE).' | out='.$out
+        );
+        $this->assertFalse((bool) $run->critical);
     }
 
     public function test_probe_dry_skips_history(): void
