@@ -1,14 +1,30 @@
 # Комм-пакет марафона — когорта 28-08-2026
 
-_Created: 17-07-2026 · Last updated: 17-07-2026_
+_Created: 17-07-2026 · Last updated: 28-07-2026_
 
-Готовые к вставке русские тексты для первой когорты 3-дневной «Консультации по
-онлайн-курсам Общества ревнителей санскрита» (28-08-2026). Пакет — **авторская
-заготовка, не публикация**: публикует человек (MG/Иван) по шагам из
-[DEPLOY_QUEUE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)
-и [MARATHON_ACTIVATION_CHECKLIST.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/MARATHON_ACTIVATION_CHECKLIST.md);
-агент ничего не деплоит. Составлено Fable 5 (`claude-fable-5`) по
-[H1067](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1067-Fable_Systema-Sanscriticum_marathon-cohort-ru-comms-pack_16.07.26.md).
+Готовые русские тексты для первой когорты 3-дневной «Консультации по
+онлайн-курсам Общества ревнителей санскрита» (28-08-2026). Авторство H1067
+(Fable 5 `claude-fable-5`, [PR #544](https://github.com/gasyoun/Systema-Sanscriticum/pull/544)).
+
+**Публикация (28-07-2026, Grok 4.5 `grok-4.5`):** вариант **A** вшит в
+`/online/konsultaciya` (config `marathon_landing_copy`, default `a`); **B** —
+второй этап через `MARATHON_LANDING_COPY_VARIANT=b` + `config:clear`.
+
+```bash
+# 1) LandingPage-строка (Filament/slug) = вариант A, затем B
+php artisan marathon:apply-landing-copy a
+# позже: php artisan marathon:apply-landing-copy b
+#        + MARATHON_LANDING_COPY_VARIANT=b && php artisan config:clear
+
+# 2) TG-посты канала @samskrte (магнит-бот из Marketing Settings)
+php artisan marathon:publish-channel-posts --post=1          # dry-run
+php artisan marathon:publish-channel-posts --post=1 --live   # реальная отправка
+```
+
+Бот для канала: **тот же магнит-бот** (`MarketingSetting.tg_bot_token` /
+`tg_bot_username`, обычно `@samskrte`) — он уже гоняет Day 1–3 drip. Ему
+нужны права **администратора канала** @samskrte с «Публикация сообщений».
+Не student-bot, не zapisi-bot.
 
 ## Состав пакета
 
