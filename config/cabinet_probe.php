@@ -15,19 +15,32 @@ return [
     | (TEST_MANAGER_*) in-process и дёргает несколько GET-поверхностей.
     |
     | Fail-open: без TEST_MANAGER_PASSWORD команда no-op и SUCCESS; любая
-    | сетевая ошибка healthchecks не роняет слот планировщика. Тревога
-    | — через CABINET_PROBE_PING_URL (healthchecks.io /fail при поломке).
+    | сетевая ошибка healthchecks/Telegram не роняет слот планировщика.
+    |
+    | Тревоги (можно комбинировать):
+    |   1) CABINET_PROBE_PING_URL — healthchecks.io (silence → alert)
+    |   2) CABINET_PROBE_TELEGRAM_CHAT_ID — TG-чат(ы) через основной бот
+    |      (TELEGRAM_BOT_TOKEN). По умолчанию = ADMIN_TELEGRAM_ID.
+    |      Несколько id через запятую. Пусто явно — TG выключен.
     |
     */
 
     // Пусто = не пинговать внешний сторож (сам probe всё равно логирует).
     'ping_url' => (string) env('CABINET_PROBE_PING_URL', ''),
 
+    // Telegram chat_id(s) for failure + recovery. Default ADMIN_TELEGRAM_ID.
+    // Set CABINET_PROBE_TELEGRAM_CHAT_ID= (empty) to disable TG even if admin is set.
+    'telegram_chat_id' => env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),
+
+    // Не слать повторный «болен» чаще, чем раз в N минут (пока кабинет лежит).
+    'telegram_cooldown_minutes' => (int) env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
+
     // Частота. 15 мин: тяжелее, чем heartbeat:ping (рендер Blade/Filament),
     // но достаточно, чтобы «кабинет лежит» не ждал GitHub-крона часами.
     'cron' => (string) env('CABINET_PROBE_CRON', '*/15 * * * *'),
 
     'timeout' => (int) env('CABINET_PROBE_TIMEOUT', 15),
+
 
     // Маркеры, по которым страница считается «упавшей», даже при HTTP 200.
     'error_markers' => [
