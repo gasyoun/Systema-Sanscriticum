@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.61.0] - 2026-07-28
+
 ### Added
 - **TG-алерт пульса кабинета (H1777 follow-up).** `cabinet:probe` при падении шлёт HTML-сообщение основным ботом (`TELEGRAM_BOT_TOKEN`) в `CABINET_PROBE_TELEGRAM_CHAT_ID` (по умолчанию `ADMIN_TELEGRAM_ID`); cooldown 60 мин, «снова жив» один раз после восстановления; sync-HTTP без очереди (не зависит от Horizon); `--force-alert` игнорирует cooldown. healthchecks.io по-прежнему опционален. Executor: Grok 4.5 (`grok-4.5`).
 
