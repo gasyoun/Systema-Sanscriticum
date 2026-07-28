@@ -48,6 +48,10 @@ class Payment extends Model
         'consumed_amount',
         'deposit_credit_applied',
         'status',
+        // Момент первого входа в оплаченный статус — резервная опора
+        // resurrection-guard'а, не зависящая от payment_audits (H1645).
+        // Стамповается один раз (fireOnPaid) и никогда не перезаписывается.
+        'first_paid_at',
         // Возврат за конкретный платёж (H352): у платежа-«Расход» указывает
         // исходную оплату, чью выручку усекать по месяц возврата.
         'refund_of_payment_id',
@@ -95,6 +99,7 @@ class Payment extends Model
         'discount_amount' => 'decimal:2',
         'foreign_amount' => 'decimal:2',
         'referral_credit_applied' => 'decimal:2',
+        'first_paid_at' => 'datetime',
         'deposit_consumed_at' => 'datetime',
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
@@ -167,13 +172,37 @@ class Payment extends Model
      * Payment и PaymentAudit — сиблинги от Model, поэтому `$audit->changes`
      * ИЗ ЭТОГО класса читает пустое protected-свойство, а НЕ атрибут. Берём
      * значение только через getAttribute(), иначе связь не срабатывает.
+     *
+     * H1645: `first_paid_at` — прямая, независимая от аудита опора — проверяется
+     * первой. Она стамповается write-путём (fireOnPaid + create-as-paid payloads)
+     * и бэкфиллится командой `payments:backfill-first-paid-at`, так что покрывает
+     * и «до-аудитную» эпоху (PaymentAuditObserver существует только с 08-06-2026),
+     * и withoutEvents-пути создания уже-оплаченных платежей, невидимые аудиту.
+     * Аудит-обход остаётся фолбэком, пока колонка не забэкфилена, и теперь
+     * инспектирует ОБЕ стороны диффа ($status[0] и $status[1]) — было: только
+     * новое значение, из-за чего запись paid→failed (новое = failed) была
+     * невидима, хотя старое значение доказывает, что платёж был оплачен.
      */
     public function hasPriorPaidTransition(): bool
     {
+        if ($this->first_paid_at !== null) {
+            return true;
+        }
+
         foreach ($this->audits()->get() as $audit) {
             $status = $audit->getAttribute('changes')['status'] ?? null;
-            $newStatus = is_array($status) ? ($status[1] ?? null) : $status;
-            if (in_array($newStatus, self::PAID_STATUSES, true)) {
+
+            if (! is_array($status)) {
+                if (in_array($status, self::PAID_STATUSES, true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (in_array($status[0] ?? null, self::PAID_STATUSES, true)
+                || in_array($status[1] ?? null, self::PAID_STATUSES, true)
+            ) {
                 return true;
             }
         }
@@ -515,6 +544,29 @@ class Payment extends Model
      */
     private static function fireOnPaid(Payment $payment): void
     {
+        // H1645: штамп момента первого входа в оплаченный статус — резервная
+        // опора resurrection-guard'а (hasPriorPaidTransition), не зависящая от
+        // payment_audits. Один раз, никогда не перезаписывается.
+        //
+        // ВНИМАНИЕ: fireOnPaid вызывается ИЗНУТРИ static::updated — одного из
+        // НЕСКОЛЬКИХ слушателей события 'updated' (PaymentObserver и другие
+        // регистрируются отдельно). Нельзя стампить через $payment->save()/
+        // updateQuietly() — они вызывают syncOriginal()/syncChanges() на ЭТОМ
+        // же инстансе и тем самым портят isDirty('status')/wasChanged('status')
+        // для слушателей, которые выполнятся ПОСЛЕ нас в том же проходе
+        // диспетчера (PaymentObserver::updated проверяет isDirty('status') —
+        // с save() внутри fireOnPaid реферальная/партнёрская награда переставала
+        // начисляться на pending->paid переходе). setAttribute() — только
+        // in-memory, без events и без синка $original; персист — отдельным
+        // withoutEvents-запросом, не через текущий инстанс.
+        if ($payment->first_paid_at === null) {
+            $timestamp = now();
+            Payment::withoutEvents(
+                fn () => Payment::query()->whereKey($payment->getKey())->update(['first_paid_at' => $timestamp])
+            );
+            $payment->setAttribute('first_paid_at', $timestamp);
+        }
+
         // Системный расход / возврат и выплата ЗП преподавателю — только
         // бухгалтерская строка. Никакого доступа, писем, праны, Telegram.
         if ($payment->isExpense() || $payment->isSalaryPayout()) {

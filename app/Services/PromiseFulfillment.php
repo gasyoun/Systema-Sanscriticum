@@ -49,6 +49,12 @@ class PromiseFulfillment
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
                 'transaction_id' => $transactionId,
+                // H1645: создаётся уже оплаченным — на silent-пути (withoutEvents)
+                // Payment::booted::created (fireOnPaid) не срабатывает, значит
+                // некому проставить first_paid_at. Пишем прямо в payload — общий
+                // для обеих веток, на не-silent пути fireOnPaid просто увидит
+                // непустое значение и не тронет его повторно.
+                'first_paid_at' => now(),
             ];
 
             if ($silent) {

@@ -82,6 +82,8 @@ class BlockAccessMaterializer
                     'end_block' => $n,
                     'is_conditional' => false,
                     'transaction_id' => self::GRANT_PREFIX.$payment->id,
+                    // H1645: withoutEvents create-as-paid — fireOnPaid не сработает.
+                    'first_paid_at' => now(),
                 ]));
 
                 $ownedKeys[$key] = true; // защита от повтора внутри одного прогона

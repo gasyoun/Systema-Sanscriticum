@@ -298,6 +298,8 @@ class ConditionalAccessGranter
             'transaction_id' => 'promise_grant_#'.$promise->id,
             'is_conditional' => true,
             'linked_promise_id' => $promise->id,
+            // H1645: withoutEvents create-as-paid — fireOnPaid не сработает.
+            'first_paid_at' => now(),
         ]));
     }
 
