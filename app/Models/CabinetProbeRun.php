@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * История прогонов cabinet:probe (H1794).
  *
  * @property int $id
- * @property \Illuminate\Support\Carbon $ran_at
+ * @property Carbon $ran_at
  * @property bool $healthy
  * @property bool $critical
  * @property int $duration_ms

@@ -307,7 +307,6 @@ return [
         'name' => env('TEST_STUDENT_NAME', 'Smoke Student'),
     ],
 
-
     'lecture_builder' => [
         'url' => env('LECTURE_BUILDER_URL', 'http://127.0.0.1:5001'),
         'token' => env('LECTURE_BUILDER_TOKEN'),

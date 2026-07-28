@@ -513,7 +513,7 @@ class ProbeCabinetHealth extends Command
         if (! is_array($steps) || $steps === []) {
             return '<code>php artisan cabinet:probe</code>';
         }
-        $lines = ["<b>Runbook</b>:"];
+        $lines = ['<b>Runbook</b>:'];
         foreach ($steps as $step) {
             $lines[] = '• <code>'.e((string) $step).'</code>';
         }
