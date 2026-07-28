@@ -177,13 +177,23 @@ n8n гигабайты не гоняются вовсе — наружу вых�
 ```
 
 Флаг `CLIP_MARKETING_ENABLED=false` → Laravel callback 404; job early-return.
-**Никогда не коммитьте живые VK-токены** — ноды ffmpeg/VK в JSON — плейсхолдеры.
+**Никогда не коммитьте живые VK-токены** — поэтому токен и id сообщества берутся
+из env n8n, а не лежат в JSON.
 
 ## Настройка после импорта
 
 1. Import `lecture-clip-extract.workflow.json`.
-2. Заменить URL ffmpeg-worker и VK-uploader (или переписать ноды на native VK API).
-3. Env n8n: `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
+2. В нодах `Нарезать и залить в VK` и `Убрать исходник` проверить, что подставился
+   SSH-кред `n8n` (тот же, что у «Скачиваем аудио» в ZOOM-сценарии). На хосте нужны
+   `yt-dlp`, `ffmpeg`, `curl`, `python3`.
+3. Env n8n:
+   - `VK_ACCESS_TOKEN` — community-токен с правом **`video`** (одних `photos`+`wall`,
+     как у кросспостинга, не хватит: заливка идёт через `video.save`);
+   - `VK_VIDEO_GROUP_ID` — числовой id сообщества, куда льём клипы;
+   - `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
+
+   Нода «Собрать команду» падает с внятным сообщением, если токен или id не заданы, —
+   молча залить «в никуда» она не может.
 4. Activate, copy Production webhook URL.
 5. Laravel `.env`:
    ```
