@@ -8,6 +8,7 @@ use App\Models\MessageTemplate;
 use App\Models\ReminderSuggestion;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
+use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\ClassAttendanceService;
 use App\Services\Reminders\ReminderSuggestionService;
@@ -115,11 +116,19 @@ class Helpdesk extends Page
      * поэтому он не попадает в user-keyed выборку выше. Не фильтруется вкладками
      * (inbox/mine/resolved — это про user-треды) — гости всегда «входящие».
      */
+    /**
+     * Треды без users-записи: гости веб-виджета (guest_token) И техвопросы из
+     * Telegram-чатов от непривязанных авторов (source_telegram_chat_id).
+     * Вторые появились, когда роутер перестал терять вопрос из-за отсутствия
+     * привязки — ни приём, ни ответ её не требуют, юзербот работает по chat_id.
+     */
     protected function loadGuestThreads(): void
     {
         $this->guestThreads = SupportConversation::query()
             ->whereNull('user_id')
-            ->whereNotNull('guest_token')
+            ->where(fn ($query) => $query
+                ->whereNotNull('guest_token')
+                ->orWhereNotNull('source_telegram_chat_id'))
             ->where('status', '!=', SupportConversation::STATUS_CLOSED)
             ->withCount(['chatMessages as unread_count' => function ($query): void {
                 $query->where('is_read', false)->where('role', 'user');
@@ -127,14 +136,22 @@ class Helpdesk extends Page
             ->orderByDesc('last_message_at')
             ->get()
             ->map(function (SupportConversation $thread): array {
-                $last = $thread->chatMessages()->orderByDesc('id')->first();
+                $isTelegram = $thread->source_telegram_chat_id !== null;
+
+                // У телеграм-треда переписка лежит в telegram_support_messages,
+                // а не в chatMessages: у него нет веб-виджета, откуда бы шли те.
+                $last = $isTelegram
+                    ? $thread->telegramMessages()->orderByDesc('id')->first()
+                    : $thread->chatMessages()->orderByDesc('id')->first();
 
                 return [
                     'id' => $thread->id,
                     'name' => $thread->displayName(),
                     'unread' => (int) $thread->unread_count,
-                    'preview' => $last ? mb_strimwidth(strip_tags($last->text), 0, 42, '…') : '',
+                    'preview' => $last ? mb_strimwidth(strip_tags((string) $last->text), 0, 42, '…') : '',
                     'location' => $thread->locationLabel(), // город/страна посетителя (H1196)
+                    'source' => $isTelegram ? 'telegram' : 'web',
+                    'is_technical' => $thread->isTechnical(),
                 ];
             })
             ->all();
@@ -322,6 +339,24 @@ class Helpdesk extends Page
             return collect();
         }
 
+        // Техвопрос из Telegram-чата: переписка в telegram_support_messages.
+        // Приводим к той же форме, что ждёт вьюха гостевого треда (role/text),
+        // чтобы не плодить второй шаблон ленты.
+        if ($thread->source_telegram_chat_id !== null) {
+            return $thread->telegramMessages()
+                ->orderBy('id')
+                ->get()
+                ->map(function (TelegramSupportMessage $message): object {
+                    return (object) [
+                        'id' => $message->id,
+                        'role' => $message->direction === 'outgoing' ? 'curator' : 'user',
+                        'text' => (string) $message->text,
+                        'created_at' => $message->sent_at,
+                        'answeredBy' => null,
+                    ];
+                });
+        }
+
         return $thread->chatMessages()
             ->with('answeredBy:id,name')
             ->orderBy('id')
@@ -344,6 +379,14 @@ class Helpdesk extends Page
             return;
         }
 
+        // Техвопрос из Telegram-чата: у автора нет users-записи, но есть чат —
+        // отвечаем туда юзерботом, реплаем на исходное сообщение.
+        if ($thread->source_telegram_chat_id !== null) {
+            $this->replyToTelegramThread($thread);
+
+            return;
+        }
+
         $curator = auth()->user();
 
         $curatorMessage = ChatMessage::create([
@@ -363,6 +406,27 @@ class Helpdesk extends Page
         $this->loadUsersList();
 
         Notification::make()->title('Ответ отправлен гостю')->success()->send();
+    }
+
+    /** Ответ юзерботом в исходный Telegram-чат (тред без users-записи). */
+    private function replyToTelegramThread(SupportConversation $thread): void
+    {
+        $sent = app(SupportReplyService::class)
+            ->replyToUnlinkedThread($thread, $this->newMessage, auth()->user());
+
+        if (! $sent) {
+            Notification::make()
+                ->title('Не удалось отправить: чат не найден в синке')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $this->newMessage = '';
+        $this->loadUsersList();
+
+        Notification::make()->title('Ответ отправлен в Telegram')->success()->send();
     }
 
     /**

@@ -118,6 +118,53 @@ class SupportConversationManager
         return $thread;
     }
 
+    /**
+     * Тред техвопроса из Telegram-чата, автор которого НЕ привязан к аккаунту.
+     *
+     * Раньше такие сообщения молча отбрасывались: роутер требовал users-запись,
+     * хотя ни приём, ни ответ её не используют — юзербот читает и отвечает по
+     * telegram_chat_id. В итоге вопрос из учебного чата не доходил до куратора,
+     * если студент не нажимал «Подключить Telegram». Тред без user_id —
+     * ровно тот же приём, что у гостей веб-виджета (см. openForGuest).
+     *
+     * Ключ — пара «чат + автор»: в общем чате пишут разные люди, и мешать их
+     * вопросы в один тред нельзя. Автор берётся из telegram_user_id сообщения.
+     */
+    public function openForTelegramChat(
+        int $chatId,
+        ?int $telegramUserId,
+        ?string $authorName = null,
+    ): SupportConversation {
+        $thread = SupportConversation::query()
+            ->whereNull('user_id')
+            ->where('source_telegram_chat_id', $chatId)
+            ->when(
+                $telegramUserId !== null,
+                fn ($query) => $query->where('source_telegram_user_id', $telegramUserId),
+                fn ($query) => $query->whereNull('source_telegram_user_id'),
+            )
+            ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $thread) {
+            return SupportConversation::create([
+                'source_telegram_chat_id' => $chatId,
+                'source_telegram_user_id' => $telegramUserId,
+                'guest_name' => $authorName,
+                'status' => SupportConversation::STATUS_OPEN,
+                'last_message_at' => now(),
+            ]);
+        }
+
+        // Имя, если появилось позже, дописываем; существующее не затираем.
+        if ($authorName && ! $thread->guest_name) {
+            $thread->forceFill(['guest_name' => $authorName])->save();
+        }
+
+        return $thread;
+    }
+
     /** Открыть/переоткрыть гостевой тред и привязать сообщение (H536 Phase 2). */
     public function recordGuestMessage(
         string $guestToken,

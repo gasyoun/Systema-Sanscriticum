@@ -111,6 +111,58 @@ class SupportReplyService
         return $message;
     }
 
+    /**
+     * Ответ в тред БЕЗ users-записи — техвопрос из Telegram-чата от непривязанного
+     * автора. Отличие от {@see replyViaSupportChannel} только в том, откуда берётся
+     * чат: там от пользователя, здесь от самого треда. Дальше всё то же — pending
+     * outgoing + DeliverSupportReply, который пишет юзерботом по chat_id.
+     */
+    public function replyToUnlinkedThread(SupportConversation $thread, string $text, ?User $curator): ?TelegramSupportMessage
+    {
+        if (! $thread->source_telegram_chat_id) {
+            return null;
+        }
+
+        $chat = TelegramSupportChat::query()
+            ->where('telegram_chat_id', (int) $thread->source_telegram_chat_id)
+            ->first();
+
+        if (! $chat) {
+            return null;
+        }
+
+        $accountId = $chat->messages()->max('telegram_support_account_id')
+            ?? TelegramSupportAccount::query()->min('id');
+
+        if (! $accountId) {
+            return null;
+        }
+
+        $message = $this->createPendingOutgoing(
+            (int) $accountId,
+            $chat,
+            $text,
+            $curator,
+            $thread->source_telegram_message_id ? (int) $thread->source_telegram_message_id : null,
+        );
+
+        $this->conversations->attach($thread, $message, $message->sent_at);
+
+        $queued = (bool) config('services.telegram_support.enabled');
+        if ($queued) {
+            DeliverSupportReply::dispatch($message->id);
+        }
+
+        Log::info('SupportReplyService: ответ в тред без привязки записан', [
+            'thread_id' => $thread->id,
+            'chat_id' => $chat->telegram_chat_id,
+            'message_id' => $message->id,
+            'delivery_queued' => $queued,
+        ]);
+
+        return $message;
+    }
+
     private function resolveTargetChat(User $user, ?SupportConversation $thread): ?TelegramSupportChat
     {
         if ($thread?->source_telegram_chat_id) {
