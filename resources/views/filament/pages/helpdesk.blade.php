@@ -447,12 +447,17 @@
                     @endif
                 @endforelse
 
-                {{-- Гостевые треды веб-чата: user_id = NULL, вне user-keyed списка (H536 Phase 5) --}}
+                {{-- Треды без users-записи: гости веб-чата (H536 Phase 5) и техвопросы
+                     из Telegram-чатов от непривязанных авторов. --}}
                 @if(!empty($guestThreads))
-                    <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; background: #f9fafb;">Гости (веб-чат)</div>
+                    <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; background: #f9fafb;">Без привязки</div>
                     @foreach($guestThreads as $g)
                         <button wire:click="selectGuest({{ $g['id'] }})" class="chat-user-item {{ $activeGuestId == $g['id'] ? 'active' : '' }}">
-                            <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">Г</div>
+                            @if(($g['source'] ?? 'web') === 'telegram')
+                                <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;" title="Техвопрос из Telegram-чата">TG</div>
+                            @else
+                                <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">Г</div>
+                            @endif
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                                     <strong style="font-size: 14px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['name'] }}</strong>
@@ -460,7 +465,10 @@
                                         <span style="background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 99px; font-weight: bold;">{{ $g['unread'] }}</span>
                                     @endif
                                 </div>
-                                <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: 'Гость сайта' }}</div>
+                                <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: (($g['source'] ?? 'web') === 'telegram' ? 'Telegram-чат' : 'Гость сайта') }}</div>
+                                @if(!empty($g['is_technical']))
+                                    <div style="font-size: 11px; color: #b45309; margin-top: 2px;">🔧 Техника</div>
+                                @endif
                                 @if(!empty($g['location']))
                                     <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">📍 {{ $g['location'] }}</div>
                                 @endif
@@ -679,15 +687,27 @@
                     </div>
                 </div>
             @elseif($activeGuestId)
-                {{-- ГОСТЕВОЙ ЧАТ (user_id = NULL): аноним с сайта, только веб-канал (H536 Phase 5) --}}
-                @php $guestThread = $this->guestThread; @endphp
+                {{-- ТРЕД БЕЗ users-ЗАПИСИ: аноним с сайта (H536 Phase 5) ИЛИ техвопрос
+                     из Telegram-чата от непривязанного автора — ответ уходит юзерботом. --}}
+                @php
+                    $guestThread = $this->guestThread;
+                    $isTelegramThread = $guestThread?->source_telegram_chat_id !== null;
+                @endphp
                 <div class="chat-header">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;">Г</div>
+                        @if($isTelegramThread)
+                            <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;">TG</div>
+                        @else
+                            <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;">Г</div>
+                        @endif
                         <div>
                             <div style="font-weight: bold; font-size: 16px; color: #111827;">{{ $guestThread?->displayName() ?? 'Гость' }}</div>
                             <div style="font-size: 12px; margin-top: 2px; color: #6b7280;">
-                                Аноним · веб-чат сайта@if($guestThread?->locationLabel()) · 📍 {{ $guestThread->locationLabel() }}@endif
+                                @if($isTelegramThread)
+                                    Не привязан к аккаунту · ответ уйдёт в Telegram-чат@if($guestThread?->isTechnical()) · 🔧 Техника @endif
+                                @else
+                                    Аноним · веб-чат сайта@if($guestThread?->locationLabel()) · 📍 {{ $guestThread->locationLabel() }}@endif
+                                @endif
                             </div>
                             @if($guestThread?->entry_url)
                                 <div style="font-size: 11px; margin-top: 2px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px;" title="{{ $guestThread->entry_url }}">🔗 {{ $guestThread->entry_url }}</div>

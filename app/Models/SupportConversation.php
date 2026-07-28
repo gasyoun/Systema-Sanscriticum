@@ -47,6 +47,7 @@ class SupportConversation extends Model
         'subject',
         'assigned_to',
         'source_telegram_chat_id',
+        'source_telegram_user_id',
         'source_telegram_message_id',
         'source_chat_type',
         'last_message_at',

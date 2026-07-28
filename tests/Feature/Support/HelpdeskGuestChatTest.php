@@ -58,8 +58,30 @@ class HelpdeskGuestChatTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(Helpdesk::class)
-            ->assertSee('Гости (веб-чат)')
+            // Заголовок списка — «Без привязки»: с 28.07.2026 туда же попадают
+            // техвопросы из Telegram-чатов от непривязанных авторов.
+            ->assertSee('Без привязки')
             ->assertSee('Аня');
+    }
+
+    /** Техвопрос из Telegram-чата виден в том же списке, с пометкой источника. */
+    public function test_unlinked_telegram_thread_appears_in_the_list(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+
+        SupportConversation::create([
+            'source_telegram_chat_id' => -100555,
+            'source_telegram_user_id' => 4242,
+            'guest_name' => 'Ольга (Хинди гр.1)',
+            'queue' => SupportConversation::QUEUE_TECHNICAL,
+            'status' => SupportConversation::STATUS_OPEN,
+            'last_message_at' => now(),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->assertSee('Ольга (Хинди гр.1)')
+            ->assertSee('Техника');
     }
 
     /** @test */

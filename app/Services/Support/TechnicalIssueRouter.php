@@ -7,7 +7,6 @@ namespace App\Services\Support;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 
 /**
  * После ingest TelegramSupportMessage: открыть Helpdesk-тред и при match
@@ -22,6 +21,7 @@ class TechnicalIssueRouter
     public function __construct(
         private readonly TechnicalIssueDetector $detector,
         private readonly SupportConversationManager $conversations,
+        private readonly TechnicalIssueNotifier $notifier,
     ) {}
 
     /**
@@ -44,29 +44,34 @@ class TechnicalIssueRouter
             return null;
         }
 
-        if (! $linkedUserId) {
-            Log::info('TechnicalIssueRouter: skip ops — sender not linked to User', [
-                'telegram_chat_id' => $payload['telegram_chat_id'] ?? $message->telegram_chat_id,
-                'telegram_message_id' => $payload['telegram_message_id'] ?? $message->telegram_message_id,
-                'is_technical' => $isTech,
-                'chat_type' => $chatType,
-            ]);
+        // Автор не привязан к аккаунту — раньше вопрос молча терялся. Ни приём, ни
+        // ответ привязки не требуют (юзербот читает и отвечает по telegram_chat_id),
+        // поэтому заводим тред без user_id — тем же приёмом, что у гостей веб-виджета.
+        //
+        // Но только для ТЕХНИЧЕСКИХ вопросов, и в группе, и в личке: болтовню
+        // незнакомца в личке по-прежнему пропускаем, иначе тред заводился бы на
+        // каждого постороннего, написавшего юзерботу «привет».
+        $isLinked = $linkedUserId && User::query()->whereKey($linkedUserId)->exists();
 
+        if (! $isLinked && ! $isTech) {
             return null;
         }
 
-        // Убедиться, что user ещё существует (assignee/FK).
-        if (! User::query()->whereKey($linkedUserId)->exists()) {
-            return null;
-        }
+        $chatId = (int) ($payload['telegram_chat_id'] ?? $message->telegram_chat_id);
 
-        $thread = $this->conversations->recordMessage($linkedUserId, $message, $message->sent_at);
+        $thread = $isLinked
+            ? $this->conversations->recordMessage($linkedUserId, $message, $message->sent_at)
+            : $this->openUnlinkedThread($message, $payload, $chatId);
 
         $updates = [
             'source_telegram_chat_id' => (int) ($payload['telegram_chat_id'] ?? $message->telegram_chat_id),
             'source_telegram_message_id' => (int) ($payload['telegram_message_id'] ?? $message->telegram_message_id),
             'source_chat_type' => $chatType,
         ];
+
+        // Уведомляем один раз — на переходе в очередь «Техника». Иначе колокольчик
+        // звенел бы на каждое следующее сообщение того же треда.
+        $becameTechnical = $isTech && $thread->queue !== SupportConversation::QUEUE_TECHNICAL;
 
         if ($isTech) {
             $updates['queue'] = SupportConversation::QUEUE_TECHNICAL;
@@ -81,7 +86,43 @@ class TechnicalIssueRouter
         }
 
         $thread->forceFill($updates)->save();
+        $thread->refresh();
 
-        return $thread->refresh();
+        if ($becameTechnical) {
+            $this->notifier->newTechnicalIssue($thread, (string) ($payload['text'] ?? $message->text ?? ''));
+        }
+
+        return $thread;
+    }
+
+    /**
+     * Тред техвопроса от непривязанного автора: ключ — пара «чат + автор», имя
+     * берём из самого сообщения, чтобы в Helpdesk был человек, а не «Гость #17».
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function openUnlinkedThread(TelegramSupportMessage $message, array $payload, int $chatId): SupportConversation
+    {
+        $telegramUserId = $payload['telegram_user_id'] ?? null;
+        $author = trim((string) ($payload['contact_name'] ?? ''));
+        $username = trim((string) ($payload['contact_username'] ?? ''));
+        $chatTitle = trim((string) ($payload['chat_title'] ?? ''));
+
+        if ($author === '') {
+            $author = $username !== '' ? '@'.$username : 'Аноним';
+        }
+
+        // «Иван (Хинди гр.1)» — куратору сразу видно, кто и откуда спрашивает.
+        $displayName = $chatTitle !== '' ? "{$author} ({$chatTitle})" : $author;
+
+        $thread = $this->conversations->openForTelegramChat(
+            $chatId,
+            $telegramUserId !== null ? (int) $telegramUserId : null,
+            $displayName,
+        );
+
+        $this->conversations->attach($thread, $message, $message->sent_at);
+
+        return $thread;
     }
 }
