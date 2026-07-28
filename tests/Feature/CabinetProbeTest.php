@@ -9,6 +9,7 @@ use App\Support\Roles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -30,7 +31,12 @@ class CabinetProbeTest extends TestCase
 
         config()->set('cabinet_probe.ping_url', self::PING);
         config()->set('cabinet_probe.timeout', 5);
+        config()->set('cabinet_probe.telegram_chat_id', ''); // TG off unless a test enables it
+        config()->set('services.telegram.bot_token', '');
         config()->set('features.cabinet_hybrid', false);
+        Cache::forget('cabinet_probe:was_down');
+        Cache::forget('cabinet_probe:last_tg_alert_at');
+
         // Always-on student surfaces (no hybrid 404s).
         config()->set('cabinet_probe.surfaces', [
             ['name' => 'student.dashboard', 'label' => 'cabinet /dvaram'],
@@ -198,4 +204,55 @@ class CabinetProbeTest extends TestCase
         $this->assertStringContainsString('Кабинет жив', $out);
         $this->assertStringNotContainsString('library', $out);
     }
+
+    public function test_failure_sends_telegram_and_respects_cooldown(): void
+    {
+        $this->seedManager('correct-pass');
+        config(['services.test_manager.password' => 'wrong-pass']);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.telegram_cooldown_minutes', 60);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage')
+            && ($r['chat_id'] ?? null) == '999001'
+            && str_contains((string) ($r['text'] ?? ''), 'Кабинет болен'));
+
+        // Second fail within cooldown — no extra send.
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+
+        // --force-alert bypasses cooldown.
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe', ['--force-alert' => true]);
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
+    }
+
+    public function test_recovery_sends_telegram_once(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+        Cache::put('cabinet_probe:was_down', true, now()->addHour());
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        $code = Artisan::call('cabinet:probe');
+        $this->assertSame(0, $code);
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова жив'));
+    }
 }
+

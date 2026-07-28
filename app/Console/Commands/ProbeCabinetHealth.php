@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -23,18 +24,25 @@ use Throwable;
  * HTTP-kernel после Auth::attempt — проверяет Auth, middleware, Blade/Filament
  * рендер и 500/Whoops, а не «порт 443 отвечает».
  *
- * Fail-open: без TEST_MANAGER_PASSWORD — no-op SUCCESS; healthchecks-ошибка
- * не роняет команду. Тревога — CABINET_PROBE_PING_URL + /fail при поломке.
+ * Fail-open: без TEST_MANAGER_PASSWORD — no-op SUCCESS; healthchecks/Telegram
+ * ошибки не роняют команду. Тревоги: CABINET_PROBE_PING_URL + Telegram
+ * (CABINET_PROBE_TELEGRAM_CHAT_ID, default ADMIN_TELEGRAM_ID) с cooldown.
  *
  *   php artisan cabinet:probe
  *   php artisan cabinet:probe --dry
  */
 class ProbeCabinetHealth extends Command
 {
+    private const CACHE_WAS_DOWN = 'cabinet_probe:was_down';
+
+    private const CACHE_LAST_ALERT_AT = 'cabinet_probe:last_tg_alert_at';
+
     protected $signature = 'cabinet:probe
-        {--dry : Прогнать проверки, не слать пинг на healthchecks}';
+        {--dry : Прогнать проверки, не слать healthchecks/Telegram}
+        {--force-alert : Игнорировать TG-cooldown (для ручной проверки доставки)}';
 
     protected $description = 'Пульс кабинета: login smoke-менеджера + /dvaram/messages/calendar/open-lessons/admin (+ hybrid if on)';
+
 
     public function handle(): int
     {
@@ -83,11 +91,13 @@ class ProbeCabinetHealth extends Command
         }
 
         $this->reportToHealthchecks($healthy, $failures);
+        $this->reportToTelegram($healthy, $failures);
 
         // Как heartbeat:ping — SUCCESS всегда, чтобы слот schedule:run не
-        // валился из-за сторожа. Сигнал — /fail или лог.
+        // валился из-за сторожа. Сигнал — /fail, TG или лог.
         return self::SUCCESS;
     }
+
 
     /**
      * @return list<string>
@@ -260,4 +270,124 @@ class ProbeCabinetHealth extends Command
             Log::warning('cabinet:probe healthchecks unreachable', ['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Telegram-алерт через основной бот (TELEGRAM_BOT_TOKEN).
+     * Sync HTTP — не через очередь: при падении Horizon кабинетный алерт
+     * всё равно должен уйти (очередь могла бы молчать вместе с ним).
+     *
+     * @param  list<string>  $failures
+     */
+    private function reportToTelegram(bool $healthy, array $failures): void
+    {
+        $chatIds = $this->telegramChatIds();
+        if ($chatIds === []) {
+            $this->comment('CABINET_PROBE_TELEGRAM_CHAT_ID / ADMIN_TELEGRAM_ID пусты — TG-алерт выключен.');
+
+            return;
+        }
+
+        $token = (string) config('services.telegram.bot_token', '');
+        if ($token === '') {
+            $this->comment('TELEGRAM_BOT_TOKEN пуст — TG-алерт невозможен.');
+
+            return;
+        }
+
+        $wasDown = (bool) Cache::get(self::CACHE_WAS_DOWN, false);
+        $cooldown = max(1, (int) config('cabinet_probe.telegram_cooldown_minutes', 60));
+        $force = (bool) $this->option('force-alert');
+
+        if ($healthy) {
+            Cache::forget(self::CACHE_WAS_DOWN);
+            Cache::forget(self::CACHE_LAST_ALERT_AT);
+            if (! $wasDown) {
+                return; // всё и так было нормально — молчим
+            }
+            $text = "✅ <b>Кабинет снова жив</b>\n"
+                ."samskrte.ru · cabinet:probe\n"
+                .'Smoke-login + поверхности снова 2xx.';
+        } else {
+            $lastAt = Cache::get(self::CACHE_LAST_ALERT_AT);
+            if (! $force && $wasDown && $lastAt !== null) {
+                $elapsed = now()->diffInMinutes($lastAt, absolute: true);
+                if ($elapsed < $cooldown) {
+                    $this->comment("TG-cooldown: следующий алерт через ~".($cooldown - (int) $elapsed).' мин.');
+
+                    return;
+                }
+            }
+            $lines = array_map(
+                static fn (string $f): string => '• '.e($f),
+                array_slice($failures, 0, 8),
+            );
+            $text = "🚨 <b>Кабинет болен</b>\n"
+                ."samskrte.ru · cabinet:probe\n"
+                .implode("\n", $lines)
+                ."\n\n<code>php artisan cabinet:probe</code>";
+        }
+
+        if ($this->option('dry')) {
+            $this->comment('--dry: TG не отправлен → '.implode(',', $chatIds));
+
+            return;
+        }
+
+        $anySent = false;
+        foreach ($chatIds as $chatId) {
+            try {
+                $response = Http::timeout((int) config('cabinet_probe.timeout', 15))
+                    ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML',
+                        'disable_web_page_preview' => true,
+                    ]);
+
+                if ($response->successful() && ($response->json('ok') ?? false)) {
+                    $anySent = true;
+                    $this->info('TG-алерт → chat '.$chatId);
+                } else {
+                    $this->error('TG API chat '.$chatId.': '.$response->body());
+                    Log::warning('cabinet:probe telegram send failed', [
+                        'chat_id' => $chatId,
+                        'body' => $response->body(),
+                    ]);
+                }
+            } catch (Throwable $e) {
+                $this->error('TG не ушёл ('.$chatId.'): '.$e->getMessage());
+                Log::warning('cabinet:probe telegram unreachable', [
+                    'chat_id' => $chatId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (! $healthy && $anySent) {
+            Cache::put(self::CACHE_WAS_DOWN, true, now()->addDays(2));
+            Cache::put(self::CACHE_LAST_ALERT_AT, now(), now()->addDays(2));
+        }
+        if ($healthy && $wasDown && $anySent) {
+            // recovery already cleared cache above
+        }
+        if (! $healthy && $anySent === false) {
+            // still mark down so recovery can fire once delivery works
+            Cache::put(self::CACHE_WAS_DOWN, true, now()->addDays(2));
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function telegramChatIds(): array
+    {
+        $raw = config('cabinet_probe.telegram_chat_id', '');
+        if ($raw === null || $raw === false) {
+            return [];
+        }
+        $parts = preg_split('/[\s,;]+/', trim((string) $raw)) ?: [];
+
+        return array_values(array_filter(array_map('strval', $parts), static fn (string $id): bool => $id !== ''));
+    }
 }
+
