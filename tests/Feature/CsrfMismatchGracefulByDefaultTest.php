@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Encryption\Encrypter;
+use Monolog\Handler\NullHandler;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,29 @@ class CsrfMismatchGracefulByDefaultTest extends TestCase
 
     /** Текст по умолчанию для fetch/XHR: страница сама не перезагрузится. */
     private const DEFAULT_JSON = 'Сессия обновилась — обновите страницу (F5) и попробуйте ещё раз.';
+
+    /**
+     * Телеметрия H1773 пишет JSON-строки в НАСТОЯЩИЙ файл
+     * (`storage/logs/csrf-mismatch-*.log`), а `CsrfMismatchTelemetryTest`
+     * читает этот файл обратно и требует в нём РОВНО одну запись. На Windows
+     * файл с живым дескриптором Monolog не удаляется, поэтому `@unlink` в его
+     * setUp молча проваливается, и записи любого класса, отработавшего
+     * раньше, попадают в чужой счёт. Этот класс сортируется перед ним
+     * (`Graceful` < `Telemetry`) — то есть ломал бы его на ровном месте.
+     *
+     * Здесь проверяется контракт ОТВЕТА, а не телеметрия (она закреплена
+     * своим тестом), поэтому канал уводится в никуда. Хрупкость самого
+     * порядко-зависимого теста этим не лечится — она отмечена в PR.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['logging.channels.csrf_mismatch' => [
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
+        ]]);
+    }
 
     private function forceRealCsrfVerification(): void
     {
