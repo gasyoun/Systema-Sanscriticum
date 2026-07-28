@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Exceptions\Handler as AppHandler;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler as BaseHandler;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
@@ -187,6 +188,6 @@ class ExceptionHandlerRenderableTypeHintTest extends TestCase
     {
         $banned = $this->conversionSourceTypes();
 
-        $this->assertNotContains(\Illuminate\Http\Exceptions\PostTooLargeException::class, $banned);
+        $this->assertNotContains(PostTooLargeException::class, $banned);
     }
 }
