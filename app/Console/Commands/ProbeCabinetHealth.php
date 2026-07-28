@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -34,7 +35,6 @@ class ProbeCabinetHealth extends Command
         {--dry : Прогнать проверки, не слать пинг на healthchecks}';
 
     protected $description = 'Пульс кабинета: login smoke-менеджера + /dvaram/messages/calendar/open-lessons/admin (+ hybrid if on)';
-
 
     public function handle(): int
     {
@@ -209,7 +209,7 @@ class ProbeCabinetHealth extends Command
         // Blade auth()->user() и $request->user() не разъехались.
         Auth::guard('web')->setUser($user);
 
-        $kernel = app(\Illuminate\Contracts\Http\Kernel::class);
+        $kernel = app(Kernel::class);
         $request = Request::create($uri, 'GET');
         $request->setLaravelSession(app('session.store'));
         $request->setUserResolver(static fn () => Auth::guard('web')->user());
