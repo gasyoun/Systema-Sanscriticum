@@ -14,6 +14,61 @@ use Throwable;
 class Handler extends ExceptionHandler
 {
     /**
+     * H1771 — маршруты со своим текстом про протухший CSRF-токен.
+     *
+     * Это ТОЛЬКО переопределение текста. Форма ответа (redirect или JSON)
+     * выбирается ниже одинаково для всех маршрутов, по expectsJson().
+     *
+     * До H1771 здесь стоял allowlist из трёх ветвей, и маршрут, которого в
+     * нём нет, получал голую страницу «419 Page Expired». Хрупкость была
+     * именно в перечислении по имени: в routes/web.php сейчас 40 POST-
+     * маршрутов, а покрыто было шесть — регистрация, восстановление пароля,
+     * сдача домашки, смена профиля и остальные оставляли студента на
+     * странице без выхода. Симптом возвращался бы при каждом новом POST-
+     * маршруте, добавленном без мысли о CSRF: ровно так ветка чекаута и
+     * пролежала незамеченной пять недель.
+     *
+     * Порядок значим — берётся первое совпадение.
+     *
+     * @var array<int, array{routes: array<int, string>, message: string}>
+     */
+    private const CSRF_MISMATCH_OVERRIDES = [
+        [
+            'routes' => ['payment.create', 'checkout.*'],
+            'message' => 'Сессия обновилась — нажмите «К безопасной оплате» ещё раз.',
+        ],
+        [
+            'routes' => ['login.post'],
+            'message' => 'Сессия обновилась — введите данные ещё раз.',
+        ],
+        // shop.login — единственный fetch-вызывающий, которому «попробуйте ещё
+        // раз» можно обещать честно: с H1774 модалка подтягивает свежий токен
+        // из /csrf-token перед КАЖДЫМ сабмитом
+        // (partials/csrf-token-refresh.blade.php), поэтому повтор реально несёт
+        // новый токен. Просить F5, как раньше, стало бы неправдой. Именно
+        // поэтому строка живёт здесь, в переопределениях, а не в общем
+        // JSON-тексте ниже — тот обслуживает вызывающих БЕЗ такого обновления.
+        [
+            'routes' => ['shop.login'],
+            'message' => 'Сессия обновилась — попробуйте войти ещё раз.',
+        ],
+    ];
+
+    /**
+     * Redirect::back возвращает пользователя на ту же страницу уже со свежим
+     * токеном, поэтому достаточно «отправьте ещё раз».
+     */
+    private const CSRF_MISMATCH_DEFAULT_HTML = 'Сессия обновилась — отправьте форму ещё раз.';
+
+    /**
+     * А произвольный fetch/XHR страницу не перезагружает и, в отличие от
+     * модалки shop.login (H1774), токен перед сабмитом не обновляет: тот, что
+     * лежит в <meta>, остаётся старым, и повтор без reload упрётся в тот же
+     * 419. Поэтому общий JSON-текст просит именно обновить страницу.
+     */
+    private const CSRF_MISMATCH_DEFAULT_JSON = 'Сессия обновилась — обновите страницу (F5) и попробуйте ещё раз.';
+
+    /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
      *
      * @var array<int, string>
@@ -33,15 +88,13 @@ class Handler extends ExceptionHandler
             //
         });
 
-        // Мягкий ретрай вместо голого «419 Page Expired» на чекауте/оплате.
-        // Студент остаётся авторизован (remember-me), поэтому возвращаем его
-        // обратно на чекаут со свежим токеном и понятным сообщением.
+        // Мягкий ретрай вместо голого «419 Page Expired» — ПО УМОЛЧАНИЮ, на
+        // любом web-POST, а не на перечисленных поимённо (H1771).
         //
-        // То же самое — на входе (/login, /shop/login): токен протухает
-        // (вкладка простояла дольше жизни сессии, повторный сабмит по
-        // уже открытой странице после первой неудачи, hand-off между
-        // встроенным браузером мессенджера и обычным), и вместо понятного
-        // повтора студент упирался в голую страницу без выхода — это и
+        // Токен протухает буднично: вкладка простояла дольше жизни сессии,
+        // повторный сабмит по уже открытой странице после первой неудачи,
+        // hand-off между встроенным браузером мессенджера и обычным. Вместо
+        // понятного повтора студент упирался в страницу без выхода — это и
         // читалось как «сайт не пускает».
         //
         // Ловим ОБЁРТКУ, а не сам TokenMismatchException. Handler::render()
@@ -50,9 +103,9 @@ class Handler extends ExceptionHandler
         // только ПОТОМ вызывает renderable-колбэки (Laravel 12,
         // vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php,
         // render() строки 616–620). Колбэк с типом TokenMismatchException не
-        // срабатывает никогда — ветка чекаута ниже пролежала мёртвой с
-        // 25-06-2026 (295ea8b8), теста на неё не было, и «мягкий ретрай на
-        // оплате» всё это время оставался обещанием в комментарии.
+        // срабатывает никогда — ветка чекаута пролежала мёртвой с 25-06-2026
+        // (295ea8b8), теста на неё не было, и «мягкий ретрай на оплате» всё
+        // это время оставался обещанием в комментарии.
         $this->renderable(function (HttpException $e, Request $request) {
             if ($e->getStatusCode() !== 419 || ! $e->getPrevious() instanceof TokenMismatchException) {
                 return null; // прочие HttpException — поведение по умолчанию
@@ -60,38 +113,39 @@ class Handler extends ExceptionHandler
 
             $this->logCsrfMismatch($request);
 
-            if ($request->routeIs('payment.create', 'checkout.*')) {
-                return redirect()->back()->with(
-                    'error',
-                    'Сессия обновилась — нажмите «К безопасной оплате» ещё раз.'
-                );
+            // Livewire — единственное исключение из «graceful по умолчанию», и
+            // именно поэтому его пришлось выяснять, а не предполагать (H1771).
+            //
+            // Обе панели Filament ходят через дефолтный livewire.update, а он
+            // зарегистрирован как POST /livewire/update ->middleware('web')
+            // (vendor/livewire/livewire/src/Mechanisms/HandleRequests/HandleRequests.php),
+            // то есть проходит наш VerifyCsrfToken и попадает сюда же. При этом
+            // клиент Livewire шлёт только Content-type + X-Livewire, без Accept
+            // и без X-Requested-With (dist/livewire.js), поэтому expectsJson()
+            // на нём ЛОЖЕН — по умолчанию он получил бы 302. А у Livewire есть
+            // собственный обработчик протухшей страницы, завязанный ровно на
+            // голый статус: `if (response.status === 419) handlePageExpiry()`.
+            // Redirect его обходит (fetch молча идёт по 302 и получает 200 HTML),
+            // и админ теряет несохранённую форму без единого предупреждения.
+            // Отдаём такие запросы Laravel'у нетронутыми.
+            if ($request->hasHeader('X-Livewire')) {
+                return null;
             }
 
-            // /login — обычный POST формы. Redirect::back несёт свежий CSRF-
-            // токен на той же странице, так что повторный сабмит проходит.
-            if ($request->routeIs('login.post')) {
-                return redirect()->back()->with(
-                    'error',
-                    'Сессия обновилась — введите данные ещё раз.'
-                );
-            }
+            $message = $this->csrfMismatchMessage($request);
 
-            // /shop/login — модалка на Alpine, шлёт fetch() с Accept: json и
-            // сама читает {success,message}. Redirect сюда не годится: fetch
-            // тихо пройдёт по 302 и получит HTML вместо JSON. С H1774 модалка
-            // подтягивает свежий токен из /csrf-token перед КАЖДЫМ сабмитом
-            // (partials/csrf-token-refresh.blade.php), так что простое «попробуйте
-            // ещё раз» теперь честно — повтор реально несёт новый токен, а не
-            // тот же самый. Раньше здесь просили F5, потому что без этого шага
-            // повтор гарантированно проваливался тем же 419.
-            if ($request->routeIs('shop.login')) {
+            // Форма ответа — по вызывающему, не по имени маршрута. Тот же
+            // контракт {success,message}, что уже отдаёт AuthController::shopLogin()
+            // и разбирает Alpine-модалка (`!response.ok || !data.success`
+            // → data.message), чтобы не заводить второй.
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Сессия обновилась — попробуйте войти ещё раз.',
+                    'message' => $message,
                 ], 419);
             }
 
-            return null; // прочие 419 — поведение по умолчанию
+            return redirect()->back()->with('error', $message);
         });
 
         // Загрузка тяжелее post_max_size обрывается на уровне PHP: тело запроса
@@ -107,6 +161,22 @@ class Handler extends ExceptionHandler
                 .'а длинный ответ сначала сохраните черновиком.'
             );
         });
+    }
+
+    /**
+     * H1771 — текст для конкретного маршрута, иначе общий по форме ответа.
+     */
+    private function csrfMismatchMessage(Request $request): string
+    {
+        foreach (self::CSRF_MISMATCH_OVERRIDES as $override) {
+            if ($request->routeIs(...$override['routes'])) {
+                return $override['message'];
+            }
+        }
+
+        return $request->expectsJson()
+            ? self::CSRF_MISMATCH_DEFAULT_JSON
+            : self::CSRF_MISMATCH_DEFAULT_HTML;
     }
 
     /**
@@ -142,8 +212,9 @@ class Handler extends ExceptionHandler
 
     /**
      * Грубая, не PII-раскрывающая классификация клиента: встроенный браузер
-     * мессенджера (см. комментарий про shop.login выше — там токен в <meta>
-     * не обновляется без полной перезагрузки страницы) против обычного.
+     * мессенджера против обычного. Разделение осмысленно, потому что hand-off
+     * между встроенным браузером и обычным — один из будничных способов
+     * получить протухший токен.
      */
     private function clientBucket(?string $userAgent): string
     {
