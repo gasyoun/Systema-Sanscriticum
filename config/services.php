@@ -299,6 +299,15 @@ return [
         'name' => env('TEST_MANAGER_NAME', 'Smoke Manager'),
     ],
 
+    // Smoke-студент для cabinet:probe student-ветки (role=null).
+    // php artisan users:ensure-test-student
+    'test_student' => [
+        'email' => env('TEST_STUDENT_EMAIL', 'smoke-student@samskrte.ru'),
+        'password' => env('TEST_STUDENT_PASSWORD'),
+        'name' => env('TEST_STUDENT_NAME', 'Smoke Student'),
+    ],
+
+
     'lecture_builder' => [
         'url' => env('LECTURE_BUILDER_URL', 'http://127.0.0.1:5001'),
         'token' => env('LECTURE_BUILDER_TOKEN'),

@@ -12,6 +12,7 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Added
+- **Cabinet probe hardening (H1794).** Public `/login`+`/online`; smoke-student (`users:ensure-test-student`); history `cabinet_probe_runs` + Filament «Здоровье кабинета»; critical/soft TG; ops runbook in alerts; GHA multi-URL uptime; healthchecks env docs. Non-goals: Playwright, auto-restart, public status. Executor: Grok 4.5 (`grok-4.5`).
 - **H1067 publish path — landing A first, then B; channel posts via magnet bot.** Public `/online/konsultaciya` now renders ruled H1067 copy from `config/marathon_landing_copy.php` (default variant **A** «страхи новичка»; switch to **B** with `MARATHON_LANDING_COPY_VARIANT=b` + `config:clear`). Artisan: `marathon:apply-landing-copy {a|b}` upserts Filament `LandingPage`; `marathon:publish-channel-posts [--post=N] [--live]` posts to @samskrte using `MarketingSetting.tg_bot_token` (dry-run by default; post 5 needs `MARATHON_TESTIMONIAL`). DEPLOY_QUEUE №27 updated. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.62.2] - 2026-07-28

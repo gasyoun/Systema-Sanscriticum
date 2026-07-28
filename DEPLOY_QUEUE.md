@@ -25,6 +25,22 @@ _Создано: 08-07-2026 · Обновлено: 28-07-2026 (H1764 row №63 �
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H1794 — cabinet probe hardening (после деплоя)
+
+1. `php artisan migrate` — таблица `cabinet_probe_runs`
+2. Smoke student (если ещё нет):
+   - `TEST_STUDENT_EMAIL=smoke-student@samskrte.ru`
+   - `TEST_STUDENT_PASSWORD=<secret>`
+   - `php artisan users:ensure-test-student`
+3. healthchecks.io (когда будет signup) — **два** check:
+   - period **5 min** → `HEARTBEAT_PING_URL=https://hc-ping.com/<uuid>`
+   - period **15 min**, grace ~20 → `CABINET_PROBE_PING_URL=https://hc-ping.com/<uuid>`
+4. TG: `CABINET_PROBE_TELEGRAM_CHAT_ID` (critical; default admin+rusamskrtam already on prod)
+   optional soft: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID`
+5. `php artisan config:clear && php artisan cabinet:probe`
+6. Filament → «Здоровье кабинета» (группа Система) — история прогонов
+7. **Не делаем:** auto-restart fpm, Playwright, public status page (handoff non-goals)
+
 ---
 
 ## Systema-Sanscriticum (samskrte.ru) — финансы
