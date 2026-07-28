@@ -1,133 +1,246 @@
 {
-  "name": "Lecture clip extract (H1452) — ffmpeg + VK + Laravel callback",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "lecture-clip-extract",
-        "responseMode": "onReceived",
-        "options": {}
-      },
-      "id": "a1111111-1111-1111-1111-111111111111",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [-400, 0],
-      "webhookId": "lecture-clip-extract",
-      "notes": "Respond immediately (onReceived): the ffmpeg→VK→callback chain runs async and reports back via the Laravel callback node. Laravel's DispatchLectureClipExtractionJob calls this webhook with Http::timeout(15) and tries=3 — with responseMode=lastNode it would ALWAYS time out (ffmpeg node alone allows 600s), retry 3×, and cut+upload every clip to VK three times."
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "// Laravel DispatchLectureClipExtractionJob payload.\n// action=clip_lecture, lesson_id, video_url/youtube_url/rutube_url, spans[], callback_url.\nconst body = $input.first().json.body ?? $input.first().json;\nif (body.action !== 'clip_lecture') {\n  throw new Error('unexpected action: ' + (body.action ?? 'missing'));\n}\nconst spans = Array.isArray(body.spans) ? body.spans : [];\nif (!spans.length) {\n  throw new Error('no spans — nothing to cut');\n}\n// Emit one item per span for the ffmpeg/VK loop. Real ffmpeg/VK credentials\n// stay operator-owned (D12: agents never ship live VK tokens).\nreturn spans.map((s, i) => ({\n  json: {\n    lesson_id: body.lesson_id,\n    lesson_title: body.lesson_title ?? '',\n    video_url: body.video_url || body.youtube_url || body.rutube_url || '',\n    callback_url: body.callback_url,\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title || ('clip-' + (i + 1)),\n    index: i + 1,\n  },\n}));"
-      },
-      "id": "a2222222-2222-2222-2222-222222222222",
-      "name": "Expand spans",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [-160, 0]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $env.FFMPEG_CUT_URL || 'https://REPLACE_WITH_FFMPEG_WORKER/cut' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"source_url\": \"{{ $json.video_url }}\",\n  \"start_seconds\": {{ $json.start_seconds }},\n  \"end_seconds\": {{ $json.end_seconds }},\n  \"title\": {{ JSON.stringify($json.title) }}\n}",
-        "options": {
-          "timeout": 600000
-        }
-      },
-      "id": "a3333333-3333-3333-3333-333333333333",
-      "name": "ffmpeg cut (placeholder HTTP)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [80, 0],
-      "notes": "Replace with your ffmpeg worker or Execute Command node. Output should include a local/file URL for VK upload."
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $env.VK_VIDEO_UPLOAD_URL || 'https://REPLACE_WITH_VK_UPLOADER/upload' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"file_url\": \"{{ $json.file_url || $json.cut_url || '' }}\",\n  \"title\": {{ JSON.stringify($('Expand spans').item.json.title) }},\n  \"lesson_id\": {{ $('Expand spans').item.json.lesson_id }}\n}",
-        "options": {
-          "timeout": 300000
-        }
-      },
-      "id": "a4444444-4444-4444-4444-444444444444",
-      "name": "VK Video upload (placeholder HTTP)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [320, 0],
-      "notes": "Replace with real VK Video/Clips API (video.save + upload). Map response to vk_video_id + vk_owner_id."
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "// Aggregate per-span results for a single Laravel callback.\n// The two HTTP Request nodes replace $json with their own response, so the\n// original span fields (lesson_id, start/end, title, callback_url) no longer\n// exist on the incoming items — read them back from the source node by index\n// (the pipeline is linear and 1:1, so order is preserved). VK ids come from\n// the current items (the VK upload response).\nconst vkItems = $input.all();\nconst spans = $('Expand spans').all();\nconst clips = vkItems.map((it, i) => {\n  const s = spans[i] ? spans[i].json : {};\n  const v = it.json;\n  return {\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title,\n    vk_video_id: String(v.vk_video_id ?? v.id ?? v.video_id ?? ''),\n    vk_owner_id: String(v.vk_owner_id ?? v.owner_id ?? ''),\n  };\n});\nconst first = spans[0] ? spans[0].json : {};\nreturn [{\n  json: {\n    callback_url: first.callback_url,\n    body: {\n      lesson_id: first.lesson_id,\n      clips,\n    },\n  },\n}];"
-      },
-      "id": "a5555555-5555-5555-5555-555555555555",
-      "name": "Aggregate clips",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [560, 0]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callback_url }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Webhook-Secret",
-              "value": "={{ $env.N8N_CLIP_CALLBACK_SECRET || 'REPLACE_WITH_LARAVEL_N8N_CLIP_CALLBACK_SECRET' }}"
+    "name": "Lecture clip extract (H1452) — ffmpeg + VK + Laravel callback",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "lecture-clip-extract",
+                "responseMode": "onReceived",
+                "options": []
             },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+            "id": "a1111111-1111-1111-1111-111111111111",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                -560,
+                0
+            ],
+            "webhookId": "lecture-clip-extract",
+            "notes": "Отвечаем сразу (onReceived): цепочка ffmpeg→VK→callback асинхронная. Laravel зовёт этот вебхук с Http::timeout(15) и tries=3 — при responseMode=lastNode он бы ВСЕГДА отваливался по таймауту и резал+заливал каждый клип трижды."
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.body }}",
-        "options": {
-          "timeout": 30000
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "language": "javaScript",
+                "jsCode": "// Laravel DispatchLectureClipExtractionJob payload.\n// action=clip_lecture, lesson_id, video_url/youtube_url/rutube_url, spans[], callback_url.\nconst body = $input.first().json.body ?? $input.first().json;\nif (body.action !== 'clip_lecture') {\n  throw new Error('unexpected action: ' + (body.action ?? 'missing'));\n}\nconst spans = Array.isArray(body.spans) ? body.spans : [];\nif (!spans.length) {\n  throw new Error('no spans — nothing to cut');\n}\n// Источник: youtube предпочтительнее (на хосте настроен yt-dlp с oauth2),\n// rutube — запасной. video_url в этой инсталляции всегда пуст.\nconst source = body.youtube_url || body.video_url || body.rutube_url || '';\nif (!source) {\n  throw new Error('lesson has no video url');\n}\nreturn spans.map((s, i) => ({\n  json: {\n    lesson_id: body.lesson_id,\n    lesson_title: body.lesson_title ?? '',\n    video_url: source,\n    callback_url: body.callback_url,\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title || ('clip-' + (i + 1)),\n    index: i + 1,\n  },\n}));"
+            },
+            "id": "a2222222-2222-2222-2222-222222222222",
+            "name": "Expand spans",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -340,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "language": "javaScript",
+                "jsCode": "// Готовим shell-команду на хост с yt-dlp/ffmpeg (тот же SSH-кред, что у\n// «Скачиваем аудио» в ZOOM-сценарии). Собираем строку здесь, а не в SSH-ноде:\n// в JS экранирование кавычек читаемо и проверяемо.\nconst token = $env.VK_ACCESS_TOKEN;\nconst groupId = $env.VK_VIDEO_GROUP_ID;\nif (!token) {\n  throw new Error('n8n env VK_ACCESS_TOKEN не задан — нужен токен с правами video');\n}\nif (!groupId) {\n  throw new Error('n8n env VK_VIDEO_GROUP_ID не задан (id сообщества, куда льём клипы)');\n}\n\n// Одинарные кавычки в bash: закрыть, вставить экранированную, открыть заново.\nconst sh = (v) => \"'\" + String(v).replace(/'/g, \"'\\\\''\") + \"'\";\n\nreturn $input.all().map((item) => {\n  const j = item.json;\n  const src = '/data/clips/src-' + j.lesson_id + '.mp4';\n  const out = '/data/clips/lesson-' + j.lesson_id + '-' + j.index + '.mp4';\n  const title = String(j.title).slice(0, 120);\n\n  const command = [\n    'set -eu',\n    'mkdir -p /data/clips',\n    // Исходник тянем один раз на всю лекцию: спанов до 5, качать их по отдельности\n    // значило бы 5 полных загрузок полуторачасового видео.\n    '[ -s ' + sh(src) + ' ] || yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"bv*+ba/b\" --merge-output-format mp4 --no-warnings -o ' + sh(src) + ' ' + sh(j.video_url),\n    // -c copy: без перекодирования, режем по ключевым кадрам — секунды, не минуты.\n    'ffmpeg -y -hide_banner -loglevel error -ss ' + Number(j.start_seconds) + ' -to ' + Number(j.end_seconds) + ' -i ' + sh(src) + ' -c copy ' + sh(out),\n    // video.save отдаёт upload_url и уже готовые owner_id/video_id.\n    'SAVE=$(curl -s -G \"https://api.vk.com/method/video.save\" --data-urlencode ' + sh('name=' + title) + ' --data-urlencode ' + sh('group_id=' + groupId) + ' --data-urlencode ' + sh('access_token=' + token) + ' --data-urlencode \"v=5.131\")',\n    'printf %s \"$SAVE\" | grep -q upload_url || { printf %s \"$SAVE\" >&2; exit 1; }',\n    'UP=$(printf %s \"$SAVE\" | python3 -c \"import sys,json;print(json.load(sys.stdin)[\\'response\\'][\\'upload_url\\'])\")',\n    'curl -s -F ' + sh('video_file=@' + out) + ' \"$UP\" > /dev/null',\n    'rm -f ' + sh(out),\n    'printf %s \"$SAVE\" | python3 -c \"import sys,json;r=json.load(sys.stdin)[\\'response\\'];print(json.dumps({\\'vk_video_id\\':r[\\'video_id\\'],\\'vk_owner_id\\':r[\\'owner_id\\']}))\"',\n  ].join('\\n');\n\n  return { json: { ...j, command } };\n});"
+            },
+            "id": "a3333333-3333-3333-3333-333333333333",
+            "name": "Собрать команду",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -120,
+                0
+            ],
+            "notes": "Требует env n8n: VK_ACCESS_TOKEN (права video) и VK_VIDEO_GROUP_ID. Токен намеренно не хранится в этом файле — он в git."
+        },
+        {
+            "parameters": {
+                "resource": "command",
+                "command": "={{ $json.command }}",
+                "cwd": "/data/clips"
+            },
+            "id": "a4444444-4444-4444-4444-444444444444",
+            "name": "Нарезать и залить в VK",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                100,
+                0
+            ],
+            "credentials": {
+                "sshPrivateKey": {
+                    "id": "s8DnkhQHhfPf8Z3A",
+                    "name": "n8n"
+                }
+            },
+            "notes": "Тот же хост и кред, что у «Скачиваем аудио» в ZOOM-сценарии: там уже есть yt-dlp (а значит и ffmpeg — без него -x --audio-format не работает). Файл никуда не гоняется через n8n: режем и заливаем в VK прямо на хосте."
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "language": "javaScript",
+                "jsCode": "// SSH-нода кладёт вывод в stdout. Последняя строка — JSON с id ролика.\nreturn $input.all().map((item) => {\n  const raw = String(item.json.stdout ?? '').trim();\n  const last = raw.split('\\n').filter(Boolean).pop() ?? '';\n  let parsed = {};\n  try {\n    parsed = JSON.parse(last);\n  } catch (e) {\n    throw new Error('не разобрать ответ VK: ' + raw.slice(0, 200));\n  }\n  return { json: parsed };\n});"
+            },
+            "id": "a5555555-5555-5555-5555-555555555555",
+            "name": "Разобрать ответ VK",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                320,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "language": "javaScript",
+                "jsCode": "// Собираем один callback на всю лекцию. Поля спана берём из «Expand spans»\n// по индексу: цепочка линейная и 1:1, порядок сохраняется, а $json к этому\n// моменту содержит только ответ VK.\nconst vkItems = $input.all();\nconst spans = $('Expand spans').all();\nconst clips = vkItems.map((it, i) => {\n  const s = spans[i] ? spans[i].json : {};\n  const v = it.json;\n  return {\n    start_seconds: s.start_seconds,\n    end_seconds: s.end_seconds,\n    title: s.title,\n    vk_video_id: String(v.vk_video_id ?? ''),\n    vk_owner_id: String(v.vk_owner_id ?? ''),\n  };\n});\nconst first = spans[0] ? spans[0].json : {};\nreturn [{\n  json: {\n    callback_url: first.callback_url,\n    lesson_id: first.lesson_id,\n    body: {\n      lesson_id: first.lesson_id,\n      clips,\n    },\n  },\n}];"
+            },
+            "id": "a6666666-6666-6666-6666-666666666666",
+            "name": "Aggregate clips",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                540,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $json.callback_url }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "X-Webhook-Secret",
+                            "value": "={{ $env.N8N_CLIP_CALLBACK_SECRET }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify($json.body) }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "id": "a7777777-7777-7777-7777-777777777777",
+            "name": "Laravel callback",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                760,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "command",
+                "command": "=rm -f '/data/clips/src-{{ $('Expand spans').first().json.lesson_id }}.mp4'",
+                "cwd": "/data/clips"
+            },
+            "id": "a8888888-8888-8888-8888-888888888888",
+            "name": "Убрать исходник",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                980,
+                0
+            ],
+            "credentials": {
+                "sshPrivateKey": {
+                    "id": "s8DnkhQHhfPf8Z3A",
+                    "name": "n8n"
+                }
+            },
+            "notes": "Полуторачасовой mp4 на хосте не нужен после нарезки. Идёт после callback, чтобы сбой уборки не стоил уже готовых клипов."
         }
-      },
-      "id": "a6666666-6666-6666-6666-666666666666",
-      "name": "Laravel callback",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [800, 0]
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Expand spans",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Expand spans": {
+            "main": [
+                [
+                    {
+                        "node": "Собрать команду",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Собрать команду": {
+            "main": [
+                [
+                    {
+                        "node": "Нарезать и залить в VK",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Нарезать и залить в VK": {
+            "main": [
+                [
+                    {
+                        "node": "Разобрать ответ VK",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Разобрать ответ VK": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate clips",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate clips": {
+            "main": [
+                [
+                    {
+                        "node": "Laravel callback",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Laravel callback": {
+            "main": [
+                [
+                    {
+                        "node": "Убрать исходник",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "meta": {
+        "templateCredsSetupCompleted": false
     }
-  ],
-  "connections": {
-    "Webhook": {
-      "main": [[{ "node": "Expand spans", "type": "main", "index": 0 }]]
-    },
-    "Expand spans": {
-      "main": [[{ "node": "ffmpeg cut (placeholder HTTP)", "type": "main", "index": 0 }]]
-    },
-    "ffmpeg cut (placeholder HTTP)": {
-      "main": [[{ "node": "VK Video upload (placeholder HTTP)", "type": "main", "index": 0 }]]
-    },
-    "VK Video upload (placeholder HTTP)": {
-      "main": [[{ "node": "Aggregate clips", "type": "main", "index": 0 }]]
-    },
-    "Aggregate clips": {
-      "main": [[{ "node": "Laravel callback", "type": "main", "index": 0 }]]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "meta": {
-    "templateCredsSetupCompleted": false
-  }
 }

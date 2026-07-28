@@ -61,7 +61,8 @@ n8n: Webhook → Expand spans → ffmpeg cut → VK upload → Laravel callback
 См. [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666), кратко:
 
 - Воркфлоу `docs/n8n/lecture-clip-extract.workflow.json` импортирован и **Active**.
-- Ноды ffmpeg и VK — **не заглушки** (реально режут и заливают).
+- В env n8n заданы `VK_ACCESS_TOKEN` (право **`video`**, а не только `photos`+`wall`)
+  и `VK_VIDEO_GROUP_ID`; SSH-кред `n8n` подставился в ноды нарезки.
 - В Laravel `.env`:
   - `N8N_CLIP_EXTRACT_WEBHOOK` — Production URL вебхука n8n  
   - `N8N_CLIP_EXTRACT_SECRET` — тот же секрет, что Header Auth на webhook n8n (`X-Webhook-Secret`)  
@@ -73,7 +74,7 @@ n8n: Webhook → Expand spans → ffmpeg cut → VK upload → Laravel callback
 |---|---|
 | Урок **опубликован** (`is_published`) | Job иначе отказывается |
 | Есть URL видео (`video_url` / YouTube / Rutube) | n8n скачивает/режет источник |
-| Есть `transcript_file` с таймкодами (Deepgram / n8n-формат) | `ClipSpanPlanner` строит спаны; без слов — пустой список, нарезки не будет |
+| Есть `transcript_file` с таймкодами (Deepgram / n8n-формат) | `ClipSpanPlanner` строит спаны; без слов — пустой список, нарезки не будет. Заполняется автоматически: ZOOM-сценарий шлёт ответ Deepgram на `POST /api/lessons/{lesson}/transcript` сразу после создания урока. У уроков **до 28.07.2026** поля нет — их транскрипты в LMS не попадали |
 | Пройден AI-шаг **таймкоды** в редакторе лекций (очередь `lectures`) | Границы клипов = уже проверенные AI-таймкоды, **не** пересчитываются заново |
 
 **Как понять, что таймкоды есть:** в кабинете/лендинге у урока открывается стенограмма с кликабельными метками времени; в админке редактора лекций — успешный прогон задачи «timecodes» без ошибки в `error_log`.

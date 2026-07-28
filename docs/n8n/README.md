@@ -130,8 +130,13 @@ Webhook ─┬─► Telegram: sendPhoto (канал)
 Воркфлоу [`lecture-clip-extract.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/lecture-clip-extract.workflow.json)
 принимает из Laravel job `DispatchLectureClipExtractionJob` спаны, уже вычисленные
 `ClipSpanPlanner` из **существующих** AI-таймкодов (без пересчёта границ), режет
-ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips и callback'ом
-пишет `LectureClip` в Laravel.
+ffmpeg, грузит фрагменты в VK Video и callback'ом пишет `LectureClip` в Laravel.
+
+**Где выполняется тяжёлое.** Нарезка и заливка идут одной SSH-командой на том же
+хосте, где живёт `yt-dlp` ZOOM-сценария (кред `n8n`, каталог `/data/clips`):
+исходник качается **один раз на лекцию**, каждый спан режется `ffmpeg -c copy`
+(без перекодирования), заливается в VK прямо с хоста и тут же удаляется. Через
+n8n гигабайты не гоняются вовсе — наружу выходит только JSON с id ролика.
 
 ## Payload Laravel → n8n
 
@@ -172,13 +177,23 @@ ffmpeg (operator HTTP/worker), грузит фрагменты в VK Video/Clips
 ```
 
 Флаг `CLIP_MARKETING_ENABLED=false` → Laravel callback 404; job early-return.
-**Никогда не коммитьте живые VK-токены** — ноды ffmpeg/VK в JSON — плейсхолдеры.
+**Никогда не коммитьте живые VK-токены** — поэтому токен и id сообщества берутся
+из env n8n, а не лежат в JSON.
 
 ## Настройка после импорта
 
 1. Import `lecture-clip-extract.workflow.json`.
-2. Заменить URL ffmpeg-worker и VK-uploader (или переписать ноды на native VK API).
-3. Env n8n: `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
+2. В нодах `Нарезать и залить в VK` и `Убрать исходник` проверить, что подставился
+   SSH-кред `n8n` (тот же, что у «Скачиваем аудио» в ZOOM-сценарии). На хосте нужны
+   `yt-dlp`, `ffmpeg`, `curl`, `python3`.
+3. Env n8n:
+   - `VK_ACCESS_TOKEN` — community-токен с правом **`video`** (одних `photos`+`wall`,
+     как у кросспостинга, не хватит: заливка идёт через `video.save`);
+   - `VK_VIDEO_GROUP_ID` — числовой id сообщества, куда льём клипы;
+   - `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
+
+   Нода «Собрать команду» падает с внятным сообщением, если токен или id не заданы, —
+   молча залить «в никуда» она не может.
 4. Activate, copy Production webhook URL.
 5. Laravel `.env`:
    ```
