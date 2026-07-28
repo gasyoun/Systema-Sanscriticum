@@ -94,6 +94,12 @@
             this.error = null;
 
             try {
+                // H1774 — <meta name=csrf-token> is stale for the lifetime of the
+                // page (checkout modal opened long after load, or hand-off from a
+                // messenger's in-app browser). Fetch a fresh token first so a
+                // genuine mismatch retry can actually succeed.
+                await window.CsrfTokenRefresh.refresh();
+
                 const response = await fetch(@json(route('shop.login')), {
                     method: 'POST',
                     headers: {
