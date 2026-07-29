@@ -83,9 +83,9 @@ class LectureClipResource extends Resource
                 Tables\Columns\TextColumn::make('end_seconds')->label('Конец')->formatStateUsing(
                     fn (int $state): string => gmdate('i:s', $state)
                 ),
-                Tables\Columns\IconColumn::make('vk_video_id')->label('В VK')->boolean(
-                    getStateUsing: fn (LectureClip $record): bool => filled($record->vk_video_id)
-                ),
+                Tables\Columns\IconColumn::make('vk_video_id')->label('В VK')
+                    ->boolean()
+                    ->getStateUsing(fn (LectureClip $record): bool => filled($record->vk_video_id)),
                 Tables\Columns\ToggleColumn::make('is_free')->label('Бесплатный'),
                 Tables\Columns\TextColumn::make('created_at')->label('Создан')->dateTime('d.m.Y H:i')->sortable(),
             ])
