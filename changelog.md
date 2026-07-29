@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Рейтинг тем поддержки научился читать канал, а не только считать его (H1837, добор).** [v1.69.0](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.69.0) сделала `support_daily_rollups` двухканальной, и [`support:topic-ranking`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SupportTopicRanking.php) с того момента **уже** считал веб-строки — он джойнится на rollup'ы, так что новые строки вошли в отчёт сами. Чего он не умел — сказать, **куда** тема приходит, и показать срез. Добавлены `--channel=all|web-side|telegram|web|vk|telegram_bot` и колонка **`web %`** (доля чат-дней, пришедших через виджет / VK / TG-student-бот, а не через TG-support-аккаунт). Одно и то же число дефлекции означает две разные стройки: тема на 90 % веб просит self-serve страницу на сайте, та же тема на 90 % Telegram — ответ в базе знаний бота, и усреднённая цифра эти случаи не различает. Значение `web-side` берётся из `SupportDailyRollup::WEB_SIDE_CHANNELS`, а не из своего списка, чтобы новый канал не пришлось добавлять в двух местах. Executor: Opus 5 (`claude-opus-5`).
+
 ## [1.69.0] - 2026-07-30
 
 ### Added
