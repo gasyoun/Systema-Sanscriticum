@@ -1,6 +1,6 @@
 # DECISIONS_LOG — PWG Arzamas material (wave-1 autonomy defaults)
 
-_Created: 26-07-2026 · Last updated: 26-07-2026_
+_Created: 26-07-2026 · Last updated: 29-07-2026_
 
 Per [PLAN §4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md):
 ambiguity → plan default + one-line rationale here, continue.
@@ -17,5 +17,7 @@ ambiguity → plan default + one-line rationale here, continue.
 | L8 | MG live redirect 26-07-2026: Dahl portrait dropped (generated stat-infographics to replace it, W2-4); csl-atlas + Vigasin + papers data woven in (FACTS CA-1…CA-40); «Сокращения» merged into ch. 10, freed slot 11 → «Приставки-чемпионы и слова-поезда» | user instruction supersedes plan detail; samāsa/derivation stats are the image-generation base |
 | L9 | Kossovich / славянофилы / фельетоны compressed to one ch. 16 paragraph; full story → SECOND Arzamas piece (FOLLOWUPS W2-5) | MG 26-07-2026: «их может быть и две» |
 | L10 | Citation-total build discrepancy (801 790 A50 vs 772 567 vs 570 817) resolved as: essay says «свыше восьмисот тысяч» per A50, density/coverage per citation-apparatus.json; builds not mixed in one sentence | csl-atlas carries three committed counts with different scopes |
+| L11 | **Серия — три заметки: третья о Минаеве будет.** Ruling дан в два шага 29-07-2026: сначала «две заметки, не три», затем — «раз это был именно Минаев, пусть будет третья». Действует второй. Третья заметка **заблокирована на входных материалах**, которые даёт MG (`@DO` в [GTD](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)); до их появления писать нечего | MG 29-07-2026. Уточняет L9 («их может быть и две» — это была верхняя граница на тот момент, а не окончательная). Работа заминчена как queued-с-предусловием, а не начата |
+| L12 | **Роли Коссовича и Минаева не переворачивать: Минаев — ученик Коссовича, а не его учитель** | Проверено по собственным материалам репозитория: [kossovich-arzamas/FACTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/FACTS.md) K11-8 — «Минаев — слушатель лекций Коссовича, впоследствии его преемник» (`verified`, secondary_vigasin, Виг. ~140); [SOURCE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/kossovich-arzamas/SOURCE.md) — «его слушатель Минаев стал первым русским индологом с мировым именем», «Среди этих „занимающихся самостоятельно“ был Иван Минаев». Формулировка «Минаев, учитель Коссовича» в постановке задачи 29-07-2026 инвертирует эту линию; принята версия репозитория. Линия преемственности сквозная у Вигасина: Коссович → Минаев → Ольденбург (ср. K16-3 «Ольденбург — ученик Минаева») |
 
 _Dr. Mārcis Gasūns_
