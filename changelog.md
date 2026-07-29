@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.67.0] - 2026-07-29
+
 ### Fixed
 - **Сторож больше не делит судьбу с тем, что сторожит (H1904, дополнение).** Разбор простоя 28–29.07 дал точный спусковой крючок: один заход `telegram-support:sync` прожил **10 470 с (2 ч 54 мин 30 с) вместо штатных 36 с** и держал `schedule:run` в foreground; `cron` за это время завёл ~174 цепочки по ~200 МБ, и в 00:19:34 ядро убило `cron` (три `Killed` подряд в `schedule.log`). Отсюда главное: **планировщик встал в 21:25, а сайт погас только в 22:37** — а `cabinet:probe`, который шлёт тревогу в Telegram, стоит `*/15` **внутри того же `schedule:run`** и за эти три часа не выполнился ни разу. Оповещение было настроено и работало — оно умерло на час раньше сайта. Новый `/usr/local/sbin/systema-watchdog-run.sh` и две отдельные строки cron дают `cabinet:probe` (`*/15`) и `heartbeat:ping` (`*/5`) свой замок, свой короткий таймаут и свою судьбу — висящая команда их больше не глушит. Дублирование с копиями в `Kernel.php` сознательно: сторож, отработавший дважды, — не проблема; сторож, не отработавший ни разу, — это авария выше. Попутно измерено, что watchdog самой команды не работает (10 470 с при потолке 120 с, превышение в 87 раз, при загруженном `pcntl`) — инвариант `Kernel.php` «зависший заход умирает раньше замка» не выполняется; вынесено в [#840](https://github.com/gasyoun/Systema-Sanscriticum/issues/840). Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
@@ -1669,7 +1671,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.66.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.67.0...HEAD
+[1.67.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.66.0...v1.67.0
 [1.66.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.65.0...v1.66.0
 [1.65.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.64.0...v1.65.0
 [1.64.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.63.0...v1.64.0
