@@ -8,6 +8,7 @@
         .tg-scroll { max-height: 620px; overflow-y: auto; }
         .tg-filter-select { min-width: 10rem; }
         .tg-msg { max-width: 78%; }
+        .tg-table-wrap { overflow-x: auto; }
         @media (min-width: 1024px) {
             .tg-cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             .tg-main-grid { grid-template-columns: minmax(320px, 420px) 1fr; }
@@ -36,7 +37,9 @@
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Unanswered</div>
                 <div class="mt-1 text-3xl font-bold text-gray-950 dark:text-white">{{ $today['unanswered'] }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Incoming: {{ $today['incoming'] }}</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Incoming: {{ $today['incoming'] }} · overdue {{ $today['unresolved_after_hours'] }}
+                </div>
             </div>
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Replies</div>
@@ -44,6 +47,49 @@
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Human {{ $today['human_replies'] }} / AI {{ $today['ai_sent'] }}</div>
             </div>
         </div>
+
+        {{-- Разбивка по каналам (H1837, S10): единый отчёт без ручной сверки. Пока
+             веб-агрегация выключена флагом, здесь одна строка — Telegram. --}}
+        @if(count($today['by_channel']) > 1)
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <div class="border-b border-gray-200 px-4 py-3 dark:border-white/10">
+                    <strong class="text-gray-950 dark:text-white">Каналы</strong>
+                    <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">deflection по обоим сторам, одна таблица</span>
+                </div>
+                <div class="tg-table-wrap">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Канал</th>
+                                <th class="px-4 py-2 text-right">Разговоров</th>
+                                <th class="px-4 py-2 text-right">Входящих</th>
+                                <th class="px-4 py-2 text-right">Ответов</th>
+                                <th class="px-4 py-2 text-right">Человек</th>
+                                <th class="px-4 py-2 text-right">ИИ</th>
+                                <th class="px-4 py-2 text-right">Без ответа</th>
+                                <th class="px-4 py-2 text-right">Просрочено</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($today['by_channel'] as $channelKey => $channelMetrics)
+                                <tr class="border-t border-gray-100 dark:border-white/5">
+                                    <td class="px-4 py-2 text-gray-950 dark:text-white">
+                                        {{ (new \App\Models\SupportDailyRollup(['channel' => $channelKey]))->channelLabel() }}
+                                    </td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['conversations'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['incoming'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['outgoing'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['human_replies'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['ai_sent'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['unanswered'] }}</td>
+                                    <td class="px-4 py-2 text-right">{{ $channelMetrics['unresolved_after_hours'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         {{-- Filters --}}
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
@@ -63,6 +109,18 @@
                         <option value="{{ $topicOption }}">{{ $topicOption }}</option>
                     @endforeach
                 </select>
+
+                @if(count($this->channelOptions) > 1)
+                    <select
+                        wire:model.live="channel"
+                        class="tg-filter-select rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-white/20 dark:bg-white/5 dark:text-white"
+                    >
+                        <option value="">Все каналы</option>
+                        @foreach($this->channelOptions as $channelValue => $channelLabel)
+                            <option value="{{ $channelValue }}">{{ $channelLabel }}</option>
+                        @endforeach
+                    </select>
+                @endif
 
                 <select
                     wire:model.live="responderType"
@@ -99,10 +157,8 @@
                 <div class="tg-scroll">
                     @forelse($this->conversations as $conversation)
                         @php
-                            $title = $conversation->chat->title
-                                ?? $conversation->chat->linkedUser?->name
-                                ?? $conversation->chat->username
-                                ?? ('Telegram chat '.$conversation->chat->telegram_chat_id);
+                            // Канал-независимая подпись: на веб-строке $conversation->chat === null.
+                            $title = $conversation->subjectLabel();
                         @endphp
                         <button
                             type="button"
@@ -117,6 +173,7 @@
                                 <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ \App\Support\ChatTimestamp::label($conversation->last_message_at) }}</span>
                             </div>
                             <div class="mt-2 flex flex-wrap gap-1.5">
+                                <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{{ $conversation->channelLabel() }}</span>
                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300">in {{ $conversation->incoming_count }}</span>
                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300">out {{ $conversation->outgoing_count }}</span>
                                 @if($conversation->has_new_contact)
@@ -124,6 +181,9 @@
                                 @endif
                                 @if($conversation->is_unanswered)
                                     <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-500/20 dark:text-red-400">unanswered</span>
+                                @endif
+                                @if($conversation->unresolved_after_hours)
+                                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">overdue</span>
                                 @endif
                                 @foreach($conversation->topicAssignments as $assignment)
                                     <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300">{{ $assignment->category }}</span>
@@ -145,13 +205,14 @@
                 <div class="tg-scroll bg-gray-50 p-4 dark:bg-gray-900">
                     @forelse($this->activeMessages as $message)
                         @php
-                            $isOutgoing = $message->direction === 'outgoing';
+                            // UnifiedMessage (H1837): одна форма для обоих хранилищ.
+                            $isOutgoing = ! $message->isIncoming();
                             $sender = $isOutgoing
-                                ? ($message->responder?->name ?? $message->responder_marker ?? $message->responder_type ?? 'Support')
+                                ? ($message->responderName ?? $message->responderMarker ?? $message->responderType ?? 'Support')
                                 : 'Contact';
                         @endphp
                         <div @class(['tg-msg mb-3', 'ml-auto text-right' => $isOutgoing])>
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">{{ $sender }} · {{ $message->sent_at->format('d.m H:i') }}</div>
+                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">{{ $sender }} · {{ $message->sentAt->format('d.m H:i') }}</div>
                             <div @class([
                                 'inline-block rounded-xl px-3 py-2 text-left text-sm',
                                 'border border-gray-200 bg-white text-gray-800 dark:border-white/10 dark:bg-gray-800 dark:text-gray-100' => ! $isOutgoing,

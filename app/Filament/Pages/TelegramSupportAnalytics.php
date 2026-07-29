@@ -3,13 +3,23 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Clusters\TelegramSupport;
+use App\Models\ChatMessage;
 use App\Models\SupportDailyRollup;
 use App\Models\TelegramSupportMessage;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
+use App\Support\UnifiedMessage;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 
+/**
+ * Единый дашборд поддержки по ОБОИМ каналам (H1837, S10). До S10 страница видела
+ * только импортированный TG-support; теперь список разговоров и сэмплы сообщений
+ * канал-независимы (через {@see UnifiedMessage}), а фильтр «канал» позволяет
+ * смотреть срез. Название страницы историческое — переименование тронуло бы slug
+ * и закладки операторов.
+ */
 class TelegramSupportAnalytics extends Page
 {
     protected static ?string $cluster = TelegramSupport::class;
@@ -33,6 +43,9 @@ class TelegramSupportAnalytics extends Page
     public string $topic = '';
 
     public string $responderType = '';
+
+    /** Срез по каналу (пусто = все каналы). */
+    public string $channel = '';
 
     public bool $onlyUnanswered = false;
 
@@ -65,44 +78,115 @@ class TelegramSupportAnalytics extends Page
         return app(SupportDashboardPacketBuilder::class)->build($this->selectedDate);
     }
 
-    public function getConversationsProperty(): Collection
+    public function getConversationsProperty(): EloquentCollection
     {
         return SupportDailyRollup::query()
-            ->with(['chat.linkedUser:id,name,email', 'topicAssignments'])
+            ->with([
+                'chat.linkedUser:id,name,email',
+                'conversation:id,user_id,guest_name,guest_token',
+                'conversation.user:id,name',
+                'webUser:id,name',
+                'topicAssignments',
+            ])
             ->whereDate('conversation_date', $this->selectedDate)
+            ->when($this->channel !== '', fn ($query) => $query->where('channel', $this->channel))
             ->when($this->onlyUnanswered, fn ($query) => $query->where('is_unanswered', true))
             ->when($this->onlyNewContacts, fn ($query) => $query->where('has_new_contact', true))
             ->when($this->topic !== '', fn ($query) => $query->whereHas(
                 'topicAssignments',
                 fn ($topicQuery) => $topicQuery->where('category', $this->topic)
             ))
+            // Фильтр по типу отвечавшего: на TG-стороне это колонка
+            // responder_type, на веб-стороне тип ВЫВОДИМ из role (см.
+            // UnifiedMessage) — поэтому две ветки, а не один запрос.
             ->when($this->responderType !== '', function ($query) {
-                $query->whereHas('chat.messages', function ($messageQuery) {
-                    $messageQuery->whereDate('sent_at', $this->selectedDate)
-                        ->where('responder_type', $this->responderType);
+                $query->where(function ($outer) {
+                    $outer->where(function ($tg) {
+                        $tg->where('channel', SupportDailyRollup::CHANNEL_TELEGRAM)
+                            ->whereHas('chat.messages', function ($messageQuery) {
+                                $messageQuery->whereDate('sent_at', $this->selectedDate)
+                                    ->where('responder_type', $this->responderType);
+                            });
+                    })->orWhere(function ($web) {
+                        $web->whereIn('channel', SupportDailyRollup::WEB_SIDE_CHANNELS)
+                            ->whereExists(function ($sub) {
+                                $sub->selectRaw('1')
+                                    ->from('chat_messages')
+                                    ->whereDate('chat_messages.created_at', $this->selectedDate)
+                                    ->whereIn('chat_messages.role', $this->webRolesForResponderType($this->responderType))
+                                    ->where(fn ($match) => $match
+                                        ->whereColumn('chat_messages.support_conversation_id', 'support_daily_rollups.support_conversation_id')
+                                        ->orWhereColumn('chat_messages.user_id', 'support_daily_rollups.web_user_id'));
+                            });
+                    });
                 });
             })
             ->orderByDesc('last_message_at')
             ->get();
     }
 
+    /**
+     * Сэмплы сообщений выбранной строки — канал-независимо, через общий read-слой.
+     *
+     * @return Collection<int, UnifiedMessage>
+     */
     public function getActiveMessagesProperty(): Collection
     {
         if (! $this->activeConversationId) {
             return new Collection;
         }
 
-        $conversation = SupportDailyRollup::find($this->activeConversationId);
-        if (! $conversation) {
+        $rollup = SupportDailyRollup::find($this->activeConversationId);
+        if (! $rollup) {
             return new Collection;
         }
 
-        return TelegramSupportMessage::query()
-            ->with('responder:id,name')
-            ->where('telegram_support_chat_id', $conversation->telegram_support_chat_id)
-            ->whereDate('sent_at', $conversation->conversation_date)
-            ->orderBy('sent_at')
-            ->get();
+        if ($rollup->isTelegramSide()) {
+            return TelegramSupportMessage::query()
+                ->with(['chat', 'contact', 'responder:id,name'])
+                ->where('telegram_support_chat_id', $rollup->telegram_support_chat_id)
+                ->whereDate('sent_at', $rollup->conversation_date)
+                ->orderBy('sent_at')
+                ->get()
+                ->map(fn (TelegramSupportMessage $message) => UnifiedMessage::fromTelegramSupportMessage($message))
+                ->values();
+        }
+
+        return ChatMessage::query()
+            ->with('answeredBy:id,name')
+            ->whereDate('created_at', $rollup->conversation_date)
+            ->when(
+                $rollup->support_conversation_id !== null,
+                fn ($query) => $query->where('support_conversation_id', $rollup->support_conversation_id),
+                fn ($query) => $query->whereNull('support_conversation_id')
+                    ->when(
+                        $rollup->web_user_id !== null,
+                        fn ($sub) => $sub->where('user_id', $rollup->web_user_id),
+                        fn ($sub) => $sub->whereNull('user_id'),
+                    ),
+            )
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ChatMessage $message) => UnifiedMessage::fromChatMessage($message))
+            ->filter(fn (UnifiedMessage $message): bool => $message->channel === $rollup->channel)
+            ->values();
+    }
+
+    /**
+     * Роли `chat_messages`, дающие запрошенный тип отвечавшего. Веб-сторона не
+     * хранит responder_type — маппинг здесь обязан совпадать с
+     * {@see UnifiedMessage::fromChatMessage()}.
+     *
+     * @return array<int, string>
+     */
+    private function webRolesForResponderType(string $responderType): array
+    {
+        return match ($responderType) {
+            UnifiedMessage::RESPONDER_HUMAN => ['curator'],
+            UnifiedMessage::RESPONDER_AI => ['bot'],
+            default => ['user'],
+        };
     }
 
     public function getTopicOptionsProperty(): array
@@ -110,6 +194,24 @@ class TelegramSupportAnalytics extends Page
         return collect($this->packet['topics'])
             ->pluck('category')
             ->values()
+            ->all();
+    }
+
+    /**
+     * Каналы, реально присутствующие в выбранном дне (значение => подпись). Пустой
+     * список = один канал/ничего, селектор в шаблоне тогда не рисуется.
+     *
+     * @return array<string, string>
+     */
+    public function getChannelOptionsProperty(): array
+    {
+        return SupportDailyRollup::query()
+            ->whereDate('conversation_date', $this->selectedDate)
+            ->distinct()
+            ->pluck('channel')
+            ->mapWithKeys(fn (string $channel): array => [
+                $channel => (new SupportDailyRollup(['channel' => $channel]))->channelLabel(),
+            ])
             ->all();
     }
 }

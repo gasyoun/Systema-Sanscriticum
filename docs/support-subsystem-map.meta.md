@@ -1,6 +1,6 @@
 # support-subsystem-map.meta.md — metadoc about `support-subsystem-map`
 
-_Created: 13-07-2026 · Last updated: 25-07-2026_
+_Created: 13-07-2026 · Last updated: 29-07-2026_
 
 Companion record for [support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) — the ground-truth agent reference for the Systema-Sanscriticum support subsystem. This metadoc holds what is *around* the document (purpose, provenance, backlog, caveats); it does not restate the subsystem facts the subject enumerates.
 
@@ -26,6 +26,7 @@ Companion record for [support-subsystem-map.md](https://github.com/gasyoun/Syste
 | 3 | Add a one-line link-integrity check (CI or pre-commit) over the model/service blob URLs | Renames silently rot the ~25 code links this doc leans on | parked (tooling) |
 | 4 | Cross-link each "Actually open" row to its owning handoff/issue where one exists | Turns the gap table into an actionable index rather than prose | parked (needs handoff IDs) |
 | 5 | Fold in the reply-OUT canary result once WS1.3 runs | The single highest-risk untested path (row 6) will flip from "untested" to a verdict | parked (blocked on canary) |
+| 6 | Re-word the "Do not merge the tables" rule so its scope is unmistakable at a glance | H1837 had to *clarify inline* that the rule governs the two message stores, not the shared daily aggregate — a future agent reading only the bolded sentence could still refuse a legitimate cross-channel aggregate | ✅ done 29-07-2026 (H1837) — scope blockquote added under the rule |
 
 ## Known limitations / caveats
 
@@ -62,5 +63,6 @@ Companion record for [support-subsystem-map.md](https://github.com/gasyoun/Syste
 | Date | Change | Model |
 |---|---|---|
 | 13-07-2026 | metadoc created (H890) | Opus 4.8 `claude-opus-4-8` |
+| 29-07-2026 | H1837 (S10): subject's "Actually open" table lost two rows (web-chat analytics, topics web-side) and had the unresolved-after-N-hours half of a third struck; scope blockquote added under "Do not merge the tables"; backlog row 6 added and closed | Opus 5 1M `claude-opus-5[1m]` |
 
 _Dr. Mārcis Gasūns_
