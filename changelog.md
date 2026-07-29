@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.65.0] - 2026-07-29
+
 ### Fixed
 - **Прод перестаёт зависать: найдена и обезврежена причина простоев 23–24.07 и 28–29.07.2026 (H1904).** Разбор — [`docs/server-resource-guards.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md). Оба раза контейнер **не выключался, а зависал**: `cron` заводит `php artisan schedule:run` каждую минуту **без замка**, а `$schedule->command()` ждёт команду в foreground — значит один медленный заход переносится на следующую минуту. `telegram-support:sync` (`everyMinute`) реально идёт **36–41 с**, `telegram-harvest:roster-groups` — до 600 с; как только заход перевалил за 60 с, `schedule:run` начал копиться по ~100 МБ на процесс. Потолков не было ни одного: `memory_limit = -1` в CLI, `pids.max = max`, свопа нет, `earlyoom` не стоял. Диагноз доказан журналом, а не рассуждением: `cron.service: A process of this unit has been killed by the OOM killer` (23-07 15:38 и 29-07 00:19:33 МСК) и следом `Found left-over process 114146…114167 (php)` — ядро убило **сам cron**, systemd перезапустил юнит поверх ~20 осиротевших процессов, память не освободилась, и контейнер ушёл в livelock (`load average` **370**, journald записал свою же строку с опозданием на 2 ч 47 мин). `->withoutOverlapping()` тут не помогает и не должен: он защищает команду от самой себя и никак не ограничивает сам `schedule:run`. Поставлено на прод (уровень ОС, деплой не требуется): обёртка `/usr/local/sbin/systema-schedule-run.sh` — `flock -n` (одновременно ровно один прогон, проверено: второй вызов печатает `SKIP` и выходит с 0), `timeout 900s`, жнец осиротевших `artisan`-процессов с явным исключением демонов (`horizon`/`reverb`/`queue:work`/MadelineProto); `TasksMax=200` + `OOMPolicy=kill` + `Restart=always` на `cron.service` (при OOM сносится **вся группа** — сирот больше не остаётся); `earlyoom` (SIGTERM <10 %, SIGKILL <5 %, `--prefer ^php[0-9.]*$`, `--avoid` для mariadbd/nginx/sshd/redis/supervisord); `pm.max_children` 5 → 12 и `pm.max_requests = 500` для php-fpm (пять воркеров на 16 ГиБ — отдельный отказ по доступности). Значения `MemoryMax` на cron/supervisor и `memory_limit = 768M` в CLI поставлены администратором в тот же день и оставлены как единственный источник правды — дублирующая директива снята, чтобы эффективное значение не зависело от порядка сортировки drop-in-файлов. **Сознательно не сделано:** `->runInBackground()` на долгих командах в [`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php) — правка трогает логику TTL замков MTProto-сессии, вокруг которой выстроено рассуждение после аварии 27-07, а два экземпляра на одной сессии MadelineProto дают `AUTH_RESTART`; вынесено владельцу подсистемы. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
@@ -1659,7 +1661,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.64.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.65.0...HEAD
+[1.65.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.64.0...v1.65.0
 [1.64.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.63.0...v1.64.0
 [1.63.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.62.2...v1.63.0
 [1.62.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.62.1...v1.62.2
