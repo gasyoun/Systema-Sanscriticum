@@ -1,6 +1,6 @@
 # Ресурсные предохранители прода: почему сервер зависал и что теперь этого не даёт
 
-_Created: 29-07-2026 · Last updated: 29-07-2026_
+_Created: 29-07-2026 · Last updated: 30-07-2026_
 
 Разбор зависаний samskrte.ru 23–24.07 и 28–29.07.2026 и перечень предохранителей,
 поставленных на прод 29-07-2026. Диагностика — Opus 5 (`claude-opus-5[1m]`),
@@ -200,6 +200,26 @@ GitHub, реальная частота которого измерена и с�
 
 ## 4. Что поставлено на прод 29-07-2026
 
+**Источник правды — не этот документ, а два файла в репозитории** ([H1914](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1914-Opus_Systema-Sanscriticum_codify-server-guards-in-repo-drift-verify_29.07.26.md), 30-07-2026):
+
+| Что | Файл | Роль |
+|---|---|---|
+| Значения (числа памяти, пороги, таймауты) | [scripts/server_guards.conf](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards.conf) | **одно** место, откуда их берут и applier, и проверка |
+| Сами предохранители | [scripts/server_guards/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/scripts/server_guards) + [manifest.psv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/manifest.psv) | шаблоны с `@@ПОДСТАНОВКАМИ@@` и список «файл → куда → права» |
+| Применить | `sudo bash `[scripts/server_guards_apply.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh) | идемпотентно; второй прогон ничего не меняет; бэкап в `/root/preflight-backup-<stamp>/` |
+| Проверить | `php artisan guards:verify` ([VerifyServerGuards.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VerifyServerGuards.php)) | non-zero + имя пропавшего; висит на `cabinet:probe` и на [deploy.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh) |
+
+Документ ниже объясняет **почему** каждый предохранитель такой; менять значения
+надо в `server_guards.conf`, а правку на самой машине руками `guards:verify`
+покажет как расхождение. До H1914 предохранители жили ТОЛЬКО на машине:
+пересборка LXC, восстановление из бэкапа или переезд (в этом проекте уже был,
+июль 2026) сносили их молча, и заметить это было нечем — ни один тест, гейт или
+монитор этого не видел. Теперь пропажу видит проба каждые 15 минут: критичная
+находка идёт в Telegram как `critical`, расхождение — как `soft`, и то и другое
+пишется в `cabinet_probe_runs`. Своп — единственное исключение: внутри LXC он не
+заводится, поэтому его отсутствие проверка сообщает как `info`, не портя код
+возврата (§6, пункт 1).
+
 Всё ниже — уровень ОС, кода приложения не касается, деплой не требуется.
 
 | Предохранитель | Где | Что делает |
@@ -311,6 +331,7 @@ exit 0
 
 ```bash
 ssh root@193.232.229.92
+cd /var/www/html && php artisan guards:verify  # ПЕРВЫМ ДЕЛОМ: все ли предохранители на месте
 tail -40 /var/log/memwatch.log                 # память по минутам: видно тренд
 tail -60 /var/log/memwatch-pressure.log        # кто именно ест, топ по RSS
 journalctl -u earlyoom --since '2 hours ago'   # кого и когда прибил earlyoom

@@ -143,6 +143,27 @@ HTTP_CODE=$(curl -fsS -o /dev/null -w '%{http_code}' "$SMOKE_URL" || echo "000")
 [ "$HTTP_CODE" = "200" ] || fail "Смоук провален: $SMOKE_URL вернул $HTTP_CODE"
 echo "OK: $SMOKE_URL → 200"
 
+# ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
+# Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять
+# системный конфиг. Предохранители 29-07-2026 живут вне репозитория, и пересборка
+# LXC/восстановление из бэкапа сносят их беззвучно — деплой самый частый момент,
+# когда об этом можно узнать вовремя.
+say "Предохранители ОС: php artisan guards:verify"
+GUARDS_DRIFT=0
+php artisan guards:verify || GUARDS_DRIFT=1
+if [ "$GUARDS_DRIFT" = 1 ]; then
+  printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
+  printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"
+  printf '\033[1;31m%s\033[0m\n' "  Почему это важно: docs/server-resource-guards.md"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') GUARDS DRIFT после ${NEW_COMMIT}" >> "$DEPLOY_LOG"
+fi
+
 # ── 8. Журнал деплоев ────────────────────────────────────────────────────────
 echo "$(date '+%Y-%m-%d %H:%M:%S') ${OLD_COMMIT}..${NEW_COMMIT} php${PHP_VER} by $(whoami)" >> "$DEPLOY_LOG"
 say "Деплой завершён: ${OLD_COMMIT} → ${NEW_COMMIT}"
+
+# Код деплоя ненулевой, если предохранители разошлись: выкладка состоялась (её
+# откатывать не за что), но молча пройти мимо пропавшего предохранителя нельзя.
+if [ "$GUARDS_DRIFT" = 1 ]; then
+  fail "Деплой выложен, но guards:verify недоволен — разберитесь с предохранителями"
+fi

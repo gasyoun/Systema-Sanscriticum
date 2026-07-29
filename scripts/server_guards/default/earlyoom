@@ -1,0 +1,19 @@
+# MANAGED FILE — scripts/server_guards_apply.sh. Пороги — из scripts/server_guards.conf.
+#
+# Systema, 29-07-2026. With no swap, the kernel's own OOM killer fires far too
+# late: on 28-07 the container spent hours in reclaim livelock (load average 370)
+# and never recovered on its own — it had to be power-cycled by hand. earlyoom
+# acts while there is still memory left to act with, so the OS stays responsive
+# and the box stays reachable over SSH.
+#
+#  -r 60      log the memory state every 60 s (this IS the missing history)
+#  -m 10,5    SIGTERM below 10% available (~1.6 GB), SIGKILL below 5% (~0.8 GB)
+#  --avoid    never pick the processes whose death takes the site down anyway
+#  --prefer   pick a plain php/php8.3 first — the scheduler chain is what runs
+#             away. Deliberately does NOT match php-fpm8.3: killing a web worker
+#             hurts visitors without touching the actual cause.
+#
+# NOTE: no quotes around the regexes. systemd splits this value on whitespace and
+# passes the words through literally; quotes would be passed to earlyoom as part
+# of the pattern.
+EARLYOOM_ARGS="-r @@EARLYOOM_REPORT_INTERVAL@@ -m @@EARLYOOM_TERM_PERCENT@@,@@EARLYOOM_KILL_PERCENT@@ --avoid @@EARLYOOM_AVOID_RE@@ --prefer @@EARLYOOM_PREFER_RE@@"

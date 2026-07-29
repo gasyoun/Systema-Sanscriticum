@@ -1,0 +1,7 @@
+[Unit]
+Description=Systema memory ledger (per-minute avail/load/proc counts, top-RSS dump under pressure)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/memwatch.sh
+Nice=19

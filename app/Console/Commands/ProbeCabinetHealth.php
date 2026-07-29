@@ -7,6 +7,10 @@ namespace App\Console\Commands;
 use App\Models\CabinetProbeRun;
 use App\Models\User;
 use App\Support\Roles;
+use App\Support\ServerGuards\GuardFinding;
+use App\Support\ServerGuards\GuardSpec;
+use App\Support\ServerGuards\ServerGuardsAuditor;
+use App\Support\ServerGuards\ShellSystemInspector;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
@@ -93,6 +97,8 @@ class ProbeCabinetHealth extends Command
             } else {
                 $this->comment('TEST_STUDENT_* пусты — student-ветка пропущена.');
             }
+
+            $failures = array_merge($failures, $this->probeServerGuards());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -160,6 +166,54 @@ class ProbeCabinetHealth extends Command
         }
 
         return [];
+    }
+
+    /**
+     * Ресурсные предохранители ОС (H1914) как ещё одна поверхность этой пробы.
+     *
+     * Предохранители 29-07-2026 живут вне репозитория и вне приложения; пересборка
+     * LXC сносит их молча. Проба — единственный контур, который ходит каждые 15
+     * минут ОТДЕЛЬНОЙ строкой cron (то есть переживает зависший планировщик) и уже
+     * имеет историю + Telegram. Поэтому пропажа предохранителя приезжает сюда.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeServerGuards(): array
+    {
+        if (! config('cabinet_probe.check_server_guards', true) || ! config('server_guards.verify_enabled')) {
+            return [];
+        }
+
+        try {
+            $auditor = new ServerGuardsAuditor(
+                GuardSpec::fromFile((string) config('server_guards.spec_path')),
+                new ShellSystemInspector,
+                (string) config('server_guards.template_root'),
+            );
+            $findings = $auditor->audit();
+        } catch (Throwable $e) {
+            // Проверять стало нечем — это тоже находка, но не повод падать пробе.
+            return [['message' => 'guards: проверка не выполнилась — '.$e->getMessage(), 'severity' => 'soft']];
+        }
+
+        $failures = [];
+        foreach ($findings as $finding) {
+            if ($finding->severity === GuardFinding::INFO) {
+                $this->comment('  ℹ guards: '.$finding->message);
+
+                continue;
+            }
+            $failures[] = [
+                'message' => 'guards/'.$finding->guard.': '.$finding->message,
+                'severity' => $finding->severity === GuardFinding::CRITICAL ? 'critical' : 'soft',
+            ];
+        }
+
+        if ($failures === []) {
+            $this->info('Предохранители ОС на месте.');
+        }
+
+        return $failures;
     }
 
     /**
