@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\Support\WebSupportRollupAggregator;
 use App\Services\TelegramSupport\SupportDailyRollupAggregator;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -38,6 +39,20 @@ class WebSupportRollupAggregatorTest extends TestCase
             'features.support_web_rollups' => true,
             'support.rollup.unresolved_after_hours' => 24,
         ]);
+
+        // Время заморожено намеренно. Тесты ниже ставят сообщения относительно
+        // «сейчас» (`now()->subMinutes(30)`) и сверяют их с `now()->toDateString()`;
+        // на живых часах прогон, попавший на полночь, разводит две половины по
+        // разным сутками и тест падает по причине, не связанной с кодом (ровно это
+        // случилось на полном прогоне 29→30-07-2026).
+        $this->travelTo(CarbonImmutable::parse('2026-07-25 12:00:00', config('app.timezone')));
+    }
+
+    protected function tearDown(): void
+    {
+        $this->travelBack();
+
+        parent::tearDown();
     }
 
     public function test_daily_rollup_counts_include_both_channels_for_the_same_day(): void
