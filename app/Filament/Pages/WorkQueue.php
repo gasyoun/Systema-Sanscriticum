@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\LeadResource;
 use App\Filament\Resources\UserResource;
+use App\Models\FollowUpTask;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
 use App\Models\SupportConversation;
@@ -79,6 +80,18 @@ class WorkQueue extends Page
         return $this->report()->unansweredSupport();
     }
 
+    /**
+     * Пятый бакет — задачи по сделкам на сегодня (GC-C3, H1836). Пока флаг
+     * crm_follow_up_tasks OFF, сервис отдаёт пустую коллекцию, а карточка в
+     * шаблоне не рендерится вовсе.
+     *
+     * @return Collection<int, FollowUpTask>
+     */
+    public function getFollowUpsProperty(): Collection
+    {
+        return $this->report()->followUpTasksDue();
+    }
+
     /** URL-хелперы для действий «открыть». */
     public function leadUrl(int $leadId): string
     {
@@ -93,6 +106,34 @@ class WorkQueue extends Page
     public function dialogUrl(int $userId): string
     {
         return Helpdesk::getUrl().'?user_id='.$userId;
+    }
+
+    public function dealBoardUrl(): string
+    {
+        return DealKanbanBoard::getUrl();
+    }
+
+    /**
+     * Один клик по задаче: «Готово». Единственная запись, которую делает
+     * кокпит по GC-C3 — проставляет done_at, ничего больше не трогает
+     * (ни стадию сделки, ни лид, ни платёж).
+     */
+    public function completeFollowUp(int $taskId): void
+    {
+        if (! config('features.crm_follow_up_tasks')) {
+            return;
+        }
+
+        $task = FollowUpTask::find($taskId);
+        if (! $task) {
+            Notification::make()->title('Задача не найдена')->danger()->send();
+
+            return;
+        }
+
+        $task->markDone();
+
+        Notification::make()->title('Задача закрыта')->success()->send();
     }
 
     /**

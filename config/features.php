@@ -526,6 +526,28 @@ return [
     'zoom_auto_create' => (bool) env('ZOOM_AUTO_CREATE', false),
 
     /*
+     | GetCourse-паритет GC-C3 (H1836): ЗАДАЧИ МЕНЕДЖЕРУ по сделке —
+     | FollowUpTask (тип/срок/факт закрытия) вместо пары полей
+     | `leads.next_contact_at` + `leads.assigned_to`, плюс пятый бакет
+     | «задачи на сегодня» в кокпите «Моя работа сегодня» (WorkQueueReport,
+     | H221). Висит на Deal (GC-C1, H1641), не на Lead.
+     |
+     | ОТДЕЛЬНЫЙ флаг, а НЕ crm_reminders — сознательно (спека
+     | docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §7 F6): crm_reminders
+     | гейтит команду leads:remind-followup, которая САМА ПИШЕТ людям;
+     | переиспользование молча расширило бы смысл одного рубильника на две
+     | разные по риску поверхности. Поведение leads:remind-followup этим
+     | флагом не меняется ни в одну сторону.
+     |
+     | ВЫКЛ по умолчанию — deploy-рубильник: пока флаг OFF,
+     | WorkQueueReport::followUpTasksDue() возвращает пустую коллекцию, а
+     | пятая карточка кокпита не рендерится (таблица создаётся миграцией
+     | всегда — она аддитивна и ни на что не влияет).
+     | Включение — CRM_FOLLOW_UP_TASKS=true + config:cache.
+     */
+    'crm_follow_up_tasks' => (bool) env('CRM_FOLLOW_UP_TASKS', false),
+
+    /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
      | page linking to short /lila drills — DISTINCT from the FSRS review loop
      | (srs.enabled, /dvaram/srs) and orthogonal to it. Когда ВЫКЛ (по умолчанию):
