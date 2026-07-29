@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Crm;
 
+use App\Jobs\SendTelegramMessageJob;
 use App\Models\Deal;
 use App\Models\FollowUpTask;
 use App\Models\Lead;
@@ -209,7 +210,7 @@ class FollowUpTaskTest extends TestCase
 
         $this->artisan('leads:remind-followup')->assertSuccessful();
 
-        Queue::assertPushed(\App\Jobs\SendTelegramMessageJob::class);
+        Queue::assertPushed(SendTelegramMessageJob::class);
         $this->assertNotNull($lead->fresh()->reminded_at);
     }
 }

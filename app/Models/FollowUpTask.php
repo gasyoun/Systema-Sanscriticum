@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\WorkQueueReport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -84,7 +85,7 @@ class FollowUpTask extends Model
     /**
      * Бакет кокпита: открытые задачи, у которых срок наступил (или прошёл).
      * Сравнение по ДАТЕ, а не по времени — зеркало
-     * {@see \App\Services\WorkQueueReport::leadsToContact()}: задача на сегодня
+     * {@see WorkQueueReport::leadsToContact()}: задача на сегодня
      * видна с утра, а не с наступлением часа.
      */
     public function scopeDue(Builder $query): Builder
