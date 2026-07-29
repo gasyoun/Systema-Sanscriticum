@@ -67,7 +67,11 @@ class TelegramSupportAnalytics extends Page
 
     public function getConversationsProperty(): Collection
     {
+        // Страница читает переписку из TelegramSupportMessage и подписывает треды
+        // из `chat` — то есть умеет ровно Telegram-канал. С H1837 в rollup'ах есть
+        // и веб-строки (chat = null), их сюда пускать нельзя.
         return SupportDailyRollup::query()
+            ->telegram()
             ->with(['chat.linkedUser:id,name,email', 'topicAssignments'])
             ->whereDate('conversation_date', $this->selectedDate)
             ->when($this->onlyUnanswered, fn ($query) => $query->where('is_unanswered', true))

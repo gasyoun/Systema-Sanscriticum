@@ -67,6 +67,7 @@ class SupportObservability extends Page
      *     accounts: Collection,
      *     delivery: array{outgoing_total: int, tracked: int, delivered: int, pending: int, rate: float|null},
      *     rollup: array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int},
+     *     web_rollup: array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int},
      *     llm: array{total: int, by_type: Collection, spend_usd: float|null, priced_events: int}
      * }
      */
@@ -77,7 +78,12 @@ class SupportObservability extends Page
         return [
             'accounts' => $this->accounts(),
             'delivery' => $this->delivery($from),
-            'rollup' => $this->rollup($from),
+            'rollup' => $this->rollup($from, SupportDailyRollup::CHANNEL_TELEGRAM),
+            // H1837: тот же расчёт по веб-каналу рядом, отдельной карточкой —
+            // «без ответа» и первый ответ по двум каналам видно на ОДНОМ экране,
+            // но числа не смешаны: соседние карточки страницы (сессии, доставка)
+            // описывают только userbot, и общая сумма читалась бы как его метрика.
+            'web_rollup' => $this->rollup($from, SupportDailyRollup::CHANNEL_WEB),
             'llm' => $this->llm($from),
         ];
     }
@@ -133,13 +139,18 @@ class SupportObservability extends Page
     }
 
     /**
-     * Сводка TG-разговоров за окно из готовых дневных агрегатов.
+     * Сводка разговоров ОДНОГО канала за окно из готовых дневных агрегатов.
+     *
+     * Скоуп канала обязателен (H1837): с появлением веб-строк общий запрос
+     * смешал бы два канала, и «неотвеченные по Telegram» перестали бы означать
+     * то, что написано на карточке рядом с сессиями userbot'а.
      *
      * @return array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int}
      */
-    private function rollup(Carbon $from): array
+    private function rollup(Carbon $from, string $channel): array
     {
         $rollups = SupportDailyRollup::query()
+            ->ofChannel($channel)
             ->whereDate('conversation_date', '>=', $from->toDateString())
             ->get([
                 'id', 'is_unanswered', 'first_response_seconds',

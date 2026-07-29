@@ -556,4 +556,21 @@ return [
      | Включение — GAMES_SKILL_DRILLS=true + config:cache после ревью.
      */
     'games_skill_drills' => (bool) env('GAMES_SKILL_DRILLS', false),
+
+    /*
+     | H1837 — дневная свёртка веб-чата в support_daily_rollups (паритет
+     | измерения дефлекции с Telegram). Единственный НОВЫЙ пишущий путь этой
+     | задачи: ночная `support:rollup-web`. Пока флаг OFF, команда — no-op, ни
+     | одной строки канала `web` не появляется, и все читающие отчёты
+     | (`support:topic-ranking`, `content:detect-gaps`) считают ровно те же
+     | числа, что и до задачи. Миграция аддитивна и накатывается всегда:
+     | `channel` у существующих строк = `telegram`.
+     |
+     | Читающая сторона флагом НЕ гейтится сознательно — она считает то, что
+     | лежит в таблице, поэтому «включить» и «выключить» измерение достаточно
+     | одним рубильником записи, без двух рассинхронизированных состояний.
+     | Включение — WEB_CHAT_DEFLECTION_ROLLUP=true + config:cache (и разовый
+     | догон истории `support:rollup-web --days=N --force`).
+     */
+    'web_chat_deflection_rollup' => (bool) env('WEB_CHAT_DEFLECTION_ROLLUP', false),
 ];

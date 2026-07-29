@@ -4,6 +4,7 @@
         $accounts = $report['accounts'];
         $delivery = $report['delivery'];
         $rollup = $report['rollup'];
+        $webRollup = $report['web_rollup'];
         $llm = $report['llm'];
         $windowDays = $this->windowDays();
     @endphp
@@ -94,6 +95,35 @@
             </div>
             <div>
                 <div class="text-2xl font-semibold tabular-nums">{{ $rollup['outgoing'] }}</div>
+                <div class="text-xs text-gray-500">исходящих</div>
+            </div>
+        </div>
+    </x-filament::section>
+
+    {{-- Сводка веб-чата: те же числа, рядом, но не смешанные с TG (H1837) --}}
+    <x-filament::section>
+        <x-slot name="heading">Веб-чат ({{ $windowDays }} дн.)</x-slot>
+        <x-slot name="description">Тот же дневной агрегат по каналу <code>web</code> — виджет сайта, VK и TG-student-bot. Пусто, пока выключен <code>features.web_chat_deflection_rollup</code>.</x-slot>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+                <div class="text-2xl font-semibold tabular-nums">{{ $webRollup['conversations'] }}</div>
+                <div class="text-xs text-gray-500">разговоров</div>
+            </div>
+            <div>
+                <div class="text-2xl font-semibold tabular-nums {{ $webRollup['unanswered'] > 0 ? 'text-danger-600' : '' }}">{{ $webRollup['unanswered'] }}</div>
+                <div class="text-xs text-gray-500">без ответа{{ $webRollup['unanswered_share'] !== null ? ' ('.$webRollup['unanswered_share'].'%)' : '' }}</div>
+            </div>
+            <div>
+                <div class="text-2xl font-semibold tabular-nums">{{ $webRollup['avg_first_response_seconds'] !== null ? round($webRollup['avg_first_response_seconds'] / 60).' мин' : '—' }}</div>
+                <div class="text-xs text-gray-500">средний первый ответ</div>
+            </div>
+            <div>
+                <div class="text-2xl font-semibold tabular-nums">{{ $webRollup['incoming'] }}</div>
+                <div class="text-xs text-gray-500">входящих</div>
+            </div>
+            <div>
+                <div class="text-2xl font-semibold tabular-nums">{{ $webRollup['outgoing'] }}</div>
                 <div class="text-xs text-gray-500">исходящих</div>
             </div>
         </div>

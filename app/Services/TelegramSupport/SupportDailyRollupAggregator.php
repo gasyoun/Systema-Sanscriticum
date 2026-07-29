@@ -50,6 +50,9 @@ class SupportDailyRollupAggregator
                         'conversation_date' => $day->startOfDay(),
                     ],
                     [
+                        // Явно, а не дефолтом колонки: строка канала — часть
+                        // контракта с кросс-канальными отчётами (H1837).
+                        'channel' => SupportDailyRollup::CHANNEL_TELEGRAM,
                         'first_message_at' => $messages->first()->sent_at,
                         'last_message_at' => $messages->last()->sent_at,
                         'incoming_count' => $messages->where('direction', 'incoming')->count(),

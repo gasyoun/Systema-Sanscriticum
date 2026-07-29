@@ -19,6 +19,12 @@ use Illuminate\Support\Collection;
  * (CAI4/CAI5/CAI6 pick this up). Persists one ContentGapSuggestion row per
  * (category, window); re-running the same window updates in place.
  *
+ * H1837 — like `support:topic-ranking`, this now reads BOTH channels: the join
+ * is on `support_daily_rollups`, which since that change carries web-chat rows
+ * alongside Telegram ones. Deliberately unfiltered by channel — a content gap is
+ * a gap wherever the question arrives, and a topic asked only through the site
+ * widget was previously invisible here.
+ *
  * `has_content` is a title/body substring heuristic against active
  * MessageTemplate::CATEGORY_SUPPORT templates — there is no structured join
  * key between free-text SupportTopicRule categories and MessageTemplate, so

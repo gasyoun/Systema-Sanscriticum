@@ -33,7 +33,11 @@ class SupportDashboardPacketBuilder
 
     private function metricsForDate(string $date): array
     {
-        $query = SupportDailyRollup::whereDate('conversation_date', $date);
+        // Пакет описывает Telegram-аккаунт поддержки (респонденты и чаты читаются
+        // из TelegramSupportMessage), поэтому и метрики скоупим тем же каналом:
+        // с H1837 в rollup'ах живут ещё и веб-строки. Кросс-канальные метрики —
+        // у `support:topic-ranking`, а не здесь.
+        $query = SupportDailyRollup::query()->telegram()->whereDate('conversation_date', $date);
 
         return [
             'conversations' => (clone $query)->count(),
@@ -51,7 +55,7 @@ class SupportDashboardPacketBuilder
     {
         return SupportTopicAssignment::query()
             ->select('category', DB::raw('count(*) as total'))
-            ->whereHas('conversation', fn ($query) => $query->whereDate('conversation_date', $date))
+            ->whereHas('conversation', fn ($query) => $query->telegram()->whereDate('conversation_date', $date))
             ->groupBy('category')
             ->orderByDesc('total')
             ->get()
@@ -87,6 +91,7 @@ class SupportDashboardPacketBuilder
     private function chatsForDate(string $date): array
     {
         return SupportDailyRollup::query()
+            ->telegram()
             ->with(['chat.linkedUser:id,name,email', 'topicAssignments'])
             ->whereDate('conversation_date', $date)
             ->orderByDesc('last_message_at')

@@ -2,6 +2,7 @@
 
 namespace App\Services\TelegramSupport;
 
+use App\Models\ChatMessage;
 use App\Models\SupportDailyRollup;
 use App\Models\SupportTopicAssignment;
 use App\Models\SupportTopicRule;
@@ -13,12 +14,7 @@ class SupportTopicClassifier
     {
         $conversation->topicAssignments()->where('source', 'keyword')->delete();
 
-        $text = TelegramSupportMessage::query()
-            ->where('telegram_support_chat_id', $conversation->telegram_support_chat_id)
-            ->whereDate('sent_at', $conversation->conversation_date)
-            ->pluck('text')
-            ->filter()
-            ->implode("\n");
+        $text = $this->dayText($conversation);
 
         $matched = false;
 
@@ -53,6 +49,32 @@ class SupportTopicClassifier
                 'reason' => 'no keyword match; llm fallback reserved',
             ]);
         }
+    }
+
+    /**
+     * Текст дня для правил-ключевиков. Хранилище зависит от канала строки
+     * (H1837): `telegram` — импортированные сообщения TG-аккаунта, `web` —
+     * `chat_messages` треда. Правила категорий общие для обоих каналов —
+     * второго набора правил заводить нельзя, иначе одна и та же тема получит
+     * две категории в зависимости от того, куда написал студент.
+     */
+    private function dayText(SupportDailyRollup $conversation): string
+    {
+        if ($conversation->channel === SupportDailyRollup::CHANNEL_WEB) {
+            return ChatMessage::query()
+                ->where('support_conversation_id', $conversation->support_conversation_id)
+                ->whereDate('created_at', $conversation->conversation_date)
+                ->pluck('text')
+                ->filter()
+                ->implode("\n");
+        }
+
+        return TelegramSupportMessage::query()
+            ->where('telegram_support_chat_id', $conversation->telegram_support_chat_id)
+            ->whereDate('sent_at', $conversation->conversation_date)
+            ->pluck('text')
+            ->filter()
+            ->implode("\n");
     }
 
     /**

@@ -391,6 +391,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('suggest-support-answers');
 
+        // --- ДНЕВНАЯ СВЁРТКА ВЕБ-ЧАТА (H1837, паритет измерения дефлекции) ---
+        // Telegram-сторону сворачивает сам синк по затронутым датам; у веб-чата
+        // синка нет, поэтому свёртку гоняем ночью за вчера+сегодня (--days=2).
+        // Без неё рейтинг тем `support:topic-ranking` измеряет только Telegram и
+        // недооценивает всё, что спрашивают через виджет/VK/TG-student-bot.
+        // Идемпотентна (updateOrCreate по тред-дню) — повторный проход безопасен.
+        $schedule->command('support:rollup-web --days=2')
+            ->dailyAt('04:35')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('rollup-web-chat-support');
+
         // Просроченные (14+ дней) pending-черновики FAQ-ответов → expired.
         $schedule->command('support:expire-stale-answer-suggestions')
             ->dailyAt('04:10')
