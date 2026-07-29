@@ -1,6 +1,6 @@
 # PWG Arzamas-material pack — «Петербургский словарь»
 
-_Created: 26-07-2026 · Last updated: 26-07-2026_
+_Created: 26-07-2026 · Last updated: 30-07-2026_
 
 Source-of-truth pack for the samskrte.ru longread about PWG (Böhtlingk–Roth,
 *Sanskrit-Wörterbuch*, «Большой Петербургский словарь») in the genre of
@@ -16,6 +16,7 @@ Handoff: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1620-Fabl
 | [SOURCE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/SOURCE.md) | Full essay, pure Markdown, chapters as `## N.` headings |
 | [meta.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/meta.json) | Article frontmatter: title, subtitle, excerpt, slug, meta_* |
 | [FACTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/FACTS.md) | claim → source rows (ACCEPT A7) |
+| [FACTS_REFEREE_VERDICTS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/FACTS_REFEREE_VERDICTS_2026.md) | hostile pre-publication referee (H1862): 136 verdicts, 14 corrections, 1 struck |
 | [ASSETS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/ASSETS.md) | image rights table (ACCEPT A8) |
 | [bibliography.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/bibliography.md) | secondary works actually cited |
 | [DECISIONS_LOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/materials/pwg-arzamas/DECISIONS_LOG.md) | autonomy defaults used (PLAN §4) |
