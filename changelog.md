@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.68.0] - 2026-07-29
+
 ### Fixed
 - **Поправка к разбору простоя: внешний Telegram-мониторинг РАБОТАЛ, вывод об отсутствии секретов был ошибочным (H1904).** В [v1.65.0](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.65.0) утверждалось, что Telegram-шаг монитора не сработал, потому что в репозитории нет Actions-секретов. Основанием был пустой вывод `gh secret list` — но у токена просто нет права читать секреты, и **отсутствие вывода было принято за отсутствие секретов**. Проверка по самим прогонам (`gh run view --json jobs`) опровергает это: шаг «Сообщить в Telegram о простое» в прогоне `30392777459` — `success`, шаг «Закрыть тревогу и сообщить о восстановлении» в прогоне `30466135990` — `success`. За простой ушло ровно **два** сообщения, как и задумано анти-спам-логикой. Настоящая проблема не «оповещения не приходят», а **«приходят поздно»**: сообщение ушло в 22:44, через 1 ч 19 мин после того, как в 21:25 встал планировщик, и только потому, что к тому времени погас сайт. Смерть самого планировщика заметить было нечем — единственное, что могло её увидеть (`cabinet:probe`), находилось внутри него. Это ровно то, что чинит вынос сторожей в отдельные строки cron (v1.67.0), и то, ради чего нужен пульс на healthchecks.io. Урок, вынесенный в документ: **вывод инструмента без прав ≠ факт о мире** — проверять по следам самого действия, а не по тому, что видно наблюдателю. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
@@ -1674,7 +1676,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.67.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.68.0...HEAD
+[1.68.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.67.0...v1.68.0
 [1.67.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.66.0...v1.67.0
 [1.66.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.65.0...v1.66.0
 [1.65.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.64.0...v1.65.0
