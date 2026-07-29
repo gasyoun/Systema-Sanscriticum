@@ -97,6 +97,18 @@ return [
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 
     /*
+     | Шаблонные черновики FAQ-суггестера ПЕРЕД LLM (H1838, тикет S9). Когда ВКЛ,
+     | категория D/E/F с привязанным шаблоном (MessageTemplate.suggester_category)
+     | получает черновик из шаблона с подстановкой плейсхолдеров — LLM для неё
+     | не вызывается вовсе (дешевле и консистентнее); непривязанные категории
+     | идут прежним LLM-путём (support_ai_assist) без изменений. ВЫКЛ по
+     | умолчанию — deploy-рубильник: пока флаг OFF, суггестер ведёт себя
+     | байт-в-байт как до H1838, даже если привязки уже расставлены в админке.
+     | Включение — SUPPORT_TEMPLATE_DRAFTS=true + config:cache после ревью.
+     */
+    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
