@@ -82,6 +82,41 @@ cron (раз в минуту)  →  php artisan schedule:run  →  php artisan <
 пару PHP-процессов примерно по 100 МБ (Laravel + Filament в памяти). Дальше
 ограничителей не было ни одного:
 
+### Конкретный спусковой крючок
+
+Не «когда-нибудь заход мог затянуться» — вот он, в `schedule.log`:
+
+```
+2026-07-28 21:25:04 Running ['artisan' telegram-support:sync]
+ 2 ч. 54 мин. 30 сек. DONE
+2026-07-29 00:19:34 Running ['artisan' zapisi:remind-classes] Killed
+Killed
+Killed
+```
+
+**Один заход прожил 10 470 секунд вместо штатных 36** и всё это время держал
+`schedule:run` в foreground. `cron` заводил новый каждую минуту — около **174**
+цепочек по ~200 МБ. Три `Killed` подряд в 00:19:34 — это OOM-killer, тот же
+момент, что и `oom-kill` в journald.
+
+Отсюда точный порядок смерти, и он важнее самой причины:
+
+| Время (МСК) | Что умерло |
+|---|---|
+| **21:25** | Планировщик — завис на синке |
+| **22:37** | Сайт — перестал отдавать страницы наружу |
+| **00:19** | Контейнер — OOM-kill `cron`, дальше livelock |
+
+**Оповещение умерло на час раньше сайта.** Почему это решает всё — §3.
+
+При этом у команды **есть** watchdog (`sync_timeout_seconds = 120`,
+[`MadelineSyncWatchdog`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSyncWatchdog.php)
+на `pcntl_alarm`), и `pcntl` на хосте загружен — то есть будильник **должен** был
+взвестись и не сработал: 10 470 с против потолка 120 с, превышение в 87 раз.
+Инвариант, на который прямо опирается `Kernel.php` («пока таймаут < TTL, зависший
+заход умирает первым»), не выполняется. Разбор и гипотезы —
+[#840](https://github.com/gasyoun/Systema-Sanscriticum/issues/840).
+
 - `memory_limit = -1` в CLI — потолка на процесс нет;
 - `pids.max = max` — потолка на число процессов нет;
 - свопа нет — упругости нет;
@@ -129,12 +164,22 @@ cron (раз в минуту)  →  php artisan schedule:run  →  php artisan <
 |---|---|---|
 | Внешний монитор GitHub Actions | **Да**, частично | Завёл issue [#823](https://github.com/gasyoun/Systema-Sanscriticum/issues/823) в 22:44. Но Telegram-шаг пропущен: в репозитории **нет ни одного Actions-секрета**, то есть `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` не заведены. Ровно то, что обещано в шапке [`uptime-samskrte.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/uptime-samskrte.yml): без секретов issue заводится, сообщение не уходит. |
 | Пульс на healthchecks.io (`heartbeat:ping`) | **Нет** | `HEARTBEAT_PING_URL` в `.env` отсутствует, `config('heartbeat.url')` резолвится в пустую строку → команда сознательно fail-open и не шлёт ничего. Это единственный сторож, который **переживает смерть сервера**, и он был выключен. |
-| Внутренние Telegram-алерты приложения | **Нет и не могли** | Они выполняются на умирающей машине. Плюс 28-07 в логе 86 отказов `sendMessage` с `error_code 404`. |
+| Внутренние Telegram-алерты приложения (`cabinet:probe`) | **Нет — и вот почему** | Канал **настроен и работает**: «каждые 15 минут система входит smoke-менеджером», сообщения доходят. Но `cabinet:probe` стоит `*/15` **внутри того же `schedule:run`**, который завис на синке в 21:25. За окно 21:25 → 00:19 он не выполнился **ни разу**, поэтому падение сайта в 22:37 не заметил никто. Сторож находился внутри того, что он сторожит. |
 
-Отсюда практический вывод: **включение `HEARTBEAT_PING_URL` — самая дешёвая и
-самая важная из оставшихся мер.** Мониторы, живущие на самой машине, о её смерти
-доложить не могут по построению; частота GitHub-крона измерена и составляет
-~8 % от заявленной (медианный разрыв 122 мин).
+Отсюда два вывода, и первый оказался важнее, чем выглядел.
+
+**1. Сторож не должен делить судьбу с тем, что он сторожит.** Не «алерты не
+настроены» — они настроены и работают. Проблема в том, что `cabinet:probe` жил
+в том же `schedule:run`, который и завис. Исправлено 29-07: обе сторожевые
+команды вынесены **отдельными строками cron**, со своим замком, своим таймаутом
+и своей судьбой (§4). Теперь висящий синк не может их заглушить.
+
+**2. `HEARTBEAT_PING_URL` — самая дешёвая из оставшихся мер.** Любой монитор,
+живущий на самой машине, о её полной смерти доложить не может по построению —
+вынесенная строка cron спасает от «планировщик встал», но не от «контейнер лёг».
+Тревога по молчанию снаружи закрывает и этот случай. Частота GitHub-крона
+измерена и составляет ~8 % от заявленной (медианный разрыв 122 мин), так что он
+второму сторожу не замена.
 
 Проверено 29-07-2026: токен бота в `.env` сейчас **рабочий** (`getMe` → `ok`), и
 чат `5487293147` («Куратор курсов») **достижим**. То есть 404-е 28-го числа
@@ -147,7 +192,8 @@ cron (раз в минуту)  →  php artisan schedule:run  →  php artisan <
 | Предохранитель | Где | Что делает |
 |---|---|---|
 | `systema-schedule-run.sh` | `/usr/local/sbin/` | Обёртка планировщика: `flock -n` (одновременно **ровно один** прогон), `timeout 900s` (зависший не держит замок вечно), жнец осиротевших `artisan`-процессов старше лимита |
-| crontab `www-data` | — | Зовёт обёртку вместо голого `php artisan schedule:run` |
+| `systema-watchdog-run.sh` | `/usr/local/sbin/` | Отдельный раннер для сторожей: свой замок, свой короткий таймаут. **Не может быть заблокирован основным планировщиком** |
+| crontab `www-data` | — | Зовёт обёртку вместо голого `php artisan schedule:run`, плюс **две отдельные строки** для `cabinet:probe` (`*/15`) и `heartbeat:ping` (`*/5`) |
 | `MemoryHigh=2G` / `MemoryMax=3G` | `cron.service.d/memory-cap.conf` | Потолок на всё поддерево планировщика (поставлено админом 29-07 15:37) |
 | `TasksMax=200`, `OOMPolicy=kill`, `Restart=always` | `cron.service.d/99-systema-limits.conf` | Потолок по **числу** процессов; при OOM сносится **вся группа** — больше никаких сирот, cron всегда встаёт чистым |
 | `MemoryHigh=3G` / `MemoryMax=4G` | `supervisor.service.d/memory-cap.conf` | То же для Horizon/Reverb (админ) |
@@ -164,11 +210,25 @@ $ sudo -u www-data /usr/local/sbin/systema-schedule-run.sh
 exit 0
 ```
 
+Сторожа вынесены из планировщика — тот самый урок 28-07:
+
+```cron
+* * * * *    /usr/local/sbin/systema-schedule-run.sh   >> …/schedule.log 2>&1
+*/15 * * * * /usr/local/sbin/systema-watchdog-run.sh "cabinet:probe"  cabinet   120 >> …/watchdog.log 2>&1
+*/5  * * * * /usr/local/sbin/systema-watchdog-run.sh "heartbeat:ping" heartbeat  60 >> …/watchdog.log 2>&1
+```
+
+Дублирование с копиями в `Kernel.php` сознательно и безвредно: `cabinet:probe`
+только читает (плюс одна строка истории и сообщение в Telegram не чаще раза в
+60 мин), `heartbeat:ping` — идемпотентный HTTP-пинг. **Сторож, отработавший
+дважды, — не проблема; сторож, не отработавший ни разу, — это авария выше.**
+
 **Побочный эффект, который надо знать:** пока идёт долгая команда, минутные
 задания этой минуты **пропускаются**, а не копятся. Для
 `telegram-harvest:roster-groups` (до 10 мин раз в час) это до десяти
 пропущенных минут в час. Это сознательный размен: пропуск против зависания.
-Полностью его снимает `->runInBackground()` на долгих командах — см. §6.
+Оповещения он больше не задевает — они вне планировщика. Полностью его снимает
+`->runInBackground()` на долгих командах — см. §6.
 
 ## 5. Что теперь пишется в логи
 
@@ -184,7 +244,8 @@ exit 0
 | `memwatch.sh` | `/var/log/memwatch.log` | раз в минуту: свободная память, load, число процессов, число `php` |
 | `memwatch` детально | `/var/log/memwatch-pressure.log` | при <25 % свободной памяти — топ-25 по RSS и суммы по командам |
 | `earlyoom` | journald | состояние памяти раз в 60 с |
-| logrotate | `schedule.log`, `madelineproto.log`, `horizon.log`, `reverb.log` | раньше не ротировались вообще |
+| `watchdog.log` | `storage/logs/watchdog.log` | срабатывания сторожевых строк cron (пишется только при таймауте — тишина = норма) |
+| logrotate | `schedule.log`, `watchdog.log`, `madelineproto.log`, `horizon.log`, `reverb.log` | раньше не ротировались вообще |
 
 Пример строки `memwatch.log`:
 
@@ -198,17 +259,24 @@ exit 0
 ## 6. Что осталось человеку
 
 Это единственное, что агент сделать не может — нужны доступы и решения.
+Статус на 29-07-2026 вечер.
 
-1. **Своп на хосте Proxmox.** Внутри LXC своп не заводится; это делается на
-   хосте: `pct set <vmid> -swap 4096`. Без свопа у ядра нет упругости, и
-   livelock остаётся физически возможным — `earlyoom` его лишь предупреждает.
-2. **`HEARTBEAT_PING_URL` в `.env`.** Завести проверку на
-   [healthchecks.io](https://healthchecks.io) (period 5 мин, grace 10 мин) и
-   вписать URL. Самая дешёвая мера с наибольшим эффектом: тревогу поднимает
-   молчание, поэтому она переживает смерть машины.
-3. **Actions-секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`** в
-   Settings → Secrets → Actions. Без них внешний монитор пишет issue в пустоту.
-   Проверить путь тревоги: Actions → Uptime → Run workflow → `force_alert = true`.
+1. 🟡 **Своп на хосте Proxmox** — *запрошено у Артёма (`@t3t3r1n`)*. Внутри LXC
+   своп не заводится; это делается на хосте: `pct set <vmid> -swap 4096`. Без
+   свопа у ядра нет упругости, и livelock остаётся физически возможным —
+   `earlyoom` его лишь предупреждает.
+2. 🟡 **`HEARTBEAT_PING_URL` в `.env`** — *ждём ссылку на почту*. Проверка на
+   [healthchecks.io](https://healthchecks.io) (period 5 мин, grace 10 мин).
+   Единственная мера, переживающая **полную** смерть контейнера: тревогу
+   поднимает молчание. Вынесенные строки cron (§4) закрывают «планировщик
+   встал», но не «контейнер лёг».
+3. 🔴 **Actions-секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`** —
+   проверено 29-07: `gh secret list` возвращает **пусто**, секретов в
+   репозитории нет. **Это НЕ то же самое, что оповещения кабинета:**
+   `cabinet:probe` шлёт в Telegram из приложения и работает; здесь речь про
+   отдельный внешний монитор на GitHub Actions, который сейчас заводит issue и
+   молчит. Заводится в Settings → Secrets → Actions; проверить путь тревоги —
+   Actions → Uptime → Run workflow → `force_alert = true`.
 4. **`->runInBackground()` на долгих командах** (`telegram-support:sync`,
    `telegram-harvest:roster-groups`, `mail:scan-bounces`, `backup:run`,
    `avatars:sync`) в [`Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php).
@@ -237,6 +305,8 @@ tail -60 /var/log/memwatch-pressure.log        # кто именно ест, т�
 journalctl -u earlyoom --since '2 hours ago'   # кого и когда прибил earlyoom
 systemctl status cron                          # не в OOM-цикле ли планировщик
 grep -E 'SKIP:|TIMEOUT:|REAP ' /var/www/html/storage/logs/schedule.log | tail -20
+tail -20 /var/www/html/storage/logs/watchdog.log        # пусто = сторожа успевают
+mysql -e 'select ran_at,healthy,summary from cabinet_probe_runs order by id desc limit 5' laravel
 sar -r -s 00:00                                # история памяти за сутки
 pgrep -fc 'artisan'                            # норма ~16-22
 ```
