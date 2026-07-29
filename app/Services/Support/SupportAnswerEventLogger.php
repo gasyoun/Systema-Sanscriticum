@@ -28,6 +28,12 @@ class SupportAnswerEventLogger
     // фактическим LLM-вызовам, а не по всем суггестам.
     public const EVENT_LLM_DRAFTED = 'answer_llm_drafted';
 
+    // Черновик D/E/F собран из привязанного шаблона MessageTemplate (H1838, S9)
+    // — LLM не вызывался. Зеркало EVENT_LLM_DRAFTED, чтобы A/B-сравнение
+    // «шаблонные vs LLM» считалось по событиям одного журнала; в дневной
+    // LLM-cap эти события НЕ входят.
+    public const EVENT_TEMPLATE_DRAFTED = 'answer_template_drafted';
+
     public static function log(SupportAnswerSuggestion $suggestion, string $eventType): void
     {
         $telegramMessageId = $suggestion->source_type === SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE
