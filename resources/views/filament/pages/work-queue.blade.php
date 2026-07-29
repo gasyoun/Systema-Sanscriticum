@@ -4,6 +4,7 @@
         $promises = $this->promises;
         $stuck = $this->stuck;
         $support = $this->support;
+        $followUps = $this->followUps;
     @endphp
 
     <style>
@@ -112,6 +113,33 @@
                 <div class="wq-empty">Все ответы даны 👌</div>
             @endforelse
         </div>
+
+        {{-- 5. Задачи по сделкам на сегодня (GC-C3, H1836). Карточка появляется
+             только при включённом crm_follow_up_tasks — пока флаг OFF, кокпит
+             выглядит ровно как до этого хэндоффа. --}}
+        @if(config('features.crm_follow_up_tasks'))
+            <div class="wq-card">
+                <div class="wq-card-head">
+                    <span class="wq-title">✅ Задачи по сделкам</span>
+                    <span class="wq-count">{{ $followUps->count() }}</span>
+                </div>
+                @forelse($followUps as $task)
+                    <div class="wq-row" wire:key="follow-up-{{ $task->id }}">
+                        <div class="wq-main">
+                            <div class="wq-name">{{ $task->label }}</div>
+                            <div class="wq-meta">
+                                срок {{ $task->due_at->format('d.m.Y') }}
+                                @if($task->isOverdue()) · <span style="color:#dc2626;">просрочено</span> @endif
+                                @if($task->assignee) · {{ $task->assignee->name }} @endif
+                            </div>
+                        </div>
+                        <button type="button" class="wq-btn" wire:click="completeFollowUp({{ $task->id }})">Готово</button>
+                    </div>
+                @empty
+                    <div class="wq-empty">Задач на сегодня нет 🎉</div>
+                @endforelse
+            </div>
+        @endif
 
     </div>
 </x-filament-panels::page>

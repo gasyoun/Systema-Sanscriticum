@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\FollowUpTask;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
 use App\Models\SupportConversation;
@@ -13,14 +14,16 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Агрегатор «Моя работа сегодня» (H221): четыре бакета операторской работы поверх
+ * Агрегатор «Моя работа сегодня» (H221): бакеты операторской работы поверх
  * УЖЕ существующих сигналов — без новой скоринговой модели. Только чтение;
  * действия (написать/напомнить/открыть) живут на самой странице кокпита.
  *
  *   1) лиды на контакт сегодня      — Lead.next_contact_at <= сегодня;
  *   2) обещания просрочены/истекают — PaymentPromise;
  *   3) риск оттока                  — StuckStudentsReport;
- *   4) поддержка без ответа > N ч    — открытый тред, последнее сообщение входящее.
+ *   4) поддержка без ответа > N ч    — открытый тред, последнее сообщение входящее;
+ *   5) задачи по сделкам на сегодня — FollowUpTask (GC-C3, H1836), за флагом
+ *      crm_follow_up_tasks: пока он OFF, бакет пуст и счётчик равен нулю.
  */
 class WorkQueueReport
 {
@@ -121,9 +124,34 @@ class WorkQueueReport
     }
 
     /**
+     * Задачи менеджера по сделкам, у которых наступил срок (GC-C3, H1836).
+     * Тот же паттерн, что и у бакета лидов: сравнение по ДАТЕ, свой лимит,
+     * сортировка по сроку. Закрытость считаем ТОЛЬКО по done_at самой задачи —
+     * состояние сделки задачу не закрывает.
+     *
+     * За флагом crm_follow_up_tasks: пока он OFF — бакет пуст, ни одного
+     * запроса к follow_up_tasks (deploy-рубильник, зеркало Segment/GC-A1).
+     *
+     * @return Collection<int, FollowUpTask>
+     */
+    public function followUpTasksDue(): Collection
+    {
+        if (! config('features.crm_follow_up_tasks')) {
+            return collect();
+        }
+
+        return FollowUpTask::query()
+            ->due()
+            ->with(['deal.user', 'deal.lead', 'deal.course', 'assignee'])
+            ->orderBy('due_at')
+            ->limit(self::LIMIT)
+            ->get();
+    }
+
+    /**
      * Счётчики бакетов для заголовка страницы.
      *
-     * @return array{leads:int, promises:int, stuck:int, support:int}
+     * @return array{leads:int, promises:int, stuck:int, support:int, follow_ups:int}
      */
     public function counts(): array
     {
@@ -132,6 +160,7 @@ class WorkQueueReport
             'promises' => $this->overduePromises()->count(),
             'stuck' => $this->stuckStudents()->count(),
             'support' => $this->unansweredSupport()->count(),
+            'follow_ups' => $this->followUpTasksDue()->count(),
         ];
     }
 }
