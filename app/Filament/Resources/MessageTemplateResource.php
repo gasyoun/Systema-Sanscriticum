@@ -73,6 +73,14 @@ class MessageTemplateResource extends Resource
                     ->label('Активен')
                     ->default(true),
 
+                Forms\Components\Select::make('suggester_category')
+                    ->label('Категория FAQ-суггестера')
+                    ->options(MessageTemplate::suggesterCategories())
+                    ->nullable()
+                    ->native(false)
+                    ->helperText('Привязка к суггестеру (S9): у привязанной категории черновик собирается из этого шаблона, LLM не вызывается. Пусто — шаблон в суггестере не участвует.')
+                    ->columnSpanFull(),
+
                 Forms\Components\Textarea::make('body')
                     ->label('Текст сообщения')
                     ->required()
@@ -102,6 +110,13 @@ class MessageTemplateResource extends Resource
                         MessageTemplate::CATEGORY_SUPPORT => 'success',
                         default => 'gray',
                     }),
+
+                Tables\Columns\TextColumn::make('suggester_category')
+                    ->label('Суггестер')
+                    ->badge()
+                    ->placeholder('—')
+                    ->formatStateUsing(fn (string $state): string => MessageTemplate::suggesterCategories()[$state] ?? $state)
+                    ->color('info'),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Активен')

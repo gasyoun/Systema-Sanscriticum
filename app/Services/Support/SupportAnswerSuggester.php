@@ -45,6 +45,7 @@ class SupportAnswerSuggester
     public function __construct(
         private readonly SupportAnswerFactResolver $facts,
         private readonly SupportLlmDraftComposer $llm,
+        private readonly SupportTemplateDraftResolver $templates,
     ) {}
 
     public function isEnabled(): bool
@@ -201,8 +202,11 @@ class SupportAnswerSuggester
 
         // A/B/C — строковый шаблон из фактов (без LLM). D/E/F (S5) — LLM
         // формулирует по фактам LMS, за флагом support_ai_assist + дневным cap.
+        // S9 (H1838): перед LLM — привязанный шаблон MessageTemplate; есть
+        // привязка → черновик из шаблона, LLM не вызывается вовсе.
         return in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
-            ? $this->llm->compose($category, $user, $text, $sourceType)
+            ? $this->templates->resolve($category, $user)
+                ?? $this->llm->compose($category, $user, $text, $sourceType)
             : $this->facts->resolve($category, $user);
     }
 

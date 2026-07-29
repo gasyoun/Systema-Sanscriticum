@@ -35,10 +35,27 @@ class MessageTemplate extends Model
         ];
     }
 
+    /**
+     * Категории FAQ-суггестера, к которым можно привязать шаблон (H1838, S9).
+     * Только LLM-категории D/E/F: у A/B/C черновик и так строится из живых
+     * фактов LMS без LLM — шаблону там нечего удешевлять.
+     *
+     * @return array<string,string> [code => human label]
+     */
+    public static function suggesterCategories(): array
+    {
+        return [
+            SupportAnswerSuggestion::CATEGORY_PAYMENT => 'D — оплата / цена / тарифы',
+            SupportAnswerSuggestion::CATEGORY_ACCESS => 'E — доступ / группа / кабинет',
+            SupportAnswerSuggestion::CATEGORY_MATERIALS => 'F — материалы / ДЗ / сертификаты',
+        ];
+    }
+
     protected $fillable = [
         'title',
         'body',
         'category',
+        'suggester_category',
         'is_active',
     ];
 
@@ -50,6 +67,12 @@ class MessageTemplate extends Model
     public function scopeForCategory(Builder $query, string $category): Builder
     {
         return $query->where('category', $category)->where('is_active', true);
+    }
+
+    /** Активный шаблон, привязанный к категории FAQ-суггестера (H1838, S9). */
+    public function scopeBoundToSuggesterCategory(Builder $query, string $category): Builder
+    {
+        return $query->where('suggester_category', $category)->where('is_active', true);
     }
 
     public function categoryLabel(): string
