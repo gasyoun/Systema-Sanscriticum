@@ -1,6 +1,6 @@
 # GetCourse-parity — production spec (the R29-equivalent for the parity programme)
 
-_Created: 18-07-2026 · Last updated: 26-07-2026_
+_Created: 18-07-2026 · Last updated: 29-07-2026_
 
 The production ruling of the getcourse-parity programme, required by **R-1**
 ([PLAN §1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md)):
@@ -56,7 +56,7 @@ demoted GC-A3 (§1 ⚠) under audit.
 | **GC-B1** one recurring Zoom meeting per course | B | **DONE** (26-07-2026, H1642) | 2 — shipped | Rescoped 19-07-2026 (MG, weekly `@DECIDE` → option (b)): auto-create ONE recurring meeting **per course**, never per `Schedule` — the single-course-link model (`eda8059`, 27-06-2026) stands. `ZoomService::createMeeting()` now makes a real Zoom API call (`type=8` recurring); trigger is the first schedule-stream generation (`ScheduleGenerator::generate()`) for a course without `zoom_meeting_id`, idempotent on that column. Flag `zoom_auto_create` (default `false`). Tests: `ZoomAutoCreateTest` (5) + rescoped `WebinarProviderSeamTest::test_create_meeting_requires_configured_credentials`. See §7 F1. |
 | **GC-C1** `Deal` + kanban | C | **DONE** (25-07-2026, H1641) | 2 — shipped | F2 ruled by MG 21-07-2026 → separate `Deal` entity. Shipped: [`Deal`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Deal.php)/[`DealStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealStage.php)/[`DealTransition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DealTransition.php), `deals`/`deal_stages`/`deal_transitions` migrations, [`DealKanbanBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DealKanbanBoard.php), [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php), flag `crm_pipeline_board` (default `false`). `LeadKanbanBoard`/`LeadStage` (H451) deliberately **untouched** — the one question this ticket did NOT resolve, opened as §7 F9 and **ruled + implemented 26-07-2026** (H1658): both boards stay, and a THIRD board [`UnifiedSalesBoard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/UnifiedSalesBoard.php) shows leads and deals in four shared columns ([`UnifiedSalesStage`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/UnifiedSalesStage.php)) — view layer only, same flag, no migration. |
 | **GC-C2** manager sales attribution | C | **NOT_BUILT** | **2** (§4) | `manager_sales_report` absent; `OrderPaymentConversionService` groups by course and channel only (lines 223, 246). Across the whole tree `assigned_to` is read by **zero** reports. |
-| **GC-C3** `FollowUpTask` | C | **NOT_BUILT** | 3 — tail | `FollowUpTask` occurs exactly once repo-wide: the roadmap line defining it. Flag `crm_reminders` **does** exist (line 67, default `false`) but gates the pre-existing [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php), not this ticket. See §7 F6. |
+| **GC-C3** `FollowUpTask` | C | **SHIPPED** (H1836, 29-07-2026, [PR #837](https://github.com/gasyoun/Systema-Sanscriticum/pull/837), [v1.66.0](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.66.0)) | — | [`FollowUpTask`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/FollowUpTask.php) висит на `Deal`, не на `Lead`; `WorkQueueReport` получил пятый бакет `followUpTasksDue()`. **F6 закрыт в пользу НОВОГО флага** `crm_follow_up_tasks` (default `false`): `crm_reminders` оставлен ровно тем, чем был — гейтом [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php), поведение которого закреплено регрессией в обе стороны. |
 | **GC-D1** quiz engine, translit-aware | D | **NOT_BUILT** | 3 — head | No `Quiz`/`Question`/`QuizAttempt` model or table. Only grading code is `MarathonController::completeLevelQuiz()` (config-driven). **No runtime IAST/Cyrillic/Devanāgarī → SLP1 transcoder exists in `app/`** — SLP1 appears only as pre-computed data. See §7 F7. |
 | **GC-D3** progress gating | D | **NOT_BUILT** | 3 | [`Lesson::isUnlockedBy`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Lesson.php) lines 255–262 is still exactly the preview short-circuit plus the tariff-key check. No per-course opt-in column. Depends on GC-D1. |
 | **GC-D2** homework scoring | D | **NOT_BUILT** | 3 | `HomeworkSubmission` `$fillable` carries status + review metadata only; no score/rubric column, no later ALTER. Nearest precedent for nullable decimal scores: the certificates exam-scores migration. |
@@ -368,7 +368,7 @@ House conventions, verified across the 20 existing keys:
 |---|---|---|---|
 | GC-C1 | `crm_pipeline_board` | `false` | ✅ Shipped 25-07-2026 (H1641). Gates **both** `DealKanbanBoard` and `PaymentDealBridgeObserver`'s write path — while OFF the bridge early-returns and not one `deals` row is written. Default pinned by `DealFlagDefaultTest` (config value + admin-visible surface), closing the §6 hygiene gap for this flag. |
 | GC-C2 | `manager_sales_report` | `false` | |
-| GC-C3 | — | — | **Anomaly:** `crm_reminders` already exists and gates the pre-existing reminder command. Reusing it silently widens its meaning — §7 F6. |
+| GC-C3 | `crm_follow_up_tasks` | `false` | **RESOLVED 29-07-2026 (H1836):** a NEW flag was minted rather than widening `crm_reminders`, which keeps gating only the reminder command that writes to people. §7 F6 closed. |
 | GC-B3 | `webinar_provider_abstraction` | `false` | **Owed retroactively** — the seam shipped unflagged against the roadmap's blanket "всё за фича-флагом" rule. §7 F8. |
 | GC-D1 / D2 / D3 / D4 | `quizzes` · `homework_scoring` · `progress_gating` · `auto_certificates` | `false` | |
 | GC-A1 / A2 / A3 / A4 | `marketing_segments` · `unified_channel_router` · `marketing_campaigns` · `marketing_automation_flows` | `false` | `marketing_segments` **shipped 25-07-2026 (H1637)** — flag now live in `config/features.php`, default unchanged (`false`). |
@@ -457,10 +457,18 @@ ways (§4.1), and the roadmap's implied `payments.lead_id` path is near-empty by
 manager scoreboard on that gate is invisible to its own subjects. Whether managers see their own row,
 everyone's, or none is a management decision, not an engineering one.
 
-**F6 · GC-C3 — reuse `crm_reminders` or mint a new flag.** The flag exists and today gates
+**F6 · GC-C3 — reuse `crm_reminders` or mint a new flag. ✅ RESOLVED 29-07-2026 (H1836) — new flag.**
+The flag exists and today gates
 `RemindLeadsForFollowup`. Promoting `next_contact_at`/`assigned_to` into a `FollowUpTask` under the
 same flag silently widens what one switch controls; a new flag splits control but leaves two flags
-for one feature.
+for one feature. **Ruled in favour of the new flag** `crm_follow_up_tasks` (default `false`): the two
+surfaces differ in *risk*, not just in scope — `crm_reminders` gates a command that autonomously
+writes to people in Telegram, while `FollowUpTask` is a read-mostly operator object. One switch over
+both would mean nobody can enable the task board without also arming outbound messaging. The "two
+flags for one feature" cost is real but bounded, and is paid once at deploy time; it is documented in
+[`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) so the
+deployer is not left to guess. `RemindLeadsForFollowup` behaviour is regression-locked in both
+directions (tasks ON + reminders OFF → no-op; tasks OFF + reminders ON → ping as before).
 
 **F7 · GC-D1 — where translit-aware answer checking gets its transcoder.** The roadmap defers this
 ("порт в PHP или вызов через внутренний сервис — решить при сборке"), and it is still open. **No

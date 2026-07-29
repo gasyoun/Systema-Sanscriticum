@@ -1,6 +1,6 @@
 # Roadmap: паритет с getcourse.ru — Q3 2026
 
-_Created: 09-07-2026 · Last updated: 18-07-2026_
+_Created: 09-07-2026 · Last updated: 29-07-2026_
 
 > **Производственная спецификация programme-of-record — [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md)** (H1144, 18-07-2026, R29-эквивалент по R-1). Этот роадмап остается **анализом-of-record** (gap-анализ + 7 рулингов MG); спецификация — **вход для сборки волны 2**: состояния всех 14 тикетов, сверенные с деревом на `9b63861`, правило границы денежного ядра (§2), производственная глубина по GC-C1/GC-C2 (§3–§4) и 8 названных развилок (§7). Где §1 спецификации расходится с §3 ниже — **верна спецификация** (сверка с деревом свежее): GC-B2 ✅ done, **GC-B3 частично сдан** ([PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) — не «Later», как в §4), GC-C1 частично (канбан+стадии сданы по `Lead`, сущности `Deal` нет).
 
@@ -49,7 +49,7 @@ Gap-анализ — четыре read-only разведки по коду (09-0
 
 **GC-C2 · Атрибуция продаж по менеджерам** — `Lead.assigned_to` есть, но ни один отчет не атрибутирует конверсию/выручку менеджеру ([`OrderPaymentConversionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) ломает только по курсу/каналу). Добавить разбивку по `assigned_to` (после GC-C1 — по `Deal.assigned_to`). Filament-страница. **E:S · V:M · R:высокий · Risk:низкий · flag:`manager_sales_report`**
 
-**GC-C3 · Объект-задача менеджеру** `Next` — промоутить поля `next_contact_at`/`assigned_to` в реальную модель `FollowUpTask` (due/done/тип), кормит [`WorkQueueReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/WorkQueueReport.php); включить флаг `crm_reminders`. После GC-C1 задачи вешаются на `Deal`, не на `Lead`. **E:M · V:M · R:средний · Risk:низкий · flag:`crm_reminders`**
+**GC-C3 · Объект-задача менеджеру** ✅ **СДЕЛАНО 29-07-2026 (H1836, [PR #837](https://github.com/gasyoun/Systema-Sanscriticum/pull/837), [v1.66.0](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.66.0))** — поля `next_contact_at`/`assigned_to` промоутированы в модель [`FollowUpTask`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/FollowUpTask.php) (тип/`due_at`/`done_at`), кормит [`WorkQueueReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/WorkQueueReport.php) пятым бакетом. Задачи висят на `Deal`, не на `Lead`, как и предписано после GC-C1. **Отступление от строки роадмапа, сознательное:** флаг НЕ `crm_reminders`, а новый `crm_follow_up_tasks` — развилка спеки §7 F6 закрыта в пользу нового флага, потому что `crm_reminders` гейтит команду, которая сама пишет людям в Telegram. **E:M · V:M · R:средний · Risk:низкий · flag:`crm_follow_up_tasks`**
 
 ### Домен D — Тесты/квизы (greenfield; сразу с гейтингом и транслит-aware проверкой — рулинги §5.3/§5.5)
 
@@ -78,7 +78,7 @@ Gap-анализ — четыре read-only разведки по коду (09-0
 Порядок закреплен рулингом §5.6: дешевые вебинарные победы → CRM → квизы → маркетинг.
 
 **Now** (быстрые победы + CRM-ядро): GC-B1 → GC-B2 → GC-C1 (Deal+канбан) → GC-C2
-**Next** (квизы одним потоком + фундамент маркетинга): GC-D1 → GC-D3 → GC-D2 → GC-D4 → GC-C3 → GC-A1 → GC-A2
+**Next** (квизы одним потоком + фундамент маркетинга): GC-D1 → GC-D3 → GC-D2 → GC-D4 → ~~GC-C3~~ (сделано 29-07-2026, H1836) → GC-A1 → GC-A2
 **Later** (тяжелые хвосты, вероятно Q4): GC-A3 → GC-A4 (гибрид) → GC-B3 (шов + BBB-скелет; BBB-сервер — инфра Q4)
 
 Логика: сперва добить почти-готовый вебинар-домен (B1/B2 — минимум усилий, максимум ценности); затем `Deal`+канбан — ежедневный инструмент менеджера при ручных продажах (окупается быстрее квизов); квизовый поток D1→D3 идет неразрывно (движок сразу с гейтингом, транслит-aware с первого релиза); маркетинг-фундамент (A1 сегменты → A2 роутер) — хвост квартала, на него в Q4 сядут кампании A3 и гибридные цепочки A4.
