@@ -336,7 +336,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.51.0] - 2026-07-22
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Kochergina lesson 1 → dedicated SRS deck (H1431).** New
   `srs:import-kochergina-lesson1` artisan command maps the already-sourced
   `database/seeders/data/memrise_6502608/level_02.csv` (Занятие I vocabulary,
@@ -414,7 +413,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.50.0] - 2026-07-21
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1396 §§2–4: чекаут переживает свою сессию (не-денежная половина).** Три
   дефекта, общий корень с §1 — «страница чекаута живёт дольше собственной сессии»,
   каждый за флагом (по умолчанию OFF), кроме §4-троттла (обычное усиление, которое
@@ -476,7 +474,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.49.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1291: корпус возражений — микрокопия в точке продажи (ВРЕМЯ + ЦЕНА).**
   Последний лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)):
@@ -500,7 +497,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.48.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1357: детерминированный `/help` и «мои задания» в боте — до передачи `CuratorAi`.**
   `StudentSelfService` получил `matchesHelpIntent`/`helpMenu()` и
   `matchesHomeworkIntent`/`homeworkSummary()` по образцу уже существующего
@@ -544,7 +540,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.46.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Free-drill funnel is now measured — an anonymous `game_events` telemetry rail for `/lila`** ([H1360](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1360-Opus_Systema-Sanscriticum_free-drill-funnel-instrumentation-game-events_20.07.26.md), [PR #622](https://github.com/gasyoun/Systema-Sanscriticum/pull/622)). The whole drill family (ligatures/roots/sort/match/cloze) previously stored **not one row** — `gate.js` kept its one-free-play state in `localStorage` only, and `GET /api/games/auth` was the sole server touchpoint — so the Tier-0 funnel question (how many visitors play → finish → hit the register wall → click «Начать бесплатно») was unanswerable. Added a first-party `POST /api/games/event` ingest (public web-guard, throttled, CSRF-exempt), a new `game_events` table, a `public/lila/telemetry.js` sender (`navigator.sendBeacon`), a `games:funnel --days=N` report command, and a Filament **«Воронка тренажёров»** page (manager/admin).
   - **Anonymous by construction (privacy fence):** the table stores no student id, no IP, and no user-agent — only a short client-minted `anon_id` stripped server-side to `[A-Za-z0-9]{0,32}`. The `authenticated` flag is stamped from the web session on the server, never trusted from the client. This keeps the table out of 152-ФЗ personal-data scope.
   - **`gate.js` untouched:** `telemetry.js` is a passive DOM observer of the wall and completion signals gate.js already produces, so the gate's own gating behaviour stays byte-for-byte unchanged (asserted by test). It uses a distinct `localStorage` key (`sgx_anon_v1`) and never reads or writes the gate's `sgx_played_v1`.
@@ -601,7 +596,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.44.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1358: `payments:expire-stale-checkouts` — abandoned-checkout reaper.**
   Pending `Payment` rows created at checkout provisionally hold resources
   (prana spend, applied referral credit, consumed deposit credit, promo-code
@@ -645,7 +639,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.43.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1356: frequency-ranked root drills (top-25/50/100) in `public/lila/roots/`.**
   New match-family exercise pairing each Sanskrit verbal root (deva + IAST hint)
   with its most frequent attested form (RU gloss as hint), banded by DCS corpus
@@ -661,7 +654,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.42.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1290: installments — the no-shame «разбить на части» checkout ask.**
   Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -684,7 +676,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.41.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1293: лесенка цен с позиционированием на витрине `/online`.** Лейн волны
   revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -702,7 +693,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.40.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1292: диаспорный путь оплаты — PayPal-путь получил тайминги и подтверждение студенту.**
   Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -725,7 +715,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.39.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1289: dunning — одно напоминание должнику стало лестницей из четырёх стадий.**
   Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -750,7 +739,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.38.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1286: подтверждение покупки + онбординг первой недели.** Лейн волны
   revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -771,7 +759,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.37.0] - 2026-07-20
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1288: возврат — страница `/vozvrat` поверх оферты.** Лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
   Trust row чекаута обещал «Возврат по оферте» и не вел никуда; порядок возврата
@@ -813,7 +800,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.35.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1285: момент после оплаты — страницы success/fail вместо редиректов.** Первый
   Fable-лейн волны revenue-copy
   ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md)).
@@ -837,7 +823,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.34.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1345: слежка за ростом файлового хранилища.** Запрос MG: «можно ли поставить слежку
   за этим, чтобы сервер не лег от файлов». До этого рост медиа не измерялся **ничем** —
   `disk_free_space`/`du` не встречались в коде ни разу, то есть узнать о проблеме можно было
@@ -881,7 +866,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.33.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1343: приём видео в домашних заданиях.** MG постановил «видео прежде не было, надо
   сделать» — до этого ни `accept` инпута, ни серверное правило `mimes:` не содержали ни
   одного видеоформата, так что попытка приложить видео падала на валидации, а подпись формы
@@ -940,7 +924,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.31.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H164: Telegram Track C — @zapisi_ORSbot (class-booking bot) integration.**
   Executes the locked D7–D11 rulings
   ([DECISIONS_telegram_harvester.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_telegram_harvester.md#track-c--second-bot-account-zapisi_orsbot)):
@@ -973,7 +956,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.30.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1281 (D6): «Лигатуры по частотности» — деванагари-тренажёр конъюнктов.** Новое
   статичное семейство `public/lila/ligatures/` в существующей `public/lila/`
   игротеке (не новый движок — reuse `match/engine.js`+`match/engine.css` as-is, per the
@@ -998,7 +980,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.29.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1280 (D4): SRS-колода «Корни санскрита по частотности».** Новая системная колода
   `sanskrit-roots-frequency` в существующем FSRS-тренажёре (H211): 570 санскритских
   корней в порядке корпусной частотности (kosha
@@ -1025,7 +1006,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.28.0] - 2026-07-19
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Corpus-frequency learner surfaces staged (queued, docs-only):** new plan
   [`docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md)
   (+ metadoc) staging two Tier-0 integrations via
@@ -1042,13 +1022,11 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.27.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1147: ESP transactional-email transport + `mail:preflight` guard — fixes issue #504's repo-side root cause.** `.env.example` no longer ships `MAIL_HOST=mailpit` as if it were a production value — local dev keeps mailpit, with a commented production shape adjacent pointing at the new [`docs/mail-esp.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mail-esp.md) setup contract (`.env` keys per driver class, SPF+DKIM+DMARC requirement, `mailing`-queue worker requirement). New `php artisan mail:preflight` command ([`app/Console/Commands/MailPreflight.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MailPreflight.php)) rejects a dev mail-catcher host or placeholder sender outside `APP_ENV=local` (non-zero exit, names the reason), warns (non-fatal) when `QUEUE_CONNECTION` isn't `sync`, and supports an opt-in `--send=<addr>` real test send; proven by `tests/Feature/Mail/MailPreflightTest.php` (7/7 green, no network by default). Added `symfony/mailgun-mailer` + `symfony/postmark-mailer` (+ `symfony/http-client`) so the existing `mailgun`/`postmark` blocks in `config/mail.php` are actually usable, alongside the already-generic `smtp` mailer — vendor choice stays a human `@DECIDE` (R-3), no vendor hardcoded. [DEPLOY_QUEUE №37](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) has the exact deploy sequence. **Does not claim mail is delivered** — issue #504 stays open until a human picks an ESP, creates the account, and installs the prod secret. Sonnet 5 (`claude-sonnet-5`). [H1147](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1147-Sonnet_Systema-Sanscriticum_esp-transactional-mail-transport-preflight_17.07.26.md).
 
 ## [1.26.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1144 (W1-D1): производственная спецификация getcourse-паритета — R29-эквивалент, которого требует R-1.** [docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) + [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.meta.md). 9 разделов: композиция всех 14 тикетов GC-* с состоянием, **сверенным с деревом** (`9b63861`) — по одному read-only агенту на тикет, каждый вердикт кроме high-confidence `NOT_BUILT` перепроверен вторым агентом с заданием **опровергнуть** его (25 агентов); **лестница приоритетов записи** (§2) — обобщение правила границы денежного ядра («слой `Deal` наблюдает денежное ядро и никогда его не авторизует») на все 14 тикетов, то самое правило, которого нет у роадмапа и которое всегда нужно сборщику; производственная глубина по GC-C1 (`Deal`+канбан, точка подключения моста — `PaymentObserver.php:63`) и GC-C2 (атрибуция по менеджерам); дата-билл, план флагов, 8 названных развилок (ни одна не разрешена — это работа человека) и последовательность «один шаг = один хэндофф».
   Три состояния расходятся с роадмапом H438: **GC-B3 частично сдан** ([PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549)), хотя роадмап числит его в «Later» — при этом привязка контейнера **не имеет ни одного потребителя** (вебхук резолвит конкретный `ZoomService`), а блока `services.bbb` нет, так что абстракция инертна; **GC-A3** понижен PARTIAL → NOT_BUILT (за «частичную сдачу» принимали объявленную самим тикетом базу переиспользования); **GC-C1** частично сдан, но в форме **отвергнутой** архитектуры.
   Главная находка — развилка F2: **два живых управляющих решения противоречат друг другу.** [Uprava DECISIONS_roadmap_forks_2026H2.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_roadmap_forks_2026H2.md) §R2 (10-07) рулит «расширять `Lead`», ROADMAP §5 (11-07 00:01) рулит «отдельная сущность `Deal`»; H451 сдал `LeadStage`+`LeadKanbanBoard` 10-07 11:06 — **между** ними, корректно исполнив действовавший тогда рулинг. §R2 никогда не был помечен как superseded. Требуется решение человека. Opus 4.8 (`claude-opus-4-8`). [H1144](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1144-Opus_Systema-Sanscriticum_getcourse-parity-production-spec-r29-equivalent_17.07.26.md).
@@ -1056,13 +1034,11 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.25.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1146 (W1-D5): Memrise course 6679375 export runner + validator (time-critical, irreversible).** Memrise is sunsetting community courses with no published shutdown date; an agent cannot obtain a Memrise login, so the deliverable shrinks the human's export step to two commands. [`scripts/memrise_export.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/memrise_export.py) (stdlib-only, credential from `MEMRISE_SESSION` env var, never argv; `--dry-run`) emits exactly the `manifest.json` + `level_NN.csv` contract already read by `php artisan srs:import-memrise` ([`ImportMemriseSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportMemriseSrsDeck.php)). [`scripts/memrise_export_validate.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/memrise_export_validate.py) checks that contract with no network and no credentials — manifest parses, every declared level file exists, every CSV header contains every manifest-declared column, no empty levels — proven against [`tests/fixtures/memrise_sample/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/memrise_sample) and against both failure modes independently (removed level file, renamed CSV header). Runner is untested against live Memrise (no agent credentials) — see [the destination README](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/memrise_6679375/README.md) for the honest boundary and the CourseDump2022 fallback. Sonnet 5 (`claude-sonnet-5`). [H1146](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1146-Sonnet_Systema-Sanscriticum_memrise-export-runner-validator-6679375_17.07.26.md).
 
 ## [1.24.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1224: «Жизненные правила для санскритологов» — новый раздел лендинга samskrte.ru.** Новый Filament-блок конструктора `life_rules_block` (17-й в `LandingPageResource`): 45 максим из [docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md) (H1215 v2) предзаполнены дефолтом Repeater-поля — куратор просто перетаскивает блок на лендинг, текст редактируется через админку. Рендер — сплошной поток без аккордеона (по образцу шумановских Lebensregeln), свёрнутый до 7 правил с кнопкой разворота (Alpine.js, стиль `faq_block`). Раздел лендинга, не отдельная страница — руление MG 18-07-2026 ([метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.meta.md)). 4/4 теста зелёные ([`tests/Feature/LifeRulesBlockTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/LifeRulesBlockTest.php)). Sonnet 5 (`claude-sonnet-5`). [H1224](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1224-Sonnet_Systema-Sanscriticum_lebensregeln-landing-section_18.07.26.md).
 
 ## [1.23.0] - 2026-07-18
@@ -1078,53 +1054,44 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.21.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1215 (v1): «Жизненные правила для санскритологов» — 40 максим по образцу Шумана, голосом Зализняка.** Манифест школы samskrte.ru: жанровая рамка — «Musikalische Haus- und Lebensregeln» Шумана (1848), голос — RWS-регистры [zalizniak-method](https://github.com/gasyoun/RuWritingStyles/blob/main/styles/passports/zalizniak-method.yml) + [zalizniak-shkolnikov-1](https://github.com/gasyoun/RuWritingStyles/blob/main/styles/passports/zalizniak-shkolnikov-1.yml); оси: ухо vs. глаз (устная Индия против табличной Европы — опирается на диагноз «NO AUDIO» из [DIGITAL_SANSKRIT_PEDAGOGY_FIELD_2026.md](https://github.com/gasyoun/SanskritGrammar/blob/main/DIGITAL_SANSKRIT_PEDAGOGY_FIELD_2026.md) §3.7) · ежедневное ремесло · инструменты · метод · этос. Спецификация утверждена в интервью MG (3 раунда, 11 вопросов) — зафиксирована в [метадоке](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.meta.md). Текст: [docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ZHIZNENNYE_PRAVILA_SANSKRITOLOGOV_2026.md). Ревизия по стенограммам (выступления MG, записи курсов, интервью санскритологов) = [H1215](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1215-Fable_Systema-Sanscriticum_lebensregeln-sanskritologov_18.07.26.md). [PR #564](https://github.com/gasyoun/Systema-Sanscriticum/pull/564). Fable 5 (`claude-fable-5`).
 
 ## [1.20.0] - 2026-07-18
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1197 (Jivo-паритет S2/5, Pillar 2): проактивный монитор посетителей + оператор пишет первым.** Второй уникальный столп Jivo: куратор видит **живой список посетителей на сайте сейчас** (город из S1, текущая страница, время на сайте) — включая тех, кто ещё ничего не написал, — и может **написать первым**; сообщение всплывает в чат-виджете посетителя. Новая эфемерная таблица ([`create_support_visitor_presences_table`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_07_17_130000_create_support_visitor_presences_table.php)); presence-beacon [`PublicPresenceController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PublicPresenceController.php) `POST /support/presence` апсертит строку по `guest_token` (реюз H536), ответ несёт `conversation_id` — так проактив куратора долетает до молчащего посетителя; гео резолвится тем же [`VisitorGeoResolver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/VisitorGeoResolver.php) (S1) через [`ResolveVisitorPresenceGeoJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/ResolveVisitorPresenceGeoJob.php); [`PruneStaleVisitorPresencesJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/PruneStaleVisitorPresencesJob.php) выметает устаревшие (окна — [`config/support_presence.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/support_presence.php)). Операторская страница [`VisitorsOnline`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/VisitorsOnline.php) «Посетители онлайн» (гейт: флаг + не-преподаватель, как `Helpdesk`): живой список (`wire:poll`) + кнопка «Написать» — тред открывается/переоткрывается (реюз `openForGuest`/`openFor`), curator-сообщение бродкастится `ChatMessageSent`; виджет [`support-chat-widget.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/support-chat-widget.blade.php) шлёт beacon с первого захода и раскрывается на проактив. **Осознанное отступление:** источник правды — beacon → таблица (heartbeat) + `wire:poll`, а не Reverb presence-канал (дешевле по WS, полностью тестируется без Reverb; см. [ROADMAP §3](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md)). Боты НЕ пишут людям сами (принцип MG) — приглашение шлёт только человек. Всё за флагом `support_visitor_presence` (**OFF** по умолчанию); **@DECIDE MG — 152-ФЗ sign-off** на отслеживание анонимного посетителя (гейт прод-включения, не билда). 20 новых тестов ([`SupportVisitorPresenceTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SupportVisitorPresenceTest.php) 9 · [`VisitorsOnlinePageTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/VisitorsOnlinePageTest.php) 9 · +2 render) + full suite 1582 зелёные; деплой — [DEPLOY_QUEUE №32](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md). [PR #560](https://github.com/gasyoun/Systema-Sanscriticum/pull/560). Opus 4.8 (`claude-opus-4-8`).
 
 ## [1.19.0] - 2026-07-17
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1196 (Jivo-паритет S1/5, Pillar 1): гео/город посетителя веб-чата в панели куратора.** Куратор в [Helpdesk](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) теперь видит «📍 Город, Страна» и страницу входа гостя — тот самый визитор-слой, ради которого держат Jivo на samskrtam.ru. Аддитивная миграция ([`add_visitor_context_to_support_conversations`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_07_17_120000_add_visitor_context_to_support_conversations.php)) добавляет `visitor_ip/city/region/country/geo_resolved_at/entry_url/referrer` на тред; [`PublicChatController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PublicChatController.php) фиксирует IP+страницу+referrer при первом сообщении (идемпотентно, без внешних вызовов), а `ResolveVisitorGeoJob` → `VisitorGeoResolver` резолвят город асинхронно по драйверу из [`config/support_geo.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/support_geo.php) (`null`-дефолт / `cloudflare` / `ipapi`). Виджет шлёт `page`. Всё за флагом `support_visitor_geo` (**OFF** по умолчанию); провайдер города — @DECIDE MG (см. [ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md) §2). 11 тестов [`SupportVisitorGeoTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SupportVisitorGeoTest.php) + 23 регрессионных чат-теста зелёные; деплой — [DEPLOY_QUEUE №31](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md). Новый [`docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_JIVO_VISITOR_PARITY_2026_2027.md) ставит задачи по всем 6 требованиям паритета (S1 сделан; S2–S5 = H1197–H1200). Opus 4.8 (`claude-opus-4-8`).
 
 ## [1.18.1] - 2026-07-17
 ### Fixed
 - **H1145: `config/srs.php` default restored to `false` (R-6 baseline protection).** The default had been flipped to `true` by H447 (PR #442, commit `6267d70`) for an August-2026 pilot rationale superseded by R-5/R-6 — three other places (the same file's docblock, `routes/web.php` ~L260, `DEPLOY_QUEUE.md` #24) still asserted OFF-by-default, so an unpatched deploy would have put an SRS nav entry in front of every student and corrupted the R20 baseline. `tests/Feature/Srs/SrsFlagDefaultTest.php` pins `config('srs.enabled') === false` and `GET /dvaram/srs` → 404 with no `SRS_ENABLED` in env; full SRS suite (30 tests) and full `php artisan test` (1549 tests, 4478 assertions) green. Protects the R20 baseline — does not start it (that clock begins only when a human deploys `DEPLOY_QUEUE.md` #25). [PR #553](https://github.com/gasyoun/Systema-Sanscriticum/pull/553).
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **W1-D4: пять Mailable марафона из рулевого пакета H1067 (H1148).** `MarathonWelcomeMail`/`Day1`/`Day2`/`Day3`/`RecordingMail` + шаблоны `resources/views/emails/marathon/` — текст перенесен ДОСЛОВНО из [marathon-email-sequence.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-email-sequence.md) (обращение «вы», без эмодзи и срочности — анти-urgency дизайн сохранен); плейсхолдеры только рулевые ({link}/{tg_link}/{date}/{host}/{coupon}/{recording_link}); Day3 несет оба трек-варианта (3а/3б). Все на очереди `mailing`, [MarathonMailablesTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Mail/MarathonMailablesTest.php) — рендер/темы/очередь/отсутствие неразрешенных плейсхолдеров и эмодзи. **Отправка сознательно инертна**: send-сайтов вне `app/Mail/` нет — канал ждет ESP-гейта (H1147), Telegram остается основным; DEPLOY_QUEUE №27a. Fable 5 (`claude-fable-5`) по разрешению MG на Sonnet-ряд.
 
 ## [1.18.0] - 2026-07-17
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **GC-B3: шов `WebinarProvider` (страховка от ухода Zoom, руление R1 — BigBlueButton).** Интерфейс с тремя методами (createMeeting / fetchParticipants / normalizeWebhook); `ZoomService` реализует его без изменения поведения (вебхук-контроллер потребляет `normalizeWebhook` — разбор байт-в-байт прежний); скелет `BigBlueButtonService` с формой BBB API (бросает до развертывания Q4); провайдер-нейтральные алиасы `meeting_*` поверх `zoom_*` (реверсивная миграция, бэкфилл копией); биндинг шва на Zoom-драйвер. Авто-создание Zoom-встреч НЕ восстановлено — остается @DECIDE GC-B1. 7 unit-тестов шва; CI зеленый. [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) + деплой-строка №29 ([PR #550](https://github.com/gasyoun/Systema-Sanscriticum/pull/550), общий `php artisan migrate`). H601, Fable 5 (`claude-fable-5`).
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **GC-B3: шов `WebinarProvider` (страховка от ухода Zoom, руление R1 — BigBlueButton).** Интерфейс с тремя методами (createMeeting / fetchParticipants / normalizeWebhook); `ZoomService` реализует его без изменения поведения (вебхук-контроллер потребляет `normalizeWebhook` — разбор байт-в-байт прежний); скелет `BigBlueButtonService` с формой BBB API (бросает до развертывания Q4); провайдер-нейтральные алиасы `meeting_*` поверх `zoom_*` (реверсивная миграция, бэкфилл копией); биндинг шва на Zoom-драйвер. Авто-создание Zoom-встреч НЕ восстановлено — остается @DECIDE GC-B1. 7 unit-тестов шва; CI зеленый. [PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549), H601, Fable 5 (`claude-fable-5`). Деплой: [DEPLOY_QUEUE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) — общий `php artisan migrate`.
 
 ## [1.17.1] - 2026-07-17
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1067: marathon 28-08 cohort RU comms pack.** New [marketing/marathon-2026-08/](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08) — two landing-copy variants (beginner-fear-focused / outcome-focused) + shared FAQ, a 5-email sequence (drafts only: prod SMTP broken, [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504)), and @samskrte channel posts with a publication-order table. Authoring-only: publish steps are queued as DEPLOY_QUEUE №25 (human-gated); the day 1–3 bot drip in `config/marathon.php` stays canonical and is not duplicated. Testimonial slots publish only with a real quote (`MARATHON_TESTIMONIAL`). Authored by Fable 5 (`claude-fable-5`), [PR #544](https://github.com/gasyoun/Systema-Sanscriticum/pull/544).
 
 ## [1.17.0] - 2026-07-16
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1046: CI/CD deploy pipeline (GitHub Actions → SSH → `deploy.sh`), MG-confirm gate.** New `.github/workflows/deploy.yml` — Option A of the [H478 deploy-gate decision](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md): every push to `main` (or manual `workflow_dispatch`) queues a run gated by a GitHub Environment (`production`) approval — MG must click Approve before the runner SSHes to prod and runs the existing `sudo bash deploy.sh` (unchanged). No agent holds prod credentials; the SSH key lives only in the Environment's secrets. **Server-side setup (deploy user, narrow `sudoers`, GitHub Environment + secrets) is a separate one-time human step** — see `docs/deploy.md` §CI/CD and `DEPLOY_QUEUE.md` §D1 — until done, the workflow only accumulates harmless "Waiting" runs.
 
 ## [1.16.0] - 2026-07-16
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H1005: RQ4 admin stats page.** New `/admin/rq4-study-dashboard` (admin/super_admin only): enrollment count + arm split, pre/post/retention-test completion counts and percentages, and how many participants are currently due a retention reminder. Built so MG can check enrollment numbers himself — **he doesn't hold SSH credentials to the production server** (only the deploy contractor does, per `docs/deploy.md`), so an artisan-command-only report would still require going through the contractor every time. 3 tests in `tests/Feature/Rq4StudyDashboardTest.php`.
 
 ### Changed
@@ -1133,13 +1100,11 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.15.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H987: RQ4 study harness (on-ramp-first vs Талмуд-first learning-gain study).** New `/rq4-study` flow behind `features.rq4_study` (OFF by default): consent + intake (self-reported prior exposure), stratified 1:1 arm assignment via a minimisation rule (`Rq4Participant::assignArm`), a 3-phase diagnostic (pre_test/post_test/retention_test) reading the vendored `resources/data/rq4_item_bank.json` (SanskritGrammar's H984 item bank), and a `rq4:send-retention-reminders` command (scheduled daily) that queues one `ScheduledReminder` per participant whose 4-week retention window has arrived — reuses the existing reminder infrastructure (H187) rather than building a new notification channel. New `rq4_participants`/`rq4_responses` tables. Draft consent text included, marked not-finalised pending MG's review (protocol §6.4). 9 tests in `tests/Feature/Rq4StudyTest.php`.
 
 ## [1.14.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H962: cabinet remake Phase 0 — instrumentation-first baseline (R20 gate).**
   The current (pre-hybrid) student cabinet now emits the event vocabulary of
   [`docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_HYBRID_PRODUCTION_SPEC_2026.md)
@@ -1163,7 +1128,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.13.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H965: kosha last-mile pipeline, Hop C difficulty-score advisory consumption.**
   `/reading/kosha-demo` (same route/flag as H959's Hop A) now also reads the
   vendored `resources/data/kosha_reading_pack_difficulty.json` — kosha's real
@@ -1179,7 +1143,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.12.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Student-cabinet mockup #5 — direction D «Путь» / Journey & membership hub (H958).** Per
   M.G. ruling R28 (15-07-2026), completing the four-direction set: the cabinet renders the
   school's ladder (письмо → грамматика → тексты) as a station map — done/current/next/horizon
@@ -1194,7 +1157,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.11.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Hybrid production spec for the cabinet remake (H961, ruling R29).** M.G. closed the
   four-direction exploration: production = hybrid — B «Курс как дом» chassis + A's
   «Сегодня»-band-with-homework and recovery mode + C's ownership shelves, progress rail and
@@ -1207,7 +1169,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.10.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **H959: kosha last-mile pipeline, Hop A reader-as-a-service demo.** New
   `/reading/kosha-demo` route (`app/Http/Controllers/ReadingPackController.php`)
   renders the vendored feed `resources/data/kosha_reading_pack_nala_1.json`
@@ -1224,7 +1185,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.9.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Student-cabinet mockup #4 — direction C «Библиотека» / Learning library (H957).** Per M.G.
   ruling R27 (15-07-2026): the cabinet as a personal library of владения — five shelves
   (Идут сейчас / Мои записи / Истёкшие-с-продлением / Завершённые / Материалы), expiry
@@ -1243,7 +1203,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.8.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Student-cabinet mockup #3 — direction A «Сегодня» / Today-first coach (H956).** Per M.G.
   ruling R26 (15-07-2026): the home is a numbered day plan with a fixed honest order
   (unfinished lesson → returned homework → today's live → first steps → ONE next step after a
@@ -1270,7 +1229,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.7.0] - 2026-07-15
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Student-cabinet mockup #2 — «Курс как дом» v2 (H954, iterates H822 direction B).** Per
   M.G. rulings R21–R25 (14-07-2026, recorded in
   [docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md)):
@@ -1285,7 +1243,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.6.0] - 2026-07-14
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Student-cabinet remake, first decision artifact (H822).** Evidence-led remake package:
   research ledger ([docs/STUDENT_CABINET_REMAKE_RESEARCH_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_RESEARCH_2026.md)),
   6-platform EdTech comparison ([docs/STUDENT_CABINET_EDTECH_COMPARISON_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_EDTECH_COMPARISON_2026.md)),
@@ -1300,7 +1257,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.5.0] - 2026-07-14
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Companion metadocs for the last 16 docs — UX-audits, strategy & one-offs (H891).** Third
   and final metadoc sweep (after H887's 13 roadmaps and H890's 31 manuals/specs): the 8
   `*_UX_AUDIT_2026` audits, 5 strategy/marketing docs (BUSINESS_MODEL_CANVAS,
@@ -1359,7 +1315,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.4.0] - 2026-07-13
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Optimisation & bottleneck backlog (H881), `docs/OPTIMISATION_BACKLOG_2026H2.md`
   (+ metadoc).** The single leverage-ranked index of what needs unblocking / speeding up /
   paying down, replacing the prior scatter across `.ai_state.md` Dev Notes and ~15 topic
@@ -1439,7 +1394,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.3.0] - 2026-07-13
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Разблокировка застрявшего студента одним кликом + лента «Проблемы со входом» (H849).**
   До сих пор неудачные попытки входа/восстановления НИГДЕ не логировались.
   Теперь: (1) новая таблица `access_attempts` собирает единой лентой неудачные
@@ -1479,7 +1433,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.2.0] - 2026-07-12
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Native live-chat support widget (H536), Phases 1–5 complete + observability.**
   Laravel Reverb WebSocket transport (`ChatMessageSent` on the private
   `support.conversation.{id}` channel, [PR #432](https://github.com/gasyoun/Systema-Sanscriticum/pull/432));
@@ -1557,7 +1510,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.1.1] - 2026-07-09
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - Selling-layout roadmap adopted for samskrte.ru: 13-layer teardown vs
   sanskritorium.ru and samskrtam.ru + 6-phase plan (hero trajectory,
   «почему мы» + proof blocks, recorded-catalog conversion, free funnel,
@@ -1572,7 +1524,6 @@ from git history on 2026-07-12 — the original one-line snapshot understated ~3
 weeks of shipped work.
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Financial cockpit (Финансовый штурвал).** Student unit economics — LTV/CAC/
   retention/churn/payback (H256, [PR #340](https://github.com/gasyoun/Systema-Sanscriticum/pull/340));
   accrual P&L (ОПиУ) + Expense/opex model (H207, [PR #311](https://github.com/gasyoun/Systema-Sanscriticum/pull/311));
@@ -1653,7 +1604,6 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 2026-07-12; this tag previously had no changelog section.
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - **Mobile API** for the student cabinet on Sanctum personal-access tokens (`/api/v1`).
   [PR #167](https://github.com/gasyoun/Systema-Sanscriticum/pull/167)
 - **Referral & prana gamification.** Referral program with a prana reward (H168,
@@ -1697,7 +1647,6 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 ## [1.0.0] - 2026-06-13
 
 ### Added
-- **PWG Arzamas-style material plan (H1620 /ask).** Layered PLAN+ROADMAP+ARCHITECTURE+IMPLEMENTATION+VERIFICATION for a 15–20 chapter Russian pop-science longread about PWG on samskrte.ru (Article + Materials hub). Genre contract: [Arzamas 1100](https://arzamas.academy/materials/1100). Index: [docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md). Executor plan: Grok 4.5 (`grok-4.5`); wave-1 build: Fable H1620.
 - Added this changelog so repository-level changes have a stable home.
 - Recorded the current repository purpose: Laravel-приложение: учебный кабинет, магазин курсов, конструктор лендингов, редактор лекций и панель администратора.
 
