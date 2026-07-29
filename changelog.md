@@ -1317,11 +1317,6 @@ esources/data/rq4_item_bank.json. Does **not** flip eatures.rq4_study. Smoke: s
 ## [1.4.0] - 2026-07-13
 
 ### Added
-  (+ metadoc).** The single leverage-ranked index of what needs unblocking / speeding up /
-  paying down, replacing the prior scatter across `.ai_state.md` Dev Notes and ~15 topic
-  roadmaps. Every row fact-checked against `origin/main` on 13-07-2026 (which surfaced that
-  the Laravel-EOL row was already resolved by H862's 10→12 upgrade, and that `vendor/` bloat
-  is a non-issue). Documentation only — no product change, so intentionally not release-cut.
 - **FAQ-суггестер v2 — LLM-черновики для категорий D/E/F (H816 PR 1, тикет S5).**
   Расширяет фактологический суггестер v1 (A/B/C, без LLM) на самые частотные
   «человеческие» категории: D «оплата/цена/тарифы» (7.4% FAQ), E «доступ/группа/
