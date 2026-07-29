@@ -1,6 +1,6 @@
 # Roadmap: Content-Ops Inbox & Weekly Content AI 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 07-07-2026 · Last updated: 23-07-2026_
+_Created: 07-07-2026 · Last updated: 29-07-2026_
 
 > Narrow roadmap for the **Postmypost-inspired** slice of support/marketing: unifying public
 > social engagement (VK/Instagram comments, story replies) alongside the existing private
@@ -273,8 +273,9 @@ Dependency chain: **S2 (SUP roadmap) → CAI3 → CAI4 → CAI5/CAI6 → CAI7**;
 
 ## 7. Wiring
 
-- Wave-1 agent-doable work → handoff:
-  `Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H310-Sonnet_Systema-Sanscriticum_content_ops_inbox_wave1_07.07.26.md and execute it.`
+- Wave-1 agent-doable work — **shipped 09-07-2026 under H418** (H310 was a
+  dead handoff pointer, never actually minted — corrected 29-07-2026, H1879):
+  `🔴 EXECUTED:` [handoffs/archive/H418-Sonnet_Systema-Sanscriticum_content-ops-cai3-content-gap-detector_09.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H418-Sonnet_Systema-Sanscriticum_content-ops-cai3-content-gap-detector_09.07.26.md)
   (CAI1 + CAI3 first — both are pure-code, no external credentials; CAI2 needs the VK Callback
   `@DO` done first, noted in the handoff as a prerequisite check.)
 - Human actions: VK Callback event enablement, VK posting-scope verification, Telegram
