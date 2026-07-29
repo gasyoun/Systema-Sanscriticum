@@ -1,0 +1,8 @@
+[Unit]
+Description=Run the Systema memory ledger every minute
+[Timer]
+OnCalendar=*:00/1
+AccuracySec=5s
+Persistent=false
+[Install]
+WantedBy=timers.target

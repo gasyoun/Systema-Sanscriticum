@@ -1,0 +1,21 @@
+# MANAGED FILE — installed by scripts/server_guards_apply.sh as the crontab of
+# @@APP_USER@@. Edit the repo copy (scripts/server_guards/cron/app-user.crontab),
+# never `crontab -e` on the server: guards:verify reports the difference.
+#
+# Systema Sanscriticum — планировщик и сторожа.
+#
+# Планировщик идёт через systema-schedule-run.sh, НЕ через голый
+# `php artisan schedule:run`: голая форма копила по ~200 МБ PHP-цепочки в минуту
+# всякий раз, когда команда шла дольше 60 с, чем и выело память 23-07 и 28-07-2026
+# (journald: "cron.service: killed by the OOM killer").
+#
+# Сторожа вынесены ОТДЕЛЬНЫМИ строками сознательно. 28-07 один заход
+# telegram-support:sync завис на 2 ч 54 мин и держал schedule:run; cabinet:probe
+# стоит `*/15` ВНУТРИ того же schedule:run, поэтому не выполнился ни разу, и
+# сообщение в Telegram не ушло — сторож умер раньше сайта. Своя строка = своя судьба.
+#
+# См. docs/server-resource-guards.md
+HOME=/tmp
+* * * * * /usr/local/sbin/systema-schedule-run.sh >> @@APP_DIR@@/storage/logs/schedule.log 2>&1
+@@WATCHDOG_CABINET_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "cabinet:probe" cabinet @@WATCHDOG_CABINET_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+@@WATCHDOG_HEARTBEAT_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "heartbeat:ping" heartbeat @@WATCHDOG_HEARTBEAT_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1

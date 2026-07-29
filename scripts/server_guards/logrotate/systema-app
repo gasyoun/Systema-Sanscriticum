@@ -1,0 +1,20 @@
+# MANAGED FILE — scripts/server_guards_apply.sh.
+# schedule.log had grown unbounded since install (never rotated), and the
+# MadelineProto/Horizon logs are high-volume. Keep them, but bounded.
+@@APP_DIR@@/storage/logs/schedule.log
+@@APP_DIR@@/storage/logs/watchdog.log
+@@APP_DIR@@/storage/logs/madelineproto.log
+@@APP_DIR@@/storage/logs/horizon.log
+@@APP_DIR@@/storage/logs/reverb.log
+{
+    daily
+    rotate @@LOGROTATE_KEEP_DAYS@@
+    maxsize @@LOGROTATE_MAX_SIZE@@
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su @@APP_USER@@ @@APP_USER@@
+    create 0664 @@APP_USER@@ @@APP_USER@@
+}

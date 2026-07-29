@@ -1,0 +1,24 @@
+# Список управляемых файлов — ОДИН на двоих потребителей:
+#   scripts/server_guards_apply.sh  ставит их,
+#   php artisan guards:verify       проверяет наличие и расхождение.
+# Две копии списка разошлись бы, и «проверка» перестала бы покрывать «применение».
+#
+# Формат: <шаблон в scripts/server_guards/>|<путь на машине>|<права>|<важность>
+# Важность = насколько страшно ОТСУТСТВИЕ файла: critical (предохранитель) или
+# warning (наблюдаемость — авария от этого не случится, но разбирать её будет
+# нечем). В путях допустимы @@ПОДСТАНОВКИ@@ из server_guards.conf.
+sbin/systema-schedule-run.sh|/usr/local/sbin/systema-schedule-run.sh|755|critical
+sbin/systema-watchdog-run.sh|/usr/local/sbin/systema-watchdog-run.sh|755|critical
+sbin/memwatch.sh|/usr/local/sbin/memwatch.sh|755|warning
+systemd/cron.service.d/memory-cap.conf|/etc/systemd/system/cron.service.d/memory-cap.conf|644|critical
+systemd/cron.service.d/99-systema-limits.conf|/etc/systemd/system/cron.service.d/99-systema-limits.conf|644|critical
+systemd/cron.service.d/nofile.conf|/etc/systemd/system/cron.service.d/nofile.conf|644|warning
+systemd/supervisor.service.d/memory-cap.conf|/etc/systemd/system/supervisor.service.d/memory-cap.conf|644|critical
+systemd/supervisor.service.d/nofile.conf|/etc/systemd/system/supervisor.service.d/nofile.conf|644|warning
+systemd/memwatch.service|/etc/systemd/system/memwatch.service|644|warning
+systemd/memwatch.timer|/etc/systemd/system/memwatch.timer|644|warning
+systemd/journald.conf.d/99-persistent.conf|/etc/systemd/journald.conf.d/99-persistent.conf|644|warning
+systemd/sysstat-collect.timer.d/99-every-minute.conf|/etc/systemd/system/sysstat-collect.timer.d/99-every-minute.conf|644|warning
+php/cli-99-memory-cap.ini|/etc/php/@@PHP_VERSION@@/cli/conf.d/99-memory-cap.ini|644|critical
+default/earlyoom|/etc/default/earlyoom|644|critical
+logrotate/systema-app|/etc/logrotate.d/systema-app|644|warning

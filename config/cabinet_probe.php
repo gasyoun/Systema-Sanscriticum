@@ -34,6 +34,16 @@ return [
     // Keep last N rows in cabinet_probe_runs (prune after each write).
     'history_keep' => (int) env('CABINET_PROBE_HISTORY_KEEP', 500),
 
+    /*
+     * H1914: сверять ресурсные предохранители прода (guards:verify) как ещё одну
+     * поверхность этой пробы. Пропажа предохранителя после пересборки LXC иначе
+     * выясняется только следующей аварией — а у этой команды уже есть история в
+     * cabinet_probe_runs и канал в Telegram. critical-находка = critical-тревога,
+     * расхождение = soft. Проверка идёт только там, где включён guards:verify
+     * (config/server_guards.php).
+     */
+    'check_server_guards' => (bool) env('CABINET_PROBE_CHECK_GUARDS', true),
+
     'error_markers' => [
         'Whoops',
         'Server Error',
