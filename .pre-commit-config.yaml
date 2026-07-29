@@ -7,3 +7,12 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: changelog-duplicate-bullets
+        name: changelog.md has no duplicated bullets
+        entry: python scripts/changelog_duplicate_bullets.py
+        language: system
+        files: ^changelog\.md$
+        pass_filenames: false
