@@ -61,8 +61,14 @@ n8n: Webhook → Expand spans → ffmpeg cut → VK upload → Laravel callback
 См. [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666), кратко:
 
 - Воркфлоу `docs/n8n/lecture-clip-extract.workflow.json` импортирован и **Active**.
-- В env n8n заданы `VK_ACCESS_TOKEN` (право **`video`**, а не только `photos`+`wall`)
-  и `VK_VIDEO_GROUP_ID`; SSH-кред `n8n` подставился в ноды нарезки.
+- На **ffmpeg-хосте** (куда ходит SSH-кред `n8n`) лежит `/root/.clip-env` c
+  `VK_ACCESS_TOKEN` (право **`video`**, а не только `photos`+`wall`) и
+  `VK_VIDEO_GROUP_ID`. В env n8n секреты класть бесполезно: Code-нодам `$env`
+  запрещён (`N8N_BLOCK_ENV_ACCESS_IN_NODE` → «access to env vars denied»).
+- SSH-кред `n8n` подставился в обе ноды нарезки.
+- Два Header Auth credential в n8n (это **разные** секреты, не перепутайте):
+  - нода `Webhook`: Name `X-Webhook-Secret`, Value = `N8N_CLIP_EXTRACT_SECRET`;
+  - нода `Laravel callback`: Name `X-Webhook-Secret`, Value = `N8N_CLIP_CALLBACK_SECRET`.
 - В Laravel `.env`:
   - `N8N_CLIP_EXTRACT_WEBHOOK` — Production URL вебхука n8n  
   - `N8N_CLIP_EXTRACT_SECRET` — тот же секрет, что Header Auth на webhook n8n (`X-Webhook-Secret`)  

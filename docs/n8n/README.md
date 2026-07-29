@@ -177,8 +177,14 @@ n8n гигабайты не гоняются вовсе — наружу вых�
 ```
 
 Флаг `CLIP_MARKETING_ENABLED=false` → Laravel callback 404; job early-return.
-**Никогда не коммитьте живые VK-токены** — поэтому токен и id сообщества берутся
-из env n8n, а не лежат в JSON.
+**Никогда не коммитьте живые VK-токены** — поэтому токена и id сообщества нет в
+JSON. В env n8n их держать тоже нельзя: в этой инсталляции Code-нодам запрещён
+`$env` (`N8N_BLOCK_ENV_ACCESS_IN_NODE` → «access to env vars denied», выяснено
+29.07.2026 на первом же запуске). Секреты живут:
+
+- VK — в файле `/root/.clip-env` **на ffmpeg-хосте** (куда ходит SSH-кред `n8n`);
+  команда нарезки сама делает `. /root/.clip-env`;
+- секрет callback — в Header Auth credential ноды «Laravel callback».
 
 ## Настройка после импорта
 
@@ -186,16 +192,21 @@ n8n гигабайты не гоняются вовсе — наружу вых�
 2. В нодах `Нарезать и залить в VK` и `Убрать исходник` проверить, что подставился
    SSH-кред `n8n` (тот же, что у «Скачиваем аудио» в ZOOM-сценарии). На хосте нужны
    `yt-dlp`, `ffmpeg`, `curl`, `python3`.
-3. Env n8n:
-   - `VK_ACCESS_TOKEN` — community-токен с правом **`video`** (одних `photos`+`wall`,
-     как у кросспостинга, не хватит: заливка идёт через `video.save`);
-   - `VK_VIDEO_GROUP_ID` — числовой id сообщества, куда льём клипы;
-   - `N8N_CLIP_CALLBACK_SECRET` = тот же, что в Laravel `.env`.
-
-   Нода «Собрать команду» падает с внятным сообщением, если токен или id не заданы, —
-   молча залить «в никуда» она не может.
-4. Activate, copy Production webhook URL.
-5. Laravel `.env`:
+3. На ffmpeg-хосте создать `/root/.clip-env` (права `600`):
+   ```
+   VK_ACCESS_TOKEN=<community-токен с правом video>
+   VK_VIDEO_GROUP_ID=<числовой id сообщества>
+   ```
+   Права **`video`** обязательны: одних `photos`+`wall`, как у кросспостинга, не
+   хватит — заливка идёт через `video.save`. Нода падает с внятным сообщением,
+   если файла нет или переменные пустые, — молча залить «в никуда» она не может.
+4. Нода `Webhook` → Header Auth credential: Name `X-Webhook-Secret`,
+   Value = `N8N_CLIP_EXTRACT_SECRET` из Laravel `.env`.
+   Нода `Laravel callback` → свой Header Auth credential: Name `X-Webhook-Secret`,
+   Value = `N8N_CLIP_CALLBACK_SECRET`. Это **два разных** секрета — не
+   перепутайте местами.
+5. Activate, copy Production webhook URL.
+6. Laravel `.env`:
    ```
    CLIP_MARKETING_ENABLED=false
    N8N_CLIP_EXTRACT_WEBHOOK=https://<n8n>/webhook/lecture-clip-extract
