@@ -2,23 +2,24 @@
 
 namespace App\Services\TelegramSupport;
 
+use App\Models\ChatMessage;
 use App\Models\SupportDailyRollup;
 use App\Models\SupportTopicAssignment;
 use App\Models\SupportTopicRule;
 use App\Models\TelegramSupportMessage;
 
+/**
+ * Keyword-классификация топиков дневного rollup'а. С H1837 (S10) работает для
+ * ОБОИХ каналов: правила (`SupportTopicRule`) и назначения одни и те же, меняется
+ * только хранилище, из которого берётся текст дня (см. {@see self::dayText()}).
+ */
 class SupportTopicClassifier
 {
     public function classify(SupportDailyRollup $conversation): void
     {
         $conversation->topicAssignments()->where('source', 'keyword')->delete();
 
-        $text = TelegramSupportMessage::query()
-            ->where('telegram_support_chat_id', $conversation->telegram_support_chat_id)
-            ->whereDate('sent_at', $conversation->conversation_date)
-            ->pluck('text')
-            ->filter()
-            ->implode("\n");
+        $text = $this->dayText($conversation);
 
         $matched = false;
 
@@ -53,6 +54,44 @@ class SupportTopicClassifier
                 'reason' => 'no keyword match; llm fallback reserved',
             ]);
         }
+    }
+
+    /**
+     * Текст всех сообщений субъекта за день — из того хранилища, которому
+     * принадлежит канал строки. Таблицы не сливаются: это две ветки чтения, а не
+     * общий запрос.
+     */
+    private function dayText(SupportDailyRollup $conversation): string
+    {
+        if ($conversation->isTelegramSide()) {
+            return TelegramSupportMessage::query()
+                ->where('telegram_support_chat_id', $conversation->telegram_support_chat_id)
+                ->whereDate('sent_at', $conversation->conversation_date)
+                ->pluck('text')
+                ->filter()
+                ->implode("\n");
+        }
+
+        $query = ChatMessage::query()
+            ->whereDate('created_at', $conversation->conversation_date);
+
+        // Канал живёт в chat_messages.source (H1200): NULL == веб-виджет.
+        match ($conversation->channel) {
+            SupportDailyRollup::CHANNEL_VK => $query->where('source', 'vk'),
+            SupportDailyRollup::CHANNEL_TELEGRAM_BOT => $query->where('source', 'telegram_bot'),
+            default => $query->where(fn ($sub) => $sub->whereNull('source')
+                ->orWhereNotIn('source', ['vk', 'telegram_bot'])),
+        };
+
+        if ($conversation->support_conversation_id !== null) {
+            $query->where('support_conversation_id', $conversation->support_conversation_id);
+        } elseif ($conversation->web_user_id !== null) {
+            $query->where('user_id', $conversation->web_user_id)->whereNull('support_conversation_id');
+        } else {
+            $query->whereNull('support_conversation_id')->whereNull('user_id');
+        }
+
+        return $query->pluck('text')->filter()->implode("\n");
     }
 
     /**

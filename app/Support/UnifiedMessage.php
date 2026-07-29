@@ -52,6 +52,13 @@ final class UnifiedMessage
         public readonly string $text,
         public readonly Carbon $sentAt,
         public readonly bool $isRead,
+        /**
+         * Подпись-маркер отвечавшего, если канал её носит (TG-support кладёт
+         * favicon-маркер в responder_marker). Нужна как последний fallback имени
+         * в дашбордах, когда маркер ещё не смаплен в SupportResponderMapping.
+         * У веб-стороны такого поля нет — там всегда null.
+         */
+        public readonly ?string $responderMarker = null,
     ) {}
 
     public function isIncoming(): bool
@@ -170,6 +177,7 @@ final class UnifiedMessage
             text: (string) $message->text,
             sentAt: $message->sent_at,
             isRead: true,
+            responderMarker: $message->responder_marker,
         );
     }
 }

@@ -72,10 +72,14 @@
 
     {{-- Сводка разговоров --}}
     <x-filament::section>
-        <x-slot name="heading">TG-разговоры ({{ $windowDays }} дн.)</x-slot>
-        <x-slot name="description">Из дневных агрегатов SupportDailyRollup.</x-slot>
+        <x-slot name="heading">Разговоры поддержки ({{ $windowDays }} дн.)</x-slot>
+        <x-slot name="description">
+            Из дневных агрегатов SupportDailyRollup — с H1837 по ОБОИМ каналам (TG-support
+            и веб-сторона: виджет / VK / TG-бот). Пока features.support_web_rollups
+            выключен, веб-строк нет и числа читаются как прежде, TG-only.
+        </x-slot>
 
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
             <div>
                 <div class="text-2xl font-semibold tabular-nums">{{ $rollup['conversations'] }}</div>
                 <div class="text-xs text-gray-500">разговоров</div>
@@ -96,7 +100,42 @@
                 <div class="text-2xl font-semibold tabular-nums">{{ $rollup['outgoing'] }}</div>
                 <div class="text-xs text-gray-500">исходящих</div>
             </div>
+            <div>
+                <div class="text-2xl font-semibold tabular-nums {{ $rollup['unresolved_after_hours'] > 0 ? 'text-warning-600' : '' }}">{{ $rollup['unresolved_after_hours'] }}</div>
+                <div class="text-xs text-gray-500">просрочено ({{ (int) config('support.rollup.unresolved_after_hours') }} ч)</div>
+            </div>
         </div>
+
+        @if (count($rollup['by_channel']) > 1)
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="text-xs uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th class="py-2 text-left">Канал</th>
+                            <th class="py-2 text-right">Разговоров</th>
+                            <th class="py-2 text-right">Без ответа</th>
+                            <th class="py-2 text-right">Первый ответ</th>
+                            <th class="py-2 text-right">Входящих</th>
+                            <th class="py-2 text-right">Исходящих</th>
+                            <th class="py-2 text-right">Просрочено</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($rollup['by_channel'] as $channelKey => $channelMetrics)
+                            <tr class="border-t border-gray-100 dark:border-white/5">
+                                <td class="py-2">{{ (new \App\Models\SupportDailyRollup(['channel' => $channelKey]))->channelLabel() }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['conversations'] }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['unanswered'] }}{{ $channelMetrics['unanswered_share'] !== null ? ' ('.$channelMetrics['unanswered_share'].'%)' : '' }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['avg_first_response_seconds'] !== null ? round($channelMetrics['avg_first_response_seconds'] / 60).' мин' : '—' }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['incoming'] }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['outgoing'] }}</td>
+                                <td class="py-2 text-right tabular-nums">{{ $channelMetrics['unresolved_after_hours'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </x-filament::section>
 
     {{-- Расход LLM --}}

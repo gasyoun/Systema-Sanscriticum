@@ -211,6 +211,21 @@ return [
     'support_observability' => (bool) env('SUPPORT_OBSERVABILITY', false),
 
     /*
+     | Дневные rollup'ы ВЕБ-стороны поддержки (H1837, S10): агрегация
+     | `chat_messages` (веб-виджет, VK-бот, TG-student-бот) в те же
+     | `support_daily_rollups`, что и TG-support, с тем же KPI
+     | «unresolved-after-N-hours» и той же классификацией топиков. Закрывает
+     | асимметрию, из-за которой deflection-отчёты (S2/S7) и поиск контент-дыр
+     | (CAI3) не видели веб-канал вовсе.
+     |
+     | ВЫКЛ по умолчанию: это НОВЫЙ always-on путь записи (почасовая команда
+     | support:rollup-web) — включать сознательным deploy-шагом. Пока флаг OFF,
+     | команда — no-op, веб-строк не появляется, а дашборды показывают ровно те
+     | же TG-числа, что и до H1837. Пороги/окна — в config/support.php (rollup).
+     */
+    'support_web_rollups' => (bool) env('SUPPORT_WEB_ROLLUPS', false),
+
+    /*
      | Проактивный монитор посетителей веб-чата (H1197, Jivo-паритет Pillar 2).
      | Когда ВКЛ, виджет витрины шлёт presence-beacon (POST /support/presence),
      | сервер держит эфемерную строку support_visitor_presences (город из

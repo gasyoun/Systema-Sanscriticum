@@ -66,7 +66,7 @@ class SupportObservability extends Page
      * @return array{
      *     accounts: Collection,
      *     delivery: array{outgoing_total: int, tracked: int, delivered: int, pending: int, rate: float|null},
-     *     rollup: array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int},
+     *     rollup: array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int, unresolved_after_hours: int, by_channel: array<string, array<string, mixed>>},
      *     llm: array{total: int, by_type: Collection, spend_usd: float|null, priced_events: int}
      * }
      */
@@ -133,19 +133,37 @@ class SupportObservability extends Page
     }
 
     /**
-     * Сводка TG-разговоров за окно из готовых дневных агрегатов.
+     * Сводка разговоров за окно из готовых дневных агрегатов.
      *
-     * @return array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int}
+     * С H1837 (S10) — по ОБОИМ каналам: верхние числа суммарные, плюс разбивка
+     * `by_channel` в том же формате. Пока features.support_web_rollups=false
+     * веб-строк нет и все числа совпадают с прежним TG-only поведением.
+     *
+     * @return array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int, unresolved_after_hours: int, by_channel: array<string, array<string, mixed>>}
      */
     private function rollup(Carbon $from): array
     {
         $rollups = SupportDailyRollup::query()
             ->whereDate('conversation_date', '>=', $from->toDateString())
             ->get([
-                'id', 'is_unanswered', 'first_response_seconds',
-                'incoming_count', 'outgoing_count',
+                'id', 'channel', 'is_unanswered', 'unresolved_after_hours',
+                'first_response_seconds', 'incoming_count', 'outgoing_count',
             ]);
 
+        return $this->foldRollups($rollups) + [
+            'by_channel' => $rollups
+                ->groupBy('channel')
+                ->map(fn (Collection $group): array => $this->foldRollups($group))
+                ->all(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, SupportDailyRollup>  $rollups
+     * @return array{conversations: int, unanswered: int, unanswered_share: float|null, avg_first_response_seconds: int|null, incoming: int, outgoing: int, unresolved_after_hours: int}
+     */
+    private function foldRollups(Collection $rollups): array
+    {
         $withResponse = $rollups->whereNotNull('first_response_seconds');
 
         return [
@@ -159,6 +177,7 @@ class SupportObservability extends Page
                 : null,
             'incoming' => (int) $rollups->sum('incoming_count'),
             'outgoing' => (int) $rollups->sum('outgoing_count'),
+            'unresolved_after_hours' => $rollups->where('unresolved_after_hours', true)->count(),
         ];
     }
 

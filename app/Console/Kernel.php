@@ -391,6 +391,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('suggest-support-answers');
 
+        // --- ДНЕВНЫЕ ROLLUP'Ы ВЕБ-СТОРОНЫ (H1837, тикет S10) ---
+        // TG-сторона агрегируется побочным эффектом telegram-support:sync; у веба
+        // синка нет, поэтому отдельный проход. Почасовой, а не ночной: KPI
+        // «висит без ответа N часов» должен дозревать в течение дня, а не через
+        // сутки. Окно перекрытия (по умолчанию 2 дня) — внутри команды. Гейт
+        // features.support_web_rollups — тоже внутри (пока OFF, это no-op).
+        $schedule->command('support:rollup-web')
+            ->hourlyAt(25)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-rollup-web');
+
         // Просроченные (14+ дней) pending-черновики FAQ-ответов → expired.
         $schedule->command('support:expire-stale-answer-suggestions')
             ->dailyAt('04:10')
