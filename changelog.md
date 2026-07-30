@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **H1966 konsultaciya redesign design packet (no production CSS).** Four directions A–D under [`marketing/marathon-2026-08/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08): token tables, post-submit/Telegram states, HTML mockups `redesign/direction-{a,b,c,d}-*.html`, full `/useit` Nielsen H1–H10 pass, recommend **B light island (O2)**. Awaits human pick before blade implement. Executor: Grok 4.5 (`grok-4.5`).
 - **Anki SRS media in review UI + agent manual.** Import publishes `media/` to `storage/app/public/srs/anki_{id}/`; review loop shows audio (front) + image (reveal) via `SrsMedia`. Agent ops: [docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.80.2] - 2026-07-30

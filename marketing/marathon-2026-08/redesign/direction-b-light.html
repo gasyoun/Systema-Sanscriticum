@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B — Light island · konsultaciya redesign mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fafaf9; --surface: #fff; --text: #1c1917; --muted: #57534e;
+      --accent: #e85c24; --accent-hover: #d34f1c; --border: #e7e5e4;
+      --success-bg: #ecfdf5; --success-text: #065f46; --success-border: #a7f3d0;
+      --tg: #0088cc; --header: #0a0d14;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; color: var(--text); background: var(--header); }
+    .shop-header { background: rgba(10,13,20,.95); border-bottom: 1px solid #1f2636; color: #e2e8f0; padding: .75rem 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 20; backdrop-filter: blur(8px); }
+    .shop-header strong { font-family: Georgia, serif; color: #fff; }
+    .shop-header a { color: #fff; background: var(--accent); text-decoration: none; padding: .5rem .9rem; border-radius: 12px; font-weight: 700; font-size: .875rem; }
+    .island { background: var(--bg); min-height: calc(100vh - 56px); color: var(--text); }
+    .wrap { max-width: 36rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
+    h1 { font-size: clamp(1.65rem, 4vw, 2.15rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 1rem; text-wrap: balance; }
+    .sub { color: var(--muted); font-size: 1.0625rem; line-height: 1.55; margin: 0 0 1.25rem; font-weight: 600; }
+    .proof { font-size: .875rem; color: var(--muted); margin-bottom: 2rem; }
+    .proof b { color: var(--text); }
+    h2 { font-size: 1.15rem; font-weight: 800; margin: 0 0 1rem; }
+    .days { display: grid; gap: .75rem; margin-bottom: 2rem; }
+    .day { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem; display: grid; grid-template-columns: 2.25rem 1fr; gap: .75rem; align-items: start; }
+    .day .n { width: 2.25rem; height: 2.25rem; border-radius: 999px; background: #fff7ed; color: var(--accent); font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: .95rem; }
+    .day strong { display: block; margin-bottom: .25rem; }
+    .day p { margin: 0; font-size: .875rem; color: var(--muted); line-height: 1.5; }
+    .benefits { margin-bottom: 2rem; }
+    .benefit { padding: .85rem 0; border-bottom: 1px solid var(--border); }
+    .benefit:last-child { border-bottom: 0; }
+    .benefit strong { display: block; margin-bottom: .2rem; }
+    .benefit p { margin: 0; font-size: .9rem; color: var(--muted); line-height: 1.5; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; box-shadow: 0 1px 2px rgba(28,25,23,.04); }
+    label.field { display: block; font-size: .8rem; font-weight: 800; margin-bottom: .4rem; color: #292524; }
+    select, input[type=text] { width: 100%; border: 1px solid #d6d3d1; border-radius: 12px; padding: .75rem .9rem; font: inherit; color: var(--text); background: #fff; margin-bottom: 1rem; }
+    select:focus, input:focus { outline: 2px solid #fdba74; border-color: var(--accent); }
+    .tracks { display: grid; gap: .5rem; margin-bottom: 1rem; }
+    .track { display: flex; gap: .75rem; align-items: flex-start; padding: 1rem; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; background: #fff; }
+    .track:has(input:checked) { border-color: var(--accent); background: #fff7ed; }
+    .track span.t { font-weight: 800; display: block; }
+    .track span.d { font-size: .8125rem; color: var(--muted); }
+    .btn { display: block; width: 100%; text-align: center; border: 0; border-radius: 14px; padding: .95rem 1rem; font-weight: 800; font-size: 1rem; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-tg { background: var(--tg); color: #fff; margin-top: .75rem; text-decoration: none; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-top: .5rem; }
+    .hint { font-size: .8rem; color: var(--muted); margin-top: .6rem; text-align: center; }
+    .success { display: none; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; color: var(--success-text); }
+    .success.show { display: block; }
+    .success h3 { margin: 0 0 .5rem; font-size: 1.1rem; }
+    .success p { margin: 0 0 .75rem; font-size: .9rem; line-height: 1.5; }
+    .checklist { margin: .75rem 0 0; padding-left: 1.1rem; font-size: .85rem; }
+    .tg-state { display: none; margin-top: .75rem; padding: .75rem; background: #f0f9ff; border-radius: 12px; font-size: .85rem; color: #0c4a6e; }
+    .tg-state.show { display: block; }
+    .faq { margin-top: 2.5rem; }
+    .faq details { background: #fff; border: 1px solid var(--border); border-radius: 14px; margin-bottom: .5rem; padding: .9rem 1rem; }
+    .faq summary { font-weight: 800; cursor: pointer; }
+    .faq p { margin: .6rem 0 0; font-size: .875rem; color: var(--muted); line-height: 1.5; }
+    .badge { display: inline-block; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: #fff7ed; padding: .25rem .5rem; border-radius: 6px; margin-bottom: .75rem; }
+    .toolbar { position: fixed; bottom: 1rem; right: 1rem; background: #1c1917; color: #fff; font-size: .75rem; padding: .5rem .75rem; border-radius: 999px; opacity: .85; z-index: 30; }
+    @media (max-width: 400px) { .wrap { padding-top: 1.75rem; } }
+  </style>
+</head>
+<body>
+  <header class="shop-header">
+    <strong>Общество ревнителей санскрита</strong>
+    <a href="#">Курсы</a>
+  </header>
+  <div class="island">
+    <div class="wrap">
+      <div class="badge">Направление B · light island · O2</div>
+      <h1>Санскрит кажется недоступным. Три дня — и вы увидите, что это не так.</h1>
+      <p class="sub">Бесплатная консультация: 3 дня по ~15 минут, в своем темпе. Без деванагари и зубрежки — только узнавание.</p>
+      <p class="proof"><b>к.ф.н. М.Ю. Гасунс</b> · начать можно в любой день · кириллица</p>
+
+      <div id="success" class="success" aria-live="polite">
+        <h3>Вы записаны</h3>
+        <p>Чтобы получить личный День 1 и День 2 в Telegram, нажмите кнопку и запустите бота — без этого шага дни не придут.</p>
+        <a class="btn btn-tg" id="tgBtn" href="https://t.me/samskrte_bot" target="_blank" rel="noopener">Продолжить в Telegram</a>
+        <button type="button" class="btn btn-ghost" id="copyBtn">Скопировать ссылку</button>
+        <div id="tgState" class="tg-state">Открыли Telegram. Нажмите <b>Start</b> у бота. Если окно не открылось — скопируйте ссылку выше.</div>
+        <ol class="checklist">
+          <li>Start у бота</li>
+          <li>Дождитесь сообщения Дня 1</li>
+          <li>Канал новостей: t.me/samskrte</li>
+        </ol>
+      </div>
+
+      <section class="days" aria-label="Три дня">
+        <h2>Как устроены три дня</h2>
+        <div class="day"><div class="n">1</div><div><strong>Санскрит роднее, чем кажется</strong><p>Тап-выбор на 3 вопроса: услышьте родство санскрита и русского.</p></div></div>
+        <div class="day"><div class="n">2</div><div><strong>Как устроено санскритское слово</strong><p>Корень + аффикс на простых примерах. В конце — ваш вопрос к живой консультации.</p></div></div>
+        <div class="day"><div class="n">3</div><div><strong>Живая консультация</strong><p>Zoom с к.ф.н. М.Ю. Гасунсом. На бесплатном треке — запись после эфира.</p></div></div>
+      </section>
+
+      <section class="benefits">
+        <h2>Что вас останавливало</h2>
+        <div class="benefit"><strong>«Совсем нет времени».</strong><p>Каждый день — ~15 минут. Ваш «день 1» начинается, когда начинаете вы.</p></div>
+        <div class="benefit"><strong>«Это слишком сложно».</strong><p>veda — «ведать», matar — «мать». Узнавание, не зубрежка.</p></div>
+        <div class="benefit"><strong>«Сначала деванагари?»</strong><p>Нет. Все три дня — на кириллице.</p></div>
+      </section>
+
+      <form class="card" id="regForm" onsubmit="return mockSubmit(event)">
+        <label class="field" for="quiz">Что вас привлекает в санскрите?</label>
+        <select id="quiz" name="quiz_goal" required>
+          <option value="">Выберите…</option>
+          <option>Грамматика и чтение</option>
+          <option>Йога и мантры</option>
+          <option>Философия</option>
+          <option>Просто попробовать</option>
+        </select>
+
+        <label class="field">Формат участия</label>
+        <div class="tracks">
+          <label class="track"><input type="radio" name="track" value="free" checked /><span><span class="t">Бесплатно</span><span class="d">2 дня + маршрут + консультация в записи</span></span></label>
+          <label class="track"><input type="radio" name="track" value="paid" /><span><span class="t">«С проверкой»</span><span class="d">Куратор смотрит практику · личный разбор · скидка на курс</span></span></label>
+        </div>
+
+        <label class="field" for="contact">Контакт</label>
+        <input id="contact" name="contact" type="text" required placeholder="+7… / name@mail.ru / @username" />
+
+        <label class="field" for="name">Имя (необязательно)</label>
+        <input id="name" name="name" type="text" placeholder="Как к вам обращаться" />
+
+        <button class="btn btn-primary" type="submit">Записаться</button>
+        <p class="hint">Без дедлайнов и «осталось N мест». Начать можно в любой день.</p>
+      </form>
+
+      <section class="faq">
+        <h2>Частые вопросы</h2>
+        <details><summary>Сколько это занимает времени?</summary><p>~15 минут в день, три дня. Материалы не сгорают.</p></details>
+        <details><summary>Нужно ли знать деванагари?</summary><p>Нет. Все материалы — на кириллице.</p></details>
+        <details><summary>Чем платный трек отличается?</summary><p>Те же дни; на платном куратор проверяет практику и разбирает ваш вопрос лично.</p></details>
+      </section>
+    </div>
+  </div>
+  <div class="toolbar">Mockup B · 375–1280 · not production</div>
+  <script>
+    function mockSubmit(e) {
+      e.preventDefault();
+      document.getElementById('success').classList.add('show');
+      document.getElementById('regForm').style.opacity = '0.45';
+      document.getElementById('regForm').style.pointerEvents = 'none';
+      document.getElementById('success').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return false;
+    }
+    document.getElementById('tgBtn').addEventListener('click', function () {
+      document.getElementById('tgState').classList.add('show');
+    });
+    document.getElementById('copyBtn').addEventListener('click', function () {
+      navigator.clipboard.writeText('https://t.me/samskrte_bot').then(function () {
+        document.getElementById('copyBtn').textContent = 'Ссылка скопирована';
+      });
+    });
+  </script>
+</body>
+</html>
