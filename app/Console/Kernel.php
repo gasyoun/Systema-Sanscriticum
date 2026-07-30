@@ -16,21 +16,36 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('archives:cleanup --hours=24')
-            ->dailyAt('03:00');
+            ->dailyAt('03:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('archives-cleanup');
 
         // Перевод просроченных promises в статус expired — ночью.
         $schedule->command('promises:expire')
-            ->dailyAt('03:30');
+            ->dailyAt('03:30')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('promises-expire');
 
         // Сканирование ящика на предмет hard bounce (H1449 A3) — суппрессия
         // адреса на будущее. Не пишет ничего пока mail.bounce_scan.enabled=false.
+        // withoutOverlapping — второй эшелон (замок живёт в кеше, CACHE_DRIVER=redis,
+        // и на сбойном Redis не сработает); первый — imap_timeout() внутри команды
+        // (ScanBounces::scanMailbox) плюс внешний flock/timeout вокруг schedule:run.
         $schedule->command('mail:scan-bounces')
-            ->hourly();
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('mail-scan-bounces');
 
         // Пересчёт авто-флага «неблагонадёжный» — после promises:expire,
         // чтобы вновь просроченные обещания сразу учитывались в пороге.
         $schedule->command('unreliable:recount')
-            ->dailyAt('03:45');
+            ->dailyAt('03:45')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('unreliable-recount');
 
         // Контроль дебиторки/рассрочки (H257): после promises:expire, чтобы
         // свежая просрочка уже учтена в пороге. Алерт финдиру при превышении —
@@ -98,7 +113,10 @@ class Kernel extends ConsoleKernel
         $paymentTime = MarketingSetting::cached()?->payment_reminder_time;
         $paymentTime = preg_match('/^\d{1,2}:\d{2}$/', (string) $paymentTime) ? $paymentTime : '09:00';
         $schedule->command('promises:remind-tomorrow')
-            ->dailyAt($paymentTime);
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('promises-remind-tomorrow');
 
         // Авто-напоминания должникам (просрочка / не продлил / блок за N дней до
         // начала). Гейт, окно, каналы и шаблон — внутри команды (MarketingSetting),
@@ -137,7 +155,10 @@ class Kernel extends ConsoleKernel
 
         // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
         $schedule->command('onboarding:weekly-digest')
-            ->weeklyOn(1, '09:30'); // понедельник 09:30 МСК
+            ->weeklyOn(1, '09:30') // понедельник 09:30 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('onboarding-weekly-digest');
 
         // Еженедельный автонапоминание тем же не заходившим: Telegram → VK → SMS
         // → email (см. SendCabinetInvites). Батч 50/неделю — не спам-флаги, не

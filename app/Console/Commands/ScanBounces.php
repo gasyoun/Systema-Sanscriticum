@@ -79,6 +79,9 @@ class ScanBounces extends Command
             return [];
         }
 
+        imap_timeout(IMAP_OPENTIMEOUT, (int) config('mail.bounce_scan.open_timeout_seconds'));
+        imap_timeout(IMAP_READTIMEOUT, (int) config('mail.bounce_scan.read_timeout_seconds'));
+
         $mailbox = @imap_open($host, $username, $password, OP_READONLY);
         if ($mailbox === false) {
             Log::error('mail:scan-bounces: IMAP connection failed.', ['host' => $host]);
