@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.80.3] - 2026-07-30
+
 ### Fixed
 - **Scheduler wrapper stale-lock false-positive skip (H1973).** `systema-schedule-run.sh`'s `flock -n` overlap guard could stay falsely held for hours after a deploy-triggered restart, silently skipping every cron-scheduled command (not Telegram-specific — `receivables:check`, `debts:remind`, `groups:notify-forming-shortfall`, etc.). Added a TTL-based stale-lock reclaim: a `flock` failure older than `2 × SCHEDULE_MAX_SECONDS + 60s` (env-overridable via `SYSTEMA_SCHEDULE_STALE_SECONDS`) is presumed a wedged/dead holder and reclaimed by replacing the lock file with a fresh inode. Reproduction test: [`scripts/server_guards/sbin/test_systema_schedule_run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/test_systema_schedule_run.sh). Details: [docs/server-resource-guards.md §2.5](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md). Executor: Sonnet 5 (`claude-sonnet-5`).
 
