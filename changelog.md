@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.80.0] - 2026-07-30
+
 ### Added
 - **n8n server catalog + ops plan (context-ai.ru / samskrtam50).** Full inventory of 76 workflows (5 Active), host bookbuilder/proxy stack, Laravel `N8N_*` bridge table, credential audit (no secret values), redacted live exports, layered `/ask` PLAN/ROADMAP/ARCH/IMPL/VERIFY. Entry: [docs/n8n/CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md) · [docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
 - **H1949 hardening: admin never gets remember; password change kills all devices.** After the opt-in checkbox (#900), admins who checked «Запомнить меня» would still have received a weeks-long recaller on the shared Filament web guard (SESSION_LIFETIME was capped at 1 day for that reason). `login` / `shopLogin` now force `remember=false` when `is_admin`. Student password change cycles `users.remember_token` so old cookies stop working. Student-manual §1 documents shared-PC risk. Executor: Grok 4.5 (`grok-4.5`).
@@ -1794,7 +1796,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...HEAD
+[1.80.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...v1.80.0
 [1.79.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.2...v1.79.3
 [1.79.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...v1.79.2
 # old Unreleased was:
