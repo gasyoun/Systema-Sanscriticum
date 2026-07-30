@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Console\Concerns\LocksMadelineSession;
-use App\Exceptions\MadelineSyncTimedOut;
 use App\Models\TelegramSupportAccount;
 use App\Services\Telegram\MadelineSessionReaper;
 use App\Services\Telegram\MadelineSyncWatchdog;
@@ -49,7 +48,20 @@ class SyncTelegramSupport extends Command
             // не ходит и зависнуть не может. Без потолка заход живёт часами, замок
             // планировщика протухает и на той же сессии стартует второй экземпляр
             // (см. MadelineSyncWatchdog).
-            if (! $watchdog->arm($timeout) && $timeout > 0 && $this->getOutput()->isVerbose()) {
+            //
+            // Уборка передаётся В watchdog, а не пишется в catch: обработчик
+            // таймаута завершает процесс через exit(), и никакой catch/finally
+            // здесь уже не отработает (H1915 — почему не через исключение).
+            $armed = $watchdog->arm($timeout, fn (int $seconds) => $this->cleanUpAfterTimeout($reaper, $seconds));
+
+            if (! $armed && $timeout > 0) {
+                // ГРОМКО, а не только в verbose: без watchdog'а единственной оградой
+                // остаётся внешний потолок обёртки (SYSTEMA_SCHEDULE_MAX_SECONDS),
+                // и TTL замка планировщика посчитан именно из него — молчать об этом
+                // значит обещать инвариант, которого нет.
+                Log::error('Telegram support sync идёт БЕЗ потолка времени: watchdog не взвёлся (нет расширения pcntl).', [
+                    'timeout_seconds' => $timeout,
+                ]);
                 $this->warn('Watchdog недоступен (нет расширения pcntl) — заход идёт без потолка времени.');
             }
 
@@ -57,8 +69,6 @@ class SyncTelegramSupport extends Command
                 // Live path opens the shared MadelineProto session — serialise it
                 // against telegram-harvest:sync / :peers (see LocksMadelineSession).
                 $result = $this->withMadelineSessionLock(fn () => $sync->sync());
-            } catch (MadelineSyncTimedOut $e) {
-                return $this->failOnTimeout($reaper, $e);
             } finally {
                 $watchdog->disarm();
             }
@@ -88,18 +98,24 @@ class SyncTelegramSupport extends Command
     }
 
     /**
-     * Заход прервали по таймауту. Замок сессии к этому моменту уже отпущен
-     * (исключение раскрутило стек через finally трейта), осталось прибрать за
-     * собой демона этой сессии — иначе он переживёт нас и продолжит держать
-     * дескрипторы, — и оставить оператору внятный след в карточке аккаунта.
+     * Заход упёрся в потолок времени. Выполняется ВНУТРИ обработчика SIGALRM,
+     * непосредственно перед exit() — то есть это единственный шанс прибрать за
+     * собой: ни `finally` вызывающего, ни деструкторы на это уже не рассчитывают.
+     *
+     * Порядок намеренный. Сначала замок сессии: он взят на 900 с, и оставленный
+     * висеть заблокировал бы следующие ~15 минут заходов после КАЖДОГО таймаута.
+     * Затем демон этой сессии — иначе он переживёт нас и продолжит держать
+     * дескрипторы (тот самый EMFILE 27.07.2026). И только потом след оператору.
      */
-    private function failOnTimeout(MadelineSessionReaper $reaper, MadelineSyncTimedOut $e): int
+    private function cleanUpAfterTimeout(MadelineSessionReaper $reaper, int $seconds): void
     {
+        $this->releaseMadelineSessionLock();
+
         $killed = $reaper->killDaemons();
         $removed = $reaper->clearIpcArtifacts();
 
         Log::error('Telegram support sync timed out — process stopped by watchdog', [
-            'timeout_seconds' => $e->timeoutSeconds,
+            'timeout_seconds' => $seconds,
             'killed_processes' => $killed,
             'removed_files' => $removed,
         ]);
@@ -110,11 +126,9 @@ class SyncTelegramSupport extends Command
             ->where('name', 'support')
             ->update([
                 'last_synced_at' => now(),
-                'last_sync_error' => "Заход прерван по таймауту ({$e->timeoutSeconds} с); демон сессии сброшен.",
+                'last_sync_error' => "Заход прерван по таймауту ({$seconds} с); демон сессии сброшен.",
             ]);
 
-        $this->error("Telegram support sync: timeout после {$e->timeoutSeconds} с — процесс остановлен, демон сессии сброшен.");
-
-        return self::FAILURE;
+        $this->error("Telegram support sync: timeout после {$seconds} с — процесс остановлен, демон сессии сброшен.");
     }
 }
