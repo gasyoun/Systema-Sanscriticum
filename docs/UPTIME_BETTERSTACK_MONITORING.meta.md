@@ -1,19 +1,20 @@
 # Metadoc — UPTIME_BETTERSTACK_MONITORING.md
 
-_Created: 30-07-2026 · Last updated: 30-07-2026 (samskrtam heartbeat script on VPS)_
+_Created: 30-07-2026 · Last updated: 30-07-2026 (FAQ + inbound links)_
 
 | | |
 |---|---|
-| **Purpose** | Single agent-facing inventory of Better Stack HTTP + heartbeat monitors and prod wiring (samskrte / samskrtam / Cologne). |
-| **Audience** | Agents operating Systema VPS or answering «how is X monitored?»; humans wiring env/UI. |
-| **Provenance** | Session 30-07-2026 (soft-fail H1941 → Better Stack migration after healthchecks outage). Model: Grok 4.5 (`grok-4.5`). Issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891). |
+| **Purpose** | Single agent-facing inventory of Better Stack HTTP + heartbeat monitors, prod wiring, and **human/agent runbook when something is red**. |
+| **Audience** | Agents; humans on call for samskrte/samskrtam/Cologne visibility. |
+| **Provenance** | Session 30-07-2026 (soft-fail H1941 → Better Stack). Model: Grok 4.5 (`grok-4.5`). Issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891). FAQ §5 same day. |
 | **Not for** | Live outage board (→ Uprava SERVER_OUTAGES); OS memory guards detail (→ server-resource-guards.md). |
+| **Inbound links** | Systema `CLAUDE.md` § Ops/uptime · `README.md` · DEPLOY_QUEUE H1794 · server-resource-guards · SERVER_OUTAGES top |
 
 ## Ranked improvement backlog
 
 1. Add monitor id table rows when new HTTP checks are created (keep UI ids).  
-2. Optional: commit a non-secret render of cologne script under `scripts/` if we want git-managed copy (today lives only on VPS).  
-3. One-line pointer from org CLAUDE.md spine table if agents still miss the doc.  
+2. Optional: commit non-secret probe scripts under `scripts/` (today only on VPS).  
+3. Optional: org-level CLAUDE.md spine row if agents still miss the doc outside Systema cwd.  
 4. After any token rotation: confirm smoke; never backfill tokens into git history.
 
 ## Limitations
