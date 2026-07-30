@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.79.3] - 2026-07-30
+
 ### Changed
 - **S10 unattended path verified on prod (H1938).** Ten scheduled `support:rollup-web` runs at `:25` (06:25–15:25 MSK, all DONE ~350 ms) after the H1914 guard-test lock cleared; flag still on; rollup totals flat at H1837 baseline because `chat_messages` did not grow (no-op re-aggregate, not a silent fail). Findings in [ROADMAP_SUPPORT_AUTOMATION_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SUPPORT_AUTOMATION_2026_2027.md) §S10. Open: `web_backfill_days=2` gap if scheduler is down longer than two days — a human decides widen vs catch-up. Executor: Grok 4.5 (`grok-4.5`).
 - **First-login Telegram ping labels synthetic / placeholder accounts (H1946).** Live pay probes (e.g. prod user **6858** / `h1939.pay…@example.invalid` from H1939) still fire `OnboardingNotifier::firstLogin` so the probe is visible, but the message is prefixed with `🧪 SYNTHETIC / TEST — не настоящий студент`. Weekly onboarding digest excludes the same placeholder suffixes (`@no-email.com`, `@example.invalid` — not `@example.com`, which Faker uses in tests). Documented in [`RESULTS_LOG.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/RESULTS_LOG.md). Executor: Grok 4.5 (`grok-4.5`).
@@ -1781,7 +1783,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.2...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...HEAD
+[1.79.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.2...v1.79.3
 [1.79.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...v1.79.2
 # old Unreleased was:
 # [Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...HEAD
