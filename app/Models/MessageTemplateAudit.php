@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Аудит операций с лидом в CRM: кто (admin/manager) и что сделал с заявкой.
- * Зеркало PaymentAudit для воронки продаж — append-only, вручную не правится.
+ * Аудит правок библиотеки шаблонов сообщений: кто, когда и что поменял
+ * (H1932). Зеркало {@see LeadAudit} — append-only, вручную не правится.
+ * Заведён вместе с открытием редактирования кураторам (manager): библиотека
+ * питает суггестер (H1838) и рассылки, поэтому у каждого текста должна быть
+ * история авторства.
  *
- * Действия без авторизованного пользователя (входящая заявка с лендинга,
- * импорт, CLI) фиксируются как «Система».
+ * Действия без авторизованного пользователя (tinker, сиды, CLI) фиксируются
+ * как «Система».
  */
-class LeadAudit extends Model
+class MessageTemplateAudit extends Model
 {
-    use HasFactory;
-
     public const ACTION_CREATED = 'created';
 
     public const ACTION_UPDATED = 'updated';
@@ -29,7 +29,7 @@ class LeadAudit extends Model
     public const UPDATED_AT = null;
 
     protected $fillable = [
-        'lead_id',
+        'message_template_id',
         'admin_id',
         'admin_name',
         'action',
@@ -46,20 +46,19 @@ class LeadAudit extends Model
      * Человекочитаемые имена аудируемых полей — для сводки в админке.
      */
     public const FIELD_LABELS = [
-        'status' => 'Статус',
-        'assigned_to' => 'Ответственный (ID)',
-        'next_contact_at' => 'Следующий контакт',
-        'name' => 'Имя',
-        'contact' => 'Контакт',
-        'email' => 'Email',
+        'title' => 'Название',
+        'body' => 'Текст',
+        'category' => 'Категория',
+        'suggester_category' => 'Категория суггестера',
+        'is_active' => 'Активен',
     ];
 
     /**
-     * Лид может быть уже удалён — связь без ограничений, может вернуть null.
+     * Шаблон может быть уже удалён — связь без ограничений, может вернуть null.
      */
-    public function lead(): BelongsTo
+    public function template(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(MessageTemplate::class, 'message_template_id');
     }
 
     public function admin(): BelongsTo
@@ -79,16 +78,14 @@ class LeadAudit extends Model
 
     /**
      * Человекочитаемая сводка изменений.
-     * - created/deleted: «Статус: new, Имя: Иван …» (снимок полей)
-     * - updated: «Статус: new → in_work» (было → стало)
+     * - created/deleted: снимок полей;
+     * - updated: «Поле: было → стало».
      */
     public function summary(): string
     {
         // ВАЖНО: именно getAttribute — `$this->changes` внутри класса попадает
         // в protected-свойство Eloquent HasAttributes::$changes (внутренний
-        // трекинг dirty-синка), которое на перечитанной из БД модели ПУСТО:
-        // таймлайн аудита в админке показывал «—» вместо изменений для всех
-        // строк, читаемых из БД (латентно с H221; всплыло тестом H1932).
+        // трекинг dirty-синка), которое на перечитанной из БД модели пусто.
         $changes = $this->getAttribute('changes') ?? [];
         if (empty($changes)) {
             return '—';
@@ -109,11 +106,19 @@ class LeadAudit extends Model
         return implode("\n", $parts);
     }
 
-    /** Нормализуем значение поля к строке для показа (статус — человекочитаемо). */
+    /** Нормализуем значение к строке для показа (категории — человекочитаемо, тело — усечённо). */
     private function display(string $field, mixed $value): string
     {
-        if ($field === 'status' && is_string($value) && isset(Lead::statuses()[$value])) {
-            return Lead::statuses()[$value];
+        if ($field === 'category' && is_string($value) && isset(MessageTemplate::categories()[$value])) {
+            return MessageTemplate::categories()[$value];
+        }
+
+        if ($field === 'suggester_category' && is_string($value) && isset(MessageTemplate::suggesterCategories()[$value])) {
+            return MessageTemplate::suggesterCategories()[$value];
+        }
+
+        if ($field === 'body' && is_string($value) && mb_strlen($value) > 120) {
+            return mb_substr($value, 0, 120).'…';
         }
 
         return match (true) {

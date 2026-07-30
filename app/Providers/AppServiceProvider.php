@@ -10,6 +10,7 @@ use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\LectureClip;
 use App\Models\Lesson;
+use App\Models\MessageTemplate;
 use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
@@ -18,6 +19,7 @@ use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
 use App\Observers\LectureClipObserver;
 use App\Observers\LessonObserver;
+use App\Observers\MessageTemplateAuditObserver;
 use App\Observers\PaymentAuditObserver;
 use App\Observers\PaymentDealBridgeObserver;
 use App\Observers\PaymentObserver;
@@ -123,6 +125,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Аудит CRM-воронки (кто/что/когда правил заявку).
         Lead::observe(LeadAuditObserver::class);
+
+        // Аудит библиотеки шаблонов (кто/что/когда правил текст, H1932).
+        MessageTemplate::observe(MessageTemplateAuditObserver::class);
 
         LandingPage::observe(LandingPageObserver::class);
 
