@@ -16,12 +16,20 @@ Pilot package for the Anki → Systema native SRS pipeline (H1970).
 ## Import
 
 ```sh
+php artisan storage:link   # once per environment if public/storage missing
 python scripts/anki_export_validate.py database/seeders/data/anki_454628379
 php artisan srs:import-anki database/seeders/data/anki_454628379 --dry-run
 php artisan srs:import-anki database/seeders/data/anki_454628379
 ```
 
-Creates system deck slug `anki-454628379-level-1` (idempotent).
+Creates system deck slug `anki-454628379-level-1` (idempotent). Publishes media to
+`storage/app/public/srs/anki_454628379/` for the review UI audio/image player.
+
+## Study (students)
+
+1. `SRS_ENABLED=true` in `.env`
+2. Log in → **`/dvaram/srs`** → select the deck
+3. Agent ops manual: [docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md)
 
 ## Regenerate from .apkg
 

@@ -88,6 +88,50 @@ class SrsReviewTest extends TestCase
             ->assertSee('На сегодня всё');
     }
 
+    public function test_review_renders_audio_and_image_when_media_published(): void
+    {
+        $user = User::factory()->create();
+        $noteType = SrsNoteType::create([
+            'key' => 'anki_TESTMEDIA',
+            'name' => 'Anki media',
+            'language' => 'hi',
+            'fields' => ['devanagari', 'iast', 'translation', 'audio', 'image'],
+        ]);
+        $deck = SrsDeck::create([
+            'note_type_id' => $noteType->id,
+            'name' => 'Hindi media deck',
+            'slug' => 'anki-TESTMEDIA-level-1',
+            'language' => 'hi',
+            'visibility' => 'system',
+        ]);
+
+        \Illuminate\Support\Facades\Storage::fake('public');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('srs/anki_TESTMEDIA/clip.mp3', 'audio');
+        \Illuminate\Support\Facades\Storage::disk('public')->put('srs/anki_TESTMEDIA/pic.jpg', 'img');
+
+        SrsCard::create([
+            'deck_id' => $deck->id,
+            'direction' => 'front_back',
+            'fields' => [
+                'devanagari' => 'हफ्ता',
+                'iast' => 'hafTaa',
+                'translation' => 'week',
+                'audio' => 'srs/anki_TESTMEDIA/clip.mp3',
+                'image' => 'srs/anki_TESTMEDIA/pic.jpg',
+            ],
+        ]);
+
+        Livewire::actingAs($user)->test(SrsReview::class)
+            ->assertSee('हफ्ता')
+            ->assertSee('hafTaa')
+            ->assertSee('clip.mp3')
+            ->assertSeeHtml('controls')
+            ->call('reveal')
+            ->assertSee('week')
+            ->assertSee('pic.jpg')
+            ->assertSeeHtml('<img');
+    }
+
     public function test_review_page_aborts_when_flag_disabled(): void
     {
         config(['srs.enabled' => false]);

@@ -9,6 +9,7 @@ use App\Models\DictionaryWord;
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
+use App\Services\Srs\SrsMedia;
 use Illuminate\Console\Command;
 use RuntimeException;
 
@@ -18,11 +19,14 @@ use RuntimeException;
  *
  * Same manifest.json + level CSV contract as {@see ImportMemriseSrsDeck}, but
  * with Anki provenance (slug/key prefix `anki-` / `anki_`), optional audio/image
- * media paths stored on the card fields for a future audio UI wave, and
- * romanization mapped into the `iast` identity slot (Latin key; not true IAST).
+ * media published to the public disk (`storage/app/public/srs/anki_{id}/`) and
+ * referenced from card fields, and romanization mapped into the `iast` identity
+ * slot (Latin key; not true IAST). Review UI plays/shows media via
+ * {@see \App\Services\Srs\SrsMedia}.
  *
  * Idempotent: Dictionary / SrsNoteType / SrsDeck / DictionaryWord / SrsCard are
- * firstOrCreate'd on stable keys — re-runs never duplicate.
+ * firstOrCreate'd on stable keys — re-runs never duplicate cards; media is
+ * re-published so paths stay resolvable. Requires `php artisan storage:link`.
  *
  *   php artisan srs:import-anki database/seeders/data/anki_454628379
  *   php artisan srs:import-anki … --dry-run
@@ -61,6 +65,14 @@ class ImportAnkiSrsDeck extends Command
 
         $this->info("Anki deck {$courseId} — {$manifest['course_name']} ({$language})");
         $this->line($dryRun ? '[dry-run] no writes will be made' : 'importing...');
+
+        $mediaDir = $dir.DIRECTORY_SEPARATOR.'media';
+        if (! $dryRun && is_dir($mediaDir)) {
+            $published = SrsMedia::publishDirectory($mediaDir, $courseId);
+            $this->line("  media: published {$published} file(s) → storage/app/public/".SrsMedia::publicDiskPrefix($courseId).'/');
+        } elseif ($dryRun && is_dir($mediaDir)) {
+            $this->line('  media: would publish from media/');
+        }
 
         $dictionaryName = "Anki import — deck {$courseId}";
         $dictionary = $dryRun
@@ -131,13 +143,29 @@ class ImportAnkiSrsDeck extends Command
                 $word = $this->upsertWord($dictionary, $row);
                 $wordsThisLevel++;
 
-                SrsCard::firstOrCreate(
+                $fields = $this->cardFields($row, $courseId);
+                $card = SrsCard::firstOrCreate(
                     ['deck_id' => $deck->id, 'source_word_id' => $word->id],
                     [
                         'direction' => 'front_back',
-                        'fields' => $this->cardFields($row),
+                        'fields' => $fields,
                     ],
                 );
+                // Refresh media paths on re-import so legacy `media/…` fields
+                // become public-disk paths without duplicating the card.
+                if (! $card->wasRecentlyCreated) {
+                    $existing = is_array($card->fields) ? $card->fields : [];
+                    $merged = $existing;
+                    foreach (['audio', 'image'] as $mediaKey) {
+                        if (isset($fields[$mediaKey])) {
+                            $merged[$mediaKey] = $fields[$mediaKey];
+                        }
+                    }
+                    if ($merged !== $existing) {
+                        $card->fields = $merged;
+                        $card->save();
+                    }
+                }
                 $cardsThisLevel++;
             }
 
@@ -247,12 +275,20 @@ class ImportAnkiSrsDeck extends Command
      * @param  array<string,string>  $row
      * @return array<string,string|list<string>>
      */
-    private function cardFields(array $row): array
+    private function cardFields(array $row, string $courseId): array
     {
         $fields = [];
-        foreach (['devanagari', 'iast', 'cyrillic', 'translation', 'audio', 'image', 'note_id', 'tags'] as $key) {
+        foreach (['devanagari', 'iast', 'cyrillic', 'translation', 'note_id', 'tags'] as $key) {
             if (($row[$key] ?? '') !== '') {
                 $fields[$key] = $row[$key];
+            }
+        }
+        foreach (['audio', 'image'] as $mediaKey) {
+            if (($row[$mediaKey] ?? '') !== '') {
+                $rewritten = SrsMedia::fieldPathForStorage($row[$mediaKey], $courseId);
+                if ($rewritten !== '') {
+                    $fields[$mediaKey] = $rewritten;
+                }
             }
         }
         if (($row['alt_answers'] ?? '') !== '') {

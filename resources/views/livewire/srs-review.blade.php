@@ -43,11 +43,28 @@
 
             {{-- Лицо --}}
             <div class="p-10 sm:p-14 text-center bg-gray-50/60">
-                @php $f = $card->fields ?? []; @endphp
+                @php
+                    $f = $card->fields ?? [];
+                    $audioUrl = $this->mediaUrl($f['audio'] ?? null);
+                    $imageUrl = $this->mediaUrl($f['image'] ?? null);
+                @endphp
                 @if(!empty($f['devanagari']))
                     <div class="text-6xl sm:text-7xl font-bold text-[#E3122C] font-sanskrit mb-2">{{ $f['devanagari'] }}</div>
+                    @if(!empty($f['iast']))
+                        <div class="text-xl font-semibold text-gray-600 mt-1">{{ $f['iast'] }}</div>
+                    @endif
                 @elseif(!empty($f['iast']))
                     <div class="text-5xl font-bold text-gray-900 mb-2">{{ $f['iast'] }}</div>
+                @endif
+
+                @if($audioUrl)
+                    <div class="mt-6 flex justify-center">
+                        <audio controls preload="metadata" class="w-full max-w-md"
+                               src="{{ $audioUrl }}"
+                               @if(! $revealed) autoplay @endif>
+                            Ваш браузер не поддерживает аудио.
+                        </audio>
+                    </div>
                 @endif
 
                 @unless($revealed)
@@ -58,8 +75,16 @@
             {{-- Ответ --}}
             @if($revealed)
                 <div class="px-8 sm:px-14 py-8 border-t border-gray-100 text-center">
+                    @if($imageUrl)
+                        <div class="mb-6 flex justify-center">
+                            <img src="{{ $imageUrl }}"
+                                 alt=""
+                                 class="max-h-48 sm:max-h-64 rounded-2xl object-contain shadow-sm border border-gray-100"
+                                 loading="lazy">
+                        </div>
+                    @endif
                     <div class="flex items-center justify-center gap-3 flex-wrap mb-4">
-                        @if(!empty($f['iast']))
+                        @if(!empty($f['iast']) && empty($f['devanagari']))
                             <span class="text-xl font-bold text-gray-900">{{ $f['iast'] }}</span>
                         @endif
                         @if(!empty($f['cyrillic']))
