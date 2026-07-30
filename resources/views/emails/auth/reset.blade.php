@@ -12,7 +12,7 @@
             <span style="font-size: 64px; color: #d35400; line-height: 1;">ॐ</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'Студент' }}! 🙏</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
 
         <p style="font-size: 18px; text-align: center;">Мы получили запрос на восстановление пароля для вашего аккаунта в <strong>Обществе ревнителей санскрита</strong>.</p>
 
@@ -32,8 +32,7 @@
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 40px 0;">
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
-            С уважением,<br>
-            <strong>Команда Общества ревнителей санскрита</strong>
+            <strong>Общество ревнителей санскрита</strong>
         </p>
 
     </div>

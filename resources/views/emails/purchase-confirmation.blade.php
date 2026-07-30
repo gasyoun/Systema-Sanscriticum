@@ -50,7 +50,6 @@
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
             Вопросы — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>, обычно отвечаем в течение рабочего дня.<br><br>
-            С уважением,<br>
             <strong>Общество ревнителей санскрита</strong>
         </p>
 

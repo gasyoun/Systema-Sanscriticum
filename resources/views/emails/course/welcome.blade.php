@@ -12,7 +12,7 @@
             <span style="font-size: 64px; color: #d35400; line-height: 1;">ॐ</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'Студент' }}! 🙏</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
 
         <p style="font-size: 18px; text-align: center;">
             Благодарим за оплату курса <strong>«{{ $course->title }}»</strong>. Доступ к материалам уже открыт в вашем личном кабинете — можно приступать к занятиям.
@@ -38,7 +38,6 @@
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
             Если у вас возникнут вопросы, просто ответьте на это письмо — мы поможем.<br><br>
-            С уважением,<br>
             <strong>Общество ревнителей санскрита</strong>
         </p>
 

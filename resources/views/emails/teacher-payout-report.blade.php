@@ -44,7 +44,7 @@
                                 $paidStudents = (int) ($b['paid_student_count'] ?? $b['student_count'] ?? 0);
                                 $freeStudents = (int) ($b['free_student_count'] ?? 0);
                                 $totalStudents = $paidStudents + $freeStudents;
-                                // За студента: для фикс-модели — оговорённая ставка, иначе выводим из
+                                // За студента: для фикс-модели — оговоренная ставка, иначе выводим из
                                 // итога ÷ число слушателей, чтобы препод видел состав суммы.
                                 $perStudent = null;
                                 if ($students > 0) {
