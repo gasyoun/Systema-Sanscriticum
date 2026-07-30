@@ -166,18 +166,22 @@ class CabinetProbeTest extends TestCase
         $this->artisan('cabinet:probe')->assertSuccessful();
     }
 
-    public function test_registered_in_the_schedule_with_config_cron(): void
+    public function test_not_registered_in_the_in_process_schedule(): void
     {
-        config()->set('cabinet_probe.cron', '*/12 * * * *');
-
+        // H1917 (30-07-2026): раньше cabinet:probe стоял *внутри* schedule:run
+        // ($schedule->command(...) в Kernel.php) — доказано живым прогоном на
+        // проде, что это не работает как сторож: слот выпадает целиком, когда
+        // сам schedule:run завис. Сторож живёт ОТДЕЛЬНОЙ строкой cron
+        // (systema-watchdog-run.sh) со своим локом, не зависящим от
+        // schedule:run. Этот тест теперь фиксирует обратное: команда НЕ должна
+        // возвращаться в Kernel-расписание.
         $events = collect(app(Schedule::class)->events())
             ->filter(fn ($event) => str_contains((string) $event->command, 'cabinet:probe'));
 
-        $this->assertCount(1, $events, 'cabinet:probe не зарегистрирован в расписании');
-        $this->assertSame('*/12 * * * *', $events->first()?->expression);
-        $this->assertTrue(
-            $events->first()?->evenInMaintenanceMode,
-            'cabinet:probe должен бить и в maintenance'
+        $this->assertCount(
+            0,
+            $events,
+            'cabinet:probe не должен быть в Kernel-расписании — сторож живёт отдельной строкой cron (H1917)'
         );
     }
 

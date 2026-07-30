@@ -480,15 +480,14 @@ class Kernel extends ConsoleKernel
         // Homepage-uptime и heartbeat:ping не видят «/ отвечает 200, а /dvaram
         // 500 / Auth сломан / Filament не пускает менеджера». Login smoke-
         // менеджера (TEST_MANAGER_*) + GET ключевых поверхностей in-process.
-        // evenInMaintenanceMode: выкладка не должна глушить сторож.
-        // onOneServer НЕ ставим: как у heartbeat, Redis-лок не должен гасить
-        // проверку (лежащий Redis — соседний сигнал, не причина молчать).
-        // Без TEST_MANAGER_PASSWORD — no-op SUCCESS (fail-open).
-        $schedule->command('cabinet:probe')
-            ->cron((string) config('cabinet_probe.cron', '*/15 * * * *'))
-            ->withoutOverlapping(10)
-            ->evenInMaintenanceMode()
-            ->name('cabinet-health-probe');
+        //
+        // НЕ здесь с 30-07-2026 (H1917): раньше `cabinet:probe` стоял *внутри*
+        // schedule:run той же строкой `*/15`, что и здесь — а значит вставал
+        // вместе с планировщиком (проверено H1917 живым зависанием: слот 11:30
+        // выпал из schedule.log целиком). Сторож вынесен ОТДЕЛЬНОЙ строкой
+        // cron — `systema-watchdog-run.sh "cabinet:probe" cabinet 120` в
+        // scripts/server_guards/cron/app-user.crontab — со своим локом и
+        // судьбой, не зависящей от schedule:run. Не возвращайте команду сюда.
     }
 
     /**
