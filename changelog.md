@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.80.1] - 2026-07-30
+
 ### Changed
 - **Marathon Day 1 quiz polish (copy, path, duration, no re-play).** URL `/online/konsultaciya/day/` → **`/dine/`** (Sanskrit *dine*; legacy `/day/` 301). Zero-cohort Day 1: *veda* as noun/perfect, lowercase options, *mātar*/*bhrātar* macrons; links to Zaliznyak «О языке древней Индии» ([samskrtam.ru/mt](https://samskrtam.ru/mt/) list) and [Burlak 2018](https://samskrtam.ru/burlak-sanskrit-2018-tc). Client wall-clock `day{1,2}_quiz_seconds` on complete — shown to enrollee and in Filament «Марафон: опросы». After `day1_engaged_at`, page shows done state (no quiz restart). Executor: Grok 4.5 (`grok-4.5`).
 - **Uptime RU: «если сайт упал» + [@rusamskrtam](https://t.me/rusamskrtam).** [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) leads with site-down / red-email-or-Telegram first steps; audience = letter or @rusamskrtam red alert. CLAUDE/README/EN pointers. Executor: Grok 4.5 (`grok-4.5`).
