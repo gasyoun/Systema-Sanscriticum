@@ -7,6 +7,8 @@ namespace App\Console\Commands;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Support\MarathonLandingCopy;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
 
@@ -20,6 +22,12 @@ use Throwable;
  * Not the student-cabinet bot, not the zapisi booking bot.
  *
  * Default is dry-run. Pass --live to send.
+ *
+ * Idempotency (H1936): a `--live` send is recorded in `marathon_channel_posts_sent`
+ * keyed by (post_number, run_key) before it can fire again — a fixed-date cron entry
+ * has no other guard against a scheduler double-run or a redeploy re-triggering the
+ * same minute. Post 3 (evergreen) uses the ISO year-week as its run_key so it still
+ * re-fires every week; every other post uses the literal string 'once'.
  */
 final class PublishMarathonChannelPosts extends Command
 {
@@ -74,8 +82,16 @@ final class PublishMarathonChannelPosts extends Command
                 continue;
             }
 
+            $runKey = $this->runKeyFor($n);
+            if ($this->alreadySent($n, $runKey)) {
+                $this->warn("Skip post {$n}: already sent for run_key={$runKey}.");
+
+                continue;
+            }
+
             try {
                 $telegram->sendMessage($chatId, $this->toTelegramHtml($text));
+                $this->markSent($n, $runKey);
                 $sent++;
                 $this->info("Sent post {$n}.");
             } catch (Throwable $e) {
@@ -105,5 +121,32 @@ final class PublishMarathonChannelPosts extends Command
     private function toTelegramHtml(string $text): string
     {
         return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    /**
+     * 'once' for one-shot posts; the ISO year-week for the recurring evergreen
+     * post 3, so a scheduled weekly run re-fires every week but a same-week
+     * double-invocation (scheduler overlap, manual re-run) is still deduped.
+     */
+    private function runKeyFor(int $postNumber): string
+    {
+        return $postNumber === 3 ? Carbon::now()->isoFormat('GGGG-[W]WW') : 'once';
+    }
+
+    private function alreadySent(int $postNumber, string $runKey): bool
+    {
+        return DB::table('marathon_channel_posts_sent')
+            ->where('post_number', $postNumber)
+            ->where('run_key', $runKey)
+            ->exists();
+    }
+
+    private function markSent(int $postNumber, string $runKey): void
+    {
+        DB::table('marathon_channel_posts_sent')->insert([
+            'post_number' => $postNumber,
+            'run_key' => $runKey,
+            'sent_at' => Carbon::now(),
+        ]);
     }
 }

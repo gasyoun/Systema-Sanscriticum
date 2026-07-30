@@ -8,6 +8,8 @@ use App\Models\LandingPage;
 use App\Models\MarketingSetting;
 use App\Support\MarathonLandingCopy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -107,5 +109,47 @@ class MarathonLandingCopyPublishTest extends TestCase
                 && str_contains($request->url(), 'sendMessage')
                 && ($request['chat_id'] ?? null) === '@samskrte';
         });
+    }
+
+    public function test_live_one_shot_post_does_not_resend_on_a_second_run(): void
+    {
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '1', '--live' => true])
+            ->assertSuccessful();
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '1', '--live' => true])
+            ->assertSuccessful()
+            ->expectsOutputToContain('already sent');
+
+        Http::assertSentCount(1);
+        $this->assertSame(
+            1,
+            DB::table('marathon_channel_posts_sent')->where('post_number', 1)->count()
+        );
+    }
+
+    public function test_evergreen_post_resends_on_a_new_week_but_not_within_the_same_week(): void
+    {
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-09-07 10:00:00')); // Monday, ISO week 37
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '3', '--live' => true])
+            ->assertSuccessful();
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '3', '--live' => true])
+            ->assertSuccessful()
+            ->expectsOutputToContain('already sent');
+
+        Http::assertSentCount(1);
+
+        Carbon::setTestNow(Carbon::parse('2026-09-14 10:00:00')); // next Monday, ISO week 38
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '3', '--live' => true])
+            ->assertSuccessful();
+
+        Http::assertSentCount(2);
+        Carbon::setTestNow();
     }
 }

@@ -7,6 +7,7 @@ use App\Jobs\PruneStaleVisitorPresencesJob;
 use App\Models\MarketingSetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Carbon;
 
 class Kernel extends ConsoleKernel
 {
@@ -282,6 +283,31 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('deliver-marathon-warm-tail');
+
+        // --- МАРАФОН: ПОСТЫ В КАНАЛ @samskrte (H1067/H1936) ---
+        // Требует: magnet-бот администратор канала с правом Post Messages (Telegram-side,
+        // делается вручную в приложении). Идемпотентность — marathon_channel_posts_sent.
+        $schedule->command('marathon:publish-channel-posts --post=1 --live')
+            ->cron('0 10 14 8 *')->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('marathon-channel-post-1-announce');
+
+        $schedule->command('marathon:publish-channel-posts --post=2 --live')
+            ->cron('0 10 28 8 *')->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('marathon-channel-post-2-start');
+
+        // Evergreen, weekly, starting after the cohort is live (~1 week post-start).
+        $schedule->command('marathon:publish-channel-posts --post=3 --live')
+            ->weeklyOn(1, '10:00')->timezone('Europe/Moscow')
+            ->when(fn () => now('Europe/Moscow')->greaterThanOrEqualTo(
+                Carbon::parse('2026-09-04', 'Europe/Moscow')
+            ))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('marathon-channel-post-3-evergreen');
 
         // --- ПИСЬМО ЛИДАМ СО ССЫЛКОЙ НА ЗАПИСЬ ВЕБИНАРА ---
         // Триггер — админ заполнил webinar_recording_url; команда сама отсечёт уже отправленных.
