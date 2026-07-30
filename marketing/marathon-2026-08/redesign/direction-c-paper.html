@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>C — Warm paper · konsultaciya redesign mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f1e8; --surface: #fffcf7; --text: #2c2416; --muted: #6b5e4e;
+      --accent: #c45c26; --border: #e0d4c4; --tg: #0088cc;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; background: #0a0d14; color: var(--text); }
+    .shop-header { background: #0a0d14; color: #e2e8f0; padding: .7rem 1rem; display: flex; justify-content: space-between; font-size: .9rem; }
+    .shop-header strong { font-family: Georgia, 'Times New Roman', serif; color: #fff; }
+    .paper { background: var(--bg); min-height: calc(100vh - 48px); }
+    .wrap { max-width: 38rem; margin: 0 auto; padding: 2.75rem 1.15rem 4rem; }
+    .badge { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 1rem; }
+    h1 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.75rem, 4.2vw, 2.35rem); font-weight: 700; line-height: 1.22; margin: 0 0 .85rem; font-style: normal; }
+    .rule { border: 0; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+    .sub { color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+    .proof { font-size: .875rem; color: var(--muted); margin: 1rem 0 1.75rem; }
+    h2 { font-size: 1rem; font-weight: 800; letter-spacing: .02em; margin: 0 0 1rem; }
+    .lessons { display: grid; gap: .85rem; margin-bottom: 2rem; }
+    .lesson { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1.15rem; }
+    .lesson .mark { color: var(--accent); font-family: Georgia, serif; font-size: 1.1rem; margin-right: .35rem; }
+    .lesson strong { font-family: Georgia, serif; font-size: 1.05rem; }
+    .lesson p { margin: .4rem 0 0; color: var(--muted); font-size: .9rem; line-height: 1.55; }
+    .quote { border-left: 3px solid var(--accent); padding: .5rem 0 .5rem 1rem; margin: 0 0 2rem; color: var(--muted); font-style: italic; font-size: .95rem; line-height: 1.55; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    label.field { display: block; font-size: .78rem; font-weight: 800; margin-bottom: .35rem; }
+    select, input[type=text] { width: 100%; border: 1px solid #d4c8b8; border-radius: 8px; padding: .7rem .85rem; font: inherit; color: var(--text); background: #fff; margin-bottom: 1rem; }
+    .tracks { display: grid; gap: .5rem; margin-bottom: 1rem; }
+    .track { border: 1px solid var(--border); border-radius: 10px; padding: .9rem; display: flex; gap: .65rem; cursor: pointer; background: #fff; }
+    .track:has(input:checked) { border-color: var(--accent); background: #faf3eb; }
+    .track .t { font-weight: 800; display: block; }
+    .track .d { font-size: .8rem; color: var(--muted); }
+    .btn { width: 100%; border: 0; border-radius: 10px; padding: .9rem; font-weight: 800; font-family: inherit; cursor: pointer; background: var(--accent); color: #fff; font-size: 1rem; }
+    .btn-tg { display: block; text-align: center; text-decoration: none; background: var(--tg); color: #fff; margin-top: .6rem; border-radius: 10px; padding: .85rem; font-weight: 800; }
+    .btn-ghost { width: 100%; margin-top: .45rem; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 10px; padding: .7rem; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .success { display: none; background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; border-radius: 12px; padding: 1.15rem; margin-bottom: 1.5rem; }
+    .success.show { display: block; }
+    .tg-state { display: none; margin-top: .65rem; font-size: .85rem; background: #e3f2fd; color: #0d47a1; padding: .65rem; border-radius: 8px; }
+    .tg-state.show { display: block; }
+    .faq details { border-top: 1px solid var(--border); padding: .85rem 0; }
+    .faq summary { font-weight: 800; cursor: pointer; }
+    .faq p { margin: .45rem 0 0; color: var(--muted); font-size: .875rem; line-height: 1.5; }
+    .toolbar { position: fixed; bottom: 1rem; right: 1rem; background: #2c2416; color: #f7f1e8; font-size: .72rem; padding: .45rem .7rem; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="shop-header"><strong>Общество ревнителей санскрита</strong><span>Курсы</span></div>
+  <div class="paper">
+    <div class="wrap">
+      <div class="badge">Направление C · warm paper · O2</div>
+      <h1>Санскрит кажется недоступным. Три дня — и вы увидите, что это не так.</h1>
+      <hr class="rule" />
+      <p class="sub">Бесплатная консультация по онлайн-курсам Общества ревнителей санскрита: три коротких дня без деванагари — только узнавание.</p>
+      <p class="proof">Ведет к.ф.н. М.Ю. Гасунс · ~15 минут в день · начать можно в любой день</p>
+
+      <div id="success" class="success">
+        <strong style="display:block;margin-bottom:.35rem">Вы записаны</strong>
+        <p style="margin:0;font-size:.9rem;line-height:1.5">Откройте Telegram и нажмите Start у бота — иначе дни не придут.</p>
+        <a class="btn-tg" id="tgBtn" href="https://t.me/samskrte_bot" target="_blank" rel="noopener">Продолжить в Telegram</a>
+        <button type="button" class="btn-ghost" id="copyBtn">Скопировать ссылку</button>
+        <div id="tgState" class="tg-state">Открыли Telegram. Нажмите <b>Start</b> у бота.</div>
+      </div>
+
+      <h2>Три урока консультации</h2>
+      <div class="lessons">
+        <div class="lesson"><span class="mark">◆</span><strong>День 1. Родство языков</strong><p>veda — «ведать», matar — «мать». Три коротких вопроса на узнавание.</p></div>
+        <div class="lesson"><span class="mark">◆</span><strong>День 2. Строение слова</strong><p>Корень и аффикс. В конце вы формулируете вопрос к встрече.</p></div>
+        <div class="lesson"><span class="mark">◆</span><strong>День 3. Живая консультация</strong><p>Zoom с преподавателем: разбор и личный маршрут.</p></div>
+      </div>
+
+      <p class="quote">Отзыв публикуется только при реальной цитате (MARATHON_TESTIMONIAL). Блок опускается, если цитаты нет.</p>
+
+      <form class="card" id="regForm" onsubmit="return mockSubmit(event)">
+        <label class="field" for="quiz">Что вас привлекает в санскрите?</label>
+        <select id="quiz" required>
+          <option value="">Выберите…</option>
+          <option>Грамматика и чтение</option>
+          <option>Йога и мантры</option>
+          <option>Философия</option>
+          <option>Просто попробовать</option>
+        </select>
+        <label class="field">Формат участия</label>
+        <div class="tracks">
+          <label class="track"><input type="radio" name="t" checked /><span><span class="t">Бесплатно</span><span class="d">Дни и запись консультации</span></span></label>
+          <label class="track"><input type="radio" name="t" /><span><span class="t">«С проверкой»</span><span class="d">Куратор · личный разбор · скидка на курс</span></span></label>
+        </div>
+        <label class="field" for="c">Контакт</label>
+        <input id="c" required placeholder="+7… / email / @telegram" />
+        <button class="btn" type="submit">Записаться</button>
+      </form>
+
+      <section class="faq" style="margin-top:2.25rem">
+        <h2>Частые вопросы</h2>
+        <details><summary>Нужно ли знать деванагари?</summary><p>Нет. Все материалы — на кириллице.</p></details>
+        <details><summary>Сколько времени это займёт?</summary><p>~15 минут в день. Материалы не сгорают.</p></details>
+        <details><summary>Кто ведет?</summary><p>К.ф.н. М.Ю. Гасунс — санскритолог, автор курсов ОРС.</p></details>
+      </section>
+    </div>
+  </div>
+  <div class="toolbar">Mockup C · paper · not production</div>
+  <script>
+    function mockSubmit(e){e.preventDefault();document.getElementById('success').classList.add('show');document.getElementById('success').scrollIntoView({behavior:'smooth'});return false;}
+    document.getElementById('tgBtn').onclick=function(){document.getElementById('tgState').classList.add('show');};
+    document.getElementById('copyBtn').onclick=function(){navigator.clipboard.writeText('https://t.me/samskrte_bot');this.textContent='Скопировано';};
+  </script>
+</body>
+</html>

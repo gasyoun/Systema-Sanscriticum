@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D — Stepped flow · konsultaciya redesign mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fafaf9; --surface: #fff; --text: #1c1917; --muted: #57534e;
+      --accent: #e85c24; --border: #e7e5e4; --tg: #0088cc; --header: #0a0d14;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; background: var(--header); color: var(--text); }
+    .shop-header { background: var(--header); color: #e2e8f0; padding: .65rem 1rem; font-size: .85rem; display: flex; justify-content: space-between; }
+    .shop-header strong { font-family: Georgia, serif; color: #fff; }
+    .island { background: var(--bg); min-height: calc(100vh - 44px); }
+    .strip { max-width: 26rem; margin: 0 auto; padding: 1.25rem 1rem .5rem; }
+    .badge { font-size: .68rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
+    .strip h1 { font-size: 1.35rem; font-weight: 900; line-height: 1.25; margin: .4rem 0 .35rem; }
+    .strip p { margin: 0; color: var(--muted); font-size: .875rem; }
+    .progress { max-width: 26rem; margin: .75rem auto 0; padding: 0 1rem; }
+    .bar { height: 6px; background: #e7e5e4; border-radius: 999px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: var(--accent); width: 25%; transition: width .25s; }
+    .steps-label { font-size: .75rem; color: var(--muted); margin-top: .4rem; font-weight: 700; }
+    .panel { max-width: 26rem; margin: 0 auto; padding: 1rem 1rem 3.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.25rem; min-height: 18rem; display: none; }
+    .card.active { display: block; }
+    .card h2 { font-size: 1.05rem; font-weight: 800; margin: 0 0 1rem; }
+    .opts { display: grid; gap: .5rem; }
+    .opt { border: 1.5px solid var(--border); border-radius: 14px; padding: .9rem 1rem; cursor: pointer; font-weight: 700; background: #fff; }
+    .opt:has(input:checked), .opt.selected { border-color: var(--accent); background: #fff7ed; }
+    .opt input { margin-right: .55rem; }
+    .opt small { display: block; font-weight: 600; color: var(--muted); margin-top: .2rem; margin-left: 1.35rem; }
+    label.field { display: block; font-size: .78rem; font-weight: 800; margin: .75rem 0 .35rem; }
+    input[type=text] { width: 100%; border: 1px solid #d6d3d1; border-radius: 12px; padding: .75rem .9rem; font: inherit; color: var(--text); background: #fff; }
+    .nav { display: flex; gap: .5rem; margin-top: 1.25rem; }
+    .btn { flex: 1; border: 0; border-radius: 12px; padding: .85rem; font-weight: 800; font-family: inherit; cursor: pointer; font-size: .95rem; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-back { background: transparent; border: 1px solid var(--border); color: var(--muted); flex: 0 0 auto; padding-inline: 1rem; }
+    .btn-tg { display: block; width: 100%; text-align: center; text-decoration: none; background: var(--tg); color: #fff; border-radius: 12px; padding: .9rem; font-weight: 800; margin-top: .75rem; }
+    .btn-ghost { width: 100%; margin-top: .45rem; background: #fff; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; padding: .75rem; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .ok { text-align: center; }
+    .ok .check { width: 3.5rem; height: 3.5rem; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: 1.75rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-weight: 900; }
+    .checklist { text-align: left; font-size: .875rem; color: var(--muted); line-height: 1.55; padding-left: 1.1rem; }
+    .tg-state { display: none; margin-top: .7rem; padding: .7rem; background: #f0f9ff; color: #0c4a6e; border-radius: 10px; font-size: .85rem; text-align: left; }
+    .tg-state.show { display: block; }
+    .days-mini { font-size: .8rem; color: var(--muted); margin-top: 1rem; line-height: 1.45; }
+    .toolbar { position: fixed; bottom: 1rem; right: 1rem; background: #1c1917; color: #fff; font-size: .72rem; padding: .45rem .7rem; border-radius: 999px; z-index: 20; }
+  </style>
+</head>
+<body>
+  <div class="shop-header"><strong>ОРС</strong><span>Курсы</span></div>
+  <div class="island">
+    <div class="strip">
+      <div class="badge">Направление D · stepped · O2</div>
+      <h1>3 дня с санскритом — запись</h1>
+      <p>~15 мин/день · без деванагари · к.ф.н. М.Ю. Гасунс</p>
+    </div>
+    <div class="progress">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="steps-label" id="stepLabel">Шаг 1 из 4 · цель</div>
+    </div>
+    <div class="panel">
+      <!-- Step 1 -->
+      <div class="card active" data-step="1">
+        <h2>Что вас привлекает в санскрите?</h2>
+        <div class="opts" id="goals">
+          <label class="opt"><input type="radio" name="goal" value="grammar" /> Грамматика и чтение</label>
+          <label class="opt"><input type="radio" name="goal" value="yoga" /> Йога и мантры</label>
+          <label class="opt"><input type="radio" name="goal" value="philo" /> Философия</label>
+          <label class="opt"><input type="radio" name="goal" value="try" /> Просто попробовать</label>
+        </div>
+        <div class="nav"><button type="button" class="btn btn-primary" onclick="nextFrom(1)">Далее</button></div>
+        <p class="days-mini">День 1 — родство языков · День 2 — строение слова · День 3 — Zoom</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="card" data-step="2">
+        <h2>Формат участия</h2>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="track" value="free" checked /> Бесплатно<small>Дни + консультация в записи</small></label>
+          <label class="opt"><input type="radio" name="track" value="paid" /> «С проверкой»<small>Куратор · личный разбор · скидка на курс</small></label>
+        </div>
+        <div class="nav">
+          <button type="button" class="btn btn-back" onclick="go(1)">Назад</button>
+          <button type="button" class="btn btn-primary" onclick="go(3)">Далее</button>
+        </div>
+      </div>
+      <!-- Step 3 -->
+      <div class="card" data-step="3">
+        <h2>Куда прислать День 1?</h2>
+        <label class="field" for="contact">Контакт</label>
+        <input id="contact" type="text" placeholder="+7… / email / @username" />
+        <label class="field" for="name">Имя (необязательно)</label>
+        <input id="name" type="text" placeholder="Как к вам обращаться" />
+        <div class="nav">
+          <button type="button" class="btn btn-back" onclick="go(2)">Назад</button>
+          <button type="button" class="btn btn-primary" onclick="finish()">Записаться</button>
+        </div>
+      </div>
+      <!-- Step 4 -->
+      <div class="card ok" data-step="4">
+        <div class="check">✓</div>
+        <h2>Вы записаны</h2>
+        <p style="color:var(--muted);font-size:.9rem;line-height:1.5;margin:0">Откройте Telegram и нажмите Start — иначе личные дни не придут.</p>
+        <a class="btn-tg" id="tgBtn" href="https://t.me/samskrte_bot" target="_blank" rel="noopener">Продолжить в Telegram</a>
+        <button type="button" class="btn-ghost" id="copyBtn">Скопировать ссылку</button>
+        <div id="tgState" class="tg-state">Открыли Telegram. Нажмите <b>Start</b> у бота. Если не открылось — скопируйте ссылку.</div>
+        <ol class="checklist">
+          <li>Start у бота</li>
+          <li>Дождаться Дня 1</li>
+          <li>В День 2 — ваш вопрос</li>
+          <li>День 3 — Zoom / запись</li>
+        </ol>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:1rem">VK / Max — позже, если продукт включит (сейчас только Telegram).</p>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar">Mockup D · stepped · not production</div>
+  <script>
+    var step = 1;
+    var labels = {1:'Шаг 1 из 4 · цель',2:'Шаг 2 из 4 · формат',3:'Шаг 3 из 4 · контакт',4:'Шаг 4 из 4 · готово'};
+    function go(n) {
+      step = n;
+      document.querySelectorAll('.card').forEach(function(c){ c.classList.toggle('active', +c.dataset.step === n); });
+      document.getElementById('barFill').style.width = (n * 25) + '%';
+      document.getElementById('stepLabel').textContent = labels[n];
+    }
+    function nextFrom(n) {
+      if (n === 1 && !document.querySelector('input[name=goal]:checked')) { alert('Выберите вариант'); return; }
+      go(n + 1);
+    }
+    function finish() {
+      if (!document.getElementById('contact').value.trim()) { alert('Укажите контакт'); return; }
+      go(4);
+    }
+    document.getElementById('tgBtn').onclick = function(){ document.getElementById('tgState').classList.add('show'); };
+    document.getElementById('copyBtn').onclick = function(){ navigator.clipboard.writeText('https://t.me/samskrte_bot'); this.textContent = 'Скопировано'; };
+  </script>
+</body>
+</html>
