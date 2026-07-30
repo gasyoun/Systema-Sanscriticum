@@ -274,8 +274,45 @@ class DebtSelfServiceTest extends TestCase
         $this->actingAs($user)
             ->from(route('student.dashboard'))
             ->post(route('student.debt.promise.pay', $promise))
-            ->assertRedirect(route('student.dashboard'))
+            ->assertRedirect(route('student.dashboard').'#debts')
             ->assertSessionHas('error');
+    }
+
+    /**
+     * Регресс: на проде flash error после fail оплаты не рендерился в кабинете
+     * (только password_status/bot_status) → «кнопка ничего не делает».
+     *
+     * @test
+     */
+    public function debt_pay_error_flash_is_visible_on_the_dashboard(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->courseWithCurrentBlock2();
+
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 5000, 'tariff' => 'block_2', 'status' => 'pending',
+            'is_conditional' => false, 'is_self_service' => true,
+        ]);
+
+        $promise = PaymentPromise::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'promised_at' => now()->addDays(5)->toDateString(), 'amount' => 5000,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('student.dashboard'))
+            ->post(route('student.debt.promise.pay', $promise))
+            ->assertRedirect(route('student.dashboard').'#debts')
+            ->assertSessionHas('error');
+
+        // Flash живёт один следующий GET — кабинет обязан его отрисовать.
+        $this->actingAs($user)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('У вас уже есть незавершённый заказ', false)
+            ->assertSee('fa-triangle-exclamation', false);
     }
 
     /** @test */
@@ -419,7 +456,7 @@ class DebtSelfServiceTest extends TestCase
         $this->actingAs($user)
             ->from(route('student.dashboard'))
             ->post(route('student.debt.promise.pay', $promise))
-            ->assertRedirect(route('student.dashboard'))
+            ->assertRedirect(route('student.dashboard').'#debts')
             ->assertSessionHas('error');
 
         // Второй pending не создан.
@@ -484,7 +521,7 @@ class DebtSelfServiceTest extends TestCase
         $this->actingAs($user)
             ->from(route('student.dashboard'))
             ->post(route('student.debt.course.pay-all', $course), ['amount' => 500])
-            ->assertRedirect(route('student.dashboard'))
+            ->assertRedirect(route('student.dashboard').'#debts')
             ->assertSessionHas('error');
     }
 
@@ -611,7 +648,7 @@ class DebtSelfServiceTest extends TestCase
         $this->actingAs($user)
             ->from(route('student.dashboard'))
             ->post(route('student.debt.promise.reschedule', $promise), ['new_date' => $newDate])
-            ->assertRedirect(route('student.dashboard'))
+            ->assertRedirect(route('student.dashboard').'#debts')
             ->assertSessionHas('success');
 
         $fresh = $promise->fresh();

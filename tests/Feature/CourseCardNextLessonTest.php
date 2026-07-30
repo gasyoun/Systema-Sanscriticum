@@ -155,6 +155,7 @@ class CourseCardNextLessonTest extends TestCase
             ->assertSee('Нужно действие по оплате')
             ->assertSee('Грамматика санскрита')
             ->assertSee('2 000 ₽')
+            ->assertSee('до ', false) // meta: дата обещания (continueLearningDebtMeta arrangement)
             ->assertSee('Оплатить следующий взнос')
             ->assertSee(route('student.debt.promise.pay', PaymentPromise::first()), false);
     }
