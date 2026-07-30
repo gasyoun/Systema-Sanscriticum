@@ -303,13 +303,12 @@ class Kernel extends ConsoleKernel
         // Telegram support-account analytics. The command is a no-op unless
         // TELEGRAM_SUPPORT_ENABLED=true and Telegram Client API credentials exist.
         //
-        // TTL замка ВЫВОДИТСЯ из watchdog-таймаута команды, а не задан числом:
-        // ->withoutOverlapping() снимает замок по истечении TTL, даже если
-        // держатель ещё жив, и тогда на одной MTProto-сессии оказываются два
-        // экземпляра. Пока таймаут < TTL, зависший заход умирает первым. Ровно
-        // этот инвариант был нарушен на проде 27.07.2026 (заход висел часами при
-        // TTL 10 мин → десять параллельных синков → EMFILE).
-        $syncLockMinutes = (int) ceil(((int) config('services.telegram_support.sync_timeout_seconds', 120)) / 60) + 5;
+        // TTL замка ВЫВОДИТСЯ из ГАРАНТИРОВАННОГО потолка жизни процесса, а не
+        // задан числом и не выведен из watchdog-таймаута команды —
+        // см. madelineSessionLockMinutes().
+        $syncLockMinutes = $this->madelineSessionLockMinutes(
+            (int) config('services.telegram_support.sync_timeout_seconds', 120),
+        );
         $schedule->command('telegram-support:sync')
             ->everyMinute()
             ->withoutOverlapping($syncLockMinutes)
@@ -330,10 +329,12 @@ class Kernel extends ConsoleKernel
         // сам. Редкий слот: держит общий замок сессии на весь проход, ежеминутный
         // telegram-support:sync это переживёт (деградирует в session_busy → повтор).
         // No-op при выключенном харвесте/support или неконфигурной MadelineProto.
-        // TTL замка выводится из watchdog-таймаута прохода — тот же инвариант,
-        // что у telegram-support:sync выше: заход умирает раньше, чем замок
-        // протухнет и пустит второй экземпляр на ту же MTProto-сессию.
-        $rosterLockMinutes = (int) ceil(((int) config('services.telegram_harvest.roster_timeout_seconds', 600)) / 60) + 5;
+        // TTL замка считается тем же madelineSessionLockMinutes(), что и у
+        // telegram-support:sync выше: сессия у них одна, а значит и граница
+        // «замок переживает держателя» должна быть одна.
+        $rosterLockMinutes = $this->madelineSessionLockMinutes(
+            (int) config('services.telegram_harvest.roster_timeout_seconds', 600),
+        );
         $schedule->command('telegram-harvest:roster-groups')
             ->hourly()
             ->withoutOverlapping($rosterLockMinutes)
@@ -488,6 +489,44 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->evenInMaintenanceMode()
             ->name('cabinet-health-probe');
+    }
+
+    /**
+     * TTL замка ->withoutOverlapping() для команд, работающих на ОДНОЙ общей
+     * MTProto-сессии (telegram-support:sync, telegram-harvest:roster-groups).
+     *
+     * Задача одна: замок обязан ПЕРЕЖИТЬ своего держателя. Laravel снимает его по
+     * истечении TTL, даже если процесс ещё жив, и тогда на одной сессии
+     * оказываются два экземпляра — это `AUTH_RESTART` на живом аккаунте
+     * поддержки, а 27.07.2026 это дало десять параллельных синков и EMFILE.
+     *
+     * ЧЕМ ЭТО СЧИТАЕТСЯ И ПОЧЕМУ НЕ watchdog-таймаутом. Прежняя версия выводила
+     * TTL из `sync_timeout_seconds` (120 с → 7 мин) на основании «пока таймаут <
+     * TTL, зависший заход умирает первым». 28.07.2026 инвариант не выполнился:
+     * заход прожил 10 470 с при потолке 120 с, то есть замок протух за это время
+     * двадцать пять раз (разбор — H1915, {@see MadelineSyncWatchdog}). Watchdog
+     * с тех пор чинен и снова надёжен, но выводить границу из него нельзя:
+     * без расширения pcntl он честный no-op, и тогда единственной оградой
+     * остаётся внешняя обёртка. Поэтому берётся ГАРАНТИРОВАННАЯ верхняя граница
+     * жизни процесса — та, что держится в любом случае:
+     *
+     *   systema-schedule-run.sh снимает заход по `timeout` на SCHEDULE_MAX_SECONDS,
+     *   а пережившего это straggler'а добивает reaper на следующем проходе —
+     *   `kill -KILL` при возрасте > 2x потолка. Значит дольше 2x не живёт никто.
+     *
+     * При 900 с это 35 мин против прежних 7. Цена — заход, убитый жёстко (без
+     * своей уборки), задерживает синк до получаса; выигрыш — двух экземпляров на
+     * одной сессии не бывает НИКОГДА. Для минутной команды это правильный размен:
+     * пауза видна healthcheck'у, а AUTH_RESTART роняет живой аккаунт.
+     */
+    private function madelineSessionLockMinutes(int $watchdogTimeoutSeconds): int
+    {
+        $hardCeiling = max(
+            $watchdogTimeoutSeconds,
+            ((int) config('schedule_guard.max_seconds', 900)) * 2,
+        );
+
+        return (int) ceil($hardCeiling / 60) + 5;
     }
 
     /**

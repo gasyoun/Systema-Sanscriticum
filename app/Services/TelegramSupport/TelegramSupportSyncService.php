@@ -2,7 +2,6 @@
 
 namespace App\Services\TelegramSupport;
 
-use App\Exceptions\MadelineSyncTimedOut;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportResponderMapping;
 use App\Models\TelegramSupportAccount;
@@ -69,12 +68,13 @@ class TelegramSupportSyncService
             $this->updateSyncState($account->refresh(), $messages);
 
             return $this->finish($account, $result, true, $messages);
-        } catch (MadelineSyncTimedOut $e) {
-            // Watchdog прервал зависший заход. Лечится не записью в last_sync_error,
-            // а завершением процесса и сбросом демона — это делает сама команда,
-            // поэтому пробрасываем, не маскируя рядовой ошибкой синка.
-            throw $e;
         } catch (Throwable $e) {
+            // Ветки для таймаута здесь БОЛЬШЕ НЕТ (H1915). Watchdog не бросает
+            // исключение — оно не переживало 76 блоков `catch (Throwable)` внутри
+            // MadelineProto и молча терялось, а одноразовый pcntl_alarm после
+            // этого уже не срабатывал (заход 28.07.2026: 10 470 с и код 0).
+            // Теперь он убирает за собой и завершает процесс сам, так что сюда
+            // управление на таймауте не доходит в принципе.
             // Кончились файловые дескрипторы: демон сессии почти наверняка
             // осиротел, а автозагрузчик уже не может подтянуть классы — на этом
             // же исключении ломается и распознавание мёртвого IPC (оно ищет

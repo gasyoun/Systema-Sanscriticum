@@ -2,6 +2,7 @@
 
 namespace App\Console\Concerns;
 
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 
@@ -20,6 +21,13 @@ use Illuminate\Support\Facades\Cache;
 trait LocksMadelineSession
 {
     /**
+     * Замок текущего захода — нужен, чтобы его мог отпустить обработчик таймаута
+     * {@see \App\Services\Telegram\MadelineSyncWatchdog}: тот завершает процесс
+     * через exit(), поэтому `finally` ниже НЕ отработает (H1915).
+     */
+    private ?Lock $madelineSessionLock = null;
+
+    /**
      * Run $work while holding the shared session lock. Returns the callback's
      * result, or null when the session is busy (another command holds the lock).
      * The TTL auto-releases if a holder process dies, so a crash can't wedge it.
@@ -32,18 +40,35 @@ trait LocksMadelineSession
      */
     protected function withMadelineSessionLock(callable $work, int $wait = 5): mixed
     {
-        $lock = Cache::lock('madeline-session', 900);
+        $lock = $this->madelineSessionLock = Cache::lock('madeline-session', 900);
 
         try {
             $lock->block($wait);
         } catch (LockTimeoutException) {
+            $this->madelineSessionLock = null;
+
             return null;
         }
 
         try {
             return $work();
         } finally {
-            $lock->release();
+            $this->releaseMadelineSessionLock();
         }
+    }
+
+    /**
+     * Отпускает замок сессии, если он у нас. Идемпотентно — вызывается и из
+     * обычного `finally`, и из уборки watchdog'а перед exit().
+     *
+     * Без этого вызова в уборке замок провисел бы свои 900 с TTL и заблокировал
+     * бы ~15 минут заходов после КАЖДОГО срабатывания потолка.
+     */
+    protected function releaseMadelineSessionLock(): void
+    {
+        $lock = $this->madelineSessionLock;
+        $this->madelineSessionLock = null;
+
+        $lock?->release();
     }
 }

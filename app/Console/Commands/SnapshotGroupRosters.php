@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Console\Concerns\LocksMadelineSession;
-use App\Exceptions\MadelineSyncTimedOut;
 use App\Models\Group;
 use App\Services\Telegram\MadelineClientFactory;
 use App\Services\Telegram\MadelineSessionReaper;
@@ -87,7 +86,30 @@ class SnapshotGroupRosters extends Command
         // флуд-лимите MadelineProto уходит в сон на часы и держит общую сессию —
         // тот же класс отказа, что 27.07.2026 положил telegram-support:sync.
         $timeout = (int) config('services.telegram_harvest.roster_timeout_seconds', 600);
-        if (! $watchdog->arm($timeout) && $timeout > 0 && $this->getOutput()->isVerbose()) {
+
+        // Уборка передаётся В watchdog: обработчик таймаута завершает процесс через
+        // exit(), поэтому ни catch, ни finally здесь не отработают (H1915 — почему
+        // исключение из обработчика SIGALRM до нас не доходило).
+        $armed = $watchdog->arm($timeout, function (int $seconds) use ($reaper, &$written, $peers): void {
+            // Порядок как в telegram-support:sync — сначала замок (900 с TTL),
+            // потом демон сессии, потом след оператору.
+            $this->releaseMadelineSessionLock();
+            $reaper->killDaemons();
+            $reaper->clearIpcArtifacts();
+
+            Log::error('Telegram harvest roster-groups timed out — process stopped by watchdog', [
+                'timeout_seconds' => $seconds,
+                'rosters_written' => $written,
+                'peers' => count($peers),
+            ]);
+
+            $this->error("Ростеры: timeout после {$seconds} с — снято {$written} из ".count($peers).', демон сессии сброшен.');
+        });
+
+        if (! $armed && $timeout > 0) {
+            Log::error('Telegram harvest roster-groups идёт БЕЗ потолка времени: watchdog не взвёлся (нет расширения pcntl).', [
+                'timeout_seconds' => $timeout,
+            ]);
             $this->warn('Watchdog недоступен (нет расширения pcntl) — проход идёт без потолка времени.');
         }
 
@@ -97,21 +119,6 @@ class SnapshotGroupRosters extends Command
             $rosters = $this->withMadelineSessionLock(
                 fn (): array => $harvest->fetchGroupRosters($peers, $writeRoster),
             );
-        } catch (MadelineSyncTimedOut $e) {
-            // Замок уже отпущен раскруткой стека; прибираем демона своей сессии,
-            // чтобы он не пережил нас и не держал дескрипторы.
-            $reaper->killDaemons();
-            $reaper->clearIpcArtifacts();
-
-            Log::error('Telegram harvest roster-groups timed out — process stopped by watchdog', [
-                'timeout_seconds' => $e->timeoutSeconds,
-                'rosters_written' => $written,
-                'peers' => count($peers),
-            ]);
-
-            $this->error("Ростеры: timeout после {$e->timeoutSeconds} с — снято {$written} из ".count($peers).', демон сессии сброшен.');
-
-            return self::FAILURE;
         } finally {
             $watchdog->disarm();
         }
