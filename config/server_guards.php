@@ -21,9 +21,20 @@ return [
 
     /*
      * Проверка осмысленна только на прод-хосте: на dev-боксе и в CI ни systemd,
-     * ни crontab www-data нет, и «пропажа» там ничего не значит. По умолчанию —
-     * только Linux; на прод-контуре это true, в тестах ничего не шевелится.
+     * ни crontab www-data нет, и «пропажа» там ничего не значит.
+     *
+     * Дефолт — Linux **и** APP_ENV=production. Раньше было только Linux: GitHub
+     * Actions (ubuntu) включал verify, cabinet:probe валил 6 тестов кучей
+     * «managed-file отсутствует» / «crontab www-data пуст». Явный
+     * SERVER_GUARDS_VERIFY=true/false перекрывает дефолт (filter_var, чтобы
+     * строка "false" из .env не стала truthy).
      */
-    'verify_enabled' => env('SERVER_GUARDS_VERIFY', PHP_OS_FAMILY === 'Linux'),
+    'verify_enabled' => filter_var(
+        env(
+            'SERVER_GUARDS_VERIFY',
+            PHP_OS_FAMILY === 'Linux' && env('APP_ENV') === 'production'
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
 
 ];
