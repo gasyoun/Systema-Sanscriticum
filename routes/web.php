@@ -245,6 +245,10 @@ Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
 // изложенный по-русски; сами условия задает только PDF оферты.
 Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
 
+// Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
+// До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
+Route::view('/uptime', 'uptime')->name('uptime.show');
+
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
 // ═══════════════════════════════════════════════════════════════

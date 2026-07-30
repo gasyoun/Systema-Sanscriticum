@@ -1,87 +1,102 @@
-# Мониторинг сайтов (Better Stack) — если сайт упал
+# Если сайт не открывается (Better Stack + Telegram)
 
 _Создано: 30-07-2026 · Обновлено: 30-07-2026_
 
-**Для кого:** сайт **перестал работать**, или пришло письмо / сообщение, что
-сайт **красный** (в т.ч. в Telegram [@rusamskrtam](https://t.me/rusamskrtam)).
+Три аудитории — **не смешивать**:
 
-**Не для агентов:** env, cron, скрипты и inventory — в английской версии:  
-[UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md).
-
-Панель Better Stack (если есть логин):  
-[uptime.betterstack.com/team/t576984](https://uptime.betterstack.com/team/t576984)
-
----
-
-## Сначала: что сделать прямо сейчас
-
-1. **Откройте сайт сами** (лучше с телефона / другой сети, не с того же Wi‑Fi):
-   - [samskrte.ru](https://samskrte.ru/) — школа / кабинет  
-   - [samskrte.ru/login](https://samskrte.ru/login) — вход  
-   - при нужде: [samskrtam.ru](https://samskrtam.ru/), [parallel-corpus](https://samskrtam.ru/parallel-corpus/)  
-2. **Посмотрите, *какой* сайт в алерте.**  
-   samskrte.ru, samskrtam.ru и словари Кёльна — **разные** сервера; «красный
-   Кёльн» не значит, что школа лежит.
-3. **Если у вас открывается, а «красный» в письме/Telegram** — подождите
-   5–15 минут (сеть, ложный сбой) или сохраните *какой именно* монитор/текст
-   алерта, прежде чем звать людей.
-4. **Если не открывается** — по таблице ниже: кого звать и что это значит.
-
----
-
-## Что мы мониторим
-
-| Сайт | Чей сервер | Что смотрим |
+| Кто | Что делать | Ссылка |
 |---|---|---|
-| **samskrte.ru** | наш (Systema) | главная; «жив ли планировщик»; «жив ли личный кабинет» |
-| **samskrtam.ru** | другой (WordPress + статика) | главная; parallel-corpus; плюс проверка «с нашего VPS видно» |
-| **sanskrit-lexicon.uni-koeln.de** | Кёльн (не наш) | главная словарей; плюс проверка с нашего VPS |
+| **Ученик / преподаватель** | 3 проверки → написать в чат с `@rusamskrtam` | [ниже §1](#1-ученики-и-преподаватели--1-минута) · живая страница [samskrte.ru/uptime](https://samskrte.ru/uptime) |
+| **Иван / Марцис** | Смотреть, *что* красное; чинить или звать агента / Артёма | [§2](#2-иван-и-марцис--ops) |
+| **Агенты / SSH** | Env, cron, smoke | [EN inventory](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
-Два типа проверки:
-
-1. **HTTP** — Better Stack сам открывает страницу из интернета.  
-2. **Heartbeat (пульс)** — наш сервер раз в N минут «отписывается». Если
-   отписка пропала — тревога по **молчанию** (сервер/cron мог умереть, даже
-   если главная ещё отвечает).
-
-Алерты могут приходить **письмом** (Better Stack) и/или в **Telegram**
-(в т.ч. канал/чат [@rusamskrtam](https://t.me/rusamskrtam) и служебные
-сообщения кабинета вроде «Личный кабинет не работает»).
+**Артёму (@t3t3r1n) пишет только Иван или Марцис** — не ученики.
 
 ---
 
-## Если что-то красное — расшифровка
+## 1. Ученики и преподаватели — 1 минута
 
-В [Better Stack → Monitors / Heartbeats](https://uptime.betterstack.com/team/t576984)
-или в тексте письма/Telegram:
+### Сейчас сделайте 3 шага
 
-| Красный сигнал | О чём это |
+**1. Откройте эти ссылки по очереди** (лучше сначала с **телефона** на мобильном интернете, не Wi‑Fi):
+
+| Что открыть | Ссылка |
 |---|---|
-| HTTP **samskrte.ru** | Сайт школы снаружи не открывается или отвечает «не 200» |
-| Heartbeat **heartbeat:ping** | Планировщик/сервер не шлёт пульс (часто хуже, чем «просто главная») |
-| Heartbeat **cabinet:probe** | Проверка кабинета не проходит или не запускается |
-| HTTP / heartbeat **samskrtam** | Другой сайт (книги/корпус) — **не** тот же сервер, что samskrte |
-| HTTP / heartbeat **Cologne / CDSL** | Словари Кёльна; **мы не можем перезагрузить их сервер** |
+| Главная школы | [samskrte.ru](https://samskrte.ru/) |
+| Вход в кабинет | [samskrte.ru/login](https://samskrte.ru/login) |
+| Страница «сайт жив?» | [samskrte.ru/uptime](https://samskrte.ru/uptime) |
+| Запасная страница (если samskrte лежит) | [gasyoun.github.io/…/uptime/](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) |
+| Книги / parallel-corpus | [samskrtam.ru](https://samskrtam.ru/) · [parallel-corpus](https://samskrtam.ru/parallel-corpus/) |
 
-Telegram от кабинета (не всегда Better Stack):
+**2. Сравните результат**
+
+| Что видите | Значит | Что делать |
+|---|---|---|
+| На **телефоне** открывается, на **компе** — нет | Чаще Wi‑Fi / **VPN** / антивирус / DNS у вас | Выключите VPN на 1 мин, другой браузер, мобильный интернет |
+| **Нигде** не открывается (телефон + комп + другой браузер) | Скорее **наш сайт** | Пишите в чат — шаг 3 |
+| Главная есть, **/login** или кабинет нет | Частичная поломка | Пишите в чат — шаг 3 |
+| Всё открывается, но «медленно / 502» | Может быть сбой | Тоже можно написать в чат |
+
+**3. Напишите в Telegram-чат** и **отметьте** [@rusamskrtam](https://t.me/rusamskrtam)
+
+Скопируйте шаблон:
+
+```text
+@rusamskrtam сайт не открывается
+где: телефон / комп
+VPN: вкл / выкл
+что пробовал: samskrte.ru · /login · /uptime
+что вижу: (белый экран / ошибка / крутится / другое)
+время: (сейчас)
+```
+
+Это увидят **Иван и Марцис**. Кто первый — запустит Claude/Grok или починит на сервере.  
+**Не пишите Артёму** и не ищите «красный монитор» в Better Stack — это не ваша зона.
+
+### Как узнать о падении *до* того, как «опять не пускает»
+
+1. Закладка: [samskrte.ru/uptime](https://samskrte.ru/uptime) — откройте, если сомневаетесь.  
+2. Запасная закладка (работает, когда VPS школы лежит):  
+   [github.io …/uptime/](https://gasyoun.github.io/Systema-Sanscriticum/uptime/)  
+3. Сообщение в общем чате с `@rusamskrtam` — так остальные узнают, что это не «только у меня».  
+4. Письма Better Stack и служебные алерты — **для ops** (Иван/Марцис), не для учеников.
+
+### Преподаватели
+
+То же, что ученики. Если у **всей группы** не открывается — напишите в чат `@rusamskrtam` и кратко «у N человек».
+
+---
+
+## 2. Иван и Марцис — ops
+
+### Кто кого зовёт
+
+| Ситуация | Кто |
+|---|---|
+| Ученик написал `@rusamskrtam` | Кто увидел первый (Иван или Марцис) → агент (Claude/Grok) или SSH |
+| Сайт мёртв, SSH нет, «машина мертва» | **Иван или Марцис → Артём (@t3t3r1n)** (Proxmox/контейнер). Ученики к Артёму **не** пишут |
+| Soft-сбой / guards | Разобрать по тексту; не эскалировать Артёму |
+
+### Посмотрите, *что* красное
+
+Панель (нужен логин): [Better Stack team](https://uptime.betterstack.com/team/t576984)
+
+| Красный сигнал | Проверить глазами | О чём это |
+|---|---|---|
+| HTTP **samskrte.ru** | [samskrte.ru](https://samskrte.ru/) | Школа снаружи не 200 |
+| Heartbeat **heartbeat:ping** | [EN §2.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) | Планировщик/сервер молчит |
+| Heartbeat **cabinet:probe** | [samskrte.ru/login](https://samskrte.ru/login) + probe | Кабинет / guards |
+| HTTP / heartbeat **samskrtam** | [samskrtam.ru](https://samskrtam.ru/) · [parallel-corpus](https://samskrtam.ru/parallel-corpus/) | **Другой** сервер, не Systema VPS |
+| HTTP / heartbeat **Cologne / CDSL** | [sanskrit-lexicon.uni-koeln.de](https://sanskrit-lexicon.uni-koeln.de/) | Не наш; в [SERVER_OUTAGES](https://github.com/gasyoun/Uprava/blob/main/SERVER_OUTAGES.md) |
+
+Telegram кабинета:
 
 | Текст | Смысл |
 |---|---|
-| «Личный кабинет не работает» | Критично: вход / кабинет / админка |
-| «soft-сбой» | Некритично (второстепенные страницы/guards); сайт может быть жив |
+| «Личный кабинет не работает» | Критично |
+| «soft-сбой» | Некритично; сайт может быть жив |
 
----
-
-## samskrte.ru (наш сервер) — кто что делает
-
-| Ситуация | Кто / что |
-|---|---|
-| Сайт совсем не открывается, SSH недоступен, «машина мертва» | **Артём (@t3t3r1n)** — рестарт контейнера/хоста (Proxmox). Отвечает нечасто |
-| Сайт лежит, но есть человек с root на VPS | Agent-док §5.2: `php-fpm`, nginx, диск, `cabinet:probe` |
-| Кабинет/логин, а главная жива | Текст алерта + agent-док §5.2; не обязательно ждать Артёма |
-| Только soft-сбой | Не паника; разобрать по тексту (часто не «весь сайт») |
-
-Команды для того, у кого есть SSH (кратко):
+Команды (root, кратко):
 
 ```text
 ssh root@193.232.229.92
@@ -91,46 +106,33 @@ cd /var/www/html && sudo -u www-data php artisan cabinet:probe
 sudo -u www-data php artisan heartbeat:ping
 ```
 
----
-
-## samskrtam.ru
-
-Это **не** Systema VPS. Лечится на хостинге WordPress/статики (панель хостера,
-nginx, диск). С нашего сервера только *проверка*, не «перезапуск WordPress».
+Полный inventory: [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md).
 
 ---
 
-## Словари Кёльна
+## 3. Три места «жив ли сайт»
 
-Мы **не** владельцы. Можно:
+| Где | Когда работает | URL |
+|---|---|---|
+| **samskrte.ru/uptime** | Когда VPS школы жив | [samskrte.ru/uptime](https://samskrte.ru/uptime) |
+| **GitHub Pages (зеркало)** | Когда VPS **лежит**, а интернет у вас есть | [gasyoun.github.io/Systema-Sanscriticum/uptime/](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) |
+| **samskrtam.ru/uptime** | На хостинге книг (отдельный сервер) | [samskrtam.ru/uptime](https://samskrtam.ru/uptime) — страница-близнец; если 404, поставить HTML из `uptime/samskrtam-snippet.html` в репо |
 
-- зафиксировать, что лежит (для агентов — [SERVER_OUTAGES](https://github.com/gasyoun/Uprava/blob/main/SERVER_OUTAGES.md));  
-- подождать / написать Кёльну;  
-- не гонять массовые выгрузки, пока host красный.
+Хотя бы **одно** из первых двух должно открываться при типичном сбое.
 
 ---
 
-## Частые вопросы
+## 4. Что мониторим (кратко)
 
-**Пришло в [@rusamskrtam](https://t.me/rusamskrtam) / письмо — это точно падение?**  
-Часто да, но сначала откройте URL сами. Бывают ложные/короткие сбои и
-путаница «какой сайт».
+| Сайт | Чей сервер |
+|---|---|
+| samskrte.ru | наш (Systema) |
+| samskrtam.ru | другой (WordPress + статика) |
+| sanskrit-lexicon.uni-koeln.de | Кёльн |
 
-**Нужно ли ставить плагин на WordPress?**  
-Нет. Better Stack ходит снаружи.
+HTTP = «мир видит страницу». Heartbeat = «наш cron/сервер отписался».
 
-**Почему два алерта на один сайт?**  
-HTTP = «мир видит страницу». Heartbeat = «наш сервер/cron жив и проверка
-прошла». Разные поломки.
-
-**Где пароли и токены?**  
-Только на сервере (`.env`, `/etc/default/*`). В GitHub их нет — так и должно быть.
-
-**healthchecks.io?**  
-Больше не используем. Всё на Better Stack.
-
-**Где подробности для технарей/агентов?**  
-[UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) (English, for agents).
+Токены только на сервере, не в GitHub. healthchecks.io — obsolete.
 
 ---
 

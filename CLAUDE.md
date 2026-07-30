@@ -17,9 +17,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
   Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths.  
   Do not re-derive from chat; tokens stay on the VPS only.
-- **Humans (RU — «сайт упал» / red in @rusamskrtam):**  
+- **Humans (RU):**  
   [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)  
-  First steps + who to call (Артём for dead host); no env secrets.
+  §1 students/teachers → [samskrte.ru/uptime](https://samskrte.ru/uptime) + tag `@rusamskrtam`;  
+  §2 Ivan/Marcis (red monitors; Artem only via ops). Mirror: `uptime/` on GitHub Pages.
 - **OS resource guards (OOM/cron):**  
   [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
 

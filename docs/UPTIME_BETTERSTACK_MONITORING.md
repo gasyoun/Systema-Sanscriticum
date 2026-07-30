@@ -5,8 +5,12 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
 
-**Humans (Russian):** «сайт упал / пришло красное в [@rusamskrtam](https://t.me/rusamskrtam)» →
-[UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md).
+**Humans (Russian):**
+- Students/teachers: [samskrte.ru/uptime](https://samskrte.ru/uptime) · mirror
+  [GitHub Pages /uptime/](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) · tag
+  [@rusamskrtam](https://t.me/rusamskrtam) — full RU:
+  [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)
+  (§1 students, §2 Ivan/Marcis only; Artem only via ops).
 
 **Canonical inventory** of external uptime / silence monitoring for samskrte.ru,
 samskrtam.ru, and Cologne CDSL. Provider: **Better Stack Uptime** (not

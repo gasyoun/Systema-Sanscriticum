@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,follow">
+    <title>Сайт жив? — samskrtam.ru</title>
+    <!--
+      Установка на WordPress/статику samskrtam.ru:
+      1) Создать страницу со slug «uptime» → URL https://samskrtam.ru/uptime/
+      2) Вставить этот HTML как custom HTML / сырой шаблон
+         ИЛИ положить файл как static page на nginx.
+      Это отдельный сервер от samskrte.ru — зеркало «книг», не школы.
+    -->
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, sans-serif; background: #f7f4ef; color: #101010; line-height: 1.45; }
+        .wrap { max-width: 40rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
+        .card { background: #fff; border: 1px solid #e5e0d6; border-radius: 1rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+        a.btn { display: block; text-align: center; text-decoration: none; background: #E85C24; color: #fff; font-weight: 700; padding: 0.85rem 1rem; border-radius: 0.75rem; margin: 0.5rem 0; }
+        a.btn.secondary { background: #1f2937; }
+        .muted { color: #666; font-size: 0.95rem; }
+        pre.tpl { background: #1f2937; color: #f9fafb; padding: 0.9rem; border-radius: 0.75rem; font-size: 0.9rem; white-space: pre-wrap; }
+        ul { padding-left: 1.25rem; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>samskrtam.ru — сайт жив?</h1>
+    <p class="muted">Это сервер <strong>книг</strong>, не школа samskrte.ru. Три шага.</p>
+
+    <div class="card">
+        <h2>Шаг 1 — откройте</h2>
+        <a class="btn" href="https://samskrtam.ru/">Главная samskrtam.ru</a>
+        <a class="btn secondary" href="https://samskrtam.ru/parallel-corpus/">parallel-corpus</a>
+        <a class="btn secondary" href="https://samskrte.ru/uptime">Школа: samskrte.ru/uptime</a>
+        <a class="btn secondary" href="https://gasyoun.github.io/Systema-Sanscriticum/uptime/">Зеркало на GitHub</a>
+    </div>
+
+    <div class="card">
+        <h2>Шаг 2 — VPN или сайт?</h2>
+        <ul>
+            <li>Телефон ок, комп нет → Wi‑Fi / VPN.</li>
+            <li>Нигде нет → пишите в чат (шаг 3).</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Шаг 3 — Telegram</h2>
+        <p>Отметьте <a href="https://t.me/rusamskrtam">@rusamskrtam</a>. Не пишите Артёму.</p>
+        <pre class="tpl">@rusamskrtam samskrtam.ru не открывается
+где: телефон / комп
+VPN: вкл / выкл
+что пробовал: samskrtam.ru · parallel-corpus
+что вижу:
+время: сейчас</pre>
+    </div>
+</div>
+</body>
+</html>

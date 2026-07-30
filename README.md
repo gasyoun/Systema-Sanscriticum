@@ -713,8 +713,9 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 | Для кого | Документ |
 |---|---|
-| **Люди** (сайт упал / красный алерт в [@rusamskrtam](https://t.me/rusamskrtam)) | [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) |
-| **Агенты** (inventory, env-ключи, smoke, §5 runbook) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
+| **Ученики / преподаватели** | [samskrte.ru/uptime](https://samskrte.ru/uptime) · [зеркало GitHub](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) · тэг [@rusamskrtam](https://t.me/rusamskrtam) |
+| **Иван / Марцис (ops)** | [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) §2 |
+| **Агенты** (inventory, env, smoke) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
 OS-предохранители (OOM/cron): [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 
