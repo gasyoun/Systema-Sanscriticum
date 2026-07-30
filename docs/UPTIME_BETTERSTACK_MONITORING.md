@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (inventory for agents)
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 30-07-2026 (samskrtam VPS heartbeat script)_
 
 **Canonical inventory** of external uptime / silence monitoring for samskrte.ru,
 samskrtam.ru, and Cologne CDSL. Provider: **Better Stack Uptime** (not
@@ -66,17 +66,35 @@ sudo -u www-data php artisan cabinet:probe
 
 ### 2.2 samskrtam.ru (other server — WordPress + static)
 
-**No WordPress plugin. No Systema code.** Better Stack HTTP only.
+**No WordPress plugin on that host.** Better Stack **HTTP** monitors (world view)
+plus optional **heartbeat from Systema VPS** (same pattern as Cologne §2.3): we
+curl samskrtam from `193.232.229.92` and report success/`/fail`.
 
-| Name (UI) | Type | URL | Keyword (suggested) |
+| Name (UI) | Type | URL / proof | Notes |
 |---|---|---|---|
-| samskrtam home (WP) | HTTP | `https://samskrtam.ru/` | stable string from WP home (not A/B copy) |
-| samskrtam parallel-corpus | HTTP | `https://samskrtam.ru/parallel-corpus` | `Параллельный санскритско-русский корпус` |
+| samskrtam home (WP) | HTTP | `https://samskrtam.ru/` | status ≠ 200; keyword e.g. `Общество ревнителей санскрита` |
+| samskrtam parallel-corpus | HTTP | `https://samskrtam.ru/parallel-corpus` | keyword `Параллельный санскритско-русский корпус` |
+| samskrtam.ru check-from-samskrte | Heartbeat | silence from VPS probe | period **5 min** / grace **10 min** (like [Cologne 477235](https://uptime.betterstack.com/team/t576984/heartbeats/477235)) |
 
-Settings per monitor: status **other than 200**; contains keyword; optional
+Settings for HTTP: status **other than 200**; contains keyword; optional
 does-not-contain (`Error establishing a database connection`, `502 Bad Gateway`,
-`Whoops`). Static paths need **their own** monitor — home WP 200 does not prove
-`/parallel-corpus` nginx root is healthy.
+`Whoops`). Static paths need **their own** HTTP monitor — home WP 200 does not
+prove `/parallel-corpus` nginx root is healthy.
+
+**VPS-side probe (script on samskrte root; wire cron after heartbeat URL exists):**
+
+| Path | Role |
+|---|---|
+| `/usr/local/sbin/samskrtam-heartbeat.sh` | curl home + parallel-corpus + keywords → POST heartbeat or `/fail` |
+| `/etc/default/samskrtam-heartbeat` | `SAMSKRTAM_HEARTBEAT_URL=…` (not in git) |
+| root crontab (when wired) | `*/5 * * * * . /etc/default/samskrtam-heartbeat; /usr/local/sbin/samskrtam-heartbeat.sh >> /var/log/samskrtam-heartbeat.log 2>&1` |
+
+Checks both URLs by default (`SAMSKRTAM_CHECK_CORPUS=1`). Smoke:
+
+```bash
+# after /etc/default/samskrtam-heartbeat has SAMSKRTAM_HEARTBEAT_URL
+/usr/local/sbin/samskrtam-heartbeat.sh
+```
 
 ### 2.3 Cologne CDSL (third-party — **we do not own the host**)
 
