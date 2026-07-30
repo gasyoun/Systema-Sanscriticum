@@ -1,0 +1,24 @@
+{
+  "course_id": "TEST4546",
+  "course_name": "Sample Anki fixture (not a real shared deck)",
+  "source_url": "https://ankiweb.net/shared/info/0",
+  "language": "hi",
+  "exported_at": "2026-07-30",
+  "source_format": "anki_apkg",
+  "columns": {
+    "devanagari": "devanagari",
+    "iast": "iast",
+    "translation": "translation",
+    "audio": "audio",
+    "image": "image",
+    "note_id": "note_id",
+    "tags": "tags"
+  },
+  "levels": [
+    {
+      "index": 1,
+      "name": "Sample Hindi Core",
+      "file": "level_01.csv"
+    }
+  ]
+}

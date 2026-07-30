@@ -1,0 +1,32 @@
+{
+  "course_id": "454628379",
+  "course_name": "Hindi Core 100 - Basic words (EN HI with audio)",
+  "source_url": "https://ankiweb.net/shared/info/454628379",
+  "language": "hi",
+  "exported_at": "2026-07-30",
+  "source_apkg": "Hindi_Core_100_-_Basic_words_EN__HI_with_audio.apkg",
+  "source_format": "anki_apkg",
+  "columns": {
+    "devanagari": "devanagari",
+    "iast": "iast",
+    "translation": "translation",
+    "audio": "audio",
+    "image": "image",
+    "note_id": "note_id",
+    "tags": "tags"
+  },
+  "levels": [
+    {
+      "index": 1,
+      "name": "Hindi Core 100 - Basic words (EN HI with audio)",
+      "file": "level_01.csv"
+    }
+  ],
+  "stats": {
+    "notes": 202,
+    "cards": 202,
+    "rows_exported": 202,
+    "audio_files": 202,
+    "image_files": 202
+  }
+}
