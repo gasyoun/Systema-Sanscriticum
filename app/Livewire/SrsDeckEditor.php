@@ -16,12 +16,19 @@ use Livewire\Component;
 /**
  * Student private-deck authoring (Wave 2, H1487). Create/rename private decks,
  * add cards one-by-one or via paste bulk. System/public decks are read-only here.
+ * Owner may edit the deck slug (shareable URL segment).
  */
 class SrsDeckEditor extends Component
 {
+    /** Path segments reserved under /dvaram/srs/{slug} (static routes). */
+    private const RESERVED_SLUGS = ['stats', 'decks'];
+
     public ?int $deckId = null;
 
     public string $newDeckName = '';
+
+    /** Editable slug for the currently selected owned deck. */
+    public string $editSlug = '';
 
     public string $cardDevanagari = '';
 
@@ -48,6 +55,8 @@ class SrsDeckEditor extends Component
         } else {
             $this->deckId = $this->ownedDecksQuery()->value('id');
         }
+
+        $this->syncEditSlugFromCurrentDeck();
     }
 
     private function ownedDecksQuery()
@@ -62,6 +71,20 @@ class SrsDeckEditor extends Component
     {
         abort_unless($this->ownedDecksQuery()->whereKey($deckId)->exists(), 403);
         $this->deckId = $deckId;
+        $this->syncEditSlugFromCurrentDeck();
+        $this->clearFlash();
+    }
+
+    public function updatedDeckId(mixed $value): void
+    {
+        if ($value === null || $value === '') {
+            $this->editSlug = '';
+
+            return;
+        }
+
+        abort_unless($this->ownedDecksQuery()->whereKey((int) $value)->exists(), 403);
+        $this->syncEditSlugFromCurrentDeck();
         $this->clearFlash();
     }
 
@@ -96,7 +119,54 @@ class SrsDeckEditor extends Component
 
         $this->newDeckName = '';
         $this->deckId = $deck->id;
+        $this->editSlug = (string) $deck->slug;
         $this->message = 'Колода создана.';
+    }
+
+    /**
+     * Owner edits the shareable slug for their private deck
+     * (cabinet URL: /dvaram/srs/{slug}).
+     */
+    public function updateSlug(): void
+    {
+        $this->clearFlash();
+        $deck = $this->currentOwnedDeck();
+        if ($deck === null) {
+            $this->error = 'Сначала создайте колоду.';
+
+            return;
+        }
+
+        $slug = Str::slug(trim($this->editSlug));
+        if ($slug === '') {
+            $this->error = 'Slug не может быть пустым (латиница, цифры, дефис).';
+            $this->editSlug = (string) ($deck->slug ?? '');
+
+            return;
+        }
+
+        if (in_array($slug, self::RESERVED_SLUGS, true) || str_starts_with($slug, 'id-')) {
+            $this->error = 'Этот slug зарезервирован. Выберите другой.';
+            $this->editSlug = (string) ($deck->slug ?? '');
+
+            return;
+        }
+
+        $taken = SrsDeck::query()
+            ->where('slug', $slug)
+            ->where('id', '!=', $deck->id)
+            ->exists();
+        if ($taken) {
+            $this->error = 'Такой slug уже занят другой колодой.';
+            $this->editSlug = (string) ($deck->slug ?? '');
+
+            return;
+        }
+
+        $deck->slug = $slug;
+        $deck->save();
+        $this->editSlug = $slug;
+        $this->message = 'Адрес колоды обновлён: /dvaram/srs/'.$slug;
     }
 
     public function deleteDeck(): void
@@ -109,7 +179,14 @@ class SrsDeckEditor extends Component
 
         $deck->delete();
         $this->deckId = $this->ownedDecksQuery()->value('id');
+        $this->syncEditSlugFromCurrentDeck();
         $this->message = 'Колода удалена.';
+    }
+
+    private function syncEditSlugFromCurrentDeck(): void
+    {
+        $deck = $this->currentOwnedDeck();
+        $this->editSlug = (string) ($deck?->slug ?? '');
     }
 
     public function addCard(): void
