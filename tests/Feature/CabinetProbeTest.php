@@ -33,6 +33,8 @@ class CabinetProbeTest extends TestCase
         config()->set('cabinet_probe.timeout', 5);
         config()->set('cabinet_probe.telegram_chat_id', ''); // TG off unless a test enables it
         config()->set('cabinet_probe.telegram_soft_chat_id', '');
+        config()->set('cabinet_probe.check_server_guards', false); // host OS audit is prod-only (H1914)
+        config()->set('server_guards.verify_enabled', false);
         config()->set('services.telegram.bot_token', '');
         config()->set('services.test_student.password', ''); // H1794 student branch off unless a test enables it
         config()->set('features.cabinet_hybrid', false);

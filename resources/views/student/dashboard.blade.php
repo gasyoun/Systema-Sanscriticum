@@ -5,8 +5,8 @@
 
 @section('content')
 
-{{-- Добавляем x-data для управления активной вкладкой --}}
-<div x-data="{ activeTab: window.location.hash === '#prana' ? 'prana' : 'courses' }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
+{{-- activeTab: #prana / #debts с fail-redirect оплаты долга (DebtPaymentController → #debts) --}}
+<div x-data="{ activeTab: (window.location.hash === '#prana' ? 'prana' : (window.location.hash === '#debts' ? 'debts' : 'courses')) }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <div class="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
@@ -22,6 +22,25 @@
     @include('student.partials.onboarding-checklist')
 
     @include('student.partials.homework-alerts')
+
+    {{-- session('error'|'success') — self-service долг, CSRF 419, перенос даты.
+         До фикса flash терялся: DebtPaymentController писал error, а кабинет
+         показывал только password_status / bot_status → «кнопка ничего не делает». --}}
+    @if (session('error'))
+        <div x-data="{ show: true }" x-show="show" role="alert"
+             class="mb-6 flex items-center justify-between gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+            <span><i class="fas fa-triangle-exclamation mr-1.5"></i>{{ session('error') }}</span>
+            <button type="button" x-on:click="show = false" class="text-red-500 hover:text-red-700" aria-label="Закрыть"><i class="fas fa-times"></i></button>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)" role="status"
+             class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+            <span><i class="fas fa-check-circle mr-1.5"></i>{{ session('success') }}</span>
+            <button type="button" x-on:click="show = false" class="text-green-500 hover:text-green-700" aria-label="Закрыть"><i class="fas fa-times"></i></button>
+        </div>
+    @endif
 
     @if (session('password_status'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"

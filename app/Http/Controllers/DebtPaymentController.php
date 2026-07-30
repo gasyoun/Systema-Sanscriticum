@@ -61,7 +61,7 @@ class DebtPaymentController extends Controller
         }
 
         if (! $promise->isUnmet()) {
-            return back()->with('error', 'Это обещание уже закрыто или отменено.');
+            return $this->backToDebts('error', 'Это обещание уже закрыто или отменено.');
         }
 
         $debt = $this->debtRow($user, (int) $promise->course_id);
@@ -100,7 +100,7 @@ class DebtPaymentController extends Controller
             ->get();
 
         if ($unmet->isEmpty()) {
-            return back()->with('error', 'По этому курсу нет непогашенных договорённостей.');
+            return $this->backToDebts('error', 'По этому курсу нет непогашенных договорённостей.');
         }
 
         $debt = $this->debtRow($user, (int) $course->id);
@@ -116,7 +116,7 @@ class DebtPaymentController extends Controller
         if ($request->filled('amount')) {
             $custom = (float) $request->input('amount');
             if ($custom < $nextInstalment - 0.01 || $custom > $remaining + 0.01) {
-                return back()->with('error', 'Сумма должна быть не меньше ближайшего взноса и не больше остатка по графику.');
+                return $this->backToDebts('error', 'Сумма должна быть не меньше ближайшего взноса и не больше остатка по графику.');
             }
             $amount = $custom;
         }
@@ -146,12 +146,12 @@ class DebtPaymentController extends Controller
         $debt = $this->debtRow($user, (int) $course->id);
 
         if ($debt === null || ! empty($debt->has_arrangement)) {
-            return back()->with('error', 'Бандл доступен только для долга без договорённости.');
+            return $this->backToDebts('error', 'Бандл доступен только для долга без договорённости.');
         }
 
         $blocks = array_values(array_map('intval', $debt->debt_block_numbers ?? []));
         if (count($blocks) < 2) {
-            return back()->with('error', 'Бандл применим к долгу из нескольких блоков.');
+            return $this->backToDebts('error', 'Бандл применим к долгу из нескольких блоков.');
         }
 
         // Цена бандла = сумма итоговых цен тарифов оплачиваемых блоков (лояльность
@@ -175,7 +175,7 @@ class DebtPaymentController extends Controller
         }
 
         if (! empty($unpriced)) {
-            return back()->with('error', 'Не для всех блоков есть тариф — оформите оплату через куратора.');
+            return $this->backToDebts('error', 'Не для всех блоков есть тариф — оформите оплату через куратора.');
         }
 
         // Fallback-бандл покрывает ВЕСЬ плоский долг сразу → открываем все его блоки
@@ -201,11 +201,11 @@ class DebtPaymentController extends Controller
         }
 
         if (! $promise->isUnmet()) {
-            return back()->with('error', 'Перенести можно только активное обещание.');
+            return $this->backToDebts('error', 'Перенести можно только активное обещание.');
         }
 
         if ($promise->student_rescheduled_at !== null) {
-            return back()->with('error', 'Вы уже переносили дату по этой договорённости. Дальнейшие изменения — через куратора.');
+            return $this->backToDebts('error', 'Вы уже переносили дату по этой договорённости. Дальнейшие изменения — через куратора.');
         }
 
         $request->validate(['new_date' => 'required|date']);
@@ -215,10 +215,10 @@ class DebtPaymentController extends Controller
         $original = $promise->promised_at?->copy()->startOfDay() ?? $today;
 
         if ($newDate->lte($original)) {
-            return back()->with('error', 'Новая дата должна быть позже текущей.');
+            return $this->backToDebts('error', 'Новая дата должна быть позже текущей.');
         }
         if ($newDate->gt($maxDate)) {
-            return back()->with('error', 'Перенести можно не более чем на '.self::RESCHEDULE_MAX_DAYS.' дней вперёд.');
+            return $this->backToDebts('error', 'Перенести можно не более чем на '.self::RESCHEDULE_MAX_DAYS.' дней вперёд.');
         }
 
         $promise->forceFill([
@@ -230,7 +230,7 @@ class DebtPaymentController extends Controller
 
         app(CuratorNotifier::class)->promiseRescheduledByStudent($promise);
 
-        return back()->with('success', 'Дата оплаты перенесена на '.$newDate->format('d.m.Y').'. Куратор уведомлён.');
+        return $this->backToDebts('success', 'Дата оплаты перенесена на '.$newDate->format('d.m.Y').'. Куратор уведомлён.');
     }
 
     /**
@@ -247,7 +247,7 @@ class DebtPaymentController extends Controller
         int $pranaRequested = 0,
     ): RedirectResponse {
         if ($amount <= 0) {
-            return back()->with('error', 'Не удалось определить сумму к оплате. Обратитесь к куратору.');
+            return $this->backToDebts('error', 'Не удалось определить сумму к оплате. Обратитесь к куратору.');
         }
 
         // Анти-дубль: свежий незавершённый self-service заказ по этому курсу уже
@@ -262,12 +262,12 @@ class DebtPaymentController extends Controller
             ->exists();
 
         if ($hasRecentPending) {
-            return back()->with('error', 'У вас уже есть незавершённый заказ по этому курсу. Завершите оплату или подождите несколько минут, прежде чем начинать новый.');
+            return $this->backToDebts('error', 'У вас уже есть незавершённый заказ по этому курсу. Завершите оплату или подождите несколько минут, прежде чем начинать новый.');
         }
 
         $course = Course::with('blocks')->find($courseId);
         if (! $course) {
-            return back()->with('error', 'Курс не найден.');
+            return $this->backToDebts('error', 'Курс не найден.');
         }
 
         $unpaidBlocksAsc = $this->debts->unpaidBlockNumbers($user, $courseId);
@@ -346,7 +346,7 @@ class DebtPaymentController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+            return $this->backToDebts('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
         }
 
         if ($response->successful() && isset($response['Data']['paymentLink'])) {
@@ -361,7 +361,7 @@ class DebtPaymentController extends Controller
             'status' => $response->status(),
         ]);
 
-        return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+        return $this->backToDebts('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
     }
 
     /**
@@ -437,5 +437,19 @@ class DebtPaymentController extends Controller
     private function debtRow(User $user, int $courseId): ?object
     {
         return $this->debts->forUser($user)->firstWhere('course_id', $courseId);
+    }
+
+    /**
+     * Fail/success flash после self-service оплаты. Всегда кабинет + #debts:
+     *  - Alpine восстанавливает вкладку «Мои долги» (dashboard activeTab);
+     *  - не зависим от Referer (continue-learning CTA / deep link).
+     * Fragment обязателен: plain back() сбрасывал вкладку в 'courses'.
+     */
+    private function backToDebts(string $key, string $message): RedirectResponse
+    {
+        return redirect()
+            ->route('student.dashboard')
+            ->withFragment('debts')
+            ->with($key, $message);
     }
 }

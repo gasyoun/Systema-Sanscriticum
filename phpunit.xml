@@ -35,5 +35,8 @@
              на реальном danog\MadelineProto\API регистрирует shutdown-хендлер,
              роняющий amp на teardown под Windows. -->
         <env name="TELEGRAM_SUPPORT_ENABLED" value="false"/>
+        <!-- H1914 server guards: CI is Linux but not prod — never audit host systemd/cron. -->
+        <env name="SERVER_GUARDS_VERIFY" value="false"/>
+        <env name="CABINET_PROBE_CHECK_GUARDS" value="false"/>
     </php>
 </phpunit>

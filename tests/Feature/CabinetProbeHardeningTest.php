@@ -26,6 +26,8 @@ class CabinetProbeHardeningTest extends TestCase
         config()->set('cabinet_probe.ping_url', '');
         config()->set('cabinet_probe.telegram_chat_id', '');
         config()->set('cabinet_probe.telegram_soft_chat_id', '');
+        config()->set('cabinet_probe.check_server_guards', false); // host OS audit is prod-only (H1914)
+        config()->set('server_guards.verify_enabled', false);
         config()->set('services.telegram.bot_token', '');
         config()->set('features.cabinet_hybrid', false);
         config()->set('cabinet_probe.public_surfaces', [

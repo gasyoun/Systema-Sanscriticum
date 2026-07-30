@@ -679,6 +679,24 @@ class StudentController extends Controller
     private function continueLearningDebtMeta(object $debt): ?string
     {
         $parts = [];
+
+        // Договорённость/рассрочка: сумма и дата живут на promise, а не в
+        // tariff-debt_amount (часто пустой при чистой «договорённости» без
+        // block-долга) — иначе CTA «Оплатить следующий взнос» без суммы.
+        if (! empty($debt->has_arrangement) && $debt->promise) {
+            if ($debt->promise->promised_at) {
+                $parts[] = 'до '.$debt->promise->promised_at->format('d.m.Y');
+            }
+            $amount = $debt->promise->amount !== null
+                ? (float) $debt->promise->amount
+                : (! empty($debt->plan_remaining) ? (float) $debt->plan_remaining : null);
+            if ($amount !== null && $amount > 0) {
+                $parts[] = number_format($amount, 0, '.', ' ').' ₽';
+            }
+
+            return $parts ? implode(' · ', $parts) : null;
+        }
+
         if (! empty($debt->debt_label)) {
             $parts[] = $debt->debt_label;
         }
