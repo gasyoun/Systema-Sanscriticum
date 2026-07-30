@@ -94,7 +94,7 @@ class MarathonController extends Controller
         RateLimiter::hit($rlKey, 5);
 
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
+            'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
             'email' => 'nullable|email',
             'social' => 'nullable|string|max:255',
@@ -106,7 +106,7 @@ class MarathonController extends Controller
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
 
         $leadData = [
-            'name' => $validated['name'] ?? null,
+            'name' => $validated['name'],
             'contact' => $validated['contact'],
             'email' => $validated['email'] ?? null,
             'social' => $validated['social'] ?? null,
