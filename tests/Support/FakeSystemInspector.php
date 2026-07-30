@@ -52,6 +52,9 @@ final class FakeSystemInspector implements SystemInspector
         $fake->crontabs[$spec->get('APP_USER')] = $spec->render(
             (string) file_get_contents(rtrim($templateRoot, '/\\').'/cron/app-user.crontab')
         );
+        $fake->crontabs['root'] = $spec->render(
+            (string) file_get_contents(rtrim($templateRoot, '/\\').'/cron/root.crontab')
+        );
 
         $pool = '/etc/php/'.$spec->get('PHP_VERSION').'/fpm/pool.d/www.conf';
         $fake->files[$pool] = "[www]\npm = dynamic\npm.max_children = ".$spec->get('FPM_MAX_CHILDREN')

@@ -31,6 +31,7 @@ final class ServerGuardsAuditor
         return array_merge(
             $this->auditManagedFiles(),
             $this->auditCrontab(),
+            $this->auditAutoDeploy(),
             $this->auditUnitLimits(),
             $this->auditSingleMemoryDefinition(),
             $this->auditPhp(),
@@ -209,6 +210,58 @@ final class ServerGuardsAuditor
                 $findings[] = GuardFinding::warning(
                     'watchdog-cron',
                     "{$command}: таймаут не {$this->spec->get($timeoutKey)} с — строка «{$matched}»",
+                );
+            }
+        }
+
+        return $findings;
+    }
+
+    /**
+     * Авто-деплой (H1933): root-крон каждые 30 минут + предохранитель.
+     *
+     * Предохранитель storage/auto_deploy.disabled ставится обёрткой после
+     * ПРОВАЛЕННОГО деплоя или проваленной пост-деплойной проверки здоровья —
+     * прод в этот момент может быть нездоров, поэтому critical (Telegram),
+     * а не warning. Пропажа самой cron-строки аварии не вызывает (деплои
+     * просто молча остановятся) — это warning, тихая деградация.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditAutoDeploy(): array
+    {
+        $findings = [];
+
+        $breaker = rtrim($this->spec->get('APP_DIR'), '/').'/storage/auto_deploy.disabled';
+        if ($this->sys->fileExists($breaker)) {
+            $reason = trim((string) $this->sys->fileContents($breaker));
+            $lastLine = $reason === '' ? 'без причины' : (array_slice(preg_split('/\r\n|\n|\r/', $reason) ?: [''], -1)[0] ?: 'без причины');
+            $findings[] = GuardFinding::critical(
+                'auto-deploy',
+                "авто-деплой остановлен предохранителем ({$lastLine}) — разобраться и удалить {$breaker}",
+            );
+        }
+
+        $crontab = $this->sys->crontabFor('root');
+        $line = null;
+        foreach (preg_split('/\r\n|\n|\r/', (string) $crontab) ?: [] as $raw) {
+            $trimmed = trim($raw);
+            if ($trimmed !== '' && ! str_starts_with($trimmed, '#') && str_contains($trimmed, 'systema-auto-deploy-run.sh')) {
+                $line = $trimmed;
+                break;
+            }
+        }
+        if ($line === null) {
+            $findings[] = GuardFinding::warning(
+                'auto-deploy',
+                'в crontab root нет строки systema-auto-deploy-run.sh — авто-деплой молча не работает',
+            );
+        } else {
+            $schedule = $this->spec->get('AUTO_DEPLOY_SCHEDULE');
+            if (! str_starts_with($line, $schedule)) {
+                $findings[] = GuardFinding::warning(
+                    'auto-deploy',
+                    "авто-деплой: расписание не «{$schedule}» — строка «{$line}»",
                 );
             }
         }

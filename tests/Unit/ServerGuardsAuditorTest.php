@@ -221,6 +221,47 @@ class ServerGuardsAuditorTest extends TestCase
         );
     }
 
+    public function test_tripped_auto_deploy_breaker_is_critical_and_names_the_reason(): void
+    {
+        $sys = $this->healthy();
+        $breaker = rtrim($this->spec->get('APP_DIR'), '/').'/storage/auto_deploy.disabled';
+        $sys->files[$breaker] = "2026-07-30T09:00:00Z deploy.sh завершился с кодом 1 — авто-деплой остановлен\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $line = $this->lines($findings);
+        $this->assertStringContainsString('[critical] auto-deploy', $line);
+        $this->assertStringContainsString('deploy.sh завершился с кодом 1', $line);
+        $this->assertStringContainsString('auto_deploy.disabled', $line);
+    }
+
+    public function test_missing_auto_deploy_cron_line_is_a_warning(): void
+    {
+        $sys = $this->healthy();
+        $sys->crontabs['root'] = "# пусто\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString(
+            '[warning] auto-deploy: в crontab root нет строки systema-auto-deploy-run.sh',
+            $this->lines($findings),
+        );
+    }
+
+    public function test_auto_deploy_schedule_drift_is_a_warning(): void
+    {
+        $sys = $this->healthy();
+        $sys->crontabs['root'] = "0 4 * * * /usr/local/sbin/systema-auto-deploy-run.sh >> /dev/null 2>&1\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString(
+            'авто-деплой: расписание не «'.$this->spec->get('AUTO_DEPLOY_SCHEDULE').'»',
+            $this->lines($findings),
+        );
+    }
+
     public function test_absent_swap_is_reported_but_does_not_fail_the_check(): void
     {
         $sys = $this->healthy();

@@ -454,4 +454,29 @@ pgrep -fc 'artisan'                            # норма ~16-22
 Строки `SKIP:` — это обёртка отработала штатно. Строки `REAP` — она подобрала
 зависший процесс: не авария, но повод посмотреть, какая команда его оставила.
 
+## 8. Авто-деплой каждые 30 минут (H1933, 30-07-2026)
+
+По решению MG деплой идет без человека: root-крон
+(`scripts/server_guards/cron/root.crontab`, ставится `server_guards_apply.sh`)
+каждые 30 минут зовет `/usr/local/sbin/systema-auto-deploy-run.sh`. Обертка
+сверяет `HEAD` с `origin/main`; отстал — гонит штатный `deploy.sh` (ff-only,
+миграции, OPcache, Horizon, смоук, `guards:verify`) и затем НЕЗАВИСИМО проверяет,
+что сервер жив: смоук еще раз, `MemAvailable ≥ AUTO_DEPLOY_MIN_AVAILABLE_MB`,
+`php-fpm`/`mysql`/`cron` active, Horizon RUNNING. Числа — в
+`scripts/server_guards.conf` (`AUTO_DEPLOY_*`).
+
+**Провал любого шага ставит предохранитель** `storage/auto_deploy.disabled`
+(внутри — причина с меткой времени) и останавливает будущие авто-деплои.
+Отката нет сознательно: `migrate --force` необратим, откат кода поверх новой
+схемы опаснее стопа. Предохранитель видит `guards:verify` как **critical** →
+`cabinet:probe` шлет тревогу в Telegram каждые 15 минут, пока человек не
+разберется и не удалит файл. Пропажа cron-строки — warning (деплои молча
+остановятся, но аварии нет).
+
+```sh
+tail -20 /var/www/html/storage/logs/auto_deploy.log   # что делал авто-деплой
+cat /var/www/html/storage/auto_deploy.disabled        # почему стоит (если стоит)
+rm /var/www/html/storage/auto_deploy.disabled         # снять предохранитель после разбора
+```
+
 _Dr. Mārcis Gasūns_

@@ -89,7 +89,9 @@ need() { [ -n "${G[$1]:-}" ] || die "$CONF_FILE: не задан $1"; printf '%s
 for k in APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS \
          CRON_MEMORY_HIGH CRON_MEMORY_MAX CRON_TASKS_MAX \
          SUPERVISOR_MEMORY_HIGH SUPERVISOR_MEMORY_MAX LIMIT_NOFILE \
-         PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS; do
+         PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS \
+         AUTO_DEPLOY_SCHEDULE AUTO_DEPLOY_MAX_SECONDS \
+         AUTO_DEPLOY_MIN_AVAILABLE_MB AUTO_DEPLOY_SMOKE_URL; do
   need "$k" >/dev/null
 done
 
@@ -214,6 +216,29 @@ else
     cp -a "$CUR_CRON" "$BACKUP_DIR/crontab-$APP_USER.txt"
     crontab -u "$APP_USER" "$CRON_TMP"
     chg "crontab $APP_USER"; CHANGED+=("crontab:$APP_USER")
+  fi
+fi
+rm -f "$CRON_TMP" "$CUR_CRON"
+
+# ── 3b. crontab root — авто-деплой (H1933) ──────────────────────────────────
+# Отдельный крон root: deploy.sh перезагружает php-fpm и рестартует Horizon,
+# прикладному пользователю это недоступно.
+say "crontab root (авто-деплой каждые 30 минут через обёртку)"
+CRON_TMP=$(mktemp)
+render "$TPL_ROOT/cron/root.crontab" > "$CRON_TMP"
+CUR_CRON=$(mktemp)
+crontab -l > "$CUR_CRON" 2>/dev/null || : > "$CUR_CRON"
+if cmp -s "$CRON_TMP" "$CUR_CRON"; then
+  ok "crontab root"
+else
+  [ "$SHOW_DIFF" = 1 ] && diff -u "$CUR_CRON" "$CRON_TMP" | sed 's/^/      /' || true
+  if [ "$DRY_RUN" = 1 ]; then
+    chg "crontab root (dry-run)"; CHANGED+=("crontab:root")
+  else
+    mkdir -p "$BACKUP_DIR"
+    cp -a "$CUR_CRON" "$BACKUP_DIR/crontab-root.txt"
+    crontab "$CRON_TMP"
+    chg "crontab root"; CHANGED+=("crontab:root")
   fi
 fi
 rm -f "$CRON_TMP" "$CUR_CRON"
