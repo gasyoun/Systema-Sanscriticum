@@ -13,10 +13,12 @@ return [
     // Год основания школы — «Преподаём санскрит с 2005 года».
     'since_year' => (int) env('TRUST_SINCE_YEAR', 2005),
 
-    // Сколько человек прошло курсы. null = не показывать, пока нет честной цифры.
-    'graduates_count' => env('TRUST_GRADUATES_COUNT') !== null
-        ? (int) env('TRUST_GRADUATES_COUNT')
-        : null,
+    // Сколько человек прошло курсы / русскоязычных студентов санскрита.
+    // Публичная цифра с витрины (карточка вебинара «…5 000 учеников»).
+    // TRUST_GRADUATES_COUNT=0 → скрыть плитку/число; пустой env → 5000.
+    'graduates_count' => env('TRUST_GRADUATES_COUNT') !== null && env('TRUST_GRADUATES_COUNT') !== ''
+        ? ((int) env('TRUST_GRADUATES_COUNT') ?: null)
+        : 5000,
 
     // Издано книг (Bibliotheca Sanscritica) — цифра из
     // custdev/SELLING_LAYOUT_COMPARISON_2026.md (H431), 20 книг / 3834 стр.

@@ -240,5 +240,6 @@
     @livewireScripts
 
     @include('partials.cookie-consent')
+    @include('partials.newsletter-subscribe-popup')
 </body>
 </html>

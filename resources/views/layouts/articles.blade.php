@@ -190,5 +190,6 @@ window.sendGoal = function(goalName) {
 @stack('scripts')
 
 @include('partials.cookie-consent')
+@include('partials.newsletter-subscribe-popup')
 </body>
 </html>

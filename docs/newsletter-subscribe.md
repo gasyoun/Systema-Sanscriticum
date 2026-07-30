@@ -1,25 +1,32 @@
 # Подписка на рассылку → кабинет + полка подписчика (H324)
 
-_Created: 07-07-2026 · Last updated: 07-07-2026_
+_Created: 07-07-2026 · Last updated: 30-07-2026_
 
-GitHub-стиль инлайн-бокс «Подписаться на рассылку»: не-студент вводит **только
-email**, а в ответ получает (а) облегченный кабинетный аккаунт (беспарольный, вход
-по одноразовой magic-ссылке) и (б) несколько бесплатных лид-магнитов на «полке
-подписчика» в личном кабинете. Закрывает разрыв атрибуции лид→пользователь→оплата
+GitHub-стиль инлайн-бокс «Подписаться на рассылку» + **плавающее окно** (правый
+низ, паттерн Claude Marketplaces): не-студент вводит **только email**, а в ответ
+получает (а) облегченный кабинетный аккаунт (беспарольный, вход по одноразовой
+magic-ссылке) и (б) несколько бесплатных лид-магнитов на «полке подписчика» в
+личном кабинете. Закрывает разрыв атрибуции лид→пользователь→оплата
 из [`docs/growth-ideas-2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/growth-ideas-2026.md) (идея #8).
 
 ## Фича-флаг
 
 Всё за флагом [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php)
-`newsletter_subscribe` (env `NEWSLETTER_SUBSCRIBE_ENABLED`), **ВЫКЛ по умолчанию** —
-deploy-рубильник. Пока OFF: виджет не рендерится, маршруты `/subscribe` и
-`/magic/{token}` отдают 404, полка и Filament-ресурс скрыты. Прод не затронут, пока
-человек не выставит `NEWSLETTER_SUBSCRIBE_ENABLED=true` после ревью.
+`newsletter_subscribe` (env `NEWSLETTER_SUBSCRIBE_ENABLED`), **ВКЛ по умолчанию**
+(с H396, 09-07-2026) — аварийный выключатель
+`NEWSLETTER_SUBSCRIBE_ENABLED=false`. Пока OFF: виджеты не рендерятся, маршруты
+`/subscribe` и `/magic/{token}` отдают 404, полка и Filament-ресурс скрыты.
 
 ## Поток
 
-1. **Виджет** — `<x-newsletter-subscribe />` ([resources/views/components/newsletter-subscribe.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/components/newsletter-subscribe.blade.php)):
+1. **Инлайн-виджет** — `<x-newsletter-subscribe />` ([resources/views/components/newsletter-subscribe.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/components/newsletter-subscribe.blade.php)):
    email + чекбокс согласия. Ставится в футер/промо-блоки. Самогейтится по флагу.
+1b. **Плавающее окно** — [`partials/newsletter-subscribe-popup.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/newsletter-subscribe-popup.blade.php):
+   fixed right-bottom (над пузырём чата), copy «Присоединяйтесь к **N+**
+   русскоязычным студентам санскрита…», N из `config('trust.graduates_count')`
+   (default **5000** — публичная цифра витрины). Dismiss →
+   `localStorage.newsletter_popup_v1`. Скрыто у уже-подписчиков. Монтируется на
+   `main`, shop, articles, promo layouts.
 2. **`POST /subscribe`** ([NewsletterSubscribeController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/NewsletterSubscribeController.php)):
    троттлинг (1/5с/IP + `throttle:10,1`), валидация `email` + `is_promo_agreed:accepted`.
    Ответ единый (анти-enumeration) — не раскрывает, был ли уже аккаунт.
