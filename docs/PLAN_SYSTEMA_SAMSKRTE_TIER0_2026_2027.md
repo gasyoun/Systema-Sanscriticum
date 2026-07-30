@@ -1,6 +1,10 @@
-# PLAN — samskrte.ru / Tier-0 (Systema + ORS-FAQ) · 2026–2027
+# PLAN — SAMSKRTE-TIER0 · samskrte.ru / Tier-0 (Systema + ORS-FAQ) · 2026–2027
 
 _Created: 30-07-2026 · Last updated: 30-07-2026_
+
+**Umbrella ID:** `SAMSKRTE-TIER0` · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** `/ask samskrte.ru` 30-07-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_TIER0_*`
+
+> One family: every layer file shares the stem **`SAMSKRTE_TIER0`**. Search the repo for `SAMSKRTE-TIER0` or `SAMSKRTE_TIER0` to pull the whole pack.
 
 **Goal (one paragraph).** Make **samskrte.ru** (Laravel LMS [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)) and the linked Tier-0 funnel surfaces ([ORS-FAQ](https://github.com/gasyoun/ORS-FAQ)) a reliable revenue engine for 2026–2027: **wave-1** lands the **28-08-2026 marathon cohort fully live** (funnel → money path → notify → smoke A–E) with pre-launch DR (off-site backup + uptime Telegram) and deploy truth; **later waves** grow along the **GetCourse-parity spine** plus **growth/membership revenue bets**, with research/dictionary work out of scope.
 
@@ -10,9 +14,9 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 |---|---|
 | Roadmap (year + waves) | [ROADMAP_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md) |
 | Architecture | [ARCHITECTURE_SYSTEMA_SAMSKRTE_TIER0.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_SAMSKRTE_TIER0.md) |
-| Implementation (wave-1) | [IMPLEMENTATION_SYSTEMA_MARATHON_28_08_WAVE1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_MARATHON_28_08_WAVE1.md) |
-| Verification (wave-1) | [VERIFICATION_SYSTEMA_MARATHON_28_08_WAVE1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_MARATHON_28_08_WAVE1.md) |
-| Ops runbook (evidence log) | [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md) |
+| Implementation (wave-1) | [IMPLEMENTATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md) |
+| Verification (wave-1) | [VERIFICATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md) |
+| Ops runbook (evidence log) | [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md) |
 
 Companion metadoc: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.meta.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.meta.md).
 
@@ -33,7 +37,7 @@ Companion metadoc: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.meta.md](https://githu
 | D9 | Money code | **Do not edit payment/access/grant code**; activate existing only | Fence for unattended safety. |
 | D10 | ORS-FAQ | **Full joint Tier-0 plan**; W1 = marathon CTA surfaces only | Year owns WP/bot/CRM unlock. |
 | D11 | Hosting | **In scope:** uptime, DR, deploy truth, CT power-off prevention | Post 24–26.07 outage. |
-| D12 | W1 artifact | **One runbook + evidence log** | [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md). |
+| D12 | W1 artifact | **One runbook + evidence log** | [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md). |
 | D13 | ESP/SMTP | **Homegrown mailbox (mail.ru / Yandex 360) + SPF/DKIM** (H1449 path) | Close [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504). |
 | D14 | Deploy truth | **Fix CI deploy + agent post-merge deploy fallback** | [#828](https://github.com/gasyoun/Systema-Sanscriticum/issues/828). |
 | D15 | DR in W1 | **Yes — pre-launch gate** | Yandex off-site + uptime TG dry-fire. |

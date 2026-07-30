@@ -11,13 +11,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Changed
+- **Umbrella ID SAMSKRTE-TIER0:** wave-1 docs renamed to share stem *_SYSTEMA_SAMSKRTE_TIER0_*; banner on every layer + H1939. Executor: Grok 4.5 (grok-4.5).
+
 ## [1.79.0] - 2026-07-30
 
 ### Fixed
 - **Первый живой цикл авто-деплоя умер на PATH крона — composer не найден (H1933, код 127).** Debian-cron даёт `PATH=/usr/bin:/bin`, а composer живёт в `/usr/local/bin`: цикл 30-07-2026 10:00Z упал, автооткат честно вернул прежний коммит (`git reset` успел до composer), предохранитель встал, сайт не пострадал (200) — контур отработал ровно как задуман, причина была в окружении. Полный `PATH` теперь выставляют ОБА ремня: экспорт в начале [`systema-auto-deploy-run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/systema-auto-deploy-run.sh) (обёртка обязана работать одинаково из cron, руками и из чужого вызова) и строка `PATH=` в [`cron/root.crontab`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/cron/root.crontab). Executor: Fable 5 (`claude-fable-5`).
 
 ### Added
-- **`/ask samskrte.ru` Tier-0 plan pack 2026–2027 (docs-only).** Autonomy-ready index + layers: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md), roadmap, architecture, wave-1 implementation/verification, [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md). Wave-1 = marathon 28-08 fully live (funnel → money activate → notify → smoke A–E) + DR gates; year spine = GetCourse-parity + growth. 26 interview rulings; money-code fence. Executor: Grok 4.5 (`grok-4.5`).
+- **`/ask samskrte.ru` Tier-0 plan pack 2026–2027 (docs-only).** Autonomy-ready index + layers: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md), roadmap, architecture, wave-1 implementation/verification, [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md). Wave-1 = marathon 28-08 fully live (funnel → money activate → notify → smoke A–E) + DR gates; year spine = GetCourse-parity + growth. 26 interview rulings; money-code fence. Executor: Grok 4.5 (`grok-4.5`).
 - **H1067 `@samskrte` channel posts (announce/start/evergreen) automated via the scheduler, with an idempotency guard (H1936, 30-07-2026).** `marathon:publish-channel-posts --live` already existed but was manual-only and had no dedup, so a bare cron entry would have risked duplicate posts to a real public channel on any scheduler overlap or redeploy. Added `marathon_channel_posts_sent` (post_number, run_key) tracking checked/recorded around every live send, then wired posts 1/2/3 into `Kernel::schedule()` (14-08 announce, 28-08 start, weekly evergreen from 04-09, `withoutOverlapping`+`onOneServer`). Posts 4/5 stay manual (date/testimonial-dependent). **Still outstanding (MG, Telegram-side only):** make the magnet bot a channel administrator with Post Messages rights on `@samskrte` — no code/server action can do this. Executor: Sonnet 5 (`claude-sonnet-5`).
 
 ## [1.78.0] - 2026-07-30
