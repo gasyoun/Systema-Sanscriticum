@@ -4,9 +4,10 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 
 **Handoff:** [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md)  
 **Live:** [https://samskrte.ru/online/konsultaciya](https://samskrte.ru/online/konsultaciya)  
-**Methods:** [Taste-skill orchestration](https://github.com/gasyoun/Uprava/blob/main/docs/TASTE_SKILL_ORCHESTRATION_FABLE_REDESIGN_PIPELINE_2026.md) · [/useit Nielsen pass](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md)  
+**Methods (design):** [Taste-skill orchestration](https://github.com/gasyoun/Uprava/blob/main/docs/TASTE_SKILL_ORCHESTRATION_FABLE_REDESIGN_PIPELINE_2026.md) · [/useit Nielsen pass](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md)  
+**Methods (multi-dir implement — mandatory):** [jakubkrehel/skills](https://github.com/jakubkrehel/skills) **`better-interface`** + six domain skills (`better-accessibility` · `better-layout` · `better-writing` · `better-typography` · `better-colors` · `better-ui`) + repo [`blade-styling`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/skills/blade-styling/SKILL.md) — registered on H1966 skill-pack table 30-07-2026  
 **Author session:** Grok 4.5 (`grok-4.5`) executing Fable-tier design packet  
-**Status:** Design packet landed ([PR #921](https://github.com/gasyoun/Systema-Sanscriticum/pull/921)). **Multi-direction (30-07-2026):** **no human single-winner pick** — keep **A–D concurrent** (B = default variant only). Production CSS ships as multi-dir implement, not one chosen skin.
+**Status:** Design packet landed ([PR #921](https://github.com/gasyoun/Systema-Sanscriticum/pull/921)). **Multi-direction (30-07-2026):** **no human single-winner pick** — keep **A–D concurrent** (B = default variant only). Production CSS ships as multi-dir implement, not one chosen skin. **Do not re-run design** when applying `better-*` — they are implement/QA skills.
 
 ---
 
@@ -286,12 +287,22 @@ Same as B; ensure step titles always stone-900.
 | Layout | B/C → **O2** wrap; A → **O1** tokens; D → O2 + Alpine steps — **all retained as variants** |
 | Switch | Config (and/or query) for visual variant; default **b**; copy variant axis stays separate |
 | Do not break | H1067 copy keys; field names; routes `marathon.register` / `marathon.pay`; flash `marathon_*`; evergreen anti-urgency |
-| Skills | `blade-styling` + Playwright contrast **per direction**; taste Phase 4 from each mockup (or shared shell + direction packs). See H1966 skill-pack table for further packs. |
-| Out of scope | VK/Max deliver-due; BotFather; Filament; Day content; forcing a single skin |
+| Skills | **Mandatory stack:** (1) [`blade-styling`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/skills/blade-styling/SKILL.md) + Playwright contrast **per direction**; (2) taste Phase 4 from each mockup (or shared shell + direction packs); (3) **[jakubkrehel/skills](https://github.com/jakubkrehel/skills) `better-interface full`** per variant (loads a11y/layout/writing/type/color/ui). Primary table: [H1966 skill packs](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md). |
+| Out of scope | VK/Max deliver-due; BotFather; Filament; Day content; forcing a single skin; re-running the design packet |
 
 ### Contrast floor (every variant)
 
 Every shippable direction: body text ≥ 4.5:1; inputs `text-stone-900 bg-white` (or dark-native explicit tokens on A). No “wait for pick” hotfix path — multi-dir is the path.
+
+### Skill packs for implement (mirror of H1966)
+
+| Pack | Role | Status |
+|---|---|---|
+| `/useit` | Nielsen H1–H10 on production | applied (design) — [USEIT_NIELSEN_PASS_30.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md) |
+| Taste orchestration | Phase 0–3 mockups A–D | applied (design) |
+| **`better-*` (jakubkrehel/skills)** | Holistic interface QA on each concurrent variant | **required for implement** — install: `~/.grok/skills/better-*` / `~/.agents/skills/` |
+
+**Invoke:** `better-interface full online/konsultaciya multi-dir variants` (Grok) · `/better-interface full …` (Claude CLI skills) · `$better-interface full …` (Codex). Use `quick` only for a single-variant spot check. Close HIGH/MEDIUM findings (or document accept) before marking a skin shippable. Optional artifact: `redesign/BETTER_INTERFACE_PASS_DD.MM.YY.md`.
 
 ---
 
@@ -325,6 +336,12 @@ Open HTML files in a browser (desktop 1280 + devtools 375). Unopened mockup is a
 
 ## Next step (no human direction pick)
 
-Mint multi-dir implement handoff: concurrent A–D variants + default B; this packet + all four HTML mockups = source of truth. Append further skill packs on [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md) skill-pack table first if needed.
+Mint multi-dir implement handoff: concurrent A–D variants + default B; this packet + all four HTML mockups = source of truth. **Skill pack gate for implement is closed:** [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md) now requires [jakubkrehel/skills](https://github.com/jakubkrehel/skills) `better-interface` (+ six domains) on every shippable variant — do **not** implement chrome without loading those skills.
+
+```
+Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H####-<Model>_Systema-Sanscriticum_konsultaciya-multi-dir-implement_DD.MM.YY.md and execute it.
+```
+
+(When the implement handoff is minted, put its real `H###` path in the block above and in H1966.)
 
 _Dr. Mārcis Gasūns_
