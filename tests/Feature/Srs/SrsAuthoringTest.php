@@ -177,6 +177,49 @@ class SrsAuthoringTest extends TestCase
         $this->assertSame(1, SrsCard::count());
     }
 
+    public function test_owner_can_edit_deck_slug(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(SrsDeckEditor::class)
+            ->set('newDeckName', 'Моя лексика')
+            ->call('createDeck')
+            ->set('editSlug', 'my-vocab-deck')
+            ->call('updateSlug')
+            ->assertSet('message', 'Адрес колоды обновлён: /dvaram/srs/my-vocab-deck')
+            ->assertSet('editSlug', 'my-vocab-deck');
+
+        $this->assertDatabaseHas('srs_decks', [
+            'user_id' => $user->id,
+            'slug' => 'my-vocab-deck',
+        ]);
+    }
+
+    public function test_owner_slug_rejects_reserved_and_duplicate(): void
+    {
+        $user = User::factory()->create();
+        $noteType = $this->makeNoteType();
+        SrsDeck::create([
+            'note_type_id' => $noteType->id,
+            'name' => 'System',
+            'slug' => 'taken-slug',
+            'language' => 'sa',
+            'visibility' => 'system',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(SrsDeckEditor::class)
+            ->set('newDeckName', 'Моя')
+            ->call('createDeck')
+            ->set('editSlug', 'stats')
+            ->call('updateSlug')
+            ->assertSet('error', 'Этот slug зарезервирован. Выберите другой.')
+            ->set('editSlug', 'taken-slug')
+            ->call('updateSlug')
+            ->assertSet('error', 'Такой slug уже занят другой колодой.');
+    }
+
     public function test_student_paste_bulk_and_cannot_see_others_decks(): void
     {
         $owner = User::factory()->create();

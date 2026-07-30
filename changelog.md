@@ -1,9 +1,11 @@
 ## [Unreleased]
 
 ### Added
+- **Deck owner can edit slug** (student «Мои колоды» + Filament unique/required slug). Reserved: `stats`, `decks`. Executor: Grok 4.5 (`grok-4.5`).
 - **SRS per-deck URLs + guest trial.** Each deck has its own path (`/srs/{slug}` public, `/dvaram/srs/{slug}` cabinet); hub pages list decks. Guests can try system/public decks without registration (soft wall after `SRS_GUEST_TRIAL_CARDS`, default 10; progress not saved). Tagline is language-aware (`sa` → «учите санскрит», `hi` → «учите хинди»). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
+- **SRS enabled by default** (`env('SRS_ENABLED', true)`). Explicit `SRS_ENABLED=false` still darks the surface. R-6 OFF-by-default lifted after public per-deck trial URLs shipped. Executor: Grok 4.5 (`grok-4.5`).
 - **H1966 konsultaciya redesign: multi-direction concurrent variants.** No single human pick among A–D; ship several visual directions at once (B = default only). Packet + marketing README updated. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.80.3] - 2026-07-30

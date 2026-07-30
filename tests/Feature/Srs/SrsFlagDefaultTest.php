@@ -8,29 +8,28 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * H1145 — pins the R-6 default: `srs.enabled` must be OFF unless a prod
- * `.env` sets `SRS_ENABLED=true` explicitly. H447 (PR #442, commit 6267d70)
- * flipped the default to true for the August-2026 pilot; that call was
- * reasonable when made but does not survive R-5/R-6 — an SRS nav entry
- * appearing for every student without an explicit opt-in corrupts the R20
- * baseline. This test does NOT set `SRS_ENABLED` anywhere, so it exercises
+ * Product default (30-07-2026): `srs.enabled` is ON unless `.env` sets
+ * `SRS_ENABLED=false`. R-6 had pinned OFF-by-default to protect an R20
+ * cabinet baseline; that gate is lifted now that per-deck public trial URLs
+ * and the review surface are intentional product features.
+ *
+ * This test does NOT set `SRS_ENABLED` in the environment, so it exercises
  * the real config default, not an overridden one.
  */
 class SrsFlagDefaultTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_srs_enabled_defaults_to_false(): void
+    public function test_srs_enabled_defaults_to_true(): void
     {
-        $this->assertFalse(config('srs.enabled'));
+        $this->assertTrue(config('srs.enabled'));
     }
 
-    public function test_srs_review_route_is_404_by_default(): void
+    public function test_srs_routes_registered_by_default(): void
     {
-        // The route registration itself is gated behind `if (config('srs.enabled'))`
-        // in routes/web.php, so with the flag OFF the URI has no route at all —
-        // this is the student-visible surface R-6 protects, checked independently
-        // of the config assertion above.
-        $this->get('/dvaram/srs')->assertNotFound();
+        $this->assertTrue(app('router')->has('student.srs'));
+        $this->assertTrue(app('router')->has('student.srs.deck'));
+        $this->assertTrue(app('router')->has('srs.index'));
+        $this->assertTrue(app('router')->has('srs.deck'));
     }
 }
