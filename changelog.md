@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.79.0] - 2026-07-30
+
 ### Fixed
 - **Первый живой цикл авто-деплоя умер на PATH крона — composer не найден (H1933, код 127).** Debian-cron даёт `PATH=/usr/bin:/bin`, а composer живёт в `/usr/local/bin`: цикл 30-07-2026 10:00Z упал, автооткат честно вернул прежний коммит (`git reset` успел до composer), предохранитель встал, сайт не пострадал (200) — контур отработал ровно как задуман, причина была в окружении. Полный `PATH` теперь выставляют ОБА ремня: экспорт в начале [`systema-auto-deploy-run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/systema-auto-deploy-run.sh) (обёртка обязана работать одинаково из cron, руками и из чужого вызова) и строка `PATH=` в [`cron/root.crontab`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/cron/root.crontab). Executor: Fable 5 (`claude-fable-5`).
 
