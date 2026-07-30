@@ -1,6 +1,6 @@
 # Implementation map: масштабирование Telegram-интеграции 2026–2027
 
-_Created: 11-07-2026 · Last updated: 11-07-2026_
+_Created: 11-07-2026 · Last updated: 30-07-2026_
 
 > **PR/file-level карта исполнения** для зонтичного
 > [`ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md).
@@ -176,10 +176,11 @@ W1.3 → W3.2**, параллельно **W1.1** и **W3.3/W3.4**. WS2/WS4 — �
 | **Гейт** | **D1 решён** (порог задан), но требует формального [`/decision-record`](https://github.com/gasyoun/claude-config/blob/main/commands/decision-record.md) (D##) **до** прод-включения — это изменение жёсткого принципа. **Хэндоф НЕ заминчен** в этом заходе (ждёт D##). |
 | **Исполнитель** | Sonnet |
 
-### W1.3 — reply-out канарейка (live-fire) · H594 · Sonnet
+### W1.3 — reply-out канарейка (live-fire) · H594 · Sonnet · 🔴 BLOCKED (30-07-2026)
 | | |
 |---|---|
 | **Что делает** | Userbot Ивана живой → впервые контролируемо прогнать ранее непроверенный путь доставки на **одном** канарейка-чате: `support_unified_reply=true` + очередь. Черновики работают и без него — риск изолирован. |
+| **Результат канарейки** | Прогнана 30-07-2026 на внутреннем `tech_group_peers`-чате `-1003671345641` (не на живом студенте). Доставка **упала**: MTProto-сессия юзербота застряла в блокировке IPC-сокета (`"session is busy... Telegram does not support starting multiple instances"`), 54 неудачных `telegram-support:sync` за 10 минут ДО канарейки — сбой предсуществующий, не вызван флагом. Флаг возвращён в `false` сразу после провала (иначе он расширил бы охват уже сломанного пути на всех кураторов, не только очередь «Техника», которая через тот же путь уже тихо не доставляет). Детали: [support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) риск-реестр «Reply-out delivery». **Следующий шаг — человек/DevOps чинит застрявшую MadelineProto-сессию на проде, потом W1.3 повторяется.** |
 | **Файлы** | [`SupportReplyService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportReplyService.php), [`DeliverSupportReply`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/DeliverSupportReply.php), [`TelegramSupportSyncService::deliverMessage()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php), `config/features.php` (`support_unified_reply`) |
 | **Миграции/флаги** | `support_unified_reply` (env), `TELEGRAM_SUPPORT_ENABLED` |
 | **Тесты** | [`DeliverSupportReplyTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/DeliverSupportReplyTest.php), [`SupportReplyServiceTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/SupportReplyServiceTest.php) |
