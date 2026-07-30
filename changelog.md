@@ -6,6 +6,7 @@
 - **Marathon Day 1 immediately after Telegram `/start`.** After magnet deep-link binds `telegram_chat_id`, Day 1 drip text is sent at once (no wait for next calendar day). Cron `marathon:deliver-due` remains the catch-up path; `day1_completed_at` keeps both paths idempotent. Shared `MarathonDay1Sender`. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added
+- **Прод-базлайн deflection по категориям (H592, P0.4).** Реальный порядок категорий из `php artisan support:topic-ranking --months=6 --json`, зафиксирован в [`docs/DEFLECTION_BASELINE_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEFLECTION_BASELINE_2026.md) ([PR #909](https://github.com/gasyoun/Systema-Sanscriticum/pull/909)): `schedule` (C) — не `zoom` (A) — лидирует по дефлекции (617), с расхождением против roadmap §4.2 A/B/C-допущения (A/B не выделены отдельной категорией в живой таксономии). Executor: Sonnet 5 (`claude-sonnet-5`).
 - **Uptime: Russian human guide + dual EN/RU packaging.** [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) — short «что красное / кого звать» for people; EN [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) marked for agents with cross-link. `CLAUDE.md` + `README.md` dual pointers. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.80.0] - 2026-07-30
