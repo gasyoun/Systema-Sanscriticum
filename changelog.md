@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **First-login Telegram ping labels synthetic / placeholder accounts (H1946).** Live pay probes (e.g. prod user **6858** / `h1939.pay…@example.invalid` from H1939) still fire `OnboardingNotifier::firstLogin` so the probe is visible, but the message is prefixed with `🧪 SYNTHETIC / TEST — не настоящий студент`. Weekly onboarding digest excludes the same placeholder suffixes (`@no-email.com`, `@example.invalid` — not `@example.com`, which Faker uses in tests). Documented in [`RESULTS_LOG.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/RESULTS_LOG.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.79.2] - 2026-07-30
 
 ### Changed

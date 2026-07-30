@@ -19,14 +19,18 @@ final class OnboardingWeeklyDigest extends Command
         // «Должен зайти» = студенту реально выслали доступ И у него рабочий email.
         // Признак «доступ выслан» — штамп «[Доступ отправлен: …]» в note, который
         // ставит bulk-action отправки доступа в UserResource (а его фильтр
-        // `access_sent` использует тот же LIKE). Реальный email — не заглушка
-        // @no-email.com и не пустой (на момент штампа адрес уже прошёл валидацию).
+        // `access_sent` использует тот же LIKE). Реальный email — не placeholder
+        // (import @no-email.com, live-probe @example.invalid) и не пустой.
+        // Список суффиксов — OnboardingNotifier::PLACEHOLDER_EMAIL_SUFFIXES.
         $base = User::query()
             ->where('is_admin', false)
             ->where('note', 'like', '%[Доступ отправлен%')
             ->whereNotNull('email')
-            ->where('email', '<>', '')
-            ->where('email', 'not like', '%@no-email.com');
+            ->where('email', '<>', '');
+
+        foreach (OnboardingNotifier::PLACEHOLDER_EMAIL_SUFFIXES as $suffix) {
+            $base->where('email', 'not like', '%'.$suffix);
+        }
 
         $accessSent = (clone $base)->count();
         $notEntered = (clone $base)->where('login_count', 0)->count();

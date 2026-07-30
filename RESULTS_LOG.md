@@ -4,6 +4,34 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 
 Durable substantive-result tables for this repo. Newest first.
 
+## H1946 — Synthetic prod user 6858 (H1939 pay probe) (30-07-2026)
+
+_Model: Grok 4.5 (`grok-4.5`)._ Ops false-alarm: Telegram onboarding chat
+(`@testpodpiska12_bot` → first-login ping) fired for a non-student.
+
+| Field | Value |
+|---|---|
+| User id | **6858** |
+| Admin card | https://samskrte.ru/admin/users/6858/edit |
+| Name | `H1939 Pay 20260730150332` |
+| Email | `h1939.pay.20260730150332@example.invalid` |
+| Kind | **Synthetic / live pay probe** — not a real student |
+| Origin | H1939 marathon/wave1 live smoke; prod probe script reused `User::find(6858)` for Tochka link-create (no real student mailbox) |
+| First-login ping | 30.07.2026 15:03 — legitimate `OnboardingNotifier::firstLogin`, not spam |
+
+**Convention for future probes:** name `H### …` + email under
+`@example.invalid` (RFC reserved; **not** `@example.com` — Faker uses that).
+First-login pings for those domains are still sent (so a probe login is visible)
+but prefixed with `🧪 SYNTHETIC / TEST`. Weekly onboarding digest excludes
+`@no-email.com` and `@example.invalid`.
+
+**Human residual (card note):** paste into the student `note` field on
+https://samskrte.ru/admin/users/6858/edit so the admin card itself is labeled:
+
+> SYNTHETIC / TEST — H1939 live pay probe (not a student). Email @example.invalid. Do not contact. Keep for payment smoke only.
+
+_Dr. Mārcis Gasūns_
+
 ## H1917 — Scheduler-hang chaos drill (30-07-2026)
 
 _Model: Sonnet 5 (`claude-sonnet-5`)._ Live drill on production

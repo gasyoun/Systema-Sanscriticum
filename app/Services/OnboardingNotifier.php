@@ -19,16 +19,36 @@ use Illuminate\Support\Collection;
  * все методы — no-op (фича выключена). Отправляет основной бот
  * (config('services.telegram.bot_token')) через SendTelegramChatMessageJob —
  * тот же паттерн, что и у App\Services\CuratorNotifier.
+ *
+ * Placeholder / synthetic accounts (import `@no-email.com`, live-probe
+ * `@example.invalid` / `@example.com`) still get a first-login ping so probes
+ * stay visible, but the message is prefixed with 🧪 so ops does not treat them
+ * as real students. See RESULTS_LOG «H1946» and User id 6858.
  */
 class OnboardingNotifier
 {
+    /**
+     * Email suffixes that mark non-student / probe accounts (not real mailboxes).
+     * Do NOT include `@example.com` — Faker `safeEmail()` uses it in tests and
+     * would empty the weekly digest. Probes must use `@example.invalid` (RFC
+     * reserved, never used by Faker).
+     */
+    public const PLACEHOLDER_EMAIL_SUFFIXES = [
+        '@no-email.com',
+        '@example.invalid',
+    ];
+
     public function firstLogin(User $user): void
     {
-        $lines = [
-            '🚀 <b>Первый вход в кабинет</b>',
-            '',
-            $this->studentLine($user),
-        ];
+        $lines = [];
+        if ($this->isPlaceholderEmail($user->email ?? null)) {
+            $lines[] = '🧪 <b>SYNTHETIC / TEST</b> — не настоящий студент';
+            $lines[] = '';
+        }
+
+        $lines[] = '🚀 <b>Первый вход в кабинет</b>';
+        $lines[] = '';
+        $lines[] = $this->studentLine($user);
 
         $courses = $this->courseTitlesFor($user);
         if ($courses !== '') {
@@ -39,6 +59,22 @@ class OnboardingNotifier
         $lines[] = $this->adminLink($user);
 
         $this->dispatchToOnboarding($this->join($lines));
+    }
+
+    public function isPlaceholderEmail(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+        if ($email === '') {
+            return false;
+        }
+
+        foreach (self::PLACEHOLDER_EMAIL_SUFFIXES as $suffix) {
+            if (str_ends_with($email, $suffix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
