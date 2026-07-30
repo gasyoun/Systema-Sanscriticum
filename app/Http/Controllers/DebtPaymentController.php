@@ -73,6 +73,10 @@ class DebtPaymentController extends Controller
         // greedy-счётчиком, что закроет обещания на вебхуке).
         $covered = $this->fulfiller->coveredPromises($promise, $amount);
 
+        // Приоритет: блоки, которые куратор уже указал «Открыть доступ под
+        // обещание» (conditional Payments). Иначе self-service угадывал full.
+        $keyAndBlocks = $this->scopeFromConditionalGrants($promise);
+
         return $this->startCheckout(
             user: $user,
             courseId: (int) $promise->course_id,
@@ -81,6 +85,7 @@ class DebtPaymentController extends Controller
             blocksToOpen: max(1, $covered->count()),
             closesFinalPromise: $this->coversFinalPromise($promise, $covered),
             pranaRequested: (int) $request->input('prana_amount', 0),
+            keyAndBlocksOverride: $keyAndBlocks,
         );
     }
 
@@ -237,6 +242,10 @@ class DebtPaymentController extends Controller
      * Общая часть: (гард дубля) → создать pending-платёж (в транзакции, со
      * списанием праны) → увести в Точку ПОСЛЕ commit (сеть не держит row-lock).
      */
+    /**
+     * @param  array{0: string, 1: int|null, 2: int|null}|null  $keyAndBlocksOverride
+     *                                                                                 [tariff, start, end] из conditional-гранта
+     */
     private function startCheckout(
         User $user,
         int $courseId,
@@ -245,6 +254,7 @@ class DebtPaymentController extends Controller
         int $blocksToOpen,
         bool $closesFinalPromise,
         int $pranaRequested = 0,
+        ?array $keyAndBlocksOverride = null,
     ): RedirectResponse {
         if ($amount <= 0) {
             return $this->backToDebts('error', 'Не удалось определить сумму к оплате. Обратитесь к куратору.');
@@ -270,13 +280,17 @@ class DebtPaymentController extends Controller
             return $this->backToDebts('error', 'Курс не найден.');
         }
 
-        $unpaidBlocksAsc = $this->debts->unpaidBlockNumbers($user, $courseId);
-        [$tariffKey, $startBlock, $endBlock] = $this->resolveKeyAndBlocks(
-            $course,
-            $unpaidBlocksAsc,
-            $blocksToOpen,
-            $closesFinalPromise,
-        );
+        if ($keyAndBlocksOverride !== null) {
+            [$tariffKey, $startBlock, $endBlock] = $keyAndBlocksOverride;
+        } else {
+            $unpaidBlocksAsc = $this->debts->unpaidBlockNumbers($user, $courseId);
+            [$tariffKey, $startBlock, $endBlock] = $this->resolveKeyAndBlocks(
+                $course,
+                $unpaidBlocksAsc,
+                $blocksToOpen,
+                $closesFinalPromise,
+            );
+        }
 
         // Прана: студент может списать СВОЮ прану против суммы (лояльность/промокод
         // не применяем — цена фиксирована куратором). Максимум считаем на сервере,
@@ -407,13 +421,75 @@ class DebtPaymentController extends Controller
     }
 
     /**
+     * Scope доступа из conditional Payments «открыть доступ под обещание».
+     * Куратор в админке явно указал full или block_N — self-service копирует
+     * тот же объём, а не раздувает до full по списку unpaid.
+     *
+     * @return array{0: string, 1: int|null, 2: int|null}|null [tariff, start, end]
+     */
+    private function scopeFromConditionalGrants(PaymentPromise $promise): ?array
+    {
+        $grants = Payment::query()
+            ->where('linked_promise_id', $promise->id)
+            ->where('is_conditional', true)
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->get(['tariff', 'start_block', 'end_block']);
+
+        if ($grants->isEmpty()) {
+            return null;
+        }
+
+        if ($grants->contains(fn (Payment $p) => $p->tariff === 'full')) {
+            return ['full', null, null];
+        }
+
+        $blockNums = [];
+        foreach ($grants as $grant) {
+            if (is_string($grant->tariff) && preg_match('/^block_(\d+)/', $grant->tariff, $m)) {
+                $blockNums[] = (int) $m[1];
+            }
+            $start = $grant->start_block !== null ? (int) $grant->start_block : null;
+            $end = $grant->end_block !== null ? (int) $grant->end_block : null;
+            if ($start !== null && $end !== null && $end >= $start) {
+                for ($n = $start; $n <= $end; $n++) {
+                    $blockNums[] = $n;
+                }
+            } elseif ($start !== null) {
+                $blockNums[] = $start;
+            } elseif ($end !== null) {
+                $blockNums[] = $end;
+            }
+        }
+
+        $blockNums = array_values(array_unique(array_filter($blockNums, fn (int $n) => $n > 0)));
+        sort($blockNums);
+
+        if ($blockNums === []) {
+            return null;
+        }
+
+        $start = min($blockNums);
+        $end = max($blockNums);
+
+        // Один платёж на диапазон: materializer дорисует siblings block_N.
+        return ['block_'.$start, $start, $end];
+    }
+
+    /**
      * Покрывает ли платёж ПОСЛЕДНЕЕ непогашенное обещание графика (значит долг
      * гасится полностью — открываем весь оставшийся диапазон блоков).
+     *
+     * Одиночная договорённость (нет installment_group_id) — всегда false:
+     * один взнос = один (или grant-scope) блок, не silent full на весь курс.
      *
      * @param  Collection<int, PaymentPromise>  $covered
      */
     private function coversFinalPromise(PaymentPromise $lead, Collection $covered): bool
     {
+        if ($lead->installment_group_id === null) {
+            return false;
+        }
+
         $last = $this->lastUnmetOfGroup($lead);
 
         return $last === null || $covered->contains(fn (PaymentPromise $p) => $p->id === $last->id);

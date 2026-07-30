@@ -164,11 +164,11 @@ class DebtPaymentTariffKeyTest extends TestCase
     }
 
     /** @test */
-    public function a_single_promise_covering_the_whole_course_still_opens_full(): void
+    public function a_solo_promise_without_grant_opens_only_the_first_unpaid_block(): void
     {
-        // Одиночное обещание оплатить весь (неоплаченный) курс — законный 'full'.
+        // Solo promise ≠ full: один взнос без кураторского full-гранта = 1 блок.
         $user = User::factory()->create();
-        $course = $this->courseWithBlocks(2);
+        $course = $this->courseWithBlocks(4);
         $promise = PaymentPromise::create([
             'user_id' => $user->id, 'course_id' => $course->id,
             'promised_at' => now()->addDays(5)->toDateString(), 'amount' => 5000,
@@ -178,7 +178,101 @@ class DebtPaymentTariffKeyTest extends TestCase
         $this->actingAs($user)->post(route('student.debt.promise.pay', $promise))->assertRedirect();
 
         $payment = Payment::where('user_id', $user->id)->where('status', 'pending')->firstOrFail();
+        $this->assertSame('block_1', $payment->tariff);
+        $this->assertSame(1, (int) $payment->start_block);
+        $this->assertSame(1, (int) $payment->end_block);
+    }
+
+    /** @test */
+    public function self_service_copies_block_scope_from_conditional_grant(): void
+    {
+        // Куратор открыл «Блок 1» под обещание → pending self-service = block_1, не full.
+        $user = User::factory()->create();
+        $course = $this->courseWithBlocks(4);
+        $promise = PaymentPromise::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'promised_at' => now()->addDays(5)->toDateString(), 'amount' => 4800,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 0, 'tariff' => 'block_1', 'status' => 'paid',
+            'start_block' => 1, 'end_block' => 1,
+            'is_conditional' => true, 'linked_promise_id' => $promise->id,
+            'transaction_id' => 'promise_grant_#'.$promise->id,
+        ]));
+
+        $this->actingAs($user)->post(route('student.debt.promise.pay', $promise))->assertRedirect();
+
+        $payment = Payment::where('user_id', $user->id)
+            ->where('is_self_service', true)
+            ->where('status', 'pending')
+            ->firstOrFail();
+        $this->assertSame('block_1', $payment->tariff);
+        $this->assertSame(1, (int) $payment->start_block);
+        $this->assertSame(1, (int) $payment->end_block);
+        $this->assertSame(4800.0, (float) $payment->amount);
+        $this->assertFalse((bool) $payment->is_conditional);
+    }
+
+    /** @test */
+    public function self_service_copies_full_scope_when_curator_granted_full(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->courseWithBlocks(3);
+        $promise = PaymentPromise::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'promised_at' => now()->addDays(5)->toDateString(), 'amount' => 15000,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 0, 'tariff' => 'full', 'status' => 'paid',
+            'start_block' => null, 'end_block' => null,
+            'is_conditional' => true, 'linked_promise_id' => $promise->id,
+            'transaction_id' => 'promise_grant_#'.$promise->id,
+        ]));
+
+        $this->actingAs($user)->post(route('student.debt.promise.pay', $promise))->assertRedirect();
+
+        $payment = Payment::where('user_id', $user->id)
+            ->where('is_self_service', true)
+            ->where('status', 'pending')
+            ->firstOrFail();
         $this->assertSame('full', $payment->tariff);
+        $this->assertNull($payment->start_block);
+        $this->assertNull($payment->end_block);
+    }
+
+    /** @test */
+    public function self_service_copies_multi_block_range_from_conditional_grants(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->courseWithBlocks(5);
+        $promise = PaymentPromise::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'promised_at' => now()->addDays(5)->toDateString(), 'amount' => 9000,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+        foreach ([2, 3] as $n) {
+            Payment::withoutEvents(fn () => Payment::create([
+                'user_id' => $user->id, 'course_id' => $course->id,
+                'amount' => 0, 'tariff' => 'block_'.$n, 'status' => 'paid',
+                'start_block' => $n, 'end_block' => $n,
+                'is_conditional' => true, 'linked_promise_id' => $promise->id,
+                'transaction_id' => 'promise_grant_#'.$promise->id.'_'.$n,
+            ]));
+        }
+
+        $this->actingAs($user)->post(route('student.debt.promise.pay', $promise))->assertRedirect();
+
+        $payment = Payment::where('user_id', $user->id)
+            ->where('is_self_service', true)
+            ->where('status', 'pending')
+            ->firstOrFail();
+        $this->assertSame('block_2', $payment->tariff);
+        $this->assertSame(2, (int) $payment->start_block);
+        $this->assertSame(3, (int) $payment->end_block);
     }
 
     // ---- Bug 2: real bundle tariff -----------------------------------------
