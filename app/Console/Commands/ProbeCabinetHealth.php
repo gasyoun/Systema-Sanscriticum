@@ -34,9 +34,15 @@ class ProbeCabinetHealth extends Command
 
     private const CACHE_LAST_ALERT_AT = 'cabinet_probe:last_tg_alert_at';
 
+    /** Soft-only path (H1941 spam): last send time. */
+    private const CACHE_LAST_SOFT_ALERT_AT = 'cabinet_probe:last_soft_tg_alert_at';
+
+    /** Soft-only path: fingerprint of last alerted soft failure set. */
+    private const CACHE_LAST_SOFT_FINGERPRINT = 'cabinet_probe:last_soft_fingerprint';
+
     protected $signature = 'cabinet:probe
         {--dry : Прогнать проверки, не слать healthchecks/Telegram и не писать history}
-        {--force-alert : Игнорировать TG-cooldown}';
+        {--force-alert : Игнорировать TG-cooldown (critical и soft)}';
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
 
@@ -437,16 +443,37 @@ class ProbeCabinetHealth extends Command
 
         $wasDown = (bool) Cache::get(self::CACHE_WAS_DOWN, false);
         $cooldown = max(1, (int) config('cabinet_probe.telegram_cooldown_minutes', 60));
+        $softCooldown = max(1, (int) config('cabinet_probe.telegram_soft_cooldown_minutes', 60));
         $force = (bool) $this->option('force-alert');
 
         // Soft-only: alert soft chats without flipping critical downtime.
+        // Cooldown + fingerprint (H1941): same soft set must not spam every */15.
+        // New fingerprint (другой набор soft-fail) шлёт сразу; --force-alert тоже.
         if ($criticalHealthy && $softFails !== []) {
+            $fingerprint = $this->softFailureFingerprint($softFails);
+            $lastSoftAt = Cache::get(self::CACHE_LAST_SOFT_ALERT_AT);
+            $lastFp = Cache::get(self::CACHE_LAST_SOFT_FINGERPRINT);
+            $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
+            if (! $force && $sameSet && $lastSoftAt !== null) {
+                $elapsed = now()->diffInMinutes($lastSoftAt, absolute: true);
+                if ($elapsed < $softCooldown) {
+                    $this->comment('TG soft-cooldown: ~'.($softCooldown - (int) $elapsed).' мин. (тот же soft-набор)');
+
+                    return;
+                }
+            }
+
+            $scope = e($this->softAlertScope($softFails));
             $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
-            $text = "⚠️ <b>Кабинет: soft-сбой</b> (некритичные проверки: hybrid / guards)\n\n"
+            $text = "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})\n\n"
                 .$this->telegramUrlBlock()."\n"
                 .implode("\n", $lines)."\n\n"
                 .$this->telegramRunbook();
-            $this->sendTelegram($token, $softIds, $text);
+            $sent = $this->sendTelegram($token, $softIds, $text);
+            if ($sent) {
+                Cache::put(self::CACHE_LAST_SOFT_ALERT_AT, now(), now()->addDays(2));
+                Cache::put(self::CACHE_LAST_SOFT_FINGERPRINT, $fingerprint, now()->addDays(2));
+            }
 
             return;
         }
@@ -454,6 +481,9 @@ class ProbeCabinetHealth extends Command
         if ($criticalHealthy) {
             Cache::forget(self::CACHE_WAS_DOWN);
             Cache::forget(self::CACHE_LAST_ALERT_AT);
+            // Soft path cleared: full green ends soft spam state too.
+            Cache::forget(self::CACHE_LAST_SOFT_ALERT_AT);
+            Cache::forget(self::CACHE_LAST_SOFT_FINGERPRINT);
             if (! $wasDown) {
                 return;
             }
@@ -573,5 +603,62 @@ class ProbeCabinetHealth extends Command
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Scope for soft TG title — derived from failure messages, not a fixed label.
+     *
+     * @param  list<array{message: string, severity: string}>  $softFails
+     */
+    private function softAlertScope(array $softFails): string
+    {
+        $guards = false;
+        $hybrid = false;
+        $other = false;
+        foreach ($softFails as $f) {
+            $m = (string) ($f['message'] ?? '');
+            if (str_starts_with($m, 'guards/') || str_starts_with($m, 'guards:')) {
+                $guards = true;
+            } elseif (
+                str_contains($m, 'hybrid ')
+                || str_contains($m, 'hybrid /')
+                || str_contains($m, '/library')
+                || str_contains($m, '/progress')
+                || str_contains($m, '/access')
+            ) {
+                $hybrid = true;
+            } else {
+                $other = true;
+            }
+        }
+
+        $parts = [];
+        if ($guards) {
+            $parts[] = 'guards';
+        }
+        if ($hybrid) {
+            $parts[] = 'hybrid';
+        }
+        if ($other) {
+            $parts[] = $parts === [] ? 'опциональные проверки' : 'прочее';
+        }
+
+        return $parts === [] ? 'некритичные проверки' : implode(' / ', $parts);
+    }
+
+    /**
+     * Stable fingerprint of the soft failure set (order-independent).
+     *
+     * @param  list<array{message: string, severity: string}>  $softFails
+     */
+    private function softFailureFingerprint(array $softFails): string
+    {
+        $messages = array_map(
+            static fn (array $f): string => (string) ($f['message'] ?? ''),
+            $softFails,
+        );
+        sort($messages);
+
+        return hash('sha256', implode("\n", $messages));
     }
 }
