@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.76.3] - 2026-07-30
+
 ### Fixed
 - **`worktree_bootstrap.ps1` не парсился целиком — обратная кавычка съела закрывающую (H1929, догон 3).** В [1.76.2](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.76.2) предупреждение заканчивалось на `` `Remove-Item … $here` ``: внутри двойных кавычек PowerShell трактует `` ` `` как escape, поэтому завершающая кавычка экранировала закрывающую `"` — строка не закрывалась, и **весь файл** падал с `ParserError` на следующей же строке. То есть релиз 1.76.2 содержал нерабочий скрипт. Поймано на первом запуске после релиза.
 - **Заведён гейт, из-за отсутствия которого это и уехало: [`powershell-syntax.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/powershell-syntax.yml)** — парсит каждый `.ps1` в репозитории (`Parser::ParseFile`, без выполнения) на push и PR, затрагивающих `.ps1`. Секунды на прогон. PHP-набор про `.ps1` ничего не знал, а сам скрипт до мержа не запускался — синтаксическую поломку ловить было нечем. Executor: Opus 5 1M (`claude-opus-5[1m]`).
@@ -1732,7 +1734,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.2...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.3...HEAD
+[1.76.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.2...v1.76.3
 [1.76.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.1...v1.76.2
 [1.76.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...v1.76.1
 [1.76.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...v1.76.0
