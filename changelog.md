@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **samskrtam VPS heartbeat marked wired** in [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §2.2 (cron `*/5` live). Executor: Grok 4.5 (`grok-4.5`).
+
 ### Added
 - **Канон uptime-inventory для агентов — Better Stack.** [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) (+ metadoc): HTTP + heartbeats samskrte / samskrtam / Cologne, env-ключи без TOKEN, VPS paths для cologne-cdsl-heartbeat, smoke. Указатели: `server-resource-guards.md` §3/§6, DEPLOY_QUEUE H1794, `.env.example`. healthchecks.io помечен obsolete. Executor: Grok 4.5 (`grok-4.5`).
 - **samskrtam.ru probe-from-VPS heartbeat script** (Cologne pattern). `/usr/local/sbin/samskrtam-heartbeat.sh` on samskrte: curl home + `/parallel-corpus` + keywords → Better Stack. Cron after `SAMSKRTAM_HEARTBEAT_URL` in `/etc/default/samskrtam-heartbeat`. Doc §2.2. Executor: Grok 4.5 (`grok-4.5`).
