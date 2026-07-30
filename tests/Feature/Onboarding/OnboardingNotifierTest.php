@@ -33,7 +33,27 @@ class OnboardingNotifierTest extends TestCase
         event(new Login('web', $user, false));
 
         Queue::assertPushed(SendTelegramChatMessageJob::class, fn (SendTelegramChatMessageJob $job) => $job->chatId === '-1009998887770'
-            && str_contains($job->text, 'Первый вход'));
+            && str_contains($job->text, 'Первый вход')
+            && ! str_contains($job->text, 'SYNTHETIC'));
+    }
+
+    /** @test */
+    public function first_login_of_placeholder_email_is_labeled_synthetic(): void
+    {
+        // H1939 live pay probe pattern — RFC reserved domain, not a student.
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'login_count' => 0,
+            'name' => 'H1939 Pay 20260730150332',
+            'email' => 'h1939.pay.20260730150332@example.invalid',
+        ]);
+
+        event(new Login('web', $user, false));
+
+        Queue::assertPushed(SendTelegramChatMessageJob::class, fn (SendTelegramChatMessageJob $job) => $job->chatId === '-1009998887770'
+            && str_contains($job->text, 'Первый вход')
+            && str_contains($job->text, 'SYNTHETIC / TEST')
+            && str_contains($job->text, 'не настоящий студент'));
     }
 
     /** @test */
@@ -88,6 +108,12 @@ class OnboardingNotifierTest extends TestCase
         User::factory()->create([
             'is_admin' => false, 'login_count' => 0,
             'email' => 'ivan_1234@no-email.com', 'note' => 'импорт'.$sent,
+        ]);
+
+        // Live-probe placeholder @example.invalid — тоже исключается (H1946)
+        User::factory()->create([
+            'is_admin' => false, 'login_count' => 0,
+            'email' => 'h1939.pay@example.invalid', 'note' => 'probe'.$sent,
         ]);
 
         // Админ со штампом — исключается
