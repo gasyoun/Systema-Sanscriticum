@@ -6,12 +6,15 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Support\Roles;
+use App\Support\ServerGuards\GuardSpec;
+use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\FakeSystemInspector;
 use Tests\TestCase;
 
 /**
@@ -146,6 +149,73 @@ class CabinetProbeTest extends TestCase
         $this->artisan('cabinet:probe', ['--dry' => true])->assertSuccessful();
 
         Http::assertNothingSent();
+    }
+
+    /**
+     * H1931 item 3: SystemInspector is container-bound so a fake proves
+     * cabinet:probe really wires guards:verify into the health verdict.
+     * Before the bind, `new ShellSystemInspector` inside the command made this
+     * untestable without a live Linux prod host.
+     */
+    public function test_critical_guard_finding_reaches_probe_verdict_via_di(): void
+    {
+        config([
+            'services.test_manager.password' => '',
+            'services.test_student.password' => '',
+            'cabinet_probe.public_surfaces' => [],
+            'cabinet_probe.ping_url' => '',
+            'cabinet_probe.check_server_guards' => true,
+            'server_guards.verify_enabled' => true,
+            'server_guards.spec_path' => base_path('scripts/server_guards.conf'),
+            'server_guards.template_root' => base_path('scripts/server_guards'),
+        ]);
+
+        $spec = GuardSpec::fromFile(base_path('scripts/server_guards.conf'));
+        $fake = FakeSystemInspector::healthy(
+            $spec,
+            base_path('scripts/server_guards'),
+            (string) file_get_contents(base_path('scripts/server_guards/manifest.psv')),
+        );
+        $fake->active['earlyoom'] = false;
+        $this->app->instance(SystemInspector::class, $fake);
+
+        $code = Artisan::call('cabinet:probe', ['--dry' => true]);
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out); // probe is fail-open on exit code
+        $this->assertStringContainsString('Кабинет болен', $out);
+        $this->assertStringContainsString('guards/', $out);
+        $this->assertStringContainsString('earlyoom', $out);
+        $this->assertStringContainsString('[critical]', $out);
+    }
+
+    public function test_healthy_fake_inspector_marks_guards_ok_via_di(): void
+    {
+        config([
+            'services.test_manager.password' => '',
+            'services.test_student.password' => '',
+            'cabinet_probe.public_surfaces' => [],
+            'cabinet_probe.ping_url' => '',
+            'cabinet_probe.check_server_guards' => true,
+            'server_guards.verify_enabled' => true,
+            'server_guards.spec_path' => base_path('scripts/server_guards.conf'),
+            'server_guards.template_root' => base_path('scripts/server_guards'),
+        ]);
+
+        $spec = GuardSpec::fromFile(base_path('scripts/server_guards.conf'));
+        $fake = FakeSystemInspector::healthy(
+            $spec,
+            base_path('scripts/server_guards'),
+            (string) file_get_contents(base_path('scripts/server_guards/manifest.psv')),
+        );
+        $this->app->instance(SystemInspector::class, $fake);
+
+        $code = Artisan::call('cabinet:probe', ['--dry' => true]);
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out);
+        $this->assertStringContainsString('Кабинет жив', $out);
+        $this->assertStringContainsString('Предохранители ОС на месте', $out);
     }
 
     public function test_no_ping_url_still_runs_checks_without_http(): void

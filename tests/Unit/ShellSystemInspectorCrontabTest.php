@@ -95,5 +95,3 @@ class ShellSystemInspectorCrontabTest extends TestCase
         $this->assertSame($own, $inspector->crontabFor($me));
     }
 }
-
-

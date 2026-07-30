@@ -10,7 +10,7 @@ use App\Support\Roles;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
-use App\Support\ServerGuards\ShellSystemInspector;
+use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
@@ -193,7 +193,7 @@ class ProbeCabinetHealth extends Command
         try {
             $auditor = new ServerGuardsAuditor(
                 GuardSpec::fromFile((string) config('server_guards.spec_path')),
-                new ShellSystemInspector,
+                app(SystemInspector::class),
                 (string) config('server_guards.template_root'),
             );
             $findings = $auditor->audit();

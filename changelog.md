@@ -3,10 +3,12 @@
 ## [1.79.2] - 2026-07-30
 
 ### Changed
-- **H1939 wave-1 marathon activation pass (evidence, not LIVE).** Prod smoke A–C green (landing 200, register→enrollment, Tochka hosted checkout 302); D/E PARK (magnet bot token placeholder; Yandex SMTP 554). LandingPage variant A applied; Schedule #1122 start set to 2026-08-28 19:00. Deploy truth = auto-deploy cron (GHA #828 still no-op without Environment secrets). Runbook: [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md). Executor: Grok 4.5 (`grok-4.5`).
+- **SystemInspector DI for cabinet:probe / guards:verify (H1931 item 3 / H1942).** Both commands used 
+ew ShellSystemInspector inline, so no test could prove a critical guards finding actually reaches the probe verdict without a live Linux host. Bound SystemInspector → ShellSystemInspector in AppServiceProvider; commands resolve via the container. Two CabinetProbe tests swap in FakeSystemInspector (earlyoom down → «Кабинет болен» + guards/…earlyoom; healthy fake → «Предохранители ОС на месте»). Prod default binding unchanged. Executor: Grok 4.5 (grok-4.5).
+- **H1939 wave-1 marathon activation pass (evidence, not LIVE).** Prod smoke A–C green (landing 200, register→enrollment, Tochka hosted checkout 302); D/E PARK (magnet bot token placeholder; Yandex SMTP 554). LandingPage variant A applied; Schedule #1122 start set to 2026-08-28 19:00. Deploy truth = auto-deploy cron (GHA #828 still no-op without Environment secrets). Runbook: [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md). Executor: Grok 4.5 (grok-4.5).
 
 ### Fixed
-- **Soft-TG cabinet:probe больше не спамит каждые 15 мин.** Отдельный cooldown (`CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`, default = critical 60) + fingerprint набора soft-fail: тот же набор глушится, другой (или `--force-alert`) шлёт сразу. Заголовок soft-алерта теперь **по scope** (`guards` / `hybrid` / …), а не фиксированная «hybrid / guards». Executor: Grok 4.5 (`grok-4.5`).
+- **Soft-TG cabinet:probe больше не спамит каждые 15 мин.** Отдельный cooldown (CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN, default = critical 60) + fingerprint набора soft-fail: тот же набор глушится, другой (или --force-alert) шлёт сразу. Заголовок soft-алерта теперь **по scope** (guards / hybrid / …), а не фиксированная «hybrid / guards». Executor: Grok 4.5 (grok-4.5).
 
 ## [1.79.1] - 2026-07-30
 
