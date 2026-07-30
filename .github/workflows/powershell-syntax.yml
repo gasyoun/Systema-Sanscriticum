@@ -1,0 +1,47 @@
+# Парсинг всех .ps1 без выполнения.
+#
+# Заведено после H1929: скрипт scripts/worktree_bootstrap.ps1 ушёл в релиз с
+# ParserError — завершающая обратная кавычка внутри двойных кавычек съела
+# закрывающую кавычку, и файл перестал парситься ЦЕЛИКОМ. Ни один тест этого не
+# видел: PHP-набор про .ps1 ничего не знает, а сам скрипт до мержа не запускался.
+# Проверка стоит секунды и ловит ровно этот класс — синтаксис, а не поведение.
+name: PowerShell syntax
+
+on:
+  push:
+    paths:
+      - '**/*.ps1'
+      - '.github/workflows/powershell-syntax.yml'
+  pull_request:
+    paths:
+      - '**/*.ps1'
+      - '.github/workflows/powershell-syntax.yml'
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse every .ps1
+        shell: pwsh
+        run: |
+          $failed = $false
+          $files = Get-ChildItem -Path . -Filter *.ps1 -Recurse -File
+          if ($files.Count -eq 0) {
+            Write-Host 'Нет .ps1 — проверять нечего.'
+            exit 0
+          }
+          foreach ($file in $files) {
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors)
+            if ($errors -and $errors.Count -gt 0) {
+              $failed = $true
+              foreach ($e in $errors) {
+                Write-Host ("::error file={0},line={1}::{2}" -f $file.FullName, $e.Extent.StartLineNumber, $e.Message)
+              }
+            } else {
+              Write-Host ("ok  {0}" -f $file.FullName)
+            }
+          }
+          if ($failed) { exit 1 }
