@@ -711,9 +711,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 ## Прод: uptime / мониторинг
 
-Канон для агентов и людей (Better Stack, inventory, **FAQ «сайт упал» → шаги**):
-
-[docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)
+| Для кого | Документ |
+|---|---|
+| **Люди** (что красное, кого звать) | [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) |
+| **Агенты** (inventory, env-ключи, smoke, §5 runbook) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
 OS-предохранители (OOM/cron): [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 
