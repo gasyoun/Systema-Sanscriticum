@@ -7,6 +7,8 @@ namespace App\Jobs;
 use App\Models\LandingBot;
 use App\Models\Lead;
 use App\Services\Leads\LeadMagnetDispatcher;
+use App\Services\Marathon\MarathonDay1Sender;
+use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -75,6 +77,13 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         if (! $lead->telegram_chat_id) {
             $lead->update(['telegram_chat_id' => $chatId]);
         }
+
+        // H1939 residual / product ruling: Day 1 marathon drip immediately after
+        // /start (not next calendar day). Idempotent via day1_completed_at; cron
+        // marathon:deliver-due still catch-ups if this path was missed.
+        $lead = $lead->fresh() ?? $lead;
+        $channel = app(DeliveryChannelManager::class)->get('telegram');
+        MarathonDay1Sender::trySendIfPending($lead, $channel, ignorePersonalDay: true);
 
         // Сразу, если у лендинга нет вебинара или окно [старт−offset; старт+грейс]
         // уже открыто; иначе выдаст планировщик magnets:deliver-due.
