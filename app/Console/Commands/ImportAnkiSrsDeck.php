@@ -22,7 +22,7 @@ use RuntimeException;
  * media published to the public disk (`storage/app/public/srs/anki_{id}/`) and
  * referenced from card fields, and romanization mapped into the `iast` identity
  * slot (Latin key; not true IAST). Review UI plays/shows media via
- * {@see \App\Services\Srs\SrsMedia}.
+ * {@see SrsMedia}.
  *
  * Idempotent: Dictionary / SrsNoteType / SrsDeck / DictionaryWord / SrsCard are
  * firstOrCreate'd on stable keys — re-runs never duplicate cards; media is

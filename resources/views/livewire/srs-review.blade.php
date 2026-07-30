@@ -6,19 +6,39 @@
         else if (['1','2','3','4'].includes(event.key)) { if (revealed) { event.preventDefault(); $wire.grade(parseInt(event.key)); } }
      ">
 
+    @if($isGuest)
+        <div class="mb-6 rounded-2xl border border-[#E85C24]/30 bg-orange-50 px-4 py-3 text-sm text-gray-700">
+            <span class="font-bold text-[#E85C24]">Пробный режим.</span>
+            Прогресс не сохраняется.
+            <a href="{{ url('/login') }}" class="font-bold text-[#E85C24] underline hover:no-underline">Войдите</a>
+            или
+            <a href="{{ url('/login') }}" class="font-bold text-[#E85C24] underline hover:no-underline">зарегистрируйтесь</a>,
+            чтобы учить с интервальными повторениями и сохранять результат.
+        </div>
+    @endif
+
     {{-- Заголовок + выбор колоды --}}
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-[#101010] tracking-tight">Карточки</h1>
-            <p class="text-gray-500">Интервальные повторения — учите санскрит по чуть-чуть каждый день.</p>
+            <h1 class="text-3xl font-extrabold text-[#101010] tracking-tight">
+                {{ $deck?->name ?? 'Карточки' }}
+            </h1>
+            <p class="text-gray-500">{{ $tagline }}</p>
         </div>
 
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {{-- url() not route(): Livewire unit tests boot without SRS route registration --}}
-            <a href="{{ url('/dvaram/srs/decks') }}"
-               class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
-                Мои колоды
-            </a>
+            @unless($isGuest)
+                {{-- url() not route(): Livewire unit tests boot without SRS route registration --}}
+                <a href="{{ url('/dvaram/srs/decks') }}"
+                   class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
+                    Мои колоды
+                </a>
+            @else
+                <a href="{{ url('/srs') }}"
+                   class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
+                    Все колоды
+                </a>
+            @endunless
             @if($decks->count() > 1)
                 <select wire:model.live="deckId"
                         class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium cursor-pointer">
@@ -33,7 +53,11 @@
     {{-- Счётчик оставшихся --}}
     <div class="mb-4 flex items-center gap-2 text-sm font-bold text-gray-400">
         <i class="fas fa-layer-group text-[#E85C24]"></i>
-        <span>Осталось на сегодня: <span class="text-gray-700">{{ $remaining }}</span></span>
+        @if($isGuest)
+            <span>Осталось в пробе: <span class="text-gray-700">{{ $remaining }}</span></span>
+        @else
+            <span>Осталось на сегодня: <span class="text-gray-700">{{ $remaining }}</span></span>
+        @endif
     </div>
 
     @if($card)
@@ -118,13 +142,29 @@
                                 class="flex flex-col items-center py-3 px-2 rounded-2xl border {{ $b[2] }} {{ $b[1] }} font-bold transition-colors">
                             <span class="text-[10px] font-bold text-gray-400 mb-1">{{ $val }}</span>
                             <span>{{ $b[0] }}</span>
-                            <span class="text-xs font-medium opacity-70 mt-1">{{ $this->formatInterval($previews[$val] ?? 0) }}</span>
+                            @unless($isGuest)
+                                <span class="text-xs font-medium opacity-70 mt-1">{{ $this->formatInterval($previews[$val] ?? 0) }}</span>
+                            @endunless
                         </button>
                     @endforeach
                 </div>
             @endunless
         </div>
 
+    @elseif($guestLimitReached)
+        <div class="text-center py-16 bg-white rounded-[2rem] border border-dashed border-[#E85C24]/40 px-6">
+            <div class="w-20 h-20 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4 text-[#E85C24]">
+                <i class="fas fa-lock text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Пробные карточки закончились</h3>
+            <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                Зарегистрируйтесь бесплатно — прогресс сохранится, и интервальные повторения подстроятся под вас.
+            </p>
+            <a href="{{ url('/login') }}"
+               class="inline-flex items-center justify-center px-8 py-4 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
+                Войти или зарегистрироваться
+            </a>
+        </div>
     @else
         {{-- Пусто: всё повторено --}}
         <div class="text-center py-20 bg-white rounded-[2rem] border border-dashed border-gray-200">

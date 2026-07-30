@@ -33,7 +33,10 @@ class SrsFlagOverrideTest extends TestCase
     {
         $this->assertTrue(config('srs.enabled'));
         $this->assertTrue(app('router')->has('student.srs'));
+        $this->assertTrue(app('router')->has('student.srs.deck'));
         $this->assertTrue(app('router')->has('student.srs.stats'));
         $this->assertTrue(app('router')->has('student.srs.decks'));
+        $this->assertTrue(app('router')->has('srs.index'));
+        $this->assertTrue(app('router')->has('srs.deck'));
     }
 }
