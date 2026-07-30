@@ -8,4 +8,9 @@
 # и рестартует Horizon через supervisorctl — прикладному пользователю это
 # недоступно, поэтому строка живёт в root-кроне, а не в кроне @@APP_USER@@.
 # Все guard-механики (замок, предохранитель, здоровье) — внутри обёртки.
+#
+# PATH обязателен: cron-умолчание /usr/bin:/bin не видит composer в
+# /usr/local/bin — первый живой цикл умер на этом (код 127). Обёртка дублирует
+# этот PATH у себя, строка здесь — второй ремень.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 @@AUTO_DEPLOY_SCHEDULE@@ /usr/local/sbin/systema-auto-deploy-run.sh >> @@APP_DIR@@/storage/logs/auto_deploy.log 2>&1
