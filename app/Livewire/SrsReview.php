@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Models\SrsDeck;
 use App\Services\Srs\Rating;
 use App\Services\Srs\ReviewService;
+use App\Services\Srs\SrsMedia;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -76,6 +77,15 @@ class SrsReview extends Component
 
         $service->grade(auth()->user(), $card, Rating::from($rating));
         $this->revealed = false;
+    }
+
+    /**
+     * Public URL for a card audio/image field, or null if missing/unresolvable.
+     * Used by the review Blade for Anki-imported media (H1970 follow-up).
+     */
+    public function mediaUrl(?string $path): ?string
+    {
+        return SrsMedia::url($path, $this->currentDeck());
     }
 
     /** Секунды → короткая русская подпись интервала для кнопок. */

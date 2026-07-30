@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Anki SRS media in review UI + agent manual.** Import publishes `media/` to `storage/app/public/srs/anki_{id}/`; review loop shows audio (front) + image (reveal) via `SrsMedia`. Agent ops: [docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.80.2] - 2026-07-30
 ### Changed
 - **Marathon: required name + admin quiz reset.** Landing form: name is required (min 2). Filament «Марафон: опросы» lists all enrollments with Сброс Д1 / Д2 / Д1+Д2 (`resetQuizEngagement` — clears engaged_at + quiz_seconds only). Executor: Grok 4.5 (`grok-4.5`).

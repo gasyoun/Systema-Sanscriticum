@@ -11,6 +11,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -24,6 +25,12 @@ class ImportAnkiSrsDeckTest extends TestCase
     private function fixturePath(): string
     {
         return base_path('tests/fixtures/anki_sample');
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('public');
     }
 
     public function test_imports_note_type_deck_words_and_cards(): void
@@ -50,7 +57,11 @@ class ImportAnkiSrsDeckTest extends TestCase
         $this->assertSame('हफ्ता', $card->fields['devanagari']);
         $this->assertSame('hafTaa', $card->fields['iast']);
         $this->assertSame('week', $card->fields['translation']);
-        $this->assertSame('media/284860.mp3', $card->fields['audio']);
+        $this->assertSame('srs/anki_TEST4546/284860.mp3', $card->fields['audio']);
+        $this->assertSame('srs/anki_TEST4546/22019_96square.jpg', $card->fields['image']);
+
+        Storage::disk('public')->assertExists('srs/anki_TEST4546/284860.mp3');
+        Storage::disk('public')->assertExists('srs/anki_TEST4546/22019_96square.jpg');
 
         $dictionary = Dictionary::where('name', 'Anki import — deck TEST4546')->firstOrFail();
         $this->assertSame($dictionary->id, $hafta->dictionary_id);
