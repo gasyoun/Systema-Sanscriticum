@@ -9,7 +9,32 @@
 # that can't be signaled (D-state) can't be told apart from in a black-box test.
 #
 # Usage: bash scripts/server_guards/sbin/test_systema_schedule_run.sh
+#
+# SAFETY (added 30-07-2026 after a live-fire incident): reap() inside the
+# wrapper under test does a SYSTEM-WIDE `pgrep -f "artisan"` -- it is NOT
+# scoped to this test's temp dir. Running this on a host that also has a real
+# cron calling the real /usr/local/sbin/systema-schedule-run.sh WILL SIGKILL
+# live production schedule:run processes if this test's (deliberately short)
+# MAX_SECONDS/STALE_SECONDS window is shorter than how long those real
+# processes have been running -- confirmed on prod (H1973 follow-up,
+# 30-07-2026): a real `schedule:run` invocation got killed mid-tick, rc=137 in
+# schedule.log, while this test ran with MAX_SECONDS=60 against a real prod
+# cron tuned for 900s. No lasting damage that time (nothing was queued to
+# post at that exact moment), but it was luck, not design. So this script
+# refuses to run on any host where the real wrapper is installed, unless
+# explicitly overridden.
 set -euo pipefail
+
+if [ -e /usr/local/sbin/systema-schedule-run.sh ] && [ -z "${H1973_TEST_ALLOW_MANAGED_HOST:-}" ]; then
+  echo "REFUSING TO RUN: /usr/local/sbin/systema-schedule-run.sh exists on this host." >&2
+  echo "This looks like a machine with a REAL cron calling the real wrapper -- reap()'s" >&2
+  echo "system-wide 'pgrep -f artisan' can kill live schedule:run processes (see the" >&2
+  echo "SAFETY note in this script's header for the incident this guards against)." >&2
+  echo "Run this on a disposable dev box/CI runner instead. If you have verified no" >&2
+  echo "live cron is calling the real wrapper right now, override with:" >&2
+  echo "  H1973_TEST_ALLOW_MANAGED_HOST=1 bash $0" >&2
+  exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$SCRIPT_DIR/systema-schedule-run.sh"
