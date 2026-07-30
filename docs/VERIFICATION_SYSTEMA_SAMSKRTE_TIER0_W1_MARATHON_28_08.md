@@ -10,20 +10,20 @@ Index: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Sys
 
 | ID | Criterion | How to prove | Pass |
 |---|---|---|---|
-| **A** | Landing HTTP 200 | `curl -sI https://samskrte.ru/<marathon-path>` → `200` | |
-| **B** | Register creates enrollment | Submit form (or artisan tinker factory) → row in `marathon_enrollments` + Lead | |
-| **C** | ₽500 Tochka path | Checkout reaches Tochka; success path returns to site (live charge only if ops-safe) | |
-| **D** | TG day message | Bot delivers Day 1 (or manual `marathon:deliver-due` after start) within schedule window | |
-| **E** | Email deliver | Transactional mail received (not stuck in mailpit); screenshot or IMAP | |
+| **A** | Landing HTTP 200 | `curl -sI https://samskrte.ru/<marathon-path>` → `200` | **PASS** 30-07-2026 H1939 · `/online/konsultaciya` 200 |
+| **B** | Register creates enrollment | Submit form (or artisan tinker factory) → row in `marathon_enrollments` + Lead | **PASS** 30-07-2026 H1939 · enrollment id=2+ |
+| **C** | ₽500 Tochka path | Checkout reaches Tochka; success path returns to site (live charge only if ops-safe) | **PASS** 30-07-2026 H1939 · 302 `merch.tochka.com` (charge not completed) |
+| **D** | TG day message | Bot delivers Day 1 (or manual `marathon:deliver-due` after start) within schedule window | **FAIL/PARK** · placeholder `tg_bot_token` |
+| **E** | Email deliver | Transactional mail received (not stuck in mailpit); screenshot or IMAP | **FAIL/PARK** · Yandex SMTP 554 spam |
 
-All five required (D17). Partial green ⇒ status **BLOCKED**, not LIVE.
+All five required (D17). Partial green ⇒ status **BLOCKED**, not LIVE. H1939: **BLOCKED**.
 
 ## 2. DR gates
 
 | ID | Criterion | How to prove | Pass / PARK |
 |---|---|---|---|
-| **DR1** | Off-site backup this week | `php artisan backup:list` or WebDAV listing under `/Backups/systema-sanscriticum` with mtime ≤ 8 days | |
-| **DR2** | Uptime TG dry-fire | Actions secrets set + test notification **or** documented PARK if no admin | |
+| **DR1** | Off-site backup this week | `php artisan backup:list` or WebDAV listing under `/Backups/systema-sanscriticum` with mtime ≤ 8 days | **PARK** off-site; local healthy ≤8d |
+| **DR2** | Uptime TG dry-fire | Actions secrets set + test notification **or** documented PARK if no admin | **PARK** TG secrets; HTTP uptime job green |
 
 PARK allowed under D26; LIVE claim for marathon may still be made if A–E pass, but runbook must flag **DR incomplete** and residual `@DO` for secrets.
 
@@ -31,14 +31,14 @@ PARK allowed under D26; LIVE claim for marathon may still be made if A–E pass,
 
 | ID | Criterion | How to prove |
 |---|---|---|
-| **DEP1** | Prod SHA matches intended | SSH: `git rev-parse HEAD` equals merged SHA |
-| **DEP2** | Not CI no-op only | Either successful Actions deploy log with remote commands **or** Evidence line of agent `deploy.sh` |
+| **DEP1** | Prod SHA matches intended | SSH: `git rev-parse HEAD` equals merged SHA · **PASS** H1939 `93d1d81e…` = origin/main |
+| **DEP2** | Not CI no-op only | Either successful Actions deploy log with remote commands **or** Evidence line of agent `deploy.sh` · **PASS** root cron `systema-auto-deploy-run.sh` (GHA deploy.yml still secrets-empty no-op #828) |
 
 ## 4. ORS CTA
 
 | ID | Criterion | How to prove |
 |---|---|---|
-| **ORS1** | ≥1 live surface | URL + navigation steps in runbook; click reaches marathon landing |
+| **ORS1** | ≥1 live surface | URL + navigation steps in runbook; click reaches marathon landing · **PASS** homepage → `/konsultaciya-po-onlayn-kursam` 200 |
 
 ## 5. Code quality (if app/workflow changed)
 
