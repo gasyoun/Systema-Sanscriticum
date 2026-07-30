@@ -481,10 +481,19 @@ Severity в `guards:verify` зависит от исхода: метка `[rolle
 каждые 15 минут, пока человек не разберется и не удалит файл. Пропажа
 cron-строки — warning (деплои молча остановятся, но аварии нет).
 
+**Зеркало root-crontab (H1941).** `cabinet:probe` / `guards:verify` крутятся от
+`www-data` и не читают `/var/spool/cron/crontabs/root` (600). Снимок
+`storage/app/server_guards/crontab-root.installed` (644) пишут: (1) эта
+обёртка **каждый** `*/30` после flock — даже когда `HEAD` уже на `main` и
+деплоить нечего; (2) `deploy.sh` перед `guards:verify`; (3)
+`server_guards_apply.sh` после установки root-cron. Без (1) снимок старел
+между деплоями, и soft-probe мог не увидеть ручное снятие auto-deploy.
+
 ```sh
 tail -20 /var/www/html/storage/logs/auto_deploy.log   # что делал авто-деплой
 cat /var/www/html/storage/auto_deploy.disabled        # почему стоит (если стоит)
 rm /var/www/html/storage/auto_deploy.disabled         # снять предохранитель после разбора
+cat /var/www/html/storage/app/server_guards/crontab-root.installed  # снимок root-cron для probe
 ```
 
 _Dr. Mārcis Gasūns_
