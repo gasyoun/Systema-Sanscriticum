@@ -1712,7 +1712,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.73.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...HEAD
+[1.75.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.74.0...v1.75.0
+[1.74.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.73.0...v1.74.0
 [1.73.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.72.0...v1.73.0
 [1.72.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.71.0...v1.72.0
 [1.71.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.70.0...v1.71.0
