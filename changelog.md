@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Changed
+- **Uptime RU: «если сайт упал» + [@rusamskrtam](https://t.me/rusamskrtam).** [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) leads with site-down / red-email-or-Telegram first steps; audience = letter or @rusamskrtam red alert. CLAUDE/README/EN pointers. Executor: Grok 4.5 (`grok-4.5`).
 - **Marathon Day 1 immediately after Telegram `/start`.** After magnet deep-link binds `telegram_chat_id`, Day 1 drip text is sent at once (no wait for next calendar day). Cron `marathon:deliver-due` remains the catch-up path; `day1_completed_at` keeps both paths idempotent. Shared `MarathonDay1Sender`. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added

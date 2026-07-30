@@ -5,7 +5,7 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
 
-**Humans (Russian, non-ops):** short “what is red / who to call” guide →
+**Humans (Russian):** «сайт упал / пришло красное в [@rusamskrtam](https://t.me/rusamskrtam)» →
 [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md).
 
 **Canonical inventory** of external uptime / silence monitoring for samskrte.ru,

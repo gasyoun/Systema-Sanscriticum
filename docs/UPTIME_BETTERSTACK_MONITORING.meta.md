@@ -5,7 +5,7 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 | | |
 |---|---|
 | **Purpose** | Agent-facing inventory of Better Stack HTTP + heartbeat monitors, prod wiring, and §5 runbook when something is red. Russian short twin for humans. |
-| **Audience** | EN: agents. RU: humans on call (no secrets). |
+| **Audience** | EN: agents. RU: humans when site is down or red alert (email / [@rusamskrtam](https://t.me/rusamskrtam)); no secrets. |
 | **Provenance** | Session 30-07-2026 (soft-fail H1941 → Better Stack). Model: Grok 4.5 (`grok-4.5`). Issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891). FAQ §5 + RU twin same day. |
 | **Not for** | Live outage board (→ Uprava SERVER_OUTAGES); OS memory guards detail (→ server-resource-guards.md). |
 | **Inbound links** | Systema `CLAUDE.md` § Ops/uptime · `README.md` · DEPLOY_QUEUE H1794 · server-resource-guards · SERVER_OUTAGES top |
