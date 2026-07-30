@@ -30,6 +30,12 @@
 #    guards:verify даёт за неё warning вместо critical.
 set -uo pipefail
 
+# Debian-cron даёт PATH=/usr/bin:/bin — composer живёт в /usr/local/bin, и
+# первый живой цикл 30-07-2026 10:00Z умер на этом с кодом 127 (предохранитель
+# сработал штатно). Полный PATH выставляем здесь, а не только в crontab: обёртка
+# обязана работать одинаково из cron, руками и из чужого вызова.
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 APP_DIR=${SYSTEMA_APP_DIR:-@@APP_DIR@@}
 MAX=${SYSTEMA_AUTO_DEPLOY_MAX:-@@AUTO_DEPLOY_MAX_SECONDS@@}
 MIN_MB=${SYSTEMA_AUTO_DEPLOY_MIN_MB:-@@AUTO_DEPLOY_MIN_AVAILABLE_MB@@}
