@@ -2,11 +2,11 @@
 
 _Created: 30-07-2026 · Last updated: 30-07-2026_
 
-**Handoff:** [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md)  
+**Handoff:** [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md)  
 **Live:** [https://samskrte.ru/online/konsultaciya](https://samskrte.ru/online/konsultaciya)  
 **Methods:** [Taste-skill orchestration](https://github.com/gasyoun/Uprava/blob/main/docs/TASTE_SKILL_ORCHESTRATION_FABLE_REDESIGN_PIPELINE_2026.md) · [/useit Nielsen pass](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md)  
 **Author session:** Grok 4.5 (`grok-4.5`) executing Fable-tier design packet  
-**Status:** Design-only — **do not ship production CSS** until a human picks A/B/C/D (or hybrid).
+**Status:** Design packet landed ([PR #921](https://github.com/gasyoun/Systema-Sanscriticum/pull/921)). **Multi-direction (30-07-2026):** **no human single-winner pick** — keep **A–D concurrent** (B = default variant only). Production CSS ships as multi-dir implement, not one chosen skin.
 
 ---
 
@@ -38,25 +38,34 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 
 **Design Read:** redesign-overhaul of cold-traffic education landing for FB/VK adults who fear Sanskrit is inaccessible; preserve brand orange + funnel fields; fix theme collision first.
 
-| Direction | Aesthetic lock | VARIANCE | MOTION | DENSITY |
-|---|---|---|---|---|
-| A Dark-native | high-end night shop | 5 | 3 | 5 |
-| **B Light island (rec.)** | **minimalist-ui** | **4** | **2** | **3** |
-| C Warm paper | editorial serif/ivory | 5 | 2 | 4 |
-| D Stepped flow | conversion GetCourse-like | 3 | 4 | 4 |
+| Direction | Aesthetic lock | VARIANCE | MOTION | DENSITY | Role |
+|---|---|---|---|---|---|
+| A Dark-native | high-end night shop | 5 | 3 | 5 | concurrent variant |
+| **B Light island** | **minimalist-ui** | **4** | **2** | **3** | **default variant** (not sole winner) |
+| C Warm paper | editorial serif/ivory | 5 | 2 | 4 | concurrent variant |
+| D Stepped flow | conversion GetCourse-like | 3 | 4 | 4 | concurrent variant |
 
 ---
 
-## Recommended pick: **Direction B — Light minimalist island**
+## Multi-direction policy (not a single pick)
 
-1. Fixes unreadable contrast via **O2** (light canvas under dark header) without redesigning entire shop shell.
-2. Matches cold ad traffic expectations (white/education pages) better than pure night shop.
-3. Lowest implementer risk on current blade: wrap + token swap, keep one-column form.
-4. Addresses useit Must-fix set with S–M effort; mockup fully specified below.
-5. Still keeps `#E85C24` and can reuse shop header/footer.
+**Ruled 30-07-2026:** a human will **not** choose one of A–D. **Several directions ship at once** as concurrent visual variants (same idea as H1067 copy A/B, but for chrome/layout).
 
-**Runner-up:** A if MG prioritizes full shop visual continuity over cold-traffic familiarity.  
-**Hotfix only (no full redesign):** A token pass on current blade — still needs human OK.
+| Axis | Mechanism (implement target) |
+|---|---|
+| Visual direction | e.g. `MARATHON_LANDING_VISUAL_VARIANT=a\|b\|c\|d` (or query `?skin=`) + Blade partials / CSS packs under `resources/views/marathon/` |
+| Copy (H1067) | existing `MARATHON_LANDING_COPY_VARIANT` — independent of visual skin |
+| Default | **B** if unset — cold-traffic safe; A/C/D remain first-class |
+
+Why B is a good **default** (not a kill switch for A/C/D):
+
+1. O2 light island fixes contrast without rewriting whole shop shell.
+2. Matches cold FB/VK education-page expectations.
+3. Lowest risk wrap on current blade.
+4. Covers useit Must-fix set at S–M effort.
+5. Keeps `#E85C24` + shop header/footer.
+
+**Contrast floor applies to every variant** before it is considered shippable (no grey-on-`#0A0D14`).
 
 ---
 
@@ -135,7 +144,7 @@ Optional v2 (Sonnet): poll `GET …/status/{token}` → «Бот подключ�
 
 ---
 
-## Direction B — Light minimalist island (**recommended**)
+## Direction B — Light minimalist island (**default variant**)
 
 **Thesis:** Calm modern edtech paper under shop header — opens Sanskrit for cold FB/VK traffic without museum dust.  
 **Layout option:** **O2** (`min-h-screen bg-stone-50 text-stone-900` content wrap).  
@@ -269,19 +278,20 @@ Same as B; ensure step titles always stone-900.
 
 ---
 
-## Implementer note (after human pick)
+## Implementer note (multi-direction — no winner pick)
 
 | Item | Detail |
 |---|---|
-| Files | `resources/views/marathon/show.blade.php` primarily; if O3: new `layouts/marathon.blade.php` reusing header/footer partials from shop |
-| Layout | B/C → **O2** wrap inside `@section('content')`; A → **O1** token rewrite; D → O2 + Alpine steps |
+| Files | `resources/views/marathon/show.blade.php` + per-direction partials/CSS (or one shell + `direction-{a,b,c,d}` includes); optional `layouts/marathon.blade.php` if O3 |
+| Layout | B/C → **O2** wrap; A → **O1** tokens; D → O2 + Alpine steps — **all retained as variants** |
+| Switch | Config (and/or query) for visual variant; default **b**; copy variant axis stays separate |
 | Do not break | H1067 copy keys; field names; routes `marathon.register` / `marathon.pay`; flash `marathon_*`; evergreen anti-urgency |
-| Skills | `blade-styling` + Playwright contrast; taste Phase 4 `image-to-code` **or** `design-taste-frontend` from winner mockup only |
-| Out of scope | VK/Max deliver-due; BotFather; Filament; Day content |
+| Skills | `blade-styling` + Playwright contrast **per direction**; taste Phase 4 from each mockup (or shared shell + direction packs). See H1966 skill-pack table for further packs. |
+| Out of scope | VK/Max deliver-due; BotFather; Filament; Day content; forcing a single skin |
 
-### Contrast hotfix (if redesign waits)
+### Contrast floor (every variant)
 
-Minimal A-path: set hero/body classes to light slate; force inputs `text-stone-900 bg-white` — still needs human OK to merge.
+Every shippable direction: body text ≥ 4.5:1; inputs `text-stone-900 bg-white` (or dark-native explicit tokens on A). No “wait for pick” hotfix path — multi-dir is the path.
 
 ---
 
@@ -302,7 +312,7 @@ Human pastes into BotFather; not a landing PR.
 
 | File | What |
 |---|---|
-| This doc | Directions A–D + audit + recommend B |
+| This doc | Directions A–D + audit + multi-dir policy (B default) |
 | [redesign/USEIT_NIELSEN_PASS_30.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md) | Full `/useit` H1–H10 |
 | [redesign/direction-a-dark.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/direction-a-dark.html) | Static mockup A |
 | [redesign/direction-b-light.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/direction-b-light.html) | Static mockup B |
@@ -313,8 +323,8 @@ Open HTML files in a browser (desktop 1280 + devtools 375). Unopened mockup is a
 
 ---
 
-## Human decision
+## Next step (no human direction pick)
 
-`@DECIDE` which direction (or hybrid) ships. Then mint Sonnet implement handoff with winner path + this packet as source of truth.
+Mint multi-dir implement handoff: concurrent A–D variants + default B; this packet + all four HTML mockups = source of truth. Append further skill packs on [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md) skill-pack table first if needed.
 
 _Dr. Mārcis Gasūns_
