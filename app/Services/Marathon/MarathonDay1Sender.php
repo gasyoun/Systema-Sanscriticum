@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Marathon;
 
+use App\Console\Commands\DeliverDueMarathonContent;
+use App\Jobs\ProcessTelegramMagnetUpdate;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Services\Messaging\Contracts\DeliveryChannel;
@@ -14,9 +16,9 @@ use Throwable;
  * Shared Day-1 drip send for the diagnostic marathon.
  *
  * Used by:
- * - {@see \App\Jobs\ProcessTelegramMagnetUpdate} — immediate send on /start
+ * - {@see ProcessTelegramMagnetUpdate} — immediate send on /start
  *   (ignores personal-day gate; user just opened the bot).
- * - {@see \App\Console\Commands\DeliverDueMarathonContent} — cron catch-up
+ * - {@see DeliverDueMarathonContent} — cron catch-up
  *   when personal day ≥ 1 (default gate).
  *
  * Idempotent via day1_completed_at.
