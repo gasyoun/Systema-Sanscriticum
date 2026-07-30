@@ -11,15 +11,16 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.79.1] - 2026-07-30
+
 ### Fixed
 - **False soft-сбой «авто-деплой молча не работает» при живом root-кроне.** `cabinet:probe` (www-data, каждые 15 мин) звал `ShellSystemInspector::crontabFor('root')`, а тот при отказе `crontab -u root -l` падал на bare `crontab -l` — это crontab **текущего** пользователя (www-data), без `systema-auto-deploy-run.sh`. Итог: soft-TG каждые 15 мин, хотя `crontab -l` от root и авто-деплой живы. Фикс: bare `crontab -l` только если `whoami === $user`; fallback на 644-зеркало `storage/app/server_guards/crontab-root.installed` (пишет `deploy.sh` и `server_guards_apply.sh`). Текст soft-алерта: «некритичные проверки: hybrid / guards». Тесты: `ShellSystemInspectorCrontabTest`. Executor: Grok 4.5 (`grok-4.5`).
+- **Self-service debt pay copied the wrong block scope (solo promises expanded to tariff full 1–100).** Cabinet debt pay now mirrors the curator grant-for-promise path: prefer blocks from conditional grant payments; without a grant open only the first unpaid block. [#878](https://github.com/gasyoun/Systema-Sanscriticum/pull/878). Executor: Grok 4.5 (`grok-4.5`).
 - **Зеркало root-crontab обновляется каждые 30 мин, даже без деплоя (H1941 follow-up).** `systema-auto-deploy-run.sh` после flock пишет `storage/app/server_guards/crontab-root.installed` **до** early-exit `HEAD==origin/main` и до breaker — иначе снимок старел, пока main не двигался, и probe мог не увидеть ручное снятие auto-deploy. После выкладки шаблона: `sudo bash scripts/server_guards_apply.sh` (иначе drift managed-file). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
 - **SAMSKRTE-TIER0 launch:** short starters `/go H1939` (no full Windows path). Executor: Grok 4.5 (`grok-4.5`).
-
-### Changed
-- **Umbrella ID SAMSKRTE-TIER0:** wave-1 docs renamed to share stem *_SYSTEMA_SAMSKRTE_TIER0_*; banner on every layer + H1939. Executor: Grok 4.5 (grok-4.5).
+- **Umbrella ID SAMSKRTE-TIER0:** wave-1 docs renamed to share stem *_SYSTEMA_SAMSKRTE_TIER0_*; banner on every layer + H1939. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.79.0] - 2026-07-30
 
@@ -1776,7 +1777,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...HEAD
+[1.79.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.0...v1.79.1
 [1.79.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.78.0...v1.79.0
 [1.78.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.77.0...v1.78.0
 [1.76.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.2...v1.76.3
