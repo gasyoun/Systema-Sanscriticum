@@ -11,6 +11,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
@@ -105,9 +106,9 @@ class SrsReviewTest extends TestCase
             'visibility' => 'system',
         ]);
 
-        \Illuminate\Support\Facades\Storage::fake('public');
-        \Illuminate\Support\Facades\Storage::disk('public')->put('srs/anki_TESTMEDIA/clip.mp3', 'audio');
-        \Illuminate\Support\Facades\Storage::disk('public')->put('srs/anki_TESTMEDIA/pic.jpg', 'img');
+        Storage::fake('public');
+        Storage::disk('public')->put('srs/anki_TESTMEDIA/clip.mp3', 'audio');
+        Storage::disk('public')->put('srs/anki_TESTMEDIA/pic.jpg', 'img');
 
         SrsCard::create([
             'deck_id' => $deck->id,
