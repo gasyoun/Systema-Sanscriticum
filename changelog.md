@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Uptime: Russian human guide + dual EN/RU packaging.** [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) — short «что красное / кого звать» for people; EN [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) marked for agents with cross-link. `CLAUDE.md` + `README.md` dual pointers. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.80.0] - 2026-07-30
 
 ### Added

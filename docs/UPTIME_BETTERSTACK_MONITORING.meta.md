@@ -1,12 +1,12 @@
-# Metadoc — UPTIME_BETTERSTACK_MONITORING.md
+# Metadoc — UPTIME_BETTERSTACK_MONITORING.md (+ RU human twin)
 
-_Created: 30-07-2026 · Last updated: 30-07-2026 (FAQ + inbound links)_
+_Created: 30-07-2026 · Last updated: 30-07-2026_
 
 | | |
 |---|---|
-| **Purpose** | Single agent-facing inventory of Better Stack HTTP + heartbeat monitors, prod wiring, and **human/agent runbook when something is red**. |
-| **Audience** | Agents; humans on call for samskrte/samskrtam/Cologne visibility. |
-| **Provenance** | Session 30-07-2026 (soft-fail H1941 → Better Stack). Model: Grok 4.5 (`grok-4.5`). Issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891). FAQ §5 same day. |
+| **Purpose** | Agent-facing inventory of Better Stack HTTP + heartbeat monitors, prod wiring, and §5 runbook when something is red. Russian short twin for humans. |
+| **Audience** | EN: agents. RU: humans on call (no secrets). |
+| **Provenance** | Session 30-07-2026 (soft-fail H1941 → Better Stack). Model: Grok 4.5 (`grok-4.5`). Issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891). FAQ §5 + RU twin same day. |
 | **Not for** | Live outage board (→ Uprava SERVER_OUTAGES); OS memory guards detail (→ server-resource-guards.md). |
 | **Inbound links** | Systema `CLAUDE.md` § Ops/uptime · `README.md` · DEPLOY_QUEUE H1794 · server-resource-guards · SERVER_OUTAGES top |
 
@@ -25,7 +25,8 @@ _Created: 30-07-2026 · Last updated: 30-07-2026 (FAQ + inbound links)_
 
 ## Related
 
-- [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
+- [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) (EN, agents)  
+- [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) (RU, humans)  
 - [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)  
 - [Uprava SERVER_OUTAGES.md](https://github.com/gasyoun/Uprava/blob/main/SERVER_OUTAGES.md)
 

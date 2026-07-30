@@ -13,10 +13,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Ops / uptime (production)
 
-- **Canonical inventory + FAQ (site down → human steps):**  
+- **Agents (EN inventory + smoke + §5 runbook):**  
   [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
-  Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths,  
-  §5 human runbook. Do not re-derive from chat; tokens stay on the VPS only.
+  Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths.  
+  Do not re-derive from chat; tokens stay on the VPS only.
+- **Humans (RU, short):**  
+  [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)  
+  What is red / who to call (Артём for dead host); no env secrets.
 - **OS resource guards (OOM/cron):**  
   [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
 
