@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,follow">
+    <title>Сайт жив? — зеркало (GitHub)</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #f7f4ef;
+            color: #101010;
+            line-height: 1.45;
+        }
+        .wrap { max-width: 40rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+        h1 { font-size: 1.75rem; margin: 0 0 0.5rem; line-height: 1.2; }
+        .lead { font-size: 1.1rem; color: #333; margin: 0 0 1.25rem; }
+        .banner {
+            background: #1f2937;
+            color: #fff;
+            padding: 0.65rem 0.9rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e5e0d6;
+            border-radius: 1rem;
+            padding: 1rem 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .card h2 { font-size: 1.15rem; margin: 0 0 0.75rem; }
+        ul { margin: 0; padding-left: 1.25rem; }
+        li { margin: 0.45rem 0; }
+        a.btn {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            background: #E85C24;
+            color: #fff;
+            font-weight: 700;
+            padding: 0.85rem 1rem;
+            border-radius: 0.75rem;
+            margin: 0.5rem 0;
+        }
+        a.btn.secondary { background: #1f2937; }
+        a.btn.ghost {
+            background: #fff;
+            color: #E85C24;
+            border: 2px solid #E85C24;
+        }
+        .muted { color: #666; font-size: 0.95rem; }
+        pre.tpl {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 0.9rem;
+            border-radius: 0.75rem;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #eee;
+        }
+        .pill.ok { background: #d1fae5; color: #065f46; }
+        .pill.bad { background: #fee2e2; color: #991b1b; }
+        .pill.wait { background: #fef3c7; color: #92400e; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        td { padding: 0.4rem 0; border-bottom: 1px solid #eee; vertical-align: top; }
+        td:first-child { font-weight: 600; width: 40%; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="banner">
+        Это <strong>запасное зеркало</strong> на GitHub Pages.
+        Оно открывается, даже когда сервер школы (samskrte.ru) лежит.
+    </div>
+
+    <h1>Сайт не открывается?</h1>
+    <p class="lead">Три шага. Сначала VPN/интернет, потом напишите @rusamskrtam.</p>
+
+    <div class="card">
+        <h2>Шаг 1 — нажмите ссылки</h2>
+        <p class="muted">С <strong>телефона на мобильном интернете</strong> (не Wi‑Fi).</p>
+        <a class="btn" href="https://samskrte.ru/" target="_blank" rel="noopener">samskrte.ru (школа)</a>
+        <a class="btn secondary" href="https://samskrte.ru/login" target="_blank" rel="noopener">samskrte.ru/login</a>
+        <a class="btn ghost" href="https://samskrte.ru/uptime" target="_blank" rel="noopener">samskrte.ru/uptime (если VPS жив)</a>
+        <a class="btn ghost" href="https://samskrtam.ru/" target="_blank" rel="noopener">samskrtam.ru (книги)</a>
+        <table style="margin-top:1rem" aria-label="Автопроверка">
+            <tr>
+                <td>samskrte.ru</td>
+                <td><span id="c-samskrte" class="pill wait">проверяю…</span></td>
+            </tr>
+            <tr>
+                <td>samskrte.ru/login</td>
+                <td><span id="c-login" class="pill wait">проверяю…</span></td>
+            </tr>
+            <tr>
+                <td>samskrtam.ru</td>
+                <td><span id="c-samskrtam" class="pill wait">проверяю…</span></td>
+            </tr>
+        </table>
+        <p class="muted" style="margin-top:0.75rem">
+            «недоступен» здесь ≈ браузер не достучался (сайт лежит, сеть, или CORS/блокировка).
+            Всегда смотрите и на свои кнопки выше.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Шаг 2 — VPN или наш сайт?</h2>
+        <ul>
+            <li><strong>Телефон ок, комп нет</strong> → Wi‑Fi / VPN. Выключите VPN на 1 мин.</li>
+            <li><strong>Нигде нет</strong> → скорее наш сайт → шаг 3.</li>
+            <li><strong>Главная есть, вход нет</strong> → шаг 3.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Шаг 3 — Telegram</h2>
+        <p>Чат школы, отметьте <a href="https://t.me/rusamskrtam">@rusamskrtam</a> (Иван / Марцис).</p>
+        <pre class="tpl" id="tpl">@rusamskrtam сайт не открывается
+где: телефон / комп
+VPN: вкл / выкл
+что пробовал: samskrte.ru · /login · зеркало github
+что вижу: (белый экран / ошибка / крутится / другое)
+время: сейчас</pre>
+        <button type="button" class="btn" id="copy-btn" style="border:0;width:100%;cursor:pointer">Скопировать текст</button>
+        <p class="muted" style="margin-top:0.75rem"><strong>Не пишите Артёму.</strong> Его зовут только Иван или Марцис.</p>
+    </div>
+
+    <div class="card">
+        <h2>Ops</h2>
+        <p class="muted">
+            <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md">RU §2 Иван/Марцис</a>
+            ·
+            <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md">EN agents</a>
+        </p>
+    </div>
+</div>
+<script>
+(function () {
+    function set(id, ok, label) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = label;
+        el.className = 'pill ' + (ok ? 'ok' : 'bad');
+    }
+    function probe(id, url) {
+        var ctrl = new AbortController();
+        var t = setTimeout(function () { ctrl.abort(); }, 8000);
+        // no-cors: opaque response still means TCP/TLS reached the host
+        fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal })
+            .then(function () { clearTimeout(t); set(id, true, 'отвечает (сеть дошла)'); })
+            .catch(function () { clearTimeout(t); set(id, false, 'недоступен из этого браузера'); });
+    }
+    probe('c-samskrte', 'https://samskrte.ru/');
+    probe('c-login', 'https://samskrte.ru/login');
+    probe('c-samskrtam', 'https://samskrtam.ru/');
+
+    var btn = document.getElementById('copy-btn');
+    var tpl = document.getElementById('tpl');
+    if (btn && tpl) {
+        btn.addEventListener('click', function () {
+            var text = tpl.textContent || '';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    btn.textContent = 'Скопировано';
+                }).catch(function () {
+                    btn.textContent = 'Выделите текст вручную';
+                });
+            } else {
+                btn.textContent = 'Выделите текст вручную';
+            }
+        });
+    }
+})();
+</script>
+</body>
+</html>

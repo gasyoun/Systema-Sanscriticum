@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Student uptime pages + RU split by audience.** Public [samskrte.ru/uptime](https://samskrte.ru/uptime) (Laravel) + GitHub Pages mirror [`uptime/`](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) (works when VPS is down) + WordPress snippet `uptime/samskrtam-snippet.html`. [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md): §1 students/teachers (VPN vs site, tag `@rusamskrtam`); §2 Ivan/Marcis only (red monitors, Artem). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.80.1] - 2026-07-30
 
 ### Changed
