@@ -221,10 +221,12 @@ final class ServerGuardsAuditor
      * Авто-деплой (H1933): root-крон каждые 30 минут + предохранитель.
      *
      * Предохранитель storage/auto_deploy.disabled ставится обёрткой после
-     * ПРОВАЛЕННОГО деплоя или проваленной пост-деплойной проверки здоровья —
-     * прод в этот момент может быть нездоров, поэтому critical (Telegram),
-     * а не warning. Пропажа самой cron-строки аварии не вызывает (деплои
-     * просто молча остановятся) — это warning, тихая деградация.
+     * ПРОВАЛЕННОГО деплоя или проваленной пост-деплойной проверки здоровья.
+     * Если обёртка успела автоматически откатиться и сайт жив (метка
+     * [rolled-back] в причине) — это warning: деплои стоят, но пожара нет,
+     * человек чинит без спешки. Без метки прод может быть нездоров — critical
+     * (Telegram). Пропажа самой cron-строки аварии не вызывает (деплои просто
+     * молча остановятся) — warning, тихая деградация.
      *
      * @return list<GuardFinding>
      */
@@ -236,10 +238,10 @@ final class ServerGuardsAuditor
         if ($this->sys->fileExists($breaker)) {
             $reason = trim((string) $this->sys->fileContents($breaker));
             $lastLine = $reason === '' ? 'без причины' : (array_slice(preg_split('/\r\n|\n|\r/', $reason) ?: [''], -1)[0] ?: 'без причины');
-            $findings[] = GuardFinding::critical(
-                'auto-deploy',
-                "авто-деплой остановлен предохранителем ({$lastLine}) — разобраться и удалить {$breaker}",
-            );
+            $message = "авто-деплой остановлен предохранителем ({$lastLine}) — разобраться и удалить {$breaker}";
+            $findings[] = str_contains($lastLine, '[rolled-back]')
+                ? GuardFinding::warning('auto-deploy', $message)
+                : GuardFinding::critical('auto-deploy', $message);
         }
 
         $crontab = $this->sys->crontabFor('root');

@@ -19,9 +19,15 @@
 #    смоук, guards:verify — всё там).
 #  • Пост-деплойное здоровье проверяется НЕЗАВИСИМО от deploy.sh: смоук ещё раз,
 #    MemAvailable, php-fpm/mysql/cron active, Horizon RUNNING.
-#  • Отката НЕТ сознательно: migrate --force необратим, откат кода поверх новой
-#    схемы опаснее стопа. Провал = предохранитель + громкая тревога, чинит
-#    человек. Снять предохранитель: разобраться и удалить файл.
+#  • Автооткат (MG, 30-07-2026): если деплой провалился ИЛИ здоровье не прошло,
+#    И деплой не приносил миграций (git diff по database/migrations/ пуст) —
+#    автоматически возвращаемся на прежний коммит (deploy.sh --rollback: тот же
+#    конвейер без pull и без миграций), сайт живет на старом коде, человек
+#    чинит без спешки. Миграции в деплое → отката НЕТ (migrate --force
+#    необратим) — предохранитель + critical, человек нужен срочно.
+#  • Предохранитель ставится в ЛЮБОМ провальном исходе — авто-деплои стоят до
+#    разбора. Метка [rolled-back] в причине = сайт восстановлен откатом;
+#    guards:verify даёт за неё warning вместо critical.
 set -uo pipefail
 
 APP_DIR=${SYSTEMA_APP_DIR:-@@APP_DIR@@}
@@ -53,28 +59,48 @@ LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse origin/main)
 [ "$LOCAL" = "$REMOTE" ] && exit 0
 
+# ── Пост-деплойное здоровье: сервер обязан остаться жив ─────────────────────
+# Пишет найденные проблемы в $fails (пусто = здоров).
+health_check() {
+  fails=""
+  local code avail unit
+  code=$(curl -fsS -o /dev/null -m 30 -w '%{http_code}' "$SMOKE_URL" 2>/dev/null || echo 000)
+  [ "$code" = "200" ] || fails="$fails smoke:$code"
+  avail=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
+  [ "${avail:-0}" -ge "$MIN_MB" ] || fails="$fails mem:${avail}MB<${MIN_MB}MB"
+  for unit in php@@PHP_VERSION@@-fpm mysql cron; do
+    systemctl is-active --quiet "$unit" || fails="$fails unit:$unit"
+  done
+  if command -v supervisorctl >/dev/null 2>&1; then
+    supervisorctl status horizon 2>/dev/null | grep -q RUNNING || fails="$fails horizon"
+  fi
+  [ -z "$fails" ]
+}
+
+# Провал деплоя/здоровья: попытаться автооткат, затем — предохранитель.
+# Откат разрешён только без миграций в диапазоне (migrate --force необратим).
+fail_deploy() {
+  local reason="$1"
+  if git diff --name-only "$LOCAL" "$REMOTE" -- database/migrations/ | grep -q .; then
+    trip "$reason; в деплое есть миграции — автооткат запрещён, нужен человек СРОЧНО"
+  fi
+  echo "$(stamp) ROLLBACK: возвращаю $(git rev-parse --short "$LOCAL")"
+  if timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" --rollback "$LOCAL" && health_check; then
+    trip "[rolled-back] $reason; автоматически откатились на $(git rev-parse --short "$LOCAL"), сайт жив — чинить можно без спешки"
+  fi
+  trip "$reason; автооткат НЕ помог — сервер требует человека немедленно"
+}
+
 echo "$(stamp) AUTO-DEPLOY: $(git rev-parse --short "$LOCAL") -> $(git rev-parse --short "$REMOTE")"
 timeout -k 30s "${MAX}s" bash "$DEPLOY_SH"
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  trip "deploy.sh завершился с кодом $rc — авто-деплой остановлен; разберитесь и удалите $BREAKER"
+  fail_deploy "deploy.sh завершился с кодом $rc"
 fi
 
-# ── Пост-деплойное здоровье: сервер обязан остаться жив ─────────────────────
-fails=""
-code=$(curl -fsS -o /dev/null -m 30 -w '%{http_code}' "$SMOKE_URL" 2>/dev/null || echo 000)
-[ "$code" = "200" ] || fails="$fails smoke:$code"
-avail=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
-[ "${avail:-0}" -ge "$MIN_MB" ] || fails="$fails mem:${avail}MB<${MIN_MB}MB"
-for unit in php@@PHP_VERSION@@-fpm mysql cron; do
-  systemctl is-active --quiet "$unit" || fails="$fails unit:$unit"
-done
-if command -v supervisorctl >/dev/null 2>&1; then
-  supervisorctl status horizon 2>/dev/null | grep -q RUNNING || fails="$fails horizon"
-fi
-if [ -n "$fails" ]; then
-  trip "деплой прошёл, но сервер нездоров:$fails — авто-деплой остановлен; разберитесь и удалите $BREAKER"
+if ! health_check; then
+  fail_deploy "деплой прошёл, но сервер нездоров:$fails"
 fi
 
-echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail}MB, smoke 200)"
+echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail:-?}MB, smoke 200)"
 exit 0

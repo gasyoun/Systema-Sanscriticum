@@ -236,6 +236,20 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringContainsString('auto_deploy.disabled', $line);
     }
 
+    public function test_rolled_back_breaker_is_a_warning_not_critical(): void
+    {
+        $sys = $this->healthy();
+        $breaker = rtrim($this->spec->get('APP_DIR'), '/').'/storage/auto_deploy.disabled';
+        $sys->files[$breaker] = "2026-07-30T09:00:00Z [rolled-back] deploy.sh завершился с кодом 1; автоматически откатились на abc1234, сайт жив — чинить можно без спешки\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $line = $this->lines($findings);
+        $this->assertStringContainsString('[warning] auto-deploy', $line);
+        $this->assertStringNotContainsString('[critical] auto-deploy', $line);
+        $this->assertStringContainsString('сайт жив', $line);
+    }
+
     public function test_missing_auto_deploy_cron_line_is_a_warning(): void
     {
         $sys = $this->healthy();

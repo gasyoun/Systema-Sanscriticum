@@ -20,7 +20,20 @@ SMOKE_URL="${SMOKE_URL:-https://samskrte.ru/}"
 DEPLOY_LOG="storage/logs/deploys.log"
 
 USE_DOWN=0
-[ "${1:-}" = "--down" ] && USE_DOWN=1
+ROLLBACK_TO=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --down) USE_DOWN=1 ;;
+    # --rollback <sha> — режим ОТКАТА (H1933, зовёт systema-auto-deploy-run.sh):
+    # вместо pull — reset --hard на указанный коммит, миграции НЕ гоняются
+    # (migrate --force необратим; автооткат разрешён только когда деплой их
+    # не приносил — это проверяет вызывающая обёртка). Остальной конвейер
+    # (composer, npm, кэши, OPcache, Horizon, смоук) — тот же.
+    --rollback) shift; ROLLBACK_TO="${1:?--rollback требует SHA}" ;;
+    *) printf '\n\033[1;31m✖ Неизвестный аргумент: %s\033[0m\n' "$1"; exit 1 ;;
+  esac
+  shift
+done
 
 cd "$APP_DIR"
 
@@ -53,9 +66,15 @@ fi
 OLD_COMMIT=$(git rev-parse --short HEAD)
 
 # ── 1. Код ───────────────────────────────────────────────────────────────────
-say "git pull --ff-only origin $BRANCH"
-git fetch origin
-git pull --ff-only origin "$BRANCH"
+if [ -n "$ROLLBACK_TO" ]; then
+  say "ОТКАТ: git reset --hard $ROLLBACK_TO"
+  git cat-file -e "${ROLLBACK_TO}^{commit}" 2>/dev/null || fail "Нет такого коммита: $ROLLBACK_TO"
+  git reset --hard "$ROLLBACK_TO"
+else
+  say "git pull --ff-only origin $BRANCH"
+  git fetch origin
+  git pull --ff-only origin "$BRANCH"
+fi
 
 if [ "$STASHED" = 1 ]; then
   say "Возвращаю прод-локальные PDF из стэша"
@@ -94,7 +113,11 @@ php artisan optimize:clear
 # без явного сброса новый виджет/страница ловит ComponentNotFoundException на
 # первом же update-запросе (см. docs/deploy.md, гочка LeadCostRangeWidget).
 php artisan filament:optimize-clear 2>/dev/null || true
-php artisan migrate --force
+if [ -n "$ROLLBACK_TO" ]; then
+  say "ОТКАТ: миграции пропускаются (migrate --force необратим)"
+else
+  php artisan migrate --force
+fi
 
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
 say "Прогрев кэшей (config/route/view + filament)"
