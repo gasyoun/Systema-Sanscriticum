@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Changed
+- **Uptime doc: FAQ «сайт упал» + discoverability.** [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §5 human/agent runbook (samskrte / samskrtam / Cologne); inbound links from `CLAUDE.md`, `README.md`. Executor: Grok 4.5 (`grok-4.5`).
 - **samskrtam VPS heartbeat marked wired** in [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §2.2 (cron `*/5` live). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added

@@ -11,6 +11,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **DB**: MySQL (production), SQLite in-memory (tests)
 - **Docker**: Laravel Sail (`./vendor/bin/sail`)
 
+## Ops / uptime (production)
+
+- **Canonical inventory + FAQ (site down → human steps):**  
+  [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
+  Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths,  
+  §5 human runbook. Do not re-derive from chat; tokens stay on the VPS only.
+- **OS resource guards (OOM/cron):**  
+  [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
+
 ## Commands
 
 ```bash

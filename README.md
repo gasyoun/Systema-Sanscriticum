@@ -27,6 +27,7 @@ Laravel-приложение для школы санскрита: учебны�
 - [Модули](#модули)
 - [Интеграции и вебхуки](#интеграции-и-вебхуки)
 - [Роадмап](#роадмап)
+- [Прод: uptime / мониторинг](#прод-uptime--мониторинг)
 
 ---
 
@@ -705,6 +706,16 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   earn+spend слой целиком — лидерборд · бейджи · streak · магазин · P2P · ранги —
   рядом со скидочным кошельком (two-counter, концепции сосуществуют). **Decay
   остается выключенным** (`PRANA_DECAY_ENABLED=false`); сгорание не включаем.
+
+---
+
+## Прод: uptime / мониторинг
+
+Канон для агентов и людей (Better Stack, inventory, **FAQ «сайт упал» → шаги**):
+
+[docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)
+
+OS-предохранители (OOM/cron): [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 
 ---
 
