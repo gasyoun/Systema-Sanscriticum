@@ -1,0 +1,321 @@
+{
+  "id": "eixPIvFjfPdOSrYo",
+  "name": "╨Х╨╢╨╡╨╝╨╡╤Б╤П╤З╨╜╤Л╨╣ ╨┐╨╛╤Б╤В ╨║╤Г╤А╤Б╨╛╨▓ тЖТ ╨Т╨Ъ + Telegram (monthly_schedule_post)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "monthly-schedule-post",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "8e294b22-badc-46df-956b-08a2b20f36af",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        208
+      ],
+      "webhookId": "monthly-schedule-post",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Header Auth account 3",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot***:***REDACTED***/sendPhoto",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "-1002194149434"
+            },
+            {
+              "name": "photo",
+              "value": "={{ $json.body.image_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "79c24c2d-a3cf-41e1-b129-3c08f9b81b8e",
+      "name": "Telegram: sendPhoto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/photos.getWallUploadServer",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "group_id",
+              "value": "208089583"
+            },
+            {
+              "name": "access_token",
+              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
+            },
+            {
+              "name": "v",
+              "value": "5.131"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e92b957b-e96c-4c28-8834-cfccd6c935dd",
+      "name": "VK: getWallUploadServer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook').item.json.body.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "aeccb90a-024a-401c-bda1-92204c377024",
+      "name": "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('VK: getWallUploadServer').item.json.response.upload_url }}",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "photo",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f2179538-45b2-4a8b-8f86-53737683eaa6",
+      "name": "VK: upload photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/photos.saveWallPhoto",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "group_id",
+              "value": "208089583"
+            },
+            {
+              "name": "access_token",
+              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
+            },
+            {
+              "name": "v",
+              "value": "5.131"
+            },
+            {
+              "name": "server",
+              "value": "={{ $json.server }}"
+            },
+            {
+              "name": "photo",
+              "value": "={{ $json.photo }}"
+            },
+            {
+              "name": "hash",
+              "value": "={{ $json.hash }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b904cfc8-2dce-413b-abfb-be1bc6a475e2",
+      "name": "VK: saveWallPhoto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.vk.com/method/wall.post",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "owner_id",
+              "value": "-208089583"
+            },
+            {
+              "name": "from_group",
+              "value": "1"
+            },
+            {
+              "name": "access_token",
+              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
+            },
+            {
+              "name": "v",
+              "value": "5.131"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Webhook').item.json.body.text_vk }}"
+            },
+            {
+              "name": "attachments",
+              "value": "=photo{{ $json.response[0].owner_id }}_{{ $json.response[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13ca0b9d-cfcd-44aa-9c06-49ce3e8ed3b9",
+      "name": "VK: wall.post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot***:***REDACTED***/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"chat_id\": \"-1002194149434\",\n    \"text\": {{ JSON.stringify($('Webhook').item.json.body.text_tg) }},\n    \"parse_mode\": \"HTML\",\n    \"disable_web_page_preview\": true\n  }",
+        "options": {}
+      },
+      "id": "adc39d6f-3032-4942-9b02-b04c621363cd",
+      "name": "Telegram: sendPhoto1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram: sendPhoto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "VK: getWallUploadServer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VK: getWallUploadServer": {
+      "main": [
+        [
+          {
+            "node": "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г": {
+      "main": [
+        [
+          {
+            "node": "VK: upload photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VK: upload photo": {
+      "main": [
+        [
+          {
+            "node": "VK: saveWallPhoto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VK: saveWallPhoto": {
+      "main": [
+        [
+          {
+            "node": "VK: wall.post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: sendPhoto": {
+      "main": [
+        [
+          {
+            "node": "Telegram: sendPhoto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}

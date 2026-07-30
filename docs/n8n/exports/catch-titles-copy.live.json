@@ -1,0 +1,147 @@
+{
+  "id": "egCkjS06dYtYcnmv",
+  "name": "╨╗╨╛╨▓╨╕╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤П copy",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fb961b2a-e2eb-4e77-9214-9c05b22bff3c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "9375865d-db41-4542-92f2-460398bd682e",
+      "name": "Webhook (╨╕╨╖ Laravel)",
+      "webhookId": "fb961b2a-e2eb-4e77-9214-9c05b22bff3c"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI",
+          "mode": "list",
+          "cachedResultName": "Automation_DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1289282161,
+          "mode": "list",
+          "cachedResultName": "Titles",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit#gid=1289282161"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "last_topic": "={{ $json.full_text }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_topic",
+              "displayName": "last_topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": []
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        16
+      ],
+      "id": "23e91c60-94c4-4e7b-9d38-e2fc4600fee6",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ╨г╨║╨░╨╢╨╕ ╨╖╨┤╨╡╤Б╤М ID ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╡╨╣, ╨╛╤В ╨║╨╛╤В╨╛╤А╤Л╤Е ╨╜╤Г╨╢╨╜╨╛ ╨┐╤А╨╕╨╜╨╕╨╝╨░╤В╤М ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П\nconst ALLOWED_IDS = [908572509, 190100700, 427307131, \n1438569462]; \n\nreturn items.map(item => {\n  // ╨Ш╤Й╨╡╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ (╤Г╤З╨╕╤В╤Л╨▓╨░╨╡╨╝ ╨╛╨▒╤Л╤З╨╜╤Л╨╡ ╨╕ ╨▒╨╕╨╖╨╜╨╡╤Б-╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П)\n  const src = item.json.body || item.json;\n  const message = src.message || src.business_message || src.edited_message;\n\n  if (!message || !message.from) return null;\n\n  const userId = message.from.id;\n  const fullText = message.text || message.caption || \"\";\n\n  // 2. ╨Я╨а╨Ю╨Т╨Х╨а╨Ъ╨Р ID: ╨Х╤Б╨╗╨╕ ╨╛╤В╨┐╤А╨░╨▓╨╕╤В╨╡╨╗╤П ╨╜╨╡╤В ╨▓ ╤Б╨┐╨╕╤Б╨║╨╡ ╤А╨░╨╖╤А╨╡╤И╨╡╨╜╨╜╤Л╤Е тАФ ╨┐╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝\n  if (!ALLOWED_IDS.includes(userId)) {\n    return null;\n  }\n\n  // 3. ╨Я╨а╨Ю╨Т╨Х╨а╨Ъ╨Р ╨Э╨Р╨Ы╨Ш╨з╨Ш╨п ╨Ц╨Ш╨а╨Э╨Ю╨У╨Ю ╨в╨Х╨Ъ╨б╨в╨Р\n  let topic = \"\";\n  \n  if (message.entities) {\n    const boldEntities = message.entities.filter(entity => entity.type === 'bold');\n    \n    if (boldEntities.length > 0) {\n      topic = boldEntities\n        .map(entity => fullText.substring(entity.offset, entity.offset + entity.length))\n        .join(' ')\n        .trim();\n    }\n  }\n\n  // ╨Х╤Б╨╗╨╕ ╨╢╨╕╤А╨╜╤Л╨╣ ╤В╨╡╨║╤Б╤В ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜ тАФ ╨┐╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╤Ж╨╡╨╗╨╕╨║╨╛╨╝\n  if (!topic) {\n    return null;\n  }\n\n  // 4. ╨Т╨Ю╨Ч╨Т╨а╨Р╨й╨Р╨Х╨Ь ╨а╨Х╨Ч╨г╨Ы╨м╨в╨Р╨в\n  return {\n    json: {\n      user_id: userId,\n      name: `${message.from.first_name || ''} ${message.from.last_name || ''}`.trim(),\n      username: message.from.username,\n      extracted_topic: topic,\n      full_text: fullText,\n      biz_connection_id: message.business_connection_id || null\n    }\n  };\n})\n// ╨Ю╤З╨╕╤Б╤В╨║╨░ ╨╝╨░╤Б╤Б╨╕╨▓╨░ ╨╛╤В null ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨╛╨▓\n.filter(item => item !== null);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        16
+      ],
+      "id": "9b16cd75-0938-40e5-8adb-09ab09a22e96",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "connections": {
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (╨╕╨╖ Laravel)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}

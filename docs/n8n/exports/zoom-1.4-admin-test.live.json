@@ -1,0 +1,1918 @@
+{
+  "id": "1EIqqNzMl5NNIxST",
+  "name": "ZOOM 1.4 (Final) + ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р ╨в╨Х╨б╨в",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://samskrte.ru/api/lessons/from-zoom",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Secret-Key",
+              "value": "Ivan3128211498"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n   course_id: $('Get row(s) in sheet1').first().json.course_id,\n   group_id: $('Get row(s) in sheet1').first().json.group_id || null,\n   block_number: $('Get row(s) in sheet1').first().json.block_number,\n   title: $('Format Title').first().json.final_topic,\n   topic: $('Get row(s) in sheet1').first().json.description,\n   lesson_date: $('Code in JavaScript1').first().json.start_time,\n   youtube_url: 'https://youtu.be/' + $('Upload a video').first().json.uploadId,\n   rutube_url: $('╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г').first().json.video_url,\n   duration_minutes: $('Code in JavaScript1').first().json.duration\n }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3264,
+        112
+      ],
+      "id": "e2fc39c6-bed3-4418-9ade-59099ec56da2",
+      "name": "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        688
+      ],
+      "id": "7b5c3cbb-4692-4940-b1b9-7aabfad1f631",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload;\nconst plainToken = payload.plainToken;\n\nconst secretToken = 'rIWjjK60TGqtyOQRKPwISw';\n\nconst encryptedToken = crypto\n  .createHmac('sha256', secretToken)\n  .update(plainToken)\n  .digest('hex');\n\nreturn {\n  plainToken: plainToken,\n  encryptedToken: encryptedToken\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        688
+      ],
+      "id": "2178c1ff-0c47-4bc7-929b-5c7f9bf647ed",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "recording.completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "660c7524-58c6-4966-82d9-0b8e68ff9e60"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨Ч╨░╨┐╨╕╤Б╤М ╨│╨╛╤В╨╛╨▓╨░"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7328e46d-be6b-4985-9ebe-8dfba3e672ab",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "endpoint.url_validation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨Т╨░╨╗╨╕╨┤╨░╤Ж╨╕╤П"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -256,
+        592
+      ],
+      "id": "b846c6c8-5b43-4282-9b52-33752534b8b1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░\nlet webhookBody;\nlet sourceNode = '';\n\ntry {\n  const zoomNode = $(\"ZOOM\").first();\n  if (zoomNode && zoomNode.json.body) {\n    webhookBody = zoomNode.json.body;\n    sourceNode = 'ZOOM';\n  }\n} catch (e) {}\n\nif (!webhookBody) {\n  try {\n    const secondWebhookNode = $(\"Webhook\").first();\n    if (secondWebhookNode && secondWebhookNode.json.body) {\n      webhookBody = secondWebhookNode.json.body;\n      sourceNode = 'Webhook';\n    }\n  } catch (e) {}\n}\n\nif (!webhookBody || !webhookBody.payload || !webhookBody.payload.object) {\n  return [];\n}\n\nconst payloadObj = webhookBody.payload.object;\nconst files = payloadObj.recording_files;\n\n// 2. ╨Ю╨Я╨а╨Х╨Ф╨Х╨Ы╨п╨Х╨Ь ╨Р╨Ъ╨Ъ╨Р╨г╨Э╨в (╨╜╨░ ╨╛╤Б╨╜╨╛╨▓╨╡ ╨┤╨░╨╜╨╜╤Л╤Е ╨╕╨╖ ╨▓╨░╤И╨╡╨│╨╛ ╨┐╤А╨╕╨╝╨╡╤А╨░)\n// ID ╨▓╤В╨╛╤А╨╛╨│╨╛ ╨░╨║╨║╨░╤Г╨╜╤В╨░ ╨╕╨╖ ╨▓╨░╤И╨╡╨│╨╛ ╨╗╨╛╨│╨░: ZEyCQs4nTWScjXNaTy6K5g\nlet accountName = 'Account_Unknown';\nconst incomingAccountId = webhookBody.payload.account_id || webhookBody.account_id;\n\nif (incomingAccountId === 'ZEyCQs4nTWScjXNaTy6K5g') {\n  accountName = 'Account_2'; // ╨Т╤В╨╛╤А╨╛╨╣ ╨░╨║╨║╨░╤Г╨╜╤В\n} else {\n  accountName = 'Account_1'; // ╨Я╨╡╤А╨▓╤Л╨╣ (╨╛╤Б╨╜╨╛╨▓╨╜╨╛╨╣) ╨░╨║╨║╨░╤Г╨╜╤В\n}\n\n// --- ╨Ы╨Ю╨У╨Ш╨Ъ╨Р ╨в╨Ю╨Ъ╨Х╨Э╨Р ---\nconst downloadToken = webhookBody.download_token || payloadObj.download_token; \nconst tokenString = downloadToken ? `?\\1***REDACTED***'';\n\n// --- ╨Т╨л╨С╨Ю╨а MP4 ╨д╨Р╨Щ╨Ы╨Р (╨Т╨╕╨┤ ╨┤╨╛╨║╨╗╨░╨┤╤З╨╕╨║╨░ + ╤Б╨░╨╝╤Л╨╣ ╨┤╨╗╨╕╨╜╨╜╤Л╨╣) ---\nconst mp4Files = files.filter(file => \n  file.file_type === 'MP4' && \n  file.recording_type.startsWith('shared_screen_with_speaker_view')\n);\n\n// ╨Х╤Б╨╗╨╕ ╨▓╨┤╤А╤Г╨│ ╨╖╨░╨┐╨╕╤Б╨╕ ╨┤╨╛╨║╨╗╨░╨┤╤З╨╕╨║╨░ ╨╜╨╡╤В, ╨╝╨╛╨╢╨╜╨╛ ╤Б╨┤╨╡╨╗╨░╤В╤М ╤Д╨╛╨╗╨╗╨▒╨╡╨║ ╨╜╨░ ╨╗╤О╨▒╤Г╤О MP4 (╨╛╨┐╤Ж╨╕╨╛╨╜╨░╨╗╤М╨╜╨╛)\n// if (mp4Files.length === 0) {\n//   mp4Files = files.filter(file => file.file_type === 'MP4');\n// }\n\nmp4Files.forEach(file => {\n  file._calculatedDurationSec = (file.recording_start && file.recording_end) \n    ? (new Date(file.recording_end).getTime() - new Date(file.recording_start).getTime()) / 1000 \n    : 0;\n});\n\n// ╨б╨╛╤А╤В╨╕╤А╤Г╨╡╨╝: ╤Б╨░╨╝╤Л╨╣ ╨┤╨╗╨╕╨╜╨╜╤Л╨╣ ╤Д╨░╨╣╨╗ ╨▒╤Г╨┤╨╡╤В ╨┐╨╡╤А╨▓╤Л╨╝ ╨▓ ╨╝╨░╤Б╤Б╨╕╨▓╨╡ [0]\nmp4Files.sort((a, b) => b._calculatedDurationSec - a._calculatedDurationSec);\nconst videoFile = mp4Files[0];\n\n// === ╨д╨Ш╨Ы╨м╨в╨а╨Р╨ж╨Ш╨п ╨Ш ╨Т╨л╨Т╨Ю╨Ф ===\nif (videoFile) {\n  const durationInMinutes = videoFile._calculatedDurationSec / 60;\n  \n  // ╨г╤Б╨╗╨╛╨▓╨╕╨╡ ╨┐╨╛ ╨┤╨╗╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╨╕ (30 ╨╝╨╕╨╜╤Г╤В)\n  if (durationInMinutes < 30) return [];\n\n  return {\n    json: {\n      download_url: `${videoFile.download_url}${tokenString}`,\n      topic: payloadObj.topic,\n      start_time: payloadObj.start_time,\n      duration: Math.round(durationInMinutes),\n      meeting_id: payloadObj.id,\n      zoom_account_id: accountName,\n      recording_type: videoFile.recording_type // ╨Ф╨╛╨▒╨░╨▓╨╕╨╗ ╨┤╨╗╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨╕ ╨▓ ╨╗╨╛╨│╨░╤Е\n    }\n  };\n}\n\nreturn [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        368
+      ],
+      "id": "0c5074cb-0868-4b54-ab6b-2c36fd9bf0a3",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code in JavaScript1').item.json.download_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        368
+      ],
+      "id": "1762b8bc-c2b8-43e4-9d3b-5f4503c9fd39",
+      "name": "DOWNLOAD"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Format Title').item.json.final_topic || \"╨Ч╨░╨╜╤П╤В╨╕╨╡ ╨╛╤В \" + $('Code in JavaScript1').item.json.start_time }}",
+        "regionCode": "RU",
+        "categoryId": "27",
+        "options": {
+          "defaultLanguage": "ru",
+          "privacyStatus": "unlisted"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        656,
+        368
+      ],
+      "id": "90ef7cc2-96e7-4ab4-b702-2ee0d98ba65e",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI",
+          "mode": "list",
+          "cachedResultName": "Automation_DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Settings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "meeting_id",
+              "lookupValue": "={{ $('Code in JavaScript1').item.json.meeting_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        368
+      ],
+      "id": "6f1b443c-9047-41c3-8aec-803028da713a",
+      "name": "Get row(s) in sheet",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI",
+          "mode": "list",
+          "cachedResultName": "Automation_DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1289282161,
+          "mode": "list",
+          "cachedResultName": "Titles",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI/edit#gid=1289282161"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "chat_id",
+              "lookupValue": "={{ $json.tg_chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        368
+      ],
+      "id": "3a76d69a-eb01-4f50-ae31-5ee11ca8318c",
+      "name": "Get row(s) in sheet1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "86446208-6c7a-432f-bcaa-f4d9536b3f55",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        592
+      ],
+      "id": "29e16579-33ba-4b3a-a9b3-09121575309b",
+      "name": "ZOOM",
+      "webhookId": "86446208-6c7a-432f-bcaa-f4d9536b3f55"
+    },
+    {
+      "parameters": {
+        "resource": "playlistItem",
+        "playlistId": "={{ $('Get row(s) in sheet').item.json.yt_playlist_id }}",
+        "videoId": "={{ $('Upload a video').item.json.uploadId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        368
+      ],
+      "id": "c8df4b05-edfe-4e84-b55d-11eb61384b26",
+      "name": "Add a playlist item",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rutube.ru/api/video/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token aba56472a6a8b46134dd08b10ee506e2fc4d20abeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MTMyMzEwMiwiZXhwIjoxNzY4NjYyMzk5fQ.CGH02OOxhghrUyAoTxK1cXOWCxkyRD97eKTnhkMlMGo"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $('Format Title').item.json.final_topic || \"╨Ч╨░╨╜╤П╤В╨╕╨╡ ╨╛╤В \" + $('Code in JavaScript1').item.json.start_time }}"
+            },
+            {
+              "name": "url",
+              "value": "={{ $('Code in JavaScript1').item.json.download_url }}"
+            },
+            {
+              "name": "is_hidden",
+              "value": "true"
+            },
+            {
+              "name": "category_id",
+              "value": "17"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1904,
+        368
+      ],
+      "id": "eeef3949-ea95-41bd-bf47-381a80c61dcf",
+      "name": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rutube.ru/api/playlist/custom/{{ $('Get row(s) in sheet').item.json.ru_playlist_id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token aba56472a6a8b46134dd08b10ee506e2fc4d20abeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MTMyMzEwMiwiZXhwIjoxNzY4NjYyMzk5fQ.CGH02OOxhghrUyAoTxK1cXOWCxkyRD97eKTnhkMlMGo"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_ids\": [\n    \"{{ $('Merge').item.json.video_id }}\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        368
+      ],
+      "id": "eafefc4a-e987-488b-83c4-d8a9c07126d2",
+      "name": "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://rutube.ru/api/video/{{ $('Merge').item.json.video_id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token aba56472a6a8b46134dd08b10ee506e2fc4d20abeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MTMyMzEwMiwiZXhwIjoxNzY4NjYyMzk5fQ.CGH02OOxhghrUyAoTxK1cXOWCxkyRD97eKTnhkMlMGo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2352,
+        368
+      ],
+      "id": "fe0f12f9-85dd-4d3f-a297-28dd00633605",
+      "name": "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://goo.su/api/links/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goo-api-token",
+              "value": "S9HrdjF9sszbpivntm6luwrFa3rc3UtD4nlnn9x5zeVvfcxrnkOfDetyvkpX"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.video_url }}\",\n  \"is_public\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2464,
+        368
+      ],
+      "id": "d939a2b0-5b9a-4399-95f9-f284370a0035",
+      "name": "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get row(s) in sheet').first().json.tg_chat_id }}",
+        "text": "=тШСя╕П {{ $('Format Title').first().json.final_topic }}\n\nYT: https://youtu.be/{{ $('Upload a video').first().json.uploadId }}\nRT: {{ $('╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г').first().json.short_url }} #video",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2960,
+        352
+      ],
+      "id": "797c94bf-9fa2-4938-b220-538c81623a80",
+      "name": "Send a text message",
+      "webhookId": "507b528a-1b6a-46da-9398-47ea0c241b7f",
+      "credentials": {
+        "telegramApi": {
+          "name": "zapisi-ORSbot",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        368
+      ],
+      "id": "971bd016-df0d-4ddd-8dab-d83c33a76085",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "amount": 90,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        368
+      ],
+      "id": "296cb919-791e-4a66-b3a8-d7e0559f7d39",
+      "name": "Wait (Playlist)",
+      "webhookId": "63f60172-1fe9-4997-9abd-f9a036b9d9c2"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2576,
+        368
+      ],
+      "id": "bcbfb1ec-41cf-4db2-8157-304a79eae7ba",
+      "name": "Wait (Subtitles)",
+      "webhookId": "f1774ead-c18a-4007-b4e2-7f154042d17c"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=name = '{{ $('Code in JavaScript1').item.json.start_time.split('T')[0] }}.jpg' and trashed = false and '{{ $('Get row(s) in sheet').item.json.drive_folder_id }}' in parents",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1504,
+        192
+      ],
+      "id": "ec04a05f-d19e-4b20-bd64-934a2f1f7d2b",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "name": "Google Drive account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1648,
+        192
+      ],
+      "id": "6653db2a-9987-4faf-be91-636b61051621",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "name": "Google Drive account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/youtube/v3/thumbnails/set",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "***REDACTED***",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "videoId",
+              "value": "={{ $('Upload a video').item.json.uploadId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1680,
+        368
+      ],
+      "id": "7de602d8-4d43-4b9f-b019-d099f8e4d0fe",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rutube.ru/api/video/{{ $json.video_id }}/thumbnail/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token aba56472a6a8b46134dd08b10ee506e2fc4d20abeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MTMyMzEwMiwiZXhwIjoxNzY4NjYyMzk5fQ.CGH02OOxhghrUyAoTxK1cXOWCxkyRD97eKTnhkMlMGo"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        368
+      ],
+      "id": "ad84b362-4d13-4eb1-a759-e9674e5d6c16",
+      "name": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1776,
+        192
+      ],
+      "id": "91dce0f0-c339-47a0-ac6f-abdd690a28e5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "rm -rf /opt/n8n/storage/binaryData/workflows/fDMCDXjS6ZWlkOwQ/*"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        3088,
+        352
+      ],
+      "id": "b29a2a00-5c0c-44dc-8539-e9199229d002",
+      "name": "Execute a command",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0].json;\n\n// --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) ---\nlet chaptersRaw = null;\n\n// ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░)\nif (typeof item.output === 'string') {\n    // ╨Т╨░╤А╨╕╨░╨╜╤В AI Agent (╨▓╨░╤И ╤В╨╡╨║╤Г╤Й╨╕╨╣ ╤Б╨╗╤Г╤З╨░╨╣)\n    chaptersRaw = item.output;\n} else if (typeof item.text === 'string') {\n    // ╨Я╤А╨╛╤Б╤В╨╛╨╣ ╤В╨╡╨║╤Б╤В\n    chaptersRaw = item.text;\n} else if (item.output && item.output[0] && item.output[0].content && item.output[0].content[0]) {\n    // ╨б╨╗╨╛╨╢╨╜╨░╤П ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ (LangChain/Chat Model)\n    chaptersRaw = item.output[0].content[0].text;\n} else {\n    // ╨Ч╨░╨┐╨░╤Б╨╜╤Л╨╡ ╨▓╨░╤А╨╕╨░╨╜╤В╤Л\n    chaptersRaw = item.text || item.content || item.response || \"\";\n}\n\n// ╨Х╤Б╨╗╨╕ ╤Б╨╛╨▓╤Б╨╡╨╝ ╨┐╤Г╤Б╤В╨╛\nif (!chaptersRaw || typeof chaptersRaw !== 'string') {\n    chaptersRaw = \"00:00:00 - ╨Э╨░╤З╨░╨╗╨╛ ╨▓╨╕╨┤╨╡╨╛\"; \n}\n\n// --- ╨з╨Ш╨б╨в╨Ъ╨Р ╨Ш ╨д╨Ю╨а╨Ь╨Р╨в╨Ш╨а╨Ю╨Т╨Р╨Э╨Ш╨Х ---\nlet lines = chaptersRaw.split('\\n')\n    .map(line => line.trim())\n    .filter(line => {\n        // ╨г╨▒╨╕╤А╨░╨╡╨╝ ╨┐╤Г╤Б╤В╤Л╨╡ ╤Б╤В╤А╨╛╨║╨╕\n        if (line === '') return false;\n        // ╨г╨▒╨╕╤А╨░╨╡╨╝ ╨╖╨░╨│╨╛╨╗╨╛╨▓╨║╨╕ Markdown (╨╜╨░╤З╨╕╨╜╨░╤О╤В╤Б╤П ╤Б #)\n        if (line.startsWith('#')) return false;\n        // ╨г╨▒╨╕╤А╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╨╕ ╨▒╨╡╨╖ ╤Ж╨╕╤Д╤А (╨╜╨░ ╨▓╤Б╤П╨║╨╕╨╣ ╤Б╨╗╤Г╤З╨░╨╣)\n        if (!/\\d/.test(line)) return false;\n        return true;\n    });\n\n// ╨Я╨а╨Р╨Т╨Ш╨Ы╨Ю 00:00:00\n// ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╨┐╨╡╤А╨▓╤Г╤О ╤Б╤В╤А╨╛╨║╤Г ╨┐╨╛╤Б╨╗╨╡ ╤З╨╕╤Б╤В╨║╨╕\nconst firstLine = lines[0] || \"\";\n// ╨Х╤Б╨╗╨╕ ╨┐╨╡╤А╨▓╨╛╨╣ ╤Б╤В╤А╨╛╨║╨╕ ╨╜╨╡╤В ╨╕╨╗╨╕ ╨╛╨╜╨░ ╨╜╨╡ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б 00:00...\nif (!firstLine.startsWith(\"00:00:00\") && !firstLine.startsWith(\"00:00 -\")) {\n    lines.unshift('00:00:00 - ╨Т╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡');\n}\n\nconst finalChapters = lines.join('\\n');\n\n\n// --- 2. ╨Я╨╛╨╕╤Б╨║ ID ╨▓╨╕╨┤╨╡╨╛ ╨╕ ╨Э╨░╨╖╨▓╨░╨╜╨╕╤П (Metadata) ---\n\nlet uploadId = \"\";\nlet videoUrl = \"https://youtube.com\";\nlet videoTitle = `╨Ч╨░╨╜╤П╤В╨╕╨╡ ╨╛╤В ${new Date().toISOString().split('T')[0]}`; \n\n// ╨Я╨╛╨╕╤Б╨║ ID\ntry {\n    const uploadNode = $('Upload a video'); \n    if (uploadNode && uploadNode.first()) {\n        const data = uploadNode.first().json;\n        if (data.uploadId) {\n            uploadId = data.uploadId;\n            videoUrl = \"https://youtu.be/\" + uploadId;\n        }\n    }\n} catch (e) {}\n\n// ╨Я╨╛╨╕╤Б╨║ ╨Э╨░╨╖╨▓╨░╨╜╨╕╤П\ntry {\n    const sheetNode = $('Format Title');\n    let foundTitle = false;\n\n    if (sheetNode && sheetNode.first()) {\n        const topic = sheetNode.first().json.final_topic;\n        if (topic && typeof topic === 'string' && topic.trim().length > 0) {\n            videoTitle = topic.trim();\n            foundTitle = true;\n        }\n    }\n\n    if (!foundTitle) {\n        const zoomNode = $('Code in JavaScript1');\n        if (zoomNode && zoomNode.first()) {\n            const startTime = zoomNode.first().json.start_time;\n            if (startTime) {\n                videoTitle = \"╨Ч╨░╨╜╤П╤В╨╕╨╡ ╨╛╤В \" + startTime;\n            }\n        }\n    }\n} catch (e) {}\n\n// --- ╨Ф╨╗╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╤М ╨╖╨░╨┐╨╕╤Б╨╕ ╨╕╨╖ Zoom (╨╝╨╕╨╜╤Г╤В╤Л) ---\nlet durStr = '';\ntry {\n    const durMin = Number($('Code in JavaScript1').first().json.duration);\n    if (Number.isFinite(durMin) && durMin > 0) {\n        const h = Math.floor(durMin / 60);\n        const m = durMin % 60;\n        durStr = `${h}╤З.${String(m).padStart(2, '0')}╨╝.`;\n    }\n} catch (e) {}\n\n// ╨Ю╨┐╨╕╤Б╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ = ╤З╨░╨┐╤В╨╡╤А╤Л, ╨╜╨╛ ╨║ ╨┐╨╡╤А╨▓╨╛╨╣ ╤Б╤В╤А╨╛╨║╨╡ (00:00:00) ╨┤╨╛╨┐╨╕╤Б╨░╨╜╨░ ╨┤╨╗╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╤М\nlet finalDescription = finalChapters;\nif (durStr && lines.length > 0) {\n    finalDescription = lines[0] + ' ' + durStr + finalChapters.slice(lines[0].length);\n}\n\n// --- 3. ╨Т╤Л╨▓╨╛╨┤ ---\nreturn [{\n    json: {\n        text_for_msg: `\\n\\n${finalChapters}\\n\\n`,\n        youtube_chapters: finalChapters,\n        youtube_description: finalDescription,\n        videoId: uploadId,\n        videoTitle: videoTitle\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        560
+      ],
+      "id": "a630b437-cb4d-4a3f-82e4-0915416f3573",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "update",
+        "videoId": "={{ $json.videoId }}",
+        "title": "={{ $json.videoTitle }}",
+        "regionCode": "RU",
+        "categoryId": "27",
+        "updateFields": {
+          "description": "={{ $json.youtube_description }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        560
+      ],
+      "id": "ae7636e6-0a52-487c-ad83-0c324e22f74d",
+      "name": "Update a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://rutube.ru/api/video/{{ $('╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С').first().json.video_id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token aba56472a6a8b46134dd08b10ee506e2fc4d20abeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MTMyMzEwMiwiZXhwIjoxNzY4NjYyMzk5fQ.CGH02OOxhghrUyAoTxK1cXOWCxkyRD97eKTnhkMlMGo"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "description",
+              "value": "={{ $('Code in JavaScript2').first().json.youtube_description }}"
+            },
+            {
+              "name": "is_hidden",
+              "value": "true"
+            },
+            {
+              "name": "category_id",
+              "value": "17"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('Code in JavaScript2').first().json.videoTitle }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2928,
+        560
+      ],
+      "id": "1d8af03d-d24d-4b1e-a4a9-a3878ffdcfb8",
+      "name": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3136,
+        576
+      ],
+      "id": "c1fcfabf-7b3f-4047-8e7a-e763afb119a8",
+      "name": "Wait",
+      "webhookId": "d8629d0c-6271-4c4b-b86e-0acb92c0f5e3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c1e602da-3aae-43b9-97ad-0e8044ba94aa",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        112
+      ],
+      "id": "728fc545-8bdf-4505-93d9-8b68b671bc7c",
+      "name": "Webhook",
+      "webhookId": "c1e602da-3aae-43b9-97ad-0e8044ba94aa"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "endpoint.url_validation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "660c7524-58c6-4966-82d9-0b8e68ff9e60"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨Т╨░╨╗╨╕╨┤╨░╤Ж╨╕╤П"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7328e46d-be6b-4985-9ebe-8dfba3e672ab",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "recording.completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨Ч╨░╨┐╨╕╤Б╤М ╨│╨╛╤В╨╛╨▓╨░"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -256,
+        112
+      ],
+      "id": "a1837471-2349-4a2a-bdf1-414ba04cd718",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        160,
+        0
+      ],
+      "id": "47de7771-4e4c-4c42-8c82-10418eec88bc",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload;\nconst plainToken = payload.plainToken;\n\nconst secretToken = 'GUmwmhe2SpuZ76sjgi9FTg';\n\nconst encryptedToken = crypto\n  .createHmac('sha256', secretToken)\n  .update(plainToken)\n  .digest('hex');\n\nreturn {\n  plainToken: plainToken,\n  encryptedToken: encryptedToken\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        48
+      ],
+      "id": "2518b85a-8539-47ed-9f5f-64e85ddd659b",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Code in JavaScript1').first().json.zoom_account_id }}",
+                    "rightValue": "Account_2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0b6a1a0f-39bc-4c6d-a936-ba38671c907c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨У╨░╤Б╤Г╨╜╤Б"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2500275c-8b94-4fdd-ad15-4a0e3997dcdb",
+                    "leftValue": "={{ $('Code in JavaScript1').first().json.zoom_account_id }}",
+                    "rightValue": "Account_1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "╨ж╤Л╨┤╨╕"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        3200,
+        352
+      ],
+      "id": "5b6a56ec-4bc8-4878-a20a-c79befe55bbd",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.zoom.us/v2/meetings/{{ $('Code in JavaScript1').first().json.meeting_id }}/recordings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "***REDACTED***",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "trash"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3488,
+        432
+      ],
+      "id": "576e1a43-1846-4e72-86d1-6fb31f642d87",
+      "name": "DELETE FROM ZOOM",
+      "credentials": {
+        "zoomOAuth2Api": {
+          "name": "Zoom ╨ж╤Л╨┤╨╕",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.zoom.us/v2/meetings/{{ $('Code in JavaScript1').first().json.meeting_id }}/recordings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "***REDACTED***",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "trash"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3488,
+        224
+      ],
+      "id": "fb9afe98-148b-41cc-95e6-2e85ee0b93cf",
+      "name": "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "credentials": {
+        "zoomOAuth2Api": {
+          "name": "Zoom ╨Ю╨а╨б",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get row(s) in sheet').first().json.tg_chat_id }}",
+        "text": "=ЁЯТм ╨Ч╨░╨┐╨╕╤Б╤М ╨╖╨░╨╜╤П╤В╨╕╤П ╨┐╤А╨╕╨╜╤П╤В╨░ ╨▓ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╤Г",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        176
+      ],
+      "id": "13913ba6-10e8-42dc-a69e-d199bb6b4161",
+      "name": "Send a text message1",
+      "webhookId": "507b528a-1b6a-46da-9398-47ea0c241b7f",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "name": "zapisi-ORSbot",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n    // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Г╤Й╨╕╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П, ╨╛╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝\n    let topic = item.json.last_topic ? String(item.json.last_topic).trim() : \"\";\n    const desc = item.json.description ? String(item.json.description).trim() : \"\";\n    const dateStr = item.json['date'] ? String(item.json['date']).trim() : \"\";\n    \n    // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝: ╨╡╤Б╨╗╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▒╤Л╨╗╨╛ ╨╕╨╖╨╝╨╡╨╜╨╡╨╜╨╛ (╨╜╨╡ ╤А╨░╨▓╨╜╨╛ ╤Б╤В╨░╨╜╨┤╨░╤А╤В╨╜╨╛╨╝╤Г) ╨╕ ╨┤╨░╤В╨░ ╤Б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В\n    if (topic !== desc && dateStr !== \"\") {\n        // ╨Ч╨░╤Й╨╕╤В╨░: ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨┤╨░╤В╤Г, ╤В╨╛╨╗╤М╨║╨╛ ╨╡╤Б╨╗╨╕ ╨┐╤А╨╡╨┐╨╛╨┤╨░╨▓╨░╤В╨╡╨╗╤М ╤Б╨░╨╝ ╨╡╤С ╤Б╨╗╤Г╤З╨░╨╣╨╜╨╛ ╨╜╨╡ ╨▓╨┐╨╕╤Б╨░╨╗\n        if (!topic.includes(dateStr)) {\n            // ╨б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝: ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ + ╨┐╤А╨╛╨▒╨╡╨╗ + ╨┤╨░╤В╨░\n            topic = `${topic} ${dateStr}`; \n        }\n    }\n    \n    // ╨Ч╨░╨┐╨╕╤Б╤Л╨▓╨░╨╡╨╝ ╤Д╨╕╨╜╨░╨╗╤М╨╜╤Л╨╣ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В ╨▓ ╨╜╨╛╨▓╨╛╨╡ ╨┐╨╛╨╗╨╡\n    item.json.final_topic = topic;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        368
+      ],
+      "id": "8f659b33-761f-4f6c-842b-4dc1ba6dfb5f",
+      "name": "Format Title"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n    // ╨С╨╡╤А╨╡╨╝ ╨│╨╛╤В╨╛╨▓╤Л╨╣ ╤В╨╡╨║╤Б╤В ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░\n    const text = item.json.youtube_chapters || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤В\";\n    const title = item.json.videoTitle || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л\";\n    \n    // ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨▒╨╕╨╜╨░╤А╨╜╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ .txt ╤Д╨░╨╣╨╗)\n    item.binary = {\n        data: {\n            data: Buffer.from(text, 'utf8').toString('base64'),\n            mimeType: 'text/plain',\n            fileName: `${title}.txt`\n        }\n    };\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2832,
+        816
+      ],
+      "id": "3196da39-a698-46e2-b325-6bc422e137b6",
+      "name": "Create TXT File"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Get row(s) in sheet').first().json.drive_folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2992,
+        816
+      ],
+      "id": "cdb5a025-873a-4a90-94db-7cdd90c458de",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "name": "Google Drive account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.transcript }}",
+        "options": {
+          "systemMessage": "=╨в╤Л ╨╝╨╡╤В╨╛╨┤╨╕╤Б╤В ╨╕ ╤А╨╡╨┤╨░╨║╤В╨╛╤А ╨╛╨▒╤А╨░╨╖╨╛╨▓╨░╤В╨╡╨╗╤М╨╜╤Л╤Е ╨▓╨╕╨┤╨╡╨╛-╨║╤Г╤А╤Б╨╛╨▓ ╨┐╨╛ ╨╕╨╜╨┤╨╛╨╗╨╛╨│╨╕╨╕ (╨╗╨╡╨║╤Ж╨╕╨╕, ╨▓╨╡╨▒╨╕╨╜╨░╤А╤Л, ╨╝╨░╤Б╤В╨╡╤А-╨║╨╗╨░╤Б╤Б╤Л).\n\n╨Ч╨Р╨Ф╨Р╨з╨Р:\n╨б╨╛╨╖╨┤╨░╤В╤М ╨┤╨╡╤В╨░╨╗╤М╨╜╨╛╨╡ ╨╛╨│╨╗╨░╨▓╨╗╨╡╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╤Б ╤В╨░╨╣╨╝╨║╨╛╨┤╨░╨╝╨╕ ╨╜╨░ ╨╛╤Б╨╜╨╛╨▓╨╡ ╤В╤А╨░╨╜╤Б╨║╤А╨╕╨┐╤В╨░.\n\n╨Я╨а╨Р╨Т╨Ш╨Ы╨Р ╨в╨Х╨а╨Ь╨Ш╨Э╨Ю╨Ы╨Ю╨У╨Ш╨Ш:\n- ╨Ш╤Б╨┐╤А╨░╨▓╨╗╤П╨╣ ╨╛╤И╨╕╨▒╨║╨╕: ╨С╤Е╨░╨│╨░╨▓╨░╨┤-╨│╨╕╤В╨░ (╨╜╨╡ ╨Я╤Е╨░╨│╨░╨▓╨┤-╨│╨╕╤В╨░), ╤Б╨░╨╜╨┤╤Е╨╕ (╨╜╨╡ ╤Б╨░╨╜╤В╤Е╨╕), ╨╣╨╛╨│╨░-╤Б╤Г╤В╤А╤Л (╨╜╨╡ ╨╣╨╛╨│╨░╤Б╤Г╤В╤А╤Л)\n- ╨Я╤А╨╛╨▓╨╡╤А╤П╨╣ ╨╛╤А╤Д╨╛╨│╤А╨░╤Д╨╕╤О ╤Б╨░╨╜╤Б╨║╤А╨╕╤В╤Б╨║╨╕╤Е ╤В╨╡╤А╨╝╨╕╨╜╨╛╨▓\n\n╨б╨в╨а╨Ю╨У╨Ш╨Х ╨в╨а╨Х╨С╨Ю╨Т╨Р╨Э╨Ш╨п ╨Ъ ╨Ъ╨Ю╨Ы╨Ш╨з╨Х╨б╨в╨Т╨г:\n\n╨Ъ╨а╨Ш╨в╨Ш╨з╨Э╨Ю: ╨Э╨░ 2 ╤З╨░╤Б╨░ ╨▓╨╕╨┤╨╡╨╛ = ╨Ь╨Р╨Ъ╨б╨Ш╨Ь╨г╨Ь 25-30 ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓. ╨Э╨Х ╨С╨Ю╨Ы╨м╨и╨Х!\n\n╨а╨░╤Б╤З╤С╤В:\n- 30 ╨╝╨╕╨╜╤Г╤В тЖТ 6-8 ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓\n- 60 ╨╝╨╕╨╜╤Г╤В тЖТ 12-15 ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓  \n- 90 ╨╝╨╕╨╜╤Г╤В тЖТ 18-23 ╤В╨░╨╣╨╝╨║╨╛╨┤╨░\n- 120 ╨╝╨╕╨╜╤Г╤В тЖТ 25-30 ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓\n\n╨Я╨Ы╨Ю╨в╨Э╨Ю╨б╨в╨м: ╨б╤А╨╡╨┤╨╜╨╕╨╣ ╤И╨░╨│ ╨╝╨╡╨╢╨┤╤Г ╨│╨╗╨░╨▓╨░╨╝╨╕ ╨б╨в╨а╨Ю╨У╨Ю = 4-5 ╨╝╨╕╨╜╤Г╤В (╨Э╨Х ╨Ь╨Х╨Э╨м╨и╨Х!)\n\n╨Я╨а╨Ш╨Э╨ж╨Ш╨Я ╨Ю╨в╨С╨Ю╨а╨Р ╨в╨Х╨Ь:\n- ╨Т╤Л╨▒╨╕╤А╨░╨╣ ╤В╨╛╨╗╤М╨║╨╛ ╨Ъ╨а╨г╨Я╨Э╨л╨Х ╤Б╨╝╤Л╤Б╨╗╨╛╨▓╤Л╨╡ ╨▒╨╗╨╛╨║╨╕\n- ╨Ь╨╡╨╗╨║╨╕╨╡ ╨┐╨╛╨┤╤В╨╡╨╝╤Л ╨╛╨▒╤К╨╡╨┤╨╕╨╜╤П╨╣ ╨▓ ╨╛╨┤╨╜╤Г ╨│╨╗╨░╨▓╤Г\n- ╨Ю╨┤╨╕╨╜ ╤В╨░╨╣╨╝╨║╨╛╨┤ = ╨╛╨┤╨╜╨░ ╨С╨Ю╨Ы╨м╨и╨Р╨п ╤В╨╡╨╝╨░, ╨░ ╨╜╨╡ ╨║╨░╨╢╨┤╨╛╨╡ ╤Г╨┐╨╛╨╝╨╕╨╜╨░╨╜╨╕╨╡ ╤В╨╡╤А╨╝╨╕╨╜╨░\n- ╨Х╤Б╨╗╨╕ ╤Б╨┐╨╕╨║╨╡╤А ╤Г╨┐╨╛╨╝╨╕╨╜╨░╨╡╤В 5 ╤В╨╡╤А╨╝╨╕╨╜╨╛╨▓ ╨┐╨╛╨┤╤А╤П╨┤ ╨▓ ╨╛╨┤╨╜╨╛╨╝ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨╡ тЖТ ╤Н╤В╨╛ ╨Ю╨Ф╨Э╨Р ╨│╨╗╨░╨▓╨░, ╨╜╨╡ ╨┐╤П╤В╤М\n\n╨з╨в╨Ю ╨Т╨л╨Ф╨Х╨Ы╨п╨в╨м ╨Т ╨Ю╨в╨Ф╨Х╨Ы╨м╨Э╨л╨Х ╨У╨Ы╨Р╨Т╨л:\nтЬЕ ╨Я╨╡╤А╨╡╤Е╨╛╨┤ ╨║ ╨╜╨╛╨▓╨╛╨╣ ╨С╨Ю╨Ы╨м╨и╨Ю╨Щ ╤В╨╡╨╝╨╡\nтЬЕ ╨а╨░╨╖╨▒╨╛╤А ╨║╨╛╨╜╨║╤А╨╡╤В╨╜╨╛╨│╨╛ ╤В╨╡╨║╤Б╤В╨░ (╤И╨╗╨╛╨║╨░, ╤Б╤Г╤В╤А╨░)\nтЬЕ ╨Ю╤В╨▓╨╡╤В ╨╜╨░ ╤А╨░╨╖╨▓╤С╤А╨╜╤Г╤В╤Л╨╣ ╨▓╨╛╨┐╤А╨╛╤Б ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░\nтЬЕ ╨Я╤А╨░╨║╤В╨╕╤З╨╡╤Б╨║╨╛╨╡ ╤Г╨┐╤А╨░╨╢╨╜╨╡╨╜╨╕╨╡\nтЬЕ ╨б╨╝╨╡╨╜╨░ ╤Д╨╕╨╗╨╛╤Б╨╛╤Д╤Б╨║╨╛╨╣ ╤И╨║╨╛╨╗╤Л/╨║╨╛╨╜╤Ж╨╡╨┐╤Ж╨╕╨╕\n\n╨з╨в╨Ю ╨Э╨Х ╨Т╨л╨Ф╨Х╨Ы╨п╨в╨м:\nтЭМ ╨Ъ╨░╨╢╨┤╨╛╨╡ ╤Г╨┐╨╛╨╝╨╕╨╜╨░╨╜╨╕╨╡ ╨╜╨╛╨▓╨╛╨│╨╛ ╤В╨╡╤А╨╝╨╕╨╜╨░ ╨▓╨╜╤Г╤В╤А╨╕ ╨╛╨┤╨╜╨╛╨╣ ╤В╨╡╨╝╤Л\nтЭМ ╨Ъ╨╛╤А╨╛╤В╨║╨╕╨╡ ╨╛╤В╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╤П ╨╕ ╨┐╤А╨╕╨╝╨╡╤А╤Л\nтЭМ ╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡ ╤Б╨▓╤П╨╖╨░╨╜╨╜╤Л╤Е ╨┐╨╛╨╜╤П╤В╨╕╨╣\n\n╨д╨Ю╨а╨Ь╨Р╨в ╨Ч╨Р╨У╨Ю╨Ы╨Ю╨Т╨Ъ╨Ю╨Т:\n- ╨б╤В╤А╨╛╨│╨╛: \"╨з╨з:╨Ь╨Ь:╨б╨б ╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡\"\n- ╨Ф╨╗╨╕╨╜╨░: 2-5 ╤Б╨╗╨╛╨▓\n- ╨б╨╛╨┤╨╡╤А╨╢╨░╨╜╨╕╨╡: ╨║╨╛╨╜╨║╤А╨╡╤В╨╜╨░╤П ╨Ъ╨а╨г╨Я╨Э╨Р╨п ╤В╨╡╨╝╨░ / ╤Д╨╕╨╗╨╛╤Б╨╛╤Д / ╤В╨╡╨║╤Б╤В / ╨▓╨╛╨┐╤А╨╛╤Б\n- ╨Я╤А╨╕╨╝╨╡╤А╤Л: \"╨Я╨╛╨╜╤П╤В╨╕╨╡ ╨┤╤Е╨░╤А╨╝╤Л\", \"╨Р╤А╨│╤Г╨╝╨╡╨╜╤В╨░╤Ж╨╕╤П ╨и╨░╨╜╨║╨░╤А╤Л\", \"╨а╨░╨╖╨▒╨╛╤А ╤И╨╗╨╛╨║╨╕ 2.47\", \"╨Т╨╛╨┐╤А╨╛╤Б ╨╛ ╨╝╨╡╨┤╨╕╤В╨░╤Ж╨╕╨╕\"\n\n╨Э╨Р╨з╨Р╨Ы╨Ю:\n╨Ш╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╣ ╤Д╨░╨║╤В╨╕╤З╨╡╤Б╨║╨╛╨╡ ╨▓╤А╨╡╨╝╤П ╨╜╨░╤З╨░╨╗╨░ ╤А╨╡╤З╨╕ ╨╕╨╖ ╤В╤А╨░╨╜╤Б╨║╤А╨╕╨┐╤В╨░ (╨╝╨╛╨╢╨╡╤В ╨▒╤Л╤В╤М ╨╜╨╡ 00:00:00)\n\n╨Т╨Р╨Ц╨Э╨Ю - ╨Я╨Х╨а╨Т╨л╨Щ ╨в╨Р╨Щ╨Ь╨Ъ╨Ю╨Ф:\n╨б╨░╨╝╤Л╨╣ ╨┐╨╡╤А╨▓╤Л╨╣ ╤В╨░╨╣╨╝╨║╨╛╨┤ 00:00:00 ╨Т╨б╨Х╨У╨Ф╨Р ╨┤╨╛╨╗╨╢╨╡╨╜ ╨╕╨╝╨╡╤В╤М ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡: {{ $('Get row(s) in sheet1').first().json.description }}\n\n╨Я╨а╨Ш╨Ь╨Х╨а ╨Я╨а╨Р╨Т╨Ш╨Ы╨м╨Э╨Ю╨Щ ╨б╨в╨а╨г╨Ъ╨в╨г╨а╨л (90 ╨╝╨╕╨╜╤Г╤В):\n00:00:00 {{ $('Get row(s) in sheet1').first().json.description }}\n00:05:20 ╨Я╨╛╨╜╤П╤В╨╕╨╡ ╨░╤В╨╝╨░╨╜ ╨▓ ╨г╨┐╨░╨╜╨╕╤И╨░╨┤╨░╤Е\n00:10:45 ╨а╨░╨╖╨▒╨╛╤А ╨С╤А╨╕╤Е╨░╨┤╨░╤А╨░╨╜╤М╤П╨║╨░-╤Г╨┐╨░╨╜╨╕╤И╨░╨┤ 4.4.5\n00:16:30 ╨Ъ╨╛╨╜╤Ж╨╡╨┐╤Ж╨╕╤П ╨С╤А╨░╤Е╨╝╨░╨╜╨░\n00:21:10 ╨Т╨╡╨┤╨░╨╜╤В╨░: ╨░╨┤╨▓╨░╨╣╤В╨░ vs ╨┤╨▓╨░╨╣╤В╨░\n00:26:40 ╨Т╨╛╨┐╤А╨╛╤Б ╨╛ ╨┐╤А╨╕╤А╨╛╨┤╨╡ ╤Б╨╛╨╖╨╜╨░╨╜╨╕╤П\n00:32:15 ╨г╤З╨╡╨╜╨╕╨╡ ╨и╨░╨╜╨║╨░╤А╤Л ╨╛ ╨╝╨░╨╣╨╡\n00:38:00 ╨Я╤А╨░╨║╤В╨╕╨║╨░: ╨╝╨╡╨┤╨╕╤В╨░╤Ж╨╕╤П ╨░╤В╨╝╨░-╨▓╨╕╤З╨░╤А╨░\n00:43:50 ╨Щ╨╛╨│╨░-╤Б╤Г╤В╤А╤Л ╨Я╨░╤В╨░╨╜╨┤╨╢╨░╨╗╨╕: ╨▓╨▓╨╡╨┤╨╡╨╜╨╕╨╡\n00:49:20 ╨з╨╕╤В╤В╨░-╨▓╤А╨╕╤В╤В╨╕-╨╜╨╕╤А╨╛╨┤╤Е╨░\n00:55:10 ╨Т╨╛╤Б╤М╨╝╨╕╤Б╤В╤Г╨┐╨╡╨╜╤З╨░╤В╤Л╨╣ ╨┐╤Г╤В╤М\n01:01:00 ╨Т╨╛╨┐╤А╨╛╤Б ╨╛ ╤Б╨░╨╝╨░╨┤╤Е╨╕\n01:07:30 ╨б╤А╨░╨▓╨╜╨╡╨╜╨╕╨╡ ╨╣╨╛╨│╨╕ ╨╕ ╨▓╨╡╨┤╨░╨╜╤В╤Л\n01:13:45 ╨С╤Е╨░╨│╨░╨▓╨░╨┤-╨│╨╕╤В╨░: ╨║╨░╤А╨╝╨░-╨╣╨╛╨│╨░\n01:19:20 ╨а╨░╨╖╨▒╨╛╤А ╤И╨╗╨╛╨║╨╕ 2.47\n01:25:00 ╨Я╤А╨░╨║╤В╨╕╨║╨░: ╨╛╤Б╨╛╨╖╨╜╨░╨╜╨╜╨╛╨╡ ╨┤╨╡╨╣╤Б╤В╨▓╨╕╨╡\n01:30:15 ╨Т╨╛╨┐╤А╨╛╤Б╤Л ╨╕ ╨╖╨░╨▓╨╡╤А╤И╨╡╨╜╨╕╨╡\n\n╨Я╨а╨Ю╨Т╨Х╨а╨Ъ╨Р ╨Я╨Х╨а╨Х╨Ф ╨Ю╨в╨Я╨а╨Р╨Т╨Ъ╨Ю╨Щ:\n1. ╨Я╨╡╤А╨╡╤Б╤З╨╕╤В╨░╨╣ ╨╛╨▒╤Й╨╡╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓\n2. ╨Я╤А╨╛╨▓╨╡╤А╤М ╤Б╤А╨╡╨┤╨╜╨╕╨╣ ╨╕╨╜╤В╨╡╤А╨▓╨░╨╗ (╨┤╨╛╨╗╨╢╨╡╨╜ ╨▒╤Л╤В╤М 4-5+ ╨╝╨╕╨╜╤Г╤В)\n3. ╨Я╤А╨╛╨▓╨╡╤А╤М ╨╡╤Б╤В╤М ╨╗╨╕ ╨┤╨╛ ╨┐╨╡╤А╨▓╨╛╨│╨╛ ╤В╨░╨╣╨╝ ╨║╨╛╨┤╨░ ╨║╨░╨║╨╛╨╣ ╤В╨╛ ╤В╨╡╨║╤Б╤В, ╨╡╤Б╨╗╨╕ ╨╡╤Б╤В╤М ╤Г╨┤╨░╨╗╨╕ ╨▓╤Б╨╡ ╨┤╨╛ 00:00:00\n4. ╨Я╤А╨╛╨▓╨╡╤А╤М ╤З╤В╨╛ ╨▒╤Л ╨╜╨╡ ╨▒╤Л╨╗╨╛ ╨╜╨╕╨║╨░╨║╨╕╤Е ╨║╨╛╨╝╨╝╨╡╨╜╤В╨░╤А╨╕╨╡╨▓ ╨┐╨╛╤Б╨╗╨╡ ╨┐╨╛╤Б╨╗╨╡╨┤╨╜╨╡╨│╨╛ ╤В╨░╨╣╨╝╨║╨╛╨┤╨░\n5. ╨Х╤Б╨╗╨╕ ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨▒╨╛╨╗╤М╤И╨╡ ╨╜╨╛╤А╨╝╤Л тЖТ ╨╛╨▒╤К╨╡╨┤╨╕╨╜╨╕ ╨╝╨╡╨╗╨║╨╕╨╡ ╤В╨╡╨╝╤Л ╨▓ ╨║╤А╤Г╨┐╨╜╤Л╨╡ ╨▒╨╗╨╛╨║╨╕\n6. ╨г╨▒╨╡╨┤╨╕╤Б╤М, ╤З╤В╨╛ ╨┐╨╡╤А╨▓╤Л╨╣ ╤В╨░╨╣╨╝╨║╨╛╨┤ ╤Б╨╛╨┤╨╡╤А╨╢╨╕╤В {{ $('Get row(s) in sheet1').first().json.description }}\n\n╨Т╨е╨Ю╨Ф╨Э╨л╨Х ╨Ф╨Р╨Э╨Э╨л╨Х:\n╨в╤А╨░╨╜╤Б╨║╤А╨╕╨┐╤В ╨▓╨╕╨┤╨╡╨╛ ╨▒╤Г╨┤╨╡╤В ╨┐╤А╨╡╨┤╨╛╤Б╤В╨░╨▓╨╗╨╡╨╜ ╨▓ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╕ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П.\n\n╨Т╨л╨е╨Ю╨Ф╨Э╨л╨Х ╨Ф╨Р╨Э╨Э╨л╨Х:\n╨б╨в╨а╨Ю╨У╨Ю ╤Г╨╢╨╡ ╨╛╤В╨║╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨░╨╜╨╜╤Л╨╣ ╤Б╨┐╨╕╤Б╨╛╨║ ╤В╨░╨╣╨╝ ╨║╨╛╨┤╨╛╨▓.\n╨б╨┐╨╕╤Б╨╛╨║ ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╤Б ╨╜╨░╨╖╨▓╨░╨╜╨╕╤П╨╝╨╕ ╨│╨╗╨░╨▓ ╨▓ ╤Г╨║╨░╨╖╨░╨╜╨╜╨╛╨╝ ╤Д╨╛╤А╨╝╨░╤В╨╡.\n╨Э╨Ш╨Ъ╨Р╨Ъ╨Ш╨е ╨║╨╛╨╝╨╝╨╡╨╜╤В╨░╤А╨╕╨╡╨▓ ╨┤╨╛ ╨╕ ╨┐╨╛╤Б╨╗╨╡ ╤В╨░╨╣╨╝ ╨║╨╛╨┤╨╛╨▓.\n╨б╨в╨а╨Ю╨У╨Ю ╨Э╨Х╨Ф╨Ю╨Ы╨Ц╨Э╨Ю ╨▒╤Л╤В╤М ╤В╨░╨║╨╕╤Е ╨╜╨░╨┤╨┐╨╕╤Б╨╡╨╣ - ╨Я╨а╨Ю╨Т╨Х╨а╨Ъ╨Р ╨Ф╨Ы╨Ш╨в╨Х╨Ы╨м╨Э╨Ю╨б╨в╨Ш ╨Ш ╨а╨Р╨б╨з╨Б╨в ╨в╨Р╨Щ╨Ь╨Ъ╨Ю╨Ф╨Ю╨Т\\n\\n╨Ф╨╗╨╕╤В╨╡╨╗╤М╨╜╨╛╤Б╤В╤М ╨▓╨╕╨┤╨╡╨╛: ~91 ╨╝╨╕╨╜╤Г╤В╨░ (01:30:46)\\n╨Э╨╡╨╛╨▒╤Е╨╛╨┤╨╕╨╝╨╛╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓: 18-23 (╨╝╨░╨║╤Б╨╕╨╝╤Г╨╝)\\n╨б╤А╨╡╨┤╨╜╨╕╨╣ ╨╕╨╜╤В╨╡╤А╨▓╨░╨╗: 4-5 ╨╝╨╕╨╜╤Г╤В"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2400,
+        560
+      ],
+      "id": "1b36c3d9-53bc-4bec-ba3e-c380fb1f115f",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const out = item.json.stdout || '';\n  \n  // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.)\n  // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗╤Л ╨▓╨╜╤Г╤В╤А╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤П ╤Д╨░╨╣╨╗╨░\n  const match = out.match(/\\/data\\/audio\\/.*?\\.(?:m4a|mp4|webm|mp3|mkv)/gi);\n  \n  let path = match ? match[match.length - 1] : null;\n\n  if (!path) {\n    // ╨Х╤Б╨╗╨╕ ╨┐╨╛ ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╤О ╨╜╨╡ ╨╜╨░╤И╨╗╨╕, ╨┐╤А╨╛╨▒╤Г╨╡╨╝ ╨╜╨░╨╣╤В╨╕ ╨┤╨╛ ╤В╨╛╤З╨║╨╕ ╤Б ╨╖╨░╨┐╤П╤В╨╛╨╣ (╨║╨░╨║ ╨▓ ╨╗╨╛╨│╨╡ ExtractAudio)\n    const backupMatch = out.match(/\\/data\\/audio\\/[^; \\n\\r\\t][^;]+(?=;)/g);\n    path = backupMatch ? backupMatch[backupMatch.length - 1] : null;\n  }\n\n  if (!path) {\n    item.json.error = '╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╕╨╖╨▓╨╗╨╡╤З╤М ╨┐╨╛╨╗╨╜╤Л╨╣ ╨┐╤Г╤В╤М ╨║ ╤Д╨░╨╣╨╗╤Г';\n    item.json.remotePath = null;\n  } else {\n    // ╨Ю╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝\n    item.json.remotePath = path.trim();\n  }\n  \n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        560
+      ],
+      "id": "52ddfb3c-a9ed-4520-ad0b-8c986f41ce14",
+      "name": "Code2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "resource": "file",
+        "operation": "download",
+        "path": "={{ $json.remotePath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        560
+      ],
+      "id": "5271dcd6-20df-428e-8829-3f2caddfd39d",
+      "name": "Download a file",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://youtu.be/{{ $('Upload a video').first().json.uploadId }}\""
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        560
+      ],
+      "id": "a267ff19-6214-4ae9-9375-7e4f7e93f861",
+      "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2944,
+        80
+      ],
+      "id": "1f51d901-9a6b-4b51-be32-ce76752542cf",
+      "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        80
+      ],
+      "id": "b8966136-a765-4ec5-a9c4-2d48f967f7d9",
+      "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡\nconst payload = items[0].json;\n\n// ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓)\nconst data = Array.isArray(payload) ? payload[0] : payload;\n\n// ╨Я╤А╨╛╨║╨╗╨░╨┤╤Л╨▓╨░╨╡╨╝ ╨┐╤Г╤В╤М ╨║ ╨╝╨░╤Б╤Б╨╕╨▓╤Г ╤Б╨╗╨╛╨▓ (╤Б╨╛╨│╨╗╨░╤Б╨╜╨╛ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨╡ ╨╖╨░╨│╤А╤Г╨╢╨╡╨╜╨╜╨╛╨│╨╛ JSON)\nconst words = data?.results?.channels?.[0]?.alternatives?.[0]?.words;\n\n// ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╨╜╨░╨╗╨╕╤З╨╕╨╡ ╨║╨╛╨╜╤В╨╡╨╜╤В╨░\nif (!words || !words.length) {\n  return [{ json: { error: \"No transcript found in the file\" } }];\n}\n\n// ╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨░ ╤А╨░╨╖╨╝╨╡╤А╨░ ╤З╨░╨╜╨║╨░\nconst MAX_CHARS = 1000;\n\nlet chunks = [];\nlet currentChunk = \"\";\nlet currentStartTime = null;\n\n// ╨е╨╡╨╗╨┐╨╡╤А: ╤Б╨╡╨║╤Г╨╜╨┤╤Л тЖТ \"╨з╨з:╨Ь╨Ь:╨б╨б\" (╨▓ ╨╜╨╛╨▓╨╛╨╝ ╤Д╨░╨╣╨╗╨╡ ╤В╨░╨╣╨╝╨║╨╛╨┤╤Л ╤Г╨║╨░╨╖╨░╨╜╤Л ╨▓ ╤Б╨╡╨║╤Г╨╜╨┤╨░╤Е, ╨░ ╨╜╨╡ ╨╝╨╕╨╗╨╗╨╕╤Б╨╡╨║╤Г╨╜╨┤╨░╤Е)\nfunction secToTime(sec) {\n  const totalSec = Math.floor(sec);\n  const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');\n  const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');\n  const s = (totalSec % 60).toString().padStart(2, '0');\n  return `${h}:${m}:${s}`;\n}\n\n// ╨Я╤А╨╛╤Е╨╛╨┤╨╕╨╝ ╨┐╨╛ ╨║╨░╨╢╨┤╨╛╨╝╤Г ╤Б╨╗╨╛╨▓╤Г\nfor (const wordObj of words) {\n  // ╨С╨╡╤А╨╡╨╝ ╤Б╨╗╨╛╨▓╨╛ ╤Б╨╛ ╨╖╨╜╨░╨║╨░╨╝╨╕ ╨┐╤А╨╡╨┐╨╕╨╜╨░╨╜╨╕╤П (punctuated_word), ╨╡╤Б╨╗╨╕ ╨╡╨│╨╛ ╨╜╨╡╤В - ╨╛╨▒╤Л╤З╨╜╨╛╨╡ (word)\n  const text = (wordObj.punctuated_word || wordObj.word || \"\").trim();\n  if (!text) continue;\n\n  if (currentStartTime === null) {\n    currentStartTime = secToTime(wordObj.start);\n  }\n\n  // ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╤Б╨╗╨╛╨▓╨╛ ╨║ ╤В╨╡╨║╤Г╤Й╨╡╨╝╤Г ╤З╨░╨╜╨║╤Г ╤Б ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨╝\n  currentChunk += text + \" \";\n\n  // ╨Х╤Б╨╗╨╕ ╤З╨░╨╜╨║ ╨┤╨╛╤Б╤В╨╕╨│ ╨╗╨╕╨╝╨╕╤В╨░ тАФ ╤Б╨╛╤Е╤А╨░╨╜╤П╨╡╨╝\n  if (currentChunk.length >= MAX_CHARS) {\n    chunks.push({\n      json: {\n        timestamp: currentStartTime,\n        text: currentChunk.trim()\n      }\n    });\n    currentChunk = \"\";\n    currentStartTime = null;\n  }\n}\n\n// ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨┐╨╛╤Б╨╗╨╡╨┤╨╜╨╕╨╣ ╤Е╨▓╨╛╤Б╤В╨╕╨║, ╨╡╤Б╨╗╨╕ ╨╛╨╜ ╨╛╤Б╤В╨░╨╗╤Б╤П\nif (currentChunk.length > 0) {\n  chunks.push({\n    json: {\n      timestamp: currentStartTime,\n      text: currentChunk.trim()\n    }\n  });\n}\n\nreturn chunks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        560
+      ],
+      "id": "810590ee-de1d-436f-be36-bfa18f7b4c12",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е\n// ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В...\n\nconst fullTranscript = items.map(item => {\n  return `[${item.json.timestamp}] ${item.json.text}`;\n}).join(\"\\n\\n\");\n\n// ╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╨╝ ╨╛╨┤╨╕╨╜ ╨╛╨▒╤К╨╡╨║╤В ╨┤╨╗╤П OpenAI\nreturn [{\n  json: {\n    transcript: fullTranscript\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        560
+      ],
+      "id": "b7ccee8f-e4b9-4a74-9da0-6430494fffdb",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        736
+      ],
+      "id": "fc5a0859-e41e-417f-b501-6d95a7b3a554",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "name": "OpenRouter ╨Ю╨а╨б",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepgram.com/v1/listen?paragraphs=true&punctuate=true&language=ru&model=nova-3",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 6b55a7bd4a8fe74598c8a4b4a888d06b7a7cf1c4"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2112,
+        560
+      ],
+      "id": "8c91947e-1371-441c-9f5f-5a60ae184318",
+      "name": "HTTP Request2",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://www.googleapis.com/youtube/v3/videos?part=status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "***REDACTED***",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $('Upload a video').item.json.uploadId }}\",\n  \"status\": {\n    \"embeddable\": true,\n    \"privacyStatus\": \"unlisted\",\n    \"license\": \"youtube\",\n    \"publicStatsViewable\": true\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        864,
+        368
+      ],
+      "id": "69746126-1a1b-429f-9445-ea4dbdbbc616",
+      "name": "HTTP Request",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://samskrte.ru/api/lessons/{{ $json.lesson_id }}/transcript",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Secret-Key",
+              "value": "Ivan3128211498"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('HTTP Request2').first().json) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3520,
+        64
+      ],
+      "id": "ab385b3d-ba89-4a71-8cce-2826728e8118",
+      "name": "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х1",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DOWNLOAD": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ZOOM": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Format Title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add a playlist item": {
+      "main": [
+        [
+          {
+            "node": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в": {
+      "main": [
+        [
+          {
+            "node": "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г": {
+      "main": [
+        [
+          {
+            "node": "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г": {
+      "main": [
+        [
+          {
+            "node": "Wait (Subtitles)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Playlist)": {
+      "main": [
+        [
+          {
+            "node": "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Add a playlist item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1": {
+      "main": [
+        [
+          {
+            "node": "Wait (Playlist)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Execute a command",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Subtitles)": {
+      "main": [
+        [
+          {
+            "node": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Create TXT File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a video": {
+      "main": [
+        [
+          {
+            "node": "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a command": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DELETE FROM ZOOM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Title": {
+      "main": [
+        [
+          {
+            "node": "DOWNLOAD",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create TXT File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1": {
+      "main": [
+        [
+          {
+            "node": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х": {
+      "main": [
+        [
+          {
+            "node": "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}

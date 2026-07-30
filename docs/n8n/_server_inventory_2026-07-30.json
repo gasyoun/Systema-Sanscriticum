@@ -1,0 +1,4189 @@
+[
+  {
+    "id": "GGs0G2azzkLqLbJj",
+    "name": "Lecture clip extract (H1452) тАФ ffmpeg + VK + Laravel callback",
+    "active": true,
+    "archived": false,
+    "created": "2026-07-28 17:56:27",
+    "updated": "2026-07-29 16:45:54",
+    "triggerCount": 1,
+    "node_count": 8,
+    "node_types": [
+      "code",
+      "httpRequest",
+      "ssh",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "lecture-clip-extract"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Expand spans",
+        "kind": "code",
+        "preview": "// Laravel DispatchLectureClipExtractionJob payload. / // action=clip_lecture, lesson_id, video_url/youtube_url/rutube_url, spans[], callback_url. / const body = $input.first().json.body ?? $input.first()"
+      },
+      {
+        "name": "╨б╨╛╨▒╤А╨░╤В╤М ╨║╨╛╨╝╨░╨╜╨┤╤Г",
+        "kind": "code",
+        "preview": "// ╨У╨╛╤В╨╛╨▓╨╕╨╝ shell-╨║╨╛╨╝╨░╨╜╨┤╤Г ╨╜╨░ ╤Е╨╛╤Б╤В ╤Б yt-dlp/ffmpeg (╤В╨╛╤В ╨╢╨╡ SSH-╨║╤А╨╡╨┤, ╤З╤В╨╛ ╤Г / // ┬л╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛┬╗ ╨▓ ZOOM-╤Б╤Ж╨╡╨╜╨░╤А╨╕╨╕). ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г ╨╖╨┤╨╡╤Б╤М, ╨░ ╨╜╨╡ ╨▓ SSH-╨╜╨╛╨┤╨╡: / // ╨▓ JS ╤Н╨║╤А╨░╨╜╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡ ╨║╨░╨▓╤Л╤З╨╡╨║ ╤З╨╕╤В╨░╨╡╨╝╨╛ ╨╕ ╨┐╤А╨╛╨▓╨╡╤А╤П╨╡"
+      },
+      {
+        "name": "╨Э╨░╤А╨╡╨╖╨░╤В╤М ╨╕ ╨╖╨░╨╗╨╕╤В╤М ╨▓ VK",
+        "kind": "ssh",
+        "preview": "={{ $json.command }}"
+      },
+      {
+        "name": "╨а╨░╨╖╨╛╨▒╤А╨░╤В╤М ╨╛╤В╨▓╨╡╤В VK",
+        "kind": "code",
+        "preview": "// SSH-╨╜╨╛╨┤╨░ ╨║╨╗╨░╨┤╤С╤В ╨▓╤Л╨▓╨╛╨┤ ╨▓ stdout. ╨Я╨╛╤Б╨╗╨╡╨┤╨╜╤П╤П ╤Б╤В╤А╨╛╨║╨░ тАФ JSON ╤Б id ╤А╨╛╨╗╨╕╨║╨░. / return $input.all().map((item) => { /   const raw = String(item.json.stdout ?? '').trim(); /   const last = raw.split('\\n').filter(B"
+      },
+      {
+        "name": "Aggregate clips",
+        "kind": "code",
+        "preview": "// ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨╛╨┤╨╕╨╜ callback ╨╜╨░ ╨▓╤Б╤О ╨╗╨╡╨║╤Ж╨╕╤О. ╨Я╨╛╨╗╤П ╤Б╨┐╨░╨╜╨░ ╨▒╨╡╤А╤С╨╝ ╨╕╨╖ ┬лExpand spans┬╗ / // ╨┐╨╛ ╨╕╨╜╨┤╨╡╨║╤Б╤Г: ╤Ж╨╡╨┐╨╛╤З╨║╨░ ╨╗╨╕╨╜╨╡╨╣╨╜╨░╤П ╨╕ 1:1, ╨┐╨╛╤А╤П╨┤╨╛╨║ ╤Б╨╛╤Е╤А╨░╨╜╤П╨╡╤В╤Б╤П, ╨░ $json ╨║ ╤Н╤В╨╛╨╝╤Г / // ╨╝╨╛╨╝╨╡╨╜╤В╤Г ╤Б╨╛╨┤╨╡╤А╨╢╨╕╤В ╤В╨╛╨╗╤М╨║╨╛ ╨╛╤В╨▓╨╡╤В VK. / const vkIte"
+      },
+      {
+        "name": "╨г╨▒╤А╨░╤В╤М ╨╕╤Б╤Е╨╛╨┤╨╜╨╕╨║",
+        "kind": "ssh",
+        "preview": "=rm -f '/data/clips/src-{{ $('Expand spans').first().json.lesson_id }}.mp4'"
+      }
+    ],
+    "node_names": [
+      "Webhook",
+      "Expand spans",
+      "╨б╨╛╨▒╤А╨░╤В╤М ╨║╨╛╨╝╨░╨╜╨┤╤Г",
+      "╨Э╨░╤А╨╡╨╖╨░╤В╤М ╨╕ ╨╖╨░╨╗╨╕╤В╤М ╨▓ VK",
+      "╨а╨░╨╖╨╛╨▒╤А╨░╤В╤М ╨╛╤В╨▓╨╡╤В VK",
+      "Aggregate clips",
+      "Laravel callback",
+      "╨г╨▒╤А╨░╤В╤М ╨╕╤Б╤Е╨╛╨┤╨╜╨╕╨║"
+    ],
+    "description": ""
+  },
+  {
+    "id": "1EIqqNzMl5NNIxST",
+    "name": "ZOOM 1.4 (Final) + ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р ╨в╨Х╨б╨в",
+    "active": true,
+    "archived": false,
+    "created": "2026-06-14 14:31:06",
+    "updated": "2026-07-28 14:44:15",
+    "triggerCount": 2,
+    "node_count": 52,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "86446208-6c7a-432f-bcaa-f4d9536b3f55"
+      },
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "c1e602da-3aae-43b9-97ad-0e8044ba94aa"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / let webhookBody; / let sourceNode = ''; /  / try { /   const zoomNode = $(\"ZOOM\").first(); /   if (zoomNode && zoomNode.json.body) { /     webhookBody = zoomNode.json.body; /     sour"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/fDMCDXjS6ZWlkOwQ/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'GUmwmhe2SpuZ76sjgi9"
+      },
+      {
+        "name": "Format Title",
+        "kind": "code",
+        "preview": "for (const item of $input.all()) { /     // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Г╤Й╨╕╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П, ╨╛╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝ /     let topic = item.json.last_topic ? String(item.json.last_topic).trim() : \"\"; /     const desc"
+      },
+      {
+        "name": "Create TXT File",
+        "kind": "code",
+        "preview": "const items = $input.all(); /  / for (const item of items) { /     // ╨С╨╡╤А╨╡╨╝ ╨│╨╛╤В╨╛╨▓╤Л╨╣ ╤В╨╡╨║╤Б╤В ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░ /     const text = item.json.youtube_chapters || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤В\""
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://yo"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ / const payload = items[0].json; /  / // ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓) / const data = Array.isArray(payload) ? payload[0] "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      }
+    ],
+    "node_names": [
+      "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х",
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Code in JavaScript2",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "Wait",
+      "Webhook",
+      "Switch1",
+      "Respond to Webhook2",
+      "Code in JavaScript5",
+      "Switch2",
+      "DELETE FROM ZOOM",
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "Send a text message1",
+      "Format Title",
+      "Create TXT File",
+      "Upload file",
+      "AI Agent1",
+      "Code2",
+      "Download a file",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "OpenRouter Chat Model1",
+      "HTTP Request2",
+      "HTTP Request",
+      "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "XWQHAwlxBAFe6xfj",
+    "name": "╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р+╨в╨Р╨С╨Ы╨Ш╨ж╨Р ╨Ю╨Я╨Ы╨Р╨в",
+    "active": true,
+    "archived": false,
+    "created": "2026-04-20 13:18:34",
+    "updated": "2026-06-28 09:11:01",
+    "triggerCount": 1,
+    "node_count": 2,
+    "node_types": [
+      "googleSheets",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "payments"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "Append or update row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "b2LCmGsT8gKcQV6t",
+    "name": "╨о╤В╤Г╨▒ ╤Б╨┐╨╕╤Б╨╛╨║",
+    "active": true,
+    "archived": false,
+    "created": "2026-01-15 13:29:44",
+    "updated": "2026-06-27 11:29:09",
+    "triggerCount": 1,
+    "node_count": 6,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "scheduleTrigger",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "╨а╨░╨╖ ╨▓ ╨┤╨╡╨╜╤М 03:00",
+        "path": "{\"interval\": [{\"field\": \"days\", \"triggerAtHour\": 3, \"triggerAtMinute\": 0}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "╨в╨╛╨╗╤М╨║╨╛ ╨╜╨╛╨▓╤Л╨╡",
+        "kind": "code",
+        "preview": "const plMap = {}; / for (const p of $('Get many playlists').all()) { /   if (p.json && p.json.id) plMap[p.json.id] = (p.json.snippet && p.json.snippet.title) || ''; / } / const idRe = /(?:youtu\\.be\\/|[?&]v=|\\"
+      }
+    ],
+    "node_names": [
+      "╨а╨░╨╖ ╨▓ ╨┤╨╡╨╜╤М 03:00",
+      "╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "Get many playlists",
+      "Get many playlist items",
+      "╨в╨╛╨╗╤М╨║╨╛ ╨╜╨╛╨▓╤Л╨╡",
+      "Append row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "egCkjS06dYtYcnmv",
+    "name": "╨╗╨╛╨▓╨╕╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤П copy",
+    "active": true,
+    "archived": false,
+    "created": "2026-02-15 23:24:49",
+    "updated": "2026-07-28 10:12:22",
+    "triggerCount": 1,
+    "node_count": 3,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook (╨╕╨╖ Laravel)",
+        "path": "fb961b2a-e2eb-4e77-9214-9c05b22bff3c"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨г╨║╨░╨╢╨╕ ╨╖╨┤╨╡╤Б╤М ID ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╡╨╣, ╨╛╤В ╨║╨╛╤В╨╛╤А╤Л╤Е ╨╜╤Г╨╢╨╜╨╛ ╨┐╤А╨╕╨╜╨╕╨╝╨░╤В╤М ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П / const ALLOWED_IDS = [908572509, 190100700, 427307131,  / 1438569462];  /  / return items.map(item => { /   // ╨Ш╤Й╨╡╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ (╤Г╤З╨╕╤В╤Л╨▓╨░╨╡╨╝"
+      }
+    ],
+    "node_names": [
+      "Webhook (╨╕╨╖ Laravel)",
+      "Append or update row in sheet",
+      "Code in JavaScript1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "umx56MTx6vBYfJXQ",
+    "name": "Content Harvester",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-05 14:04:17",
+    "updated": "2026-02-05 19:25:13",
+    "triggerCount": 0,
+    "node_count": 13,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "scheduleTrigger",
+      "splitInBatches",
+      "switch",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨╛╤В╨▓╨╡╤В ╨╛╤В YouTube / const items = $input.all()[0].json.items; /  / if (!items || items.length === 0) { /     return []; // ╨Я╨╗╨╡╨╣╨╗╨╕╤Б╤В ╨┐╤Г╤Б╤В / } /  / // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╕╨╜╤Д╨╛ ╨╛ ╨║╤Г╤А╤Б╨╡, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╝╤Л ╤Б╨╡╨╣╤З╨░╤Б ╨╛╨▒╤А╨░╨▒╨░╤В╤Л╨▓╨░╨╡╨╝ (╨╕╨╖"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// ╨Ъ╨╛╨┤ ╨┤╨╗╤П Rutube / const items = $input.all(); / let allVideos = []; /  / for (const item of items) { /     // Rutube ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╨▓╨╕╨┤╨╡╨╛ ╨▓╨╜╤Г╤В╤А╨╕ ╨╝╨░╤Б╤Б╨╕╨▓╨░ \"results\" /     const results = item.json.results;  /      /     "
+      },
+      {
+        "name": "Merge All",
+        "kind": "code",
+        "preview": "// ╨Т╨Р╨Ц╨Э╨Ю: ╨Ч╨░╨╝╨╡╨╜╨╕ 'Code' ╨╜╨░ ╨╕╨╝╤П ╤В╨▓╨╛╨╡╨╣ ╨╜╨╛╨┤╤Л Code, ╨║╨╛╤В╨╛╤А╨░╤П ╨Т╨Э╨г╨в╨а╨Ш ╤Ж╨╕╨║╨╗╨░ / // ╨Ю╨╜╨░ ╨┤╨╛╨╗╨╢╨╜╨░ ╨╜╨░╨╖╤Л╨▓╨░╤В╤М╤Б╤П ╤В╨░╨║ ╨╢╨╡, ╨║╨░╨║ ╨╜╨░ ╤Б╤Е╨╡╨╝╨╡ (╨╜╨░╨┐╤А╨╕╨╝╨╡╤А 'Code Rutube' ╨╕╨╗╨╕ ╨┐╤А╨╛╤Б╤В╨╛ 'Code') / const allExecutions = $('Code').all(); /  / le"
+      }
+    ],
+    "node_names": [
+      "Schedule Trigger",
+      "Get row(s) in sheet",
+      "Loop Over Items",
+      "HTTP Request",
+      "Code in JavaScript",
+      "Split In Batches",
+      "Append or update row in sheet",
+      "Code in JavaScript1",
+      "Rutube API",
+      "Check Next",
+      "Wait",
+      "Merge All",
+      "Append or update row in sheet1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "YFdGuNU66oEcYYCf",
+    "name": "KINESCOPE",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-16 12:27:56",
+    "updated": "2026-01-17 16:33:20",
+    "triggerCount": 0,
+    "node_count": 8,
+    "node_types": [
+      "httpRequest",
+      "manualTrigger",
+      "splitOut",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request1",
+      "Split Out",
+      "AUTH RUTUBE",
+      "DOWNLOAD",
+      "GET LIST",
+      "HTTP Request",
+      "Upload a video"
+    ],
+    "description": ""
+  },
+  {
+    "id": "E5fMNFhDE2aF3txk",
+    "name": "LMS ORS",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-13 19:31:41",
+    "updated": "2026-02-13 19:31:41",
+    "triggerCount": 0,
+    "node_count": 1,
+    "node_types": [
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "8b601137-1903-41bb-9f65-c6355b997613"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook"
+    ],
+    "description": ""
+  },
+  {
+    "id": "AlDrByBqiJ20a75W",
+    "name": "My workflow",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-25 19:09:26",
+    "updated": "2025-08-25 20:49:54",
+    "triggerCount": 0,
+    "node_count": 4,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "manualTrigger",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШTest workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШTest workflowтАЩ",
+      "YouTube",
+      "Google Sheets",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "VhLIACWtrYwC7fJW",
+    "name": "My workflow 10",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-19 20:15:19",
+    "updated": "2026-01-19 20:15:19",
+    "triggerCount": 0,
+    "node_count": 19,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "manualTrigger",
+      "respondToWebhook",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "c36d6461-7087-4f5e-ba34-9316da91ea9a"
+      },
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / // 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ plainToken ╨╛╤В Zoom / // ╨Х╤Б╨╗╨╕ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ ╨┐╤А╨╕╨┤╨╡╤В ╨╜╨╡╨╝╨╜╨╛╨│╨╛ ╨┤╤А╤Г╨│╨░╤П, ╨┐╤А╨╛╨▒╤Г╨╡╨╝ ╤А╨░╨╖╨╜╤Л╨╡ ╨▓╨░╤А╨╕╨░╨╜╤В╤Л ╨┤╨╛╤Б╤В╤Г╨┐╨░ / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\""
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨╗╨╛ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / const body = items[0].json.body || items[0].json; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╤З╤В╨╛ ╤Н╤В╨╛ ╤Б╨╛╨▒╤Л╤В╨╕╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ / if (!body.payload || !body.payload.object) { /   return []; / } /  / const payloadObj = body"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "return { /   \"body\": { /     \"event\": \"recording.completed\", /     \"payload\": { /       \"object\": { /         \"id\": \"82508182114\",  // <-- ╨Т╨б╨в╨Р╨Т╨м╨в╨Х ╨б╨о╨Ф╨Р MEETING ID (╨▒╨╡╨╖ ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓, ╨║╨░╨║ ╨▓ ╤В╨░╨▒╨╗╨╕╤Ж╨╡) /         \"topic\":"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait",
+      "When clicking тАШExecute workflowтАЩ",
+      "Code in JavaScript2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "xVu3aaw13DJfWcpr",
+    "name": "My workflow 12",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-21 06:56:26",
+    "updated": "2026-01-21 07:03:55",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "manualTrigger",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "Send a text message"
+    ],
+    "description": ""
+  },
+  {
+    "id": "y2gRwFpkoqZjIcyj",
+    "name": "My workflow 13",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-21 19:29:00",
+    "updated": "2026-01-21 19:29:00",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "UOHueG3PiVupVh7O",
+    "name": "My workflow 14",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-23 08:38:48",
+    "updated": "2026-01-23 10:45:55",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "errorTrigger",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "errorTrigger",
+        "name": "Error Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Error Trigger",
+      "Send a text message"
+    ],
+    "description": ""
+  },
+  {
+    "id": "xGFWEoEvZraUBdkD",
+    "name": "My workflow 16",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-24 20:36:56",
+    "updated": "2026-01-24 20:36:56",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "manualTrigger",
+      "wordpress"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "Create a post"
+    ],
+    "description": ""
+  },
+  {
+    "id": "EIUuWQF7x3gjIW3R",
+    "name": "My workflow 17",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-30 15:26:56",
+    "updated": "2026-01-30 20:15:02",
+    "triggerCount": 0,
+    "node_count": 8,
+    "node_types": [
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// 1. ╨г╨║╨░╨╖╤Л╨▓╨░╨╡╨╝ ╤В╨╛╤З╨╜╨╛╨╡ ╨╕╨╝╤П ╨╜╨╛╨┤╤Л ╤Б ╤В╨░╨▒╨╗╨╕╤Ж╨╡╨╣ (╨║╨░╨║ ╤Г ╨▓╨░╤Б ╨╜╨░ ╤Б╤Е╨╡╨╝╨╡) / const sheetNodeName = 'Get row(s) in sheet'; /  / try { /   // 2. ╨Ь╨░╨│╨╕╤П n8n: .item ╨░╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╤Б╨║╨╕ ╨╜╨░╤Е╨╛╨┤╨╕╤В ╨┤╨░╨╜╨╜╤Л╨╡ ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╨╕╤В╨╡╤А╨░╤Ж╨╕╨╕ /   // ╨н╤В╨╛ ╤А╨░╨▒╨╛"
+      }
+    ],
+    "node_names": [
+      "Folder_Exists?",
+      "GoogleDrive_Upload_Description",
+      "When clicking тАШExecute workflowтАЩ",
+      "Get row(s) in sheet",
+      "HTTP Request",
+      "HTTP Request1",
+      "Code in JavaScript",
+      "HTTP Request2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "Wm0mLBukW2TWqHLh",
+    "name": "My workflow 18",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-10 11:33:19",
+    "updated": "2026-02-17 10:31:57",
+    "triggerCount": 0,
+    "node_count": 4,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "scheduleTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 5}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// --- ╨Ш╨б╨Я╨а╨Р╨Т╨Ы╨Х╨Э╨Ш╨Х: ╨г╨Ь╨Э╨Ю╨Х ╨Я╨Ю╨Ы╨г╨з╨Х╨Э╨Ш╨Х ╨Ф╨Р╨Э╨Э╨л╨е --- / let courses = []; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝: ╨╡╤Б╨╗╨╕ ╨┐╨╡╤А╨▓╤Л╨╣ ╤Н╨╗╨╡╨╝╨╡╨╜╤В ╤Б╨░╨╝ ╨┐╨╛ ╤Б╨╡╨▒╨╡ ╨╝╨░╤Б╤Б╨╕╨▓ - ╨▒╨╡╤А╨╡╨╝ ╨╡╨│╨╛ / if (Array.isArray(items[0].json)) { /     courses = items[0].json; / }  / /"
+      }
+    ],
+    "node_names": [
+      "Schedule Trigger",
+      "HTTP Request",
+      "Code in JavaScript",
+      "Append row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "3Mzz3V6oPQquD3Bz",
+    "name": "My workflow 19",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-15 15:08:31",
+    "updated": "2026-02-15 15:08:31",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "googleSheets",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Append or update row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "YfdiM8FSYDFXNobW",
+    "name": "My workflow 2",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-26 20:41:54",
+    "updated": "2025-08-26 20:41:54",
+    "triggerCount": 0,
+    "node_count": 5,
+    "node_types": [
+      "httpRequest",
+      "if",
+      "respondToWebhook",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "vk-callback"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "If",
+      "Respond to Webhook",
+      "╨У╤Г╤А╤Г",
+      "╨У╤Г╤А╤Г1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "kABgakYrg6hcwPOd",
+    "name": "My workflow 20",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-28 12:45:17",
+    "updated": "2026-04-07 06:53:32",
+    "triggerCount": 0,
+    "node_count": 18,
+    "node_types": [
+      "agent",
+      "apify",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "if",
+      "lmChatOpenRouter",
+      "manualTrigger",
+      "merge",
+      "splitInBatches",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г SRT ╨╕╨╖ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨░ Apify / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨╡╤Б╤В╤М ╨╗╨╕ ╤Б╤Г╨▒╤В╨╕╤В╤А╤Л ╨▓╨╛╨╛╨▒╤Й╨╡ / const subtitles = items[0].json.subtitles; / if (!subtitles || !subtitles.length || !subtitles[0].srt) { /   return [{ json"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      },
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╨╛╤В╨▓╨╡╤В╨░ ╨╛╤В AI ╨Р╨│╨╡╨╜╤В╨░ / const text = $input.first().json.output;  /  / // 2. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨╕╨╖ ╤В╨░╨▒╨╗╨╕╤Ж╤Л.  / // ╨Ь╤Л ╨╛╨▒╤А╨░╤Й╨░╨╡╨╝╤Б╤П ╨║ ╨╜╨╛╨┤╨╡ \"Loop Over Items1\", ╨│╨┤╨╡ ╤Е╤А╨░╨╜╤П╤В╤Б╤П ╨┤╨░╨╜╨╜╤Л╨╡ ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╤Б╤В╤А╨╛╨║╨╕ "
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "// 1. ╨Ч╨░╨▒╨╕╤А╨░╨╡╨╝ ╤Б╨│╨╡╨╜╨╡╤А╨╕╤А╨╛╨▓╨░╨╜╨╜╤Л╨╣ ╤В╨╡╨║╤Б╤В ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤Г╨╖╨╗╨░ (╤Г╨║╨░╨╢╨╕ ╨┐╤А╨░╨▓╨╕╨╗╤М╨╜╨╛╨╡ ╨┐╨╛╨╗╨╡ ╨▓╨╝╨╡╤Б╤В╨╛ .text) / let aiText = $input.first().json.output || \"\";  /  / // 2. ╨Т╤Б╤В╨░╨▓╨╗╤П╨╡╨╝ ╨Т╨Х╨б╨м ╤Б╨╗╨╛╨▓╨░╤А╤М ╨┐╤А╤П╨╝╨╛ ╨╕╨╖ ╤В╨╡╨║╤Б╤В╨╛╨▓╨╛╨│╨╛ ╤Д╨░╨╣╨╗╨░ ╨╝╨╡"
+      }
+    ],
+    "node_names": [
+      "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "If2",
+      "When clicking тАШExecute workflowтАЩ",
+      "Loop Over Items1",
+      "Run an Actor",
+      "Get dataset items",
+      "Code in JavaScript",
+      "Code in JavaScript1",
+      "OpenRouter Chat Model",
+      "AI Agent1",
+      "Code1",
+      "Upload file",
+      "Wait",
+      "Update row in sheet",
+      "Code in JavaScript2",
+      "Upload file1",
+      "Merge",
+      "Wait1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "cXKrTSrWxCaVWJMB",
+    "name": "My workflow 21",
+    "active": false,
+    "archived": false,
+    "created": "2026-03-24 10:28:23",
+    "updated": "2026-03-24 10:28:23",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "e27f6cb0-f187-42d8-ae22-8287e603f560"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "THnIiwwb4XVC7qns",
+    "name": "My workflow 22",
+    "active": false,
+    "archived": false,
+    "created": "2026-04-01 06:04:01",
+    "updated": "2026-04-01 06:34:37",
+    "triggerCount": 0,
+    "node_count": 5,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "manualTrigger",
+      "set",
+      "splitOut"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request",
+      "Split Out",
+      "Edit Fields",
+      "Append row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "EBtkhJtLIU8JwP1g",
+    "name": "My workflow 23",
+    "active": false,
+    "archived": false,
+    "created": "2026-04-05 16:05:03",
+    "updated": "2026-04-05 16:05:03",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "6ZwvfareQRIJoNTk",
+    "name": "My workflow 24",
+    "active": false,
+    "archived": false,
+    "created": "2026-06-28 14:38:50",
+    "updated": "2026-06-28 14:38:50",
+    "triggerCount": 0,
+    "node_count": 1,
+    "node_types": [
+      "httpRequest"
+    ],
+    "triggers": [],
+    "code_nodes": [],
+    "node_names": [
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б"
+    ],
+    "description": ""
+  },
+  {
+    "id": "hi6CqbX9UX0bQfaK",
+    "name": "My workflow 4",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-01 18:24:12",
+    "updated": "2025-09-01 18:24:12",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "l6j8t5RHyYtMI8vL",
+    "name": "My workflow 5",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-08 19:27:08",
+    "updated": "2025-09-08 19:27:08",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "code",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "const items = []; / const baseUrl = 'https://catalog.libfl.ru/Bookreader/Viewer?OrderId=937985&view_mode=HQ#page/1'; // ╨Я╤А╨╕╨╝╨╡╤А, ╨╖╨░╨╝╨╡╨╜╨╕╤В╨╡ ╨╜╨░ ╤А╨╡╨░╨╗╤М╨╜╤Л╨╣ URL / const totalPages = 150; // ╨г╨║╨░╨╢╨╕╤В╨╡ ╤А╨╡╨░╨╗╤М╨╜╨╛╨╡ ╨║╨╛╨╗╨╕╤З"
+      }
+    ],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "Code"
+    ],
+    "description": ""
+  },
+  {
+    "id": "4qNFy707GEtLZJpg",
+    "name": "My workflow 6",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-09 16:50:12",
+    "updated": "2025-09-09 18:29:38",
+    "triggerCount": 0,
+    "node_count": 5,
+    "node_types": [
+      "googleDocs",
+      "googleSheets",
+      "manualTrigger",
+      "splitInBatches"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "Get row(s) in sheet",
+      "Get a document",
+      "Loop Over Items",
+      "Update a document"
+    ],
+    "description": ""
+  },
+  {
+    "id": "2BdJGhwtCxRqGh9b",
+    "name": "My workflow 7",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-10 19:38:21",
+    "updated": "2025-09-10 19:38:21",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "kcrcj5GKWXuy6Lyk",
+    "name": "My workflow 8",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-28 11:07:31",
+    "updated": "2025-09-28 11:17:17",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "httpRequest",
+      "manualTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "╨│╨╗╨░╨▓╤Л ╨║╨╕╨╜╨╡╤Б╨║╨╛╨┐"
+    ],
+    "description": ""
+  },
+  {
+    "id": "vOVGt2JUTtpQUHvO",
+    "name": "Pars_TG_pars",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-28 11:20:31",
+    "updated": "2025-08-28 18:07:33",
+    "triggerCount": 0,
+    "node_count": 6,
+    "node_types": [
+      "agent",
+      "executeWorkflowTrigger",
+      "lmChatOpenAi",
+      "memoryBufferWindow",
+      "stickyNote",
+      "toolHttpRequest"
+    ],
+    "triggers": [
+      {
+        "kind": "executeWorkflowTrigger",
+        "name": "When Executed by Another Workflow",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When Executed by Another Workflow",
+      "Sticky Note",
+      "OpenAI Chat Model",
+      "AI Agent",
+      "Simple Memory",
+      "Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "cUH4DMXr5onZSxis",
+    "name": "Parse_TG_main",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-28 11:21:29",
+    "updated": "2025-08-28 18:03:51",
+    "triggerCount": 0,
+    "node_count": 5,
+    "node_types": [
+      "agent",
+      "chatTrigger",
+      "lmChatOpenAi",
+      "memoryBufferWindow",
+      "toolWorkflow"
+    ],
+    "triggers": [
+      {
+        "kind": "chatTrigger",
+        "name": "When chat message received",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "AI Agent",
+      "open and close tg",
+      "When chat message received",
+      "Simple Memory",
+      "OpenAI Chat Model"
+    ],
+    "description": ""
+  },
+  {
+    "id": "zRSYQq0aHTB9XLGx",
+    "name": "Webinar Bot",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-26 10:21:09",
+    "updated": "2026-06-19 06:04:19",
+    "triggerCount": 1,
+    "node_count": 27,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "set",
+      "switch",
+      "telegram",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "7a965a1b-1443-4ebc-9577-650276e9f804"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Telegram Trigger",
+        "kind": "code",
+        "preview": "return { json: $json.body };"
+      }
+    ],
+    "node_names": [
+      "Config",
+      "If",
+      "Lookup user",
+      "Already registered?",
+      "Send: already registered",
+      "Save user",
+      "Ask: name",
+      "Is callback?",
+      "Answer callback",
+      "Mark im_in",
+      "Lookup user 2",
+      "Switch by state",
+      "Save: name",
+      "Ask: city",
+      "Save: city",
+      "Ask: phone",
+      "Validate: phone",
+      "Save: phone",
+      "Send: phone invalid",
+      "Ask: email",
+      "Validate: email",
+      "Save: email",
+      "Send: email invalid",
+      "Send: welcome",
+      "Webhook",
+      "Telegram Trigger",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "0fUKbeECN1wBBRiD",
+    "name": "Webinar Bot тАФ Registration",
+    "active": false,
+    "archived": true,
+    "created": "2026-05-06 09:20:05",
+    "updated": "2026-05-26 12:59:15",
+    "triggerCount": 0,
+    "node_count": 10,
+    "node_types": [
+      "googleSheets",
+      "if",
+      "set",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Config",
+      "Lookup user",
+      "Send: already registered",
+      "Save user",
+      "Send: welcome",
+      "Answer callback",
+      "Mark im_in",
+      "If",
+      "Already registered?"
+    ],
+    "description": ""
+  },
+  {
+    "id": "L2wfA4ZZIIl2ZN3t",
+    "name": "Webinar Bot тАФ Registration",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-06 13:21:11",
+    "updated": "2026-06-10 08:34:39",
+    "triggerCount": 0,
+    "node_count": 23,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "set",
+      "switch",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Config",
+      "If",
+      "Lookup user",
+      "Already registered?",
+      "Send: already registered",
+      "Save user",
+      "Ask: name",
+      "Is callback?",
+      "Answer callback",
+      "Mark im_in",
+      "Lookup user 2",
+      "Switch by state",
+      "Save: name",
+      "Ask: city",
+      "Save: city",
+      "Ask: phone",
+      "Save: phone",
+      "Ask: email",
+      "Save: email",
+      "Send: welcome",
+      "HTTP Request",
+      "HTTP Request1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "azxNm1xZIETuojXM",
+    "name": "Webinar Bot тАФ Registration",
+    "active": false,
+    "archived": true,
+    "created": "2026-05-06 13:38:42",
+    "updated": "2026-05-26 12:59:38",
+    "triggerCount": 1,
+    "node_count": 26,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "if",
+      "set",
+      "switch",
+      "telegram",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "7a965a1b-1443-4ebc-9577-650276e9f804"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "return [{ json: $json.body }];"
+      }
+    ],
+    "node_names": [
+      "Config",
+      "If",
+      "Lookup user",
+      "Already registered?",
+      "Send: already registered",
+      "Save user",
+      "Ask: name",
+      "Is callback?",
+      "Answer callback",
+      "Mark im_in",
+      "Lookup user 2",
+      "Switch by state",
+      "Save: name",
+      "Ask: city",
+      "Save: city",
+      "Ask: phone",
+      "Validate: phone",
+      "Save: phone",
+      "Send: phone invalid",
+      "Ask: email",
+      "Validate: email",
+      "Save: email",
+      "Send: email invalid",
+      "Send: welcome",
+      "Webhook",
+      "Code in JavaScript"
+    ],
+    "description": ""
+  },
+  {
+    "id": "U66CimuvenCZKtSe",
+    "name": "Webinar Bot тАФ VK Survey (skeleton)",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-26 13:14:02",
+    "updated": "2026-05-26 13:28:58",
+    "triggerCount": 1,
+    "node_count": 9,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "set",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "eac2a174-46a2-4b1e-8f6d-b2154998e587"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Normalize",
+        "kind": "code",
+        "preview": "return { json: $json.body };"
+      },
+      {
+        "name": "Parse VK",
+        "kind": "code",
+        "preview": "const e = $('Normalize').item.json; /   const obj = e.object || e; /   const m = obj.message || e.message || {}; /   const userId = m.from_id || obj.user_id || e.user_id || ''; /   return { json: { /     vk_use"
+      },
+      {
+        "name": "FSM",
+        "kind": "code",
+        "preview": "const cfg = $('Config').item.json; / const inp = $('Parse VK').item.json; / const row = $json && $json.vk_user_id ? $json : {}; / const text = inp.text; / const vk = inp.vk_user_id; / const status = row.status "
+      }
+    ],
+    "node_names": [
+      "Webhook",
+      "Normalize",
+      "Config",
+      "Parse VK",
+      "Lookup user",
+      "FSM",
+      "Skip save?",
+      "Save row",
+      "Send reply"
+    ],
+    "description": ""
+  },
+  {
+    "id": "nFN4rxzXoi0Qavw9",
+    "name": "Webinar Bot тАФ VK Warming (fixed)",
+    "active": false,
+    "archived": false,
+    "created": "2026-06-15 16:07:45",
+    "updated": "2026-06-19 06:04:00",
+    "triggerCount": 1,
+    "node_count": 7,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "scheduleTrigger",
+      "set"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Every 15 min",
+        "path": "{\"interval\": [{\"field\": \"minutes\", \"minutesInterval\": 15}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Decide action",
+        "kind": "code",
+        "preview": "const items = $input.all(); /   const cfg = $('Config').first().json; /   const webinarDate = new Date(cfg.webinar_date_iso); /   const now = new Date(); /   const mins = (webinarDate - now) / 60000; /   const "
+      },
+      {
+        "name": "Build mark row",
+        "kind": "code",
+        "preview": "const d = $('Decide action').item.json; / return { json: { vk_user_id: d.vk_user_id, ['sent_' + d.action]: 'TRUE' } };"
+      }
+    ],
+    "node_names": [
+      "Every 15 min",
+      "Config",
+      "Read registrations",
+      "Decide action",
+      "Send",
+      "Build mark row",
+      "Mark sent"
+    ],
+    "description": ""
+  },
+  {
+    "id": "a44v1zeK8d5SLtwf",
+    "name": "Webinar Bot тАФ VK Warming (skeleton)",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-26 13:55:49",
+    "updated": "2026-06-18 06:09:29",
+    "triggerCount": 1,
+    "node_count": 12,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "scheduleTrigger",
+      "set",
+      "switch"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Every 15 min",
+        "path": "{\"interval\": [{\"field\": \"minutes\", \"minutesInterval\": 15}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Decide action",
+        "kind": "code",
+        "preview": "const items = $input.all(); /   const cfg = $('Config').first().json; /   const webinarDate = new Date(cfg.webinar_date_iso); /   const now = new Date(); /   const mins = (webinarDate - now) / 60000; /   const "
+      }
+    ],
+    "node_names": [
+      "Every 15 min",
+      "Config",
+      "Read registrations",
+      "Decide action",
+      "Send",
+      "Switch",
+      "Mark warmup1",
+      "Mark warmup2",
+      "Mark reminder_3h",
+      "Mark reminder_15min",
+      "Mark start",
+      "Mark followup"
+    ],
+    "description": ""
+  },
+  {
+    "id": "99dzjNOSSRjxNX0w",
+    "name": "Webinar Bot тАФ Warming",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-26 12:18:58",
+    "updated": "2026-06-19 06:04:02",
+    "triggerCount": 1,
+    "node_count": 17,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "scheduleTrigger",
+      "set",
+      "switch",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Every 15 min",
+        "path": "{\"interval\": [{\"field\": \"minutes\", \"minutesInterval\": 15}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Decide action",
+        "kind": "code",
+        "preview": "const items = $input.all(); / const cfg = $('Config').first().json; / const webinarDate = new Date(cfg.webinar_date_iso); / const now = new Date(); / const minsToWebinar = (webinarDate - now) / 60000; / const h"
+      }
+    ],
+    "node_names": [
+      "Every 15 min",
+      "Read registrations",
+      "Decide action",
+      "Send: warmup1",
+      "Mark warmup1",
+      "Send: warmup2",
+      "Mark warmup2",
+      "Send: reminder_3h",
+      "Mark reminder_3h",
+      "Send: reminder_15min",
+      "Mark reminder_15min",
+      "Send: start",
+      "Mark start",
+      "Send: followup",
+      "Mark followup",
+      "Switch",
+      "Config"
+    ],
+    "description": ""
+  },
+  {
+    "id": "E8szvLJXvswU2z9D",
+    "name": "Webinar Bot тАФ Warming Sequence",
+    "active": false,
+    "archived": true,
+    "created": "2026-05-06 09:28:49",
+    "updated": "2026-05-26 12:59:05",
+    "triggerCount": 0,
+    "node_count": 17,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "scheduleTrigger",
+      "set",
+      "switch",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Every 15 min",
+        "path": "{\"interval\": [{\"field\": \"minutes\", \"minutesInterval\": 15}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Decide action",
+        "kind": "code",
+        "preview": "const items = $input.all(); / const cfg = $('Config').first().json; / const webinarDate = new Date(cfg.webinar_date_iso); / const now = new Date(); / const minsToWebinar = (webinarDate - now) / 60000; / const h"
+      }
+    ],
+    "node_names": [
+      "Every 15 min",
+      "Read registrations",
+      "Decide action",
+      "Send: warmup1",
+      "Mark warmup1",
+      "Send: warmup2",
+      "Mark warmup2",
+      "Send: reminder_3h",
+      "Mark reminder_3h",
+      "Send: reminder_15min",
+      "Mark reminder_15min",
+      "Send: start",
+      "Mark start",
+      "Send: followup",
+      "Mark followup",
+      "Switch",
+      "Config"
+    ],
+    "description": ""
+  },
+  {
+    "id": "mgXS16QatfCvxlOV",
+    "name": "ZOOM",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-18 14:00:22",
+    "updated": "2026-01-19 18:03:02",
+    "triggerCount": 1,
+    "node_count": 9,
+    "node_types": [
+      "code",
+      "httpRequest",
+      "respondToWebhook",
+      "switch",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "c36d6461-7087-4f5e-ba34-9316da91ea9a"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / // 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ plainToken ╨╛╤В Zoom / // ╨Х╤Б╨╗╨╕ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ ╨┐╤А╨╕╨┤╨╡╤В ╨╜╨╡╨╝╨╜╨╛╨│╨╛ ╨┤╤А╤Г╨│╨░╤П, ╨┐╤А╨╛╨▒╤Г╨╡╨╝ ╤А╨░╨╖╨╜╤Л╨╡ ╨▓╨░╤А╨╕╨░╨╜╤В╤Л ╨┤╨╛╤Б╤В╤Г╨┐╨░ / const payload = $node[\"Webhook\"].json.payload || $node[\"We"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨╗╨╛ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / const body = items[0].json.body || items[0].json; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╤З╤В╨╛ ╤Н╤В╨╛ ╤Б╨╛╨▒╤Л╤В╨╕╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ / if (!body.payload || !body.payload.object) { /   return []; / } /  / const payloadObj = body"
+      }
+    ],
+    "node_names": [
+      "Webhook",
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "HTTP Request1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Respond to Webhook1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "usc3QJOVj37bOCfM",
+    "name": "ZOOM 1.2...",
+    "active": false,
+    "archived": true,
+    "created": "2026-01-20 09:41:32",
+    "updated": "2026-01-24 11:47:44",
+    "triggerCount": 1,
+    "node_count": 23,
+    "node_types": [
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "e4d5f706-028b-48e6-9793-6ffbab227554"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / // 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ plainToken ╨╛╤В Zoom / // ╨Х╤Б╨╗╨╕ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ ╨┐╤А╨╕╨┤╨╡╤В ╨╜╨╡╨╝╨╜╨╛╨│╨╛ ╨┤╤А╤Г╨│╨░╤П, ╨┐╤А╨╛╨▒╤Г╨╡╨╝ ╤А╨░╨╖╨╜╤Л╨╡ ╨▓╨░╤А╨╕╨░╨╜╤В╤Л ╨┤╨╛╤Б╤В╤Г╨┐╨░ / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\""
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨╗╨╛ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / const body = items[0].json.body || items[0].json; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╤З╤В╨╛ ╤Н╤В╨╛ ╤Б╨╛╨▒╤Л╤В╨╕╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ / if (!body.payload || !body.payload.object) { /   return []; / } /  / const payloadObj = body"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/usc3QJOVj37bOCfM/*"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command"
+    ],
+    "description": ""
+  },
+  {
+    "id": "aiLHLvGPpR56g0o3",
+    "name": "ZOOM 1.3...",
+    "active": false,
+    "archived": true,
+    "created": "2026-01-21 11:37:49",
+    "updated": "2026-01-24 11:47:35",
+    "triggerCount": 1,
+    "node_count": 31,
+    "node_types": [
+      "apify",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "merge",
+      "openAi",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "09e0b4e9-7df2-4741-bfbe-ba60a87a4b37"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / // 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ plainToken ╨╛╤В Zoom / // ╨Х╤Б╨╗╨╕ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ ╨┐╤А╨╕╨┤╨╡╤В ╨╜╨╡╨╝╨╜╨╛╨│╨╛ ╨┤╤А╤Г╨│╨░╤П, ╨┐╤А╨╛╨▒╤Г╨╡╨╝ ╤А╨░╨╖╨╜╤Л╨╡ ╨▓╨░╤А╨╕╨░╨╜╤В╤Л ╨┤╨╛╤Б╤В╤Г╨┐╨░ / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\""
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨╗╨╛ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / const body = items[0].json.body || items[0].json; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╤З╤В╨╛ ╤Н╤В╨╛ ╤Б╨╛╨▒╤Л╤В╨╕╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ / if (!body.payload || !body.payload.object) { /   return []; / } /  / const payloadObj = body"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/usc3QJOVj37bOCfM/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // 1. ╨Ш╤Й╨╡╨╝ ╤В╨╡╨║╤Б╤В (╨▓╨░╤И╨░ ╤Б╤В╤А╤Г╨║╤В╤Г╤А╨░ ╨╕╨╖ Anthropic/Claude ╨╕╨╗╨╕ OpenAI) / let chaptersRaw = null; / if (item.output && item.output[0] && item.output[0].content && item.output[0].cont"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г SRT ╨╕╨╖ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨░ Apify / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨╡╤Б╤В╤М ╨╗╨╕ ╤Б╤Г╨▒╤В╨╕╤В╤А╤Л ╨▓╨╛╨╛╨▒╤Й╨╡ / const subtitles = items[0].json.subtitles; / if (!subtitles || !subtitles.length || !subtitles[0].srt) { /   return [{ json"
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Run an Actor",
+      "Get dataset items",
+      "Message a model",
+      "Code in JavaScript2",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "iZAtDoeTV4eLRmA6",
+    "name": "ZOOM 1.4 (Final)",
+    "active": false,
+    "archived": true,
+    "created": "2026-01-22 13:40:50",
+    "updated": "2026-01-29 07:24:22",
+    "triggerCount": 1,
+    "node_count": 35,
+    "node_types": [
+      "agent",
+      "apify",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "09e0b4e9-7df2-4741-bfbe-ba60a87a4b37"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨╗╨╛ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / const body = items[0].json.body || items[0].json; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╤З╤В╨╛ ╤Н╤В╨╛ ╤Б╨╛╨▒╤Л╤В╨╕╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ / if (!body.payload || !body.payload.object) { /   return []; / } /  / const payloadObj = body"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/usc3QJOVj37bOCfM/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г SRT ╨╕╨╖ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨░ Apify / const subtitles = items[0].json.subtitles; / if (!subtitles || !subtitles.length || !subtitles[0].srt) { /   return [{ json: { error: \"No subtitles found\" } }]; / "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / }).join(\"\\n\\n\"); /  / return [{ /   json: { /     transcript: fullTranscript /   } / }];"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Run an Actor",
+      "Get dataset items",
+      "Code in JavaScript2",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "DELETE FROM ZOOM1",
+      "Wait",
+      "AI Agent",
+      "OpenRouter Chat Model"
+    ],
+    "description": ""
+  },
+  {
+    "id": "MtN1h7FdF3JTmrse",
+    "name": "ZOOM 1.4 (Final) + ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р",
+    "active": false,
+    "archived": false,
+    "created": "2026-05-31 10:10:56",
+    "updated": "2026-06-14 14:31:58",
+    "triggerCount": 2,
+    "node_count": 51,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "86446208-6c7a-432f-bcaa-f4d9536b3f55"
+      },
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "c1e602da-3aae-43b9-97ad-0e8044ba94aa"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / let webhookBody; / let sourceNode = ''; /  / try { /   const zoomNode = $(\"ZOOM\").first(); /   if (zoomNode && zoomNode.json.body) { /     webhookBody = zoomNode.json.body; /     sour"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/fDMCDXjS6ZWlkOwQ/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'GUmwmhe2SpuZ76sjgi9"
+      },
+      {
+        "name": "Format Title",
+        "kind": "code",
+        "preview": "for (const item of $input.all()) { /     // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Г╤Й╨╕╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П, ╨╛╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝ /     let topic = item.json.last_topic ? String(item.json.last_topic).trim() : \"\"; /     const desc"
+      },
+      {
+        "name": "Create TXT File",
+        "kind": "code",
+        "preview": "const items = $input.all(); /  / for (const item of items) { /     // ╨С╨╡╤А╨╡╨╝ ╨│╨╛╤В╨╛╨▓╤Л╨╣ ╤В╨╡╨║╤Б╤В ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░ /     const text = item.json.youtube_chapters || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤В\""
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://yo"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ / const payload = items[0].json; /  / // ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓) / const data = Array.isArray(payload) ? payload[0] "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      }
+    ],
+    "node_names": [
+      "╨б╨Ю╨Ч╨Ф╨Р╨Б╨Ь ╨г╨а╨Ю╨Ъ ╨Т ╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Х",
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Code in JavaScript2",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "Wait",
+      "Webhook",
+      "Switch1",
+      "Respond to Webhook2",
+      "Code in JavaScript5",
+      "Switch2",
+      "DELETE FROM ZOOM",
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "Send a text message1",
+      "Format Title",
+      "Create TXT File",
+      "Upload file",
+      "AI Agent1",
+      "Code2",
+      "Download a file",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "OpenRouter Chat Model1",
+      "HTTP Request2",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "fDMCDXjS6ZWlkOwQ",
+    "name": "ZOOM 1.4 (Final) copy",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-24 11:48:01",
+    "updated": "2026-05-31 10:12:35",
+    "triggerCount": 2,
+    "node_count": 50,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "86446208-6c7a-432f-bcaa-f4d9536b3f55"
+      },
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "c1e602da-3aae-43b9-97ad-0e8044ba94aa"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / let webhookBody; / let sourceNode = ''; /  / try { /   const zoomNode = $(\"ZOOM\").first(); /   if (zoomNode && zoomNode.json.body) { /     webhookBody = zoomNode.json.body; /     sour"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/fDMCDXjS6ZWlkOwQ/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'GUmwmhe2SpuZ76sjgi9"
+      },
+      {
+        "name": "Format Title",
+        "kind": "code",
+        "preview": "for (const item of $input.all()) { /     // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Г╤Й╨╕╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П, ╨╛╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝ /     let topic = item.json.last_topic ? String(item.json.last_topic).trim() : \"\"; /     const desc"
+      },
+      {
+        "name": "Create TXT File",
+        "kind": "code",
+        "preview": "const items = $input.all(); /  / for (const item of items) { /     // ╨С╨╡╤А╨╡╨╝ ╨│╨╛╤В╨╛╨▓╤Л╨╣ ╤В╨╡╨║╤Б╤В ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░ /     const text = item.json.youtube_chapters || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤В\""
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://yo"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ / const payload = items[0].json; /  / // ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓) / const data = Array.isArray(payload) ? payload[0] "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Code in JavaScript2",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "Wait",
+      "Webhook",
+      "Switch1",
+      "Respond to Webhook2",
+      "Code in JavaScript5",
+      "Switch2",
+      "DELETE FROM ZOOM",
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "Send a text message1",
+      "Format Title",
+      "Create TXT File",
+      "Upload file",
+      "AI Agent1",
+      "Code2",
+      "Download a file",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "OpenRouter Chat Model1",
+      "HTTP Request2",
+      "HTTP Request"
+    ],
+    "description": ""
+  },
+  {
+    "id": "G1eqOsfzNGABo6nA",
+    "name": "ZOOM 1.5 (test)",
+    "active": false,
+    "archived": false,
+    "created": "2026-03-14 11:28:26",
+    "updated": "2026-03-14 11:45:27",
+    "triggerCount": 2,
+    "node_count": 49,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "437bddf1-962e-4e87-b787-35a8cd9a07eb"
+      },
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "80b8a5cb-2ba8-435c-b13a-013ca62491d3"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / let webhookBody; / let sourceNode = ''; /  / try { /   const zoomNode = $(\"ZOOM\").first(); /   if (zoomNode && zoomNode.json.body) { /     webhookBody = zoomNode.json.body; /     sour"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/usc3QJOVj37bOCfM/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'GUmwmhe2SpuZ76sjgi9"
+      },
+      {
+        "name": "Format Title",
+        "kind": "code",
+        "preview": "for (const item of $input.all()) { /     // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Г╤Й╨╕╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П, ╨╛╤З╨╕╤Й╨░╨╡╨╝ ╨╛╤В ╨╗╨╕╤И╨╜╨╕╤Е ╨┐╤А╨╛╨▒╨╡╨╗╨╛╨▓ ╨┐╨╛ ╨║╤А╨░╤П╨╝ /     let topic = item.json.last_topic ? String(item.json.last_topic).trim() : \"\"; /     const desc"
+      },
+      {
+        "name": "Create TXT File",
+        "kind": "code",
+        "preview": "const items = $input.all(); /  / for (const item of items) { /     // ╨С╨╡╤А╨╡╨╝ ╨│╨╛╤В╨╛╨▓╤Л╨╣ ╤В╨╡╨║╤Б╤В ╤В╨░╨╣╨╝╨║╨╛╨┤╨╛╨▓ ╨╕ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨▓╨╕╨┤╨╡╨╛ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░ /     const text = item.json.youtube_chapters || \"╨в╨░╨╣╨╝╨║╨╛╨┤╤Л ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤В\""
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://yo"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ / const payload = items[0].json; /  / // ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓) / const data = Array.isArray(payload) ? payload[0] "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Code in JavaScript2",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "Wait",
+      "Webhook",
+      "Switch1",
+      "Respond to Webhook2",
+      "Code in JavaScript5",
+      "Switch2",
+      "DELETE FROM ZOOM",
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "Send a text message1",
+      "Format Title",
+      "Create TXT File",
+      "Upload file",
+      "AI Agent1",
+      "Code2",
+      "Download a file",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "OpenRouter Chat Model1",
+      "HTTP Request2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "ANlSfL2YJpA0vO5F",
+    "name": "ZOOM 1.5 n.",
+    "active": false,
+    "archived": true,
+    "created": "2026-02-10 07:43:05",
+    "updated": "2026-03-14 11:27:55",
+    "triggerCount": 2,
+    "node_count": 42,
+    "node_types": [
+      "agent",
+      "apify",
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "merge",
+      "respondToWebhook",
+      "ssh",
+      "switch",
+      "telegram",
+      "wait",
+      "webhook",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "ZOOM",
+        "path": "9c1370c3-48f0-4c51-b03d-cbdfa422cffd"
+      },
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "140948ce-f50d-45e7-9cc2-2a5426595dae"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"ZOOM\"].json.payload || $node[\"ZOOM\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'rIWjjK60TGqtyOQRKPwISw'; / "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// 1. ╨Ш╨╖╨▓╨╗╨╡╨║╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨▓╨╡╨▒╤Е╤Г╨║╨░ / let webhookBody; / let sourceNode = ''; /  / try { /   const zoomNode = $(\"ZOOM\").first(); /   if (zoomNode && zoomNode.json.body) { /     webhookBody = zoomNode.json.body; /     sour"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/usc3QJOVj37bOCfM/*"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const item = items[0].json; /  / // --- 1. ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╨╡╨║╤Б╤В╨░ ╨│╨╗╨░╨▓ (Transcript/Chapters) --- / let chaptersRaw = null; /  / // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝, ╨│╨┤╨╡ ╨╗╨╡╨╢╨╕╤В ╤В╨╡╨║╤Б╤В (╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╨░╤П ╨┐╤А╨╛╨▓╨╡╤А╨║╨░) / if (typeof item.output === 'strin"
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г SRT ╨╕╨╖ ╤А╨╡╨╖╤Г╨╗╤М╤В╨░╤В╨░ Apify / const subtitles = items[0].json.subtitles; / if (!subtitles || !subtitles.length || !subtitles[0].srt) { /   return [{ json: { error: \"No subtitles found\" } }]; / "
+      },
+      {
+        "name": "Code in JavaScript4",
+        "kind": "code",
+        "preview": "const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / }).join(\"\\n\\n\"); /  / return [{ /   json: { /     transcript: fullTranscript /   } / }];"
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const crypto = require('crypto'); /  / const payload = $node[\"Webhook\"].json.payload || $node[\"Webhook\"].json.body.payload; / const plainToken = payload.plainToken; /  / const secretToken = 'GUmwmhe2SpuZ76sjgi9"
+      }
+    ],
+    "node_names": [
+      "Respond to Webhook",
+      "Code in JavaScript",
+      "Switch",
+      "Code in JavaScript1",
+      "DOWNLOAD",
+      "Upload a video",
+      "Get row(s) in sheet",
+      "Get row(s) in sheet1",
+      "ZOOM",
+      "Add a playlist item",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ф╨Ю╨С╨Р╨Т╨Ы╨п╨Х╨Ь ╨Т ╨Я╨Ы╨Х╨Щ╨Ы╨Ш╨б╨в",
+      "╨Я╨Ю╨Ы╨г╨з╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "╨б╨Ю╨Ъ╨а╨Р╨й╨Р╨Х╨Ь ╨б╨б╨л╨Ы╨Ъ╨г",
+      "Send a text message",
+      "Respond to Webhook1",
+      "Wait (Playlist)",
+      "Wait (Subtitles)",
+      "Search files and folders",
+      "Download file",
+      "HTTP Request1",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Merge",
+      "Execute a command",
+      "Run an Actor",
+      "Get dataset items",
+      "Code in JavaScript2",
+      "Code in JavaScript3",
+      "Code in JavaScript4",
+      "Update a video",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С2",
+      "Wait",
+      "AI Agent",
+      "OpenRouter Chat Model",
+      "Webhook",
+      "Switch1",
+      "Respond to Webhook2",
+      "Code in JavaScript5",
+      "Switch2",
+      "DELETE FROM ZOOM",
+      "DELETE FROM ╨У╨Р╨б╨г╨Э╨б",
+      "Send a text message1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "9Wi8Uvddxgow3zpn",
+    "name": "logo animation",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-24 07:01:15",
+    "updated": "2025-09-05 14:37:24",
+    "triggerCount": 0,
+    "node_count": 28,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "httpRequest",
+      "if",
+      "lmChatOpenAi",
+      "openAi",
+      "set",
+      "stickyNote",
+      "telegram",
+      "telegramTrigger",
+      "toolThink",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╨╕╨┤╨╡╨░╨╗╤М╨╜╨╛╨│╨╛ ╨╛╤В╨▓╨╡╤В╨░ ╨░╨│╨╡╨╜╤В╨░ / const rawOutput = $input.first().json.output; /  / try { /   // ╨Я╨░╤А╤Б╨╕╨╝ ╨╛╤Б╨╜╨╛╨▓╨╜╨╛╨╣ JSON /   const parsed = JSON.parse(rawOutput); /    /   // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤З╤В╨╛ ╨▓╤Б╨╡ ╨╜╤Г╨╢╨╜╤Л╨╡ ╨┐╨╛╨╗╤П ╨╡╤Б╤В╤М / "
+      }
+    ],
+    "node_names": [
+      "Telegram Trigger",
+      "Telegram",
+      "Sticky Note10",
+      "Get Result1",
+      "Result1",
+      "Download File",
+      "OpenAI Chat Model",
+      "Think",
+      "Logo Animator AI Agent",
+      "Your Creative Direction",
+      "Analyze image (logo)",
+      "30 Seconds",
+      "Generate Video",
+      "Code",
+      "Sticky Note8",
+      "Sticky Note9",
+      "Sticky Note11",
+      "Sticky Note12",
+      "Sticky Note17",
+      "Sticky Note1",
+      "Sticky Note3",
+      "Sticky Note4",
+      "Upload file3",
+      "Upload file",
+      "AI Agent",
+      "Think1",
+      "30 sec",
+      "If"
+    ],
+    "description": ""
+  },
+  {
+    "id": "i27PhDCFloVjxyx5",
+    "name": "rutube",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-25 12:54:05",
+    "updated": "2025-09-10 11:48:28",
+    "triggerCount": 0,
+    "node_count": 9,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "manualTrigger",
+      "set",
+      "splitInBatches",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШTest workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШTest workflowтАЩ",
+      "goo.su: create short link",
+      "Normalize fields",
+      "Google Sheets",
+      "goo.su: create short link1",
+      "Google Sheets1",
+      "If",
+      "Loop Over Items",
+      "Wait"
+    ],
+    "description": ""
+  },
+  {
+    "id": "SsnSwJD2IxgSrA7r",
+    "name": "vk bot",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-26 15:30:01",
+    "updated": "2025-09-05 08:28:33",
+    "triggerCount": 1,
+    "node_count": 10,
+    "node_types": [
+      "agent",
+      "baserowTool",
+      "httpRequest",
+      "lmChatOpenAi",
+      "memoryBufferWindow",
+      "respondToWebhook",
+      "switch",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "vk-callback"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "Respond to Webhook",
+      "AI Agent",
+      "OpenAI Chat Model",
+      "╨У╤Г╤А╤Г1",
+      "Baserow",
+      "Switch1",
+      "Simple Memory",
+      "Respond to Webhook1",
+      "Switch"
+    ],
+    "description": ""
+  },
+  {
+    "id": "8oJijJbvN1n0Ew9d",
+    "name": "vk bot copy",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-28 18:56:13",
+    "updated": "2025-08-28 19:59:24",
+    "triggerCount": 1,
+    "node_count": 13,
+    "node_types": [
+      "agent",
+      "baserowTool",
+      "httpRequest",
+      "lmChatOpenAi",
+      "memoryBufferWindow",
+      "respondToWebhook",
+      "set",
+      "switch",
+      "telegramTrigger",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "098cd79c-e3fa-4397-811a-e31a4cfaab8d"
+      },
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "Respond to Webhook",
+      "AI Agent",
+      "OpenAI Chat Model",
+      "╨У╤Г╤А╤Г1",
+      "Baserow",
+      "Switch1",
+      "Simple Memory",
+      "Respond to Webhook1",
+      "Switch",
+      "Edit Fields",
+      "HTTP Request",
+      "Telegram Trigger"
+    ],
+    "description": ""
+  },
+  {
+    "id": "HTg7FJUpHwjrbSYX",
+    "name": "╨С╨Ю╨в ╨в╨г╨Ъ╨Р╨Э USERs",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-15 14:28:07",
+    "updated": "2026-06-21 16:17:53",
+    "triggerCount": 1,
+    "node_count": 13,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "set",
+      "switch",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Append or update row in sheet",
+      "Router (Switch)",
+      "╨н╤В╨╛ ╨║╨╜╨╛╨┐╨║╨░?",
+      "Get row(s) in sheet",
+      "If",
+      "Edit Fields",
+      "HTTP Request",
+      "HTTP Request1",
+      "HTTP Request2",
+      "Edit Fields1",
+      "HTTP Request3",
+      "HTTP Request4"
+    ],
+    "description": ""
+  },
+  {
+    "id": "eixPIvFjfPdOSrYo",
+    "name": "╨Х╨╢╨╡╨╝╨╡╤Б╤П╤З╨╜╤Л╨╣ ╨┐╨╛╤Б╤В ╨║╤Г╤А╤Б╨╛╨▓ тЖТ ╨Т╨Ъ + Telegram (monthly_schedule_post)",
+    "active": false,
+    "archived": false,
+    "created": "2026-06-23 14:46:07",
+    "updated": "2026-06-23 15:27:34",
+    "triggerCount": 1,
+    "node_count": 8,
+    "node_types": [
+      "httpRequest",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "monthly-schedule-post"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "Telegram: sendPhoto",
+      "VK: getWallUploadServer",
+      "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г",
+      "VK: upload photo",
+      "VK: saveWallPhoto",
+      "VK: wall.post",
+      "Telegram: sendPhoto1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "wGaKM3r6JXs3JhEv",
+    "name": "╨Ъ╤А╨╛╤Б╤Б╨┐╨╛╤Б╤В╨╕╨╜╨│ ╨╗╨╡╤В╨╛╨┐╨╕╤Б╨╕ (VK+TG)",
+    "active": false,
+    "archived": false,
+    "created": "2026-06-23 11:01:25",
+    "updated": "2026-07-28 18:17:54",
+    "triggerCount": 0,
+    "node_count": 16,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "merge",
+      "scheduleTrigger",
+      "set",
+      "telegram",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 10}, {\"triggerAtHour\": 18}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Pick due posts",
+        "kind": "code",
+        "preview": "const today = $now.toFormat('yyyy-MM-dd'); / const slot = $now.hour < 14 ? 10 : 18; / const isMorning = $now.hour < 14; /  / const norm = (v) => { /   if (v == null) return ''; /   const s = String(v).trim(); /   c"
+      }
+    ],
+    "node_names": [
+      "Schedule Trigger",
+      "Get rows",
+      "Get a video",
+      "Build text",
+      "Download thumb",
+      "VK getWallUploadServer",
+      "Merge",
+      "VK upload photo",
+      "VK saveWallPhoto",
+      "VK wall.post",
+      "TG sendPhoto",
+      "Pick due posts",
+      "Route",
+      "Reminder gate",
+      "Mark as posted",
+      "TG refill reminder"
+    ],
+    "description": ""
+  },
+  {
+    "id": "vAYmfuER3mIZ2iXy",
+    "name": "╨Ы╨Ъ",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-23 19:10:55",
+    "updated": "2026-02-09 07:09:05",
+    "triggerCount": 1,
+    "node_count": 11,
+    "node_types": [
+      "function",
+      "googleSheets",
+      "if",
+      "respondToWebhook",
+      "switch",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook POST",
+        "path": "school-api"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Format Courses",
+        "kind": "function",
+        "preview": "const allData = items.map(item => { /   let c = item.json; /   try { if(typeof c.video_links_json === 'string') c.videoLinks = JSON.parse(c.video_links_json); } catch(e){} /   try { if(typeof c.rutube_links"
+      }
+    ],
+    "node_names": [
+      "Webhook POST",
+      "Switch Action",
+      "Find User",
+      "Check Pass",
+      "Success Login",
+      "Fail Login",
+      "Format Courses",
+      "Return Courses",
+      "Add User Sheet",
+      "Success Reg",
+      "Get Courses"
+    ],
+    "description": ""
+  },
+  {
+    "id": "zRuPbshhmRMU6YVI",
+    "name": "╨Я╨Ш╨б╨Р╨а╨м ╨Т ╨з╨Р╨в╨л",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-12 21:52:21",
+    "updated": "2026-02-14 18:39:33",
+    "triggerCount": 0,
+    "node_count": 5,
+    "node_types": [
+      "googleSheets",
+      "if",
+      "scheduleTrigger",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 6}]}"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Schedule Trigger",
+      "Get row(s) in sheet",
+      "If",
+      "Send a text message",
+      "Update row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "0ghTUdEZB1KnDPrD",
+    "name": "╨а╨Р╨б╨Я╨Ш╨б╨Р╨Э╨Ш╨Х + ╨в╨Р╨С╨Ы",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-17 11:00:08",
+    "updated": "2026-02-17 11:46:03",
+    "triggerCount": 0,
+    "node_count": 1,
+    "node_types": [
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "6a4e0703-4059-47ba-8bad-c3c3d51447ff"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook"
+    ],
+    "description": ""
+  },
+  {
+    "id": "gDewFLK9YiQk5MYy",
+    "name": "╨б╨С╨Ю╨а╨Ъ╨Р ╨Ъ╨Э╨Ш╨У",
+    "active": false,
+    "archived": false,
+    "created": "2025-10-04 19:50:15",
+    "updated": "2026-04-01 14:26:37",
+    "triggerCount": 0,
+    "node_count": 27,
+    "node_types": [
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "manualTrigger",
+      "merge",
+      "splitInBatches",
+      "ssh",
+      "stickyNote",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "const headers = items[0].json.headers; / const setCookie = headers['set-cookie']; / let readerToken = \"\"; /  / if (Array.isArray(setCookie)) { /     const tokenCookie = setCookie.find(c => c.trim().startsWith('"
+      },
+      {
+        "name": "Code in JavaScript2",
+        "kind": "code",
+        "preview": "const currentItem = $('Code in JavaScript5').item.json; / const bookFullId = currentItem.bookId; / const totalPages = currentItem.totalPages; /  / if (!bookFullId || typeof bookFullId !== 'string') { /   throw "
+      },
+      {
+        "name": "Code in JavaScript3",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨║╤Г╨║╨╕ ╤В╨╡╨║╤Г╤Й╨╡╨│╨╛ ╤Ж╨╕╨║╨╗╨░ / const token = $('Code in JavaScript1').item.json.authCookie.split('=')[1]; / const cookieContent = `.libfl.ru\\tTRUE\\t/\\tFALSE\\t2147483647\\tReaderToken\\t${token}`; / return [{ "
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "Code in JavaScript5",
+        "kind": "code",
+        "preview": "const rawData = items[0].json; /  / // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л (╨╕╨╖ SSH stdout ╨╕╨╗╨╕ HTTP data) / let textContent = rawData.stdout || rawData.data || \"\"; / if (typeof textContent !== 'string') { /     textContent "
+      },
+      {
+        "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+        "kind": "ssh",
+        "preview": "=echo \"{{ $('Code in JavaScript2').item.json.urlList }}\" > \"/tmp/url_list_{{ $('Code in JavaScript2').item.json.safeBookId }}.txt\" /  / echo \"{{ $('Code in JavaScript3').item.json.cookieContent }}\" > \"/tm"
+      },
+      {
+        "name": "╨╖╨░╨┐╤Г╤Б╨║",
+        "kind": "ssh",
+        "preview": "=/opt/bookbuilder/process_book.sh \"{{ $('Code in JavaScript2').item.json.safeBookId }}\""
+      },
+      {
+        "name": "exiftool",
+        "kind": "ssh",
+        "preview": "=# 1. ╨С╨╡╤А╨╡╨╝ ╨┐╤Г╤В╤М / FILE_PATH=\"{{ $json.full_path }}\" /  / # 2. ╨Я╤А╨╛╨▓╨╡╤А╨║╨░ / if [ ! -f \"$FILE_PATH\" ]; then /     echo \"Error: PDF file not found at $FILE_PATH\" /     exit 1 / fi /  / # 3. ╨Я╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡ / AUTHOR=\"{{ $json.pdf_"
+      },
+      {
+        "name": "metadate2",
+        "kind": "code",
+        "preview": "const returnData = []; /  / // ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨╛╤З╨╕╤Б╤В╨║╨╕ HTML-╤В╨╡╨│╨╛╨▓ / const stripTags = (str) => { /   if (!str) return null; /   return str.replace(/<[^>]*>?/gm, '').trim(); / }; /  / // ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г"
+      },
+      {
+        "name": "Build PDF Metadata",
+        "kind": "code",
+        "preview": "// ╨Э╨░╨┤╨╡╨╢╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨┐╨╛╨╗╤Г╤З╨╡╨╜╨╕╤П ╨┤╨░╨╜╨╜╤Л╤Е ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╨║╨╜╨╕╨│╨╕ ╨▓ ╤Ж╨╕╨║╨╗╨╡ / function safeGetItem(nodeName) { /   try { /     return $(nodeName).item.json; /   } catch (e) { /     try { /       return $(nodeName).first().jso"
+      },
+      {
+        "name": "╨║╤Г╨║╨╕",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╖╨░╨│╨╛╨╗╨╛╨▓╨║╨╕ ╨╛╤В ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░ / const headers = items[0].json.headers; / const setCookie = headers['set-cookie']; /  / // ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨║╤Г╨║╨╕ ╨▓ ╤Б╤В╤А╨╛╨║╤Г / let cookieString = \"\"; / if (Array.isArray(setCookie)"
+      },
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "let meta = {}; / try { /     meta = $('Build PDF Metadata').item.json; // <-- ╨Ч╨░╨╝╨╡╨╜╨╕╨╗╨╕ first ╨╜╨░ item / } catch (e) { /     console.log(\"Meta not found\"); / } /  / // 2. ╨д╤Г╨╜╨║╤Ж╨╕╤П ╨╛╤З╨╕╤Б╤В╨║╨╕ / const clean = (str) => { /     "
+      },
+      {
+        "name": "exiftool1",
+        "kind": "ssh",
+        "preview": "=# 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ID ╨║╨╜╨╕╨│╨╕ ╨╕╨╖ ╨╜╨╛╨┤╤Л \"Code in JavaScript2\" / # ╨Т╨░╨╢╨╜╨╛: ╨╕╨╝╤П ╨╜╨╛╨┤╤Л ╨▓ ╤Б╨║╨╛╨▒╨║╨░╤Е ╨┤╨╛╨╗╨╢╨╜╨╛ ╤В╨╛╤З╨╜╨╛ ╤Б╨╛╨▓╨┐╨░╨┤╨░╤В╤М ╤Б ╤В╨▓╨╛╨╕╨╝ / ID=\"{{ $('Code in JavaScript2').first().json.safeBookId }}\" /  / # 2. ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨┐╨░╨┐╨║╤Г ╤Б ╨║╨╜╨╕╨│╨╛"
+      },
+      {
+        "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+        "kind": "ssh",
+        "preview": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\""
+      },
+      {
+        "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+        "kind": "ssh",
+        "preview": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json.stdout.split('SUCCESS: ')[1].split('\\n')[0].trim() }}\" \"{{ $('Code in JavaScript1').item.json.authCookie }}\""
+      },
+      {
+        "name": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+        "kind": "ssh",
+        "preview": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/auto_order.py \"{{ $('Loop Over Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\" \"kravch-ivan@yandex.ru\" \"bDW-7vN-nav-34v\""
+      }
+    ],
+    "node_names": [
+      "Get Initial Cookies",
+      "HTTP Request",
+      "Code in JavaScript1",
+      "Code in JavaScript2",
+      "Code in JavaScript3",
+      "Download a file",
+      "Code in JavaScript5",
+      "If1",
+      "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "Upload file",
+      "Sticky Note1",
+      "Update row in sheet",
+      "Loop Over Items1",
+      "When clicking тАШExecute workflowтАЩ",
+      "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+      "╨╖╨░╨┐╤Г╤Б╨║",
+      "exiftool",
+      "metadate2",
+      "Build PDF Metadata",
+      "Merge",
+      "╨║╤Г╨║╨╕",
+      "Code in JavaScript",
+      "exiftool1",
+      "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+      "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+      "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+      "Wait"
+    ],
+    "description": ""
+  },
+  {
+    "id": "qsSm7oBrEKCfV015",
+    "name": "╨б╨Х╨Э╨Ы╨Х╨а",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-19 10:30:02",
+    "updated": "2026-01-23 19:01:56",
+    "triggerCount": 1,
+    "node_count": 1,
+    "node_types": [
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "c86328d6-411b-42aa-8825-cb65592db358"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook"
+    ],
+    "description": ""
+  },
+  {
+    "id": "OxIMZUzGng5RbHrE",
+    "name": "╨б╨Ю╨Ю╨С╨й╨Х╨Э╨Ш╨п ╨Ю╨в ╨С╨Ю╨в╨Р",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-19 21:26:46",
+    "updated": "2026-07-30 09:47:27",
+    "triggerCount": 0,
+    "node_count": 4,
+    "node_types": [
+      "googleSheets",
+      "manualTrigger",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Send a text message",
+      "╤А╨╡╨┤╨░╨║╤В╨╕╤А╨╛╨▓╨░╤В╤М",
+      "When clicking тАШExecute workflowтАЩ",
+      "Append or update row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "yrz1bBEBWeFHSOok",
+    "name": "╨б╨▒╨╛╤А ╨╖╨░╤П╨▓╨╛╨║ (Logic Router)",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-17 14:30:20",
+    "updated": "2026-02-25 12:46:07",
+    "triggerCount": 1,
+    "node_count": 12,
+    "node_types": [
+      "googleSheets",
+      "if",
+      "switch",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Is /start?",
+      "1. Send Offer",
+      "Is Button Clicked?",
+      "Is Phone Sent?",
+      "Is Email?",
+      "Answer Loading",
+      "2. Request Phone",
+      "3. Got Phone -> Ask Email",
+      "Sheet (Phone)",
+      "Sheet (Email)",
+      "Final Thanks"
+    ],
+    "description": ""
+  },
+  {
+    "id": "J2Q2OpZiWZKCm709",
+    "name": "╨░╨▓╤В╨╛╤Б╤В╨╛╤А╨╕╤Б╤Л",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-07 12:26:43",
+    "updated": "2025-09-07 16:11:31",
+    "triggerCount": 0,
+    "node_count": 8,
+    "node_types": [
+      "googleDrive",
+      "httpRequest",
+      "respondToWebhook",
+      "switch",
+      "webhook"
+    ],
+    "triggers": [
+      {
+        "kind": "webhook",
+        "name": "Webhook",
+        "path": "vk-callback"
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Webhook",
+      "Respond to Webhook",
+      "Switch1",
+      "Respond to Webhook1",
+      "HTTP Request",
+      "Download file",
+      "HTTP Request1",
+      "HTTP Request2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "6gatYC6rCvrUAAlk",
+    "name": "╨▓╨╕╨┤╨╡╨╛ ╨▒╨╛╤В",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-23 20:19:18",
+    "updated": "2026-02-05 12:49:16",
+    "triggerCount": 1,
+    "node_count": 7,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "merge",
+      "set",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// Code тАФ Run Once for ALL Items / // ╨Ы╤Г╤З╤И╨╕╨╣ ╨║╤Г╤А╤Б ╨┐╨╛ ╨┐╨╛╤Е╨╛╨╢╨╡╤Б╤В╨╕ ╤В╨╛╨║╨╡╨╜╨╛╨▓ + ╨╛╤В╨╜╨╛╤Б╨╕╤В╨╡╨╗╤М╨╜╤Л╨╡ ╨▒╨╗╨╛╨║╨╕ + HTML ╤Д╨╛╤А╨╝╨░╤В /  / // ---------- helpers ---------- / function escText(s){ /   return String(s ?? '') /     .replace(/&"
+      },
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╨╖╨░╨┐╤А╨╛╤Б╨░ / let originalQuery = ($('Telegram Trigger').item.json.message.text || \"\").toLowerCase().trim(); / const allItems = $input.all(); /  / let targetBlocks = []; / let searchQuery = ori"
+      }
+    ],
+    "node_names": [
+      "Telegram Trigger",
+      "Code",
+      "Edit Fields",
+      "Merge",
+      "Send a text message",
+      "Get row(s) in sheet",
+      "Code in JavaScript"
+    ],
+    "description": ""
+  },
+  {
+    "id": "f4CfmK5ckvhKECbs",
+    "name": "╨▓╨║ ╨░╨▓╤В╨╛",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-22 19:05:59",
+    "updated": "2026-01-22 20:36:16",
+    "triggerCount": 0,
+    "node_count": 9,
+    "node_types": [
+      "googleSheets",
+      "httpRequest",
+      "manualTrigger",
+      "merge",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "HTTP Request",
+      "When clicking тАШExecute workflowтАЩ",
+      "Get row(s) in sheet",
+      "Get a video",
+      "HTTP Request1",
+      "HTTP Request2",
+      "HTTP Request3",
+      "Merge",
+      "HTTP Request4"
+    ],
+    "description": ""
+  },
+  {
+    "id": "irHtMs8yAy3eIv9i",
+    "name": "╨╗╨╛╨▓╨╕╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤П",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-19 14:52:06",
+    "updated": "2026-03-04 08:00:07",
+    "triggerCount": 1,
+    "node_count": 6,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "if",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// 1. ╨б╨Я╨Ш╨б╨Ю╨Ъ ╨а╨Р╨Ч╨а╨Х╨и╨Х╨Э╨Э╨л╨е ID (╨╜╨░╨┐╤А╨╕╨╝╨╡╤А, ID ╨┐╤А╨╡╨┐╨╛╨┤╨░╨▓╨░╤В╨╡╨╗╨╡╨╣) / // ╨Т╤Б╤В╨░╨▓╤М╤В╨╡ ╤Б╤О╨┤╨░ ╨╜╤Г╨╢╨╜╤Л╨╡ ID ╤З╨╡╤А╨╡╨╖ ╨╖╨░╨┐╤П╤В╤Г╤О / const allowedIds = [908572509];  /  / return items.map(item => { /   // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╨╕ ╨╛╨▒╤Л╤З╨╜╨╛╨╡ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡, ╨╕ ╨╛╤В"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "return items.map(item => { /   // 1. ╨Ш╤Й╨╡╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ (╤Г╤З╨╕╤В╤Л╨▓╨░╨╡╨╝ ╤А╨░╨╖╨╜╤Г╤О ╤Б╤В╤А╤Г╨║╤В╤Г╤А╤Г n8n) /   const message = item.json.message || item.json.edited_message || (item.json.body && item.json.body.message); /  /   // "
+      }
+    ],
+    "node_names": [
+      "Telegram Trigger",
+      "If",
+      "Code in JavaScript",
+      "Append or update row in sheet",
+      "Append row in sheet",
+      "Code in JavaScript1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "lNKdx9us8ouWwD3n",
+    "name": "╨╜╨░╨╖╨▓╨░╨╜╨╕╤П ╨┤╨╗╤П ╤А╨╛╨╗╨╕╨║╨╛╨▓",
+    "active": false,
+    "archived": false,
+    "created": "2026-02-11 08:30:46",
+    "updated": "2026-06-25 16:21:16",
+    "triggerCount": 1,
+    "node_count": 15,
+    "node_types": [
+      "code",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "scheduleTrigger",
+      "set",
+      "splitInBatches",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 6}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨╕╨╖ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤Г╨╖╨╗╨░ HTTP Request / const sheets = $json.sheets; /  / // ╨Я╤А╨╡╨▓╤А╨░╤Й╨░╨╡╨╝ ╨╝╨░╤Б╤Б╨╕╨▓ ╨╗╨╕╤Б╤В╨╛╨▓ ╨▓ ╨╝╨░╤Б╤Б╨╕╨▓ ╨╛╨▒╤К╨╡╨║╤В╨╛╨▓, ╨┐╨╛╨╜╤П╤В╨╜╤Л╨╣ n8n / return sheets.map(sheet => { /   return { /     title: sheet.prop"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "const months = { /   \"╤П╨╜╨▓\": \"01\", \"╤Д╨╡╨▓\": \"02\", \"╨╝╨░╤А\": \"03\", \"╨░╨┐╤А\": \"04\", \"╨╝╨░╨╣\": \"05\", \"╨╝╨░╤П\": \"05\", /   \"╨╕╤О╨╜\": \"06\", \"╨╕╤О╨╗\": \"07\", \"╨░╨▓╨│\": \"08\", \"╤Б╨╡╨╜\": \"09\", \"╨╛╨║╤В\": \"10\", \"╨╜╨╛╤П\": \"11\", \"╨┤╨╡╨║\": \"12\" / }; /  / // 1. ╨Ф"
+      }
+    ],
+    "node_names": [
+      "HTTP Request",
+      "Code in JavaScript",
+      "If",
+      "Get row(s) in sheet",
+      "If1",
+      "Edit Fields",
+      "Code in JavaScript1",
+      "Loop Over Items",
+      "Update row in sheet",
+      "Edit Fields1",
+      "Get row(s) in sheet1",
+      "Schedule Trigger",
+      "Wait",
+      "Wait1",
+      "Wait2"
+    ],
+    "description": ""
+  },
+  {
+    "id": "OvMVNbm0L1myBptq",
+    "name": "╨╜╨░╤А╨╡╨╖╨║╨░ ╨▓╨╕╨┤╨╡╨╛",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-25 12:09:19",
+    "updated": "2026-03-23 14:32:34",
+    "triggerCount": 1,
+    "node_count": 7,
+    "node_types": [
+      "code",
+      "googleDrive",
+      "splitInBatches",
+      "ssh",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "const text = $('Telegram Trigger').item.json.message.text; / const chatId = $('Telegram Trigger').item.json.message.chat.id; /  / // 1. ╨Ш╤Й╨╡╨╝ ╤Б╤Б╤Л╨╗╨║╤Г (╨╛╨╜╨░ ╨╛╨┤╨╜╨░ ╨╜╨░ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡) / const urlMatch = text.match(/(http"
+      },
+      {
+        "name": "Execute a command",
+        "kind": "ssh",
+        "preview": "=# 1. ╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ (╨Ь╨░╨║╤Б╨╕╨╝╨░╨╗╤М╨╜╨╛╨╡ ╨║╨░╤З╨╡╤Б╤В╨▓╨╛ + ╤Б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨▓ MP4) / yt-dlp --quiet \\ / --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" \\ / -f \"bestvideo+bestaudio/best\" \\ / --mer"
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨┤╨╗╨╕╨╜╨╜╤Г╤О ╤Б╤В╤А╨╛╨║╤Г base64, ╨║╨╛╤В╨╛╤А╤Г╤О ╨┐╤А╨╕╤Б╨╗╨░╨╗ yt-dlp / const base64String = items[0].json.stdout; /  / // ╨С╨╡╤А╨╡╨╝ ╨║╤А╨░╤Б╨╕╨▓╨╛╨╡ ╨╕╨╝╤П, ╨║╨╛╤В╨╛╤А╨╛╨╡ ╨╝╤Л ╨┐╤А╨╕╨┤╤Г╨╝╨░╨╗╨╕ ╤А╨░╨╜╨╡╨╡ / const fileName = $('Code in JavaScript').item.json."
+      }
+    ],
+    "node_names": [
+      "Telegram Trigger",
+      "Code in JavaScript",
+      "Execute a command",
+      "Code in JavaScript1",
+      "Loop Over Items",
+      "Upload file",
+      "Send a text message"
+    ],
+    "description": ""
+  },
+  {
+    "id": "lIDWsm2sqFkuBV23",
+    "name": "╤Б╨▒╨╛╤А ╨╖╨░╤П╨▓╨╛╨║",
+    "active": false,
+    "archived": true,
+    "created": "2026-02-12 17:15:56",
+    "updated": "2026-02-17 14:51:33",
+    "triggerCount": 1,
+    "node_count": 14,
+    "node_types": [
+      "googleSheets",
+      "if",
+      "switch",
+      "telegram",
+      "telegramTrigger",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "Telegram Trigger",
+      "Router (Start vs Action)",
+      "1. Send Offer",
+      "Check Button Click",
+      "Answer Loading",
+      "2. Request Phone",
+      "3. Final Success",
+      "Switch",
+      "Append row in sheet",
+      "If",
+      "4. Ask Email",
+      "Wait for Email",
+      "3. Final Success1",
+      "Append row in sheet1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "mkct0W3oFHftaBah",
+    "name": "╤В╨░╨╣╨╝╨║╨╛╨┤╤Л",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-20 16:48:26",
+    "updated": "2026-07-30 09:42:11",
+    "triggerCount": 0,
+    "node_count": 17,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDrive",
+      "httpRequest",
+      "lmChatOpenRouter",
+      "manualTrigger",
+      "ssh",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code in JavaScript",
+        "kind": "code",
+        "preview": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ / const payload = items[0].json; /  / // ╨Т ╨╖╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╨╕ ╨╛╤В ╤В╨╛╨│╨╛, ╨║╨░╨║ n8n ╤Б╨┐╨░╤А╤Б╨╕╨╗ ╤Д╨░╨╣╨╗, ╨▒╨╡╤А╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨╛╨▒╤К╨╡╨║╤В (╤В╨░╨║ ╨║╨░╨║ ╨║╨╛╤А╨╡╨╜╤М ╤Д╨░╨╣╨╗╨░ - ╨╝╨░╤Б╤Б╨╕╨▓) / const data = Array.isArray(payload) ? payload[0] "
+      },
+      {
+        "name": "Code in JavaScript1",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨┤╤П╤Й╨╕╨╡ ╨║╤Г╤Б╨╛╤З╨║╨╕ ╨╕ ╤Б╨║╨╗╨╡╨╕╨▓╨░╨╡╨╝ ╨╕╤Е / // ╨д╨╛╤А╨╝╨░╤В: [00:00:14] ╨в╨╡╨║╤Б╤В... \\n [00:02:30] ╨в╨╡╨║╤Б╤В... /  / const fullTranscript = items.map(item => { /   return `[${item.json.timestamp}] ${item.json.text}`; / })"
+      },
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "// 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╨╛╤В╨▓╨╡╤В╨░ ╨╛╤В AI ╨Р╨│╨╡╨╜╤В╨░ / const text = $input.first().json.output;  /  / // 2. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨╕╨╖ ╤В╨░╨▒╨╗╨╕╤Ж╤Л.  / // ╨Ь╤Л ╨╛╨▒╤А╨░╤Й╨░╨╡╨╝╤Б╤П ╨║ ╨╜╨╛╨┤╨╡ \"Loop Over Items1\", ╨│╨┤╨╡ ╤Е╤А╨░╨╜╤П╤В╤Б╤П ╨┤╨░╨╜╨╜╤Л╨╡ ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╤Б╤В╤А╨╛╨║╨╕ "
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"https://yo"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').first().json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      }
+    ],
+    "node_names": [
+      "Code in JavaScript",
+      "Code in JavaScript1",
+      "OpenRouter Chat Model",
+      "AI Agent1",
+      "When clicking тАШExecute workflowтАЩ",
+      "HTTP Request",
+      "Code1",
+      "Upload file",
+      "Wait",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С",
+      "╨Ч╨Р╨У╨а╨г╨Ч╨Ъ╨Р ╨Э╨Р ╨а╨г╨в╨г╨С1",
+      "Code2",
+      "Download a file",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "HTTP Request1",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "BsK3ShnzOWEPYVYG",
+    "name": "╤В╤А╨░╨╜╤Б╨║╤А╨╕╨▒",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-02 12:52:23",
+    "updated": "2026-01-29 11:25:36",
+    "triggerCount": 1,
+    "node_count": 18,
+    "node_types": [
+      "code",
+      "googleDocs",
+      "googleDrive",
+      "httpRequest",
+      "if",
+      "set",
+      "ssh",
+      "telegram",
+      "telegramTrigger",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "╨Ы╨╛╨▓╨╕╨╝ ╤Б╤Б╤Л╨╗╨║╤Г",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "const text = $input.first().json.results.channels[0].alternatives[0].transcript // ╨╖╨░╨╝╨╡╨╜╨╕ \"result\" ╨╜╨░ ╤В╨╛╤З╨╜╨╛╨╡ ╨╕╨╝╤П ╨┐╨╛╨╗╤П ╨╕╨╖ ╨╜╨╛╨┤╤Л \"╨Р╨│╨╡╨╜╤В\" /  / return [{ /   binary: { /     data: { /       data: Buffer.from(text, '"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"{{ $json.l"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code').item.json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      }
+    ],
+    "node_names": [
+      "HTTP Request1",
+      "Code1",
+      "Download a file",
+      "Create a document1",
+      "Update a document",
+      "Send a text message",
+      "Share file",
+      "Send a text message1",
+      "╨Ы╨╛╨▓╨╕╨╝ ╤Б╤Б╤Л╨╗╨║╤Г",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "Edit Fields1",
+      "If",
+      "Send a text message2",
+      "Send a text message3",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Wait",
+      "Code"
+    ],
+    "description": ""
+  },
+  {
+    "id": "KgnzSQcyR8iVRl8d",
+    "name": "╤В╤А╨░╨╜╤Б╨║╤А╨╕╨▒ + ╨╗╨╗╨╝",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-31 07:01:20",
+    "updated": "2025-09-06 10:55:58",
+    "triggerCount": 1,
+    "node_count": 18,
+    "node_types": [
+      "agent",
+      "code",
+      "googleDocs",
+      "googleDrive",
+      "httpRequest",
+      "lmChatOpenAi",
+      "merge",
+      "set",
+      "ssh",
+      "telegram",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "╨Ы╨╛╨▓╨╕╨╝ ╤Б╤Б╤Л╨╗╨║╤Г",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "const text = $input.first().json.formatted_text; // ╨╖╨░╨╝╨╡╨╜╨╕ \"result\" ╨╜╨░ ╤В╨╛╤З╨╜╨╛╨╡ ╨╕╨╝╤П ╨┐╨╛╨╗╤П ╨╕╨╖ ╨╜╨╛╨┤╤Л \"╨Р╨│╨╡╨╜╤В\" /  / return [{ /   binary: { /     data: { /       data: Buffer.from(text, 'utf-8').toString('base64'), /    "
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "const out = $input.first().json.stdout || ''; / const path = out.split('\\n').map(s => s.trim()).filter(Boolean).pop(); / if (!path) throw new Error('╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╛╨┐╤А╨╡╨┤╨╡╨╗╨╕╤В╤М ╨┐╤Г╤В╤М ╨║ ╤Д╨░╨╣╨╗╤Г'); / return [{ remoteP"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "Split Text",
+        "kind": "code",
+        "preview": "const text = $input.first().json['Raw Text Input'] || ''; / const limit = 10000; /  / const chunks = []; / let i = 0; /  / while (i < text.length) { /   let end = i + limit; /   if (end < text.length) { /     // ╨╕╤Й╨╡╨╝ ╨▒"
+      },
+      {
+        "name": "Join Text Outputs",
+        "kind": "code",
+        "preview": "// ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨▓╤Б╨╡ output-╤З╨░╤Б╤В╨╕ ╨▓ ╨╛╨┤╨╕╨╜ ╨┤╨╗╨╕╨╜╨╜╤Л╨╣ ╤В╨╡╨║╤Б╤В / const parts = items.map(item => item.json.output || item.json.result || \"\"); / const fullText = parts.join(\"\\n\\n\");  // ╨Ф╨╛╨▒╨░╨▓╨╕╨╝ ╨╛╤В╤Б╤В╤Г╨┐ ╨╝╨╡╨╢╨┤╤Г ╨░╨▒╨╖╨░╤Ж╨░╨╝╨╕ /  / r"
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp -4 -q --no-warnings --no-progress \\ /   -x --audio-format m4a \\ /   -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \\ /   --print after_move:filepath \\ /   \"{{ $json.link }}\""
+      }
+    ],
+    "node_names": [
+      "HTTP Request1",
+      "AI Agent1",
+      "OpenAI Chat Model1",
+      "Code1",
+      "Code2",
+      "Download a file",
+      "Create a document1",
+      "Update a document",
+      "Edit Fields",
+      "Split Text",
+      "Merge",
+      "Join Text Outputs",
+      "Send a text message",
+      "Share file",
+      "Send a text message1",
+      "╨Ы╨╛╨▓╨╕╨╝ ╤Б╤Б╤Л╨╗╨║╤Г",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "Edit Fields1"
+    ],
+    "description": ""
+  },
+  {
+    "id": "T8scvz2KZpKNuF1B",
+    "name": "╤В╤А╨░╨╜╤Б╨║╤А╨╕╨▒ ╨╕╨╖ ╤В╨░╨▒╨╗╨╕╤Ж╤Л",
+    "active": false,
+    "archived": false,
+    "created": "2026-03-09 12:19:57",
+    "updated": "2026-07-29 16:10:08",
+    "triggerCount": 1,
+    "node_count": 22,
+    "node_types": [
+      "code",
+      "googleDocs",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "scheduleTrigger",
+      "set",
+      "splitInBatches",
+      "ssh",
+      "telegram",
+      "wait"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 23, \"triggerAtMinute\": 35}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "const text = $input.first().json.results.channels[0].alternatives[0].transcript // ╨╖╨░╨╝╨╡╨╜╨╕ \"result\" ╨╜╨░ ╤В╨╛╤З╨╜╨╛╨╡ ╨╕╨╝╤П ╨┐╨╛╨╗╤П ╨╕╨╖ ╨╜╨╛╨┤╤Л \"╨Р╨│╨╡╨╜╤В\" /  / return [{ /   binary: { /     data: { /       data: Buffer.from(text, '"
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"{{ $json.l"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').item.json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╨╡╤Б╤М ╨╛╤В╨▓╨╡╤В ╨╛╤В Deepgram / const deepgramResponse = $input.item.json; / const jsonString = JSON.stringify(deepgramResponse, null, 2); /  / // ╨С╨╡╤А╨╡╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨╜╨░╨┐╤А╤П╨╝╤Г╤О ╨╕╨╖ ╤Ж╨╕╨║╨╗╨░ (╨╕╨╖ ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╤Б╤В╤А╨╛╨║╨╕ ╤В╨░╨▒╨╗╨╕╤Ж╤Л"
+      }
+    ],
+    "node_names": [
+      "HTTP Request1",
+      "Code1",
+      "Code2",
+      "Download a file",
+      "Create a document1",
+      "Update a document",
+      "Share file",
+      "Send a text message1",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "Edit Fields1",
+      "If",
+      "Send a text message3",
+      "Schedule Trigger",
+      "Get row(s) in sheet",
+      "If1",
+      "Loop Over Items",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Update row in sheet",
+      "HTTP Request",
+      "Wait",
+      "Code"
+    ],
+    "description": ""
+  },
+  {
+    "id": "4IAHmDld7EfBum98",
+    "name": "╤В╤А╨░╨╜╤Б╨║╤А╨╕╨▒ ╨╕╨╖ ╤В╨░╨▒╨╗╨╕╤Ж╤Л + ╤В╨░╨╣╨╝╨║╨╛╨┤╤Л",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-10 15:48:09",
+    "updated": "2025-09-12 17:05:24",
+    "triggerCount": 1,
+    "node_count": 21,
+    "node_types": [
+      "chainLlm",
+      "code",
+      "googleDocs",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "lmChatOpenAi",
+      "scheduleTrigger",
+      "set",
+      "splitInBatches",
+      "ssh",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 22, \"triggerAtMinute\": 6}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "const text = $input.first().json.results.channels[0].alternatives[0].transcript // ╨╖╨░╨╝╨╡╨╜╨╕ \"result\" ╨╜╨░ ╤В╨╛╤З╨╜╨╛╨╡ ╨╕╨╝╤П ╨┐╨╛╨╗╤П ╨╕╨╖ ╨╜╨╛╨┤╤Л \"╨Р╨│╨╡╨╜╤В\" /  / return [{ /   binary: { /     data: { /       data: Buffer.from(text, '"
+      },
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "// `items` тАФ ╤Н╤В╨╛ ╨╝╨░╤Б╤Б╨╕╨▓, ╤Б╨╛╨┤╨╡╤А╨╢╨░╤Й╨╕╨╣ ╨▓╤Б╨╡ 40 ╤Н╨╗╨╡╨╝╨╡╨╜╤В╨╛╨▓, ╨┐╤А╨╕╤И╨╡╨┤╤И╨╕╤Е ╨╜╨░ ╨▓╤Е╨╛╨┤ / return items.map(item => { /   // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Л╨▓╨╛╨┤ ╨║╨╛╨╝╨░╨╜╨┤╤Л ╨┤╨╗╤П ╨║╨░╨╢╨┤╨╛╨│╨╛ ╨╛╤В╨┤╨╡╨╗╤М╨╜╨╛╨│╨╛ ╤Н╨╗╨╡╨╝╨╡╨╜╤В╨░ /   const out = item.json.stdout || ''; /    / "
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp -4 -q --no-warnings --no-progress \\ /   -x --audio-format m4a \\ /   --concurrent-fragments 5 \\ /   --throttled-rate 100M \\ /   -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \\ /   --print after_move:fi"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm \"{{ $('Code2').item.json.remotePath }}\""
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// --- ╨Т╤Е╨╛╨┤╨╜╤Л╨╡ ╨┤╨░╨╜╨╜╤Л╨╡ --- / const llmResult = $input.first().json.text; / const httpRequestItem = $('HTTP Request1').first(); / let deepgramBody = null; /  / // --- ╨и╨Р╨У 1: ╨г╨Э╨Ш╨Т╨Х╨а╨б╨Р╨Ы╨м╨Э╨Ю╨Х ╨Я╨Ю╨Ы╨г╨з╨Х╨Э╨Ш╨Х ╨Ф╨Р╨Э╨Э╨л╨е DEEPGRA"
+      }
+    ],
+    "node_names": [
+      "HTTP Request1",
+      "Code1",
+      "Code2",
+      "Download a file",
+      "Create a document1",
+      "Update a document",
+      "Share file",
+      "Send a text message1",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "Edit Fields1",
+      "If",
+      "Schedule Trigger",
+      "Get row(s) in sheet",
+      "If1",
+      "Loop Over Items",
+      "Update row in sheet",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "Basic LLM Chain",
+      "OpenAI Chat Model",
+      "Code"
+    ],
+    "description": ""
+  },
+  {
+    "id": "nLnqV0SwhTaF9K0H",
+    "name": "╤В╤А╨░╨╜╤Б╨║╤А╨╕╨▒ ╨╕╨╖ ╤В╨░╨▒╨╗╨╕╤Ж╤Л ╨┤╨╗╤П ╨Р╨╜╨░╤В╨╛╨╗╨╕╤П",
+    "active": false,
+    "archived": false,
+    "created": "2025-09-06 08:22:10",
+    "updated": "2026-04-23 12:51:38",
+    "triggerCount": 1,
+    "node_count": 19,
+    "node_types": [
+      "code",
+      "googleDrive",
+      "googleSheets",
+      "httpRequest",
+      "if",
+      "scheduleTrigger",
+      "set",
+      "splitInBatches",
+      "ssh",
+      "telegram"
+    ],
+    "triggers": [
+      {
+        "kind": "scheduleTrigger",
+        "name": "Schedule Trigger",
+        "path": "{\"interval\": [{\"triggerAtHour\": 23, \"triggerAtMinute\": 35}]}"
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code2",
+        "kind": "code",
+        "preview": "return items.map(item => { /   const out = item.json.stdout || ''; /    /   // ╨Ш╤Й╨╡╨╝ ╨┐╤Г╤В╤М, ╨║╨╛╤В╨╛╤А╤Л╨╣ ╨╜╨░╤З╨╕╨╜╨░╨╡╤В╤Б╤П ╤Б /data/audio/ ╨╕ ╨╖╨░╨║╨░╨╜╤З╨╕╨▓╨░╨╡╤В╤Б╤П ╤А╨░╤Б╤И╨╕╤А╨╡╨╜╨╕╨╡╨╝ (.m4a, .mp4 ╨╕ ╤В.╨┤.) /   // ╨н╤В╨╛ ╨┐╨╛╨╖╨▓╨╛╨╗╨╕╤В ╨╖╨░╤Е╨▓╨░╤В╨╕╤В╤М ╨┐╤А╨╛╨▒╨╡╨╗"
+      },
+      {
+        "name": "Download a file",
+        "kind": "ssh",
+        "preview": ""
+      },
+      {
+        "name": "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+        "kind": "ssh",
+        "preview": "=yt-dlp --extractor-args \"youtube:oauth2\" --extractor-args \"youtube:player_client=android,web\" -f \"ba/b\" -x --audio-format m4a --no-warnings -o \"/data/audio/%(title).200B [%(id)s].%(ext)s\" \"{{ $json.l"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+        "kind": "ssh",
+        "preview": "=rm '{{ $('Code2').item.json.remotePath }}'"
+      },
+      {
+        "name": "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+        "kind": "ssh",
+        "preview": "rm -rf /opt/n8n/storage/binaryData/workflows/nLnqV0SwhTaF9K0H/executions/*"
+      },
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// ╨С╨╡╤А╨╡╨╝ ╨▓╨╡╤Б╤М ╨╛╤В╨▓╨╡╤В ╨╛╤В Deepgram / const deepgramResponse = $input.item.json; / const jsonString = JSON.stringify(deepgramResponse, null, 2); /  / // ╨С╨╡╤А╨╡╨╝ ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨╜╨░╨┐╤А╤П╨╝╤Г╤О ╨╕╨╖ ╤Ж╨╕╨║╨╗╨░ (╨╕╨╖ ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╤Б╤В╤А╨╛╨║╨╕ ╤В╨░╨▒╨╗╨╕╤Ж╤Л"
+      }
+    ],
+    "node_names": [
+      "HTTP Request1",
+      "Code2",
+      "Download a file",
+      "Send a text message1",
+      "╨б╨║╨░╤З╨╕╨▓╨░╨╡╨╝ ╨░╤Г╨┤╨╕╨╛",
+      "Edit Fields1",
+      "If",
+      "Send a text message3",
+      "Schedule Trigger",
+      "Get row(s) in sheet",
+      "If1",
+      "Loop Over Items",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░",
+      "╨з╨╕╤Б╤В╨║╨░ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨░1",
+      "HTTP Request",
+      "Code",
+      "Upload file",
+      "Upload JSON to Drive",
+      "Update row in sheet"
+    ],
+    "description": ""
+  },
+  {
+    "id": "FC8b5pBQguN1jYfN",
+    "name": "╤Г╨┤╨░╨╗╨╕╤В╤М ╨▓╨╕╨┤╨╡╨╛ ╤Б ╤О╤В╤Г╨▒╨░",
+    "active": false,
+    "archived": false,
+    "created": "2026-01-20 16:14:05",
+    "updated": "2026-03-08 05:31:24",
+    "triggerCount": 0,
+    "node_count": 2,
+    "node_types": [
+      "manualTrigger",
+      "youTube"
+    ],
+    "triggers": [
+      {
+        "kind": "manualTrigger",
+        "name": "When clicking тАШExecute workflowтАЩ",
+        "path": ""
+      }
+    ],
+    "code_nodes": [],
+    "node_names": [
+      "When clicking тАШExecute workflowтАЩ",
+      "Delete a video"
+    ],
+    "description": ""
+  },
+  {
+    "id": "fPiFHptJ2KvA6IpN",
+    "name": "╤З╨╡╨║╨╕",
+    "active": false,
+    "archived": false,
+    "created": "2025-08-24 10:06:32",
+    "updated": "2025-09-05 08:28:18",
+    "triggerCount": 1,
+    "node_count": 9,
+    "node_types": [
+      "code",
+      "extractFromFile",
+      "googleSheets",
+      "if",
+      "merge",
+      "openAi",
+      "set",
+      "telegramTrigger"
+    ],
+    "triggers": [
+      {
+        "kind": "telegramTrigger",
+        "name": "Telegram Trigger",
+        "path": ""
+      }
+    ],
+    "code_nodes": [
+      {
+        "name": "Code",
+        "kind": "code",
+        "preview": "// ╨г╨╗╤Г╤З╤И╨╡╨╜╨╜╨░╤П ╨▓╨╡╤А╤Б╨╕╤П ╤Б ╨┤╨╡╤В╨░╨╗╤М╨╜╤Л╨╝ ╨┐╨░╤А╤Б╨╕╨╜╨│╨╛╨╝ / const inputData = $input.all(); /  / const results = []; /  / for (const item of inputData) { /   if (item.json.text) { /     // ╨Я╨░╤А╤Б╨╕╨╜╨│ ╨▒╨░╨╜╨║╨╛╨▓╤Б╨║╨╛╨│╨╛ ╤З╨╡╨║╨░ /     const text "
+      },
+      {
+        "name": "Code1",
+        "kind": "code",
+        "preview": "// ╨г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╤Л╨╣ ╨╝╨╕╨╜╨╕╨╝╨░╨╗╤М╨╜╤Л╨╣ ╨┐╨░╤А╤Б╨╡╤А ╨┐╨╗╨░╤В╨╡╨╢╨╡╨╣ ╨┤╨╗╤П n8n / // ╨Т╤Л╤Е╨╛╨┤: ╤Б╤Г╨╝╨╝╨░_╨┐╨╗╨░╤В╨╡╨╢╨░, ╨▓╨░╨╗╤О╤В╨░, ╨║╤В╨╛_╨┐╨╡╤А╨╡╨▓╨╡╨╗, ╨┤╨░╤В╨░_╨┐╨╡╤А╨╡╨▓╨╛╨┤╨░, ╨┤╨░╤В╨░_╨┐╨╡╤А╨╡╨▓╨╛╨┤╨░_iso /  / // ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Е╨╛╨┤╨╜╤Л╨╡ items (Code / Function / Function Item) / const i"
+      }
+    ],
+    "node_names": [
+      "Telegram Trigger",
+      "Extract from File",
+      "Code",
+      "Merge",
+      "Analyze image",
+      "Code1",
+      "Edit Fields",
+      "If",
+      "Append or update row in sheet"
+    ],
+    "description": ""
+  }
+]

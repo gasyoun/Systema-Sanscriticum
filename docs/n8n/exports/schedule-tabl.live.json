@@ -1,0 +1,32 @@
+{
+  "id": "0ghTUdEZB1KnDPrD",
+  "name": "╨а╨Р╨б╨Я╨Ш╨б╨Р╨Э╨Ш╨Х + ╨в╨Р╨С╨Ы",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6a4e0703-4059-47ba-8bad-c3c3d51447ff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0181821d-7b93-4571-aa33-e7e2ddc302b0",
+      "name": "Webhook",
+      "webhookId": "6a4e0703-4059-47ba-8bad-c3c3d51447ff"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}
