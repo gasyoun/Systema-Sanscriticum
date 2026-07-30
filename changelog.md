@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **`/ask samskrte.ru` Tier-0 plan pack 2026–2027 (docs-only).** Autonomy-ready index + layers: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md), roadmap, architecture, wave-1 implementation/verification, [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md). Wave-1 = marathon 28-08 fully live (funnel → money activate → notify → smoke A–E) + DR gates; year spine = GetCourse-parity + growth. 26 interview rulings; money-code fence. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.78.0] - 2026-07-30
 
 ### Added
