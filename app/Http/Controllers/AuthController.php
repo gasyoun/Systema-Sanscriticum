@@ -38,8 +38,10 @@ class AuthController extends Controller
         // входе приводим ввод к тому же виду (иначе «Anna@Mail.ru» не найдёт аккаунт).
         $credentials['email'] = User::normalizeEmail($credentials['email']);
 
-        // Попытка входа
-        if (Auth::attempt($credentials)) {
+        // Попытка входа. remember — opt-in long-lived cookie (H1949); default off
+        // when the checkbox is absent, matching shopLogin() so both password paths
+        // honour the same flag. Social / magic-link logins still always remember.
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             // Если это Админ -> в админку

@@ -71,6 +71,15 @@
                     </div>
                 </div>
 
+                {{-- H1949 — opt-in long-lived session; default off (unchecked).
+                     Shop modal already had this; password /login was the gap. --}}
+                <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none pl-1">
+                    <input type="checkbox" name="remember" value="1"
+                        @checked(old('remember'))
+                        class="rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24]">
+                    Запомнить меня
+                </label>
+
                 <div class="pt-2">
                     <button type="submit" 
                         class="w-full bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
