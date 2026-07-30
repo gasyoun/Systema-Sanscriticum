@@ -1,12 +1,15 @@
 ## [Unreleased]
 
+### Changed
+- **H1966 konsultaciya redesign: multi-direction concurrent variants.** No single human pick among A–D; ship several visual directions at once (B = default only). Packet + marketing README updated. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.80.3] - 2026-07-30
 
 ### Fixed
 - **Scheduler wrapper stale-lock false-positive skip (H1973).** `systema-schedule-run.sh`'s `flock -n` overlap guard could stay falsely held for hours after a deploy-triggered restart, silently skipping every cron-scheduled command (not Telegram-specific — `receivables:check`, `debts:remind`, `groups:notify-forming-shortfall`, etc.). Added a TTL-based stale-lock reclaim: a `flock` failure older than `2 × SCHEDULE_MAX_SECONDS + 60s` (env-overridable via `SYSTEMA_SCHEDULE_STALE_SECONDS`) is presumed a wedged/dead holder and reclaimed by replacing the lock file with a fresh inode. Reproduction test: [`scripts/server_guards/sbin/test_systema_schedule_run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/test_systema_schedule_run.sh). Details: [docs/server-resource-guards.md §2.5](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md). Executor: Sonnet 5 (`claude-sonnet-5`).
 
 ### Added
-- **H1966 konsultaciya redesign design packet (no production CSS).** Four directions A–D under [`marketing/marathon-2026-08/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08): token tables, post-submit/Telegram states, HTML mockups `redesign/direction-{a,b,c,d}-*.html`, full `/useit` Nielsen H1–H10 pass, recommend **B light island (O2)**. Awaits human pick before blade implement. Executor: Grok 4.5 (`grok-4.5`).
+- **H1966 konsultaciya redesign design packet (no production CSS).** Four directions A–D under [`marketing/marathon-2026-08/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08): token tables, post-submit/Telegram states, HTML mockups `redesign/direction-{a,b,c,d}-*.html`, full `/useit` Nielsen H1–H10 pass; multi-dir policy (B = default variant, not sole winner). Executor: Grok 4.5 (`grok-4.5`).
 - **Anki SRS media in review UI + agent manual.** Import publishes `media/` to `storage/app/public/srs/anki_{id}/`; review loop shows audio (front) + image (reveal) via `SrsMedia`. Agent ops: [docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.80.2] - 2026-07-30
@@ -1826,6 +1829,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
 [Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...HEAD
+
+### Changed
+- H1966 konsultaciya redesign: multi-direction concurrent variants (no single human pick; B = default only).
 [1.80.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.1...v1.80.2
 [1.80.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...v1.80.1
 [1.80.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...v1.80.0
@@ -1833,6 +1839,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.79.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...v1.79.2
 # old Unreleased was:
 # [Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...HEAD
+
+### Changed
+- H1966 konsultaciya redesign: multi-direction concurrent variants (no single human pick; B = default only).
 [1.79.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.0...v1.79.1
 [1.79.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.78.0...v1.79.0
 [1.78.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.77.0...v1.78.0
