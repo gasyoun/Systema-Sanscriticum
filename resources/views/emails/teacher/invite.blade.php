@@ -12,7 +12,7 @@
             <span style="font-size: 64px; color: #d35400; line-height: 1;">ॐ</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'преподаватель' }}! 🙏</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'преподаватель' }}!</h2>
 
         <p style="font-size: 18px; text-align: center;">Вас пригласили преподавать в <strong>Обществе ревнителей санскрита</strong>. Для вас открыт доступ в учебную панель в роли <strong>преподавателя</strong>.</p>
 
@@ -41,8 +41,7 @@
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
             Если у вас возникнут вопросы, просто ответьте на это письмо.<br><br>
-            С уважением,<br>
-            <strong>Команда Общества ревнителей санскрита</strong>
+            <strong>Общество ревнителей санскрита</strong>
         </p>
 
     </div>

@@ -12,7 +12,7 @@
             <span style="font-size: 56px; line-height: 1;">📌</span>
         </div>
 
-        <h2 style="color: #b45309; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}! 🙏</h2>
+        <h2 style="color: #b45309; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
 
         <p style="font-size: 17px; text-align: center;">
             Мы получили предоплату за курс <strong>«{{ $course->title }}»</strong>. Место за вами забронировано.
