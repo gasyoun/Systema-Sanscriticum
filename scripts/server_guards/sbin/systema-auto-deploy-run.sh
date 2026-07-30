@@ -28,6 +28,10 @@
 #  • Предохранитель ставится в ЛЮБОМ провальном исходе — авто-деплои стоят до
 #    разбора. Метка [rolled-back] в причине = сайт восстановлен откатом;
 #    guards:verify даёт за неё warning вместо critical.
+#  • Каждые 30 минут (даже если HEAD уже = origin/main) обновляет 644-зеркало
+#    storage/app/server_guards/crontab-root.installed — чтобы cabinet:probe /
+#    guards:verify от www-data видели живой root-крон (H1941: spool 600, bare
+#    crontab -l врёт чужим user'ом). deploy.sh и apply.sh пишут то же зеркало.
 set -uo pipefail
 
 # Debian-cron даёт PATH=/usr/bin:/bin — composer живёт в /usr/local/bin, и
@@ -43,6 +47,7 @@ SMOKE_URL=${SMOKE_URL:-@@AUTO_DEPLOY_SMOKE_URL@@}
 DEPLOY_SH=${SYSTEMA_DEPLOY_SH:-$APP_DIR/deploy.sh}
 BREAKER="$APP_DIR/storage/auto_deploy.disabled"
 LOCK="$APP_DIR/storage/framework/auto-deploy.lock"
+APP_USER=${SYSTEMA_APP_USER:-www-data}
 
 stamp() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 trip() {
@@ -51,8 +56,28 @@ trip() {
   exit 1
 }
 
+# Снимок root-crontab, читаемый www-data (H1941). Fail-open: crontab недоступен
+# → просто не трогаем зеркало; probe тогда ругается честно, а не молчит.
+refresh_root_crontab_mirror() {
+  local dir="$APP_DIR/storage/app/server_guards"
+  local mirror="$dir/crontab-root.installed"
+  local tmp="$mirror.tmp"
+  mkdir -p "$dir" 2>/dev/null || return 0
+  if ! crontab -l > "$tmp" 2>/dev/null; then
+    rm -f "$tmp"
+    return 0
+  fi
+  mv -f "$tmp" "$mirror"
+  chmod 644 "$mirror" 2>/dev/null || true
+  chown "root:${APP_USER}" "$mirror" 2>/dev/null || true
+}
+
 exec 9>"$LOCK" 2>/dev/null || exit 0
 flock -n 9 || exit 0            # прошлый прогон ещё идёт — молча пропускаем
+
+# Зеркало — до breaker/early-exit: probe ходит каждые 15 мин и не должен
+# смотреть на вчерашний снимок, даже когда деплоить нечего или деплой стоит.
+refresh_root_crontab_mirror
 
 [ -f "$BREAKER" ] && exit 0     # предохранитель стоит; кричит guards:verify
 
