@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Telegram;
 
+use App\Console\Concerns\LocksMadelineSession;
 use Closure;
 use Throwable;
 
@@ -49,7 +50,7 @@ use Throwable;
  * Цена решения — `finally` вызывающего НЕ отработает, поэтому вся уборка обязана
  * жить в $onTimeout. Замок `madeline-session` (TTL 900 с) без этого провисел бы
  * четверть часа и заблокировал следующие заходы; см.
- * {@see \App\Console\Concerns\LocksMadelineSession::releaseMadelineSessionLock()}.
+ * {@see LocksMadelineSession::releaseMadelineSessionLock()}.
  *
  * Без расширения pcntl (в т.ч. на Windows) watchdog — честный no-op: {@see arm()}
  * вернёт false, и вызывающий обязан сказать об этом ГРОМКО: единственной оградой

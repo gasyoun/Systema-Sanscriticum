@@ -2,6 +2,7 @@
 
 namespace App\Console\Concerns;
 
+use App\Services\Telegram\MadelineSyncWatchdog;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
@@ -22,7 +23,7 @@ trait LocksMadelineSession
 {
     /**
      * Замок текущего захода — нужен, чтобы его мог отпустить обработчик таймаута
-     * {@see \App\Services\Telegram\MadelineSyncWatchdog}: тот завершает процесс
+     * {@see MadelineSyncWatchdog}: тот завершает процесс
      * через exit(), поэтому `finally` ниже НЕ отработает (H1915).
      */
     private ?Lock $madelineSessionLock = null;
