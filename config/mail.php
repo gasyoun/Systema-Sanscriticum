@@ -150,6 +150,10 @@ return [
         'host' => env('MAIL_BOUNCE_IMAP_HOST'), // e.g. {imap.mail.ru:993/imap/ssl}INBOX
         'username' => env('MAIL_BOUNCE_IMAP_USERNAME'),
         'password' => env('MAIL_BOUNCE_IMAP_PASSWORD'),
+        // H1916: unreachable IMAP host used to hang mail:scan-bounces
+        // indefinitely (PHP/network decide the wait, not us).
+        'open_timeout_seconds' => (int) env('MAIL_BOUNCE_IMAP_OPEN_TIMEOUT', 15),
+        'read_timeout_seconds' => (int) env('MAIL_BOUNCE_IMAP_READ_TIMEOUT', 30),
     ],
 
     /*
