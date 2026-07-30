@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Fixed
+- **Soft-TG cabinet:probe больше не спамит каждые 15 мин.** Отдельный cooldown (`CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`, default = critical 60) + fingerprint набора soft-fail: тот же набор глушится, другой (или `--force-alert`) шлёт сразу. Заголовок soft-алерта теперь **по scope** (`guards` / `hybrid` / …), а не фиксированная «hybrid / guards». Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.79.1] - 2026-07-30
 
 ### Fixed

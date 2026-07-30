@@ -40,6 +40,8 @@ class CabinetProbeTest extends TestCase
         config()->set('features.cabinet_hybrid', false);
         Cache::forget('cabinet_probe:was_down');
         Cache::forget('cabinet_probe:last_tg_alert_at');
+        Cache::forget('cabinet_probe:last_soft_tg_alert_at');
+        Cache::forget('cabinet_probe:last_soft_fingerprint');
 
         // Legacy H1777 tests isolate manager surfaces; public/student covered in CabinetProbeHardeningTest.
         config()->set('cabinet_probe.public_surfaces', []);
@@ -269,5 +271,68 @@ class CabinetProbeTest extends TestCase
         $code = Artisan::call('cabinet:probe');
         $this->assertSame(0, $code);
         Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова работает'));
+    }
+
+    public function test_soft_failure_sends_scoped_telegram_and_respects_soft_cooldown(): void
+    {
+        $this->seedManager();
+        // Critical surfaces OK; one soft surface with no route → soft-only failure.
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ]);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.telegram_soft_cooldown_minutes', 60);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        Artisan::call('cabinet:probe');
+        Http::assertSent(function ($r) {
+            $text = (string) ($r['text'] ?? '');
+
+            return str_contains($r->url(), 'sendMessage')
+                && str_contains($text, 'soft-сбой')
+                && str_contains($text, '(hybrid)')
+                && str_contains($text, 'hybrid /library');
+        });
+
+        // Same soft set within cooldown → no re-send (the H1941 spam class).
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+
+        // Different soft fingerprint → alert again immediately.
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.another.missing.route', 'label' => 'guards/auto-deploy', 'severity' => 'soft'],
+        ]);
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), '(guards)')
+            && str_contains((string) ($r['text'] ?? ''), 'guards/auto-deploy'));
+
+        // Same new set again → cooldown.
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+
+        // --force-alert bypasses soft cooldown.
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe', ['--force-alert' => true]);
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
     }
 }

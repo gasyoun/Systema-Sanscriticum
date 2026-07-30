@@ -25,7 +25,15 @@ return [
     // Soft-only failures (optional surfaces). Empty → same as critical.
     'telegram_soft_chat_id' => env('CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID', ''),
 
+    // Critical down/recovery re-alert spacing.
     'telegram_cooldown_minutes' => (int) env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
+
+    // Soft-only path (guards/hybrid): same failure set is not re-sent every */15.
+    // A different soft set (new fingerprint) alerts immediately. --force-alert bypasses.
+    'telegram_soft_cooldown_minutes' => (int) env(
+        'CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN',
+        env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
+    ),
 
     'cron' => (string) env('CABINET_PROBE_CRON', '*/15 * * * *'),
 
