@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.76.1] - 2026-07-30
+
 ### Fixed
 - **`worktree_bootstrap.ps1 -Teardown` больше не врёт про «закройте процессы», когда держит каталог сам вызывающий (H1929, догон).** Поймано на первом же живом сносе: снос запускался из шелла, чей текущий каталог находился ВНУТРИ сносимого worktree, — Windows не удаляет каталог, пока он текущий для процесса, и скрипт честно падал, но с бесполезным советом. Теперь проверка `cwd` идёт первой и печатает точную причину вместе с готовой командой из главного дерева. Заодно удаление повторяется трижды с паузой (хэндл под worktree часто отпускается через мгновение после того, как git закончил — в том самом прогоне каталог исчез сам через секунду после «неудачи»), а финальное сообщение объясняет, что регистрация в git УЖЕ снята и добить остаётся одним `Remove-Item`. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
@@ -1720,7 +1722,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.1...HEAD
+[1.76.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...v1.76.1
 [1.76.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...v1.76.0
 [1.75.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.74.0...v1.75.0
 [1.74.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.73.0...v1.74.0
