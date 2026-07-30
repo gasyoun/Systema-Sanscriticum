@@ -10,7 +10,7 @@
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
     <h2 style="color: #111827;">🔒 Доступ временно закрыт</h2>
 
-    <p>Намасте, {{ $student->name }}.</p>
+    <p>Намасте, {{ $student->name }}!</p>
 
     <p>
         Доступ к курсу <strong>«{{ $course->title }}»</strong> приостановлен:
@@ -38,7 +38,7 @@
     </p>
 
     <p style="color: #6b7280; font-size: 13px; margin-top: 32px;">
-        Это автоматическое сообщение от Systema Sanscriticum.
+        Это автоматическое письмо Общества ревнителей санскрита.
     </p>
 </body>
 </html>

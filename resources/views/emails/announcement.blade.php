@@ -12,7 +12,7 @@
                     
                     <tr>
                         <td style="background-color: #19191C; padding: 30px; text-align: center;">
-                            <h2 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">Платформа Обучения</h2>
+                            <h2 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">Общество ревнителей санскрита</h2>
                         </td>
                     </tr>
 
@@ -28,7 +28,7 @@
                         <td style="padding: 40px;">
                             <h1 style="color: #1A1A1A; font-size: 24px; margin-top: 0; margin-bottom: 20px;">{{ $announcement->title }}</h1>
                             
-                            <p style="color: #555555; font-size: 16px; line-height: 1.6;">Здравствуйте, {{ $user->name }}!</p>
+                            <p style="color: #555555; font-size: 16px; line-height: 1.6;">Намасте, {{ $user->name }}!</p>
 
                             <div style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
                                 {!! $announcement->content !!}
@@ -47,7 +47,7 @@
                     <tr>
                         <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;">
                             <p style="color: #999999; font-size: 13px; margin: 0;">
-                                Вы получили это письмо, так как являетесь студентом нашей платформы.<br>
+                                Вы получили это письмо, потому что учитесь в Обществе ревнителей санскрита.<br>
                                 Чтобы прочитать сообщение в кабинете, <a href="{{ route('student.messages') }}" style="color: #E85C24;">нажмите здесь</a>.
                             </p>
                         </td>

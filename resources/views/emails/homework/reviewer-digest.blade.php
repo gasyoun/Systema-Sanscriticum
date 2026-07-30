@@ -19,7 +19,7 @@
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 6px 0; font-size: 15px;"><strong>Сдано за неделю:</strong> {{ $summary['submitted'] }}</p>
             <p style="margin: 6px 0; font-size: 15px;"><strong>Проверено:</strong> {{ $summary['reviewed'] }}</p>
-            <p style="margin: 6px 0; font-size: 15px;"><strong>Ждёт проверки:</strong> {{ $summary['waiting'] }}</p>
+            <p style="margin: 6px 0; font-size: 15px;"><strong>Ждет проверки:</strong> {{ $summary['waiting'] }}</p>
         </div>
 
         @if (! empty($summary['waiting_rows']))

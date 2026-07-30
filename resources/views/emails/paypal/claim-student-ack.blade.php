@@ -46,15 +46,13 @@
         </div>
 
         <p style="font-size: 16px;">
-            Если рабочий день прошел, а доступа нет — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>,
-            обычно отвечаем в течение рабочего дня.
+            Если рабочий день прошел, а доступа нет — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>.
         </p>
 
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 35px 0 25px;">
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
             Вопросы — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>, обычно отвечаем в течение рабочего дня.<br><br>
-            С уважением,<br>
             <strong>Общество ревнителей санскрита</strong>
         </p>
 

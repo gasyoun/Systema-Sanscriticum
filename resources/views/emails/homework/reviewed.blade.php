@@ -40,7 +40,7 @@
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 36px 0;">
 
         <p style="margin-top: 0; font-size: 14px; color: #95a5a6; text-align: center;">
-            С уважением,<br>Команда Общества ревнителей санскрита
+            Общество ревнителей санскрита
         </p>
     </div>
 

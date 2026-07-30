@@ -12,7 +12,7 @@
             <span style="font-size: 56px; color: #38BDF8; line-height: 1;">🎟</span>
         </div>
 
-        <h2 style="color: #0c6ea3; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}! 🙏</h2>
+        <h2 style="color: #0c6ea3; text-align: center; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
 
         @if($isRecording)
             <p style="font-size: 17px; text-align: center;">Мы получили оплату пробного занятия курса <strong>«{{ $course->title }}»</strong>. Запись уже открыта в вашем личном кабинете.</p>
