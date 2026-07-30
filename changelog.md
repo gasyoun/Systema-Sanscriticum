@@ -1,14 +1,15 @@
 ## [Unreleased]
 
-### Changed
-- **Uptime doc: FAQ «сайт упал» + discoverability.** [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §5 human/agent runbook (samskrte / samskrtam / Cologne); inbound links from `CLAUDE.md`, `README.md`. Executor: Grok 4.5 (`grok-4.5`).
-- **samskrtam VPS heartbeat marked wired** in [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §2.2 (cron `*/5` live). Executor: Grok 4.5 (`grok-4.5`).
-
 ### Added
+- **n8n server catalog + ops plan (context-ai.ru / samskrtam50).** Full inventory of 76 workflows (5 Active), host bookbuilder/proxy stack, Laravel `N8N_*` bridge table, credential audit (no secret values), redacted live exports, layered `/ask` PLAN/ROADMAP/ARCH/IMPL/VERIFY. Entry: [docs/n8n/CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md) · [docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md). Executor: Grok 4.5 (`grok-4.5`).
 - **H1949 hardening: admin never gets remember; password change kills all devices.** After the opt-in checkbox (#900), admins who checked «Запомнить меня» would still have received a weeks-long recaller on the shared Filament web guard (SESSION_LIFETIME was capped at 1 day for that reason). `login` / `shopLogin` now force `remember=false` when `is_admin`. Student password change cycles `users.remember_token` so old cookies stop working. Student-manual §1 documents shared-PC risk. Executor: Grok 4.5 (`grok-4.5`).
 - **«Запомнить меня» на парольном входе в кабинет (H1949).** У витринной Alpine-модалки (`shop.login`) чекбокс и `Auth::attempt(..., remember)` уже были; форма `/login` (`login.post`) — нет: сессия жила только `SESSION_LIFETIME` минут, и после закрытия браузера / простоя студент снова вводил пароль. Добавлен opt-in чекбокс «Запомнить меня» (по умолчанию **выкл**) и тот же `$request->boolean('remember')` во `AuthController::login`, что уже использует `shopLogin`. Социальный и magic-link вход по-прежнему всегда remember. Денежный контур и чекаут не тронуты. Executor: Grok 4.5 (`grok-4.5`).
 - **Канон uptime-inventory для агентов — Better Stack.** [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) (+ metadoc): HTTP + heartbeats samskrte / samskrtam / Cologne, env-ключи без TOKEN, VPS paths для cologne-cdsl-heartbeat, smoke. Указатели: `server-resource-guards.md` §3/§6, DEPLOY_QUEUE H1794, `.env.example`. healthchecks.io помечен obsolete. Executor: Grok 4.5 (`grok-4.5`).
 - **samskrtam.ru probe-from-VPS heartbeat script** (Cologne pattern). `/usr/local/sbin/samskrtam-heartbeat.sh` on samskrte: curl home + `/parallel-corpus` + keywords → Better Stack. Cron after `SAMSKRTAM_HEARTBEAT_URL` in `/etc/default/samskrtam-heartbeat`. Doc §2.2. Executor: Grok 4.5 (`grok-4.5`).
+
+### Changed
+- **Uptime doc: FAQ «сайт упал» + discoverability.** [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §5 human/agent runbook (samskrte / samskrtam / Cologne); inbound links from `CLAUDE.md`, `README.md`. Executor: Grok 4.5 (`grok-4.5`).
+- **samskrtam VPS heartbeat marked wired** in [UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) §2.2 (cron `*/5` live). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.79.3] - 2026-07-30
 

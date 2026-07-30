@@ -1,0 +1,312 @@
+{
+  "id": "b2LCmGsT8gKcQV6t",
+  "name": "╨о╤В╤Г╨▒ ╤Б╨┐╨╕╤Б╨╛╨║",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 3,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -220,
+        0
+      ],
+      "id": "sched-0001",
+      "name": "╨а╨░╨╖ ╨▓ ╨┤╨╡╨╜╤М 03:00"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM",
+          "mode": "list",
+          "cachedResultName": "full video",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM/edit?usp=drivesdk#gid=0"
+        },
+        "range": "D:D",
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "D:D"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        20,
+        200
+      ],
+      "id": "read-0001",
+      "name": "╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "playlist",
+        "returnAll": true,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        20,
+        -120
+      ],
+      "id": "4f764438-f8fb-4a41-acbe-f40f16def15f",
+      "name": "Get many playlists",
+      "executeOnce": true,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "playlistItem",
+        "operation": "getAll",
+        "playlistId": "={{ $json.id }}",
+        "returnAll": true,
+        "options": {
+          "onBehalfOfContentOwner": ""
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -120
+      ],
+      "id": "9e87fec2-825e-4b40-ba53-147c29ab3268",
+      "name": "Get many playlist items",
+      "notesInFlow": true,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "name": "╨Ю╨а╨б YouTube",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const plMap = {};\nfor (const p of $('Get many playlists').all()) {\n  if (p.json && p.json.id) plMap[p.json.id] = (p.json.snippet && p.json.snippet.title) || '';\n}\nconst idRe = /(?:youtu\\.be\\/|[?&]v=|\\/live\\/|\\/shorts\\/|\\/embed\\/)([A-Za-z0-9_-]{11})/;\nconst existing = new Set();\nfor (const row of $('╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤Б╤Б╤Л╨╗╨║╨╕').all()) {\n  const j = row.json || {};\n  for (const val of [...Object.keys(j), ...Object.values(j)]) {\n    const m = String(val).match(idRe);\n    if (m) existing.add(m[1]);\n  }\n}\nconst out = [];\nconst seen = new Set();\nfor (const item of $input.all()) {\n  const s = (item.json && item.json.snippet) || {};\n  const id = s.resourceId && s.resourceId.videoId;\n  if (!id) continue;\n  const title = s.title || '';\n  if (title === 'Deleted video') continue;\n  if (existing.has(id) || seen.has(id)) continue;\n  seen.add(id);\n  const th = s.thumbnails || {};\n  const thumb = ((th.maxres || th.standard || th.high || th.medium || th.default || {}).url) || '';\n  out.push({ json: { videoId: id, title: title, description: s.description || '', thumb: thumb, playlistId: s.playlistId || '', playlistTitle: plMap[s.playlistId] || '' }});\n}\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        -120
+      ],
+      "id": "code-0001",
+      "name": "╨в╨╛╨╗╤М╨║╨╛ ╨╜╨╛╨▓╤Л╨╡"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM",
+          "mode": "list",
+          "cachedResultName": "full video",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EHws07TN8yrOKX8zu5vhkD29QFkNKp5-ugH2z5aKWFM/edit?usp=drivesdk#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "╨┐╤А╨╡╨▓╤М╤О": "==IMAGE(\"{{ $json.thumb }}\")",
+            "╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡": "={{ $json.title }}",
+            "╨╛╨┐╨╕╤Б╨░╨╜╨╕╨╡": "={{ $json.description }}",
+            "╤Б╤Б╤Л╨╗╨║╨░": "=https://youtu.be/{{ $json.videoId }}",
+            "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В": "=https://www.youtube.com/playlist?list={{ $json.playlistId }}",
+            "╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В": "={{ $json.playlistTitle }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "╨┐╤А╨╡╨▓╤М╤О",
+              "displayName": "╨┐╤А╨╡╨▓╤М╤О",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡",
+              "displayName": "╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨╛╨┐╨╕╤Б╨░╨╜╨╕╨╡",
+              "displayName": "╨╛╨┐╨╕╤Б╨░╨╜╨╕╨╡",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╤Б╤Б╤Л╨╗╨║╨░",
+              "displayName": "╤Б╤Б╤Л╨╗╨║╨░",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В",
+              "displayName": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В",
+              "displayName": "╨┐╨╗╨╡╨╣╨╗╨╕╤Б╤В",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        680,
+        -120
+      ],
+      "id": "6b0e3054-0893-4560-9835-d9d7f5bbd67b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "╨а╨░╨╖ ╨▓ ╨┤╨╡╨╜╤М 03:00": {
+      "main": [
+        [
+          {
+            "node": "╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many playlists": {
+      "main": [
+        [
+          {
+            "node": "Get many playlist items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many playlist items": {
+      "main": [
+        [
+          {
+            "node": "╨в╨╛╨╗╤М╨║╨╛ ╨╜╨╛╨▓╤Л╨╡",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨в╨╛╨╗╤М╨║╨╛ ╨╜╨╛╨▓╤Л╨╡": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤Б╤Б╤Л╨╗╨║╨╕": {
+      "main": [
+        [
+          {
+            "node": "Get many playlists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}
