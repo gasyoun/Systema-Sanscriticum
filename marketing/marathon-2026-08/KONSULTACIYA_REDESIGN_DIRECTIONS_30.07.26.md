@@ -7,7 +7,7 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 **Methods (design):** [Taste-skill orchestration](https://github.com/gasyoun/Uprava/blob/main/docs/TASTE_SKILL_ORCHESTRATION_FABLE_REDESIGN_PIPELINE_2026.md) · [/useit Nielsen pass](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md)  
 **Methods (multi-dir implement — mandatory):** [jakubkrehel/skills](https://github.com/jakubkrehel/skills) **`better-interface`** + six domain skills (`better-accessibility` · `better-layout` · `better-writing` · `better-typography` · `better-colors` · `better-ui`) + repo [`blade-styling`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/skills/blade-styling/SKILL.md) — registered on H1966 skill-pack table 30-07-2026  
 **Author session:** Grok 4.5 (`grok-4.5`) executing Fable-tier design packet  
-**Status:** Design packet landed ([PR #921](https://github.com/gasyoun/Systema-Sanscriticum/pull/921)). **Multi-direction (30-07-2026):** **no human single-winner pick** — keep **A–D concurrent** (B = default variant only). Production CSS ships as multi-dir implement, not one chosen skin. **Do not re-run design** when applying `better-*` — they are implement/QA skills.
+**Status:** Design packet landed ([PR #921](https://github.com/gasyoun/Systema-Sanscriticum/pull/921)). **Multi-direction:** A–D concurrent (B = default only). **Implement DAG:** [H1975](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1975-Sonnet_Systema-Sanscriticum_konsultaciya-visual-shell-b_30.07.26.md) → H1976 A · H1977 C · H1978 D. **Do not re-run design** when applying `better-*`.
 
 ---
 
@@ -336,12 +336,19 @@ Open HTML files in a browser (desktop 1280 + devtools 375). Unopened mockup is a
 
 ## Next step (no human direction pick)
 
-Mint multi-dir implement handoff: concurrent A–D variants + default B; this packet + all four HTML mockups = source of truth. **Skill pack gate for implement is closed:** [H1966](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1966-Fable_Systema-Sanscriticum_konsultaciya-ui-redesign_30.07.26.md) now requires [jakubkrehel/skills](https://github.com/jakubkrehel/skills) `better-interface` (+ six domains) on every shippable variant — do **not** implement chrome without loading those skills.
+**Implement DAG minted 30-07-2026** (Sonnet 5). This packet + four HTML mockups = design source of truth. Skill pack gate closed (`better-interface` required).
+
+| Order | Handoff | Scope |
+|---|---|---|
+| **1 — launch first** | [H1975](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1975-Sonnet_Systema-Sanscriticum_konsultaciya-visual-shell-b_30.07.26.md) | Visual switch + **default B** light island |
+| 2 | [H1976](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1976-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-a_30.07.26.md) | Skin A dark-native (after H1975) |
+| 3 | [H1977](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1977-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-c_30.07.26.md) | Skin C warm paper (after H1975) |
+| 4 | [H1978](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1978-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-d_30.07.26.md) | Skin D stepped Alpine (after H1975) |
+
+**Launch today:**
 
 ```
-Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H####-<Model>_Systema-Sanscriticum_konsultaciya-multi-dir-implement_DD.MM.YY.md and execute it.
+Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H1975-Sonnet_Systema-Sanscriticum_konsultaciya-visual-shell-b_30.07.26.md and execute it.
 ```
-
-(When the implement handoff is minted, put its real `H###` path in the block above and in H1966.)
 
 _Dr. Mārcis Gasūns_
