@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **SRS per-deck URLs + guest trial.** Each deck has its own path (`/srs/{slug}` public, `/dvaram/srs/{slug}` cabinet); hub pages list decks. Guests can try system/public decks without registration (soft wall after `SRS_GUEST_TRIAL_CARDS`, default 10; progress not saved). Tagline is language-aware (`sa` → «учите санскрит», `hi` → «учите хинди»). Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **H1966 konsultaciya redesign: multi-direction concurrent variants.** No single human pick among A–D; ship several visual directions at once (B = default only). Packet + marketing README updated. Executor: Grok 4.5 (`grok-4.5`).
 

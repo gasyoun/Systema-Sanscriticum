@@ -204,6 +204,13 @@ Route::post('/api/games/srs-onboarding-import', [GamesSrsOnboardingController::c
     ->middleware(['auth', 'throttle:10,1'])
     ->name('games.srs-onboarding-import');
 
+// Public SRS trial (shareable per-deck URLs, no auth). Must sit BEFORE the
+// promo catch-all /{slug}. Same srs.enabled gate as the cabinet routes.
+if (config('srs.enabled')) {
+    Route::get('/srs', [SrsController::class, 'publicIndex'])->name('srs.index');
+    Route::get('/srs/{slug}', [SrsController::class, 'publicReview'])->name('srs.deck');
+}
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1')
@@ -322,10 +329,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     // SRS-карточки (H211, Wave 1) — маршрут появляется только при включённом
     // флаге srs.enabled (в проде OFF). Пункт меню в layouts.student — под тем же условием.
+    // Static segments (stats/decks) MUST be registered before {slug}.
     if (config('srs.enabled')) {
-        Route::get('/dvaram/srs', [SrsController::class, 'review'])
-            ->name('student.srs');
-
         // H447 — per-trainer stats dashboard, same gate as the review route.
         Route::get('/dvaram/srs/stats', [SrsController::class, 'stats'])
             ->name('student.srs.stats');
@@ -333,6 +338,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         // H1487 Wave 2 — student private-deck editor.
         Route::get('/dvaram/srs/decks', [SrsController::class, 'decks'])
             ->name('student.srs.decks');
+
+        // Per-deck review URL (changes with the selected deck).
+        Route::get('/dvaram/srs/{slug}', [SrsController::class, 'review'])
+            ->name('student.srs.deck');
+
+        // Hub listing available decks (each links to /dvaram/srs/{slug}).
+        Route::get('/dvaram/srs', [SrsController::class, 'cabinetIndex'])
+            ->name('student.srs');
     }
 
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS

@@ -4,5 +4,5 @@
 @section('header', 'Карточки')
 
 @section('content')
-    @livewire('srs-review')
+    @livewire('srs-review', ['slug' => $slug ?? null])
 @endsection

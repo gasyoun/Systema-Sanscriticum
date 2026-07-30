@@ -138,7 +138,7 @@ class SrsReviewTest extends TestCase
 
         $this->expectException(NotFoundHttpException::class);
 
-        (new SrsController)->review();
+        (new SrsController)->review('sanskrit-core');
     }
 
     public function test_component_gated_when_flag_disabled(): void
