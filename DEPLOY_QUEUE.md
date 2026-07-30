@@ -1,14 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 30-07-2026 (H1933 — авто-деплой каждые 30 минут)_
-
-**30-07-2026 (H1933, решение MG): код теперь деплоится САМ — root-крон на проде
-каждые 30 минут выкатывает `origin/main` через `deploy.sh`.** Ручной шаг
-«прогнать deploy.sh» из этой очереди ушел; человеку остаются только пункты с
-решением/флагом/внешним шагом (⚙️ финдир, `@DECIDE MG`, Точка/BotFather и т.п.) —
-их авто-деплой не трогает. Если авто-деплой споткнется, он сам откатит код (когда
-в выкладке нет миграций), поставит предохранитель `storage/auto_deploy.disabled`
-и поднимет тревогу в Telegram; разбор — [docs/server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
+_Создано: 08-07-2026 · Обновлено: 30-07-2026 (авто-деплой 30 мин + остаточные шаги человека)_
 
 **21-07-2026: MG подтвердил в чате — Иван прогнал деплой на проде сегодня.** Базовый
 шаг (№1, `php artisan migrate` + `sudo bash deploy.sh`) и все пункты, не требующие
@@ -16,6 +8,8 @@ _Создано: 08-07-2026 · Обновлено: 30-07-2026 (H1933 — авт�
 активация зависит от финдира, `@DECIDE MG` или внешнего действия (Точка/BotFather/
 Яндекс.Вебмастер), остаются в очереди — код на проде, но решение/флаг не подтверждены
 отдельно; гадать по ним нельзя (см. H788).
+
+**30-07-2026: авто-деплой каждые 30 минут** ([PR #870](https://github.com/gasyoun/Systema-Sanscriticum/pull/870), PATH [PR #875](https://github.com/gasyoun/Systema-Sanscriticum/pull/875), probe [PR #880](https://github.com/gasyoun/Systema-Sanscriticum/pull/880)). Root-cron гоняет `systema-auto-deploy-run.sh` → тот же `deploy.sh` (migrate --force, caches, php-fpm, Horizon). **Код из `main` доезжает сам**; в очереди ниже — только то, что автомат не делает: `.env`/флаги, разовые artisan (backfill/import/publish), внешние сервисы, сверка с финдиром. Гадать «флаг уже true» нельзя — только подтверждённые включения (S10 `SUPPORT_WEB_ROLLUPS` и CRM-шаблоны — в архиве).
 
 Всё, что **влито в `main`, но еще не выкачено на прод**, с точными командами для
 сервера. Прод — **root-VPS (Ubuntu, Beget)**; деплой делает человек на сервере (**у агента нет доступа** — это ограничение прав, а не хостинга). Обычный путь — `sudo bash deploy.sh`. _Исправлено 10-07-2026 (H478): прежняя формулировка «по FTP, без SSH» неверна — SSH/root есть._
@@ -33,43 +27,36 @@ _Создано: 08-07-2026 · Обновлено: 30-07-2026 (H1933 — авт�
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
-### 🚀 H1765/H1773/H1774 — вход: 419 «Page Expired» у тех, кто заходит раз в неделю
+### 🚀 Вход: 419 «Page Expired» ([PR #820](https://github.com/gasyoun/Systema-Sanscriticum/pull/820)/[#821](https://github.com/gasyoun/Systema-Sanscriticum/pull/821))
 
 **Почему первым.** Преподаватель дважды не смогла войти накануне занятия (жалоба
-29-07-2026). Сайт при этом жив — падает именно сабмит формы входа. Сессия на проде
-живёт 120 минут, а преподаватели заходят раз в неделю: их сессия мертва всегда,
-страница входа отдаёт протухший CSRF-токен → 419. «Запомнить меня» на форме
-email+пароль нет (`remember: true` есть только в соц-входе,
-[`SocialAuthController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Auth/SocialAuthController.php)),
-поэтому полный вход с паролем — каждый раз.
+29-07-2026). Сайт жив — падает сабмит формы. Часто `SESSION_LIFETIME=120`, а
+преподаватели заходят раз в неделю → протухший CSRF → 419. «Запомнить меня» на
+email+пароль нет (`remember: true` только в соц-входе,
+[`SocialAuthController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Auth/SocialAuthController.php)).
 
-**Миграций нет ни у одного пункта** — обычный `sudo bash deploy.sh`.
+Мягкий 419 ([PR #778](https://github.com/gasyoun/Systema-Sanscriticum/pull/778)/[#779](https://github.com/gasyoun/Systema-Sanscriticum/pull/779)) на проде с **28-07**.
+Код свежего токена на `/login` + телеметрия CSRF — в `main` после 28-07; при живом
+авто-деплое **должен уже быть на сервере** — сверить
+`git -C /var/www/html rev-parse --short HEAD` с `origin/main`.
 
-1. **Выкатить текущий `main`.** Приносит H1774 (страница входа берёт свежий токен
-   перед сабмитом и на `pageshow`/bfcache) — это и есть лечение — и H1773
-   (телеметрия). H1765 (мягкий повтор вместо «419 Page Expired») уже на проде с 28-07.
-2. **`SESSION_LIFETIME=1440`** в прод-`.env` → `php artisan optimize:clear`.
-   Коммит [`614ce7d1`](https://github.com/gasyoun/Systema-Sanscriticum/commit/614ce7d1)
-   поднял 120→1440 **только в `.env.example`**, а на проде значение задано явно —
-   без этой правки ничего не изменится. Сутки закрывают массовый случай «вкладка
-   простояла обед», но **не** недельный интервал преподавателя: его закрывает только
-   пункт 1.
-3. **Телеметрия H1773** — ни миграции, ни флага, включается самим деплоем:
-   - лог — `storage/logs/csrf-mismatch.log` (канал `csrf_mismatch`,
+**Остаток человека (авто-деплой этого не делает):**
+
+1. **`SESSION_LIFETIME=1440`** в прод-`.env` → `php artisan optimize:clear` (или
+   `config:cache`). Коммит [`614ce7d1`](https://github.com/gasyoun/Systema-Sanscriticum/commit/614ce7d1)
+   поднял 120→1440 **только в `.env.example`** — на проде значение задано явно.
+2. **Телеметрия CSRF** (если код выкачен, без флага):
+   - лог `storage/logs/csrf-mismatch.log` (канал `csrf_mismatch`,
      [`config/logging.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/logging.php));
-   - дайджест `csrf:mismatch-digest` уже прописан в
+   - `csrf:mismatch-digest` ежедневно 04:25 в
      [`app/Console/Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)
-     (ежедневно 04:25) — сработает сам, если серверный cron зовёт `schedule:run`
-     (та же зависимость, что у №4/5/13/16/21);
-   - пороги по желанию — `CSRF_MISMATCH_DIGEST_THRESHOLD` (по умолчанию 20/сутки) и
-     `CSRF_MISMATCH_DIGEST_WINDOW_DAYS` (1) в
-     [`config/csrf.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/csrf.php);
-     это стартовые оценки, тюнить после месяца реальных данных.
-4. **Сверка после выката** (1 аккаунт, не марафонский): открыть `/login`, оставить
-   вкладку до истечения сессии, сабмитить — вход должен пройти, а не упасть в 419
-   и не потребовать F5. Через сутки проверить, что дайджест отработал в 04:25.
-5. **В этот выкат НЕ входит:** H1771 (graceful 419 по умолчанию на каждом web POST) —
-   ветка `feat/h1771-csrf-419-graceful-default` ещё не влита в `main`.
+     — нужен cron `schedule:run`;
+   - пороги по желанию: `CSRF_MISMATCH_DIGEST_THRESHOLD`, `CSRF_MISMATCH_DIGEST_WINDOW_DAYS`
+     в [`config/csrf.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/csrf.php).
+3. **Сверка:** `/login` → вкладка дольше сессии → сабмит без 419 и без F5; на
+   следующий день — дайджест в 04:25.
+4. **Не входит:** graceful 419 на каждом web POST (ветка
+   `feat/h1771-csrf-419-graceful-default` ещё не в `main`).
 
 ---
 
@@ -111,6 +98,42 @@ email+пароль нет (`remember: true` есть только в соц-вх
 
 ---
 
+### 🚀 Разовый бэкфилл штампа записи урока ([PR #871](https://github.com/gasyoun/Systema-Sanscriticum/pull/871), issue [#868](https://github.com/gasyoun/Systema-Sanscriticum/issues/868))
+
+Колонка `lessons.recording_attached_at` на проде заполнена у ~5 из ~1667 уроков с
+записью (~99.7% NULL). Авто-открытие ДЗ видит NULL как «записи нет» →
+`homework:auto-open` пишет «0 из 0». Код команды в `main` (доезжает авто-деплоем).
+
+1. Dry-run: `php artisan lessons:backfill-recording-stamp` (без записи).
+2. Сверить отчёт (сколько восстановится из `lesson_date`).
+3. Применить: `php artisan lessons:backfill-recording-stamp --apply`.
+4. **Не шлёт уведомления** и **не открывает ДЗ** сама; охват `homework:auto-open`
+   по-прежнему режется `HOMEWORK_AUTO_OPEN_COURSES` + `textbook_lesson` 1–5 (см. №63).
+5. Опц.: `--course=<slug>` / `--limit=N`.
+
+### 🚀 Arzamas-лонгриды — import + publish ([PR #720](https://github.com/gasyoun/Systema-Sanscriticum/pull/720)/[#728](https://github.com/gasyoun/Systema-Sanscriticum/pull/728))
+
+Код в `main`. На сервере, **порядок важен**:
+
+1. `php artisan materials:import-pwg-arzamas --publish`
+2. `php artisan materials:import-kossovich-arzamas --publish`
+3. Ещё раз `php artisan materials:import-pwg-arzamas` (живая ссылка гл. 16 → второй материал)
+4. Смоук: <https://samskrte.ru/s/peterburgskiy-slovar-pwg>,
+   <https://samskrte.ru/s/rossiya-i-sanskritskiy-slovar>,
+   карточки на <https://samskrte.ru/online/materialy>
+
+### ⚙️ Гибридный кабинет Phase 4 — флаг (GO 29-07-2026; [PR #673](https://github.com/gasyoun/Systema-Sanscriticum/pull/673)/[#678](https://github.com/gasyoun/Systema-Sanscriticum/pull/678)/[#679](https://github.com/gasyoun/Systema-Sanscriticum/pull/679))
+
+Код инертен при `CABINET_HYBRID=false`. Baseline ≥14 дней с 21-07.
+
+1. `php artisan cabinet:hybrid-readiness` + `php artisan cabinet:baseline --days=14`
+2. Staging walkthrough — [`docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md)
+3. `CABINET_HYBRID=true` → `php artisan config:clear` (или `config:cache`)
+4. Смоук: студент → «Сегодня» + job-nav; `/library` `/progress` `/access` = 200
+5. Откат: `CABINET_HYBRID=false` → `config:clear`. Post-flip: `cabinet:baseline --days=7` / `--days=14`
+
+---
+
 ## Systema-Sanscriticum (samskrte.ru) — финансы
 
 Весь план A→C→B→D + реверс возврата влит; остались только шаги на проде.
@@ -139,7 +162,7 @@ email+пароль нет (`remember: true` есть только в соц-вх
 | 20 | **FAQ-суггестер v2 — LLM-черновики D/E/F (цена/доступ/материалы)** (H816 PR 1) | входит в общий `php artisan migrate` (аддитивная `marketing_settings.support_ai_daily_cap`, nullable); включение — те же рубильники, что у v1 A/B/C **плюс** LLM: (1) `SUPPORT_ANSWER_SUGGESTER=true` + `SUPPORT_AI_ASSIST=true` в `.env` → `php artisan config:clear`; (2) `OPENROUTER_API_KEY` уже задан (тот же ключ, что у ИИ-куратора/ассиста — если бот работает, ключ есть); (3) админ-тумблер `support_answer_suggester_enabled` включён в `MarketingSetting` (Filament); опц. дневной предел LLM-вызовов — поле `support_ai_daily_cap` (пусто → дефолт 100, `0` → без предела); (4) приватность ЛС: сырой текст импортированного Telegram-ЛС уходит во внешний LLM только при `SUPPORT_AI_INCLUDE_TELEGRAM=true` (по умолчанию OFF — черновик строится из одних фактов LMS) | миграция + флаги + LLM-расход | авто-черновик куратору на вопросы про **оплату/цену/тарифы (D, 7.4% FAQ), доступ/группу (E), материалы/ДЗ/сертификаты (F)**; бот НЕ отвечает сам — только pending-черновик в Helpdesk. **Всё OFF по умолчанию** — до включения флагов ничего не меняется |
 | 24 | **Импорт демо-SRS-колоды из kosha** ([PR #519](https://github.com/gasyoun/Systema-Sanscriticum/pull/519), MERGED) | по желанию (демо): `KOSHA_SRS=true` в `.env` → `php artisan config:clear` → `php artisan srs:import-kosha-b1-demo` — создаёт одну системную Saraswati-SRS-колоду из вендорного фида `resources/data/kosha_srs_deck_b1_demo.json` (наши производные данные, НЕ живая зависимость от kosha) | флаг + разовая artisan-команда | демо-колода для SRS-тренажёра (Rung B1); **по умолчанию OFF — при выключенном флаге команда ничего не пишет и завершается с предупреждением; SRS-движок в целом всё ещё за `SRS_ENABLED=false`** |
 | 26 | **RQ4-исследование: харнесс + консент + админ-статистика** ([PR #536](https://github.com/gasyoun/Systema-Sanscriticum/pull/536) харнесс, [PR #540](https://github.com/gasyoun/Systema-Sanscriticum/pull/540) админ-дашборд, [PR #539](https://github.com/gasyoun/Systema-Sanscriticum/pull/539) текст согласия, [PR #588](https://github.com/gasyoun/Systema-Sanscriticum/pull/588) сверка преflight + откат-контракт — все MERGED, релиз [v1.16.0](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.16.0)) | **MG ruled GO 18-07-2026** ([H1261](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1261-Sonnet_Systema-Sanscriticum_rq4-study-go-live_18.07.26.md)) — preflight done 19-07 (11/11 `--filter=Rq4` tests green, code confirmed present). Отслеживание для Ивана: [issue #599](https://github.com/gasyoun/Systema-Sanscriticum/issues/599) (assignee — команды продублированы там же). Входит в общий `php artisan migrate` (аддитивные таблицы `rq4_participants`/`rq4_responses`); включение: `RQ4_STUDY=true` в `.env` → `php artisan config:clear` (по умолчанию OFF, `config('features.rq4_study')`); планировщик `rq4:send-retention-reminders` (ежедневно 09:00) уже прописан в `Kernel.php`, сработает сам после деплоя, если серверный cron вызывает `schedule:run` (та же зависимость, что №4/5/13/16/21); текст согласия УТВЕРЖДЁН MG (без правок) — отдельного шага нет; после включения флага админ-дашборд `/admin/rq4-study-dashboard` (admin/super_admin) показывает набор/сплит рук A/B/фазы диагностики. **Откат при сбое** (миграция упала / дубли участников / планировщик молчит / утечка когорты 28-08): `RQ4_STUDY=false` в `.env` → `php artisan config:clear` — набор мгновенно закрывается (route 404), уже собранные `rq4_participants`/`rq4_responses` НЕ трогать (данные исследования, не откатывать миграцией). **Смок-тест после включения** (одноразовый тестовый аккаунт, не из марафонской когорты 28-08): `/rq4-study` открывает согласие → анкету → распределение по руке; `/admin/rq4-study-dashboard` показывает нового участника | миграция + флаг + планировщик | 🚀 запуск RQ4-исследования (on-ramp-first vs Talmud-first) — набор реальных участников и замер на живых данных; **всё OFF по умолчанию — до включения флага `RQ4_STUDY` ничего не видно** |
-| 27 | **Комм-пакет марафона 28-08 — лендинг/письма/TG-посты** ([PR #544](https://github.com/gasyoun/Systema-Sanscriticum/pull/544) контент; publish-path 28-07-2026) | **После деплоя кода (вариант A по умолчанию на `/online/konsultaciya`):** (1) `php artisan marathon:apply-landing-copy a` — upsert `LandingPage` слага `konsultaciya-po-onlayn-kursam`; позже B: `MARATHON_LANDING_COPY_VARIANT=b` + `config:clear` + `php artisan marathon:apply-landing-copy b`; (2) TG-посты: магнит-бот (`MarketingSetting.tg_bot_*`, обычно `@samskrte`) должен быть **админом канала** @samskrte → dry-run `php artisan marathon:publish-channel-posts --post=1`, live `--live` (анонс ~14-08, старт 28-08); (3) письма — всё ещё ESP [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504) / №37; (4) `{testimonial}` / пост 5 — только с `MARATHON_TESTIMONIAL` | деплой кода + 2 artisan-команды + права бота в канале | продающий контур когорты 28-08: A live first, B second window |
+| 27 | **Комм-пакет марафона 28-08 — лендинг/письма/TG-посты** ([PR #544](https://github.com/gasyoun/Systema-Sanscriticum/pull/544); расписание [PR #872](https://github.com/gasyoun/Systema-Sanscriticum/pull/872)) | **После деплоя кода (вариант A по умолчанию на `/online/konsultaciya`):** (1) `php artisan marathon:apply-landing-copy a` — upsert `LandingPage` слага `konsultaciya-po-onlayn-kursam`; позже B: `MARATHON_LANDING_COPY_VARIANT=b` + `config:clear` + `php artisan marathon:apply-landing-copy b`; (2) TG-посты: магнит-бот (`MarketingSetting.tg_bot_*`, обычно `@samskrte`) **админ канала** @samskrte. Посты 1/2/3 (анонс 14-08, старт 28-08, evergreen с 04-09) **уже в `Kernel::schedule()`** ([PR #872](https://github.com/gasyoun/Systema-Sanscriticum/pull/872), идемпотентно) — при `schedule:run` + админстве бота уходят сами; dry-run/ручной: `php artisan marathon:publish-channel-posts --post=1` / `--live`. Посты 4–5 вручную; (3) письма — всё ещё ESP [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504) / №37; (4) `{testimonial}` / пост 5 — только с `MARATHON_TESTIMONIAL` | деплой кода + 2 artisan-команды + права бота в канале | продающий контур когорты 28-08: A live first, B second window |
 | 27a | **Письма марафона — код-путь готов (H1148)** ([PR — см. changelog]) | пять `Marathon*Mail` + шаблоны + тест влиты; **отправка сознательно не подключена** — блокер теперь ТОЛЬКО ESP-гейт (H1147: вендор + аккаунт + прод-секрет), не авторство и не код | код, деплой не требует действий | зависимость №27 (3): письма из черновиков стали готовыми к подключению Mailable |
 | 31 | **Гео/город посетителя веб-чата — Jivo-паритет S1, Pillar 1** (H1196, [PR #557](https://github.com/gasyoun/Systema-Sanscriticum/pull/557)) | входит в общий `php artisan migrate` (аддитивные `support_conversations.visitor_ip/city/region/country/geo_resolved_at` + `entry_url`/`referrer`, все nullable); `entry_url`/`referrer` пишутся сразу после деплоя БЕЗ флага. Чтобы куратор видел ГОРОД: (1) выбрать провайдера — `SUPPORT_GEO_DRIVER=cloudflare` (если сайт за Cloudflare — ноль внешних вызовов) или `ipapi` (ip-api.com, но НЕкоммерческая лицензия + HTTP-only) в `.env`; (2) `SUPPORT_VISITOR_GEO=true`; (3) `php artisan config:clear`; нужен работающий воркер очереди (`ResolveVisitorGeoJob` идёт через ту же очередь, что Horizon). Провайдер города — @DECIDE MG (рекоменд. MaxMind GeoLite2 локально — драйвер-стаб). 📋 **Ruling-ready бриф: [docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md) (H1234)** — `ipapi` лицензионно негоден (живая проверка) + противоречит §1.5 политики; MaxMind-драйвера пока нет | миграция + флаг (дисплей, без денег) | куратор видит «из какого города пишет посетитель» + страницу входа — визитор-слой Jivo; **по умолчанию OFF / драйвер `null` — до включения город не запрашивается, пишутся только IP/страница входа** |
 | 32 | **Проактивный монитор посетителей + оператор пишет первым — Jivo-паритет S2, Pillar 2** (H1197) | входит в общий `php artisan migrate` (новая таблица `support_visitor_presences`, аддитивно). Чтобы включить: (1) `SUPPORT_VISITOR_PRESENCE=true` в `.env`; (2) `php artisan config:clear`. Город в списке появится, только если ещё и `support_visitor_geo` включён с драйвером ≠ null (см. №31). Нужен рабочий воркер очереди (гео-джоба идёт через Horizon) и работающий cron `schedule:run` (выметание устаревших строк каждые 5 мин). **@DECIDE MG — юридический sign-off 152-ФЗ:** presence отслеживает анонимного посетителя (город + поведение на сайте) — включать сознательно, с согласием (cookie-баннер уже есть); IP наружу оператору не светим. 📋 **Ruling-ready бриф: [docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md) (H1234)** — политика §5.4 покрывает IP/referrer/время, но не гео-город/поведенческий мониторинг/категорию «посетитель»; точные вопросы юристу внутри | миграция + флаг (без денег) | куратор видит живой список посетителей на сайте сейчас и может **написать первым** (страница «Посетители онлайн» в админке) — второй уникальный столп Jivo; **по умолчанию OFF — до включения presence не пишется, страница скрыта, виджет как прежде** |
@@ -220,6 +243,10 @@ email+пароль нет (`remember: true` есть только в соц-вх
 
 ## ✅ Выполнено (архив)
 
+- **Авто-деплой каждые 30 мин** ([PR #870](https://github.com/gasyoun/Systema-Sanscriticum/pull/870), [PR #875](https://github.com/gasyoun/Systema-Sanscriticum/pull/875), [PR #880](https://github.com/gasyoun/Systema-Sanscriticum/pull/880)) — 30-07-2026 (root-cron `systema-auto-deploy-run.sh`)
+- **S10 support web rollups** (`SUPPORT_WEB_ROLLUPS=true`, [PR #866](https://github.com/gasyoun/Systema-Sanscriticum/pull/866)) — 30-07-2026 (config:cache; coverage 46/46 и 41/41 vs `chat_messages`)
+- **Шаблоны сообщений для кураторов + audit** ([PR #867](https://github.com/gasyoun/Systema-Sanscriticum/pull/867)) — 30-07-2026 (migrate + `CRM_COCKPIT=true` + config:cache в той же SSH-сессии)
+- **Вход 419 soft message** ([PR #778](https://github.com/gasyoun/Systema-Sanscriticum/pull/778)/[#779](https://github.com/gasyoun/Systema-Sanscriticum/pull/779), v1.59.1) — 28-07-2026 (`sudo bash deploy.sh`)
 - **№1 Все накопленные миграции** — подтверждено 21-07-2026 (MG — Иван прогнал `php artisan migrate` на проде, покрывает веб-чат S1–S5/GC-B3/`cta_subject`/чекаут-миграции и все аддитивные миграции строк №8/9/11/21/23/25/28/29/30/35/36/40/42/43 ниже)
 - **№8 Набор в группы — уведомления о недоборе** ([PR #386](https://github.com/gasyoun/Systema-Sanscriticum/pull/386)) — подтверждено 21-07-2026 (входит в миграцию №1, планировщик `groups:notify-forming-shortfall` под подтверждённым cron `schedule:run`)
 - **№9 Чек-ины по целям делегирования** ([PR #380](https://github.com/gasyoun/Systema-Sanscriticum/pull/380)) — подтверждено 21-07-2026 (входит в миграцию №1, планировщик `goals:record-checkins` под подтверждённым cron)
@@ -246,14 +273,6 @@ email+пароль нет (`remember: true` есть только в соц-вх
 
 ---
 
-_Публичная копия для Ивана (Systema/ORS-FAQ — публичные репозитории). Внутренний
-источник — приватный `Uprava/GTD_NEXT_ACTIONS.md`. **Регенерация задумана как ежедневная
-в 08:00** (задача `systema-deploy-queue-daily`, `~/.claude/scheduled-tasks/`, публикует
-через Contents API — поэтому история и показывает коммиты под git-identity MG, а не бота),
-**но по факту не запускается**: ни в реестре cloud-триггеров Claude, ни в Windows Task
-Scheduler эта задача не зарегистрирована (проверено 26-07-2026); последний реальный
-регенерирующий коммит — 19-07-2026, дальше пробел. Пока триггер не восстановлен, считать
-файл поддерживаемым вручную (агентская сессия при слиянии PR/аудите). Пункт уходит из
-списка, когда MG подтверждает, что деплой сделан._
+_Публичная копия для Ивана (Systema/ORS-FAQ — публичные репозитории). Внутренний источник — приватный GTD. Регенерация — задача `systema-deploy-queue-daily` (Contents API). Обновлено 30-07-2026: учтён авто-деплой 30 мин; S10 rollups и CRM-шаблоны в архиве; добавлены бэкфилл `recording_attached_at`, Arzamas publish, hybrid flag GO. Пункт уходит в архив только с подтверждением (не «наверное уже true»)._
 
 _Dr. Mārcis Gasūns_
