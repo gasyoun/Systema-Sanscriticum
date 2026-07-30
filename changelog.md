@@ -14,6 +14,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ### Fixed
 - **`worktree_bootstrap.ps1 -Teardown` больше не врёт про «закройте процессы», когда держит каталог сам вызывающий (H1929, догон).** Поймано на первом же живом сносе: снос запускался из шелла, чей текущий каталог находился ВНУТРИ сносимого worktree, — Windows не удаляет каталог, пока он текущий для процесса, и скрипт честно падал, но с бесполезным советом. Теперь проверка `cwd` идёт первой и печатает точную причину вместе с готовой командой из главного дерева. Заодно удаление повторяется трижды с паузой (хэндл под worktree часто отпускается через мгновение после того, как git закончил — в том самом прогоне каталог исчез сам через секунду после «неудачи»), а финальное сообщение объясняет, что регистрация в git УЖЕ снята и добить остаётся одним `Remove-Item`. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
+## [1.76.0] - 2026-07-30
+
 ### Changed
 - **Транзакционные письма приведены к одному голосу — регистровый проход по всем 29 шаблонам (H1865).** Письма писались инкрементально и разговаривали в несколько голосов: три разных приветствия («Намасте… 🙏», «Здравствуйте», «Намасте» без эмодзи), три подписи («С уважением, Команда…», «С уважением, …», просто бренд), два фолбэка имени («Студент»/«друг»), три имени отправителя в копии («Платформа Обучения», «Systema Sanscriticum», «Общество ревнителей санскрита»). Эталоном взят голос новейшего авторского слоя (марафон/онбординг/purchase-confirmation, H1289-эпоха): приветствие «Намасте, {имя ?? 'друг'}!» без эмодзи (без имени — «Здравствуйте!»), подпись просто «Общество ревнителей санскрита», бренд назван одинаково везде, «ё» → «е» (кроме различения всё/все — «Ждёт проверки» и др.). Переписан парадный канцелярит [student/welcome](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/student/welcome.blade.php) («Ваш путь к изучению священного языка начался», CTA «Перейти к знаниям» → «В личный кабинет»), в [announcement](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/announcement.blade.php) убран заголовок-плейсхолдер «Платформа Обучения», в PayPal-подтверждении сведена задвоенная строка поддержки. Переменные и условия шаблонов не тронуты — механический дифф echo/директив до/после подтвердил тождество (меняются только строковые литералы фолбэков), 57 почтовых тестов зелёные, все Blade-шаблоны компилируются. 12 из 29 шаблонов уже соответствовали эталону и не изменены. Executor: Fable 5 (`claude-fable-5`).
 
@@ -1718,7 +1720,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...HEAD
+[1.76.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...v1.76.0
 [1.75.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.74.0...v1.75.0
 [1.74.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.73.0...v1.74.0
 [1.73.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.72.0...v1.73.0
