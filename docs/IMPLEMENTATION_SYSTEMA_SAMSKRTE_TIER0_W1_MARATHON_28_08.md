@@ -2,8 +2,10 @@
 
 _Created: 30-07-2026 · Last updated: 30-07-2026_
 
+**Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
+
 Index: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md).  
-Evidence log: [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md).  
+Evidence log: [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md).  
 Legacy steps: [MARATHON_ACTIVATION_CHECKLIST.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/MARATHON_ACTIVATION_CHECKLIST.md) (content still valid; **prod ownership superseded by D7** — agent may run deploy when keys allow).
 
 Ordered steps. Each depends on prior unless marked *parallel*.
@@ -13,7 +15,7 @@ Ordered steps. Each depends on prior unless marked *parallel*.
 ### Step 0 — Worktree + claim (meta)
 
 1. `git fetch origin` in Systema; worktree off `origin/main` (session-unique name).
-2. Open/update [MARATHON_28_08_LIVE_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_28_08_LIVE_RUNBOOK.md) Evidence section with start timestamp + model tier+version.
+2. Open/update [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md) Evidence section with start timestamp + model tier+version.
 3. **Fence check:** do not open Payment/access files for edit.
 
 ### Step 1 — L1 Funnel content
@@ -87,7 +89,7 @@ Ordered steps. Each depends on prior unless marked *parallel*.
 
 | Path | Action |
 |---|---|
-| `docs/MARATHON_28_08_LIVE_RUNBOOK.md` | Evidence throughout |
+| `docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md` | Evidence throughout |
 | `docs/PLAN_*` / `ROADMAP_*` / `ARCHITECTURE_*` / `IMPLEMENTATION_*` / `VERIFICATION_*` | This plan pack |
 | `.github/workflows/deploy.yml` and/or tests quarantine | Only if fixing #828/#865 |
 | `.env` on **server** | Secrets — never commit |

@@ -2,9 +2,11 @@
 
 _Created: 30-07-2026 · Last updated: 30-07-2026_
 
+**Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
+
 Plan index: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md).  
-Implementation: [IMPLEMENTATION_SYSTEMA_MARATHON_28_08_WAVE1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_MARATHON_28_08_WAVE1.md).  
-Verification: [VERIFICATION_SYSTEMA_MARATHON_28_08_WAVE1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_MARATHON_28_08_WAVE1.md).  
+Implementation: [IMPLEMENTATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md).  
+Verification: [VERIFICATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md).  
 Legacy activation: [MARATHON_ACTIVATION_CHECKLIST.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/MARATHON_ACTIVATION_CHECKLIST.md).
 
 **Status:** `NOT STARTED` · target cohort **28-08-2026**
