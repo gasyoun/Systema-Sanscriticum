@@ -1,0 +1,66 @@
+# ROADMAP — samskrte.ru Tier-0 · 2026–2027
+
+_Created: 30-07-2026 · Last updated: 30-07-2026_
+
+Index: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md).
+
+## Waves
+
+### Wave 1 — Marathon 28-08 fully live (hard gate · now → 28-08-2026)
+
+**Done when:** smoke A–E green + runbook Evidence complete (DR legs green or explicitly PARKED with secret gap).
+
+| Track | Deliverable | Unblocks |
+|---|---|---|
+| Funnel | Landing branded + H1067 comms pack publish path executed | Registration volume |
+| Money | Existing ₽500 Tochka path activated/smoke | Paid track |
+| Notify | TG bot drip + SMTP transactional (homegrown mailbox) | Day 1–3 + password reset |
+| DR | Weekly backup off-site Yandex + uptime TG dry-fire | Survive outage class of 24–26.07 |
+| Deploy | CI deploy not no-op **or** agent `deploy.sh` fallback after every merge | Code reaches prod |
+| ORS | ≥1 FAQ/bot/surface CTA → marathon landing | Joint Tier-0 funnel |
+| Auth hygiene | Login CSRF / session fixes already on main are **on prod** | Teacher/student entry |
+
+**Non-goals (W1):** new money semantics; GetCourse new domains; membership product; mobile app; media S3 migration; full ORS WP publish; research/csl; CabinetProbe perfection beyond quarantine; CT host migration.
+
+### Wave 2 — Post-cohort ops + revenue GC gaps (Sep–Oct 2026)
+
+Unblocked by W1 live + first cohort telemetry.
+
+| Priority order (revenue-ranked default) | Item | Source |
+|---|---|---|
+| 1 | Flip remaining **Anton** student-comfort flags that are code-complete (video resume, etc.) after smoke | [PLAN_SYSTEMA_ANTON_OPS_GAPS](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md) / DEPLOY_QUEUE |
+| 2 | Email campaigns bulk path once deliverability proven | DEPLOY №45 |
+| 3 | CRM pipeline board flag GO if manager needs it | GC-C1 residual / GTD `@DECIDE` |
+| 4 | Hybrid cabinet Phase 4 if baseline window met | DEPLOY №52 |
+| 5 | Homework auto-open wave-1 **code** (plan already merged H1764) if ops pain | [PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md) |
+| 6 | Proxmox CT power-off root-cause policy + alert | GTD outage row |
+
+### Wave 3 — GetCourse-parity spine core (Q4 2026)
+
+Follow [ROADMAP_GETCOURSE_PARITY_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_GETCOURSE_PARITY_2026.md) / production spec — do **not** re-derive. Default order unless revenue data re-ranks:
+
+1. Remaining **Domain B** (webinar provider abstraction / BBB skeleton) if Zoom risk materializes.
+2. **Domain C** CRM completeness (`Deal` attribution, follow-up tasks already partly shipped).
+3. **Domain D** quiz engine + translit-aware check (flagged; money access additive only).
+4. **Domain A** segments + channel router (marketing).
+
+Always-on parallel: security Wave 4 (Laravel 10→11), media storage roadmap when stage-2 trigger hits (Yandex Object Storage first — already ruled).
+
+### Wave 4 — Growth / membership (2027 H1)
+
+Execute [GROWTH_STRATEGY_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GROWTH_STRATEGY_2026_2027.md): membership tariff key, archive flag on courses, monthly content pulse — **no money-core rewrites beyond additive tariff type** under a dedicated plan + human merge.
+
+### Wave 5 — ORS-FAQ year track (parallel after W1 CTA)
+
+WordPress/Woo publish ladder, LTV collector, bot improvements — own docs under ORS-FAQ; linked from this roadmap only as Tier-0 peers, not rebuilt inside Systema.
+
+## Explicit non-goals (plan-wide)
+
+- Sanskrit research repos, csl-orig corrections, paper pipeline.
+- Replacing Tochka or rewriting Payment state machine.
+- Migrating off Beget/Proxmox unless a separate cost/reliability `@DECIDE` appears.
+- EN product / international full launch (growth strategy: light steps only).
+
+---
+
+_Dr. Mārcis Gasūns_
