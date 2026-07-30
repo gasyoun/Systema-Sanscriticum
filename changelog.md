@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Канон uptime-inventory для агентов — Better Stack.** [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) (+ metadoc): HTTP + heartbeats samskrte / samskrtam / Cologne, env-ключи без TOKEN, VPS paths для cologne-cdsl-heartbeat, smoke. Указатели: `server-resource-guards.md` §3/§6, DEPLOY_QUEUE H1794, `.env.example`. healthchecks.io помечен obsolete. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.79.3] - 2026-07-30
 
 ### Changed

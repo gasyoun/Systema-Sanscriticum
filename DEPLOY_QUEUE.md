@@ -67,19 +67,20 @@ email+пароль нет (`remember: true` только в соц-входе,
 
 ---
 
-### H1794 — cabinet probe hardening (после деплоя)
+### H1794 — cabinet probe hardening (после деплоя) — ✅ pulse env 30-07-2026
 
-1. `php artisan migrate` — таблица `cabinet_probe_runs`
+1. ✅ `php artisan migrate` — таблица `cabinet_probe_runs` (если ещё не на проде — входит в общий migrate)
 2. Smoke student (если ещё нет):
    - `TEST_STUDENT_EMAIL=smoke-student@samskrte.ru`
    - `TEST_STUDENT_PASSWORD=<secret>`
    - `php artisan users:ensure-test-student`
-3. healthchecks.io (когда будет signup) — **два** check:
-   - period **5 min** → `HEARTBEAT_PING_URL=https://hc-ping.com/<uuid>`
-   - period **15 min**, grace ~20 → `CABINET_PROBE_PING_URL=https://hc-ping.com/<uuid>`
+3. ✅ **Внешний pulse — Better Stack Uptime** (не healthchecks.io):
+   - period **5 min** → `HEARTBEAT_PING_URL=https://uptime.betterstack.com/api/v1/heartbeat/<TOKEN>`
+   - period **15 min**, grace ~20 → `CABINET_PROBE_PING_URL=…`
+   - Inventory + samskrtam + Cologne: [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) · issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891)
 4. TG: `CABINET_PROBE_TELEGRAM_CHAT_ID` (critical; default admin+rusamskrtam already on prod)
-   optional soft: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID`
-5. `php artisan config:clear && php artisan cabinet:probe`
+   optional soft: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` · soft cooldown: `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`
+5. `php artisan config:clear && php artisan cabinet:probe` (после любой смены env)
 6. Filament → «Здоровье кабинета» (группа Система) — история прогонов
 7. **Не делаем:** auto-restart fpm, Playwright, public status page (handoff non-goals)
 
