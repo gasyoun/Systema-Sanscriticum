@@ -282,6 +282,9 @@
 
     @include('partials.cookie-consent')
 
+    {{-- Плавающее окно подписки (правый низ, над чатом). --}}
+    @include('partials.newsletter-subscribe-popup')
+
     {{-- Живой веб-чат поддержки — плавающий пузырь посетителя (H536 Phase 4). --}}
     @include('partials.support-chat-widget')
 </body>

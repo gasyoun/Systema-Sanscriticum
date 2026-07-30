@@ -217,4 +217,40 @@ class NewsletterSubscribeTest extends TestCase
         $plaintext = MagicLinkToken::issueFor($user, 'newsletter');
         $this->get('/magic/'.$plaintext)->assertNotFound();
     }
+
+    public function test_floating_popup_renders_on_home_with_student_count(): void
+    {
+        config([
+            'features.newsletter_subscribe' => true,
+            'trust.graduates_count' => 5000,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('data-analytics="newsletter-subscribe-popup"', false)
+            ->assertSee('5 000+', false)
+            ->assertSee('русскоязычным студентам санскрита', false)
+            ->assertSee('utm_source" value="newsletter_popup"', false);
+    }
+
+    public function test_floating_popup_hidden_when_flag_off(): void
+    {
+        config(['features.newsletter_subscribe' => false]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('newsletter-subscribe-popup', false);
+    }
+
+    public function test_floating_popup_hidden_for_existing_subscriber(): void
+    {
+        config(['features.newsletter_subscribe' => true]);
+
+        $user = User::factory()->create(['newsletter_subscribed_at' => now()]);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertDontSee('data-analytics="newsletter-subscribe-popup"', false);
+    }
 }
