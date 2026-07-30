@@ -8,7 +8,17 @@ _Created: 30-07-2026 · Last updated: 30-07-2026_
 
 **Goal (one paragraph).** Make **samskrte.ru** (Laravel LMS [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)) and the linked Tier-0 funnel surfaces ([ORS-FAQ](https://github.com/gasyoun/ORS-FAQ)) a reliable revenue engine for 2026–2027: **wave-1** lands the **28-08-2026 marathon cohort fully live** (funnel → money path → notify → smoke A–E) with pre-launch DR (off-site backup + uptime Telegram) and deploy truth; **later waves** grow along the **GetCourse-parity spine** plus **growth/membership revenue bets**, with research/dictionary work out of scope.
 
-**Execution entry:** wave-1 handoff points here. Layer docs:
+**Launch (no full path required):** paste one of these into a fresh session:
+
+```
+/go H1939
+```
+
+```
+Execute umbrella SAMSKRTE-TIER0 wave-1 (H1939).
+```
+
+Agent resolves H1939 + this PLAN by ID/stem; worktree off `origin/main`. Layer docs:
 
 | Layer | Doc |
 |---|---|
