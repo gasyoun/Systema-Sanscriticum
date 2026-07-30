@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Fixed
+- **False soft-сбой «авто-деплой молча не работает» при живом root-кроне.** `cabinet:probe` (www-data, каждые 15 мин) звал `ShellSystemInspector::crontabFor('root')`, а тот при отказе `crontab -u root -l` падал на bare `crontab -l` — это crontab **текущего** пользователя (www-data), без `systema-auto-deploy-run.sh`. Итог: soft-TG каждые 15 мин, хотя `crontab -l` от root и авто-деплой живы. Фикс: bare `crontab -l` только если `whoami === $user`; fallback на 644-зеркало `storage/app/server_guards/crontab-root.installed` (пишет `deploy.sh` и `server_guards_apply.sh`). Текст soft-алерта: «некритичные проверки: hybrid / guards». Тесты: `ShellSystemInspectorCrontabTest`. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **Umbrella ID SAMSKRTE-TIER0:** wave-1 docs renamed to share stem *_SYSTEMA_SAMSKRTE_TIER0_*; banner on every layer + H1939. Executor: Grok 4.5 (grok-4.5).
 
