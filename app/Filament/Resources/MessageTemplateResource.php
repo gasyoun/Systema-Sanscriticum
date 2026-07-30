@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MessageTemplateResource\Pages;
+use App\Filament\Resources\MessageTemplateResource\RelationManagers\AuditsRelationManager;
 use App\Models\MessageTemplate;
 use App\Support\MessagePlaceholders;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -16,14 +17,19 @@ use Filament\Tables;
 use Filament\Tables\Table;
 
 /**
- * Админ-CRUD общей библиотеки шаблонов сообщений (H221). Один текст питает
- * реактивацию, follow-up лидов и канреплаи поддержки. За флагом crm_cockpit —
- * пока OFF, ресурс скрыт из навигации и роут закрыт.
+ * CRUD общей библиотеки шаблонов сообщений (H221). Один текст питает
+ * реактивацию, follow-up лидов, канреплаи поддержки и шаблонные черновики
+ * FAQ-суггестера (H1838). За флагом crm_cockpit — пока OFF, ресурс скрыт из
+ * навигации и роут закрыт.
+ *
+ * Доступ (H1932, ruling 30-07-2026): смотреть/создавать/править могут админ,
+ * супер-админ И куратор (manager) — библиотека это их рабочий инструмент;
+ * удаление осталось за админом. Каждая правка пишется в append-only аудит
+ * (MessageTemplateAuditObserver) — «кто, когда, что поменял» видно во вкладке
+ * «История изменений».
  */
 class MessageTemplateResource extends Resource
 {
-    use AdminOnly;
-
     protected static ?string $model = MessageTemplate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
@@ -38,17 +44,39 @@ class MessageTemplateResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Шаблоны сообщений';
 
-    /**
-     * Весь ресурс живёт за фича-флагом кокпита + AdminOnly. NB: AdminOnly —
-     * trait, «влитый» в класс, поэтому parent:: ушёл бы мимо гейта в
-     * Resource::* — проверяем роль напрямую через RoleGate.
-     */
+    /** Флаг кокпита + роль admin/manager (super_admin проходит всегда). */
+    private static function canManage(): bool
+    {
+        return config('features.crm_cockpit') && RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
     public static function shouldRegisterNavigation(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::canManage();
+    }
+
+    /** Удаление — только админ: тексты питают суггестер и рассылки. */
+    public static function canDelete($record): bool
     {
         return config('features.crm_cockpit') && RoleGate::adminOnly();
     }
 
-    public static function canViewAny(): bool
+    public static function canDeleteAny(): bool
     {
         return config('features.crm_cockpit') && RoleGate::adminOnly();
     }
@@ -143,6 +171,13 @@ class MessageTemplateResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            AuditsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

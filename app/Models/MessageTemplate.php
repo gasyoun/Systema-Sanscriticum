@@ -8,6 +8,7 @@ use App\Support\MessagePlaceholders;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Общая библиотека шаблонов сообщений оператора. Один текст с плейсхолдерами
@@ -73,6 +74,12 @@ class MessageTemplate extends Model
     public function scopeBoundToSuggesterCategory(Builder $query, string $category): Builder
     {
         return $query->where('suggester_category', $category)->where('is_active', true);
+    }
+
+    /** История правок шаблона — пишет MessageTemplateAuditObserver (H1932). */
+    public function audits(): HasMany
+    {
+        return $this->hasMany(MessageTemplateAudit::class)->latest('created_at');
     }
 
     public function categoryLabel(): string

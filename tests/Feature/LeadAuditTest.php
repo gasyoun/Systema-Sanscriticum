@@ -91,4 +91,20 @@ class LeadAuditTest extends TestCase
         $this->assertNotNull($audit, 'Аудит удаления должен пережить сам лид.');
         $this->assertNull(Lead::find($id));
     }
+
+    /** @test */
+    public function summary_renders_changes_on_a_model_reloaded_from_db(): void
+    {
+        // Регресс H1932: `$this->changes` внутри модели попадал в protected-
+        // свойство Eloquent (dirty-синк), пустое на перечитанной строке, —
+        // таймлайн в админке показывал «—» вместо изменений.
+        $lead = $this->makeLead(['status' => 'new']);
+        LeadAudit::query()->delete();
+        $lead->update(['status' => 'in_work']);
+
+        $reloaded = LeadAudit::query()->sole()->fresh();
+
+        $this->assertStringContainsString('→', $reloaded->summary());
+        $this->assertStringNotContainsString('—', $reloaded->summary());
+    }
 }

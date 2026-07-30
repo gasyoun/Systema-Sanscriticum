@@ -11,6 +11,12 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Added
+- **Библиотека шаблонов открыта куратору — с append-only историей правок (H1932, ruling 30-07-2026).** «Шаблоны сообщений» были заперты за `AdminOnly`: куратор (`manager`), чьим рабочим инструментом библиотека и является (канреплаи, реактивация, теперь и шаблонные черновики суггестера H1838), не мог даже открыть её. Теперь смотреть/создавать/править могут админ, супер-админ и куратор; **удаление осталось за админом** — тексты питают суггестер и рассылки. Цена расширения доступа — подотчётность: новый [`MessageTemplateAuditObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/MessageTemplateAuditObserver.php) пишет каждую правку в append-only `message_template_audits` (зеркало `lead_audits`: кто, когда, какое поле, было → стало; действия из tinker/CLI — «Система»), а вкладка «История изменений» ([`AuditsRelationManager`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/MessageTemplateResource/RelationManagers/AuditsRelationManager.php)) показывает таймлайн прямо на странице шаблона — видна и куратору, раз он правит. Executor: Fable 5 (`claude-fable-5`).
+
+### Fixed
+- **Таймлайн аудита лидов показывал «—» вместо изменений — на всех строках, читаемых из БД (H1932, латентно с H221).** `LeadAudit::summary()` читал `$this->changes`, а это внутри Eloquent-модели попадает в protected-свойство `HasAttributes::$changes` (внутренний трекинг dirty-синка), пустое у перечитанной из БД строки — JSON-атрибут `changes` даже не спрашивался. Всплыло тестом нового зеркального аудита шаблонов; исправлено на `getAttribute('changes')` в обеих моделях и закрыто регрессом `summary_renders_changes_on_a_model_reloaded_from_db`. Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.76.4] - 2026-07-30
 
 ### Fixed
