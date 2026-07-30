@@ -1831,20 +1831,13 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...HEAD
-
-### Changed
-- H1966 konsultaciya redesign: multi-direction concurrent variants (no single human pick; B = default only).
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.3...HEAD
+[1.80.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...v1.80.3
 [1.80.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.1...v1.80.2
 [1.80.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...v1.80.1
 [1.80.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...v1.80.0
 [1.79.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.2...v1.79.3
 [1.79.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...v1.79.2
-# old Unreleased was:
-# [Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...HEAD
-
-### Changed
-- H1966 konsultaciya redesign: multi-direction concurrent variants (no single human pick; B = default only).
 [1.79.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.0...v1.79.1
 [1.79.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.78.0...v1.79.0
 [1.78.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.77.0...v1.78.0
