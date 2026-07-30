@@ -18,6 +18,8 @@
 .env
 .env.backup
 .env.production
+.env.magnet.local
+.env.*.local
 /lecture-builder/.env
 /lecture-builder/.venv/
 __pycache__/
