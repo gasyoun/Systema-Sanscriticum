@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
-use App\Support\ServerGuards\ShellSystemInspector;
+use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -38,7 +38,7 @@ class VerifyServerGuards extends Command
             $spec = GuardSpec::fromFile((string) config('server_guards.spec_path'));
             $auditor = new ServerGuardsAuditor(
                 $spec,
-                new ShellSystemInspector,
+                app(SystemInspector::class),
                 (string) config('server_guards.template_root'),
             );
             $findings = $auditor->audit();

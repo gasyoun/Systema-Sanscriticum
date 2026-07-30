@@ -30,6 +30,8 @@ use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\ServerGuards\ShellSystemInspector;
+use App\Support\ServerGuards\SystemInspector;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -68,6 +70,12 @@ class AppServiceProvider extends ServiceProvider
             WebinarProvider::class,
             fn () => ZoomService::fromConfig(),
         );
+
+        // H1914/H1931: SystemInspector — шов для cabinet:probe / guards:verify.
+        // bind (не singleton): тесты подставляют FakeSystemInspector через
+        // $this->app->instance(...) и доказывают, что critical-находка доходит
+        // до вердикта пробы (раньше был hard-coded `new ShellSystemInspector`).
+        $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
     }
 
     /**
