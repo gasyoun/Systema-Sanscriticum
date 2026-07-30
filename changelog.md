@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.80.2] - 2026-07-30
+### Changed
+- **Marathon: required name + admin quiz reset.** Landing form: name is required (min 2). Filament «Марафон: опросы» lists all enrollments with Сброс Д1 / Д2 / Д1+Д2 (`resetQuizEngagement` — clears engaged_at + quiz_seconds only). Executor: Grok 4.5 (`grok-4.5`).
+
 ### Added
 - **Student uptime pages + RU split by audience.** Public [samskrte.ru/uptime](https://samskrte.ru/uptime) (Laravel) + GitHub Pages mirror [`uptime/`](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) (works when VPS is down) + WordPress snippet `uptime/samskrtam-snippet.html`. [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md): 1 students/teachers (VPN vs site, tag `@rusamskrtam`); 2 Ivan/Marcis only (red monitors, Artem). Executor: Grok 4.5 (`grok-4.5`).
 - **Anki → Systema SRS import pipeline (H1970):** public AnkiWeb shared-deck path — `scripts/ankiweb_download_deck.py` (Playwright), `scripts/anki_apkg_to_srs_export.py` + `scripts/anki_export_validate.py`, `php artisan srs:import-anki`, fixture tests, pilot seed `database/seeders/data/anki_454628379/` (Hindi Core 100, AnkiWeb 454628379, ~202 cards + media). Reusable skill `/anki-srs-import`. Executor: Grok 4.5 (`grok-4.5`).
@@ -7,7 +11,6 @@
 ## [1.80.1] - 2026-07-30
 
 ### Changed
-- **Marathon: required name + admin quiz reset.** Landing form: name is required (min 2). Filament «Марафон: опросы» lists all enrollments with Сброс Д1 / Д2 / Д1+Д2 (`resetQuizEngagement` — clears engaged_at + quiz_seconds only). Executor: Grok 4.5 (`grok-4.5`).
 - **Marathon Day 1 quiz polish (copy, path, duration, no re-play).** URL `/online/konsultaciya/day/` → **`/dine/`** (Sanskrit *dine*; legacy `/day/` 301). Zero-cohort Day 1: *veda* as noun/perfect, lowercase options, *mātar*/*bhrātar* macrons; links to Zaliznyak «О языке древней Индии» ([samskrtam.ru/mt](https://samskrtam.ru/mt/) list) and [Burlak 2018](https://samskrtam.ru/burlak-sanskrit-2018-tc). Client wall-clock `day{1,2}_quiz_seconds` on complete — shown to enrollee and in Filament «Марафон: опросы». After `day1_engaged_at`, page shows done state (no quiz restart). Executor: Grok 4.5 (`grok-4.5`).
 - **Uptime RU: «если сайт упал» + [@rusamskrtam](https://t.me/rusamskrtam).** [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) leads with site-down / red-email-or-Telegram first steps; audience = letter or @rusamskrtam red alert. CLAUDE/README/EN pointers. Executor: Grok 4.5 (`grok-4.5`).
 - **Marathon Day 1 immediately after Telegram `/start`.** After magnet deep-link binds `telegram_chat_id`, Day 1 drip text is sent at once (no wait for next calendar day). Cron `marathon:deliver-due` remains the catch-up path; `day1_completed_at` keeps both paths idempotent. Shared `MarathonDay1Sender`. Executor: Grok 4.5 (`grok-4.5`).
@@ -1812,7 +1815,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...HEAD
+[1.80.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.1...v1.80.2
+[1.80.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...v1.80.1
 [1.80.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.3...v1.80.0
 [1.79.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.2...v1.79.3
 [1.79.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.1...v1.79.2
