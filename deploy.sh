@@ -171,6 +171,20 @@ echo "OK: $SMOKE_URL → 200"
 # системный конфиг. Предохранители 29-07-2026 живут вне репозитория, и пересборка
 # LXC/восстановление из бэкапа сносят их беззвучно — деплой самый частый момент,
 # когда об этом можно узнать вовремя.
+#
+# Зеркало root-crontab (644): cabinet:probe крутится от www-data и не читает
+# /var/spool/cron/crontabs/root; без снимка guards:verify под www-data врёт
+# «авто-деплой молча не работает» при живой строке в root-кроне.
+if [ "$(id -u)" = 0 ]; then
+  MIRROR_DIR="$APP_DIR/storage/app/server_guards"
+  mkdir -p "$MIRROR_DIR"
+  if crontab -l > "$MIRROR_DIR/crontab-root.installed.tmp" 2>/dev/null; then
+    mv -f "$MIRROR_DIR/crontab-root.installed.tmp" "$MIRROR_DIR/crontab-root.installed"
+    chmod 644 "$MIRROR_DIR/crontab-root.installed"
+    chown "root:${APP_USER:-www-data}" "$MIRROR_DIR/crontab-root.installed" 2>/dev/null || true
+  fi
+fi
+
 say "Предохранители ОС: php artisan guards:verify"
 GUARDS_DRIFT=0
 php artisan guards:verify || GUARDS_DRIFT=1

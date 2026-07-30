@@ -45,21 +45,47 @@ final class ShellSystemInspector implements SystemInspector
 
     public function crontabFor(string $user): ?string
     {
-        // Под root ходим через -u; под самим www-data `crontab -u` на Debian
-        // отказывает, зато свой crontab читается без него. Последний рубеж —
-        // файл спула, читаемый владельцем.
-        $attempts = [
-            ['crontab', '-u', $user, '-l'],
-            ['crontab', '-l'],
-        ];
-        foreach ($attempts as $cmd) {
-            $out = $this->run($cmd);
+        // 1) crontab -u USER -l — работает от root / с CAP_SETUID.
+        $out = $this->run(['crontab', '-u', $user, '-l']);
+        if ($out !== null && trim($out) !== '') {
+            return $out;
+        }
+
+        // 2) Bare `crontab -l` — ТОЛЬКО если мы и есть этот user.
+        //    Раньше его звали всегда: www-data, читая «root», получал СВОЙ
+        //    crontab (без systema-auto-deploy-run.sh) → soft-сбой каждые 15 мин
+        //    при живом авто-деплое (H1933 false positive, 30-07-2026).
+        $current = $this->currentUsername();
+        if ($current !== null && $current === $user) {
+            $out = $this->run(['crontab', '-l']);
             if ($out !== null && trim($out) !== '') {
                 return $out;
             }
         }
 
-        return $this->fileContents('/var/spool/cron/crontabs/'.$user);
+        // 3) Спул — 600 root:crontab, www-data обычно не читает.
+        $spool = $this->fileContents('/var/spool/cron/crontabs/'.$user);
+        if ($spool !== null && trim($spool) !== '') {
+            return $spool;
+        }
+
+        // 4) Зеркало, которое пишут deploy.sh / server_guards_apply.sh (644),
+        //    чтобы cabinet:probe от www-data видел root-крон авто-деплоя.
+        return $this->fileContents(base_path('storage/app/server_guards/crontab-'.$user.'.installed'));
+    }
+
+    private function currentUsername(): ?string
+    {
+        if (\function_exists('posix_geteuid') && \function_exists('posix_getpwuid')) {
+            $info = @posix_getpwuid(posix_geteuid());
+            if (\is_array($info) && isset($info['name']) && $info['name'] !== '') {
+                return (string) $info['name'];
+            }
+        }
+
+        $who = $this->run(['whoami']);
+
+        return $who === null ? null : trim($who);
     }
 
     public function unitIsActive(string $unit): bool

@@ -241,6 +241,23 @@ else
     chg "crontab root"; CHANGED+=("crontab:root")
   fi
 fi
+# Зеркало 644: cabinet:probe / guards:verify от www-data не читают
+# /var/spool/cron/crontabs/root (600), а bare `crontab -l` врёт чужим user'ом.
+if [ "$DRY_RUN" = 0 ]; then
+  MIRROR_DIR="$APP_DIR/storage/app/server_guards"
+  MIRROR="$MIRROR_DIR/crontab-root.installed"
+  mkdir -p "$MIRROR_DIR"
+  if crontab -l > "$MIRROR.tmp" 2>/dev/null; then
+    if [ ! -f "$MIRROR" ] || ! cmp -s "$MIRROR.tmp" "$MIRROR"; then
+      install -m 644 "$MIRROR.tmp" "$MIRROR"
+      chown "root:$APP_USER" "$MIRROR" 2>/dev/null || true
+      chg "mirror $MIRROR"; CHANGED+=("mirror:crontab-root")
+    else
+      ok "mirror $MIRROR"
+    fi
+  fi
+  rm -f "$MIRROR.tmp"
+fi
 rm -f "$CRON_TMP" "$CUR_CRON"
 
 # ── 4. Инвариант единственного определения чисел памяти ─────────────────────

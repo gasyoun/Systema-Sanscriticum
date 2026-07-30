@@ -442,7 +442,7 @@ class ProbeCabinetHealth extends Command
         // Soft-only: alert soft chats without flipping critical downtime.
         if ($criticalHealthy && $softFails !== []) {
             $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
-            $text = "⚠️ <b>Кабинет: soft-сбой</b> (hybrid/опциональные страницы)\n\n"
+            $text = "⚠️ <b>Кабинет: soft-сбой</b> (некритичные проверки: hybrid / guards)\n\n"
                 .$this->telegramUrlBlock()."\n"
                 .implode("\n", $lines)."\n\n"
                 .$this->telegramRunbook();
