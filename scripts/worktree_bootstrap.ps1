@@ -47,6 +47,20 @@ function Die([string] $text) { Write-Host "✖ $text" -ForegroundColor Red; exit
 # ── Teardown ────────────────────────────────────────────────────────────────
 if ($Teardown) {
     if ($here -ieq $mainClone) { Die "это и есть главное дерево — сносить нечего" }
+
+    # Самая частая причина «Permission denied» на Windows — не чужой процесс, а МЫ САМИ:
+    # каталог, который является текущим для процесса, удалить нельзя. Проверяем это
+    # первым и говорим прямо, вместо «закройте что-нибудь» вслепую.
+    $cwd = (Get-Location).Path
+    if ($cwd -ieq $here -or $cwd.StartsWith("$here\", [StringComparison]::OrdinalIgnoreCase)) {
+        Die @"
+запуск ИЗНУТРИ сносимого worktree ($cwd) — Windows не удалит каталог, пока он текущий.
+Из главного дерева:
+    cd $mainClone
+    pwsh -File $here\scripts\worktree_bootstrap.ps1 -Teardown
+"@
+    }
+
     Say "Снос worktree $here"
     Push-Location $mainClone
     git worktree remove $here --force 2>&1 | Out-Null
@@ -54,11 +68,19 @@ if ($Teardown) {
     if (Test-Path $here) {
         # Windows держит хэндл под worktree чаще, чем хотелось бы: git успевает
         # снять регистрацию, но каталог остаётся — и висит потом неделями.
+        # Хэндл нередко отпускается через мгновение после того, как git закончил,
+        # поэтому одна неудачная попытка — ещё не приговор: пробуем трижды.
         Warn "git не смог удалить каталог — добиваю вручную"
-        Remove-Item -Recurse -Force $here -ErrorAction SilentlyContinue
+        foreach ($attempt in 1..3) {
+            Remove-Item -Recurse -Force $here -ErrorAction SilentlyContinue
+            if (-not (Test-Path $here)) { break }
+            Start-Sleep -Milliseconds 700
+        }
     }
     Pop-Location
-    if (Test-Path $here) { Die "каталог всё ещё на месте: закройте процессы, держащие файлы, и повторите" }
+    if (Test-Path $here) {
+        Die "каталог всё ещё на месте: какой-то процесс держит файлы под $here (проводник, редактор, php, запущенный тест). Закройте его и повторите — регистрация в git уже снята, так что достаточно `Remove-Item -Recurse -Force $here`."
+    }
     Ok "worktree удалён и разрегистрирован"
     exit 0
 }
