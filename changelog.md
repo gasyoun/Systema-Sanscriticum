@@ -11,6 +11,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+### Removed
+- **Обе Арзамас-заметки сняты с samskrte.ru — серия уходит на сайт Арзамаса (H1928, ruling MG 30-07-2026).** С прода удалены обе статьи (id 5 «Россия и санскритский словарь» и id 6 «Петербургский словарь», обе стояли опубликованными с 27-07) вместе с обложками — URLs `/s/peterburgskiy-slovar-pwg` и `/s/rossiya-i-sanskritskiy-slovar` отвечают 404. Из репозитория удалены обе импорт-команды (`materials:import-pwg-arzamas`, `materials:import-kossovich-arzamas`) и их тесты — публикационный путь samskrte закрыт, чтобы деплой не мог вернуть статьи случайно. Паки [pwg-arzamas](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/pwg-arzamas) и [kossovich-arzamas](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/kossovich-arzamas) остаются редакционным source of truth (READMEs помечены RETARGETED; K-2 закрыт как беспредметный); экспорт для редакции Арзамаса (оба SOURCE.md отрефереенных версий + все картинки + заметка об адаптации) передан MG (Desktop/Arzamas_export). Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.73.0] - 2026-07-30
 
 ### Added

@@ -2,7 +2,18 @@
 
 _Created: 26-07-2026 · Last updated: 30-07-2026_
 
-Source-of-truth pack for the samskrte.ru longread about PWG (Böhtlingk–Roth,
+> **⚠️ RETARGETED 30-07-2026 (MG, H1928): this piece publishes on the Arzamas
+> website ONLY — never on samskrte.ru.** The prod article
+> (`/s/peterburgskiy-slovar-pwg`, id 6) and its cover were deleted from
+> samskrte.ru the same day; the `materials:import-pwg-arzamas` command and its
+> test were removed from the repo. This pack stays as the editorial source of
+> truth (incl. the H1862 referee verdicts); the handover copy for the Arzamas
+> editors is `SOURCE.md` + the images. The «Rebuild / import» and «Production
+> runbook» sections below are HISTORICAL — do not re-create the import path.
+> Ch. 16's cross-link and ch. 20's CTA are samskrte-specific and need
+> Arzamas-side adaptation.
+
+Source-of-truth pack for the longread about PWG (Böhtlingk–Roth,
 *Sanskrit-Wörterbuch*, «Большой Петербургский словарь») in the genre of
 [Arzamas materials/1100](https://arzamas.academy/materials/1100).
 

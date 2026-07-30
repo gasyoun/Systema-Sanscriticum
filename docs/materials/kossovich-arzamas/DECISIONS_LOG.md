@@ -1,6 +1,6 @@
 # DECISIONS_LOG — Kossovich Arzamas material (H1696 autonomy defaults)
 
-_Created: 26-07-2026 · Last updated: 26-07-2026_
+_Created: 26-07-2026 · Last updated: 30-07-2026_
 
 Per [PLAN §4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md)
 (пайплайн H1620 применён ко второй заметке): ambiguity → default + one-line rationale here, continue.
@@ -20,5 +20,6 @@ Per [PLAN §4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PL
 | M11 | Пост-релизный mining-pass (MG, 26-07-2026): в эссе влиты лучшие пассажи параллельной попытки H1696 (escrow-ветка `h1696-kossovich-arzamas-2099`) — биография по статье Ольденбурга о Коссовиче («Этюды», ~1705–1730; источник, не найденный в первом проходе), «решётка кириллицы», латинский «фиговый листок», программа с храмами Ориссы, контраст 70,9 %/23,6 %, финальные формулы; добавлены НОВАЯ гл. 10 с образцами статей из kow.jsonl и блок о переизданиях (planeta.ru «sanskrit»/«ohotnik», лекция 1859 на samskrtam.ru); 15 → 16 h2 | указание MG; каждый новый факт заведён в FACTS (K3-9…K16-5) с проверкой по первоисточникам, а не доверием escrow-версии |
 
 | M12 | Галерея самас (26-07-2026): по указанию MG («Запиши все, лишние потом перенесу в запас») в гл. 10 влиты ВСЕ 16 позиций шорт-листа K-6 списком; сокращение и отбор — за человеком; kṛtajña дан только как рамочный пример (буквы «к» в словаре нет — FACTS K10-7) | прямое указание MG; список легче резать, чем дописывать |
+| M13 | **Площадка — сайт Арзамаса, НЕ samskrte.ru (MG, 30-07-2026, H1928).** Статья снята с прода samskrte.ru (id 5 + обложка удалены; стояла опубликованной с 27-07), команда `materials:import-kossovich-arzamas` и тест удалены из репозитория; K-2 (re-import первой заметки после публикации второй) тем самым закрыт как беспредметный. Экспорт для редакции Арзамаса передан MG 30-07-2026 (папка Arzamas_export) | прямое указание MG «Arzamas will be published on Arzamas website only… delete from samskrte.ru, both articles» |
 
 _Dr. Mārcis Gasūns_

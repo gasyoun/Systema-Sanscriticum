@@ -1,8 +1,17 @@
 # Kossovich Arzamas-material pack — «Россия и санскритский словарь»
 
-_Created: 26-07-2026 · Last updated: 26-07-2026_
+_Created: 26-07-2026 · Last updated: 30-07-2026_
 
-Source-of-truth pack for the second samskrte.ru longread in the genre of
+> **⚠️ RETARGETED 30-07-2026 (MG, H1928): this piece publishes on the Arzamas
+> website ONLY — never on samskrte.ru.** The prod article
+> (`/s/rossiya-i-sanskritskiy-slovar`, id 5) and its cover were deleted from
+> samskrte.ru the same day; the `materials:import-kossovich-arzamas` command and
+> its test were removed from the repo. This pack stays as the editorial source
+> of truth; the handover copy for the Arzamas editors is `SOURCE.md` + the
+> images. The «Rebuild / import» and «Production runbook» sections below are
+> HISTORICAL — do not re-create the import path.
+
+Source-of-truth pack for the second longread in the genre of
 [Arzamas materials/1100](https://arzamas.academy/materials/1100): «Россия и
 санскритский словарь: Коссович против Бётлингка» — the Russian context of PWG
 (the money, Uvarov's Latin, Kossovich's 1854 Sanskrit–Russian dictionary, the
