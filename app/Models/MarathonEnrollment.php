@@ -100,6 +100,32 @@ class MarathonEnrollment extends Model
         return $s === 0 ? "{$m} мин" : "{$m} мин {$s} сек";
     }
 
+    /**
+     * Clear tap-quiz completion so the enrollee can re-take Day 1 and/or Day 2
+     * (admin-only, Filament «Марафон: опросы»). Does not touch delivery clocks
+     * (day{N}_completed_at), paid track, or day2_question.
+     *
+     * @param  1|2|null  $day  null = both days
+     */
+    public function resetQuizEngagement(?int $day = null): void
+    {
+        $updates = [];
+
+        if ($day === null || $day === 1) {
+            $updates['day1_engaged_at'] = null;
+            $updates['day1_quiz_seconds'] = null;
+        }
+
+        if ($day === null || $day === 2) {
+            $updates['day2_engaged_at'] = null;
+            $updates['day2_quiz_seconds'] = null;
+        }
+
+        if ($updates !== []) {
+            $this->update($updates);
+        }
+    }
+
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);

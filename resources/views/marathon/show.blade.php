@@ -144,13 +144,22 @@
         </div>
 
         <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Контакт (телефон, email или Telegram)</label>
-            <input type="text" name="contact" required class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Имя <span class="text-red-500">*</span></label>
+            <input type="text" name="name" required minlength="2" maxlength="255"
+                   value="{{ old('name') }}"
+                   class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+            @error('name')
+                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+            @enderror
         </div>
 
         <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Имя (необязательно)</label>
-            <input type="text" name="name" class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Контакт (телефон, email или Telegram) <span class="text-red-500">*</span></label>
+            <input type="text" name="contact" required value="{{ old('contact') }}"
+                   class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24]">
+            @error('contact')
+                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+            @enderror
         </div>
 
         <button type="submit" class="w-full px-6 py-3.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">

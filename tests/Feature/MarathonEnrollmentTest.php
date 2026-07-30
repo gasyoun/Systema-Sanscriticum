@@ -45,6 +45,7 @@ class MarathonEnrollmentTest extends TestCase
         $this->landing();
 
         $response = $this->post(route('marathon.register'), [
+            'name' => 'Анна',
             'contact' => 'student@example.com',
             'track' => 'free',
             'quiz_goal' => 'grammar',
@@ -55,6 +56,7 @@ class MarathonEnrollmentTest extends TestCase
         $lead = Lead::where('contact', 'student@example.com')->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
 
+        $this->assertSame('Анна', $lead->name);
         $this->assertSame('free', $enrollment->track);
         $this->assertSame('grammar', $enrollment->quiz_goal);
         $this->assertNotNull($enrollment->day0_started_at);
@@ -66,6 +68,7 @@ class MarathonEnrollmentTest extends TestCase
         $this->landing();
 
         $this->post(route('marathon.register'), [
+            'name' => 'Борис',
             'contact' => 'paid@example.com',
             'track' => 'paid',
             'quiz_goal' => 'yoga',
@@ -86,6 +89,7 @@ class MarathonEnrollmentTest extends TestCase
         $originalStart = $enrollment->day0_started_at;
 
         $this->post(route('marathon.register'), [
+            'name' => 'Повтор',
             'contact' => 'repeat@example.com',
             'track' => 'free',
             'quiz_goal' => 'philo',
@@ -100,8 +104,22 @@ class MarathonEnrollmentTest extends TestCase
     {
         $this->landing();
 
-        $this->post(route('marathon.register'), ['track' => 'free', 'quiz_goal' => 'grammar'])
-            ->assertSessionHasErrors('contact');
+        $this->post(route('marathon.register'), [
+            'name' => 'Без контакта',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ])->assertSessionHasErrors('contact');
+    }
+
+    public function test_registration_requires_name(): void
+    {
+        $this->landing();
+
+        $this->post(route('marathon.register'), [
+            'contact' => 'noname@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'grammar',
+        ])->assertSessionHasErrors('name');
     }
 
     public function test_registration_rejects_invalid_track(): void
@@ -111,8 +129,12 @@ class MarathonEnrollmentTest extends TestCase
         // Separate test, not a second post() in the same test: the 1-request/5s
         // rate limit on this endpoint (RateLimiter::hit(..., 5)) would otherwise
         // 429 the second call instead of reaching validation.
-        $this->post(route('marathon.register'), ['contact' => 'x@example.com', 'track' => 'bogus', 'quiz_goal' => 'grammar'])
-            ->assertSessionHasErrors('track');
+        $this->post(route('marathon.register'), [
+            'name' => 'Икс',
+            'contact' => 'x@example.com',
+            'track' => 'bogus',
+            'quiz_goal' => 'grammar',
+        ])->assertSessionHasErrors('track');
     }
 
     public function test_registration_attaches_telegram_magnet_token_and_deep_link(): void
@@ -120,6 +142,7 @@ class MarathonEnrollmentTest extends TestCase
         $this->landing();
 
         $response = $this->post(route('marathon.register'), [
+            'name' => 'Телеграм',
             'contact' => 'telegram-link@example.com',
             'track' => 'free',
             'quiz_goal' => 'grammar',
@@ -145,6 +168,7 @@ class MarathonEnrollmentTest extends TestCase
         MarathonEnrollment::factory()->create(['lead_id' => $lead->id]);
 
         $this->post(route('marathon.register'), [
+            'name' => 'Повтор',
             'contact' => 'repeat-token@example.com',
             'track' => 'free',
             'quiz_goal' => 'grammar',
@@ -169,6 +193,7 @@ class MarathonEnrollmentTest extends TestCase
         $this->landing();
 
         $this->post(route('marathon.register'), [
+            'name' => 'Когорта',
             'contact' => 'cohort-default@example.com',
             'track' => 'free',
             'quiz_goal' => 'grammar',
@@ -208,6 +233,7 @@ class MarathonEnrollmentTest extends TestCase
         $this->landing();
 
         $this->post(route('marathon.register'), [
+            'name' => 'АБ',
             'contact' => 'arm@example.com',
             'track' => 'free',
             'quiz_goal' => 'grammar',
@@ -244,6 +270,7 @@ class MarathonEnrollmentTest extends TestCase
         ]);
 
         $this->post(route('marathon.register'), [
+            'name' => 'Повтор',
             'contact' => 'repeat-arm@example.com',
             'track' => 'free',
             'quiz_goal' => 'philo',
@@ -265,5 +292,43 @@ class MarathonEnrollmentTest extends TestCase
         // neither arm dominates, i.e. the split is genuinely ~50/50.
         $this->assertGreaterThan(150, $countA);
         $this->assertGreaterThan(150, $countB);
+    }
+
+    public function test_reset_quiz_engagement_clears_day1_only(): void
+    {
+        $enrollment = MarathonEnrollment::factory()->create([
+            'day1_engaged_at' => now(),
+            'day1_quiz_seconds' => 90,
+            'day2_engaged_at' => now(),
+            'day2_quiz_seconds' => 40,
+            'day2_question' => 'Сохранить?',
+        ]);
+
+        $enrollment->resetQuizEngagement(1);
+        $enrollment->refresh();
+
+        $this->assertNull($enrollment->day1_engaged_at);
+        $this->assertNull($enrollment->day1_quiz_seconds);
+        $this->assertNotNull($enrollment->day2_engaged_at);
+        $this->assertSame(40, $enrollment->day2_quiz_seconds);
+        $this->assertSame('Сохранить?', $enrollment->day2_question);
+    }
+
+    public function test_reset_quiz_engagement_both_days(): void
+    {
+        $enrollment = MarathonEnrollment::factory()->create([
+            'day1_engaged_at' => now(),
+            'day1_quiz_seconds' => 10,
+            'day2_engaged_at' => now(),
+            'day2_quiz_seconds' => 20,
+        ]);
+
+        $enrollment->resetQuizEngagement(null);
+        $enrollment->refresh();
+
+        $this->assertNull($enrollment->day1_engaged_at);
+        $this->assertNull($enrollment->day2_engaged_at);
+        $this->assertNull($enrollment->day1_quiz_seconds);
+        $this->assertNull($enrollment->day2_quiz_seconds);
     }
 }
