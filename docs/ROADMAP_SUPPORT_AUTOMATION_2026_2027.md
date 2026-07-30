@@ -1,6 +1,6 @@
 # Roadmap: автоматизация поддержки 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 06-07-2026 · Last updated: 30-07-2026 (H1938 scheduled-path verify)_
+_Created: 06-07-2026 · Last updated: 30-07-2026 (H1938: scheduled verify + web_backfill_days=2 ruled)_
 
 > Узкий roadmap **support-автоматизации** — как за год снять с людей автоматизируемые 38.5 % вопросов
 > рабочего чата «Отдел заботы». Общий продуктовый roadmap —
@@ -256,15 +256,14 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
 > traffic arrives, the same path will write new/updated `web` / `telegram_bot` rows
 > without a manual command.
 >
-> **Open (human decides, not part of verification):**
-> `support.rollup.web_backfill_days` defaults to **2**. If the scheduler is down
-> longer than that, those days drop out of the rollup permanently (hourly pass only
-> overlaps two days). Either widen the default or add a catch-up that walks back to
-> the last covered `conversation_date`. Widening a production window is deliberately
-> out of this pass.
+> **Residual RULED 30-07-2026:** keep `support.rollup.web_backfill_days` default **2**.
+> If the scheduler is ever down longer than two days, a one-shot manual
+> `php artisan support:rollup-web --days=N` (or a future catch-up) is acceptable —
+> no widen / no automated walk-back unless a multi-day outage actually bites.
+> No further human decisions remain from H1938.
 >
 > Executor: Grok 4.5 (`grok-4.5`), handoff
-> [H1938](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1938-Sonnet_Systema-Sanscriticum_s10-scheduled-run-verify-web-rollups_30.07.26.md)
+> [H1938](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1938-Sonnet_Systema-Sanscriticum_s10-scheduled-run-verify-web-rollups_30.07.26.md)
 > (intended Sonnet 5; run authorized on Grok).
 
 - **Что:** закрыть известную асимметрию (`support-subsystem-map.md` «Actually open»): `SupportDailyRollup`/топики покрывают только TG-сторону; веб-`ChatMessage` не агрегируется — S2-метрики видят не весь поток.
