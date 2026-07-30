@@ -1,6 +1,6 @@
 # Roadmap: автоматизация поддержки 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 06-07-2026 · Last updated: 30-07-2026_
+_Created: 06-07-2026 · Last updated: 30-07-2026 (H1938 scheduled-path verify)_
 
 > Узкий roadmap **support-автоматизации** — как за год снять с людей автоматизируемые 38.5 % вопросов
 > рабочего чата «Отдел заботы». Общий продуктовый roadmap —
@@ -228,6 +228,44 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
 > ключу вышло `{user: 15, thread: 5}`. Агрегация только по треду (первый из двух
 > вариантов в шаге (1) ниже) покрыла бы меньшинство потока и отчиталась бы об этом
 > как о покрытии. Запасной ключ `web_user_id` здесь несущий, а не косметический.
+>
+> ### H1938 — unattended scheduled path verified (30-07-2026 ~12:50 MSK)
+>
+> **Verdict: PASS on scheduler fire; metrics flat because no new web traffic (not a fault).**
+>
+> H1837 left open: the 31-day backfill was hand-run, and at enablement time
+> `schedule:run` was locked out by a live H1914 guard test (`debug:hang` +
+> `timeout`, pid holding the lock). Until a *scheduled* `support:rollup-web`
+> ran, “web channel is measured” rested on a human typing the command.
+>
+> | Check | Result |
+> |---|---|
+> | Host health (`uptime` load) | `0.15, 0.30, 0.36` — healthy; not the 28–29.07 livelock class |
+> | `schedule:list` | `25 * * * * php artisan support:rollup-web` — Next Due ~33 min at probe |
+> | Scheduled fires in `storage/logs/schedule.log` | **10× DONE** at `:25` from `06:25` through `15:25` MSK (durations 346–391 ms) — unattended, not hand-run |
+> | `flag_support_web_rollups` | still `true` |
+> | `rollups_total` / by channel | **3913** / `{telegram:3893, telegram_bot:5, web:15}` — **identical to H1837 enablement baseline ~12:20 MSK** |
+> | `chat_messages_total` / without thread | **175** / **162** — unchanged → no new web messages to roll up |
+> | Coverage arithmetic (`/tmp/s10_coverage.sh`) | still **EXACT** — incoming 46/46, outgoing 41/41, delta 0 |
+> | Residual `SKIP:` lines in `schedule.log` | 41 total (overlapping `schedule:run` holders for some slots); **does not block** `support:rollup-web` — every `:25` slot since 06:25 completed |
+>
+> **Stop condition met:** at least one scheduled (not hand-run) `support:rollup-web`
+> has executed on prod. Row counts did not advance *because* `chat_messages_total`
+> is still 175 — the hourly job re-aggregates the same two-day window over the same
+> messages; that is success of a no-op pass, not a silent failure. When new web
+> traffic arrives, the same path will write new/updated `web` / `telegram_bot` rows
+> without a manual command.
+>
+> **Open (human decides, not part of verification):**
+> `support.rollup.web_backfill_days` defaults to **2**. If the scheduler is down
+> longer than that, those days drop out of the rollup permanently (hourly pass only
+> overlaps two days). Either widen the default or add a catch-up that walks back to
+> the last covered `conversation_date`. Widening a production window is deliberately
+> out of this pass.
+>
+> Executor: Grok 4.5 (`grok-4.5`), handoff
+> [H1938](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1938-Sonnet_Systema-Sanscriticum_s10-scheduled-run-verify-web-rollups_30.07.26.md)
+> (intended Sonnet 5; run authorized on Grok).
 
 - **Что:** закрыть известную асимметрию (`support-subsystem-map.md` «Actually open»): `SupportDailyRollup`/топики покрывают только TG-сторону; веб-`ChatMessage` не агрегируется — S2-метрики видят не весь поток.
 - **4 метрики:** часы 1 · выручка 2 · удовлетворенность 1 · простота 3. Ценность — полнота измерений + закрытие техдолга.
