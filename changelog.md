@@ -11,6 +11,8 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 
 ## [Unreleased]
 
+## [1.76.2] - 2026-07-30
+
 ### Fixed
 - **`-Teardown` больше не объявляет неудачей УСПЕШНЫЙ снос worktree (H1929, догон 2).** Оба живых прогона 30-07-2026 выглядели одинаково: git снимал регистрацию, файлы удалялись, а сама папка держалась Windows ещё секунду — и скрипт печатал «какой-то процесс держит файлы», хотя терять было уже нечего (следующий же `Remove-Item` её сносил). Теперь повторов пять с растущей паузой (0.3 → 4.8 с вместо трёх по 0.7), а главное — **пустой незарегистрированный каталог считается успехом**: скрипт говорит, что работы в нём нет и git о нём не знает, и выходит с нулём. Настоящая неудача (в каталоге ОСТАЛИСЬ файлы) по-прежнему падает и называет их количество. Ложная тревога здесь дороже настоящей: она учит не верить отчёту инструмента. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 
@@ -1725,7 +1727,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.1...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.2...HEAD
+[1.76.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.1...v1.76.2
 [1.76.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...v1.76.1
 [1.76.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.75.0...v1.76.0
 [1.75.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.74.0...v1.75.0
