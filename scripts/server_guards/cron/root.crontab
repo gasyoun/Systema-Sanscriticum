@@ -1,0 +1,11 @@
+# MANAGED FILE — installed by scripts/server_guards_apply.sh as the crontab of
+# root. Edit the repo copy (scripts/server_guards/cron/root.crontab), never
+# `crontab -e` on the server: guards:verify reports the difference.
+#
+# Systema Sanscriticum — авто-деплой (H1933).
+#
+# Деплой обязан идти от root: deploy.sh перезагружает php-fpm (systemctl reload)
+# и рестартует Horizon через supervisorctl — прикладному пользователю это
+# недоступно, поэтому строка живёт в root-кроне, а не в кроне @@APP_USER@@.
+# Все guard-механики (замок, предохранитель, здоровье) — внутри обёртки.
+@@AUTO_DEPLOY_SCHEDULE@@ /usr/local/sbin/systema-auto-deploy-run.sh >> @@APP_DIR@@/storage/logs/auto_deploy.log 2>&1
