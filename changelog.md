@@ -12,6 +12,9 @@ history on 2026-07-12 (backfill) — they document work that already shipped.
 ## [Unreleased]
 
 ### Changed
+- **SAMSKRTE-TIER0 launch:** short starters `/go H1939` (no full Windows path). Executor: Grok 4.5 (`grok-4.5`).
+
+### Changed
 - **Umbrella ID SAMSKRTE-TIER0:** wave-1 docs renamed to share stem *_SYSTEMA_SAMSKRTE_TIER0_*; banner on every layer + H1939. Executor: Grok 4.5 (grok-4.5).
 
 ## [1.79.0] - 2026-07-30
