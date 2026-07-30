@@ -57,6 +57,8 @@ class MarathonEnrollment extends Model
         'day2_completed_at',
         'day1_engaged_at',
         'day2_engaged_at',
+        'day1_quiz_seconds',
+        'day2_quiz_seconds',
         'consultation_booked_at',
         'recording_sent_at',
         'paid_at',
@@ -69,12 +71,34 @@ class MarathonEnrollment extends Model
         'day2_completed_at' => 'datetime',
         'day1_engaged_at' => 'datetime',
         'day2_engaged_at' => 'datetime',
+        'day1_quiz_seconds' => 'integer',
+        'day2_quiz_seconds' => 'integer',
         'consultation_booked_at' => 'datetime',
         'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
         'warm_tail_last_day_sent' => 'integer',
         'quiz_level' => 'integer',
     ];
+
+    /**
+     * Human-readable quiz duration for enrollee UI and Filament admin.
+     * Null when the day was never finished or duration was not posted.
+     */
+    public function formatQuizDuration(?int $seconds): ?string
+    {
+        if ($seconds === null || $seconds < 0) {
+            return null;
+        }
+
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+
+        if ($m === 0) {
+            return "{$s} сек";
+        }
+
+        return $s === 0 ? "{$m} мин" : "{$m} мин {$s} сек";
+    }
 
     public function lead(): BelongsTo
     {

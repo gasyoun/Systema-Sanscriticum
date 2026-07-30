@@ -315,18 +315,33 @@ class MarathonController extends Controller
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
 
+        $validated = $request->validate([
+            // Client wall-clock on the quiz page; 0..2h hard cap (anti-spam).
+            'duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'question' => 'nullable|string|max:2000',
+        ]);
+
         $updates = [];
+        $duration = isset($validated['duration_seconds'])
+            ? (int) $validated['duration_seconds']
+            : null;
 
         if ($day === 1 && $enrollment->day1_engaged_at === null) {
             $updates['day1_engaged_at'] = now();
+            if ($duration !== null) {
+                $updates['day1_quiz_seconds'] = $duration;
+            }
         }
 
         if ($day === 2) {
             if ($enrollment->day2_engaged_at === null) {
                 $updates['day2_engaged_at'] = now();
+                if ($duration !== null) {
+                    $updates['day2_quiz_seconds'] = $duration;
+                }
             }
 
-            $question = trim((string) $request->input('question', ''));
+            $question = trim((string) ($validated['question'] ?? ''));
             if ($question !== '' && $enrollment->day2_question === null) {
                 $updates['day2_question'] = mb_substr($question, 0, 2000);
             }

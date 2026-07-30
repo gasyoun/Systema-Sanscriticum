@@ -142,11 +142,19 @@ Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->na
 // H471 Phase 4 — ₽500 «с проверкой» track checkout.
 Route::post('/online/konsultaciya/pay', [MarathonController::class, 'pay'])->name('marathon.pay');
 // H483 Phase 3b — Day 1/2 tap-choice recognition pages, keyed by the lead's
-// existing magnet_token (no new token needed).
-Route::get('/online/konsultaciya/day/{day}/{token}', [MarathonController::class, 'day'])
+// existing magnet_token (no new token needed). Path uses Sanskrit dine
+// (loc. sg. of diná «день»), not English day.
+Route::get('/online/konsultaciya/dine/{day}/{token}', [MarathonController::class, 'day'])
     ->where('day', '[12]')->name('marathon.day');
-Route::post('/online/konsultaciya/day/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
+Route::post('/online/konsultaciya/dine/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
     ->where('day', '[12]')->name('marathon.day.complete');
+// Legacy English /day/ → permanent redirect (Telegram links already sent).
+Route::get('/online/konsultaciya/day/{day}/{token}', function (int $day, string $token) {
+    return redirect()->route('marathon.day', ['day' => $day, 'token' => $token], 301);
+})->where('day', '[12]');
+Route::post('/online/konsultaciya/day/{day}/{token}/complete', function (int $day, string $token) {
+    return redirect()->route('marathon.day.complete', ['day' => $day, 'token' => $token], 307);
+})->where('day', '[12]');
 // H445 Phase 2 — `deva` cohort level-quiz, layered on top of the intent-quiz.
 // 404s for `zero` enrollments (MarathonController::levelQuiz()).
 Route::get('/online/konsultaciya/level-quiz/{token}', [MarathonController::class, 'levelQuiz'])

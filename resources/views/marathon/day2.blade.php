@@ -3,6 +3,10 @@
 @section('title', 'День 2 — Консультация по онлайн-курсам ОРС')
 
 @section('content')
+@php
+    $alreadyDone = $enrollment->day2_engaged_at !== null;
+    $durationLabel = $enrollment->formatQuizDuration($enrollment->day2_quiz_seconds);
+@endphp
 <div class="max-w-2xl mx-auto py-12 px-4">
 
     <div class="text-center mb-8">
@@ -10,12 +14,33 @@
         <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Как устроено санскритское слово</h1>
     </div>
 
+    @if ($alreadyDone)
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+            <div class="py-2">
+                <p class="text-2xl text-center mb-2">🎉</p>
+                <p class="font-bold text-[#1A1A1A] text-center mb-1">День 2 пройден!</p>
+                @if ($durationLabel)
+                    <p class="text-sm text-gray-600 text-center mb-2">Время на опрос: <span class="font-semibold text-[#1A1A1A]">{{ $durationLabel }}</span></p>
+                @endif
+                @if ($enrollment->day2_question)
+                    <p class="text-sm text-gray-500 text-center mb-4">Ваш вопрос к консультации уже сохранён.</p>
+                    <div class="rounded-xl bg-gray-50 p-4 text-sm text-gray-700 mb-2">{{ $enrollment->day2_question }}</div>
+                @else
+                    <p class="text-sm text-gray-500 text-center mb-4">Опрос засчитан. День 3 — живая консультация.</p>
+                @endif
+            </div>
+        </div>
+    @else
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8"
          x-data="{
              quiz: @js($quiz),
              idx: 0,
              answered: false,
              picked: null,
+             startedAt: Date.now(),
+             durationSeconds() {
+                 return Math.max(0, Math.min(7200, Math.round((Date.now() - this.startedAt) / 1000)));
+             },
              tap(i) {
                  if (this.answered) return;
                  this.picked = i;
@@ -58,11 +83,17 @@
         </template>
 
         <template x-if="done">
-            <form method="POST" action="{{ route('marathon.day.complete', ['day' => 2, 'token' => $token]) }}">
+            <form method="POST" action="{{ route('marathon.day.complete', ['day' => 2, 'token' => $token]) }}"
+                  @submit="$el.querySelector('[name=duration_seconds]').value = durationSeconds()">
                 @csrf
+                <input type="hidden" name="duration_seconds" value="0">
                 <div class="py-2">
                     <p class="text-2xl text-center mb-2">🎉</p>
                     <p class="font-bold text-[#1A1A1A] text-center mb-1">День 2 пройден!</p>
+                    <p class="text-sm text-gray-600 text-center mb-2">
+                        Время на опрос:
+                        <span class="font-semibold text-[#1A1A1A]" x-text="Math.floor(durationSeconds() / 60) + ' мин ' + (durationSeconds() % 60) + ' сек'"></span>
+                    </p>
                     <p class="text-sm text-gray-500 text-center mb-6">
                         День 3 — живая консультация. Если у вас уже есть вопрос — оставьте его здесь,
                         мы разберем его лично (необязательно).
@@ -78,5 +109,6 @@
         </template>
 
     </div>
+    @endif
 </div>
 @endsection
