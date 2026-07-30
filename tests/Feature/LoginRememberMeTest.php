@@ -94,4 +94,54 @@ class LoginRememberMeTest extends TestCase
 
         $this->assertGuest();
     }
+
+    /** @test */
+    public function admin_password_login_never_sets_a_remember_token_even_when_checked(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => Hash::make('secret123'),
+            'is_admin' => true,
+            'remember_token' => null,
+        ]);
+
+        $response = $this->post(route('login.post'), [
+            'email' => 'admin@example.com',
+            'password' => 'secret123',
+            'remember' => '1',
+        ]);
+
+        $response->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNull($user->fresh()->remember_token);
+
+        $cookieNames = collect($response->headers->getCookies())->map->getName();
+        $this->assertFalse(
+            $cookieNames->contains(fn (string $name) => str_starts_with($name, 'remember_web_')),
+            'admin must not receive a remember_web_* cookie'
+        );
+    }
+
+    /** @test */
+    public function password_change_cycles_the_remember_token(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('old-secret-1'),
+            'remember_token' => 'old-remember-token-value',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('student.dashboard'))
+            ->post(route('student.password.update'), [
+                'current_password' => 'old-secret-1',
+                'password' => 'new-secret-99',
+                'password_confirmation' => 'new-secret-99',
+            ])
+            ->assertRedirect();
+
+        $fresh = $user->fresh();
+        $this->assertNotSame('old-remember-token-value', $fresh->remember_token);
+        $this->assertNotNull($fresh->remember_token);
+        $this->assertTrue(Hash::check('new-secret-99', $fresh->password));
+    }
 }
