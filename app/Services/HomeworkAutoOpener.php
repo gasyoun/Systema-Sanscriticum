@@ -112,7 +112,22 @@ class HomeworkAutoOpener
             return false;
         }
 
-        return $this->open($lesson, notify: true);
+        $opened = $this->open($lesson, notify: true);
+
+        // Волна 2: якорь в чате группы для reply #ДЗ (звено C). Только generic —
+        // Kochergina по-прежнему без группового поста.
+        if ($opened) {
+            try {
+                app(HomeworkTelegramTagService::class)->postOpenInvite($lesson);
+            } catch (\Throwable $e) {
+                Log::warning('HomeworkAutoOpener: postOpenInvite failed', [
+                    'lesson_id' => $lesson->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $opened;
     }
 
     /**
