@@ -207,6 +207,12 @@ class PaymentResource extends Resource
                             ->seconds(false)
                             ->native(false)
                             ->displayFormat('d.m.Y H:i')
+                            // Дата в будущем — всегда опечатка ручного ввода: две
+                            // строки «Расход» пять месяцев висели в сентябре-2026
+                            // (10.09 вместо 10.02, issue #953, H2008). Задним
+                            // числом — можно, вперёд — нет.
+                            ->maxDate(now()->endOfDay())
+                            ->validationMessages(['before_or_equal' => 'Дата платежа не может быть в будущем — проверьте день и месяц.'])
                             ->helperText('По умолчанию — текущий момент'),
 
                         Forms\Components\Select::make('status')

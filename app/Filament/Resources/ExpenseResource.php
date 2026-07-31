@@ -47,6 +47,10 @@ class ExpenseResource extends Resource
                         ->label('Дата траты')
                         ->required()
                         ->default(now())
+                        // Тот же гард, что у даты платежа (issue #953, H2008):
+                        // расход в будущем — опечатка, не план.
+                        ->maxDate(now()->endOfDay())
+                        ->validationMessages(['before_or_equal' => 'Дата траты не может быть в будущем — проверьте день и месяц.'])
                         ->native(false),
 
                     Forms\Components\Select::make('category')
