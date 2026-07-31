@@ -1,7 +1,12 @@
 ## [Unreleased]
 
+## [1.80.6] - 2026-07-31
+
 ### Added
 - **«Первые вопросы» на витрине `/online` (H1868).** Ориентационная полоса для первого визита: пять реальных первых вопросов из custdev-корпуса (~2 600 размеченных диалогов; коды возражений В1–В6 из [ORS-FAQ FAQ_FUNNEL_OBJECTION_MAP.md](https://github.com/gasyoun/ORS-FAQ/blob/main/docs/FAQ_FUNNEL_OBJECTION_MAP.md)) с честными ответами и ссылками только на существующие поверхности (квиз «С чего начать», фильтры каталога, якорь `#ceny`, хаб «Материалы»). Hero-подзаголовок переписан из лозунга в ориентацию; без срочности и соц-давления (анти-приемы Win/Loss −7/−6). Тест `ShopFirstQuestionsTest`. Executor: Fable 5 (`claude-fable-5`).
+
+### Fixed
+- **Main CI разблокирован** ([#943](https://github.com/gasyoun/Systema-Sanscriticum/pull/943)): pint-фиксы в `SrsTestModesTest.php` (H1988) — pint-шаг валил CI на каждом пуше в `main` начиная с 1.80.4, phpunit-шаг не запускался. Executor: Fable 5 (`claude-fable-5`).
 
 ## [1.80.5] - 2026-07-31
 
@@ -1848,7 +1853,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.5...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.6...HEAD
+[1.80.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.5...v1.80.6
 [1.80.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.4...v1.80.5
 [1.80.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.3...v1.80.4
 [1.80.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...v1.80.3
