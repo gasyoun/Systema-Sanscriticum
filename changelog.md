@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.81.3] - 2026-08-01
 ### Added
 - **H1963 n8n hygiene/archive-tags — tag set `archive` + `legacy` on 28 inactive workflows.** Live host `193.232.229.91`: created tags `archive` (`af7aa560d1a125ba`) + `legacy` (`f2e703e2a44a2070`); applied to **20** `My workflow*` + **8** inactive `ZOOM*` (not the Active canonical `1EIqqNzMl5NNIxST`). Active set (5) unchanged; workflow count still 76; **no deletes**. CATALOG §7b tag-set addendum + [`docs/n8n/exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv). Executor: Grok 4.5 (`grok-4.5`).
 
