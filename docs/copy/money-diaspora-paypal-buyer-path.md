@@ -1,26 +1,27 @@
 # Диаспорный путь оплаты (PayPal) — финальная копия (H1292)
 
-_Created: 20-07-2026 · Last updated: 20-07-2026_
+_Created: 20-07-2026 · Last updated: 31-07-2026_
 
 Лейн H1292 волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md) ·
 [контракт голоса](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md) ·
 [handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1292-Fable_Systema-Sanscriticum_money-diaspora-paypal-buyer-path_19.07.26.md)).
 Исполнено Fable 5 (`claude-fable-5`), 20-07-2026.
+**Prod enable + claim fields H2017** (Grok 4.5 (`grok-4.5`), 31-07-2026, [PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969)).
 
-## ⚠️ Фича выключена в проде, email инертен
+## ✅ Prod status (31-07-2026)
 
-Две независимые причины, по которым студент сегодня ничего из этого не увидит:
+| Item | Value |
+|---|---|
+| Flag | `PAYPAL_CLAIM_ENABLED=true` |
+| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`) via `https://www.paypal.com/paypalme/gasyoun` |
+| Checkout CTA | Visible («Оплатить через PayPal») |
+| Claim form | `/paypal/{tariff}` — **required:** from-account + paid date + amount; optional txn/proof (H2017) |
+| Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» |
+| Access | Only after human `pending` → `paid` (personal PayPal, no business API) |
+| Claim notify mail | Still `ADMIN_EMAIL` (curator mailbox); student ack via `PaypalClaimStudentAckMail` |
 
-1. **`PAYPAL_CLAIM_ENABLED=false` в проде** — открытый пункт MG. Все роуты
-   `/paypal/*` отдают 404, кнопка на чекауте скрыта
-   ([`config/services.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/services.php)).
-   Копия и код этого лейна инертны до включения; прод-конфиг — за забором
-   (правило 4), лейн его не трогает и не пытается.
-2. **Прод-SMTP сломан** ([#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504)) —
-   новое письмо студенту, как и все письма волны, корректно, оттестировано,
-   встает в очередь `mailing` и не уйдет, пока SMTP не починен (это H1147, не
-   этот лейн).
+Historical note: H1292 shipped behind a dark flag; H2017 opened prod after MG asked to enable diaspora path. SMTP/queue: see current prod mail status (issue #504 was later re-diagnosed / closed in other work — treat live Horizon `mailing` as source of truth).
 
 ## Зачем этот лейн
 
@@ -74,6 +75,16 @@ _Created: 20-07-2026 · Last updated: 20-07-2026_
 >
 > _(мелкой строкой)_ PayPal не поддерживает автосписание на нашей платформе,
 > поэтому каждый платеж сверяем вручную. Подтверждение заявки придет на email.
+
+### Обязательные поля сверки (H2017)
+
+Personal (non-business) PayPal has no auto-match API. Admin reconciles by:
+
+1. **С какого PayPal платили** (`claim_meta.paypal_payer`)
+2. **Дата оплаты** (`claim_meta.paid_on`)
+3. **Сумма + валюта** (`foreign_amount` / `foreign_currency`)
+
+Txn id and screenshot are optional helpers, not substitutes for the triple.
 
 ### Страница заявки (`paypal/claim.blade.php`)
 

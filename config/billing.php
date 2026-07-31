@@ -6,10 +6,10 @@ declare(strict_types=1);
  * School legal + bank details for company invoices (счёт на оплату юрлицу)
  * and future own-KKT / multi-provider billing docs.
  *
- * COMPANY_INVOICE_ENABLED default OFF — prod-inert until human enable
- * (.env + config:cache). Without filled legal fields the form still accepts
- * claims, but the printable invoice shows a "реквизиты не заполнены" banner
- * so ops know to fill BILLING_* before sending to companies.
+ * Defaults in code remain OFF/empty (safe for CI). Prod (31-07-2026, H2017):
+ * COMPANY_INVOICE_ENABLED=true and BILLING_* filled from Tochka open-banking
+ * customer + site footer — see docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md.
+ * Incomplete legal fields: printable invoice still works but shows a banner.
  */
 return [
 

@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 26-07-2026_
+_Created: 25-07-2026 · Last updated: 31-07-2026_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
@@ -444,6 +444,24 @@ Why the money core looks like this:
 - **Receivables/conversion thresholds encode borrowed case-study numbers** (the
   0.5-of-revenue receivables cap, the 63 % conversion target) — they are starting
   points for the findir to tune in `.env`, not laws.
+
+---
+
+## 7b. Semi-manual payment paths (outside Tochka) — H2017
+
+These create a normal `Payment` row with `status=pending` and a non-null `provider`.
+Access opens only when an admin flips status to `paid` (same `Payment::booted()` path
+as a bank webhook success). They are **never** reaped by
+`payments:expire-stale-checkouts` (`Payment::MANUAL_CLAIM_PROVIDERS`).
+
+| Path | `provider` | Student surface | Admin action | Prod (31-07-2026) |
+|---|---|---|---|---|
+| PayPal diaspora | `paypal` | Checkout CTA → `/paypal/{tariff}`; claim_meta: from + date + amount | Filter «Заявки PayPal» → «Подтвердить PayPal» | **ON** — money to `gasyoun@gmail.com` / paypal.me/gasyoun |
+| Company invoice | `invoice` | CTA → `/invoice/{tariff}` → print `/invoices/{id}/print` | Filter «Счета юрлиц» → «Подтвердить счет» | **ON** — `BILLING_*` from Tochka customer + site footer |
+
+Config: `services.paypal.*` · `billing.company_invoice.enabled` · `billing.legal.*`.
+Ops detail: [TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
+Tochka card/SBP acquiring is unchanged (§5 webhook).
 
 ---
 

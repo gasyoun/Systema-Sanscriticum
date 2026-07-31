@@ -2,7 +2,33 @@
 
 _Created: 31-07-2026 · Last updated: 31-07-2026_
 
-**Handoff:** [H2017](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2017-Grok_Systema-Sanscriticum_paypal-invoice-billing-paths_31.07.26.md) · **Model:** Grok 4.5 (`grok-4.5`)
+**Handoff:** [H2017](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2017-Grok_Systema-Sanscriticum_paypal-invoice-billing-paths_31.07.26.md) · **Model:** Grok 4.5 (`grok-4.5`) · **PR:** [#969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969) merged
+
+## Prod status (verified live 31-07-2026, SSH + Tochka API)
+
+| Surface | Status |
+|---|---|
+| Code on prod | `main` includes H2017 (`f9e855b9`+) |
+| `TOCHKA_MERCHANT_ID` | `200000000038797` = retailer **samskrte.ru/shop** |
+| Retailers | Both **REG / isActive**: `samskrte.ru/shop` + `samskrtam.ru` |
+| `paymentModes` (API) | **`sbp` + `card`** on both retailers |
+| Fiscal / cashbox | **`digitalKassaTochka`** (rented cloud KKT) on both |
+| Tax | `TOCHKA_TAX_SYSTEM_CODE=usn_income`, `TOCHKA_VAT_TYPE=none` |
+| PayPal claim | **ON** — `PAYPAL_CLAIM_ENABLED=true`, recipient `gasyoun@gmail.com`, me-link `paypal.me/gasyoun` |
+| Company invoice | **ON** — `COMPANY_INVOICE_ENABLED=true` + `BILLING_*` filled from Tochka customer + site footer |
+| Own KKT | Still **procurement** (not this cycle) |
+| YooMoney | Still **planned only**, not built |
+
+**Customer (Tochka open-banking):** `customerCode=305489174` · fullName «Индивидуальный предприниматель Гасунс Марцис» · taxCode `540861224623` · OGRN/OGRNIP `325400000076450`.
+
+**Settlement accounts (Точка, BIK `044525104`):**
+
+| Account | Note |
+|---|---|
+| `40802810020000863757` | Primary for printed invoices (`BILLING_ACCOUNT`); ~main balance at check time |
+| `40802810020000877617` | Second business current account — do not put on invoices unless ops decides |
+
+Corr. account used on invoices: `30101810745374525104` (standard for BIK 044525104).
 
 ## What the code does today
 
@@ -14,29 +40,21 @@ _Created: 31-07-2026 · Last updated: 31-07-2026_
 | Unit economics | Acquiring rates: card **2.9%**, SBP **0.4%** | [`config/economics.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/economics.php) |
 | Checkout UI | No multi-method radio list — redirect to Tochka payment page | `PaymentController` |
 
-**Implication:** buyers already get **SBP + bank card** on the bank page if the merchant terminal has them enabled. We do **not** pass `dolyame` in `paymentMode` at create time (webhook still recognises it if the bank ever returns it). **YooMoney wallet** is not a Tochka paymentMode in our integration.
-
-## What a human must check in the Tochka cabinet (cannot be done from code)
-
-1. Internet acquiring terminal is active for the live `TOCHKA_MERCHANT_ID`.
-2. **СБП** and **card** are both enabled for that terminal (mirror of our `paymentMode`).
-3. Fiscal / cloud-KKT subscription is the one you intend to **replace with own KKT** (see plan below).
-4. `TOCHKA_TAX_SYSTEM_CODE` / `TOCHKA_VAT_TYPE` match the tax regime on the terminal.
-5. Webhook URL points at prod `/api/webhooks/tochka` and deliveries are green.
-
-If SBP is missing on the bank page for a real payment, it is almost always **merchant/terminal settings**, not missing app code.
+**Implication:** buyers already get **SBP + bank card** on the bank page. We do **not** pass `dolyame` in `paymentMode` at create time (webhook still recognises it if the bank ever returns it). **YooMoney wallet** is not a Tochka paymentMode in our integration.
 
 ## Semi-manual paths (outside Tochka)
 
-| Path | Status | Flag |
+| Path | Prod status | Flag / notes |
 |---|---|---|
-| PayPal claim (diaspora) | Built; claim form collects **from-account + date + amount** (+ optional txn/proof) | `PAYPAL_CLAIM_ENABLED` default OFF |
-| Company invoice (счёт юрлицу) | Built H2017; bank transfer + human confirm | `COMPANY_INVOICE_ENABLED` default OFF |
-| YooMoney / YooKassa | **Planned only** — not implementing now | `config('billing.yoomoney')` |
+| PayPal claim (diaspora) | **Live** | Personal PayPal (no business API). Form: **from-account + date + amount** (+ optional txn/proof). Confirm in Filament «Заявки PayPal на проверке». Money to `gasyoun@gmail.com` / paypal.me/gasyoun. Claim-admin email still `ADMIN_EMAIL` (curator mailbox). |
+| Company invoice (счёт юрлицу) | **Live** | Form → pending `provider=invoice` → HTML print → Filament «Подтвердить счет». Reqs from `BILLING_*` / [`config/billing.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/billing.php). **Legal address empty** (not in Tochka customer payload or site footer). |
+| YooMoney / YooKassa | Planned only | `billing.yoomoney.planned=true` |
 
-## Own KKT plan (procurement, not code this PR)
+Ops copy: [money-diaspora-paypal-buyer-path.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-diaspora-paypal-buyer-path.md) · [money-company-invoice-path.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-company-invoice-path.md).
 
-Today: receipt is generated by Tochka's **rented** fiscal layer (`payments_with_receipt`).
+## Own KKT plan (procurement later)
+
+Today: receipt is generated by Tochka's **rented** fiscal layer (`digitalKassaTochka` / `payments_with_receipt`).
 
 Target: **buy school-owned cash register (ККТ)** and stop renting Tochka fiscal.
 
@@ -48,10 +66,10 @@ Target: **buy school-owned cash register (ККТ)** and stop renting Tochka fisc
 | P3 Integrate receipt emission (replace or dual-run with `payments_with_receipt`) | eng | New service + feature flag OFF |
 | P4 Cut over + cancel Tochka cloud-KKT rent | human | After dual-run green |
 
-Tracked in [`config/billing.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/billing.php) `own_kkt` and GTD.
+Tracked in `config/billing.php` `own_kkt` and GTD.
 
 ## YooMoney plan (deferred)
 
-Parity with Timepad-style **wallet** method. Requires a **second acquirer** (YooKassa) or a Tochka product we do not use today. Do **not** build until conversion data shows card+SBP+PayPal+invoice is insufficient. Config stub: `billing.yoomoney.planned = true`.
+Parity with Timepad-style **wallet** method. Requires a **second acquirer** (YooKassa) or a Tochka product we do not use today. Do **not** build until conversion data shows card+SBP+PayPal+invoice is insufficient.
 
 _Dr. Mārcis Gasūns_

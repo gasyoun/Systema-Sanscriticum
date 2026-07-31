@@ -68,7 +68,11 @@ _Created: 02-07-2026 · Last updated: 06-07-2026_
 - **Оплаченный блок №** — найти всех, кто оплатил конкретный блок (учитывает и покупку всего курса, и диапазоны блоков). Комбинируется с фильтром по курсу.
 - **По статусу** — Ожидает / Оплачено / Отменено.
 - **Только брони (депозиты)** — показать/скрыть предоплаты-брони.
+- **Заявки PayPal на проверке** — pending `provider=paypal` (диаспора). Сверить перевод в **личном** PayPal (`gasyoun@gmail.com`) по полям «с какого PayPal / дата / сумма» → кнопка **«Подтвердить PayPal»** (откроет доступ).
+- **Счета юрлиц на проверке** — pending `provider=invoice`. Сверить безнал на р/с школы → **«Подтвердить счет»**. Печать: действие **«Счет»**.
 - **Период** — диапазон дат «с … по …».
+
+> **H2017 (с 31-07-2026 на проде):** PayPal и счет для компании **включены**. Это не автоэквайринг Точки: доступ открывается только после ручного подтверждения. Подробнее: [money-diaspora-paypal-buyer-path](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-diaspora-paypal-buyer-path.md), [money-company-invoice-path](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-company-invoice-path.md), [Tochka audit](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
 
 ### 2.3. Создание транзакции вручную
 

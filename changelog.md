@@ -6,7 +6,10 @@
 - **Userbot-сессия MadelineProto: 30-07 блокировка снята, исходящая доставка проверена вживую (H594 follow-up).** Диагностика 31-07 показала здоровую сессию (один воркер с 07:32, `telegram-support:sync` зеленый каждую минуту); застрявший canary-джоб `DeliverSupportReply` (H594, `failed_jobs` id 1445) перезапущен `queue:retry` и прошел без повторного падения, свежие outgoing-строки несут реальные `telegram_message_id`. Статусная строка в [docs/support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) переведена из «BLOCKED» в «RECOVERED»; ретрай W1.3 разблокирован. Executor: Fable 5 (`claude-fable-5`).
 
 ### Added
-- **H2017: PayPal claim fields + company invoice (dark flags) + Tochka/YooMoney/KKT plan.** Diaspora form now requires **from-PayPal + paid date + amount** (txn/proof optional) for manual reconciliation on a non-business PayPal account; structured `payments.claim_meta` JSON. New **счёт для юрлица** path (`COMPANY_INVOICE_ENABLED` default OFF): form → pending `provider=invoice` → printable HTML invoice → Filament «Подтвердить счет». Tochka audit doc records live `paymentMode=['sbp','card']` and own-KKT procurement plan; YooMoney deferred. Flags stay OFF until human enable. Executor: Grok 4.5 (`grok-4.5`).
+- **H2017: PayPal claim fields + company invoice + Tochka/YooMoney/KKT plan ([PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969)).** Diaspora form requires **from-PayPal + paid date + amount** (txn/proof optional); `payments.claim_meta` JSON. Company invoice path (`provider=invoice`) with printable HTML + Filament confirm. Docs: [TOCHKA_PAYMENT_METHODS_AUDIT](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md). Executor: Grok 4.5 (`grok-4.5`).
+
+### Changed
+- **H2017 prod enable (31-07-2026):** `PAYPAL_CLAIM_ENABLED=true` (recipient `gasyoun@gmail.com`, me-link paypal.me/gasyoun); `COMPANY_INVOICE_ENABLED=true` + `BILLING_*` from Tochka customer (ИП Гасунс Марцис / ИНН 540861224623 / р/с 40802…63757 @ Точка). Tochka retailers confirmed REG/active, modes sbp+card, cashbox `digitalKassaTochka`. Own KKT still later; YooMoney still deferred. Docs + accountant guide updated same day.
 
 ## [1.81.0] - 2026-07-31
 

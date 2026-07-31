@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2014: CRM_FOLLOW_UP_TASKS=true + SESSION_LIFETIME/mail facts; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2017: PayPal + company invoice ON on prod; H2014 CRM/session facts; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -47,6 +47,21 @@ _Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2014: CRM_FOLLOW
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### H2017 — PayPal diaspora + счёт юрлицу **✅ на проде** (31-07-2026)
+
+Код: [PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969) merged.
+Флаги на проде (не в git):
+
+- `PAYPAL_CLAIM_ENABLED=true`
+- `PAYPAL_ME_LINK=https://www.paypal.com/paypalme/gasyoun`
+- `PAYPAL_RECIPIENT=gasyoun@gmail.com`
+- `COMPANY_INVOICE_ENABLED=true` + `BILLING_*` (ИП Гасунс Марцис / ИНН 540861224623 / р/с Точка)
+
+Смоук: `/paypal/{tariff}` и `/invoice/{tariff}` → 200. Tochka: sbp+card, cashbox `digitalKassaTochka`.
+ККТ (своя) — **не** в этой выкладке. Доки: [TOCHKA audit](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
+
+---
 
 ### 🚀 Вход: 419 «Page Expired» — SESSION lifetime **✅ на проде** (H2014, 31-07-2026)
 
