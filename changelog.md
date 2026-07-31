@@ -5,6 +5,12 @@
 ### Added
 - **Konsultaciya landing copy: real per-visitor A/B test, cutoff 01-11-2026 (H2010).** MG's 31-07-2026 ruling ("не человек решает — гоняем A/B до 1 ноября, дальше решают цифры") overrides `MarathonLandingCopy`'s earlier sequential A-then-B-via-env design. New `MarathonLandingCopySplit`: sticky cookie (`mkt_copy_variant`), true 50/50 random assignment on a visitor's first landing hit, one `impression` event per new assignment (not per reload). `Lead.landing_copy_variant` + `marathon_landing_copy_variant_events` table record the split through to conversion. `php artisan marathon:copy-variant-report` prints per-variant impressions/leads/conversion — reports only, never auto-picks a winner. After `config('marathon_landing_copy.ab_test_until')` (default `2026-11-01`), the split stops assigning new visitors and everyone gets the config default variant, which a human sets after reading the report. Independent of the `MarathonVisual` skin axis (H1966/H1975) — do not conflate. 8+2 new feature tests green, full marathon suite (103 tests) green, Pint clean. Executor: Sonnet 5 (`claude-sonnet-5`).
 
+## [1.80.15] - 2026-07-31
+
+### Added
+- **Ввод расходов (opex) закреплен за бухгалтером + русская инструкция (H2016, issue [#953](https://github.com/gasyoun/Systema-Sanscriticum/issues/953)).** Решение MG 31-07-2026: ввод операционных расходов ведет Мария (роль `accountant`) — доступ проверен по коду (панель `canAccessPanel`, платежи `ACCOUNTANT`-гейт, «Расходы (opex)» через `FinanceAccess`/`RoleGate::finance()` — ничего дооткрывать не пришлось). Новая инструкция [MANUAL_EXPENSE_ENTRY_ACCOUNTANT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_EXPENSE_ENTRY_ACCOUNTANT_RU.md) (+ метадок): что вносить по четырем статьям, ритм и объемы из прошлой практики (35–55 записей / 0,8–1,3 млн ₽ в месяц), обязательное «назначение» (у всех 440 legacy-строк оно пусто), разнесение мостовых строк по статьям, чего не делать. Закрепление отражено в [FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) (ритм-обзор KPI остается открытым `@DECIDE`). Executor: Fable 5 (`claude-fable-5`).
+
+
 ## [1.80.14] - 2026-07-31
 
 ### Added
@@ -1901,7 +1907,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.13...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.15...HEAD
+[1.80.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.14...v1.80.15
+[1.80.14]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.13...v1.80.14
 [1.80.13]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.12...v1.80.13
 [1.80.12]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.11...v1.80.12
 [1.80.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.10...v1.80.11
