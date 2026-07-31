@@ -229,7 +229,9 @@ class FinanceCockpitReport
         $inflow = $this->revenueForWindow($start, $end);
 
         $salaryOut = (float) TeacherPayout::query()
-            ->whereBetween('paid_at', [$start->toDateString(), $end->toDateString()])
+            // Суточные границы, не toDateString(): выплата последнего дня месяца
+            // со временем в значении выпадала из окна (issue #935, H1996).
+            ->whereBetween('paid_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
             ->sum('amount');
 
         $refundOut = abs((float) Payment::query()
