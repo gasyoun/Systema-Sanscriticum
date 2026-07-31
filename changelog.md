@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.80.12] - 2026-07-31
+
+### Fixed
+- **ДДС: «Расход» больше не считается возвратом — двойной отток после моста устранён (H2003, issue [#953](https://github.com/gasyoun/Systema-Sanscriticum/issues/953)).** `FinanceCockpitReport::dds` считал строку `refundOut` по тарифу «Расход» (`REFUND_TARIFF` был мислейблом: это легаси-расходы школы, не возвраты ученикам), и после моста «Расход»→Expense (1.80.11) те же деньги вычитались из net дважды — как refundOut И как opexOut (май: net −397 812 вместо −132 989). Теперь `refundOut` считается по настоящему механизму возвратов — привязке `refund_of_payment_id` (как в `RevenueScheduleService::deferredRevenueAsOf`); привязанных возвратов в проде пока ноль, строка честно нулевая. Регресс-тесты: мостовой «Расход» в ДДС ровно один раз (opexOut, не refundOut), привязанный возврат попадает в refundOut. Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.80.11] - 2026-07-31
 
 ### Added
@@ -1878,7 +1883,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.11...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.12...HEAD
+[1.80.12]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.11...v1.80.12
 [1.80.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.10...v1.80.11
 [1.80.10]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.9...v1.80.10
 [1.80.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.8...v1.80.9

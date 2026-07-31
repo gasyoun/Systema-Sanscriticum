@@ -97,6 +97,41 @@ class ExpenseBridgeRaskhodTest extends TestCase
     }
 
     /** @test */
+    public function dds_counts_bridged_raskhod_once_and_not_as_refund(): void
+    {
+        $user = User::factory()->create();
+        $this->raskhod($user, -10000, '2026-05-10 00:00:00');
+        $this->artisan('expenses:bridge-raskhod --apply')->assertSuccessful();
+
+        $dds = app(FinanceCockpitReport::class)->dds('2026-05');
+
+        $this->assertSame(10000.0, $dds['opexOut']);
+        // «Расход» — расход школы, не возврат ученику: в refundOut ему не место,
+        // иначе net задвоил бы отток (мислейбл REFUND_TARIFF, issue #953).
+        $this->assertSame(0.0, $dds['refundOut']);
+        $this->assertSame(-10000.0, $dds['net']);
+    }
+
+    /** @test */
+    public function linked_refund_counts_in_dds_refund_out(): void
+    {
+        $user = User::factory()->create();
+        $orig = Payment::create(['user_id' => $user->id, 'amount' => 5000, 'tariff' => 'full', 'status' => 'paid']);
+        $refund = Payment::create([
+            'user_id' => $user->id,
+            'amount' => -5000,
+            'tariff' => 'full',
+            'status' => 'paid',
+            'refund_of_payment_id' => $orig->id,
+        ]);
+        $refund->forceFill(['created_at' => '2026-05-12 00:00:00'])->saveQuietly();
+
+        $dds = app(FinanceCockpitReport::class)->dds('2026-05');
+
+        $this->assertSame(5000.0, $dds['refundOut']);
+    }
+
+    /** @test */
     public function bridged_rows_feed_the_cockpit_window(): void
     {
         $user = User::factory()->create();
