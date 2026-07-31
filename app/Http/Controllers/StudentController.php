@@ -26,6 +26,7 @@ use App\Services\DebtPaymentResolver;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
+use App\Services\Leaderboard\LeaderboardService;
 use App\Support\Badges;
 use App\Support\KinescopePilot;
 use App\Support\OnboardingChecklist;
@@ -171,8 +172,13 @@ class StudentController extends Controller
         $pranaRewards = PranaSettings::allRewards();
         $pranaReasons = config('prana.reasons', []);
 
-        // Таблица лидеров по накопленной пране (геймификация).
-        $pranaLeaderboard = PranaLeaderboard::rows(10, $user->id);
+        // Таблица лидеров: Week / Month / All Time (Memrise-аналог, H2051).
+        $pranaLeaderboards = PranaLeaderboard::rowsByPeriod(10, $user->id);
+        $pranaLeaderboard = $pranaLeaderboards['all']; // BC for partials/tests
+        // H2054 — multi-board gamification (prana / SRS / lila / Memrise import / combined).
+        // Disabled boards drop out via config/leaderboards.php enabled flags.
+        $limit = (int) config('leaderboards.limit', 10);
+        $gamificationBoards = app(LeaderboardService::class)->allEnabledBoards($limit, $user->id);
         // Бейджи (достижения) — вычисляются из сигналов прогресса/праны.
         $badges = Badges::for($user);
         // Магазин праны (spend-sink): активные перки + последние покупки студента.
@@ -259,6 +265,8 @@ class StudentController extends Controller
             'pranaTransactions',
             'pranaRewards',
             'pranaLeaderboard',
+            'pranaLeaderboards',
+            'gamificationBoards',
             'badges',
             'pranaPerks',
             'pranaRedemptions',

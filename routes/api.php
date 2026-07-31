@@ -11,6 +11,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
 use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
+use App\Http\Controllers\Webhooks\PaypalSubscriptionsWebhookController;
 use App\Http\Controllers\Webhooks\TelegramMagnetWebhookController;
 use App\Http\Controllers\Webhooks\TelegramZapisiWebhookController;
 use App\Http\Controllers\Webhooks\VkMagnetCallbackController;
@@ -69,6 +70,10 @@ Route::post('/vk-webhook', [VkBotController::class, 'handle'])
     ->middleware('verify.vk.bot');
 
 Route::post('/webhooks/tochka', [WebhookController::class, 'handleTochkaWebhook']);
+
+// H2027 PayPal Subscriptions — dark flag (404 when PAYPAL_SUBSCRIPTIONS_ENABLED=false).
+Route::post('/webhooks/paypal-subscriptions', PaypalSubscriptionsWebhookController::class)
+    ->name('webhook.paypal.subscriptions');
 
 // Zoom Event Subscription: запись вебинара готова (recording.completed) +
 // проверка URL. Подпись (x-zm-signature) проверяется внутри контроллера.

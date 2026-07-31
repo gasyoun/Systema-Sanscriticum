@@ -3140,7 +3140,7 @@
       {
         "name": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
         "kind": "ssh",
-        "preview": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/auto_order.py \"{{ $('Loop Over Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\" \"kravch-ivan@yandex.ru\" \"bDW-7vN-nav-34v\""
+        "preview": "=/opt/bookbuilder/auto_order_from_env.sh \"{{ book_url }}\"  # H1958 env file"
       }
     ],
     "node_names": [

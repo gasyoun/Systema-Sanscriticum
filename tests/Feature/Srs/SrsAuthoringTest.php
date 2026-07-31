@@ -15,6 +15,7 @@ use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
 use App\Models\User;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -82,13 +83,49 @@ class SrsAuthoringTest extends TestCase
 
     public function test_filament_resources_visible_when_flag_on_for_admin_role_gate_shape(): void
     {
-        // Without an authenticated admin RoleGate::adminOnly() is false;
-        // with flag on the resources still require admin — not open to guests.
+        // Without an authenticated staff user, RoleGate is false;
+        // with flag on the resources still require admin|teacher — not open to guests.
         $this->assertFalse(SrsDeckResource::canViewAny());
 
         config(['srs.enabled' => true]);
-        // Flag alone is not enough without admin role.
+        // Flag alone is not enough without staff role.
         $this->assertFalse(SrsDeckResource::canViewAny());
+    }
+
+    public function test_filament_resources_open_to_teacher_when_flag_on(): void
+    {
+        config(['srs.enabled' => true]);
+
+        $teacher = User::factory()->create(['role' => Roles::TEACHER]);
+        $this->actingAs($teacher);
+
+        $this->assertTrue(SrsDeckResource::canViewAny());
+        $this->assertTrue(SrsDeckResource::canCreate());
+        $this->assertTrue(SrsCardResource::canViewAny());
+        $this->assertTrue(SrsCardResource::canCreate());
+        $this->assertTrue(SrsDeckResource::shouldRegisterNavigation());
+    }
+
+    public function test_filament_resources_open_to_admin_when_flag_on(): void
+    {
+        config(['srs.enabled' => true]);
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $this->actingAs($admin);
+
+        $this->assertTrue(SrsDeckResource::canAuthor());
+        $this->assertTrue(SrsCardResource::canEdit(null));
+    }
+
+    public function test_filament_resources_closed_to_manager_when_flag_on(): void
+    {
+        config(['srs.enabled' => true]);
+
+        $manager = User::factory()->create(['role' => Roles::MANAGER]);
+        $this->actingAs($manager);
+
+        $this->assertFalse(SrsDeckResource::canViewAny());
+        $this->assertFalse(SrsCardResource::canCreate());
     }
 
     public function test_seed_from_dictionary_creates_cards_idempotently(): void

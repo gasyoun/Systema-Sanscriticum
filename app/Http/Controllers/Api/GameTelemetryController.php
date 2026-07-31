@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\GameEvent;
+use App\Models\LilaScoreEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Первопартийный приёмник событий воронки бесплатных тренажёров /lila (H1360).
@@ -35,16 +37,20 @@ class GameTelemetryController extends Controller
             return response()->json(['error' => 'unknown event'], 422);
         }
 
+        $drill = $this->slug($request->input('drill'), 40) ?? 'unknown';
+        $band = $this->slug($request->input('band'), 40);
+        $user = $request->user();
+
         try {
             GameEvent::create([
                 'anon_id' => $this->anonId($request),
-                'drill' => $this->slug($request->input('drill'), 40) ?? 'unknown',
-                'band' => $this->slug($request->input('band'), 40),
+                'drill' => $drill,
+                'band' => $band,
                 'event' => $event,
                 'payload' => $this->payload($request, $event),
                 // Сервер — единственный источник правды по залогиненности:
                 // клиент не может это подделать.
-                'authenticated' => $request->user() !== null,
+                'authenticated' => $user !== null,
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
@@ -52,6 +58,33 @@ class GameTelemetryController extends Controller
                 'event' => $event,
                 'error' => $e->getMessage(),
             ]);
+        }
+
+        // H2052 — authenticated completes feed the /lila leaderboards (separate
+        // table so game_events stay anonymous / 152-FZ clean).
+        if ($user !== null
+            && $event === GameEvent::COMPLETE
+            && Schema::hasTable('lila_score_events')) {
+            try {
+                $points = (int) config('leaderboards.lila_complete_points', 10);
+                $payloadScore = $request->input('payload.score');
+                if (is_numeric($payloadScore) && (int) $payloadScore > 0) {
+                    $points = min(500, (int) $payloadScore);
+                }
+                LilaScoreEvent::create([
+                    'user_id' => $user->id,
+                    'drill' => $drill,
+                    'band' => $band,
+                    'points' => max(1, $points),
+                    'event' => $event,
+                    'created_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('LilaScoreEvent write failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // fire-and-forget: клиент шлёт sendBeacon и не ждёт тела.

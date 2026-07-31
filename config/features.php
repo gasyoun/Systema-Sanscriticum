@@ -603,4 +603,12 @@ return [
         explode(',', (string) env('TOCHKA_RECURRING_MODES', 'per_course,club,installment'))
     ))),
 
+    /*
+     | PayPal Subscriptions API (H2027) — auto-bill for diaspora, separate from
+     | manual claim (PAYPAL_CLAIM_ENABLED). Default OFF: route returns 404 and
+     | no Product/Plan/Subscription calls. Prod enable is human @DO only after
+     | Business account can sell Subscriptions. See
+     | docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
+     */
+    'paypal_subscriptions' => (bool) env('PAYPAL_SUBSCRIPTIONS_ENABLED', false),
 ];

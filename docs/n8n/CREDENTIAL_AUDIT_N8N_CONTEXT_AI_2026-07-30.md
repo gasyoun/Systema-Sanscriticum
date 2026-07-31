@@ -1,6 +1,6 @@
 # Credential audit — n8n context-ai.ru
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 31-07-2026_
 
 Read-only audit of secrets posture on `samskrtam50` / `https://context-ai.ru`.  
 **No secret values are written here or in git exports.** Findings only: severity × location × remediation × owner.
@@ -35,7 +35,7 @@ Out of scope for this memo: actually rotating tokens (human / gated handoff).
 
 | ID | Sev | Location | Finding | Remediation | Owner |
 |---|---|---|---|---|---|
-| C01 | 🔴 | Workflow `СБОРКА КНИГ` · SSH node `автозаказ` | libfl **login + password as CLI args** in node command (visible to anyone with n8n edit access / DB / backups) | 1) Rotate libfl password immediately 2) Move to `/root/.libfl-env` (mode 600) 3) SSH command: `set -a; . /root/.libfl-env; set +a; python3 auto_order.py "$URL" "$LOGIN" "$PASSWORD"` 4) Re-export scrubbed JSON | Human ops + agent assist script only after arming |
+| C01 | 🟢 **REMEDIATED (H1958, 31-07-2026)** was 🔴 | Workflow `СБОРКА КНИГ` · SSH node `автозаказ` | Was: libfl login+password as CLI args. **Now:** node runs only `/opt/bookbuilder/auto_order_from_env.sh "<url>"`; secrets in `/root/.libfl-env` (mode 600) keys `LIBFL_LOGIN`/`LIBFL_PASSWORD`; live sqlite has **zero** password/login strings; git export scrubbed | Residual: human confirms one login/order path works; Jul-25 sqlite `.bak-*` may still hold the **pre-rotate** secret — shred offline when safe; stale `/opt/n8n/workflows.json` still had login email until next full re-export | H1958 Grok 4.5 |
 | C02 | 🔴 | Workflow `Ежемесячный пост…` · HTTP Telegram URLs | **Bot token embedded in URL** `api.telegram.org/bot<token>/…` (not Telegram credential) | Rotate Telegram bot token via BotFather; switch nodes to official Telegram node or header; never put token in URL string | Human |
 | C03 | 🔴 | Active `АДМИНКА+ТАБЛИЦА ОПЛАТ` webhook `payments` | `authentication=none` on money-adjacent append-to-sheet | Header Auth credential + match secret in Laravel `N8N_*` / payments caller; reject without header | Human-gated (money fence) |
 | C04 | 🔴 | Active lecture-clip executions | 6/6 errors — pipeline armed in UI but not delivering; may leave partial VK state | Debug with one dry-run; confirm `/root/.clip-env` scopes (`video`); do not disable without noting | Ops + agent read-only logs |

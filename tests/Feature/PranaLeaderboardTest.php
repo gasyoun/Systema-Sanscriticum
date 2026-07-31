@@ -6,9 +6,11 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
+use App\Models\PranaTransaction;
 use App\Models\User;
 use App\Support\PranaLeaderboard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -145,5 +147,94 @@ class PranaLeaderboardTest extends TestCase
         $rows = PranaLeaderboard::rows(10);
 
         $this->assertSame('Кузнецов И.', $rows->first()['display']);
+    }
+
+    // --- H2051: Week / Month / All Time periods (Memrise-analogue) ---
+
+    /** @test */
+    public function week_period_sums_only_awards_in_current_week(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-29 12:00:00')); // Wednesday
+
+        $alice = $this->student('Алиса Топ', 0);
+        $bob = $this->student('Боб Второй', 0);
+        $old = $this->student('Старый Герой', 0);
+
+        $this->awardAt($alice->id, 100, '2026-07-28 10:00:00'); // this week (Mon 27)
+        $this->awardAt($bob->id, 40, '2026-07-29 09:00:00');
+        // Spend must not count.
+        $this->awardAt($bob->id, -10, '2026-07-29 10:00:00', 'shop');
+        // Previous week — out of scope for week board, even if lifetime is huge.
+        $this->awardAt($old->id, 999, '2026-07-20 10:00:00');
+        $old->forceFill(['lifetime_prana' => 999])->save();
+
+        $rows = PranaLeaderboard::rows(10, null, PranaLeaderboard::PERIOD_WEEK);
+
+        $this->assertSame([100, 40], $rows->pluck('score')->all());
+        $this->assertSame('Алиса Т.', $rows->first()['display']);
+        $this->assertSame(PranaLeaderboard::PERIOD_WEEK, $rows->first()['period']);
+        $this->assertFalse($rows->contains(fn ($r) => str_contains($r['display'], 'Старый')));
+
+        Carbon::setTestNow();
+    }
+
+    /** @test */
+    public function month_period_uses_calendar_month_start(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-15 12:00:00'));
+
+        $in = $this->student('Июльский', 0);
+        $out = $this->student('Июньский', 0);
+
+        $this->awardAt($in->id, 50, '2026-07-02 08:00:00', 'srs_review');
+        $this->awardAt($out->id, 200, '2026-06-30 23:00:00', 'srs_review');
+
+        $rows = PranaLeaderboard::rows(10, null, PranaLeaderboard::PERIOD_MONTH);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(50, $rows->first()['score']);
+        $this->assertSame('Июльский', $rows->first()['display']);
+
+        Carbon::setTestNow();
+    }
+
+    /** @test */
+    public function rows_by_period_returns_all_three_keys(): void
+    {
+        $this->student('Все Время', 500);
+
+        $boards = PranaLeaderboard::rowsByPeriod(10);
+
+        $this->assertArrayHasKey('week', $boards);
+        $this->assertArrayHasKey('month', $boards);
+        $this->assertArrayHasKey('all', $boards);
+        $this->assertSame(500, $boards['all']->first()['score']);
+        $this->assertTrue($boards['week']->isEmpty());
+    }
+
+    /** @test */
+    public function position_for_period_counts_ahead_scores(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-29 12:00:00'));
+
+        $a = $this->student('А', 0);
+        $b = $this->student('Б', 0);
+        $this->awardAt($a->id, 80, '2026-07-29 11:00:00');
+        $this->awardAt($b->id, 20, '2026-07-29 11:00:00');
+
+        $this->assertSame(1, PranaLeaderboard::positionFor($a->id, 'week'));
+        $this->assertSame(2, PranaLeaderboard::positionFor($b->id, 'week'));
+
+        Carbon::setTestNow();
+    }
+
+    private function awardAt(int $userId, int $amount, string $at, string $reason = 'lesson_complete'): void
+    {
+        PranaTransaction::forceCreate([
+            'user_id' => $userId,
+            'amount' => $amount,
+            'reason' => $reason,
+            'created_at' => Carbon::parse($at),
+        ]);
     }
 }
