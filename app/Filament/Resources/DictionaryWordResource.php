@@ -2,19 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\DictionaryWordResource\Pages;
 use App\Models\DictionaryWord;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+/**
+ * Lexical stock CRUD for admins and teachers (H2050: Elena Trefilova main
+ * maintainer). Containers ({@see DictionaryResource}) stay admin-only.
+ */
 class DictionaryWordResource extends Resource
 {
-    use AdminOnly;
-
     protected static ?string $model = DictionaryWord::class;
 
     // Иконка и навигация
@@ -25,6 +28,36 @@ class DictionaryWordResource extends Resource
     protected static ?string $modelLabel = 'Слово';
 
     protected static ?string $pluralModelLabel = 'Словарный запас';
+
+    public static function canMaintain(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return self::canMaintain();
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::canMaintain();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::canMaintain();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canMaintain();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return self::canMaintain();
+    }
 
     // По каким полям искать, если мы введем текст в самый верхний (глобальный) поиск админки
     public static function getGloballySearchableAttributes(): array
