@@ -38,7 +38,7 @@ class VisitorsOnlinePageTest extends TestCase
             'guest_token' => 'tok-'.bin2hex(random_bytes(6)),
             'visitor_city' => 'Москва',
             'visitor_country' => 'RU',
-            'current_url' => 'https://samskrte.ru/online/kursy/sanskrit',
+            'current_url' => 'https://samskrte.ru/k/sanskrit',
             'first_seen_at' => now()->subMinutes(3),
             'last_seen_at' => now()->subSeconds(10),
         ], $attrs));
@@ -70,7 +70,7 @@ class VisitorsOnlinePageTest extends TestCase
             ->test(VisitorsOnline::class)
             ->assertSee('Гость')
             ->assertSee('Москва')
-            ->assertSee('/online/kursy/sanskrit');
+            ->assertSee('/k/sanskrit');
     }
 
     public function test_offline_visitor_is_not_listed(): void

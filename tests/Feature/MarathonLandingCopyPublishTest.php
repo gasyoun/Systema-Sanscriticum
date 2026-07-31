@@ -31,7 +31,13 @@ class MarathonLandingCopyPublishTest extends TestCase
 
     public function test_default_variant_is_a_and_show_renders_a_hero(): void
     {
-        config(['marathon_landing_copy.variant' => 'a']);
+        // H2010: while ab_test_until is in the future, the live 50/50 split
+        // ignores config('marathon_landing_copy.variant'). End the experiment
+        // so these tests assert the post-cutoff / config-driven path.
+        config([
+            'marathon_landing_copy.variant' => 'a',
+            'marathon_landing_copy.ab_test_until' => '2020-01-01',
+        ]);
 
         $this->assertSame('a', MarathonLandingCopy::variantKey());
 
@@ -45,7 +51,10 @@ class MarathonLandingCopyPublishTest extends TestCase
 
     public function test_variant_b_renders_outcome_hero(): void
     {
-        config(['marathon_landing_copy.variant' => 'b']);
+        config([
+            'marathon_landing_copy.variant' => 'b',
+            'marathon_landing_copy.ab_test_until' => '2020-01-01',
+        ]);
 
         $this->get(route('marathon.show'))
             ->assertOk()

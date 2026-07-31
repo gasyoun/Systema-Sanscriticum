@@ -130,7 +130,7 @@ class PublicScheduleFeedTest extends TestCase
         $response->assertJsonPath('data.0.group.status', 'forming');
         $response->assertJsonPath('data.0.group.seats_min', 5);
         // Ссылка на лендинг курса построена по слагу, без числовых id.
-        $this->assertStringContainsString('/online/kursy/'.$made['course']->slug, $response->json('data.0.course.url'));
+        $this->assertStringContainsString('/k/'.$made['course']->slug, $response->json('data.0.course.url'));
     }
 
     public function test_direction_filter_returns_only_matching_subset(): void

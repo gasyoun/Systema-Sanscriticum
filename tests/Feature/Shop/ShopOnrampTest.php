@@ -169,7 +169,7 @@ class ShopOnrampTest extends TestCase
         $course = Course::factory()->create(['slug' => 'onramp-warning-course']);
         Tariff::factory()->for($course)->create(['title' => 'Весь курс целиком']);
 
-        $this->get('/online/kursy/onramp-warning-course')
+        $this->get('/k/onramp-warning-course')
             ->assertOk()
             // Красный блок-блокиратор новых покупателей убран.
             ->assertDontSee('не регистрируйтесь самостоятельно')
@@ -189,7 +189,7 @@ class ShopOnrampTest extends TestCase
         // «ничего не потеряется» — фраза, уникальная для guest-блока
         // (модалка логина рендерится скрытой для всех — её текст не индикатор).
         $this->actingAs($user)
-            ->get('/online/kursy/onramp-auth-course')
+            ->get('/k/onramp-auth-course')
             ->assertOk()
             ->assertDontSee('ничего не потеряется');
     }

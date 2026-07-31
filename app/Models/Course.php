@@ -14,6 +14,9 @@ class Course extends Model
 {
     use HasFactory;
 
+    /** @var string|null previous slug to archive as alias after update */
+    protected ?string $pendingSlugAlias = null;
+
     // Поля, которые можно заполнять из админки
     protected $fillable = [
         'title',
@@ -145,6 +148,58 @@ class Course extends Model
         'audience' => 'array',
         'outcomes' => 'array',
     ];
+
+    /** Прошлые slug'и курса (для 301 после rename). */
+    public function slugAliases(): HasMany
+    {
+        return $this->hasMany(CourseSlugAlias::class);
+    }
+
+    /**
+     * Резолв курса по каноническому slug или алиасу.
+     * Единый источник для student/shop роутов и legacy-редиректов.
+     */
+    public static function resolveBySlug(?string $slug): ?self
+    {
+        if ($slug === null || $slug === '') {
+            return null;
+        }
+
+        $byCanonical = static::query()->where('slug', $slug)->first();
+        if ($byCanonical) {
+            return $byCanonical;
+        }
+
+        $alias = CourseSlugAlias::query()->where('slug', $slug)->first();
+
+        return $alias?->course;
+    }
+
+    public static function resolveBySlugOrFail(string $slug): self
+    {
+        $course = static::resolveBySlug($slug);
+        if ($course === null) {
+            abort(404);
+        }
+
+        return $course;
+    }
+
+    /**
+     * Implicit binding `{course:slug}`: канон или alias.
+     * После биндинга middleware RedirectToCanonicalCourseSlug шлёт 301, если
+     * в URL был alias, а не courses.slug.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?: $this->getRouteKeyName();
+
+        if ($field === 'slug' || $field === null) {
+            return static::resolveBySlug(is_string($value) ? $value : (string) $value);
+        }
+
+        return parent::resolveRouteBinding($value, $field);
+    }
 
     /** Курс/поток завершён (записи опубликованы, повторного набора нет). */
     public function isCompleted(): bool
@@ -299,6 +354,47 @@ class Course extends Model
         // После сохранения курса синхронизируем урок-заготовку под пробное занятие.
         static::saved(function (self $course): void {
             $course->syncTrialPlaceholderLesson();
+        });
+
+        // При смене slug старый остаётся алиасом — 301 со старых ссылок.
+        static::updating(function (self $course): void {
+            if ($course->isDirty('slug')) {
+                $old = $course->getOriginal('slug');
+                $course->pendingSlugAlias = is_string($old) && $old !== '' ? $old : null;
+            }
+        });
+
+        static::updated(function (self $course): void {
+            $old = $course->pendingSlugAlias;
+            $course->pendingSlugAlias = null;
+            if ($old === null || $old === $course->slug) {
+                return;
+            }
+
+            // Новый канон мог быть чьим-то алиасом — снимаем, чтобы resolve
+            // по courses.slug однозначно выигрывал (канон всегда первый).
+            CourseSlugAlias::query()
+                ->where('slug', $course->slug)
+                ->delete();
+
+            // Старый slug → alias (если ещё не занят другим курсом/алиасом).
+            $takenAsCanonical = self::query()
+                ->where('slug', $old)
+                ->where('id', '!=', $course->id)
+                ->exists();
+            $takenAsAlias = CourseSlugAlias::query()
+                ->where('slug', $old)
+                ->where('course_id', '!=', $course->id)
+                ->exists();
+
+            if ($takenAsCanonical || $takenAsAlias) {
+                return;
+            }
+
+            CourseSlugAlias::query()->firstOrCreate(
+                ['slug' => $old],
+                ['course_id' => $course->id, 'created_at' => now()],
+            );
         });
     }
 

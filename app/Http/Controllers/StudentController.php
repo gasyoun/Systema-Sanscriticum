@@ -43,8 +43,8 @@ class StudentController extends Controller
      */
     private function getUserUnlockedTariffs($userId, $courseSlug): array
     {
-        // 1. Находим ID курса по его slug
-        $courseId = Course::where('slug', $courseSlug)->value('id');
+        // 1. Находим ID курса по каноническому slug или alias
+        $courseId = Course::resolveBySlug($courseSlug)?->id;
 
         // Если курс не найден, возвращаем пустой массив (нет доступов)
         if (! $courseId) {
@@ -720,15 +720,15 @@ class StudentController extends Controller
 
         // БЫЛО: where('is_visible', true)
         // СТАЛО: where('is_active', true)
-        $course = Course::where('slug', $slug)
-            ->where('is_active', true)
-            ->whereHas('groups', function ($query) use ($userGroupIds) {
-                $query->whereIn('groups.id', $userGroupIds);
-            })
-            ->firstOrFail();
+        $course = Course::resolveBySlugOrFail($slug);
+        abort_unless($course->is_active, 404);
+        abort_unless(
+            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
+            404
+        );
 
         $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
-        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
+        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
         if (config('features.cabinet_hybrid')) {
@@ -758,8 +758,9 @@ class StudentController extends Controller
     public function showLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
-        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $course = Course::resolveBySlugOrFail($courseSlug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+        $courseSlug = $course->slug;
 
         // Разовый доступ к конкретному уроку (например, оплаченное пробное занятие) —
         // обход и блок/full гейта, и группового: явный grant на этот урок главнее.
@@ -905,7 +906,7 @@ class StudentController extends Controller
                 ]);
             }
 
-            $course = Course::where('slug', $courseSlug)->firstOrFail();
+            $course = Course::resolveBySlugOrFail($courseSlug);
             $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
             // Начисление за урок (идемпотентно по lesson_id).
@@ -978,7 +979,7 @@ class StudentController extends Controller
      */
     private function ensureLessonAccessible($user, string $courseSlug, $lessonId): void
     {
-        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $course = Course::resolveBySlugOrFail($courseSlug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
         if (! $lesson->isVisibleToGroupsOf($user)) {
@@ -989,7 +990,7 @@ class StudentController extends Controller
             return;
         }
 
-        $unlocked = $this->getUserUnlockedTariffs($user->id, $courseSlug);
+        $unlocked = $this->getUserUnlockedTariffs($user->id, $course->slug);
 
         if (! $lesson->isUnlockedBy($unlocked)) {
             abort(403, 'Нет доступа к этому уроку.');
@@ -1007,14 +1008,14 @@ class StudentController extends Controller
 
         // Проверяем, что курс доступен этому студенту (он в нужной группе).
         // Используем is_active (а не is_visible) — это видимость в ЛК, согласованно с dashboard/showCourse.
-        $course = Course::where('slug', $slug)
-            ->where('is_active', true)
-            ->whereHas('groups', function ($query) use ($userGroupIds) {
-                $query->whereIn('groups.id', $userGroupIds);
-            })
-            ->firstOrFail();
+        $course = Course::resolveBySlugOrFail($slug);
+        abort_unless($course->is_active, 404);
+        abort_unless(
+            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
+            404
+        );
 
-        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $slug);
+        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
 
         if (empty($unlockedTariffs)) {
             return back()->with('error', 'У вас нет оплаченных блоков для этого курса.');
