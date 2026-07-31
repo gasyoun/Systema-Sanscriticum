@@ -75,6 +75,8 @@ class Payment extends Model
         'received_account',
         'received_by_teacher_id',
         'payer_note',
+        // Structured claim payload (PayPal / company invoice) — see claim_meta JSON.
+        'claim_meta',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
     ];
@@ -92,6 +94,23 @@ class Payment extends Model
      */
     public const PROVIDER_PAYPAL = 'paypal';
 
+    /**
+     * Счёт на оплату для юрлица / ИП (безнал по реквизитам). Pending до ручной
+     * сверки поступления; доступ только после paid в Filament (H2017).
+     */
+    public const PROVIDER_INVOICE = 'invoice';
+
+    /**
+     * Providers that wait for human reconciliation and must never be reaped by
+     * payments:expire-stale-checkouts (they are not abandoned bank links).
+     *
+     * @var list<string>
+     */
+    public const MANUAL_CLAIM_PROVIDERS = [
+        self::PROVIDER_PAYPAL,
+        self::PROVIDER_INVOICE,
+    ];
+
     protected $casts = [
         'is_conditional' => 'boolean',
         'is_self_service' => 'boolean',
@@ -104,6 +123,7 @@ class Payment extends Model
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
         'payment_link_expires_at' => 'datetime',
+        'claim_meta' => 'array',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
         'start_block' => 'integer',
@@ -243,6 +263,32 @@ class Payment extends Model
     public function isPaypal(): bool
     {
         return $this->provider === self::PROVIDER_PAYPAL;
+    }
+
+    /** Счёт на оплату юрлицу / ИП (безнал), ожидает ручной сверки. */
+    public function isCompanyInvoice(): bool
+    {
+        return $this->provider === self::PROVIDER_INVOICE;
+    }
+
+    /**
+     * Scalar from claim_meta JSON (PayPal / company invoice), or null.
+     */
+    public function claimMeta(string $key, mixed $default = null): mixed
+    {
+        $meta = $this->claim_meta;
+
+        if (! is_array($meta) || ! array_key_exists($key, $meta)) {
+            return $default;
+        }
+
+        return $meta[$key];
+    }
+
+    /** Human invoice number for printable счёт (stable per payment id). */
+    public function invoiceNumber(): string
+    {
+        return 'СЧ-'.$this->id;
     }
 
     /**
@@ -388,6 +434,12 @@ class Payment extends Model
     public function scopePaypalPending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_PAYPAL)->where('status', 'pending');
+    }
+
+    /** Неподтверждённые счета юрлиц, ожидающие сверки банковского поступления. */
+    public function scopeInvoicePending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_INVOICE)->where('status', 'pending');
     }
 
     /** Цвет Filament-бейджа статуса — единая точка вместо дублей match по вьюхам. */

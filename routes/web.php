@@ -12,6 +12,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CompanyInvoiceController;
 use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DictionaryPageController;
@@ -597,6 +598,18 @@ Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
 Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
+
+// Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
+// admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"
+// is never resolved as a Tariff id. Strictly before catch-all /{slug}.
+Route::get('/invoices/{payment}/print', [CompanyInvoiceController::class, 'print'])
+    ->middleware('auth')
+    ->name('invoice.print');
+Route::get('/invoice/{tariff}', [CompanyInvoiceController::class, 'show'])
+    ->name('invoice.claim.show');
+Route::post('/invoice/{tariff}', [CompanyInvoiceController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('invoice.claim.store');
 
 // Приватный чек PayPal-заявки: только персонал (сверка платежа в админке).
 // Диск 'local' (не public) — скрин может содержать личные/платёжные данные.

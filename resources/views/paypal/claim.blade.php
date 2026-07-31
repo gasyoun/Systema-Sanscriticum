@@ -96,7 +96,21 @@
                     <p class="text-xs text-gray-500">После сверки мы пришлем пароль на email — войдете в личный кабинет.</p>
                 @endguest
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {{-- H2017: personal PayPal has no API — admin reconciles by from + date + amount. --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">С какого PayPal платили <span class="text-red-500">*</span></label>
+                    <input type="text" name="paypal_payer" required maxlength="255" value="{{ old('paypal_payer') }}"
+                           placeholder="email@example.com или @username"
+                           class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                    <p class="mt-1 text-xs text-gray-500">Аккаунт отправителя — так мы найдем перевод в личном PayPal (не business-аккаунт).</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Дата оплаты <span class="text-red-500">*</span></label>
+                        <input type="date" name="paid_on" required max="{{ now()->toDateString() }}" value="{{ old('paid_on', now()->toDateString()) }}"
+                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Сколько заплатили <span class="text-red-500">*</span></label>
                         <input type="number" name="foreign_amount" required min="1" step="0.01" value="{{ old('foreign_amount') }}"
@@ -107,25 +121,24 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Валюта <span class="text-red-500">*</span></label>
                         <select name="foreign_currency" required
                                 class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                            <option value="USD" @selected(old('foreign_currency') === 'USD')>Доллары (USD, $)</option>
+                            <option value="USD" @selected(old('foreign_currency', 'USD') === 'USD')>Доллары (USD, $)</option>
                             <option value="EUR" @selected(old('foreign_currency') === 'EUR')>Евро (EUR, €)</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Номер транзакции PayPal</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Номер транзакции PayPal <span class="text-gray-400 font-normal">(необязательно)</span></label>
                     <input type="text" name="paypal_txn" maxlength="255" value="{{ old('paypal_txn') }}"
                            placeholder="Напр. 1AB23456CD789012E"
                            class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                    <p class="mt-1 text-xs text-gray-500">Укажите номер транзакции <b>или</b> приложите скриншот/чек ниже — достаточно одного.</p>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Скриншот / чек оплаты</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Скриншот / чек <span class="text-gray-400 font-normal">(необязательно)</span></label>
                     <input type="file" name="proof" accept=".jpg,.jpeg,.png,.pdf"
                            class="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition">
-                    <p class="mt-1 text-xs text-gray-500">JPG, PNG или PDF, до 5 МБ.</p>
+                    <p class="mt-1 text-xs text-gray-500">JPG, PNG или PDF, до 5 МБ. Ускоряет сверку, но достаточно тройки: аккаунт + дата + сумма.</p>
                 </div>
 
                 <div>

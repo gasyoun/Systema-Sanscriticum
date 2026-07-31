@@ -65,11 +65,45 @@ class CuratorNotifier
             'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
             'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
         ];
+        if ($from = $payment->claimMeta('paypal_payer')) {
+            $lines[] = 'С аккаунта: <code>'.e((string) $from).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
         if (! empty($payment->payer_note)) {
             $lines[] = 'Примечание: '.e($payment->payer_note);
         }
         if (! empty($payment->proof_path)) {
             $lines[] = '📎 Приложен файл подтверждения';
+        }
+        $lines[] = $this->adminLink($payment->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Новый счёт юрлицу — ждёт банковского поступления, затем «Подтвердить счёт».
+     */
+    public function companyInvoiceReceived(Payment $payment): void
+    {
+        $lines = [
+            '🏢 <b>Счет для юрлица</b> — ждем поступление',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Сумма: <b>'.$this->money((float) $payment->amount).'</b>',
+            'Номер: <code>'.e($payment->invoiceNumber()).'</code>',
+        ];
+        if ($company = $payment->claimMeta('company_name')) {
+            $lines[] = 'Организация: <b>'.e((string) $company).'</b>';
+        }
+        if ($inn = $payment->claimMeta('inn')) {
+            $lines[] = 'ИНН: <code>'.e((string) $inn).'</code>';
+        }
+        if (! empty($payment->payer_note)) {
+            $lines[] = 'Примечание: '.e($payment->payer_note);
         }
         $lines[] = $this->adminLink($payment->user);
 
