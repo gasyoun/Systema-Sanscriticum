@@ -14,6 +14,7 @@ use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
 use App\Support\MarathonLandingCopy;
+use App\Support\MarathonLandingCopySplit;
 use App\Support\MarathonVisual;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
@@ -73,8 +74,15 @@ class MarathonController extends Controller
     public function show(Request $request): View
     {
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
-        // H1067 — ruled RU copy; default variant A, then B via MARATHON_LANDING_COPY_VARIANT.
-        $copy = MarathonLandingCopy::forView();
+        // H2010 — real per-visitor 50/50 copy A/B split, live until
+        // config('marathon_landing_copy.ab_test_until'); sticky cookie set
+        // here on first assignment, read again (not re-assigned) in
+        // register() to tag the resulting Lead.
+        $split = MarathonLandingCopySplit::resolveForRequest($request);
+        if ($split->isNewAssignment) {
+            MarathonLandingCopySplit::recordImpression($split->variantKey);
+        }
+        $copy = MarathonLandingCopy::forView($split->variantKey);
         // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
         $skin = MarathonVisual::variantKey($request);
 
@@ -109,12 +117,18 @@ class MarathonController extends Controller
 
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
 
+        // H2010 — reads the sticky variant cookie set in show(); never
+        // assigns one here (assignment only happens on a landing hit), and
+        // null for a visitor who never saw the live-test landing.
+        $copyVariant = MarathonLandingCopySplit::variantFromRequest($request);
+
         $leadData = [
             'name' => $validated['name'],
             'contact' => $validated['contact'],
             'email' => $validated['email'] ?? null,
             'social' => $validated['social'] ?? null,
             'landing_page_id' => $landing?->id,
+            'landing_copy_variant' => $copyVariant,
             'is_promo_agreed' => $request->has('is_promo_agreed'),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -153,6 +167,13 @@ class MarathonController extends Controller
             $lead = $existingLead;
         } else {
             $lead = Lead::create($leadData);
+            // H2010 — one 'lead' event per genuinely new Lead row, matching
+            // the one 'impression' event per genuinely new cookie
+            // assignment; the resumed-lead branch above never re-enters
+            // here, so no double-counting on a repeat submit.
+            if ($copyVariant !== null) {
+                MarathonLandingCopySplit::recordLead($copyVariant);
+            }
         }
 
         // H445 Phase 1 — this route only ever serves the August all-zero
