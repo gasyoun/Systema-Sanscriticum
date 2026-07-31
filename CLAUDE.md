@@ -300,11 +300,13 @@ consume (b/a/c share this contract; keep it), and update the stub in
 `show.blade.php`'s fallback list. Each skin's own `better-interface full`
 accessibility/contrast pass lives alongside the mockup in
 [`marketing/marathon-2026-08/redesign/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign)
-(`BETTER_INTERFACE_PASS_{A,B,C}_*.md`) — treat contrast pairs as **computed, not
-assumed** (WCAG relative-luminance formula), same discipline the existing three
+(`BETTER_INTERFACE_PASS_{A,B,C,D}_*.md`) — treat contrast pairs as **computed,
+not assumed** (WCAG relative-luminance formula), same discipline all four
 passes used. As of 31-07-2026: B (light island, default), A (dark-native), C
-(warm paper) shipped; D (stepped) queued as H1978. Multi-direction is a
-deliberate policy (H1966) — no single-winner pick, ship concurrent variants.
+(warm paper), D (stepped Alpine wizard, H1978 — the one skin whose `quiz_goal`
+field is radio cards rather than the others' `<select>`, matching its own
+mockup; same field name/values) all shipped. Multi-direction is a deliberate
+policy (H1966) — no single-winner pick, ship concurrent variants.
 
 ### Landing Page Builder
 
