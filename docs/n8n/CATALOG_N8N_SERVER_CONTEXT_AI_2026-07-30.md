@@ -1,6 +1,6 @@
 # Каталог n8n — context-ai.ru (samskrtam50)
 
-_Created: 30-07-2026 · Last updated: 01-08-2026_
+_Created: 30-07-2026 · Last updated: 30-07-2026_
 
 Живой inventory инстанса **n8n** на `193.232.229.91` (`samskrtam50`, UI: `https://context-ai.ru`).  
 Снято **30-07-2026** read-only с `database.sqlite` + host paths. Машинный снимок: [`_server_inventory_2026-07-30.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json). Redacted exports: [`exports/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/).
@@ -24,7 +24,7 @@ _Created: 30-07-2026 · Last updated: 01-08-2026_
 |---|---|
 | Host | `samskrtam50` · `193.232.229.91` |
 | Public UI | `https://context-ai.ru` (Caddy → `n8n:5678`) |
-| Install | `/opt/n8n` · `docker compose` (`n8nio/n8n:2.27.5@sha256:d53243d06c7f…` **pinned H1961** + `caddy:latest` still floating) |
+| Install | `/opt/n8n` · `docker compose` (`n8nio/n8n:latest` + `caddy:latest`) |
 | Data volume | `/opt/n8n/storage` → `/home/node/.n8n` |
 | Media bind | `/data` → `/data` (`audio`, `clips`, `bookbuilder`) |
 | Local port | `127.0.0.1:5678` only (not public) |
@@ -41,15 +41,14 @@ _Created: 30-07-2026 · Last updated: 01-08-2026_
 ```yaml
 services:
   n8n:
-    # H1961 (01-08-2026): pinned away from :latest — see OPS_PIN_IMAGE_H1961_2026-08-01.md
-    image: n8nio/n8n:2.27.5@sha256:d53243d06c7f7de81910ac922ff55ed4b58c9c3c761d7f2f8443d0567990def3
+    image: n8nio/n8n:latest
     ports: ["127.0.0.1:5678:5678"]
     volumes:
       - /opt/n8n/storage:/home/node/.n8n
       - /data:/data
     extra_hosts: ["host.docker.internal:host-gateway"]
   caddy:
-    image: caddy:latest   # still floating; out of H1961 scope
+    image: caddy:latest
     ports: ["80:80", "443:443"]
 # Caddyfile: context-ai.ru { reverse_proxy n8n:5678 }
 ```
@@ -78,9 +77,9 @@ services:
 |---|---|---|---|---|
 | `N8N_CLIP_EXTRACT_WEBHOOK` · `DispatchLectureClipExtractionJob` | `/webhook/lecture-clip-extract` | `Lecture clip extract (H1452)` `GGs0G2azzkLqLbJj` | **ON** · Header Auth | 6 recent errors (no success in retention) |
 | `N8N_CLIP_CALLBACK_SECRET` · callback → Laravel | n8n → `callback_url` | same workflow | ON | OK design; errors on ffmpeg/VK side |
-| `N8N_PAYMENTS_WEBHOOK_URL` · payments export | `/webhook/payments` | `АДМИНКА+ТАБЛИЦА ОПЛАТ` `XWQHAwlxBAFe6xfj` | **ON** · **auth=none** | No Header Auth |
+| `N8N_PAYMENTS_WEBHOOK_URL` + `N8N_PAYMENTS_WEBHOOK_SECRET` · payments export | `/webhook/payments` | `АДМИНКА+ТАБЛИЦА ОПЛАТ` `XWQHAwlxBAFe6xfj` | **ON** · **Header Auth** (H1960) | `X-Webhook-Secret` via credential `payments-webhook (H1960)` |
 | `N8N_SCHEDULE_SHEET_WEBHOOK` · Filament schedule sync | `/webhook/schedule-sheet-sync` (template) | **MISSING** | — | JSON in repo not imported; stub `РАСПИСАНИЕ + ТАБЛ` only (UUID path, 1 node, off) |
-| `N8N_MONTHLY_SCHEDULE_WEBHOOK` · `schedule:post-monthly` | `/webhook/monthly-schedule-post` | `Ежемесячный пост…` `eixPIvFjfPdOSrYo` | **OFF** | Imported, inactive; **C02 closed (H1959)** — Telegram via credential `@zapisi_ORSbot`, not URL token |
+| `N8N_MONTHLY_SCHEDULE_WEBHOOK` · `schedule:post-monthly` | `/webhook/monthly-schedule-post` | `Ежемесячный пост…` `eixPIvFjfPdOSrYo` | **OFF** | Imported but inactive; **bot token was inlined in URL** (see credential audit) |
 | `N8N_CALENDAR_POST_WEBHOOK` · `content:publish-due` | `/webhook/vk-calendar-post` | **MISSING** | — | Template in `docs/n8n/vk-calendar-post.workflow.json` not on server |
 | `N8N_SOCIAL_POST_WEBHOOK` · `PublishSocialPostJob` | social_post path | **MISSING** | — | Wave-2 product; not imported |
 | Zoom recording completed | Zoom webhook UUID path | `ZOOM 1.4 (Final) + АДМИНКА ТЕСТ` | **ON** · auth=none | Canonical prod ZOOM |
@@ -117,7 +116,7 @@ Zoom recording.completed webhook
 ```
 
 **Storage:** ~5.1 GB under workflow binary storage — prune candidate.  
-**Risks:** webhook auth=none; dual Zoom credential delete; n8n image **pinned H1961** (caddy still `:latest`); SSH cleanup paths reference *other* workflow IDs (stale copy residue).  
+**Risks:** webhook auth=none; dual Zoom credential delete; `:latest` image; SSH cleanup paths reference *other* workflow IDs (stale copy residue).  
 **Exec:** 15 success / 6 error / 1 canceled (recent retention).  
 **Export:** [`exports/zoom-1.4-admin-test.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/zoom-1.4-admin-test.live.json)
 
@@ -132,7 +131,7 @@ SSH cut+upload using `/root/.clip-env`; callback to Laravel with separate Header
 
 ### 3.3 `АДМИНКА+ТАБЛИЦА ОПЛАТ` · `XWQHAwlxBAFe6xfj` · ON
 
-2 nodes: Webhook `payments` (auth=none) → Google Sheets appendOrUpdate.  
+2 nodes: Webhook `payments` (**Header Auth** H1960) → Google Sheets appendOrUpdate. Laravel `SendPaymentToSheetJob` sends `X-Webhook-Secret` = `N8N_PAYMENTS_WEBHOOK_SECRET`.  
 **Money-adjacent** — fence: plan must not change payment logic without human; **auth hardening is a separate gated handoff**.  
 **Exec:** 9 success. Export: `admin-payments-sheet.live.json`.
 
@@ -250,13 +249,13 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 |---|---|---|---|
 | `schedule-sheet-sync` not imported | 🟠 | No workflow; Laravel env often empty | Import `docs/n8n/schedule-sheet-sync.workflow.json` + Header Auth |
 | `vk-calendar-post` not imported | 🟠 | Template only | Import when `CONTENT_CALENDAR_AUTOPILOT` staging |
-| `monthly-schedule-post` imported but OFF | 🟠 | Workflow exists, inactive | Activate after product smoke (token already on credential — H1959) |
-| Telegram bot token inlined in monthly HTTP URLs | 🟢 fixed H1959 | Was live HTTP URLs; now `n8n-nodes-base.telegram` + `@zapisi_ORSbot` | Optional BotFather rotate of historical export token; leave workflow OFF until product smoke |
+| `monthly-schedule-post` imported but OFF | 🟠 | Workflow exists, inactive | Activate after token move to credentials + smoke |
+| Telegram bot token inlined in monthly HTTP URLs | 🔴 | Live node params | Rotate bot token; use Telegram credential node |
 | libfl password in book SSH command | 🟢 fixed H1958 | Was live CLI args; now `auto_order_from_env.sh` + `/root/.libfl-env` (600) | Human: confirm one login still works |
 | Lecture clip 6/6 errors | 🔴 | execution_entity | Debug SSH/ffmpeg/VK; dry-run one lesson |
-| Payments webhook auth=none | 🔴 money-adj | node auth | Header Auth + Laravel secret (human-gated) |
+| Payments webhook Header Auth | 🟢 remediating H1960 | node auth | Header Auth on + Laravel `N8N_PAYMENTS_WEBHOOK_SECRET` |
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |
-| `n8nio/n8n` image pin (was `:latest`) | 🟢 H1961 | compose | `2.27.5@sha256:d53243d06c7f…` — [OPS note](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md) |
+| `n8nio/n8n:latest` unpinned | 🟠 | compose | Pin digest/version |
 | 5.6G binary storage | 🟡 | du | Prune old executions/binaryData offline |
 | 20× My workflow + 8× ZOOM copies | 🟢 fixed H1963 | live sqlite tags | Tags applied; **no delete**; export list below |
 | Social post workflow missing | 🟡 | product Wave 2 | Import when pilot armed |
@@ -327,3 +326,4 @@ Never commit unredacted `credentials.json` or raw `.env`.
 ---
 
 _Dr. Mārcis Gasūns_
+

@@ -67,6 +67,9 @@ return [
 
     'n8n' => [
         'payments_webhook' => env('N8N_PAYMENTS_WEBHOOK_URL'),
+        // Header Auth on n8n «АДМИНКА+ТАБЛИЦА ОПЛАТ» webhook (H1960 / C03).
+        // Sent as X-Webhook-Secret; empty → caller omits header (dev only).
+        'payments_webhook_secret' => env('N8N_PAYMENTS_WEBHOOK_SECRET'),
         'schedule_sheet_webhook' => env('N8N_SCHEDULE_SHEET_WEBHOOK'),
         // Секрет для входящего вебхука «лид дошёл до шага бота» (POST /api/webhooks/lead-step).
         // Пусто → эндпоинт всегда отвечает 403 (выключен).

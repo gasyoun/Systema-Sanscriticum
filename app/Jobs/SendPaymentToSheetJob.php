@@ -61,7 +61,18 @@ class SendPaymentToSheetJob implements ShouldQueue
             return;
         }
 
-        $response = Http::timeout(10)
+        // H1960: n8n Webhook Header Auth (X-Webhook-Secret). Same pattern as
+        // clip_extract / monthly_schedule / social_post. Empty secret → no header
+        // (local/dev without n8n auth); prod must set N8N_PAYMENTS_WEBHOOK_SECRET
+        // once the n8n node has Header Auth enabled.
+        $headers = [];
+        $secret = config('services.n8n.payments_webhook_secret');
+        if (! empty($secret)) {
+            $headers['X-Webhook-Secret'] = (string) $secret;
+        }
+
+        $response = Http::withHeaders($headers)
+            ->timeout(10)
             ->acceptJson()
             ->asJson()
             ->post($webhookUrl, $this->buildPayload($payment));
