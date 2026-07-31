@@ -25,7 +25,7 @@ class CourseShowTest extends TestCase
         $course = Course::factory()->create(['slug' => 'test-course']);
         Tariff::factory()->for($course)->create(['title' => 'Весь курс целиком']);
 
-        $this->get('/online/kursy/test-course')->assertOk();
+        $this->get('/k/test-course')->assertOk();
     }
 
     /** @test */
@@ -33,7 +33,7 @@ class CourseShowTest extends TestCase
     {
         Course::factory()->hidden()->create(['slug' => 'hidden-course']);
 
-        $this->get('/online/kursy/hidden-course')->assertNotFound();
+        $this->get('/k/hidden-course')->assertNotFound();
     }
 
     /** @test */
@@ -42,7 +42,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 2);
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         $this->assertStringContainsString("tab: 'blocks'", $html);
     }
@@ -52,7 +52,7 @@ class CourseShowTest extends TestCase
     {
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: null);
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         $this->assertStringContainsString("tab: 'full'", $html);
     }
@@ -63,7 +63,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 2);
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         $this->assertStringContainsString('СЕЙЧАС ИДЕТ', $html);
     }
@@ -74,7 +74,7 @@ class CourseShowTest extends TestCase
         Carbon::setTestNow('2026-04-15 12:00:00');
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: 3);
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         // В разметке "БЛОК N" встречается у каждой карточки. Третий блок (актуальный)
         // должен идти раньше всех остальных в HTML.
@@ -90,7 +90,7 @@ class CourseShowTest extends TestCase
     {
         $course = $this->makeCourseWithBlocks(blocks: 4, currentBlockNumber: null);
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         preg_match_all('/БЛОК\s*(\d+)/u', $html, $matches);
         $orderedNumbers = array_values(array_unique($matches[1]));
@@ -112,7 +112,7 @@ class CourseShowTest extends TestCase
             'course_id' => $course->id,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Расписание')
             ->assertSee('Вводное занятие')
@@ -135,7 +135,7 @@ class CourseShowTest extends TestCase
             'group_id' => $group->id,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Занятие группы');
     }
@@ -154,7 +154,7 @@ class CourseShowTest extends TestCase
             'course_id' => $course->id,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertDontSee('Прошедшее занятие');
     }
@@ -165,7 +165,7 @@ class CourseShowTest extends TestCase
         $course = Course::factory()->create(['slug' => 'no-sched-course']);
         Tariff::factory()->for($course)->create();
 
-        $html = $this->get('/online/kursy/'.$course->slug)->getContent();
+        $html = $this->get('/k/'.$course->slug)->getContent();
 
         // Заголовок секции расписания не должен появляться без занятий.
         $this->assertStringNotContainsString('id="schedule"', $html);
@@ -183,7 +183,7 @@ class CourseShowTest extends TestCase
         ]);
         Tariff::factory()->for($course)->create();
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Коротко о курсе')
             ->assertSee('Иван Толчельников')
@@ -205,7 +205,7 @@ class CourseShowTest extends TestCase
             ->withDates(Carbon::parse('2028-04-01'), Carbon::parse('2028-05-31'))
             ->create(['number' => 2]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Даты проведения')
             ->assertSee('июль 2026')
@@ -226,7 +226,7 @@ class CourseShowTest extends TestCase
             'course_id' => $course->id,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Записаться')
             ->assertSee('href="#tariffs"', false);
@@ -247,7 +247,7 @@ class CourseShowTest extends TestCase
         // Делает этот сеанс пробным: цена + ссылка на событие расписания.
         $course->update(['trial_price' => 1000, 'trial_schedule_id' => $session->id]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Купить пробное');
     }
@@ -279,7 +279,7 @@ class CourseShowTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get('/online/kursy/'.$course->slug)
+            ->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Подключиться')
             ->assertSee('https://zoom.us/j/999', false);
@@ -299,7 +299,7 @@ class CourseShowTest extends TestCase
             'title' => 'Чёрновик урока', 'block_number' => 1, 'sort_order' => 2,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Программа курса')
             ->assertSee('Деванагари')

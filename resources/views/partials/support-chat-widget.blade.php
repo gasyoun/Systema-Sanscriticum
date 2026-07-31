@@ -271,7 +271,8 @@
         if (!CONTEXT_GREETING || !intro || OFFLINE) return;
         var path = (location.pathname || '').toLowerCase();
         var greeting = null;
-        if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0) {
+        if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0
+            || path.indexOf('/k/') === 0 || path.indexOf('/c/') === 0) {
             greeting = 'Здравствуйте! Вопрос по этому курсу — программа, расписание, преподаватель? Мы поможем разобраться.';
         } else if (path.indexOf('/checkout/') === 0 || path.indexOf('/payment/') === 0 || path.indexOf('/deposit/') === 0) {
             greeting = 'Здравствуйте! Возникли сложности с оплатой? Мы поможем разобраться.';

@@ -93,7 +93,7 @@ class ShopCourseResource extends Resource
                         Tables\Columns\TextColumn::make('slug')
                             ->color('gray')
                             ->size('sm')
-                            ->prefix('/course/'),
+                            ->prefix('/k/'),
 
                         // Описание
                         Tables\Columns\TextColumn::make('description')

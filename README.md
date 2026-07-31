@@ -369,9 +369,10 @@ LandingPage ──> JSON-блоки
 ### 2. Магазин курсов (`/online`, `/checkout`)
 
 Каталог курсов (`/online`, фильтры горизонтальными чипами в стиле Arzamas, теги
-категорий, типографские обложки-фолбэки), страница курса (`/online/kursy/{slug}`)
-с выбором тарифа, оформление заказа (`/checkout/{tariff}`). Оплата через Точку
-Банк, промокоды (процент или фиксированная сумма).
+категорий, типографские обложки-фолбэки), страница курса (`/k/{slug}`, legacy
+`/online/kursy/{slug}` → 301) с выбором тарифа, оформление заказа
+(`/checkout/{tariff}`). Оплата через Точку Банк, промокоды (процент или
+фиксированная сумма). Кабинет: `/c/{slug}`, урок `/c/{slug}/u/{id}`.
 
 Файлы: [ShopController.php](app/Http/Controllers/ShopController.php),
 [CheckoutController.php](app/Http/Controllers/CheckoutController.php),

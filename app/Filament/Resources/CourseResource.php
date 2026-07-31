@@ -104,7 +104,8 @@ class CourseResource extends Resource
                                 Forms\Components\TextInput::make('slug')
                                     ->required()
                                     ->unique(ignoreRecord: true)
-                                    ->label('URL-адрес (slug)'),
+                                    ->label('URL-адрес (slug)')
+                                    ->helperText('Короткий канон: кабинет /c/{slug}/u/{id}, витрина /k/{slug}. Пример: hindi-2_sb1300-2026. При смене старый slug сохраняется как 301-алиас.'),
                             ]),
 
                         // БЛОК 2: Описание

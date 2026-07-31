@@ -27,11 +27,12 @@
 | Маршрут | Описание |
 |---|---|
 | `GET /cabinet` | Дашборд студента |
-| `GET /course/{slug}` | Уроки курса |
-| `GET /course/{slug}/lesson/{id}` | Плеер урока |
-| `POST /lesson/{id}/complete` | Отметить урок пройденным |
-| `POST /lesson/{id}/note` | Сохранить заметку |
-| `GET /course/{slug}/materials` | Скачать архив материалов |
+| `GET /c/{slug}` | Уроки курса (legacy `/course/{slug}` → 301) |
+| `GET /c/{slug}/u/{id}` | Плеер урока (legacy `/course/.../lesson/...` → 301) |
+| `POST /c/{slug}/u/{id}/complete` | Отметить урок пройденным |
+| `POST /c/{slug}/u/{id}/note` | Сохранить заметку |
+| `GET /c/{slug}/materials/download` | Скачать архив материалов |
+| `GET /k/{slug}` | Витрина курса (legacy `/online/kursy/{slug}` → 301) |
 | `GET /certificate/{id}` | Скачать сертификат |
 | `GET /calendar` | Расписание |
 | `GET /cabinet/payments` | История платежей |

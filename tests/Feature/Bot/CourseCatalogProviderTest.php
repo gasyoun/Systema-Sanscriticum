@@ -50,7 +50,7 @@ class CourseCatalogProviderTest extends TestCase
 
         $md = app(CourseCatalogProvider::class)->markdown();
 
-        $this->assertStringContainsString('Страница курса и оплата: https://samskrte.ru/online/kursy/kurs-so-ssylkoj', $md);
+        $this->assertStringContainsString('Страница курса и оплата: https://samskrte.ru/k/kurs-so-ssylkoj', $md);
     }
 
     public function test_hidden_or_inactive_courses_are_excluded(): void

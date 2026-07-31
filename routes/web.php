@@ -44,6 +44,7 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VkController;
+use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
@@ -156,12 +157,16 @@ Route::post('/online/konsultaciya/level-quiz/{token}/complete', [MarathonControl
 Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController::class, 'levelQuizResult'])
     ->name('marathon.level-quiz.result');
 
-// Страница одного курса
-Route::get('/online/kursy/{course:slug}', [ShopController::class, 'show'])->name('shop.course.show');
+// Страница одного курса (короткий path /k/{slug}; legacy /online/kursy/* → 301 ниже)
+Route::get('/k/{course:slug}', [ShopController::class, 'show'])
+    ->middleware('course.canonical')
+    ->name('shop.course.show');
 
 // Публичный «Пример урока»: отдаёт ТОЛЬКО preview-урок этого курса (is_preview),
 // без auth. Никакого lesson-id в URL — гость не может запросить произвольный урок.
-Route::get('/online/kursy/{course:slug}/preview', [ShopController::class, 'preview'])->name('shop.course.preview');
+Route::get('/k/{course:slug}/preview', [ShopController::class, 'preview'])
+    ->middleware('course.canonical')
+    ->name('shop.course.preview');
 
 // === ВСТРАИВАЕМЫЙ ВИДЖЕТ РАСПИСАНИЯ (H1427, wave 1b) ===
 // Голый HTML-документ без layout/auth; клиентский JS тянет /api/public/schedule.
@@ -171,7 +176,24 @@ Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->na
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
 // Специфичный /shop/course/* — ДО общего /shop, иначе общий перехватит.
-Route::get('/shop/course/{slug}', fn ($slug) => redirect()->route('shop.course.show', $slug, 301));
+Route::get('/shop/course/{slug}', function (string $slug) {
+    $course = Course::resolveBySlug($slug);
+    abort_if($course === null, 404);
+
+    return redirect()->route('shop.course.show', $course->slug, 301);
+});
+Route::get('/online/kursy/{slug}', function (string $slug) {
+    $course = Course::resolveBySlug($slug);
+    abort_if($course === null, 404);
+
+    return redirect()->route('shop.course.show', $course->slug, 301);
+});
+Route::get('/online/kursy/{slug}/preview', function (string $slug) {
+    $course = Course::resolveBySlug($slug);
+    abort_if($course === null, 404);
+
+    return redirect()->route('shop.course.preview', $course->slug, 301);
+});
 Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 
 // Auth-state probe for the free static games under public/lila/ — lets
@@ -355,21 +377,42 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
     Route::get('/access', [StudentController::class, 'access'])->name('student.access');
 
-    Route::get('/course/{slug}', [StudentController::class, 'showCourse'])->name('student.course');
-    Route::get('/course/{slug}/lesson/{lessonId}', [StudentController::class, 'showLesson'])->name('student.lesson');
+    // Короткие URL кабинета: /c/{slug}, /c/{slug}/u/{lessonId} (урок).
+    // Legacy /course/... → 301 (см. блок ниже, внутри auth).
+    Route::get('/c/{slug}', [StudentController::class, 'showCourse'])
+        ->middleware('course.canonical')
+        ->name('student.course');
+    Route::get('/c/{slug}/u/{lessonId}', [StudentController::class, 'showLesson'])
+        ->middleware('course.canonical')
+        ->name('student.lesson');
 
-    Route::post('/course/{slug}/lesson/{lessonId}/complete', [StudentController::class, 'completeLesson'])
+    Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
 
-    Route::get('/course/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
+    Route::get('/c/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
+        ->middleware('course.canonical')
         ->name('student.course.materials.download');
 
-    Route::post('/course/{slug}/lesson/{lessonId}/note', [StudentController::class, 'saveNote'])
+    Route::post('/c/{slug}/u/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
 
     // Домашние задания: сдача студентом + контролируемое скачивание файлов
-    Route::post('/course/{slug}/lesson/{lessonId}/homework', [HomeworkController::class, 'store'])
+    Route::post('/c/{slug}/u/{lessonId}/homework', [HomeworkController::class, 'store'])
         ->name('student.homework.store');
+
+    // Legacy path 301 → short /c/... (только GET; POST остаются на новых action).
+    Route::get('/course/{slug}', function (string $slug) {
+        $course = Course::resolveBySlug($slug);
+        abort_if($course === null, 404);
+
+        return redirect()->route('student.course', $course->slug, 301);
+    });
+    Route::get('/course/{slug}/lesson/{lessonId}', function (string $slug, $lessonId) {
+        $course = Course::resolveBySlug($slug);
+        abort_if($course === null, 404);
+
+        return redirect()->route('student.lesson', [$course->slug, $lessonId], 301);
+    });
     Route::get('/homework/file/{file}', [HomeworkController::class, 'download'])
         ->name('homework.file.download');
 

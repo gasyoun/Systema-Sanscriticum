@@ -43,7 +43,7 @@ class ObjectionPosMicrocopyTest extends TestCase
     {
         $course = $this->makeCourseWithBlockTariff('blocks-course');
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('data-analytics="objection-price-microcopy"', false)
             ->assertSee('Платить за весь курс сразу не нужно')
@@ -56,7 +56,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         $course = Course::factory()->create(['slug' => 'full-only-course']);
         Tariff::factory()->for($course)->create();
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('data-analytics="objection-price-microcopy"', false)
             ->assertDontSee('Платить за весь курс сразу не нужно');
@@ -68,7 +68,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         config(['services.telegram.curators_chat_id' => '-100123']);
         $course = $this->makeCourseWithBlockTariff('with-curators');
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Нужно разбить оплату на части?')
             ->assertSee('запрос куратору ни к чему не обязывает');
@@ -76,7 +76,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         config(['services.telegram.curators_chat_id' => null]);
         $course2 = $this->makeCourseWithBlockTariff('without-curators');
 
-        $this->get('/online/kursy/'.$course2->slug)
+        $this->get('/k/'.$course2->slug)
             ->assertOk()
             ->assertDontSee('Нужно разбить оплату на части?');
     }
@@ -86,7 +86,7 @@ class ObjectionPosMicrocopyTest extends TestCase
     {
         $course = $this->makeCourseWithBlockTariff('benefit-course');
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('Пенсионерам, студентам и многодетным')
             ->assertSee('на многих курсах действует льготная цена')
@@ -110,7 +110,7 @@ class ObjectionPosMicrocopyTest extends TestCase
 
         // Целого блока к покупке нет — обещание «оплачиваете ближайший блок»
         // было бы ложным; остальная микрокопия остается.
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('data-analytics="objection-price-microcopy"', false)
             ->assertDontSee('Платить за весь курс сразу не нужно');
@@ -131,7 +131,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get('/online/kursy/'.$course->slug)
+            ->get('/k/'.$course->slug)
             ->assertOk()
             ->assertDontSee('objection-price-microcopy')
             ->assertDontSee('льготная цена');
@@ -142,7 +142,7 @@ class ObjectionPosMicrocopyTest extends TestCase
     {
         Course::factory()->create(['slug' => 'no-tariffs-course']);
 
-        $this->get('/online/kursy/no-tariffs-course')
+        $this->get('/k/no-tariffs-course')
             ->assertOk()
             ->assertDontSee('objection-price-microcopy')
             ->assertDontSee('льготная цена');
@@ -162,7 +162,7 @@ class ObjectionPosMicrocopyTest extends TestCase
             'course_id' => $course->id,
         ]);
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertSee('data-analytics="objection-time-microcopy"', false)
             ->assertSee('Не попадаете по времени?')
@@ -175,7 +175,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         $course = Course::factory()->create(['slug' => 'no-sched-micro']);
         Tariff::factory()->for($course)->create();
 
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertDontSee('objection-time-microcopy')
             ->assertDontSee('Не попадаете по времени?');
@@ -235,7 +235,7 @@ class ObjectionPosMicrocopyTest extends TestCase
         // Регистр волны: на студенческих поверхностях — «оплата по частям»,
         // никогда «рассрочка» (кредитная коннотация; правило H1290).
         // Стебель без первой буквы ловит и «Рассрочка», и «рассрочка».
-        $this->get('/online/kursy/'.$course->slug)
+        $this->get('/k/'.$course->slug)
             ->assertOk()
             ->assertDontSee('ассрочк');
     }

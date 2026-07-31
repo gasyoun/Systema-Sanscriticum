@@ -23,7 +23,7 @@ class HomeworkController extends Controller
     public function store(Request $request, string $courseSlug, int $lessonId)
     {
         $user = $request->user();
-        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $course = Course::resolveBySlugOrFail($courseSlug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
         $this->ensureLessonAccessible($user, $course, $lesson);

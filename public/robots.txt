@@ -8,6 +8,7 @@ Disallow: /calendar
 Disallow: /messages
 Disallow: /open-lessons
 Disallow: /course/
+Disallow: /c/
 Disallow: /checkout/
 Disallow: /payment/
 Disallow: /login

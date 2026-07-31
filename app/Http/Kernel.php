@@ -10,6 +10,7 @@ use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\RedirectToCanonicalCourseSlug;
 use App\Http\Middleware\StudentMaintenance;
 use App\Http\Middleware\TrackUserActivity;
 use App\Http\Middleware\TrimStrings;
@@ -123,5 +124,7 @@ class Kernel extends HttpKernel
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
+        // Канонический slug курса: alias в URL → 301 на courses.slug
+        'course.canonical' => RedirectToCanonicalCourseSlug::class,
     ];
 }
