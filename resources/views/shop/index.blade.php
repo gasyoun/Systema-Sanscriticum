@@ -13,8 +13,11 @@
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
                 Общество ревнителей санскрита
             </h1>
+            {{-- Подзаголовок — ориентация, не лозунг (H1868): что здесь есть и
+                 куда идти новичку, вместо «выберите курс» перед стеной карточек. --}}
             <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-6">
-                Платформа для глубокого изучения языка, философии и текстов. Выберите курс для начала обучения.
+                Курсы санскрита и хинди — от первых букв с нуля до чтения текстов в оригинале.
+                Если вы здесь впервые, ниже — короткие ответы на вопросы, с которых обычно начинают.
             </p>
 
             <div class="flex flex-wrap justify-center gap-3">
@@ -35,6 +38,9 @@
 
         {{-- Полоса доверия (H323, social proof) --}}
         @include('shop.partials.trust-strip')
+
+        {{-- Первые вопросы новичка (H1868, custdev-обоснованная ориентация) --}}
+        @include('shop.partials.first-questions')
 
         @livewire('shop.course-catalog')
 
