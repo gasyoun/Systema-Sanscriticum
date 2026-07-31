@@ -1,15 +1,21 @@
 ## [Unreleased]
 
-## [1.80.4] - 2026-07-31
+## [1.80.5] - 2026-07-31
 
 ### Added
 - **Memrise SRS P2 test modes (H1988).** Auth review UI gains mode tabs: multiple choice (`DistractorSampler`), typing (`AnswerMatcher` exact/soft), tap-the-pairs, speed (10 s timeout → Again), difficult words (`queueDifficultFor`, lapses &gt; 0). Guests stay on classic trial. Roadmap P0/P1/P2 status updated. Executor: Grok 4.5 (`grok-4.5`).
+
+### Changed
+- **Docs + marketing: product URL `srs` → `koloda` everywhere live paths appear** (manuals, roadmaps, audits, seed READMEs, README, TG drafts). Storage still `storage/.../srs/`; config file still `config/srs.php`. Executor: Grok 4.5 (`grok-4.5`).
+
+## [1.80.4] - 2026-07-31
+
+### Added
 - **Deck owner can edit slug** (student «Мои колоды» + Filament unique/required slug). Reserved: `stats`, `decks`. Executor: Grok 4.5 (`grok-4.5`).
 - **SRS per-deck URLs + guest trial.** Each deck has its own path (`/koloda/{slug}` public, `/dvaram/koloda/{slug}` cabinet); hub pages list decks. Guests can try system/public decks without registration (soft wall after `SRS_GUEST_TRIAL_CARDS`, default 10; progress not saved). Tagline is language-aware (`sa` → «учите санскрит», `hi` → «учите хинди»). Executor: Grok 4.5 (`grok-4.5`).
 - **Konsultaciya visual skin switch + skin B light island (H1975).** `MARATHON_LANDING_VISUAL_VARIANT` (a|b|c|d, default **b**) + `?skin=` QA override, resolved by `App\Support\MarathonVisual`, orthogonal to the existing `MARATHON_LANDING_COPY_VARIANT` copy axis. `resources/views/marathon/show.blade.php` is now a thin shell that includes `marathon/skins/{a,b,c,d}/content.blade.php` (a/c/d stub → fall back to b until [H1976](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1976-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-a_30.07.26.md)/[H1977](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1977-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-c_30.07.26.md)/[H1978](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1978-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-d_30.07.26.md) ship). Skin B closes the USEIT Must-fix set (`marketing/marathon-2026-08/redesign/USEIT_NIELSEN_PASS_30.07.26.md`): O2 light-island wrap (no more dark-on-dark), explicit `text-stone-900 bg-white` form controls, numbered day cards, success pinned above the fold, inline post-Telegram-click state, «Шаг 2 из 2» payment step label. `better-interface full` pass closed 2 MEDIUM accessibility findings (radio group → `fieldset`/`legend`, FAQ accordion → `aria-expanded`/`aria-controls`) — [BETTER_INTERFACE_PASS_B_30.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/BETTER_INTERFACE_PASS_B_30.07.26.md). Executor: Sonnet 5 (`claude-sonnet-5`).
 
 ### Changed
-- **Docs + marketing: product URL `srs` → `koloda` everywhere live paths appear** (manuals, roadmaps, audits, seed READMEs, README, TG drafts). Storage still `storage/.../srs/`; config file still `config/srs.php`. Executor: Grok 4.5 (`grok-4.5`).
 - **Public URL `srs` → `koloda`.** Canonical paths: `/koloda`, `/koloda/{slug}`, `/dvaram/koloda` (+ stats/decks). Legacy `/srs` and `/dvaram/srs` stay as **301** redirects. Internal route names (`student.srs`, `srs.index`) unchanged. Executor: Grok 4.5 (`grok-4.5`).
 - **SRS enabled by default** (`env('SRS_ENABLED', true)`). Explicit `SRS_ENABLED=false` still darks the surface. R-6 OFF-by-default lifted after public per-deck trial URLs shipped. Executor: Grok 4.5 (`grok-4.5`).
 - **H1966 konsultaciya redesign: multi-direction concurrent variants.** No single human pick among A–D; ship several visual directions at once (B = default only). Packet + marketing README updated. Executor: Grok 4.5 (`grok-4.5`).
@@ -1839,7 +1845,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.3...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.5...HEAD
+[1.80.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.4...v1.80.5
+[1.80.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.3...v1.80.4
 [1.80.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.2...v1.80.3
 [1.80.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.1...v1.80.2
 [1.80.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.0...v1.80.1
