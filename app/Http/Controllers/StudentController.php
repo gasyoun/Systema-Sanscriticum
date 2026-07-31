@@ -171,8 +171,9 @@ class StudentController extends Controller
         $pranaRewards = PranaSettings::allRewards();
         $pranaReasons = config('prana.reasons', []);
 
-        // Таблица лидеров по накопленной пране (геймификация).
-        $pranaLeaderboard = PranaLeaderboard::rows(10, $user->id);
+        // Таблица лидеров: Week / Month / All Time (Memrise-аналог, H2051).
+        $pranaLeaderboards = PranaLeaderboard::rowsByPeriod(10, $user->id);
+        $pranaLeaderboard = $pranaLeaderboards['all']; // BC for partials/tests
         // Бейджи (достижения) — вычисляются из сигналов прогресса/праны.
         $badges = Badges::for($user);
         // Магазин праны (spend-sink): активные перки + последние покупки студента.
@@ -259,6 +260,7 @@ class StudentController extends Controller
             'pranaTransactions',
             'pranaRewards',
             'pranaLeaderboard',
+            'pranaLeaderboards',
             'badges',
             'pranaPerks',
             'pranaRedemptions',
