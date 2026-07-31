@@ -1,0 +1,103 @@
+{
+  "course_id": "6679375",
+  "course_name": "Продленка по санскриту",
+  "source_url": "https://community-courses.memrise.com/community/course/6679375/",
+  "language": "sa",
+  "exported_at": "2026-07-31",
+  "columns": {
+    "col_a": "col_a",
+    "col_b": "col_b"
+  },
+  "levels": [
+    {
+      "index": 1,
+      "name": "Level 1",
+      "file": "level_01.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Level 2",
+      "file": "level_02.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "Level 3",
+      "file": "level_03.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "Level 4",
+      "file": "level_04.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "Level 5",
+      "file": "level_05.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 6,
+      "name": "Level 6",
+      "file": "level_06.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 7,
+      "name": "Level 7",
+      "file": "level_07.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 8,
+      "name": "Level 8",
+      "file": "level_08.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 9,
+      "name": "Level 9",
+      "file": "level_09.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    },
+    {
+      "index": 10,
+      "name": "Level 10",
+      "file": "level_10.csv",
+      "columns": [
+        "col_a",
+        "col_b"
+      ]
+    }
+  ]
+}
