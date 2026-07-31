@@ -14,6 +14,7 @@ use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
 use App\Support\MarathonLandingCopy;
+use App\Support\MarathonVisual;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -69,15 +70,18 @@ class MarathonController extends Controller
         'try' => 'Хочу попробовать — пока не знаю',
     ];
 
-    public function show(): View
+    public function show(Request $request): View
     {
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
         // H1067 — ruled RU copy; default variant A, then B via MARATHON_LANDING_COPY_VARIANT.
         $copy = MarathonLandingCopy::forView();
+        // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
+        $skin = MarathonVisual::variantKey($request);
 
         return view('marathon.show', [
             'landing' => $landing,
             'copy' => $copy,
+            'skin' => $skin,
             'quizGoals' => self::QUIZ_GOALS,
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
