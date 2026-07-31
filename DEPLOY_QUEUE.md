@@ -1,22 +1,20 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 31-07-2026 (🚀 breaker: авто-деплой стоит с 30-07 18:56Z)_
+_Создано: 08-07-2026 · Обновлено: 31-07-2026 (✅ breaker снят, авто-деплой снова работает; прод на `a4ff4325`)_
 
-### 🚀🚀 ПЕРВЫМ ДЕЛОМ: авто-деплой СТОИТ — предохранитель сработал 30-07 18:56Z
+### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
-Авто-деплой (H1933) **не работает**: `deploy.sh` умер по таймауту (exit 124, судя по
-логу — внутри `npm ci && npm run build`), автооткат не помог, крон поставил
-предохранитель `storage/auto_deploy.disabled` и с тех пор ничего не выкатывает.
-Прод заморожен на `90ca7a01` (#936); **релизы 1.80.4, 1.80.5 и
-[1.80.6](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.80.6) не живые**
-(SRS/koloda-редиректы, Memrise P2, «Первые вопросы» на `/online`). Сайт при этом
-работает (200) на старом коде. Полные свидетельства и шаги:
-[issue #945](https://github.com/gasyoun/Systema-Sanscriticum/issues/945).
-
-1. Посмотреть, почему `deploy.sh` затаймаутил: `tail -100 /var/www/html/storage/logs/auto_deploy.log`.
-2. Прогнать вручную под присмотром: `cd /var/www/html && sudo bash deploy.sh`.
-3. Если зелено — снять предохранитель: `rm /var/www/html/storage/auto_deploy.disabled`
-   (крон каждые 30 мин снова начнет выкатывать `origin/main`).
+Сбой 30-07 18:56Z (exit 124 в `npm ci && npm run build`) закрыт: предохранитель
+`storage/auto_deploy.disabled` снят до 09:00Z 31-07, крон возобновил выкладки
+(09:00Z → `24e28049` v1.80.7, 09:30Z → `d6494dc6` v1.80.8), а в 09:47Z обертка
+`/usr/local/sbin/systema-auto-deploy-run.sh` прогнана вручную по SSH — прод на
+`a4ff4325` = голова `main` ([v1.80.9](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.80.9)).
+Смоук 200, `guards:verify` чист, Horizon перезапущен; три зеленых деплоя подряд,
+таймаут не повторился. Свидетельства и разбор —
+[issue #945 (закрыт)](https://github.com/gasyoun/Systema-Sanscriticum/issues/945).
+Если exit 124 повторится на npm-тяжелой выкладке — крутилка `SYSTEMA_AUTO_DEPLOY_MAX`
+([docs/server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)).
+Релизы 1.80.4–1.80.9 живые; ниже в очереди остаются только пункты с решением/флагом/внешним шагом.
 
 **30-07-2026 (H1933, решение MG): код теперь деплоится САМ — root-крон на проде
 каждые 30 минут выкатывает `origin/main` через `deploy.sh`.** Ручной шаг
