@@ -1,6 +1,6 @@
 # Комм-пакет марафона — когорта 28-08-2026
 
-_Created: 17-07-2026 · Last updated: 30-07-2026_
+_Created: 17-07-2026 · Last updated: 31-07-2026_
 
 Готовые русские тексты для первой когорты 3-дневной «Консультации по
 онлайн-курсам Общества ревнителей санскрита» (28-08-2026). Авторство H1067
@@ -31,7 +31,7 @@ php artisan marathon:publish-channel-posts --post=1 --live   # реальная 
 | Файл | Что внутри | Куда вставляется |
 |---|---|---|
 | [marathon-landing-copy-variants.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-landing-copy-variants.md) | Два варианта лендинга (A «страхи новичка» / B «результат за 3 дня»): hero, выгоды, FAQ, CTA | Запись `LandingPage` со слагом `konsultaciya-po-onlayn-kursam` через Filament (шаг 2 чек-листа активации) |
-| [marathon-email-sequence.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-email-sequence.md) | 5 писем: welcome, напоминания Дней 1–3, пост-марафонное письмо с купоном | Будущие Mailable-классы `app/Mail/Marathon*` + шаблоны `resources/views/emails/marathon/` — **черновики**: прод-SMTP сломан ([#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504)) |
+| [marathon-email-sequence.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-email-sequence.md) | 5 писем: welcome, напоминания Дней 1–3, пост-марафонное письмо с купоном | Mailable-классы `app/Mail/Marathon*` + шаблоны (H1148); прод SMTP **живой** (Yandex, `mail:preflight` OK 31-07 H2014) — bulk send всё ещё human-gated; [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504) «mailpit» root-cause устарел |
 | [marathon-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/marathon-telegram-posts.md) | Посты канала @samskrte: анонс, день старта, evergreen-напоминания, пост после эфира | Вставляются вручную в канал; бот-дрип НЕ здесь (см. ниже) |
 | [KONSULTACIYA_REDESIGN_DIRECTIONS_30.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/KONSULTACIYA_REDESIGN_DIRECTIONS_30.07.26.md) | H1966: 4 visual directions A–D; **multi-dir** (no single pick; B = default) | Concurrent visual variants on implement — **not** live CSS yet |
 | [redesign/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign) | Static HTML mockups A–D + `/useit` Nielsen pass | Open HTML in browser; design packet |
