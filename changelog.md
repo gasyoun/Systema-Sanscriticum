@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.80.4] - 2026-07-31
+
 ### Added
 - **Deck owner can edit slug** (student «Мои колоды» + Filament unique/required slug). Reserved: `stats`, `decks`. Executor: Grok 4.5 (`grok-4.5`).
 - **SRS per-deck URLs + guest trial.** Each deck has its own path (`/koloda/{slug}` public, `/dvaram/koloda/{slug}` cabinet); hub pages list decks. Guests can try system/public decks without registration (soft wall after `SRS_GUEST_TRIAL_CARDS`, default 10; progress not saved). Tagline is language-aware (`sa` → «учите санскрит», `hi` → «учите хинди»). Executor: Grok 4.5 (`grok-4.5`).
