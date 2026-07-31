@@ -62,7 +62,7 @@ _Unblocked by: nothing — ready._
 - `App\Services\Srs\Fsrs` — vendored FSRS reference (19 weights, `Card` state, grade→next-state), pinned default weights, unit-tested against the reference vectors.
 - `App\Services\Srs\ReviewService` — build today's queue (due + new-per-day limit), record a grade, update state, append log.
 - Dictionary seeder: `DictionaryWord` → one system Sanskrit deck.
-- Minimal Livewire `SrsReview` component at `/dvaram/srs`: front → reveal → Again/Hard/Good/Easy with FSRS-predicted intervals; keyboard shortcuts.
+- Minimal Livewire `SrsReview` component at `/dvaram/koloda`: front → reveal → Again/Hard/Good/Easy with FSRS-predicted intervals; keyboard shortcuts.
 - Behind a `srs_enabled` feature flag (off in prod).
 - **Deliverable:** one Sanskrit system deck reviewable end-to-end by a flagged account.
 

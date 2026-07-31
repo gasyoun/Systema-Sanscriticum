@@ -25,7 +25,7 @@ Index: [PLAN_SYSTEMA_ONLINE_SANSKRIT_GAMES_2026H2.md](https://github.com/gasyoun
                 ▼
 ┌───────────────────────────────────┐     ┌──────────────────────┐
 │  SrsOnboardingFromGames (Wave 2)  │────►│  Saraswati FSRS SRS  │
-│  system deck, cap 20 “seen” cards │     │  /dvaram/srs         │
+│  system deck, cap 20 “seen” cards │     │  /dvaram/koloda         │
 └───────────────────────────────────┘     └──────────────────────┘
                 │
                 ▼ (Wave 2)

@@ -41,12 +41,12 @@ depends on. Ahead of W1-D1 despite the numbering
 | 2 | Change the default to `false`. |
 | 3 | Rewrite the line 16–17 comment: cite **R-6**, state the reason is *baseline protection* (R20), not engine doubt, and note the H447 August-pilot rationale is superseded by R-5. Do not delete the H447 provenance. |
 | 4 | Verify the line 10 docblock ("ВЫКЛ по умолчанию (в проде тоже)") now matches the code. It already asserts the target state — no edit expected. |
-| 5 | Add `tests/Feature/Srs/SrsFlagDefaultTest.php` pinning **two** facts with no `SRS_ENABLED` in env: `config('srs.enabled') === false`, and `GET /dvaram/srs` → 404. The route assertion is the one that matters — it is the student-visible surface R-6 protects. |
+| 5 | Add `tests/Feature/Srs/SrsFlagDefaultTest.php` pinning **two** facts with no `SRS_ENABLED` in env: `config('srs.enabled') === false`, and `GET /dvaram/koloda` → 404. The route assertion is the one that matters — it is the student-visible surface R-6 protects. |
 | 6 | Run the existing SRS suite. Tests that *presume* the feature is on must set the flag explicitly rather than rely on the default — fix by setting the flag in the test, never by reverting step 2. |
 | 7 | Add a DEPLOY_QUEUE note under №24: the default is now `false` in code, so no prod `.env` step is needed to keep SRS dark; an explicit `SRS_ENABLED=true` is now required to surface it. |
 
 > **Acceptance:** with no `SRS_ENABLED` set in the environment, `config('srs.enabled')` is
-> `false` and `GET /dvaram/srs` returns 404, pinned by a passing test in
+> `false` and `GET /dvaram/koloda` returns 404, pinned by a passing test in
 > `tests/Feature/Srs/SrsFlagDefaultTest.php`; the full suite is green.
 
 **Escalate if:** any test failure suggests a non-SRS surface depends on the flag being on
