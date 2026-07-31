@@ -72,6 +72,26 @@ class ReviewService
     }
 
     /**
+     * Memrise P2 «Difficult words»: cards in this deck where the user has
+     * lapses &gt; 0, ordered by most lapses then earliest due. Bypasses the
+     * new-per-day gate so a student can drill known-hard items on demand.
+     *
+     * @return Collection<int, SrsCard>
+     */
+    public function queueDifficultFor(User $user, SrsDeck $deck): Collection
+    {
+        return SrsCard::query()
+            ->where('deck_id', $deck->id)
+            ->whereHas('reviewStates', fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->where('lapses', '>', 0))
+            ->with(['reviewStates' => fn ($q) => $q->where('user_id', $user->id)])
+            ->get()
+            ->sortByDesc(fn (SrsCard $c) => (int) optional($c->reviewStates->first())->lapses)
+            ->values();
+    }
+
+    /**
      * Предпросмотр интервалов для каждой оценки (Again/Hard/Good/Easy) без записи:
      * сколько секунд до следующего показа, если сейчас нажать эту кнопку. Fuzz
      * выключен, чтобы подписи на кнопках были стабильными.

@@ -1,6 +1,6 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 22-07-2026_
+_Created: 11-07-2026 · Last updated: 31-07-2026_
 
 Bring the full Memrise learning loop — spaced-repetition review, every test mode,
 gamification, and user mnemonics — into the [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)
@@ -75,7 +75,13 @@ authoring/import path*, and the *Hindi* content dimension.
 Phases are ordered by *dependency and risk*, not calendar. P0 is time-critical (archive
 sunset). P1–P4 are the core clone; P5 is the Hindi dimension; P6 is the deferred audio.
 
-### P0 — Export the Memrise course (DO FIRST, time-critical) — [H569]
+### P0 — Export the Memrise course (DO FIRST, time-critical) — [H569] · [H1146]
+**Status 31-07-2026:** tooling **shipped** (`scripts/memrise_export.py` + validator);
+sibling courses **exported** (`memrise_6502608`, `6508023`, `6517849`, `6522419`);
+target `memrise_6679375/` is still **empty of CSV** — needs a human `MEMRISE_SESSION`
+(agent cannot log into Memrise). P0 for 6679375 remains the only time-critical human
+step; engineering proceeds on P1/P2 with the other exports + fixtures.
+
 Memrise is **sunsetting community courses** with no published shutdown date; the archive can
 go dark. Export before anything else.
 
@@ -95,6 +101,12 @@ go dark. Export before anything else.
   column meaning, level order, and export date. **Keep the audio/image files even though
   audio is deferred** (D4) — re-fetching after sunset may be impossible.
 - **Also export any Hindi course** the owner holds on the same pass, same tooling (P5 input).
+
+### P1 — Import + wire the existing SRS — ✅ SHIPPED (scaffold + wire + flag ON)
+**Status 31-07-2026:** `srs:import-memrise` + Kochergina lesson-1 importer + Prana award
+on every grade (H447) + authoring (H1487) + per-deck URLs / guest trial (H1981) +
+`SRS_ENABLED` **default true**. Remaining: human runs P0 for 6679375 then
+`php artisan srs:import-memrise database/seeders/data/memrise_6679375`.
 
 ### P1 — Import + wire the existing SRS (the clone goes live behind the flag)
 - **Schema map:** Memrise columns → an `SrsNoteType` field set (e.g. `devanagari`, `iast`,
@@ -126,22 +138,20 @@ go dark. Export before anything else.
   convention).
 - **Exit:** a real student can review the imported deck end-to-end and see XP/streak move.
 
-### P2 — Test modes (the visible Memrise feel)
-Build as Livewire components alongside `SrsReview`, each consuming the same deck/queue:
-- **Multiple choice** — correct answer + N distractors sampled from the deck (same
-  note-type, near length). Grades feed FSRS.
-- **Typing test** — free-type the answer; needs a **Devanagari input** affordance (see P2b).
-  Fuzzy-match against `alt answers` exported from Memrise.
-- **Tap-the-pairs / word-tap** — assemble the answer from shuffled tokens.
-- **Speed review** — timed variant of the review loop; ties into Prana bonus.
-- **Difficult words** — a filter over cards with lapses `> 0`; its own review entry point.
+### P2 — Test modes (the visible Memrise feel) — ✅ SHIPPED 31-07-2026 (H1988)
+Modes live on `SrsReview` via `?mode=` + tab strip (auth only; guests stay classic):
+- **Multiple choice** (`mc`) — correct + up to 3 distractors from the same deck
+  (`DistractorSampler`, length-aware). Correct → Good, wrong → Again.
+- **Typing test** (`typing`) — free-type; `AnswerMatcher` exact/soft/miss → Good/Hard/Again.
+  Accepts `translation*` + `alt_answers` + script fields. **P2b polish** (on-screen
+  Devanagari / live IAST→Devanagari) still open — cheapest path shipped first (Q2 rec).
+- **Tap-the-pairs** (`pairs`) — match prompt↔answer columns for a batch of up to 4.
+- **Speed review** (`speed`) — classic loop with a 10 s Alpine timer; timeout → Again.
+- **Difficult words** (`difficult`) — `ReviewService::queueDifficultFor` (lapses &gt; 0).
 
-### P2b — Devanagari / transliteration input widget
-Typing-mode blocker for both languages. Options (Open Question Q2): a lightweight
-IAST→Devanagari live transliterator (client-side), an on-screen Devanagari keyboard, or
-accept IAST/Cyrillic input and normalize server-side via the existing
-`SanskritGlossary::normalizeKey()` / SLP1 path. Reuse, don't reinvent — the repo already
-stores all three scripts per word.
+### P2b — Devanagari / transliteration input widget — residual polish
+Typing mode works with romanized/Cyrillic + normalize (P2 shipped). Optional upgrade:
+live IAST→Devanagari or on-screen keyboard — not blocking P3.
 
 ### P3 — Mems (mnemonics) + UGC
 - **`SrsMem`** model: `user_id`, `card_id` (or `word_id`), `text`, optional `image`,
