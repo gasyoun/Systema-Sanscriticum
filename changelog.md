@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Konsultaciya visual direction C, warm paper (H1977).** `resources/views/marathon/skins/c/content.blade.php` implemented against the packet C tokens (bg `#F7F1E8`, surface `#FFFCF7`, accent `#C45C26` terracotta) as an O2 light island under the dark shop header — serif display (Tailwind's built-in Georgia/Cambria stack) + sans body, lesson cards with a single ◆ mark each, FAQ under thin rules, shared post-submit/post-Telegram-click states. WCAG contrast pairs computed (not assumed): three pairs — the badge label, the contact placeholder, and both CTA buttons' white-on-accent fill — came in below the 4.5:1 normal-text floor and were fixed pre-review (badge/CTA promoted to the darker in-family `#A94D1F`, already the file's own hover shade; placeholder moved to the standing `#6B5E4E` muted token) rather than accepted as a gap, since this is the skin's own new accent, not a pre-existing brand lock. `better-interface full` pass, 17/17 live Playwright checks green at 375/1280 — [BETTER_INTERFACE_PASS_C_31.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/BETTER_INTERFACE_PASS_C_31.07.26.md). PHPUnit marathon suite 93/93 green (295 assertions), Pint clean. Concurrent sibling to skins A/B ([H1975](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1975-Sonnet_Systema-Sanscriticum_konsultaciya-visual-shell-b_30.07.26.md)/[H1976](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1976-Sonnet_Systema-Sanscriticum_konsultaciya-visual-dir-a_30.07.26.md)), not a sole winner (H1966 multi-dir policy); default stays skin B. Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.80.9] - 2026-07-31
 
 ### Fixed
