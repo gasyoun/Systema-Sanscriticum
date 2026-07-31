@@ -12,7 +12,6 @@ declare(strict_types=1);
  * Context: docs/OPTIMISATION_BACKLOG_2026H2.md §2 · H2014 · .ai_state.md Dev Notes
  * (01-07-2026 MadelineProto polyfill breaks all Livewire locally on Windows).
  */
-
 if (PHP_OS_FAMILY !== 'Windows') {
     exit(0);
 }
