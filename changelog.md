@@ -1,13 +1,8 @@
 ## [Unreleased]
 
 ### Fixed
-<<<<<<< HEAD
+- **H1961 n8n hygiene/pin-image — stop floating `:latest`.** Live `/opt/n8n/docker-compose.yml` pins `n8nio/n8n:2.27.5@sha256:d53243d06c7f7de81910ac922ff55ed4b58c9c3c761d7f2f8443d0567990def3` (was `n8nio/n8n:latest`, same digest at pin time). Staged recreate: healthz 200; n8n `--version` 2.27.5; all 5 Active workflows still listed. Host backup + rollback under `/opt/n8n/backups/h1961/`. Docs: [OPS_PIN_IMAGE_H1961_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md); catalog + C07 remediated. Residual: `caddy:latest` still floating. Executor: Grok 4.5 (`grok-4.5`).
 - **H1959 n8n sec/tg-token-rotate — monthly Telegram bot token out of workflow JSON.** Live `Ежемесячный пост…` (`eixPIvFjfPdOSrYo`, OFF) uses `n8n-nodes-base.telegram` + credential `@zapisi_ORSbot` — **zero** `bot\d+:` URL tokens in live nodes. Host `/opt/n8n/workflows.json` scrubbed (7 inlined tokens → placeholders; pre-scrub backup under `/opt/n8n/backups/h1959/`). Re-exported [`docs/n8n/exports/monthly-schedule-post.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/monthly-schedule-post.live.json); credential audit C02 marked remediated. Residual: optional BotFather rotate of historical export token; monthly stays OFF until product smoke. Out of scope: inactive `БОТ ТУКАН USERs` still URL-inlines tokens. Executor: Grok 4.5 (`grok-4.5`).
-=======
-- **H1961 n8n hygiene/pin-image — stop floating :latest.** Live /opt/n8n/docker-compose.yml pins 
-8nio/n8n:2.27.5@sha256:d53243d06c7f7de81910ac922ff55ed4b58c9c3c761d7f2f8443d0567990def3 (was 
-8nio/n8n:latest, same digest at pin time). Staged recreate: healthz 200; n8n --version 2.27.5; all 5 Active workflows still listed. Host backup + rollback under /opt/n8n/backups/h1961/. Docs: [OPS_PIN_IMAGE_H1961_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md); catalog + C07 remediated. Residual: caddy:latest still floating. Executor: Grok 4.5 (grok-4.5).
->>>>>>> 37dcc389 (docs(n8n): H1961 pin n8nio/n8n image to 2.27.5 digest)
 - **H1958 n8n sec/libfl-rotate — libfl password out of bookbuilder SSH node.** Live `СБОРКА КНИГ` node calls only `/opt/bookbuilder/auto_order_from_env.sh "<url>"`; secrets live in host `/root/.libfl-env` (mode 600). Live n8n sqlite has no password/login strings. Scrubbed git export [`docs/n8n/exports/book-assembly.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/book-assembly.live.json) + inventory snapshot; credential audit C01 marked remediated. Residual: human confirms one libfl login; Jul-25 sqlite bak shred if still present. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added

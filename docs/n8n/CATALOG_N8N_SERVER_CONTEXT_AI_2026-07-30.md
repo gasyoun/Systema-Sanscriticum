@@ -1,10 +1,6 @@
 # Каталог n8n — context-ai.ru (samskrtam50)
 
-<<<<<<< HEAD
-_Created: 30-07-2026 · Last updated: 31-07-2026_
-=======
 _Created: 30-07-2026 · Last updated: 01-08-2026_
->>>>>>> 37dcc389 (docs(n8n): H1961 pin n8nio/n8n image to 2.27.5 digest)
 
 Живой inventory инстанса **n8n** на `193.232.229.91` (`samskrtam50`, UI: `https://context-ai.ru`).  
 Снято **30-07-2026** read-only с `database.sqlite` + host paths. Машинный снимок: [`_server_inventory_2026-07-30.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json). Redacted exports: [`exports/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/).
