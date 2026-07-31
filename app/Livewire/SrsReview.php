@@ -6,6 +6,9 @@ namespace App\Livewire;
 
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
+use App\Services\Srs\AnswerMatcher;
+use App\Services\Srs\CardFace;
+use App\Services\Srs\DistractorSampler;
 use App\Services\Srs\Rating;
 use App\Services\Srs\ReviewService;
 use App\Services\Srs\SrsMedia;
@@ -15,17 +18,24 @@ use Illuminate\Support\Collection;
 use Livewire\Component;
 
 /**
- * SRS-обзор (H211, Wave 1): подбор колоды → лицо карточки → раскрытие →
- * оценка Again/Hard/Good/Easy с FSRS-предсказанием интервала. Ядро логики — в
- * {@see ReviewService}; компонент только держит UI-состояние (выбранная колода,
- * раскрыта ли карточка).
+ * SRS review (H211 Wave 1 + Memrise P2 test modes).
  *
  * Per-deck URL + guest trial: mount accepts optional slug; changing the deck
  * select navigates to /koloda/{slug} or /dvaram/koloda/{slug}. Guests may try
  * system/public decks without registration (session-only, no FSRS persist).
+ *
+ * Modes (query ?mode= / Livewire $mode):
+ * - classic — reveal → Again/Hard/Good/Easy (original)
+ * - mc — multiple choice (distractors from same deck)
+ * - typing — free-type answer (normalize + soft match)
+ * - pairs — tap-the-pairs (match prompt↔answer for a small batch)
+ * - speed — timed classic (deadline grades Again if not answered)
+ * - difficult — same UI as classic, queue = lapses &gt; 0 only
  */
 class SrsReview extends Component
 {
+    public const MODES = ['classic', 'mc', 'typing', 'pairs', 'speed', 'difficult'];
+
     public ?int $deckId = null;
 
     public bool $revealed = false;
@@ -35,27 +45,61 @@ class SrsReview extends Component
 
     public bool $isGuest = false;
 
+    /** @var string classic|mc|typing|pairs|speed|difficult */
+    public string $mode = 'classic';
+
+    /** MC: list of {text, correct} after shuffle. */
+    public array $mcChoices = [];
+
+    public ?string $mcFeedback = null;
+
+    public string $typedAnswer = '';
+
+    public ?string $typingFeedback = null;
+
+    /** Pairs: left column (prompts), right column (answers), matched id pairs. */
+    public array $pairLeft = [];
+
+    public array $pairRight = [];
+
+    public array $pairMatched = [];
+
+    public ?int $pairSelectedLeft = null;
+
+    public ?string $pairsFeedback = null;
+
+    /** Speed: seconds remaining for current card. */
+    public int $speedSeconds = 10;
+
+    public int $speedLimit = 10;
+
     public function mount(?string $slug = null): void
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
         $this->isGuest = ! auth()->check();
 
+        $requested = (string) request()->query('mode', 'classic');
+        $this->mode = in_array($requested, self::MODES, true) ? $requested : 'classic';
+
+        // Guests: only classic trial (no FSRS / no multi-mode complexity).
+        if ($this->isGuest) {
+            $this->mode = 'classic';
+        }
+
         if ($slug !== null && $slug !== '') {
             $deck = $this->resolveDeckBySlug($slug);
             abort_unless($deck !== null && $this->canAccess($deck), 404);
             $this->deckId = $deck->id;
+            $this->prepareModeState();
 
             return;
         }
 
         $this->deckId = $this->availableDecks()->value('id');
+        $this->prepareModeState();
     }
 
-    /**
-     * URL path segment for a deck: slug when present, else id-{id} for private
-     * decks without a slug.
-     */
     public static function deckPathSegment(SrsDeck $deck): string
     {
         return $deck->slug !== null && $deck->slug !== ''
@@ -63,7 +107,6 @@ class SrsReview extends Component
             : 'id-'.$deck->id;
     }
 
-    /** Language-aware marketing line (sa → санскрит, hi → хинди). */
     public function tagline(?SrsDeck $deck): string
     {
         $subject = match ($deck?->language) {
@@ -95,7 +138,6 @@ class SrsReview extends Component
         return auth()->check() && (int) $deck->user_id === (int) auth()->id();
     }
 
-    /** Колоды, доступные: системные, публичные (+ свои, если auth). */
     private function availableDecks(): Builder
     {
         $userId = auth()->id();
@@ -116,10 +158,6 @@ class SrsReview extends Component
         return $this->deckId ? SrsDeck::find($this->deckId) : null;
     }
 
-    /**
-     * When the deck select changes, navigate so the URL reflects the deck.
-     * Livewire only fires this after mount, so no redirect loop on first load.
-     */
     public function updatedDeckId(mixed $value): void
     {
         $deck = SrsDeck::find((int) $value);
@@ -127,7 +165,7 @@ class SrsReview extends Component
             return;
         }
 
-        $this->revealed = false;
+        $this->resetCardUi();
         $this->guestGraded = 0;
 
         $segment = self::deckPathSegment($deck);
@@ -135,7 +173,10 @@ class SrsReview extends Component
             ? '/koloda/'.$segment
             : '/dvaram/koloda/'.$segment;
 
-        // url() not route(): unit tests may boot without SRS route registration.
+        if ($this->mode !== 'classic' && ! $this->isGuest) {
+            $path .= '?mode='.$this->mode;
+        }
+
         $this->redirect(url($path), navigate: true);
     }
 
@@ -143,6 +184,31 @@ class SrsReview extends Component
     {
         $this->deckId = $deckId;
         $this->updatedDeckId($deckId);
+    }
+
+    public function setMode(string $mode): void
+    {
+        if ($this->isGuest || ! in_array($mode, self::MODES, true)) {
+            return;
+        }
+
+        $this->mode = $mode;
+        $this->resetCardUi();
+        $this->prepareModeState();
+
+        $deck = $this->currentDeck();
+        if ($deck === null) {
+            return;
+        }
+
+        $segment = self::deckPathSegment($deck);
+        $path = request()->routeIs('srs.*')
+            ? '/koloda/'.$segment
+            : '/dvaram/koloda/'.$segment;
+        if ($mode !== 'classic') {
+            $path .= '?mode='.$mode;
+        }
+        $this->redirect(url($path), navigate: true);
     }
 
     public function reveal(): void
@@ -159,31 +225,142 @@ class SrsReview extends Component
 
         if ($this->isGuest) {
             $this->guestGraded++;
-            $this->revealed = false;
+            $this->resetCardUi();
 
             return;
         }
 
         $service = app(ReviewService::class);
-        $card = $service->queueFor(auth()->user(), $deck)->first();
+        $card = $this->queue($service, $deck)->first();
         if ($card === null) {
             return;
         }
 
         $service->grade(auth()->user(), $card, Rating::from($rating));
-        $this->revealed = false;
+        $this->resetCardUi();
+        $this->prepareModeState();
     }
 
-    /**
-     * Public URL for a card audio/image field, or null if missing/unresolvable.
-     * Used by the review Blade for Anki-imported media (H1970 follow-up).
-     */
+    /** Multiple-choice: pick index into $mcChoices. */
+    public function chooseMc(int $index): void
+    {
+        if ($this->mode !== 'mc' || $this->isGuest) {
+            return;
+        }
+
+        $choice = $this->mcChoices[$index] ?? null;
+        if ($choice === null) {
+            return;
+        }
+
+        $this->mcFeedback = ($choice['correct'] ?? false) ? 'correct' : 'wrong';
+        $rating = ($choice['correct'] ?? false) ? Rating::Good : Rating::Again;
+        $this->grade($rating->value);
+    }
+
+    /** Typing mode submit. */
+    public function submitTyping(): void
+    {
+        if ($this->mode !== 'typing' || $this->isGuest) {
+            return;
+        }
+
+        $deck = $this->currentDeck();
+        if ($deck === null) {
+            return;
+        }
+
+        $card = $this->queue(app(ReviewService::class), $deck)->first();
+        if ($card === null) {
+            return;
+        }
+
+        $result = app(AnswerMatcher::class)->match($card, $this->typedAnswer);
+        $this->typingFeedback = $result;
+
+        $rating = match ($result) {
+            AnswerMatcher::EXACT => Rating::Good,
+            AnswerMatcher::SOFT => Rating::Hard,
+            default => Rating::Again,
+        };
+
+        $this->grade($rating->value);
+    }
+
+    public function selectPairLeft(int $id): void
+    {
+        if ($this->mode !== 'pairs' || in_array($id, $this->pairMatched, true)) {
+            return;
+        }
+        $this->pairSelectedLeft = $id;
+    }
+
+    public function selectPairRight(int $id): void
+    {
+        if ($this->mode !== 'pairs' || $this->pairSelectedLeft === null) {
+            return;
+        }
+        if (in_array($id, $this->pairMatched, true)) {
+            return;
+        }
+
+        // Right ids equal left card ids when they form a true pair.
+        if ($id === $this->pairSelectedLeft) {
+            $this->pairMatched[] = $id;
+            $this->pairSelectedLeft = null;
+            $this->pairsFeedback = null;
+
+            if (count($this->pairMatched) >= count($this->pairLeft)) {
+                // Grade each matched card as Good.
+                $this->finishPairsSession(Rating::Good);
+            }
+
+            return;
+        }
+
+        $this->pairsFeedback = 'wrong';
+        $this->pairSelectedLeft = null;
+    }
+
+    private function finishPairsSession(Rating $rating): void
+    {
+        if ($this->isGuest) {
+            $this->resetCardUi();
+
+            return;
+        }
+
+        $deck = $this->currentDeck();
+        if ($deck === null) {
+            return;
+        }
+
+        $service = app(ReviewService::class);
+        foreach ($this->pairLeft as $item) {
+            $card = SrsCard::find($item['id'] ?? null);
+            if ($card !== null) {
+                $service->grade(auth()->user(), $card, $rating);
+            }
+        }
+
+        $this->resetCardUi();
+        $this->prepareModeState();
+    }
+
+    /** Speed mode: timer expired without grade. */
+    public function speedTimeout(): void
+    {
+        if ($this->mode !== 'speed') {
+            return;
+        }
+        $this->grade(Rating::Again->value);
+    }
+
     public function mediaUrl(?string $path): ?string
     {
         return SrsMedia::url($path, $this->currentDeck());
     }
 
-    /** Секунды → короткая русская подпись интервала для кнопок. */
     public function formatInterval(int $seconds): string
     {
         if ($seconds < 3600) {
@@ -205,8 +382,6 @@ class SrsReview extends Component
     }
 
     /**
-     * Guest trial queue: first N cards of the deck, then slice past already-graded.
-     *
      * @return Collection<int, SrsCard>
      */
     private function guestQueue(SrsDeck $deck): Collection
@@ -220,6 +395,84 @@ class SrsReview extends Component
             ->get()
             ->slice($this->guestGraded)
             ->values();
+    }
+
+    /**
+     * @return Collection<int, SrsCard>
+     */
+    private function queue(ReviewService $service, SrsDeck $deck): Collection
+    {
+        if ($this->mode === 'difficult') {
+            return $service->queueDifficultFor(auth()->user(), $deck);
+        }
+
+        return $service->queueFor(auth()->user(), $deck);
+    }
+
+    private function resetCardUi(): void
+    {
+        $this->revealed = false;
+        $this->mcChoices = [];
+        $this->mcFeedback = null;
+        $this->typedAnswer = '';
+        $this->typingFeedback = null;
+        $this->pairLeft = [];
+        $this->pairRight = [];
+        $this->pairMatched = [];
+        $this->pairSelectedLeft = null;
+        $this->pairsFeedback = null;
+        $this->speedSeconds = $this->speedLimit;
+    }
+
+    private function prepareModeState(): void
+    {
+        if ($this->isGuest || $this->deckId === null) {
+            return;
+        }
+
+        $deck = $this->currentDeck();
+        if ($deck === null) {
+            return;
+        }
+
+        $service = app(ReviewService::class);
+
+        if ($this->mode === 'mc') {
+            $card = $this->queue($service, $deck)->first();
+            if ($card !== null) {
+                $this->mcChoices = app(DistractorSampler::class)->choices($deck, $card, 3);
+            }
+
+            return;
+        }
+
+        if ($this->mode === 'pairs') {
+            $batch = $this->queue($service, $deck)->take(4);
+            if ($batch->count() < 2) {
+                // Fall back to any cards in deck for a pairs drill.
+                $batch = SrsCard::query()->where('deck_id', $deck->id)->orderBy('id')->limit(4)->get();
+            }
+            $left = [];
+            $right = [];
+            foreach ($batch as $card) {
+                $prompt = CardFace::prompt($card);
+                $answer = CardFace::answer($card);
+                if ($prompt === '' || $answer === '') {
+                    continue;
+                }
+                $left[] = ['id' => $card->id, 'text' => $prompt];
+                $right[] = ['id' => $card->id, 'text' => $answer];
+            }
+            shuffle($right);
+            $this->pairLeft = $left;
+            $this->pairRight = $right;
+
+            return;
+        }
+
+        if ($this->mode === 'speed') {
+            $this->speedSeconds = $this->speedLimit;
+        }
     }
 
     public function render(): View
@@ -242,18 +495,42 @@ class SrsReview extends Component
                 'guestLimitReached' => $guestLimitReached,
                 'tagline' => $this->tagline($deck),
                 'isGuest' => true,
+                'promptText' => $card ? CardFace::prompt($card) : '',
+                'answerText' => $card ? CardFace::answer($card) : '',
+                'modes' => self::MODES,
+            ]);
+        }
+
+        if ($this->mode === 'pairs') {
+            return view('livewire.srs-review', [
+                'decks' => $this->availableDecks()->get(),
+                'deck' => $deck,
+                'card' => null,
+                'remaining' => count($this->pairLeft) - count($this->pairMatched),
+                'previews' => [],
+                'guestLimitReached' => false,
+                'tagline' => $this->tagline($deck),
+                'isGuest' => false,
+                'promptText' => '',
+                'answerText' => '',
+                'modes' => self::MODES,
             ]);
         }
 
         /** @var Collection $queue */
         $queue = $deck !== null
-            ? $service->queueFor(auth()->user(), $deck)
+            ? $this->queue($service, $deck)
             : collect();
 
         $card = $queue->first();
         $previews = ($card !== null && $deck !== null)
             ? $service->previewIntervals(auth()->user(), $card)
             : [];
+
+        // Rebuild MC choices if empty (e.g. after Livewire dehydrate edge).
+        if ($this->mode === 'mc' && $card !== null && $deck !== null && $this->mcChoices === []) {
+            $this->mcChoices = app(DistractorSampler::class)->choices($deck, $card, 3);
+        }
 
         return view('livewire.srs-review', [
             'decks' => $this->availableDecks()->get(),
@@ -264,6 +541,9 @@ class SrsReview extends Component
             'guestLimitReached' => false,
             'tagline' => $this->tagline($deck),
             'isGuest' => false,
+            'promptText' => $card ? CardFace::prompt($card) : '',
+            'answerText' => $card ? CardFace::answer($card) : '',
+            'modes' => self::MODES,
         ]);
     }
 }
