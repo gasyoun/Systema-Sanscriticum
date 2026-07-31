@@ -1,6 +1,10 @@
 # Каталог n8n — context-ai.ru (samskrtam50)
 
+<<<<<<< HEAD
 _Created: 30-07-2026 · Last updated: 31-07-2026_
+=======
+_Created: 30-07-2026 · Last updated: 01-08-2026_
+>>>>>>> 37dcc389 (docs(n8n): H1961 pin n8nio/n8n image to 2.27.5 digest)
 
 Живой inventory инстанса **n8n** на `193.232.229.91` (`samskrtam50`, UI: `https://context-ai.ru`).  
 Снято **30-07-2026** read-only с `database.sqlite` + host paths. Машинный снимок: [`_server_inventory_2026-07-30.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json). Redacted exports: [`exports/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/).
@@ -24,7 +28,7 @@ _Created: 30-07-2026 · Last updated: 31-07-2026_
 |---|---|
 | Host | `samskrtam50` · `193.232.229.91` |
 | Public UI | `https://context-ai.ru` (Caddy → `n8n:5678`) |
-| Install | `/opt/n8n` · `docker compose` (`n8nio/n8n:latest` + `caddy:latest`) |
+| Install | `/opt/n8n` · `docker compose` (`n8nio/n8n:2.27.5@sha256:d53243d06c7f…` **pinned H1961** + `caddy:latest` still floating) |
 | Data volume | `/opt/n8n/storage` → `/home/node/.n8n` |
 | Media bind | `/data` → `/data` (`audio`, `clips`, `bookbuilder`) |
 | Local port | `127.0.0.1:5678` only (not public) |
@@ -41,14 +45,15 @@ _Created: 30-07-2026 · Last updated: 31-07-2026_
 ```yaml
 services:
   n8n:
-    image: n8nio/n8n:latest
+    # H1961 (01-08-2026): pinned away from :latest — see OPS_PIN_IMAGE_H1961_2026-08-01.md
+    image: n8nio/n8n:2.27.5@sha256:d53243d06c7f7de81910ac922ff55ed4b58c9c3c761d7f2f8443d0567990def3
     ports: ["127.0.0.1:5678:5678"]
     volumes:
       - /opt/n8n/storage:/home/node/.n8n
       - /data:/data
     extra_hosts: ["host.docker.internal:host-gateway"]
   caddy:
-    image: caddy:latest
+    image: caddy:latest   # still floating; out of H1961 scope
     ports: ["80:80", "443:443"]
 # Caddyfile: context-ai.ru { reverse_proxy n8n:5678 }
 ```
@@ -116,7 +121,7 @@ Zoom recording.completed webhook
 ```
 
 **Storage:** ~5.1 GB under workflow binary storage — prune candidate.  
-**Risks:** webhook auth=none; dual Zoom credential delete; `:latest` image; SSH cleanup paths reference *other* workflow IDs (stale copy residue).  
+**Risks:** webhook auth=none; dual Zoom credential delete; n8n image **pinned H1961** (caddy still `:latest`); SSH cleanup paths reference *other* workflow IDs (stale copy residue).  
 **Exec:** 15 success / 6 error / 1 canceled (recent retention).  
 **Export:** [`exports/zoom-1.4-admin-test.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/zoom-1.4-admin-test.live.json)
 
@@ -255,7 +260,7 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 | Lecture clip 6/6 errors | 🔴 | execution_entity | Debug SSH/ffmpeg/VK; dry-run one lesson |
 | Payments webhook auth=none | 🔴 money-adj | node auth | Header Auth + Laravel secret (human-gated) |
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |
-| `n8nio/n8n:latest` unpinned | 🟠 | compose | Pin digest/version |
+| `n8nio/n8n` image pin (was `:latest`) | 🟢 H1961 | compose | `2.27.5@sha256:d53243d06c7f…` — [OPS note](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md) |
 | 5.6G binary storage | 🟡 | du | Prune old executions/binaryData offline |
 | 21× My workflow + 8× ZOOM copies | 🟡 | inventory | Archive-tag; no delete yet |
 | Social post workflow missing | 🟡 | product Wave 2 | Import when pilot armed |

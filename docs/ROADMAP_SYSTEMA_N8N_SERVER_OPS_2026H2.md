@@ -1,6 +1,6 @@
 # ROADMAP — n8n server ops 2026 H2
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 Index: [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md)
 
@@ -42,7 +42,7 @@ Index: [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/System
 
 | Item | Notes |
 |---|---|
-| Pin `n8nio/n8n` image version/digest | C07 |
+| ✅ Pin `n8nio/n8n` image version/digest (H1961, 01-08-2026 → `2.27.5@sha256:d53243d06c7f…`) | C07 closed |
 | Prune binary storage (5.6G) offline | Keep Active; clear stale workflow binary dirs |
 | Archive-tag inactive: `My workflow *`, old ZOOM lineage | D4 — no delete |
 | Rename unnamed credentials | C11 |
