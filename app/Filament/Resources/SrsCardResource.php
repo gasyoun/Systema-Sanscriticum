@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\SrsCardResource\Pages;
 use App\Models\SrsCard;
-use App\Support\RoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,14 +13,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 
 /**
- * Standalone card CRUD + CSV import (Wave 2, H1487). Deck-scoped editing also
- * lives on SrsDeckResource's CardsRelationManager; this resource is for bulk
- * review/import across decks.
+ * Standalone card CRUD + CSV import (Wave 2, H1487; H2049 opens to teachers).
+ * Deck-scoped editing also lives on SrsDeckResource's CardsRelationManager;
+ * this resource is for bulk review/import across decks.
  */
 class SrsCardResource extends Resource
 {
-    use AdminOnly;
-
     protected static ?string $model = SrsCard::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-group';
@@ -39,32 +35,32 @@ class SrsCardResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function canViewAny(): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function canCreate(): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function canEdit($record): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function canDelete($record): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function canDeleteAny(): bool
     {
-        return (bool) config('srs.enabled') && RoleGate::adminOnly();
+        return SrsDeckResource::canAuthor();
     }
 
     public static function form(Form $form): Form
