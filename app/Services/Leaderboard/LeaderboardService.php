@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Leaderboard;
 
+use App\Models\MarathonEnrollment;
 use App\Models\SrsDeck;
 use App\Models\User;
+use App\Services\Prana\PranaSettings;
 use App\Support\PranaLeaderboard;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -420,7 +422,7 @@ class LeaderboardService
     {
         // Reuse masking via a public-ish path: call PranaLeaderboard through reflection-free adapter
         $display = $this->maskName((string) $u->name);
-        if (PranaLeaderboard::armFor($u) === \App\Models\MarathonEnrollment::ARM_B
+        if (PranaLeaderboard::armFor($u) === MarathonEnrollment::ARM_B
             && (bool) config('marathon.leaderboard_unmask_enabled', false)) {
             $display = trim((string) $u->name);
         }
@@ -430,7 +432,7 @@ class LeaderboardService
             'display' => $display,
             'score' => $score,
             'lifetime' => $score,
-            'rank' => \App\Services\Prana\PranaSettings::rankFor((int) ($u->lifetime_prana ?? 0))['name'],
+            'rank' => PranaSettings::rankFor((int) ($u->lifetime_prana ?? 0))['name'],
             'is_me' => $currentUserId !== null && $u->id === $currentUserId,
             'period' => $period,
             'board' => $boardKey,
