@@ -38,6 +38,9 @@ class Expense extends Model
         'amount',
         'counterparty',
         'note',
+        // Провенанс моста «Расход»→opex (H2003): id исходного легаси-платежа,
+        // уникален — обеспечивает идемпотентность expenses:bridge-raskhod.
+        'payment_id',
     ];
 
     protected $casts = [
