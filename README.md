@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 11-07-2026_
+_Created: 13-02-2026 · Last updated: 31-07-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -146,6 +146,13 @@ draft → submitted → (needs_revision → submitted)* → accepted
 марафона). Есть бесплатный трек и платный tripwire-трек «с проверкой»
 (`MARATHON_PAID_TRACK_PRICE`, дефолт 500 ₽). Длина прогрева после марафона —
 `MARATHON_WARM_TAIL_DAYS` (медиана времени до покупки из custdev).
+
+Визуальное направление лендинга переключается независимо от контента (H1975):
+`show.blade.php` — тонкая оболочка, отдающая рендер одному из
+`resources/views/marathon/skins/{a,b,c,d}/content.blade.php` через
+`App\Support\MarathonVisual` (`MARATHON_LANDING_VISUAL_VARIANT`, дефолт `b`, QA-оверрайд
+`?skin=`). На 31-07-2026 готовы B (light island, дефолт), A (dark-native, H1976),
+C (warm paper, H1977); D (stepped, H1978) — в очереди.
 
 Файлы: [MarathonController.php](app/Http/Controllers/MarathonController.php),
 [config/marathon.php](config/marathon.php),

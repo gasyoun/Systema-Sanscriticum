@@ -280,6 +280,32 @@ by `RoleGate::finance()`:
   "Юный чемпион" worked example (14.5M capex / 160k-mo rent → IRR ~1 %, payback in
   year 6), which doubles as the correctness validation against the real case.
 
+### Marathon Landing Visual Skins (`/online/konsultaciya`)
+
+H1975: [`resources/views/marathon/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/marathon/show.blade.php)
+is a thin shell — it resolves a **visual** variant key (`a`/`b`/`c`/`d`) via
+`App\Support\MarathonVisual::variantKey()` and includes
+`marathon.skins.{key}.content`. This axis is independent of
+`MarathonLandingCopy`'s **copy** variant (`MARATHON_LANDING_COPY_VARIANT`) — one
+config controls tokens/layout, the other controls text; do not conflate them.
+`MARATHON_LANDING_VISUAL_VARIANT` (env, default `b`) picks the durable variant;
+`?skin=` is a **QA-only override that does not survive the register() POST →
+redirect → GET cycle** (documented, not a bug — `MarathonVisual`'s own docblock
+says so).
+
+**Adding a new skin:** add the letter to `MarathonVisual::VARIANTS`, create
+`resources/views/marathon/skins/{x}/content.blade.php` reading the same `$copy`/
+`$days`/`$benefits`/`$faq`/`$testimonial` variables the existing skins already
+consume (b/a/c share this contract; keep it), and update the stub in
+`show.blade.php`'s fallback list. Each skin's own `better-interface full`
+accessibility/contrast pass lives alongside the mockup in
+[`marketing/marathon-2026-08/redesign/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign)
+(`BETTER_INTERFACE_PASS_{A,B,C}_*.md`) — treat contrast pairs as **computed, not
+assumed** (WCAG relative-luminance formula), same discipline the existing three
+passes used. As of 31-07-2026: B (light island, default), A (dark-native), C
+(warm paper) shipped; D (stepped) queued as H1978. Multi-direction is a
+deliberate policy (H1966) — no single-winner pick, ship concurrent variants.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
