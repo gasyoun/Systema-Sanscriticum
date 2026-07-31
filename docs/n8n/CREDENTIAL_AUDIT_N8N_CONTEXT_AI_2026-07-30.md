@@ -1,6 +1,6 @@
 # Credential audit — n8n context-ai.ru
 
-_Created: 30-07-2026 · Last updated: 31-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 Read-only audit of secrets posture on `samskrtam50` / `https://context-ai.ru`.  
 **No secret values are written here or in git exports.** Findings only: severity × location × remediation × owner.
@@ -41,7 +41,7 @@ Out of scope for this memo: actually rotating tokens (human / gated handoff).
 | C04 | 🔴 | Active lecture-clip executions | 6/6 errors — pipeline armed in UI but not delivering; may leave partial VK state | Debug with one dry-run; confirm `/root/.clip-env` scopes (`video`); do not disable without noting | Ops + agent read-only logs |
 | C05 | 🟠 | Active ZOOM webhooks (2 paths) | Node-level auth=none (Zoom CRC may be in Code) | Keep CRC; add shared-secret header on non-Zoom secondary webhook; restrict source IPs if possible | Ops |
 | C06 | 🟠 | Active `ловим названия copy` webhook | auth=none; high traffic | Header Auth + Laravel secret | Ops |
-| C07 | 🟠 | Docker image `n8nio/n8n:latest` | Unpinned upgrades can break nodes / auth behavior overnight | Pin version or digest in compose; staged upgrade | Ops |
+| C07 | 🟢 **REMEDIATED (H1961, 01-08-2026)** was 🟠 | Docker image was `n8nio/n8n:latest` | Unpinned upgrades can break nodes / auth behavior overnight | **Pinned** `/opt/n8n/docker-compose.yml` → `n8nio/n8n:2.27.5@sha256:d53243d06c7f7de81910ac922ff55ed4b58c9c3c761d7f2f8443d0567990def3`; healthz 200; 5 Active still listed. Ops note: [OPS_PIN_IMAGE_H1961_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md). Residual: `caddy:latest` still floating | H1961 Grok 4.5 |
 | C08 | 🟠 | n8n `.env` contains `VK_ACCESS_TOKEN` / `VK_VIDEO_GROUP_ID` | Code nodes often **cannot** read `$env` (`N8N_BLOCK_ENV_ACCESS_IN_NODE`); false sense of config | Prefer host file (clip-env) or proper credentials; document which path is live | Ops |
 | C09 | 🟠 | Host SSH private key credential `n8n` | SSH from container to host for yt-dlp/ffmpeg — powerful | Ensure key is host-only, no password reuse; audit authorized_keys; command allowlist long-term | Ops |
 | C10 | 🟠 | Multiple Zoom OAuth credentials (6 named) | `Zoom account` ×4 + `Zoom ОРС` + `Zoom Цыди` | Inventory which still used by Active ZOOM; revoke unused | Human |
