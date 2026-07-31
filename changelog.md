@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.80.13] - 2026-07-31
+
+### Added
+- **Гард будущих дат в ручном вводе платежей и расходов (issue [#953](https://github.com/gasyoun/Systema-Sanscriticum/issues/953), H2008).** «Дата платежа» ([PaymentResource](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php)) и «Дата траты» ([ExpenseResource](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/ExpenseResource.php)) получили `maxDate(конец сегодня)` с русским сообщением об ошибке: дата в будущем при ручном вводе — всегда опечатка (две строки «Расход» пять месяцев висели в сентябре-2026 из-за «10.09» вместо «10.02»). Задним числом вносить по-прежнему можно. Тест `ManualEntryFutureDateGuardTest` (4 кейса). Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.80.12] - 2026-07-31
 
 ### Fixed
@@ -1883,7 +1888,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.12...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.13...HEAD
+[1.80.13]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.12...v1.80.13
 [1.80.12]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.11...v1.80.12
 [1.80.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.10...v1.80.11
 [1.80.10]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.9...v1.80.10
