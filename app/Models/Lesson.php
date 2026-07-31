@@ -113,6 +113,29 @@ class Lesson extends Model
                 $lesson->homework_opens_at = HomeworkAutoOpener::opensAtFor($lesson->recording_attached_at);
             }
         });
+
+        // Generic/Hindi track: open HW immediately when the recording stamp
+        // is first applied. Must run after save so open()'s nested save does
+        // not race the outer insert/update. Kochergina stays on the hourly
+        // command (delay + 09:00); this hook only fires for generic_course_slugs.
+        static::saved(function (Lesson $lesson): void {
+            if (! $lesson->wasChanged('recording_attached_at')) {
+                return;
+            }
+
+            if (blank($lesson->recording_attached_at)) {
+                return;
+            }
+
+            try {
+                app(HomeworkAutoOpener::class)->tryOpenImmediate($lesson);
+            } catch (\Throwable $e) {
+                Log::warning('Lesson::saved — generic homework auto-open failed', [
+                    'lesson_id' => $lesson->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        });
     }
 
     public function course(): BelongsTo

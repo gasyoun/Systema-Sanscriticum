@@ -12,6 +12,7 @@ use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
+use App\Services\HomeworkTelegramTagService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache; // Добавили для переключения на человека
 use Illuminate\Support\Facades\Http;
@@ -37,6 +38,19 @@ class TelegramWebhookController extends Controller
             $text = $data['message']['text'];
             // @username отправителя (необязателен в Telegram; может отсутствовать).
             $fromUsername = $data['message']['from']['username'] ?? null;
+
+            // #ДЗ / /dz в чате группы (волна 2): до student-AI и «привяжите аккаунт».
+            // Не-теговые сообщения группы тоже глушим здесь — иначе chat.id группы
+            // уходит в ветку «неавторизованный» и спамит «привяжите аккаунт».
+            $chatType = (string) ($data['message']['chat']['type'] ?? '');
+            if (in_array($chatType, ['group', 'supergroup'], true)) {
+                $tag = app(HomeworkTelegramTagService::class);
+                if ($tag->isTagMessage($text)) {
+                    $tag->handleIncoming($data['message']);
+                }
+
+                return response()->json(['status' => 'ok']);
+            }
 
             // Ловим команду /start с уникальным токеном (Deep Linking)
             if (str_starts_with($text, '/start ')) {
@@ -331,6 +345,13 @@ class TelegramWebhookController extends Controller
         $data = (string) ($callback['data'] ?? '');
         $fromId = $callback['from']['id'] ?? null;
         $chatId = $callback['message']['chat']['id'] ?? $fromId;
+
+        // Выбор урока для #ДЗ (волна 2, звено G).
+        if (str_starts_with($data, HomeworkTelegramTagService::CALLBACK_PREFIX)) {
+            app(HomeworkTelegramTagService::class)->handleCallback($callback);
+
+            return;
+        }
 
         if (! str_starts_with($data, 'ub:') || $fromId === null) {
             $notifier->answerCallback($callbackId);

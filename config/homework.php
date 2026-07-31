@@ -129,6 +129,62 @@ return [
             'KOCHERGINA_SOURCE_PATH',
             base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_unicode.mdx'),
         ),
+
+        /*
+        |----------------------------------------------------------------------
+        | Generic / Hindi track (immediate open, fixed prompt)
+        |----------------------------------------------------------------------
+        |
+        | Отдельный охват от Кочергиной: без textbook_lesson, без +12ч/09:00.
+        | При первом появлении записи урок открывается сразу с формулировкой
+        | generic_prompt («Домашнее задание»). Пусто generic_course_slugs =
+        | трек спит (выкатка безопасна по умолчанию).
+        |
+        | Не кладите один slug и в course_slugs, и в generic_course_slugs:
+        | generic-immediate сработает на saved раньше hourly kochergina-path.
+        |
+        */
+
+        'generic_course_slugs' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('HOMEWORK_AUTO_OPEN_GENERIC_COURSES', '')),
+        ))),
+
+        'generic_prompt' => (string) env(
+            'HOMEWORK_AUTO_OPEN_GENERIC_PROMPT',
+            'Домашнее задание',
+        ),
+
+        // Kill-switch только для immediate-трека (не гасит Кочергину).
+        'generic_immediate' => (bool) env('HOMEWORK_AUTO_OPEN_GENERIC_IMMEDIATE', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | #ДЗ из Telegram-чата группы (волна 2)
+    |--------------------------------------------------------------------------
+    |
+    | Преподаватель пишет в чат группы `#ДЗ …` (или `/dz …`) — платформа
+    | обновляет homework_prompt у урока. Резолвер: C (reply на пост бота) →
+    | B (одно открытое placeholder-ДЗ) → A (свежая запись) → G (кнопки).
+    |
+    | Требует: бот кабинета в чате группы, groups.telegram_chat_id заполнен,
+    | privacy mode OFF у бота ИЛИ команда /dz (иначе Telegram не пришлёт
+    | свободный текст с хэштегом).
+    |
+    */
+
+    'tg_tag' => [
+        'enabled' => (bool) env('HOMEWORK_TG_TAG_ENABLED', true),
+
+        // Сколько часов назад смотреть recording_attached_at для шага A.
+        'lookback_hours' => (int) env('HOMEWORK_TG_TAG_LOOKBACK_HOURS', 72),
+
+        // Постить в чат группы «ответьте #ДЗ» при generic-автооткрытии (звено C).
+        'post_open_invite' => (bool) env('HOMEWORK_TG_TAG_POST_OPEN_INVITE', true),
+
+        // TTL черновика prompt при неоднозначности (кнопки G), минуты.
+        'pending_ttl_minutes' => (int) env('HOMEWORK_TG_TAG_PENDING_TTL', 60),
     ],
 
 ];
