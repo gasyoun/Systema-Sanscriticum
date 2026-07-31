@@ -583,4 +583,13 @@ return [
      | Включение — GAMES_SKILL_DRILLS=true + config:cache после ревью.
      */
     'games_skill_drills' => (bool) env('GAMES_SKILL_DRILLS', false),
+
+    /*
+     | PayPal Subscriptions API (H2027) — auto-bill for diaspora, separate from
+     | manual claim (PAYPAL_CLAIM_ENABLED). Default OFF: route returns 404 and
+     | no Product/Plan/Subscription calls. Prod enable is human @DO only after
+     | Business account can sell Subscriptions. See
+     | docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
+     */
+    'paypal_subscriptions' => (bool) env('PAYPAL_SUBSCRIPTIONS_ENABLED', false),
 ];

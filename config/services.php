@@ -359,6 +359,17 @@ return [
         'enabled' => (bool) env('PAYPAL_CLAIM_ENABLED', false),
         'me_link' => env('PAYPAL_ME_LINK'),      // напр. https://www.paypal.com/paypalme/xxx
         'recipient' => env('PAYPAL_RECIPIENT'),  // email/имя получателя для инструкции студенту
+        // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
+        // Master flag default OFF; secrets never committed. See
+        // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
+        'subscriptions' => [
+            'enabled' => (bool) env('PAYPAL_SUBSCRIPTIONS_ENABLED', false),
+            'mode' => env('PAYPAL_API_MODE', 'sandbox'), // sandbox|live
+            'client_id' => env('PAYPAL_CLIENT_ID'),
+            'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+            'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+            'base_url' => env('PAYPAL_API_BASE_URL'), // optional override
+        ],
     ],
 
 ];

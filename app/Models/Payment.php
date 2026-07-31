@@ -95,6 +95,13 @@ class Payment extends Model
     public const PROVIDER_PAYPAL = 'paypal';
 
     /**
+     * Auto-charge from PayPal Subscriptions API (H2027). Not a manual claim —
+     * webhook-paid; must stay out of MANUAL_CLAIM_PROVIDERS. Distinct from
+     * PROVIDER_PAYPAL so Filament «Заявки PayPal» does not mix subscription rows.
+     */
+    public const PROVIDER_PAYPAL_SUBSCRIPTION = 'paypal_subscription';
+
+    /**
      * Счёт на оплату для юрлица / ИП (безнал по реквизитам). Pending до ручной
      * сверки поступления; доступ только после paid в Filament (H2017).
      */
