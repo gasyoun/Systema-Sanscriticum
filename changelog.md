@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.80.7] - 2026-07-31
+
+### Changed
+- **Библиотека ответов поддержки — регистровый проход, категории суггестера A–F (H1876).** Тексты черновиков FAQ-суггестера приведены к домашнему регистру revenue-copy voice contract: «с учётом» → «с учетом» в публичных тарифах (D-гость, правило D13), регистровый блок в системном промпте LLM-формулировщика D/E/F (`SupportLlmDraftComposer`), канреплай «приняли в работу» без «ё»/восклицания и с конкретной скоростью ответа, плюс три непривязанные заготовки D/E/F в [`MessageTemplateSeeder`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/MessageTemplateSeeder.php) (привязка — решение оператора, S9/H1838). G–I сознательно вне охвата (не категории суггестера). Запись: [docs/copy/support-reply-library-ru-register-a-f.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/support-reply-library-ru-register-a-f.md). Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.80.6] - 2026-07-31
 
 ### Added
@@ -1853,7 +1858,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.6...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.7...HEAD
+[1.80.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.6...v1.80.7
 [1.80.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.5...v1.80.6
 [1.80.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.4...v1.80.5
 [1.80.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.3...v1.80.4
