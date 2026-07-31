@@ -1,6 +1,6 @@
 {
   "id": "eixPIvFjfPdOSrYo",
-  "name": "╨Х╨╢╨╡╨╝╨╡╤Б╤П╤З╨╜╤Л╨╣ ╨┐╨╛╤Б╤В ╨║╤Г╤А╤Б╨╛╨▓ тЖТ ╨Т╨Ъ + Telegram (monthly_schedule_post)",
+  "name": "Ежемесячный пост курсов → ВК + Telegram (monthly_schedule_post)",
   "active": false,
   "nodes": [
     {
@@ -22,38 +22,35 @@
       "webhookId": "monthly-schedule-post",
       "credentials": {
         "httpHeaderAuth": {
-          "name": "Header Auth account 3",
-          "id": "***"
+          "id": "uWRgfvaDdQByTUcB",
+          "name": "Header Auth account 3"
         }
       }
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.telegram.org/bot***:***REDACTED***/sendPhoto",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "chat_id",
-              "value": "-1002194149434"
-            },
-            {
-              "name": "photo",
-              "value": "={{ $json.body.image_url }}"
-            }
-          ]
-        },
-        "options": {}
+        "operation": "sendPhoto",
+        "chatId": "-1002194149434",
+        "binaryData": false,
+        "file": "={{ $json.body.image_url }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "79c24c2d-a3cf-41e1-b129-3c08f9b81b8e",
       "name": "Telegram: sendPhoto",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
         0,
         0
-      ]
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "8J5AXq9y3lggdOMs",
+          "name": "@zapisi_ORSbot"
+        }
+      }
     },
     {
       "parameters": {
@@ -66,16 +63,14 @@
               "value": "208089583"
             },
             {
-              "name": "access_token",
-              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
-            },
-            {
               "name": "v",
               "value": "5.131"
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
       },
       "id": "e92b957b-e96c-4c28-8834-cfccd6c935dd",
       "name": "VK: getWallUploadServer",
@@ -84,7 +79,13 @@
       "position": [
         0,
         384
-      ]
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qryVkToken01",
+          "name": "VK access_token (env)"
+        }
+      }
     },
     {
       "parameters": {
@@ -98,7 +99,7 @@
         }
       },
       "id": "aeccb90a-024a-401c-bda1-92204c377024",
-      "name": "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г",
+      "name": "VK: скачать картинку",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -143,10 +144,6 @@
               "value": "208089583"
             },
             {
-              "name": "access_token",
-              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
-            },
-            {
               "name": "v",
               "value": "5.131"
             },
@@ -164,7 +161,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
       },
       "id": "b904cfc8-2dce-413b-abfb-be1bc6a475e2",
       "name": "VK: saveWallPhoto",
@@ -173,7 +172,13 @@
       "position": [
         720,
         384
-      ]
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qryVkToken01",
+          "name": "VK access_token (env)"
+        }
+      }
     },
     {
       "parameters": {
@@ -190,10 +195,6 @@
               "value": "1"
             },
             {
-              "name": "access_token",
-              "value": "vk1.a.qe76Mlm87Afa-IXtDsI_WfqPIVscMnzErGBwOm12ktoZD9g-u-Up0k54k5zP1OyJjVX33HiDKEBBnG1upsb2S_N9AHO_z69HgwkbLVls-ZmqeDEbfW-9KzFvAgO2jgRPxYqhlEQ1eE06fKP5FJw44Mc9gCrL2uqJX3LMJP34rrN9cDvRodVpOmUxjBJ5Kx6OpJ5_jV2qOVIdqdXPgXK8Mw"
-            },
-            {
               "name": "v",
               "value": "5.131"
             },
@@ -207,7 +208,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth"
       },
       "id": "13ca0b9d-cfcd-44aa-9c06-49ce3e8ed3b9",
       "name": "VK: wall.post",
@@ -216,25 +219,38 @@
       "position": [
         960,
         384
-      ]
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qryVkToken01",
+          "name": "VK access_token (env)"
+        }
+      }
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.telegram.org/bot***:***REDACTED***/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"chat_id\": \"-1002194149434\",\n    \"text\": {{ JSON.stringify($('Webhook').item.json.body.text_tg) }},\n    \"parse_mode\": \"HTML\",\n    \"disable_web_page_preview\": true\n  }",
-        "options": {}
+        "chatId": "-1002194149434",
+        "text": "={{ $('Webhook').item.json.body.text_tg }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
       },
       "id": "adc39d6f-3032-4942-9b02-b04c621363cd",
       "name": "Telegram: sendPhoto1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
         176,
         0
-      ]
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "8J5AXq9y3lggdOMs",
+          "name": "@zapisi_ORSbot"
+        }
+      }
     }
   ],
   "connections": {
@@ -258,14 +274,14 @@
       "main": [
         [
           {
-            "node": "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г",
+            "node": "VK: скачать картинку",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "VK: ╤Б╨║╨░╤З╨░╤В╤М ╨║╨░╤А╤В╨╕╨╜╨║╤Г": {
+    "VK: скачать картинку": {
       "main": [
         [
           {
@@ -314,8 +330,7 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "exportedAt": "2026-07-30",
-    "host": "samskrtam50",
-    "note": "credentials and secrets redacted"
+    "exported": "H1959 2026-07-31",
+    "note": "Live shape: n8n-nodes-base.telegram + telegramApi credential (no URL-embedded bot token). Secret values never included."
   }
 }

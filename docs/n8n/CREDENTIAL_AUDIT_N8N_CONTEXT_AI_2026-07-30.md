@@ -36,7 +36,7 @@ Out of scope for this memo: actually rotating tokens (human / gated handoff).
 | ID | Sev | Location | Finding | Remediation | Owner |
 |---|---|---|---|---|---|
 | C01 | 🟢 **REMEDIATED (H1958, 31-07-2026)** was 🔴 | Workflow `СБОРКА КНИГ` · SSH node `автозаказ` | Was: libfl login+password as CLI args. **Now:** node runs only `/opt/bookbuilder/auto_order_from_env.sh "<url>"`; secrets in `/root/.libfl-env` (mode 600) keys `LIBFL_LOGIN`/`LIBFL_PASSWORD`; live sqlite has **zero** password/login strings; git export scrubbed | Residual: human confirms one login/order path works; Jul-25 sqlite `.bak-*` may still hold the **pre-rotate** secret — shred offline when safe; stale `/opt/n8n/workflows.json` still had login email until next full re-export | H1958 Grok 4.5 |
-| C02 | 🔴 | Workflow `Ежемесячный пост…` · HTTP Telegram URLs | **Bot token embedded in URL** `api.telegram.org/bot<token>/…` (not Telegram credential) | Rotate Telegram bot token via BotFather; switch nodes to official Telegram node or header; never put token in URL string | Human |
+| C02 | 🟢 **REMEDIATED (H1959, 31-07-2026)** was 🔴 | Workflow `Ежемесячный пост…` `eixPIvFjfPdOSrYo` (OFF) | Was: bot token in HTTP URLs `api.telegram.org/bot<token>/…`. **Now (live):** both TG steps are `n8n-nodes-base.telegram` bound to `telegramApi` credential `@zapisi_ORSbot` (`8J5AXq9y3lggdOMs`); live nodes have **zero** `bot\d+:` / plain-token shapes. Host `/opt/n8n/workflows.json` scrubbed (7 URL tokens → `REPLACE_TG_BOT_TOKEN`); pre-scrub copy at `/opt/n8n/backups/h1959/workflows.json.before_h1959_*` mode 600 | Residual human: optional BotFather rotate of any token that lived in the pre-scrub export, then re-enter in the n8n credential if that bot is still used; smoke-activate monthly only if product wants posts ON. Out of scope: inactive `БОТ ТУКАН USERs` still has 5 URL-inlined tokens | H1959 Grok 4.5 |
 | C03 | 🔴 | Active `АДМИНКА+ТАБЛИЦА ОПЛАТ` webhook `payments` | `authentication=none` on money-adjacent append-to-sheet | Header Auth credential + match secret in Laravel `N8N_*` / payments caller; reject without header | Human-gated (money fence) |
 | C04 | 🔴 | Active lecture-clip executions | 6/6 errors — pipeline armed in UI but not delivering; may leave partial VK state | Debug with one dry-run; confirm `/root/.clip-env` scopes (`video`); do not disable without noting | Ops + agent read-only logs |
 | C05 | 🟠 | Active ZOOM webhooks (2 paths) | Node-level auth=none (Zoom CRC may be in Code) | Keep CRC; add shared-secret header on non-Zoom secondary webhook; restrict source IPs if possible | Ops |
@@ -97,7 +97,7 @@ Out of scope for this memo: actually rotating tokens (human / gated handoff).
 ## Immediate human checklist (not agent-executed)
 
 1. **Rotate** libfl password used by bookbuilder; remove plaintext from `СБОРКА КНИГ`.
-2. **Rotate** Telegram bot token that was URL-inlined in monthly post workflow.
+2. **Optional (C02 residual):** BotFather-rotate any token that appeared in pre-H1959 `/opt/n8n/workflows.json` backup under `/opt/n8n/backups/h1959/`; re-enter in n8n `telegramApi` if still used. Live monthly no longer embeds tokens.
 3. Decide: enable Header Auth on `payments` and titles webhooks (money/comms impact).
 4. Confirm whether `credentials.json` + sqlite `.bak-*` under `/opt/n8n` should be shredded or encrypted offline.
 5. Fix lecture-clip error streak before marketing flag ON.
