@@ -7,14 +7,19 @@ declare(strict_types=1);
 | H1067 marathon landing + channel copy (ruled texts, no rewrite)
 |--------------------------------------------------------------------------
 | Source: marketing/marathon-2026-08/*.md (Fable 5, H1067).
-| Default live variant: A («страхи новичка»). Switch to B via
-| MARATHON_LANDING_COPY_VARIANT=b after the A window.
+| MARATHON_LANDING_COPY_VARIANT is either:
+|   - `a` or `b` — forces every visitor to that single variant (also the
+|     rollback lever if the live split needs to be paused).
+|   - `ab` — runs both concurrently, session-sticky 50/50 split (MG ruling
+|     31-07-2026: run both rather than pick one). See
+|     App\Support\MarathonLandingCopy::resolveArmForRequest() and
+|     `php artisan marathon:landing-copy-ab-report` for the conversion read.
 | Register «вы», no urgency, no invented testimonials.
 */
 
 return [
-    // Live public page /online/konsultaciya — A first, then B (MG 28-07-2026).
-    'variant' => env('MARATHON_LANDING_COPY_VARIANT', 'a'),
+    // Live public page /online/konsultaciya — default ab (concurrent split, MG 31-07-2026).
+    'variant' => env('MARATHON_LANDING_COPY_VARIANT', 'ab'),
 
     // Public channel for schedule posts (not the personal Day 1–3 drip).
     'channel_chat_id' => env('MARATHON_CHANNEL_CHAT_ID', '@samskrte'),

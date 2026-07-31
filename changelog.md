@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- Marathon landing copy (H1067) now supports a live 50/50 A/B split (`MARATHON_LANDING_COPY_VARIANT=ab`, the new default) — session-sticky arm assignment in `MarathonLandingCopy::resolveArmForRequest()`, persisted onto `leads.landing_copy_arm` at registration, read back via `php artisan marathon:landing-copy-ab-report`. Forcing `a`/`b` still pins every visitor to a single variant (rollback lever). MG ruling 31-07-2026: run both concurrently instead of picking one, mirroring the H1966 visual-skin policy.
+
 ## [1.80.13] - 2026-07-31
 
 ### Added

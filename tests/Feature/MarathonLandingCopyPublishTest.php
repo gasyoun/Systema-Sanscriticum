@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\MarketingSetting;
 use App\Support\MarathonLandingCopy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -151,5 +152,67 @@ class MarathonLandingCopyPublishTest extends TestCase
 
         Http::assertSentCount(2);
         Carbon::setTestNow();
+    }
+
+    /** MG ruling 31-07-2026: run both copy arms concurrently rather than pick one. */
+    public function test_ab_mode_is_sticky_within_a_session_and_reaches_both_arms(): void
+    {
+        config(['marathon_landing_copy.variant' => 'ab']);
+
+        $first = $this->get(route('marathon.show'))->assertOk();
+        $armFromFirstVisit = session(MarathonLandingCopy::SESSION_KEY);
+        $this->assertContains($armFromFirstVisit, ['a', 'b']);
+
+        // Same session, second visit — same arm, not re-rolled.
+        $this->get(route('marathon.show'))->assertOk();
+        $this->assertSame($armFromFirstVisit, session(MarathonLandingCopy::SESSION_KEY));
+
+        // A fresh session (new test client) can land on the other arm; over
+        // enough tries both arms must appear, proving the split is live and
+        // not silently pinned to one letter.
+        $seenArms = [];
+        for ($i = 0; $i < 20 && count($seenArms) < 2; $i++) {
+            $this->flushSession();
+            $this->get(route('marathon.show'));
+            $seenArms[session(MarathonLandingCopy::SESSION_KEY)] = true;
+        }
+        $this->assertCount(2, $seenArms, 'Expected both arms to appear across fresh sessions.');
+    }
+
+    public function test_ab_mode_persists_the_shown_arm_onto_the_registered_lead(): void
+    {
+        config(['marathon_landing_copy.variant' => 'ab']);
+
+        $this->get(route('marathon.show'))->assertOk();
+        $shownArm = session(MarathonLandingCopy::SESSION_KEY);
+
+        $this->post(route('marathon.register'), [
+            'name' => 'Тест Тестов',
+            'contact' => 'test-ab-arm@example.com',
+            'email' => 'test-ab-arm@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'try',
+        ])->assertRedirect(route('marathon.show'));
+
+        $lead = Lead::where('email', 'test-ab-arm@example.com')->firstOrFail();
+        $this->assertSame($shownArm, $lead->landing_copy_arm);
+    }
+
+    public function test_forced_single_variant_still_overrides_ab_split(): void
+    {
+        config(['marathon_landing_copy.variant' => 'b']);
+
+        $this->get(route('marathon.show'))->assertOk();
+
+        $this->post(route('marathon.register'), [
+            'name' => 'Тест Тестов',
+            'contact' => 'test-forced-b@example.com',
+            'email' => 'test-forced-b@example.com',
+            'track' => 'free',
+            'quiz_goal' => 'try',
+        ])->assertRedirect(route('marathon.show'));
+
+        $lead = Lead::where('email', 'test-forced-b@example.com')->firstOrFail();
+        $this->assertSame('b', $lead->landing_copy_arm);
     }
 }

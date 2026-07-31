@@ -73,8 +73,10 @@ class MarathonController extends Controller
     public function show(Request $request): View
     {
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
-        // H1067 — ruled RU copy; default variant A, then B via MARATHON_LANDING_COPY_VARIANT.
-        $copy = MarathonLandingCopy::forView();
+        // H1067 — ruled RU copy; MARATHON_LANDING_COPY_VARIANT=ab (default) runs a
+        // live session-sticky 50/50 split between the two ruled variants.
+        $armKey = MarathonLandingCopy::resolveArmForRequest($request);
+        $copy = MarathonLandingCopy::forView($armKey);
         // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
         $skin = MarathonVisual::variantKey($request);
 
@@ -115,6 +117,10 @@ class MarathonController extends Controller
             'email' => $validated['email'] ?? null,
             'social' => $validated['social'] ?? null,
             'landing_page_id' => $landing?->id,
+            // H1067 — the arm this visitor actually saw (session-sticky, set
+            // on first `show()` this session); never recomputed here, so a
+            // resumed/duplicate submit can't silently switch a Lead's arm.
+            'landing_copy_arm' => MarathonLandingCopy::resolveArmForRequest($request),
             'is_promo_agreed' => $request->has('is_promo_agreed'),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),

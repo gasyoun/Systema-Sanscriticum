@@ -57,6 +57,7 @@ class Lead extends Model
     protected $fillable = [
         // Основные данные
         'landing_page_id',
+        'landing_copy_arm',
         'name',
         'contact',
         'email',            // <--- Важно: Добавили Email
