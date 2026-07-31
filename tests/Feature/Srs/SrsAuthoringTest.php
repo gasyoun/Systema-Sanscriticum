@@ -30,7 +30,7 @@ class SrsAuthoringTest extends TestCase
 
     protected function setUp(): void
     {
-        // Route registration for /dvaram/srs/* is gated on config at boot
+        // Route registration for /dvaram/koloda/* is gated on config at boot
         // (see routes/web.php) — same pattern as SrsFlagOverrideTest / SrsReviewTest.
         putenv('SRS_ENABLED=true');
         $_ENV['SRS_ENABLED'] = 'true';
@@ -187,7 +187,7 @@ class SrsAuthoringTest extends TestCase
             ->call('createDeck')
             ->set('editSlug', 'my-vocab-deck')
             ->call('updateSlug')
-            ->assertSet('message', 'Адрес колоды обновлён: /dvaram/srs/my-vocab-deck')
+            ->assertSet('message', 'Адрес колоды обновлён: /dvaram/koloda/my-vocab-deck')
             ->assertSet('editSlug', 'my-vocab-deck');
 
         $this->assertDatabaseHas('srs_decks', [

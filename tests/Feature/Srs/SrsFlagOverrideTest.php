@@ -37,6 +37,6 @@ class SrsFlagOverrideTest extends TestCase
         $this->assertFalse(app('router')->has('srs.index'));
         $this->assertFalse(app('router')->has('srs.deck'));
         // Cabinet path only exists under the SRS gate (not the promo catch-all).
-        $this->get('/dvaram/srs')->assertNotFound();
+        $this->get('/dvaram/koloda')->assertNotFound();
     }
 }

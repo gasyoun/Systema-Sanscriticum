@@ -29,12 +29,12 @@
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             @unless($isGuest)
                 {{-- url() not route(): Livewire unit tests boot without SRS route registration --}}
-                <a href="{{ url('/dvaram/srs/decks') }}"
+                <a href="{{ url('/dvaram/koloda/decks') }}"
                    class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
                     Мои колоды
                 </a>
             @else
-                <a href="{{ url('/srs') }}"
+                <a href="{{ url('/koloda') }}"
                    class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors whitespace-nowrap">
                     Все колоды
                 </a>

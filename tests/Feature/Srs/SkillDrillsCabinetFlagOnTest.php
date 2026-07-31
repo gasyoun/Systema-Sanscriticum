@@ -46,7 +46,7 @@ class SkillDrillsCabinetFlagOnTest extends TestCase
         $response->assertSee('/lila/', false);
 
         $this->assertSame('/dvaram/skill-drills', parse_url(route('student.skill-drills'), PHP_URL_PATH));
-        $this->assertNotSame('/dvaram/srs', parse_url(route('student.skill-drills'), PHP_URL_PATH));
+        $this->assertNotSame('/dvaram/koloda', parse_url(route('student.skill-drills'), PHP_URL_PATH));
     }
 
     /** @test */

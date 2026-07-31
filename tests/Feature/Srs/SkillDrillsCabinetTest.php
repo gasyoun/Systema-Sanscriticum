@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 /**
  * H1680 — Wave 2: cabinet skill-drill strip (/dvaram/skill-drills), DISTINCT
- * from the FSRS review loop (/dvaram/srs) and gated by its own flag
+ * from the FSRS review loop (/dvaram/koloda) and gated by its own flag
  * (features.games_skill_drills), OFF by default (Architecture §5). The
  * flag-ON half lives in SkillDrillsCabinetFlagOnTest — routes are
  * registered at boot from config, so that half must set the flag via env

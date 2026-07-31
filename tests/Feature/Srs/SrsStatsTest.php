@@ -98,7 +98,7 @@ class SrsStatsTest extends TestCase
         config(['srs.enabled' => false]);
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/dvaram/srs/stats');
+        $response = $this->actingAs($user)->get('/dvaram/koloda/stats');
 
         $response->assertNotFound();
     }

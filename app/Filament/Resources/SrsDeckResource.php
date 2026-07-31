@@ -90,7 +90,7 @@ class SrsDeckResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->rules(['alpha_dash', 'not_in:stats,decks'])
-                    ->helperText('Сегмент URL: /srs/{slug} и /dvaram/srs/{slug}. Латиница, цифры, дефис. Нельзя stats/decks.'),
+                    ->helperText('Сегмент URL: /koloda/{slug} и /dvaram/koloda/{slug}. Латиница, цифры, дефис. Нельзя stats/decks.'),
 
                 Forms\Components\Select::make('note_type_id')
                     ->label('Тип карточки')

@@ -32,7 +32,7 @@
                     };
                 @endphp
                 <li>
-                    <a href="{{ url('/srs/'.$segment) }}"
+                    <a href="{{ url('/koloda/'.$segment) }}"
                        class="flex items-center justify-between gap-4 p-5 rounded-2xl border border-[#1F2636] bg-[#111622] hover:border-[#E85C24]/50 transition-all group">
                         <div>
                             <div class="font-extrabold text-white group-hover:text-[#E85C24] transition-colors">
