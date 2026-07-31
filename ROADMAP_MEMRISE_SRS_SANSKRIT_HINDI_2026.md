@@ -195,20 +195,14 @@ do not solve audio twice.
 
 ---
 
-## 5. Open questions (@DECIDE)
+## 5. Open questions (@DECIDE) — ruled 31-07-2026 (koloda ask-batch)
 
-1. **`Lesson.flash_cards` reconciliation.** Lessons already carry a simpler `flash_cards`
-   JSON column. Migrate those into the SRS `SrsCard` system (one source of truth), or keep
-   the two independent (lesson-embedded quick cards vs the SRS trainer)? Recommendation:
-   migrate into SRS so all cards share scheduling + gamification.
-2. **Typing-mode input.** Live IAST→Devanagari transliterator, on-screen Devanagari
-   keyboard, or accept romanized input + server-side normalize? Recommendation: start with
-   romanized-in + normalize (cheapest, reuses existing script logic), add a live
-   transliterator in P2b polish.
-3. **Hindi placement.** Separate Hindi track (own decks, own menu) or interleaved with
-   Sanskrit? Affects navigation and the leaderboard scoping.
-4. **UGC moderation policy.** Are public mems/decks pre-moderated or post-moderated? Affects
-   P3 scope.
+1. **`Lesson.flash_cards` reconciliation.** ✅ **Migrate into SRS** (K2). See
+   [docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
+2. **Typing-mode input.** P2 shipped romanized + normalize; **P2b** (live IAST→Devanagari /
+   on-screen keyboard) remains polish, not blocking content wave.
+3. **Hindi placement.** ✅ **Separate track / language filter** on hubs (K4).
+4. **UGC moderation policy.** ✅ **Post-moderation** when P3 lands (K3); not wave-1.
 
 ---
 
