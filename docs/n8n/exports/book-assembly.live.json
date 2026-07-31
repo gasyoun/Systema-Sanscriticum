@@ -1,6 +1,6 @@
 {
   "id": "gDewFLK9YiQk5MYy",
-  "name": "╨б╨С╨Ю╨а╨Ъ╨Р ╨Ъ╨Э╨Ш╨У",
+  "name": "СБОРКА КНИГ",
   "active": false,
   "nodes": [
     {
@@ -52,15 +52,15 @@
           "parameters": [
             {
               "name": "login",
-              "value": "***EMAIL***"
+              "value": ""
             },
             {
               "name": "password",
-              "value": "***REDACTED***"
+              "value": ""
             },
             {
               "name": "submit",
-              "value": "╨Т╨╛╨╣╤В╨╕"
+              "value": "Войти"
             },
             {
               "name": "referer",
@@ -93,7 +93,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\nlet readerToken = \"\";\n\nif (Array.isArray(setCookie)) {\n    const tokenCookie = setCookie.find(c => c.trim().startsWith('ReaderToken='));\n    if (tokenCookie) readerToken = tokenCookie.split(';')[0];\n} else if (typeof setCookie === 'string' && setCookie.startsWith('ReaderToken=')) {\n    readerToken = setCookie.split(';')[0];\n}\n\nreturn [{\n    json: {\n        // ╨С╨Х╨а╨Х╨Ь ╨Ф╨Р╨Э╨Э╨л╨Х ╨в╨Х╨Ъ╨г╨й╨Х╨Щ ╨Ъ╨Э╨Ш╨У╨Ш\n        ...$('Loop Over Items1').item.json,\n        authCookie: readerToken\n    }\n}];"
+        "jsCode": "const headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\nlet readerToken = \"\";\n\nif (Array.isArray(setCookie)) {\n    const tokenCookie = setCookie.find(c => c.trim().startsWith('ReaderToken='));\n    if (tokenCookie) readerToken = tokenCookie.split(';')[0];\n} else if (typeof setCookie === 'string' && setCookie.startsWith('ReaderToken=')) {\n    readerToken = setCookie.split(';')[0];\n}\n\nreturn [{\n    json: {\n        // БЕРЕМ ДАННЫЕ ТЕКУЩЕЙ КНИГИ\n        ...$('Loop Over Items1').item.json,\n        authCookie: readerToken\n    }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -106,7 +106,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const currentItem = $('Code in JavaScript5').item.json;\nconst bookFullId = currentItem.bookId;\nconst totalPages = currentItem.totalPages;\n\nif (!bookFullId || typeof bookFullId !== 'string') {\n  throw new Error(`╨Э╨╡╨║╨╛╤А╤А╨╡╨║╤В╨╜╤Л╨╣ ID ╨║╨╜╨╕╨│╨╕: ${bookFullId}`);\n}\n\nconst parts = bookFullId.includes('_') ? bookFullId.split('_') : [bookFullId, \"0\"];\nconst prefix = parts[0];\nlet numStr = parts[1] || \"0\"; \nconst numPart = numStr.toString().padStart(9, '0');\n\nconst p1 = numPart.substring(0, 3);\nconst p2 = numPart.substring(3, 6);\nconst p3 = numPart.substring(6, 9);\nconst safeBookId = bookFullId.trim().replace(/[^\\w.-]+/g, \"_\");\n\nlet urlList = \"\";\nfor (let i = 1; i <= Number(totalPages); i++) {\n  const pagePad = i.toString().padStart(5, '0');\n  urlList += `https://cdn.libfl.ru/books/${prefix}/${p1}/${p2}/${p3}/JPEG_HQ/${pagePad}.jpg\\n`;\n}\n\nreturn [{\n  json: {\n    ...currentItem,\n    bookId: bookFullId,\n    safeBookId, \n    urlList,\n    urlCount: Number(totalPages),\n  }\n}];"
+        "jsCode": "const currentItem = $('Code in JavaScript5').item.json;\nconst bookFullId = currentItem.bookId;\nconst totalPages = currentItem.totalPages;\n\nif (!bookFullId || typeof bookFullId !== 'string') {\n  throw new Error(`Некорректный ID книги: ${bookFullId}`);\n}\n\nconst parts = bookFullId.includes('_') ? bookFullId.split('_') : [bookFullId, \"0\"];\nconst prefix = parts[0];\nlet numStr = parts[1] || \"0\"; \nconst numPart = numStr.toString().padStart(9, '0');\n\nconst p1 = numPart.substring(0, 3);\nconst p2 = numPart.substring(3, 6);\nconst p3 = numPart.substring(6, 9);\nconst safeBookId = bookFullId.trim().replace(/[^\\w.-]+/g, \"_\");\n\nlet urlList = \"\";\nfor (let i = 1; i <= Number(totalPages); i++) {\n  const pagePad = i.toString().padStart(5, '0');\n  urlList += `https://cdn.libfl.ru/books/${prefix}/${p1}/${p2}/${p3}/JPEG_HQ/${pagePad}.jpg\\n`;\n}\n\nreturn [{\n  json: {\n    ...currentItem,\n    bookId: bookFullId,\n    safeBookId, \n    urlList,\n    urlCount: Number(totalPages),\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ╨С╨╡╤А╨╡╨╝ ╨║╤Г╨║╨╕ ╤В╨╡╨║╤Г╤Й╨╡╨│╨╛ ╤Ж╨╕╨║╨╗╨░\nconst token = $('Code in JavaScript1').item.json.authCookie.split('=')[1];\nconst cookieContent = `.libfl.ru\\tTRUE\\t/\\tFALSE\\t2147483647\\tReaderToken\\t${token}`;\nreturn [{ json: { cookieContent } }];"
+        "jsCode": "// Берем куки текущего цикла\nconst token = $('Code in JavaScript1').item.json.authCookie.split('=')[1];\nconst cookieContent = `.libfl.ru\\tTRUE\\t/\\tFALSE\\t2147483647\\tReaderToken\\t${token}`;\nreturn [{ json: { cookieContent } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -147,12 +147,15 @@
       "id": "1a74d269-52c8-440d-b2a2-e1120153fbf5",
       "name": "Download a file",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
       "parameters": {
-        "jsCode": "const rawData = items[0].json;\n\n// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л (╨╕╨╖ SSH stdout ╨╕╨╗╨╕ HTTP data)\nlet textContent = rawData.stdout || rawData.data || \"\";\nif (typeof textContent !== 'string') {\n    textContent = JSON.stringify(textContent);\n}\n\nlet bookId = \"Unknown\";\nlet title = \"Scan\";\nlet author = \"Unknown Author\";\nlet totalPages = 600;\n\n// ╨Ш╨й╨Х╨Ь ╨Ф╨Р╨Э╨Э╨л╨Х ╨Т HTML ╨Я╨а╨Ю╨б╨Ь╨Ю╨в╨а╨й╨Ш╨Ъ╨Р (Viewer)\n// ╨Ш╤Й╨╡╨╝ ╨▒╨╗╨╛╨║ var bookInfo = { ... };\nconst bookInfoMatch = textContent.match(/var bookInfo\\s*=\\s*({[\\s\\S]*?});/);\n\nif (bookInfoMatch) {\n    try {\n        const info = JSON.parse(bookInfoMatch[1]);\n        if (info.ID) bookId = info.ID;\n        if (info.Title) title = info.Title.trim();\n        if (info.Author) author = info.Author;\n    } catch (e) {\n        console.log(\"╨Ю╤И╨╕╨▒╨║╨░ ╨┐╨░╤А╤Б╨╕╨╜╨│╨░ bookInfo JSON\");\n    }\n\n    // ╨Ш╤Й╨╡╨╝ ╤В╨╛╤З╨╜╨╛╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╤Б╤В╤А╨░╨╜╨╕╤Ж (CountJPG)\n    const countMatch = textContent.match(/\"CountJPG\"\\s*:\\s*(\\d+)/);\n    if (countMatch) {\n        totalPages = parseInt(countMatch[1]);\n    }\n    \n    if (bookId === \"Unknown\") {\n        throw new Error(\"╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╜╨░╨╣╤В╨╕ ID ╨║╨╜╨╕╨│╨╕ ╨▓ ╨║╨╛╨┤╨╡ ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л Viewer'╨░!\");\n    }\n\n    return [{\n        json: {\n            bookId: bookId,\n            title: title,\n            author: author,\n            totalPages: totalPages\n        }\n    }];\n}\n\nthrow new Error(\"╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╜╨░╨╣╤В╨╕ ╨┐╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡ Viewer ╨╜╨░ ╤Б╤В╤А╨░╨╜╨╕╤Ж╨╡. ╨Т╨╛╨╖╨╝╨╛╨╢╨╜╨╛, ╨╖╨░╤Й╨╕╤В╨░ ╨╜╨╡ ╨┐╤А╨╛╨╣╨┤╨╡╨╜╨░ ╨╕╨╗╨╕ ╤В╨╛╨║╨╡╨╜ ╤Г╤Б╤В╨░╤А╨╡╨╗.\");"
+        "jsCode": "const rawData = items[0].json;\n\n// Получаем текст страницы (из SSH stdout или HTTP data)\nlet textContent = rawData.stdout || rawData.data || \"\";\nif (typeof textContent !== 'string') {\n    textContent = JSON.stringify(textContent);\n}\n\nlet bookId = \"Unknown\";\nlet title = \"Scan\";\nlet author = \"Unknown Author\";\nlet totalPages = 600;\n\n// ИЩЕМ ДАННЫЕ В HTML ПРОСМОТРЩИКА (Viewer)\n// Ищем блок var bookInfo = { ... };\nconst bookInfoMatch = textContent.match(/var bookInfo\\s*=\\s*({[\\s\\S]*?});/);\n\nif (bookInfoMatch) {\n    try {\n        const info = JSON.parse(bookInfoMatch[1]);\n        if (info.ID) bookId = info.ID;\n        if (info.Title) title = info.Title.trim();\n        if (info.Author) author = info.Author;\n    } catch (e) {\n        console.log(\"Ошибка парсинга bookInfo JSON\");\n    }\n\n    // Ищем точное количество страниц (CountJPG)\n    const countMatch = textContent.match(/\"CountJPG\"\\s*:\\s*(\\d+)/);\n    if (countMatch) {\n        totalPages = parseInt(countMatch[1]);\n    }\n    \n    if (bookId === \"Unknown\") {\n        throw new Error(\"Не удалось найти ID книги в коде страницы Viewer'а!\");\n    }\n\n    return [{\n        json: {\n            bookId: bookId,\n            title: title,\n            author: author,\n            totalPages: totalPages\n        }\n    }];\n}\n\nthrow new Error(\"Не удалось найти переменные Viewer на странице. Возможно, защита не пройдена или токен устарел.\");"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -203,14 +206,14 @@
           "__rl": true,
           "value": "1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854",
           "mode": "list",
-          "cachedResultName": "╨╜╨░ ╤Б╨▒╨╛╤А",
+          "cachedResultName": "на сбор",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultName": "Лист1",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit#gid=0"
         },
         "options": {}
@@ -222,11 +225,11 @@
         -896
       ],
       "id": "4f893a5d-fb13-4a1f-bbd2-b8a4c324532f",
-      "name": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "name": "получаем все ссылки",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "name": "Google Sheets account",
-          "id": "***"
+          "id": "LouM7wyF0ciME6q4",
+          "name": "Google Sheets account"
         }
       }
     },
@@ -242,7 +245,7 @@
           "__rl": true,
           "value": "1tyxqYJLtbCqNXZ0J3RteihnnW6KNQMPp",
           "mode": "list",
-          "cachedResultName": "╨║╨╜╨╕╨│╨╕ ╨Ю╨а╨б",
+          "cachedResultName": "книги ОРС",
           "cachedResultUrl": "https://drive.google.com/drive/folders/1tyxqYJLtbCqNXZ0J3RteihnnW6KNQMPp"
         },
         "options": {}
@@ -257,14 +260,14 @@
       "name": "Upload file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "name": "Google Drive account",
-          "id": "***"
+          "id": "gn90oB4e3TAh4XFv",
+          "name": "Google Drive account"
         }
       }
     },
     {
       "parameters": {
-        "content": "## ╨Р╨Т╨в╨Ю╨а╨Ш╨Ч╨Р╨ж╨Ш╨п ╨Ш ╨Я╨Ю╨Ы╨г╨з╨Х╨Э╨Ш╨Х ╨в╨Ю╨Ъ╨Х╨Э╨Р",
+        "content": "## АВТОРИЗАЦИЯ И ПОЛУЧЕНИЕ ТОКЕНА",
         "height": 208,
         "width": 688,
         "color": 4
@@ -285,30 +288,30 @@
           "__rl": true,
           "value": "1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854",
           "mode": "list",
-          "cachedResultName": "╨╜╨░ ╤Б╨▒╨╛╤А",
+          "cachedResultName": "на сбор",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultName": "Лист1",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г": "={{ $('Loop Over Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}",
+            "ссылка на книгу": "={{ $('Loop Over Items1').item.json['ссылка на книгу'] }}",
             "title": "={{ $('Code in JavaScript5').first().json.title }}",
             "finish": "={{ $json.webContentLink }}"
           },
           "matchingColumns": [
-            "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г"
+            "ссылка на книгу"
           ],
           "schema": [
             {
-              "id": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г",
-              "displayName": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г",
+              "id": "ссылка на книгу",
+              "displayName": "ссылка на книгу",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -371,8 +374,8 @@
       "name": "Update row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "name": "Google Sheets account",
-          "id": "***"
+          "id": "LouM7wyF0ciME6q4",
+          "name": "Google Sheets account"
         }
       }
     },
@@ -400,7 +403,7 @@
         -896
       ],
       "id": "3f388761-e112-408b-adf7-9e648ae4b299",
-      "name": "When clicking тАШExecute workflowтАЩ"
+      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
@@ -415,9 +418,12 @@
         -224
       ],
       "id": "6d1295be-c464-4c64-94dc-9796ae1bfc94",
-      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+      "name": "создание списка файлов",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
@@ -433,14 +439,17 @@
         -224
       ],
       "id": "72634d64-228f-46d8-b7e9-fbddaec75c00",
-      "name": "╨╖╨░╨┐╤Г╤Б╨║",
+      "name": "запуск",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
       "parameters": {
-        "command": "=# 1. ╨С╨╡╤А╨╡╨╝ ╨┐╤Г╤В╤М\nFILE_PATH=\"{{ $json.full_path }}\"\n\n# 2. ╨Я╤А╨╛╨▓╨╡╤А╨║╨░\nif [ ! -f \"$FILE_PATH\" ]; then\n    echo \"Error: PDF file not found at $FILE_PATH\"\n    exit 1\nfi\n\n# 3. ╨Я╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡\nAUTHOR=\"{{ $json.pdf_author.replace(/^['\"]|['\"]$/g, '').replace(/\"/g, '\\\\\"') }}\"\n\n# 4. ╨Я╤А╨╛╨┐╨╕╤Б╤Л╨▓╨░╨╡╨╝ ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╨╡\nexiftool -overwrite_original \\\n -Title=\"{{ $json.pdf_title.replace(/\"/g, '\\\\\"') }}\" \\\n -Author=\"$AUTHOR\" \\\n -XMP-dc:Creator=\"$AUTHOR\" \\\n -Subject=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Description=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Keywords=\"{{ $json.pdf_keywords.replace(/\"/g, '\\\\\"') }}\" \\\n -Publisher=\"{{ $json.pdf_publisher.replace(/\"/g, '\\\\\"') }}\" \\\n -Language=\"{{ $json.pdf_language }}\" \\\n \"$FILE_PATH\"\n\n# 5. ╨Т╨Р╨Ц╨Э╨Ю: ╨Т╤Л╨▓╨╛╨┤╨╕╨╝ ╨┐╤Г╤В╤М ╨║ ╤Д╨░╨╣╨╗╤Г, ╤З╤В╨╛╨▒╤Л ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨░╤П ╨╜╨╛╨┤╨░ ╨╖╨╜╨░╨╗╨░, ╤З╤В╨╛ ╨║╨░╤З╨░╤В╤М\necho \"$FILE_PATH\"",
+        "command": "=# 1. Берем путь\nFILE_PATH=\"{{ $json.full_path }}\"\n\n# 2. Проверка\nif [ ! -f \"$FILE_PATH\" ]; then\n    echo \"Error: PDF file not found at $FILE_PATH\"\n    exit 1\nfi\n\n# 3. Переменные\nAUTHOR=\"{{ $json.pdf_author.replace(/^['\"]|['\"]$/g, '').replace(/\"/g, '\\\\\"') }}\"\n\n# 4. Прописываем метаданные\nexiftool -overwrite_original \\\n -Title=\"{{ $json.pdf_title.replace(/\"/g, '\\\\\"') }}\" \\\n -Author=\"$AUTHOR\" \\\n -XMP-dc:Creator=\"$AUTHOR\" \\\n -Subject=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Description=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Keywords=\"{{ $json.pdf_keywords.replace(/\"/g, '\\\\\"') }}\" \\\n -Publisher=\"{{ $json.pdf_publisher.replace(/\"/g, '\\\\\"') }}\" \\\n -Language=\"{{ $json.pdf_language }}\" \\\n \"$FILE_PATH\"\n\n# 5. ВАЖНО: Выводим путь к файлу, чтобы следующая нода знала, что качать\necho \"$FILE_PATH\"",
         "authentication": "privateKey"
       },
       "type": "n8n-nodes-base.ssh",
@@ -452,12 +461,15 @@
       "id": "835fba91-8c48-4760-bee2-66c82d762ee4",
       "name": "exiftool",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
       "parameters": {
-        "jsCode": "const returnData = [];\n\n// ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨╛╤З╨╕╤Б╤В╨║╨╕ HTML-╤В╨╡╨│╨╛╨▓\nconst stripTags = (str) => {\n  if (!str) return null;\n  return str.replace(/<[^>]*>?/gm, '').trim();\n};\n\n// ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨┐╨╛╨╕╤Б╨║╨░ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П ╨┐╨╛ ╨┐╤А╨╛╤Б╤В╨╛╨╝╤Г ╨┐╨░╤В╤В╨╡╤А╨╜╤Г\nconst findMatch = (html, regex, index = 1) => {\n  const match = html.match(regex);\n  return match ? stripTags(match[index]) : null;\n};\n\nfor (const item of items) {\n  const html = item.json.stdout;\n  if (!html) continue;\n\n  // 1. ╨Ю╤Б╨╜╨╛╨▓╨╜╤Л╨╡ ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╨╡ ╤З╨╡╤А╨╡╨╖ Regex\n  const title = findMatch(html, /<h3 property=\"name\">([\\s\\S]*?)<\\/h3>/);\n  const mainAuthor = findMatch(html, /<span class='author'>([\\s\\S]*?)<\\/span>/);\n  const recordId = findMatch(html, /value=\"([^\"]+)\" class=\"hiddenId\"/);\n\n  // 2. ╨Я╨░╤А╤Б╨╕╨╜╨│ ╨╛╤Б╨╜╨╛╨▓╨╜╨╛╨╣ ╤В╨░╨▒╨╗╨╕╤Ж╤Л (╨С╨╕╨▒╨╗╨╕╨╛╨│╤А╨░╤Д╨╕╤З╨╡╤Б╨║╨╕╨╡ ╨┐╨╛╨┤╤А╨╛╨▒╨╜╨╛╤Б╤В╨╕)\n  const details = {};\n  // ╨Ш╤Й╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨╢╨┤╨╡╨╜╨╕╤П <th>Key</th><td>Value</td>\n  const tableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n  let match;\n  while ((match = tableRegex.exec(html)) !== null) {\n    const key = stripTags(match[1]);\n    const val = stripTags(match[2]);\n    details[key] = val;\n  }\n\n  // ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨░╨▓╤В╨╛╤А╨╛╨▓\n  const authors = [mainAuthor];\n  if (details['╨Ф╤А╤Г╨│╨╛╨╣ ╨░╨▓╤В╨╛╤А']) {\n    authors.push(details['╨Ф╤А╤Г╨│╨╛╨╣ ╨░╨▓╤В╨╛╤А']);\n  }\n\n  // 3. ╨Ю╨▒╨╗╨╛╨╢╨║╨░\n  let coverUrl = null;\n  const coverMatch = html.match(/data-fancybox='covers' href='([^']+)'/);\n  if (coverMatch) {\n    coverUrl = coverMatch[1];\n    if (coverUrl && !coverUrl.startsWith('http')) {\n      coverUrl = `https://catalog.libfl.ru${coverUrl}`;\n    }\n  }\n\n  // 4. ╨Я╨░╤А╤Б╨╕╨╜╨│ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨╛╨▓ (Exemplars)\n  // ╨а╨░╨╖╨▒╨╕╨▓╨░╨╡╨╝ HTML ╨╜╨░ ╨║╤Г╤Б╨║╨╕ ╨┐╨╛ ╨║╨╗╨░╤Б╤Б╤Г exemplar\n  const holdings = [];\n  const exemplarParts = html.split('class=exemplar>');\n  \n  // ╨Я╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝ ╨╜╤Г╨╗╨╡╨▓╨╛╨╣ ╤Н╨╗╨╡╨╝╨╡╨╜╤В (╤Н╤В╨╛ ╨▓╤Б╨╡ ╤З╤В╨╛ ╨Ф╨Ю ╨┐╨╡╤А╨▓╨╛╨│╨╛ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨░)\n  for (let i = 1; i < exemplarParts.length; i++) {\n    const part = exemplarParts[i];\n    \n    // ╨Э╨╛╨╝╨╡╤А ╨║╨╛╨┐╨╕╨╕\n    const copyNumMatch = part.match(/<h3[^>]*>#&nbsp;(\\d+)<\\/h3>/);\n    const copyNum = copyNumMatch ? copyNumMatch[1] : null;\n\n    // ╨Ф╨░╨╜╨╜╤Л╨╡ ╨▓╨╜╤Г╤В╤А╨╕ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨░ (╤Б╨╜╨╛╨▓╨░ ╤В╨░╨▒╨╗╨╕╤Ж╨░)\n    const exData = {};\n    let exMatch;\n    // ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨╜╨╛╨▓╤Л╨╣ regex ╨╛╨▒╤К╨╡╨║╤В ╨┤╨╗╤П ╤Ж╨╕╨║╨╗╨░, ╤З╤В╨╛╨▒╤Л ╨╜╨╡ ╨║╨╛╨╜╤Д╨╗╨╕╨║╤В╨╛╨▓╨░╤В╤М ╤Б ╨▓╨╜╨╡╤И╨╜╨╕╨╝\n    const exTableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n    \n    // ╨Ю╨│╤А╨░╨╜╨╕╤З╨╕╨╝ ╨┐╨╛╨╕╤Б╨║ ╤В╨╡╨║╤Г╤Й╨╕╨╝ ╨▒╨╗╨╛╨║╨╛╨╝ (╨┤╨╛ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╡╨│╨╛ div)\n    const tableBlock = part.split('</table>')[0]; \n    \n    while ((exMatch = exTableRegex.exec(tableBlock)) !== null) {\n      exData[stripTags(exMatch[1])] = stripTags(exMatch[2]);\n    }\n\n    if (copyNum || exData['╨Э╨╛╤Б╨╕╤В╨╡╨╗╤М']) {\n       holdings.push({\n        copy_number: copyNum,\n        format: exData['╨Э╨╛╤Б╨╕╤В╨╡╨╗╤М'] || null,\n        status: exData['╨Ъ╨╗╨░╤Б╤Б ╨╕╨╖╨┤╨░╨╜╨╕╤П'] || '╨Э╨╡ ╤Г╨║╨░╨╖╨░╨╜',\n        location: exData['╨Ь╨╡╤Б╤В╨╛╨╜╨░╤Е╨╛╨╢╨┤╨╡╨╜╨╕╨╡'] || null,\n        call_number: exData['╨и╨╕╤Д╤А'] || null,\n        inv_number: exData['╨Ш╨╜╨▓. ╨╜╨╛╨╝╨╡╤А'] || null\n      });\n    }\n  }\n\n  returnData.push({\n    json: {\n      id: recordId,\n      title: title,\n      authors: authors.filter(Boolean),\n      publisher: details['╨Ш╨╖╨┤╨░╤В╨╡╨╗╤М╤Б╤В╨▓╨╛'] || null,\n      publish_year: details['╨Ф╨░╤В╨░ ╨╕╨╖╨┤╨░╨╜╨╕╤П'] ? parseInt(details['╨Ф╨░╤В╨░ ╨╕╨╖╨┤╨░╨╜╨╕╤П']) : null,\n      publish_city: details['╨Ь╨╡╤Б╤В╨╛ ╨╕╨╖╨┤╨░╨╜╨╕╤П'] || null,\n      language: details['╨п╨╖╤Л╨║'] || null,\n      topics: [details['╨в╨╡╨╝╨░╤В╨╕╨║╨░'], details['╨Я╤А╨╡╨┤╨╝╨╡╤В╨╜╨░╤П ╤А╤Г╨▒╤А╨╕╨║╨░']].filter(Boolean),\n      cover_image: coverUrl,\n      holdings: holdings,\n      source_url: `https://catalog.libfl.ru/Record/${recordId}`\n    }\n  });\n}\n\nreturn returnData;"
+        "jsCode": "const returnData = [];\n\n// Вспомогательная функция для очистки HTML-тегов\nconst stripTags = (str) => {\n  if (!str) return null;\n  return str.replace(/<[^>]*>?/gm, '').trim();\n};\n\n// Вспомогательная функция для поиска значения по простому паттерну\nconst findMatch = (html, regex, index = 1) => {\n  const match = html.match(regex);\n  return match ? stripTags(match[index]) : null;\n};\n\nfor (const item of items) {\n  const html = item.json.stdout;\n  if (!html) continue;\n\n  // 1. Основные метаданные через Regex\n  const title = findMatch(html, /<h3 property=\"name\">([\\s\\S]*?)<\\/h3>/);\n  const mainAuthor = findMatch(html, /<span class='author'>([\\s\\S]*?)<\\/span>/);\n  const recordId = findMatch(html, /value=\"([^\"]+)\" class=\"hiddenId\"/);\n\n  // 2. Парсинг основной таблицы (Библиографические подробности)\n  const details = {};\n  // Ищем все вхождения <th>Key</th><td>Value</td>\n  const tableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n  let match;\n  while ((match = tableRegex.exec(html)) !== null) {\n    const key = stripTags(match[1]);\n    const val = stripTags(match[2]);\n    details[key] = val;\n  }\n\n  // Собираем авторов\n  const authors = [mainAuthor];\n  if (details['Другой автор']) {\n    authors.push(details['Другой автор']);\n  }\n\n  // 3. Обложка\n  let coverUrl = null;\n  const coverMatch = html.match(/data-fancybox='covers' href='([^']+)'/);\n  if (coverMatch) {\n    coverUrl = coverMatch[1];\n    if (coverUrl && !coverUrl.startsWith('http')) {\n      coverUrl = `https://catalog.libfl.ru${coverUrl}`;\n    }\n  }\n\n  // 4. Парсинг экземпляров (Exemplars)\n  // Разбиваем HTML на куски по классу exemplar\n  const holdings = [];\n  const exemplarParts = html.split('class=exemplar>');\n  \n  // Пропускаем нулевой элемент (это все что ДО первого экземпляра)\n  for (let i = 1; i < exemplarParts.length; i++) {\n    const part = exemplarParts[i];\n    \n    // Номер копии\n    const copyNumMatch = part.match(/<h3[^>]*>#&nbsp;(\\d+)<\\/h3>/);\n    const copyNum = copyNumMatch ? copyNumMatch[1] : null;\n\n    // Данные внутри экземпляра (снова таблица)\n    const exData = {};\n    let exMatch;\n    // Создаем новый regex объект для цикла, чтобы не конфликтовать с внешним\n    const exTableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n    \n    // Ограничим поиск текущим блоком (до следующего div)\n    const tableBlock = part.split('</table>')[0]; \n    \n    while ((exMatch = exTableRegex.exec(tableBlock)) !== null) {\n      exData[stripTags(exMatch[1])] = stripTags(exMatch[2]);\n    }\n\n    if (copyNum || exData['Носитель']) {\n       holdings.push({\n        copy_number: copyNum,\n        format: exData['Носитель'] || null,\n        status: exData['Класс издания'] || 'Не указан',\n        location: exData['Местонахождение'] || null,\n        call_number: exData['Шифр'] || null,\n        inv_number: exData['Инв. номер'] || null\n      });\n    }\n  }\n\n  returnData.push({\n    json: {\n      id: recordId,\n      title: title,\n      authors: authors.filter(Boolean),\n      publisher: details['Издательство'] || null,\n      publish_year: details['Дата издания'] ? parseInt(details['Дата издания']) : null,\n      publish_city: details['Место издания'] || null,\n      language: details['Язык'] || null,\n      topics: [details['Тематика'], details['Предметная рубрика']].filter(Boolean),\n      cover_image: coverUrl,\n      holdings: holdings,\n      source_url: `https://catalog.libfl.ru/Record/${recordId}`\n    }\n  });\n}\n\nreturn returnData;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -470,7 +482,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ╨Э╨░╨┤╨╡╨╢╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨┐╨╛╨╗╤Г╤З╨╡╨╜╨╕╤П ╨┤╨░╨╜╨╜╤Л╤Е ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╨║╨╜╨╕╨│╨╕ ╨▓ ╤Ж╨╕╨║╨╗╨╡\nfunction safeGetItem(nodeName) {\n  try {\n    return $(nodeName).item.json;\n  } catch (e) {\n    try {\n      return $(nodeName).first().json;\n    } catch (err) {\n      return {};\n    }\n  }\n}\n\n// ╨Ч╨░╨▒╨╕╤А╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨╕╨╖ ╨┤╤А╤Г╨│╨╕╤Е ╨╜╨╛╨┤\nconst cat = safeGetItem('metadate2');            \nconst vw  = safeGetItem('Code in JavaScript5');  \nconst loopItem = safeGetItem('Loop Over Items1');  \nconst js2 = safeGetItem('Code in JavaScript2');\n\n// 1. ╨Ш╨Ф╨Х╨Р╨Ы╨м╨Э╨л╨Щ ╨Я╨г╨в╨м ╨С╨Х╨Ч ╨Я╨Р╨а╨б╨Ш╨Э╨У╨Р ╨Ы╨Ю╨У╨Ю╨Т\n// ╨С╨╡╤А╨╡╨╝ ID ╨║╨╜╨╕╨│╨╕ (╨╜╨░╨┐╤А╨╕╨╝╨╡╤А, BJVVV_1465084) ╨╕ ╨┐╤А╨╛╤Б╤В╨╛ ╨┐╨╛╨┤╤Б╤В╨░╨▓╨╗╤П╨╡╨╝ ╨▓ ╤Д╨╛╤А╨╝╤Г╨╗╤Г ╨┐╤Г╤В╨╕\nconst safeId = js2.safeBookId || loopItem.safeBookId || \"UNKNOWN_ID\";\nconst fullPath = `/data/bookbuilder/books/${safeId}/${safeId}.pdf`;\n\n// 2. ╨б╨▒╨╛╤А ╨╛╤Б╤В╨░╨╗╤М╨╜╤Л╤Е ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е\nconst title = (cat.title || vw.title || loopItem.title || 'Scan').toString().trim();\nconst authorsArr = (cat.authors && cat.authors.length ? cat.authors : [vw.author, loopItem.author])\n    .filter(Boolean).map(a => a.toString().trim());\n\nconst publisher = (cat.publisher || '').toString().trim();\nconst year = cat.publish_year ? String(cat.publish_year) : (cat.year ? String(cat.year) : '');\nconst language = (cat.language || '').toString().trim();\nconst topics = (cat.topics || []).map(t => t.toString().trim()).filter(Boolean);\n\nconst subjectParts = [\n  publisher && `╨Ш╨╖╨┤╨░╤В╨╡╨╗╤М: ${publisher}`,\n  year && `╨У╨╛╨┤: ${year}`,\n  language && `╨п╨╖╤Л╨║: ${language}`,\n].filter(Boolean);\n\nconst keywords = [...topics, language, publisher, year].filter(Boolean).join(', ');\n\nreturn [{\n  json: {\n    full_path: fullPath,\n    pdf_title: title,\n    pdf_author: authorsArr.join('; ') || 'Unknown Author',\n    pdf_subject: subjectParts.join(' | ') || 'Scan',\n    pdf_keywords: keywords,\n    pdf_publisher: publisher,\n    pdf_language: language,\n    pdf_year: year,\n  }\n}];"
+        "jsCode": "// Надежная функция для получения данных текущей книги в цикле\nfunction safeGetItem(nodeName) {\n  try {\n    return $(nodeName).item.json;\n  } catch (e) {\n    try {\n      return $(nodeName).first().json;\n    } catch (err) {\n      return {};\n    }\n  }\n}\n\n// Забираем данные из других нод\nconst cat = safeGetItem('metadate2');            \nconst vw  = safeGetItem('Code in JavaScript5');  \nconst loopItem = safeGetItem('Loop Over Items1');  \nconst js2 = safeGetItem('Code in JavaScript2');\n\n// 1. ИДЕАЛЬНЫЙ ПУТЬ БЕЗ ПАРСИНГА ЛОГОВ\n// Берем ID книги (например, BJVVV_1465084) и просто подставляем в формулу пути\nconst safeId = js2.safeBookId || loopItem.safeBookId || \"UNKNOWN_ID\";\nconst fullPath = `/data/bookbuilder/books/${safeId}/${safeId}.pdf`;\n\n// 2. Сбор остальных метаданных\nconst title = (cat.title || vw.title || loopItem.title || 'Scan').toString().trim();\nconst authorsArr = (cat.authors && cat.authors.length ? cat.authors : [vw.author, loopItem.author])\n    .filter(Boolean).map(a => a.toString().trim());\n\nconst publisher = (cat.publisher || '').toString().trim();\nconst year = cat.publish_year ? String(cat.publish_year) : (cat.year ? String(cat.year) : '');\nconst language = (cat.language || '').toString().trim();\nconst topics = (cat.topics || []).map(t => t.toString().trim()).filter(Boolean);\n\nconst subjectParts = [\n  publisher && `Издатель: ${publisher}`,\n  year && `Год: ${year}`,\n  language && `Язык: ${language}`,\n].filter(Boolean);\n\nconst keywords = [...topics, language, publisher, year].filter(Boolean).join(', ');\n\nreturn [{\n  json: {\n    full_path: fullPath,\n    pdf_title: title,\n    pdf_author: authorsArr.join('; ') || 'Unknown Author',\n    pdf_subject: subjectParts.join(' | ') || 'Scan',\n    pdf_keywords: keywords,\n    pdf_publisher: publisher,\n    pdf_language: language,\n    pdf_year: year,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -498,7 +510,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╖╨░╨│╨╛╨╗╨╛╨▓╨║╨╕ ╨╛╤В ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░\nconst headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\n\n// ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨║╤Г╨║╨╕ ╨▓ ╤Б╤В╤А╨╛╨║╤Г\nlet cookieString = \"\";\nif (Array.isArray(setCookie)) {\n    // ╨Х╤Б╨╗╨╕ ╨┐╤А╨╕╤И╨╗╨╛ ╨╜╨╡╤Б╨║╨╛╨╗╤М╨║╨╛ ╨║╤Г╨║ (╨╝╨░╤Б╤Б╨╕╨▓)\n    cookieString = setCookie.map(c => c.split(';')[0]).join('; ');\n} else if (typeof setCookie === 'string') {\n    // ╨Х╤Б╨╗╨╕ ╨┐╤А╨╕╤И╨╗╨░ ╨╛╨┤╨╜╨░ ╨║╤Г╨║╨░\n    cookieString = setCookie.split(';')[0];\n}\n\n// ╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г, ╨║╨╛╤В╨╛╤А╤Г╤О ╨▓╤Б╤В╨░╨▓╨╕╨╝ ╨▓ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╕╨╣ ╨╖╨░╨┐╤А╨╛╤Б\nreturn [{\n    json: {\n        cookieString: cookieString\n    }\n}];"
+        "jsCode": "// Получаем заголовки от предыдущего шага\nconst headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\n\n// Собираем куки в строку\nlet cookieString = \"\";\nif (Array.isArray(setCookie)) {\n    // Если пришло несколько кук (массив)\n    cookieString = setCookie.map(c => c.split(';')[0]).join('; ');\n} else if (typeof setCookie === 'string') {\n    // Если пришла одна кука\n    cookieString = setCookie.split(';')[0];\n}\n\n// Возвращаем строку, которую вставим в следующий запрос\nreturn [{\n    json: {\n        cookieString: cookieString\n    }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -507,11 +519,11 @@
         -688
       ],
       "id": "afb2052c-ae8c-4b5e-8d76-1525f9e0ec44",
-      "name": "╨║╤Г╨║╨╕"
+      "name": "куки"
     },
     {
       "parameters": {
-        "jsCode": "let meta = {};\ntry {\n    meta = $('Build PDF Metadata').item.json; // <-- ╨Ч╨░╨╝╨╡╨╜╨╕╨╗╨╕ first ╨╜╨░ item\n} catch (e) {\n    console.log(\"Meta not found\");\n}\n\n// 2. ╨д╤Г╨╜╨║╤Ж╨╕╤П ╨╛╤З╨╕╤Б╤В╨║╨╕\nconst clean = (str) => {\n    if (!str) return \"\";\n    return str.toString().replace(/[\\/\\\\:*?\"<>|]/g, '').replace(/\\s+/g, ' ').trim();\n};\n\n// 3. ╨д╨╛╤А╨╝╨╕╤А╤Г╨╡╨╝ ╨╕╨╝╤П\nconst title = clean(meta.pdf_title) || \"Scan\";\nconst author = clean(meta.pdf_author) || \"NoAuthor\";\nconst year = clean(meta.pdf_year) || \"\";\n\nlet newName = `${author} - ${title}`;\nif (year) {\n    newName += ` - ${year}`;\n}\nnewName += \".pdf\";\n\n// 4. ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨╕╨╝╤П\nfor (const item of items) {\n    // ╨Р) ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨▒╨╕╨╜╨░╤А╨╜╨╕╨║╤Г (╨┤╨╗╤П ╨▓╨╕╨┤╨░)\n    if (item.binary && item.binary.data) {\n        item.binary.data.fileName = newName;\n    }\n    \n    // ╨С) ╨Т╨Р╨Ц╨Э╨Ю: ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨▓ JSON, ╤З╤В╨╛╨▒╤Л ╨╕╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╤М ╨▓ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╡╨╣ ╨╜╨╛╨┤╨╡\n    item.json.finalFileName = newName;\n}\n\nreturn items;"
+        "jsCode": "let meta = {};\ntry {\n    meta = $('Build PDF Metadata').item.json; // <-- Заменили first на item\n} catch (e) {\n    console.log(\"Meta not found\");\n}\n\n// 2. Функция очистки\nconst clean = (str) => {\n    if (!str) return \"\";\n    return str.toString().replace(/[\\/\\\\:*?\"<>|]/g, '').replace(/\\s+/g, ' ').trim();\n};\n\n// 3. Формируем имя\nconst title = clean(meta.pdf_title) || \"Scan\";\nconst author = clean(meta.pdf_author) || \"NoAuthor\";\nconst year = clean(meta.pdf_year) || \"\";\n\nlet newName = `${author} - ${title}`;\nif (year) {\n    newName += ` - ${year}`;\n}\nnewName += \".pdf\";\n\n// 4. Присваиваем имя\nfor (const item of items) {\n    // А) Присваиваем бинарнику (для вида)\n    if (item.binary && item.binary.data) {\n        item.binary.data.fileName = newName;\n    }\n    \n    // Б) ВАЖНО: Присваиваем в JSON, чтобы использовать в следующей ноде\n    item.json.finalFileName = newName;\n}\n\nreturn items;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -524,7 +536,7 @@
     },
     {
       "parameters": {
-        "command": "=# 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ID ╨║╨╜╨╕╨│╨╕ ╨╕╨╖ ╨╜╨╛╨┤╤Л \"Code in JavaScript2\"\n# ╨Т╨░╨╢╨╜╨╛: ╨╕╨╝╤П ╨╜╨╛╨┤╤Л ╨▓ ╤Б╨║╨╛╨▒╨║╨░╤Е ╨┤╨╛╨╗╨╢╨╜╨╛ ╤В╨╛╤З╨╜╨╛ ╤Б╨╛╨▓╨┐╨░╨┤╨░╤В╤М ╤Б ╤В╨▓╨╛╨╕╨╝\nID=\"{{ $('Code in JavaScript2').first().json.safeBookId }}\"\n\n# 2. ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨┐╨░╨┐╨║╤Г ╤Б ╨║╨╜╨╕╨│╨╛╨╣ (╤В╨░╨╝ ╨╗╨╡╨╢╨░╤В img, raw.pdf ╨╕ ╨╕╤В╨╛╨│╨╛╨▓╤Л╨╣ pdf)\n# ╨д╨╗╨░╨│ -rf ╤Г╨┤╨░╨╗╤П╨╡╤В ╨┐╨░╨┐╨║╤Г ╤А╨╡╨║╤Г╤А╤Б╨╕╨▓╨╜╨╛ ╨╕ ╨▒╨╡╨╖ ╨╗╨╕╤И╨╜╨╕╤Е ╨▓╨╛╨┐╤А╨╛╤Б╨╛╨▓\nrm -rf \"/data/bookbuilder/books/$ID\"\n\n# 3. ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨▓╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡ ╤Д╨░╨╣╨╗╤Л ╤Б╨┐╨╕╤Б╨║╨╛╨▓ (╨╕╨╖ ╨┐╨░╨┐╨║╨╕ /tmp)\nrm -f \"/tmp/url_list_${ID}.txt\"\nrm -f \"/tmp/cookies_${ID}.txt\"\n\n# 4. ╨Т╤Л╨▓╨╛╨┤╨╕╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨▓ ╨╗╨╛╨│ (╨╛╨┐╤Ж╨╕╨╛╨╜╨░╨╗╤М╨╜╨╛)\necho \"CLEANUP DONE: Deleted data for book $ID\"",
+        "command": "=# 1. Получаем ID книги из ноды \"Code in JavaScript2\"\n# Важно: имя ноды в скобках должно точно совпадать с твоим\nID=\"{{ $('Code in JavaScript2').first().json.safeBookId }}\"\n\n# 2. Удаляем папку с книгой (там лежат img, raw.pdf и итоговый pdf)\n# Флаг -rf удаляет папку рекурсивно и без лишних вопросов\nrm -rf \"/data/bookbuilder/books/$ID\"\n\n# 3. Удаляем временные файлы списков (из папки /tmp)\nrm -f \"/tmp/url_list_${ID}.txt\"\nrm -f \"/tmp/cookies_${ID}.txt\"\n\n# 4. Выводим сообщение в лог (опционально)\necho \"CLEANUP DONE: Deleted data for book $ID\"",
         "authentication": "privateKey"
       },
       "type": "n8n-nodes-base.ssh",
@@ -536,12 +548,15 @@
       "id": "f3f3173f-3370-4c27-ba5d-55d905ff0c33",
       "name": "exiftool1",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
       "parameters": {
-        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\"",
+        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json['ссылка на книгу'] }}\"",
         "cwd": "/root",
         "authentication": "privateKey"
       },
@@ -552,9 +567,12 @@
         -896
       ],
       "id": "7c70631e-5842-4830-851a-1fcfbe6619c5",
-      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+      "name": "создание списка файлов1",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
@@ -570,14 +588,17 @@
         -464
       ],
       "id": "d42017d8-d709-486f-8506-134d4fed88b2",
-      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+      "name": "создание списка файлов2",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
       "parameters": {
-        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/auto_order.py ***ARGS_REDACTED*** Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\" \"***EMAIL***\" \"***REDACTED***\"",
+        "command": "=/opt/bookbuilder/auto_order_from_env.sh \"{{ $('Loop Over Items1').item.json['ссылка на книгу'] }}\"",
         "cwd": "/root",
         "authentication": "privateKey"
       },
@@ -588,9 +609,12 @@
         -688
       ],
       "id": "0fe2ba38-5c4d-4c2e-b28c-e3688d5d0130",
-      "name": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+      "name": "автозаказ",
       "credentials": {
-        "sshPrivateKey": "***REDACTED***"
+        "sshPrivateKey": {
+          "id": "s8DnkhQHhfPf8Z3A",
+          "name": "n8n"
+        }
       }
     },
     {
@@ -611,7 +635,7 @@
       "main": [
         [
           {
-            "node": "╨║╤Г╨║╨╕",
+            "node": "куки",
             "type": "main",
             "index": 0
           }
@@ -633,7 +657,7 @@
       "main": [
         [
           {
-            "node": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+            "node": "автозаказ",
             "type": "main",
             "index": 0
           }
@@ -655,7 +679,7 @@
       "main": [
         [
           {
-            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+            "node": "создание списка файлов",
             "type": "main",
             "index": 0
           }
@@ -696,7 +720,7 @@
         []
       ]
     },
-    "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕": {
+    "получаем все ссылки": {
       "main": [
         [
           {
@@ -723,7 +747,7 @@
         [],
         [
           {
-            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+            "node": "создание списка файлов1",
             "type": "main",
             "index": 0
           },
@@ -735,29 +759,29 @@
         ]
       ]
     },
-    "When clicking тАШExecute workflowтАЩ": {
+    "When clicking ‘Execute workflow’": {
       "main": [
         [
           {
-            "node": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+            "node": "получаем все ссылки",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓": {
+    "создание списка файлов": {
       "main": [
         [
           {
-            "node": "╨╖╨░╨┐╤Г╤Б╨║",
+            "node": "запуск",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "╨╖╨░╨┐╤Г╤Б╨║": {
+    "запуск": {
       "main": [
         [
           {
@@ -812,7 +836,7 @@
         ]
       ]
     },
-    "╨║╤Г╨║╨╕": {
+    "куки": {
       "main": [
         [
           {
@@ -856,7 +880,7 @@
         ]
       ]
     },
-    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1": {
+    "создание списка файлов1": {
       "main": [
         [
           {
@@ -867,7 +891,7 @@
         ]
       ]
     },
-    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2": {
+    "создание списка файлов2": {
       "main": [
         [
           {
@@ -878,11 +902,11 @@
         ]
       ]
     },
-    "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖": {
+    "автозаказ": {
       "main": [
         [
           {
-            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+            "node": "создание списка файлов2",
             "type": "main",
             "index": 0
           }
@@ -893,7 +917,7 @@
       "main": [
         [
           {
-            "node": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+            "node": "получаем все ссылки",
             "type": "main",
             "index": 0
           }
@@ -904,9 +928,11 @@
   "settings": {
     "executionOrder": "v1"
   },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "c13f1421-fe69-42a9-9a33-a7dee5f11b59",
   "meta": {
-    "exportedAt": "2026-07-30",
-    "host": "samskrtam50",
-    "note": "credentials and secrets redacted"
-  }
+    "templateCredsSetupCompleted": true
+  },
+  "_export_note": "H1958 scrubbed — no libfl login/password values"
 }
