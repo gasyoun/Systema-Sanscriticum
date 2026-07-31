@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.81.0] - 2026-07-31
+
 ### Added
 - **Konsultaciya landing copy: real per-visitor A/B test, cutoff 01-11-2026 (H2010).** MG's 31-07-2026 ruling ("не человек решает — гоняем A/B до 1 ноября, дальше решают цифры") overrides `MarathonLandingCopy`'s earlier sequential A-then-B-via-env design. New `MarathonLandingCopySplit`: sticky cookie (`mkt_copy_variant`), true 50/50 random assignment on a visitor's first landing hit, one `impression` event per new assignment (not per reload). `Lead.landing_copy_variant` + `marathon_landing_copy_variant_events` table record the split through to conversion. `php artisan marathon:copy-variant-report` prints per-variant impressions/leads/conversion — reports only, never auto-picks a winner. After `config('marathon_landing_copy.ab_test_until')` (default `2026-11-01`), the split stops assigning new visitors and everyone gets the config default variant, which a human sets after reading the report. Independent of the `MarathonVisual` skin axis (H1966/H1975) — do not conflate. 8+2 new feature tests green, full marathon suite (103 tests) green, Pint clean. Executor: Sonnet 5 (`claude-sonnet-5`).
 
