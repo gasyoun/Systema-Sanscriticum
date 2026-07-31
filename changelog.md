@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.80.8] - 2026-07-31
+
 ### Added
 - **Konsultaciya visual direction A, dark-native (H1976).** `resources/views/marathon/skins/a/content.blade.php` implemented against the packet A tokens (bg `#0A0D14`, surface `#111622`, accent `#E85C24`) — vertical day timeline with orange nodes, accent-bar benefit cards, elevated dark form card, shared post-submit/post-Telegram-click states, dark FAQ accordion. WCAG contrast pairs computed (two `slate-500` instances bumped to `slate-400` to clear AA). `better-interface full` pass — no new findings, inherits skin B's fixed `fieldset`/`legend` + FAQ `aria-expanded`/`aria-controls` patterns — [BETTER_INTERFACE_PASS_A_31.07.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/marathon-2026-08/redesign/BETTER_INTERFACE_PASS_A_31.07.26.md). Concurrent sibling to skin B ([H1975](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1975-Sonnet_Systema-Sanscriticum_konsultaciya-visual-shell-b_30.07.26.md)), not a sole winner (H1966 multi-dir policy); default stays skin B. Executor: Sonnet 5 (`claude-sonnet-5`).
 
