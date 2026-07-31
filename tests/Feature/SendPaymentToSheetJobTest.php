@@ -50,12 +50,13 @@ class SendPaymentToSheetJobTest extends TestCase
             'status' => 'paid',
         ]);
 
-        (new SendPaymentToSheetJob($payment->id, 'create'))->handle();
+        $paymentId = $payment->id;
+        (new SendPaymentToSheetJob($paymentId, 'create'))->handle();
 
-        Http::assertSent(function ($request) {
+        Http::assertSent(function ($request) use ($paymentId) {
             return $request->url() === 'https://n8n.example.test/webhook/payments'
                 && $request->hasHeader('X-Webhook-Secret', 'test-payments-secret')
-                && ($request['id'] ?? null) === $payment->id;
+                && ($request['id'] ?? null) === $paymentId;
         });
     }
 
