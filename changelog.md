@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.80.11] - 2026-07-31
+
+### Added
+- **Мост «Расход» → opex-леджер + полный бэкфилл (H2003, issue [#953](https://github.com/gasyoun/Systema-Sanscriticum/issues/953)).** Легаси-расходы (отрицательные платежи с тарифом «Расход», 440 строк с марта) были невидимы кокпиту: из выручки исключены `NON_REVENUE_TARIFFS`, а opex читается только из пустого `Expense` — EBITDA завышалась на ~0.8–1.3M ₽/мес в марте–мае. Новая команда [`expenses:bridge-raskhod`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/BridgeRaskhodExpenses.php) (dry-run по умолчанию, `--apply` пишет) копирует их в `Expense` идемпотентно по новому уникальному `expenses.payment_id`; статья у мостовых строк — «Налоги, банк, прочее» (сигнала для категоризации в платеже нет; оператор пере-категоризует в админке). Ежедневный прогон 04:40 в `Kernel` держит конвенции в синхроне; будущедатированные и положительные исходники команда помечает предупреждением. Тест `ExpenseBridgeRaskhodTest` (5 кейсов). Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.80.10] - 2026-07-31
 
 ### Added
@@ -1873,7 +1878,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.9...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.11...HEAD
+[1.80.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.10...v1.80.11
+[1.80.10]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.9...v1.80.10
 [1.80.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.8...v1.80.9
 [1.80.8]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.7...v1.80.8
 [1.80.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.6...v1.80.7
