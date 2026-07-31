@@ -28,7 +28,7 @@ Creates system deck slug `anki-454628379-level-1` (idempotent). Publishes media 
 ## Study (students)
 
 1. `SRS_ENABLED=true` in `.env`
-2. Log in → **`/dvaram/srs`** → select the deck
+2. Log in → **`/dvaram/koloda`** → select the deck
 3. Agent ops manual: [docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_AGENT_ANKI_SRS_IMPORT.md)
 
 ## Regenerate from .apkg

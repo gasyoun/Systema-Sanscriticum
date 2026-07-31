@@ -126,7 +126,7 @@ The docblock and the code disagree **in the same file**. The default is `true`.
 
 | Site | Effect when `true` |
 |---|---|
-| [`routes/web.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) line 261 | registers `/dvaram/srs` + `/dvaram/srs/stats` |
+| [`routes/web.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) line 261 | registers `/dvaram/koloda` + `/dvaram/koloda/stats` |
 | [`SrsController::review()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SrsController.php) line 24 | serves instead of 404 |
 | `SrsController::stats()` line 38 | serves instead of 404 |
 | [`app/Livewire/SrsReview.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Livewire/SrsReview.php) line 29 | serves instead of 404 |

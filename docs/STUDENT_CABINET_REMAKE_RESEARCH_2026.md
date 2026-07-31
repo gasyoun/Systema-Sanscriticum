@@ -42,7 +42,7 @@ group behind `auth` + `track.activity` + `student.maintenance`
 | Calendar `/calendar` | `student.calendar` | Schedule events Today/Tomorrow/date + iCal feed. |
 | Open lessons `/open-lessons` | `student.open-lessons` | All free published lessons, regardless of purchase. |
 | Messages `/messages` | `student.messages` | Announcements. Unread state is **localStorage only**; the sidebar red dot is **hardcoded fake** (`student.blade.php:126`, comment «пока фейковая»). |
-| SRS `/dvaram/srs` | `SrsController` | Flash-cards — nav hidden, `config('srs.enabled')` OFF in prod. |
+| SRS `/dvaram/koloda` | `SrsController` | Flash-cards — nav hidden, `config('srs.enabled')` OFF in prod. |
 
 Per-situation walkthrough (the eight situations the handoff names):
 

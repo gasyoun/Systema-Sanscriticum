@@ -40,9 +40,9 @@ Viewports of record: **390×844** (iPhone 14), **360×740** (compact Android), *
 | `/access` | `student.access` | hybrid `access` | hybrid new | **Pass** — debt cards stack |
 | `/course/{slug}` | `student.course` | `course` / hybrid `course` | partial (cards) | **Pass** — lesson rows `min-w-0` + truncate |
 | `/course/{slug}/lesson/{id}` | `student.lesson` | `lesson` | partial | **Pass** — block layout &lt;768 px; side col stacks |
-| `/dvaram/srs` | `student.srs` | Livewire `srs-review` | not cleared | **Pass** — grade grid 2×2 on mobile |
-| `/dvaram/srs/stats` | `student.srs.stats` | `srs-stats` | not cleared | **Pass** — stacked cards |
-| `/dvaram/srs/decks` | `student.srs.decks` | Livewire deck editor | H1487 new | **Pass** — form grids collapse to 1 col |
+| `/dvaram/koloda` | `student.srs` | Livewire `srs-review` | not cleared | **Pass** — grade grid 2×2 on mobile |
+| `/dvaram/koloda/stats` | `student.srs.stats` | `srs-stats` | not cleared | **Pass** — stacked cards |
+| `/dvaram/koloda/decks` | `student.srs.decks` | Livewire deck editor | H1487 new | **Pass** — form grids collapse to 1 col |
 | POST/telemetry/debt/prana | n/a | actions only | n/a | out of viewport scope |
 
 Non-goals: admin/Filament pages, public shop/checkout (H1391 already fixed checkout), Capacitor store packaging (Wave 0–3 human-gated).

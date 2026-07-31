@@ -17,7 +17,7 @@ how students **run** it. Distilled from H1970 + media follow-up.
 |---|---|---|
 | Seed package | `database/seeders/data/anki_<id>/` | manifest + CSV + media (committed) |
 | DB rows | `php artisan srs:import-anki …` | system deck + cards; media → public disk |
-| Student UI | `SRS_ENABLED=true` + `/dvaram/srs` | review loop with audio/image when present |
+| Student UI | `SRS_ENABLED=true` + `/dvaram/koloda` | review loop with audio/image when present |
 
 Seed files alone do **not** create studyable cards. Import + flag are required.
 
@@ -61,9 +61,9 @@ field paths without duplicating cards.
 
 ## How students run the deck
 
-1. Env: `SRS_ENABLED=true` (default is **false** — see `config/srs.php`, R-6).
+1. Env: `SRS_ENABLED=true` (default **true** since 30-07-2026; `false` darks the surface — see `config/srs.php`).
 2. Log in as a student.
-3. Open **`/dvaram/srs`** (cabinet nav «Карточки» when flag is on).
+3. Open **`/dvaram/koloda`** (cabinet nav «Карточки» when flag is on).
 4. Select the system deck (Anki decks sort with other system decks first).
 5. Front: Devanagari + romanization + **audio** (autoplay when available).  
    Reveal: **image** (if any) + translation.  
@@ -72,13 +72,16 @@ field paths without duplicating cards.
 
 | URL | Role |
 |---|---|
-| `/dvaram/srs` | Review loop |
-| `/dvaram/srs/stats` | Stats |
-| `/dvaram/srs/decks` | Student private decks (not required for system Anki decks) |
+| `/koloda` | Public hub (guest trial) |
+| `/koloda/{slug}` | Public per-deck trial |
+| `/dvaram/koloda` | Cabinet hub / review |
+| `/dvaram/koloda/stats` | Stats |
+| `/dvaram/koloda/decks` | Student private decks (not required for system Anki decks) |
+
+Legacy `/srs` and `/dvaram/srs` **301** → `/koloda` / `/dvaram/koloda`.
 
 **Prod:** after deploy of the seed + this import code, run `srs:import-anki` on the
-VPS (auto-deploy alone does **not** import). Then set `SRS_ENABLED=true` only when a
-human wants the SRS nav live (protects R20 baseline).
+VPS (auto-deploy alone does **not** import).
 
 ---
 
@@ -139,7 +142,7 @@ php artisan test --filter=ImportAnkiSrsDeck
 php artisan test --filter=SrsMedia
 php artisan test --filter=SrsReview
 php artisan srs:import-anki database/seeders/data/anki_<ID> --dry-run
-# with SRS_ENABLED=true and a student session: open /dvaram/srs, pick deck, hear audio
+# with SRS_ENABLED=true and a student session: open /dvaram/koloda, pick deck, hear audio
 ```
 
 _Dr. Mārcis Gasūns_

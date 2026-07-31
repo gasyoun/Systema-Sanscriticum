@@ -31,9 +31,9 @@ const ROUTES = [
   '/progress',
   '/access',
   '/open-lessons',
-  '/dvaram/srs',
-  '/dvaram/srs/stats',
-  '/dvaram/srs/decks',
+  '/dvaram/koloda',
+  '/dvaram/koloda/stats',
+  '/dvaram/koloda/decks',
 ];
 
 function parseCookie(raw) {

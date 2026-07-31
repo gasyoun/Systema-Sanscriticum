@@ -1109,7 +1109,7 @@ class StudentController extends Controller
 
     /**
      * H1680 — Wave 2: cabinet skill-drill strip. Links out to the existing
-     * free /lila drills, DISTINCT from the FSRS review loop at /dvaram/srs —
+     * free /lila drills, DISTINCT from the FSRS review loop at /dvaram/koloda —
      * short single-item practice, no spaced-repetition scheduling here.
      * Static curated list (the drills themselves live in public/lila/, not
      * in the DB) — matches the "not FSRS" scope of this handoff.

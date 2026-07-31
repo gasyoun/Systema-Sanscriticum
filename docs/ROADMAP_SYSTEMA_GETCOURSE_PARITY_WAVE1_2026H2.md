@@ -95,7 +95,7 @@ station** (R-6); **no arm-aware segmentation** (R-5).
 
 | Frozen | Ruling | Until |
 |---|---|---|
-| **SRS surfaced to students** — `SRS_ENABLED` on, `/dvaram/srs` reachable, menu item, any SRS station in R29 | R-6 | the hybrid ships. W1-D2 restores the default; nothing re-flips it without a human. |
+| **SRS surfaced to students** — `SRS_ENABLED` on, `/dvaram/koloda` reachable, menu item, any SRS station in R29 | R-6 | the hybrid ships. W1-D2 restores the default; nothing re-flips it without a human. |
 | **RQ4 recruitment** — `RQ4_STUDY=true`, live enrolment | R-5 | autumn, after the R20 baseline owns the August window. Harness is built and idle. |
 | **Arm-aware segmentation work** of any kind | R-5 | not scheduled |
 | **The 28-08 marathon cohort as an RQ4 recruitment source** | R-5 | permanently — ruled out, not deferred |
