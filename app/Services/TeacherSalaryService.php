@@ -479,7 +479,9 @@ class TeacherSalaryService
                 $q->where('period_month', $periodMonth)
                     ->orWhere(function ($q2) use ($start, $end) {
                         $q2->whereNull('period_month')
-                            ->whereBetween('paid_at', [$start->toDateString(), $end->toDateString()]);
+                            // Суточные границы (issue #935, H1996): toDateString()
+                            // терял выплаты последнего дня окна со временем в значении.
+                            ->whereBetween('paid_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()]);
                     });
             })
             ->groupBy('teacher_id')

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.80.9] - 2026-07-31
+
+### Fixed
+- **Финансовые месячные окна теряли последний день месяца (issue [#935](https://github.com/gasyoun/Systema-Sanscriticum/issues/935), H1996).** `whereBetween(col, [toDateString(), toDateString()])` исключал записи последнего дня окна, у которых значение хранится со временем (SQLite пишет `Y-m-d H:i:s` даже под cast `date`) — `'2026-07-31 18:00:00'` строково больше границы `'2026-07-31'`. Из-за этого весь `FinanceCockpitOpexTest` детерминированно падал каждое последнее число месяца (CI и локально) и был зелёным в остальные дни. Исправлены все три финансовых окна: [`Expense::scopeInWindow`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Expense.php), ДДС-отток зарплат в [`FinanceCockpitReport::dds`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/FinanceCockpitReport.php), окно `paid_at` в [`TeacherSalaryService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php) — границы теперь начало/конец суток. Регресс закреплён `FinanceMonthEndWindowTest` с замороженным временем на вечере 31-го числа, чтобы воспроизводиться в любой день прогона. Executor: Fable 5 (`claude-fable-5`).
+
 ## [1.80.8] - 2026-07-31
 
 ### Added
@@ -1863,7 +1868,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.7...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.9...HEAD
+[1.80.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.8...v1.80.9
+[1.80.8]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.7...v1.80.8
 [1.80.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.6...v1.80.7
 [1.80.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.5...v1.80.6
 [1.80.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.4...v1.80.5
