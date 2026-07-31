@@ -63,7 +63,9 @@ class PaypalClaimTest extends TestCase
         $this->get(route('paypal.claim.show', $tariff))
             ->assertOk()
             ->assertSee('Оплата через PayPal')
-            ->assertSee('Сообщите нам об оплате');
+            ->assertSee('Сообщите нам об оплате')
+            ->assertSee('С какого PayPal платили')
+            ->assertSee('Дата оплаты');
     }
 
     /** @test */
@@ -102,6 +104,8 @@ class PaypalClaimTest extends TestCase
             'name' => 'Джон',
             'email' => 'john@example.test',
             'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'USD',
             'paypal_txn' => '1AB23456CD789012E',
             'proof' => UploadedFile::fake()->image('receipt.png'),
@@ -119,6 +123,8 @@ class PaypalClaimTest extends TestCase
         $this->assertSame(4800.0, (float) $payment->amount, 'Рублёвый номинал = цена тарифа.');
         $this->assertSame(50.0, (float) $payment->foreign_amount);
         $this->assertSame('USD', $payment->foreign_currency);
+        $this->assertSame('payer@example.com', $payment->claimMeta('paypal_payer'));
+        $this->assertSame('2026-07-30', $payment->claimMeta('paid_on'));
         $this->assertNotNull($payment->proof_path);
         Storage::disk('local')->assertExists($payment->proof_path);
 
@@ -139,6 +145,8 @@ class PaypalClaimTest extends TestCase
             'name' => 'Джон',
             'email' => 'john@example.test',
             'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'USD',
             'paypal_txn' => 'TX1',
         ]);
@@ -158,6 +166,8 @@ class PaypalClaimTest extends TestCase
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'EUR',
             'paypal_txn' => 'TX-EUR',
         ]);
@@ -174,6 +184,8 @@ class PaypalClaimTest extends TestCase
             'name' => 'Джон',
             'email' => 'john@example.test',
             'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'USD',
             'paypal_txn' => 'TX1',
         ]);
@@ -195,7 +207,26 @@ class PaypalClaimTest extends TestCase
     }
 
     /** @test */
-    public function requires_txn_or_proof(): void
+    public function claim_without_txn_or_proof_is_accepted(): void
+    {
+        // H2017: personal PayPal — reconciliation keys are from + date + amount;
+        // txn/proof are optional helpers.
+        $tariff = $this->blockTariff();
+
+        $this->post(route('paypal.claim.store', $tariff), [
+            'name' => 'Джон',
+            'email' => 'john@example.test',
+            'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
+            'foreign_currency' => 'USD',
+        ])->assertRedirect(route('paypal.claim.show', $tariff));
+
+        $this->assertSame(1, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+    }
+
+    /** @test */
+    public function requires_paypal_payer_and_paid_on(): void
     {
         $tariff = $this->blockTariff();
 
@@ -204,8 +235,7 @@ class PaypalClaimTest extends TestCase
             'email' => 'john@example.test',
             'foreign_amount' => 50,
             'foreign_currency' => 'USD',
-            // ни paypal_txn, ни proof
-        ])->assertSessionHasErrors('paypal_txn');
+        ])->assertSessionHasErrors(['paypal_payer', 'paid_on']);
 
         $this->assertSame(0, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
     }
@@ -220,6 +250,8 @@ class PaypalClaimTest extends TestCase
             'name' => 'Джон',
             'email' => 'taken@example.test',
             'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'USD',
             'paypal_txn' => 'TX1',
         ])->assertSessionHasErrors('email');
@@ -236,6 +268,8 @@ class PaypalClaimTest extends TestCase
             'name' => 'Джон',
             'email' => 'john@example.test',
             'foreign_amount' => 50,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'USD',
             'paypal_txn' => 'TX1',
         ]);
@@ -263,6 +297,8 @@ class PaypalClaimTest extends TestCase
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
             'foreign_currency' => 'EUR',
             'paypal_txn' => 'TX-EUR',
         ])->assertRedirect(route('paypal.claim.show', $tariff));

@@ -26,9 +26,10 @@ use Illuminate\View\View;
  * Автосписания нет: студент платит на paypal.me школы, затем подаёт здесь
  * уведомление. Оно ложится ОБЫЧНЫМ Payment со status=pending и provider='paypal'
  * — доступ НЕ открывается (pending не открывает ничего). Админ сверяет платёж в
- * PayPal и переводит запись в paid из Filament — тогда доступ/письма/прана
- * открываются штатной логикой Payment::booted(). Это зеркало DepositController,
- * но без вызова эквайринга Точки.
+ * personal PayPal (не business API) по полям from / date / amount и переводит
+ * запись в paid из Filament — тогда доступ/письма/прана открываются штатной
+ * логикой Payment::booted(). Это зеркало DepositController, но без вызова
+ * эквайринга Точки.
  */
 final class PaypalClaimController extends Controller
 {
@@ -61,7 +62,15 @@ final class PaypalClaimController extends Controller
 
         [$startBlock, $endBlock] = $this->blocksFor($tariff);
 
-        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock): Payment {
+        $claimMeta = [
+            'paypal_payer' => (string) $request->validated('paypal_payer'),
+            'paid_on' => (string) $request->validated('paid_on'),
+        ];
+        if ($txn = $request->validated('paypal_txn')) {
+            $claimMeta['txn'] = (string) $txn;
+        }
+
+        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta): Payment {
             return Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $tariff->course_id,
@@ -77,6 +86,7 @@ final class PaypalClaimController extends Controller
                 'status' => 'pending',
                 'provider' => Payment::PROVIDER_PAYPAL,
                 'proof_path' => $proofPath,
+                'claim_meta' => $claimMeta,
                 'payer_note' => $this->buildNote($request),
             ]);
         });
@@ -121,10 +131,12 @@ final class PaypalClaimController extends Controller
         return [null, null];
     }
 
-    /** Свободнотекстовое примечание для админки: номер транзакции + комментарий. */
+    /** Свободнотекстовое примечание для админки: from + date + txn + comment. */
     private function buildNote(StorePaypalClaimRequest $request): string
     {
         $parts = ['PayPal-заявка'];
+        $parts[] = 'from: '.$request->validated('paypal_payer');
+        $parts[] = 'paid_on: '.$request->validated('paid_on');
         if ($txn = $request->validated('paypal_txn')) {
             $parts[] = 'txn: '.$txn;
         }

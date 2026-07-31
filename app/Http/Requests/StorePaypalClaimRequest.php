@@ -9,9 +9,10 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Заявка студента об оплате блока/курса через PayPal (оплата из-за рубежа).
  *
- * Требуем сумму+валюту и хотя бы ОДНО доказательство (номер транзакции ИЛИ файл
- * чека) — админ по нему сверит платёж в PayPal. Гость дополнительно даёт имя+email
- * (на их основе создаётся аккаунт — зеркало StoreDepositRequest).
+ * Школа на personal/non-business PayPal — автосверки нет. Обязательные поля
+ * для ручной сверки (H2017): с какого PayPal платили, дата, сумма+валюта.
+ * Номер транзакции и файл чека — опциональные усилители, не замена тройки.
+ * Гость дополнительно даёт имя+email (создание аккаунта).
  */
 final class StorePaypalClaimRequest extends FormRequest
 {
@@ -25,9 +26,12 @@ final class StorePaypalClaimRequest extends FormRequest
         $rules = [
             'foreign_amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
             'foreign_currency' => ['required', 'in:USD,EUR'],
-            // Хотя бы одно доказательство оплаты: номер транзакции ИЛИ файл-чек.
-            'paypal_txn' => ['nullable', 'required_without:proof', 'string', 'max:255'],
-            'proof' => ['nullable', 'required_without:paypal_txn', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            // С какого PayPal-аккаунта ушёл перевод (email или @username).
+            'paypal_payer' => ['required', 'string', 'max:255'],
+            // Дата перевода по заявлению студента (календарный день, не datetime).
+            'paid_on' => ['required', 'date', 'before_or_equal:today'],
+            'paypal_txn' => ['nullable', 'string', 'max:255'],
+            'proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'comment' => ['nullable', 'string', 'max:1000'],
         ];
 
@@ -46,6 +50,8 @@ final class StorePaypalClaimRequest extends FormRequest
         return [
             'foreign_amount' => 'сумма оплаты',
             'foreign_currency' => 'валюта',
+            'paypal_payer' => 'PayPal, с которого платили',
+            'paid_on' => 'дата оплаты',
             'paypal_txn' => 'номер транзакции PayPal',
             'proof' => 'файл подтверждения',
             'comment' => 'комментарий',
@@ -55,8 +61,9 @@ final class StorePaypalClaimRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'paypal_txn.required_without' => 'Укажите номер транзакции PayPal или приложите файл подтверждения.',
-            'proof.required_without' => 'Приложите файл подтверждения или укажите номер транзакции PayPal.',
+            'paypal_payer.required' => 'Укажите PayPal-аккаунт (email или @username), с которого ушёл перевод — так мы найдём платеж в личном PayPal.',
+            'paid_on.required' => 'Укажите дату перевода — без неё сверка в личном PayPal занимает часы.',
+            'paid_on.before_or_equal' => 'Дата оплаты не может быть в будущем.',
         ];
     }
 }
