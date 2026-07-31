@@ -1,13 +1,14 @@
 {
   "id": "XWQHAwlxBAFe6xfj",
-  "name": "╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р+╨в╨Р╨С╨Ы╨Ш╨ж╨Р ╨Ю╨Я╨Ы╨Р╨в",
+  "name": "АДМИНКА+ТАБЛИЦА ОПЛАТ",
   "active": true,
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
         "path": "payments",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -17,7 +18,13 @@
       ],
       "id": "39e0ca69-d6f9-4629-8274-4a86f37f74e1",
       "name": "Webhook",
-      "webhookId": "e806c7e2-7058-4bac-839f-c7860573a997"
+      "webhookId": "e806c7e2-7058-4bac-839f-c7860573a997",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "hdrPayments01",
+          "name": "payments-webhook (H1960)"
+        }
+      }
     },
     {
       "parameters": {
@@ -26,29 +33,29 @@
           "__rl": true,
           "value": "1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io",
           "mode": "list",
-          "cachedResultName": "╨б╤В╤Г╨┤╨╡╨╜╤В╤Л_╨Ю╨┐╨╗╨░╤В╤Л",
+          "cachedResultName": "Студенты_Оплаты",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": 1842808935,
           "mode": "list",
-          "cachedResultName": "╨Ю╨┐╨╗╨░╤В╤Л",
+          "cachedResultName": "Оплаты",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io/edit#gid=1842808935"
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
             "ID": "={{ $json.body.id }}",
-            "╨б╤В╤Г╨┤╨╡╨╜╤В": "={{ $json.body.student }}",
-            "╨Ъ╤Г╤А╤Б": "={{ $json.body.course }}",
-            "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.": "={{ $json.body.start_block }}",
-            "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.": "={{ $json.body.end_block }}",
-            "╨Ф╨░╤В╨░1": "={{ $json.body.paid_at }}",
-            "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)": "={{ $json.body.amount }}",
-            "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕": "={{ $json.body.label }}",
-            "╨б╨║╨╕╨┤╨║╨░": "={{ $json.body.discount }}",
-            "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡": "={{ $json.body.note }}"
+            "Студент": "={{ $json.body.student }}",
+            "Курс": "={{ $json.body.course }}",
+            "№ блока нач.": "={{ $json.body.start_block }}",
+            "№ блока кон.": "={{ $json.body.end_block }}",
+            "Дата1": "={{ $json.body.paid_at }}",
+            "Оплата (руб.)": "={{ $json.body.amount }}",
+            "Тип операции": "={{ $json.body.label }}",
+            "Скидка": "={{ $json.body.discount }}",
+            "Примечание": "={{ $json.body.note }}"
           },
           "matchingColumns": [
             "ID"
@@ -65,8 +72,8 @@
               "removed": false
             },
             {
-              "id": "╨б╤В╤Г╨┤╨╡╨╜╤В",
-              "displayName": "╨б╤В╤Г╨┤╨╡╨╜╤В",
+              "id": "Студент",
+              "displayName": "Студент",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -75,8 +82,8 @@
               "removed": false
             },
             {
-              "id": "╨Ъ╤Г╤А╤Б",
-              "displayName": "╨Ъ╤Г╤А╤Б",
+              "id": "Курс",
+              "displayName": "Курс",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -84,8 +91,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.",
-              "displayName": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.",
+              "id": "№ блока нач.",
+              "displayName": "№ блока нач.",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -93,8 +100,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.",
-              "displayName": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.",
+              "id": "№ блока кон.",
+              "displayName": "№ блока кон.",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -102,8 +109,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)",
-              "displayName": "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)",
+              "id": "Оплата (руб.)",
+              "displayName": "Оплата (руб.)",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -111,8 +118,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "╨Ф╨░╤В╨░1",
-              "displayName": "╨Ф╨░╤В╨░1",
+              "id": "Дата1",
+              "displayName": "Дата1",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -120,8 +127,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "╨Ф╨░╤В╨░2_╨╡╤Б╨╗╨╕_╨╡╤Б╤В╤М",
-              "displayName": "╨Ф╨░╤В╨░2_╨╡╤Б╨╗╨╕_╨╡╤Б╤В╤М",
+              "id": "Дата2_если_есть",
+              "displayName": "Дата2_если_есть",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -130,8 +137,8 @@
               "removed": true
             },
             {
-              "id": "╨б╤В╨░╤В╤Г╤Б ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░",
-              "displayName": "╨б╤В╨░╤В╤Г╤Б ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░",
+              "id": "Статус студента",
+              "displayName": "Статус студента",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -140,8 +147,8 @@
               "removed": true
             },
             {
-              "id": "╨б╨║╨╕╨┤╨║╨░",
-              "displayName": "╨б╨║╨╕╨┤╨║╨░",
+              "id": "Скидка",
+              "displayName": "Скидка",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -150,8 +157,8 @@
               "removed": false
             },
             {
-              "id": "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕",
-              "displayName": "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕",
+              "id": "Тип операции",
+              "displayName": "Тип операции",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -160,8 +167,8 @@
               "removed": false
             },
             {
-              "id": "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡",
-              "displayName": "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡",
+              "id": "Примечание",
+              "displayName": "Примечание",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -170,8 +177,8 @@
               "removed": false
             },
             {
-              "id": "╨Я╤А╨╛╨▓╨╡╤А╨║╨░. ╨в╨╕╨┐ ╨┤╨░╨╜╨╜╤Л╤Е ╨┤╨╗╤П ╨Ю╨┐╨╗╨░╤В╤Л (╨┤╨╛╨╗╨╢╨╜╨╛ =1)",
-              "displayName": "╨Я╤А╨╛╨▓╨╡╤А╨║╨░. ╨в╨╕╨┐ ╨┤╨░╨╜╨╜╤Л╤Е ╨┤╨╗╤П ╨Ю╨┐╨╗╨░╤В╤Л (╨┤╨╛╨╗╨╢╨╜╨╛ =1)",
+              "id": "Проверка. Тип данных для Оплаты (должно =1)",
+              "displayName": "Проверка. Тип данных для Оплаты (должно =1)",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -180,8 +187,8 @@
               "removed": true
             },
             {
-              "id": "╨Ъ╤Г╤А╤Б (╨░╨┤╨╝╨╕╨╜╨║╨░)",
-              "displayName": "╨Ъ╤Г╤А╤Б (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "id": "Курс (админка)",
+              "displayName": "Курс (админка)",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -190,8 +197,8 @@
               "removed": true
             },
             {
-              "id": "slug (╨░╨┤╨╝╨╕╨╜╨║╨░)",
-              "displayName": "slug (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "id": "slug (админка)",
+              "displayName": "slug (админка)",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -215,31 +222,11 @@
       "name": "Append or update row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "name": "Google Sheets account",
-          "id": "***"
+          "id": "LouM7wyF0ciME6q4",
+          "name": "Google Sheets account"
         }
       }
     }
   ],
-  "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Append or update row in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "meta": {
-    "exportedAt": "2026-07-30",
-    "host": "samskrtam50",
-    "note": "credentials and secrets redacted"
-  }
+  "note": "H1960 Header Auth; secret not in export"
 }
