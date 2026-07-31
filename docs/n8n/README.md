@@ -8,9 +8,10 @@
 | [CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md) | Secrets posture (findings only, no values) |
 | [_server_inventory_2026-07-30.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json) | Machine snapshot from live sqlite |
 | [exports/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/n8n/exports) | Redacted live exports (Active + key inactive) |
+| [exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv) | H1963: 28 workflows tagged `archive`+`legacy` (IDs only) |
 | [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md) | `/ask` plan index + cleanup DAG |
 
-Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · snapshot **30-07-2026**.
+Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · snapshot **30-07-2026** · tags pass **H1963 / 01-08-2026**.
 
 ---
 

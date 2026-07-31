@@ -1,6 +1,6 @@
 # Каталог n8n — context-ai.ru (samskrtam50)
 
-_Created: 30-07-2026 · Last updated: 31-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 Живой inventory инстанса **n8n** на `193.232.229.91` (`samskrtam50`, UI: `https://context-ai.ru`).  
 Снято **30-07-2026** read-only с `database.sqlite` + host paths. Машинный снимок: [`_server_inventory_2026-07-30.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json). Redacted exports: [`exports/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/).
@@ -202,10 +202,10 @@ Full fields (node type lists, code previews): JSON inventory file.
 | Category | Count | Notes |
 |---|---|---|
 | Active prod | 5 | See §3 |
-| ZOOM lineage (inactive) | 8 | Archive-tag; never dual-activate |
+| ZOOM lineage (inactive) | 8 | **Tagged** `archive`+`legacy` (H1963); never dual-activate |
 | Transcript / timecodes | 6 | Sheet-driven + TG; shares yt-dlp/Deepgram patterns with ZOOM |
 | Webinar bot family | 9+ | Registration/warming/VK skeletons — product contour, mostly off |
-| Scratch `My workflow *` | 21 | Archive-tag; export-before-delete later |
+| Scratch `My workflow *` | 20 live | **Tagged** `archive`+`legacy` (H1963); catalog 30-07 said 21 — live count 20 |
 | Social / crosspost | ~8 | monthly (off), летопись, vk bots, stories |
 | Bookbuilder | 1 + host scripts | First-class product contour (security first) |
 | Payments / checks | 2 | payments ON; чеки OFF |
@@ -257,8 +257,57 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |
 | `n8nio/n8n:latest` unpinned | 🟠 | compose | Pin digest/version |
 | 5.6G binary storage | 🟡 | du | Prune old executions/binaryData offline |
-| 21× My workflow + 8× ZOOM copies | 🟡 | inventory | Archive-tag; no delete yet |
+| 20× My workflow + 8× ZOOM copies | 🟢 fixed H1963 | live sqlite tags | Tags applied; **no delete**; export list below |
 | Social post workflow missing | 🟡 | product Wave 2 | Import when pilot armed |
+
+---
+
+## 7b. Tag set addendum — H1963 (01-08-2026)
+
+**Goal:** make the UI operable by marking scratch + superseded ZOOM lineage without deleting anything or flipping Active.
+
+### Tag set (canonical names)
+
+| Tag name | Tag id (live) | Meaning |
+|---|---|---|
+| `archive` | `af7aa560d1a125ba` | Not production; keep for history / future export-before-purge |
+| `legacy` | `f2e703e2a44a2070` | Superseded by a newer canonical workflow (or pure scratch) |
+| `lessons` | `SRHUMzPCFXfM66rO` | Pre-existing (unrelated product tag; leave alone) |
+
+Both `archive` and `legacy` are applied together to every H1963 target. Future agents filter UI by either tag.
+
+### Scope rules
+
+| Include | Exclude |
+|---|---|
+| All `My workflow*` (live **20**, all inactive) | Active set (5 workflows) — never touch |
+| All **inactive** `ZOOM*` lineage (**8**) | Canonical **ON** `ZOOM 1.4 (Final) + АДМИНКА ТЕСТ` `1EIqqNzMl5NNIxST` |
+
+**Not done (by design):** no deletes · no `active` flips · no node/graph edits · no `isArchived` mass-flip (4 ZOOM copies already had `isArchived=1` from earlier UI work).
+
+### Smoke (host, 31-07-2026 UTC)
+
+| Check | Result |
+|---|---|
+| `archive` + `legacy` tagged workflow count | **28** each (20 My + 8 ZOOM inactive) |
+| Active set before/after | **unchanged** (5 workflows: Lecture clip · ZOOM 1.4+АДМИНКА ТЕСТ · payments · Ютуб список · ловим названия copy) |
+| `workflow_entity` count | **76** (no deletes) |
+| Canonical ZOOM tagged? | **no** |
+
+DB backup pre-tag: `/opt/n8n/backups/h1963/database.sqlite.pre-tag.20260731T221126Z` on `193.232.229.91`.
+
+### Tagged ID export
+
+Full machine list: [`exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv).
+
+| Group | Count | IDs (workflow_id) |
+|---|---|---|
+| My workflow* | 20 | `AlDrByBqiJ20a75W` `YfdiM8FSYDFXNobW` `hi6CqbX9UX0bQfaK` `l6j8t5RHyYtMI8vL` `4qNFy707GEtLZJpg` `2BdJGhwtCxRqGh9b` `kcrcj5GKWXuy6Lyk` `VhLIACWtrYwC7fJW` `xVu3aaw13DJfWcpr` `y2gRwFpkoqZjIcyj` `UOHueG3PiVupVh7O` `xGFWEoEvZraUBdkD` `EIUuWQF7x3gjIW3R` `Wm0mLBukW2TWqHLh` `3Mzz3V6oPQquD3Bz` `kABgakYrg6hcwPOd` `cXKrTSrWxCaVWJMB` `THnIiwwb4XVC7qns` `EBtkhJtLIU8JwP1g` `6ZwvfareQRIJoNTk` |
+| ZOOM lineage (inactive) | 8 | `mgXS16QatfCvxlOV` `usc3QJOVj37bOCfM` `aiLHLvGPpR56g0o3` `iZAtDoeTV4eLRmA6` `MtN1h7FdF3JTmrse` `fDMCDXjS6ZWlkOwQ` `G1eqOsfzNGABo6nA` `ANlSfL2YJpA0vO5F` |
+
+**UI note:** tags were written via sqlite (`tag_entity` + `workflows_tags`). If the browser still hides them, hard-refresh the editor or restart `n8n-n8n-1` once (no compose recreate).
+
+**Count note vs 30-07 catalog:** inventory text said **21** My workflow*; live host on H1963 day has **20** (no `My workflow 3` / 9 / 11 / 15). Tagged = live set, not the stale 21.
 
 ---
 
