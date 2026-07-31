@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.81.4] - 2026-08-01
 ### Security
 - **H1960: Header Auth on n8n payments sheet webhook (C03).** n8n workflow `АДМИНКА+ТАБЛИЦА ОПЛАТ` (`/webhook/payments`) requires `X-Webhook-Secret`; Laravel [`SendPaymentToSheetJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/SendPaymentToSheetJob.php) sends `N8N_PAYMENTS_WEBHOOK_SECRET` when set. No sheet mapping or payment business-logic changes. Secret lives only on n8n host (`/root/.n8n-payments-webhook-secret`) and Laravel `.env` — never in git. Executor: Grok 4.5 (`grok-4.5`).
 
