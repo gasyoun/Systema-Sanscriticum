@@ -34,6 +34,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'curator_display_name',
         'email',
+        'memrise_username', // H2054 — claim imported Memrise leaderboard points
         'password',
         'wants_email_announcements',
         'wants_messenger_announcements',
