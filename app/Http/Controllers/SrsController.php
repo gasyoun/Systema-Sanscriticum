@@ -17,8 +17,9 @@ use Illuminate\View\View;
  * Доступна только при включённом флаге srs.enabled (маршрут регистрируется
  * под тем же условием).
  *
- * Public trial: /srs and /srs/{slug} — system/public decks without auth.
- * Cabinet: /dvaram/srs (hub) + /dvaram/srs/{slug} (review) — auth required.
+ * Public trial: /koloda and /koloda/{slug} — system/public decks without auth.
+ * Cabinet: /dvaram/koloda (hub) + /dvaram/koloda/{slug} (review) — auth required.
+ * Legacy /srs and /dvaram/srs redirect 301 to the koloda paths.
  */
 class SrsController extends Controller
 {
@@ -72,7 +73,7 @@ class SrsController extends Controller
     }
 
     /**
-     * Cabinet per-deck review (auth) — URL is /dvaram/srs/{slug}.
+     * Cabinet per-deck review (auth) — URL is /dvaram/koloda/{slug}.
      */
     public function review(string $slug): View
     {

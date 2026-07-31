@@ -21,7 +21,7 @@ use Livewire\Component;
  * раскрыта ли карточка).
  *
  * Per-deck URL + guest trial: mount accepts optional slug; changing the deck
- * select navigates to /srs/{slug} or /dvaram/srs/{slug}. Guests may try
+ * select navigates to /koloda/{slug} or /dvaram/koloda/{slug}. Guests may try
  * system/public decks without registration (session-only, no FSRS persist).
  */
 class SrsReview extends Component
@@ -132,8 +132,8 @@ class SrsReview extends Component
 
         $segment = self::deckPathSegment($deck);
         $path = ($this->isGuest || request()->routeIs('srs.*'))
-            ? '/srs/'.$segment
-            : '/dvaram/srs/'.$segment;
+            ? '/koloda/'.$segment
+            : '/dvaram/koloda/'.$segment;
 
         // url() not route(): unit tests may boot without SRS route registration.
         $this->redirect(url($path), navigate: true);

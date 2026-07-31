@@ -11,11 +11,11 @@
     </div>
 
     <div class="mb-6 flex flex-wrap gap-3">
-        <a href="{{ url('/dvaram/srs/decks') }}"
+        <a href="{{ url('/dvaram/koloda/decks') }}"
            class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
             Мои колоды
         </a>
-        <a href="{{ url('/dvaram/srs/stats') }}"
+        <a href="{{ url('/dvaram/koloda/stats') }}"
            class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
             Статистика
         </a>
@@ -37,7 +37,7 @@
                     };
                 @endphp
                 <li>
-                    <a href="{{ url('/dvaram/srs/'.$segment) }}"
+                    <a href="{{ url('/dvaram/koloda/'.$segment) }}"
                        class="flex items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-[#E85C24]/40 hover:shadow-md transition-all group">
                         <div>
                             <div class="font-extrabold text-gray-900 group-hover:text-[#E85C24] transition-colors">

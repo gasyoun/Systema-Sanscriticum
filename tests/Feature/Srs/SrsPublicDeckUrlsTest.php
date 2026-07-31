@@ -82,12 +82,12 @@ class SrsPublicDeckUrlsTest extends TestCase
     {
         $this->makeDeck('sanskrit-core', 'sa', 'Санскрит — ядро');
 
-        $this->get('/srs')
+        $this->get('/koloda')
             ->assertOk()
             ->assertSee('Санскрит — ядро')
             ->assertSee('Попробовать');
 
-        $this->get('/srs/sanskrit-core')
+        $this->get('/koloda/sanskrit-core')
             ->assertOk()
             ->assertSee('Санскрит — ядро')
             ->assertSee('учите санскрит')
@@ -99,7 +99,7 @@ class SrsPublicDeckUrlsTest extends TestCase
     {
         $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
 
-        $this->get('/srs/hindi-core')
+        $this->get('/koloda/hindi-core')
             ->assertOk()
             ->assertSee('учите хинди')
             ->assertDontSee('учите санскрит');
@@ -140,7 +140,7 @@ class SrsPublicDeckUrlsTest extends TestCase
         $this->makeDeck('sanskrit-core', 'sa', 'Санскрит — ядро');
 
         $this->actingAs($user)
-            ->get('/dvaram/srs/sanskrit-core')
+            ->get('/dvaram/koloda/sanskrit-core')
             ->assertOk()
             ->assertSee('Санскрит — ядро')
             ->assertSee('учите санскрит')
@@ -154,10 +154,10 @@ class SrsPublicDeckUrlsTest extends TestCase
         $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
 
         $this->actingAs($user)
-            ->get('/dvaram/srs')
+            ->get('/dvaram/koloda')
             ->assertOk()
-            ->assertSee('/dvaram/srs/sanskrit-core')
-            ->assertSee('/dvaram/srs/hindi-core')
+            ->assertSee('/dvaram/koloda/sanskrit-core')
+            ->assertSee('/dvaram/koloda/hindi-core')
             ->assertSee('Санскрит — ядро')
             ->assertSee('Hindi Core 100');
     }
@@ -180,6 +180,26 @@ class SrsPublicDeckUrlsTest extends TestCase
             'visibility' => 'private',
         ]);
 
-        $this->get('/srs/secret-deck')->assertNotFound();
+        $this->get('/koloda/secret-deck')->assertNotFound();
+    }
+
+    public function test_legacy_srs_urls_redirect_to_koloda(): void
+    {
+        $this->makeDeck('sanskrit-core', 'sa', 'Санскрит — ядро');
+
+        $this->get('/srs')
+            ->assertRedirect('/koloda');
+
+        $this->get('/srs/sanskrit-core')
+            ->assertRedirect('/koloda/sanskrit-core');
+
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->get('/dvaram/srs')
+            ->assertRedirect('/dvaram/koloda');
+
+        $this->actingAs($user)
+            ->get('/dvaram/srs/sanskrit-core')
+            ->assertRedirect('/dvaram/koloda/sanskrit-core');
     }
 }

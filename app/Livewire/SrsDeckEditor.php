@@ -20,7 +20,7 @@ use Livewire\Component;
  */
 class SrsDeckEditor extends Component
 {
-    /** Path segments reserved under /dvaram/srs/{slug} (static routes). */
+    /** Path segments reserved under /dvaram/koloda/{slug} (static routes). */
     private const RESERVED_SLUGS = ['stats', 'decks'];
 
     public ?int $deckId = null;
@@ -125,7 +125,7 @@ class SrsDeckEditor extends Component
 
     /**
      * Owner edits the shareable slug for their private deck
-     * (cabinet URL: /dvaram/srs/{slug}).
+     * (cabinet URL: /dvaram/koloda/{slug}).
      */
     public function updateSlug(): void
     {
@@ -166,7 +166,7 @@ class SrsDeckEditor extends Component
         $deck->slug = $slug;
         $deck->save();
         $this->editSlug = $slug;
-        $this->message = 'Адрес колоды обновлён: /dvaram/srs/'.$slug;
+        $this->message = 'Адрес колоды обновлён: /dvaram/koloda/'.$slug;
     }
 
     public function deleteDeck(): void

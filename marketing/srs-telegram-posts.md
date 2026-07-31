@@ -1,13 +1,13 @@
 # Telegram-посты — SRS-карточки (интервальные повторения)
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 31-07-2026_
 
 Черновики для канала [@samskrte](https://t.me/samskrte). Вставляются **вручную**.
 Стиль как у [lila-telegram-posts](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/lila-telegram-posts.md):
 «вы», не больше одного эмодзи на пост, один CTA.
 
-**Каталог (без регистрации, проба):** https://samskrte.ru/srs  
-**Кабинет (прогресс сохраняется):** https://samskrte.ru/dvaram/srs  
+**Каталог (без регистрации, проба):** https://samskrte.ru/koloda  
+**Кабинет (прогресс сохраняется):** https://samskrte.ru/dvaram/koloda  
 **Гости** — несколько карточек бесплатно, дальше мягкое приглашение войти в кабинет.
 
 Прод: `SRS_ENABLED=true`, деплой `80aeeba1` (30-07-2026). Колоды на момент анонса:
@@ -25,9 +25,9 @@ Grok 4.5 (`grok-4.5`).
 Карточки с умными интервалами (FSRS): слово → перевод, корни, кириллица для первых дней, даже хинди. Можно попробовать в браузере без регистрации; если зайдёте в кабинет — прогресс сохранится.
 
 С чего начать:
-• Кочергина, занятие I (41 слово) — https://samskrte.ru/srs/kochergina-lesson-1
-• Корни по частотности (570) — https://samskrte.ru/srs/sanskrit-roots-frequency
-• Все колоды — https://samskrte.ru/srs
+• Кочергина, занятие I (41 слово) — https://samskrte.ru/koloda/kochergina-lesson-1
+• Корни по частотности (570) — https://samskrte.ru/koloda/sanskrit-roots-frequency
+• Все колоды — https://samskrte.ru/koloda
 
 ---
 
@@ -37,7 +37,7 @@ Grok 4.5 (`grok-4.5`).
 
 Интервальные повторения на samskrte.ru: выберите колоду, листайте, система сама подберёт, когда снова показать слово.
 
-Каталог: https://samskrte.ru/srs
+Каталог: https://samskrte.ru/koloda
 
 ---
 
@@ -45,8 +45,8 @@ Grok 4.5 (`grok-4.5`).
 
 В кабинете появился пункт «Карточки» (SRS): колоды словаря, корни по частотности, Кочергина I, демо Nala и Hindi Core.
 
-Ссылка из кабинета: https://samskrte.ru/dvaram/srs  
-Публичная проба (можно переслать знакомым): https://samskrte.ru/srs
+Ссылка из кабинета: https://samskrte.ru/dvaram/koloda  
+Публичная проба (можно переслать знакомым): https://samskrte.ru/koloda
 
 Прогресс и статистика — только после входа.
 
@@ -54,8 +54,8 @@ Grok 4.5 (`grok-4.5`).
 
 ## Чек-лист перед публикацией
 
-1. Открыть https://samskrte.ru/srs в инкогнито — 200, видны колоды.
+1. Открыть https://samskrte.ru/koloda в инкогнито — 200, видны колоды.
 2. Пройти 2–3 карточки на телефоне (4G).
-3. Один CTA: каталог `/srs` (не смешивать с марафоном/прайсом).
+3. Один CTA: каталог `/koloda` (не смешивать с марафоном/прайсом).
 
 _Dr. Mārcis Gasūns_
