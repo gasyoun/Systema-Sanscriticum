@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.81.1] - 2026-07-31
+
+### Fixed
+- **Userbot-сессия MadelineProto: 30-07 блокировка снята, исходящая доставка проверена вживую (H594 follow-up).** Диагностика 31-07 показала здоровую сессию (один воркер с 07:32, `telegram-support:sync` зеленый каждую минуту); застрявший canary-джоб `DeliverSupportReply` (H594, `failed_jobs` id 1445) перезапущен `queue:retry` и прошел без повторного падения, свежие outgoing-строки несут реальные `telegram_message_id`. Статусная строка в [docs/support-subsystem-map.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md) переведена из «BLOCKED» в «RECOVERED»; ретрай W1.3 разблокирован. Executor: Fable 5 (`claude-fable-5`).
+
 ### Added
 - **H2017: PayPal claim fields + company invoice (dark flags) + Tochka/YooMoney/KKT plan.** Diaspora form now requires **from-PayPal + paid date + amount** (txn/proof optional) for manual reconciliation on a non-business PayPal account; structured `payments.claim_meta` JSON. New **счёт для юрлица** path (`COMPANY_INVOICE_ENABLED` default OFF): form → pending `provider=invoice` → printable HTML invoice → Filament «Подтвердить счет». Tochka audit doc records live `paymentMode=['sbp','card']` and own-KKT procurement plan; YooMoney deferred. Flags stay OFF until human enable. Executor: Grok 4.5 (`grok-4.5`).
 
@@ -1910,7 +1915,9 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.15...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.1...HEAD
+[1.81.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.0...v1.81.1
+[1.81.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.15...v1.81.0
 [1.80.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.14...v1.80.15
 [1.80.14]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.13...v1.80.14
 [1.80.13]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.12...v1.80.13
