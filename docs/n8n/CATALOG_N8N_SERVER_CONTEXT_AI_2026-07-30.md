@@ -59,7 +59,9 @@ services:
 |---|---|
 | `/opt/bookbuilder/process_book.sh` | aria2c pages → blank-page drop → mogrify → img2pdf → ocrmypdf rus+eng |
 | `/opt/bookbuilder/fetch_page.py` | Playwright: page HTML + cookies for libfl viewer |
-| `/opt/bookbuilder/auto_order.py` | Playwright: libfl login → cart → order → viewer URL |
+| `/opt/bookbuilder/auto_order.py` | Playwright: libfl login → cart → order → viewer URL (CLI args; do **not** put secrets in n8n) |
+| `/opt/bookbuilder/auto_order_from_env.sh` | H1958: sources `/root/.libfl-env` (mode 600), calls `auto_order.py` with env login/password |
+| `/root/.libfl-env` | Host-only keys `LIBFL_LOGIN` + `LIBFL_PASSWORD` (never commit) |
 | `/opt/bookbuilder/requirements.txt` + `venv/` | playwright, img2pdf, ocrmypdf, … |
 | `/root/.clip-env` | VK token + group id for lecture-clip SSH path (exists) |
 | `/etc/systemd/system/socks-nl.service` | SOCKS5 tunnel for yt-dlp YouTube |
@@ -249,7 +251,7 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 | `vk-calendar-post` not imported | 🟠 | Template only | Import when `CONTENT_CALENDAR_AUTOPILOT` staging |
 | `monthly-schedule-post` imported but OFF | 🟠 | Workflow exists, inactive | Activate after token move to credentials + smoke |
 | Telegram bot token inlined in monthly HTTP URLs | 🔴 | Live node params | Rotate bot token; use Telegram credential node |
-| libfl password in book SSH command | 🔴 | Live node | Rotate; `/root/.libfl-env` pattern |
+| libfl password in book SSH command | 🟢 fixed H1958 | Was live CLI args; now `auto_order_from_env.sh` + `/root/.libfl-env` (600) | Human: confirm one login still works |
 | Lecture clip 6/6 errors | 🔴 | execution_entity | Debug SSH/ffmpeg/VK; dry-run one lesson |
 | Payments webhook auth=none | 🔴 money-adj | node auth | Header Auth + Laravel secret (human-gated) |
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |

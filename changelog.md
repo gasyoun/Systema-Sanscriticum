@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H1958 n8n sec/libfl-rotate — libfl password out of bookbuilder SSH node.** Live `СБОРКА КНИГ` node calls only `/opt/bookbuilder/auto_order_from_env.sh "<url>"`; secrets live in host `/root/.libfl-env` (mode 600). Live n8n sqlite has no password/login strings. Scrubbed git export [`docs/n8n/exports/book-assembly.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/book-assembly.live.json) + inventory snapshot; credential audit C01 marked remediated. Residual: human confirms one libfl login; Jul-25 sqlite bak shred if still present. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Added
 - **Таблица лидеров Week / Month / All Time (Memrise-аналог, H2051).** Вкладка «Прана» в кабинете: **Неделя** (с пн), **Месяц** (с 1-го), **Всё время** (`lifetime_prana`). Периоды считают сумму начислений `prana_transactions` (amount > 0); траты не входят. [`PranaLeaderboard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/PranaLeaderboard.php) + partial. Per-game / per-deck топы — out of scope. Executor: Grok 4.5 (`grok-4.5`).
 - **Словарный запас (DictionaryWord) доступен преподавателям (H2050).** Filament **Допматериалы → Словарный запас** — create/edit/delete для `teacher` и admin (Елена Трефилова — основной редактор). Контейнеры «Словари» остаются admin-only. Manual updated. Executor: Grok 4.5 (`grok-4.5`).
