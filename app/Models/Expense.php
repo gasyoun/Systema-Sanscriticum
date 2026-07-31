@@ -38,6 +38,9 @@ class Expense extends Model
         'amount',
         'counterparty',
         'note',
+        // Провенанс моста «Расход»→opex (H2003): id исходного легаси-платежа,
+        // уникален — обеспечивает идемпотентность expenses:bridge-raskhod.
+        'payment_id',
     ];
 
     protected $casts = [
@@ -48,10 +51,14 @@ class Expense extends Model
 
     /**
      * Расходы, попавшие в окно [начало, конец] по дате траты (кассовый признак).
+     * Границы — начало/конец суток: сравнение по `toDateString()` теряло записи
+     * последнего дня окна, у которых значение хранится со временем (SQLite в
+     * тестах пишет 'Y-m-d H:i:s' даже под cast 'date') — '2026-07-31 09:00:00'
+     * строково больше верхней границы '2026-07-31' (issue #935, H1996).
      */
     public function scopeInWindow(Builder $query, Carbon $start, Carbon $end): Builder
     {
-        return $query->whereBetween('spent_at', [$start->toDateString(), $end->toDateString()]);
+        return $query->whereBetween('spent_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()]);
     }
 
     /**

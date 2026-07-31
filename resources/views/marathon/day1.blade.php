@@ -3,6 +3,10 @@
 @section('title', 'День 1 — Консультация по онлайн-курсам ОРС')
 
 @section('content')
+@php
+    $alreadyDone = $enrollment->day1_engaged_at !== null;
+    $durationLabel = $enrollment->formatQuizDuration($enrollment->day1_quiz_seconds);
+@endphp
 <div class="max-w-2xl mx-auto py-12 px-4">
 
     <div class="text-center mb-8">
@@ -10,12 +14,29 @@
         <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Санскрит роднее, чем кажется</h1>
     </div>
 
+    @if ($alreadyDone)
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+            <div class="text-center py-4">
+                <p class="text-2xl mb-2">🎉</p>
+                <p class="font-bold text-[#1A1A1A] mb-1">День 1 пройден!</p>
+                @if ($durationLabel)
+                    <p class="text-sm text-gray-600 mb-2">Время на опрос: <span class="font-semibold text-[#1A1A1A]">{{ $durationLabel }}</span></p>
+                @endif
+                <p class="text-sm text-gray-500 mb-2">Завтра — как устроено само слово: корень + аффикс.</p>
+                <p class="text-xs text-gray-400">Опрос уже засчитан — повторно проходить не нужно.</p>
+            </div>
+        </div>
+    @else
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8"
          x-data="{
              quiz: @js($quiz),
              idx: 0,
              answered: false,
              picked: null,
+             startedAt: Date.now(),
+             durationSeconds() {
+                 return Math.max(0, Math.min(7200, Math.round((Date.now() - this.startedAt) / 1000)));
+             },
              tap(i) {
                  if (this.answered) return;
                  this.picked = i;
@@ -47,7 +68,14 @@
                 </div>
                 <template x-if="answered">
                     <div>
-                        <p class="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 mb-4" x-text="step.explain"></p>
+                        <p class="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 mb-3" x-text="step.explain"></p>
+                        <template x-if="step.link && step.link.url">
+                            <p class="mb-4">
+                                <a :href="step.link.url" target="_blank" rel="noopener noreferrer"
+                                   class="text-sm font-semibold text-[#E85C24] hover:underline"
+                                   x-text="step.link.label || step.link.url"></a>
+                            </p>
+                        </template>
                         <button type="button" @click="next()"
                                 class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
                             <span x-text="isLast ? 'Готово' : 'Далее'"></span>
@@ -58,11 +86,17 @@
         </template>
 
         <template x-if="done">
-            <form method="POST" action="{{ route('marathon.day.complete', ['day' => 1, 'token' => $token]) }}">
+            <form method="POST" action="{{ route('marathon.day.complete', ['day' => 1, 'token' => $token]) }}"
+                  @submit="$el.querySelector('[name=duration_seconds]').value = durationSeconds()">
                 @csrf
+                <input type="hidden" name="duration_seconds" value="0">
                 <div class="text-center py-4">
                     <p class="text-2xl mb-2">🎉</p>
                     <p class="font-bold text-[#1A1A1A] mb-1">День 1 пройден!</p>
+                    <p class="text-sm text-gray-600 mb-2">
+                        Время на опрос:
+                        <span class="font-semibold text-[#1A1A1A]" x-text="Math.floor(durationSeconds() / 60) + ' мин ' + (durationSeconds() % 60) + ' сек'"></span>
+                    </p>
                     <p class="text-sm text-gray-500 mb-6">Завтра — как устроено само слово: корень + аффикс.</p>
                     <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
                         Завершить День 1
@@ -72,5 +106,6 @@
         </template>
 
     </div>
+    @endif
 </div>
 @endsection

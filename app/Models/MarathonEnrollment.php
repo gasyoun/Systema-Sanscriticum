@@ -57,6 +57,8 @@ class MarathonEnrollment extends Model
         'day2_completed_at',
         'day1_engaged_at',
         'day2_engaged_at',
+        'day1_quiz_seconds',
+        'day2_quiz_seconds',
         'consultation_booked_at',
         'recording_sent_at',
         'paid_at',
@@ -69,12 +71,60 @@ class MarathonEnrollment extends Model
         'day2_completed_at' => 'datetime',
         'day1_engaged_at' => 'datetime',
         'day2_engaged_at' => 'datetime',
+        'day1_quiz_seconds' => 'integer',
+        'day2_quiz_seconds' => 'integer',
         'consultation_booked_at' => 'datetime',
         'recording_sent_at' => 'datetime',
         'paid_at' => 'datetime',
         'warm_tail_last_day_sent' => 'integer',
         'quiz_level' => 'integer',
     ];
+
+    /**
+     * Human-readable quiz duration for enrollee UI and Filament admin.
+     * Null when the day was never finished or duration was not posted.
+     */
+    public function formatQuizDuration(?int $seconds): ?string
+    {
+        if ($seconds === null || $seconds < 0) {
+            return null;
+        }
+
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+
+        if ($m === 0) {
+            return "{$s} сек";
+        }
+
+        return $s === 0 ? "{$m} мин" : "{$m} мин {$s} сек";
+    }
+
+    /**
+     * Clear tap-quiz completion so the enrollee can re-take Day 1 and/or Day 2
+     * (admin-only, Filament «Марафон: опросы»). Does not touch delivery clocks
+     * (day{N}_completed_at), paid track, or day2_question.
+     *
+     * @param  1|2|null  $day  null = both days
+     */
+    public function resetQuizEngagement(?int $day = null): void
+    {
+        $updates = [];
+
+        if ($day === null || $day === 1) {
+            $updates['day1_engaged_at'] = null;
+            $updates['day1_quiz_seconds'] = null;
+        }
+
+        if ($day === null || $day === 2) {
+            $updates['day2_engaged_at'] = null;
+            $updates['day2_quiz_seconds'] = null;
+        }
+
+        if ($updates !== []) {
+            $this->update($updates);
+        }
+    }
 
     public function lead(): BelongsTo
     {

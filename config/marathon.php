@@ -68,25 +68,38 @@ return [
     // steps, not the branching results{} shape ShopController::start() uses
     // for its master-quiz (recognition tasks don't route anywhere — each
     // answer just reveals an explanation and advances). 0-indexed `correct`.
+    // Day-1 recognition quiz (zero cohort). Optional per-step `link`
+    // {url, label} is rendered under the explanation (see day1.blade.php).
+    // Zaliznyak: «О языке древней Индии» from the school’s curated list
+    // https://samskrtam.ru/mt/ (Муми-тролль talks). Burlak: IE kinship talk
+    // already hosted on samskrtam.ru.
     'day1_quiz' => [
         'steps' => [
             [
-                'text' => 'Слово veda значит...',
-                'opts' => ['Видеть', 'Знать', 'Течь'],
+                'text' => 'Слово veda (существительное или глагол в перфекте) значит...',
+                'opts' => ['видеть', 'знать', 'течь'],
                 'correct' => 1,
-                'explain' => 'Верно! «Veda» — «знание». Тот же корень, что в русском «ведать», «весть», «невежда» — санскрит и русский родня, оба из одной индоевропейской семьи.',
+                'explain' => 'Верно! veda — «знание» (и «он узнал» в перфекте). Тот же корень, что в русском «ведать», «весть», «невежда» — санскрит и русский родня, оба из одной индоевропейской семьи.',
+                'link' => [
+                    'url' => 'https://elementy.ru/nauchno-populyarnaya_biblioteka/431350/O_yazyke_drevney_Indii',
+                    'label' => 'А.А. Зализняк: «О языке древней Индии» (из подборки samskrtam.ru/mt)',
+                ],
             ],
             [
-                'text' => 'А matar?',
-                'opts' => ['Отец', 'Мать', 'Брат'],
+                'text' => 'А mātar?',
+                'opts' => ['отец', 'мать', 'брат'],
                 'correct' => 1,
-                'explain' => 'Да! «Matar» — «мать». Слышите родство? bhratar — «брат» устроено так же.',
+                'explain' => 'Да! mātar — «мать». Слышите родство? bhrātar — «брат» устроено так же.',
             ],
             [
-                'text' => 'Bhratar — это...',
-                'opts' => ['Сестра', 'Друг', 'Брат'],
+                'text' => 'Bhrātar — это...',
+                'opts' => ['сестра', 'друг', 'брат'],
                 'correct' => 2,
                 'explain' => 'Точно! Родство санскрита и русского — не совпадение, а общий индоевропейский предок.',
+                'link' => [
+                    'url' => 'https://samskrtam.ru/burlak-sanskrit-2018-tc',
+                    'label' => 'С.А. Бурлак: «Какой же русский не понимает санскрита?»',
+                ],
             ],
         ],
     ],

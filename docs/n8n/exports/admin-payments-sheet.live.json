@@ -1,0 +1,245 @@
+{
+  "id": "XWQHAwlxBAFe6xfj",
+  "name": "╨Р╨Ф╨Ь╨Ш╨Э╨Ъ╨Р+╨в╨Р╨С╨Ы╨Ш╨ж╨Р ╨Ю╨Я╨Ы╨Р╨в",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payments",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "39e0ca69-d6f9-4629-8274-4a86f37f74e1",
+      "name": "Webhook",
+      "webhookId": "e806c7e2-7058-4bac-839f-c7860573a997"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io",
+          "mode": "list",
+          "cachedResultName": "╨б╤В╤Г╨┤╨╡╨╜╤В╤Л_╨Ю╨┐╨╗╨░╤В╤Л",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1842808935,
+          "mode": "list",
+          "cachedResultName": "╨Ю╨┐╨╗╨░╤В╤Л",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UOifoMIdS9FUXkBUkOiB28kW_eVSHppu49LcSynY7Io/edit#gid=1842808935"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.body.id }}",
+            "╨б╤В╤Г╨┤╨╡╨╜╤В": "={{ $json.body.student }}",
+            "╨Ъ╤Г╤А╤Б": "={{ $json.body.course }}",
+            "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.": "={{ $json.body.start_block }}",
+            "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.": "={{ $json.body.end_block }}",
+            "╨Ф╨░╤В╨░1": "={{ $json.body.paid_at }}",
+            "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)": "={{ $json.body.amount }}",
+            "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕": "={{ $json.body.label }}",
+            "╨б╨║╨╕╨┤╨║╨░": "={{ $json.body.discount }}",
+            "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡": "={{ $json.body.note }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨б╤В╤Г╨┤╨╡╨╜╤В",
+              "displayName": "╨б╤В╤Г╨┤╨╡╨╜╤В",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨Ъ╤Г╤А╤Б",
+              "displayName": "╨Ъ╤Г╤А╤Б",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.",
+              "displayName": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨╜╨░╤З.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.",
+              "displayName": "тДЦ ╨▒╨╗╨╛╨║╨░ ╨║╨╛╨╜.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)",
+              "displayName": "╨Ю╨┐╨╗╨░╤В╨░ (╤А╤Г╨▒.)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "╨Ф╨░╤В╨░1",
+              "displayName": "╨Ф╨░╤В╨░1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "╨Ф╨░╤В╨░2_╨╡╤Б╨╗╨╕_╨╡╤Б╤В╤М",
+              "displayName": "╨Ф╨░╤В╨░2_╨╡╤Б╨╗╨╕_╨╡╤Б╤В╤М",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "╨б╤В╨░╤В╤Г╤Б ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░",
+              "displayName": "╨б╤В╨░╤В╤Г╤Б ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "╨б╨║╨╕╨┤╨║╨░",
+              "displayName": "╨б╨║╨╕╨┤╨║╨░",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕",
+              "displayName": "╨в╨╕╨┐ ╨╛╨┐╨╡╤А╨░╤Ж╨╕╨╕",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡",
+              "displayName": "╨Я╤А╨╕╨╝╨╡╤З╨░╨╜╨╕╨╡",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "╨Я╤А╨╛╨▓╨╡╤А╨║╨░. ╨в╨╕╨┐ ╨┤╨░╨╜╨╜╤Л╤Е ╨┤╨╗╤П ╨Ю╨┐╨╗╨░╤В╤Л (╨┤╨╛╨╗╨╢╨╜╨╛ =1)",
+              "displayName": "╨Я╤А╨╛╨▓╨╡╤А╨║╨░. ╨в╨╕╨┐ ╨┤╨░╨╜╨╜╤Л╤Е ╨┤╨╗╤П ╨Ю╨┐╨╗╨░╤В╤Л (╨┤╨╛╨╗╨╢╨╜╨╛ =1)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "╨Ъ╤Г╤А╤Б (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "displayName": "╨Ъ╤Г╤А╤Б (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "slug (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "displayName": "slug (╨░╨┤╨╝╨╕╨╜╨║╨░)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "49b22890-1693-4091-b6f1-e84930bcd550",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}

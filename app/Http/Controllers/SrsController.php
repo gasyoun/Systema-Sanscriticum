@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Livewire\SrsReview;
 use App\Models\SrsDeck;
 use App\Models\SrsReviewLog;
 use App\Models\SrsReviewState;
@@ -13,17 +12,74 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
- * SRS-карточки (H211, Wave 1). Тонкая обёртка: страница личного кабинета,
- * встраивающая Livewire-компонент {@see SrsReview}. Доступна только
- * при включённом флаге srs.enabled (маршрут регистрируется под тем же условием).
+ * SRS-карточки (H211, Wave 1). Тонкая обёртка: страница личного кабинета /
+ * публичной пробы, встраивающая Livewire-компонент {@see SrsReview}.
+ * Доступна только при включённом флаге srs.enabled (маршрут регистрируется
+ * под тем же условием).
+ *
+ * Public trial: /koloda and /koloda/{slug} — system/public decks without auth.
+ * Cabinet: /dvaram/koloda (hub) + /dvaram/koloda/{slug} (review) — auth required.
+ * Legacy /srs and /dvaram/srs redirect 301 to the koloda paths.
  */
 class SrsController extends Controller
 {
-    public function review(): View
+    /**
+     * Public hub of system/public decks (marketing trial, no login).
+     */
+    public function publicIndex(): View
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
-        return view('student.srs');
+        $decks = SrsDeck::query()
+            ->whereIn('visibility', ['system', 'public'])
+            ->withCount('cards')
+            ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
+            ->orderBy('name')
+            ->get();
+
+        return view('srs.public-index', ['decks' => $decks]);
+    }
+
+    /**
+     * Public per-deck review (guest trial or logged-in on the shareable URL).
+     */
+    public function publicReview(string $slug): View
+    {
+        abort_unless((bool) config('srs.enabled'), 404);
+
+        return view('srs.public-review', ['slug' => $slug]);
+    }
+
+    /**
+     * Cabinet hub: list decks with per-deck URLs (auth).
+     */
+    public function cabinetIndex(): View
+    {
+        abort_unless((bool) config('srs.enabled'), 404);
+
+        $userId = Auth::id();
+
+        $decks = SrsDeck::query()
+            ->where(function ($q) use ($userId) {
+                $q->whereIn('visibility', ['system', 'public'])
+                    ->orWhere('user_id', $userId);
+            })
+            ->withCount('cards')
+            ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
+            ->orderBy('name')
+            ->get();
+
+        return view('student.srs-hub', ['decks' => $decks]);
+    }
+
+    /**
+     * Cabinet per-deck review (auth) — URL is /dvaram/koloda/{slug}.
+     */
+    public function review(string $slug): View
+    {
+        abort_unless((bool) config('srs.enabled'), 404);
+
+        return view('student.srs', ['slug' => $slug]);
     }
 
     /**

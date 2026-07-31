@@ -59,10 +59,59 @@ class MarathonTapChoiceTest extends TestCase
     {
         [$lead, $enrollment] = $this->enrollment();
 
-        $this->post(route('marathon.day.complete', ['day' => 1, 'token' => $lead->magnet_token]))
+        $this->post(route('marathon.day.complete', ['day' => 1, 'token' => $lead->magnet_token]), [
+            'duration_seconds' => 97,
+        ])
             ->assertRedirect(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]));
 
-        $this->assertNotNull($enrollment->fresh()->day1_engaged_at);
+        $enrollment->refresh();
+        $this->assertNotNull($enrollment->day1_engaged_at);
+        $this->assertSame(97, $enrollment->day1_quiz_seconds);
+    }
+
+    public function test_day1_after_complete_shows_done_not_quiz(): void
+    {
+        [$lead, $enrollment] = $this->enrollment();
+        $enrollment->update([
+            'day1_engaged_at' => now(),
+            'day1_quiz_seconds' => 120,
+        ]);
+
+        $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
+            ->assertOk()
+            ->assertSee('День 1 пройден')
+            ->assertSee('2 мин')
+            ->assertDontSee('Слово veda', false);
+    }
+
+    public function test_dine_path_is_canonical_and_day_redirects(): void
+    {
+        [$lead] = $this->enrollment();
+
+        $this->get('/online/konsultaciya/dine/1/'.$lead->magnet_token)
+            ->assertOk();
+
+        $this->get('/online/konsultaciya/day/1/'.$lead->magnet_token)
+            ->assertRedirect('/online/konsultaciya/dine/1/'.$lead->magnet_token);
+    }
+
+    public function test_zero_cohort_day1_uses_macron_forms(): void
+    {
+        [$lead] = $this->enrollment();
+
+        $this->get(route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]))
+            ->assertOk()
+            ->assertViewHas('quiz', function ($quiz) {
+                $steps = $quiz['steps'];
+
+                return str_contains($steps[0]['text'], 'перфекте')
+                    && $steps[0]['opts'][1] === 'знать'
+                    && str_contains($steps[1]['text'], 'mātar')
+                    && str_contains($steps[2]['text'], 'Bhrātar')
+                    && isset($steps[0]['link']['url'])
+                    && str_contains($steps[0]['link']['url'], 'O_yazyke_drevney_Indii')
+                    && ($steps[2]['link']['url'] ?? '') === 'https://samskrtam.ru/burlak-sanskrit-2018-tc';
+            });
     }
 
     public function test_complete_day1_is_idempotent(): void

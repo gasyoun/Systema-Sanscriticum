@@ -14,6 +14,8 @@ use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
 use App\Support\MarathonLandingCopy;
+use App\Support\MarathonLandingCopySplit;
+use App\Support\MarathonVisual;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -69,15 +71,25 @@ class MarathonController extends Controller
         'try' => 'Хочу попробовать — пока не знаю',
     ];
 
-    public function show(): View
+    public function show(Request $request): View
     {
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
-        // H1067 — ruled RU copy; default variant A, then B via MARATHON_LANDING_COPY_VARIANT.
-        $copy = MarathonLandingCopy::forView();
+        // H2010 — real per-visitor 50/50 copy A/B split, live until
+        // config('marathon_landing_copy.ab_test_until'); sticky cookie set
+        // here on first assignment, read again (not re-assigned) in
+        // register() to tag the resulting Lead.
+        $split = MarathonLandingCopySplit::resolveForRequest($request);
+        if ($split->isNewAssignment) {
+            MarathonLandingCopySplit::recordImpression($split->variantKey);
+        }
+        $copy = MarathonLandingCopy::forView($split->variantKey);
+        // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
+        $skin = MarathonVisual::variantKey($request);
 
         return view('marathon.show', [
             'landing' => $landing,
             'copy' => $copy,
+            'skin' => $skin,
             'quizGoals' => self::QUIZ_GOALS,
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
@@ -94,7 +106,7 @@ class MarathonController extends Controller
         RateLimiter::hit($rlKey, 5);
 
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
+            'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
             'email' => 'nullable|email',
             'social' => 'nullable|string|max:255',
@@ -105,12 +117,18 @@ class MarathonController extends Controller
 
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
 
+        // H2010 — reads the sticky variant cookie set in show(); never
+        // assigns one here (assignment only happens on a landing hit), and
+        // null for a visitor who never saw the live-test landing.
+        $copyVariant = MarathonLandingCopySplit::variantFromRequest($request);
+
         $leadData = [
-            'name' => $validated['name'] ?? null,
+            'name' => $validated['name'],
             'contact' => $validated['contact'],
             'email' => $validated['email'] ?? null,
             'social' => $validated['social'] ?? null,
             'landing_page_id' => $landing?->id,
+            'landing_copy_variant' => $copyVariant,
             'is_promo_agreed' => $request->has('is_promo_agreed'),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -149,6 +167,13 @@ class MarathonController extends Controller
             $lead = $existingLead;
         } else {
             $lead = Lead::create($leadData);
+            // H2010 — one 'lead' event per genuinely new Lead row, matching
+            // the one 'impression' event per genuinely new cookie
+            // assignment; the resumed-lead branch above never re-enters
+            // here, so no double-counting on a repeat submit.
+            if ($copyVariant !== null) {
+                MarathonLandingCopySplit::recordLead($copyVariant);
+            }
         }
 
         // H445 Phase 1 — this route only ever serves the August all-zero
@@ -315,18 +340,33 @@ class MarathonController extends Controller
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
 
+        $validated = $request->validate([
+            // Client wall-clock on the quiz page; 0..2h hard cap (anti-spam).
+            'duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'question' => 'nullable|string|max:2000',
+        ]);
+
         $updates = [];
+        $duration = isset($validated['duration_seconds'])
+            ? (int) $validated['duration_seconds']
+            : null;
 
         if ($day === 1 && $enrollment->day1_engaged_at === null) {
             $updates['day1_engaged_at'] = now();
+            if ($duration !== null) {
+                $updates['day1_quiz_seconds'] = $duration;
+            }
         }
 
         if ($day === 2) {
             if ($enrollment->day2_engaged_at === null) {
                 $updates['day2_engaged_at'] = now();
+                if ($duration !== null) {
+                    $updates['day2_quiz_seconds'] = $duration;
+                }
             }
 
-            $question = trim((string) $request->input('question', ''));
+            $question = trim((string) ($validated['question'] ?? ''));
             if ($question !== '' && $enrollment->day2_question === null) {
                 $updates['day2_question'] = mb_substr($question, 0, 2000);
             }

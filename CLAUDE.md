@@ -11,6 +11,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **DB**: MySQL (production), SQLite in-memory (tests)
 - **Docker**: Laravel Sail (`./vendor/bin/sail`)
 
+## Ops / uptime (production)
+
+- **Agents (EN inventory + smoke + §5 runbook):**  
+  [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
+  Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths.  
+  Do not re-derive from chat; tokens stay on the VPS only.
+- **Humans (RU):**  
+  [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)  
+  §1 students/teachers → [samskrte.ru/uptime](https://samskrte.ru/uptime) + tag `@rusamskrtam`;  
+  §2 Ivan/Marcis (red monitors; Artem only via ops). Mirror: `uptime/` on GitHub Pages.
+- **OS resource guards (OOM/cron):**  
+  [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
+
 ## Commands
 
 ```bash
@@ -266,6 +279,34 @@ by `RoleGate::finance()`:
   spend types to model first). The page is prefilled with the published
   "Юный чемпион" worked example (14.5M capex / 160k-mo rent → IRR ~1 %, payback in
   year 6), which doubles as the correctness validation against the real case.
+
+### Marathon Landing Visual Skins (`/online/konsultaciya`)
+
+H1975: [`resources/views/marathon/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/marathon/show.blade.php)
+is a thin shell — it resolves a **visual** variant key (`a`/`b`/`c`/`d`) via
+`App\Support\MarathonVisual::variantKey()` and includes
+`marathon.skins.{key}.content`. This axis is independent of
+`MarathonLandingCopy`'s **copy** variant (`MARATHON_LANDING_COPY_VARIANT`) — one
+config controls tokens/layout, the other controls text; do not conflate them.
+`MARATHON_LANDING_VISUAL_VARIANT` (env, default `b`) picks the durable variant;
+`?skin=` is a **QA-only override that does not survive the register() POST →
+redirect → GET cycle** (documented, not a bug — `MarathonVisual`'s own docblock
+says so).
+
+**Adding a new skin:** add the letter to `MarathonVisual::VARIANTS`, create
+`resources/views/marathon/skins/{x}/content.blade.php` reading the same `$copy`/
+`$days`/`$benefits`/`$faq`/`$testimonial` variables the existing skins already
+consume (b/a/c share this contract; keep it), and update the stub in
+`show.blade.php`'s fallback list. Each skin's own `better-interface full`
+accessibility/contrast pass lives alongside the mockup in
+[`marketing/marathon-2026-08/redesign/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign)
+(`BETTER_INTERFACE_PASS_{A,B,C,D}_*.md`) — treat contrast pairs as **computed,
+not assumed** (WCAG relative-luminance formula), same discipline all four
+passes used. As of 31-07-2026: B (light island, default), A (dark-native), C
+(warm paper), D (stepped Alpine wizard, H1978 — the one skin whose `quiz_goal`
+field is radio cards rather than the others' `<select>`, matching its own
+mockup; same field name/values) all shipped. Multi-direction is a deliberate
+policy (H1966) — no single-winner pick, ship concurrent variants.
 
 ### Landing Page Builder
 

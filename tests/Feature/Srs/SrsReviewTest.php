@@ -11,6 +11,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
@@ -88,13 +89,57 @@ class SrsReviewTest extends TestCase
             ->assertSee('На сегодня всё');
     }
 
+    public function test_review_renders_audio_and_image_when_media_published(): void
+    {
+        $user = User::factory()->create();
+        $noteType = SrsNoteType::create([
+            'key' => 'anki_TESTMEDIA',
+            'name' => 'Anki media',
+            'language' => 'hi',
+            'fields' => ['devanagari', 'iast', 'translation', 'audio', 'image'],
+        ]);
+        $deck = SrsDeck::create([
+            'note_type_id' => $noteType->id,
+            'name' => 'Hindi media deck',
+            'slug' => 'anki-TESTMEDIA-level-1',
+            'language' => 'hi',
+            'visibility' => 'system',
+        ]);
+
+        Storage::fake('public');
+        Storage::disk('public')->put('srs/anki_TESTMEDIA/clip.mp3', 'audio');
+        Storage::disk('public')->put('srs/anki_TESTMEDIA/pic.jpg', 'img');
+
+        SrsCard::create([
+            'deck_id' => $deck->id,
+            'direction' => 'front_back',
+            'fields' => [
+                'devanagari' => 'हफ्ता',
+                'iast' => 'hafTaa',
+                'translation' => 'week',
+                'audio' => 'srs/anki_TESTMEDIA/clip.mp3',
+                'image' => 'srs/anki_TESTMEDIA/pic.jpg',
+            ],
+        ]);
+
+        Livewire::actingAs($user)->test(SrsReview::class)
+            ->assertSee('हफ्ता')
+            ->assertSee('hafTaa')
+            ->assertSee('clip.mp3')
+            ->assertSeeHtml('controls')
+            ->call('reveal')
+            ->assertSee('week')
+            ->assertSee('pic.jpg')
+            ->assertSeeHtml('<img');
+    }
+
     public function test_review_page_aborts_when_flag_disabled(): void
     {
         config(['srs.enabled' => false]);
 
         $this->expectException(NotFoundHttpException::class);
 
-        (new SrsController)->review();
+        (new SrsController)->review('sanskrit-core');
     }
 
     public function test_component_gated_when_flag_disabled(): void

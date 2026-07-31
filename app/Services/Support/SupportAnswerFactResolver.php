@@ -65,7 +65,7 @@ class SupportAnswerFactResolver
         })->implode("\n");
 
         return [
-            'draft' => "Актуальные тарифы курсов (точная цена с учётом скидок/рассрочки — уточните у куратора):\n{$lines}",
+            'draft' => "Актуальные тарифы курсов (точная цена с учетом скидок/рассрочки — уточните у куратора):\n{$lines}",
             'facts' => [
                 'type' => 'public_pricing',
                 'courses' => $courses->map(fn (Course $course): array => [

@@ -70,7 +70,7 @@ pass         = rate ≥ 0.15 when cta_clickers ≥ 50; else "baseline only, do n
 
 | Criterion | Proof |
 |---|---|
-| Not FSRS UI | Separate route/component from `/dvaram/srs` |
+| Not FSRS UI | Separate route/component from `/dvaram/koloda` |
 | Optional lesson attach | Filament or config field tested |
 
 ---

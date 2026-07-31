@@ -44,7 +44,7 @@ php artisan test --filter=SrsFlagDefaultTest
 Must assert, with no `SRS_ENABLED` in the environment:
 
 - `config('srs.enabled') === false`
-- `GET /dvaram/srs` → **404**
+- `GET /dvaram/koloda` → **404**
 
 The 404 is the load-bearing assertion — it is the student-visible surface R-6 protects. A
 config assertion alone would pass even if a route were registered unconditionally elsewhere.

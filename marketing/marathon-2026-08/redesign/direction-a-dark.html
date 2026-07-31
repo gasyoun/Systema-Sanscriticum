@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A — Dark-native · konsultaciya redesign mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0d14; --surface: #111622; --text: #f1f5f9; --muted: #94a3b8;
+      --accent: #e85c24; --border: #1f2636; --tg: #0088cc;
+      --ok-bg: #14532d; --ok-text: #bbf7d0; --ok-border: #166534;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Nunito Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header { border-bottom: 1px solid var(--border); padding: .75rem 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(10,13,20,.92); backdrop-filter: blur(8px); z-index: 10; }
+    header strong { font-family: Georgia, serif; }
+    header span { background: var(--accent); color: #fff; padding: .45rem .85rem; border-radius: 12px; font-size: .8rem; font-weight: 800; }
+    .wrap { max-width: 36rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
+    .badge { font-size: .7rem; font-weight: 800; color: var(--accent); letter-spacing: .05em; text-transform: uppercase; margin-bottom: .75rem; }
+    h1 { font-size: clamp(1.7rem, 4vw, 2.25rem); font-weight: 900; line-height: 1.18; margin: 0 0 .75rem; }
+    h1::after { content: ""; display: block; width: 3rem; height: 3px; background: var(--accent); margin-top: .85rem; border-radius: 2px; }
+    .sub { color: var(--muted); font-size: 1.05rem; line-height: 1.55; font-weight: 600; }
+    .proof { color: #cbd5e1; font-size: .875rem; margin: 1rem 0 2rem; }
+    h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 1rem; }
+    .timeline { border-left: 2px solid var(--border); margin: 0 0 2rem .7rem; padding-left: 1.25rem; display: grid; gap: 1.1rem; }
+    .tl { position: relative; }
+    .tl::before { content: ""; position: absolute; left: -1.55rem; top: .35rem; width: .65rem; height: .65rem; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 3px rgba(232,92,36,.25); }
+    .tl strong { display: block; margin-bottom: .2rem; }
+    .tl p { margin: 0; color: var(--muted); font-size: .875rem; line-height: 1.5; }
+    .benefits { display: grid; gap: .65rem; margin-bottom: 2rem; }
+    .b { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 14px; padding: 1rem 1.1rem; }
+    .b strong { display: block; margin-bottom: .25rem; }
+    .b p { margin: 0; color: var(--muted); font-size: .875rem; line-height: 1.5; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.4rem; }
+    label.field { display: block; font-size: .8rem; font-weight: 800; color: #e2e8f0; margin-bottom: .4rem; }
+    select, input[type=text] { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: .75rem .9rem; font: inherit; margin-bottom: 1rem; }
+    select option { background: var(--bg); color: var(--text); }
+    .tracks { display: grid; gap: .5rem; margin-bottom: 1rem; }
+    .track { display: flex; gap: .7rem; padding: .95rem; border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+    .track:has(input:checked) { border-color: var(--accent); background: rgba(232,92,36,.08); }
+    .track .t { font-weight: 800; display: block; }
+    .track .d { font-size: .8rem; color: var(--muted); }
+    .btn { width: 100%; border: 0; border-radius: 14px; padding: .95rem; font-weight: 800; font-family: inherit; cursor: pointer; font-size: 1rem; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-tg { background: transparent; color: #7dd3fc; border: 1.5px solid var(--tg); margin-top: .6rem; text-decoration: none; display: block; text-align: center; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); margin-top: .5rem; }
+    .success { display: none; background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-text); border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; }
+    .success.show { display: block; }
+    .tg-state { display: none; margin-top: .7rem; font-size: .85rem; color: #bae6fd; background: rgba(0,136,204,.12); padding: .7rem; border-radius: 10px; }
+    .tg-state.show { display: block; }
+    .faq details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: .9rem 1rem; margin-bottom: .5rem; }
+    .faq summary { font-weight: 800; cursor: pointer; }
+    .faq p { color: var(--muted); font-size: .875rem; margin: .55rem 0 0; line-height: 1.5; }
+    .toolbar { position: fixed; bottom: 1rem; right: 1rem; background: #1e293b; color: #e2e8f0; font-size: .72rem; padding: .45rem .7rem; border-radius: 999px; z-index: 20; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Общество ревнителей санскрита</strong>
+    <span>Курсы</span>
+  </header>
+  <div class="wrap">
+    <div class="badge">Направление A · dark-native · O1</div>
+    <h1>Санскрит кажется недоступным. Три дня — и вы увидите, что это не так.</h1>
+    <p class="sub">3 дня · ~15 минут · свой темп · без деванагари. Бесплатная консультация ОРС.</p>
+    <p class="proof">Ведет к.ф.н. М.Ю. Гасунс · начать можно в любой день</p>
+
+    <div id="success" class="success">
+      <strong style="display:block;margin-bottom:.4rem">Вы записаны</strong>
+      <p style="margin:0 0 .75rem;font-size:.9rem;line-height:1.5">Откройте Telegram и нажмите Start у бота — иначе личные дни не придут.</p>
+      <a class="btn btn-tg" id="tgBtn" href="https://t.me/samskrte_bot" target="_blank" rel="noopener">Продолжить в Telegram</a>
+      <button type="button" class="btn btn-ghost" id="copyBtn">Скопировать ссылку</button>
+      <div id="tgState" class="tg-state">Открыли Telegram. Нажмите <b>Start</b>. Если не открылось — скопируйте ссылку.</div>
+    </div>
+
+    <h2>Три дня</h2>
+    <div class="timeline">
+      <div class="tl"><strong>День 1 — Роднее, чем кажется</strong><p>Три коротких вопроса: veda — «ведать», matar — «мать».</p></div>
+      <div class="tl"><strong>День 2 — Как собрано слово</strong><p>Корень + аффикс. В конце — ваш вопрос к Zoom.</p></div>
+      <div class="tl"><strong>День 3 — Живая консультация</strong><p>Разбор и маршрут с к.ф.н. М.Ю. Гасунсом.</p></div>
+    </div>
+
+    <div class="benefits">
+      <div class="b"><strong>«Нет времени»</strong><p>~15 минут в день, личный отсчёт, не общий поток.</p></div>
+      <div class="b"><strong>«Слишком сложно»</strong><p>Узнавание родственных корней, не зубрежка.</p></div>
+      <div class="b"><strong>«Сначала письмо?»</strong><p>Нет — все три дня на кириллице.</p></div>
+    </div>
+
+    <form class="card" id="regForm" onsubmit="return mockSubmit(event)">
+      <label class="field" for="quiz">Что вас привлекает в санскрите?</label>
+      <select id="quiz" required>
+        <option value="">Выберите…</option>
+        <option>Грамматика и чтение</option>
+        <option>Йога и мантры</option>
+        <option>Философия</option>
+        <option>Просто попробовать</option>
+      </select>
+      <label class="field">Формат</label>
+      <div class="tracks">
+        <label class="track"><input type="radio" name="t" checked /><span><span class="t">Бесплатно</span><span class="d">Дни + запись консультации</span></span></label>
+        <label class="track"><input type="radio" name="t" /><span><span class="t">«С проверкой»</span><span class="d">Куратор + личный разбор + скидка</span></span></label>
+      </div>
+      <label class="field" for="c">Контакт</label>
+      <input id="c" required placeholder="+7… / email / @telegram" />
+      <button class="btn btn-primary" type="submit">Записаться</button>
+    </form>
+
+    <section class="faq" style="margin-top:2rem">
+      <h2>Частые вопросы</h2>
+      <details><summary>Нужно ли деванагари?</summary><p>Нет. Кириллица на всех трёх днях.</p></details>
+      <details><summary>Сколько времени?</summary><p>~15 минут в день. Материалы не сгорают.</p></details>
+    </section>
+  </div>
+  <div class="toolbar">Mockup A · dark · not production</div>
+  <script>
+    function mockSubmit(e){e.preventDefault();document.getElementById('success').classList.add('show');document.getElementById('success').scrollIntoView({behavior:'smooth'});return false;}
+    document.getElementById('tgBtn').onclick=function(){document.getElementById('tgState').classList.add('show');};
+    document.getElementById('copyBtn').onclick=function(){navigator.clipboard.writeText('https://t.me/samskrte_bot');this.textContent='Скопировано';};
+  </script>
+</body>
+</html>

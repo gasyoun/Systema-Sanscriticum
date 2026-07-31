@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
@@ -38,8 +39,16 @@ class AuthController extends Controller
         // входе приводим ввод к тому же виду (иначе «Anna@Mail.ru» не найдёт аккаунт).
         $credentials['email'] = User::normalizeEmail($credentials['email']);
 
-        // Попытка входа
-        if (Auth::attempt($credentials)) {
+        // H1949 — opt-in long-lived cookie; default off when checkbox absent.
+        // Admins never get remember: Filament shares the web guard and
+        // SESSION_LIFETIME was capped at 1 day for that reason (28-07-2026) —
+        // a weeks-long recaller would re-auth admin after idle expiry.
+        $remember = $request->boolean('remember')
+            && ! (bool) User::query()
+                ->where('email', $credentials['email'])
+                ->value('is_admin');
+
+        if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
             // Если это Админ -> в админку
@@ -82,7 +91,14 @@ class AuthController extends Controller
 
         $credentials['email'] = User::normalizeEmail($credentials['email']);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        // Same admin guard as login(): shop is student-facing, but still refuse
+        // a long-lived cookie if an admin account is used here by mistake.
+        $remember = $request->boolean('remember')
+            && ! (bool) User::query()
+                ->where('email', $credentials['email'])
+                ->value('is_admin');
+
+        if (! Auth::attempt($credentials, $remember)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Неверный email или пароль.',
@@ -117,7 +133,12 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-        $user->update(['password' => Hash::make($request->input('password'))]);
+        // H1949 — password change must kill long-lived remember cookies on every
+        // device (Laravel stores the recaller hash in users.remember_token).
+        $user->forceFill([
+            'password' => Hash::make($request->input('password')),
+            'remember_token' => Str::random(60),
+        ])->save();
 
         return back()->with('password_status', 'Пароль успешно изменён.');
     }

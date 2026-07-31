@@ -4,7 +4,7 @@
             <h1 class="text-3xl font-extrabold text-[#101010] tracking-tight">Мои колоды</h1>
             <p class="text-gray-500">Личные колоды для повторения. Системные колоды редактируются преподавателем.</p>
         </div>
-        <a href="{{ url('/dvaram/srs') }}"
+        <a href="{{ url('/dvaram/koloda') }}"
            class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gray-50 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
             ← К повторению
         </a>
@@ -53,6 +53,24 @@
                         class="text-sm font-bold text-red-600 hover:text-red-700">
                     Удалить колоду
                 </button>
+            </div>
+
+            {{-- Owner-editable slug (shareable /dvaram/koloda/{slug}) --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 space-y-3">
+                <h3 class="text-lg font-extrabold text-gray-900">Адрес колоды (slug)</h3>
+                <p class="text-sm text-gray-500">
+                    Ссылка в кабинете:
+                    <code class="bg-gray-50 px-1 rounded">/dvaram/koloda/{{ $editSlug !== '' ? $editSlug : '…' }}</code>
+                    — латиница, цифры и дефис.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" wire:model="editSlug" placeholder="my-vocab"
+                           class="flex-1 px-4 py-3 bg-gray-50 border-transparent rounded-xl font-mono text-sm focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all"/>
+                    <button type="button" wire:click="updateSlug"
+                            class="px-5 py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-colors">
+                        Сохранить slug
+                    </button>
+                </div>
             </div>
 
             {{-- Add card form --}}

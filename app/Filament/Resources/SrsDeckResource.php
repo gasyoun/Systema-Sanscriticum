@@ -85,9 +85,12 @@ class SrsDeckResource extends Resource
                     }),
 
                 Forms\Components\TextInput::make('slug')
-                    ->label('Slug')
+                    ->label('Slug (URL)')
                     ->maxLength(255)
-                    ->helperText('Необязательно. Для системных колод — стабильный идентификатор.'),
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->rules(['alpha_dash', 'not_in:stats,decks'])
+                    ->helperText('Сегмент URL: /koloda/{slug} и /dvaram/koloda/{slug}. Латиница, цифры, дефис. Нельзя stats/decks.'),
 
                 Forms\Components\Select::make('note_type_id')
                     ->label('Тип карточки')

@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| SRS (интервальные повторения, «Anki для санскрита») — H211, Wave 1
+| SRS (интервальные повторения) — H211, Wave 1
 |--------------------------------------------------------------------------
 |
-| Фича за флагом. `enabled` ВЫКЛ по умолчанию (в проде тоже) — маршрут
-| /dvaram/srs и пункт меню появляются только когда флаг включён. Числовые
-| параметры — настройки планировщика FSRS и лимита новых карточек в день.
+| Фича за флагом. `enabled` ВКЛ по умолчанию (H1981 guest trial + shareable
+| per-deck URLs shipped; product surface is ready). Явный `SRS_ENABLED=false`
+| в `.env` выключает маршруты /dvaram/koloda, /koloda/{slug} и пункт меню.
+| Числовые параметры — настройки планировщика FSRS и лимита новых карточек.
 */
 
 return [
-    // Главный рубильник фичи. ВЫКЛ по умолчанию — восстановлено по R-6
-    // (H1145): default был флипнут на true H447-ом (Saraswati trainer suite
-    // Phase 1, PR #442, коммит 6267d70) с обоснованием «движок протестирован
-    // (SrsReviewTest), пилот август-2026» — решение было разумным на тот
-    // момент, но не переживает R-5/R-6: без явного `SRS_ENABLED=false` в
-    // прод-`.env` следующий деплой кладёт пункт SRS в навигацию каждому
-    // студенту, что портит R20-baseline (защита baseline, а не сомнение в
-    // движке — сам движок H447 не трогаем). Явный `SRS_ENABLED=true`
-    // теперь обязателен, чтобы SRS стал видимым.
-    'enabled' => (bool) env('SRS_ENABLED', false),
+    // Главный рубильник. ON by default (product decision 30-07-2026):
+    // public trial URLs + cabinet review are intended to be live; set
+    // SRS_ENABLED=false only to dark the whole surface again.
+    'enabled' => (bool) env('SRS_ENABLED', true),
 
     // Сколько новых (ещё не виденных) карточек показывать в день на колоду.
     'new_per_day' => (int) env('SRS_NEW_PER_DAY', 20),
@@ -32,4 +27,8 @@ return [
 
     // Случайное «размытие» интервалов (антислипание карточек). В тестах отключается.
     'fuzz' => (bool) env('SRS_FUZZ', true),
+
+    // Public /koloda/{slug} guest trial: how many cards a non-registered visitor
+    // may flip before the soft register wall. Progress is not persisted.
+    'guest_trial_cards' => (int) env('SRS_GUEST_TRIAL_CARDS', 10),
 ];

@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 11-07-2026_
+_Created: 13-02-2026 · Last updated: 31-07-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -27,6 +27,7 @@ Laravel-приложение для школы санскрита: учебны�
 - [Модули](#модули)
 - [Интеграции и вебхуки](#интеграции-и-вебхуки)
 - [Роадмап](#роадмап)
+- [Прод: uptime / мониторинг](#прод-uptime--мониторинг)
 
 ---
 
@@ -59,16 +60,23 @@ Laravel-приложение для школы санскрита: учебны�
 [DictionaryWordImporter.php](app/Filament/Imports/DictionaryWordImporter.php)
 (колонки: деванагари, IAST, кириллица, перевод, страница).
 
-### Интервальные повторения — «Anki для санскрита» (`/dvaram/srs`)
+### Интервальные повторения — «Anki для санскрита» (`/koloda`, `/dvaram/koloda`)
 
 Нативный SRS-тренажер (Saraswati trainer suite) с планировщиком FSRS: студент
 повторяет карточки (лексика санскрита и хинди) с интервалами, которые движок
 подбирает по истории ответов, с дневным лимитом новых карточек на колоду. Есть
-страница статистики по тренажеру (`/dvaram/srs/stats`).
+страница статистики (`/dvaram/koloda/stats`).
+
+| URL | Кто |
+|---|---|
+| [`/koloda`](https://samskrte.ru/koloda) | публичный каталог колод (проба без логина) |
+| `/koloda/{slug}` | публичная колода |
+| `/dvaram/koloda` | кабинет (прогресс сохраняется) |
+
+Старые `/srs` и `/dvaram/srs` отдают **301** на `koloda`.
 
 Фича за флагом `SRS_ENABLED` ([config/srs.php](config/srs.php)) — по умолчанию
-**включена** с H447 (движок покрыт `SrsReviewTest`), пилот назначен на август 2026;
-маршрут и пункт меню появляются только при включенном флаге. Файлы:
+**включена**; `SRS_ENABLED=false` гасит маршруты и пункт меню. Файлы:
 [SrsController.php](app/Http/Controllers/SrsController.php).
 
 ### Домашние задания с проверкой куратором
@@ -138,6 +146,13 @@ draft → submitted → (needs_revision → submitted)* → accepted
 марафона). Есть бесплатный трек и платный tripwire-трек «с проверкой»
 (`MARATHON_PAID_TRACK_PRICE`, дефолт 500 ₽). Длина прогрева после марафона —
 `MARATHON_WARM_TAIL_DAYS` (медиана времени до покупки из custdev).
+
+Визуальное направление лендинга переключается независимо от контента (H1975):
+`show.blade.php` — тонкая оболочка, отдающая рендер одному из
+`resources/views/marathon/skins/{a,b,c,d}/content.blade.php` через
+`App\Support\MarathonVisual` (`MARATHON_LANDING_VISUAL_VARIANT`, дефолт `b`, QA-оверрайд
+`?skin=`). На 31-07-2026 готовы B (light island, дефолт), A (dark-native, H1976),
+C (warm paper, H1977); D (stepped, H1978) — в очереди.
 
 Файлы: [MarathonController.php](app/Http/Controllers/MarathonController.php),
 [config/marathon.php](config/marathon.php),
@@ -706,6 +721,18 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
   earn+spend слой целиком — лидерборд · бейджи · streak · магазин · P2P · ранги —
   рядом со скидочным кошельком (two-counter, концепции сосуществуют). **Decay
   остается выключенным** (`PRANA_DECAY_ENABLED=false`); сгорание не включаем.
+
+---
+
+## Прод: uptime / мониторинг
+
+| Для кого | Документ |
+|---|---|
+| **Ученики / преподаватели** | [samskrte.ru/uptime](https://samskrte.ru/uptime) · [зеркало GitHub](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) · тэг [@rusamskrtam](https://t.me/rusamskrtam) |
+| **Иван / Марцис (ops)** | [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) §2 |
+| **Агенты** (inventory, env, smoke) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
+
+OS-предохранители (OOM/cron): [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 
 ---
 

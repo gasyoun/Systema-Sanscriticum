@@ -41,8 +41,11 @@ class FinanceCockpitReport
      */
     private const NON_REVENUE_TARIFFS = ['Расход', 'salary_payout'];
 
-    /** Тариф-возврат (сторно оплаты), хранится отрицательной суммой. */
-    private const REFUND_TARIFF = 'Расход';
+    // REFUND_TARIFF = 'Расход' удалён (H2003, issue #953): тариф «Расход» — это
+    // легаси-РАСХОДЫ школы, а не возвраты ученикам. ДДС считал их «возвратами»
+    // (строка была мислейблом), а после моста «Расход»→Expense те же деньги
+    // попали бы в net дважды — как refundOut И как opexOut. Возвраты теперь
+    // считаются по настоящему механизму привязки refund_of_payment_id.
 
     /** 10 праны = 1 ₽ (config('prana.rate')). */
     private const PRANA_RATE = 10;
@@ -229,11 +232,18 @@ class FinanceCockpitReport
         $inflow = $this->revenueForWindow($start, $end);
 
         $salaryOut = (float) TeacherPayout::query()
-            ->whereBetween('paid_at', [$start->toDateString(), $end->toDateString()])
+            // Суточные границы, не toDateString(): выплата последнего дня месяца
+            // со временем в значении выпадала из окна (issue #935, H1996).
+            ->whereBetween('paid_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
             ->sum('amount');
 
+        // Возвраты ученикам — ТОЛЬКО привязанные сторно (refund_of_payment_id),
+        // как в RevenueScheduleService::deferredRevenueAsOf. Прежний фильтр по
+        // тарифу «Расход» ловил легаси-расходы школы, не возвраты; после моста
+        // «Расход»→Expense (H2003) они входят в opexOut — считать их здесь ещё
+        // раз значило бы задвоить отток (issue #953).
         $refundOut = abs((float) Payment::query()
-            ->where('tariff', self::REFUND_TARIFF)
+            ->whereNotNull('refund_of_payment_id')
             ->whereBetween('created_at', [$start, $end])
             ->sum('amount'));
 

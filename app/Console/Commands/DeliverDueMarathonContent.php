@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\MarathonEnrollment;
 use App\Models\Schedule;
+use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -56,13 +57,10 @@ final class DeliverDueMarathonContent extends Command
 
             $day = $enrollment->currentDay();
 
-            if ($day >= 1 && $enrollment->day1_completed_at === null) {
-                $link = route('marathon.day', ['day' => 1, 'token' => $lead->magnet_token]);
-                $text = str_replace('{link}', $link, (string) $enrollment->content('day1_message'));
-                $channel->sendMessage((string) $lead->telegram_chat_id, $text);
-                $enrollment->update(['day1_completed_at' => now()]);
+            // Day 1: shared sender (personal-day gate). Immediate path is /start
+            // in ProcessTelegramMagnetUpdate (ignorePersonalDay: true).
+            if (MarathonDay1Sender::sendIfPending($lead, $channel, ignorePersonalDay: false)) {
                 $sent++;
-                Log::info("marathon:deliver-due — Day 1 sent, enrollment #{$enrollment->id}");
             }
 
             if ($day >= 2 && $enrollment->day2_completed_at === null) {

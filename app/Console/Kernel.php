@@ -68,6 +68,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('storage-usage-check');
 
+        // Мост «Расход»→Expense (H2003, issue #953): легаси-расходы, внесенные
+        // платежами с тарифом «Расход», ежедневно доливаются в opex-леджер —
+        // кокпит видит их, какой бы конвенцией расход ни внесли. Идемпотентен
+        // по expenses.payment_id.
+        $schedule->command('expenses:bridge-raskhod --apply')
+            ->dailyAt('04:40')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('expenses-bridge-raskhod');
+
         // Недельный KPI-дайджест делегирования (H259, фаза D): сводка всех фаз
         // финдиру по понедельникам утром — «ритм обзора» с зубами. Гейт «есть
         // получатели» — внутри команды.

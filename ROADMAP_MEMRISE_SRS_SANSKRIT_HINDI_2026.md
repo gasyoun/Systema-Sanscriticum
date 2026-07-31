@@ -1,6 +1,6 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 22-07-2026_
+_Created: 11-07-2026 · Last updated: 31-07-2026_
 
 Bring the full Memrise learning loop — spaced-repetition review, every test mode,
 gamification, and user mnemonics — into the [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)
@@ -23,7 +23,7 @@ a from-scratch build. Concretely, already present:
 | **SRS data model** | Note-types, decks (system/public/private), cards, per-user review state, review log | [`app/Models/SrsNoteType.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/SrsNoteType.php), `SrsDeck.php`, `SrsCard.php`, `SrsReviewState.php`, `SrsReviewLog.php` |
 | **Review orchestration** | Today's queue (due + new-per-day), grade, interval preview, logging | [`app/Services/Srs/ReviewService.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Srs/ReviewService.php) |
 | **Review UI** | Livewire deck-pick → reveal → grade screen | [`app/Livewire/SrsReview.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Livewire/SrsReview.php) + `resources/views/livewire/srs-review.blade.php` |
-| **Route + flag** | `/dvaram/srs`, registered only if `config('srs.enabled')` | [`config/srs.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/srs.php), `routes/web.php` |
+| **Route + flag** | `/dvaram/koloda`, registered only if `config('srs.enabled')` | [`config/srs.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/srs.php), `routes/web.php` |
 | **Gamification** | "Prana" XP/points, ranks, shop; streaks; leaderboard | [`app/Services/Prana/PranaService.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Prana/PranaService.php), `app/Services/StreakService.php`, `app/Support/PranaLeaderboard.php` |
 | **Daily goals** | Goal-setting + check-ins | [`app/Models/Goal.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Goal.php), `GoalCheckin.php` |
 | **Multi-script words** | Devanagari / IAST / Cyrillic columns per headword; SLP1-aware glossary | [`app/Models/DictionaryWord.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php), [`app/Services/SanskritGlossary.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/SanskritGlossary.php) |
@@ -75,7 +75,13 @@ authoring/import path*, and the *Hindi* content dimension.
 Phases are ordered by *dependency and risk*, not calendar. P0 is time-critical (archive
 sunset). P1–P4 are the core clone; P5 is the Hindi dimension; P6 is the deferred audio.
 
-### P0 — Export the Memrise course (DO FIRST, time-critical) — [H569]
+### P0 — Export the Memrise course (DO FIRST, time-critical) — [H569] · [H1146]
+**Status 31-07-2026:** tooling **shipped** (`scripts/memrise_export.py` + validator);
+sibling courses **exported** (`memrise_6502608`, `6508023`, `6517849`, `6522419`);
+target `memrise_6679375/` is still **empty of CSV** — needs a human `MEMRISE_SESSION`
+(agent cannot log into Memrise). P0 for 6679375 remains the only time-critical human
+step; engineering proceeds on P1/P2 with the other exports + fixtures.
+
 Memrise is **sunsetting community courses** with no published shutdown date; the archive can
 go dark. Export before anything else.
 
@@ -95,6 +101,12 @@ go dark. Export before anything else.
   column meaning, level order, and export date. **Keep the audio/image files even though
   audio is deferred** (D4) — re-fetching after sunset may be impossible.
 - **Also export any Hindi course** the owner holds on the same pass, same tooling (P5 input).
+
+### P1 — Import + wire the existing SRS — ✅ SHIPPED (scaffold + wire + flag ON)
+**Status 31-07-2026:** `srs:import-memrise` + Kochergina lesson-1 importer + Prana award
+on every grade (H447) + authoring (H1487) + per-deck URLs / guest trial (H1981) +
+`SRS_ENABLED` **default true**. Remaining: human runs P0 for 6679375 then
+`php artisan srs:import-memrise database/seeders/data/memrise_6679375`.
 
 ### P1 — Import + wire the existing SRS (the clone goes live behind the flag)
 - **Schema map:** Memrise columns → an `SrsNoteType` field set (e.g. `devanagari`, `iast`,
@@ -126,22 +138,20 @@ go dark. Export before anything else.
   convention).
 - **Exit:** a real student can review the imported deck end-to-end and see XP/streak move.
 
-### P2 — Test modes (the visible Memrise feel)
-Build as Livewire components alongside `SrsReview`, each consuming the same deck/queue:
-- **Multiple choice** — correct answer + N distractors sampled from the deck (same
-  note-type, near length). Grades feed FSRS.
-- **Typing test** — free-type the answer; needs a **Devanagari input** affordance (see P2b).
-  Fuzzy-match against `alt answers` exported from Memrise.
-- **Tap-the-pairs / word-tap** — assemble the answer from shuffled tokens.
-- **Speed review** — timed variant of the review loop; ties into Prana bonus.
-- **Difficult words** — a filter over cards with lapses `> 0`; its own review entry point.
+### P2 — Test modes (the visible Memrise feel) — ✅ SHIPPED 31-07-2026 (H1988)
+Modes live on `SrsReview` via `?mode=` + tab strip (auth only; guests stay classic):
+- **Multiple choice** (`mc`) — correct + up to 3 distractors from the same deck
+  (`DistractorSampler`, length-aware). Correct → Good, wrong → Again.
+- **Typing test** (`typing`) — free-type; `AnswerMatcher` exact/soft/miss → Good/Hard/Again.
+  Accepts `translation*` + `alt_answers` + script fields. **P2b polish** (on-screen
+  Devanagari / live IAST→Devanagari) still open — cheapest path shipped first (Q2 rec).
+- **Tap-the-pairs** (`pairs`) — match prompt↔answer columns for a batch of up to 4.
+- **Speed review** (`speed`) — classic loop with a 10 s Alpine timer; timeout → Again.
+- **Difficult words** (`difficult`) — `ReviewService::queueDifficultFor` (lapses &gt; 0).
 
-### P2b — Devanagari / transliteration input widget
-Typing-mode blocker for both languages. Options (Open Question Q2): a lightweight
-IAST→Devanagari live transliterator (client-side), an on-screen Devanagari keyboard, or
-accept IAST/Cyrillic input and normalize server-side via the existing
-`SanskritGlossary::normalizeKey()` / SLP1 path. Reuse, don't reinvent — the repo already
-stores all three scripts per word.
+### P2b — Devanagari / transliteration input widget — residual polish
+Typing mode works with romanized/Cyrillic + normalize (P2 shipped). Optional upgrade:
+live IAST→Devanagari or on-screen keyboard — not blocking P3.
 
 ### P3 — Mems (mnemonics) + UGC
 - **`SrsMem`** model: `user_id`, `card_id` (or `word_id`), `text`, optional `image`,
@@ -185,20 +195,14 @@ do not solve audio twice.
 
 ---
 
-## 5. Open questions (@DECIDE)
+## 5. Open questions (@DECIDE) — ruled 31-07-2026 (koloda ask-batch)
 
-1. **`Lesson.flash_cards` reconciliation.** Lessons already carry a simpler `flash_cards`
-   JSON column. Migrate those into the SRS `SrsCard` system (one source of truth), or keep
-   the two independent (lesson-embedded quick cards vs the SRS trainer)? Recommendation:
-   migrate into SRS so all cards share scheduling + gamification.
-2. **Typing-mode input.** Live IAST→Devanagari transliterator, on-screen Devanagari
-   keyboard, or accept romanized input + server-side normalize? Recommendation: start with
-   romanized-in + normalize (cheapest, reuses existing script logic), add a live
-   transliterator in P2b polish.
-3. **Hindi placement.** Separate Hindi track (own decks, own menu) or interleaved with
-   Sanskrit? Affects navigation and the leaderboard scoping.
-4. **UGC moderation policy.** Are public mems/decks pre-moderated or post-moderated? Affects
-   P3 scope.
+1. **`Lesson.flash_cards` reconciliation.** ✅ **Migrate into SRS** (K2). See
+   [docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
+2. **Typing-mode input.** P2 shipped romanized + normalize; **P2b** (live IAST→Devanagari /
+   on-screen keyboard) remains polish, not blocking content wave.
+3. **Hindi placement.** ✅ **Separate track / language filter** on hubs (K4).
+4. **UGC moderation policy.** ✅ **Post-moderation** when P3 lands (K3); not wave-1.
 
 ---
 

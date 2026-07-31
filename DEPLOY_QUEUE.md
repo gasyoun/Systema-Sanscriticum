@@ -1,6 +1,20 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 30-07-2026 (H1933 — авто-деплой 30 мин; остаток — флаги/artisan)_
+_Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2014: CRM_FOLLOW_UP_TASKS=true + SESSION_LIFETIME/mail facts; авто-деплой жив)_
+
+### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
+
+Сбой 30-07 18:56Z (exit 124 в `npm ci && npm run build`) закрыт: предохранитель
+`storage/auto_deploy.disabled` снят до 09:00Z 31-07, крон возобновил выкладки
+(09:00Z → `24e28049` v1.80.7, 09:30Z → `d6494dc6` v1.80.8), а в 09:47Z обертка
+`/usr/local/sbin/systema-auto-deploy-run.sh` прогнана вручную по SSH — прод на
+`a4ff4325` = голова `main` ([v1.80.9](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.80.9)).
+Смоук 200, `guards:verify` чист, Horizon перезапущен; три зеленых деплоя подряд,
+таймаут не повторился. Свидетельства и разбор —
+[issue #945 (закрыт)](https://github.com/gasyoun/Systema-Sanscriticum/issues/945).
+Если exit 124 повторится на npm-тяжелой выкладке — крутилка `SYSTEMA_AUTO_DEPLOY_MAX`
+([docs/server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)).
+Релизы 1.80.4–1.80.9 живые; ниже в очереди остаются только пункты с решением/флагом/внешним шагом.
 
 **30-07-2026 (H1933, решение MG): код теперь деплоится САМ — root-крон на проде
 каждые 30 минут выкатывает `origin/main` через `deploy.sh`.** Ручной шаг
@@ -34,74 +48,55 @@ _Создано: 08-07-2026 · Обновлено: 30-07-2026 (H1933 — авт�
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
-### 🚀 Вход: 419 «Page Expired» ([PR #820](https://github.com/gasyoun/Systema-Sanscriticum/pull/820)/[#821](https://github.com/gasyoun/Systema-Sanscriticum/pull/821))
+### 🚀 Вход: 419 «Page Expired» — SESSION lifetime **✅ на проде** (H2014, 31-07-2026)
 
-**Почему первым.** Преподаватель дважды не смогла войти накануне занятия (жалоба
-29-07-2026). Сайт жив — падает сабмит формы. Часто `SESSION_LIFETIME=120`, а
-преподаватели заходят раз в неделю → протухший CSRF → 419. «Запомнить меня» на
-email+пароль нет (`remember: true` только в соц-входе,
-[`SocialAuthController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Auth/SocialAuthController.php)).
+**Было.** Преподаватель не входила (жалоба 29-07): `SESSION_LIFETIME=120` + редкие
+заходы → CSRF 419. Мягкий 419 ([PR #778](https://github.com/gasyoun/Systema-Sanscriticum/pull/778)/[#779](https://github.com/gasyoun/Systema-Sanscriticum/pull/779))
+на проде с 28-07.
 
-Мягкий 419 ([PR #778](https://github.com/gasyoun/Systema-Sanscriticum/pull/778)/[#779](https://github.com/gasyoun/Systema-Sanscriticum/pull/779)) на проде с **28-07**.
-Код свежего токена на `/login` + телеметрия CSRF — в `main` после 28-07; при живом
-авто-деплое **должен уже быть на сервере** — сверить
-`git -C /var/www/html rev-parse --short HEAD` с `origin/main`.
+**Проверено 31-07 (H2014, live SSH):** прод `.env` уже `SESSION_LIFETIME=1440`,
+`config('session.lifetime')` = 1440. Пункт «поднять lifetime» **снят**.
 
-**Остаток человека (авто-деплой этого не делает):**
-
-1. **`SESSION_LIFETIME=1440`** в прод-`.env` → `php artisan optimize:clear` (или
-   `config:cache`). Коммит [`614ce7d1`](https://github.com/gasyoun/Systema-Sanscriticum/commit/614ce7d1)
-   поднял 120→1440 **только в `.env.example`** — на проде значение задано явно.
-2. **Телеметрия CSRF** (если код выкачен, без флага):
-   - лог `storage/logs/csrf-mismatch.log` (канал `csrf_mismatch`,
-     [`config/logging.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/logging.php));
-   - `csrf:mismatch-digest` ежедневно 04:25 в
-     [`app/Console/Kernel.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Kernel.php)
-     — нужен cron `schedule:run`;
-   - пороги по желанию: `CSRF_MISMATCH_DIGEST_THRESHOLD`, `CSRF_MISMATCH_DIGEST_WINDOW_DAYS`
-     в [`config/csrf.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/csrf.php).
-3. **Сверка:** `/login` → вкладка дольше сессии → сабмит без 419 и без F5; на
-   следующий день — дайджест в 04:25.
-4. **Не входит:** graceful 419 на каждом web POST (ветка
-   `feat/h1771-csrf-419-graceful-default` ещё не в `main`).
+**Опциональный остаток (не блокер):**
+- телеметрия CSRF: `storage/logs/csrf-mismatch.log`, `csrf:mismatch-digest` 04:25
+  (нужен `schedule:run`);
+- смок: `/login` после длинной вкладки без 419;
+- graceful 419 на каждом web POST (ветка `feat/h1771-csrf-419-graceful-default`
+  ещё не в `main`).
 
 ---
 
-### H1794 — cabinet probe hardening (после деплоя)
+### H1794 — cabinet probe hardening (после деплоя) — ✅ pulse env 30-07-2026
 
-1. `php artisan migrate` — таблица `cabinet_probe_runs`
+1. ✅ `php artisan migrate` — таблица `cabinet_probe_runs` (если ещё не на проде — входит в общий migrate)
 2. Smoke student (если ещё нет):
    - `TEST_STUDENT_EMAIL=smoke-student@samskrte.ru`
    - `TEST_STUDENT_PASSWORD=<secret>`
    - `php artisan users:ensure-test-student`
-3. healthchecks.io (когда будет signup) — **два** check:
-   - period **5 min** → `HEARTBEAT_PING_URL=https://hc-ping.com/<uuid>`
-   - period **15 min**, grace ~20 → `CABINET_PROBE_PING_URL=https://hc-ping.com/<uuid>`
+3. ✅ **Внешний pulse — Better Stack Uptime** (не healthchecks.io):
+   - period **5 min** → `HEARTBEAT_PING_URL=https://uptime.betterstack.com/api/v1/heartbeat/<TOKEN>`
+   - period **15 min**, grace ~20 → `CABINET_PROBE_PING_URL=…`
+   - Inventory + samskrtam + Cologne: [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) · issue [#891](https://github.com/gasyoun/Systema-Sanscriticum/issues/891)
 4. TG: `CABINET_PROBE_TELEGRAM_CHAT_ID` (critical; default admin+rusamskrtam already on prod)
-   optional soft: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID`
-5. `php artisan config:clear && php artisan cabinet:probe`
+   optional soft: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` · soft cooldown: `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`
+5. `php artisan config:clear && php artisan cabinet:probe` (после любой смены env)
 6. Filament → «Здоровье кабинета» (группа Система) — история прогонов
 7. **Не делаем:** auto-restart fpm, Playwright, public status page (handoff non-goals)
 
 ---
 
-### ⚙️ H1836 — задачи менеджеру `FollowUpTask` (GC-C3), v1.66.0
+### ⚙️ Off-site backup Yandex.Disk — **human-secret** (H2014 probe 31-07-2026)
 
-Прод-инертно до включения флага: миграция аддитивна, но **сама по себе ничего не
-меняет** — пока `CRM_FOLLOW_UP_TASKS` не выставлен, пятый бакет кокпита пуст, к
-`follow_up_tasks` не уходит ни одного запроса, карточка не рендерится.
+Локальные бэкапы **живые** (`backup:list`: disk `local` healthy, 7 zip). Disk
+`yandex_disk` — **Unauthorized** (WebDAV 401).
 
-1. `php artisan migrate` — таблица `follow_up_tasks` (аддитивно: `leads`, `deals`,
-   `payments` не меняются ни одной колонкой).
-2. **Флаг НЕ включать сразу.** Включение — осознанный шаг: `CRM_FOLLOW_UP_TASKS=true`
-   в `.env`, затем `php artisan config:clear`.
-3. Карточка видна только при **обоих** флагах: `CRM_COCKPIT=true` (сама страница
-   «Моя работа сегодня») **и** `CRM_FOLLOW_UP_TASKS=true` (пятый бакет). `CRM_COCKPIT`
-   на проде сейчас выключен — то есть до его включения новый флаг вообще ни на что
-   не влияет.
-4. **`CRM_REMINDERS` не трогать.** Это другой рубильник — он гейтит `leads:remind-followup`,
-   команду, которая САМА ПИШЕТ людям в Telegram. H1836 её поведение не менял, и
-   включение задач не требует включения напоминаний (и наоборот).
+1. В аккаунте Яндекса создать **пароль приложения** (не основной пароль).
+2. Прод `.env`: `YANDEX_DISK_LOGIN=…`, `YANDEX_DISK_APP_PASSWORD=…`
+   (опц. `YANDEX_DISK_BACKUP_PATH`, default `/Backups/systema-sanscriticum`).
+3. `php artisan config:clear && php artisan backup:run --only-to-disk=yandex_disk`
+4. `php artisan backup:list` — `yandex_disk` Reachable ✅.
+
+См. [`docs/OPTIMISATION_BACKLOG_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/OPTIMISATION_BACKLOG_2026H2.md) §3.
 
 ---
 
@@ -250,6 +245,9 @@ email+пароль нет (`remember: true` только в соц-входе,
 
 ## ✅ Выполнено (архив)
 
+- **H1836 GC-C3 `CRM_FOLLOW_UP_TASKS=true`** (H2014, 31-07-2026) — coupling с уже включённым `CRM_COCKPIT=true` + `CRM_PIPELINE_BOARD=true`; migrate `follow_up_tasks` Ran; `WorkQueueReport::counts()['follow_ups']` отвечает; **`CRM_REMINDERS` не трогали**
+- **`SESSION_LIFETIME=1440` на проде** (H2014 probe 31-07-2026) — 419-lifetime residual closed
+- **SMTP prod не mailpit** (H2014 probe): `MAIL_MAILER=smtp` + Yandex SMTP, `mail:preflight` OK, Horizon queue `mailing` в supervisors — issue [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504) root-cause «mailpit» **устарел** (остаток: SPF/DKIM / real `--send` smoke)
 - **Авто-деплой каждые 30 мин** ([PR #870](https://github.com/gasyoun/Systema-Sanscriticum/pull/870), [PR #875](https://github.com/gasyoun/Systema-Sanscriticum/pull/875), [PR #880](https://github.com/gasyoun/Systema-Sanscriticum/pull/880)) — 30-07-2026 (root-cron `systema-auto-deploy-run.sh`)
 - **S10 support web rollups** (`SUPPORT_WEB_ROLLUPS=true`, [PR #866](https://github.com/gasyoun/Systema-Sanscriticum/pull/866)) — 30-07-2026 (config:cache; coverage 46/46 и 41/41 vs `chat_messages`)
 - **Шаблоны сообщений для кураторов + audit** ([PR #867](https://github.com/gasyoun/Systema-Sanscriticum/pull/867)) — 30-07-2026 (migrate + `CRM_COCKPIT=true` + config:cache в той же SSH-сессии)
@@ -280,6 +278,6 @@ email+пароль нет (`remember: true` только в соц-входе,
 
 ---
 
-_Публичная копия для Ивана (Systema/ORS-FAQ — публичные репозитории). Внутренний источник — приватный GTD. Код: авто-деплой H1933 (каждые 30 мин); эта очередь — только решения/флаги/разовые artisan/внешние шаги. Обновлено 30-07-2026 поверх шапки H1933 (+9/−1): residual login SESSION_LIFETIME, бэкфилл `recording_attached_at`, Arzamas publish, hybrid GO, S10/CRM в архиве. Пункт уходит в архив только с подтверждением._
+_Публичная копия для Ивана (Systema/ORS-FAQ — публичные репозитории). Внутренний источник — приватный GTD. Код: авто-деплой H1933 (каждые 30 мин); эта очередь — только решения/флаги/разовые artisan/внешние шаги. Обновлено 31-07-2026 (H2014): CRM follow-up flag ON, SESSION/mail facts corrected, Yandex.Disk off-site still human-secret. Пункт уходит в архив только с подтверждением._
 
 _Dr. Mārcis Gasūns_

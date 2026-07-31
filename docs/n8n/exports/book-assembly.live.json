@@ -1,0 +1,912 @@
+{
+  "id": "gDewFLK9YiQk5MYy",
+  "name": "╨б╨С╨Ю╨а╨Ъ╨Р ╨Ъ╨Э╨Ш╨У",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://oauth.libfl.ru/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        -688
+      ],
+      "id": "39278ae3-93e6-4e30-a8ca-06cce722ea13",
+      "name": "Get Initial Cookies"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth.libfl.ru/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cookieString }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "login",
+              "value": "***EMAIL***"
+            },
+            {
+              "name": "password",
+              "value": "***REDACTED***"
+            },
+            {
+              "name": "submit",
+              "value": "╨Т╨╛╨╣╤В╨╕"
+            },
+            {
+              "name": "referer",
+              "value": "https://oauth.libfl.ru"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        -688
+      ],
+      "id": "175d69cb-8a95-4a2a-98b6-c1d7bbd17bc5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\nlet readerToken = \"\";\n\nif (Array.isArray(setCookie)) {\n    const tokenCookie = setCookie.find(c => c.trim().startsWith('ReaderToken='));\n    if (tokenCookie) readerToken = tokenCookie.split(';')[0];\n} else if (typeof setCookie === 'string' && setCookie.startsWith('ReaderToken=')) {\n    readerToken = setCookie.split(';')[0];\n}\n\nreturn [{\n    json: {\n        // ╨С╨Х╨а╨Х╨Ь ╨Ф╨Р╨Э╨Э╨л╨Х ╨в╨Х╨Ъ╨г╨й╨Х╨Щ ╨Ъ╨Э╨Ш╨У╨Ш\n        ...$('Loop Over Items1').item.json,\n        authCookie: readerToken\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -688
+      ],
+      "id": "fd9e6410-d740-472d-8bdb-458d6fd80fc3",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentItem = $('Code in JavaScript5').item.json;\nconst bookFullId = currentItem.bookId;\nconst totalPages = currentItem.totalPages;\n\nif (!bookFullId || typeof bookFullId !== 'string') {\n  throw new Error(`╨Э╨╡╨║╨╛╤А╤А╨╡╨║╤В╨╜╤Л╨╣ ID ╨║╨╜╨╕╨│╨╕: ${bookFullId}`);\n}\n\nconst parts = bookFullId.includes('_') ? bookFullId.split('_') : [bookFullId, \"0\"];\nconst prefix = parts[0];\nlet numStr = parts[1] || \"0\"; \nconst numPart = numStr.toString().padStart(9, '0');\n\nconst p1 = numPart.substring(0, 3);\nconst p2 = numPart.substring(3, 6);\nconst p3 = numPart.substring(6, 9);\nconst safeBookId = bookFullId.trim().replace(/[^\\w.-]+/g, \"_\");\n\nlet urlList = \"\";\nfor (let i = 1; i <= Number(totalPages); i++) {\n  const pagePad = i.toString().padStart(5, '0');\n  urlList += `https://cdn.libfl.ru/books/${prefix}/${p1}/${p2}/${p3}/JPEG_HQ/${pagePad}.jpg\\n`;\n}\n\nreturn [{\n  json: {\n    ...currentItem,\n    bookId: bookFullId,\n    safeBookId, \n    urlList,\n    urlCount: Number(totalPages),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -464
+      ],
+      "id": "2c9ad44c-b308-4585-9e3a-34c7b3ad1b23",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╨С╨╡╤А╨╡╨╝ ╨║╤Г╨║╨╕ ╤В╨╡╨║╤Г╤Й╨╡╨│╨╛ ╤Ж╨╕╨║╨╗╨░\nconst token = $('Code in JavaScript1').item.json.authCookie.split('=')[1];\nconst cookieContent = `.libfl.ru\\tTRUE\\t/\\tFALSE\\t2147483647\\tReaderToken\\t${token}`;\nreturn [{ json: { cookieContent } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -464
+      ],
+      "id": "e30b9028-2877-43d7-aead-bcde08893239",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "path": "={{ $json.stdout.trim().split('\\n').pop() }}",
+        "options": {},
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -224
+      ],
+      "id": "1a74d269-52c8-440d-b2a2-e1120153fbf5",
+      "name": "Download a file",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawData = items[0].json;\n\n// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╤В╨╡╨║╤Б╤В ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л (╨╕╨╖ SSH stdout ╨╕╨╗╨╕ HTTP data)\nlet textContent = rawData.stdout || rawData.data || \"\";\nif (typeof textContent !== 'string') {\n    textContent = JSON.stringify(textContent);\n}\n\nlet bookId = \"Unknown\";\nlet title = \"Scan\";\nlet author = \"Unknown Author\";\nlet totalPages = 600;\n\n// ╨Ш╨й╨Х╨Ь ╨Ф╨Р╨Э╨Э╨л╨Х ╨Т HTML ╨Я╨а╨Ю╨б╨Ь╨Ю╨в╨а╨й╨Ш╨Ъ╨Р (Viewer)\n// ╨Ш╤Й╨╡╨╝ ╨▒╨╗╨╛╨║ var bookInfo = { ... };\nconst bookInfoMatch = textContent.match(/var bookInfo\\s*=\\s*({[\\s\\S]*?});/);\n\nif (bookInfoMatch) {\n    try {\n        const info = JSON.parse(bookInfoMatch[1]);\n        if (info.ID) bookId = info.ID;\n        if (info.Title) title = info.Title.trim();\n        if (info.Author) author = info.Author;\n    } catch (e) {\n        console.log(\"╨Ю╤И╨╕╨▒╨║╨░ ╨┐╨░╤А╤Б╨╕╨╜╨│╨░ bookInfo JSON\");\n    }\n\n    // ╨Ш╤Й╨╡╨╝ ╤В╨╛╤З╨╜╨╛╨╡ ╨║╨╛╨╗╨╕╤З╨╡╤Б╤В╨▓╨╛ ╤Б╤В╤А╨░╨╜╨╕╤Ж (CountJPG)\n    const countMatch = textContent.match(/\"CountJPG\"\\s*:\\s*(\\d+)/);\n    if (countMatch) {\n        totalPages = parseInt(countMatch[1]);\n    }\n    \n    if (bookId === \"Unknown\") {\n        throw new Error(\"╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╜╨░╨╣╤В╨╕ ID ╨║╨╜╨╕╨│╨╕ ╨▓ ╨║╨╛╨┤╨╡ ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л Viewer'╨░!\");\n    }\n\n    return [{\n        json: {\n            bookId: bookId,\n            title: title,\n            author: author,\n            totalPages: totalPages\n        }\n    }];\n}\n\nthrow new Error(\"╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╨╜╨░╨╣╤В╨╕ ╨┐╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡ Viewer ╨╜╨░ ╤Б╤В╤А╨░╨╜╨╕╤Ж╨╡. ╨Т╨╛╨╖╨╝╨╛╨╢╨╜╨╛, ╨╖╨░╤Й╨╕╤В╨░ ╨╜╨╡ ╨┐╤А╨╛╨╣╨┤╨╡╨╜╨░ ╨╕╨╗╨╕ ╤В╨╛╨║╨╡╨╜ ╤Г╤Б╤В╨░╤А╨╡╨╗.\");"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -464
+      ],
+      "id": "882a4339-7718-4d16-9682-836ef7906edf",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1818c30d-5023-4252-aeb4-36133289fe78",
+              "leftValue": "={{ $json.finish }}",
+              "rightValue": "https://",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -896
+      ],
+      "id": "0f5a5e1b-1342-4767-a600-a19707e7e541",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854",
+          "mode": "list",
+          "cachedResultName": "╨╜╨░ ╤Б╨▒╨╛╤А",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -480,
+        -896
+      ],
+      "id": "4f893a5d-fb13-4a1f-bbd2-b8a4c324532f",
+      "name": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.finalFileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1tyxqYJLtbCqNXZ0J3RteihnnW6KNQMPp",
+          "mode": "list",
+          "cachedResultName": "╨║╨╜╨╕╨│╨╕ ╨Ю╨а╨б",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1tyxqYJLtbCqNXZ0J3RteihnnW6KNQMPp"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        240,
+        -224
+      ],
+      "id": "859e3211-7b32-4448-b489-6d92de444084",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "name": "Google Drive account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## ╨Р╨Т╨в╨Ю╨а╨Ш╨Ч╨Р╨ж╨Ш╨п ╨Ш ╨Я╨Ю╨Ы╨г╨з╨Х╨Э╨Ш╨Х ╨в╨Ю╨Ъ╨Х╨Э╨Р",
+        "height": 208,
+        "width": 688,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -736
+      ],
+      "id": "813a5b62-5f5c-4da2-ad2b-03dbd12148b6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854",
+          "mode": "list",
+          "cachedResultName": "╨╜╨░ ╤Б╨▒╨╛╤А",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "╨Ы╨╕╤Б╤В1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZp6kzvJsw-CItBUMHb0S8r4mj4IQmliNcsslZDG854/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г": "={{ $('Loop Over Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}",
+            "title": "={{ $('Code in JavaScript5').first().json.title }}",
+            "finish": "={{ $json.webContentLink }}"
+          },
+          "matchingColumns": [
+            "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г"
+          ],
+          "schema": [
+            {
+              "id": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г",
+              "displayName": "╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link scan",
+              "displayName": "link scan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finish",
+              "displayName": "finish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        -224
+      ],
+      "id": "b299ee1f-e572-4847-ae30-6c30557e61e2",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account",
+          "id": "***"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        -896
+      ],
+      "id": "9ded80a7-5ff9-4913-a228-b1db75cb0007",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -896
+      ],
+      "id": "3f388761-e112-408b-adf7-9e648ae4b299",
+      "name": "When clicking тАШExecute workflowтАЩ"
+    },
+    {
+      "parameters": {
+        "command": "=echo \"{{ $('Code in JavaScript2').item.json.urlList }}\" > \"/tmp/url_list_{{ $('Code in JavaScript2').item.json.safeBookId }}.txt\"\n\necho \"{{ $('Code in JavaScript3').item.json.cookieContent }}\" > \"/tmp/cookies_{{ $('Code in JavaScript2').item.json.safeBookId }}.txt\"",
+        "cwd": "/root",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -224
+      ],
+      "id": "6d1295be-c464-4c64-94dc-9796ae1bfc94",
+      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "command": "=/opt/bookbuilder/process_book.sh \"{{ $('Code in JavaScript2').item.json.safeBookId }}\"",
+        "cwd": "/opt/bookbuilder",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -224
+      ],
+      "id": "72634d64-228f-46d8-b7e9-fbddaec75c00",
+      "name": "╨╖╨░╨┐╤Г╤Б╨║",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "command": "=# 1. ╨С╨╡╤А╨╡╨╝ ╨┐╤Г╤В╤М\nFILE_PATH=\"{{ $json.full_path }}\"\n\n# 2. ╨Я╤А╨╛╨▓╨╡╤А╨║╨░\nif [ ! -f \"$FILE_PATH\" ]; then\n    echo \"Error: PDF file not found at $FILE_PATH\"\n    exit 1\nfi\n\n# 3. ╨Я╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡\nAUTHOR=\"{{ $json.pdf_author.replace(/^['\"]|['\"]$/g, '').replace(/\"/g, '\\\\\"') }}\"\n\n# 4. ╨Я╤А╨╛╨┐╨╕╤Б╤Л╨▓╨░╨╡╨╝ ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╨╡\nexiftool -overwrite_original \\\n -Title=\"{{ $json.pdf_title.replace(/\"/g, '\\\\\"') }}\" \\\n -Author=\"$AUTHOR\" \\\n -XMP-dc:Creator=\"$AUTHOR\" \\\n -Subject=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Description=\"{{ $json.pdf_subject.replace(/\"/g, '\\\\\"') }}\" \\\n -Keywords=\"{{ $json.pdf_keywords.replace(/\"/g, '\\\\\"') }}\" \\\n -Publisher=\"{{ $json.pdf_publisher.replace(/\"/g, '\\\\\"') }}\" \\\n -Language=\"{{ $json.pdf_language }}\" \\\n \"$FILE_PATH\"\n\n# 5. ╨Т╨Р╨Ц╨Э╨Ю: ╨Т╤Л╨▓╨╛╨┤╨╕╨╝ ╨┐╤Г╤В╤М ╨║ ╤Д╨░╨╣╨╗╤Г, ╤З╤В╨╛╨▒╤Л ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨░╤П ╨╜╨╛╨┤╨░ ╨╖╨╜╨░╨╗╨░, ╤З╤В╨╛ ╨║╨░╤З╨░╤В╤М\necho \"$FILE_PATH\"",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -224
+      ],
+      "id": "835fba91-8c48-4760-bee2-66c82d762ee4",
+      "name": "exiftool",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const returnData = [];\n\n// ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨╛╤З╨╕╤Б╤В╨║╨╕ HTML-╤В╨╡╨│╨╛╨▓\nconst stripTags = (str) => {\n  if (!str) return null;\n  return str.replace(/<[^>]*>?/gm, '').trim();\n};\n\n// ╨Т╤Б╨┐╨╛╨╝╨╛╨│╨░╤В╨╡╨╗╤М╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨┐╨╛╨╕╤Б╨║╨░ ╨╖╨╜╨░╤З╨╡╨╜╨╕╤П ╨┐╨╛ ╨┐╤А╨╛╤Б╤В╨╛╨╝╤Г ╨┐╨░╤В╤В╨╡╤А╨╜╤Г\nconst findMatch = (html, regex, index = 1) => {\n  const match = html.match(regex);\n  return match ? stripTags(match[index]) : null;\n};\n\nfor (const item of items) {\n  const html = item.json.stdout;\n  if (!html) continue;\n\n  // 1. ╨Ю╤Б╨╜╨╛╨▓╨╜╤Л╨╡ ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╨╡ ╤З╨╡╤А╨╡╨╖ Regex\n  const title = findMatch(html, /<h3 property=\"name\">([\\s\\S]*?)<\\/h3>/);\n  const mainAuthor = findMatch(html, /<span class='author'>([\\s\\S]*?)<\\/span>/);\n  const recordId = findMatch(html, /value=\"([^\"]+)\" class=\"hiddenId\"/);\n\n  // 2. ╨Я╨░╤А╤Б╨╕╨╜╨│ ╨╛╤Б╨╜╨╛╨▓╨╜╨╛╨╣ ╤В╨░╨▒╨╗╨╕╤Ж╤Л (╨С╨╕╨▒╨╗╨╕╨╛╨│╤А╨░╤Д╨╕╤З╨╡╤Б╨║╨╕╨╡ ╨┐╨╛╨┤╤А╨╛╨▒╨╜╨╛╤Б╤В╨╕)\n  const details = {};\n  // ╨Ш╤Й╨╡╨╝ ╨▓╤Б╨╡ ╨▓╤Е╨╛╨╢╨┤╨╡╨╜╨╕╤П <th>Key</th><td>Value</td>\n  const tableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n  let match;\n  while ((match = tableRegex.exec(html)) !== null) {\n    const key = stripTags(match[1]);\n    const val = stripTags(match[2]);\n    details[key] = val;\n  }\n\n  // ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨░╨▓╤В╨╛╤А╨╛╨▓\n  const authors = [mainAuthor];\n  if (details['╨Ф╤А╤Г╨│╨╛╨╣ ╨░╨▓╤В╨╛╤А']) {\n    authors.push(details['╨Ф╤А╤Г╨│╨╛╨╣ ╨░╨▓╤В╨╛╤А']);\n  }\n\n  // 3. ╨Ю╨▒╨╗╨╛╨╢╨║╨░\n  let coverUrl = null;\n  const coverMatch = html.match(/data-fancybox='covers' href='([^']+)'/);\n  if (coverMatch) {\n    coverUrl = coverMatch[1];\n    if (coverUrl && !coverUrl.startsWith('http')) {\n      coverUrl = `https://catalog.libfl.ru${coverUrl}`;\n    }\n  }\n\n  // 4. ╨Я╨░╤А╤Б╨╕╨╜╨│ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨╛╨▓ (Exemplars)\n  // ╨а╨░╨╖╨▒╨╕╨▓╨░╨╡╨╝ HTML ╨╜╨░ ╨║╤Г╤Б╨║╨╕ ╨┐╨╛ ╨║╨╗╨░╤Б╤Б╤Г exemplar\n  const holdings = [];\n  const exemplarParts = html.split('class=exemplar>');\n  \n  // ╨Я╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝ ╨╜╤Г╨╗╨╡╨▓╨╛╨╣ ╤Н╨╗╨╡╨╝╨╡╨╜╤В (╤Н╤В╨╛ ╨▓╤Б╨╡ ╤З╤В╨╛ ╨Ф╨Ю ╨┐╨╡╤А╨▓╨╛╨│╨╛ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨░)\n  for (let i = 1; i < exemplarParts.length; i++) {\n    const part = exemplarParts[i];\n    \n    // ╨Э╨╛╨╝╨╡╤А ╨║╨╛╨┐╨╕╨╕\n    const copyNumMatch = part.match(/<h3[^>]*>#&nbsp;(\\d+)<\\/h3>/);\n    const copyNum = copyNumMatch ? copyNumMatch[1] : null;\n\n    // ╨Ф╨░╨╜╨╜╤Л╨╡ ╨▓╨╜╤Г╤В╤А╨╕ ╤Н╨║╨╖╨╡╨╝╨┐╨╗╤П╤А╨░ (╤Б╨╜╨╛╨▓╨░ ╤В╨░╨▒╨╗╨╕╤Ж╨░)\n    const exData = {};\n    let exMatch;\n    // ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨╜╨╛╨▓╤Л╨╣ regex ╨╛╨▒╤К╨╡╨║╤В ╨┤╨╗╤П ╤Ж╨╕╨║╨╗╨░, ╤З╤В╨╛╨▒╤Л ╨╜╨╡ ╨║╨╛╨╜╤Д╨╗╨╕╨║╤В╨╛╨▓╨░╤В╤М ╤Б ╨▓╨╜╨╡╤И╨╜╨╕╨╝\n    const exTableRegex = /<th>(.*?)<\\/th><td>(.*?)<\\/td>/g;\n    \n    // ╨Ю╨│╤А╨░╨╜╨╕╤З╨╕╨╝ ╨┐╨╛╨╕╤Б╨║ ╤В╨╡╨║╤Г╤Й╨╕╨╝ ╨▒╨╗╨╛╨║╨╛╨╝ (╨┤╨╛ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╡╨│╨╛ div)\n    const tableBlock = part.split('</table>')[0]; \n    \n    while ((exMatch = exTableRegex.exec(tableBlock)) !== null) {\n      exData[stripTags(exMatch[1])] = stripTags(exMatch[2]);\n    }\n\n    if (copyNum || exData['╨Э╨╛╤Б╨╕╤В╨╡╨╗╤М']) {\n       holdings.push({\n        copy_number: copyNum,\n        format: exData['╨Э╨╛╤Б╨╕╤В╨╡╨╗╤М'] || null,\n        status: exData['╨Ъ╨╗╨░╤Б╤Б ╨╕╨╖╨┤╨░╨╜╨╕╤П'] || '╨Э╨╡ ╤Г╨║╨░╨╖╨░╨╜',\n        location: exData['╨Ь╨╡╤Б╤В╨╛╨╜╨░╤Е╨╛╨╢╨┤╨╡╨╜╨╕╨╡'] || null,\n        call_number: exData['╨и╨╕╤Д╤А'] || null,\n        inv_number: exData['╨Ш╨╜╨▓. ╨╜╨╛╨╝╨╡╤А'] || null\n      });\n    }\n  }\n\n  returnData.push({\n    json: {\n      id: recordId,\n      title: title,\n      authors: authors.filter(Boolean),\n      publisher: details['╨Ш╨╖╨┤╨░╤В╨╡╨╗╤М╤Б╤В╨▓╨╛'] || null,\n      publish_year: details['╨Ф╨░╤В╨░ ╨╕╨╖╨┤╨░╨╜╨╕╤П'] ? parseInt(details['╨Ф╨░╤В╨░ ╨╕╨╖╨┤╨░╨╜╨╕╤П']) : null,\n      publish_city: details['╨Ь╨╡╤Б╤В╨╛ ╨╕╨╖╨┤╨░╨╜╨╕╤П'] || null,\n      language: details['╨п╨╖╤Л╨║'] || null,\n      topics: [details['╨в╨╡╨╝╨░╤В╨╕╨║╨░'], details['╨Я╤А╨╡╨┤╨╝╨╡╤В╨╜╨░╤П ╤А╤Г╨▒╤А╨╕╨║╨░']].filter(Boolean),\n      cover_image: coverUrl,\n      holdings: holdings,\n      source_url: `https://catalog.libfl.ru/Record/${recordId}`\n    }\n  });\n}\n\nreturn returnData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -896
+      ],
+      "id": "0e37e8be-d54f-4e7c-9f2b-e83a8fde29e8",
+      "name": "metadate2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╨Э╨░╨┤╨╡╨╢╨╜╨░╤П ╤Д╤Г╨╜╨║╤Ж╨╕╤П ╨┤╨╗╤П ╨┐╨╛╨╗╤Г╤З╨╡╨╜╨╕╤П ╨┤╨░╨╜╨╜╤Л╤Е ╤В╨╡╨║╤Г╤Й╨╡╨╣ ╨║╨╜╨╕╨│╨╕ ╨▓ ╤Ж╨╕╨║╨╗╨╡\nfunction safeGetItem(nodeName) {\n  try {\n    return $(nodeName).item.json;\n  } catch (e) {\n    try {\n      return $(nodeName).first().json;\n    } catch (err) {\n      return {};\n    }\n  }\n}\n\n// ╨Ч╨░╨▒╨╕╤А╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨╕╨╖ ╨┤╤А╤Г╨│╨╕╤Е ╨╜╨╛╨┤\nconst cat = safeGetItem('metadate2');            \nconst vw  = safeGetItem('Code in JavaScript5');  \nconst loopItem = safeGetItem('Loop Over Items1');  \nconst js2 = safeGetItem('Code in JavaScript2');\n\n// 1. ╨Ш╨Ф╨Х╨Р╨Ы╨м╨Э╨л╨Щ ╨Я╨г╨в╨м ╨С╨Х╨Ч ╨Я╨Р╨а╨б╨Ш╨Э╨У╨Р ╨Ы╨Ю╨У╨Ю╨Т\n// ╨С╨╡╤А╨╡╨╝ ID ╨║╨╜╨╕╨│╨╕ (╨╜╨░╨┐╤А╨╕╨╝╨╡╤А, BJVVV_1465084) ╨╕ ╨┐╤А╨╛╤Б╤В╨╛ ╨┐╨╛╨┤╤Б╤В╨░╨▓╨╗╤П╨╡╨╝ ╨▓ ╤Д╨╛╤А╨╝╤Г╨╗╤Г ╨┐╤Г╤В╨╕\nconst safeId = js2.safeBookId || loopItem.safeBookId || \"UNKNOWN_ID\";\nconst fullPath = `/data/bookbuilder/books/${safeId}/${safeId}.pdf`;\n\n// 2. ╨б╨▒╨╛╤А ╨╛╤Б╤В╨░╨╗╤М╨╜╤Л╤Е ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е\nconst title = (cat.title || vw.title || loopItem.title || 'Scan').toString().trim();\nconst authorsArr = (cat.authors && cat.authors.length ? cat.authors : [vw.author, loopItem.author])\n    .filter(Boolean).map(a => a.toString().trim());\n\nconst publisher = (cat.publisher || '').toString().trim();\nconst year = cat.publish_year ? String(cat.publish_year) : (cat.year ? String(cat.year) : '');\nconst language = (cat.language || '').toString().trim();\nconst topics = (cat.topics || []).map(t => t.toString().trim()).filter(Boolean);\n\nconst subjectParts = [\n  publisher && `╨Ш╨╖╨┤╨░╤В╨╡╨╗╤М: ${publisher}`,\n  year && `╨У╨╛╨┤: ${year}`,\n  language && `╨п╨╖╤Л╨║: ${language}`,\n].filter(Boolean);\n\nconst keywords = [...topics, language, publisher, year].filter(Boolean).join(', ');\n\nreturn [{\n  json: {\n    full_path: fullPath,\n    pdf_title: title,\n    pdf_author: authorsArr.join('; ') || 'Unknown Author',\n    pdf_subject: subjectParts.join(' | ') || 'Scan',\n    pdf_keywords: keywords,\n    pdf_publisher: publisher,\n    pdf_language: language,\n    pdf_year: year,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -224
+      ],
+      "id": "6356bf09-14e3-411b-a79a-c938cd8db0a0",
+      "name": "Build PDF Metadata"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -320,
+        -224
+      ],
+      "id": "028f3519-b962-44e8-974a-ab15444a278a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨╖╨░╨│╨╛╨╗╨╛╨▓╨║╨╕ ╨╛╤В ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╡╨│╨╛ ╤И╨░╨│╨░\nconst headers = items[0].json.headers;\nconst setCookie = headers['set-cookie'];\n\n// ╨б╨╛╨▒╨╕╤А╨░╨╡╨╝ ╨║╤Г╨║╨╕ ╨▓ ╤Б╤В╤А╨╛╨║╤Г\nlet cookieString = \"\";\nif (Array.isArray(setCookie)) {\n    // ╨Х╤Б╨╗╨╕ ╨┐╤А╨╕╤И╨╗╨╛ ╨╜╨╡╤Б╨║╨╛╨╗╤М╨║╨╛ ╨║╤Г╨║ (╨╝╨░╤Б╤Б╨╕╨▓)\n    cookieString = setCookie.map(c => c.split(';')[0]).join('; ');\n} else if (typeof setCookie === 'string') {\n    // ╨Х╤Б╨╗╨╕ ╨┐╤А╨╕╤И╨╗╨░ ╨╛╨┤╨╜╨░ ╨║╤Г╨║╨░\n    cookieString = setCookie.split(';')[0];\n}\n\n// ╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г, ╨║╨╛╤В╨╛╤А╤Г╤О ╨▓╤Б╤В╨░╨▓╨╕╨╝ ╨▓ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╕╨╣ ╨╖╨░╨┐╤А╨╛╤Б\nreturn [{\n    json: {\n        cookieString: cookieString\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -688
+      ],
+      "id": "afb2052c-ae8c-4b5e-8d76-1525f9e0ec44",
+      "name": "╨║╤Г╨║╨╕"
+    },
+    {
+      "parameters": {
+        "jsCode": "let meta = {};\ntry {\n    meta = $('Build PDF Metadata').item.json; // <-- ╨Ч╨░╨╝╨╡╨╜╨╕╨╗╨╕ first ╨╜╨░ item\n} catch (e) {\n    console.log(\"Meta not found\");\n}\n\n// 2. ╨д╤Г╨╜╨║╤Ж╨╕╤П ╨╛╤З╨╕╤Б╤В╨║╨╕\nconst clean = (str) => {\n    if (!str) return \"\";\n    return str.toString().replace(/[\\/\\\\:*?\"<>|]/g, '').replace(/\\s+/g, ' ').trim();\n};\n\n// 3. ╨д╨╛╤А╨╝╨╕╤А╤Г╨╡╨╝ ╨╕╨╝╤П\nconst title = clean(meta.pdf_title) || \"Scan\";\nconst author = clean(meta.pdf_author) || \"NoAuthor\";\nconst year = clean(meta.pdf_year) || \"\";\n\nlet newName = `${author} - ${title}`;\nif (year) {\n    newName += ` - ${year}`;\n}\nnewName += \".pdf\";\n\n// 4. ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨╕╨╝╤П\nfor (const item of items) {\n    // ╨Р) ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨▒╨╕╨╜╨░╤А╨╜╨╕╨║╤Г (╨┤╨╗╤П ╨▓╨╕╨┤╨░)\n    if (item.binary && item.binary.data) {\n        item.binary.data.fileName = newName;\n    }\n    \n    // ╨С) ╨Т╨Р╨Ц╨Э╨Ю: ╨Я╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╡╨╝ ╨▓ JSON, ╤З╤В╨╛╨▒╤Л ╨╕╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╤М ╨▓ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╡╨╣ ╨╜╨╛╨┤╨╡\n    item.json.finalFileName = newName;\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -224
+      ],
+      "id": "0553f60e-d2bb-4f52-abf8-546109f1917c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "command": "=# 1. ╨Я╨╛╨╗╤Г╤З╨░╨╡╨╝ ID ╨║╨╜╨╕╨│╨╕ ╨╕╨╖ ╨╜╨╛╨┤╤Л \"Code in JavaScript2\"\n# ╨Т╨░╨╢╨╜╨╛: ╨╕╨╝╤П ╨╜╨╛╨┤╤Л ╨▓ ╤Б╨║╨╛╨▒╨║╨░╤Е ╨┤╨╛╨╗╨╢╨╜╨╛ ╤В╨╛╤З╨╜╨╛ ╤Б╨╛╨▓╨┐╨░╨┤╨░╤В╤М ╤Б ╤В╨▓╨╛╨╕╨╝\nID=\"{{ $('Code in JavaScript2').first().json.safeBookId }}\"\n\n# 2. ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨┐╨░╨┐╨║╤Г ╤Б ╨║╨╜╨╕╨│╨╛╨╣ (╤В╨░╨╝ ╨╗╨╡╨╢╨░╤В img, raw.pdf ╨╕ ╨╕╤В╨╛╨│╨╛╨▓╤Л╨╣ pdf)\n# ╨д╨╗╨░╨│ -rf ╤Г╨┤╨░╨╗╤П╨╡╤В ╨┐╨░╨┐╨║╤Г ╤А╨╡╨║╤Г╤А╤Б╨╕╨▓╨╜╨╛ ╨╕ ╨▒╨╡╨╖ ╨╗╨╕╤И╨╜╨╕╤Е ╨▓╨╛╨┐╤А╨╛╤Б╨╛╨▓\nrm -rf \"/data/bookbuilder/books/$ID\"\n\n# 3. ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨▓╤А╨╡╨╝╨╡╨╜╨╜╤Л╨╡ ╤Д╨░╨╣╨╗╤Л ╤Б╨┐╨╕╤Б╨║╨╛╨▓ (╨╕╨╖ ╨┐╨░╨┐╨║╨╕ /tmp)\nrm -f \"/tmp/url_list_${ID}.txt\"\nrm -f \"/tmp/cookies_${ID}.txt\"\n\n# 4. ╨Т╤Л╨▓╨╛╨┤╨╕╨╝ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨▓ ╨╗╨╛╨│ (╨╛╨┐╤Ж╨╕╨╛╨╜╨░╨╗╤М╨╜╨╛)\necho \"CLEANUP DONE: Deleted data for book $ID\"",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -224
+      ],
+      "id": "f3f3173f-3370-4c27-ba5d-55d905ff0c33",
+      "name": "exiftool1",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\"",
+        "cwd": "/root",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -896
+      ],
+      "id": "7c70631e-5842-4830-851a-1fcfbe6619c5",
+      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/fetch_page.py \"{{ $json.stdout.split('SUCCESS: ')[1].split('\\n')[0].trim() }}\" \"{{ $('Code in JavaScript1').item.json.authCookie }}\"",
+        "cwd": "/root",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -464
+      ],
+      "id": "d42017d8-d709-486f-8506-134d4fed88b2",
+      "name": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {
+        "command": "=/opt/bookbuilder/venv/bin/python3 /opt/bookbuilder/auto_order.py ***ARGS_REDACTED*** Items1').item.json['╤Б╤Б╤Л╨╗╨║╨░ ╨╜╨░ ╨║╨╜╨╕╨│╤Г'] }}\" \"***EMAIL***\" \"***REDACTED***\"",
+        "cwd": "/root",
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -688
+      ],
+      "id": "0fe2ba38-5c4d-4c2e-b28c-e3688d5d0130",
+      "name": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+      "credentials": {
+        "sshPrivateKey": "***REDACTED***"
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        -224
+      ],
+      "id": "921b8c43-c49f-46ea-b977-2355e06a332e",
+      "name": "Wait",
+      "webhookId": "ea9c8529-5f3b-48f7-90fd-6c0f01e15d4c"
+    }
+  ],
+  "connections": {
+    "Get Initial Cookies": {
+      "main": [
+        [
+          {
+            "node": "╨║╤Г╨║╨╕",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Initial Cookies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking тАШExecute workflowтАЩ": {
+      "main": [
+        [
+          {
+            "node": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓": {
+      "main": [
+        [
+          {
+            "node": "╨╖╨░╨┐╤Г╤Б╨║",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨╖╨░╨┐╤Г╤Б╨║": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "exiftool": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "metadate2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build PDF Metadata": {
+      "main": [
+        [
+          {
+            "node": "exiftool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Build PDF Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨║╤Г╨║╨╕": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "exiftool1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exiftool1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓1": {
+      "main": [
+        [
+          {
+            "node": "metadate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "╨░╨▓╤В╨╛╨╖╨░╨║╨░╨╖": {
+      "main": [
+        [
+          {
+            "node": "╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╤Б╨┐╨╕╤Б╨║╨░ ╤Д╨░╨╣╨╗╨╛╨▓2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "╨┐╨╛╨╗╤Г╤З╨░╨╡╨╝ ╨▓╤Б╨╡ ╤Б╤Б╤Л╨╗╨║╨╕",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "exportedAt": "2026-07-30",
+    "host": "samskrtam50",
+    "note": "credentials and secrets redacted"
+  }
+}

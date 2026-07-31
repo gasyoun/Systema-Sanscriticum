@@ -143,11 +143,19 @@ Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->na
 // H471 Phase 4 — ₽500 «с проверкой» track checkout.
 Route::post('/online/konsultaciya/pay', [MarathonController::class, 'pay'])->name('marathon.pay');
 // H483 Phase 3b — Day 1/2 tap-choice recognition pages, keyed by the lead's
-// existing magnet_token (no new token needed).
-Route::get('/online/konsultaciya/day/{day}/{token}', [MarathonController::class, 'day'])
+// existing magnet_token (no new token needed). Path uses Sanskrit dine
+// (loc. sg. of diná «день»), not English day.
+Route::get('/online/konsultaciya/dine/{day}/{token}', [MarathonController::class, 'day'])
     ->where('day', '[12]')->name('marathon.day');
-Route::post('/online/konsultaciya/day/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
+Route::post('/online/konsultaciya/dine/{day}/{token}/complete', [MarathonController::class, 'completeDay'])
     ->where('day', '[12]')->name('marathon.day.complete');
+// Legacy English /day/ → permanent redirect (Telegram links already sent).
+Route::get('/online/konsultaciya/day/{day}/{token}', function (int $day, string $token) {
+    return redirect()->route('marathon.day', ['day' => $day, 'token' => $token], 301);
+})->where('day', '[12]');
+Route::post('/online/konsultaciya/day/{day}/{token}/complete', function (int $day, string $token) {
+    return redirect()->route('marathon.day.complete', ['day' => $day, 'token' => $token], 307);
+})->where('day', '[12]');
 // H445 Phase 2 — `deva` cohort level-quiz, layered on top of the intent-quiz.
 // 404s for `zero` enrollments (MarathonController::levelQuiz()).
 Route::get('/online/konsultaciya/level-quiz/{token}', [MarathonController::class, 'levelQuiz'])
@@ -218,6 +226,19 @@ Route::post('/api/games/srs-onboarding-import', [GamesSrsOnboardingController::c
     ->middleware(['auth', 'throttle:10,1'])
     ->name('games.srs-onboarding-import');
 
+// Public deck trial (shareable per-deck URLs, no auth). Canonical path: /koloda.
+// Must sit BEFORE the promo catch-all /{slug}. Same srs.enabled gate as cabinet.
+if (config('srs.enabled')) {
+    Route::get('/koloda', [SrsController::class, 'publicIndex'])->name('srs.index');
+    Route::get('/koloda/{slug}', [SrsController::class, 'publicReview'])->name('srs.deck');
+
+    // Legacy /srs → /koloda (301). Keep old Telegram/blog links working.
+    Route::permanentRedirect('/srs', '/koloda');
+    Route::get('/srs/{slug}', function (string $slug) {
+        return redirect('/koloda/'.$slug, 301);
+    })->where('slug', '[A-Za-z0-9\-]+');
+}
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1')
@@ -258,6 +279,10 @@ Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
 // Условия возврата (H1288) — порядок отказа из оферты (приложение №1),
 // изложенный по-русски; сами условия задает только PDF оферты.
 Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
+
+// Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
+// До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
+Route::view('/uptime', 'uptime')->name('uptime.show');
 
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
@@ -330,23 +355,33 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 
-    // SRS-карточки (H211, Wave 1) — маршрут появляется только при включённом
-    // флаге srs.enabled (в проде OFF). Пункт меню в layouts.student — под тем же условием.
+    // Колоды / интервальные повторения (H211) — только при srs.enabled.
+    // Canonical URL: /dvaram/koloda (legacy /dvaram/srs → 301).
+    // Static segments (stats/decks) MUST be registered before {slug}.
     if (config('srs.enabled')) {
-        Route::get('/dvaram/srs', [SrsController::class, 'review'])
-            ->name('student.srs');
-
-        // H447 — per-trainer stats dashboard, same gate as the review route.
-        Route::get('/dvaram/srs/stats', [SrsController::class, 'stats'])
+        Route::get('/dvaram/koloda/stats', [SrsController::class, 'stats'])
             ->name('student.srs.stats');
 
-        // H1487 Wave 2 — student private-deck editor.
-        Route::get('/dvaram/srs/decks', [SrsController::class, 'decks'])
+        Route::get('/dvaram/koloda/decks', [SrsController::class, 'decks'])
             ->name('student.srs.decks');
+
+        Route::get('/dvaram/koloda/{slug}', [SrsController::class, 'review'])
+            ->name('student.srs.deck');
+
+        Route::get('/dvaram/koloda', [SrsController::class, 'cabinetIndex'])
+            ->name('student.srs');
+
+        // Legacy /dvaram/srs → /dvaram/koloda
+        Route::permanentRedirect('/dvaram/srs', '/dvaram/koloda');
+        Route::permanentRedirect('/dvaram/srs/stats', '/dvaram/koloda/stats');
+        Route::permanentRedirect('/dvaram/srs/decks', '/dvaram/koloda/decks');
+        Route::get('/dvaram/srs/{slug}', function (string $slug) {
+            return redirect('/dvaram/koloda/'.$slug, 301);
+        })->where('slug', '[A-Za-z0-9\-]+');
     }
 
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS
-    // review loop above (/dvaram/srs) — short /lila drills linked from the
+    // review loop above (/dvaram/koloda) — short /lila drills linked from the
     // cabinet, no spaced-repetition scheduling here. Behind its own flag
     // (default OFF, Architecture §5: "any cabinet/SRS surfacing remains
     // OFF by default"), independent of srs.enabled.
