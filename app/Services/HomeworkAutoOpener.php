@@ -12,11 +12,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Автооткрытие приёма домашних заданий (H1764, волна 1).
+ * Автооткрытие приёма домашних заданий (H1764 + generic/Hindi track).
  *
  * Раньше открытие было ровно одним булевым флагом `lessons.homework_enabled`,
- * который преподаватель щёлкал руками. Здесь он ставится сам — на следующий
- * день после того, как у урока появилась запись.
+ * который преподаватель щёлкал руками. Здесь он ставится сам.
+ *
+ * Два трека:
+ *  - Kochergina (H1764): hourly `homework:auto-open`, +delay → 09:00 MSK,
+ *    текст из оцифровки учебника, охват `course_slugs` + `textbook_lessons`.
+ *  - Generic (Hindi pilot): сразу после первого `recording_attached_at` на
+ *    `Lesson::saved`, prompt из `generic_prompt`, охват `generic_course_slugs`.
  *
  * Владение выражено схемой, а не веткой в коде: автомат помечает открытые им
  * уроки `homework_auto_opened_at`, и закрывать (волна 2) вправе только их.
@@ -56,6 +61,58 @@ class HomeworkAutoOpener
         }
 
         return $opensAt;
+    }
+
+    /**
+     * Курс в пилоте generic-трека (хинди и т.п.): фиксированный prompt, без
+     * textbook_lesson. Пустой список slug — трек спит.
+     */
+    public function isGenericPilot(Lesson $lesson): bool
+    {
+        if (! config('homework.auto_open.enabled')) {
+            return false;
+        }
+
+        $slugs = (array) config('homework.auto_open.generic_course_slugs', []);
+        if ($slugs === []) {
+            return false;
+        }
+
+        $lesson->loadMissing('course');
+        $slug = $lesson->course?->slug;
+
+        return is_string($slug) && $slug !== '' && in_array($slug, $slugs, true);
+    }
+
+    /**
+     * Немедленное открытие после первой записи (generic track).
+     * Возвращает false, если урок не в охвате, уже открыт руками/автоматом
+     * или kill-switch выключен — без побочных эффектов.
+     */
+    public function tryOpenImmediate(Lesson $lesson): bool
+    {
+        if (! config('homework.auto_open.generic_immediate', true)) {
+            return false;
+        }
+
+        if (! $this->isGenericPilot($lesson)) {
+            return false;
+        }
+
+        if (filled($lesson->homework_auto_opened_at)) {
+            return false;
+        }
+
+        // Ручное включение — не перехватываем владение и не шлём второй «открыли».
+        if ($lesson->homework_enabled) {
+            return false;
+        }
+
+        if (blank($lesson->recording_attached_at)) {
+            return false;
+        }
+
+        return $this->open($lesson, notify: true);
     }
 
     /**
@@ -143,13 +200,16 @@ class HomeworkAutoOpener
     }
 
     /**
-     * Условие задания (D5). Текст упражнений из оцифровки — но НЕ в уроки,
-     * видимые гостю без оплаты: `is_free`/`is_preview` получают отсылочную
-     * формулировку (D14). Урок при этом всё равно открывается — отсутствие
-     * текста никогда не блокирует открытие.
+     * Условие задания. Generic-пилот — фиксированная строка из конфига.
+     * Kochergina — текст упражнений из оцифровки, но НЕ в уроки, видимые
+     * гостю без оплаты (D14). Урок при этом всё равно открывается.
      */
     private function promptFor(Lesson $lesson): string
     {
+        if ($this->isGenericPilot($lesson)) {
+            return (string) config('homework.auto_open.generic_prompt', 'Домашнее задание');
+        }
+
         $textbookLesson = $lesson->textbook_lesson === null ? null : (int) $lesson->textbook_lesson;
         $fallback = KocherginaExerciseSource::fallbackPrompt($textbookLesson);
 

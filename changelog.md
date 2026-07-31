@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **Автооткрытие ДЗ с формулировкой «Домашнее задание» — generic/Hindi track.** Рядом с пилотом Кочергиной (H1764, +12ч → 09:00, текст учебника) — второй охват: `HOMEWORK_AUTO_OPEN_GENERIC_COURSES` (пусто = спит). При **первом** появлении записи урок сразу получает `homework_enabled`, prompt из `HOMEWORK_AUTO_OPEN_GENERIC_PROMPT` (по умолчанию «Домашнее задание») и один пуш студентам; написанный преподавателем prompt не перетирается, ручное включение ДЗ автомат не перехватывает. Кочергина и hourly `homework:auto-open` не тронуты. Волна 2 (синк `#ДЗ` из Telegram, цепочка C→B→A→G) — отдельно. Executor: Grok 4.5 (`grok-4.5`).
 - **H2026 architecture: Tochka multi-mode recurring billing (modes A–E).** Design of record for auto-subscription via Tochka: per-course anniversary (A), consolidated 1–2×/month across directions (B), multi-month prepay (C), club (D), installment auto-collect on curator plans (E). Entities, phase ship order 0→5, money-contour flags OFF by default. Docs: [ARCHITECTURE_TOCHKA_RECURRING_BILLING_MODES_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_TOCHKA_RECURRING_BILLING_MODES_2026.md). PayPal Subscriptions is a separate lane ([H2027](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md)). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.81.1] - 2026-07-31

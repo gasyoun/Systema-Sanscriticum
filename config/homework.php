@@ -129,6 +129,34 @@ return [
             'KOCHERGINA_SOURCE_PATH',
             base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_unicode.mdx'),
         ),
+
+        /*
+        |----------------------------------------------------------------------
+        | Generic / Hindi track (immediate open, fixed prompt)
+        |----------------------------------------------------------------------
+        |
+        | Отдельный охват от Кочергиной: без textbook_lesson, без +12ч/09:00.
+        | При первом появлении записи урок открывается сразу с формулировкой
+        | generic_prompt («Домашнее задание»). Пусто generic_course_slugs =
+        | трек спит (выкатка безопасна по умолчанию).
+        |
+        | Не кладите один slug и в course_slugs, и в generic_course_slugs:
+        | generic-immediate сработает на saved раньше hourly kochergina-path.
+        |
+        */
+
+        'generic_course_slugs' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('HOMEWORK_AUTO_OPEN_GENERIC_COURSES', '')),
+        ))),
+
+        'generic_prompt' => (string) env(
+            'HOMEWORK_AUTO_OPEN_GENERIC_PROMPT',
+            'Домашнее задание',
+        ),
+
+        // Kill-switch только для immediate-трека (не гасит Кочергину).
+        'generic_immediate' => (bool) env('HOMEWORK_AUTO_OPEN_GENERIC_IMMEDIATE', true),
     ],
 
 ];
