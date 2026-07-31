@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2017: PayPal claim fields + company invoice (dark flags) + Tochka/YooMoney/KKT plan.** Diaspora form now requires **from-PayPal + paid date + amount** (txn/proof optional) for manual reconciliation on a non-business PayPal account; structured `payments.claim_meta` JSON. New **счёт для юрлица** path (`COMPANY_INVOICE_ENABLED` default OFF): form → pending `provider=invoice` → printable HTML invoice → Filament «Подтвердить счёт». Tochka audit doc records live `paymentMode=['sbp','card']` and own-KKT procurement plan; YooMoney deferred. Flags stay OFF until human enable. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.81.0] - 2026-07-31
 
 ### Added

@@ -22,7 +22,8 @@ class ExpireStaleCheckouts extends Command
      * - deposit/trial: not abandoned checkouts, they ARE the held reservation
      *   (Payment::scopeUnconsumedDeposits reads them once paid); a pending one
      *   simply hasn't been paid yet and carries no separate reservation to release.
-     * - paypal: awaits manual reconciliation in the admin (Payment::scopePaypalPending).
+     * - paypal / invoice: await manual reconciliation in the admin
+     *   (Payment::MANUAL_CLAIM_PROVIDERS — PayPal claim + company invoice).
      * - conditional: zero-money "under promise" grants are always created directly
      *   as paid (see ConditionalAccessGranter) and should never appear pending, but
      *   excluded defensively.
@@ -32,7 +33,8 @@ class ExpireStaleCheckouts extends Command
         $query
             ->whereNotIn('tariff', ['deposit', 'trial'])
             ->where(function ($provider): void {
-                $provider->whereNull('provider')->orWhere('provider', '!=', Payment::PROVIDER_PAYPAL);
+                $provider->whereNull('provider')
+                    ->orWhereNotIn('provider', Payment::MANUAL_CLAIM_PROVIDERS);
             })
             ->where('is_conditional', false);
     }
@@ -116,7 +118,7 @@ class ExpireStaleCheckouts extends Command
             }
 
             if (in_array($payment->tariff, ['deposit', 'trial'], true)
-                || $payment->provider === Payment::PROVIDER_PAYPAL
+                || in_array($payment->provider, Payment::MANUAL_CLAIM_PROVIDERS, true)
                 || $payment->is_conditional
             ) {
                 return false;

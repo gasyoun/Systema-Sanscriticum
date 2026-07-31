@@ -7,6 +7,8 @@
 - **Курс:** {{ $payment->course?->title ?? '—' }}
 - **Тариф:** {{ $payment->operationLabel() }}
 - **Заявленная сумма:** {{ $payment->foreignAmountLabel() ?: '—' }}
+- **С какого PayPal:** {{ $payment->claimMeta('paypal_payer', '—') }}
+- **Дата оплаты:** {{ $payment->claimMeta('paid_on', '—') }}
 - **Рублевый номинал:** {{ number_format((float) $payment->amount, 0, '.', ' ') }} ₽
 - **Примечание:** {{ $payment->payer_note ?: '—' }}
 @if($payment->proof_path)

@@ -508,6 +508,11 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->paypalPending())
                     ->toggle(),
 
+                Tables\Filters\Filter::make('invoice_pending')
+                    ->label('Счета юрлиц на проверке')
+                    ->query(fn ($query) => $query->invoicePending())
+                    ->toggle(),
+
                 Tables\Filters\TernaryFilter::make('is_deposit')
                     ->label('Только брони (депозиты)')
                     ->placeholder('Все транзакции')
@@ -564,8 +569,34 @@ class PaymentResource extends Resource
                     ->visible(fn (Payment $record) => $record->isPaypal() && $record->status === 'pending')
                     ->requiresConfirmation()
                     ->modalHeading('Подтвердить оплату через PayPal')
-                    ->modalDescription('Сверьте платёж в PayPal. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
+                    ->modalDescription(fn (Payment $record): string => 'Сверьте в личном PayPal: с '
+                        .($record->claimMeta('paypal_payer') ?: '—')
+                        .', дата '.($record->claimMeta('paid_on') ?: '—')
+                        .', сумма '.($record->foreignAmountLabel() ?: '—')
+                        .'. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                Tables\Actions\Action::make('confirmInvoice')
+                    ->label('Подтвердить счет')
+                    ->icon('heroicon-o-building-office-2')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isCompanyInvoice() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить оплату по счету')
+                    ->modalDescription(fn (Payment $record): string => 'Сверьте поступление: '
+                        .($record->claimMeta('company_name') ?: '—')
+                        .', ИНН '.($record->claimMeta('inn') ?: '—')
+                        .', '.$record->invoiceNumber()
+                        .', '.number_format((float) $record->amount, 0, '.', ' ').' ₽. '
+                        .'После подтверждения откроется доступ.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                Tables\Actions\Action::make('viewInvoice')
+                    ->label('Счет')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->visible(fn (Payment $record) => $record->isCompanyInvoice())
+                    ->url(fn (Payment $record) => route('invoice.print', $record), shouldOpenInNewTab: true),
 
                 // Перенести оплаченную незачтённую бронь (депозит) на другой курс:
                 // студент передумал и хочет учиться на другом курсе. Зачёт депозита
