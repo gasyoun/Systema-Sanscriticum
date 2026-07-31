@@ -7,14 +7,24 @@ declare(strict_types=1);
 | H1067 marathon landing + channel copy (ruled texts, no rewrite)
 |--------------------------------------------------------------------------
 | Source: marketing/marathon-2026-08/*.md (Fable 5, H1067).
-| Default live variant: A («страхи новичка»). Switch to B via
-| MARATHON_LANDING_COPY_VARIANT=b after the A window.
+| 'variant' is now only the POST-EXPERIMENT fallback — H2010 (MG 31-07-2026)
+| overrides the earlier "A first, then B via env" sequential-window ruling
+| with a real per-visitor 50/50 split (MarathonLandingCopySplit) that runs
+| until 'ab_test_until'. Before that date every new visitor is randomly
+| assigned A or B (sticky cookie); on/after that date the split stops and
+| everyone gets 'variant' below, which a human sets after reviewing
+| `php artisan marathon:copy-variant-report`.
 | Register «вы», no urgency, no invented testimonials.
 */
 
 return [
-    // Live public page /online/konsultaciya — A first, then B (MG 28-07-2026).
+    // Post-experiment fallback only — see header. Not read while the A/B
+    // split is active (now() < ab_test_until).
     'variant' => env('MARATHON_LANDING_COPY_VARIANT', 'a'),
+
+    // H2010 — real A/B split cutoff (MG 31-07-2026 ruling: "numbers decide
+    // after 1 November"). ISO date, parsed in Europe/Moscow (config/app.php).
+    'ab_test_until' => env('MARATHON_LANDING_COPY_AB_TEST_UNTIL', '2026-11-01'),
 
     // Public channel for schedule posts (not the personal Day 1–3 drip).
     'channel_chat_id' => env('MARATHON_CHANNEL_CHAT_ID', '@samskrte'),
