@@ -463,6 +463,11 @@ Config: `services.paypal.*` · `billing.company_invoice.enabled` · `billing.leg
 Ops detail: [TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
 Tochka card/SBP acquiring is unchanged (§5 webhook).
 
+**PayPal Subscriptions (auto-bill, H2027):** design + dark flag only — see
+[ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md).
+`PAYPAL_SUBSCRIPTIONS_ENABLED` defaults **OFF**; claim path remains the diaspora
+default. Shares H2026 `billing_*` model with `provider=paypal` when Phase 1+ ships.
+
 ---
 
 ## 8. Config-gate reference (money-relevant)
