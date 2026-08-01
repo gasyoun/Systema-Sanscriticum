@@ -17,13 +17,16 @@ class StaleCheckoutExpiryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reaper_is_dark_by_default(): void
+    public function test_reaper_is_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_stale_order_expiry'));
+        // MG 01-08-2026: permanent dark was false economy — default ON.
+        $this->assertTrue(config('features.checkout_stale_order_expiry'));
     }
 
     public function test_flag_off_refuses_to_apply_but_dry_run_still_reports(): void
     {
+        config()->set('features.checkout_stale_order_expiry', false);
+
         [$course, $tariff] = $this->courseAndTariff();
         $payment = $this->pendingPayment($course, $tariff, ['created_at' => now()->subDays(40)]);
 

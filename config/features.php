@@ -316,11 +316,13 @@ return [
      | освобождает промо-слот. Deposit/trial/paypal/conditional строки — вне области:
      | не трогаются никогда. Гонка с банковским вебхуком закрыта построчным
      | lockForUpdate внутри транзакции (тот же паттерн, что и WebhookController).
-     | ВЫКЛ по умолчанию — deploy-рубильник; команда без --apply (dry-run отчёт)
-     | работает независимо от флага. Включение — CHECKOUT_STALE_ORDER_EXPIRY=true
-     | + config:cache после ревью.
+     |
+     | ВКЛ по умолчанию (MG 01-08-2026): держать reaper dark — ложная экономия
+     | (stale pending держат резервы; «не трогать деньги cron'ом» = вредительство).
+     | Opt-out: CHECKOUT_STALE_ORDER_EXPIRY=false + config:cache. См.
+     | docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md. Dry-run без --apply всегда.
      */
-    'checkout_stale_order_expiry' => (bool) env('CHECKOUT_STALE_ORDER_EXPIRY', false),
+    'checkout_stale_order_expiry' => (bool) env('CHECKOUT_STALE_ORDER_EXPIRY', true),
 
     /*
      | Промокод переживает обновление сессии в чекауте (H1396 §1). Промокод жил
