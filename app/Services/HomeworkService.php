@@ -76,6 +76,9 @@ class HomeworkService
      * Студент удаляет свой вложенный файл, пока работу ещё можно править
      * (draft / submitted / needs_revision). Принятые работы и файлы преподавателя
      * не трогаем — история проверки остаётся целой.
+     *
+     * Сам файл с диска уходит, в треде остаётся служебная отметка
+     * (имя файла + время в created_at) — удаления не бесследны.
      */
     public function deleteStudentFile(HomeworkFile $file, User $student): void
     {
@@ -90,7 +93,15 @@ class HomeworkService
             abort_unless($comment->author_role === HomeworkComment::ROLE_STUDENT, 403);
             abort_unless((int) $comment->author_id === (int) $student->id, 403);
 
+            $label = $this->fileDeletionLabel($file);
             $this->unlinkAndDeleteFileRow($file);
+
+            $this->recordDeletionNote(
+                $submission,
+                $student,
+                HomeworkComment::ROLE_STUDENT,
+                "Удалён файл «{$label}».",
+            );
 
             $submission->last_activity_at = now();
             $submission->save();
@@ -101,6 +112,8 @@ class HomeworkService
      * Штат (админ / препод курса / проверяющий группы) удаляет любой файл
      * работы — в т.ч. ошибочно залитое ДЗ, которое студент уже не может
      * править (accepted) или не видит в кабинете. H2120.
+     *
+     * В треде — служебная отметка с именем файла (время = created_at).
      */
     public function deleteFileAsStaff(HomeworkFile $file, User $staff): void
     {
@@ -110,8 +123,19 @@ class HomeworkService
         abort_if(! $submission, 404);
         abort_unless($this->actorIsStaffFor($staff, $submission), 403);
 
-        DB::transaction(function () use ($file, $submission) {
+        DB::transaction(function () use ($file, $submission, $staff) {
+            $label = $this->fileDeletionLabel($file);
             $this->unlinkAndDeleteFileRow($file);
+
+            $this->recordDeletionNote(
+                $submission,
+                $staff,
+                $staff->isAdminLike()
+                    ? HomeworkComment::ROLE_ADMIN
+                    : HomeworkComment::ROLE_TEACHER,
+                "Удалён файл «{$label}».",
+            );
+
             $submission->last_activity_at = now();
             $submission->save();
         });
@@ -120,6 +144,7 @@ class HomeworkService
     /**
      * Штат стирает все студенческие вложения (диск + строки). Опционально
      * возвращает работу в «На доработку», чтобы студент мог залить заново.
+     * В треде — список имён удалённых файлов (не только счётчик).
      *
      * @return int сколько файлов удалено
      */
@@ -133,17 +158,19 @@ class HomeworkService
         $submission->loadMissing('comments.files');
 
         return DB::transaction(function () use ($submission, $staff, $reopenForRevision) {
-            $deleted = 0;
+            $names = [];
 
             foreach ($submission->comments as $comment) {
                 if ($comment->author_role !== HomeworkComment::ROLE_STUDENT) {
                     continue;
                 }
                 foreach ($comment->files as $file) {
+                    $names[] = $this->fileDeletionLabel($file);
                     $this->unlinkAndDeleteFileRow($file);
-                    $deleted++;
                 }
             }
+
+            $deleted = count($names);
 
             if ($reopenForRevision && $submission->status !== HomeworkSubmission::STATUS_DRAFT) {
                 $submission->status = HomeworkSubmission::STATUS_NEEDS_REVISION;
@@ -154,17 +181,22 @@ class HomeworkService
             $submission->last_activity_at = now();
             $submission->save();
 
-            $submission->comments()->create([
-                'author_id' => $staff->id,
-                'author_role' => $staff->isAdminLike()
+            if ($deleted === 0) {
+                $body = 'Файлов студента не было — приём открыт на правку.';
+            } else {
+                $list = collect($names)->map(fn (string $n) => '• '.$n)->implode("\n");
+                $body = "Удалены залитые файлы студента ({$deleted}):\n{$list}\nМожно прикрепить заново.";
+            }
+
+            $this->recordDeletionNote(
+                $submission,
+                $staff,
+                $staff->isAdminLike()
                     ? HomeworkComment::ROLE_ADMIN
                     : HomeworkComment::ROLE_TEACHER,
-                'type' => HomeworkComment::TYPE_MESSAGE,
-                'body' => $deleted > 0
-                    ? "Удалены залитые файлы студента ({$deleted}). Можно прикрепить заново."
-                    : 'Файлов студента не было — приём открыт на правку.',
-                'new_status' => $reopenForRevision ? HomeworkSubmission::STATUS_NEEDS_REVISION : null,
-            ]);
+                $body,
+                $reopenForRevision ? HomeworkSubmission::STATUS_NEEDS_REVISION : null,
+            );
 
             return $deleted;
         });
@@ -205,7 +237,8 @@ class HomeworkService
 
     /**
      * Студент удаляет своё сообщение в треде целиком (текст + вложения),
-     * пока работу ещё можно править. Вердикты преподавателя не удаляются.
+     * пока работу ещё можно править. Вердикты и служебные отметки
+     * (type=message) не удаляются — иначе стирается аудит.
      */
     public function deleteStudentComment(HomeworkComment $comment, User $student): void
     {
@@ -218,8 +251,12 @@ class HomeworkService
             abort_unless($submission->isEditableByStudent(), 403);
             abort_unless($comment->author_role === HomeworkComment::ROLE_STUDENT, 403);
             abort_unless((int) $comment->author_id === (int) $student->id, 403);
-            // review / чужие реплики не трогаем даже при ошибочной роли в UI
+            // review / служебные отметки / чужие реплики не трогаем
             abort_if($comment->type === HomeworkComment::TYPE_REVIEW, 403);
+            abort_if($comment->type === HomeworkComment::TYPE_MESSAGE, 403);
+
+            $names = $comment->files->map(fn (HomeworkFile $f) => $this->fileDeletionLabel($f))->all();
+            $hadBody = filled($comment->body);
 
             foreach ($comment->files as $file) {
                 $this->unlinkAndDeleteFileRow($file);
@@ -227,9 +264,56 @@ class HomeworkService
 
             $comment->delete();
 
+            $parts = ['Удалено сообщение из переписки.'];
+            if ($hadBody) {
+                $parts[] = 'Был текст ответа.';
+            }
+            if ($names !== []) {
+                $list = collect($names)->map(fn (string $n) => '• '.$n)->implode("\n");
+                $parts[] = "Файлы:\n{$list}";
+            }
+            $this->recordDeletionNote(
+                $submission,
+                $student,
+                HomeworkComment::ROLE_STUDENT,
+                implode(' ', $parts),
+            );
+
             $submission->last_activity_at = now();
             $submission->save();
         });
+    }
+
+    /**
+     * Служебная строка в треде: кто удалил + что (время = created_at).
+     * Сами байты файла с диска уже сняты — остаётся только эта отметка.
+     */
+    private function recordDeletionNote(
+        HomeworkSubmission $submission,
+        User $actor,
+        string $role,
+        string $body,
+        ?string $newStatus = null,
+    ): HomeworkComment {
+        return $submission->comments()->create([
+            'author_id' => $actor->id,
+            'author_role' => $role,
+            'type' => HomeworkComment::TYPE_MESSAGE,
+            'body' => $body,
+            'new_status' => $newStatus,
+        ]);
+    }
+
+    private function fileDeletionLabel(HomeworkFile $file): string
+    {
+        $name = trim((string) $file->original_name) ?: 'файл';
+        // Без переносов/управляющих — одна строка в треде.
+        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+        $name = mb_substr($name, 0, 120);
+
+        $size = $file->size > 0 ? ' · '.$file->humanSize() : '';
+
+        return $name.$size;
     }
 
     private function unlinkAndDeleteFileRow(HomeworkFile $file): void

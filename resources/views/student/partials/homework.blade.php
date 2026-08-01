@@ -85,22 +85,28 @@
                 @foreach($homeworkSubmission->comments as $c)
                     @php
                         $isStudent = $c->author_role === 'student';
-                        $who = $isStudent ? 'Вы' : 'Преподаватель';
+                        $isAudit = $c->type === 'message';
+                        $who = $isAudit
+                            ? ($isStudent ? 'Вы (отметка)' : 'Преподаватель (отметка)')
+                            : ($isStudent ? 'Вы' : 'Преподаватель');
+                        // Только сдачи: служебные отметки удаления нельзя стереть.
                         $canDeleteComment = $hwEditable
                             && $isStudent
-                            && $c->type !== 'review';
+                            && $c->type === 'submission';
                     @endphp
-                    <div class="flex {{ $isStudent ? 'justify-end' : 'justify-start' }}">
-                        <div class="max-w-[85%] rounded-2xl border p-4 {{ $isStudent ? 'bg-gray-50 border-gray-200' : 'bg-blue-50/70 border-blue-200' }}">
+                    <div class="flex {{ $isAudit ? 'justify-center' : ($isStudent ? 'justify-end' : 'justify-start') }}">
+                        <div class="max-w-[85%] rounded-2xl border p-4 {{ $isAudit ? 'bg-amber-50/70 border-amber-100 w-full sm:w-auto' : ($isStudent ? 'bg-gray-50 border-gray-200' : 'bg-blue-50/70 border-blue-200') }}">
                             <div class="flex items-center gap-2 mb-1.5">
-                                <span class="text-xs font-extrabold {{ $isStudent ? 'text-gray-700' : 'text-blue-700' }}">{{ $who }}</span>
+                                <span class="text-xs font-extrabold {{ $isAudit ? 'text-amber-800' : ($isStudent ? 'text-gray-700' : 'text-blue-700') }}">{{ $who }}</span>
                                 @if($c->type === 'review')
                                     <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400">проверка</span>
+                                @elseif($isAudit)
+                                    <span class="text-[10px] font-bold uppercase tracking-wide text-amber-600/80">удаление</span>
                                 @endif
                                 <span class="text-[11px] text-gray-400">{{ $c->created_at->format('d.m.Y H:i') }}</span>
                                 @if($canDeleteComment)
                                     <form action="{{ route('homework.comment.destroy', $c) }}" method="POST" class="ml-auto"
-                                          onsubmit="return confirm(@js('Удалить это сообщение и все его файлы?'));">
+                                          onsubmit="return confirm(@js('Удалить это сообщение и все его файлы? В треде останется отметка.'));">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -113,7 +119,7 @@
                                 @endif
                             </div>
                             @if($c->body)
-                                <p class="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{{ $c->body }}</p>
+                                <p class="text-sm {{ $isAudit ? 'text-amber-950/90' : 'text-gray-800' }} whitespace-pre-line leading-relaxed">{{ $c->body }}</p>
                             @endif
                             @if($c->files->isNotEmpty())
                                 <div class="mt-2.5 flex flex-wrap gap-2">
