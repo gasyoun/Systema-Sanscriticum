@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\LessonTelegramHook;
+use App\Models\MarketingSetting;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -554,8 +555,19 @@ class HomeworkTelegramTagService
         }
     }
 
+    /**
+     * Групповые уведомления и #ДЗ — через @zapisi_ORSbot (MarketingSetting),
+     * тот же бот, что напоминания о занятиях в чаты групп (SendZapisiBotMessageJob).
+     * Кабинетный student-bot в групповые чаты часто не добавлен → chat not found.
+     */
     private function botToken(): string
     {
+        $zapisi = (string) (MarketingSetting::cached()?->zapisi_bot_token ?? '');
+        if ($zapisi !== '') {
+            return $zapisi;
+        }
+
+        // Fallback: local/tests without MarketingSetting.zapisi_bot_token.
         return (string) (config('services.telegram.student_bot_token')
             ?: config('services.telegram.bot_token')
             ?: '');

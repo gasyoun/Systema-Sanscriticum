@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MarketingSetting;
+use App\Services\HomeworkTelegramTagService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -45,6 +46,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         // Отсекать здесь ничего нельзя: n8n сам решает, что ему интересно.
         $this->forwardToN8n();
 
+        // #ДЗ / кнопки выбора урока: @zapisi_ORSbot сидит в чатах групп
+        // (в отличие от student-bot). Callback и входящий тег обрабатываем здесь.
+        $homeworkTag = app(HomeworkTelegramTagService::class);
+        if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
+            $homeworkTag->handleCallback($this->update['callback_query']);
+
+            return;
+        }
+
         $message = $this->update['message'] ?? $this->update['channel_post'] ?? null;
         if (! $message || ! isset($message['chat']['id'], $message['message_id'], $message['date'])) {
             return;
@@ -54,6 +64,10 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         $from = $message['from'] ?? null;
         $media = $this->mediaMeta($message);
         $text = (string) ($message['text'] ?? $message['caption'] ?? '');
+
+        if (is_array($chat) && $homeworkTag->isGroupChat($chat) && $homeworkTag->isTagMessage($text)) {
+            $homeworkTag->handleIncoming($message);
+        }
 
         if ($text === '' && ! $media['has_media']) {
             return;
