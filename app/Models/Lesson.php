@@ -118,12 +118,16 @@ class Lesson extends Model
         // is first applied. Must run after save so open()'s nested save does
         // not race the outer insert/update. Kochergina stays on the hourly
         // command (delay + 09:00); this hook only fires for generic_course_slugs.
+        //
+        // Important: on INSERT, Laravel does not populate wasChanged() the way
+        // performUpdate does — so Zoom/n8n create-with-video never saw
+        // wasChanged('recording_attached_at') and silently skipped open
+        // (prod lessons 1830/1832). wasRecentlyCreated covers that path.
         static::saved(function (Lesson $lesson): void {
-            if (! $lesson->wasChanged('recording_attached_at')) {
-                return;
-            }
+            $stampJustSet = $lesson->wasChanged('recording_attached_at')
+                || ($lesson->wasRecentlyCreated && filled($lesson->recording_attached_at));
 
-            if (blank($lesson->recording_attached_at)) {
+            if (! $stampJustSet || blank($lesson->recording_attached_at)) {
                 return;
             }
 
