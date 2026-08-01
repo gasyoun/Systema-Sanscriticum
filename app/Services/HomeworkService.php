@@ -31,15 +31,25 @@ class HomeworkService
                 'user_id' => $student->id,
                 'lesson_id' => $lesson->id,
             ]);
-            // Пересдача: работа уже возвращалась на доработку и студент шлёт её заново.
+            // Повторное уведомление: доработка после needs_revision ИЛИ правка уже
+            // сданной (submitted) работы — преподавателю нужна пометка «повторно».
             // Фиксируем до перезаписи статуса — после save() прежнее значение теряется.
-            $isResubmission = $submission->exists
-                && $submission->status === HomeworkSubmission::STATUS_NEEDS_REVISION;
+            $priorStatus = $submission->exists ? $submission->status : null;
+            $isResubmission = in_array($priorStatus, [
+                HomeworkSubmission::STATUS_NEEDS_REVISION,
+                HomeworkSubmission::STATUS_SUBMITTED,
+            ], true);
 
             $submission->course_id = $lesson->course_id;
-            $submission->status = $finalize
-                ? HomeworkSubmission::STATUS_SUBMITTED
-                : HomeworkSubmission::STATUS_DRAFT;
+            if ($finalize) {
+                $submission->status = HomeworkSubmission::STATUS_SUBMITTED;
+            } elseif ($priorStatus === HomeworkSubmission::STATUS_SUBMITTED) {
+                // Нельзя «откатить» сданную в черновик — работа исчезнет из очереди проверки.
+                // Контроллер не должен пускать draft здесь; страховка на уровне сервиса.
+                $submission->status = HomeworkSubmission::STATUS_SUBMITTED;
+            } else {
+                $submission->status = HomeworkSubmission::STATUS_DRAFT;
+            }
             $submission->last_activity_at = now();
             $submission->save();
 

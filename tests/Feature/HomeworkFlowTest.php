@@ -209,7 +209,7 @@ class HomeworkFlowTest extends TestCase
     }
 
     /** @test */
-    public function submitted_work_cannot_be_edited_by_student(): void
+    public function student_can_update_submitted_homework_while_awaiting_review(): void
     {
         [$teacher] = $this->makeTeacher();
         [$course, $lesson] = $this->makeLessonWithHomework($teacher);
@@ -220,13 +220,67 @@ class HomeworkFlowTest extends TestCase
             ['action' => 'submit', 'body' => 'v1']
         );
 
-        // Повторная попытка, пока статус submitted → отклоняется (с ошибкой), без новой записи.
+        // Пока статус submitted — студент может дополнить/исправить (новый комментарий в треде).
         $this->actingAs($student)->post(
             route('student.homework.store', [$course->slug, $lesson->id]),
-            ['action' => 'submit', 'body' => 'v2']
+            ['action' => 'submit', 'body' => 'v2 — поправил опечатку']
+        )->assertRedirect()->assertSessionHas('success');
+
+        $submission = HomeworkSubmission::firstOrFail();
+        $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->status);
+        $this->assertCount(2, $submission->comments);
+        $this->assertSame('v2 — поправил опечатку', $submission->comments->last()->body);
+
+        Mail::assertQueued(HomeworkSubmittedMail::class, function ($m) {
+            return $m->isResubmission === true
+                && str_starts_with($m->envelope()->subject, '🔁');
+        });
+    }
+
+    /** @test */
+    public function student_cannot_demote_submitted_work_to_draft(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'v1']
+        );
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'draft', 'body' => 'oops draft']
         )->assertSessionHas('error');
 
-        $this->assertCount(1, HomeworkSubmission::firstOrFail()->comments);
+        $submission = HomeworkSubmission::firstOrFail();
+        $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->status);
+        $this->assertCount(1, $submission->comments);
+    }
+
+    /** @test */
+    public function accepted_work_cannot_be_edited_by_student(): void
+    {
+        [$teacher, $teacherUser] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $service = app(HomeworkService::class);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'v1']
+        );
+        $submission = HomeworkSubmission::firstOrFail();
+        $service->recordReview($submission, $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Ок');
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'late edit']
+        )->assertSessionHas('error');
+
+        $this->assertSame(HomeworkSubmission::STATUS_ACCEPTED, $submission->fresh()->status);
+        $this->assertCount(2, $submission->fresh()->comments); // submission + review only
     }
 
     /** @test */
