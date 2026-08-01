@@ -216,8 +216,73 @@ class DealTest extends TestCase
             'пробное' => [['tariff' => 'trial']],
             'марафон с проверкой' => [['tariff' => 'marathon_paid', 'course_id' => null]],
             'conditional (доступ под обещание)' => [['is_conditional' => true]],
-            'не оплачен' => [['status' => 'pending']],
+            // pending is NOT excluded for deal creation as of H2102 — see open-on-pending tests.
         ];
+    }
+
+    // ---------------------------------------------------------------
+    // (b3) Open Deal on pending payable intent (H2102 / NOBORING Wave 1a).
+    // ---------------------------------------------------------------
+
+    /** @test */
+    public function pending_payable_intent_opens_a_deal_on_first_stage(): void
+    {
+        $payment = $this->makeSale(['status' => 'pending']);
+
+        $deal = Deal::query()->where('user_id', $payment->user_id)
+            ->where('course_id', $payment->course_id)
+            ->firstOrFail();
+
+        $this->assertNull($deal->closed_at, 'pending must not close the deal');
+        $this->assertNull($deal->source_payment_id, 'source_payment_id is set only when paid closes');
+        $this->assertSame($this->firstStage()->id, $deal->stage_id);
+        $this->assertSame('4800.00', (string) $deal->amount);
+    }
+
+    /** @test */
+    public function second_pending_for_same_user_and_course_does_not_duplicate_open_deal(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'status' => 'pending']);
+        $this->makeSale(['user_id' => $user->id, 'course_id' => $course->id, 'status' => 'pending', 'amount' => 4800]);
+
+        $this->assertSame(1, Deal::query()->open()->where('user_id', $user->id)->where('course_id', $course->id)->count());
+    }
+
+    /** @test */
+    public function pending_then_paid_closes_the_same_open_deal_without_a_second(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+
+        $pending = $this->makeSale([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'status' => 'pending',
+        ]);
+
+        $open = Deal::query()->open()->where('user_id', $user->id)->where('course_id', $course->id)->firstOrFail();
+        $this->assertNull($open->source_payment_id);
+
+        $pending->update(['status' => 'paid']);
+
+        $this->assertSame(1, Deal::query()->count());
+        $open->refresh();
+        $this->assertNotNull($open->closed_at);
+        $this->assertSame($this->wonStage()->id, $open->stage_id);
+        $this->assertSame($pending->id, $open->source_payment_id);
+    }
+
+    /** @test */
+    public function excluded_pending_types_still_never_open_a_deal(): void
+    {
+        $this->makeSale(['status' => 'pending', 'tariff' => 'deposit']);
+        $this->makeSale(['status' => 'pending', 'tariff' => 'trial']);
+        $this->makeSale(['status' => 'pending', 'is_conditional' => true]);
+
+        $this->assertSame(0, Deal::query()->count());
     }
 
     /** @test */

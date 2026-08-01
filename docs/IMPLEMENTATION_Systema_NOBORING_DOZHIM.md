@@ -9,14 +9,14 @@ Work in a **session-unique worktree** off `origin/main`. Systema is main-tree gu
 ## H-A — Deal dozhim readiness (before queue UI)
 
 1. Re-read `GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md` §1 GC-C1/C2 and `PaymentDealBridgeObserver`.
-2. Inventory tests in `tests/Feature/DealTest.php` — what creation paths exist. — **H2097:** sole create path is paid bridge → won; factory/tests only for open.
-3. Gap: **open Deal on pending payable intent** (**confirmed missing** H2097):
-   - Prefer additive method on observer or thin `DealIntentService`
-   - Idempotent on (user/lead, course, installment_group)
-   - Flag `crm_pipeline_board` still gates writes
-   - **Never** call grant/access
+2. Inventory tests in `tests/Feature/DealTest.php` — what creation paths exist. — **H2097:** sole create path was paid bridge → won; factory/tests only for open.
+3. Gap: **open Deal on pending payable intent** — **done H2102** (01-08-2026):
+   - Additive methods on observer: `qualifiesAsPayableIntent` + `openDealForIntent` (not a separate service)
+   - Idempotent on (user/lead, course, installment_group) via `findOpenDealFor` / `dealOfPlan`
+   - Flag `crm_pipeline_board` still gates all writes (default OFF)
+   - **Never** call grant/access; `source_payment_id` set only on paid close
 4. GC-C2: if manager report still missing, add Filament page grouping paid conversion by `Deal.assigned_to` / `Lead.assigned_to` behind `manager_sales_report`.
-5. Feature tests + Pint.
+5. Feature tests + Pint — H2102: pending→open, second pending no dup, pending→paid same deal, flag-off silence.
 6. PR non-money; merge when green.
 
 ## H-B — Baseline + queue + templates + drip

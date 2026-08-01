@@ -508,17 +508,16 @@ return [
     'marketing_segments' => (bool) env('MARKETING_SEGMENTS', false),
 
     /*
-     | GetCourse-паритет GC-C1 (H1641): СДЕЛКИ — отдельная сущность Deal с
-     | настраиваемыми стадиями (deal_stages) и канбан-доской DealKanbanBoard,
-     | плюс мост «состоявшаяся оплата → закрытие сделки»
-     | (PaymentDealBridgeObserver). Ранг 4 лестницы полномочий
-     | (docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §2.2): наблюдает денежное
-     | ядро и НИКОГДА его не авторизует — ни доступа, ни цены, ни отмены
-     | платежа. Lead/LeadStage/LeadKanbanBoard (H451) не трогаются: сделка ≠
-     | лид, у одного человека может быть несколько сделок. ВЫКЛ по умолчанию —
-     | deploy-рубильник: пока флаг OFF, доска не регистрируется и недоступна,
-     | а мост от оплаты делает ранний возврат (ни одной строки в deals).
-     | Включение — CRM_PIPELINE_BOARD=true + config:cache.
+     | GetCourse-паритет GC-C1 (H1641) + dozhim open-on-pending (H2102):
+     | СДЕЛКИ — сущность Deal, канбан DealKanbanBoard, и PaymentDealBridgeObserver:
+     |  (1) pending payable intent → open Deal on first stage (H2102);
+     |  (2) paid/success sale → close open Deal or record won Deal (H1641).
+     | Ранг 4 лестницы полномочий (docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §2.2):
+     | наблюдает денежное ядро и НИКОГДА его не авторизует — ни доступа, ни цены,
+     | ни отмены платежа. Lead/LeadStage/LeadKanbanBoard (H451) не трогаются.
+     | ВЫКЛ по умолчанию — deploy-рубильник: пока флаг OFF, доска не
+     | регистрируется, мост ранний return (0 строк в deals). Prod-enable:
+     | CRM_PIPELINE_BOARD=true + config:cache (human @DO after review).
      */
     'crm_pipeline_board' => (bool) env('CRM_PIPELINE_BOARD', false),
 

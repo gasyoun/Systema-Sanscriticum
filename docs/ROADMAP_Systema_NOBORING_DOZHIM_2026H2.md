@@ -50,9 +50,9 @@ Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (de
 Prior art: GC-C1 **shipped**. Residual for dozhim:
 
 - [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
-- [ ] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment / unpaid Order path) — still rank-4 observer only
+- [x] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment) — **done H2102** (01-08-2026; `PaymentDealBridgeObserver::openDealForIntent`, still rank-4, flag OFF)
 - [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports (spec: NOT_BUILT as of last census — re-verify)
-- [ ] Flag `crm_pipeline_board` remains default OFF; staging admin-on
+- [x] Flag `crm_pipeline_board` remains default OFF; staging admin-on — **re-pinned H2102** (default still false; pending path gated by same flag)
 
 **Unblocks:** H-B queue has cards.
 

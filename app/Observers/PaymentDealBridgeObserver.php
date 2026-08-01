@@ -14,13 +14,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Мост «состоявшаяся оплата → сделка» (GC-C1 / H1641, группировка взносов H1659).
+ * Мост «платёж → сделка» (GC-C1 / H1641, группировка взносов H1659,
+ * open-on-pending H2102 / NOBORING Wave 1a residual).
  *
  * ОТДЕЛЬНЫЙ обсервер по прецеденту PaymentAuditObserver / PaymentTelemetryObserver:
  * денежную логику PaymentObserver не трогаем и внутрь него не лезем.
  *
+ * ДВА направления записи в deals (оба за флагом crm_pipeline_board, default OFF):
+ *  1. pending payable intent → открытая сделка на первой стадии (дожим-очередь);
+ *  2. paid/success sale → закрытие открытой или won-сделка сразу.
+ *
  * РАНГ 4 лестницы полномочий (docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §2.2):
- * читаем СОСТОЯВШИЙСЯ денежный переход и пишем ТОЛЬКО в deals/deal_transitions.
+ * читаем денежное состояние и пишем ТОЛЬКО в deals/deal_transitions.
  * Ни доступа, ни цены, ни статуса платежа, ни статуса лида этот класс не меняет.
  * Lead::markConverted() отсюда НЕ вызывается — это делает Payment на своих
  * трёх путях (депозит/пробное/марафон), и обычная покупка курса лид не
@@ -103,11 +108,18 @@ class PaymentDealBridgeObserver
                 return;
             }
 
-            if (! $this->qualifiesAsSale($payment)) {
+            // Paid path first: close/record won deal (H1641).
+            if ($this->qualifiesAsSale($payment)) {
+                $this->closeOrRecordDeal($payment);
+
                 return;
             }
 
-            $this->closeOrRecordDeal($payment);
+            // Pending payable intent → open Deal for dozhim queue (H2102).
+            // Never grants access; source_payment_id stays null until paid close.
+            if ($this->qualifiesAsPayableIntent($payment)) {
+                $this->openDealForIntent($payment);
+            }
         } catch (\Throwable $e) {
             Log::error('GC-C1: мост сделок упал, платёж не тронут', [
                 'payment_id' => $payment->id,
@@ -127,12 +139,83 @@ class PaymentDealBridgeObserver
     private function qualifiesAsSale(Payment $payment): bool
     {
         return in_array($payment->status, Payment::PAID_STATUSES, true)
-            && ! $payment->isExpense()
+            && $this->isCourseSaleShape($payment);
+    }
+
+    /**
+     * Payable intent for dozhim (H2102): unpaid checkout that still looks like
+     * a real course sale shape — same exclusions as qualifiesAsSale, status pending only.
+     * Wave 0 «заявка» map: open unpaid = pending (ROADMAP_Systema_NOBORING_DOZHIM).
+     */
+    private function qualifiesAsPayableIntent(Payment $payment): bool
+    {
+        return $payment->status === 'pending'
+            && $this->isCourseSaleShape($payment)
+            && ($payment->user_id !== null || $payment->lead_id !== null);
+    }
+
+    /** Shared non-status exclusions for sale / intent (expense, deposit, trial, …). */
+    private function isCourseSaleShape(Payment $payment): bool
+    {
+        return ! $payment->isExpense()
             && ! $payment->isSalaryPayout()
             && ! $payment->isDeposit()
             && ! $payment->isTrial()
             && ! $payment->isMarathonPaid()
             && ! $payment->is_conditional;
+    }
+
+    /**
+     * Open (or ensure open) Deal when student starts unpaid checkout (H2102).
+     *
+     * Idempotent on lead/user + course + installment_group via findOpenDealFor /
+     * dealOfPlan — second pending for the same sale does not double cards.
+     * Does NOT set source_payment_id (that field marks the payment that closed
+     * the deal). Does NOT call grant/access. Rank 4 only.
+     */
+    private function openDealForIntent(Payment $payment): void
+    {
+        $first = DealStage::firstStage();
+        if ($first === null) {
+            return;
+        }
+
+        $group = $this->installmentGroupFor($payment);
+
+        if ($group !== null) {
+            $grouped = $this->dealOfPlan($payment, $group);
+            if ($grouped !== null) {
+                // Plan already has a deal (open or closed) — do not spawn a twin.
+                return;
+            }
+        }
+
+        if ($this->findOpenDealFor($payment, $group) !== null) {
+            return;
+        }
+
+        DB::transaction(function () use ($payment, $first, $group): void {
+            $deal = Deal::create([
+                'lead_id' => $payment->lead_id,
+                'user_id' => $payment->user_id,
+                'course_id' => $payment->course_id,
+                'amount' => $payment->amount ?? 0,
+                'currency' => 'RUB',
+                'stage_id' => $first->id,
+                'closed_at' => null,
+                'closed_reason' => null,
+                'source_payment_id' => null,
+                'installment_group_id' => $group,
+            ]);
+
+            DealTransition::create([
+                'deal_id' => $deal->id,
+                'from_stage_id' => null,
+                'to_stage_id' => $first->id,
+                'user_id' => null,
+                'created_at' => now(),
+            ]);
+        });
     }
 
     /**
