@@ -28,6 +28,8 @@ use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
 use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
+use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use App\Support\ServerGuards\ShellSystemInspector;
@@ -75,6 +77,10 @@ class AppServiceProvider extends ServiceProvider
         // bind (не singleton): тесты подставляют FakeSystemInspector через
         // $this->app->instance(...) и доказывают, что critical-находка доходит
         // до вердикта пробы (раньше был hard-coded `new ShellSystemInspector`).
+        $this->app->bind(
+            PaypalWebhookSignatureVerifier::class,
+            HttpPaypalWebhookSignatureVerifier::class,
+        );
         $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
     }
 
