@@ -16,19 +16,29 @@
         @if ($this->selectedGroup)
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div class="fi-section rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
-                    <div class="flex items-center gap-3 mb-4">
-                        @if ($this->avatar)
-                            <img src="{{ $this->avatar }}" alt="" class="h-11 w-11 rounded-full object-cover shrink-0">
-                        @else
-                            <div class="h-11 w-11 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-semibold text-gray-400 shrink-0">
-                                {{ mb_strtoupper(mb_substr($this->selectedGroup->name, 0, 1)) }}
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-3 min-w-0">
+                            @if ($this->avatar)
+                                <img src="{{ $this->avatar }}" alt="" class="h-11 w-11 rounded-full object-cover shrink-0">
+                            @else
+                                <div class="h-11 w-11 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-semibold text-gray-400 shrink-0">
+                                    {{ mb_strtoupper(mb_substr($this->selectedGroup->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            <div class="min-w-0">
+                                <h2 class="text-base font-semibold truncate">Состав чата</h2>
+                                <div class="text-xs text-gray-500 truncate">{{ $this->selectedGroup->name }}</div>
+                                <div class="text-xs text-gray-400">chat_id: <code>{{ $this->chatId }}</code></div>
                             </div>
-                        @endif
-                        <div class="min-w-0">
-                            <h2 class="text-base font-semibold truncate">Состав чата</h2>
-                            <div class="text-xs text-gray-500 truncate">{{ $this->selectedGroup->name }}</div>
-                            <div class="text-xs text-gray-400">chat_id: <code>{{ $this->chatId }}</code></div>
                         </div>
+                        <x-filament::button
+                            color="gray"
+                            size="sm"
+                            wire:click="checkZapisiRights"
+                            class="shrink-0"
+                        >
+                            Права zapisi
+                        </x-filament::button>
                     </div>
 
                     @if (! $this->roster)
@@ -54,11 +64,36 @@
                         @endif
                         <ul class="divide-y divide-gray-100 dark:divide-gray-800 max-h-96 overflow-y-auto">
                             @foreach ($this->roster['members'] as $member)
-                                <li class="py-2 text-sm flex justify-between">
-                                    <span>{{ $member['name'] ?? '—' }}</span>
-                                    <span class="text-gray-500">
-                                        {{ $member['username'] ? '@'.$member['username'] : $member['id'] }}
-                                    </span>
+                                @php
+                                    $memberId = (int) ($member['id'] ?? 0);
+                                    $isBot = ! empty($member['is_bot']);
+                                @endphp
+                                <li class="py-2 text-sm flex items-center justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <span class="font-medium">{{ $member['name'] ?? '—' }}</span>
+                                        @if ($isBot)
+                                            <span class="ml-1 text-[10px] uppercase tracking-wide text-gray-400">бот</span>
+                                        @endif
+                                        <div class="text-xs text-gray-500 truncate">
+                                            @if (! empty($member['username']))
+                                                <span>{{ '@'.$member['username'] }}</span>
+                                            @endif
+                                            @if ($memberId > 0)
+                                                <span class="text-gray-400">id {{ $memberId }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if (! $isBot && $memberId > 0)
+                                        <x-filament::button
+                                            color="danger"
+                                            size="xs"
+                                            wire:click="kickMember({{ $memberId }})"
+                                            wire:confirm="Исключить {{ $member['name'] ?? $memberId }} из Telegram-чата? (soft kick; LMS не меняется)"
+                                            class="shrink-0"
+                                        >
+                                            Исключить
+                                        </x-filament::button>
+                                    @endif
                                 </li>
                             @endforeach
                         </ul>
