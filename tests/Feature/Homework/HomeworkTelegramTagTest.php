@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Homework;
 
+use App\Jobs\ProcessTelegramZapisiUpdate;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\LessonTelegramHook;
+use App\Models\MarketingSetting;
 use App\Models\User;
 use App\Services\HomeworkTelegramTagService;
 use App\Support\Roles;
@@ -34,11 +36,14 @@ class HomeworkTelegramTagTest extends TestCase
         parent::setUp();
 
         config()->set('services.telegram.bot_webhook_secret', 'test-tg');
-        config()->set('services.telegram.student_bot_token', 'TESTTOKEN');
+        config()->set('services.telegram.student_bot_token', 'STUDENTTOKEN');
         config()->set('homework.tg_tag.enabled', true);
         config()->set('homework.tg_tag.lookback_hours', 72);
         config()->set('homework.tg_tag.post_open_invite', true);
         config()->set('homework.auto_open.generic_prompt', 'Домашнее задание');
+
+        MarketingSetting::flushCached();
+        MarketingSetting::create(['zapisi_bot_token' => 'ZAPISITOKEN']);
 
         $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'test-tg');
         Http::fake(['api.telegram.org/*' => Http::response([
@@ -314,5 +319,49 @@ class HomeworkTelegramTagTest extends TestCase
         $this->postGroup('#ДЗ Не должно примениться');
 
         $this->assertSame('Домашнее задание', $lesson->fresh()->homework_prompt);
+    }
+
+    /** @test */
+    public function open_invite_uses_zapisi_bot_token(): void
+    {
+        config([
+            'homework.auto_open.enabled' => true,
+            'homework.auto_open.generic_course_slugs' => ['hindi-pilot'],
+            'homework.auto_open.generic_immediate' => true,
+            'homework.auto_open.notify_channels' => [],
+        ]);
+
+        $lesson = Lesson::factory()->for($this->course)->create([
+            'group_id' => $this->group->id,
+        ]);
+        $lesson->update(['youtube_url' => 'https://youtu.be/zapisi-token']);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'api.telegram.org/botZAPISITOKEN/sendMessage')
+                && ($request->data()['chat_id'] ?? null) == self::CHAT_ID;
+        });
+    }
+
+    /** @test */
+    public function zapisi_webhook_job_applies_dz_tag(): void
+    {
+        $this->staff(555);
+        $lesson = Lesson::factory()->for($this->course)->create([
+            'group_id' => $this->group->id,
+            'homework_enabled' => true,
+            'homework_prompt' => 'Домашнее задание',
+        ]);
+
+        (new ProcessTelegramZapisiUpdate([
+            'message' => [
+                'message_id' => 200,
+                'date' => time(),
+                'chat' => ['id' => (int) self::CHAT_ID, 'type' => 'supergroup', 'title' => 'Хинди А'],
+                'from' => ['id' => 555, 'first_name' => 'Teacher'],
+                'text' => '#ДЗ Упр. из чата zapisi',
+            ],
+        ]))->handle();
+
+        $this->assertPrompt($lesson, 'Упр. из чата zapisi');
     }
 }
