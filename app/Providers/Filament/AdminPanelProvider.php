@@ -9,6 +9,7 @@ use App\Filament\Widgets\SalesFunnelChart;
 use App\Filament\Widgets\StuckStudentsWidget;
 use App\Filament\Widgets\StudentStatsOverview;
 use App\Filament\Widgets\UpcomingPromisesWidget;
+use App\Http\Middleware\ImpersonationGuard;
 use Awcodes\Curator\CuratorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -266,6 +267,11 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // H1947: у панели свой стек middleware — группу `web` она не
+                // включает, поэтому режим просмотра за пользователем гейтится
+                // здесь отдельно (иначе под куратором не было бы ни плашки, ни
+                // fail-closed при снятом флаге).
+                ImpersonationGuard::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

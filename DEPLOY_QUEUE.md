@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 01-08-2026 (H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 01-08-2026 (H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -169,6 +169,26 @@ course without groups → 500 until groups attached.
 3. `CABINET_HYBRID=true` → `php artisan config:clear` (или `config:cache`)
 4. Смоук: студент → «Сегодня» + job-nav; `/library` `/progress` `/access` = 200
 5. Откат: `CABINET_HYBRID=false` → `config:clear`. Post-flip: `cabinet:baseline --days=7` / `--days=14`
+
+### ⚙️ H1947 — режим просмотра за пользователя («войти как») — флаг ([PR #1040](https://github.com/gasyoun/Systema-Sanscriticum/pull/1040))
+
+Супер-админ смотрит кабинет студента или панель куратора, не меняя `users.role`.
+Код **инертен** при `STAFF_IMPERSONATION=false`: маршруты `/impersonate/*` отдают
+404, кнопок в «Студентах» нет, журнал скрыт. Миграция `impersonation_audits`
+аддитивна и приезжает штатным авто-деплоем.
+
+1. `STAFF_IMPERSONATION=true` в `.env` → `php artisan config:cache`
+2. Смоук: «Студенты» → 👁 у студента → кабинет открылся под ним, сверху плашка →
+   «Выйти из режима» → вы снова супер-админ
+3. Смоук куратора: 🪪 у пользователя с ролью `manager` → в панели **не видно**
+   админ-онли разделов → «Вернуться в супер-админ»
+4. Проверить журнал: «Пользователи» → «Входы за пользователя» — по строке на вход и
+   проставленный «Выход»
+5. Откат: `STAFF_IMPERSONATION=false` → `config:cache` (открытый режим закроется сам
+   на первом же запросе)
+
+Инструкция для человека — [`docs/admin-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/admin-manual.md) §5.4.
+Денежные записи в режиме запрещены (403) — это не баг, а предохранитель.
 
 ---
 

@@ -20,6 +20,7 @@ use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\HomeworkController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MarathonController;
@@ -570,6 +571,18 @@ Route::get('/login-link/{token}', [AdminLoginLinkController::class, 'login'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('admin.login-link');
+
+// --- РЕЖИМ ПРОСМОТРА ЗА ПОЛЬЗОВАТЕЛЯ (H1947) ---
+// Старт — подписанная короткоживущая ссылка из UserResource (подпись закрывает
+// CSRF на GET; права всё равно перепроверяет контроллер). Выход — POST из
+// плашки. При выключенном features.staff_impersonation оба отдают 404.
+Route::middleware(['auth', 'signed'])
+    ->get('/impersonate/{user}/{mode}', [ImpersonationController::class, 'start'])
+    ->where('mode', 'student|manager')
+    ->name('impersonate.start');
+Route::middleware('auth')
+    ->post('/impersonate/stop', [ImpersonationController::class, 'stop'])
+    ->name('impersonate.stop');
 Route::get('/thank-you', function () {
     // Переносим flash на следующий request, чтобы F5 на странице
     // не сбрасывал состояние (дубликат vs новая заявка) и кнопки магнита.
