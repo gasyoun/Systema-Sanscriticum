@@ -40,13 +40,15 @@ class PromoReservationTest extends TestCase
         ]);
     }
 
-    public function test_promo_reservations_are_dark_by_default(): void
+    public function test_promo_reservations_are_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_promo_reservations'));
+        $this->assertTrue(config('features.checkout_promo_reservations'));
     }
 
     public function test_flag_off_preserves_payload_and_expiry_behavior(): void
     {
+        config()->set('features.checkout_promo_reservations', false);
+
         [$tariff, $promo] = $this->tariffAndPromo();
         $user = User::factory()->create();
 

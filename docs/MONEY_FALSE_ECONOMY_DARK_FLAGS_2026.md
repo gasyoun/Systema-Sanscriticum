@@ -2,7 +2,7 @@
 
 _Created: 01-08-2026 · Last updated: 01-08-2026_
 
-> **Prod arming (same day, second pass):** all MUST/SHOULD ON flags below are
+> **Prod arming (01-08-2026):** all MUST ON flags + **promo reservations** are
 > **true** on samskrte.ru `.env` + `config:cache`. Code defaults match.
 
 **Ruling (MG, 01-08-2026):** leaving a money-path safety or cleanup feature
@@ -83,7 +83,7 @@ Defaults in `config/features.php` unless noted. Prod snapshot 01-08-2026 from
 | `checkout_promo_survives_session` / `CHECKOUT_PROMO_SURVIVES_SESSION` | **true** | **ON** | **MUST ON** | Session refresh drops promo → full price |
 | `checkout_session_lapse_relogin` / `CHECKOUT_SESSION_LAPSE_RELOGIN` | **true** | **ON** | **MUST ON** | Lapsed session mid-checkout confuses guest form |
 | `checkout_signed_return_url` / `CHECKOUT_SIGNED_RETURN_URL` | **true** | **ON** | **MUST ON** | Bank return without signed payment id |
-| `checkout_promo_reservations` / `CHECKOUT_PROMO_RESERVATIONS` | false | OFF | **OPS** | Capacity promos over-sell without timed slots |
+| `checkout_promo_reservations` / `CHECKOUT_PROMO_RESERVATIONS` | **true** | **ON** | **MUST ON** (capacity) | Capacity promos over-sell without timed slots; pairs with reaper |
 | `checkout_integrity_safe_repairs` / `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | false | OFF | **OPS** | Audit `--apply-safe` blocked; not cron-critical |
 | `PAYPAL_CLAIM_ENABLED` | false | **ON** | armed | — |
 | `COMPANY_INVOICE_ENABLED` | false | **ON** | armed | — |
