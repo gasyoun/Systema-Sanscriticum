@@ -20,10 +20,30 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 - [x] Commit `tools/order_pay_conversion_baseline.php` (or Artisan command): last 30/90d — **done H2094** (`php artisan dozhim:baseline`; service `OrderPaymentConversionService::dozhimBaseline`)
   - rate A: paid Orders / (paid + unpaid eligible Orders)
   - rate B: Leads with first Payment / Leads in period (`converted_at`)
-- [ ] Write numbers into this roadmap + ORS `roadmap_samskrte_sales` Phase 0 baseline checkbox
-- [ ] Document which statuses count as «заявка» (PLAN defaults)
+- [x] Write numbers into this roadmap + ORS `roadmap_samskrte_sales` — **done H2096** (01-08-2026; see snapshot below; mirrored under ORS Noboring section)
+- [x] Document which statuses count as «заявка» (PLAN defaults) — **done H2096** (see § «Заявка» definition)
 
 **Unblocks:** H-B targets; honest KPI.
+
+#### Wave 0 baseline snapshot (prod `193.232.229.92`, as_of `2026-08-01 13:25:58`)
+
+Prod was still on pre-H2094 deploy at probe time — numbers from the same filters as `dozhimBaseline` / `conversionForRange` + Lead counts (read-only tinker probe). After deploy: `php artisan dozhim:baseline --json`.
+
+| Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
+| 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
+
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay).
+
+#### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
+
+| Rate | «Заявка» (denominator) | Success (numerator) | Exclusions / status map |
+|---|---|---|---|
+| **A (primary)** | Real course `Payment` created in window (`is_conditional = false`) | `status IN ('paid','success')` | Excluded tariffs (env `CONVERSION_EXCLUDED_TARIFFS`, default): `Расход`, `salary_payout`, `deposit`, `trial`. Open unpaid: `pending`. Lost: `canceled` / `cancelled` / `failed`. |
+| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path — **underfilled today** (see Rate B above). |
+
+Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (default **63**), red < `CONVERSION_WARN_PCT` (default **50**); unclosed pending after `CONVERSION_UNCLOSED_AFTER_DAYS` (default **3**).
 
 ### Wave 1a — Deal dozhim readiness (H-A)
 
