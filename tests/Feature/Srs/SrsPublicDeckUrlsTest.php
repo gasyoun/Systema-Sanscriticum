@@ -212,7 +212,7 @@ class SrsPublicDeckUrlsTest extends TestCase
         $this->get('/koloda')
             ->assertOk()
             ->assertSee('Санскрит — ядро')
-            ->assertDontSee('Hindi Core 100')
+            ->assertDontSee('Hindi Core 100');
 
         $this->get('/koloda?lang=hi')
             ->assertOk()
