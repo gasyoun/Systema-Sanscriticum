@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.82.0] - 2026-08-01
+
 ### Changed
 - **Homework FAQ URL canonical in docs:** onboarding + student-manual + lesson «как сдавать» → [samskrte.ru/faq/dz](https://samskrte.ru/faq/dz) (`route('faq.dz')`). Executor: Grok 4.5 (`grok-4.5`).
 
