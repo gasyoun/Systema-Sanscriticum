@@ -72,6 +72,30 @@ class GenericAutoOpenHomeworkTest extends TestCase
         $this->assertNotNull($lesson->recording_attached_at);
     }
 
+    /**
+     * Zoom/n8n path: new Lesson + video in one INSERT. Laravel does not set
+     * wasChanged() on create — open must still fire (prod regression 1830/1832).
+     *
+     * @test
+     */
+    public function create_with_video_opens_homework_immediately(): void
+    {
+        $course = Course::factory()->create(['slug' => 'hindi-pilot']);
+
+        $lesson = Lesson::factory()->for($course)->create([
+            'title' => 'Новый урок с записью',
+            'youtube_url' => 'https://youtu.be/create-with-video',
+            'homework_enabled' => false,
+            'homework_prompt' => null,
+        ]);
+
+        $lesson->refresh();
+        $this->assertNotNull($lesson->recording_attached_at);
+        $this->assertTrue((bool) $lesson->homework_enabled, 'CREATE+video must auto-open HW');
+        $this->assertSame('Домашнее задание', $lesson->homework_prompt);
+        $this->assertNotNull($lesson->homework_auto_opened_at);
+    }
+
     /** @test */
     public function second_video_save_does_not_reopen_or_second_push(): void
     {
