@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2143 follow-up: cabinet Telegram posts — mental model (0A–0C).** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md): posts for «есть ли кабинет», «не помню пароль = тот же путь», «нет Регистрации / уроки только от оплаты», curator table, expanded FAQ post 10, study-chat calendar leading with 0A–0C. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.82.0] - 2026-08-01
 
 ### Changed
