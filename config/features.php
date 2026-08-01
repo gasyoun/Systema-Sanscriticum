@@ -285,27 +285,27 @@ return [
     /*
      | Авторитетная проверка активности тарифа в POST /payment/create. Когда ВКЛ,
      | выключенный тариф возвращает 404 до создания гостя, Payment и банковской
-     | ссылки. ВЫКЛ по умолчанию: денежный PR остаётся прод-инертным до ручного
-     | включения CHECKOUT_INACTIVE_TARIFF_GUARD=true и config:cache.
+     | ссылки. ВКЛ по умолчанию (MG 01-08-2026 false-economy): opt-out
+     | CHECKOUT_INACTIVE_TARIFF_GUARD=false. См. MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.
      */
-    'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', false),
+    'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', true),
 
     /*
      | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
      | действием перечитывает и блокирует строку users, а расчёт/списание кредита
-     | использует только это DB-значение. ВЫКЛ по умолчанию; ручное включение —
-     | CHECKOUT_REFERRAL_CREDIT_LOCK=true и config:cache после ревью/деплоя.
+     | использует только это DB-значение. ВКЛ по умолчанию (MG 01-08-2026):
+     | CHECKOUT_REFERRAL_CREDIT_LOCK=false to opt out.
      */
-    'checkout_referral_credit_lock' => (bool) env('CHECKOUT_REFERRAL_CREDIT_LOCK', false),
+    'checkout_referral_credit_lock' => (bool) env('CHECKOUT_REFERRAL_CREDIT_LOCK', true),
 
     /*
      | Обратимость депозитного зачёта. Когда ВКЛ, реальный переход оплаты из
      | paid/success в failed/canceled возвращает ровно deposit_credit_applied в
      | оплаченные deposit/trial строки (LIFO, под row-lock), сохраняя маркер
-     | покупки для аудита и повторной оплаты. ВЫКЛ по умолчанию; включение —
-     | CHECKOUT_DEPOSIT_REVERSAL=true + config:cache после ручного ревью.
+     | покупки для аудита и повторной оплаты. ВКЛ по умолчанию (MG 01-08-2026):
+     | CHECKOUT_DEPOSIT_REVERSAL=false to opt out.
      */
-    'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', false),
+    'checkout_deposit_reversal' => (bool) env('CHECKOUT_DEPOSIT_REVERSAL', true),
 
     /*
      | Ридер (reaper) брошенных чекаутов (H1358): payments:expire-stale-checkouts
@@ -335,11 +335,11 @@ return [
      | isValid/appliesToCourse/redeemedByUser/hasCapacity). Валиден → скидка списывается
      | заново; протух между показом и сабмитом → НЕ уходим молча в банк на полную и НЕ
      | отказываем, а показываем явное подтверждение новой цены (RULED 20-07-2026 MG),
-     | и заказ создаётся ровно на подтверждённую сумму. ВЫКЛ по умолчанию: с флагом OFF
-     | createPayment ведёт себя байт-в-байт как раньше (только сессия) — денежный PR
-     | прод-инертен до CHECKOUT_PROMO_SURVIVES_SESSION=true + config:cache после ревью.
+     | и заказ создаётся ровно на подтверждённую сумму. ВКЛ по умолчанию
+     | (MG 01-08-2026 false-economy): OFF = lost promo → full price. Opt-out
+     | CHECKOUT_PROMO_SURVIVES_SESSION=false.
      */
-    'checkout_promo_survives_session' => (bool) env('CHECKOUT_PROMO_SURVIVES_SESSION', false),
+    'checkout_promo_survives_session' => (bool) env('CHECKOUT_PROMO_SURVIVES_SESSION', true),
 
     /*
      | Защита денежного вебхука Точки (H1359). Когда ВКЛ, WebhookController
@@ -347,12 +347,11 @@ return [
      | события (event_hash) — идемпотентный 200-no-op; (b) success для платежа,
      | который был оплачен и затем отменён/возвращён (resurrection) — не даёт
      | воскресить доступ/депозит/промо/реферала; (c) сумму из банка, расходящуюся
-     | с payments.amount сверх config('checkout.webhook_amount_tolerance'). ВЫКЛ
-     | по умолчанию: журнал payment_webhook_events пишется ВСЕГДА (чисто
-     | аддитивно), но отказы — только при включённом флаге. Включение —
-     | TOCHKA_WEBHOOK_GUARD=true + config:cache после ревью.
+     | с payments.amount сверх config('checkout.webhook_amount_tolerance').
+     | Журнал payment_webhook_events пишется ВСЕГДА. ВКЛ по умолчанию
+     | (MG 01-08-2026): TOCHKA_WEBHOOK_GUARD=false to opt out.
      */
-    'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', false),
+    'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
@@ -374,10 +373,10 @@ return [
      | вводил свой же email — жёсткий отказ «у вас уже есть аккаунт». Обычный 419 был
      | строго удобнее. Когда ВКЛ: такой сабмит (скрытая метка checkout_authed=1 без
      | активной сессии) уводит студента на /login с intended-возвратом к оплате того
-     | же тарифа, вместо гостевой формы, которую он не видел. ВЫКЛ по умолчанию —
-     | deploy-рубильник; включение CHECKOUT_SESSION_LAPSE_RELOGIN=true + config:cache.
+     | же тарифа, вместо гостевой формы, которую он не видел. ВКЛ по умолчанию
+     | (MG 01-08-2026): CHECKOUT_SESSION_LAPSE_RELOGIN=false to opt out.
      */
-    'checkout_session_lapse_relogin' => (bool) env('CHECKOUT_SESSION_LAPSE_RELOGIN', false),
+    'checkout_session_lapse_relogin' => (bool) env('CHECKOUT_SESSION_LAPSE_RELOGIN', true),
 
     /*
      | Подписанный URL возврата из банка (H1396 §3). TochkaPaymentService слал банку
@@ -390,11 +389,9 @@ return [
      | НЕ тот заказ при двух pending. Когда ВКЛ: возврат несёт подписанный payment id
      | (URL::signedRoute), и success/fail опознают точный заказ по валидной подписи,
      | переживая потерю cookie; при OFF или без подписи — прежнее поведение по сессии.
-     | secure у config/session.php фактически false → SameSite=None/Partitioned здесь
-     | НЕ вариант без починки этого (см. §3 брифа). ВЫКЛ по умолчанию — deploy-рубильник;
-     | включение CHECKOUT_SIGNED_RETURN_URL=true + config:cache после ревью.
+     | ВКЛ по умолчанию (MG 01-08-2026): CHECKOUT_SIGNED_RETURN_URL=false to opt out.
      */
-    'checkout_signed_return_url' => (bool) env('CHECKOUT_SIGNED_RETURN_URL', false),
+    'checkout_signed_return_url' => (bool) env('CHECKOUT_SIGNED_RETURN_URL', true),
 
     /*
      | Homegrown email-campaign engine (H1449 W1b, Anton ops-gaps plan): compose

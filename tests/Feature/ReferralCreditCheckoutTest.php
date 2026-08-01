@@ -41,9 +41,9 @@ class ReferralCreditCheckoutTest extends TestCase
         return Tariff::factory()->for(Course::factory()->create())->create(['price' => $price]);
     }
 
-    public function test_referral_lock_is_dark_by_default(): void
+    public function test_referral_lock_is_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_referral_credit_lock'));
+        $this->assertTrue(config('features.checkout_referral_credit_lock'));
     }
 
     public function test_stale_authenticated_user_cannot_spend_credit_already_reduced_in_database(): void
