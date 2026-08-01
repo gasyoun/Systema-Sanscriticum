@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **Public FAQ for homework:** `/faq/dz` (`faq.dz`) — student DZ guide without login (chat-friendly). `/help/homework` → 301 to `/faq/dz`. Executor: Grok 4.5 (`grok-4.5`).
 - **Cabinet URL for homework help:** `/help/homework` (`help.homework`) — student-facing guide inside the cabinet layout; link «как сдавать» on the lesson homework block. Source doc: [STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md). Executor: Grok 4.5 (`grok-4.5`).
 - **H2134: student homework guide (RU).** [docs/STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md) — where to submit, when the form appears, file limits, statuses, fix wrong file, FAQ. Linked from onboarding + student-manual. Executor: Grok 4.5 (`grok-4.5`).
 - **Homework delete audit trail.** Every file/message wipe leaves a `type=message` note in the homework thread with original filename(s) and actor; timestamp is `created_at`. Bulk clear lists names, not only a count. Audit notes cannot be deleted by the student. Follow-up to H2120. Executor: Grok 4.5 (`grok-4.5`).
