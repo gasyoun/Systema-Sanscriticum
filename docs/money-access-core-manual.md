@@ -487,16 +487,16 @@ after any `.env` change on a config-cached deployment run `php artisan config:ca
 | Flag (`features.*`) | `.env` key | Default | Gates |
 |---|---|---|---|
 | `full_course_block_credit` | `FULL_COURSE_BLOCK_CREDIT` | OFF | crediting paid blocks into a `full` purchase (§2); half→block credit is always on |
-| `tochka_webhook_guard` | `TOCHKA_WEBHOOK_GUARD` | OFF | the three webhook refusals (§5.3); ledger writes are unconditional |
-| `checkout_inactive_tariff_guard` | `CHECKOUT_INACTIVE_TARIFF_GUARD` | OFF | 404 on checkout of a deactivated tariff before any row/bank link is created |
-| `checkout_referral_credit_lock` | `CHECKOUT_REFERRAL_CREDIT_LOCK` | OFF | row-lock + DB-authoritative referral wallet in checkout |
-| `checkout_deposit_reversal` | `CHECKOUT_DEPOSIT_REVERSAL` | OFF | LIFO restoration of `deposit_credit_applied` on paid→failed/canceled |
+| `tochka_webhook_guard` | `TOCHKA_WEBHOOK_GUARD` | **ON** (default true since 01-08-2026) | the three webhook refusals (§5.3); ledger writes are unconditional |
+| `checkout_inactive_tariff_guard` | `CHECKOUT_INACTIVE_TARIFF_GUARD` | **ON** | 404 on checkout of a deactivated tariff before any row/bank link is created |
+| `checkout_referral_credit_lock` | `CHECKOUT_REFERRAL_CREDIT_LOCK` | **ON** | row-lock + DB-authoritative referral wallet in checkout |
+| `checkout_deposit_reversal` | `CHECKOUT_DEPOSIT_REVERSAL` | **ON** | LIFO restoration of `deposit_credit_applied` on paid→failed/canceled |
 | `checkout_promo_reservations` | `CHECKOUT_PROMO_RESERVATIONS` | OFF | timed promo capacity slots (link TTL 30 min + 10 min webhook buffer); paid-reversal releases `used_count` |
 | `checkout_integrity_safe_repairs` | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | OFF | allows `payments:audit-checkout-integrity --apply-safe` (promo counters only) |
-| `checkout_stale_order_expiry` | `CHECKOUT_STALE_ORDER_EXPIRY` | **ON** (default true since 01-08-2026) | the stale-checkout reaper `payments:expire-stale-checkouts --apply` (dry-run always works; schedule only when ON) |
-| `checkout_promo_survives_session` | `CHECKOUT_PROMO_SURVIVES_SESSION` | OFF | H1396 §1: promo carried in a hidden field, re-resolved authoritatively; lapsed ⇒ explicit price confirmation |
-| `checkout_session_lapse_relogin` | `CHECKOUT_SESSION_LAPSE_RELOGIN` | OFF | H1396 §2: lapsed-session submit → login with return to checkout |
-| `checkout_signed_return_url` | `CHECKOUT_SIGNED_RETURN_URL` | OFF | H1396 §3: signed bank return URLs carrying the payment id |
+| `checkout_stale_order_expiry` | `CHECKOUT_STALE_ORDER_EXPIRY` | **ON** | the stale-checkout reaper `payments:expire-stale-checkouts --apply` (dry-run always works; schedule only when ON) |
+| `checkout_promo_survives_session` | `CHECKOUT_PROMO_SURVIVES_SESSION` | **ON** | H1396 §1: promo carried in a hidden field, re-resolved authoritatively; lapsed ⇒ explicit price confirmation |
+| `checkout_session_lapse_relogin` | `CHECKOUT_SESSION_LAPSE_RELOGIN` | **ON** | H1396 §2: lapsed-session submit → login with return to checkout |
+| `checkout_signed_return_url` | `CHECKOUT_SIGNED_RETURN_URL` | **ON** | H1396 §3: signed bank return URLs carrying the payment id |
 
 Non-flag money knobs: `checkout.webhook_amount_tolerance` (1.00 ₽ default, §5.3c),
 `checkout.legacy_pending_days` (30) / `checkout.stale_pending_minutes` (180, reserved)

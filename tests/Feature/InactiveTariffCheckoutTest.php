@@ -33,9 +33,9 @@ class InactiveTariffCheckoutTest extends TestCase
         ]);
     }
 
-    public function test_guard_is_dark_by_default(): void
+    public function test_guard_is_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_inactive_tariff_guard'));
+        $this->assertTrue(config('features.checkout_inactive_tariff_guard'));
     }
 
     public function test_authenticated_direct_post_to_inactive_tariff_creates_nothing(): void

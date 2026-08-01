@@ -25,13 +25,15 @@ class DepositReversalTest extends TestCase
         Mail::fake();
     }
 
-    public function test_deposit_reversal_is_dark_by_default(): void
+    public function test_deposit_reversal_is_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_deposit_reversal'));
+        $this->assertTrue(config('features.checkout_deposit_reversal'));
     }
 
     public function test_flag_off_preserves_existing_non_restoring_behavior(): void
     {
+        config()->set('features.checkout_deposit_reversal', false);
+
         [$user, $course] = $this->buyerAndCourse();
         $deposit = $this->deposit($user, $course, 1000);
         $purchase = $this->paidPurchase($user, $course, 1000);
