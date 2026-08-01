@@ -1,6 +1,6 @@
 # Sanskrit-HUB — Asset → Pedagogy → NLP Use-Case Index
 
-_Created: 10-07-2026 · Last updated: 10-07-2026_
+_Created: 10-07-2026 · Last updated: 01-08-2026_
 
 **Purpose.** The single map that answers *"we already have asset X — what can a learner or an
 NLP developer actually DO with it on [samskrtam.ru/sanskritHUB](https://samskrtam.ru/)?"* Every
@@ -36,7 +36,7 @@ the layered picture is
 | **L3 Corpus & frequency** | attested forms, frequency bands, citations, texts | DCS freq (E26), Indische Sprüche (F33), VedaWeb (M13), `<ls>` citation graph (E38) |
 | **L4 Alignment & translation** | word-aligned parallel text, TM, MT | `corpus_lexicon` (A1), 3-layer glossary (A2), `mw_en_tm` (A3), mw_ru/pwg_ru kit (L7), DharmaMitra (M12) |
 | **L5 API & data hub** | one endpoint per capability, downloadable datasets | kosha manifest + directory (J21), C-SALT/Kosh API (G2), data releases |
-| **L6 Learn track** | courses, SRS, quizzes, reader, karaoke — consumes L0–L5 | Systema LMS (K19), SanskritKaraoke (H7), intent quiz (`ShopController`) |
+| **L6 Learn track** | courses, SRS, quizzes, reader, karaoke — consumes L0–L5 | Systema LMS (K19), SanskritKaraoke (H7), intent quiz (`ShopController`), **«Старт чтения»** ([PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md)) |
 | **L7 Portal / hub** | search + reader + dashboards + learn, one brand | samskrtam.ru (H4), SanskritRussian glossary (H5), the new `sanskritHUB` surface |
 
 ---
@@ -102,6 +102,7 @@ the layered picture is
 | Interface (ID) | Rung / audience | Fold-in use-case |
 |---|---|---|
 | Systema LMS (K19) | learn track host | The hub's course engine, SRS, access control, payments — **the `sanskritHUB` surface is built here.** |
+| «Старт чтения» (Akro-style pilot) | A0–B1 cohort packaging | 5-week paid funnel in Systema (SKU + packs + cohort SRS) — register [PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md); code H2105–H2111. |
 | CSL App Flutter (K18) | all, offline | **Offline companion**: 50+ dicts in the pocket; sync SRS decks. |
 | CSL Observatory (I8) | (meta) | **"State of Sanskrit data" dashboard** — a trust/authority signal for the NLP-hub positioning. |
 | BookIndex / Zalizniakiada (I11) | C1–C2 | Sound-law simulator + KWIC as an advanced-phonology module. |

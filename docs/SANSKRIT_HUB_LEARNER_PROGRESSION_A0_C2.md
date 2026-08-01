@@ -1,6 +1,6 @@
 # Sanskrit-HUB — Learner Progression (A0 → C2)
 
-_Created: 10-07-2026 · Last updated: 10-07-2026_
+_Created: 10-07-2026 · Last updated: 01-08-2026_
 
 **Purpose.** A CEFR-shaped ladder for learning Sanskrit on
 [samskrtam.ru/sanskritHUB](https://samskrtam.ru/), where **every rung is powered by a real
@@ -28,6 +28,8 @@ write Devanāgarī → **A0 is Cyrillic-only**; script writing / recitation UGC 
 | **B2** | Classical text | Read epic prose/verse with grammar support | Read a Rāmāyaṇa sarga | RussianRamayana (H6), `corpus_lexicon` interlinear (A1), Samudra Manthanam (H4) |
 | **C1** | Vedic & commentary | Accented Vedic; follow a commentary | Read an RV hymn + its commentary | VedaWeb (M13), GRA, commentary apparatus, Whitney roots (B9–B11) |
 | **C2** | Scholar / lexicographer | Multi-dict philology, etymology, Skt-only defs | Write an evidence-graded gloss | CDSL all-dicts (G1), csl-atlas, etymology oracle (B7), SKD/VCP |
+
+**Paid cohort packaging (A0–B1):** the 5-week «Старт чтения» Akro-style pilot packages script → first continuous prose on Systema (Hitopadeśa-0 / subhāṣita interim). Register: [PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md). Distinct from the marathon 28-08 A0 diagnostic funnel.
 
 ---
 
