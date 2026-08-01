@@ -261,6 +261,27 @@ class StaffImpersonationTest extends TestCase
         $this->assertFalse(auth()->user()->isSuperAdmin());
     }
 
+    /**
+     * Плашка обязана быть и в панели: у Filament свой стек middleware, группу
+     * `web` он не включает — без отдельной регистрации гварда куратор остался бы
+     * без единственной кнопки выхода.
+     *
+     * @test
+     */
+    public function the_banner_reaches_the_filament_panel_too(): void
+    {
+        $super = $this->user(Roles::SUPER_ADMIN);
+        $manager = $this->user(Roles::MANAGER);
+
+        $this->actingAs($super);
+        $this->start($manager, Impersonation::MODE_MANAGER);
+
+        $this->get('/admin')
+            ->assertOk()
+            ->assertSee('id="impersonation-banner"', false)
+            ->assertSee('Вернуться в супер-админ');
+    }
+
     // ==========================================
     // ДЕНЬГИ
     // ==========================================
