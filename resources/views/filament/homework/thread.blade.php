@@ -2,6 +2,13 @@
     $submission = $getRecord();
     $comments = $submission->comments()->with('files', 'author')->get();
     $canManageFiles = \App\Filament\Resources\HomeworkSubmissionResource::canReview($submission);
+    // H2142: другие уроки курса с ДЗ — цель переноса ошибочно залитого файла.
+    $hwMoveTargets = \App\Models\Lesson::query()
+        ->where('course_id', $submission->course_id)
+        ->where('homework_enabled', true)
+        ->where('id', '!=', $submission->lesson_id)
+        ->orderBy('id')
+        ->get(['id', 'title']);
 @endphp
 
 <div class="space-y-4">
@@ -41,6 +48,27 @@
                                 {{ \Illuminate\Support\Str::limit($f->original_name, 32) }}
                                 <span class="text-gray-400">{{ $f->humanSize() }}</span>
                             </a>
+                            @if($canManageFiles && $isStudent && $hwMoveTargets->isNotEmpty())
+                                <form action="{{ route('homework.file.move', $f) }}" method="POST"
+                                      class="inline-flex items-center gap-1 pr-1">
+                                    @csrf
+                                    <select name="lesson_id" required
+                                            class="text-xs rounded-md border border-gray-200 dark:border-white/10 dark:bg-white/5 py-1 pl-1.5 pr-6 max-w-[11rem]"
+                                            title="Перенести в урок"
+                                            aria-label="Куда перенести {{ $f->original_name }}">
+                                        <option value="">→ урок…</option>
+                                        @foreach($hwMoveTargets as $mt)
+                                            <option value="{{ $mt->id }}">{{ \Illuminate\Support\Str::limit($mt->title, 30) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit"
+                                            class="px-2 py-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-md transition-colors"
+                                            title="Перенести файл"
+                                            aria-label="Перенести {{ $f->original_name }}">
+                                        <x-filament::icon icon="heroicon-o-arrow-right-circle" class="w-4 h-4" />
+                                    </button>
+                                </form>
+                            @endif
                             @if($canManageFiles)
                                 <form action="{{ route('homework.file.destroy', $f) }}" method="POST" class="pr-1"
                                       onsubmit="return confirm('Удалить файл «{{ addslashes($f->original_name) }}»?');">
