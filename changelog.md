@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.81.5] - 2026-08-01
+### Changed
+- **H1965 n8n bridge import-gaps — product-gated GTD defers (no placeholder import).** Live re-probe on `193.232.229.91`: `schedule-sheet-sync` / `vk-calendar-post` still **missing** (webhook 404); monthly `eixPIvFjfPdOSrYo` present **OFF**. Disposition: explicit GTD defer for sheet + calendar until product arms them; monthly activate blocked on H1959 token hygiene. Ops note: [docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md). Catalog gap table + ROADMAP Wave 3 updated. No ON workflow mutation; no Laravel env secrets written. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.81.4] - 2026-08-01
 ### Security
 - **H1960: Header Auth on n8n payments sheet webhook (C03).** n8n workflow `АДМИНКА+ТАБЛИЦА ОПЛАТ` (`/webhook/payments`) requires `X-Webhook-Secret`; Laravel [`SendPaymentToSheetJob`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/SendPaymentToSheetJob.php) sends `N8N_PAYMENTS_WEBHOOK_SECRET` when set. No sheet mapping or payment business-logic changes. Secret lives only on n8n host (`/root/.n8n-payments-webhook-secret`) and Laravel `.env` — never in git. Executor: Grok 4.5 (`grok-4.5`).

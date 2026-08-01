@@ -53,9 +53,9 @@ Index: [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/System
 | Item | Notes |
 |---|---|
 | Debug lecture-clip 6-error streak | Before any marketing flag |
-| Import `schedule-sheet-sync` if product still needs Sheets | Gap table |
-| Import `vk-calendar-post` only when calendar autopilot staged | Flag OFF until smoke |
-| Activate monthly post after token fix + smoke | Was OFF |
+| Import `schedule-sheet-sync` if product still needs Sheets | **H1965 deferred to GTD** (01-08-2026) — not product-priority; re-arm when Sheets export wanted |
+| Import `vk-calendar-post` only when calendar autopilot staged | **H1965 deferred to GTD** — flag OFF; import at DEPLOY_QUEUE №60 staging |
+| Activate monthly post after token fix + smoke | **H1965 defer-activate** — live `eixPIvFjfPdOSrYo` OFF; blocked on H1959 |
 | Social-post workflow when Wave-2 content pilot armed | Product plan |
 
 ### Wave 4 — Bookbuilder product (after security)

@@ -1,6 +1,6 @@
 # Каталог n8n — context-ai.ru (samskrtam50)
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 Живой inventory инстанса **n8n** на `193.232.229.91` (`samskrtam50`, UI: `https://context-ai.ru`).  
 Снято **30-07-2026** read-only с `database.sqlite` + host paths. Машинный снимок: [`_server_inventory_2026-07-30.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json). Redacted exports: [`exports/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/).
@@ -78,9 +78,9 @@ services:
 | `N8N_CLIP_EXTRACT_WEBHOOK` · `DispatchLectureClipExtractionJob` | `/webhook/lecture-clip-extract` | `Lecture clip extract (H1452)` `GGs0G2azzkLqLbJj` | **ON** · Header Auth | 6 recent errors (no success in retention) |
 | `N8N_CLIP_CALLBACK_SECRET` · callback → Laravel | n8n → `callback_url` | same workflow | ON | OK design; errors on ffmpeg/VK side |
 | `N8N_PAYMENTS_WEBHOOK_URL` + `N8N_PAYMENTS_WEBHOOK_SECRET` · payments export | `/webhook/payments` | `АДМИНКА+ТАБЛИЦА ОПЛАТ` `XWQHAwlxBAFe6xfj` | **ON** · **Header Auth** (H1960) | `X-Webhook-Secret` via credential `payments-webhook (H1960)` |
-| `N8N_SCHEDULE_SHEET_WEBHOOK` · Filament schedule sync | `/webhook/schedule-sheet-sync` (template) | **MISSING** | — | JSON in repo not imported; stub `РАСПИСАНИЕ + ТАБЛ` only (UUID path, 1 node, off) |
-| `N8N_MONTHLY_SCHEDULE_WEBHOOK` · `schedule:post-monthly` | `/webhook/monthly-schedule-post` | `Ежемесячный пост…` `eixPIvFjfPdOSrYo` | **OFF** | Imported but inactive; **bot token was inlined in URL** (see credential audit) |
-| `N8N_CALENDAR_POST_WEBHOOK` · `content:publish-due` | `/webhook/vk-calendar-post` | **MISSING** | — | Template in `docs/n8n/vk-calendar-post.workflow.json` not on server |
+| `N8N_SCHEDULE_SHEET_WEBHOOK` · Filament schedule sync | `/webhook/schedule-sheet-sync` (template) | **MISSING** | — | **H1965 GTD defer** (01-08-2026): product not arming Sheets export; template + Header Auth runbook in README; stub `РАСПИСАНИЕ + ТАБЛ` only |
+| `N8N_MONTHLY_SCHEDULE_WEBHOOK` · `schedule:post-monthly` | `/webhook/monthly-schedule-post` | `Ежемесячный пост…` `eixPIvFjfPdOSrYo` | **OFF** | **H1965 defer activate**: live id confirmed; wait H1959 token-out-of-URL + Header Auth + smoke before ON |
+| `N8N_CALENDAR_POST_WEBHOOK` · `content:publish-due` | `/webhook/vk-calendar-post` | **MISSING** | — | **H1965 GTD defer**: import only when `CONTENT_CALENDAR_AUTOPILOT` staged (flag default OFF) |
 | `N8N_SOCIAL_POST_WEBHOOK` · `PublishSocialPostJob` | social_post path | **MISSING** | — | Wave-2 product; not imported |
 | Zoom recording completed | Zoom webhook UUID path | `ZOOM 1.4 (Final) + АДМИНКА ТЕСТ` | **ON** · auth=none | Canonical prod ZOOM |
 | Titles / lesson names from Laravel | webhook UUID | `ловим названия copy` | **ON** · auth=none | High traffic (123 success) |
@@ -247,9 +247,9 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 
 | Gap | Severity | Evidence | Recommended action (later handoffs) |
 |---|---|---|---|
-| `schedule-sheet-sync` not imported | 🟠 | No workflow; Laravel env often empty | Import `docs/n8n/schedule-sheet-sync.workflow.json` + Header Auth |
-| `vk-calendar-post` not imported | 🟠 | Template only | Import when `CONTENT_CALENDAR_AUTOPILOT` staging |
-| `monthly-schedule-post` imported but OFF | 🟠 | Workflow exists, inactive | Activate after token move to credentials + smoke |
+| `schedule-sheet-sync` not imported | 🟡 H1965 deferred | Live 404 path; product not requesting | **GTD defer** — import + Google OAuth + Header Auth when MG arms Filament sheet export ([OPS_IMPORT_GAPS_H1965](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md)) |
+| `vk-calendar-post` not imported | 🟡 H1965 deferred | Template only; autopilot OFF | **GTD defer** — import when `CONTENT_CALENDAR_AUTOPILOT` staging (DEPLOY_QUEUE №60) |
+| `monthly-schedule-post` imported but OFF | 🟡 H1965 defer-activate | `eixPIvFjfPdOSrYo` active=0 | Activate after H1959 token move + Header Auth + smoke |
 | Telegram bot token inlined in monthly HTTP URLs | 🔴 | Live node params | Rotate bot token; use Telegram credential node |
 | libfl password in book SSH command | 🟢 fixed H1958 | Was live CLI args; now `auto_order_from_env.sh` + `/root/.libfl-env` (600) | Human: confirm one login still works |
 | Lecture clip 6/6 errors | 🔴 | execution_entity | Debug SSH/ffmpeg/VK; dry-run one lesson |
