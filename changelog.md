@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H1992: koloda hub language filter (`?lang=sa|hi|all`).** Public `/koloda` and cabinet `/dvaram/koloda` list hubs filter by `SrsDeck.language` (default `sa`; null language counts as sa; tabs Санскрит / Хинди / Все). Deep links `/koloda/{slug}` unchanged. Tests in `SrsPublicDeckUrlsTest`. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **Stale-checkout reaper ON by default + false-economy policy (MG 01-08-2026).** `features.checkout_stale_order_expiry` default `true`; prod enabled (`CHECKOUT_STALE_ORDER_EXPIRY=true`, first apply released 18 stale pending). Dark-forever money guards called out as sabotage thrift in [docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md). Executor: Grok 4.5 (`grok-4.5`).
 
