@@ -476,11 +476,18 @@ class Kernel extends ConsoleKernel
         // дебри) с построчным row-lock против гонки с банковским вебхуком. Без --apply
         // команда только отчитывается — гейт features.checkout_stale_order_expiry
         // проверяется только когда --apply передан.
-        $schedule->command('payments:expire-stale-checkouts --apply')
-            ->everyFifteenMinutes()
-            ->withoutOverlapping(10)
-            ->onOneServer()
-            ->name('expire-stale-checkouts');
+        //
+        // Слот ТОЛЬКО при включённом флаге: иначе cron каждые 15 мин гонял --apply,
+        // команда exit 1 («Reaper is disabled»), Laravel ScheduleRunCommand логировал
+        // production.ERROR (хвост инцидента 01-08-2026). Dry-run руками без флага
+        // по-прежнему: `php artisan payments:expire-stale-checkouts`.
+        if (config('features.checkout_stale_order_expiry')) {
+            $schedule->command('payments:expire-stale-checkouts --apply')
+                ->everyFifteenMinutes()
+                ->withoutOverlapping(10)
+                ->onOneServer()
+                ->name('expire-stale-checkouts');
+        }
 
         // --- ПУЛЬС ПЛАНИРОВЩИКА (H1713) ---
         // Дёргает уникальный URL на healthchecks.io; тревогу поднимает МОЛЧАНИЕ,

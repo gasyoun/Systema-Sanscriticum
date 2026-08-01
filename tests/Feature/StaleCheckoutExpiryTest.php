@@ -27,7 +27,8 @@ class StaleCheckoutExpiryTest extends TestCase
         [$course, $tariff] = $this->courseAndTariff();
         $payment = $this->pendingPayment($course, $tariff, ['created_at' => now()->subDays(40)]);
 
-        $this->artisan('payments:expire-stale-checkouts --apply')->assertFailed();
+        // Soft no-op (exit 0): schedule noise when flag is off must not be ERROR.
+        $this->artisan('payments:expire-stale-checkouts --apply')->assertSuccessful();
         $this->assertSame('pending', $payment->fresh()->status);
 
         $this->artisan('payments:expire-stale-checkouts')

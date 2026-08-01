@@ -44,9 +44,12 @@ class ExpireStaleCheckouts extends Command
         $apply = (bool) $this->option('apply');
 
         if ($apply && ! config('features.checkout_stale_order_expiry')) {
-            $this->error('Reaper is disabled. Set CHECKOUT_STALE_ORDER_EXPIRY=true and rebuild config cache, or omit --apply to preview.');
+            // Exit 0 when called from a stale schedule or a mistaken --apply: do not
+            // poison schedule:run / laravel.log with ERROR every 15 minutes. The
+            // reaper still refuses to mutate rows (no candidates are applied).
+            $this->warn('Reaper is disabled. Set CHECKOUT_STALE_ORDER_EXPIRY=true and rebuild config cache, or omit --apply to preview.');
 
-            return self::FAILURE;
+            return self::SUCCESS;
         }
 
         $staleIds = $this->staleCandidateIds();
