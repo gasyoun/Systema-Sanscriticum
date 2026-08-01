@@ -21,6 +21,29 @@
         </a>
     </div>
 
+    @php
+        $lang = $lang ?? 'sa';
+        $tabs = [
+            'sa' => 'Санскрит',
+            'hi' => 'Хинди',
+            'all' => 'Все',
+        ];
+    @endphp
+    <div class="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Язык колод">
+        @foreach($tabs as $code => $label)
+            @php $active = $lang === $code; @endphp
+            <a href="{{ url('/dvaram/koloda').($code === 'sa' ? '' : '?lang='.$code) }}"
+               role="tab"
+               aria-selected="{{ $active ? 'true' : 'false' }}"
+               class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors
+                      {{ $active
+                          ? 'bg-[#E85C24] text-white'
+                          : 'bg-gray-50 text-gray-700 border border-gray-100 hover:border-[#E85C24]/40' }}">
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+
     @if($decks->isEmpty())
         <div class="text-center py-16 bg-white rounded-[2rem] border border-dashed border-gray-200">
             <p class="text-gray-500">Пока нет доступных колод.</p>

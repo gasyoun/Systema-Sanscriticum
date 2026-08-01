@@ -8,6 +8,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsReviewLog;
 use App\Models\SrsReviewState;
 use App\Services\Srs\Rating;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -26,18 +27,24 @@ class SrsController extends Controller
     /**
      * Public hub of system/public decks (marketing trial, no login).
      */
-    public function publicIndex(): View
+    public function publicIndex(Request $request): View
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
+        $lang = $this->resolveLanguageFilter($request);
+
         $decks = SrsDeck::query()
             ->whereIn('visibility', ['system', 'public'])
+            ->tap(fn ($q) => $this->applyLanguageFilter($q, $lang))
             ->withCount('cards')
             ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
             ->orderBy('name')
             ->get();
 
-        return view('srs.public-index', ['decks' => $decks]);
+        return view('srs.public-index', [
+            'decks' => $decks,
+            'lang' => $lang,
+        ]);
     }
 
     /**
@@ -53,23 +60,28 @@ class SrsController extends Controller
     /**
      * Cabinet hub: list decks with per-deck URLs (auth).
      */
-    public function cabinetIndex(): View
+    public function cabinetIndex(Request $request): View
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
         $userId = Auth::id();
+        $lang = $this->resolveLanguageFilter($request);
 
         $decks = SrsDeck::query()
             ->where(function ($q) use ($userId) {
                 $q->whereIn('visibility', ['system', 'public'])
                     ->orWhere('user_id', $userId);
             })
+            ->tap(fn ($q) => $this->applyLanguageFilter($q, $lang))
             ->withCount('cards')
             ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
             ->orderBy('name')
             ->get();
 
-        return view('student.srs-hub', ['decks' => $decks]);
+        return view('student.srs-hub', [
+            'decks' => $decks,
+            'lang' => $lang,
+        ]);
     }
 
     /**
@@ -162,5 +174,35 @@ class SrsController extends Controller
             ->values();
 
         return view('student.srs-stats', ['stats' => $stats]);
+    }
+
+    /**
+     * H1992 — hub language filter. Default sa: null language treated as Sanskrit.
+     * ?lang=sa|hi|all
+     */
+    private function resolveLanguageFilter(Request $request): string
+    {
+        $lang = strtolower((string) $request->query('lang', 'sa'));
+
+        return in_array($lang, ['sa', 'hi', 'all'], true) ? $lang : 'sa';
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\SrsDeck>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\SrsDeck>
+     */
+    private function applyLanguageFilter($query, string $lang)
+    {
+        if ($lang === 'all') {
+            return $query;
+        }
+
+        if ($lang === 'sa') {
+            return $query->where(function ($q) {
+                $q->where('language', 'sa')->orWhereNull('language');
+            });
+        }
+
+        return $query->where('language', $lang);
     }
 }
