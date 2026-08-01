@@ -88,7 +88,7 @@
                                             color="danger"
                                             size="xs"
                                             wire:click="kickMember({{ $memberId }})"
-                                            wire:confirm="Исключить {{ $member['name'] ?? $memberId }} из Telegram-чата? (soft kick; LMS не меняется)"
+                                            wire:confirm="Забанить {{ $member['name'] ?? $memberId }} в Telegram-чате? Вернуться по инвайту нельзя, пока не разбаните. LMS не меняется."
                                             class="shrink-0"
                                         >
                                             Исключить
@@ -97,6 +97,46 @@
                                 </li>
                             @endforeach
                         </ul>
+
+                        @if (count($this->bannedMembers) > 0)
+                            <div class="mt-5 border-t border-gray-100 pt-4 dark:border-gray-800">
+                                <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Заблокированные ({{ count($this->bannedMembers) }})
+                                </h3>
+                                <p class="mb-3 text-xs text-gray-500">
+                                    Hard ban: «Присоединиться к группе» не сработает, пока не нажмёте «Разбанить».
+                                </p>
+                                <ul class="divide-y divide-gray-100 dark:divide-gray-800 max-h-48 overflow-y-auto">
+                                    @foreach ($this->bannedMembers as $banned)
+                                        @php $bannedId = (int) ($banned['id'] ?? 0); @endphp
+                                        <li class="py-2 text-sm flex items-center justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <span class="font-medium">{{ $banned['name'] ?? '—' }}</span>
+                                                <div class="text-xs text-gray-500 truncate">
+                                                    @if (! empty($banned['username']))
+                                                        <span>{{ '@'.$banned['username'] }}</span>
+                                                    @endif
+                                                    @if ($bannedId > 0)
+                                                        <span class="text-gray-400">id {{ $bannedId }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if ($bannedId > 0)
+                                                <x-filament::button
+                                                    color="gray"
+                                                    size="xs"
+                                                    wire:click="unbanMember({{ $bannedId }})"
+                                                    wire:confirm="Разбанить {{ $banned['name'] ?? $bannedId }}? После этого можно снова войти по инвайту."
+                                                    class="shrink-0"
+                                                >
+                                                    Разбанить
+                                                </x-filament::button>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                     @endif
                 </div>
 

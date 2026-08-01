@@ -71,7 +71,7 @@ class ZapisiChatMemberServiceTest extends TestCase
         $this->assertStringContainsString('админ', $rights['detail']);
     }
 
-    public function test_kick_calls_ban_then_unban(): void
+    public function test_kick_is_hard_ban_without_unban(): void
     {
         $this->fakeZapisi(function ($request) {
             $url = $request->url();
@@ -87,9 +87,6 @@ class ZapisiChatMemberServiceTest extends TestCase
             if (str_contains($url, 'banChatMember')) {
                 return Http::response(['ok' => true, 'result' => true]);
             }
-            if (str_contains($url, 'unbanChatMember')) {
-                return Http::response(['ok' => true, 'result' => true]);
-            }
 
             return Http::response(['ok' => false], 400);
         });
@@ -100,8 +97,35 @@ class ZapisiChatMemberServiceTest extends TestCase
             && (string) ($r->data()['chat_id'] ?? '') === '-100555'
             && (string) ($r->data()['user_id'] ?? '') === '777001');
 
+        Http::assertNotSent(fn ($r) => str_contains($r->url(), 'unbanChatMember'));
+    }
+
+    public function test_unban_calls_unban_chat_member(): void
+    {
+        $this->fakeZapisi(function ($request) {
+            $url = $request->url();
+            if (str_contains($url, 'getMe')) {
+                return Http::response(['ok' => true, 'result' => ['id' => 99]]);
+            }
+            if (str_contains($url, 'getChatMember')) {
+                return Http::response([
+                    'ok' => true,
+                    'result' => ['status' => 'administrator', 'can_restrict_members' => true],
+                ]);
+            }
+            if (str_contains($url, 'unbanChatMember')) {
+                return Http::response(['ok' => true, 'result' => true]);
+            }
+
+            return Http::response(['ok' => false], 400);
+        });
+
+        app(ZapisiChatMemberService::class)->unban('-100555', 777001, byUserId: 1);
+
         Http::assertSent(fn ($r) => str_contains($r->url(), 'unbanChatMember')
-            && (string) ($r->data()['chat_id'] ?? '') === '-100555');
+            && (string) ($r->data()['chat_id'] ?? '') === '-100555'
+            && (string) ($r->data()['user_id'] ?? '') === '777001'
+            && ($r->data()['only_if_banned'] ?? false) === true);
     }
 
     public function test_kick_throws_when_bot_cannot_restrict(): void
