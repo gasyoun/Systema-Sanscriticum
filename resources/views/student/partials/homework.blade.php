@@ -86,6 +86,9 @@
                     @php
                         $isStudent = $c->author_role === 'student';
                         $who = $isStudent ? 'Вы' : 'Преподаватель';
+                        $canDeleteComment = $hwEditable
+                            && $isStudent
+                            && $c->type !== 'review';
                     @endphp
                     <div class="flex {{ $isStudent ? 'justify-end' : 'justify-start' }}">
                         <div class="max-w-[85%] rounded-2xl border p-4 {{ $isStudent ? 'bg-gray-50 border-gray-200' : 'bg-blue-50/70 border-blue-200' }}">
@@ -95,6 +98,19 @@
                                     <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400">проверка</span>
                                 @endif
                                 <span class="text-[11px] text-gray-400">{{ $c->created_at->format('d.m.Y H:i') }}</span>
+                                @if($canDeleteComment)
+                                    <form action="{{ route('homework.comment.destroy', $c) }}" method="POST" class="ml-auto"
+                                          onsubmit="return confirm(@js('Удалить это сообщение и все его файлы?'));">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="w-7 h-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                title="Удалить сообщение"
+                                                aria-label="Удалить сообщение">
+                                            <i class="fas fa-trash-can text-[11px]"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                             @if($c->body)
                                 <p class="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{{ $c->body }}</p>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\HomeworkComment;
 use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -150,6 +151,16 @@ class HomeworkController extends Controller
         $this->service->deleteStudentFile($file, $request->user());
 
         return back()->with('success', 'Файл удалён из домашней работы.');
+    }
+
+    /**
+     * Студент удаляет своё сообщение в треде (текст + файлы), пока работа не принята.
+     */
+    public function destroyComment(Request $request, HomeworkComment $comment)
+    {
+        $this->service->deleteStudentComment($comment, $request->user());
+
+        return back()->with('success', 'Сообщение удалено из переписки.');
     }
 
     /**

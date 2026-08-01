@@ -8,6 +8,7 @@ use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkReviewedMail;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
+use App\Models\HomeworkComment;
 use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -379,6 +380,70 @@ class HomeworkFlowTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('homework_files', ['id' => $file->id]);
+    }
+
+    /** @test */
+    public function student_can_delete_own_outdated_comment_while_on_review(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'старое сообщение',
+                'files' => [UploadedFile::fake()->create('old.pdf', 20, 'application/pdf')],
+            ]
+        );
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'актуальное']
+        );
+
+        $submission = HomeworkSubmission::firstOrFail()->load('comments.files');
+        $this->assertCount(2, $submission->comments);
+        $old = $submission->comments->first();
+        $path = $old->files->first()->path;
+        Storage::disk('local')->assertExists($path);
+
+        $this->actingAs($student)
+            ->delete(route('homework.comment.destroy', $old))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('homework_comments', ['id' => $old->id]);
+        Storage::disk('local')->assertMissing($path);
+        $this->assertSame(1, HomeworkComment::where('submission_id', $submission->id)->count());
+        $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->fresh()->status);
+    }
+
+    /** @test */
+    public function student_cannot_delete_teacher_review_comment(): void
+    {
+        [$teacher, $teacherUser] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $service = app(HomeworkService::class);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'v1']
+        );
+        $submission = HomeworkSubmission::firstOrFail();
+        $review = $service->recordReview(
+            $submission,
+            $teacherUser,
+            HomeworkSubmission::STATUS_NEEDS_REVISION,
+            'Поправьте'
+        );
+
+        $this->actingAs($student)
+            ->delete(route('homework.comment.destroy', $review))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('homework_comments', ['id' => $review->id]);
     }
 
     /** @test */
