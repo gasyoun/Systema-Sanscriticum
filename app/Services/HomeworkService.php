@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkReviewedMail;
 use App\Models\HomeworkComment;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class HomeworkService
 {
@@ -67,6 +69,37 @@ class HomeworkService
             }
 
             return $submission;
+        });
+    }
+
+    /**
+     * Студент удаляет свой вложенный файл, пока работу ещё можно править
+     * (draft / submitted / needs_revision). Принятые работы и файлы преподавателя
+     * не трогаем — история проверки остаётся целой.
+     */
+    public function deleteStudentFile(HomeworkFile $file, User $student): void
+    {
+        DB::transaction(function () use ($file, $student) {
+            $file->loadMissing('comment.submission');
+            $comment = $file->comment;
+            $submission = $comment?->submission;
+
+            abort_if(! $submission, 404);
+            abort_unless($submission->user_id === $student->id, 403);
+            abort_unless($submission->isEditableByStudent(), 403);
+            abort_unless($comment->author_role === HomeworkComment::ROLE_STUDENT, 403);
+            abort_unless((int) $comment->author_id === (int) $student->id, 403);
+
+            $disk = $file->disk ?: 'local';
+            $path = $file->path;
+            $file->delete();
+
+            if ($path && Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+
+            $submission->last_activity_at = now();
+            $submission->save();
         });
     }
 

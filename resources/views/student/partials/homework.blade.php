@@ -102,12 +102,32 @@
                             @if($c->files->isNotEmpty())
                                 <div class="mt-2.5 flex flex-wrap gap-2">
                                     @foreach($c->files as $f)
-                                        <a href="{{ route('homework.file.download', $f) }}"
-                                           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:border-[#E85C24] hover:text-[#E85C24] transition-colors">
-                                            <i class="fas {{ $f->isImage() ? 'fa-image' : 'fa-file-arrow-down' }} text-xs"></i>
-                                            {{ \Illuminate\Support\Str::limit($f->original_name, 28) }}
-                                            <span class="text-gray-400">{{ $f->humanSize() }}</span>
-                                        </a>
+                                        @php
+                                            $canDeleteFile = $hwEditable
+                                                && $isStudent
+                                                && $c->author_role === 'student';
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gray-200 text-xs font-semibold text-gray-700">
+                                            <a href="{{ route('homework.file.download', $f) }}"
+                                               class="inline-flex items-center gap-2 px-3 py-1.5 hover:text-[#E85C24] transition-colors">
+                                                <i class="fas {{ $f->isImage() ? 'fa-image' : 'fa-file-arrow-down' }} text-xs"></i>
+                                                {{ \Illuminate\Support\Str::limit($f->original_name, 28) }}
+                                                <span class="text-gray-400">{{ $f->humanSize() }}</span>
+                                            </a>
+                                            @if($canDeleteFile)
+                                                <form action="{{ route('homework.file.destroy', $f) }}" method="POST" class="pr-1.5"
+                                                      onsubmit="return confirm(@js('Удалить файл «'.$f->original_name.'» из работы?'));">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="w-7 h-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                            title="Удалить файл"
+                                                            aria-label="Удалить файл {{ $f->original_name }}">
+                                                        <i class="fas fa-trash-can text-[11px]"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </span>
                                     @endforeach
                                 </div>
                             @endif

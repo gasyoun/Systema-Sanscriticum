@@ -451,6 +451,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     });
     Route::get('/homework/file/{file}', [HomeworkController::class, 'download'])
         ->name('homework.file.download');
+    Route::delete('/homework/file/{file}', [HomeworkController::class, 'destroyFile'])
+        ->name('homework.file.destroy');
 
     Route::post('/api/heartbeat', [HeartbeatController::class, 'store'])
         ->name('activity.heartbeat');

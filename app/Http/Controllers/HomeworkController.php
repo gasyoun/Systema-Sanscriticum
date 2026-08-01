@@ -143,6 +143,16 @@ class HomeworkController extends Controller
     }
 
     /**
+     * Студент убирает неактуальный файл из своей сдачи (пока работа не принята).
+     */
+    public function destroyFile(Request $request, HomeworkFile $file)
+    {
+        $this->service->deleteStudentFile($file, $request->user());
+
+        return back()->with('success', 'Файл удалён из домашней работы.');
+    }
+
+    /**
      * Зеркалит StudentController::ensureLessonAccessible — доступ к уроку
      * (free, персональный грант, либо оплачен full/block_X). Защита сдачи от
      * IDOR на чужие уроки.
