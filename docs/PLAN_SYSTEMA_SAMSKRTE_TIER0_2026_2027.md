@@ -1,6 +1,6 @@
 # PLAN — SAMSKRTE-TIER0 · samskrte.ru / Tier-0 (Systema + ORS-FAQ) · 2026–2027
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 **Umbrella ID:** `SAMSKRTE-TIER0` · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** `/ask samskrte.ru` 30-07-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_TIER0_*`
 
@@ -29,6 +29,15 @@ Agent resolves H1939 + this PLAN by ID/stem; worktree off `origin/main`. Layer d
 | Ops runbook (evidence log) | [RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SYSTEMA_SAMSKRTE_TIER0_W1_MARATHON_28_08.md) |
 
 Companion metadoc: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.meta.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.meta.md).
+
+### Related product (separate SKU): «Старт чтения» (Akro-style)
+
+5-week paid pilot packaging — **not** the marathon 28-08 wave-1 gate. Systema register:
+
+[PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md)
+· hub plan [PLAN_AKRO_START_CHTENIYA_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_AKRO_START_CHTENIYA_2026.md)
+· first Systema code handoff [H2105](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2105-Sonnet_Systema-Sanscriticum_start-chteniya-cohort-funnel_01.08.26.md).
+
 
 ---
 
