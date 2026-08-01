@@ -13,6 +13,7 @@ use App\Services\Access\StudentUnblockService;
 use App\Services\Prana\PranaService;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
+use App\Support\Impersonation;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Carbon\Carbon;
@@ -870,6 +871,38 @@ class UserResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->iconButton()
                     ->tooltip('Редактировать'),
+
+                // --- РЕЖИМ ПРОСМОТРА ЗА ПОЛЬЗОВАТЕЛЕМ (H1947) ---
+                // Только супер-админ и только при включённом флаге; видимость —
+                // Impersonation::canImpersonate(), она же перепроверяется на
+                // сервере в контроллере (кнопка ничего не авторизует).
+                Tables\Actions\Action::make('impersonate_student')
+                    ->iconButton()
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->tooltip('Открыть кабинет как студент')
+                    ->visible(fn (User $record) => Impersonation::canImpersonate($record, Impersonation::MODE_STUDENT))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record) => 'Открыть кабинет как «'.$record->name.'»?')
+                    ->modalDescription('Вы увидите кабинет глазами этого студента. Денежные действия в режиме запрещены, старт и выход пишутся в журнал. Вернуться — кнопкой в верхней плашке.')
+                    ->modalSubmitActionLabel('Открыть кабинет')
+                    ->action(fn (User $record) => redirect()->to(
+                        Impersonation::startUrl($record, Impersonation::MODE_STUDENT)
+                    )),
+
+                Tables\Actions\Action::make('impersonate_manager')
+                    ->iconButton()
+                    ->icon('heroicon-o-identification')
+                    ->color('info')
+                    ->tooltip('Войти как куратор')
+                    ->visible(fn (User $record) => Impersonation::canImpersonate($record, Impersonation::MODE_MANAGER))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record) => 'Войти как куратор «'.$record->name.'»?')
+                    ->modalDescription('Панель будет вести себя ровно как у куратора: права супер-админа на время режима не действуют. Вернуться — кнопкой в верхней плашке.')
+                    ->modalSubmitActionLabel('Войти как куратор')
+                    ->action(fn (User $record) => redirect()->to(
+                        Impersonation::startUrl($record, Impersonation::MODE_MANAGER)
+                    )),
 
                 Tables\Actions\Action::make('grant_prana')
                     ->iconButton()

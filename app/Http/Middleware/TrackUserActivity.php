@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Activity\ActivityTracker;
 use App\Services\Prana\PranaService;
 use App\Services\StreakService;
+use App\Support\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -58,6 +59,13 @@ final class TrackUserActivity
         }
 
         if ($request->is('api/heartbeat*')) {
+            return;
+        }
+
+        // Режим просмотра за пользователя (H1947): сотрудник, листающий чужой
+        // кабинет, не должен выглядеть в отчётах как активность самого студента —
+        // ни last_activity_at, ни прана за вход, ни серия активных дней.
+        if (Impersonation::isActive()) {
             return;
         }
 

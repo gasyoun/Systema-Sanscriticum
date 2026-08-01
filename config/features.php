@@ -636,6 +636,25 @@ return [
     ))),
 
     /*
+     | Режим просмотра за пользователя — «войти как» (H1947). Когда ВКЛ,
+     | СУПЕР-АДМИН (и только он) может из карточки пользователя открыть кабинет
+     | студента или панель куратора (manager), не меняя users.role и не зная
+     | чужого пароля: сессия переключается на целевого пользователя, сверху
+     | висит несъёмная плашка «выйти из режима», старт и стоп пишутся в
+     | impersonation_audits.
+     |
+     | ВЫКЛ по умолчанию — deploy-рубильник: пока флаг OFF, действия в
+     | UserResource скрыты, маршруты /impersonate/* отвечают 404, а уже открытый
+     | режим принудительно закрывается на первом же запросе (fail-closed).
+     | Включение — STAFF_IMPERSONATION=true + config:cache после ревью.
+     |
+     | Денежные/выдающие доступ записи в режиме ЗАПРЕЩЕНЫ всегда (403), список
+     | закрытых маршрутов — в config/impersonation.php. Никогда не расширять
+     | этот флаг на обычного admin: только super_admin.
+     */
+    'staff_impersonation' => (bool) env('STAFF_IMPERSONATION', false),
+
+    /*
      | PayPal Subscriptions API (H2027) — auto-bill for diaspora, separate from
      | manual claim (PAYPAL_CLAIM_ENABLED). Default OFF: route returns 404 and
      | no Product/Plan/Subscription calls. Prod enable is human @DO only after

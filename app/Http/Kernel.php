@@ -8,6 +8,7 @@ use App\Http\Middleware\CaptureAttribution;
 use App\Http\Middleware\CapturePartnerReferral;
 use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\ImpersonationGuard;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectToCanonicalCourseSlug;
@@ -74,6 +75,13 @@ class Kernel extends HttpKernel
             StartSession::class,
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
+            // Границы режима просмотра за пользователя (H1947): fail-closed при
+            // снятом флаге, запрет денежных записей, плашка режима в HTML.
+            // Стоит ДО SubstituteBindings осознанно: запрет не должен зависеть от
+            // того, нашлась ли модель в URL, иначе денежный POST по несуществующему
+            // slug'у отвечал бы 404 мимо гейта. Панель Filament включает его
+            // отдельно — группу `web` она не берёт.
+            ImpersonationGuard::class,
             SubstituteBindings::class,
             CaptureReferral::class,
             CapturePartnerReferral::class,
