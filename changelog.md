@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H1992: koloda hub language filter (`?lang=sa|hi|all`).** Public `/koloda` and cabinet `/dvaram/koloda` list hubs filter by `SrsDeck.language` (default `sa`; null language counts as sa; tabs Санскрит / Хинди / Все). Deep links `/koloda/{slug}` unchanged. Tests in `SrsPublicDeckUrlsTest`. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **Money MUST-ON guards armed (MG 01-08-2026 false-economy).** Prod `.env` + code defaults **true** for: `TOCHKA_WEBHOOK_GUARD`, `CHECKOUT_DEPOSIT_REVERSAL`, `CHECKOUT_REFERRAL_CREDIT_LOCK`, `CHECKOUT_INACTIVE_TARIFF_GUARD`, `CHECKOUT_PROMO_SURVIVES_SESSION`, `CHECKOUT_SESSION_LAPSE_RELOGIN`, `CHECKOUT_SIGNED_RETURN_URL`, `CHECKOUT_STALE_ORDER_EXPIRY`. Still dark (ops/scaffold): promo reservations, integrity safe-repairs, Tochka recurring, PayPal subscriptions. Register: [docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md). Executor: Grok 4.5 (`grok-4.5`).
 - **Stale-checkout reaper ON by default + false-economy policy (MG 01-08-2026).** `features.checkout_stale_order_expiry` default `true`; prod first apply released 18 stale pending. Executor: Grok 4.5 (`grok-4.5`).

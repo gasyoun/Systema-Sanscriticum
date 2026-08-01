@@ -154,7 +154,7 @@ class SrsPublicDeckUrlsTest extends TestCase
         $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
 
         $this->actingAs($user)
-            ->get('/dvaram/koloda')
+            ->get('/dvaram/koloda?lang=all')
             ->assertOk()
             ->assertSee('/dvaram/koloda/sanskrit-core')
             ->assertSee('/dvaram/koloda/hindi-core')
@@ -201,5 +201,71 @@ class SrsPublicDeckUrlsTest extends TestCase
         $this->actingAs($user)
             ->get('/dvaram/srs/sanskrit-core')
             ->assertRedirect('/dvaram/koloda/sanskrit-core');
+    }
+
+    public function test_public_hub_filters_by_language(): void
+    {
+        $this->makeDeck('sanskrit-core', 'sa', 'Санскрит — ядро');
+        $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
+
+        // default sa: hindi hidden
+        $this->get('/koloda')
+            ->assertOk()
+            ->assertSee('Санскрит — ядро')
+            ->assertDontSee('Hindi Core 100')
+
+        $this->get('/koloda?lang=hi')
+            ->assertOk()
+            ->assertSee('Hindi Core 100')
+            ->assertDontSee('Санскрит — ядро');
+
+        $this->get('/koloda?lang=all')
+            ->assertOk()
+            ->assertSee('Санскрит — ядро')
+            ->assertSee('Hindi Core 100');
+    }
+
+    public function test_cabinet_hub_filters_by_language(): void
+    {
+        $user = User::factory()->create();
+        $this->makeDeck('sanskrit-core', 'sa', 'Санскрит — ядро');
+        $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
+
+        $this->actingAs($user)
+            ->get('/dvaram/koloda')
+            ->assertOk()
+            ->assertSee('Санскрит — ядро')
+            ->assertDontSee('Hindi Core 100');
+
+        $this->actingAs($user)
+            ->get('/dvaram/koloda?lang=all')
+            ->assertOk()
+            ->assertSee('Санскрит — ядро')
+            ->assertSee('Hindi Core 100');
+    }
+
+    public function test_null_language_counts_as_sa(): void
+    {
+        $noteType = SrsNoteType::firstOrCreate(
+            ['key' => 'basic_sa'],
+            [
+                'name' => 'Sanskrit',
+                'language' => 'sa',
+                'fields' => ['devanagari', 'iast', 'translation'],
+            ]
+        );
+        SrsDeck::create([
+            'note_type_id' => $noteType->id,
+            'name' => 'Legacy null-lang',
+            'slug' => 'legacy-null',
+            'language' => null,
+            'visibility' => 'system',
+        ]);
+        $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
+
+        $this->get('/koloda')
+            ->assertOk()
+            ->assertSee('Legacy null-lang')
+            ->assertDontSee('Hindi Core 100');
     }
 }

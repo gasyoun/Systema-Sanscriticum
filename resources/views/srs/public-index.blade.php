@@ -11,6 +11,29 @@
         </p>
     </div>
 
+    @php
+        $lang = $lang ?? 'sa';
+        $tabs = [
+            'sa' => 'Санскрит',
+            'hi' => 'Хинди',
+            'all' => 'Все',
+        ];
+    @endphp
+    <div class="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Язык колод">
+        @foreach($tabs as $code => $label)
+            @php $active = $lang === $code; @endphp
+            <a href="{{ url('/koloda').($code === 'sa' ? '' : '?lang='.$code) }}"
+               role="tab"
+               aria-selected="{{ $active ? 'true' : 'false' }}"
+               class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors
+                      {{ $active
+                          ? 'bg-[#E85C24] text-white'
+                          : 'bg-[#111622] text-slate-300 border border-[#1F2636] hover:border-[#E85C24]/50' }}">
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+
     @if($decks->isEmpty())
         <div class="rounded-2xl border border-[#1F2636] bg-[#111622] p-10 text-center text-slate-400">
             Колоды скоро появятся.
