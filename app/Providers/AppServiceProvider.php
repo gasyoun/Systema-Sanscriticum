@@ -44,6 +44,9 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
 
+use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
+use App\Services\Payments\PaypalWebhookSignatureVerifier;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -75,6 +78,10 @@ class AppServiceProvider extends ServiceProvider
         // bind (не singleton): тесты подставляют FakeSystemInspector через
         // $this->app->instance(...) и доказывают, что critical-находка доходит
         // до вердикта пробы (раньше был hard-coded `new ShellSystemInspector`).
+        $this->app->bind(
+            PaypalWebhookSignatureVerifier::class,
+            HttpPaypalWebhookSignatureVerifier::class,
+        );
         $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
     }
 

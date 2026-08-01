@@ -376,6 +376,8 @@ return [
             'client_id' => env('PAYPAL_CLIENT_ID'),
             'client_secret' => env('PAYPAL_CLIENT_SECRET'),
             'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+            // Test-only escape hatch — never true in prod .env
+            'skip_signature_verify' => (bool) env('PAYPAL_SKIP_WEBHOOK_SIGNATURE', false),
             'base_url' => env('PAYPAL_API_BASE_URL'), // optional override
         ],
     ],

@@ -61,7 +61,7 @@ class PaypalSubscriptionsConfigTest extends TestCase
     }
 
     /** @test */
-    public function webhook_returns_501_when_enabled_and_configured_phase0(): void
+    public function webhook_returns_200_when_enabled_and_configured_p1(): void
     {
         config([
             'features.paypal_subscriptions' => true,
@@ -77,10 +77,18 @@ class PaypalSubscriptionsConfigTest extends TestCase
         $this->assertTrue($svc->isConfigured());
         $this->assertStringContainsString('sandbox', $svc->apiBaseUrl());
 
+        // P1: signature accepted (skip/test double), unmatched subscription → 200 + ledger.
+        config(['services.paypal.subscriptions.skip_signature_verify' => true]);
+        $this->app->bind(
+            \App\Services\Payments\PaypalWebhookSignatureVerifier::class,
+            \App\Services\Payments\AcceptingPaypalWebhookSignatureVerifier::class,
+        );
+
         $this->postJson('/api/webhooks/paypal-subscriptions', [
             'id' => 'WH-EVENT-1',
             'event_type' => 'BILLING.SUBSCRIPTION.ACTIVATED',
-        ])->assertStatus(501);
+            'resource' => ['id' => 'I-UNKNOWN'],
+        ])->assertOk();
     }
 
     /** @test */
