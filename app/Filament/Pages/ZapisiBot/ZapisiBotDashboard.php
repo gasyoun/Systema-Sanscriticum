@@ -6,25 +6,27 @@ namespace App\Filament\Pages\ZapisiBot;
 
 use App\Filament\Clusters\ZapisiBot;
 use App\Models\Group;
+use App\Services\Telegram\ZapisiChatMemberException;
+use App\Services\Telegram\ZapisiChatMemberService;
 use App\Support\RoleGate;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 
 /**
- * Track C (H164): read-only dashboard tab for @zapisi_ORSbot — member roster
- * (D9 snapshot) + recent messages/media (D7+D8 corpus lane), both read
- * straight from the out-of-git store (never a DB table — PII/rights per the
- * Legal gate, this is a private booking chat, not a publishable group).
+ * Track C (H164): dashboard for @zapisi_ORSbot — member roster (D9 snapshot)
+ * + recent messages/media (D7+D8 corpus), + kick from chat via Bot API.
  *
- * Мультичат: выпадающий список с поиском по учебным группам с заданным
- * telegram_chat_id (реестр чатов = группы, тот же источник, что и у напоминаний),
- * ниже — состав+сообщения выбранной группы. Дип-линк ?group=<id>.
+ * Ростер: telegram user id + username из MTProto (telegram-harvest:roster-groups).
+ * Кик: soft kick через zapisi_bot_token (не требует users.telegram_id в LMS).
+ *
+ * Мультичат: select по Group.telegram_chat_id; дип-линк ?group=<id>.
  */
 class ZapisiBotDashboard extends Page implements HasForms
 {
@@ -234,6 +236,111 @@ class ZapisiBotDashboard extends Page implements HasForms
     public function getChatIdProperty(): ?string
     {
         return $this->chatId();
+    }
+
+    /** Проверка: @zapisi_ORSbot — админ чата с can_restrict_members. */
+    public function checkZapisiRights(ZapisiChatMemberService $zapisi): void
+    {
+        $chatId = $this->chatId();
+        if ($chatId === null) {
+            Notification::make()
+                ->title('Нет chat_id')
+                ->body('У выбранной группы не заполнен telegram_chat_id.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $rights = $zapisi->botRightsInChat($chatId);
+        Notification::make()
+            ->title($rights['ok'] ? 'Zapisi может исключать' : 'Zapisi не может исключать')
+            ->body($rights['detail'])
+            ->{$rights['ok'] ? 'success' : 'danger'}()
+            ->send();
+    }
+
+    /**
+     * Soft kick участника по Telegram user id из снимка ростера.
+     * wire:click с confirm в blade.
+     */
+    public function kickMember(int $telegramUserId, ZapisiChatMemberService $zapisi): void
+    {
+        $chatId = $this->chatId();
+        if ($chatId === null) {
+            Notification::make()->title('Нет chat_id группы')->danger()->send();
+
+            return;
+        }
+
+        if ($telegramUserId <= 0) {
+            Notification::make()->title('Некорректный Telegram id')->danger()->send();
+
+            return;
+        }
+
+        // Не кикаем ботов из снимка (и себя).
+        $member = collect($this->roster['members'] ?? [])
+            ->first(fn (array $m): bool => (int) ($m['id'] ?? 0) === $telegramUserId);
+
+        if (is_array($member) && ! empty($member['is_bot'])) {
+            Notification::make()
+                ->title('Это бот')
+                ->body('Исключать ботов из чата этим действием нельзя.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        try {
+            $zapisi->kick(
+                $chatId,
+                $telegramUserId,
+                auth()->id() ? (int) auth()->id() : null,
+            );
+
+            $label = is_array($member)
+                ? ($member['name'] ?? '').(isset($member['username']) && $member['username'] ? ' @'.$member['username'] : '')
+                : (string) $telegramUserId;
+
+            Notification::make()
+                ->title('Исключён из Telegram-чата')
+                ->body(trim($label) !== '' ? trim($label) : (string) $telegramUserId)
+                ->success()
+                ->send();
+
+            // Убрать из локального снимка, чтобы UI сразу отразил кик
+            // (полный снимок обновит roster-groups раз в час).
+            $this->removeMemberFromRosterSnapshot($chatId, $telegramUserId);
+        } catch (ZapisiChatMemberException $e) {
+            Notification::make()
+                ->title('Не удалось исключить')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    private function removeMemberFromRosterSnapshot(string $chatId, int $telegramUserId): void
+    {
+        $file = $this->storePath().'/roster/'.$chatId.'.json';
+        if (! File::exists($file)) {
+            return;
+        }
+
+        $decoded = json_decode(File::get($file), true);
+        if (! is_array($decoded) || ! isset($decoded['members']) || ! is_array($decoded['members'])) {
+            return;
+        }
+
+        $decoded['members'] = array_values(array_filter(
+            $decoded['members'],
+            fn ($m): bool => ! is_array($m) || (int) ($m['id'] ?? 0) !== $telegramUserId,
+        ));
+        $decoded['count'] = count($decoded['members']);
+
+        File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
     }
 
     private function chatId(): ?string
