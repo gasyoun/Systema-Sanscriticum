@@ -629,12 +629,12 @@ class ProbeCabinetHealth extends Command
 
         if ($onlyAutoDeploy) {
             return "Это guards/auto-deploy (fuse), не «сервер мёртв».\n"
-                ."Сайт часто 200: <code>cat storage/auto_deploy.disabled</code> → smoke → "
+                .'Сайт часто 200: <code>cat storage/auto_deploy.disabled</code> → smoke → '
                 ."после разбора <code>rm storage/auto_deploy.disabled</code>.\n"
-                ."Артёма (@t3t3r1n) звать только если SSH не отвечает / хост мёртв.";
+                .'Артёма (@t3t3r1n) звать только если SSH не отвечает / хост мёртв.';
         }
 
-        return "Сначала SSH + runbook. Поднять VPS/контейнер может только Артём (@t3t3r1n) — "
+        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артём (@t3t3r1n) — '
             .'отвечает нечасто; звать только при отсутствии SSH / host-down.';
     }
 
