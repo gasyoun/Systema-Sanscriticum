@@ -585,6 +585,25 @@ return [
     'games_skill_drills' => (bool) env('GAMES_SKILL_DRILLS', false),
 
     /*
+     | Tochka multi-mode recurring billing (H2026 Phase 0 scaffold).
+     | Master OFF by default: no subscription create/charge/webhook side-effects.
+     | Modes allow-list (comma-separated in env): per_course, consolidated, club,
+     | installment, multi_month. Phase 1+ only enables paths after human prod enable.
+     | Docs: docs/ARCHITECTURE_TOCHKA_RECURRING_BILLING_MODES_2026.md
+     | Enable: TOCHKA_RECURRING_ENABLED=true + config:cache (money PR, human only).
+     */
+    'tochka_recurring' => (bool) env('TOCHKA_RECURRING_ENABLED', false),
+
+    /*
+     | Comma-separated mode allow-list when tochka_recurring is ON.
+     | Default: per_course,club,installment (A, D, E first-wave; B/C opt-in later).
+     */
+    'tochka_recurring_modes' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('TOCHKA_RECURRING_MODES', 'per_course,club,installment'))
+    ))),
+
+    /*
      | PayPal Subscriptions API (H2027) — auto-bill for diaspora, separate from
      | manual claim (PAYPAL_CLAIM_ENABLED). Default OFF: route returns 404 and
      | no Product/Plan/Subscription calls. Prod enable is human @DO only after

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Exports;
 
+use App\Filament\Imports\SrsCardImporter;
 use App\Models\SrsCard;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
@@ -13,7 +14,7 @@ use Filament\Actions\Exports\Models\Export;
  * CSV export of SRS cards for backup and optional re-upload to Memrise
  * (H2055 / teacher workflow: Systema is source of truth).
  *
- * Columns match {@see \App\Filament\Imports\SrsCardImporter} plus deck slug
+ * Columns match {@see SrsCardImporter} plus deck slug
  * for human-readable Memrise bulk tools.
  */
 class SrsCardExporter extends Exporter
