@@ -9,9 +9,12 @@ use App\Models\User;
 use App\Services\ClassAttendanceService;
 use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
+use App\Services\Telegram\ZapisiChatMemberException;
+use App\Services\Telegram\ZapisiChatMemberService;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -251,6 +254,87 @@ class GroupResource extends Resource
                                 ->mapWithKeys(fn ($id) => [(int) $id => $pivot])
                                 ->all()
                         );
+                    }),
+
+                Tables\Actions\Action::make('check_zapisi_rights')
+                    ->label('Права zapisi')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('gray')
+                    ->visible(fn (Group $record): bool => filled($record->telegram_chat_id))
+                    ->action(function (Group $record, ZapisiChatMemberService $zapisi): void {
+                        $rights = $zapisi->botRightsInChat((string) $record->telegram_chat_id);
+                        Notification::make()
+                            ->title($rights['ok'] ? 'Zapisi может исключать' : 'Zapisi не может исключать')
+                            ->body($rights['detail'])
+                            ->{$rights['ok'] ? 'success' : 'danger'}()
+                            ->send();
+                    }),
+
+                // Soft kick из учебного TG-чата через @zapisi_ORSbot (ban+unban).
+                // LMS-состав не трогаем. Бот должен быть админом с can_restrict_members.
+                Tables\Actions\Action::make('kick_from_telegram')
+                    ->label('Исключить из TG')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(fn (Group $record): bool => filled($record->telegram_chat_id))
+                    ->form(fn (Group $record): array => [
+                        Forms\Components\Select::make('user_id')
+                            ->label('Ученик')
+                            ->required()
+                            ->searchable()
+                            ->options(
+                                $record->activeUsers()
+                                    ->orderBy('name')
+                                    ->get(['users.id', 'users.name', 'users.telegram_id', 'users.telegram_username'])
+                                    ->mapWithKeys(function (User $u) {
+                                        $tg = filled($u->telegram_id)
+                                            ? 'TG:'.$u->telegram_id.($u->telegram_username ? ' @'.$u->telegram_username : '')
+                                            : 'Telegram не привязан';
+                                        $label = $u->name.' — '.$tg;
+
+                                        return [(int) $u->id => $label];
+                                    })
+                                    ->all()
+                            )
+                            ->helperText('Исключение только из Telegram-чата (soft kick). Состав LMS не меняется. Нужна привязка Telegram у ученика.'),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Group $record): string => 'Исключить из TG — '.$record->name)
+                    ->modalSubmitActionLabel('Исключить')
+                    ->action(function (Group $record, array $data, ZapisiChatMemberService $zapisi): void {
+                        $user = User::query()->find($data['user_id'] ?? null);
+                        if (! $user) {
+                            Notification::make()->title('Ученик не найден')->danger()->send();
+
+                            return;
+                        }
+                        if (blank($user->telegram_id)) {
+                            Notification::make()
+                                ->title('Нет telegram_id')
+                                ->body('Ученик должен привязать Telegram в кабинете.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                        try {
+                            $zapisi->kick(
+                                (string) $record->telegram_chat_id,
+                                $user->telegram_id,
+                                auth()->id() ? (int) auth()->id() : null,
+                            );
+                            Notification::make()
+                                ->title('Исключён из Telegram-чата')
+                                ->body($user->name)
+                                ->success()
+                                ->send();
+                        } catch (ZapisiChatMemberException $e) {
+                            Notification::make()
+                                ->title('Не удалось исключить')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
 
                 Tables\Actions\EditAction::make(),
