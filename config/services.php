@@ -141,6 +141,11 @@ return [
         // окажутся два экземпляра, каждый со своим IPC-демоном. Kernel::schedule()
         // выводит TTL замка отсюда, так что инвариант держится сам.
         'sync_timeout_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_SECONDS', 120),
+        // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
+        // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
+        // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.
+        'auto_heal' => (bool) env('TELEGRAM_SUPPORT_AUTO_HEAL', false),
+        'auto_heal_cooldown_minutes' => (int) env('TELEGRAM_SUPPORT_AUTO_HEAL_COOLDOWN_MINUTES', 30),
         // Очередь «Техника» — канон в config/support_tech.php; зеркало здесь
         // для чтения из services.telegram_support.* (см. TechnicalIssueRouter).
         'tech_assignee_user_id' => env('SUPPORT_TECH_ASSIGNEE_USER_ID')

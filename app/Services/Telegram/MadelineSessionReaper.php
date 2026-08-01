@@ -65,6 +65,43 @@ class MadelineSessionReaper
     }
 
     /**
+     * SIGKILL — для процессов в uninterruptible sleep (D), которых SIGTERM
+     * не берёт (прод 01.08.2026: worker 28 ч в disk sleep).
+     *
+     * @return int сколько процессов получили SIGKILL
+     */
+    public function killDaemonsHard(): int
+    {
+        if (PHP_OS_FAMILY === 'Windows' || ! function_exists('exec') || ! function_exists('posix_kill')) {
+            return 0;
+        }
+
+        $session = MadelineClientFactory::sessionPath();
+        if ($session === '') {
+            return 0;
+        }
+
+        $self = function_exists('getmypid') ? (int) getmypid() : 0;
+        $parent = function_exists('posix_getppid') ? posix_getppid() : 0;
+
+        $lines = [];
+        @exec('pgrep -f -- '.escapeshellarg($this->pgrepPattern($session)).' 2>/dev/null', $lines);
+
+        $killed = 0;
+        foreach ($lines as $line) {
+            $pid = (int) trim($line);
+            if ($pid <= 0 || $pid === $self || $pid === $parent) {
+                continue;
+            }
+            if (@posix_kill($pid, 9)) { // SIGKILL
+                $killed++;
+            }
+        }
+
+        return $killed;
+    }
+
+    /**
      * Удаляет осиротевший IPC-сокет/состояние сессии, НЕ трогая учётные данные:
      * `safe.php` и прочие `*.php` лежат в том же каталоге, и их удаление
      * разлогинило бы аккаунт (нужен повторный интерактивный вход с кодом).
@@ -86,6 +123,34 @@ class MadelineSessionReaper
             $targets[] = $session.DIRECTORY_SEPARATOR.$name;
         }
         foreach ((glob($session.DIRECTORY_SEPARATOR.'*.ipc') ?: []) as $path) {
+            $targets[] = $path;
+        }
+
+        $removed = [];
+        foreach (array_unique($targets) as $path) {
+            if (is_file($path) && @unlink($path)) {
+                $removed[] = basename($path);
+            }
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Файловые lock'и Madeline (не путать с Cache::lock madeline-session).
+     * `safe.php` / `lightState.php` не трогаем.
+     *
+     * @return array<int, string>
+     */
+    public function clearLockArtifacts(): array
+    {
+        $session = MadelineClientFactory::sessionPath();
+        if (! is_dir($session)) {
+            return [];
+        }
+
+        $targets = [$session.DIRECTORY_SEPARATOR.'lock'];
+        foreach ((glob($session.DIRECTORY_SEPARATOR.'*.lock') ?: []) as $path) {
             $targets[] = $path;
         }
 

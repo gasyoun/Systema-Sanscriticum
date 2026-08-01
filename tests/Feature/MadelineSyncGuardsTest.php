@@ -97,13 +97,17 @@ class MadelineSyncGuardsTest extends TestCase
         File::put($session.DIRECTORY_SEPARATOR.'lightState.php', 'light');
         File::put($session.DIRECTORY_SEPARATOR.'ipcState.php', 'ipc state');
         File::put($session.DIRECTORY_SEPARATOR.'callback.ipc', '');
+        File::put($session.DIRECTORY_SEPARATOR.'lock', '');
+        File::put($session.DIRECTORY_SEPARATOR.'safe.php.lock', '');
 
         config(['services.telegram_support.session' => $session]);
 
-        $removed = (new MadelineSessionReaper)->clearIpcArtifacts();
+        $reaper = new MadelineSessionReaper;
+        $removed = $reaper->clearIpcArtifacts();
+        $removed = array_merge($removed, $reaper->clearLockArtifacts());
         sort($removed);
 
-        $this->assertSame(['callback.ipc', 'ipcState.php'], $removed);
+        $this->assertSame(['callback.ipc', 'ipcState.php', 'lock', 'safe.php.lock'], $removed);
 
         // Учётные данные трогать нельзя: их удаление разлогинивает аккаунт и
         // требует повторного интерактивного входа с кодом.
