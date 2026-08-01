@@ -50,7 +50,7 @@ Out of scope for this memo: actually rotating tokens (human / gated handoff).
 | C13 | 🟡 | Dual Google Drive/Sheets OAuth | `Google Drive account` + `Гугл диск`; Sheets + `аккаунт МЮ` | Consolidate or document owner | Human |
 | C14 | 🟡 | OpenAI + OpenRouter + Anthropic + YANDEX GPT + Apify + Baserow + Supabase×2 | Broad third-party surface | Confirm still needed; rotate keys on schedule | Human |
 | C15 | 🟡 | Backup files on host | `/opt/n8n/database.sqlite.bak-*` (Jul 25) + `credentials.json` export in `/opt/n8n/` | Encrypt or remove stale backups; `credentials.json` must not be world-readable or in git | Ops |
-| C16 | 🟡 | Workflow binary storage 5.6G | Old media in `storage/storage/workflows/*` | Prune inactive execution binary; keep Active retention policy | Ops handoff |
+| C16 | 🟢 fixed H1962 | Workflow binary storage 5.6G | Was 6.6G; old media under `storage/storage/workflows/*` | Pruned to **1.4G** (−5.2G); kept ZOOM exec 351+173; inactive binary trees removed | [OPS_PRUNE_STORAGE_H1962](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PRUNE_STORAGE_H1962_2026-08-01.md) |
 | C17 | 🟠 | Deepgram / OpenRouter / goo.su / Rutube tokens in ZOOM HTTP nodes | Some via credentials, some may be query/header — re-check on edit | Prefer credential store; scrub on export | Ops |
 | C18 | 🟡 | Laravel `.env` empty webhooks | `N8N_SCHEDULE_SHEET_WEBHOOK=` etc. often empty | Intentional inert OR misconfig — verify per env (staging/prod) | Human |
 
