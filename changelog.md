@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Fixed
+- **PromoReservationTest vs CHECKOUT_PROMO_SURVIVES_SESSION default true (#1009).** Capacity exhaustion with the renewal guard on returns `checkout.confirm-price` (full-price interstitial), not `assertSessionHasErrors('promo_code')`. Three reservation tests updated to match. Grok 4.5 (`grok-4.5`).
 - **H1992 CI: drop impossible null-language deck fixture.** `srs_decks.language` is NOT NULL enum default `sa`; test that inserted null violated SQLite integrity on main after #1011. Grok 4.5 (`grok-4.5`).
 
 ### Added

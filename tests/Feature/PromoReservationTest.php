@@ -66,8 +66,12 @@ class PromoReservationTest extends TestCase
 
         $this->checkout($first, $tariff, $promo)->assertRedirect();
 
+        // With checkout_promo_survives_session default true (#1009), capacity
+        // exhaustion is a lapsed-promo confirmation (full-price interstitial),
+        // not a ValidationException on promo_code. No second bank link.
         $this->checkout($second, $tariff, $promo)
-            ->assertSessionHasErrors('promo_code');
+            ->assertOk()
+            ->assertViewIs('checkout.confirm-price');
 
         $this->assertSame(1, Payment::where('promo_code_id', $promo->id)->count());
         $this->assertSame(1, $promo->activeReservationCount());
@@ -120,7 +124,9 @@ class PromoReservationTest extends TestCase
         );
 
         $buyer = User::factory()->create();
-        $this->checkout($buyer, $tariff, $promo)->assertSessionHasErrors('promo_code');
+        $this->checkout($buyer, $tariff, $promo)
+            ->assertOk()
+            ->assertViewIs('checkout.confirm-price');
 
         $this->assertSame(1, $promo->activeReservationCount());
         Http::assertNothingSent();
@@ -133,7 +139,9 @@ class PromoReservationTest extends TestCase
         $this->pendingReservation(User::factory()->create(), $tariff, $promo, null);
 
         $buyer = User::factory()->create();
-        $this->checkout($buyer, $tariff, $promo)->assertSessionHasErrors('promo_code');
+        $this->checkout($buyer, $tariff, $promo)
+            ->assertOk()
+            ->assertViewIs('checkout.confirm-price');
 
         $this->assertSame(1, $promo->activeReservationCount());
         Http::assertNothingSent();
