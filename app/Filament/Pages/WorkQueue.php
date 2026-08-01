@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\LeadResource;
 use App\Filament\Resources\UserResource;
+use App\Models\Deal;
 use App\Models\FollowUpTask;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
@@ -90,6 +91,17 @@ class WorkQueue extends Page
     public function getFollowUpsProperty(): Collection
     {
         return $this->report()->followUpTasksDue();
+    }
+
+    /**
+     * Шестой бакет — недожатые open Deal (H2119 / dozhim Wave 1b). Флаг
+     * dozhim_queue; пока OFF — пусто и карточка скрыта.
+     *
+     * @return Collection<int, Deal>
+     */
+    public function getUnpaidDealsProperty(): Collection
+    {
+        return $this->report()->unpaidOpenDeals();
     }
 
     /** URL-хелперы для действий «открыть». */

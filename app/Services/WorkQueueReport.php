@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Deal;
 use App\Models\FollowUpTask;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
@@ -23,7 +24,8 @@ use Illuminate\Support\Collection;
  *   3) риск оттока                  — StuckStudentsReport;
  *   4) поддержка без ответа > N ч    — открытый тред, последнее сообщение входящее;
  *   5) задачи по сделкам на сегодня — FollowUpTask (GC-C3, H1836), за флагом
- *      crm_follow_up_tasks: пока он OFF, бакет пуст и счётчик равен нулю.
+ *      crm_follow_up_tasks: пока он OFF, бакет пуст и счётчик равен нулю;
+ *   6) недожатые open Deal старше N ч — dozhim Wave 1b (H2119), флаг dozhim_queue.
  */
 class WorkQueueReport
 {
@@ -149,9 +151,36 @@ class WorkQueueReport
     }
 
     /**
+     * Недожатые open Deals (H2119 / NOBORING Wave 1b): сделка ещё не закрыта и
+     * висит дольше N часов (config/dozhim.php unpaid_deal_hours, default 24).
+     * Карточки появляются после open-on-pending (H2102) когда crm_pipeline_board ON.
+     *
+     * За флагом dozhim_queue: пока OFF — пусто, без запроса к deals.
+     *
+     * @return Collection<int, Deal>
+     */
+    public function unpaidOpenDeals(): Collection
+    {
+        if (! config('features.dozhim_queue')) {
+            return collect();
+        }
+
+        $hours = max(1, (int) config('dozhim.unpaid_deal_hours', 24));
+        $cutoff = now()->subHours($hours);
+
+        return Deal::query()
+            ->open()
+            ->where('created_at', '<=', $cutoff)
+            ->with(['user', 'lead', 'course', 'assignee'])
+            ->orderBy('created_at')
+            ->limit(self::LIMIT)
+            ->get();
+    }
+
+    /**
      * Счётчики бакетов для заголовка страницы.
      *
-     * @return array{leads:int, promises:int, stuck:int, support:int, follow_ups:int}
+     * @return array{leads:int, promises:int, stuck:int, support:int, follow_ups:int, unpaid_deals:int}
      */
     public function counts(): array
     {
@@ -161,6 +190,7 @@ class WorkQueueReport
             'stuck' => $this->stuckStudents()->count(),
             'support' => $this->unansweredSupport()->count(),
             'follow_ups' => $this->followUpTasksDue()->count(),
+            'unpaid_deals' => $this->unpaidOpenDeals()->count(),
         ];
     }
 }
