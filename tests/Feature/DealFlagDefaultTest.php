@@ -54,4 +54,18 @@ class DealFlagDefaultTest extends TestCase
 
         $this->assertSame(0, Deal::query()->count(), 'при выключенном флаге мост обязан быть инертен на проде');
     }
+
+    /** H2102: pending open path must also stay inert while flag is OFF. */
+    public function test_pending_intent_writes_nothing_by_default(): void
+    {
+        Payment::create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => Course::factory()->create(['is_active' => true])->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->assertSame(0, Deal::query()->count(), 'pending open-on-intent must not write deals while CRM_PIPELINE_BOARD is OFF');
+    }
 }
