@@ -269,10 +269,12 @@ return [
      | Жёсткая ёмкость промокодов через timed reservations. Когда ВКЛ, живой
      | pending держит usage slot до TTL ссылки Точки (30 мин) + webhook-буфера
      | (10 мин), null-expiry легаси держится до ручной сверки, а paid-reversal
-     | освобождает used_count. ВЫКЛ по умолчанию; ручное включение —
-     | CHECKOUT_PROMO_RESERVATIONS=true + config:cache после миграции и ревью.
+     | освобождает used_count. ВКЛ по умолчанию (MG 01-08-2026 capacity + reaper):
+     | opt-out CHECKOUT_PROMO_RESERVATIONS=false. Требует payment_link_expires_at
+     | (миграция 2026_07_18) + reaper для снятия брошенных броней. См.
+     | MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.
      */
-    'checkout_promo_reservations' => (bool) env('CHECKOUT_PROMO_RESERVATIONS', false),
+    'checkout_promo_reservations' => (bool) env('CHECKOUT_PROMO_RESERVATIONS', true),
 
     /*
      | Разрешает единственную автоматическую запись команды

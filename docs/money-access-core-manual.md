@@ -273,7 +273,7 @@ deposit must not credit two open orders at once).
 Validity = active + calendar + capacity + course match + once-per-user (paid
 payments only — an abandoned pending does not burn the code). `used_count`
 increments **on payment**, not on checkout. Capacity can be hardened with timed
-reservations (`checkout_promo_reservations`, default OFF): a live pending holds a
+reservations (`checkout_promo_reservations`, **default ON** since 01-08-2026): a live pending holds a
 slot until the Tochka link TTL (30 min) + webhook buffer (10 min) expires. A carried
 promo that lapsed between page load and submit triggers an **explicit price
 confirmation** — never a silent full-price charge (H1396 §1, MG ruling 20-07-2026).
@@ -491,7 +491,7 @@ after any `.env` change on a config-cached deployment run `php artisan config:ca
 | `checkout_inactive_tariff_guard` | `CHECKOUT_INACTIVE_TARIFF_GUARD` | **ON** | 404 on checkout of a deactivated tariff before any row/bank link is created |
 | `checkout_referral_credit_lock` | `CHECKOUT_REFERRAL_CREDIT_LOCK` | **ON** | row-lock + DB-authoritative referral wallet in checkout |
 | `checkout_deposit_reversal` | `CHECKOUT_DEPOSIT_REVERSAL` | **ON** | LIFO restoration of `deposit_credit_applied` on paid→failed/canceled |
-| `checkout_promo_reservations` | `CHECKOUT_PROMO_RESERVATIONS` | OFF | timed promo capacity slots (link TTL 30 min + 10 min webhook buffer); paid-reversal releases `used_count` |
+| `checkout_promo_reservations` | `CHECKOUT_PROMO_RESERVATIONS` | **ON** (default true since 01-08-2026) | timed promo capacity slots (link TTL 30 min + 10 min webhook buffer); paid-reversal releases `used_count` |
 | `checkout_integrity_safe_repairs` | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | OFF | allows `payments:audit-checkout-integrity --apply-safe` (promo counters only) |
 | `checkout_stale_order_expiry` | `CHECKOUT_STALE_ORDER_EXPIRY` | **ON** | the stale-checkout reaper `payments:expire-stale-checkouts --apply` (dry-run always works; schedule only when ON) |
 | `checkout_promo_survives_session` | `CHECKOUT_PROMO_SURVIVES_SESSION` | **ON** | H1396 §1: promo carried in a hidden field, re-resolved authoritatively; lapsed ⇒ explicit price confirmation |

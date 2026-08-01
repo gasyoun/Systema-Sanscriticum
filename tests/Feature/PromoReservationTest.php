@@ -30,6 +30,10 @@ class PromoReservationTest extends TestCase
         Queue::fake();
         Mail::fake();
         MarketingSetting::flushCached();
+        // Isolate reservation capacity hard-errors from H1396 promo-lapse confirm-price
+        // (when checkout_promo_survives_session is ON, exhausted capacity surfaces as
+        // the confirmation view before the createPayment transaction capacity check).
+        config()->set('features.checkout_promo_survives_session', false);
         Http::fake([
             'enter.tochka.com/*' => Http::response([
                 'Data' => [
@@ -40,13 +44,15 @@ class PromoReservationTest extends TestCase
         ]);
     }
 
-    public function test_promo_reservations_are_dark_by_default(): void
+    public function test_promo_reservations_are_on_by_default(): void
     {
-        $this->assertFalse(config('features.checkout_promo_reservations'));
+        $this->assertTrue(config('features.checkout_promo_reservations'));
     }
 
     public function test_flag_off_preserves_payload_and_expiry_behavior(): void
     {
+        config()->set('features.checkout_promo_reservations', false);
+
         [$tariff, $promo] = $this->tariffAndPromo();
         $user = User::factory()->create();
 
