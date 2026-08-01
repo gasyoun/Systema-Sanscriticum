@@ -69,7 +69,13 @@ class WebhookController extends Controller
             $paymentId = $matches[1] ?? null;
 
             if (! $paymentId) {
-                Log::info("Вебхук: В purpose нет номера заказа. Purpose: {$purpose}");
+                // H2085: was info — charged bank events with wrong purpose stayed quiet.
+                // Soft 200 stays intentional (Tochka retries on non-2xx for forever-noise
+                // on non-order purposes); LOUD log is the operator signal.
+                Log::warning('Вебхук: в purpose нет «Заказ №{id}» — доступ не будет выдан', [
+                    'purpose' => $purpose,
+                    'status' => $statusFromBank,
+                ]);
             }
 
             // Идемпотентность по телу события (H1359): sha256 сырого JWT.
@@ -85,12 +91,21 @@ class WebhookController extends Controller
                 return response('OK', 200);
             }
 
-            $successStatuses = ['paid', 'authorized', 'APPROVED', 'AUTHORIZED', 'captured', 'completed'];
+            // Capture-confirmed statuses. Hold (authorized/AUTHORIZED) historically sat
+            // in the same list → access on bank hold, not capture (H2085 silent-wrong).
+            // Flag OFF (default): legacy parity, hold still grants. Flag ON: hold is
+            // journalled as hold_not_captured, no paid transition.
+            $captureStatuses = ['paid', 'APPROVED', 'captured', 'completed'];
+            $holdStatuses = ['authorized', 'AUTHORIZED'];
+            $authorizedNotPaid = (bool) config('features.tochka_authorized_not_paid');
+            $successStatuses = $authorizedNotPaid
+                ? $captureStatuses
+                : array_merge($captureStatuses, $holdStatuses);
             $failureStatuses = ['rejected', 'canceled', 'failed'];
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
-            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $reportedAmount, $eventHash, $guard, $successStatuses, $failureStatuses) {
+            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $reportedAmount, $eventHash, $guard, $successStatuses, $failureStatuses, $holdStatuses, $authorizedNotPaid) {
                 $payment = $paymentId ? Payment::lockForUpdate()->find($paymentId) : null;
 
                 // Решение по этой доставке для журнала; по умолчанию — как раньше.
@@ -104,6 +119,14 @@ class WebhookController extends Controller
                     if ($paymentId) {
                         Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
                     }
+                } elseif ($authorizedNotPaid && in_array($statusFromBank, $holdStatuses, true)) {
+                    // H2085: bank hold ≠ capture — do not grant access.
+                    $decision = PaymentWebhookEvent::DECISION_HOLD_NOT_CAPTURED;
+                    $apply = false;
+                    Log::warning("⛔ Вебхук: hold (status={$statusFromBank}) для заказа №{$payment->id} — доступ НЕ выдан (ждём capture/paid).", [
+                        'payment_id' => $payment->id,
+                        'bank_status' => $statusFromBank,
+                    ]);
                 } elseif (in_array($statusFromBank, $successStatuses, true)) {
                     // (b) Воскрешение: платёж был оплачен и затем отменён/возвращён.
                     // Повторный/переигранный success-JWT не должен воскрешать доступ,

@@ -11,6 +11,7 @@ use App\Models\PaymentWebhookEvent;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -364,6 +365,187 @@ PEM;
         $this->assertDatabaseHas('payment_webhook_events', [
             'payment_id' => $payment->id,
             'decision' => PaymentWebhookEvent::DECISION_APPLIED,
+        ]);
+    }
+
+    // ================= H2085: hold ≠ capture · empty groups · purpose miss =================
+
+    /**
+     * H2085 gap 2 — flag OFF (default): authorized still grants (legacy parity /
+     * money-PR prod-inert). Hold was historically in successStatuses.
+     *
+     * @test
+     */
+    public function flag_off_authorized_hold_still_grants_legacy(): void
+    {
+        config([
+            'features.tochka_authorized_not_paid' => false,
+            'features.tochka_webhook_guard' => false,
+        ]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'authorized',
+        ]))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+    }
+
+    /**
+     * H2085 gap 2 — flag ON: authorized hold does NOT mark paid, does NOT grant
+     * groups, journals hold_not_captured.
+     *
+     * @test
+     *
+     * @dataProvider holdStatusProvider
+     */
+    public function flag_on_hold_status_does_not_grant(string $bankStatus): void
+    {
+        config([
+            'features.tochka_authorized_not_paid' => true,
+            'features.tochka_webhook_guard' => false,
+        ]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => $bankStatus,
+        ]))->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups->contains($group->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $payment->id,
+            'decision' => PaymentWebhookEvent::DECISION_HOLD_NOT_CAPTURED,
+            'bank_status' => $bankStatus,
+        ]);
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function holdStatusProvider(): array
+    {
+        return [
+            'authorized lower' => ['authorized'],
+            'AUTHORIZED upper' => ['AUTHORIZED'],
+        ];
+    }
+
+    /**
+     * H2085 gap 2 — flag ON still grants on true capture status `paid`.
+     *
+     * @test
+     */
+    public function flag_on_paid_capture_still_grants(): void
+    {
+        config([
+            'features.tochka_authorized_not_paid' => true,
+            'features.tochka_webhook_guard' => false,
+        ]);
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'paid',
+        ]))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+    }
+
+    /**
+     * H2085 gap 1 — course with zero groups: paid path logs error-level
+     * (was warning). Flag OFF: no throw, payment may still become paid (legacy).
+     *
+     * @test
+     */
+    public function empty_course_groups_logs_error_without_throw_when_flag_off(): void
+    {
+        config(['features.money_grant_require_groups' => false]);
+        $this->useTestKey();
+        Log::spy();
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        // intentionally no $course->groups()->attach
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'paid',
+        ]))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertSame(0, $user->fresh()->groups()->count());
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn ($message) => is_string($message) && str_contains($message, 'grantAccess'))
+            ->atLeast()
+            ->once();
+    }
+
+    /**
+     * H2085 gap 1 — flag ON: empty groups hard-fails the paid transaction
+     * (RuntimeException). Payment stays pending; zero groups.
+     *
+     * @test
+     */
+    public function empty_course_groups_blocks_paid_when_flag_on(): void
+    {
+        config(['features.money_grant_require_groups' => true]);
+        $this->useTestKey();
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+
+        // fireOnPaid → grantAccess throws → outer webhook catch → 500.
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => 'paid',
+        ]))->assertStatus(500);
+
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertSame(0, $user->fresh()->groups()->count());
+    }
+
+    /**
+     * H2085 gap 3 — purpose without «Заказ №{id}»: soft 200 (intentional, bank
+     * retry hygiene) + UNMATCHED journal. Access not granted.
+     *
+     * @test
+     */
+    public function purpose_parse_miss_is_soft_200_unmatched_no_access(): void
+    {
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => 'Пополнение счёта без номера',
+            'status' => 'paid',
+        ]))->assertOk();
+
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups->contains($group->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'decision' => PaymentWebhookEvent::DECISION_UNMATCHED,
         ]);
     }
 }

@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2017: PayPal + company invoice ON on prod; H2014 CRM/session facts; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 01-08-2026 (H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -60,6 +60,27 @@ _Создано: 08-07-2026 · Обновлено: 31-07-2026 (H2017: PayPal + c
 
 Смоук: `/paypal/{tariff}` и `/invoice/{tariff}` → 200. Tochka: sbp+card, cashbox `digitalKassaTochka`.
 ККТ (своя) — **не** в этой выкладке. Доки: [TOCHKA audit](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
+
+---
+
+### ⚙️ H2085 — silent-grant gaps (hold ≠ paid · empty groups) — **после human-merge PR**
+
+Код авто-деплоится с `main`; **флаги тёмные** (money-contour). Включать только
+после ревью PR (НЕ auto-merge) и `config:cache`:
+
+```bash
+# .env (prod) — human @DO
+TOCHKA_AUTHORIZED_NOT_PAID=true
+# only after every paid course has ≥1 group in Filament «Группы»:
+MONEY_GRANT_REQUIRE_GROUPS=true
+# TOCHKA_WEBHOOK_GUARD already defaults true on main (01-08 false-economy);
+# confirm prod is not forcing =false
+php artisan config:cache
+```
+
+Memo: [docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md).
+Smoke after enable: hold JWT must leave payment `pending`; paid with groups grants;
+course without groups → 500 until groups attached.
 
 ---
 

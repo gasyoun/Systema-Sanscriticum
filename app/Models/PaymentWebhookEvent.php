@@ -32,10 +32,17 @@ class PaymentWebhookEvent extends Model
     /** Подпись валидна, но локального платежа нет (нет номера заказа / не найден). */
     public const DECISION_UNMATCHED = 'unmatched';
 
+    /**
+     * Банк прислал hold (authorized/AUTHORIZED), а не capture.
+     * Только при TOCHKA_AUTHORIZED_NOT_PAID=true — доступ не выдаём (H2085).
+     */
+    public const DECISION_HOLD_NOT_CAPTURED = 'hold_not_captured';
+
     /** Решения-отказы — для отчёта операторам (AuditCheckoutIntegrity). */
     public const REJECTED_DECISIONS = [
         self::DECISION_REJECTED_RESURRECTION,
         self::DECISION_REJECTED_AMOUNT_MISMATCH,
+        self::DECISION_HOLD_NOT_CAPTURED,
     ];
 
     /** Только момент записи; updated_at не нужен — лог неизменяем. */
