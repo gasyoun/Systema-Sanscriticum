@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Telegram;
 
+use App\Models\Group;
 use App\Models\MarketingSetting;
+use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +17,10 @@ use Illuminate\Support\Facades\Log;
  * Бот должен быть администратором группы с can_restrict_members.
  * Исключение = hard ban (banChatMember без unban): вернуться по инвайту
  * нельзя, пока оператор не вызовет unban.
+ *
+ * UI: дашборд «Записи (бот)» (roster) + «Должники» (по users.telegram_id
+ * и group.telegram_chat_id активных групп). LMS-членство / course_user
+ * при кике не меняется.
  */
 class ZapisiChatMemberService
 {
@@ -25,6 +32,97 @@ class ZapisiChatMemberService
     public function isConfigured(): bool
     {
         return $this->token() !== '';
+    }
+
+    /**
+     * Активные учебные группы студента с заполненным telegram_chat_id.
+     * Опционально — только группы, привязанные к курсу (строка должника).
+     *
+     * @return Collection<int, Group>
+     */
+    public function studyGroupsWithChat(User $user, ?int $courseId = null): Collection
+    {
+        $query = $user->activeGroups()
+            ->whereNotNull('telegram_chat_id')
+            ->where('telegram_chat_id', '!=', '');
+
+        if ($courseId !== null && $courseId > 0) {
+            $query->whereHas('courses', fn ($q) => $q->where('courses.id', $courseId));
+        }
+
+        return $query->get()
+            ->unique(fn (Group $g): string => trim((string) $g->telegram_chat_id))
+            ->values();
+    }
+
+    /**
+     * Hard-ban студента из всех (или выбранных) учебных TG-чатов.
+     *
+     * @param  list<int>|null  $groupIds  null = все studyGroupsWithChat; иначе пересечение
+     * @return array{
+     *     ok: list<array{group_id: int, group_name: string, chat_id: string}>,
+     *     failed: list<array{group_id: int, group_name: string, chat_id: string, error: string}>,
+     *     skipped: ?string
+     * }
+     */
+    public function kickFromStudyChats(
+        User $user,
+        ?int $courseId = null,
+        ?int $byUserId = null,
+        ?array $groupIds = null,
+    ): array {
+        $telegramId = trim((string) ($user->telegram_id ?? ''));
+        if ($telegramId === '') {
+            return [
+                'ok' => [],
+                'failed' => [],
+                'skipped' => 'У студента не привязан Telegram (users.telegram_id пуст).',
+            ];
+        }
+
+        if (! $this->isConfigured()) {
+            return [
+                'ok' => [],
+                'failed' => [],
+                'skipped' => 'Токен @zapisi_ORSbot не задан (MarketingSetting).',
+            ];
+        }
+
+        $groups = $this->studyGroupsWithChat($user, $courseId);
+        if ($groupIds !== null) {
+            $want = array_map('intval', $groupIds);
+            $groups = $groups->filter(fn (Group $g): bool => in_array((int) $g->id, $want, true))->values();
+        }
+
+        if ($groups->isEmpty()) {
+            return [
+                'ok' => [],
+                'failed' => [],
+                'skipped' => $courseId
+                    ? 'Нет активных групп курса с telegram_chat_id (проверьте карточку группы).'
+                    : 'Нет активных групп с telegram_chat_id.',
+            ];
+        }
+
+        $ok = [];
+        $failed = [];
+
+        foreach ($groups as $group) {
+            $chatId = trim((string) $group->telegram_chat_id);
+            $row = [
+                'group_id' => (int) $group->id,
+                'group_name' => (string) $group->name,
+                'chat_id' => $chatId,
+            ];
+            try {
+                $this->kick($chatId, $telegramId, $byUserId);
+                $ok[] = $row;
+            } catch (ZapisiChatMemberException $e) {
+                $failed[] = $row + ['error' => $e->getMessage()];
+            }
+        }
+
+        return ['ok' => $ok, 'failed' => $failed, 'skipped' => null];
     }
 
     /**
