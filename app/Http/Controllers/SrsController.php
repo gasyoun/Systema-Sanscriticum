@@ -8,6 +8,7 @@ use App\Models\SrsDeck;
 use App\Models\SrsReviewLog;
 use App\Models\SrsReviewState;
 use App\Services\Srs\Rating;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -188,8 +189,8 @@ class SrsController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\SrsDeck>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\SrsDeck>
+     * @param  Builder<SrsDeck>  $query
+     * @return Builder<SrsDeck>
      */
     private function applyLanguageFilter($query, string $lang)
     {
