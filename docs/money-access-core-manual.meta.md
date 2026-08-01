@@ -1,6 +1,6 @@
 # money-access-core-manual.meta.md — metadoc for `money-access-core-manual`
 
-_Created: 25-07-2026 · Last updated: 31-07-2026_
+_Created: 25-07-2026 · Last updated: 01-08-2026_
 
 Companion record for
 [money-access-core-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md) —
@@ -8,10 +8,9 @@ purpose, provenance, verification evidence, backlog and limitations, without
 restating the manual's content.
 
 ## Staleness block
-
-LAST_VERIFIED: 31-07-2026
-VERIFIED_BY: Grok 4.5 (grok-4.5), H2017 docs pass (manual §7b only; full H1405 suite not re-run)
-COMMANDS_SPOT_RUN: 4 (H1405) + prod smoke PayPal/invoice 200
+LAST_VERIFIED: 01-08-2026
+VERIFIED_BY: Grok 4.5 (grok-4.5), H2078 (COMMANDS_SPOT_RUN integer fix + path/php spot; full H1405 suite not re-run — no vendor in worktree)
+COMMANDS_SPOT_RUN: 2
 
 ## Subject
 
@@ -127,6 +126,7 @@ authored in this wave).
 
 | Date | Event | Model |
 |---|---|---|
+| 01-08-2026 | H2078: COMMANDS_SPOT_RUN forced to integer (was free-text UNPARSEABLE); LAST_VERIFIED refresh; path+php presence spots | Grok 4.5 (grok-4.5) |
 | 25-07-2026 | Manual + metadoc authored; C1/C2/C3 claim-verified; 4 spot-runs recorded | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | §9 C3 amended after the adversarial pass: `withoutEvents` create-as-paid paths (silent promise fulfillment) + the new-value-only audit walk make the guard blind to silently-created paid payments — "trail complete going forward" retracted | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | Adversarial ledger complete: 45/47 CONFIRMED; §5.2 `duplicate` row + §11.2 RU guidance corrected (the `duplicate` decision constant is never persisted — a replay leaves no ledger row) | Fable 5 (`claude-fable-5`), H1405 |
