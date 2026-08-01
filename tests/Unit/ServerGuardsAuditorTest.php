@@ -277,7 +277,8 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringContainsString('[warning] auto-deploy', $line);
         $this->assertStringNotContainsString('[critical] auto-deploy', $line);
         $this->assertStringContainsString('timeout-alive', $line);
-        $this->assertStringContainsString('код 124', $line);
+        // Message uses instrumental «с кодом 124» (not bare «код 124»).
+        $this->assertStringContainsString('кодом 124', $line);
     }
 
     public function test_tracked_dirty_non_pdf_is_a_warning(): void
