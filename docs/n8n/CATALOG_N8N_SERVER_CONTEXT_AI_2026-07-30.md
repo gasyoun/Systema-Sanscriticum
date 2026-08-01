@@ -126,7 +126,7 @@ Legacy siblings (OFF, archive-tag later): `ZOOM`, `ZOOM 1.2…`, `1.3…`, `1.4 
 
 8 nodes. Webhook path `lecture-clip-extract`, **Header Auth**, `responseMode=onReceived` (async — correct).  
 SSH cut+upload using `/root/.clip-env`; callback to Laravel with separate Header Auth cred.  
-**Exec:** 6 errors, 0 success in retention — **broken for production use until fixed**.  
+**Exec (pre-H1964):** 6 errors, 0 success. **Post-H1964 (01-08-2026):** ≥1 production success (exec 376) + Laravel callback rows for lesson 1802; probe guard on Expand spans. Ops: [OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md).  
 **Export:** [`exports/lecture-clip-extract.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/lecture-clip-extract.live.json)
 
 ### 3.3 `АДМИНКА+ТАБЛИЦА ОПЛАТ` · `XWQHAwlxBAFe6xfj` · ON
@@ -252,7 +252,7 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 | `monthly-schedule-post` imported but OFF | 🟡 H1965 defer-activate | `eixPIvFjfPdOSrYo` active=0 | Activate after H1959 token move + Header Auth + smoke |
 | Telegram bot token inlined in monthly HTTP URLs | 🔴 | Live node params | Rotate bot token; use Telegram credential node |
 | libfl password in book SSH command | 🟢 fixed H1958 | Was live CLI args; now `auto_order_from_env.sh` + `/root/.libfl-env` (600) | Human: confirm one login still works |
-| Lecture clip 6/6 errors | 🔴 | execution_entity | Debug SSH/ffmpeg/VK; dry-run one lesson |
+| Lecture clip 6/6 errors | ✅ H1964 | execution_entity | Fixed 01-08-2026 — see [OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md) |
 | Payments webhook Header Auth | 🟢 remediating H1960 | node auth | Header Auth on + Laravel `N8N_PAYMENTS_WEBHOOK_SECRET` |
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |
 | `n8nio/n8n:latest` unpinned | 🟠 | compose | Pin digest/version |
