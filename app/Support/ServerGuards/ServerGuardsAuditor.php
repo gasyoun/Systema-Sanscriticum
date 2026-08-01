@@ -222,11 +222,10 @@ final class ServerGuardsAuditor
      *
      * Предохранитель storage/auto_deploy.disabled ставится обёрткой после
      * ПРОВАЛЕННОГО деплоя или проваленной пост-деплойной проверки здоровья.
-     * Если обёртка успела автоматически откатиться и сайт жив (метка
-     * [rolled-back] в причине) — это warning: деплои стоят, но пожара нет,
-     * человек чинит без спешки. Без метки прод может быть нездоров — critical
-     * (Telegram). Пропажа самой cron-строки аварии не вызывает (деплои просто
-     * молча остановятся) — warning, тихая деградация.
+     * Severity (H2066): метки [rolled-back] и [blocked-preflight] — warning
+     * (сайт жив / HEAD не сдвинулся); без метки — critical (Telegram).
+     * Пропажа cron-строки — warning. Tracked dirty (не public/docs/*.pdf) —
+     * warning до следующего слота деплоя, чтобы не ждать breaker.
      *
      * @return list<GuardFinding>
      */
@@ -239,7 +238,10 @@ final class ServerGuardsAuditor
             $reason = trim((string) $this->sys->fileContents($breaker));
             $lastLine = $reason === '' ? 'без причины' : (array_slice(preg_split('/\r\n|\n|\r/', $reason) ?: [''], -1)[0] ?: 'без причины');
             $message = "авто-деплой остановлен предохранителем ({$lastLine}) — разобраться и удалить {$breaker}";
-            $findings[] = str_contains($lastLine, '[rolled-back]')
+            $soft = str_contains($lastLine, '[rolled-back]')
+                || str_contains($lastLine, '[blocked-preflight]')
+                || str_contains($lastLine, '[blocked-dirty]');
+            $findings[] = $soft
                 ? GuardFinding::warning('auto-deploy', $message)
                 : GuardFinding::critical('auto-deploy', $message);
         }
@@ -264,6 +266,26 @@ final class ServerGuardsAuditor
                 $findings[] = GuardFinding::warning(
                     'auto-deploy',
                     "авто-деплой: расписание не «{$schedule}» — строка «{$line}»",
+                );
+            }
+        }
+
+        $appDir = rtrim($this->spec->get('APP_DIR'), '/');
+        $dirty = $this->sys->trackedDirtyPaths($appDir);
+        if ($dirty !== null && $dirty !== []) {
+            $allowedRe = '#^public/docs/[^/]+\.pdf$#';
+            $blocking = array_values(array_filter(
+                $dirty,
+                static fn (string $path): bool => preg_match($allowedRe, $path) !== 1,
+            ));
+            if ($blocking !== []) {
+                $sample = array_slice($blocking, 0, 5);
+                $more = count($blocking) > 5 ? ' …+'.(count($blocking) - 5) : '';
+                $findings[] = GuardFinding::warning(
+                    'auto-deploy',
+                    'tracked dirty на проде (deploy.sh/auto-deploy остановятся): '
+                    .implode(', ', $sample).$more
+                    .' — код только через main; git checkout -- <file> или stash',
                 );
             }
         }

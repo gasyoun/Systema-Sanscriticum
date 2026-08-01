@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H2066: auto-deploy dirty-tree no longer false-critical «кабинет упал».** `deploy.sh --rollback` skips dirty-gate (`reset --hard` clears tracked dirty); forward deploy auto-discards tracked files already equal to `origin/main`; auto-deploy trips soft `[blocked-preflight]` when HEAD did not move and health is green; `guards:verify` treats `[blocked-preflight]`/`[rolled-back]` as warning and warns early on non-PDF tracked dirty. Docs: deploy.md, server-resource-guards.md. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **H1962 n8n hygiene/prune-storage — binary residue 6.6G → 1.4G (−5.2G).** Live host `193.232.229.91`: removed 14 older ZOOM (`1EIqqNzMl5NNIxST`) execution `binary_data` dirs + entire inactive binary trees `mkct0W3oFHftaBah` (таймкоды) and `T8scvz2KZpKNuF1B` (транскриб); kept last two ZOOM successes (exec **351**, **173**). Workflow definitions / Active set (5) / count (76) untouched; healthz 200. Ops note: [docs/n8n/OPS_PRUNE_STORAGE_H1962_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PRUNE_STORAGE_H1962_2026-08-01.md). Executor: Grok 4.5 (`grok-4.5`). Tracks [#1001](https://github.com/gasyoun/Systema-Sanscriticum/issues/1001).
 - **H2067 / CABINET_ADOPTION P0: password/cabinet-login mail subject.** `PasswordResetMail` subject is now **«Вход в личный кабинет ОРС»** (not «Сброс пароля» / «Восстановление доступа…»); body CTA framed as cabinet entry. Prod deliverability evidence (Yandex SMTP + SPF/DKIM/DMARC on `yandex.ru` From domain, `mail:preflight` OK, Horizon `mailing`) lives in ORS-FAQ `CABINET_ADOPTION_ROADMAP.md`. Executor: Grok 4.5 (`grok-4.5`).
@@ -7,7 +10,6 @@
 ## [1.81.5] - 2026-08-01
 ### Changed
 - **H1965 n8n bridge import-gaps — product-gated GTD defers (no placeholder import).** Live re-probe on `193.232.229.91`: `schedule-sheet-sync` / `vk-calendar-post` still **missing** (webhook 404); monthly `eixPIvFjfPdOSrYo` present **OFF**. Disposition: explicit GTD defer for sheet + calendar until product arms them; monthly activate blocked on H1959 token hygiene. Ops note: [docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md). Catalog gap table + ROADMAP Wave 3 updated. No ON workflow mutation; no Laravel env secrets written. Executor: Grok 4.5 (`grok-4.5`).
-
 
 ## [1.81.4] - 2026-08-01
 ### Security

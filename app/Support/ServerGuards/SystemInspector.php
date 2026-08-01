@@ -39,4 +39,12 @@ interface SystemInspector
      * Байты свопа; null — если узнать нельзя.
      */
     public function swapTotalBytes(): ?int;
+
+    /**
+     * Пути tracked-файлов с локальными правками в $repoDir
+     * (`git status --porcelain --untracked-files=no`). null — git недоступен.
+     *
+     * @return list<string>|null
+     */
+    public function trackedDirtyPaths(string $repoDir): ?array;
 }

@@ -26,8 +26,11 @@
 #    чинит без спешки. Миграции в деплое → отката НЕТ (migrate --force
 #    необратим) — предохранитель + critical, человек нужен срочно.
 #  • Предохранитель ставится в ЛЮБОМ провальном исходе — авто-деплои стоят до
-#    разбора. Метка [rolled-back] в причине = сайт восстановлен откатом;
-#    guards:verify даёт за неё warning вместо critical.
+#    разбора. Severity в guards:verify (H2066):
+#      [rolled-back]       — сайт восстановлен откатом → warning
+#      [blocked-preflight] — HEAD не сдвинулся, health чист (грязное дерево
+#                            и т.п.) → warning, не «человеку СРОЧНО»
+#      иначе               — critical (прод может быть нездоров)
 #  • Каждые 30 минут (даже если HEAD уже = origin/main) обновляет 644-зеркало
 #    storage/app/server_guards/crontab-root.installed — чтобы cabinet:probe /
 #    guards:verify от www-data видели живой root-крон (H1941: spool 600, bare
@@ -112,6 +115,16 @@ health_check() {
 # Откат разрешён только без миграций в диапазоне (migrate --force необратим).
 fail_deploy() {
   local reason="$1"
+  local head_now
+  head_now=$(git rev-parse HEAD 2>/dev/null || echo "")
+
+  # H2066: деплой не стартовал / не сдвинул HEAD, сайт жив → soft breaker.
+  # Типичный случай: грязное дерево (не-PDF). Раньше rollback тоже падал на
+  # dirty-gate и писал critical «автооткат НЕ помог» при живом HTTP.
+  if [ -n "$head_now" ] && [ "$head_now" = "$LOCAL" ] && health_check; then
+    trip "[blocked-preflight] $reason; HEAD не сдвинулся ($(git rev-parse --short "$LOCAL")), health чист — разобрать git status / preflight, не паника"
+  fi
+
   if git diff --name-only "$LOCAL" "$REMOTE" -- database/migrations/ | grep -q .; then
     trip "$reason; в деплое есть миграции — автооткат запрещён, нужен человек СРОЧНО"
   fi

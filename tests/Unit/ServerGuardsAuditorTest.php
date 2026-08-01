@@ -250,6 +250,50 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringContainsString('сайт жив', $line);
     }
 
+    public function test_blocked_preflight_breaker_is_a_warning_not_critical(): void
+    {
+        $sys = $this->healthy();
+        $breaker = rtrim($this->spec->get('APP_DIR'), '/').'/storage/auto_deploy.disabled';
+        $sys->files[$breaker] = "2026-08-01T02:00:00Z [blocked-preflight] deploy.sh завершился с кодом 1; HEAD не сдвинулся (65e660bd), health чист — разобрать git status / preflight, не паника\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $line = $this->lines($findings);
+        $this->assertStringContainsString('[warning] auto-deploy', $line);
+        $this->assertStringNotContainsString('[critical] auto-deploy', $line);
+        $this->assertStringContainsString('blocked-preflight', $line);
+        $this->assertStringContainsString('health чист', $line);
+    }
+
+    public function test_tracked_dirty_non_pdf_is_a_warning(): void
+    {
+        $sys = $this->healthy();
+        $sys->trackedDirtyPaths = [
+            'app/Jobs/SendPaymentToSheetJob.php',
+            'config/services.php',
+            'public/docs/oferta.pdf',
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+
+        $line = $this->lines($findings);
+        $this->assertStringContainsString('[warning] auto-deploy', $line);
+        $this->assertStringContainsString('tracked dirty', $line);
+        $this->assertStringContainsString('SendPaymentToSheetJob.php', $line);
+        $this->assertStringNotContainsString('oferta.pdf', $line);
+        $this->assertStringNotContainsString('[critical] auto-deploy', $line);
+    }
+
+    public function test_pdf_only_dirty_is_silent(): void
+    {
+        $sys = $this->healthy();
+        $sys->trackedDirtyPaths = ['public/docs/oferta.pdf', 'public/docs/policy.pdf'];
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringNotContainsString('tracked dirty', $this->lines($findings));
+    }
+
     public function test_missing_auto_deploy_cron_line_is_a_warning(): void
     {
         $sys = $this->healthy();
