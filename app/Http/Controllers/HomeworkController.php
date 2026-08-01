@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\HomeworkComment;
 use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -140,6 +141,26 @@ class HomeworkController extends Controller
         abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
 
         return Storage::disk($file->disk)->download($file->path, $file->original_name);
+    }
+
+    /**
+     * Студент убирает неактуальный файл из своей сдачи (пока работа не принята).
+     */
+    public function destroyFile(Request $request, HomeworkFile $file)
+    {
+        $this->service->deleteStudentFile($file, $request->user());
+
+        return back()->with('success', 'Файл удалён из домашней работы.');
+    }
+
+    /**
+     * Студент удаляет своё сообщение в треде (текст + файлы), пока работа не принята.
+     */
+    public function destroyComment(Request $request, HomeworkComment $comment)
+    {
+        $this->service->deleteStudentComment($comment, $request->user());
+
+        return back()->with('success', 'Сообщение удалено из переписки.');
     }
 
     /**

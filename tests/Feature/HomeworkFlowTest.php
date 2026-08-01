@@ -8,6 +8,8 @@ use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Mail\HomeworkReviewedMail;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
+use App\Models\HomeworkComment;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
@@ -302,6 +304,146 @@ class HomeworkFlowTest extends TestCase
         $this->actingAs($student)->get($url)->assertOk();      // владелец
         $this->actingAs($teacherUser)->get($url)->assertOk();  // препод курса
         $this->actingAs($stranger)->get($url)->assertForbidden(); // посторонний
+    }
+
+    /** @test */
+    public function student_can_delete_own_file_while_work_is_on_review(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'с файлом',
+                'files' => [UploadedFile::fake()->create('old.pdf', 40, 'application/pdf')],
+            ]
+        );
+
+        $file = HomeworkSubmission::firstOrFail()->comments->first()->files->first();
+        $path = $file->path;
+        Storage::disk('local')->assertExists($path);
+
+        $this->actingAs($student)
+            ->delete(route('homework.file.destroy', $file))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('homework_files', ['id' => $file->id]);
+        Storage::disk('local')->assertMissing($path);
+        $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, HomeworkSubmission::firstOrFail()->status);
+    }
+
+    /** @test */
+    public function stranger_cannot_delete_student_homework_file(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'files' => [UploadedFile::fake()->create('w.pdf', 30, 'application/pdf')]]
+        );
+
+        $file = HomeworkFile::firstOrFail();
+
+        $this->actingAs($stranger)
+            ->delete(route('homework.file.destroy', $file))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('homework_files', ['id' => $file->id]);
+    }
+
+    /** @test */
+    public function student_cannot_delete_file_after_acceptance(): void
+    {
+        [$teacher, $teacherUser] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $service = app(HomeworkService::class);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'files' => [UploadedFile::fake()->create('w.pdf', 30, 'application/pdf')]]
+        );
+
+        $submission = HomeworkSubmission::firstOrFail();
+        $file = $submission->comments->first()->files->first();
+        $service->recordReview($submission, $teacherUser, HomeworkSubmission::STATUS_ACCEPTED, 'Ок');
+
+        $this->actingAs($student)
+            ->delete(route('homework.file.destroy', $file))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('homework_files', ['id' => $file->id]);
+    }
+
+    /** @test */
+    public function student_can_delete_own_outdated_comment_while_on_review(): void
+    {
+        [$teacher] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'старое сообщение',
+                'files' => [UploadedFile::fake()->create('old.pdf', 20, 'application/pdf')],
+            ]
+        );
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'актуальное']
+        );
+
+        $submission = HomeworkSubmission::firstOrFail()->load('comments.files');
+        $this->assertCount(2, $submission->comments);
+        $old = $submission->comments->first();
+        $path = $old->files->first()->path;
+        Storage::disk('local')->assertExists($path);
+
+        $this->actingAs($student)
+            ->delete(route('homework.comment.destroy', $old))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('homework_comments', ['id' => $old->id]);
+        Storage::disk('local')->assertMissing($path);
+        $this->assertSame(1, HomeworkComment::where('submission_id', $submission->id)->count());
+        $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->fresh()->status);
+    }
+
+    /** @test */
+    public function student_cannot_delete_teacher_review_comment(): void
+    {
+        [$teacher, $teacherUser] = $this->makeTeacher();
+        [$course, $lesson] = $this->makeLessonWithHomework($teacher);
+        $student = User::factory()->create();
+        $service = app(HomeworkService::class);
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            ['action' => 'submit', 'body' => 'v1']
+        );
+        $submission = HomeworkSubmission::firstOrFail();
+        $review = $service->recordReview(
+            $submission,
+            $teacherUser,
+            HomeworkSubmission::STATUS_NEEDS_REVISION,
+            'Поправьте'
+        );
+
+        $this->actingAs($student)
+            ->delete(route('homework.comment.destroy', $review))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('homework_comments', ['id' => $review->id]);
     }
 
     /** @test */
