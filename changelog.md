@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Fixed
+- **Stale-checkout reaper schedule no longer ERROR every 15 min when flag is off.** `payments:expire-stale-checkouts --apply` is only scheduled when `CHECKOUT_STALE_ORDER_EXPIRY=true`; with the flag off, `--apply` is a soft no-op (exit 0, warn, no mutation). Stops `production.ERROR: Scheduled command … failed` noise. Executor: Grok 4.5 (`grok-4.5`).
 - **H2066: auto-deploy dirty-tree no longer false-critical «кабинет упал».** `deploy.sh --rollback` skips dirty-gate (`reset --hard` clears tracked dirty); forward deploy auto-discards tracked files already equal to `origin/main`; auto-deploy trips soft `[blocked-preflight]` when HEAD did not move and health is green; `guards:verify` treats `[blocked-preflight]`/`[rolled-back]` as warning and warns early on non-PDF tracked dirty. Docs: deploy.md, server-resource-guards.md. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
