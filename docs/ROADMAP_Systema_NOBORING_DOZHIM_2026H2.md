@@ -94,11 +94,12 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 
 ### Wave 1b — Operator dozhim (H-B)
 
-- [ ] WorkQueue / UnifiedSales bucket: **unpaid / open Deal past N hours**
+- [x] WorkQueue bucket: **unpaid / open Deal past N hours** — **done H2119** (01-08-2026): `WorkQueueReport::unpaidOpenDeals()` + WorkQueue card; threshold `config/dozhim.php` `unpaid_deal_hours` (default 24); flag `dozhim_queue` default **OFF**. Cards need open Deals from H2102 when `crm_pipeline_board` ON. UnifiedSales surface deferred (cockpit bucket is the operator surface).
 - [ ] MessageTemplate category `dozhim` (4 scripts from NF table: payment help, installment CTA, feedback, upsell)
 - [ ] Auto FollowUpTask on open Deal age threshold
 - [ ] Auto-drip via existing Messaging channels (TG/email) — linear only; no n8n branch required for wave-1
-- [ ] Flags: `dozhim_queue`, `dozhim_drip` default OFF
+- [x] Flag `dozhim_queue` default OFF — **done H2119** (pinned in features + test)
+- [ ] Flag `dozhim_drip` default OFF
 
 **Unblocks:** H-C front mirror; live operator use.
 

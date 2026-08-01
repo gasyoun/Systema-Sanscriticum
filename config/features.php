@@ -596,6 +596,17 @@ return [
     'crm_follow_up_tasks' => (bool) env('CRM_FOLLOW_UP_TASKS', false),
 
     /*
+     | Noboring dozhim Wave 1b (H2119): бакет «недожатые / open Deal старше N ч»
+     | в WorkQueueReport + карточка кокпита. Сделки открывает H2102 open-on-pending
+     | (тот же crm_pipeline_board); этот флаг только показывает очередь оператору.
+     |
+     | ВЫКЛ по умолчанию. Не пишет в payments/access. dozhim_drip (шаблоны/drip)
+     | — отдельный флаг, не здесь.
+     | Включение — DOZHIM_QUEUE=true + config:cache после ревью.
+     */
+    'dozhim_queue' => (bool) env('DOZHIM_QUEUE', false),
+
+    /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
      | page linking to short /lila drills — DISTINCT from the FSRS review loop
      | (srs.enabled, /dvaram/koloda) and orthogonal to it. Когда ВЫКЛ (по умолчанию):

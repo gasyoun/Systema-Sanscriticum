@@ -5,6 +5,8 @@
         $stuck = $this->stuck;
         $support = $this->support;
         $followUps = $this->followUps;
+        $unpaidDeals = $this->unpaidDeals;
+        $unpaidHours = max(1, (int) config('dozhim.unpaid_deal_hours', 24));
     @endphp
 
     <style>
@@ -137,6 +139,32 @@
                     </div>
                 @empty
                     <div class="wq-empty">Задач на сегодня нет 🎉</div>
+                @endforelse
+            </div>
+        @endif
+
+        {{-- 6. Недожатые open Deal (H2119 / NOBORING Wave 1b). Карточка только
+             при dozhim_queue ON — open-on-pending (H2102) наполняет сделки. --}}
+        @if(config('features.dozhim_queue'))
+            <div class="wq-card">
+                <div class="wq-card-head">
+                    <span class="wq-title">💸 Недожатые сделки &gt; {{ $unpaidHours }} ч</span>
+                    <span class="wq-count">{{ $unpaidDeals->count() }}</span>
+                </div>
+                @forelse($unpaidDeals as $deal)
+                    <div class="wq-row" wire:key="unpaid-deal-{{ $deal->id }}">
+                        <div class="wq-main">
+                            <div class="wq-name">{{ $deal->kanban_title }}</div>
+                            <div class="wq-meta">
+                                открыта {{ $deal->created_at?->format('d.m.Y H:i') }}
+                                · {{ (int) $deal->created_at?->diffInHours(now()) }} ч
+                                @if($deal->amount) · {{ number_format((float) $deal->amount, 0, '.', ' ') }} ₽ @endif
+                            </div>
+                        </div>
+                        <a href="{{ $this->dealBoardUrl() }}" class="wq-btn" target="_blank">Доска сделок</a>
+                    </div>
+                @empty
+                    <div class="wq-empty">Нет просроченных open Deal</div>
                 @endforelse
             </div>
         @endif
