@@ -22,6 +22,7 @@ use App\Services\Discipline\DisciplineScore;
 use App\Services\DisciplineScoreService;
 use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
+use App\Services\Telegram\ZapisiChatMemberService;
 use App\Support\RoleGate;
 use Carbon\CarbonInterface;
 use Filament\Forms;
@@ -541,6 +542,7 @@ class Debtors extends Page implements HasTable
                     $this->quickReminderAction(),
                     $this->promiseAction(),
                     $this->installmentAction(),
+                    $this->kickFromTelegramAction(),
                     $this->markUnreliableAction(),
                     $this->clearUnreliableAction(),
                     $this->openCardAction(),
@@ -549,6 +551,7 @@ class Debtors extends Page implements HasTable
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     $this->sendReminderBulkAction(),
+                    $this->kickFromTelegramBulkAction(),
                     Tables\Actions\ExportBulkAction::make()
                         ->exporter(DebtorsExporter::class)
                         ->options(fn (): array => ['years' => $this->selectedYears])
@@ -1314,6 +1317,200 @@ class Debtors extends Page implements HasTable
             ->openUrlInNewTab();
     }
 
+    /**
+     * Hard-ban из учебных TG-чатов курса через @zapisi_ORSbot.
+     * LMS-членство и статус курса не трогаем — только Telegram.
+     */
+    private function kickFromTelegramAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('kick_from_telegram')
+            ->label('Исключить из TG-чата')
+            ->icon('heroicon-o-no-symbol')
+            ->color('danger')
+            ->visible(function (Model $r): bool {
+                if (empty($r->telegram_id)) {
+                    return false;
+                }
+
+                return app(ZapisiChatMemberService::class)->isConfigured();
+            })
+            ->modalHeading(fn (Model $r): string => 'Исключить из TG — '.($r->name ?: $r->email))
+            ->modalDescription(
+                'Hard ban через @zapisi_ORSbot: вернуться по инвайту нельзя, пока не разбаните '
+                .'(дашборд «Записи (бот)»). Членство в LMS и оплаченный доступ не меняются.'
+            )
+            ->fillForm(function (Model $r): array {
+                $user = User::find($r->id);
+                if (! $user) {
+                    return ['group_ids' => []];
+                }
+                $groups = app(ZapisiChatMemberService::class)
+                    ->studyGroupsWithChat($user, (int) $r->course_id);
+
+                return [
+                    'group_ids' => $groups->pluck('id')->map(fn ($id) => (int) $id)->all(),
+                ];
+            })
+            ->form([
+                Forms\Components\CheckboxList::make('group_ids')
+                    ->label('Учебные чаты (группы с telegram_chat_id)')
+                    ->options(function (?Model $record): array {
+                        if (! $record) {
+                            return [];
+                        }
+                        $user = User::find($record->id);
+                        if (! $user) {
+                            return [];
+                        }
+                        $groups = app(ZapisiChatMemberService::class)
+                            ->studyGroupsWithChat($user, (int) $record->course_id);
+
+                        return $groups
+                            ->mapWithKeys(fn ($g) => [
+                                (int) $g->id => $g->name.' ('.$g->telegram_chat_id.')',
+                            ])
+                            ->all();
+                    })
+                    ->required()
+                    ->helperText('Пустой список — у активных групп курса не заполнен telegram_chat_id.'),
+            ])
+            ->requiresConfirmation()
+            ->action(function (Model $r, array $data): void {
+                $user = User::find($r->id);
+                if (! $user) {
+                    Notification::make()->title('Студент не найден')->danger()->send();
+
+                    return;
+                }
+
+                $result = app(ZapisiChatMemberService::class)->kickFromStudyChats(
+                    $user,
+                    (int) $r->course_id,
+                    auth()->id() ? (int) auth()->id() : null,
+                    array_map('intval', $data['group_ids'] ?? []),
+                );
+
+                $this->notifyKickResult($result);
+            });
+    }
+
+    private function kickFromTelegramBulkAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make('kick_from_telegram')
+            ->label('Исключить из TG-чата')
+            ->icon('heroicon-o-no-symbol')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Исключить выбранных из учебных TG-чатов')
+            ->modalDescription(
+                'Hard ban через @zapisi_ORSbot по каждой активной группе строки (курс). '
+                .'Без telegram_id или chat_id — пропуск. LMS не меняется.'
+            )
+            ->deselectRecordsAfterCompletion()
+            ->action(function (Collection $records): void {
+                if (! app(ZapisiChatMemberService::class)->isConfigured()) {
+                    Notification::make()
+                        ->title('Zapisi-бот не настроен')
+                        ->body('Заполните zapisi_bot_token в настройках маркетинга.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $okN = 0;
+                $failN = 0;
+                $skipN = 0;
+                $service = app(ZapisiChatMemberService::class);
+                $by = auth()->id() ? (int) auth()->id() : null;
+                $seen = [];
+
+                foreach ($records as $r) {
+                    $key = ((int) $r->id).':'.((int) $r->course_id);
+                    if (isset($seen[$key])) {
+                        continue;
+                    }
+                    $seen[$key] = true;
+
+                    $user = User::find($r->id);
+                    if (! $user) {
+                        $skipN++;
+
+                        continue;
+                    }
+
+                    $result = $service->kickFromStudyChats(
+                        $user,
+                        (int) $r->course_id,
+                        $by,
+                    );
+
+                    if ($result['skipped'] !== null) {
+                        $skipN++;
+                    }
+                    $okN += count($result['ok']);
+                    $failN += count($result['failed']);
+                }
+
+                Notification::make()
+                    ->title('Исключение из TG')
+                    ->body("Забанено чатов: {$okN}. Ошибок: {$failN}. Пропусков: {$skipN}.")
+                    ->{$failN > 0 ? 'warning' : 'success'}()
+                    ->send();
+            });
+    }
+
+    /**
+     * @param  array{
+     *     ok: list<array{group_id: int, group_name: string, chat_id: string}>,
+     *     failed: list<array{group_id: int, group_name: string, chat_id: string, error: string}>,
+     *     skipped: ?string
+     * }  $result
+     */
+    private function notifyKickResult(array $result): void
+    {
+        if ($result['skipped'] !== null) {
+            Notification::make()
+                ->title('Не исключили')
+                ->body($result['skipped'])
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $okNames = collect($result['ok'])->map(fn (array $r) => $r['group_name'])->implode(', ');
+        $failBits = collect($result['failed'])
+            ->map(fn (array $r) => $r['group_name'].': '.$r['error'])
+            ->implode('; ');
+
+        if ($result['ok'] !== [] && $result['failed'] === []) {
+            Notification::make()
+                ->title('Заблокирован в Telegram-чате')
+                ->body($okNames.' — вернуться по инвайту нельзя, пока не разбаните.')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        if ($result['ok'] !== [] && $result['failed'] !== []) {
+            Notification::make()
+                ->title('Частично: '.count($result['ok']).' ок, '.count($result['failed']).' ошибок')
+                ->body(trim($okNames.($failBits !== '' ? ' | Ошибки: '.$failBits : '')))
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Не удалось исключить')
+            ->body($failBits !== '' ? $failBits : 'Нет целевых чатов.')
+            ->danger()
+            ->send();
+    }
+
     private function markUnreliableAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('mark_unreliable')
@@ -1329,6 +1526,15 @@ class Debtors extends Page implements HasTable
                     ->rows(3)
                     ->required()
                     ->placeholder('Например: «3 раза подряд срывал обещания оплаты без предупреждения».'),
+                Forms\Components\Toggle::make('also_ban_telegram')
+                    ->label('Также исключить из учебных TG-чатов курса')
+                    ->helperText(
+                        'Hard ban через @zapisi_ORSbot (нужны telegram_id + group.telegram_chat_id + бот-админ). '
+                        .'По умолчанию выкл — только флаг 🚩.'
+                    )
+                    ->default(false)
+                    ->visible(fn (Model $r): bool => ! empty($r->telegram_id)
+                        && app(ZapisiChatMemberService::class)->isConfigured()),
             ])
             ->action(function (Model $r, array $data): void {
                 $user = User::find($r->id);
@@ -1338,9 +1544,29 @@ class Debtors extends Page implements HasTable
                     return;
                 }
                 $user->markUnreliable((string) $data['reason'], auth()->user(), auto: false);
+
+                $body = 'Привилегии loyalty, обещания и conditional-доступ отключены.';
+                if (! empty($data['also_ban_telegram'])) {
+                    $result = app(ZapisiChatMemberService::class)->kickFromStudyChats(
+                        $user,
+                        (int) $r->course_id,
+                        auth()->id() ? (int) auth()->id() : null,
+                    );
+                    if ($result['skipped'] !== null) {
+                        $body .= ' TG: пропуск — '.$result['skipped'];
+                    } elseif ($result['ok'] !== []) {
+                        $names = collect($result['ok'])->pluck('group_name')->implode(', ');
+                        $body .= ' TG: забанен в '.$names.'.';
+                    }
+                    if ($result['failed'] !== []) {
+                        $body .= ' TG ошибки: '
+                            .collect($result['failed'])->map(fn ($f) => $f['error'])->implode('; ');
+                    }
+                }
+
                 Notification::make()
                     ->title('Флаг выставлен')
-                    ->body('Привилегии loyalty, обещания и conditional-доступ отключены.')
+                    ->body($body)
                     ->warning()
                     ->send();
             });
