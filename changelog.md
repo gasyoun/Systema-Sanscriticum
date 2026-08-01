@@ -1,8 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- **H2067 / CABINET_ADOPTION P0: password/cabinet-login mail subject.** `PasswordResetMail` subject is now **«Вход в личный кабинет ОРС»** (not «Сброс пароля» / «Восстановление доступа…»); body CTA framed as cabinet entry. Prod deliverability evidence (Yandex SMTP + SPF/DKIM/DMARC on `yandex.ru` From domain, `mail:preflight` OK, Horizon `mailing`) lives in ORS-FAQ `CABINET_ADOPTION_ROADMAP.md`. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.81.5] - 2026-08-01
 ### Changed
 - **H1965 n8n bridge import-gaps — product-gated GTD defers (no placeholder import).** Live re-probe on `193.232.229.91`: `schedule-sheet-sync` / `vk-calendar-post` still **missing** (webhook 404); monthly `eixPIvFjfPdOSrYo` present **OFF**. Disposition: explicit GTD defer for sheet + calendar until product arms them; monthly activate blocked on H1959 token hygiene. Ops note: [docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md). Catalog gap table + ROADMAP Wave 3 updated. No ON workflow mutation; no Laravel env secrets written. Executor: Grok 4.5 (`grok-4.5`).
+
 
 ## [1.81.4] - 2026-08-01
 ### Security
