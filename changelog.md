@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **Stale-checkout reaper ON by default + false-economy policy (MG 01-08-2026).** `features.checkout_stale_order_expiry` default `true`; prod enabled (`CHECKOUT_STALE_ORDER_EXPIRY=true`, first apply released 18 stale pending). Dark-forever money guards called out as sabotage thrift in [docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ### Fixed
 - **Stale-checkout reaper schedule no longer ERROR every 15 min when flag is off.** `payments:expire-stale-checkouts --apply` is only scheduled when `CHECKOUT_STALE_ORDER_EXPIRY=true`; with the flag off, `--apply` is a soft no-op (exit 0, warn, no mutation). Stops `production.ERROR: Scheduled command … failed` noise. Executor: Grok 4.5 (`grok-4.5`).
 - **H2066: auto-deploy dirty-tree no longer false-critical «кабинет упал».** `deploy.sh --rollback` skips dirty-gate (`reset --hard` clears tracked dirty); forward deploy auto-discards tracked files already equal to `origin/main`; auto-deploy trips soft `[blocked-preflight]` when HEAD did not move and health is green; `guards:verify` treats `[blocked-preflight]`/`[rolled-back]` as warning and warns early on non-PDF tracked dirty. Docs: deploy.md, server-resource-guards.md. Executor: Grok 4.5 (`grok-4.5`).

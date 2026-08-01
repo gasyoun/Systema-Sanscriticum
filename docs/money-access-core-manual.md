@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 31-07-2026_
+_Created: 25-07-2026 · Last updated: 01-08-2026_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
@@ -472,9 +472,17 @@ default. Shares H2026 `billing_*` model with `provider=paypal` when Phase 1+ shi
 
 ## 8. Config-gate reference (money-relevant)
 
+> **Standing rule (MG 01-08-2026):** permanent dark on a *shipped* money
+> protection or cleanup is **false economy / sabotage**, not thrift. Full
+> register, prod snapshot, and agent rules:
+> [MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.md).
+> Scaffold-only lanes (Tochka recurring, PayPal Subscriptions) stay dark until
+> product arms them.
+
 All flags read through `config('features.*')` from
 [config/features.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php);
-after any `.env` change on a config-cached deployment run `php artisan config:clear`.
+after any `.env` change on a config-cached deployment run `php artisan config:cache`
+(or `config:clear` then rebuild).
 
 | Flag (`features.*`) | `.env` key | Default | Gates |
 |---|---|---|---|
@@ -485,7 +493,7 @@ after any `.env` change on a config-cached deployment run `php artisan config:cl
 | `checkout_deposit_reversal` | `CHECKOUT_DEPOSIT_REVERSAL` | OFF | LIFO restoration of `deposit_credit_applied` on paid→failed/canceled |
 | `checkout_promo_reservations` | `CHECKOUT_PROMO_RESERVATIONS` | OFF | timed promo capacity slots (link TTL 30 min + 10 min webhook buffer); paid-reversal releases `used_count` |
 | `checkout_integrity_safe_repairs` | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | OFF | allows `payments:audit-checkout-integrity --apply-safe` (promo counters only) |
-| `checkout_stale_order_expiry` | `CHECKOUT_STALE_ORDER_EXPIRY` | OFF | the stale-checkout reaper `payments:expire-stale-checkouts --apply` (dry-run works without the flag) |
+| `checkout_stale_order_expiry` | `CHECKOUT_STALE_ORDER_EXPIRY` | **ON** (default true since 01-08-2026) | the stale-checkout reaper `payments:expire-stale-checkouts --apply` (dry-run always works; schedule only when ON) |
 | `checkout_promo_survives_session` | `CHECKOUT_PROMO_SURVIVES_SESSION` | OFF | H1396 §1: promo carried in a hidden field, re-resolved authoritatively; lapsed ⇒ explicit price confirmation |
 | `checkout_session_lapse_relogin` | `CHECKOUT_SESSION_LAPSE_RELOGIN` | OFF | H1396 §2: lapsed-session submit → login with return to checkout |
 | `checkout_signed_return_url` | `CHECKOUT_SIGNED_RETURN_URL` | OFF | H1396 §3: signed bank return URLs carrying the payment id |
