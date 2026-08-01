@@ -4,6 +4,7 @@
 - **Homework FAQ URL canonical in docs:** onboarding + student-manual + lesson «как сдавать» → [samskrte.ru/faq/dz](https://samskrte.ru/faq/dz) (`route('faq.dz')`). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added
+- **H2143: Telegram series for student cabinet (`/dvaram`).** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md) — 10 paste-ready posts (entry, lessons, homework, dictionary, Telegram/support, access/debts, prana, practice pointer, FAQ) + curator map + channel calendar. Grounded in onboarding-student + student-manual. Executor: Grok 4.5 (`grok-4.5`).
 - **Public FAQ for homework:** `/faq/dz` (`faq.dz`) — student DZ guide without login (chat-friendly). `/help/homework` → 301 to `/faq/dz`. Executor: Grok 4.5 (`grok-4.5`).
 - **Cabinet URL for homework help:** `/help/homework` (`help.homework`) — student-facing guide inside the cabinet layout; link «как сдавать» on the lesson homework block. Source doc: [STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md). Executor: Grok 4.5 (`grok-4.5`).
 - **H2134: student homework guide (RU).** [docs/STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md) — where to submit, when the form appears, file limits, statuses, fix wrong file, FAQ. Linked from onboarding + student-manual. Executor: Grok 4.5 (`grok-4.5`).
