@@ -34,7 +34,7 @@ class PasswordResetMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Восстановление доступа в Академию 🔑',
+            subject: 'Вход в личный кабинет ОРС',
         );
     }
 

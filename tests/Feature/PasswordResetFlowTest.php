@@ -33,6 +33,7 @@ class PasswordResetFlowTest extends TestCase
 
         Mail::assertQueued(PasswordResetMail::class, function (PasswordResetMail $mail) use ($user) {
             return $mail->user->is($user)
+                && $mail->envelope()->subject === 'Вход в личный кабинет ОРС'
                 && str_contains($mail->resetUrl, '/reset-password/')
                 && str_contains($mail->resetUrl, urlencode($user->email));
         });
