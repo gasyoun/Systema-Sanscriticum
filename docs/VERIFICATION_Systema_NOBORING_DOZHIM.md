@@ -41,6 +41,6 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 
 1. SQL/sample: count payments by status last 90d.  
 2. Confirm whether unpaid order = `payments.status=pending` or promise rows.  
-3. Confirm Deal created only after paid (read observer `qualifiesAsSale` / open path).
+3. Confirm Deal created only after paid (read observer `qualifiesAsSale` / open path). — **done H2097**: paid bridge only; no open-on-pending.
 
 _Dr. Mārcis Gasūns_

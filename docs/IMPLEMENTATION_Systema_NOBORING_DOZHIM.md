@@ -9,8 +9,8 @@ Work in a **session-unique worktree** off `origin/main`. Systema is main-tree gu
 ## H-A — Deal dozhim readiness (before queue UI)
 
 1. Re-read `GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md` §1 GC-C1/C2 and `PaymentDealBridgeObserver`.
-2. Inventory tests in `tests/Feature/DealTest.php` — what creation paths exist.
-3. Gap: **open Deal on pending payable intent** (if missing):
+2. Inventory tests in `tests/Feature/DealTest.php` — what creation paths exist. — **H2097:** sole create path is paid bridge → won; factory/tests only for open.
+3. Gap: **open Deal on pending payable intent** (**confirmed missing** H2097):
    - Prefer additive method on observer or thin `DealIntentService`
    - Idempotent on (user/lead, course, installment_group)
    - Flag `crm_pipeline_board` still gates writes

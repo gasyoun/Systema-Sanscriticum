@@ -49,12 +49,48 @@ Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (de
 
 Prior art: GC-C1 **shipped**. Residual for dozhim:
 
-- [ ] Audit: when is Deal created today? (paid bridge only vs pending intent)
+- [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
 - [ ] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment / unpaid Order path) — still rank-4 observer only
 - [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports (spec: NOT_BUILT as of last census — re-verify)
 - [ ] Flag `crm_pipeline_board` remains default OFF; staging admin-on
 
 **Unblocks:** H-B queue has cards.
+
+#### Wave 1a audit — when is Deal created? (H2097, 01-08-2026)
+
+**Verdict: paid bridge only.** There is **no** production path that opens a Deal on pending payable intent. Auto-created rows are **won (closed)** after a qualifying paid Payment. Open Deals exist only via tests/factory (or manual DB); Filament does not create them.
+
+| Path | Creates Deal? | When | Stage / closed |
+|---|---|---|---|
+| [`PaymentDealBridgeObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentDealBridgeObserver.php) `Deal::create` | **Yes — sole app create** | After `qualifiesAsSale` (status ∈ `paid`/`success`, not expense/salary/deposit/trial/marathon/`is_conditional`) and no open/plan deal to close | **Won immediately** (`stage` = won, `closed_at` set, `source_payment_id` set) |
+| Same observer `closeDealWith` | No create — closes existing open Deal | Paid sale finds open Deal via lead/user + course (+ installment group rules) | Open → won |
+| Same observer `reopenDealClosedBy` | No create — reopens | Payment reverse (`failed`/`canceled`/`cancelled`) on deal that had that `source_payment_id` | Won → first stage (if still on won) |
+| Pending Payment / unpaid Order | **No** | `qualifiesAsSale` requires `PAID_STATUSES` only | — |
+| Filament DealKanban / UnifiedSalesBoard | **No create** | Stage drag / move only (`disableEditModal = true` on kanban) | — |
+| Filament `DealResource` | **Absent** | — | — |
+| `Deal::factory()` / tests | Yes (test only) | Default state is **open** (`closed_at` null) | Open unless `->won()` |
+
+**Gates / silence conditions**
+
+1. Flag [`crm_pipeline_board`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) default **`false`** (`CRM_PIPELINE_BOARD`) — entire bridge returns early; prod inert unless env ON.
+2. Registered only on `Payment` observe in `AppServiceProvider` (created + status-changed updated).
+3. Known gap (observer docblock): clearing `is_conditional` without status change never fires `updated` → no Deal for that path until predicate expands.
+4. Exceptions in bridge are swallowed (rank-4 must not roll back rank-1 webhook tx).
+
+**Reproduce (code, no prod DB required)**
+
+```text
+# sole Deal::create in app/
+# PaymentDealBridgeObserver::closeOrRecordDeal ~L224
+# qualifiesAsSale ~L128 requires Payment::PAID_STATUSES
+# Feature: tests/Feature/DealTest.php (paid → won; flag off → 0 deals)
+```
+
+**Implication for next Wave 1a checkbox:** H-B unpaid/open Deal queue will have **no auto cards** for the ~40 pending payments in the Wave 0 30d window until **open Deal on pending intent** ships (next checkbox / H2058 residual). Existing bridge only backfills **won** history when flag is ON.
+
+**Does not change:** money grant (`PaymentObserver`), flag defaults, schema.
+
+Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2058-Sonnet_Systema-Sanscriticum_noboring-dozhim-ha-deal-readiness_01.08.26.md).
 
 ### Wave 1b — Operator dozhim (H-B)
 
