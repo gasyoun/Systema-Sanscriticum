@@ -7,7 +7,9 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Tariff;
+use App\Services\Payments\AcceptingPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalSubscriptionsService;
+use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -80,8 +82,8 @@ class PaypalSubscriptionsConfigTest extends TestCase
         // P1: signature accepted (skip/test double), unmatched subscription → 200 + ledger.
         config(['services.paypal.subscriptions.skip_signature_verify' => true]);
         $this->app->bind(
-            \App\Services\Payments\PaypalWebhookSignatureVerifier::class,
-            \App\Services\Payments\AcceptingPaypalWebhookSignatureVerifier::class,
+            PaypalWebhookSignatureVerifier::class,
+            AcceptingPaypalWebhookSignatureVerifier::class,
         );
 
         $this->postJson('/api/webhooks/paypal-subscriptions', [

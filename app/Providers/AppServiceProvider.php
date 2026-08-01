@@ -28,6 +28,8 @@ use App\Observers\ScheduleObserver;
 use App\Observers\SitemapCacheInvalidator;
 use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
+use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
+use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use App\Support\ServerGuards\ShellSystemInspector;
@@ -43,9 +45,6 @@ use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
-
-use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
-use App\Services\Payments\PaypalWebhookSignatureVerifier;
 
 class AppServiceProvider extends ServiceProvider
 {

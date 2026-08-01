@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Payments\AcceptingPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
@@ -142,8 +143,9 @@ class PaypalSubscriptionsWebhookTest extends TestCase
     {
         $this->enableConfigured();
         $this->app->bind(PaypalWebhookSignatureVerifier::class, function () {
-            return new class implements PaypalWebhookSignatureVerifier {
-                public function verify(\Illuminate\Http\Request $request): bool
+            return new class implements PaypalWebhookSignatureVerifier
+            {
+                public function verify(Request $request): bool
                 {
                     return false;
                 }

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Live PayPal verify-webhook-signature (H2027).
+ *
  * @see https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature
  */
 final class HttpPaypalWebhookSignatureVerifier implements PaypalWebhookSignatureVerifier
