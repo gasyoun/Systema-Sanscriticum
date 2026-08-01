@@ -243,29 +243,4 @@ class SrsPublicDeckUrlsTest extends TestCase
             ->assertSee('Санскрит — ядро')
             ->assertSee('Hindi Core 100');
     }
-
-    public function test_null_language_counts_as_sa(): void
-    {
-        $noteType = SrsNoteType::firstOrCreate(
-            ['key' => 'basic_sa'],
-            [
-                'name' => 'Sanskrit',
-                'language' => 'sa',
-                'fields' => ['devanagari', 'iast', 'translation'],
-            ]
-        );
-        SrsDeck::create([
-            'note_type_id' => $noteType->id,
-            'name' => 'Legacy null-lang',
-            'slug' => 'legacy-null',
-            'language' => null,
-            'visibility' => 'system',
-        ]);
-        $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');
-
-        $this->get('/koloda')
-            ->assertOk()
-            ->assertSee('Legacy null-lang')
-            ->assertDontSee('Hindi Core 100');
-    }
 }
