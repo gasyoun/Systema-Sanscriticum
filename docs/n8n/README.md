@@ -7,6 +7,7 @@
 | [CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CATALOG_N8N_SERVER_CONTEXT_AI_2026-07-30.md) | Full inventory: 76 workflows, host scripts, Active deep-dives, Laravel bridge, gaps |
 | [CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md) | Secrets posture (findings only, no values) |
 | [OPS_PIN_IMAGE_H1961_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PIN_IMAGE_H1961_2026-08-01.md) | H1961: n8n image pin + rollback (`2.27.5` digest) |
+| [OPS_PRUNE_STORAGE_H1962_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PRUNE_STORAGE_H1962_2026-08-01.md) | H1962: binary storage prune **6.6G → 1.4G** (−5.2G) |
 | [OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_LECTURE_CLIP_FIX_H1964_2026-08-01.md) | H1964: lecture-clip success path + probe guard + callback dry-run |
 | [OPS_IMPORT_GAPS_H1965_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_IMPORT_GAPS_H1965_2026-08-01.md) | H1965: schedule/vk-calendar/monthly gaps — product-gated **GTD defers** (no placeholder import) |
 | [_server_inventory_2026-07-30.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/_server_inventory_2026-07-30.json) | Machine snapshot from live sqlite |
@@ -14,7 +15,7 @@
 | [exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/h1963-archive-legacy-tagged-ids_2026-07-31.csv) | H1963: 28 workflows tagged `archive`+`legacy` (IDs only) |
 | [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md) | `/ask` plan index + cleanup DAG |
 
-Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · catalog snapshot **30-07-2026** · n8n image pin **01-08-2026 (H1961)** · tags pass **H1963 / 01-08-2026** · lecture-clip fix **H1964 / 01-08-2026** · import-gaps disposition **H1965 / 01-08-2026**.
+Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · catalog snapshot **30-07-2026** · n8n image pin **01-08-2026 (H1961)** · binary prune **H1962 / 01-08-2026** · tags pass **H1963 / 01-08-2026** · lecture-clip fix **H1964 / 01-08-2026** · import-gaps disposition **H1965 / 01-08-2026**.
 
 ---
 

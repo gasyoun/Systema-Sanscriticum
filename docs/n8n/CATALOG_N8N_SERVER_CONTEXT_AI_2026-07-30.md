@@ -31,7 +31,7 @@ _Created: 30-07-2026 · Last updated: 01-08-2026_
 | Timezone env | `GENERIC_TIMEZONE` / `TZ` set (MSK expected) |
 | Proxy | `HTTP(S)_PROXY` → privoxy → `socks-nl.service` SSH tunnel NL (`127.0.0.1:1080`) for YouTube/googlevideo |
 | Prune | `EXECUTIONS_DATA_PRUNE` on; max age in `.env` |
-| DB size | ~71 MB sqlite + WAL; **binary storage ~5.6 GB** (mostly ZOOM workflow `1EIqqNzMl5NNIxST` ~5.1 GB) |
+| DB size | ~71 MB sqlite + WAL; **binary storage ~1.4 GB after H1962 prune** (was ~5.6–6.6 GB; kept ZOOM exec 351+173 only — see [OPS_PRUNE_STORAGE_H1962_2026-08-01.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/OPS_PRUNE_STORAGE_H1962_2026-08-01.md)) |
 | Workflows | **76** total · **5 Active** · 71 inactive |
 | Credentials | **46** |
 | Executions retained | 182 (17 error) at snapshot |
@@ -115,7 +115,7 @@ Zoom recording.completed webhook
   → cleanup binaryData / audio
 ```
 
-**Storage:** ~5.1 GB under workflow binary storage — prune candidate.  
+**Storage:** was ~5.1–6.1 GB under workflow binary storage; **H1962 pruned** to ~1.4G (kept exec 351+173).  
 **Risks:** webhook auth=none; dual Zoom credential delete; `:latest` image; SSH cleanup paths reference *other* workflow IDs (stale copy residue).  
 **Exec:** 15 success / 6 error / 1 canceled (recent retention).  
 **Export:** [`exports/zoom-1.4-admin-test.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/zoom-1.4-admin-test.live.json)
@@ -256,7 +256,7 @@ Top types: `httpRequest` 167 · `code` 123 · `googleSheets` 117 · `telegram` 8
 | Payments webhook Header Auth | 🟢 remediating H1960 | node auth | Header Auth on + Laravel `N8N_PAYMENTS_WEBHOOK_SECRET` |
 | ZOOM webhooks auth=none | 🟠 | node auth | Zoom signature already in Code; still harden secondary webhook |
 | `n8nio/n8n:latest` unpinned | 🟠 | compose | Pin digest/version |
-| 5.6G binary storage | 🟡 | du | Prune old executions/binaryData offline |
+| 5.6G binary storage | 🟢 fixed H1962 | du | Was 6.6G at run; pruned to **1.4G** (−5.2G); keep last 2 ZOOM successes; prefer `/data` |
 | 20× My workflow + 8× ZOOM copies | 🟢 fixed H1963 | live sqlite tags | Tags applied; **no delete**; export list below |
 | Social post workflow missing | 🟡 | product Wave 2 | Import when pilot armed |
 
