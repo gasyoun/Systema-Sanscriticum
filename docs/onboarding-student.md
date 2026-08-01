@@ -97,7 +97,9 @@
 своего урока** (не перепутайте урок 1 и 2).
 
 Полная инструкция (где форма, лимиты файлов, как исправить ошибку, FAQ):
-[STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md).
+[https://samskrte.ru/faq/dz](https://samskrte.ru/faq/dz)
+(источник в репо:
+[STUDENT_HOMEWORK_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md)).
 
 | Статус | Что это значит | Что делать |
 |---|---|---|
