@@ -80,6 +80,11 @@ class HomeworkFileDeleteTest extends TestCase
 
         $this->assertDatabaseMissing('homework_files', ['id' => $file->id]);
         Storage::disk('local')->assertMissing($file->path);
+
+        $note = $submission->fresh()->comments()->where('type', HomeworkComment::TYPE_MESSAGE)->latest('id')->first();
+        $this->assertNotNull($note);
+        $this->assertStringContainsString('wrong.pdf', (string) $note->body);
+        $this->assertStringContainsString('Удалён файл', (string) $note->body);
     }
 
     /** @test */
@@ -94,6 +99,10 @@ class HomeworkFileDeleteTest extends TestCase
 
         $this->assertDatabaseMissing('homework_files', ['id' => $file->id]);
         Storage::disk('local')->assertMissing($file->path);
+
+        $note = $submission->fresh()->comments()->where('type', HomeworkComment::TYPE_MESSAGE)->latest('id')->first();
+        $this->assertNotNull($note);
+        $this->assertStringContainsString('wrong.pdf', (string) $note->body);
     }
 
     /** @test */
@@ -128,7 +137,8 @@ class HomeworkFileDeleteTest extends TestCase
 
         $note = $submission->comments()->where('type', HomeworkComment::TYPE_MESSAGE)->latest('id')->first();
         $this->assertNotNull($note);
-        $this->assertStringContainsString('Удалены залитые файлы', (string) $note->body);
+        $this->assertStringContainsString('Удалены залитые файлы студента', (string) $note->body);
+        $this->assertStringContainsString('wrong.pdf', (string) $note->body);
     }
 
     /** @test */
