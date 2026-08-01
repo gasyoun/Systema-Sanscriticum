@@ -27,8 +27,10 @@ while [ $# -gt 0 ]; do
     # --rollback <sha> — режим ОТКАТА (H1933, зовёт systema-auto-deploy-run.sh):
     # вместо pull — reset --hard на указанный коммит, миграции НЕ гоняются
     # (migrate --force необратим; автооткат разрешён только когда деплой их
-    # не приносил — это проверяет вызывающая обёртка). Остальной конвейер
-    # (composer, npm, кэши, OPcache, Horizon, смоук) — тот же.
+    # не приносил — это проверяет вызывающая обёртка). npm skip'ается, если
+    # asset-пути не менялись и public/build на месте (H2104: double-timeout
+    # 124 на rollback с полным vite). Остальное (composer, кэши, OPcache,
+    # Horizon, смоук) — то же.
     --rollback) shift; ROLLBACK_TO="${1:?--rollback требует SHA}" ;;
     *) printf '\n\033[1;31m✖ Неизвестный аргумент: %s\033[0m\n' "$1"; exit 1 ;;
   esac
@@ -120,6 +122,9 @@ if [ "$STASHED" = 1 ]; then
   git stash pop || fail "git stash pop конфликтнул — PDF в public/docs изменились и в репозитории. Разбор руками: git status; свежие прод-версии лежат в стэше (git stash list)."
 fi
 NEW_COMMIT=$(git rev-parse --short HEAD)
+# Полные SHA для git diff assets (OLD_COMMIT снят short-ом до pull/reset).
+OLD_FULL=$(git rev-parse "$OLD_COMMIT" 2>/dev/null || git rev-parse HEAD)
+NEW_FULL=$(git rev-parse HEAD)
 if [ "$OLD_COMMIT" = "$NEW_COMMIT" ]; then
   echo "Код не изменился ($NEW_COMMIT) — продолжаю (пересборка кэшей всё равно полезна)."
 fi
@@ -128,9 +133,46 @@ fi
 say "composer install (prod)"
 composer install --no-dev --optimize-autoloader --no-interaction
 
-say "npm ci && npm run build"
-npm ci --silent
-npm run build
+# H2104 (01-08-2026): npm ci + vite — главный потребитель wall-clock на автодеплое
+# (инцидент 11:00Z: docs-only PR → timeout 1500s → rollback снова vite → 124 →
+# critical breaker при живом HTTP). Собираем фронт только если изменились
+# asset-пути, нет FORCE_NPM=1, и (для skip) на диске есть manifest.
+# Пути: package* / vite / postcss / tailwind / resources/{js,css,css/**}.
+need_npm_build() {
+  if [ "${FORCE_NPM:-0}" = "1" ]; then
+    echo "FORCE_NPM=1 — принудительная пересборка фронта"
+    return 0
+  fi
+  if [ ! -f public/build/manifest.json ]; then
+    echo "нет public/build/manifest.json — нужна сборка"
+    return 0
+  fi
+  if [ "$OLD_FULL" = "$NEW_FULL" ]; then
+    echo "HEAD не сдвинулся — npm skip (manifest на месте)"
+    return 1
+  fi
+  # Любой path, влияющий на vite output
+  if git diff --name-only "$OLD_FULL" "$NEW_FULL" -- \
+      package.json package-lock.json \
+      vite.config.js vite.config.ts vite.config.mjs \
+      postcss.config.js postcss.config.cjs postcss.config.mjs \
+      tailwind.config.js tailwind.config.ts tailwind.config.cjs \
+      resources/js resources/css \
+    | grep -q .; then
+    echo "изменились asset-пути — npm ci + build"
+    return 0
+  fi
+  echo "asset-пути не менялись ($OLD_COMMIT..$NEW_COMMIT) — npm skip"
+  return 1
+}
+
+if need_npm_build; then
+  say "npm ci && npm run build"
+  npm ci --silent
+  npm run build
+else
+  say "npm skip (assets unchanged; FORCE_NPM=1 to force)"
+fi
 
 # Публикуем ассеты Filament (public/{css,js}/filament) — это build-артефакты,
 # в git не хранятся (см. .gitignore). Без этого шага после git-деплоя они бы

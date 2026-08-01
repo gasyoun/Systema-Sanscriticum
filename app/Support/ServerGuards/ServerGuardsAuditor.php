@@ -222,10 +222,11 @@ final class ServerGuardsAuditor
      *
      * Предохранитель storage/auto_deploy.disabled ставится обёрткой после
      * ПРОВАЛЕННОГО деплоя или проваленной пост-деплойной проверки здоровья.
-     * Severity (H2066): метки [rolled-back] и [blocked-preflight] — warning
-     * (сайт жив / HEAD не сдвинулся); без метки — critical (Telegram).
-     * Пропажа cron-строки — warning. Tracked dirty (не public/docs/*.pdf) —
-     * warning до следующего слота деплоя, чтобы не ждать breaker.
+     * Severity (H2066 + H2104): метки [rolled-back], [blocked-preflight],
+     * [timeout-alive] — warning (сайт жив / HEAD не сдвинулся / timeout при
+     * smoke 200); без метки — critical (Telegram). Пропажа cron-строки —
+     * warning. Tracked dirty (не public/docs/*.pdf) — warning до следующего
+     * слота деплоя, чтобы не ждать breaker.
      *
      * @return list<GuardFinding>
      */
@@ -240,7 +241,8 @@ final class ServerGuardsAuditor
             $message = "авто-деплой остановлен предохранителем ({$lastLine}) — разобраться и удалить {$breaker}";
             $soft = str_contains($lastLine, '[rolled-back]')
                 || str_contains($lastLine, '[blocked-preflight]')
-                || str_contains($lastLine, '[blocked-dirty]');
+                || str_contains($lastLine, '[blocked-dirty]')
+                || str_contains($lastLine, '[timeout-alive]');
             $findings[] = $soft
                 ? GuardFinding::warning('auto-deploy', $message)
                 : GuardFinding::critical('auto-deploy', $message);

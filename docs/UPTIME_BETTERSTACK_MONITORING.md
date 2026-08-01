@@ -216,7 +216,7 @@ Order matters: **confirm → classify → fix only what you own**.
    | OOM / load extreme | memory | [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md); avoid blind `schedule:run` pile-up |
    | Site 200, cabinet:probe fails | app/auth/DB | TG failure lines; `laravel.log`; Filament «Здоровье кабинета» |
    | Heartbeat silence, site 200 | cron/www-data / PATH | `crontab -u www-data -l`; `systema-watchdog-run.sh`; env `HEARTBEAT_PING_URL` / `CABINET_PROBE_PING_URL` still set after deploy |
-   | Auto-deploy stuck | breaker | `cat storage/auto_deploy.disabled`; only remove after root-cause. Soft tags `[rolled-back]` / `[blocked-preflight]` = site alive, clean dirty tree then `rm` fuse (H2066) |
+   | Auto-deploy stuck | breaker | `cat storage/auto_deploy.disabled`; only remove after root-cause. Soft tags `[rolled-back]` / `[blocked-preflight]` / `[timeout-alive]` = site alive (H2066/H2104) — `rm` fuse after smoke; **not** Artem. Hard breaker (no tag) = may need host/app triage. deploy.sh skips `npm` when asset paths unchanged (`FORCE_NPM=1` to force). After changing `scripts/server_guards/sbin/*`, run `sudo bash scripts/server_guards_apply.sh` once so `/usr/local/sbin` matches (else `guards:verify` drift). |
 
 4. **After recovery**  
    - Re-run `cabinet:probe` + `heartbeat:ping` until green.  
@@ -225,7 +225,8 @@ Order matters: **confirm → classify → fix only what you own**.
 
 5. **Do not**  
    - Force-push or wipe DB.  
-   - Delete `auto_deploy.disabled` without reading the reason.  
+   - Delete `auto_deploy.disabled` without reading the reason (and without smoke 200).  
+   - Call Artem for `[timeout-alive]` / auto-deploy fuse while SSH works — that is app-level.
    - Assume samskrtam/Cologne share this VPS (they do not).
 
 ### 5.3 samskrtam.ru — human steps

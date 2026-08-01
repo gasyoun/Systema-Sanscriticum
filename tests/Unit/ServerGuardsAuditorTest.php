@@ -265,6 +265,21 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringContainsString('health чист', $line);
     }
 
+    public function test_timeout_alive_breaker_is_a_warning_not_critical(): void
+    {
+        $sys = $this->healthy();
+        $breaker = rtrim($this->spec->get('APP_DIR'), '/').'/storage/auto_deploy.disabled';
+        $sys->files[$breaker] = "2026-08-01T11:33:25Z [timeout-alive] deploy.sh завершился с кодом 124; автооткат не уложился/не помог, но health чист (smoke 200) — сайт жив, Артём не нужен\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $line = $this->lines($findings);
+        $this->assertStringContainsString('[warning] auto-deploy', $line);
+        $this->assertStringNotContainsString('[critical] auto-deploy', $line);
+        $this->assertStringContainsString('timeout-alive', $line);
+        $this->assertStringContainsString('код 124', $line);
+    }
+
     public function test_tracked_dirty_non_pdf_is_a_warning(): void
     {
         $sys = $this->healthy();
