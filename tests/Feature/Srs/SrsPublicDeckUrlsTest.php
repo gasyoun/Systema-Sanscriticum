@@ -246,6 +246,9 @@ class SrsPublicDeckUrlsTest extends TestCase
 
     public function test_null_language_counts_as_sa(): void
     {
+        // Column is NOT NULL DEFAULT 'sa' — cannot insert SQL NULL on SQLite.
+        // Hub filter still treats NULL as sa (orWhereNull) for legacy MySQL rows;
+        // here we omit language so the DB default 'sa' lands in the default hub.
         $noteType = SrsNoteType::firstOrCreate(
             ['key' => 'basic_sa'],
             [
@@ -258,7 +261,6 @@ class SrsPublicDeckUrlsTest extends TestCase
             'note_type_id' => $noteType->id,
             'name' => 'Legacy null-lang',
             'slug' => 'legacy-null',
-            'language' => null,
             'visibility' => 'system',
         ]);
         $this->makeDeck('hindi-core', 'hi', 'Hindi Core 100');

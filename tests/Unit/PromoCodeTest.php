@@ -14,6 +14,15 @@ use Tests\TestCase;
  */
 class PromoCodeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Pure unit: no payments table. With CHECKOUT_PROMO_RESERVATIONS default ON,
+        // hasCapacity() would query active reservations — keep that off here.
+        config()->set('features.checkout_promo_reservations', false);
+    }
+
     private function promo(array $attrs): PromoCode
     {
         return new PromoCode(array_merge([
