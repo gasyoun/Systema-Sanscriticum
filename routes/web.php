@@ -410,6 +410,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Короткая help-страница «Почему баланс праны уменьшился?» (H1756) —
     // закрывает частый вопрос поддержки про сгорание/списания праны.
     Route::view('/help/prana-balance', 'help.prana-balance')->name('help.prana-balance');
+
+    // Инструкция по ДЗ для учеников (H2134 / follow-up: URL внутри кабинета).
+    Route::view('/help/homework', 'help.homework')->name('help.homework');
     Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
     Route::get('/access', [StudentController::class, 'access'])->name('student.access');
 

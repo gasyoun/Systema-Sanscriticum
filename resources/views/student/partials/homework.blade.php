@@ -38,7 +38,11 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Домашнее задание</h3>
-                    <p class="hidden sm:block text-[13px] text-gray-500">{{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}</p>
+                    <p class="hidden sm:block text-[13px] text-gray-500">
+                        {{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}
+                        ·
+                        <a href="{{ route('help.homework') }}" class="text-[#E85C24] font-semibold hover:underline">как сдавать</a>
+                    </p>
                 </div>
             </div>
             @if($hwBadge)
