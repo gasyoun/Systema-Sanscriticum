@@ -90,17 +90,117 @@ class HomeworkService
             abort_unless($comment->author_role === HomeworkComment::ROLE_STUDENT, 403);
             abort_unless((int) $comment->author_id === (int) $student->id, 403);
 
-            $disk = $file->disk ?: 'local';
-            $path = $file->path;
-            $file->delete();
-
-            if ($path && Storage::disk($disk)->exists($path)) {
-                Storage::disk($disk)->delete($path);
-            }
+            $this->unlinkAndDeleteFileRow($file);
 
             $submission->last_activity_at = now();
             $submission->save();
         });
+    }
+
+    /**
+     * Штат (админ / препод курса / проверяющий группы) удаляет любой файл
+     * работы — в т.ч. ошибочно залитое ДЗ, которое студент уже не может
+     * править (accepted) или не видит в кабинете. H2120.
+     */
+    public function deleteFileAsStaff(HomeworkFile $file, User $staff): void
+    {
+        $file->loadMissing('comment.submission.course', 'comment.submission.lesson');
+        $submission = $file->comment?->submission;
+
+        abort_if(! $submission, 404);
+        abort_unless($this->actorIsStaffFor($staff, $submission), 403);
+
+        DB::transaction(function () use ($file, $submission) {
+            $this->unlinkAndDeleteFileRow($file);
+            $submission->last_activity_at = now();
+            $submission->save();
+        });
+    }
+
+    /**
+     * Штат стирает все студенческие вложения (диск + строки). Опционально
+     * возвращает работу в «На доработку», чтобы студент мог залить заново.
+     *
+     * @return int сколько файлов удалено
+     */
+    public function clearStudentFiles(
+        HomeworkSubmission $submission,
+        User $staff,
+        bool $reopenForRevision = true,
+    ): int {
+        abort_unless($this->actorIsStaffFor($staff, $submission), 403);
+
+        $submission->loadMissing('comments.files');
+
+        return DB::transaction(function () use ($submission, $staff, $reopenForRevision) {
+            $deleted = 0;
+
+            foreach ($submission->comments as $comment) {
+                if ($comment->author_role !== HomeworkComment::ROLE_STUDENT) {
+                    continue;
+                }
+                foreach ($comment->files as $file) {
+                    $this->unlinkAndDeleteFileRow($file);
+                    $deleted++;
+                }
+            }
+
+            if ($reopenForRevision && $submission->status !== HomeworkSubmission::STATUS_DRAFT) {
+                $submission->status = HomeworkSubmission::STATUS_NEEDS_REVISION;
+                $submission->reviewed_by = $staff->id;
+                $submission->reviewed_at = now();
+            }
+
+            $submission->last_activity_at = now();
+            $submission->save();
+
+            $submission->comments()->create([
+                'author_id' => $staff->id,
+                'author_role' => $staff->isAdminLike()
+                    ? HomeworkComment::ROLE_ADMIN
+                    : HomeworkComment::ROLE_TEACHER,
+                'type' => HomeworkComment::TYPE_MESSAGE,
+                'body' => $deleted > 0
+                    ? "Удалены залитые файлы студента ({$deleted}). Можно прикрепить заново."
+                    : 'Файлов студента не было — приём открыт на правку.',
+                'new_status' => $reopenForRevision ? HomeworkSubmission::STATUS_NEEDS_REVISION : null,
+            ]);
+
+            return $deleted;
+        });
+    }
+
+    /**
+     * Админ / преподаватель курса / проверяющий группы (H1729).
+     * Совпадает с HomeworkSubmissionResource::canReview, без UI-слоя Filament.
+     */
+    public function actorIsStaffFor(User $actor, HomeworkSubmission $submission): bool
+    {
+        if ($actor->isAdminLike()) {
+            return true;
+        }
+
+        if (! $actor->isTeacher()) {
+            return false;
+        }
+
+        $submission->loadMissing('course', 'lesson');
+
+        if ($actor->teacher_id && optional($submission->course)->teacher_id === $actor->teacher_id) {
+            return true;
+        }
+
+        if ((int) $submission->user_id === (int) $actor->id) {
+            return false;
+        }
+
+        foreach ($submission->reviewGroupIds() as $groupId) {
+            if ($actor->canReviewGroup($groupId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -122,12 +222,7 @@ class HomeworkService
             abort_if($comment->type === HomeworkComment::TYPE_REVIEW, 403);
 
             foreach ($comment->files as $file) {
-                $disk = $file->disk ?: 'local';
-                $path = $file->path;
-                $file->delete();
-                if ($path && Storage::disk($disk)->exists($path)) {
-                    Storage::disk($disk)->delete($path);
-                }
+                $this->unlinkAndDeleteFileRow($file);
             }
 
             $comment->delete();
@@ -135,6 +230,17 @@ class HomeworkService
             $submission->last_activity_at = now();
             $submission->save();
         });
+    }
+
+    private function unlinkAndDeleteFileRow(HomeworkFile $file): void
+    {
+        $disk = $file->disk ?: 'local';
+        $path = $file->path;
+        $file->delete();
+
+        if ($path && Storage::disk($disk)->exists($path)) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     /**

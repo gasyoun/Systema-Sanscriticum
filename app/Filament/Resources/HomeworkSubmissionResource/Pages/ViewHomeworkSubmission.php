@@ -85,6 +85,34 @@ class ViewHomeworkSubmission extends ViewRecord
                     $this->feedbackFilesField(),
                 ])
                 ->action(fn (array $data) => $this->review(HomeworkSubmission::STATUS_NEEDS_REVISION, $data)),
+
+            // H2120: ошибочно залитое ДЗ (не тот урок / не тот файл) —
+            // стереть студенческие вложения и открыть приём на правку.
+            Action::make('clearStudentFiles')
+                ->label('Стереть файлы студента')
+                ->icon('heroicon-o-trash')
+                ->color('gray')
+                ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
+                ->requiresConfirmation()
+                ->modalHeading('Стереть залитые файлы студента?')
+                ->modalDescription('Удалятся все вложения студента (с диска). Работа перейдёт в «На доработку», чтобы студент мог прикрепить файлы заново. Файлы и комментарии проверяющего сохранятся.')
+                ->modalSubmitActionLabel('Стереть')
+                ->action(function (): void {
+                    $deleted = app(HomeworkService::class)->clearStudentFiles(
+                        $this->getRecord(),
+                        auth()->user(),
+                        reopenForRevision: true,
+                    );
+
+                    Notification::make()
+                        ->success()
+                        ->title($deleted > 0
+                            ? "Удалено файлов: {$deleted}. Работа открыта на доработку."
+                            : 'Файлов студента не было. Работа открыта на доработку.')
+                        ->send();
+
+                    $this->redirect(HomeworkSubmissionResource::getUrl('view', ['record' => $this->getRecord()]));
+                }),
         ];
     }
 

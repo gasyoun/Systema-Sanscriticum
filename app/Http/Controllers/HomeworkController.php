@@ -121,22 +121,21 @@ class HomeworkController extends Controller
     }
 
     /**
-     * Контролируемое скачивание файла домашки: владелец-студент,
-     * преподаватель курса или админ. Файлы лежат на приватном диске local.
+     * Контролируемое скачивание файла домашки: владелец-студент или
+     * штат (админ / препод курса / проверяющий группы). Файлы — диск local.
      */
     public function download(Request $request, HomeworkFile $file)
     {
         $user = $request->user();
+        $file->loadMissing('comment.submission.course', 'comment.submission.lesson');
         $submission = $file->comment?->submission;
 
         abort_if(! $submission, 404);
 
         $isOwner = $submission->user_id === $user->id;
-        $isCourseTeacher = $user->teacher_id
-            && optional($submission->course)->teacher_id === $user->teacher_id;
-        $isAdmin = (bool) $user->is_admin;
+        $isStaff = $this->service->actorIsStaffFor($user, $submission);
 
-        abort_unless($isOwner || $isCourseTeacher || $isAdmin, 403);
+        abort_unless($isOwner || $isStaff, 403);
 
         abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
 
@@ -144,11 +143,21 @@ class HomeworkController extends Controller
     }
 
     /**
-     * Студент убирает неактуальный файл из своей сдачи (пока работа не принята).
+     * Удалить залитый файл: студент — свой (пока editable); штат — любой
+     * файл этой работы (H2120).
      */
     public function destroyFile(Request $request, HomeworkFile $file)
     {
-        $this->service->deleteStudentFile($file, $request->user());
+        $user = $request->user();
+        $file->loadMissing('comment.submission.course', 'comment.submission.lesson');
+        $submission = $file->comment?->submission;
+        abort_if(! $submission, 404);
+
+        if ($this->service->actorIsStaffFor($user, $submission)) {
+            $this->service->deleteFileAsStaff($file, $user);
+        } else {
+            $this->service->deleteStudentFile($file, $user);
+        }
 
         return back()->with('success', 'Файл удалён из домашней работы.');
     }
