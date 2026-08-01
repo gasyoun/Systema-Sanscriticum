@@ -69,14 +69,18 @@ class HomeworkController extends Controller
 
         $finalize = $validated['action'] === 'submit';
 
-        // Существующую отправленную/принятую работу студент менять не может —
-        // правки разрешены только в черновике и при возврате на доработку.
         $existing = HomeworkSubmission::where('user_id', $user->id)
             ->where('lesson_id', $lesson->id)
             ->first();
 
+        // Accepted — только через возврат преподавателем; draft/submitted/needs_revision — можно.
         if ($existing && ! $existing->isEditableByStudent()) {
-            return back()->with('error', 'Работа уже на проверке или принята — изменения недоступны.');
+            return back()->with('error', 'Работа уже принята — изменения недоступны.');
+        }
+
+        // Черновик после сдачи убрал бы работу из очереди — запрещаем.
+        if (! $finalize && $existing?->status === HomeworkSubmission::STATUS_SUBMITTED) {
+            return back()->with('error', 'Работа уже на проверке. Чтобы изменить её, нажмите «Обновить работу».');
         }
 
         $uploaded = $request->file('files', []);
@@ -99,11 +103,20 @@ class HomeworkController extends Controller
             ];
         }
 
+        $wasAlreadySubmitted = $existing
+            && $existing->status === HomeworkSubmission::STATUS_SUBMITTED;
+
         $this->service->recordSubmission($user, $lesson, $validated['body'] ?? null, $files, $finalize);
 
-        return back()->with('success', $finalize
-            ? 'Работа отправлена на проверку.'
-            : 'Черновик сохранён.');
+        if (! $finalize) {
+            $success = 'Черновик сохранён.';
+        } elseif ($wasAlreadySubmitted) {
+            $success = 'Работа обновлена — преподаватель увидит новое сообщение.';
+        } else {
+            $success = 'Работа отправлена на проверку.';
+        }
+
+        return back()->with('success', $success);
     }
 
     /**

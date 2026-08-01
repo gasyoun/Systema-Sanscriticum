@@ -3,7 +3,7 @@
     $hwEditable = ! $homeworkSubmission || $homeworkSubmission->isEditableByStudent();
     $hwBadge = match($hwStatus) {
         'submitted' => ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке',
-            'Работа у куратора — ждите ответа, мы сообщим на почту.'],
+            'Работа у куратора. Можно дополнить или исправить — ниже появится новое сообщение в переписке.'],
         'needs_revision' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку',
             'Куратор вернул работу с комментариями — прочитайте замечания и отправьте снова.'],
         'accepted' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'fa-circle-check', 'Принято',
@@ -124,6 +124,18 @@
                 <p class="text-[13px] text-amber-800"><span class="font-bold">Задание еще не задано.</span> Преподаватель скоро выложит условие — загляните позже.</p>
             </div>
         @elseif($hwEditable)
+            @php
+                $hwIsSubmitted = $hwStatus === 'submitted';
+                $hwIsRework = $hwStatus === 'needs_revision';
+                $lastStudentBody = old('body');
+                if ($lastStudentBody === null && $homeworkSubmission) {
+                    $lastStudentBody = optional(
+                        $homeworkSubmission->comments
+                            ->where('author_role', 'student')
+                            ->last()
+                    )->body;
+                }
+            @endphp
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
                   x-data="{
                       files: [],
@@ -150,14 +162,16 @@
                       },
                   }">
                 @csrf
-                @if($hwStatus === 'needs_revision')
+                @if($hwIsRework)
                     <p class="text-sm text-red-600 font-semibold mb-3"><i class="fas fa-rotate-left mr-1.5"></i>Преподаватель вернул работу — внесите правки и отправьте снова.</p>
+                @elseif($hwIsSubmitted)
+                    <p class="text-sm text-blue-700 font-semibold mb-3"><i class="fas fa-pen-to-square mr-1.5"></i>Работа уже на проверке — можно дополнить текст или файлы. Преподаватель увидит новое сообщение в переписке.</p>
                 @endif
 
                 <label class="block text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-1.5">Ваш ответ</label>
                 <textarea name="body" rows="5"
                           class="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm resize-y"
-                          placeholder="Опишите решение, добавьте комментарий для преподавателя...">{{ old('body') }}</textarea>
+                          placeholder="Опишите решение, добавьте комментарий для преподавателя...">{{ $lastStudentBody }}</textarea>
 
                 <div class="mt-4">
                     <label class="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-[#E85C24] hover:bg-orange-50/30 transition-colors p-6 cursor-pointer">
@@ -190,19 +204,17 @@
                 <div class="mt-5 flex flex-col sm:flex-row gap-3">
                     <button type="submit" name="action" value="submit"
                             class="flex-1 bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider">
-                        <i class="fas fa-paper-plane mr-2"></i>Отправить на проверку
+                        <i class="fas {{ $hwIsSubmitted || $hwIsRework ? 'fa-rotate' : 'fa-paper-plane' }} mr-2"></i>
+                        {{ $hwIsSubmitted ? 'Обновить работу' : ($hwIsRework ? 'Отправить снова' : 'Отправить на проверку') }}
                     </button>
-                    <button type="submit" name="action" value="draft"
-                            class="px-5 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
-                        Сохранить черновик
-                    </button>
+                    @unless($hwIsSubmitted)
+                        <button type="submit" name="action" value="draft"
+                                class="px-5 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors">
+                            Сохранить черновик
+                        </button>
+                    @endunless
                 </div>
             </form>
-        @elseif($hwStatus === 'submitted')
-            <div class="flex items-center gap-3 rounded-xl bg-blue-50/70 border border-blue-100 px-4 py-3">
-                <i class="fas fa-hourglass-half text-blue-500 shrink-0"></i>
-                <p class="text-[13px] text-blue-800"><span class="font-bold">Работа на проверке.</span> Сообщим на почту, когда появится результат.</p>
-            </div>
         @elseif($hwStatus === 'accepted')
             <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
                 <i class="fas fa-circle-check text-emerald-500 shrink-0"></i>

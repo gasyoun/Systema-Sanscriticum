@@ -121,10 +121,18 @@ class HomeworkSubmission extends Model
             ->all();
     }
 
-    /** Студент ещё не отправил — можно редактировать/досдавать. */
+    /**
+     * Студент может дополнить/исправить работу, пока её не приняли.
+     * «На проверке» тоже открыто: опечатка/забытый файл не должны ждать вердикта.
+     * Accepted — только через возврат на доработку преподавателем.
+     */
     public function isEditableByStudent(): bool
     {
-        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_NEEDS_REVISION], true);
+        return in_array($this->status, [
+            self::STATUS_DRAFT,
+            self::STATUS_SUBMITTED,
+            self::STATUS_NEEDS_REVISION,
+        ], true);
     }
 
     public function statusLabel(): string
