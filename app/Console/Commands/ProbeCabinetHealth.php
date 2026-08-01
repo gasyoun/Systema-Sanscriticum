@@ -489,8 +489,8 @@ class ProbeCabinetHealth extends Command
             }
             $text = "✅ <b>Личный кабинет снова работает</b>\n\n"
                 .$this->telegramUrlBlock()."\n"
-                ."Проверка прошла: вход smoke-аккаунтов и ключевые страницы снова отвечают.\n"
-                ."Поднять сервер может только Артём (@t3t3r1n) — отвечает нечасто, поднимает небыстро.\n\n"
+                ."Проверка прошла: вход smoke-аккаунтов и ключевые страницы снова отвечают.\n\n"
+                .$this->telegramEscalationHint([])."\n\n"
                 .$this->telegramRunbook();
             $this->sendTelegram($token, $criticalIds, $text);
 
@@ -518,7 +518,7 @@ class ProbeCabinetHealth extends Command
         $text = "🚨 <b>Личный кабинет не работает</b>\n\n"
             .$this->telegramUrlBlock()."\n"
             ."Что упало:\n".implode("\n", $lines)."\n\n"
-            ."Поднять сервер может только Артём (@t3t3r1n) — отвечает нечасто, поднимает небыстро.\n\n"
+            .$this->telegramEscalationHint($criticalFails)."\n\n"
             .$this->telegramRunbook();
 
         $sent = $this->sendTelegram($token, $criticalIds, $text);
@@ -603,6 +603,39 @@ class ProbeCabinetHealth extends Command
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * H2104: не пугать «только Артём» на app-level fuse (auto-deploy timeout
+     * при живом HTTP). Артём — host/LXC down (SSH нет).
+     *
+     * @param  list<array{message?: string, severity?: string}>  $criticalFails
+     */
+    private function telegramEscalationHint(array $criticalFails): string
+    {
+        $onlyAutoDeploy = $criticalFails !== [];
+        foreach ($criticalFails as $f) {
+            $m = (string) ($f['message'] ?? '');
+            if (! str_contains($m, 'auto-deploy') && ! str_contains($m, 'auto_deploy')) {
+                $onlyAutoDeploy = false;
+                break;
+            }
+        }
+
+        if ($criticalFails === []) {
+            // recovery: short neutral note
+            return 'Если снова упадёт: smoke /login → SSH runbook. Host down (нет SSH) — Иван/Марцис → Артём (@t3t3r1n).';
+        }
+
+        if ($onlyAutoDeploy) {
+            return "Это guards/auto-deploy (fuse), не «сервер мёртв».\n"
+                .'Сайт часто 200: <code>cat storage/auto_deploy.disabled</code> → smoke → '
+                ."после разбора <code>rm storage/auto_deploy.disabled</code>.\n"
+                .'Артёма (@t3t3r1n) звать только если SSH не отвечает / хост мёртв.';
+        }
+
+        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артём (@t3t3r1n) — '
+            .'отвечает нечасто; звать только при отсутствии SSH / host-down.';
     }
 
     /**

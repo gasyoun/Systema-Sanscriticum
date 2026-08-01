@@ -26,10 +26,12 @@
 #    чинит без спешки. Миграции в деплое → отката НЕТ (migrate --force
 #    необратим) — предохранитель + critical, человек нужен срочно.
 #  • Предохранитель ставится в ЛЮБОМ провальном исходе — авто-деплои стоят до
-#    разбора. Severity в guards:verify (H2066):
+#    разбора. Severity в guards:verify (H2066 + H2104):
 #      [rolled-back]       — сайт восстановлен откатом → warning
 #      [blocked-preflight] — HEAD не сдвинулся, health чист (грязное дерево
 #                            и т.п.) → warning, не «человеку СРОЧНО»
+#      [timeout-alive]     — deploy/rollback timeout (124/137), но health
+#                            чист (smoke 200) → warning; Артём не нужен
 #      иначе               — critical (прод может быть нездоров)
 #  • Каждые 30 минут (даже если HEAD уже = origin/main) обновляет 644-зеркало
 #    storage/app/server_guards/crontab-root.installed — чтобы cabinet:probe /
@@ -113,8 +115,10 @@ health_check() {
 
 # Провал деплоя/здоровья: попытаться автооткат, затем — предохранитель.
 # Откат разрешён только без миграций в диапазоне (migrate --force необратим).
+# $2 = exit code deploy.sh (опционально; 124/137 → timeout/kill).
 fail_deploy() {
   local reason="$1"
+  local deploy_rc="${2:-1}"
   local head_now
   head_now=$(git rev-parse HEAD 2>/dev/null || echo "")
 
@@ -132,6 +136,15 @@ fail_deploy() {
   if timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" --rollback "$LOCAL" && health_check; then
     trip "[rolled-back] $reason; автоматически откатились на $(git rev-parse --short "$LOCAL"), сайт жив — чинить можно без спешки"
   fi
+
+  # H2104: timeout (124) / SIGKILL (137) при живом smoke — не «требует Артёма».
+  # Инцидент 01-08-2026: vite 1500s → rollback 124 → critical при HTTP 200.
+  if health_check && { [ "$deploy_rc" -eq 124 ] || [ "$deploy_rc" -eq 137 ]; }; then
+    trip "[timeout-alive] $reason; автооткат не уложился/не помог, но health чист (smoke 200) — сайт жив, Артём не нужен; разобрать npm/vite или MAX=${MAX}s, снять auto_deploy.disabled"
+  fi
+  if health_check; then
+    trip "[timeout-alive] $reason; автооткат НЕ помог, health чист — сайт жив; разобрать и снять fuse (не host-down)"
+  fi
   trip "$reason; автооткат НЕ помог — сервер требует человека немедленно"
 }
 
@@ -139,11 +152,11 @@ echo "$(stamp) AUTO-DEPLOY: $(git rev-parse --short "$LOCAL") -> $(git rev-parse
 timeout -k 30s "${MAX}s" bash "$DEPLOY_SH"
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  fail_deploy "deploy.sh завершился с кодом $rc"
+  fail_deploy "deploy.sh завершился с кодом $rc" "$rc"
 fi
 
 if ! health_check; then
-  fail_deploy "деплой прошёл, но сервер нездоров:$fails"
+  fail_deploy "деплой прошёл, но сервер нездоров:$fails" 1
 fi
 
 echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail:-?}MB, smoke 200)"

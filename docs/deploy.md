@@ -31,8 +31,11 @@ _Created: 02-07-2026 · Last updated: 01-08-2026_
    Любая другая грязь — отказ деплоить. На проде **не правят** tracked
    `app/`/`config/` руками: только PR → `main` → auto-deploy / `deploy.sh`.
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
-3. `composer install --no-dev -o` + `npm ci && npm run build`
-   (`public/build` в git не хранится — фронт собирается на сервере).
+3. `composer install --no-dev -o` + **`npm ci && npm run build` только если
+   изменились asset-пути** (package*/vite/postcss/tailwind/`resources/{js,css}`)
+   относительно предыдущего HEAD, или нет `public/build/manifest.json`, или
+   `FORCE_NPM=1` (H2104). Docs/PHP-only PR больше не гоняют vite ~25 мин.
+   `public/build` в git не хранится — фронт собирается на сервере при нужде.
 4. (с флагом `--down`) `php artisan down` на время миграций.
 5. `php artisan optimize:clear` + `filament:optimize-clear` (кеш
    Filament-компонентов `optimize:clear` не трогает — без явного сброса новый
