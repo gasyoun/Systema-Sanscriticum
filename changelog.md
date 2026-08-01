@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **H2094 NOBORING Wave 0 baseline: `php artisan dozhim:baseline`.** Dual rates for last 30/90d — **A** order→pay (reuses H262 `OrderPaymentConversionService` cohort filter) and **B** Lead→`converted_at`. Wrapper [`tools/order_pay_conversion_baseline.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tools/order_pay_conversion_baseline.php). Tests: `DozhimBaselineTest`. Roadmap Wave 0 first checkbox ticked. Executor: Grok 4.5 (`grok-4.5`).
 - **H1992: koloda hub language filter (`?lang=sa|hi|all`).** Public `/koloda` and cabinet `/dvaram/koloda` list hubs filter by `SrsDeck.language` (default `sa`; null language counts as sa; tabs Санскрит / Хинди / Все). Deep links `/koloda/{slug}` unchanged. Tests in `SrsPublicDeckUrlsTest`. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed

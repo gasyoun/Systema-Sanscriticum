@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Reports;
 
 use App\Filament\Pages\ReceivablesGovernance;
+use App\Models\Lead;
 use App\Models\Payment;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +36,73 @@ use Illuminate\Support\Collection;
  */
 class OrderPaymentConversionService
 {
+    /**
+     * Dual-denominator baseline for NOBORING dozhim Wave 0 (rate A + rate B).
+     *
+     * Rate A (primary): paid course-intent Payments / all course-intent Payments
+     * in the cohort window (same «оформленный заказ» filter as snapshot()).
+     * Rate B (secondary): Leads created in the window with converted_at set
+     * (product mark when a linked Payment reaches paid) / all Leads in window.
+     *
+     * @param  list<int>  $windowsDays  e.g. [30, 90]
+     * @return array{
+     *   as_of: string,
+     *   windows: list<array{
+     *     days: int,
+     *     from: string,
+     *     to: string,
+     *     rate_a: array{orders:int, paid:int, pending:int, lost:int, conversion_pct:float|null},
+     *     rate_b: array{leads:int, converted:int, conversion_pct:float|null}
+     *   }>,
+     *   zayavka_definition: string
+     * }
+     */
+    public function dozhimBaseline(?Carbon $asOf = null, array $windowsDays = [30, 90]): array
+    {
+        $asOf = ($asOf ?? now())->copy();
+        $windows = [];
+
+        foreach ($windowsDays as $days) {
+            $days = max(1, (int) $days);
+            $from = $asOf->copy()->subDays($days);
+            $windows[] = [
+                'days' => $days,
+                'from' => $from->toDateTimeString(),
+                'to' => $asOf->toDateTimeString(),
+                'rate_a' => $this->conversionForRange($from, $asOf),
+                'rate_b' => $this->leadConversionForRange($from, $asOf),
+            ];
+        }
+
+        return [
+            'as_of' => $asOf->toDateTimeString(),
+            'windows' => $windows,
+            'zayavka_definition' => 'Rate A «заявка» = real course Payment (not conditional; not excluded tariffs). '
+                .'Rate B «заявка» = Lead row created in window; converted = converted_at set on paid path.',
+        ];
+    }
+
+    /**
+     * Lead → first paid conversion for rate B.
+     *
+     * @return array{leads:int, converted:int, conversion_pct:float|null}
+     */
+    public function leadConversionForRange(Carbon $from, Carbon $to): array
+    {
+        $base = Lead::query()
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<', $to);
+
+        $leads = (clone $base)->count();
+        $converted = (clone $base)->whereNotNull('converted_at')->count();
+
+        return [
+            'leads' => $leads,
+            'converted' => $converted,
+            'conversion_pct' => $leads > 0 ? round($converted / $leads * 100, 1) : null,
+        ];
+    }
+
     /**
      * Полный снимок воронки заказ→оплата на момент $asOf (по умолчанию — сейчас).
      *
