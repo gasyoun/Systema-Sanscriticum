@@ -21,10 +21,11 @@ use Illuminate\Support\Facades\File;
 
 /**
  * Track C (H164): dashboard for @zapisi_ORSbot — member roster (D9 snapshot)
- * + recent messages/media (D7+D8 corpus), + kick from chat via Bot API.
+ * + recent messages/media (D7+D8 corpus), + ban/unban via Bot API.
  *
  * Ростер: telegram user id + username из MTProto (telegram-harvest:roster-groups).
- * Кик: soft kick через zapisi_bot_token (не требует users.telegram_id в LMS).
+ * Исключение = hard ban (banChatMember без unban) — вернуться по инвайту нельзя,
+ * пока оператор не разбанит. Локальный журнал: roster/{chat_id}.banned.json.
  *
  * Мультичат: select по Group.telegram_chat_id; дип-линк ?group=<id>.
  */
@@ -261,7 +262,7 @@ class ZapisiBotDashboard extends Page implements HasForms
     }
 
     /**
-     * Soft kick участника по Telegram user id из снимка ростера.
+     * Hard ban участника по Telegram user id из снимка ростера.
      * wire:click с confirm в blade.
      */
     public function kickMember(int $telegramUserId, ZapisiChatMemberService $zapisi): void
@@ -279,7 +280,7 @@ class ZapisiBotDashboard extends Page implements HasForms
             return;
         }
 
-        // Не кикаем ботов из снимка (и себя).
+        // Не баним ботов из снимка.
         $member = collect($this->roster['members'] ?? [])
             ->first(fn (array $m): bool => (int) ($m['id'] ?? 0) === $telegramUserId);
 
@@ -305,14 +306,23 @@ class ZapisiBotDashboard extends Page implements HasForms
                 : (string) $telegramUserId;
 
             Notification::make()
-                ->title('Исключён из Telegram-чата')
-                ->body(trim($label) !== '' ? trim($label) : (string) $telegramUserId)
+                ->title('Заблокирован в Telegram-чате')
+                ->body(
+                    (trim($label) !== '' ? trim($label) : (string) $telegramUserId)
+                    .' — вернуться по инвайту нельзя, пока не разбаните.'
+                )
                 ->success()
                 ->send();
 
-            // Убрать из локального снимка, чтобы UI сразу отразил кик
-            // (полный снимок обновит roster-groups раз в час).
+            // Убрать из локального снимка + записать в журнал банов.
             $this->removeMemberFromRosterSnapshot($chatId, $telegramUserId);
+            $this->rememberBanned($chatId, [
+                'id' => $telegramUserId,
+                'username' => is_array($member) ? ($member['username'] ?? null) : null,
+                'name' => is_array($member) ? ($member['name'] ?? null) : null,
+                'banned_at' => now()->toIso8601String(),
+                'by_user_id' => auth()->id() ? (int) auth()->id() : null,
+            ]);
         } catch (ZapisiChatMemberException $e) {
             Notification::make()
                 ->title('Не удалось исключить')
@@ -320,6 +330,85 @@ class ZapisiBotDashboard extends Page implements HasForms
                 ->danger()
                 ->send();
         }
+    }
+
+    /**
+     * Снять бан: unbanChatMember + убрать из локального журнала.
+     */
+    public function unbanMember(int $telegramUserId, ZapisiChatMemberService $zapisi): void
+    {
+        $chatId = $this->chatId();
+        if ($chatId === null) {
+            Notification::make()->title('Нет chat_id группы')->danger()->send();
+
+            return;
+        }
+
+        if ($telegramUserId <= 0) {
+            Notification::make()->title('Некорректный Telegram id')->danger()->send();
+
+            return;
+        }
+
+        $banned = collect($this->bannedMembers)
+            ->first(fn (array $m): bool => (int) ($m['id'] ?? 0) === $telegramUserId);
+
+        try {
+            $zapisi->unban(
+                $chatId,
+                $telegramUserId,
+                auth()->id() ? (int) auth()->id() : null,
+            );
+
+            $label = is_array($banned)
+                ? ($banned['name'] ?? '').(isset($banned['username']) && $banned['username'] ? ' @'.$banned['username'] : '')
+                : (string) $telegramUserId;
+
+            Notification::make()
+                ->title('Разбанен')
+                ->body(
+                    (trim($label) !== '' ? trim($label) : (string) $telegramUserId)
+                    .' — можно снова войти по инвайт-ссылке.'
+                )
+                ->success()
+                ->send();
+
+            $this->forgetBanned($chatId, $telegramUserId);
+        } catch (ZapisiChatMemberException $e) {
+            Notification::make()
+                ->title('Не удалось разбанить')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    /**
+     * Локальный журнал hard-ban'ов (не Telegram API — у бота нет списка kicked).
+     *
+     * @return list<array{id: int, username: ?string, name: ?string, banned_at: ?string, by_user_id: ?int}>
+     */
+    public function getBannedMembersProperty(): array
+    {
+        $chatId = $this->chatId();
+        if ($chatId === null) {
+            return [];
+        }
+
+        $file = $this->bannedPath($chatId);
+        if (! File::exists($file)) {
+            return [];
+        }
+
+        $decoded = json_decode(File::get($file), true);
+        if (! is_array($decoded) || ! isset($decoded['members']) || ! is_array($decoded['members'])) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $decoded['members'],
+            fn ($m): bool => is_array($m) && (int) ($m['id'] ?? 0) > 0,
+        ));
     }
 
     private function removeMemberFromRosterSnapshot(string $chatId, int $telegramUserId): void
@@ -341,6 +430,62 @@ class ZapisiBotDashboard extends Page implements HasForms
         $decoded['count'] = count($decoded['members']);
 
         File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * @param  array{id: int, username: ?string, name: ?string, banned_at: ?string, by_user_id: ?int}  $entry
+     */
+    private function rememberBanned(string $chatId, array $entry): void
+    {
+        $file = $this->bannedPath($chatId);
+        $dir = dirname($file);
+        if (! File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+
+        $decoded = ['members' => []];
+        if (File::exists($file)) {
+            $raw = json_decode(File::get($file), true);
+            if (is_array($raw) && isset($raw['members']) && is_array($raw['members'])) {
+                $decoded = $raw;
+            }
+        }
+
+        $id = (int) $entry['id'];
+        $decoded['members'] = array_values(array_filter(
+            $decoded['members'],
+            fn ($m): bool => ! is_array($m) || (int) ($m['id'] ?? 0) !== $id,
+        ));
+        $decoded['members'][] = $entry;
+        $decoded['updated_at'] = now()->toIso8601String();
+
+        File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+
+    private function forgetBanned(string $chatId, int $telegramUserId): void
+    {
+        $file = $this->bannedPath($chatId);
+        if (! File::exists($file)) {
+            return;
+        }
+
+        $decoded = json_decode(File::get($file), true);
+        if (! is_array($decoded) || ! isset($decoded['members']) || ! is_array($decoded['members'])) {
+            return;
+        }
+
+        $decoded['members'] = array_values(array_filter(
+            $decoded['members'],
+            fn ($m): bool => ! is_array($m) || (int) ($m['id'] ?? 0) !== $telegramUserId,
+        ));
+        $decoded['updated_at'] = now()->toIso8601String();
+
+        File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+
+    private function bannedPath(string $chatId): string
+    {
+        return $this->storePath().'/roster/'.$chatId.'.banned.json';
     }
 
     private function chatId(): ?string

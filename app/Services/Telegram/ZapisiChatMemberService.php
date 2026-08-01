@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Log;
  * Управление участниками учебных чатов через @zapisi_ORSbot.
  *
  * Бот должен быть администратором группы с can_restrict_members.
- * Soft kick = banChatMember + unbanChatMember (можно вернуться по инвайту).
+ * Исключение = hard ban (banChatMember без unban): вернуться по инвайту
+ * нельзя, пока оператор не вызовет unban.
  */
 class ZapisiChatMemberService
 {
@@ -98,7 +99,7 @@ class ZapisiChatMemberService
     }
 
     /**
-     * Soft kick: ban then unban (user can rejoin via invite link).
+     * Hard ban: banChatMember only. User cannot rejoin via invite until unban().
      *
      * @throws ZapisiChatMemberException
      */
@@ -132,6 +133,32 @@ class ZapisiChatMemberService
             throw new ZapisiChatMemberException("Telegram banChatMember: {$desc}");
         }
 
+        Log::info('ZapisiChatMemberService: ban ok', [
+            'chat_id' => $chatId,
+            'telegram_user_id' => $telegramUserId,
+            'by_user_id' => $byUserId,
+        ]);
+    }
+
+    /**
+     * Снять бан: unbanChatMember. После этого можно снова войти по инвайту.
+     *
+     * @throws ZapisiChatMemberException
+     */
+    public function unban(string $chatId, int|string $telegramUserId, ?int $byUserId = null): void
+    {
+        $chatId = trim($chatId);
+        $telegramUserId = (string) $telegramUserId;
+
+        if ($chatId === '' || $telegramUserId === '') {
+            throw new ZapisiChatMemberException('Не указан chat_id или telegram user id.');
+        }
+
+        $rights = $this->botRightsInChat($chatId);
+        if (! $rights['ok']) {
+            throw new ZapisiChatMemberException($rights['detail']);
+        }
+
         $unban = $this->api('unbanChatMember', [
             'chat_id' => $chatId,
             'user_id' => $telegramUserId,
@@ -140,18 +167,16 @@ class ZapisiChatMemberService
 
         if (! ($unban['ok'] ?? false)) {
             $desc = (string) ($unban['description'] ?? 'unknown');
-            Log::warning('ZapisiChatMemberService: unbanChatMember failed after ban', [
+            Log::warning('ZapisiChatMemberService: unbanChatMember failed', [
                 'chat_id' => $chatId,
                 'user_id' => $telegramUserId,
                 'by' => $byUserId,
                 'body' => $unban,
             ]);
-            throw new ZapisiChatMemberException(
-                "Участник заблокирован, но unban не прошёл ({$desc}). Разблокируйте вручную в Telegram."
-            );
+            throw new ZapisiChatMemberException("Telegram unbanChatMember: {$desc}");
         }
 
-        Log::info('ZapisiChatMemberService: kick ok', [
+        Log::info('ZapisiChatMemberService: unban ok', [
             'chat_id' => $chatId,
             'telegram_user_id' => $telegramUserId,
             'by_user_id' => $byUserId,

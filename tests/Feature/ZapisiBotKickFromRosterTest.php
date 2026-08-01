@@ -84,10 +84,63 @@ class ZapisiBotKickFromRosterTest extends TestCase
         Http::assertSent(fn ($r) => str_contains($r->url(), 'banChatMember')
             && (string) ($r->data()['user_id'] ?? '') === '111'
             && (string) ($r->data()['chat_id'] ?? '') === '-100999');
+        // Hard ban: no automatic unban (cannot rejoin via invite).
+        Http::assertNotSent(fn ($r) => str_contains($r->url(), 'unbanChatMember'));
 
         $roster = json_decode(File::get($this->store.'/roster/-100999.json'), true);
         $this->assertCount(1, $roster['members']);
         $this->assertSame(222, $roster['members'][0]['id']);
+
+        $banned = json_decode(File::get($this->store.'/roster/-100999.banned.json'), true);
+        $this->assertCount(1, $banned['members']);
+        $this->assertSame(111, $banned['members'][0]['id']);
+        $this->assertSame('student_a', $banned['members'][0]['username']);
+    }
+
+    public function test_unban_member_removes_from_local_ban_log(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $group = Group::create([
+            'name' => 'Группа unban',
+            'telegram_chat_id' => '-100777',
+            'status' => 'active',
+        ]);
+
+        File::put($this->store.'/roster/-100777.banned.json', json_encode([
+            'members' => [
+                ['id' => 555, 'username' => 'kicked_user', 'name' => 'Kicked', 'banned_at' => now()->toIso8601String()],
+            ],
+        ], JSON_UNESCAPED_UNICODE));
+
+        Http::fake(function ($request) {
+            $url = $request->url();
+            if (str_contains($url, 'getMe')) {
+                return Http::response(['ok' => true, 'result' => ['id' => 99]]);
+            }
+            if (str_contains($url, 'getChatMember')) {
+                return Http::response([
+                    'ok' => true,
+                    'result' => ['status' => 'administrator', 'can_restrict_members' => true],
+                ]);
+            }
+            if (str_contains($url, 'unbanChatMember')) {
+                return Http::response(['ok' => true, 'result' => true]);
+            }
+
+            return Http::response(['ok' => false], 400);
+        });
+
+        Livewire::actingAs($admin)
+            ->test(ZapisiBotDashboard::class)
+            ->set('data.group_id', $group->id)
+            ->call('unbanMember', 555)
+            ->assertHasNoErrors();
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'unbanChatMember')
+            && (string) ($r->data()['user_id'] ?? '') === '555');
+
+        $banned = json_decode(File::get($this->store.'/roster/-100777.banned.json'), true);
+        $this->assertCount(0, $banned['members']);
     }
 
     public function test_does_not_kick_bots(): void
