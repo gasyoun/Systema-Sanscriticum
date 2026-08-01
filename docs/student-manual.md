@@ -75,6 +75,8 @@ _Created: 06-07-2026 · Last updated: 01-08-2026_
 ### 2.2. Домашние задания
 
 Инструкция для учеников (как сдавать, лимиты, исправить неверный файл):
+**https://samskrte.ru/faq/dz** (публично, без входа).
+Исходник:
 [`STUDENT_HOMEWORK_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_HOMEWORK_GUIDE_RU.md).
 Статусы — также в
 [`onboarding-student.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/onboarding-student.md#домашние-задания).

@@ -26,6 +26,10 @@
     $hwAccept = collect(config('homework.allowed_extensions', []))
         ->map(fn ($ext) => '.'.$ext)
         ->implode(',');
+    // H2142: куда можно перенести файл, если залито не в тот урок.
+    $hwMoveTargets = collect($lessons ?? [])
+        ->filter(fn ($l) => (int) $l->id !== (int) $lesson->id && $l->homework_enabled)
+        ->values();
 @endphp
 <section class="font-nunito">
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6">
@@ -38,7 +42,11 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Домашнее задание</h3>
-                    <p class="hidden sm:block text-[13px] text-gray-500">{{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}</p>
+                    <p class="hidden sm:block text-[13px] text-gray-500">
+                        {{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}
+                        ·
+                        <a href="{{ route('faq.dz') }}" class="text-[#E85C24] font-semibold hover:underline">как сдавать</a>
+                    </p>
                 </div>
             </div>
             @if($hwBadge)
@@ -136,6 +144,33 @@
                                                 {{ \Illuminate\Support\Str::limit($f->original_name, 28) }}
                                                 <span class="text-gray-400">{{ $f->humanSize() }}</span>
                                             </a>
+                                            @if($canDeleteFile && $hwMoveTargets->isNotEmpty())
+                                                <form action="{{ route('homework.file.move', $f) }}" method="POST"
+                                                      class="inline-flex items-center gap-1 pr-1"
+                                                      x-data="{ open: false }">
+                                                    @csrf
+                                                    <input type="hidden" name="go_to_target" value="1">
+                                                    <button type="button"
+                                                            class="w-7 h-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                                            title="Перенести в другой урок"
+                                                            aria-label="Перенести файл {{ $f->original_name }}"
+                                                            x-on:click="open = !open">
+                                                        <i class="fas fa-right-left text-[11px]"></i>
+                                                    </button>
+                                                    <span x-show="open" x-cloak class="inline-flex items-center gap-1">
+                                                        <select name="lesson_id" required
+                                                                class="text-[11px] rounded-md border border-gray-200 py-1 pl-1.5 pr-6 max-w-[10rem]">
+                                                            <option value="">Урок…</option>
+                                                            @foreach($hwMoveTargets as $mt)
+                                                                <option value="{{ $mt->id }}">{{ \Illuminate\Support\Str::limit($mt->title, 28) }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="submit"
+                                                                class="px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100"
+                                                                title="Перенести">OK</button>
+                                                    </span>
+                                                </form>
+                                            @endif
                                             @if($canDeleteFile)
                                                 <form action="{{ route('homework.file.destroy', $f) }}" method="POST" class="pr-1.5"
                                                       onsubmit="return confirm(@js('Удалить файл «'.$f->original_name.'» из работы?'));">

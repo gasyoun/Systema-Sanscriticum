@@ -282,6 +282,9 @@ Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
 // изложенный по-русски; сами условия задает только PDF оферты.
 Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
 
+// FAQ: как сдавать ДЗ — публично (удобно для ссылки в чат группы; без входа).
+Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
+
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
 Route::view('/uptime', 'uptime')->name('uptime.show');
@@ -411,6 +414,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Короткая help-страница «Почему баланс праны уменьшился?» (H1756) —
     // закрывает частый вопрос поддержки про сгорание/списания праны.
     Route::view('/help/prana-balance', 'help.prana-balance')->name('help.prana-balance');
+
+    // Старый URL → канон /faq/dz (публичный FAQ; в кабинете «как сдавать» тоже туда).
+    Route::redirect('/help/homework', '/faq/dz', 301)->name('help.homework');
     Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
     Route::get('/access', [StudentController::class, 'access'])->name('student.access');
 
@@ -454,6 +460,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('homework.file.download');
     Route::delete('/homework/file/{file}', [HomeworkController::class, 'destroyFile'])
         ->name('homework.file.destroy');
+    Route::post('/homework/file/{file}/move', [HomeworkController::class, 'moveFile'])
+        ->name('homework.file.move');
     Route::delete('/homework/comment/{comment}', [HomeworkController::class, 'destroyComment'])
         ->name('homework.comment.destroy');
 

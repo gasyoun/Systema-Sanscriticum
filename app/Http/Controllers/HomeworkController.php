@@ -163,6 +163,30 @@ class HomeworkController extends Controller
     }
 
     /**
+     * Перенести студенческий файл в ДЗ другого урока того же курса (H2142).
+     * Студент — свой editable; штат — любой студенческий файл работы.
+     */
+    public function moveFile(Request $request, HomeworkFile $file)
+    {
+        $validated = $request->validate([
+            'lesson_id' => ['required', 'integer', 'exists:lessons,id'],
+        ]);
+
+        $targetLesson = Lesson::findOrFail($validated['lesson_id']);
+        $target = $this->service->moveFileToLesson($file, $targetLesson, $request->user());
+
+        if ($request->boolean('go_to_target') && $target->course) {
+            return redirect()
+                ->route('student.lesson', [$target->course->slug, $targetLesson->id])
+                ->with('success', 'Файл перенесён в эту домашнюю работу.');
+        }
+
+        $title = $targetLesson->title ?: ('урок #'.$targetLesson->id);
+
+        return back()->with('success', "Файл перенесён в «{$title}».");
+    }
+
+    /**
      * Студент удаляет своё сообщение в треде (текст + файлы), пока работа не принята.
      */
     public function destroyComment(Request $request, HomeworkComment $comment)
