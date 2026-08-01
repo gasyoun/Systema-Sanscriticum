@@ -17,9 +17,9 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 
 ### Wave 0 — Measure (unblocks everything)
 
-- [ ] Commit `tools/order_pay_conversion_baseline.php` (or Artisan command): last 30/90d
+- [x] Commit `tools/order_pay_conversion_baseline.php` (or Artisan command): last 30/90d — **done H2094** (`php artisan dozhim:baseline`; service `OrderPaymentConversionService::dozhimBaseline`)
   - rate A: paid Orders / (paid + unpaid eligible Orders)
-  - rate B: Leads with first Payment / Leads in period
+  - rate B: Leads with first Payment / Leads in period (`converted_at`)
 - [ ] Write numbers into this roadmap + ORS `roadmap_samskrte_sales` Phase 0 baseline checkbox
 - [ ] Document which statuses count as «заявка» (PLAN defaults)
 
