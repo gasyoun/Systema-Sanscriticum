@@ -459,6 +459,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('homework.file.download');
     Route::delete('/homework/file/{file}', [HomeworkController::class, 'destroyFile'])
         ->name('homework.file.destroy');
+    Route::post('/homework/file/{file}/move', [HomeworkController::class, 'moveFile'])
+        ->name('homework.file.move');
     Route::delete('/homework/comment/{comment}', [HomeworkController::class, 'destroyComment'])
         ->name('homework.comment.destroy');
 

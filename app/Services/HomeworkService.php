@@ -203,6 +203,131 @@ class HomeworkService
     }
 
     /**
+     * Перенести один студенческий файл в ДЗ другого урока (тот же студент, тот же курс).
+     * H2142: залито не туда по ошибке — вместо удаления + повторной загрузки.
+     *
+     * Студент: пока source/target editable. Штат: любой студенческий файл.
+     * На диске путь обновляется на homework/{user}/{target_lesson}/…; в обоих
+     * тредах — служебные отметки.
+     */
+    public function moveFileToLesson(HomeworkFile $file, Lesson $targetLesson, User $actor): HomeworkSubmission
+    {
+        $file->loadMissing('comment.submission.course', 'comment.submission.lesson', 'comment.submission.user');
+        $comment = $file->comment;
+        $source = $comment?->submission;
+
+        abort_if(! $source, 404);
+        abort_unless($comment->author_role === HomeworkComment::ROLE_STUDENT, 403);
+        abort_if((int) $targetLesson->id === (int) $source->lesson_id, 422, 'Уже этот урок.');
+        abort_unless((bool) $targetLesson->homework_enabled, 422, 'У целевого урока нет ДЗ.');
+        abort_unless((int) $targetLesson->course_id === (int) $source->course_id, 422, 'Только внутри того же курса.');
+
+        $isStaff = $this->actorIsStaffFor($actor, $source);
+        $isOwner = (int) $source->user_id === (int) $actor->id;
+        abort_unless($isStaff || $isOwner, 403);
+
+        if ($isOwner && ! $isStaff) {
+            abort_unless($source->isEditableByStudent(), 403);
+            abort_unless((int) $comment->author_id === (int) $actor->id, 403);
+        }
+
+        $studentId = (int) $source->user_id;
+
+        return DB::transaction(function () use ($file, $comment, $source, $targetLesson, $actor, $isStaff, $studentId) {
+            $target = HomeworkSubmission::firstOrNew([
+                'user_id' => $studentId,
+                'lesson_id' => $targetLesson->id,
+            ]);
+            $target->course_id = $targetLesson->course_id;
+
+            if (! $isStaff && $target->exists && ! $target->isEditableByStudent()) {
+                abort(403, 'Целевая работа уже принята — перенос недоступен.');
+            }
+
+            if (! $target->exists || $target->status === HomeworkSubmission::STATUS_DRAFT) {
+                $target->status = HomeworkSubmission::STATUS_SUBMITTED;
+            }
+
+            $target->last_activity_at = now();
+            $target->save();
+
+            $disk = $file->disk ?: 'local';
+            $oldPath = (string) $file->path;
+            if ($oldPath !== '' && Storage::disk($disk)->exists($oldPath)) {
+                $base = basename($oldPath);
+                $newPath = "homework/{$studentId}/{$targetLesson->id}/{$base}";
+                if ($newPath !== $oldPath) {
+                    Storage::disk($disk)->move($oldPath, $newPath);
+                    $file->path = $newPath;
+                }
+            }
+
+            $targetComment = $target->comments()->create([
+                'author_id' => $comment->author_id,
+                'author_role' => HomeworkComment::ROLE_STUDENT,
+                'type' => HomeworkComment::TYPE_SUBMISSION,
+                'body' => null,
+            ]);
+
+            $file->comment_id = $targetComment->id;
+            $file->save();
+
+            $label = $this->fileDeletionLabel($file);
+            $fromTitle = $source->lesson?->title ?: ('урок #'.$source->lesson_id);
+            $toTitle = $targetLesson->title ?: ('урок #'.$targetLesson->id);
+
+            $role = $isStaff
+                ? ($actor->isAdminLike() ? HomeworkComment::ROLE_ADMIN : HomeworkComment::ROLE_TEACHER)
+                : HomeworkComment::ROLE_STUDENT;
+
+            $this->recordDeletionNote(
+                $source,
+                $actor,
+                $role,
+                "Файл «{$label}» перенесён в урок «{$toTitle}».",
+            );
+            $this->recordDeletionNote(
+                $target,
+                $actor,
+                $role,
+                "Файл «{$label}» перенесён из урока «{$fromTitle}».",
+            );
+
+            $source->last_activity_at = now();
+            $source->save();
+
+            return $target->fresh(['comments.files', 'lesson', 'course']);
+        });
+    }
+
+    /**
+     * Штат: перенести все студенческие файлы работы в ДЗ другого урока.
+     *
+     * @return int сколько файлов перенесено
+     */
+    public function moveAllStudentFiles(
+        HomeworkSubmission $source,
+        Lesson $targetLesson,
+        User $staff,
+    ): int {
+        abort_unless($this->actorIsStaffFor($staff, $source), 403);
+        $source->loadMissing('comments.files');
+
+        $moved = 0;
+        foreach ($source->comments as $comment) {
+            if ($comment->author_role !== HomeworkComment::ROLE_STUDENT) {
+                continue;
+            }
+            foreach ($comment->files->all() as $file) {
+                $this->moveFileToLesson($file, $targetLesson, $staff);
+                $moved++;
+            }
+        }
+
+        return $moved;
+    }
+
+    /**
      * Админ / преподаватель курса / проверяющий группы (H1729).
      * Совпадает с HomeworkSubmissionResource::canReview, без UI-слоя Filament.
      */

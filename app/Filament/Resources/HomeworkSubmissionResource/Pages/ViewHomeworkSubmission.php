@@ -4,9 +4,11 @@ namespace App\Filament\Resources\HomeworkSubmissionResource\Pages;
 
 use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
 use App\Services\HomeworkService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
@@ -109,6 +111,50 @@ class ViewHomeworkSubmission extends ViewRecord
                         ->title($deleted > 0
                             ? "Удалено файлов: {$deleted}. Работа открыта на доработку."
                             : 'Файлов студента не было. Работа открыта на доработку.')
+                        ->send();
+
+                    $this->redirect(HomeworkSubmissionResource::getUrl('view', ['record' => $this->getRecord()]));
+                }),
+
+            // H2142: перенести все студенческие файлы в другой урок (не туда залито).
+            Action::make('moveStudentFiles')
+                ->label('Перенести файлы в другой урок')
+                ->icon('heroicon-o-arrow-right-circle')
+                ->color('gray')
+                ->visible(fn (): bool => HomeworkSubmissionResource::canReview($this->getRecord()))
+                ->form([
+                    Select::make('lesson_id')
+                        ->label('Целевой урок (тот же курс)')
+                        ->options(function (): array {
+                            $record = $this->getRecord();
+
+                            return Lesson::query()
+                                ->where('course_id', $record->course_id)
+                                ->where('homework_enabled', true)
+                                ->where('id', '!=', $record->lesson_id)
+                                ->orderBy('id')
+                                ->pluck('title', 'id')
+                                ->all();
+                        })
+                        ->required()
+                        ->searchable(),
+                ])
+                ->modalHeading('Перенести файлы студента в другой урок?')
+                ->modalDescription('Файлы останутся на диске, но привяжутся к ДЗ выбранного урока. В обоих тредах появятся служебные отметки.')
+                ->modalSubmitActionLabel('Перенести')
+                ->action(function (array $data): void {
+                    $target = Lesson::findOrFail($data['lesson_id']);
+                    $moved = app(HomeworkService::class)->moveAllStudentFiles(
+                        $this->getRecord(),
+                        $target,
+                        auth()->user(),
+                    );
+
+                    Notification::make()
+                        ->success()
+                        ->title($moved > 0
+                            ? "Перенесено файлов: {$moved} → «{$target->title}»."
+                            : 'Студенческих файлов не было.')
                         ->send();
 
                     $this->redirect(HomeworkSubmissionResource::getUrl('view', ['record' => $this->getRecord()]));
