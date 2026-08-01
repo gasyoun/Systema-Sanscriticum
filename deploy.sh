@@ -51,17 +51,55 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 # стэшим на время обновления кода и возвращаем после. Любая ДРУГАЯ грязь —
 # по-прежнему стоп-сигнал: это не «известный танец», а чьи-то незафиксированные
 # правки, которые reset/pull молча потеряет.
+#
+# Исключения (H2066, 01-08-2026):
+#  • --rollback: dirty-gate пропускается — reset --hard сам сбрасывает tracked
+#    dirty; раньше откат падал на том же preflight, что и forward-деплой
+#    (инцидент 31-07: breaker «автооткат НЕ помог» при живом сайте).
+#  • Файлы, уже совпадающие с origin/$BRANCH (ручной partial hotfix = будущий
+#    commit): сбрасываем к HEAD, pull подтянет их из origin. Реальный
+#    расходящийся hotfix — по-прежнему fail.
 ALLOWED_DIRTY_RE='^public/docs/[^/]+\.pdf$'
 DIRTY_FILES=$(git status --porcelain --untracked-files=no | sed 's/^...//')
 STASHED=0
-if [ -n "$DIRTY_FILES" ]; then
-  if echo "$DIRTY_FILES" | grep -qvE "$ALLOWED_DIRTY_RE"; then
-    fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
+if [ -z "$ROLLBACK_TO" ] && [ -n "$DIRTY_FILES" ]; then
+  # Нужен origin, чтобы отличить «уже в main» от «настоящий hotfix».
+  git fetch origin
+  REAL_DIRTY=""
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if echo "$f" | grep -qE "$ALLOWED_DIRTY_RE"; then
+      continue
+    fi
+    # working tree == origin/$BRANCH for this path → discard to HEAD (safe)
+    if git rev-parse --verify -q "origin/${BRANCH}" >/dev/null \
+      && git diff --quiet "origin/${BRANCH}" -- "$f" 2>/dev/null; then
+      say "Сбрасываю tracked dirty, уже совпадающий с origin/${BRANCH}: $f"
+      git checkout HEAD -- "$f"
+      continue
+    fi
+    REAL_DIRTY="${REAL_DIRTY}${REAL_DIRTY:+$'\n'}$f"
+  done <<EOF
+$DIRTY_FILES
+EOF
+  if [ -n "$REAL_DIRTY" ]; then
+    fail "Рабочее дерево грязное (не только public/docs/*.pdf и не совпадает с origin/${BRANCH}):
+$REAL_DIRTY
+— сначала разобраться с локальными изменениями (git status)"
   fi
-  say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
-  # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
-  git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
-  STASHED=1
+  # Перечитать после auto-discard: остались только PDF (или пусто).
+  DIRTY_FILES=$(git status --porcelain --untracked-files=no | sed 's/^...//')
+  if [ -n "$DIRTY_FILES" ]; then
+    if echo "$DIRTY_FILES" | grep -qvE "$ALLOWED_DIRTY_RE"; then
+      fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
+    fi
+    say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
+    # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
+    git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
+    STASHED=1
+  fi
+elif [ -n "$ROLLBACK_TO" ] && [ -n "$DIRTY_FILES" ]; then
+  say "Откат: dirty-gate пропущен (reset --hard снимет tracked dirty)"
 fi
 OLD_COMMIT=$(git rev-parse --short HEAD)
 
@@ -72,6 +110,7 @@ if [ -n "$ROLLBACK_TO" ]; then
   git reset --hard "$ROLLBACK_TO"
 else
   say "git pull --ff-only origin $BRANCH"
+  # fetch уже мог пройти на dirty-preflight; повторный — дёшево и идемпотентен
   git fetch origin
   git pull --ff-only origin "$BRANCH"
 fi

@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 27-07-2026_
+_Created: 02-07-2026 · Last updated: 01-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -22,10 +22,14 @@ _Created: 02-07-2026 · Last updated: 27-07-2026_
 ## Что делает скрипт (по шагам)
 
 1. **Предполет:** каталог приложения, ветка `main`, чистое рабочее дерево.
-   Исключение — `public/docs/*.pdf` (оферта/политика/согласие, которые заменяют
-   на сервере мимо git): их скрипт сам стэшит на время обновления кода и
-   возвращает после (`git stash pop`); конфликт при возврате = стоп с
-   инструкцией. Любая другая грязь — по-прежнему отказ деплоить.
+   Исключения (H2066):
+   - `public/docs/*.pdf` (оферта/политика/согласие) — стэш на время pull, `pop` после.
+   - Tracked dirty, **уже совпадающий с `origin/main`** (ручной partial hotfix
+     будущего commit) — `git checkout HEAD -- <file>`, затем обычный pull.
+   - Режим `--rollback` — dirty-gate **пропускается** (`reset --hard` сам
+     снимет tracked dirty; иначе автооткат падает на том же preflight).
+   Любая другая грязь — отказ деплоить. На проде **не правят** tracked
+   `app/`/`config/` руками: только PR → `main` → auto-deploy / `deploy.sh`.
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
 3. `composer install --no-dev -o` + `npm ci && npm run build`
    (`public/build` в git не хранится — фронт собирается на сервере).

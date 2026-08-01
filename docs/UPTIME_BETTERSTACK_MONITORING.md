@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -216,7 +216,7 @@ Order matters: **confirm → classify → fix only what you own**.
    | OOM / load extreme | memory | [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md); avoid blind `schedule:run` pile-up |
    | Site 200, cabinet:probe fails | app/auth/DB | TG failure lines; `laravel.log`; Filament «Здоровье кабинета» |
    | Heartbeat silence, site 200 | cron/www-data / PATH | `crontab -u www-data -l`; `systema-watchdog-run.sh`; env `HEARTBEAT_PING_URL` / `CABINET_PROBE_PING_URL` still set after deploy |
-   | Auto-deploy stuck | breaker | `cat storage/auto_deploy.disabled`; only remove after root-cause |
+   | Auto-deploy stuck | breaker | `cat storage/auto_deploy.disabled`; only remove after root-cause. Soft tags `[rolled-back]` / `[blocked-preflight]` = site alive, clean dirty tree then `rm` fuse (H2066) |
 
 4. **After recovery**  
    - Re-run `cabinet:probe` + `heartbeat:ping` until green.  

@@ -130,6 +130,46 @@ final class ShellSystemInspector implements SystemInspector
         return (int) $m[1] * 1024;
     }
 
+    public function trackedDirtyPaths(string $repoDir): ?array
+    {
+        if (! is_dir($repoDir)) {
+            return null;
+        }
+        $gitMeta = rtrim($repoDir, '/\\').DIRECTORY_SEPARATOR.'.git';
+        if (! is_dir($gitMeta) && ! is_file($gitMeta)) {
+            return null;
+        }
+
+        try {
+            $result = Process::timeout($this->timeout)
+                ->path($repoDir)
+                ->run(['git', 'status', '--porcelain', '--untracked-files=no']);
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (! $result->successful()) {
+            return null;
+        }
+
+        $paths = [];
+        foreach (preg_split('/\r\n|\n|\r/', $result->output()) ?: [] as $line) {
+            if ($line === '') {
+                continue;
+            }
+            // porcelain v1: XY<space>path  or  XY<space>orig -> path
+            $path = trim(substr($line, 3));
+            if (str_contains($path, ' -> ')) {
+                $path = trim(explode(' -> ', $path, 2)[1]);
+            }
+            if ($path !== '') {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
+    }
+
     /**
      * @param  list<string>  $command
      */

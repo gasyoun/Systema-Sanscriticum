@@ -35,6 +35,9 @@ final class FakeSystemInspector implements SystemInspector
 
     public ?int $swapTotalBytes = 4294967296;
 
+    /** @var list<string>|null null = git unavailable; [] = clean tree */
+    public ?array $trackedDirtyPaths = [];
+
     public static function healthy(GuardSpec $spec, string $templateRoot, string $manifestBody): self
     {
         $fake = new self;
@@ -127,5 +130,10 @@ final class FakeSystemInspector implements SystemInspector
     public function swapTotalBytes(): ?int
     {
         return $this->swapTotalBytes;
+    }
+
+    public function trackedDirtyPaths(string $repoDir): ?array
+    {
+        return $this->trackedDirtyPaths;
     }
 }
