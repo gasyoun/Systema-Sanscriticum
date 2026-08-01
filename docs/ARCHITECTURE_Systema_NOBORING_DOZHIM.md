@@ -22,7 +22,7 @@ Traffic → intro/marathon/content
 | Component | Reuse / build | Notes |
 |---|---|---|
 | Deal / DealStage / DealTransition | **Reuse** | GC-C1 H1641 |
-| PaymentDealBridgeObserver | **Extend carefully** | Today syncs on paid/reversal; may open Deal earlier on pending if qualifies — still **no grant** |
+| PaymentDealBridgeObserver | **Extend carefully** | **H2097 audit:** creates **won** Deal on paid only (flag-gated); **no** open-on-pending yet — still **no grant** |
 | UnifiedSalesBoard / DealKanban | **Reuse** | View layer |
 | FollowUpTask + WorkQueue | **Extend** | New bucket / auto-create |
 | MessageTemplate | **Reuse + seeds** | category `dozhim` |
