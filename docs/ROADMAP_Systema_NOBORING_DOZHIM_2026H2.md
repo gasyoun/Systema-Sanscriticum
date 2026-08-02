@@ -27,14 +27,25 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 
 #### Wave 0 baseline snapshot (prod `193.232.229.92`, as_of `2026-08-01 13:25:58`)
 
-Prod was still on pre-H2094 deploy at probe time — numbers from the same filters as `dozhimBaseline` / `conversionForRange` + Lead counts (read-only tinker probe). After deploy: `php artisan dozhim:baseline --json`.
+Prod was still on pre-H2094 deploy at probe time — numbers from the same filters as `dozhimBaseline` / `conversionForRange` + Lead counts (read-only tinker probe). Re-verified after deploy with live artisan (H2188).
 
 | Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
 | 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
 
-**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay).
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, not yet enabled on prod).
+
+#### H2188 re-verify — live `dozhim:baseline --json` (prod, as_of `2026-08-02 19:26:05`)
+
+Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_prod_2026-08-02.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/dozhim_baseline_prod_2026-08-02.json). No percentages invented — table is artisan JSON verbatim.
+
+| Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** | Δ Rate A vs H2096 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 30 d | 120 | 74 | 43 | 3 | **61.7%** | 50 | 0 | **0.0%** | **−3.9 pp** |
+| 90 d | 567 | 482 | 43 | 42 | **85.0%** | 216 | 5 | **2.3%** | **−0.7 pp** |
+
+**Drift read (not a product regression claim):** rolling 30d window lost ~5 paid rows net and gained +3 pending; Rate A 30d slipped from the post-dozhim band (~66%) to **61.7%** (still above red `CONVERSION_WARN_PCT` 50, just under green 63). 90d nearly flat. Rate B unchanged story (sparse / flag OFF). Keep H2096 as the Wave 0 freeze; use this table as the current live check-in.
 
 #### Rate B instrumentation residual (H2186, 02-08-2026)
 
