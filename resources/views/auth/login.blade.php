@@ -98,9 +98,13 @@
                 Первый раз входите или не помните пароль?<br>
                 <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-bold transition-colors">Войдите по email заказа →</a>
             </p>
-            <p class="text-xs text-gray-400">
-                Аккаунт создан автоматически при оплате — проверьте email сами, без обращения в поддержку.
-                Если не получается — <a href="https://t.me/rusamskrtam" target="_blank" class="text-[#E85C24] hover:underline font-semibold transition-colors">напишите куратору</a>.
+            <p class="text-xs text-gray-500 leading-relaxed">
+                Аккаунт создан при оплате — сначала
+                <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-semibold">проверьте email заказа</a>.
+                Не помните email или пароль?
+                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-[#E85C24] hover:underline font-semibold">Куратор</a>
+                найдёт кабинет и пришлёт <span class="font-semibold text-gray-600">личную ссылку для входа</span>
+                в Telegram (без пароля). Новый кабинет заводить не нужно.
             </p>
         </div>
     </div>

@@ -44,7 +44,13 @@ _Created: 06-07-2026 · Last updated: 01-08-2026_
 3. **Забыли пароль** — штатная форма сброса пароля со страницы входа.
 4. **«Запомнить меня»** (H1949) — opt-in чекбокс на `/login` и в модалке витрины. По умолчанию **выкл**. Ставит long-lived cookie Laravel (`remember_web_*`, httpOnly); idle-сессия по-прежнему живёт `SESSION_LIFETIME` минут, а cookie только **переаутентифицирует** после истечения сессии. **Не отмечайте на чужом/библиотечном компьютере.** Смена пароля в кабинете сбрасывает remember-token на всех устройствах. Учётки `is_admin` **никогда** не получают remember — Filament остаётся на короткой сессии.
 
-Если ни один способ не сработал — кнопка «Позвать куратора» в чате (см. §7).
+Если ни один способ не сработал (в т.ч. студент **не помнит email и пароль**):
+куратор выдаёт **личную одноразовую magic-ссылку** (`/login-link/…`, 24 ч) —
+студент входит без пароля; см.
+[MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
+Студенту об этом сказано на `/login`, `/forgot-password` и в
+[onboarding-student.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/onboarding-student.md).
+В чате кабинета — «Позвать куратора» (§7).
 
 ---
 
