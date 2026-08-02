@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.86.1] - 2026-08-02
 ### Added
 - **H2186: Rate B instrumentation — `Lead.converted_at` on ordinary course paid path (flag OFF default).** Explains H2096 Rate B ~0% as an instrumentation gap (course checkout never set `lead_id` / never called `markConverted`; deposit/trial/marathon already did). New flag `features.lead_converted_at_on_course_paid` (`LEAD_CONVERTED_AT_ON_COURSE_PAID`, default **false**); `Payment::markLinkedLeadConverted()` (lead_id or email match + FK backfill); wired into `processSuccessfulPayment` when flag ON and not conditional; checkout attaches `lead_id` only when flag ON. Spec §2.4 + NOBORING roadmap Rate B residual updated. Tests: `LeadConvertedAtOnCoursePaidTest`. Fence: do not enable in prod without human review. Executor: Grok 4.5 (`grok-4.5`).
 
