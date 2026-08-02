@@ -1,6 +1,6 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 02-08-2026 (H2187 dry-run fixtures + operator smoke)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
@@ -82,7 +82,23 @@ working tree for that path matches `origin/main`. Safe remediate reuses the same
 
 ### 4.0 Prefer the automated safe path (after B ships)
 
-On the VPS (as root or www-data with deploy rights, **never** invent money ops):
+#### Operator smoke (local / CI — no prod side effects)
+
+One-liner residual of H2148 / H2187. Run **before** any VPS apply:
+
+```sh
+# Fixture dry-run suite + artisan default dry-run (exit 0 on clean tree)
+php artisan test --filter=SoftRemediate && php artisan ops:soft-remediate --dry-run --json
+```
+
+Committed fixtures (breaker lines + expected status contracts):  
+[`tests/fixtures/soft_remediate/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/soft_remediate).  
+PHPUnit: `SoftRemediateCommandTest` (H2148) + `SoftRemediateDryRunFixturesTest` (H2187).  
+Default without `--apply` is always dry-run — never auto-remediates prod.
+
+#### On the VPS (after dry-run review)
+
+As root or www-data with deploy rights, **never** invent money ops:
 
 ```sh
 cd /var/www/html
@@ -102,7 +118,8 @@ Exit codes (contract):
 | 2 | misconfiguration / tool error |
 
 `--apply-breaker-clear` is **only** honored when the command itself proves:  
-soft-tagged breaker **and** no blocking diverging dirty **and** smoke optional OK.
+soft-tagged breaker **and** no blocking diverging dirty **and** smoke optional OK.  
+Dry-run with `--apply-breaker-clear` still **does not** unlink the fuse (H2187 fixture).
 
 ### 4.1 Manual ladder — blocked-preflight + tracked dirty
 

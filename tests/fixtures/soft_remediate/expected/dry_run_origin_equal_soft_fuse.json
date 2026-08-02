@@ -1,0 +1,10 @@
+{
+  "scenario": "origin_equal_dirty_plus_soft_breaker",
+  "status": "ok",
+  "exit_code": 0,
+  "breaker_present_after_dry_run": true,
+  "origin_equal_contains": "config/copy.php",
+  "action_types": ["discard_origin_equal", "clear_soft_breaker"],
+  "all_actions_applied_false": true,
+  "notes": "Would discard origin-equal path and optionally clear soft fuse; dry-run never mutates"
+}

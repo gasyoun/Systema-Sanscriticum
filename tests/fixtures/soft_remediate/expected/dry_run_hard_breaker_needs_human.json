@@ -1,0 +1,10 @@
+{
+  "scenario": "hard_breaker_no_soft_tag",
+  "status": "needs_human",
+  "exit_code": 1,
+  "breaker_present_after_dry_run": true,
+  "breaker_soft": false,
+  "action_types": ["breaker_hard"],
+  "all_actions_applied_false": true,
+  "notes": "Hard fuse never auto-cleared even with --apply-breaker-clear"
+}
