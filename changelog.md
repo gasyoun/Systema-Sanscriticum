@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Changed
+- **Cabinet chat pin phrase updated.** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md) post 0′: pre-cabinet payments count, no re-register, order-email login, curator fallback. Executor: Grok 4.5 (`grok-4.5`).
 - **H2143 follow-up: cabinet Telegram posts — mental model (0A–0C).** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md): posts for «есть ли кабинет», «не помню пароль = тот же путь», «нет Регистрации / уроки только от оплаты», curator table, expanded FAQ post 10, study-chat calendar leading with 0A–0C. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added
