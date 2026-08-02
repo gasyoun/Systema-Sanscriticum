@@ -1,0 +1,134 @@
+{
+  "id": "ExamScoresSync1",
+  "name": "Баллы Санки → samskrte.ru (exam-scores)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "sticky-note-1",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-60, -260],
+      "parameters": {
+        "width": 620,
+        "height": 200,
+        "content": "## Баллы экзамена «Санка» → Laravel\n\nЧитает таблицу преподавателя и шлёт баллы в POST /api/webhooks/exam-scores (Header Auth уже настроен).\n\n**Перед активацией:**\n1. В ноде «Google Sheets» выбрать реальную таблицу и лист (колонки: Email, Курс, Выразительность, Дикция, Плавность).\n2. Прогнать вручную (Execute) и проверить ответ: unmatched должен быть пуст.\n3. Activate.\n\nТЗ: docs/n8n/README.md в репо Systema-Sanscriticum."
+      }
+    },
+    {
+      "id": "schedule-trigger-1",
+      "name": "Каждый час",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "google-sheets-1",
+      "name": "Google Sheets: лист баллов",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [220, 0],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ЗАМЕНИТЕ_НА_ID_ТАБЛИЦЫ_БАЛЛОВ"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LouM7wyF0ciME6q4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "code-1",
+      "name": "Собрать rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {
+        "jsCode": "// Строки листа → payload вебхука. Пустые строки и строки без единого балла отбрасываем\n// (Laravel вернул бы их как unmatched/empty_scores — незачем гонять).\nconst num = (v) => {\n  const s = String(v ?? '').replace(',', '.').trim();\n  if (s === '') return null;\n  const n = Number(s);\n  return Number.isFinite(n) ? n : null;\n};\n\nconst rows = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const email = String(j['Email'] ?? j['email'] ?? j['Почта'] ?? '').trim();\n  const course = String(j['Курс'] ?? j['course'] ?? j['Курс (slug)'] ?? '').trim();\n  const clarity = num(j['Выразительность'] ?? j['score_clarity']);\n  const letters = num(j['Дикция'] ?? j['score_letters']);\n  const flow = num(j['Плавность'] ?? j['score_flow']);\n\n  if (!email || !course) continue;\n  if (clarity === null && letters === null && flow === null) continue;\n\n  rows.push({\n    email,\n    course,\n    score_clarity: clarity,\n    score_letters: letters,\n    score_flow: flow,\n    row_ref: 'row ' + String(j.row_number ?? '?'),\n  });\n}\n\nreturn [{ json: { rows } }];"
+      }
+    },
+    {
+      "id": "http-request-1",
+      "name": "POST exam-scores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://samskrte.ru/api/webhooks/exam-scores",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "hdrExamScores01",
+          "name": "exam-scores-webhook (X-Webhook-Secret)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Каждый час": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: лист баллов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: лист баллов": {
+      "main": [
+        [
+          {
+            "node": "Собрать rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать rows": {
+      "main": [
+        [
+          {
+            "node": "POST exam-scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

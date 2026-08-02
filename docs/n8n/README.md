@@ -19,7 +19,15 @@ Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · catalog
 
 ---
 
-# n8n: баллы экзамена «Санка» → Laravel (ТЗ, воркфлоу ещё не создан)
+# n8n: баллы экзамена «Санка» → Laravel
+
+**Создан 02-08-2026**: воркфлоу «Баллы Санки → samskrte.ru (exam-scores)»
+(id `ExamScoresSync1`) импортирован на `.91`, экспорт —
+[`exports/exam-scores-sync.live.json`](exports/exam-scores-sync.live.json).
+Header-Auth кред `hdrExamScores01` заведён (значение = `N8N_EXAM_SCORES_SECRET`
+из прод-`.env` на `.92`). **Воркфлоу неактивен**: перед активацией человек
+должен в ноде Google Sheets выбрать реальную таблицу баллов (сейчас
+плейсхолдер), прогнать вручную и проверить `unmatched`.
 
 Преподаватель ведёт баллы экзамена в Google-таблице (колонки: Email, Курс(slug),
 Выразительность ≤20, Дикция ≤5, Плавность ≤5). n8n по расписанию читает лист и

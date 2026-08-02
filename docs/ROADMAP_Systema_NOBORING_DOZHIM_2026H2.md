@@ -84,7 +84,7 @@ Prior art: GC-C1 **shipped**. Residual for dozhim:
 
 - [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
 - [x] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment) — **done H2102** (01-08-2026; `PaymentDealBridgeObserver::openDealForIntent`, still rank-4, flag OFF)
-- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports — **still NOT_BUILT** (re-verified H2185, 02-08-2026; F5 fully ruled 02-08-2026 MG: join=`created_by_user_id`; vis=super_admin/admin/accountant all + manager own; see § GC-C2 census below; do not tick until Filament report + `manager_sales_report` ship)
+- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports — **still NOT_BUILT** (re-verified H2185, 02-08-2026; F5(a) join = `payments.created_by_user_id` ruled 02-08-2026 MG; see § GC-C2 census below; do not tick until Filament report + `manager_sales_report` ship)
 - [x] Flag `crm_pipeline_board` remains default OFF; staging admin-on — **re-pinned H2102** (default still false; pending path gated by same flag)
 
 **Unblocks:** H-B queue has cards.
