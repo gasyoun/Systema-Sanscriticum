@@ -256,7 +256,7 @@ Per H438: **open `Lead`s are not mass-converted.** A `Deal` is created going for
 
 ## 4. GC-C2 — production detail (manager sales attribution)
 
-Small ticket, one real design problem. Sonnet tier. **F5 (a) join path is RULED 02-08-2026** (`payments.created_by_user_id` — see below). **F5 (b) visibility** still blocks a full scoreboard ship if managers are to see their own rows (§7 F5).
+Small ticket, one real design problem. Sonnet tier. **F5 fully RULED 02-08-2026 (MG):** (a) join = `payments.created_by_user_id`; (b) visibility = super_admin + admin + accountant see **all** rows; manager sees **own** rows only (`created_by_user_id = auth id`). Implementation may proceed (flag `manager_sales_report` default OFF).
 
 ### 4.1 The join problem — there is no manager column on `payments`
 
@@ -276,7 +276,20 @@ Build implications (honest, not soft-pedalled):
 - The column is deliberately non-fillable today and has had zero report read-sites; the GC-C2 page is the first consumer. Filling discipline (managers creating/marking payments in admin) is what makes the chart non-empty — not `Deal.assigned_to` fill from H2185.
 - Rejected for GC-C2 numerator: `payments.lead_id → leads.assigned_to` (near-empty by construction on conversion-eligible tariffs) and `payments.user_id → users.lead_id → assigned_to` (email-match).
 
-F5 **(b) visibility** (who may open the page / see whose rows) remains **open** — still a human call.
+**✅ F5 (b) RULED 02-08-2026 (MG):** who may open the manager sales scoreboard, and what they see.
+
+| Role | Page access | Row scope |
+|---|---|---|
+| `super_admin` (owner; MG) | yes | **all** rows |
+| `admin` | yes | **all** rows |
+| `accountant` | yes | **all** rows |
+| `manager` | yes | **own only** — `payments.created_by_user_id = auth()->id()` |
+| teacher / student / others | **no** | — |
+
+Implementation notes:
+- Do **not** reuse `RoleGate::finance()` alone — that is ADMIN+ACCOUNTANT and deliberately excludes MANAGER (locked by test). Add a dedicated gate (e.g. `RoleGate::managerSalesReport()` or page-level `canAccess`) = `any(ADMIN, ACCOUNTANT, MANAGER)` so **super_admin always passes** via the standing `RoleGate::any` rule.
+- After gate: if `role === manager` (and not super_admin), filter the breakdown and unclosed lists to self; admins/accountants/super_admin see the unfiltered board including the unassigned bucket (`created_by_user_id` null).
+- MG's "admin means me too" maps to **`super_admin` always allowed** (already how RoleGate works) + ordinary `admin` full board — not accountant-only.
 
 ### 4.2 What the extension costs once the path is ruled — very little
 
@@ -296,9 +309,7 @@ Clone the channel breakdown verbatim as the template, swapping the join and the 
 
 ### 4.3 Two adjacent facts
 
-- **Visibility.** `OrderPaymentConversion` is gated `RoleGate::finance()` = ADMIN + ACCOUNTANT.
-  **`MANAGER` is excluded, and a test locks that in.** A manager scoreboard modelled on this page
-  would be invisible to the managers it scores — §7 F5 covers this as part of the same ruling.
+- **Visibility (F5 b RULED).** Existing `OrderPaymentConversion` stays `RoleGate::finance()` (ADMIN+ACCOUNTANT; MANAGER excluded by test) — **do not widen that page.** The GC-C2 manager scoreboard is a **separate** surface (or a clearly gated second mode) under F5(b): super_admin + admin + accountant see all; manager sees own `created_by_user_id` only.
 - **Two pre-existing defects in that page**, found while specifying and *not* in this ticket's scope:
   the nav badge computes `count($snap['unclosed'])` on an associative array, so it always reads `4`;
   and the purpose-built `unclosedCount()` has no caller. Worth a separate small fix — do not bundle.
@@ -458,9 +469,9 @@ as drawn, so this is not purely a DRY question. Downstream of F2.
 Small, but it is exactly the kind of silent divergence that produces a double-close or a missed
 close under retry.
 
-**F5 · GC-C2 — what "the manager who closed the sale" means, and who may see the scoreboard.** Two halves.
-- **(a) Join path — ✅ RULED 02-08-2026 (MG):** `payments.created_by_user_id` (*who created the payment row*). See §4.1 for caveats (self-serve/webhook → unassigned). Not `assigned_to` on Lead/Deal for the conversion scoreboard under this ruling.
-- **(b) Visibility — still OPEN:** `OrderPaymentConversion` is gated to ADMIN + ACCOUNTANT with `MANAGER` excluded by a test. Whether managers see their own row, everyone's, or none remains a human call before treating the scoreboard as manager-facing.
+**F5 · GC-C2 — what "the manager who closed the sale" means, and who may see the scoreboard.** **✅ BOTH HALVES RULED 02-08-2026 (MG).**
+- **(a) Join path:** `payments.created_by_user_id` (*who created the payment row*). See §4.1 (self-serve/webhook → unassigned).
+- **(b) Visibility:** page open to `super_admin` + `admin` + `accountant` + `manager`. Row scope: **all** for super_admin/admin/accountant; **own only** for manager (`created_by_user_id = auth id`). Ordinary `OrderPaymentConversion` finance gate unchanged.
 
 **F6 · GC-C3 — reuse `crm_reminders` or mint a new flag. ✅ RESOLVED 29-07-2026 (H1836) — new flag.**
 The flag exists and today gates
@@ -565,8 +576,8 @@ proximity to the money core, not by size.
 | 2 | GC-C1a — `deals`/`deal_stages`/`deal_transitions` migrations + `Deal` model + flag | **Opus/Fable** — new entity adjacent to the money core; §5 conventions are unforgiving | F2 |
 | 3 | GC-C1b — `DealKanbanBoard` + stage guards (§3.3) | **Sonnet 5** — a well-trodden Filament page, `LeadKanbanBoard` is the template | step 2 |
 | 4 | GC-C1c — `PaymentObserver` → `Deal` bridge (§2.3, §3.4) | **Opus/Fable** — touches the money core's event chain; **mandatory adversarial review before merge** | step 2 |
-| 5 | **Resolve F5** (attribution path + visibility) | **Human** | **(a) done 02-08-2026** (`created_by_user_id`); **(b) visibility still open** — blocks manager-facing ship of step 6 |
-| 6 | GC-C2 — breakdown by `payments.created_by_user_id` + Filament page (`manager_sales_report`) | **Sonnet 5** — one dimension into a dimension-agnostic service | F5(a) ruled; F5(b) if managers must see it |
+| 5 | **Resolve F5** (attribution path + visibility) | **Human** | **✅ both done 02-08-2026** — (a) `created_by_user_id`; (b) super_admin/admin/accountant=all, manager=own |
+| 6 | GC-C2 — breakdown by `payments.created_by_user_id` + Filament page (`manager_sales_report`) | **Sonnet 5** — one dimension + F5(b) gate/scope | F5 fully ruled 02-08-2026 |
 | 7 | GC-B3 finish — flag, `services.bbb`, point consumers at the abstraction, flip the roadmap row | **Sonnet 5** — mechanical, but see F8 | F8 |
 | 8 | Wave-3 opening: GC-D1 spec pass (the transcoder question, F7, is a design problem before it is a build) | **Opus/Fable** | F7 |
 
