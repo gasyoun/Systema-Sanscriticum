@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\WaitlistEntryResource\Pages;
+use App\Models\Group;
 use App\Models\Intake;
 use App\Models\PaymentPromise;
 use App\Models\WaitlistEntry;
@@ -88,6 +89,21 @@ class WaitlistEntryResource extends Resource
                             ->searchable()
                             ->preload()
                             ->placeholder('— пока без набора'),
+
+                        Forms\Components\Select::make('group_id')
+                            ->label('Группа (ID набора)')
+                            ->helperText('Стабильный ID ещё не запущенной группы (status=forming). Список желающих ведётся по этой группе.')
+                            ->options(fn (): array => Group::query()
+                                ->whereIn('status', ['forming', 'active'])
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn (Group $g): array => [
+                                    $g->id => $g->name.' · '.$g->publicCode().' (#'.$g->id.')',
+                                ])
+                                ->all())
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('— без привязки к группе'),
 
                         Forms\Components\Select::make('level')
                             ->label('Уровень')

@@ -42,6 +42,12 @@ class GroupResource extends Resource
                             ->required()
                             ->label('Название группы'),
 
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Публичный ID (slug)')
+                            ->helperText('Стабильный код ещё не запущенной группы для листа желающих. Пусто — из названия при создании.')
+                            ->maxLength(255)
+                            ->unique(ignoreRecord: true),
+
                         Forms\Components\TextInput::make('telegram_chat_id')
                             ->label('Telegram chat_id группы')
                             ->helperText('ID чата группы в Telegram (напр. -1001234567890). Нужен для авто-постинга ссылки на занятие перед стартом. Пусто — не постим.')
@@ -95,6 +101,12 @@ class GroupResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('slug')
+                    ->label('Публичный ID')
+                    ->copyable()
+                    ->searchable()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Название')
@@ -170,14 +182,27 @@ class GroupResource extends Resource
                     ->modalHeading(fn (Group $record): string => 'Предпочтения набора — '.$record->name)
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Закрыть')
-                    ->modalContent(fn (Group $record) => view('filament.group.recruitment-preferences', [
-                        'group' => $record,
-                        'entries' => $record->intake
-                            ? $record->intake->waitlistEntries()
-                                ->whereIn('status', ['waiting', 'invited', 'recording_sent'])
-                                ->get()
-                            : collect(),
-                    ])),
+                    ->modalContent(function (Group $record) {
+                        // Prefer entries pinned to this group ID; fall back to intake-wide.
+                        $direct = $record->waitlistEntries()
+                            ->whereIn('status', ['waiting', 'invited', 'recording_sent'])
+                            ->get();
+                        $entries = $direct->isNotEmpty()
+                            ? $direct
+                            : ($record->intake
+                                ? $record->intake->waitlistEntries()
+                                    ->whereIn('status', ['waiting', 'invited', 'recording_sent'])
+                                    ->where(function ($q) use ($record) {
+                                        $q->whereNull('group_id')->orWhere('group_id', $record->id);
+                                    })
+                                    ->get()
+                                : collect());
+
+                        return view('filament.group.recruitment-preferences', [
+                            'group' => $record,
+                            'entries' => $entries,
+                        ]);
+                    }),
 
                 // Ручная фиксация даты старта при переносе — сбрасывает дедуп рассылки
                 // (Group::booted()) и немедленно предупреждает уже присоединённых

@@ -33,6 +33,8 @@ class Course extends Model
         // Курс/поток завершён, записи опубликованы. Включает «режим записей» на
         // лендинге (см. sellsRecordings()). Аддитивно, по умолчанию false.
         'is_completed',
+        // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
+        'never_repeat',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -142,6 +144,7 @@ class Course extends Model
         'is_elective' => 'boolean',
         'is_active' => 'boolean',
         'is_completed' => 'boolean',
+        'never_repeat' => 'boolean',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.

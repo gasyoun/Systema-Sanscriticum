@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Log;
  * Награда за приглашённого выдаётся ровно один раз.
  *
  * Раньше наградой была прана; теперь — реальный кредит (config('referral.credit_amount')).
+ *
+ * MG 02-08-2026 both-sides: optional credit to the referred student when
+ * config('referral.referred_credit_amount') > 0 (default 0 = dark / prod-inert).
  */
 class ReferralService
 {
@@ -86,20 +89,31 @@ class ReferralService
         }
 
         $amount = (float) config('referral.credit_amount', 500);
-        if ($amount <= 0) {
+        $referredAmount = (float) config('referral.referred_credit_amount', 0);
+        if ($amount <= 0 && $referredAmount <= 0) {
             return;
         }
 
         try {
-            DB::transaction(function () use ($referrer, $referred, $payment, $amount): void {
+            DB::transaction(function () use ($referrer, $referred, $payment, $amount, $referredAmount): void {
                 // unique(referred_id): гонка двух платежей не задвоит награду.
                 $reward = ReferralReward::firstOrCreate(
                     ['referred_id' => $referred->id],
-                    ['referrer_id' => $referrer->id, 'payment_id' => $payment->id, 'amount' => $amount],
+                    [
+                        'referrer_id' => $referrer->id,
+                        'payment_id' => $payment->id,
+                        'amount' => $amount,
+                        'referred_amount' => $referredAmount,
+                    ],
                 );
 
                 if ($reward->wasRecentlyCreated) {
-                    $referrer->increment('referral_credit', $amount);
+                    if ($amount > 0) {
+                        $referrer->increment('referral_credit', $amount);
+                    }
+                    if ($referredAmount > 0) {
+                        $referred->increment('referral_credit', $referredAmount);
+                    }
                 }
             });
         } catch (\Throwable $e) {
@@ -144,9 +158,16 @@ class ReferralService
         try {
             DB::transaction(function () use ($reward): void {
                 $referrer = User::find($reward->referrer_id);
-                if ($referrer) {
+                if ($referrer && (float) $reward->amount > 0) {
                     $newCredit = max(0.0, (float) $referrer->referral_credit - (float) $reward->amount);
                     $referrer->forceFill(['referral_credit' => $newCredit])->save();
+                }
+
+                $referred = User::find($reward->referred_id);
+                $referredAmount = (float) ($reward->referred_amount ?? 0);
+                if ($referred && $referredAmount > 0) {
+                    $newCredit = max(0.0, (float) $referred->referral_credit - $referredAmount);
+                    $referred->forceFill(['referral_credit' => $newCredit])->save();
                 }
 
                 $reward->delete();
