@@ -1,6 +1,6 @@
 # ROADMAP — samskrte.ru Tier-0 · 2026–2027
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 01-08-2026_
 
 **Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
 
@@ -55,6 +55,14 @@ Execute [GROWTH_STRATEGY_2026_2027.md](https://github.com/gasyoun/Systema-Sanscr
 ### Wave 5 — ORS-FAQ year track (parallel after W1 CTA)
 
 WordPress/Woo publish ladder, LTV collector, bot improvements — own docs under ORS-FAQ; linked from this roadmap only as Tier-0 peers, not rebuilt inside Systema.
+
+
+### Parallel product packaging — «Старт чтения» (Akro-style, from 01-08-2026)
+
+Not a substitute for Wave 1 marathon live. Separate 5-week sub-offer under samskrte; Systema code track H2105–H2111.
+
+- Register: [PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md)
+- Competitive cut: [ROADMAP_AKRO_STYLE_SANSKRIT_PRODUCT_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/ROADMAP_AKRO_STYLE_SANSKRIT_PRODUCT_2026.md)
 
 ## Explicit non-goals (plan-wide)
 

@@ -3,6 +3,9 @@
 ### Changed
 - **H2143 follow-up: cabinet Telegram posts — mental model (0A–0C).** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md): posts for «есть ли кабинет», «не помню пароль = тот же путь», «нет Регистрации / уроки только от оплаты», curator table, expanded FAQ post 10, study-chat calendar leading with 0A–0C. Executor: Grok 4.5 (`grok-4.5`).
 
+### Added
+- **H2139: «Старт чтения» (Akro-style) product registered in Systema docs.** [docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md) — product register + handoff map H2105–H2111; cross-links from SAMSKRTE-TIER0 plan/roadmap and Sanskrit-HUB index/progression. Docs only — no SKU/code. Executor: Grok 4.5 (grok-4.5).
+
 ## [1.82.0] - 2026-08-01
 
 ### Changed
