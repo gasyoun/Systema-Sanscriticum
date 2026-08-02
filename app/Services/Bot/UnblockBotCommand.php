@@ -11,11 +11,11 @@ use App\Support\Roles;
 
 /**
  * Telegram-команда `/unblock <email>` и обработка inline-кнопки «Разблокировать»
- * из проактивного алерта (H849) — админ спасает застрявшего студента прямо из
- * Telegram, не заходя в кабинет. Выдаёт одноразовую ссылку для входа.
+ * из проактивного алерта (H849) — куратор/админ спасает застрявшего студента
+ * прямо из Telegram, не заходя в кабинет. Выдаёт одноразовую ссылку для входа.
  *
- * Авторизация СТРОЖЕ, чем у куратор-команд (там admin/manager): выдача ссылки =
- * потенциальный вход в чужой кабинет, поэтому только super_admin/admin.
+ * Права совпадают с RoleGate::canIssueStudentLoginLink() (admin + manager +
+ * super_admin), но без auth() — bot-контекст может быть без web-сессии.
  */
 class UnblockBotCommand
 {
@@ -32,7 +32,13 @@ class UnblockBotCommand
 
     public static function isAuthorized(?User $user): bool
     {
-        return $user !== null && ($user->isSuperAdmin() || $user->role === Roles::ADMIN);
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->isSuperAdmin()
+            || $user->role === Roles::ADMIN
+            || $user->role === Roles::MANAGER;
     }
 
     /** Ответ на текстовую команду `/unblock <email>`. */

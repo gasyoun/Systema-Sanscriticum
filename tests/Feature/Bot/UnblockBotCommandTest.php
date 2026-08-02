@@ -14,7 +14,7 @@ class UnblockBotCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_only_super_admin_and_admin_are_authorized(): void
+    public function test_admin_and_manager_curators_are_authorized(): void
     {
         $this->assertTrue(UnblockBotCommand::isAuthorized(
             User::factory()->create(['role' => Roles::SUPER_ADMIN])
@@ -22,9 +22,12 @@ class UnblockBotCommandTest extends TestCase
         $this->assertTrue(UnblockBotCommand::isAuthorized(
             User::factory()->create(['role' => Roles::ADMIN])
         ));
-        // Менеджер — куратор, но НЕ вправе выдавать ссылки входа.
-        $this->assertFalse(UnblockBotCommand::isAuthorized(
+        // Куратор (manager) тоже выдаёт magic link.
+        $this->assertTrue(UnblockBotCommand::isAuthorized(
             User::factory()->create(['role' => Roles::MANAGER])
+        ));
+        $this->assertFalse(UnblockBotCommand::isAuthorized(
+            User::factory()->create(['role' => Roles::TEACHER])
         ));
         $this->assertFalse(UnblockBotCommand::isAuthorized(
             User::factory()->create(['role' => null])

@@ -31,6 +31,16 @@ final class RoleGate
     }
 
     /**
+     * Выдача одноразовой magic-ссылки в кабинет студента (H849 /login-link).
+     * Куратор (manager) и admin — оба; student/teacher/accountant — нет.
+     * super_admin проходит через any().
+     */
+    public static function canIssueStudentLoginLink(): bool
+    {
+        return self::any(Roles::ADMIN, Roles::MANAGER);
+    }
+
+    /**
      * Доступ к выплатам/зарплатам: только бухгалтер и супер-админ.
      * Обычный admin сюда НЕ проходит (в отличие от adminOnly()).
      */
