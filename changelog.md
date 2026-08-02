@@ -1,13 +1,12 @@
 ## [Unreleased]
 
 ### Added
+- **H2156: детектор отсрочек оплаты из TG/веб-чата → очередь куратора.** `PaymentPromiseSuggestion` + `promises:detect-deferrals` (regex+LLM, cursor) + Filament **«Предложения отсрочек»** (approve/dismiss). Approve → `PaymentPromise` active (update existing same course); **grant_access default OFF**; 🚩 + grant refused. Flag `promise_suggestion_detection_enabled` default **OFF**. Docs: playbook §4 live, debtors-manual FAQ. Tests: `PromiseSuggestion*` (≥12). Money-adjacent; agent-merge allowed under gasyoun always-merge policy (02-08-2026). Executor: Grok 4.5 (`grok-4.5`) override dual-run of Sonnet-tagged handoff.
 - F5(a) GC-C2 join path ruled: manager = `payments.created_by_user_id` (who created the payment row); F5(b) visibility still open — GETCOURSE_PARITY_PRODUCTION_SPEC_2026 §4.1 / §7
+- **H2187: dry-run fixtures + operator smoke for `ops:soft-remediate`.** Committed breaker lines and expected status contracts under [`tests/fixtures/soft_remediate/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/soft_remediate); PHPUnit [`SoftRemediateDryRunFixturesTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SoftRemediateDryRunFixturesTest.php) asserts dry-run never mutates tree/fuse (`applied === false`, porcelain + content hashes unchanged) across clean / origin-equal / diverging / hard-breaker / allowed-PDF scenarios; playbook §4.0 one-liner: `php artisan test --filter=SoftRemediate && php artisan ops:soft-remediate --dry-run --json`. Residual of H2148 (#1060). Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
 - **H2188: Wave 0 order→pay re-verify after deploy.** Live `php artisan dozhim:baseline --json` on prod `193.232.229.92` (as_of 2026-08-02 19:26:05) — command present; Rate A 30d **61.7%** (120) / 90d **85.0%** (567) vs H2096 freeze 65.6% / 85.7%; Rate B still sparse. Artifact [docs/ops/dozhim_baseline_prod_2026-08-02.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/dozhim_baseline_prod_2026-08-02.json); roadmap footnote. No money-contour code. Executor: Grok 4.5 (`grok-4.5`).
-
-### Added
-- **H2187: dry-run fixtures + operator smoke for `ops:soft-remediate`.** Committed breaker lines and expected status contracts under [`tests/fixtures/soft_remediate/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/soft_remediate); PHPUnit [`SoftRemediateDryRunFixturesTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SoftRemediateDryRunFixturesTest.php) asserts dry-run never mutates tree/fuse (`applied === false`, porcelain + content hashes unchanged) across clean / origin-equal / diverging / hard-breaker / allowed-PDF scenarios; playbook §4.0 one-liner: `php artisan test --filter=SoftRemediate && php artisan ops:soft-remediate --dry-run --json`. Residual of H2148 (#1060). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.86.2] - 2026-08-02
 ### Added

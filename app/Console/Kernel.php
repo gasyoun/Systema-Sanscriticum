@@ -428,6 +428,21 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expire-stale-reminder-suggestions');
 
+        // --- ДЕТЕКТОР ОТСРОЧЕК ОПЛАТЫ В ПЕРЕПИСКЕ (H2156) ---
+        // Twin of reminders:detect-requests; creates only PaymentPromiseSuggestion
+        // (pending). Gate promise_suggestion_detection_enabled default OFF.
+        $schedule->command('promises:detect-deferrals')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('detect-payment-promise-deferrals');
+
+        $schedule->command('promises:expire-stale-suggestions')
+            ->dailyAt('04:07')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('expire-stale-promise-suggestions');
+
         // --- WEEKLY DB + FILE STORAGE BACKUP (spatie/laravel-backup) ---
         // H364: source.files.include now covers storage/app (uploads, finance
         // templates, imports, lectures) alongside the DB dump, to local + yandex_disk
