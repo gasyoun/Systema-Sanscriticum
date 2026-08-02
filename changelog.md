@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H1990 W1-D1: Bühler grammar-tables (Memrise 6517849) paradigm cells → SRS.** New `srs:import-buhler-paradigms` artisan command imports the 78-row / 5-stem-class export into a dedicated `buhler-paradigm-drills` system deck — Option A per [ROADMAP_GRAMMAR_TABLES_BUHLER_MEMRISE_SRS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ROADMAP_GRAMMAR_TABLES_BUHLER_MEMRISE_SRS_2026.md) §P1: one card per inflected form, tagged with `lemma` + `stem_class` metadata so a later Option B (full-paradigm grid) can reuse the same import. Cards de-dupe on `deck_id + fields->form + fields->label` rather than `source_word_id`, since a form can legitimately repeat within a level under two different case/number labels. Idempotent, dry-run supported. Tests: [`ImportBuhlerParadigmsSrsDeckTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Srs/ImportBuhlerParadigmsSrsDeckTest.php) (7 green). [PR #1073](https://github.com/gasyoun/Systema-Sanscriticum/pull/1073). Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.83.1] - 2026-08-02
 
 ### Added
