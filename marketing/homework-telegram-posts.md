@@ -282,7 +282,8 @@ https://samskrte.ru/faq/dz
 | …хочет практику без ДЗ | koloda / lila серии |
 | …сдал ДЗ | эта серия |
 
-**Следующая серия по плану** (ещё не написана): оплата и блоки  
-(`payment-blocks-telegram-posts.md`).
+**Следующая серия (написана 02-08-2026):** оплата и блоки —  
+[payment-blocks-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/payment-blocks-telegram-posts.md)
+(P1 блоки → P2 рассрочка → P3 оплаты/долги → P4 после оплаты → P5 зарубежье).
 
 _Dr. Mārcis Gasūns_

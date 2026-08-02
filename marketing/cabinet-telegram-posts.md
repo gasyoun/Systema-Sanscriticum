@@ -2,8 +2,9 @@
 
 _Created: 01-08-2026 · Last updated: 02-08-2026_
 
-> **См. также:** [homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) — серия про ДЗ.  
-> **Для админов/поддержки (magic link):** [MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
+> **См. также:** [homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) — серия про ДЗ;  
+> [payment-blocks-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/payment-blocks-telegram-posts.md) — блоки, рассрочка, долги, зарубежье;  
+> **вход куратора/поддержки (magic link):** [MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
 
 Черновики для канала [@samskrte](https://t.me/samskrte) и учебных чатов
 студентов. Вставляются **вручную**. Стиль как у
