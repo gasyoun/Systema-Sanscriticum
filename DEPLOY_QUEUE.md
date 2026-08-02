@@ -136,6 +136,15 @@ course without groups → 500 until groups attached.
 
 ---
 
+### 🚀 H1990 — Bühler grammar-tables → SRS деколода ([PR #1073](https://github.com/gasyoun/Systema-Sanscriticum/pull/1073))
+
+Код доедет авто-деплоем. Один разовый artisan-импорт после деплоя (идемпотентно,
+можно перезапускать):
+
+1. `php artisan srs:import-buhler-paradigms --dry-run` — сверить: 1 колода, 78 карточек.
+2. `php artisan srs:import-buhler-paradigms` — применить.
+3. Проверить `/koloda/buhler-paradigm-drills` отдаёт 200 (при `SRS_ENABLED=true`).
+
 ### 🚀 Разовый бэкфилл штампа записи урока ([PR #871](https://github.com/gasyoun/Systema-Sanscriticum/pull/871), issue [#868](https://github.com/gasyoun/Systema-Sanscriticum/issues/868))
 
 Колонка `lessons.recording_attached_at` на проде заполнена у ~5 из ~1667 уроков с
