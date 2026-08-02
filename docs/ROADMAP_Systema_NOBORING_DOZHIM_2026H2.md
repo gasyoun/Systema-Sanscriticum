@@ -71,10 +71,48 @@ Prior art: GC-C1 **shipped**. Residual for dozhim:
 
 - [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
 - [x] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment) — **done H2102** (01-08-2026; `PaymentDealBridgeObserver::openDealForIntent`, still rank-4, flag OFF)
-- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports (spec: NOT_BUILT as of last census — re-verify)
+- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports — **still NOT_BUILT** (re-verified H2185, 02-08-2026; see § GC-C2 census below; do not tick until Filament report + `manager_sales_report` ship)
 - [x] Flag `crm_pipeline_board` remains default OFF; staging admin-on — **re-pinned H2102** (default still false; pending path gated by same flag)
 
 **Unblocks:** H-B queue has cards.
+
+#### Wave 1a census — GC-C2 `assigned_to` / manager sales attribution (H2185, 02-08-2026)
+
+**Verdict: still NOT_BUILT.** Spec row in [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) stands. This pass re-verified code + prod fill rates; it does **not** build the report.
+
+##### Code: who reads `assigned_to`?
+
+| Surface | What it does with `assigned_to` | Sales conversion / revenue attribution? |
+|---|---|---|
+| [`LeadResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/LeadResource.php) | Form select, table filter, bulk assign / take | **No** — CRM ops only |
+| [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) + support models | Support-thread assignee + "mine" tabs | **No** — support queue |
+| [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php) | `groupBy('assigned_to')` for manager digests | **No** — reminder fan-out, not conversion |
+| [`OrderPaymentConversionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) | Breakdowns `by_course`, `by_channel` only | **No** — zero `assigned_to` |
+| [`ChannelConversionReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/ChannelConversionReport.php) | UTM channel only | **No** |
+| [`WorkQueueReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/WorkQueueReport.php) | Follow-up buckets | **No** `assigned_to` grouping |
+| Filament sales pages (`OrderPaymentConversion`, `UnifiedSalesBoard`, `DealKanbanBoard`, LeadCost widgets) | — | **No** `assigned_to` references |
+| Models `Lead` / `Deal` / `FollowUpTask` | Column + `assignee()` relation | Schema only until a report joins it |
+
+**Flag census:** `manager_sales_report` is **absent** from [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) (only mentioned in roadmap/spec docs). No Filament page is gated on it.
+
+**Tree inventory (app PHP, 02-08-2026 worktree):** 10 application files mention `assigned_to` (models, Lead CRM UI, Helpdesk, RemindLeads, Support router, audit labels). **0** files under `app/Services/Reports/` mention it.
+
+##### Prod fill rate (read-only, host `193.232.229.92`, as_of `2026-08-02 18:46:31`)
+
+| Entity | Total rows | `assigned_to` NOT NULL | Fill % |
+|---|---:|---:|---:|
+| `leads` | 264 | 1 | **0.4%** |
+| `deals` | 8 | 0 | **0.0%** |
+| `follow_up_tasks` | 0 | 0 | n/a |
+
+Reproduce (prod, read-only): bootstrap Laravel on the host and count
+`Lead` / `Deal` / `FollowUpTask` rows where `assigned_to` is not null vs total.
+
+##### Implication for the open checkbox
+
+1. **Report product is still missing** — checkbox stays `[ ]` until a Filament page groups paid conversion/revenue by `Deal.assigned_to` (fallback `Lead.assigned_to`) behind `manager_sales_report`.
+2. **Even a built report would be empty-looking today** — assignee fill is near zero; building the page without an assignment-fill path first yields a wall of "unassigned". Prefer: ensure managers assign Deals/Leads (or bridge assignee on create) **with** or **before** the report UI.
+3. **Do not invent prod numbers** — table above is the only measured fill snapshot for this pass.
 
 #### Wave 1a audit — when is Deal created? (H2097, 01-08-2026)
 
