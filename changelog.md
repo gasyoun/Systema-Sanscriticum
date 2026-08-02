@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **H2220: RU-инвентарь SEO-агентов (слой 1) и пакета скиллов (слой 2).** [docs/SEO_AGENTS_AND_SKILLS_INVENTORY_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_AGENTS_AND_SKILLS_INVENTORY_2026.md) — 18 spawnable `seo-*` агентов, full skill list + broken-junction install state, source [claude-seo](https://github.com/gasyoun/claude-seo). Executor: Grok 4.5 (`grok-4.5`).
 - F5(b) GC-C2 visibility ruled: super_admin + admin + accountant see all rows; manager sees own `created_by_user_id` only — GETCOURSE_PARITY_PRODUCTION_SPEC_2026 §4 / §7
 - **H2156: детектор отсрочек оплаты из TG/веб-чата → очередь куратора.** `PaymentPromiseSuggestion` + `promises:detect-deferrals` (regex+LLM, cursor) + Filament **«Предложения отсрочек»** (approve/dismiss). Approve → `PaymentPromise` active (update existing same course); **grant_access default OFF**; 🚩 + grant refused. Flag `promise_suggestion_detection_enabled` default **OFF**. Docs: playbook §4 live, debtors-manual FAQ. Tests: `PromiseSuggestion*` (≥12). Money-adjacent; agent-merge allowed under gasyoun always-merge policy (02-08-2026). Executor: Grok 4.5 (`grok-4.5`) override dual-run of Sonnet-tagged handoff.
 - F5(a) GC-C2 join path ruled: manager = `payments.created_by_user_id` (who created the payment row); F5(b) visibility still open — GETCOURSE_PARITY_PRODUCTION_SPEC_2026 §4.1 / §7
