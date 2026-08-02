@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Services\HomeworkAutoOpener;
+use App\Services\Srs\LessonFlashCardsSync;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -140,6 +142,30 @@ class Lesson extends Model
                 ]);
             }
         });
+
+        // H1991 — keep the lesson-tied SrsDeck/SrsCard in sync whenever
+        // flash_cards is (re)written (n8n sync, manual save, …), so the
+        // one-off `srs:migrate-lesson-flash-cards` migration never goes
+        // stale during the dual-read window. wasChanged() alone misses
+        // INSERT (see the recording_attached_at note above) — wasRecentlyCreated
+        // covers create-with-flash-cards in one step.
+        static::saved(function (Lesson $lesson): void {
+            $changed = $lesson->wasChanged('flash_cards')
+                || ($lesson->wasRecentlyCreated && filled($lesson->flash_cards));
+
+            if (! $changed) {
+                return;
+            }
+
+            try {
+                LessonFlashCardsSync::sync($lesson);
+            } catch (\Throwable $e) {
+                Log::warning('Lesson::saved — flash_cards SRS sync failed', [
+                    'lesson_id' => $lesson->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        });
     }
 
     public function course(): BelongsTo
@@ -165,6 +191,12 @@ class Lesson extends Model
     public function contentCandidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class);
+    }
+
+    /** Lesson-tied SRS deck (H1991) — migrated/synced from flash_cards, see LessonFlashCardsSync. */
+    public function srsDeck(): HasOne
+    {
+        return $this->hasOne(SrsDeck::class, 'lesson_id');
     }
 
     // ===================================================================
@@ -252,6 +284,32 @@ class Lesson extends Model
     public function hasFlashcards(): bool
     {
         return is_array($this->flash_cards) && count($this->flash_cards) > 0;
+    }
+
+    /**
+     * Dual-read presentation helper (H1991): prefer the migrated SRS cards
+     * when a synced deck exists, otherwise fall back to the legacy JSON as
+     * best-effort front/back pairs. `flash_cards` stays the source during
+     * the dual-read window — this never writes.
+     *
+     * @return list<array{front:string, back:?string}>
+     */
+    public function flashcardsForDisplay(): array
+    {
+        $deck = $this->srsDeck;
+        if ($deck !== null) {
+            return $deck->cards->map(fn (SrsCard $card) => [
+                'front' => (string) ($card->fields['front'] ?? ''),
+                'back' => $card->fields['back'] ?? null,
+            ])->all();
+        }
+
+        return array_map(
+            fn ($entry) => is_array($entry)
+                ? ['front' => (string) ($entry['front'] ?? reset($entry) ?: ''), 'back' => $entry['back'] ?? null]
+                : ['front' => (string) $entry, 'back' => null],
+            (array) $this->flash_cards,
+        );
     }
 
     /** Покрытие материалами = видео ИЛИ вложения ИЛИ транскрипт. ДЗ/флешкарты не учитываются. */
