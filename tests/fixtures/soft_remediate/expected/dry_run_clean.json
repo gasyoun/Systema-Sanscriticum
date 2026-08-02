@@ -1,0 +1,8 @@
+{
+  "scenario": "clean_tree_no_breaker",
+  "status": "ok",
+  "exit_code": 0,
+  "breaker_present": false,
+  "all_actions_applied_false": true,
+  "notes": "Nothing to remediate; dry-run exit 0"
+}
