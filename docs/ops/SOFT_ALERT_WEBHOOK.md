@@ -2,7 +2,8 @@
 
 _Created: 02-08-2026 · Last updated: 02-08-2026_
 
-**Status:** skeleton shipped (H2148 C). Default **OFF** on prod until n8n/issue path is wired.  
+**Status:** **ENABLED** on prod 02-08-2026 (H2148 enablement).  
+n8n workflow `softAlertH2148` active on `.91`; prod `SOFT_ALERT_WEBHOOK_URL` set.  
 **Playbook:** [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md)
 
 ---
@@ -83,6 +84,8 @@ Nodes (minimal):
 
 Do **not** put bot tokens in exportable node JSON (use n8n credentials / env).
 
+**Live wiring (enablement):** workflow id `softAlertH2148` uses env Bearer `SOFT_ALERT_GITHUB_TOKEN` + secret check against `$env.SOFT_ALERT_WEBHOOK_SECRET` (both on `N8N_ENV_ALLOWLIST`). Prefer rotating the GitHub token to a dedicated fine-grained PAT (Issues: write).
+
 ---
 
 ## 5. Agent runner skeleton (dev machine, not prod)
@@ -101,15 +104,19 @@ Grok/Claude session: read the issue body + playbook + run stub; post comment wit
 
 ---
 
-## 6. Enablement checklist (human)
+## 6. Enablement checklist
 
-1. Import n8n workflow on `.91`; set GitHub credential.  
-2. Caddy route + secret.  
-3. Set prod `.env` `SOFT_ALERT_WEBHOOK_URL` + `SECRET`.  
-4. `php artisan config:clear` after deploy.  
-5. Force soft alert once: dirty equal-origin staging OR `--force-alert` with synthetic guards (careful).  
-6. Confirm issue opened; agent stub dry-run once.
+| # | Step | Status (02-08-2026) |
+|---|---|---|
+| 1 | Import n8n workflow on `.91`; wire GitHub | **done** — id `softAlertH2148` published/active; GitHub via env `SOFT_ALERT_GITHUB_TOKEN` (Bearer), not UI `githubApi` credential |
+| 2 | Caddy route + secret | **done** — host already reverse_proxy `context-ai.ru` → n8n; secret in n8n env + `/root/.n8n-soft-alert-webhook-secret` |
+| 3 | Prod `.env` `SOFT_ALERT_WEBHOOK_URL` + `SECRET` | **done** on `.92` |
+| 4 | `php artisan config:clear` | **done** |
+| 5 | Force soft alert / smoke once | **done** — 401 unauth · 202 auth · Laravel notifier 202 · smoke issues #1068/#1069 closed |
+| 6 | Confirm issue opened; agent stub dry-run | **done** — `soft_alert_agent_stub.py --ssh root@193.232.229.92` → dry-run JSON ok |
 
-Until then: TG soft path alone remains the signal (current behaviour).
+**Residual (Ivan):** rotate `SOFT_ALERT_GITHUB_TOKEN` to a dedicated fine-grained PAT (Issues: write on Systema only). Tracking: ops issue on enablement residual (assignee `@pe4kinsmart-tech`).
+
+TG soft path remains the parallel signal when `TELEGRAM_BOT_TOKEN` is set.
 
 _Dr. Mārcis Gasūns_
