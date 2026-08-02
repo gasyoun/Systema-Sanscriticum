@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- F5(a) GC-C2 join path ruled: manager = `payments.created_by_user_id` (who created the payment row); F5(b) visibility still open — GETCOURSE_PARITY_PRODUCTION_SPEC_2026 §4.1 / §7
+
 ### Changed
 - **H2188: Wave 0 order→pay re-verify after deploy.** Live `php artisan dozhim:baseline --json` on prod `193.232.229.92` (as_of 2026-08-02 19:26:05) — command present; Rate A 30d **61.7%** (120) / 90d **85.0%** (567) vs H2096 freeze 65.6% / 85.7%; Rate B still sparse. Artifact [docs/ops/dozhim_baseline_prod_2026-08-02.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/dozhim_baseline_prod_2026-08-02.json); roadmap footnote. No money-contour code. Executor: Grok 4.5 (`grok-4.5`).
 
