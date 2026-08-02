@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 01-08-2026_
+_Created: 02-07-2026 · Last updated: 02-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -30,6 +30,13 @@ _Created: 02-07-2026 · Last updated: 01-08-2026_
      снимет tracked dirty; иначе автооткат падает на том же preflight).
    Любая другая грязь — отказ деплоить. На проде **не правят** tracked
    `app/`/`config/` руками: только PR → `main` → auto-deploy / `deploy.sh`.
+   **Worked stop (01-08-2026):** ручной edit
+   [`config/marathon_landing_copy.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon_landing_copy.php)
+   (testimonial framing) → dirty-gate → auto-deploy
+   `storage/auto_deploy.disabled` с `[blocked-preflight]` → soft-TG
+   «Кабинет: soft-сбой (guards)» при живом HTTP. Copy/testimonial — PR или
+   env `MARATHON_TESTIMONIAL` / MarketingSetting, не `nano` на VPS.
+   Full recovery: [server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
 3. `composer install --no-dev -o` + **`npm ci && npm run build` только если
    изменились asset-пути** (package*/vite/postcss/tailwind/`resources/{js,css}`)

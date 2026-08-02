@@ -3,6 +3,7 @@
 ## [1.82.1] - 2026-08-02
 
 ### Changed
+- **Ops docs: prod tracked-dirty → soft-guards class (H2147).** Always-on pointer in [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) § Ops; worked case 01-08-2026 (`config/marathon_landing_copy.php` → `[blocked-preflight]` fuse) in [docs/server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md); dirty-gate example in [docs/deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md). Soft TG «Кабинет: soft-сбой (guards)» ≠ cabinet outage. Cross-hub: Uprava FINDINGS §280 + DANGER_FACTS. Executor: Grok 4.5 (`grok-4.5`).
 - **Cabinet chat pin phrase updated.** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md) post 0′: pre-cabinet payments count, no re-register, order-email login, curator fallback. Executor: Grok 4.5 (`grok-4.5`).
 - **H2143 follow-up: cabinet Telegram posts — mental model (0A–0C).** [marketing/cabinet-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/cabinet-telegram-posts.md): posts for «есть ли кабинет», «не помню пароль = тот же путь», «нет Регистрации / уроки только от оплаты», curator table, expanded FAQ post 10, study-chat calendar leading with 0A–0C. Executor: Grok 4.5 (`grok-4.5`).
 
