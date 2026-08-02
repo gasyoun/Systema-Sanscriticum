@@ -673,6 +673,42 @@ class Payment extends Model
         }
     }
 
+    /**
+     * Stamp Lead.converted_at for Rate B / CRM (H2186).
+     *
+     * Prefer payment.lead_id; if empty, match the newest unconverted Lead by
+     * buyer email (same heuristic as DepositController / TrialController) and
+     * backfill lead_id without re-entering model events.
+     *
+     * Deposit / trial / marathon call this always. Ordinary course purchase
+     * calls it only when features.lead_converted_at_on_course_paid is ON
+     * (default OFF — prod inert until a human enables the flag).
+     */
+    public function markLinkedLeadConverted(): void
+    {
+        $lead = $this->lead;
+
+        if ($lead === null) {
+            $email = $this->user?->email;
+            if (filled($email)) {
+                $lead = Lead::query()
+                    ->where('email', $email)
+                    ->whereNull('converted_at')
+                    ->latest()
+                    ->first();
+
+                if ($lead !== null && $this->lead_id === null && $this->getKey() !== null) {
+                    static::withoutEvents(
+                        fn () => static::query()->whereKey($this->getKey())->update(['lead_id' => $lead->id])
+                    );
+                    $this->setAttribute('lead_id', $lead->id);
+                }
+            }
+        }
+
+        $lead?->markConverted();
+    }
+
     // ==========================================
     // ГЛАВНЫЙ МЕТОД: ЗАПУСКАЕТ ВСЕ ПРОЦЕССЫ
     // ==========================================
@@ -699,6 +735,11 @@ class Payment extends Model
                 // оплате (раньше инкремент стоял на создании pending, из-за чего
                 // брошенные чекауты исчерпывали usage_limit).
                 $this->promoCode?->markRedeemed();
+
+                // H2186: Rate B instrumentation — OFF by default (spec §2.4 residual).
+                if (config('features.lead_converted_at_on_course_paid')) {
+                    $this->markLinkedLeadConverted();
+                }
             }
         });
 
@@ -749,7 +790,7 @@ class Payment extends Model
             // Открытые уроки уже доступны любому залогиненному пользователю.
             $this->sendWelcomeEmailIfNeeded();
 
-            $this->lead?->markConverted();
+            $this->markLinkedLeadConverted();
         });
 
         // Уведомление кураторам о брони (депозите).
@@ -815,7 +856,7 @@ class Payment extends Model
             }
 
             $this->sendWelcomeEmailIfNeeded();
-            $this->lead?->markConverted();
+            $this->markLinkedLeadConverted();
         });
 
         app(CuratorNotifier::class)->depositReceived($this);
@@ -887,7 +928,7 @@ class Payment extends Model
             $enrollment->update(['paid_at' => now()]);
         }
 
-        $this->lead?->markConverted();
+        $this->markLinkedLeadConverted();
 
         // Подтверждение шлём в Telegram лида (канал Phase 2 — TelegramDeliveryChannel
         // по telegram_chat_id лида), не SendTelegramMessageJob (тот резолвит по
