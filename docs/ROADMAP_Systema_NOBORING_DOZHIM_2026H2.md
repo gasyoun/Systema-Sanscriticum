@@ -46,22 +46,24 @@ Prod was still on pre-H2094 deploy at probe time — numbers from the same filte
 | Marathon paid | Yes (enrollment) | Yes |
 | **Ordinary course checkout** | **No** (until flag ON) | **No** by default |
 
-**Owner path shipped (flag OFF default — prod inert until human enables):**
+**Owner path shipped (code default still false; env is the deploy rubilnik):**
 
-1. Flag `features.lead_converted_at_on_course_paid` / env `LEAD_CONVERTED_AT_ON_COURSE_PAID` (default **false**).
+1. Flag `features.lead_converted_at_on_course_paid` / env `LEAD_CONVERTED_AT_ON_COURSE_PAID` (code default **false**).
 2. `Payment::markLinkedLeadConverted()` — `lead_id` or email fallback + backfill FK.
 3. `processSuccessfulPayment` (non-conditional) calls it when flag ON.
 4. Checkout attaches `lead_id` on create only when flag ON.
 5. Tests: `tests/Feature/LeadConvertedAtOnCoursePaidTest.php`.
 
-**Do not treat Rate B as a live KPI until the flag is ON in prod and a post-enable `dozhim:baseline` snapshot shows a non-sparse numerator.** Primary H-B targets stay on **Rate A**. Fence: never enable this flag in a money PR without human prod enable.
+**Prod enable (human, 02-08-2026):** on `193.232.229.92` `/var/www/html` — `.env` has `LEAD_CONVERTED_AT_ON_COURSE_PAID=true` (backup `.env.bak.h2186.20260802`), `php artisan config:cache` rebuilt; `php artisan config:show features.lead_converted_at_on_course_paid` → **true**.
+
+**Post-enable baseline** (`php artisan dozhim:baseline --json`, as_of `2026-08-02 19:26:28`): Rate A 30d **61.7%** (74/120) / 90d **85.0%** (482/567); Rate B 30d **0.0%** (0/50) / 90d **2.3%** (5/216) — still sparse, as expected (no historical backfill). Forward-looking only: Rate B numerator fills for **new** course paid events. Primary H-B targets stay on **Rate A**. Re-check after ~1 week of paid volume.
 
 #### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
 
 | Rate | «Заявка» (denominator) | Success (numerator) | Exclusions / status map |
 |---|---|---|---|
 | **A (primary)** | Real course `Payment` created in window (`is_conditional = false`) | `status IN ('paid','success')` | Excluded tariffs (env `CONVERSION_EXCLUDED_TARIFFS`, default): `Расход`, `salary_payout`, `deposit`, `trial`. Open unpaid: `pending`. Lost: `canceled` / `cancelled` / `failed`. |
-| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path. Deposit/trial/marathon always; **course path only if** `lead_converted_at_on_course_paid` ON (H2186; default OFF → Rate B still sparse in prod). |
+| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path. Deposit/trial/marathon always; **course path ON in prod** as of 02-08-2026 (H2186 env enable; code default still false). |
 
 Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (default **63**), red < `CONVERSION_WARN_PCT` (default **50**); unclosed pending after `CONVERSION_UNCLOSED_AFTER_DAYS` (default **3**).
 
