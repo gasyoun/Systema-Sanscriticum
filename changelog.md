@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2188: Wave 0 order→pay re-verify after deploy.** Live `php artisan dozhim:baseline --json` on prod `193.232.229.92` (as_of 2026-08-02 19:26:05) — command present; Rate A 30d **61.7%** (120) / 90d **85.0%** (567) vs H2096 freeze 65.6% / 85.7%; Rate B still sparse. Artifact [docs/ops/dozhim_baseline_prod_2026-08-02.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/dozhim_baseline_prod_2026-08-02.json); roadmap footnote. No money-contour code. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Added
 - **H2187: dry-run fixtures + operator smoke for `ops:soft-remediate`.** Committed breaker lines and expected status contracts under [`tests/fixtures/soft_remediate/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/soft_remediate); PHPUnit [`SoftRemediateDryRunFixturesTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SoftRemediateDryRunFixturesTest.php) asserts dry-run never mutates tree/fuse (`applied === false`, porcelain + content hashes unchanged) across clean / origin-equal / diverging / hard-breaker / allowed-PDF scenarios; playbook §4.0 one-liner: `php artisan test --filter=SoftRemediate && php artisan ops:soft-remediate --dry-run --json`. Residual of H2148 (#1060). Executor: Grok 4.5 (`grok-4.5`).
 
