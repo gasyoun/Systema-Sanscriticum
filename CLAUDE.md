@@ -320,6 +320,27 @@ field is radio cards rather than the others' `<select>`, matching its own
 mockup; same field name/values) all shipped. Multi-direction is a deliberate
 policy (H1966) — no single-winner pick, ship concurrent variants.
 
+### Vendored reading packs (`resources/data/cohort_start_chteniya/`)
+
+H2110. `/dvaram/reading{,/slug}` рендерит пакеты чтения для когорты «Старт чтения»
+через `ReadingPackController`. Гейт двойной и **оба условия обязательны**:
+`features.kosha_reader` (env `KOSHA_READER`, по умолчанию `false`) **И**
+`StartChteniyaCohort::hasEntitlement($user)` — не купивший когорту получает 404,
+а не редирект. Публичный `/reading/kosha-demo` живёт отдельно и этой правкой не
+затронут.
+
+**Данные пакета — замороженная КОПИЯ, а не источник.** `hitopadesa-0.json` +
+`MANIFEST.json` вендорятся из kosha-датасета `cohort-start-chteniya-pack-freeze`
+(H2109) скриптом
+[`scripts/vendor_cohort_start_chteniya_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py),
+который сверяет sha256 и размер **до** записи. Правило синхронизации: правится
+пакет — правится он в [kosha](https://github.com/gasyoun/kosha), затем
+перевендоривается скриптом; **руками файлы под `resources/data/cohort_start_chteniya/`
+не редактируются никогда** — ручная правка расходится с манифестом молча, и
+следующий прогон скрипта её затрёт. Второй пакет (`subhashita-beginner`)
+сознательно не импортирован: его схема другая, и импорт «заодно» ввёл бы вторую
+схему в кодовую базу.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
