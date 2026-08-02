@@ -10,6 +10,7 @@ use App\Support\Roles;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
+use App\Support\ServerGuards\SoftAlertWebhookNotifier;
 use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
@@ -429,10 +430,14 @@ class ProbeCabinetHealth extends Command
     private function reportToTelegram(bool $criticalHealthy, array $criticalFails, array $softFails): void
     {
         $token = (string) config('services.telegram.bot_token', '');
-        if ($token === '') {
+        $hasSoftWebhook = trim((string) config('cabinet_probe.soft_webhook_url', '')) !== '';
+        if ($token === '' && ! $hasSoftWebhook) {
             $this->comment('TELEGRAM_BOT_TOKEN пуст — TG выключен.');
 
             return;
+        }
+        if ($token === '') {
+            $this->comment('TELEGRAM_BOT_TOKEN пуст — soft-webhook only.');
         }
 
         $criticalIds = $this->parseChatIds(config('cabinet_probe.telegram_chat_id', ''));
@@ -463,18 +468,33 @@ class ProbeCabinetHealth extends Command
                 }
             }
 
-            $scope = e($this->softAlertScope($softFails));
+            $scopeRaw = $this->softAlertScope($softFails);
+            $scope = e($scopeRaw);
             $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
             $text = "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})\n\n"
                 .$this->telegramUrlBlock()."\n"
                 .implode("\n", $lines)."\n\n"
                 .$this->telegramRunbook();
-            $sent = $this->sendTelegram($token, $softIds, $text);
-            if ($sent) {
+            $sent = $token !== '' && $softIds !== []
+                ? $this->sendTelegram($token, $softIds, $text)
+                : false;
+
+            // H2148 C: outbound soft webhook (default off) — same cooldown gate as TG.
+            $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
+            if ($webhook['attempted']) {
+                $this->comment('soft-webhook: '.$webhook['detail']);
+            }
+
+            if ($sent || $webhook['ok']) {
                 Cache::put(self::CACHE_LAST_SOFT_ALERT_AT, now(), now()->addDays(2));
                 Cache::put(self::CACHE_LAST_SOFT_FINGERPRINT, $fingerprint, now()->addDays(2));
             }
 
+            return;
+        }
+
+        if ($token === '') {
+            // Soft webhook handled above; critical recovery/down still needs TG token.
             return;
         }
 

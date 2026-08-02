@@ -553,7 +553,14 @@ rm /var/www/html/storage/auto_deploy.disabled         # снять предох�
 cat /var/www/html/storage/app/server_guards/crontab-root.installed  # снимок root-cron для probe
 ```
 
-### 8.1 Разбор случая — tracked dirty → soft-guards (01-08-2026)
+### 8.1 Soft-alert playbook (agents)
+
+Каталог причин, safe vs never-auto, incident log, `ops:soft-remediate`:
+
+[SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md)  
+(H2148 — обновлять при новых метках breaker / soft TG scopes).
+
+### 8.2 Разбор случая — tracked dirty → soft-guards (01-08-2026)
 
 **Это не падение кабинета.** В soft-TG заголовок
 `Кабинет: soft-сбой (guards)` и строки вида

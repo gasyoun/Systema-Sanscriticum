@@ -42,7 +42,8 @@ _Created: 02-07-2026 · Last updated: 02-08-2026_
    [`config/marathon_landing_copy.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon_landing_copy.php)
    → dirty-gate → fuse `storage/auto_deploy.disabled` с `[blocked-preflight]` →
    soft-TG «Кабинет: soft-сбой (guards)» при живом HTTP.
-   Полный разбор: [server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
+   Полный разбор: [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) ·
+   [server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
 3. `composer install --no-dev -o` + **`npm ci && npm run build` только если
    изменились asset-пути** (package*/vite/postcss/tailwind/`resources/{js,css}`)

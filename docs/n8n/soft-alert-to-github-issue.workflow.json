@@ -1,0 +1,108 @@
+{
+  "name": "Systema soft-alert → GitHub issue (skeleton H2148)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "systema-soft-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-soft-alert",
+      "name": "Webhook soft-alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "systema-soft-alert-skeleton"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.headers['x-soft-alert-secret'] || $json.headers['X-Soft-Alert-Secret']}}",
+              "value2": "={{$env.SOFT_ALERT_WEBHOOK_SECRET}}"
+            }
+          ]
+        }
+      },
+      "id": "if-secret",
+      "name": "IF secret matches",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": false, \"error\": \"unauthorized\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "respond-401",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [480, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: `[soft-alert] ${$json.body.scope || 'unknown'} ${( $json.body.fingerprint || '' ).slice(0,8)}`, body: `## Soft cabinet alert\\n\\n**Scope:** ${$json.body.scope}\\n**Fingerprint:** \\`${$json.body.fingerprint}\\`\\n**When:** ${$json.body.occurred_at}\\n\\n### Failures\\n${($json.body.failures || []).map(f => `- ${f.message}`).join('\\n')}\\n\\n### Playbook\\nhttps://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md\\n\\n### Suggested (agent)\\n\\`\\`\\`\\nssh root@193.232.229.92\\ncd /var/www/html\\n${$json.body.suggested?.diagnose || 'php artisan ops:soft-remediate --dry-run --json'}\\n\\`\\`\\`\\n\\nAssignee: @pe4kinsmart-tech\\nLabel: ops-soft-alert\\nH2148 skeleton — do not auto-apply hard fuse clears.`, labels: ['ops-soft-alert'], assignees: ['pe4kinsmart-tech'] }) }}",
+        "options": {}
+      },
+      "id": "github-issue",
+      "name": "GitHub create issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, -80],
+      "notes": "Wire GitHub API credential in n8n UI. Create label ops-soft-alert once. Secret only via env SOFT_ALERT_WEBHOOK_SECRET — never bake into export."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"issue\": $json.html_url || null } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "respond-202",
+      "name": "Respond 202",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [720, -80]
+    }
+  ],
+  "connections": {
+    "Webhook soft-alert": {
+      "main": [[{ "node": "IF secret matches", "type": "main", "index": 0 }]]
+    },
+    "IF secret matches": {
+      "main": [
+        [{ "node": "GitHub create issue", "type": "main", "index": 0 }],
+        [{ "node": "Respond 401", "type": "main", "index": 0 }]
+      ]
+    },
+    "GitHub create issue": {
+      "main": [[{ "node": "Respond 202", "type": "main", "index": 0 }]]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "skeleton-h2148-not-for-prod-until-imported"
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "systema" },
+    { "name": "ops-soft-alert" },
+    { "name": "h2148-skeleton" }
+  ]
+}
