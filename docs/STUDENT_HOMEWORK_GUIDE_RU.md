@@ -1,9 +1,12 @@
 # Домашние задания в личном кабинете — инструкция для учеников
 
-_Created: 01-08-2026 · Last updated: 01-08-2026_
+_Created: 01-08-2026 · Last updated: 02-08-2026_
 
 **Публичная страница (можно без входа, для чата группы):**
 [https://samskrte.ru/faq/dz](https://samskrte.ru/faq/dz)
+
+**Черновики Telegram-постов для чатов/канала:**
+[marketing/homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md)
 
 Старый адрес `/help/homework` редиректит сюда же (301).
 
