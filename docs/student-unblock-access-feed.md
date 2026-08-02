@@ -1,9 +1,12 @@
 # Разблокировка студента + лента «Проблемы со входом» (H849)
 
-_Created: 13-07-2026 · Last updated: 13-07-2026_
+_Created: 13-07-2026 · Last updated: 02-08-2026_
 
 Инструмент поддержки: увидеть, кто не может войти, и разблокировать его одним
 кликом — из админки или прямо из Telegram, минуя сломанную доставку почты.
+
+**Runbook по-русски (сценарии «не помнит email / ничего не помнит», шаблоны):**  
+[MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
 
 ## Зачем
 
@@ -44,10 +47,9 @@ _Created: 13-07-2026 · Last updated: 13-07-2026_
 
 ## Безопасность / права
 
-- Выдача ссылки = потенциальный вход в чужой кабинет, поэтому и кнопки в админке,
-  и Telegram-путь ограничены **`super_admin`/`admin`** (менеджер-куратор — нет).
-  В админке — через `AdminOnly`/`RoleGate::adminOnly()`; в Telegram — по
-  `telegram_id → роль`, неавторизованным тишина.
+- Выдача ссылки = потенциальный вход в чужой кабинет: **`admin` / `manager`
+  (куратор) / `super_admin`** — `RoleGate::canIssueStudentLoginLink()`.
+  В Telegram — по `telegram_id → роль`, неавторизованным тишина.
 - Ссылка одноразовая, короткоживущая, в БД лежит только SHA-256-hash. Маршрут
   `/login-link/{token}` принимает **только** токены назначения `admin_unblock`
   (newsletter-ссылки сюда не подходят и наоборот).
@@ -64,5 +66,12 @@ _Created: 13-07-2026 · Last updated: 13-07-2026_
 Корневую причину недоставки писем (боевой SMTP / верифицированный домен
 отправителя) — это отдельная серверная задача. Инструмент даёт админу способ
 **обойти** сломанную почту вручную, пока доставка не починена.
+
+## Если ученик не помнит email
+
+Ссылка выдаётся **на найденного `User`**, не «в воздух». Сначала поиск карточки
+(ФИО, Telegram, курс, платёж). Выдают **куратор (manager)** и **admin**.
+Полный сценарий «ничего не помнит» — в
+[MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
 
 _Dr. Mārcis Gasūns_

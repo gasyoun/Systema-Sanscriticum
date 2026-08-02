@@ -24,9 +24,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **OS resource guards (OOM/cron):**  
   [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
 - **Soft TG «Кабинет: soft-сбой (guards)» + `auto_deploy.disabled` / tracked dirty ≠ падение кабинета.**  
-  Не править tracked (`config/`, `app/`, …) на проде — только PR → `main` → auto-deploy.  
-  Recovery ladder + worked case 01-08-2026 (`config/marathon_landing_copy.php`):  
-  [docs/server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·  
+  **Человеку нужно:** код/тексты — PR → `main` → auto-deploy; отзыв — env/MarketingSetting; PDF — `public/docs/*.pdf`.  
+  **Человеку не нужно:** править tracked (`config/`, `app/`, …) на проде.  
+  Лестница + случай 01-08-2026 (`config/marathon_landing_copy.php`) — **по-русски** в  
+  [docs/server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·  
   dirty-gate: [docs/deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) ·  
   class: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) ·  
   danger: [Uprava DANGER_FACTS Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
