@@ -385,6 +385,19 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         })->where('slug', '[A-Za-z0-9\-]+');
     }
 
+    // H2110 — Wave 2: «Старт чтения» cohort reading packs INSIDE the cabinet.
+    // Registered unconditionally (unlike the SRS block above) because the gate is
+    // per-request entitlement, not a boot-time flag: ReadingPackController checks
+    // features.kosha_reader AND StartChteniyaCohort::hasEntitlement($user), so a
+    // logged-in student who has not bought the cohort gets 404, not a redirect.
+    // Static segment before {slug}, same ordering discipline as /dvaram/koloda.
+    Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
+        ->name('student.reading.index');
+
+    Route::get('/dvaram/reading/{slug}', [ReadingPackController::class, 'cabinetShow'])
+        ->name('student.reading.pack')
+        ->where('slug', '[a-z0-9\-]+');
+
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS
     // review loop above (/dvaram/koloda) — short /lila drills linked from the
     // cabinet, no spaced-repetition scheduling here. Behind its own flag

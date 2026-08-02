@@ -1,0 +1,147 @@
+{
+  "id": "cohort-start-chteniya-pack-freeze",
+  "title": "«Старт чтения» cohort pack freeze (Hitopadeśa-0 + subhāṣita-beginner + sandhi L1–3)",
+  "cohort_slug": "start_chteniya",
+  "built": "2026-08-01",
+  "handoff": "H2109",
+  "executor": "Grok 4.5 (grok-4.5) — override dual-run of Sonnet-filename handoff",
+  "manifest_fix": "H2129 (Sonnet 5, claude-sonnet-5, 02-08-2026): sha256/bytes for sandhi-drills-l1-l3 and sandhi-curriculum-l1-l3 were stale — computed pre-.gitattributes(eol=lf) normalization, so the checked-in MANIFEST never matched the checked-in pin bytes and --check failed on a pristine clone. Pin file bytes unchanged; only these two hash/byte fields corrected, and the builder now writes newline=\"\\n\" so it cannot recur.",
+  "goal": "Pin owned packs for Systema embed without new linguistics",
+  "fence": "No new analysis layers; no human-overlay overwrite; freeze only",
+  "consumers": [
+    "Systema-Sanscriticum resources/data/cohort_start_chteniya/ (H2106)",
+    "reading_pack import (H2110)"
+  ],
+  "packs": [
+    {
+      "slug": "hitopadesa-0",
+      "kind": "reading_pack",
+      "source_path": "reading/data/hitopadesa-0.json",
+      "pin_path": "data/cohort_start_chteniya/hitopadesa-0.json",
+      "sha256": "86cde2bd4bc27b889f11356c39f4747cf004f035b049e59fb8b42f854fc2c9dc",
+      "bytes": 341875,
+      "built_source": "2026-07-15",
+      "schema": "reading_pack_v1 (sentences[].tokens[] with form/lemma/upos/morph/gloss/slp1; optional gloss_ru)",
+      "adapter_note": null,
+      "gloss_ru_coverage": "855/900 tokens have gloss_ru (95.0%)",
+      "stats": {
+        "sentences": 125,
+        "tokens": 900,
+        "linked_tokens": 885,
+        "link_rate_pct": 98.3,
+        "tier_counts": {
+          "exact": 885,
+          "none": 14,
+          "relaxed": 1
+        }
+      }
+    },
+    {
+      "slug": "subhashita-beginner",
+      "kind": "subhashita_reader_pack",
+      "source_path": "data/subhashita/subhashita_beginner_pack.json",
+      "pin_path": "data/cohort_start_chteniya/subhashita_beginner_pack.json",
+      "sha256": "2c617a1151e8904505c57759a937e94e22ca089fe6ee4bf8fa717171802ec46c",
+      "bytes": 519889,
+      "built_source": "2026-07-19",
+      "schema": "subhashita_reader_pack (sayings[] with lines[].chunks[] tokens; NOT sentences/tokens reading_pack shape)",
+      "adapter_note": "Schema delta vs reading_pack_v1: top-level sayings[] not sentences[]; tokens live under lines[].chunks[] as t/lemma_slp1/gloss_ru triples; German translation_de not EN gloss. Systema import (H2110) must adapt or normalize — do not invent a second schema silently.",
+      "gloss_ru_coverage": "lemma-layer RU gloss 85.3% (1288/1510 tokens); status: present — H1312 re-run joined the W-RU-a public site-tier layers (surface/lemma/",
+      "stats": {
+        "sayings": 106,
+        "difficulty_min": 0.2841,
+        "difficulty_max": 0.4063,
+        "junctions": 1294,
+        "junctions_labelled": 187,
+        "internal_seams": 247,
+        "internal_seams_resolved": 247,
+        "cross_boundary_rules": 62,
+        "seg_source_chunks": {
+          "dm": 770,
+          "cheda": 437,
+          "surface": 56
+        },
+        "metres": [
+          "anuṣṭubh",
+          "indravajrā",
+          "rathoddhatā",
+          "toṭaka",
+          "udgīti",
+          "upagīti",
+          "vaṃśastha",
+          "āryā",
+          "āryāgīti"
+        ],
+        "gloss_ru_tokens": 1510,
+        "gloss_ru_lemma_tagged": 1346,
+        "gloss_ru_lemma_hit": 1288,
+        "gloss_ru_lemma_tag_coverage_pct": 89.1,
+        "gloss_ru_coverage_pct": 85.3
+      }
+    },
+    {
+      "slug": "sandhi-drills-l1-l3",
+      "kind": "sandhi_drills_subset",
+      "source_path": "data/sandhi/sandhi_drills.json",
+      "pin_path": "data/cohort_start_chteniya/sandhi_drills_l1_l3.json",
+      "sha256": "d1e23d5383a4d3c5de40a24b85e08906c082f659bb8fb885e030bbb95e37ed71",
+      "bytes": 18548,
+      "built_source": null,
+      "schema": "sandhi_drills items[] filtered lesson<=3 (join/split/identify MCQ)",
+      "adapter_note": null,
+      "gloss_ru_coverage": "n/a (drill bank, not glossed reading)",
+      "stats": {
+        "items": 30,
+        "by_lesson": {
+          "1": 6,
+          "2": 12,
+          "3": 12
+        },
+        "by_type": {
+          "join": 10,
+          "split": 10,
+          "identify": 10
+        }
+      }
+    },
+    {
+      "slug": "sandhi-curriculum-l1-l3",
+      "kind": "sandhi_curriculum_subset",
+      "source_path": "data/sandhi/sandhi_curriculum.tsv",
+      "pin_path": "data/cohort_start_chteniya/sandhi_curriculum_l1_l3.tsv",
+      "sha256": "6f97c347d7dc5f5140b60a35ff8f84f2e9b38566016b92e73eaeb8b1b34b5212",
+      "bytes": 704,
+      "built_source": null,
+      "schema": "sandhi_curriculum.tsv rows with lesson<=3",
+      "adapter_note": null,
+      "gloss_ru_coverage": "n/a",
+      "stats": {
+        "rules": 10,
+        "lessons": "1-3"
+      }
+    },
+    {
+      "slug": "lemmas-for-srs",
+      "kind": "lemma_tsv",
+      "source_path": "derived from hitopadesa-0 + subhashita-beginner pins",
+      "pin_path": "data/cohort_start_chteniya/lemmas_for_srs.tsv",
+      "sha256": "312038b68fe28ee9a5e6216764b6925114d4122d78fd77aed692b45cf75b10f9",
+      "bytes": 92396,
+      "built_source": "2026-08-01",
+      "schema": "TSV pack|lemma_slp1|surface|gloss_ru|gloss_en|locus — unique lemma per pack",
+      "adapter_note": "Optional SRS import feed for H2106; not a full koloda seed.",
+      "gloss_ru_coverage": "445/1286 rows have gloss_ru",
+      "stats": {
+        "unique_lemmas": 1286,
+        "hitopadesa_0": 448,
+        "subhashita_beginner": 838
+      }
+    }
+  ],
+  "notes": [
+    "hitopadesa-0 is the interim week-3 continuous-prose pack (PLAN D3).",
+    "subhashita-beginner is week-5 literature band (or week-5 fallback).",
+    "sandhi L1-3 is the beginner drill/curriculum band.",
+    "Schema delta on subhashita is intentional prior art (H1279/H1312) — adapter note in pack row."
+  ]
+}
