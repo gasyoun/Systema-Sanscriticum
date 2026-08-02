@@ -30,8 +30,12 @@ class CertificateIssuedMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        $issued = $this->certificate->isSpravka()
+            ? 'Вам выдана справка об образовании'
+            : 'Вам выдан сертификат';
+
         return new Envelope(
-            subject: 'Вам выдан сертификат — '.$this->certificate->displayCourseTitle(),
+            subject: $issued.' — '.str_replace('|', ' ', $this->certificate->displayCourseTitle()),
         );
     }
 

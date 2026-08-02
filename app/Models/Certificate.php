@@ -24,6 +24,9 @@ class Certificate extends Model
         'issued_at', // <-- ИСПРАВЛЕНО: добавлена буква 'd'
         'certificate_milestone_id',
         'notified_at',
+        'group_id',
+        'occurrence',
+        'document_type',
     ];
 
     protected $casts = [
@@ -31,6 +34,13 @@ class Certificate extends Model
         'score_letters' => 'float',
         'score_flow' => 'float',
         'notified_at' => 'datetime',
+        'occurrence' => 'integer',
+    ];
+
+    // Дефолты в памяти (см. CertificateMilestone::$attributes — та же причина).
+    protected $attributes = [
+        'occurrence' => 1,
+        'document_type' => CertificateMilestone::DOC_CERTIFICATE,
     ];
 
     /**
@@ -46,10 +56,20 @@ class Certificate extends Model
     /**
      * Доступные шаблоны сертификата. Различаются росписью преподавателя —
      * каждому соответствует своё фоновое изображение целиком.
+     * spravka_background — опциональный фон для «справки об образовании»
+     * (заголовок запечён в картинку); пока файла нет — фолбэк на обычный.
      */
     public const TEMPLATES = [
-        'gasuns' => ['label' => 'Роспись: Гасунс', 'background' => 'images/ganesha_gasuns.jpg'],
-        'sanka' => ['label' => 'Роспись: Санка', 'background' => 'images/ganesha_sanka.jpg'],
+        'gasuns' => [
+            'label' => 'Роспись: Гасунс',
+            'background' => 'images/ganesha_gasuns.jpg',
+            'spravka_background' => 'images/ganesha_gasuns_spravka.jpg',
+        ],
+        'sanka' => [
+            'label' => 'Роспись: Санка',
+            'background' => 'images/ganesha_sanka.jpg',
+            'spravka_background' => 'images/ganesha_sanka_spravka.jpg',
+        ],
     ];
 
     /**
@@ -61,16 +81,28 @@ class Certificate extends Model
     }
 
     /**
-     * Абсолютный путь к фону для выбранного шаблона. Если файла ещё нет —
-     * фолбэк на нейтральный фон, чтобы генерация не падала.
+     * Абсолютный путь к фону для выбранного шаблона. Справка использует свой
+     * фон, если файл существует; дальше фолбэки: обычный фон шаблона →
+     * нейтральный, чтобы генерация не падала.
      */
     public function backgroundPath(): string
     {
-        $rel = self::TEMPLATES[$this->template ?? 'gasuns']['background']
-            ?? self::TEMPLATES['gasuns']['background'];
-        $abs = public_path($rel);
+        $template = self::TEMPLATES[$this->template ?? 'gasuns'] ?? self::TEMPLATES['gasuns'];
 
-        return is_file($abs) ? $abs : public_path('images/ganesha_clean.jpg');
+        $candidates = [];
+        if ($this->isSpravka() && ! empty($template['spravka_background'])) {
+            $candidates[] = $template['spravka_background'];
+        }
+        $candidates[] = $template['background'];
+
+        foreach ($candidates as $rel) {
+            $abs = public_path($rel);
+            if (is_file($abs)) {
+                return $abs;
+            }
+        }
+
+        return public_path('images/ganesha_clean.jpg');
     }
 
     protected static function booted()
@@ -174,5 +206,23 @@ class Certificate extends Model
     public function milestone()
     {
         return $this->belongsTo(CertificateMilestone::class, 'certificate_milestone_id');
+    }
+
+    /** Группа, по которой сработал пер-групповой триггер (NULL — ручная/курс-уровневая). */
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function isSpravka(): bool
+    {
+        return $this->document_type === CertificateMilestone::DOC_SPRAVKA;
+    }
+
+    /** «Сертификат» / «Справка об образовании» — для уведомлений, verify и реестра. */
+    public function documentLabel(): string
+    {
+        return CertificateMilestone::DOCUMENT_TYPES[$this->document_type]
+            ?? CertificateMilestone::DOCUMENT_TYPES[CertificateMilestone::DOC_CERTIFICATE];
     }
 }

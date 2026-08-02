@@ -14,8 +14,8 @@
                     <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
                         <i class="fas fa-check text-2xl"></i>
                     </div>
-                    <h1 class="mt-4 text-xl md:text-2xl font-extrabold text-white">Сертификат подтвержден</h1>
-                    <p class="mt-1 text-sm text-emerald-300/80">Документ зарегистрирован в Обществе ревнителей санскрита</p>
+                    <h1 class="mt-4 text-xl md:text-2xl font-extrabold text-white">{{ $certificate->isSpravka() ? 'Справка подтверждена' : 'Сертификат подтвержден' }}</h1>
+                    <p class="mt-1 text-sm text-emerald-300/80">{{ $certificate->documentLabel() }} — документ зарегистрирован в Обществе ревнителей санскрита</p>
                 </div>
 
                 <div class="p-6 md:p-8 space-y-5">

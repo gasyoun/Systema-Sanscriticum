@@ -338,6 +338,18 @@ class LessonResource extends Resource
                             ->minValue(1)
                             ->maxValue(40),
 
+                        // Разметка материала для material_count-вех сертификатов.
+                        // Ручная правка фиксируется как manual — сканер стенограмм
+                        // (LessonMaterialTagger) её не перезаписывает.
+                        Forms\Components\TextInput::make('material_tag')
+                            ->label('Тег материала (сертификаты)')
+                            ->helperText('Латиницей: emeno, buhler. Обычно проставляется автоматически по стенограмме; заполните вручную, если автоматика ошиблась.')
+                            ->maxLength(50)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Forms\Set $set) => $set('material_tag_source', 'manual')),
+                        Forms\Components\Hidden::make('material_tag_source')
+                            ->dehydrated(fn ($state) => $state !== null),
+
                         Forms\Components\Placeholder::make('homework_opens_at_display')
                             ->label('Приём откроется автоматически')
                             ->content(fn (?Lesson $record): string => $record?->homework_opens_at

@@ -42,9 +42,12 @@ class CertificateIssuedNotifier
 
         if ($hasTg || $hasVk) {
             $title = str_replace('|', ' ', $certificate->displayCourseTitle());
+            $issued = $certificate->isSpravka()
+                ? 'вам выдана справка об образовании'
+                : 'вам выдан сертификат';
             $text = "🎓 Намасте, {$user->name}!\n\n"
-                ."Поздравляем — вам выдан сертификат «{$title}» (№ {$certificate->number}).\n\n"
-                .'Скачать его можно в кабинете: '.route('student.dashboard');
+                ."Поздравляем — {$issued} «{$title}» (№ {$certificate->number}).\n\n"
+                .'Скачать документ можно в кабинете: '.route('student.dashboard');
             SendMessengerAlerts::dispatch($user, $text, $hasTg, $hasVk);
         }
 

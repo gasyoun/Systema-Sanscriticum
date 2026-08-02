@@ -10,13 +10,16 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Services\CertificateIssuedNotifier;
 use App\Services\MilestoneCertificateIssuer;
+use App\Services\MilestoneIssueTarget;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ListRecords; // Подключаем нашу Job
+use Filament\Resources\Pages\ListRecords;
+
+ // Подключаем нашу Job
 
 class ListCertificates extends ListRecords
 {
@@ -157,11 +160,25 @@ class ListCertificates extends ListRecords
                         ->label('Веха')
                         ->options(fn (Get $get) => CertificateMilestone::query()
                             ->where('course_id', $get('course_id'))
-                            ->orderBy('start_block')
+                            ->orderBy('id')
                             ->pluck('title', 'id')
                             ->all())
                         ->required()
-                        ->helperText('Получат оплатившие блоки вехи участники активных групп курса, у которых сертификата ещё нет. Уведомление уйдёт сразу.'),
+                        ->live()
+                        ->helperText('Получат оплатившие участники групп курса, у которых документа ещё нет. Для lesson-вех выдаются только итерации, чьи занятия уже состоялись. Уведомление уйдёт сразу.'),
+
+                    Select::make('group_id')
+                        ->label('Группа (необязательно)')
+                        ->options(fn (Get $get) => Group::query()
+                            ->whereHas('courses', fn ($q) => $q->whereKey($get('course_id')))
+                            ->whereIn('status', ['active', 'archived'])
+                            ->pluck('name', 'id')
+                            ->all())
+                        ->helperText('Пусто — все готовые группы курса. Актуально для вех по занятиям: группы доходят до порога в разное время.')
+                        ->visible(fn (Get $get) => CertificateMilestone::query()
+                            ->whereKey($get('milestone_id'))
+                            ->where('trigger_type', '!=', CertificateMilestone::TRIGGER_BLOCK)
+                            ->exists()),
                 ])
                 ->action(function (array $data) {
                     // Серверная защита от чужого course_id через POST (зеркалит issue_bulk).
@@ -187,25 +204,38 @@ class ListCertificates extends ListRecords
                         return;
                     }
 
-                    if ($milestone->template === 'sanka') {
-                        Notification::make()
-                            ->title('Экзаменационный шаблон выдаётся только вручную')
-                            ->body('«Санка» требует баллов экзамена — создайте сертификаты через форму.')
-                            ->danger()
-                            ->send();
+                    $issuer = app(MilestoneCertificateIssuer::class);
 
-                        return;
+                    // Явно выбранная группа — выдаём только по её готовым итерациям
+                    // (manual-веха порогов не имеет: одна цель на группу).
+                    if (! empty($data['group_id'])) {
+                        $group = Group::find($data['group_id']);
+                        $issued = collect();
+                        if ($group) {
+                            $occurrences = $milestone->trigger_type === CertificateMilestone::TRIGGER_MANUAL
+                                ? [1 => null]
+                                : $issuer->readyOccurrences($milestone, $group);
+                            foreach ($occurrences as $occurrence => $date) {
+                                $issued = $issued->merge($issuer->issueForTarget(
+                                    new MilestoneIssueTarget($milestone, $group, $occurrence),
+                                    force: true,
+                                ));
+                            }
+                        }
+                    } else {
+                        $issued = $issuer->issueForMilestone($milestone, force: true);
                     }
-
-                    $issued = app(MilestoneCertificateIssuer::class)
-                        ->issueForMilestone($milestone, force: true);
 
                     $notifier = app(CertificateIssuedNotifier::class);
                     $issued->each(fn (Certificate $c) => $notifier->notify($c));
 
+                    $hint = $milestone->template === 'sanka'
+                        ? ' «Санка» выдаётся только студентам с затянутыми баллами экзамена.'
+                        : '';
+
                     Notification::make()
                         ->title('Готово')
-                        ->body("Выдано новых сертификатов: {$issued->count()}")
+                        ->body("Выдано новых документов: {$issued->count()}.".$hint)
                         ->success()
                         ->send();
                 }),

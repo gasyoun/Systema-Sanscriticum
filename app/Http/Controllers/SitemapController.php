@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\DictionaryWord;
 use App\Models\LandingPage;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class SitemapController extends Controller
@@ -39,6 +41,16 @@ class SitemapController extends Controller
                     ?->format(DATE_ATOM),
                 'changefreq' => 'weekly',
                 'priority' => '0.7',
+            ];
+
+            // Публичный реестр сертификатов/справок (один URL, без query-вариантов).
+            $urls[] = [
+                'loc' => route('certificate.registry'),
+                'lastmod' => optional(Certificate::max('issued_at'))
+                    ? Carbon::parse(Certificate::max('issued_at'))->format(DATE_ATOM)
+                    : null,
+                'changefreq' => 'weekly',
+                'priority' => '0.5',
             ];
 
             LandingPage::where('is_active', true)

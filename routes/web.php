@@ -706,6 +706,11 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
 
+// --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
+// ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.
+Route::get('/sertifikaty', [\App\Http\Controllers\CertificateRegistryController::class, 'index'])
+    ->name('certificate.registry');
+
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).
 // Ведёт на режим ПРОСМОТРА карточки; доступ под guard'ом Filament-панели admin.

@@ -45,6 +45,10 @@ class Lesson extends Model
         // заполняет человек. Остальные четыре ставит только автомат, и массовое
         // присваивание из формы им противопоказано.
         'textbook_lesson',
+        // Разметка материала занятия для material_count-вех сертификатов:
+        // auto — сканер стенограмм (LessonMaterialTagger), manual — куратор.
+        'material_tag',
+        'material_tag_source',
     ];
 
     // Обязательно добавь это, чтобы JSON превращался в массив

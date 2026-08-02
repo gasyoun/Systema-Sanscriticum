@@ -163,6 +163,13 @@ class CertificateResource extends Resource
                     ->label('Название курса в сертификате')
                     ->helperText('Подставлено из курса. Символ | — перенос строки.'),
 
+                // 4a. Тип документа: сертификат или справка об образовании.
+                Forms\Components\Select::make('document_type')
+                    ->label('Тип документа')
+                    ->options(CertificateMilestone::DOCUMENT_TYPES)
+                    ->default(CertificateMilestone::DOC_CERTIFICATE)
+                    ->required(),
+
                 // 5. Шаблон сертификата (роспись преподавателя).
                 Forms\Components\Select::make('template')
                     ->label('Шаблон (роспись)')
@@ -209,10 +216,19 @@ class CertificateResource extends Resource
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('document_type')
+                    ->label('Тип')
+                    ->formatStateUsing(fn ($state) => CertificateMilestone::DOCUMENT_TYPES[$state] ?? $state)
+                    ->badge()
+                    ->color(fn ($state) => $state === CertificateMilestone::DOC_SPRAVKA ? 'info' : 'success'),
                 Tables\Columns\TextColumn::make('milestone.title')
                     ->label('Веха')
                     ->placeholder('вручную')
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('group.name')
+                    ->label('Группа')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('template')
                     ->label('Шаблон')
                     ->formatStateUsing(fn ($state) => Certificate::TEMPLATES[$state]['label'] ?? $state)
@@ -224,6 +240,11 @@ class CertificateResource extends Resource
                     ->label('Дата выдачи')
                     ->date('d.m.Y')
                     ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('document_type')
+                    ->label('Тип документа')
+                    ->options(CertificateMilestone::DOCUMENT_TYPES),
             ])
             ->actions([
                 Tables\Actions\Action::make('jpg')

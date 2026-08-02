@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Filament\Pages\Debtors;
+use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
@@ -337,6 +338,32 @@ class CuratorNotifier
         }
         $lines[] = '';
         $lines[] = '👉 <a href="'.$url.'">Открыть группы</a>';
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Детектор «забытых» курсов (courses:detect-missing-milestones): курс идёт
+     * уже N занятий, а вехи сертификатов не настроены — студенты рискуют
+     * остаться без документов. Дедуп — courses.milestones_nudge_sent_at.
+     */
+    public function courseMissingMilestones(Course $course, int $pastLessons): void
+    {
+        $lines = [
+            '⚠️ <b>Курс без вех сертификатов</b>',
+            '',
+            $this->courseLine($course),
+            'Занятий состоялось: <b>'.$pastLessons.'</b>',
+            'Вехи автовыдачи не настроены — студенты не получат сертификаты/справки.',
+        ];
+
+        try {
+            $url = CourseResource::getUrl('edit', ['record' => $course->id]);
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть курс (вкладка «Вехи сертификатов»)</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

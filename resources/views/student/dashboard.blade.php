@@ -607,8 +607,8 @@
                         </div>
                         
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate group-hover:text-[#E85C24] transition-colors">{{ $cert->course->title }}</p>
-                            <p class="text-xs font-medium text-gray-400 mt-0.5">Выдан {{ $cert->created_at->format('d.m.Y') }}</p>
+                            <p class="text-sm font-bold text-gray-800 truncate group-hover:text-[#E85C24] transition-colors">{{ str_replace('|', ' ', $cert->displayCourseTitle()) }}</p>
+                            <p class="text-xs font-medium text-gray-400 mt-0.5">{{ $cert->isSpravka() ? 'Справка' : 'Сертификат' }} · {{ $cert->created_at->format('d.m.Y') }}</p>
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">

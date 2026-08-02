@@ -10,6 +10,7 @@ use App\Models\Certificate;
 use App\Models\CertificateMilestone;
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\ExamScore;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
@@ -187,18 +188,49 @@ class MilestoneCertificateIssueTest extends TestCase
     }
 
     /** @test */
-    public function sanka_milestones_are_never_auto_issued_even_with_force(): void
+    public function sanka_milestones_issue_only_to_students_with_exam_scores(): void
     {
         $this->enableAutoIssue();
         $milestone = $this->milestone(['template' => 'sanka']);
-        $student = $this->student();
-        $this->pay($student, 'full');
-
         $issuer = app(MilestoneCertificateIssuer::class);
 
-        $this->assertFalse($issuer->dueMilestones()->contains('id', $milestone->id));
+        $withoutScores = $this->student();
+        $this->pay($withoutScores, 'full');
+
+        $withScores = $this->student();
+        $this->pay($withScores, 'full');
+        ExamScore::create([
+            'user_id' => $withScores->id,
+            'course_id' => $this->course->id,
+            'score_clarity' => 18,
+            'score_letters' => 4.5,
+            'score_flow' => 5,
+        ]);
+
+        $issued = $issuer->issueForMilestone($milestone, force: true);
+
+        // Без баллов сертификат не рисуется; с баллами — выдаётся со снапшотом.
+        $this->assertCount(1, $issued);
+        $cert = $issued->first();
+        $this->assertTrue($cert->user->is($withScores));
+        $this->assertSame(18.0, $cert->score_clarity);
+        $this->assertSame(4.5, $cert->score_letters);
+        $this->assertSame(5.0, $cert->score_flow);
+        $this->assertFalse(Certificate::where('user_id', $withoutScores->id)->exists());
+
+        // Баллы появились позже → следующий прогон выдаёт.
+        ExamScore::create([
+            'user_id' => $withoutScores->id,
+            'course_id' => $this->course->id,
+            'score_clarity' => 15,
+        ]);
+        $this->assertCount(1, $issuer->issueForMilestone($milestone, force: true));
+
+        // Обновление баллов ПОСЛЕ выдачи не трогает замороженный снапшот.
+        ExamScore::where('user_id', $withScores->id)
+            ->update(['score_clarity' => 20]);
         $this->assertCount(0, $issuer->issueForMilestone($milestone, force: true));
-        $this->assertSame(0, Certificate::count());
+        $this->assertSame(18.0, $cert->fresh()->score_clarity);
     }
 
     /** @test */

@@ -106,6 +106,14 @@ Route::post('/webhooks/lead-step', [LeadStepWebhookController::class, 'handle'])
     ->middleware('verify.n8n.leadstep')
     ->name('webhook.lead-step');
 
+// Баллы экзамена «Санка» из Google-таблицы преподавателя — n8n читает лист по
+// расписанию и шлёт батч сюда. Секрет в X-Webhook-Secret
+// (services.n8n.exam_scores_secret). Санка-вехи автовыдаются только студентам
+// с баллами (MilestoneCertificateIssuer).
+Route::post('/webhooks/exam-scores', [\App\Http\Controllers\Webhooks\ExamScoresWebhookController::class, 'handle'])
+    ->middleware('verify.n8n.examscores')
+    ->name('webhook.exam-scores');
+
 // «Клипы нарезаны» (H1452, Wave 4) — n8n зовёт после ffmpeg-нарезки + VK-аплоада.
 // Секрет в X-Webhook-Secret (services.n8n.clip_callback_secret); маршрут сам
 // отвечает 404 при выключенном features.clip_marketing (см. контроллер).

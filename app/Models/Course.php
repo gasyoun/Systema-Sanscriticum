@@ -145,6 +145,7 @@ class Course extends Model
         'is_active' => 'boolean',
         'is_completed' => 'boolean',
         'never_repeat' => 'boolean',
+        'milestones_nudge_sent_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.

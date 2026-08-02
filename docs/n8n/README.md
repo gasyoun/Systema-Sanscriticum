@@ -19,6 +19,37 @@ Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · catalog
 
 ---
 
+# n8n: баллы экзамена «Санка» → Laravel (ТЗ, воркфлоу ещё не создан)
+
+Преподаватель ведёт баллы экзамена в Google-таблице (колонки: Email, Курс(slug),
+Выразительность ≤20, Дикция ≤5, Плавность ≤5). n8n по расписанию читает лист и
+шлёт батч в Laravel; sanka-вехи автовыдачи выдают сертификаты только студентам,
+чьи баллы уже пришли (`MilestoneCertificateIssuer`).
+
+## Схема
+
+```
+Schedule Trigger (раз в час)  →  Google Sheets: Read Rows  →  Code: собрать {rows: [...]}
+    →  HTTP Request: POST https://samskrte.ru/api/webhooks/exam-scores
+```
+
+- Header Auth: `X-Webhook-Secret` = значение `N8N_EXAM_SCORES_SECRET` из прод-`.env`
+  (пустой секрет на стороне Laravel = эндпоинт выключен, 403).
+- Payload: `{"rows": [{"email": "...", "course": "slug", "score_clarity": 18,
+  "score_letters": 4.5, "score_flow": 5, "row_ref": "Лист1!A7"}]}` (≤500 строк;
+  строки без единого балла Code-нода отбрасывает).
+- Ответ Laravel всегда 200 при валидном payload: `{ok, created, updated,
+  unchanged, unmatched: [{email, course, row_ref, reason}]}`. Ретраить
+  unmatched не нужно — это бизнес-исход (опечатка в email / незнакомый slug);
+  опционально IF-нода: unmatched не пуст → сообщение в админский ТГ-чат или
+  пометка строк в таблице по `row_ref`.
+- Повтор того же листа идемпотентен (`unchanged`); пересдача = правка строки
+  (баллы обновятся, уже выданные сертификаты не изменятся — снапшот).
+- Google-креды живут в n8n (как в admin-payments-sheet), в Laravel их нет.
+- Готовый воркфлоу экспортировать в `docs/n8n/exports/exam-scores-sync.live.json`.
+
+---
+
 # n8n: выгрузка расписания в Google Таблицу
 
 Воркфлоу `schedule-sheet-sync.workflow.json` принимает снимок расписания из Laravel

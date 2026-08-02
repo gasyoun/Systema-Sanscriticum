@@ -7,14 +7,17 @@ namespace App\Console\Commands;
 use App\Models\Certificate;
 use App\Models\MarketingSetting;
 use App\Services\CertificateIssuedNotifier;
+use App\Services\LessonMaterialTagger;
 use App\Services\MilestoneCertificateIssuer;
+use App\Services\MilestoneIssueTarget;
 use Illuminate\Console\Command;
 
 /**
- * Ежедневная автовыдача сертификатов по вехам курсов: блок end_block вехи
- * закончился (ends_at, не старше lookback-окна) → сертификаты оплатившим
- * участникам групп курса + уведомление TG/VK/email. Вся логика «кто получает» —
- * в MilestoneCertificateIssuer; здесь только гейт, прогон и отчёт.
+ * Ежедневная автовыдача сертификатов/справок по вехам курсов: триггер вехи
+ * сработал (конец блока / N-е занятие группы / урок учебника / занятия
+ * материала) → документы оплатившим участникам + уведомление TG/VK/email.
+ * Вся логика «кто получает» — в MilestoneCertificateIssuer; здесь гейт,
+ * догон авторазметки материала, прогон и отчёт.
  */
 class IssueMilestoneCertificates extends Command
 {
@@ -22,8 +25,11 @@ class IssueMilestoneCertificates extends Command
 
     protected $description = 'Выдаёт сертификаты по созревшим вехам курсов и уведомляет студентов.';
 
-    public function handle(MilestoneCertificateIssuer $issuer, CertificateIssuedNotifier $notifier): int
-    {
+    public function handle(
+        MilestoneCertificateIssuer $issuer,
+        CertificateIssuedNotifier $notifier,
+        LessonMaterialTagger $tagger,
+    ): int {
         $settings = MarketingSetting::cached();
         if (! $this->option('dry-run') && ! ($settings?->certificate_auto_issue_enabled ?? false)) {
             $this->info('Автовыдача сертификатов отключена в настройках — пропуск.');
@@ -31,29 +37,36 @@ class IssueMilestoneCertificates extends Command
             return self::SUCCESS;
         }
 
-        $milestones = $issuer->dueMilestones();
+        // Догон авторазметки материала: стенограммы, пришедшие до создания
+        // material-вехи, размечаются здесь (обычный путь — job после загрузки).
+        if (! $this->option('dry-run')) {
+            $tagger->catchUp();
+        }
+
+        $targets = $issuer->dueTargets();
         $issued = 0;
 
-        foreach ($milestones as $milestone) {
+        foreach ($targets as $target) {
             if ($this->option('dry-run')) {
-                foreach ($issuer->eligibleUsers($milestone) as $user) {
+                foreach ($issuer->eligibleUsers($target->milestone, $target->group, $target->occurrence) as $user) {
                     $has = Certificate::query()
                         ->where('user_id', $user->id)
-                        ->where('certificate_milestone_id', $milestone->id)
+                        ->where('certificate_milestone_id', $target->milestone->id)
+                        ->where('occurrence', $target->occurrence)
                         ->exists();
                     if (! $has) {
                         $issued++;
-                        $this->line("[dry-run] {$milestone->course->title} / «{$milestone->title}» → {$user->name} (#{$user->id})");
+                        $this->line('[dry-run] '.$target->label()." → {$user->name} (#{$user->id})");
                     }
                 }
 
                 continue;
             }
 
-            $issued += $issuer->issueForMilestone($milestone)->count();
+            $issued += $issuer->issueForTarget($target)->count();
         }
 
-        // Доотправка: сертификаты вех без notified_at (включая упавшие вчера).
+        // Доотправка: документы вех без notified_at (включая упавшие вчера).
         $notified = 0;
         if (! $this->option('dry-run')) {
             Certificate::query()
@@ -68,7 +81,8 @@ class IssueMilestoneCertificates extends Command
                 });
         }
 
-        $this->info("Вехи: {$milestones->count()}, выдано: {$issued}, уведомлено: {$notified}.");
+        $milestoneCount = $targets->map(fn (MilestoneIssueTarget $t) => $t->milestone->id)->unique()->count();
+        $this->info("Вехи: {$milestoneCount}, целей: {$targets->count()}, выдано: {$issued}, уведомлено: {$notified}.");
 
         return self::SUCCESS;
     }

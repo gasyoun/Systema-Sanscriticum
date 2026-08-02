@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\TagLessonMaterialJob;
 use App\Models\Lesson;
 use App\Services\VideoLinkNormalizer;
 use App\Support\TranscriptParser;
@@ -184,6 +185,10 @@ class LessonController extends Controller
         $lesson->forceFill(['transcript_file' => $path])->save();
 
         $sentences = TranscriptParser::sentencesFromPublicFile($path);
+
+        // Авторазметка материала для material_count-вех сертификатов — в очередь,
+        // чтобы разбор стенограммы не задерживал ответ n8n.
+        TagLessonMaterialJob::dispatch($lesson->id);
 
         Log::info('Lesson transcript: сохранён', [
             'lesson_id' => $lesson->id,

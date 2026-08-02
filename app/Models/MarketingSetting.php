@@ -117,6 +117,8 @@ class MarketingSetting extends Model
         // --- АВТОВЫДАЧА СЕРТИФИКАТОВ ПО ВЕХАМ ---
         'certificate_auto_issue_enabled',
         'certificate_auto_issue_lookback_days',
+        'course_missing_milestones_notify_enabled',
+        'course_missing_milestones_threshold',
     ];
 
     protected $casts = [
@@ -151,6 +153,8 @@ class MarketingSetting extends Model
         'recruitment_notify_lead_days' => 'integer',
         'certificate_auto_issue_enabled' => 'boolean',
         'certificate_auto_issue_lookback_days' => 'integer',
+        'course_missing_milestones_notify_enabled' => 'boolean',
+        'course_missing_milestones_threshold' => 'integer',
         'reminder_detection_enabled' => 'boolean',
         'promise_suggestion_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',

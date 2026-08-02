@@ -217,8 +217,18 @@ class MarketingSettingResource extends Resource
                         Forms\Components\TextInput::make('certificate_auto_issue_lookback_days')
                             ->label('Окно ретроспективы, дней')
                             ->numeric()->minValue(1)->maxValue(365)->suffix('дн')->default(14)
-                            ->helperText('Вехи, чей блок закончился раньше этого окна, автоматика не трогает — старые потоки не получат внезапных сертификатов.')
+                            ->helperText('Вехи, чей триггер сработал раньше этого окна, автоматика не трогает — старые потоки не получат внезапных сертификатов. Прошлые годы закрывает разовая команда certificates:backfill-milestones.')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('certificate_auto_issue_enabled')),
+
+                        Forms\Components\Toggle::make('course_missing_milestones_notify_enabled')
+                            ->label('Детектор курсов без вех сертификатов')
+                            ->helperText('Ежедневно (courses:detect-missing-milestones): у курса с активной группой состоялось N занятий, а вехи не настроены — уведомление в кураторский чат и пометка курса. Работает независимо от автовыдачи.')
+                            ->default(true)
+                            ->live(),
+                        Forms\Components\TextInput::make('course_missing_milestones_threshold')
+                            ->label('Порог детектора, занятий')
+                            ->numeric()->minValue(1)->maxValue(100)->suffix('зан')->default(12)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('course_missing_milestones_notify_enabled')),
                     ])
                     ->collapsible(),
 

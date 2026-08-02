@@ -136,7 +136,7 @@
 
         <div class="student-name">{{ $student_name }}</div>
         
-        <div class="action-text">успешно освоил(а) онлайн-курс</div>
+        <div class="action-text">{{ $certificate->isSpravka() ? 'проходит обучение и освоил(а) часть онлайн-курса' : 'успешно освоил(а) онлайн-курс' }}</div>
 
         <div class="course-container">
         
@@ -144,9 +144,12 @@
             {!! str_replace('|', '<br>', $course_title) !!}
         </div>
 
+        @unless($certificate->isSpravka())
+        {{-- Для справки объём всего курса неверен: её окно занятий уже в названии. --}}
         <div class="hours-text">
             в объеме {{ $course->lessons_count ?? 12 }} уроков ({{ $course->hours_count ?? 24 }} академических часов)
         </div>
+        @endunless
 
     </div>
 
