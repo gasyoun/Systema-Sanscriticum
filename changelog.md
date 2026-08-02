@@ -1,6 +1,9 @@
 ## [Unreleased]
 
+## [1.83.0] - 2026-08-02
+
 ### Added
+- **H2149 follow-up: правка managed-файла — всегда двухшаговая выкладка.** Записана в [server-resource-guards.md §8.2](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) после того, как на неё наступили при выкатке самого H2149: `deploy.sh` в конце зовёт `guards:verify`, тот видит честный drift (в git новая копия managed-файла, на машине старая), деплой выходит 1, и обёртка **откатывает** ровно тот коммит, из которого `apply.sh` должен был поставить новую версию. Порядок: `deploy.sh` → `scripts/server_guards_apply.sh` → `guards:verify`. Относится к любой строке `manifest.psv`. Executor: Opus 5 1M (`claude-opus-5[1m]`).
 - **H2155: платёжная дисциплина — playbook куратор+ученик, TG 1:1, пост P6.** [docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md) · [docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md) · P6 в [marketing/payment-blocks-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/payment-blocks-telegram-posts.md) (ЛС ≠ дата в «Мои долги»). FAQ/§17 в debtors-manual + note в student-manual §5. Код auto-promise **не** в scope — дизайн twin `ReminderSuggestion` в playbook §4. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
