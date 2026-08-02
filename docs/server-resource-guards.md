@@ -2,6 +2,8 @@
 
 _Created: 29-07-2026 · Last updated: 02-08-2026_
 
+> **Язык для человека:** разделы «что делать / чего не делать» (профилактика, запреты, runbook для Ивана/MG) — **всегда по-русски**. Технические идентификаторы, пути и shell-команды можно оставлять как есть.
+
 Разбор зависаний samskrte.ru 23–24.07 и 28–29.07.2026 и перечень предохранителей,
 поставленных на прод 29-07-2026. Диагностика — Opus 5 (`claude-opus-5[1m]`),
 handoff [H1904](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1904-Opus_Systema-Sanscriticum_server-oom-scheduler-pileup-guards_29.07.26.md).
@@ -546,54 +548,56 @@ rm /var/www/html/storage/auto_deploy.disabled         # снять предох�
 cat /var/www/html/storage/app/server_guards/crontab-root.installed  # снимок root-cron для probe
 ```
 
-### 8.1 Worked case — tracked dirty → soft-guards (01-08-2026)
+### 8.1 Разбор случая — tracked dirty → soft-guards (01-08-2026)
 
-**Not an outage.** Soft TG title:
-`Кабинет: soft-сбой (guards)` with lines like
-`guards/auto-deploy: … [blocked-preflight]` and
+**Это не падение кабинета.** В soft-TG заголовок
+`Кабинет: soft-сбой (guards)` и строки вида
+`guards/auto-deploy: … [blocked-preflight]`,
 `tracked dirty … config/marathon_landing_copy.php`.
-Homepage/cabinet HTTP can stay 200; critical «кабинет упал» is a different path.
+Главная и кабинет могут отдавать 200; critical «кабинет упал» — другой путь.
 
-**What happened**
+**Что случилось**
 
-1. **19:28Z** — someone edited tracked
+1. **19:28Z** — на проде правили tracked
    [`config/marathon_landing_copy.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon_landing_copy.php)
-   on prod (honest post-5 / Sacred Geography testimonial framing).
-2. **19:30Z** — root auto-deploy tried `852da14b` → later main; dirty-gate failed
-   because working tree **≠** then-`origin/main` →
-   `storage/auto_deploy.disabled` with `[blocked-preflight]`, HEAD unmoved, health clean.
-3. Later [#1045](https://github.com/gasyoun/Systema-Sanscriticum/pull/1045) landed on
-   `main` with the **same** text → dirty became `git diff origin/main -- <file>` empty.
-4. Recovery: confirm match → `rm storage/auto_deploy.disabled` → `bash deploy.sh`
-   (H2066 auto-discards origin-equal dirty, ff-only pull). HEAD advanced to
-   `447bc544`; `guards:verify` + `cabinet:probe` green.
+   (честный framing post-5 / отзыв «Сакральная география»).
+2. **19:30Z** — root auto-deploy (`852da14b` → main) упёрся в dirty-gate:
+   рабочее дерево **≠** тогдашнему `origin/main` →
+   `storage/auto_deploy.disabled` с `[blocked-preflight]`, HEAD не сдвинулся, health чист.
+3. Позже [#1045](https://github.com/gasyoun/Systema-Sanscriticum/pull/1045) на
+   `main` с **тем же** текстом → `git diff origin/main -- <file>` стал пустым.
+4. Восстановление: убедиться, что dirty = origin → `rm storage/auto_deploy.disabled` →
+   `bash deploy.sh` (H2066 сам сбрасывает dirty, совпадающий с origin). HEAD →
+   `447bc544`; `guards:verify` + `cabinet:probe` зелёные.
 
-**Agent ladder (repeat this class)**
+**Что делать (человеку / агенту) — лестница**
 
 ```sh
 ssh -o BatchMode=yes -o ConnectTimeout=10 root@193.232.229.92
 cd /var/www/html
-cat storage/auto_deploy.disabled          # expect [blocked-preflight] / reason
+cat storage/auto_deploy.disabled          # ждать [blocked-preflight] / причину
 git status --porcelain --untracked-files=no
 git fetch origin
-git diff origin/main -- <dirty-file>      # empty → safe path below
-# if empty (dirty == origin/main):
+git diff origin/main -- <грязный-файл>    # пусто → безопасный путь ниже
+# если пусто (dirty == origin/main):
 rm -v storage/auto_deploy.disabled
 bash deploy.sh
 sudo -u www-data php artisan guards:verify
 sudo -u www-data php artisan cabinet:probe
-# if NOT empty: do NOT rm fuse — PR the unique hotfix or stash/checkout, then deploy
+# если НЕ пусто: fuse НЕ снимать вслепую — сначала PR уникального hotfix
+# или stash/checkout, потом deploy
 ```
 
-**Prevention**
+**Что нужно и чего не нужно делать человеку**
 
-| Need | Do this | Not this |
+| Нужно | Делать так | Не делать |
 |---|---|---|
-| Landing / channel copy | PR → `main` → auto-deploy | `nano config/*.php` on VPS |
-| Testimonial quote | env `MARATHON_TESTIMONIAL` / MarketingSetting | tracked config edit |
-| Legal PDFs | `public/docs/*.pdf` (allowed dirty) | other tracked paths |
+| Текст лендинга / постов в канал | PR → `main` → auto-deploy | `nano config/*.php` на VPS |
+| Цитата отзыва | env `MARATHON_TESTIMONIAL` / MarketingSetting | правка tracked `config/` на проде |
+| PDF оферты / политики | только `public/docs/*.pdf` (разрешённый dirty) | любые другие tracked-пути на проде |
+| Снять soft-алерт | разобрать fuse, затем `rm …/auto_deploy.disabled` + deploy | удалять fuse, не читая причину и без smoke 200 |
 
-Class write-up: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md).
-Danger row: [Uprava DANGER_FACTS — Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
+Класс: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md).
+Danger: [Uprava DANGER_FACTS — Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
 
 _Dr. Mārcis Gasūns_
