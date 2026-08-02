@@ -662,4 +662,22 @@ return [
      | docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
      */
     'paypal_subscriptions' => (bool) env('PAYPAL_SUBSCRIPTIONS_ENABLED', false),
+
+    /*
+     | «Старт чтения» — Akro-style 5-week paid cohort pilot (H2105, D11: per-cohort
+     | entitlement, NEVER a global SRS_ENABLED=true flip). No new money system:
+     | the cohort is an ordinary Course+Tariff sold through the existing generic
+     | checkout (ShopController/CheckoutController/PaymentController) and unlocked
+     | by the existing PaymentObserver::grantAccess() course_group pivot — see
+     | App\Support\StartChteniyaCohort. This flag ONLY gates the cohort
+     | *entitlement* helper (used by sibling handoffs H2106/H2110/H2111 to unlock
+     | multi-pack reader routes / cohort SRS deck): while OFF, a paid student is
+     | still enrolled in the course normally, but StartChteniyaCohort::hasEntitlement()
+     | returns false — a deploy-inert kill-switch before the pilot launches.
+     | Course/Tariff/Group price and dates are human ops (Filament), never invented
+     | here — see docs/PLAN_AKRO_START_CHTENIYA_2026.md D6.
+     | Включение: START_CHTENIYA_COHORT_ENABLED=true + config:cache after ops has
+     | created the Course/Tariff/Group rows.
+     */
+    'start_chteniya_cohort' => (bool) env('START_CHTENIYA_COHORT_ENABLED', false),
 ];
