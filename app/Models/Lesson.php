@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -167,6 +168,12 @@ class Lesson extends Model
         return $this->hasMany(ContentCandidate::class);
     }
 
+    /** H1991 (K2): lesson-tied SRS deck migrated from `flash_cards` JSON. */
+    public function srsDeck(): HasOne
+    {
+        return $this->hasOne(SrsDeck::class, 'lesson_id');
+    }
+
     // ===================================================================
     // МАТЕРИАЛЫ УРОКА — единый источник правды (для статистики/витрины).
     // PHP-аксессоры используют колонки модели; query-скоупы дублируют ту
@@ -252,6 +259,35 @@ class Lesson extends Model
     public function hasFlashcards(): bool
     {
         return is_array($this->flash_cards) && count($this->flash_cards) > 0;
+    }
+
+    /**
+     * H1991 dual-read: prefer the migrated SRS deck's cards over the legacy
+     * `flash_cards` JSON once `srs:migrate-lesson-flash-cards` has run for
+     * this lesson; fall back to JSON (not yet migrated) otherwise. The JSON
+     * column stays intact during this window (see
+     * docs/ARCHITECTURE_SYSTEMA_KOLODA_CONTENT.md § Lesson reconciliation).
+     *
+     * @return list<array{front:string,back:string}>
+     */
+    public function effectiveFlashCards(): array
+    {
+        $srsCards = $this->srsDeck?->cards;
+        if ($srsCards !== null && $srsCards->isNotEmpty()) {
+            return $srsCards
+                ->map(fn (SrsCard $card) => [
+                    'front' => (string) ($card->fields['front'] ?? ''),
+                    'back' => (string) ($card->fields['back'] ?? ''),
+                ])
+                ->all();
+        }
+
+        return array_map(
+            fn ($item) => is_array($item) && array_key_exists('front', $item)
+                ? ['front' => (string) $item['front'], 'back' => (string) ($item['back'] ?? '')]
+                : ['front' => (string) $item, 'back' => ''],
+            (array) ($this->flash_cards ?? [])
+        );
     }
 
     /** Покрытие материалами = видео ИЛИ вложения ИЛИ транскрипт. ДЗ/флешкарты не учитываются. */
