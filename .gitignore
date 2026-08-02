@@ -61,3 +61,7 @@ tinker-*.txt
 
 # Личная промпт-заметка (scratch), не проектный файл — не коммитится
 /docs/fable5.md
+
+# Local MCP / agent index (machine-local; dirty-tree-sweep 02-08-2026)
+.repowise/
+.claude/CLAUDE.md
