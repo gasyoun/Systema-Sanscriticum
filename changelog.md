@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Красный `main`: тест удаления реплики не учитывал аудит-отметку, которую оставляет [#1033](https://github.com/gasyoun/Systema-Sanscriticum/pull/1033).** Джоб «PHP 8.3 — tests» падал на `HomeworkFlowTest::student_can_delete_own_outdated_comment_while_on_review` («Failed asserting that 2 is identical to 1»), воспроизводился детерминированно и **в изоляции** — то есть это не зависимость от порядка тестов. Причина — устаревшее утверждение, а не дефект продукта: [#1030](https://github.com/gasyoun/Systema-Sanscriticum/pull/1030) добавил и удаление, и проверку «строк осталось 1», а пришедший позже #1033 научил `deleteStudentComment()` звать `recordDeletionNote()`, которая кладёт служебную реплику в тот же тред — сырой счёт строк остаётся 2. Отметка **намеренная** (аудит-след; `deleteStudentComment` даже `abort_if`-ает на `TYPE_MESSAGE`, чтобы ученик её не стёр), поэтому чинится тест. Вместо ослабления до «2» пиним раздельно и **по типу**: осталась ровно одна реплика ученика (`TYPE_SUBMISSION`) и записана ровно одна служебная отметка (`TYPE_MESSAGE`) — утверждений 7 → 9, то есть строже, и поведение #1033 теперь закрыто тестом, чего раньше не делал никто. [#1063](https://github.com/gasyoun/Systema-Sanscriticum/pull/1063). Executor: Opus 5 1M (`claude-opus-5[1m]`).
+
 ## [1.83.0] - 2026-08-02
 
 ### Added
