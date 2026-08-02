@@ -2,6 +2,8 @@
 
 _Created: 01-08-2026 · Last updated: 02-08-2026_
 
+> **См. также:** [homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) — серия про ДЗ.
+
 Черновики для канала [@samskrte](https://t.me/samskrte) и учебных чатов
 студентов. Вставляются **вручную**. Стиль как у
 [lila-telegram-posts](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/lila-telegram-posts.md)
@@ -18,9 +20,10 @@ _Created: 01-08-2026 · Last updated: 02-08-2026_
 [docs/student-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md) ·
 [resources/knowledge/faq.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/knowledge/faq.md) § «Личный кабинет»
 
-Серия **не** дублирует уже готовые посты про [карточки](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/srs-telegram-posts.md)
-и [игры `/lila`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/lila-telegram-posts.md) —
-только короткий указатель в посте 9.
+Серия **не** дублирует уже готовые посты про [карточки](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/srs-telegram-posts.md),
+[игры `/lila`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/lila-telegram-posts.md)
+и [домашние задания](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) —
+только короткий указатель в посте 9 (практика); ДЗ — отдельная серия.
 
 **Порядок в учебном чате (важно):** сначала **0A → 0B → 0C** (ментальная модель:
 есть ли кабинет, нет «Регистрации», откуда уроки), потом 1–10. В канале можно

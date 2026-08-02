@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Homework Telegram series.** [marketing/homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) — pin 0′, posts 0A–0C + statuses/files/FAQ; grounded in STUDENT_HOMEWORK_GUIDE + `/faq/dz`. Study-chat calendar. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.82.1] - 2026-08-02
 
 ### Changed
