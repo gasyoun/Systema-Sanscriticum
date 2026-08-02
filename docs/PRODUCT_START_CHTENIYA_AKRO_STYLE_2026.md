@@ -1,10 +1,11 @@
-_Created: 01-08-2026 · Last updated: 01-08-2026_
+_Created: 01-08-2026 · Last updated: 02-08-2026_
 
 # PRODUCT — «Старт чтения» (Akro-style 5-week pilot) · Systema register
 
-**Status:** planned product packaging — **not live in code yet.** This file is the
-**Systema-local** product register so agents and ops do not treat the offer as
-undocumented ambient context.
+**Status:** partly in code, **inert on prod.** H2105 landed the money contour and
+H2110 the in-cabinet reader; both sit behind flags that default OFF, so nothing is
+student-visible until ops enables them. This file is the **Systema-local** product
+register so agents and ops do not treat the offer as undocumented ambient context.
 
 | Field | Value |
 |---|---|
@@ -45,7 +46,7 @@ Do not re-derive architecture here. Execute from:
 | Cohort funnel: SKU + enrollment + Tochka grant | Systema | [H2105](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2105-Sonnet_Systema-Sanscriticum_start-chteniya-cohort-funnel_01.08.26.md) | ❌ not started — money-contour, human merge |
 | Wire freeze packs + deep links + cohort SRS | Systema | [H2106](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2106-Sonnet_Systema-Sanscriticum_start-chteniya-pack-wire-srs_01.08.26.md) | ❌ blocked on H2105 + kosha freeze |
 | Progress + teacher stalled-lemma view | Systema | [H2107](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2107-Sonnet_Systema-Sanscriticum_start-chteniya-progress-teacher_01.08.26.md) | ❌ Wave 2 |
-| Multi-pack `reading_pack` import | Systema | [H2110](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2110-Opus_Systema-Sanscriticum_start-chteniya-reading-pack-import_01.08.26.md) | ❌ Wave 2 |
+| Multi-pack `reading_pack` import | Systema | [H2110](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2110-Opus_Systema-Sanscriticum_start-chteniya-reading-pack-import_01.08.26.md) | ✅ shipped — `hitopadesa-0` vendored from the H2109 freeze (sha256-pinned) and readable at `/dvaram/reading/{slug}` under `StartChteniyaCohort::hasEntitlement()`; both flags default OFF. `subhashita-beginner` deliberately NOT imported (second schema — see below) |
 | Tap-token morph + RU gloss + add-to-SRS | Systema | [H2111](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2111-Opus_Systema-Sanscriticum_start-chteniya-tap-token-ui_01.08.26.md) | ❌ Wave 2 |
 
 Sibling (non-Systema) wave-1 pieces:
@@ -77,6 +78,19 @@ Same schema as vendored Nala-1 / kosha `reading/data/{slug}.json`:
 - `sentences[]` → `tokens[]` with `form`, `lemma`, `upos`, `morph`, `gloss`, optional `gloss_ru`
 
 **Do not invent a second schema.** Pin freeze copies with `MANIFEST.json` (sha256 + built date).
+
+**H2110 held that line, and it cost a pack.** The H2109 freeze also pins
+`subhashita-beginner`, whose shape is `sayings[]` → `lines[].chunks[]` with
+`t`/`lemma_slp1`/`gloss_ru` triples — **not** `sentences[]`/`tokens[]`. The freeze
+manifest's own `adapter_note` says an importer must adapt or normalize it rather than
+introduce a second schema silently. H2110's acceptance was `hitopadesa-0` in the cabinet
+and its stated failure mode was "second pack schema", so that pack is **not vendored at
+all** rather than half-imported: the adapter is a separate, visible piece of work, not a
+side effect of a reader route. Vendoring is done by
+[`scripts/vendor_cohort_start_chteniya_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py),
+which verifies every file against the freeze's own sha256 + byte count **before** writing
+and re-verifies with `--check` (H2129 had to correct two stale MANIFEST hashes; that check
+is what catches the class).
 
 ### Cohort entitlement
 

@@ -1,0 +1,10 @@
+{
+  "scenario": "diverging_dirty_plus_soft_breaker",
+  "status": "needs_human",
+  "exit_code": 1,
+  "breaker_present_after_dry_run": true,
+  "diverging_contains": "config/copy.php",
+  "action_types": ["diverging_dirty"],
+  "all_actions_applied_false": true,
+  "notes": "Unique hotfix content; fuse stays; never discard diverging"
+}

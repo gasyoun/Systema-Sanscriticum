@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
+use App\Models\CertificateMilestone;
 use App\Models\Course;
 use App\Models\User;
 use App\Services\CertificateService;
@@ -131,6 +132,27 @@ class CertificateResource extends Resource
                         $set('course_title', Course::find($state)?->title);
                     }),
 
+                // 2a. Веха (опционально): привязка к автовыдаче. При выборе
+                // подставляет своё название/шаблон — их можно поправить ниже.
+                Forms\Components\Select::make('certificate_milestone_id')
+                    ->label('Веха (автовыдача)')
+                    ->options(fn (Forms\Get $get) => CertificateMilestone::query()
+                        ->where('course_id', $get('course_id'))
+                        ->orderBy('start_block')
+                        ->pluck('title', 'id')
+                        ->all())
+                    ->visible(fn (Forms\Get $get) => $get('course_id')
+                        && CertificateMilestone::where('course_id', $get('course_id'))->exists())
+                    ->live()
+                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                        $milestone = CertificateMilestone::find($state);
+                        if ($milestone) {
+                            $set('course_title', $milestone->resolvedCertificateTitle());
+                            $set('template', $milestone->template);
+                        }
+                    })
+                    ->helperText('Ручной сертификат по вехе. Пусто — обычная ручная выдача.'),
+
                 // 3. ФИО, как оно будет напечатано в сертификате (по умолчанию из профиля).
                 Forms\Components\TextInput::make('student_name')
                     ->label('ФИО в сертификате')
@@ -187,6 +209,10 @@ class CertificateResource extends Resource
                 Tables\Columns\TextColumn::make('course.title')
                     ->label('Курс')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('milestone.title')
+                    ->label('Веха')
+                    ->placeholder('вручную')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('template')
                     ->label('Шаблон')
                     ->formatStateUsing(fn ($state) => Certificate::TEMPLATES[$state]['label'] ?? $state)

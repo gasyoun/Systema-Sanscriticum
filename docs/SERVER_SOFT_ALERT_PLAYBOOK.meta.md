@@ -1,6 +1,6 @@
 # Metadoc — SERVER_SOFT_ALERT_PLAYBOOK.md
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 02-08-2026 (H2187 fixtures)_
 
 | Field | Value |
 |---|---|
@@ -13,7 +13,8 @@ _Created: 02-08-2026 · Last updated: 02-08-2026_
 
 1. Wire incident-log append from `ops:soft-remediate` JSON (optional).  
 2. Add more historical rows once recovered from `auto_deploy.log`.  
-3. Keep catalog tags in sync with `ServerGuardsAuditor` + `systema-auto-deploy-run.sh`.
+3. Keep catalog tags in sync with `ServerGuardsAuditor` + `systema-auto-deploy-run.sh`.  
+4. ~~Dry-run fixtures + operator smoke one-liner~~ — done H2187 (`tests/fixtures/soft_remediate/`, playbook §4.0).
 
 ## Limitations
 
@@ -30,6 +31,7 @@ _Created: 02-08-2026 · Last updated: 02-08-2026_
 
 | Date | Change | Who |
 |---|---|---|
+| 02-08-2026 | Dry-run fixtures + SoftRemediateDryRunFixturesTest + §4.0 smoke one-liner | Grok 4.5 (`grok-4.5`) H2187 |
 | 02-08-2026 | Initial playbook + catalog + incident log skeleton | Grok 4.5 (`grok-4.5`) H2148 |
 
 _Dr. Mārcis Gasūns_

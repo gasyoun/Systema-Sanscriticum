@@ -43,6 +43,21 @@ class Group extends Model
         return $this->belongsTo(Intake::class);
     }
 
+    /**
+     * Заявки листа, привязанные к этой группе (до и во время набора).
+     * Стабильный ID группы = primary key + slug (пока status=forming).
+     */
+    public function waitlistEntries(): HasMany
+    {
+        return $this->hasMany(WaitlistEntry::class);
+    }
+
+    /** Публичный стабильный идентификатор для кураторов / листов (slug или id). */
+    public function publicCode(): string
+    {
+        return filled($this->slug) ? (string) $this->slug : (string) $this->id;
+    }
+
     // 2. Магия автоматического заполнения
     protected static function booted()
     {

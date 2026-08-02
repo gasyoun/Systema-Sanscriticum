@@ -113,6 +113,10 @@ class MarketingSetting extends Model
         // --- НАБОР КУРСОВ: РАССЫЛКА О НЕДОБОРЕ (H162) ---
         'recruitment_notify_enabled',
         'recruitment_notify_lead_days',
+
+        // --- АВТОВЫДАЧА СЕРТИФИКАТОВ ПО ВЕХАМ ---
+        'certificate_auto_issue_enabled',
+        'certificate_auto_issue_lookback_days',
     ];
 
     protected $casts = [
@@ -145,6 +149,8 @@ class MarketingSetting extends Model
         'debtors_notify_years' => 'array',
         'recruitment_notify_enabled' => 'boolean',
         'recruitment_notify_lead_days' => 'integer',
+        'certificate_auto_issue_enabled' => 'boolean',
+        'certificate_auto_issue_lookback_days' => 'integer',
         'reminder_detection_enabled' => 'boolean',
         'promise_suggestion_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',

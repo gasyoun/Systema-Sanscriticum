@@ -22,12 +22,15 @@ class Certificate extends Model
         'number',
         'file_path',
         'issued_at', // <-- ИСПРАВЛЕНО: добавлена буква 'd'
+        'certificate_milestone_id',
+        'notified_at',
     ];
 
     protected $casts = [
         'score_clarity' => 'float',
         'score_letters' => 'float',
         'score_flow' => 'float',
+        'notified_at' => 'datetime',
     ];
 
     /**
@@ -162,5 +165,14 @@ class Certificate extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * Веха автовыдачи, породившая сертификат. NULL — ручная выдача
+     * (форма или «Выдать группе»), поведение которой не меняется.
+     */
+    public function milestone()
+    {
+        return $this->belongsTo(CertificateMilestone::class, 'certificate_milestone_id');
     }
 }

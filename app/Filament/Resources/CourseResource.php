@@ -188,6 +188,13 @@ class CourseResource extends Resource
                                     ->default(false)
                                     ->onColor('warning')
                                     ->inline(false),
+
+                                Forms\Components\Toggle::make('never_repeat')
+                                    ->label('Живой повтор не планируется')
+                                    ->helperText('Известно заранее: живой поток больше не набираем. Куратор говорит «повтора не будет, есть запись» — не «уточню».')
+                                    ->default(false)
+                                    ->onColor('danger')
+                                    ->inline(false),
                             ]),
 
                         // БЛОК: КАТЕГОРИИ И ФОРМАТ
@@ -521,6 +528,7 @@ class CourseResource extends Resource
         return [
             CourseResource\RelationManagers\FaqsRelationManager::class,
             CourseResource\RelationManagers\TestimonialsRelationManager::class,
+            CourseResource\RelationManagers\CertificateMilestonesRelationManager::class,
         ];
     }
 

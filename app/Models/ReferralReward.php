@@ -22,10 +22,12 @@ class ReferralReward extends Model
         'referred_id',
         'payment_id',
         'amount',
+        'referred_amount',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'referred_amount' => 'decimal:2',
     ];
 
     public function referrer(): BelongsTo

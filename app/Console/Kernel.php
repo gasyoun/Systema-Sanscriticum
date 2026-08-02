@@ -146,6 +146,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('notify-forming-shortfall');
 
+        // Автовыдача сертификатов по вехам курсов (блок end_block закончился) +
+        // уведомление студентов. Гейт (certificate_auto_issue_enabled), lookback
+        // и дедуп (unique user+course+milestone, notified_at) — внутри команды.
+        $schedule->command('certificates:issue-milestones')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('issue-milestone-certificates');
+
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).
         $schedule->command('classes:remind-upcoming')

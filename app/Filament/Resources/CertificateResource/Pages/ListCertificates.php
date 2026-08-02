@@ -5,11 +5,15 @@ namespace App\Filament\Resources\CertificateResource\Pages;
 use App\Filament\Resources\CertificateResource;
 use App\Jobs\GenerateCertificatesArchive;
 use App\Models\Certificate;
+use App\Models\CertificateMilestone;
 use App\Models\Course;
 use App\Models\Group;
+use App\Services\CertificateIssuedNotifier;
+use App\Services\MilestoneCertificateIssuer;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords; // Подключаем нашу Job
@@ -128,6 +132,80 @@ class ListCertificates extends ListRecords
                     Notification::make()
                         ->title('Успешно!')
                         ->body("Выдано новых сертификатов: $count")
+                        ->success()
+                        ->send();
+                }),
+
+            // 1a. КНОПКА: ВЫДАТЬ ПО ВЕХЕ СЕЙЧАС — ручной запуск автовыдачи, не
+            // дожидаясь ежедневной certificates:issue-milestones. Право на
+            // сертификат (оплата блоков, активный состав групп) проверяет
+            // MilestoneCertificateIssuer — здесь только выбор вехи и отчёт.
+            Actions\Action::make('issue_milestone')
+                ->label('Выдать по вехе')
+                ->icon('heroicon-o-flag')
+                ->color('warning')
+                ->form([
+                    Select::make('course_id')
+                        ->label('Курс')
+                        ->options(static::courseOptions())
+                        ->required()
+                        ->searchable()
+                        ->preload()
+                        ->live(),
+
+                    Select::make('milestone_id')
+                        ->label('Веха')
+                        ->options(fn (Get $get) => CertificateMilestone::query()
+                            ->where('course_id', $get('course_id'))
+                            ->orderBy('start_block')
+                            ->pluck('title', 'id')
+                            ->all())
+                        ->required()
+                        ->helperText('Получат оплатившие блоки вехи участники активных групп курса, у которых сертификата ещё нет. Уведомление уйдёт сразу.'),
+                ])
+                ->action(function (array $data) {
+                    // Серверная защита от чужого course_id через POST (зеркалит issue_bulk).
+                    $user = auth()->user();
+                    if ($user?->isTeacher()) {
+                        $owns = Course::query()
+                            ->forTeacher($user->teacher_id)
+                            ->whereKey($data['course_id'])
+                            ->exists();
+                        if (! $owns) {
+                            Notification::make()->title('Этот курс не закреплён за вами')->danger()->send();
+
+                            return;
+                        }
+                    }
+
+                    $milestone = CertificateMilestone::query()
+                        ->where('course_id', $data['course_id'])
+                        ->find($data['milestone_id']);
+                    if (! $milestone) {
+                        Notification::make()->title('Веха не найдена')->danger()->send();
+
+                        return;
+                    }
+
+                    if ($milestone->template === 'sanka') {
+                        Notification::make()
+                            ->title('Экзаменационный шаблон выдаётся только вручную')
+                            ->body('«Санка» требует баллов экзамена — создайте сертификаты через форму.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    $issued = app(MilestoneCertificateIssuer::class)
+                        ->issueForMilestone($milestone, force: true);
+
+                    $notifier = app(CertificateIssuedNotifier::class);
+                    $issued->each(fn (Certificate $c) => $notifier->notify($c));
+
+                    Notification::make()
+                        ->title('Готово')
+                        ->body("Выдано новых сертификатов: {$issued->count()}")
                         ->success()
                         ->send();
                 }),

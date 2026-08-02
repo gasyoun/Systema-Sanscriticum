@@ -1,6 +1,6 @@
 # GetCourse-parity — production spec (the R29-equivalent for the parity programme)
 
-_Created: 18-07-2026 · Last updated: 29-07-2026_
+_Created: 18-07-2026 · Last updated: 02-08-2026_
 
 The production ruling of the getcourse-parity programme, required by **R-1**
 ([PLAN §1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md)):
@@ -168,10 +168,13 @@ is **stale against the tree**, and a builder who trusts it will be wrong twice:
   stages are now DB rows in `lead_stages`, seeded by its create-migration and reachable via
   `Lead::statuses()` / `finalStatuses()` / `firstStageKey()`. There is no `stage_id` — `leads.status`
   is a string joined to `lead_stages.key`.
-- **"auto-convert on payment" does not hold on the main path.** `Lead::markConverted()` is called
-  from exactly three places, all in `Payment.php`: `processDeposit()`, `processTrial()`,
-  `processMarathonPaid()`. **A plain course payment does not convert its lead.** A `Deal` bridge
-  keyed on `lead_id` must not assume the lead's status reflects an ordinary purchase.
+- **"auto-convert on payment" does not hold on the main path by default.** `Lead::markConverted()`
+  is always called from deposit / trial / marathon paid paths (`Payment::markLinkedLeadConverted`).
+  **A plain course payment converts its lead only when** `features.lead_converted_at_on_course_paid`
+  is ON (env `LEAD_CONVERTED_AT_ON_COURSE_PAID`, default **OFF** — H2186; closes NOBORING Rate B
+  instrumentation gap without inventing product conversion). With the flag OFF, prod behaviour is
+  unchanged. A `Deal` bridge keyed on `lead_id` must not assume the lead's status reflects an
+  ordinary purchase unless that flag is deliberately enabled.
 
 Neither correction changes the invariant; both change what a builder must not assume while honouring it.
 
@@ -253,8 +256,7 @@ Per H438: **open `Lead`s are not mass-converted.** A `Deal` is created going for
 
 ## 4. GC-C2 — production detail (manager sales attribution)
 
-Small ticket, one real design problem. Sonnet tier — **except** that §4.1 must be ruled by a human
-before code (§7 F5).
+Small ticket, one real design problem. Sonnet tier. **F5 (a) join path is RULED 02-08-2026** (`payments.created_by_user_id` — see below). **F5 (b) visibility** still blocks a full scoreboard ship if managers are to see their own rows (§7 F5).
 
 ### 4.1 The join problem — there is no manager column on `payments`
 
@@ -267,8 +269,14 @@ each candidate path is defective in a different way:
 | `payments.user_id` → `users.lead_id` → `leads.assigned_to` | column exists | `users.lead_id` is set by `AttributionService` via **email match**, so attribution is only as good as that match. **Cheapest structural extension** — the channel breakdown already does `leftJoin('users', …)`. |
 | `payments.created_by_user_id` | column exists | **Blame, not ownership.** Deliberately non-fillable; `null` for every self-serve checkout and webhook order; has **no read site anywhere** in the app. |
 
-This is a genuine fork about what "the manager who closed the sale" *means*, not an implementation
-detail — §7 F5. **Do not pick a path in code before it is ruled.**
+**✅ F5 (a) RULED 02-08-2026 (MG):** the manager of a sale is `payments.created_by_user_id` — *who created the payment row* (staff blame column), not `leads.assigned_to` / `deals.assigned_to` and not the user→lead email-match path.
+
+Build implications (honest, not soft-pedalled):
+- Self-serve checkout and webhook-created payments leave `created_by_user_id` **NULL** — those rows bucket as **unassigned** on the scoreboard by design under this ruling.
+- The column is deliberately non-fillable today and has had zero report read-sites; the GC-C2 page is the first consumer. Filling discipline (managers creating/marking payments in admin) is what makes the chart non-empty — not `Deal.assigned_to` fill from H2185.
+- Rejected for GC-C2 numerator: `payments.lead_id → leads.assigned_to` (near-empty by construction on conversion-eligible tariffs) and `payments.user_id → users.lead_id → assigned_to` (email-match).
+
+F5 **(b) visibility** (who may open the page / see whose rows) remains **open** — still a human call.
 
 ### 4.2 What the extension costs once the path is ruled — very little
 
@@ -450,12 +458,9 @@ as drawn, so this is not purely a DRY question. Downstream of F2.
 Small, but it is exactly the kind of silent divergence that produces a double-close or a missed
 close under retry.
 
-**F5 · GC-C2 — what "the manager who closed the sale" means, and who may see the scoreboard.** Two
-halves of one ruling. (a) Which join path defines attribution — all three are defective in different
-ways (§4.1), and the roadmap's implied `payments.lead_id` path is near-empty by construction.
-(b) `OrderPaymentConversion` is gated to ADMIN + ACCOUNTANT with `MANAGER` excluded by a test; a
-manager scoreboard on that gate is invisible to its own subjects. Whether managers see their own row,
-everyone's, or none is a management decision, not an engineering one.
+**F5 · GC-C2 — what "the manager who closed the sale" means, and who may see the scoreboard.** Two halves.
+- **(a) Join path — ✅ RULED 02-08-2026 (MG):** `payments.created_by_user_id` (*who created the payment row*). See §4.1 for caveats (self-serve/webhook → unassigned). Not `assigned_to` on Lead/Deal for the conversion scoreboard under this ruling.
+- **(b) Visibility — still OPEN:** `OrderPaymentConversion` is gated to ADMIN + ACCOUNTANT with `MANAGER` excluded by a test. Whether managers see their own row, everyone's, or none remains a human call before treating the scoreboard as manager-facing.
 
 **F6 · GC-C3 — reuse `crm_reminders` or mint a new flag. ✅ RESOLVED 29-07-2026 (H1836) — new flag.**
 The flag exists and today gates
@@ -560,8 +565,8 @@ proximity to the money core, not by size.
 | 2 | GC-C1a — `deals`/`deal_stages`/`deal_transitions` migrations + `Deal` model + flag | **Opus/Fable** — new entity adjacent to the money core; §5 conventions are unforgiving | F2 |
 | 3 | GC-C1b — `DealKanbanBoard` + stage guards (§3.3) | **Sonnet 5** — a well-trodden Filament page, `LeadKanbanBoard` is the template | step 2 |
 | 4 | GC-C1c — `PaymentObserver` → `Deal` bridge (§2.3, §3.4) | **Opus/Fable** — touches the money core's event chain; **mandatory adversarial review before merge** | step 2 |
-| 5 | **Resolve F5** (attribution path + visibility) | **Human** | Blocks step 6 |
-| 6 | GC-C2 — `assigned_to` breakdown + Filament page | **Sonnet 5** — one dimension into a dimension-agnostic service | F5; step 4 if keying on `Deal` |
+| 5 | **Resolve F5** (attribution path + visibility) | **Human** | **(a) done 02-08-2026** (`created_by_user_id`); **(b) visibility still open** — blocks manager-facing ship of step 6 |
+| 6 | GC-C2 — breakdown by `payments.created_by_user_id` + Filament page (`manager_sales_report`) | **Sonnet 5** — one dimension into a dimension-agnostic service | F5(a) ruled; F5(b) if managers must see it |
 | 7 | GC-B3 finish — flag, `services.bbb`, point consumers at the abstraction, flip the roadmap row | **Sonnet 5** — mechanical, but see F8 | F8 |
 | 8 | Wave-3 opening: GC-D1 spec pass (the transcoder question, F7, is a design problem before it is a build) | **Opus/Fable** | F7 |
 

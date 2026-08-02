@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 01-08-2026_
+_Created: 01-08-2026 · Last updated: 02-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -27,21 +27,54 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 
 #### Wave 0 baseline snapshot (prod `193.232.229.92`, as_of `2026-08-01 13:25:58`)
 
-Prod was still on pre-H2094 deploy at probe time — numbers from the same filters as `dozhimBaseline` / `conversionForRange` + Lead counts (read-only tinker probe). After deploy: `php artisan dozhim:baseline --json`.
+Prod was still on pre-H2094 deploy at probe time — numbers from the same filters as `dozhimBaseline` / `conversionForRange` + Lead counts (read-only tinker probe). Re-verified after deploy with live artisan (H2188).
 
 | Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
 | 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
 
-**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay).
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, not yet enabled on prod).
+
+#### H2188 re-verify — live `dozhim:baseline --json` (prod, as_of `2026-08-02 19:26:05`)
+
+Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_prod_2026-08-02.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/dozhim_baseline_prod_2026-08-02.json). No percentages invented — table is artisan JSON verbatim.
+
+| Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** | Δ Rate A vs H2096 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 30 d | 120 | 74 | 43 | 3 | **61.7%** | 50 | 0 | **0.0%** | **−3.9 pp** |
+| 90 d | 567 | 482 | 43 | 42 | **85.0%** | 216 | 5 | **2.3%** | **−0.7 pp** |
+
+**Drift read (not a product regression claim):** rolling 30d window lost ~5 paid rows net and gained +3 pending; Rate A 30d slipped from the post-dozhim band (~66%) to **61.7%** (still above red `CONVERSION_WARN_PCT` 50, just under green 63). 90d nearly flat. Rate B unchanged story (sparse / flag OFF). Keep H2096 as the Wave 0 freeze; use this table as the current live check-in.
+
+#### Rate B instrumentation residual (H2186, 02-08-2026)
+
+**Why Rate B is ~0%:** not product failure. Root cause (code + GETCOURSE_PARITY §2.4):
+
+| Path | Sets `payment.lead_id`? | Calls `Lead::markConverted()`? |
+|---|---|---|
+| Deposit / trial checkout | Yes (email match) | Yes on paid webhook |
+| Marathon paid | Yes (enrollment) | Yes |
+| **Ordinary course checkout** | **No** (until flag ON) | **No** by default |
+
+**Owner path shipped (code default still false; env is the deploy rubilnik):**
+
+1. Flag `features.lead_converted_at_on_course_paid` / env `LEAD_CONVERTED_AT_ON_COURSE_PAID` (code default **false**).
+2. `Payment::markLinkedLeadConverted()` — `lead_id` or email fallback + backfill FK.
+3. `processSuccessfulPayment` (non-conditional) calls it when flag ON.
+4. Checkout attaches `lead_id` on create only when flag ON.
+5. Tests: `tests/Feature/LeadConvertedAtOnCoursePaidTest.php`.
+
+**Prod enable (human, 02-08-2026):** on `193.232.229.92` `/var/www/html` — `.env` has `LEAD_CONVERTED_AT_ON_COURSE_PAID=true` (backup `.env.bak.h2186.20260802`), `php artisan config:cache` rebuilt; `php artisan config:show features.lead_converted_at_on_course_paid` → **true**.
+
+**Post-enable baseline** (`php artisan dozhim:baseline --json`, as_of `2026-08-02 19:26:28`): Rate A 30d **61.7%** (74/120) / 90d **85.0%** (482/567); Rate B 30d **0.0%** (0/50) / 90d **2.3%** (5/216) — still sparse, as expected (no historical backfill). Forward-looking only: Rate B numerator fills for **new** course paid events. Primary H-B targets stay on **Rate A**. Re-check after ~1 week of paid volume.
 
 #### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
 
 | Rate | «Заявка» (denominator) | Success (numerator) | Exclusions / status map |
 |---|---|---|---|
 | **A (primary)** | Real course `Payment` created in window (`is_conditional = false`) | `status IN ('paid','success')` | Excluded tariffs (env `CONVERSION_EXCLUDED_TARIFFS`, default): `Расход`, `salary_payout`, `deposit`, `trial`. Open unpaid: `pending`. Lost: `canceled` / `cancelled` / `failed`. |
-| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path — **underfilled today** (see Rate B above). |
+| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path. Deposit/trial/marathon always; **course path ON in prod** as of 02-08-2026 (H2186 env enable; code default still false). |
 
 Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (default **63**), red < `CONVERSION_WARN_PCT` (default **50**); unclosed pending after `CONVERSION_UNCLOSED_AFTER_DAYS` (default **3**).
 
@@ -51,10 +84,48 @@ Prior art: GC-C1 **shipped**. Residual for dozhim:
 
 - [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
 - [x] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment) — **done H2102** (01-08-2026; `PaymentDealBridgeObserver::openDealForIntent`, still rank-4, flag OFF)
-- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports (spec: NOT_BUILT as of last census — re-verify)
+- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports — **still NOT_BUILT** (re-verified H2185, 02-08-2026; F5(a) join = `payments.created_by_user_id` ruled 02-08-2026 MG; see § GC-C2 census below; do not tick until Filament report + `manager_sales_report` ship)
 - [x] Flag `crm_pipeline_board` remains default OFF; staging admin-on — **re-pinned H2102** (default still false; pending path gated by same flag)
 
 **Unblocks:** H-B queue has cards.
+
+#### Wave 1a census — GC-C2 `assigned_to` / manager sales attribution (H2185, 02-08-2026)
+
+**Verdict: still NOT_BUILT.** Spec row in [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) stands. This pass re-verified code + prod fill rates; it does **not** build the report.
+
+##### Code: who reads `assigned_to`?
+
+| Surface | What it does with `assigned_to` | Sales conversion / revenue attribution? |
+|---|---|---|
+| [`LeadResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/LeadResource.php) | Form select, table filter, bulk assign / take | **No** — CRM ops only |
+| [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) + support models | Support-thread assignee + "mine" tabs | **No** — support queue |
+| [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php) | `groupBy('assigned_to')` for manager digests | **No** — reminder fan-out, not conversion |
+| [`OrderPaymentConversionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) | Breakdowns `by_course`, `by_channel` only | **No** — zero `assigned_to` |
+| [`ChannelConversionReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/ChannelConversionReport.php) | UTM channel only | **No** |
+| [`WorkQueueReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/WorkQueueReport.php) | Follow-up buckets | **No** `assigned_to` grouping |
+| Filament sales pages (`OrderPaymentConversion`, `UnifiedSalesBoard`, `DealKanbanBoard`, LeadCost widgets) | — | **No** `assigned_to` references |
+| Models `Lead` / `Deal` / `FollowUpTask` | Column + `assignee()` relation | Schema only until a report joins it |
+
+**Flag census:** `manager_sales_report` is **absent** from [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) (only mentioned in roadmap/spec docs). No Filament page is gated on it.
+
+**Tree inventory (app PHP, 02-08-2026 worktree):** 10 application files mention `assigned_to` (models, Lead CRM UI, Helpdesk, RemindLeads, Support router, audit labels). **0** files under `app/Services/Reports/` mention it.
+
+##### Prod fill rate (read-only, host `193.232.229.92`, as_of `2026-08-02 18:46:31`)
+
+| Entity | Total rows | `assigned_to` NOT NULL | Fill % |
+|---|---:|---:|---:|
+| `leads` | 264 | 1 | **0.4%** |
+| `deals` | 8 | 0 | **0.0%** |
+| `follow_up_tasks` | 0 | 0 | n/a |
+
+Reproduce (prod, read-only): bootstrap Laravel on the host and count
+`Lead` / `Deal` / `FollowUpTask` rows where `assigned_to` is not null vs total.
+
+##### Implication for the open checkbox
+
+1. **Report product is still missing** — checkbox stays `[ ]` until a Filament page groups paid conversion/revenue by `Deal.assigned_to` (fallback `Lead.assigned_to`) behind `manager_sales_report`.
+2. **Even a built report would be empty-looking today** — assignee fill is near zero; building the page without an assignment-fill path first yields a wall of "unassigned". Prefer: ensure managers assign Deals/Leads (or bridge assignee on create) **with** or **before** the report UI.
+3. **Do not invent prod numbers** — table above is the only measured fill snapshot for this pass.
 
 #### Wave 1a audit — when is Deal created? (H2097, 01-08-2026)
 

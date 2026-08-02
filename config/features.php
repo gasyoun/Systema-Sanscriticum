@@ -607,6 +607,19 @@ return [
     'dozhim_queue' => (bool) env('DOZHIM_QUEUE', false),
 
     /*
+     | H2186 / NOBORING Rate B: stamp Lead.converted_at on ordinary course paid path.
+     | Deposit / trial / marathon already call markConverted always. Course checkout
+     | historically did not (GETCOURSE_PARITY_PRODUCTION_SPEC §2.4) — Rate B on prod
+     | is ~0% instrumentation gap, not true 0% lead→pay. When ON: processSuccessfulPayment
+     | resolves lead (payment.lead_id or email match) and Lead::markConverted(); checkout
+     | may also attach lead_id on create. Does not change money/access grant.
+     |
+     | ВЫКЛ по умолчанию — deploy-рубильник. Prod enable only after human review:
+     | LEAD_CONVERTED_AT_ON_COURSE_PAID=true + config:cache. Never enable in this PR.
+     */
+    'lead_converted_at_on_course_paid' => (bool) env('LEAD_CONVERTED_AT_ON_COURSE_PAID', false),
+
+    /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
      | page linking to short /lila drills — DISTINCT from the FSRS review loop
      | (srs.enabled, /dvaram/koloda) and orthogonal to it. Когда ВЫКЛ (по умолчанию):

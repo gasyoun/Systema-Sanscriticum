@@ -1,0 +1,55 @@
+{
+    "as_of": "2026-08-02 19:26:05",
+    "host": "193.232.229.92",
+    "command": "php artisan dozhim:baseline --json",
+    "handoff": "H2188",
+    "probe_model": "Grok 4.5 (grok-4.5)",
+    "windows": [
+        {
+            "days": 30,
+            "from": "2026-07-03 19:26:05",
+            "to": "2026-08-02 19:26:05",
+            "rate_a": {
+                "orders": 120,
+                "paid": 74,
+                "pending": 43,
+                "lost": 3,
+                "conversion_pct": 61.7
+            },
+            "rate_b": {
+                "leads": 50,
+                "converted": 0,
+                "conversion_pct": 0
+            }
+        },
+        {
+            "days": 90,
+            "from": "2026-05-04 19:26:05",
+            "to": "2026-08-02 19:26:05",
+            "rate_a": {
+                "orders": 567,
+                "paid": 482,
+                "pending": 43,
+                "lost": 42,
+                "conversion_pct": 85
+            },
+            "rate_b": {
+                "leads": 216,
+                "converted": 5,
+                "conversion_pct": 2.3
+            }
+        }
+    ],
+    "zayavka_definition": "Rate A «заявка» = real course Payment (not conditional; not excluded tariffs). Rate B «заявка» = Lead row created in window; converted = converted_at set on paid path.",
+    "vs_h2096": {
+        "h2096_as_of": "2026-08-01 13:25:58",
+        "h2096_method": "tinker reflection (dozhim:baseline missing on box)",
+        "drift": {
+            "rate_a_30d_pp": -3.9,
+            "rate_a_90d_pp": -0.7,
+            "rate_b_30d_pp": 0.0,
+            "rate_b_90d_pp": 0.0,
+            "notes": "Rolling window + pending +3 (40→43). Rate B still instrumentation-sparse."
+        }
+    }
+}

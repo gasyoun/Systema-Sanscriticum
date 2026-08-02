@@ -1,11 +1,11 @@
 # Architecture — PayPal Subscriptions API (H2027)
 
-_Created: 31-07-2026 · Last updated: 31-07-2026_
+_Created: 31-07-2026 · Last updated: 02-08-2026_
 
-**Status:** design of record + Phase 0 stubs (flags OFF; no live Subscriptions)  
+**Status:** design of record + P0/P1 on main (flags OFF) · **P2–P3 product-parked** (MG 02-08-2026: no PayPal Business conversion planned; diaspora remains manual claim)  
 **Handoff:** [H2027](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md)  
 **Sibling (separate lane):** [H2026 Tochka multi-mode recurring](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_TOCHKA_RECURRING_BILLING_MODES_2026.md) — **not** in this PR wave  
-**Executor / provenance:** Grok 4.5 (`grok-4.5`), 31-07-2026  
+**Executor / provenance:** Grok 4.5 (`grok-4.5`), 31-07-2026 · park note 02-08-2026  
 
 PayPal product docs: [Subscriptions](https://developer.paypal.com/docs/subscriptions/) · Product → Plan → Subscription · webhooks `BILLING.SUBSCRIPTION.*` / payment completed · pause / cancel / revise.
 
@@ -150,6 +150,8 @@ Claim path keeps `PAYPAL_CLAIM_ENABLED` / `PAYPAL_ME_LINK` / `PAYPAL_RECIPIENT` 
 ---
 
 ## 8. Production enable checklist (P3 — human only)
+
+**Parked 02-08-2026:** product is **not** converting the merchant to PayPal Business now. Do not run this checklist until that decision flips. Code stays dark (`PAYPAL_SUBSCRIPTIONS_ENABLED=false`); manual claim remains the diaspora path.
 
 1. Confirm PayPal Business can create Products/Plans/Subscriptions for target markets/currencies.
 2. Create live REST app; set `PAYPAL_CLIENT_ID` / `SECRET` / `WEBHOOK_ID`.
