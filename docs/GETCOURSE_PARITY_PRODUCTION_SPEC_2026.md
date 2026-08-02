@@ -168,10 +168,13 @@ is **stale against the tree**, and a builder who trusts it will be wrong twice:
   stages are now DB rows in `lead_stages`, seeded by its create-migration and reachable via
   `Lead::statuses()` / `finalStatuses()` / `firstStageKey()`. There is no `stage_id` — `leads.status`
   is a string joined to `lead_stages.key`.
-- **"auto-convert on payment" does not hold on the main path.** `Lead::markConverted()` is called
-  from exactly three places, all in `Payment.php`: `processDeposit()`, `processTrial()`,
-  `processMarathonPaid()`. **A plain course payment does not convert its lead.** A `Deal` bridge
-  keyed on `lead_id` must not assume the lead's status reflects an ordinary purchase.
+- **"auto-convert on payment" does not hold on the main path by default.** `Lead::markConverted()`
+  is always called from deposit / trial / marathon paid paths (`Payment::markLinkedLeadConverted`).
+  **A plain course payment converts its lead only when** `features.lead_converted_at_on_course_paid`
+  is ON (env `LEAD_CONVERTED_AT_ON_COURSE_PAID`, default **OFF** — H2186; closes NOBORING Rate B
+  instrumentation gap without inventing product conversion). With the flag OFF, prod behaviour is
+  unchanged. A `Deal` bridge keyed on `lead_id` must not assume the lead's status reflects an
+  ordinary purchase unless that flag is deliberately enabled.
 
 Neither correction changes the invariant; both change what a builder must not assume while honouring it.
 

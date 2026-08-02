@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 01-08-2026_
+_Created: 01-08-2026 · Last updated: 02-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -36,12 +36,32 @@ Prod was still on pre-H2094 deploy at probe time — numbers from the same filte
 
 **vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay).
 
+#### Rate B instrumentation residual (H2186, 02-08-2026)
+
+**Why Rate B is ~0%:** not product failure. Root cause (code + GETCOURSE_PARITY §2.4):
+
+| Path | Sets `payment.lead_id`? | Calls `Lead::markConverted()`? |
+|---|---|---|
+| Deposit / trial checkout | Yes (email match) | Yes on paid webhook |
+| Marathon paid | Yes (enrollment) | Yes |
+| **Ordinary course checkout** | **No** (until flag ON) | **No** by default |
+
+**Owner path shipped (flag OFF default — prod inert until human enables):**
+
+1. Flag `features.lead_converted_at_on_course_paid` / env `LEAD_CONVERTED_AT_ON_COURSE_PAID` (default **false**).
+2. `Payment::markLinkedLeadConverted()` — `lead_id` or email fallback + backfill FK.
+3. `processSuccessfulPayment` (non-conditional) calls it when flag ON.
+4. Checkout attaches `lead_id` on create only when flag ON.
+5. Tests: `tests/Feature/LeadConvertedAtOnCoursePaidTest.php`.
+
+**Do not treat Rate B as a live KPI until the flag is ON in prod and a post-enable `dozhim:baseline` snapshot shows a non-sparse numerator.** Primary H-B targets stay on **Rate A**. Fence: never enable this flag in a money PR without human prod enable.
+
 #### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
 
 | Rate | «Заявка» (denominator) | Success (numerator) | Exclusions / status map |
 |---|---|---|---|
 | **A (primary)** | Real course `Payment` created in window (`is_conditional = false`) | `status IN ('paid','success')` | Excluded tariffs (env `CONVERSION_EXCLUDED_TARIFFS`, default): `Расход`, `salary_payout`, `deposit`, `trial`. Open unpaid: `pending`. Lost: `canceled` / `cancelled` / `failed`. |
-| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path — **underfilled today** (see Rate B above). |
+| **B (secondary)** | `Lead` row with `created_at` in window | `converted_at` IS NOT NULL | Product mark on paid path. Deposit/trial/marathon always; **course path only if** `lead_converted_at_on_course_paid` ON (H2186; default OFF → Rate B still sparse in prod). |
 
 Targets from config (not re-derived here): green ≥ `CONVERSION_TARGET_PCT` (default **63**), red < `CONVERSION_WARN_PCT` (default **50**); unclosed pending after `CONVERSION_UNCLOSED_AFTER_DAYS` (default **3**).
 

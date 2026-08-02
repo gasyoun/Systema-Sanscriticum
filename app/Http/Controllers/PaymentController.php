@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
@@ -314,8 +315,20 @@ class PaymentController extends Controller
             }
 
             // 3. СОЗДАЕМ ПЛАТЕЖ
+            // H2186: attach newest unconverted Lead by email only when Rate B
+            // instrumentation flag is ON (default OFF — checkout otherwise unchanged).
+            $leadId = null;
+            if (config('features.lead_converted_at_on_course_paid') && filled($user->email)) {
+                $leadId = Lead::query()
+                    ->where('email', $user->email)
+                    ->whereNull('converted_at')
+                    ->latest()
+                    ->value('id');
+            }
+
             $payment = Payment::create([
                 'user_id' => $user->id,
+                'lead_id' => $leadId,
                 'course_id' => $tariff->course->id ?? null,
                 'promo_code_id' => $promo?->id,
                 'amount' => $finalPrice,
