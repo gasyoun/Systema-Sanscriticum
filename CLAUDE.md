@@ -26,6 +26,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Soft TG «Кабинет: soft-сбой (guards)» + `auto_deploy.disabled` / tracked dirty ≠ падение кабинета.**  
   **Человеку нужно:** код/тексты — PR → `main` → auto-deploy; отзыв — env/MarketingSetting; PDF — `public/docs/*.pdf`.  
   **Человеку не нужно:** править tracked (`config/`, `app/`, …) на проде.  
+  **Primary agent playbook (catalog + safe/never-auto + incident log):**  
+  [docs/SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).  
+  Safe auto: `php artisan ops:soft-remediate` (origin-equal dirty only; never blind fuse clear).  
+  Webhook→issue→agent skeleton (OFF until env set): [docs/ops/SOFT_ALERT_WEBHOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/SOFT_ALERT_WEBHOOK.md).  
   Лестница + случай 01-08-2026 (`config/marathon_landing_copy.php`) — **по-русски** в  
   [docs/server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·  
   dirty-gate: [docs/deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) ·  

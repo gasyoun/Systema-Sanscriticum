@@ -98,4 +98,14 @@ return [
         'df -h /',
         'tail -n 50 storage/logs/laravel.log',
     ],
+
+    /*
+     * H2148 C: outbound soft-alert webhook (default OFF).
+     * When set, cabinet:probe POSTs JSON after a soft-only alert passes cooldown
+     * (same gate as soft TG). n8n / GitHub / agent runner consumes it.
+     * See docs/ops/SOFT_ALERT_WEBHOOK.md.
+     */
+    'soft_webhook_url' => (string) env('SOFT_ALERT_WEBHOOK_URL', ''),
+    'soft_webhook_secret' => (string) env('SOFT_ALERT_WEBHOOK_SECRET', ''),
+    'soft_webhook_timeout' => (int) env('SOFT_ALERT_WEBHOOK_TIMEOUT', 8),
 ];
