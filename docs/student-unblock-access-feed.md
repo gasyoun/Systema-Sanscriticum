@@ -1,9 +1,12 @@
 # Разблокировка студента + лента «Проблемы со входом» (H849)
 
-_Created: 13-07-2026 · Last updated: 13-07-2026_
+_Created: 13-07-2026 · Last updated: 02-08-2026_
 
 Инструмент поддержки: увидеть, кто не может войти, и разблокировать его одним
 кликом — из админки или прямо из Telegram, минуя сломанную доставку почты.
+
+**Runbook по-русски (сценарии «не помнит email / ничего не помнит», шаблоны):**  
+[MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
 
 ## Зачем
 
@@ -64,5 +67,12 @@ _Created: 13-07-2026 · Last updated: 13-07-2026_
 Корневую причину недоставки писем (боевой SMTP / верифицированный домен
 отправителя) — это отдельная серверная задача. Инструмент даёт админу способ
 **обойти** сломанную почту вручную, пока доставка не починена.
+
+## Если ученик не помнит email
+
+Ссылка выдаётся **на найденного `User`**, не «в воздух». Сначала поиск карточки
+(ФИО, Telegram, курс, платёж). Роль `manager` **не** выдаёт ссылку — только
+`admin` / `super_admin`. Полный сценарий «ничего не помнит» — в
+[MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md).
 
 _Dr. Mārcis Gasūns_
