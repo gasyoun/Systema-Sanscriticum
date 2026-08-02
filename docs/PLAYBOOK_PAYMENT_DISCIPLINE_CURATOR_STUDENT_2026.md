@@ -19,7 +19,7 @@ Grok 4.5 (`grok-4.5`) · H2155.
 | | Сейчас (02-08-2026) | Как «починить» |
 |---|---|---|
 | ЛС ученика → `@rusamskrtam` | **Синхронизируются** в helpdesk Systema (`TelegramSupportMessage`), если `TELEGRAM_SUPPORT_ENABLED` + `telegram-support:sync` | Уже работает |
-| Фраза «оплачу 20 августа» | **Не** создаёт `PaymentPromise` / дату в **«Мои долги»** | Нужен код (см. §4) |
+| Фраза «оплачу 20 августа» | При флаге OFF — **не** создаёт; при ON → pending suggestion → approve → `PaymentPromise` (см. §4) | Флаг `promise_suggestion_detection_enabled` |
 | Дата в кабинете и «завтра срок оплаты» | Только после **«Договориться» / «Рассрочка»** в админке (или self-service переноса даты) | Куратор фиксирует руками |
 | Доступ к блокам | Оплата **или** conditional access под обещание | Не из текста TG |
 | Учебный TG-чат | Кик **вручную** из «Должники» (`@zapisi_ORSbot`) | Авто-кика при долге **нет** |
@@ -120,23 +120,24 @@ Grok 4.5 (`grok-4.5`) · H2155.
 
 ---
 
-## 4. Как «починить» Telegram → кабинет (дизайн, не в этом handoff)
+## 4. Telegram → кабинет: детектор отсрочек (live, H2156)
 
-Образец уже есть: **`reminders:detect-requests`** → `ReminderSuggestion` (pending) → куратор approve → `ScheduledReminder`.  
-То же для оплаты:
+Реализовано как twin **`reminders:detect-requests`** → `ReminderSuggestion`:
 
-1. **Детектор** (regex + опц. LLM) по `TelegramSupportMessage` + `ChatMessage`:  
-   «оплачу / отсрочка / до DD.MM / после зарплаты…».
-2. **`PaymentPromiseSuggestion`** (pending): user (если identity сведена), candidate `course_id`(s) из долгов, parsed date, snippet, confidence.
-3. **Очередь в Filament** (или баннер в helpdesk): куратор правит курс/дату/сумму → **Approve** → `PaymentPromise` (status active), **без** auto-conditional (отдельный тогл).
-4. Ученик видит дату в **«Мои долги»**; `promises:remind-tomorrow` работает как сейчас.
-5. **Не** auto-approve, **не** auto-kick, **не** auto-open full course.
+| Шаг | Путь |
+|-----|------|
+| 1 | `php artisan promises:detect-deferrals` (каждые 15 мин, Kernel) — regex + LLM (`CuratorAi`) по `ChatMessage` + `TelegramSupportMessage` |
+| 2 | Pending **`PaymentPromiseSuggestion`** (Filament → **Пользователи → «Предложения отсрочек»**) |
+| 3 | Куратор **Approve** (дата, курс, сумма, note) → `PaymentPromise` `status=active` |
+| 4 | Ученик видит дату в **«Мои долги»**; `promises:remind-tomorrow` как у любого обещания |
+| 5 | **grant_access** в modal **default OFF** — conditional access только если куратор включил тогл; 🚩 + grant → refuse grant (обещание без доступа OK) |
 
-Идентичность: `social_accounts` / `telegram_id` — без user_id suggestion только на contact; approve привязывает человека.
+**Флаг:** `MarketingSetting.promise_suggestion_detection_enabled` / дефолт **OFF**. Без включения детектор no-op.  
+**Unlinked TG:** `linked_user_id` null → skip (нет orphan promise).  
+**Multi-course:** один open debt → prefill `course_id`; несколько → null, курс обязателен на approve.  
+**Не делает:** auto-approve, auto-kick, auto-open access, installments из одного сообщения.
 
-Оценка: 1–2 сессии engineering (модель + detector + Filament + tests), money-adjacent → PR **без** auto-merge, feature-flag default OFF.
-
-**Пока кода нет — единственный надёжный путь:** ЛС → куратор → **Договориться** → кабинет.
+Ручной fallback без флага: ЛС → куратор → **Договориться** → кабинет.
 
 ---
 

@@ -494,7 +494,7 @@
 
 ### Сообщение студента в Telegram автоматически создаёт обещание / отсрочку?
 
-**Нет.** ЛС на `@rusamskrtam` попадают в helpdesk (если support-sync включён), но **не** создают `PaymentPromise`. Дата в «Мои долги» у студента появляется только после **«Договориться» / «Рассрочка»** (или self-service переноса уже существующей даты). Скрипты 1:1 и playbook: [PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md), [docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md).
+**Да, как черновик — после approve.** При включённом флаге `promise_suggestion_detection_enabled` (default **OFF**) `promises:detect-deferrals` может создать pending **`PaymentPromiseSuggestion`** из ЛС `@rusamskrtam` / веб-чата; куратор в **«Предложения отсрочек»** правит дату/курс и **Approve** → активный `PaymentPromise` (дата в «Мои долги»). Без approve и при флаге OFF — как раньше: только **«Договориться» / «Рассрочка»** (или self-service перенос уже существующей даты). Playbook §4: [PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md).
 
 ### Кнопка «Исключить из TG-чата» не видна
 

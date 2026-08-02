@@ -101,6 +101,9 @@ class MarketingSetting extends Model
         // --- ДЕТЕКТОР ПРОСЬБ «НАПОМНИТЕ МНЕ» (H187) ---
         'reminder_detection_enabled',
 
+        // --- ДЕТЕКТОР ОТСРОЧЕК ОПЛАТЫ (H2156) — default OFF (money-adjacent) ---
+        'promise_suggestion_detection_enabled',
+
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247) ---
         'support_answer_suggester_enabled',
 
@@ -143,6 +146,7 @@ class MarketingSetting extends Model
         'recruitment_notify_enabled' => 'boolean',
         'recruitment_notify_lead_days' => 'integer',
         'reminder_detection_enabled' => 'boolean',
+        'promise_suggestion_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',
         'support_ai_daily_cap' => 'integer',
         'prana_rate' => 'integer',

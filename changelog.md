@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2156: детектор отсрочек оплаты из TG/веб-чата → очередь куратора.** `PaymentPromiseSuggestion` + `promises:detect-deferrals` (regex+LLM, cursor) + Filament **«Предложения отсрочек»** (approve/dismiss). Approve → `PaymentPromise` active (update existing same course); **grant_access default OFF**; 🚩 + grant refused. Flag `promise_suggestion_detection_enabled` default **OFF**. Docs: playbook §4 live, debtors-manual FAQ. Tests: `PromiseSuggestion*` (≥12). Money-adjacent PR, no auto-merge. Executor: Grok 4.5 (`grok-4.5`) override dual-run of Sonnet-tagged handoff.
+
 ## [1.83.1] - 2026-08-02
 
 ### Added
