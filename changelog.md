@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.86.0] - 2026-08-02
+
 ### Added
 - **H1991: `Lesson.flash_cards` migrated into lesson-tied `SrsDeck`/`SrsCard` (K2 ruling, [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md)).** SRS becomes the single source of truth for lesson flashcards; `flash_cards` stays (dual-read, column not dropped). New [`LessonFlashCardsSync`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Srs/LessonFlashCardsSync.php) is the one idempotent sync path shared by the artisan command `srs:migrate-lesson-flash-cards {--dry-run}` and a new `Lesson::saved()` hook, so a later content edit never drifts from what was migrated — cards are replaced wholesale per lesson on each sync (heterogeneous JSON shapes carry no stable natural key across runs). `Lesson::srsDeck()`/`flashcardsForDisplay()` give the dual-read presentation helper, preferring the synced deck when present. Deck `visibility=private` (lesson content sits behind paid-course access, must not surface on the public/system `/koloda` hub); `language=sa` (no language field exists on `Course`/`Lesson` yet). Tests: [`MigrateLessonFlashCardsTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Srs/MigrateLessonFlashCardsTest.php) 9 green + 116 Srs + 116 Lesson regression re-run green. [PR #1080](https://github.com/gasyoun/Systema-Sanscriticum/pull/1080). Executor: Sonnet 5 (`claude-sonnet-5`).
 
