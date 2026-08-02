@@ -56,9 +56,9 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        // Бухгалтер видит студентов для сверки (read-only): создание/правка/
-        // удаление остаются за админами — он не проходит adminOnly()/canEdit().
-        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT);
+        // Бухгалтер — сверка (read-only); куратор (manager) — поиск + magic link;
+        // создание/правка/удаление — adminOnly()/canEdit().
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
     }
 
     public static function canCreate(): bool
@@ -68,7 +68,7 @@ class UserResource extends Resource
 
     public static function canView($record): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT);
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
     }
 
     // Массовое удаление студентов — только админам. Без этого override Filament
@@ -1060,15 +1060,15 @@ class UserResource extends Resource
                 // --- РАЗБЛОКИРОВАТЬ СТУДЕНТА ОДНИМ КЛИКОМ (H849) ---
                 // У приложения нет флага «бан»: мешает войти только IP-троттл
                 // (сам спадает за минуту). Реально спасает застрявшего рабочая
-                // ССЫЛКА ДЛЯ ВХОДА, которую админ передаёт студенту (в т.ч. в
-                // Telegram), минуя сломанную почту. Кнопка снимает троттл +
-                // создаёт одноразовую magic-ссылку (+ опц. сброс пароля).
+                // ССЫЛКА ДЛЯ ВХОДА, которую куратор/админ передаёт студенту
+                // (в т.ч. в Telegram), минуя сломанную почту. Кнопка снимает
+                // троттл + создаёт одноразовую magic-ссылку (+ опц. сброс пароля).
                 Tables\Actions\Action::make('unblock')
                     ->iconButton()
                     ->icon('heroicon-o-lock-open')
                     ->color('success')
                     ->tooltip('Разблокировать (ссылка для входа)')
-                    ->visible(fn () => RoleGate::adminOnly())
+                    ->visible(fn () => RoleGate::canIssueStudentLoginLink())
                     ->form([
                         Toggle::make('reset_password')
                             ->label('Также сбросить пароль')

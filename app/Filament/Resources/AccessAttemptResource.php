@@ -28,6 +28,17 @@ class AccessAttemptResource extends Resource
 
     protected static ?string $model = AccessAttempt::class;
 
+    /** Куратор (manager) видит ленту, чтобы выдать magic link; create/edit/delete — admin. */
+    public static function canViewAny(): bool
+    {
+        return RoleGate::canIssueStudentLoginLink();
+    }
+
+    public static function canView($record): bool
+    {
+        return RoleGate::canIssueStudentLoginLink();
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
 
     protected static ?string $navigationGroup = 'Пользователи';
@@ -120,7 +131,7 @@ class AccessAttemptResource extends Resource
                     ->color('success')
                     ->visible(fn (AccessAttempt $record): bool => $record->user_id !== null
                         && $record->handled_at === null
-                        && RoleGate::adminOnly())
+                        && RoleGate::canIssueStudentLoginLink())
                     ->form([
                         Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
