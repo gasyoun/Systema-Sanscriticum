@@ -28,15 +28,21 @@ _Created: 02-07-2026 · Last updated: 02-08-2026_
      будущего commit) — `git checkout HEAD -- <file>`, затем обычный pull.
    - Режим `--rollback` — dirty-gate **пропускается** (`reset --hard` сам
      снимет tracked dirty; иначе автооткат падает на том же preflight).
-   Любая другая грязь — отказ деплоить. На проде **не правят** tracked
-   `app/`/`config/` руками: только PR → `main` → auto-deploy / `deploy.sh`.
-   **Worked stop (01-08-2026):** ручной edit
+   Любая другая грязь — отказ деплоить.
+
+   **Что нужно / чего не нужно человеку на проде**
+
+   | Нужно | Не нужно |
+   |---|---|
+   | Код и тексты — только PR → `main` → auto-deploy / `deploy.sh` | Править tracked `app/` / `config/` руками на VPS (`nano`, `sed`) |
+   | Цитата отзыва — env `MARATHON_TESTIMONIAL` / MarketingSetting | Менять testimonial framing в `config/*.php` на сервере |
+   | PDF оферты/политики — `public/docs/*.pdf` | Другой tracked dirty «на минутку» |
+
+   **Случай-стоп (01-08-2026):** ручной edit
    [`config/marathon_landing_copy.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon_landing_copy.php)
-   (testimonial framing) → dirty-gate → auto-deploy
-   `storage/auto_deploy.disabled` с `[blocked-preflight]` → soft-TG
-   «Кабинет: soft-сбой (guards)» при живом HTTP. Copy/testimonial — PR или
-   env `MARATHON_TESTIMONIAL` / MarketingSetting, не `nano` на VPS.
-   Full recovery: [server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
+   → dirty-gate → fuse `storage/auto_deploy.disabled` с `[blocked-preflight]` →
+   soft-TG «Кабинет: soft-сбой (guards)» при живом HTTP.
+   Полный разбор: [server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
 3. `composer install --no-dev -o` + **`npm ci && npm run build` только если
    изменились asset-пути** (package*/vite/postcss/tailwind/`resources/{js,css}`)

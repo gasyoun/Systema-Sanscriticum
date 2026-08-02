@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **Ops: разделы «что делать / не делать человеку» — по-русски (H2147 follow-up).** [server-resource-guards §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md), [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md), [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) § Ops: таблицы профилактики и запретов на русском. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Added
 - **Curator magic-login runbook (RU).** [docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md) — how admin issues one-time `/login-link/{token}` when student forgot password/email/everything; scenarios A–E, TG `/unblock`, security. Cabinet TG post **0D** + FAQ. Cross-link [student-unblock-access-feed.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-unblock-access-feed.md). Executor: Grok 4.5 (`grok-4.5`).
 - **Homework Telegram series.** [marketing/homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) — pin 0′, posts 0A–0C + statuses/files/FAQ; grounded in STUDENT_HOMEWORK_GUIDE + `/faq/dz`. Study-chat calendar. Executor: Grok 4.5 (`grok-4.5`).
