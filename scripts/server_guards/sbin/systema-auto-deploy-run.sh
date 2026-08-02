@@ -26,7 +26,19 @@
 #    чинит без спешки. Миграции в деплое → отката НЕТ (migrate --force
 #    необратим) — предохранитель + critical, человек нужен срочно.
 #  • Предохранитель ставится в ЛЮБОМ провальном исходе — авто-деплои стоят до
-#    разбора. Severity в guards:verify (H2066 + H2104):
+#    разбора, НО МЯГКИЕ срабатывания перепроверяют себя сами (H2149).
+#    Дефект, который это чинит: предохранитель — файл, а условие, из-за которого
+#    он встал, — состояние. Условие лечится (грязный файл стал равен origin/main,
+#    когда доехал PR), а файл остаётся, и `[ -f "$BREAKER" ] && exit 0` глушил
+#    КАЖДЫЙ следующий тик молча и навсегда. Инцидент 01-08-2026: preflight
+#    поймал грязный config/marathon_landing_copy.php в 19:28, тот же текст
+#    приехал в git через #1045 минутами позже — предохранитель сторожил уже
+#    несуществующую проблему, прод стоял 5 коммитов позади, и снял его человек.
+#    Теперь мягкая метка + живое здоровье + прошедшая пауза = снимаем сами и
+#    пробуем ещё раз; жёсткое срабатывание (без метки) человека ждёт как ждало.
+#    Само-снятие ОГРАНИЧЕНО AUTO_DEPLOY_MAX_AUTO_RETRIES подряд: мигающее
+#    условие обязано дойти до человека, а не крутиться вечно.
+#  • Severity в guards:verify (H2066 + H2104):
 #      [rolled-back]       — сайт восстановлен откатом → warning
 #      [blocked-preflight] — HEAD не сдвинулся, health чист (грязное дерево
 #                            и т.п.) → warning, не «человеку СРОЧНО»
@@ -54,6 +66,18 @@ BREAKER="$APP_DIR/storage/auto_deploy.disabled"
 LOCK="$APP_DIR/storage/framework/auto-deploy.lock"
 APP_USER=${SYSTEMA_APP_USER:-www-data}
 
+# H2149 — само-перепроверка мягкого предохранителя.
+RETRY_AFTER_MIN=${SYSTEMA_AUTO_DEPLOY_RETRY_AFTER_MIN:-@@AUTO_DEPLOY_RETRY_AFTER_MINUTES@@}
+MAX_RETRIES=${SYSTEMA_AUTO_DEPLOY_MAX_AUTO_RETRIES:-@@AUTO_DEPLOY_MAX_AUTO_RETRIES@@}
+# Счётчик подряд идущих само-снятий. Живёт ОТДЕЛЬНЫМ файлом, а не строкой в
+# предохранителе: предохранитель мы удаляем, а серию попыток обязаны помнить
+# поверх удаления — иначе мигающее условие сбрасывало бы счётчик само себе и
+# крутилось бы вечно. Обнуляется ровно одним событием — успешным деплоем.
+RETRIES_FILE="$APP_DIR/storage/framework/auto-deploy-retries"
+# Куда уезжает текст снятого предохранителя. След обязан пережить снятие —
+# иначе «почему прод не деплоился в 19:30» станет неотвечаемым вопросом.
+BREAKER_HISTORY="$APP_DIR/storage/logs/auto_deploy_breaker_history.log"
+
 stamp() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 trip() {
   printf '%s %s\n' "$(stamp)" "$1" >> "$BREAKER"
@@ -77,29 +101,16 @@ refresh_root_crontab_mirror() {
   chown "root:${APP_USER}" "$mirror" 2>/dev/null || true
 }
 
-exec 9>"$LOCK" 2>/dev/null || exit 0
-flock -n 9 || exit 0            # прошлый прогон ещё идёт — молча пропускаем
-
-# Зеркало — до breaker/early-exit: probe ходит каждые 15 мин и не должен
-# смотреть на вчерашний снимок, даже когда деплоить нечего или деплой стоит.
-refresh_root_crontab_mirror
-
-[ -f "$BREAKER" ] && exit 0     # предохранитель стоит; кричит guards:verify
-
-cd "$APP_DIR" || exit 1
-if ! git fetch -q origin; then
-  echo "$(stamp) git fetch не прошёл (сеть?) — попробуем в следующем слоте"
-  exit 0
-fi
-LOCAL=$(git rev-parse HEAD)
-REMOTE=$(git rev-parse origin/main)
-[ "$LOCAL" = "$REMOTE" ] && exit 0
-
 # ── Пост-деплойное здоровье: сервер обязан остаться жив ─────────────────────
-# Пишет найденные проблемы в $fails (пусто = здоров).
+# Пишет найденные проблемы в $fails (пусто = здоров). Определена ДО гейта
+# предохранителя (H2149): снятие мягкой метки обязано сперва убедиться, что
+# машина сейчас жива, а значит должно уметь звать эту проверку.
+# $avail НЕ local — успешная строка лога печатает «mem ${avail}MB», и при
+# local она всю жизнь печатала «mem ?MB» (косметика, но врала человеку,
+# который читает лог во время разбора).
 health_check() {
   fails=""
-  local code avail unit
+  local code unit
   code=$(curl -fsS -o /dev/null -m 30 -w '%{http_code}' "$SMOKE_URL" 2>/dev/null || echo 000)
   [ "$code" = "200" ] || fails="$fails smoke:$code"
   avail=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
@@ -112,6 +123,101 @@ health_check() {
   fi
   [ -z "$fails" ]
 }
+
+# ── Мягкий предохранитель перепроверяет себя (H2149) ────────────────────────
+# Метки, для которых авто-повтор осмыслен. Ровно те же, что guards:verify
+# считает warning'ом: сайт при них жив, а причина умеет исчезнуть сама.
+# Отсутствие метки = critical = человек; такое НИКОГДА не снимаем сами.
+SOFT_TAGS='[blocked-preflight] [blocked-dirty] [timeout-alive] [rolled-back]'
+
+breaker_is_soft() {
+  local last tag
+  last=$(tail -n 1 "$BREAKER" 2>/dev/null) || return 1
+  [ -n "$last" ] || return 1
+  for tag in $SOFT_TAGS; do
+    case "$last" in *"$tag"*) return 0 ;; esac
+  done
+  return 1
+}
+
+# Возраст предохранителя в минутах по mtime. Пауза нужна, чтобы не молотить
+# повтор в том же тике, если условие всё ещё держится.
+breaker_age_min() {
+  local mtime now
+  mtime=$(stat -c %Y "$BREAKER" 2>/dev/null) || { echo 0; return; }
+  now=$(date -u +%s)
+  echo $(( (now - mtime) / 60 ))
+}
+
+auto_retries() {
+  local n
+  n=$(cat "$RETRIES_FILE" 2>/dev/null) || n=0
+  case "$n" in ''|*[!0-9]*) n=0 ;; esac
+  echo "$n"
+}
+
+# Снять предохранитель, если он мягкий, машина жива, пауза прошла и лимит
+# повторов не выбран. Возвращает 0 = сняли, продолжаем прогон.
+maybe_clear_breaker() {
+  local tries age
+  if ! breaker_is_soft; then
+    return 1                    # жёсткое срабатывание — только человек
+  fi
+  tries=$(auto_retries)
+  if [ "$tries" -ge "$MAX_RETRIES" ]; then
+    # Лимит выбран. НЕ повышаем severity до critical сознательно: причина
+    # мягкая (сайт жив), а ложный «хост лежит» — ровно тот класс ошибки, что
+    # чинили H2066/H2104. Пишем ОДНУ явную строку, чтобы guards:verify показал
+    # человеку, что авто-повтор сдался, и молчания не было.
+    if ! grep -q 'auto-retry исчерпан' "$BREAKER" 2>/dev/null; then
+      printf '%s %s\n' "$(stamp)" \
+        "[blocked-preflight] auto-retry исчерпан ($tries/$MAX_RETRIES) — условие не лечится само, нужен человек" >> "$BREAKER"
+    fi
+    return 1
+  fi
+  age=$(breaker_age_min)
+  if [ "$age" -lt "$RETRY_AFTER_MIN" ]; then
+    return 1                    # ещё рано — подождём следующий слот
+  fi
+  if ! health_check; then
+    echo "$(stamp) auto-retry отложен: health не чист ($fails)"
+    return 1                    # в больную машину не возвращаемся никогда
+  fi
+
+  mkdir -p "$(dirname "$BREAKER_HISTORY")" 2>/dev/null || true
+  {
+    printf '%s AUTO-RETRY %s/%s — снимаю предохранитель, причина была:\n' \
+      "$(stamp)" "$((tries + 1))" "$MAX_RETRIES"
+    sed 's/^/    /' "$BREAKER" 2>/dev/null
+  } >> "$BREAKER_HISTORY" 2>/dev/null || true
+
+  echo "$((tries + 1))" > "$RETRIES_FILE" 2>/dev/null || true
+  rm -f "$BREAKER"
+  echo "$(stamp) AUTO-RETRY $((tries + 1))/$MAX_RETRIES: мягкий предохранитель снят, health чист — пробуем деплой снова"
+  return 0
+}
+
+exec 9>"$LOCK" 2>/dev/null || exit 0
+flock -n 9 || exit 0            # прошлый прогон ещё идёт — молча пропускаем
+
+# Зеркало — до breaker/early-exit: probe ходит каждые 15 мин и не должен
+# смотреть на вчерашний снимок, даже когда деплоить нечего или деплой стоит.
+refresh_root_crontab_mirror
+
+# Предохранитель стоит: мягкий — пробуем снять сами (H2149), жёсткий или
+# «ещё рано» — молча выходим, как раньше; кричит guards:verify.
+if [ -f "$BREAKER" ]; then
+  maybe_clear_breaker || exit 0
+fi
+
+cd "$APP_DIR" || exit 1
+if ! git fetch -q origin; then
+  echo "$(stamp) git fetch не прошёл (сеть?) — попробуем в следующем слоте"
+  exit 0
+fi
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(git rev-parse origin/main)
+[ "$LOCAL" = "$REMOTE" ] && exit 0
 
 # Провал деплоя/здоровья: попытаться автооткат, затем — предохранитель.
 # Откат разрешён только без миграций в диапазоне (migrate --force необратим).
@@ -158,6 +264,10 @@ fi
 if ! health_check; then
   fail_deploy "деплой прошёл, но сервер нездоров:$fails" 1
 fi
+
+# Успех — единственное событие, обнуляющее серию авто-повторов (H2149).
+# Обнулять по «предохранителя нет» было бы неверно: мы его сами и удалили.
+rm -f "$RETRIES_FILE"
 
 echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail:-?}MB, smoke 200)"
 exit 0
