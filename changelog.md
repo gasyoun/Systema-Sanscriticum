@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Changed
+- **Student-facing copy: curator magic login link.** On `/login` and `/forgot-password` (not-found + footer + mail-timeout): if you forget email/password, curator sends a personal one-time link in Telegram — no new account. Onboarding FAQ + cabinet pin 0′ + student-manual + bot FAQ knowledge. Executor: Grok 4.5 (`grok-4.5`).
 - **Magic login link: manager (куратор) may issue.** `RoleGate::canIssueStudentLoginLink()` = admin + manager; UserResource list/view + unlock; AccessAttempt feed; Telegram `/unblock`. Runbook + H849 feed. Tests: `UnblockBotCommandTest`. Executor: Grok 4.5 (`grok-4.5`).
 - **Ops: разделы «что делать / не делать человеку» — по-русски (H2147 follow-up).** [server-resource-guards §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md), [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md), [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) § Ops: таблицы профилактики и запретов на русском. Executor: Grok 4.5 (`grok-4.5`).
 

@@ -31,7 +31,8 @@
                         Откройте письмо и задайте пароль. <span class="font-semibold">Проверьте папку «Спам»</span> —
                         письмо может попасть туда.</p>
                     <p class="mt-2 text-green-700/80 text-xs">Не пришло за 5 минут? Отправьте запрос еще раз ниже
-                        или <a href="https://t.me/rusamskrtam" class="underline font-semibold">напишите куратору</a>.</p>
+                        или <a href="https://t.me/rusamskrtam" class="underline font-semibold">напишите куратору</a> —
+                        пришлём <span class="font-semibold">личную ссылку для входа в Telegram</span> (без пароля).</p>
                 </div>
             @endif
 
@@ -44,9 +45,11 @@
                         <li>заказ был оформлен на <span class="font-semibold">другой email</span> — попробуйте его;</li>
                         <li>в адресе <span class="font-semibold">опечатка</span> — проверьте написание.</li>
                     </ul>
-                    <p class="mt-2 text-amber-700/90 text-xs">Уверены, что почта верная?
-                        <a href="https://t.me/rusamskrtam" class="underline font-semibold">Напишите куратору в Telegram</a> —
-                        поможем найти ваш аккаунт.</p>
+                    <p class="mt-2 text-amber-800 text-sm">Не помните email или пароль — это нормально.
+                        <a href="https://t.me/rusamskrtam" class="underline font-semibold">Напишите куратору в Telegram</a>
+                        (ФИО, курс, когда примерно платили) — найдём кабинет и пришлём
+                        <span class="font-semibold">личную одноразовую ссылку</span>. Откроете — войдёте
+                        <span class="font-semibold">без пароля</span>. Новый кабинет заводить не нужно.</p>
                 </div>
             @endif
 
@@ -79,7 +82,12 @@
             </form>
         </div>
 
-        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center">
+        <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center space-y-2">
+            <p class="text-xs text-gray-600 leading-relaxed">
+                Не помните ни email, ни пароль?
+                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-[#E85C24] hover:underline font-semibold">Куратор</a>
+                пришлёт личную ссылку для входа в Telegram — без пароля.
+            </p>
             <p class="text-xs text-gray-500">
                 Вспомнили пароль? <a href="{{ route('login') }}" class="text-[#E85C24] hover:underline font-semibold transition-colors">Войти</a>
             </p>
