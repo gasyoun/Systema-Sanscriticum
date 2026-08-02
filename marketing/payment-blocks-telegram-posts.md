@@ -18,6 +18,8 @@ https://t.me/rusamskrtam
 [docs/student-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md) §4–6 ·
 [docs/onboarding-student.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/onboarding-student.md) ·
 [docs/debtor-self-service-spec.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/debtor-self-service-spec.md) ·
+[docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md) ·
+[docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md) ·
 [resources/knowledge/faq.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/knowledge/faq.md) § оплата
 
 Серия **не** дублирует:
@@ -26,7 +28,7 @@ https://t.me/rusamskrtam
 - [marathon-2026-08](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08) (бесплатная консультация);
 - личные напоминания должникам (dunning / `promises:remind-tomorrow`) — это **1:1**, не канал.
 
-**Порядок публикации (приоритет):** **P1 → P2 → P3 → P4 → P5**.  
+**Порядок публикации (приоритет):** **P1 → P2 → P3 → P4 → P5 → P6**.  
 В учебном чате: после pin кабинета 0A–0C; в канале — с интервалом 2–4 дня.
 
 Grok 4.5 (`grok-4.5`) · H2141 follow-on / marketing gap from homework pack.
@@ -42,6 +44,7 @@ Grok 4.5 (`grok-4.5`) · H2141 follow-on / marketing gap from homework pack.
 | **P3** | **Мои оплаты / Мои долги** | Где смотреть статус без куратора | Кабинет 0A (вход) |
 | **P4** | **После оплаты** | Доступ сам; что делать, если замок | Dunning 1:1 |
 | **P5** | **Из-за рубежа** | Честный канал (PayPal / куратор) | Не обещать форму claim, если флаг выкл. |
+| **P6** | **TG ≠ дата в кабинете** | Снимает «написал — значит записано» | Путать ЛС с «Мои долги» |
 
 ---
 
@@ -149,6 +152,29 @@ https://samskrte.ru/dvaram
 
 ---
 
+
+## P6 — Сообщение в поддержку ≠ дата в кабинете
+
+Написали куратору или в https://t.me/rusamskrtam — это **переписка**.
+Дата отсрочки («оплачу 20-го») появляется во вкладке **«Мои долги»** только
+после того, как куратор **зафиксирует** её в системе.
+
+Что сделать, если нужна отсрочка:
+
+1. Напишите **конкретную дату** и **какие курсы/блоки**.  
+2. Попросите: «зафиксируйте в кабинете».  
+3. Проверьте **«Мои долги»**: https://samskrte.ru/dvaram  
+4. Оплатите до согласованной даты (один раз дату можно **перенести**
+   не больше чем на 2 недели — дальше через куратора).
+
+За день до зафиксированной даты система может напомнить в Telegram — это
+служебное сообщение, не «коллекторы».
+
+https://samskrte.ru/dvaram  
+Поддержка: https://t.me/rusamskrtam
+
+---
+
 ## Порядок в учебном чате (неделя)
 
 | День | Пост |
@@ -158,8 +184,9 @@ https://samskrte.ru/dvaram
 | Пт | **P3** оплаты / долги |
 | Пн+1 | **P4** после оплаты |
 | Ср+1 | **P5** зарубежье (если в группе есть зарубежные студенты; иначе пропуск) |
+| Пт+1 | **P6** TG ≠ кабинет (короткий evergreen) |
 
-В канале @samskrte: **P1 → P3 → P4** как evergreen; **P2** без адресации
+В канале @samskrte: **P1 → P3 → P4 → P6** как evergreen; **P2** без адресации
 «должникам»; **P5** реже, без цифр «нас уже N».
 
 ---
@@ -173,6 +200,7 @@ https://samskrte.ru/dvaram
 | …прана / рефералка | кабинет, пост 8 |
 | …домашка | [homework-telegram-posts](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md) |
 | …персональное «завтра срок» | система 1:1, не этот файл |
+| …куратор ↔ ученик шаблоны | [docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md) |
 
 ---
 

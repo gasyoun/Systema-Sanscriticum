@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2155: платёжная дисциплина — playbook куратор+ученик, TG 1:1, пост P6.** [docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md) · [docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md) · P6 в [marketing/payment-blocks-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/payment-blocks-telegram-posts.md) (ЛС ≠ дата в «Мои долги»). FAQ/§17 в debtors-manual + note в student-manual §5. Код auto-promise **не** в scope — дизайн twin `ReminderSuggestion` в playbook §4. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **Magic login link: manager (куратор) may issue.** `RoleGate::canIssueStudentLoginLink()` = admin + manager; UserResource list/view + unlock; AccessAttempt feed; Telegram `/unblock`. Runbook + H849 feed. Tests: `UnblockBotCommandTest`. Executor: Grok 4.5 (`grok-4.5`).
 - **Ops: разделы «что делать / не делать человеку» — по-русски (H2147 follow-up).** [server-resource-guards §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md), [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md), [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) § Ops: таблицы профилактики и запретов на русском. Executor: Grok 4.5 (`grok-4.5`).

@@ -23,6 +23,7 @@
 14. [Массовые действия](#14-массовые-действия)
 15. [Автоматика и регламент](#15-автоматика-и-регламент)
 16. [FAQ](#16-faq)
+17. [Telegram и кабинет (кратко)](#17-telegram-и-кабинет-кратко)
 
 ---
 
@@ -490,10 +491,28 @@
 
 **Нет.** Кик трогает только Telegram. Чтобы убрать из выборки должников и зафиксировать отчисление, отдельно поставьте статус **Исключен** (или Покинул / Выпускник) + «Блок выхода» (раздел 12).
 
+
+### Сообщение студента в Telegram автоматически создаёт обещание / отсрочку?
+
+**Нет.** ЛС на `@rusamskrtam` попадают в helpdesk (если support-sync включён), но **не** создают `PaymentPromise`. Дата в «Мои долги» у студента появляется только после **«Договориться» / «Рассрочка»** (или self-service переноса уже существующей даты). Скрипты 1:1 и playbook: [PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md), [docs/copy/tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md).
+
 ### Кнопка «Исключить из TG-чата» не видна
 
 Обычно: нет `telegram_id` у студента (нет бейджа TG) **или** не задан токен `@zapisi_ORSbot` в Marketing settings. Если кнопка есть, но ошибка — чаще всего у группы пустой `telegram_chat_id` или бот не админ / без `can_restrict_members`.
 
 ---
 
-*Источник правды для контента — Blade-шаблон `resources/views/pdf/debtors-manual.blade.php`. Этот MD-файл поддерживается параллельно для удобного чтения на GitHub и вставки в Notion/Telegram. При изменениях обновляйте оба.*
+## 17. Telegram и кабинет (кратко)
+
+| Действие | Эффект в Systema |
+|---|---|
+| Ученик пишет `@rusamskrtam` | Сообщение в support (при sync) |
+| Куратор **Договориться** на дату | `PaymentPromise` → видно в **«Мои долги»**, авто-напоминание за день |
+| Куратор открывает доступ под обещание | Conditional access (не деньги) |
+| Куратор **Исключить из TG-чата** | Hard ban в учебных чатах курса; LMS отдельно |
+
+Двойная инструкция (куратор + ученик) и план «детектор отсрочек» как twin `reminders:detect-requests`: [PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md).
+
+---
+
+*Источник правды для контента — Blade-шаблон `resources/views/pdf/debtors-manual.blade.php`. Этот MD-файл поддерживается параллельно для удобного чтения на GitHub и копипаста в Telegram. При изменениях обновляйте оба.*
