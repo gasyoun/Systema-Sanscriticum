@@ -501,6 +501,11 @@ class Course extends Model
         return $this->hasMany(CourseBlock::class)->orderBy('number');
     }
 
+    public function certificateMilestones(): HasMany
+    {
+        return $this->hasMany(CertificateMilestone::class)->orderBy('start_block');
+    }
+
     public function currentBlock(): ?CourseBlock
     {
         return $this->blocks()->current()->orderBy('number')->first();

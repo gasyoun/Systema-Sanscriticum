@@ -208,6 +208,17 @@ class MarketingSettingResource extends Resource
                             ->placeholder(DunningStage::AccessSuspended->defaultText())
                             ->helperText('Пусто = текст по умолчанию. Плейсхолдеры те же, что у стадии 1. Win-back после отчисления сюда не пишем — это отдельный контур (H219).')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+
+                        Forms\Components\Toggle::make('certificate_auto_issue_enabled')
+                            ->label('Автовыдача сертификатов по вехам')
+                            ->helperText('Ежедневно (certificates:issue-milestones): блок вехи курса закончился — оплатившие участники групп получают сертификат и уведомление TG/VK/email. Вехи настраиваются в карточке курса. Перед первым включением прогоните команду с --dry-run.')
+                            ->default(false)
+                            ->live(),
+                        Forms\Components\TextInput::make('certificate_auto_issue_lookback_days')
+                            ->label('Окно ретроспективы, дней')
+                            ->numeric()->minValue(1)->maxValue(365)->suffix('дн')->default(14)
+                            ->helperText('Вехи, чей блок закончился раньше этого окна, автоматика не трогает — старые потоки не получат внезапных сертификатов.')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('certificate_auto_issue_enabled')),
                     ])
                     ->collapsible(),
 

@@ -528,6 +528,7 @@ class CourseResource extends Resource
         return [
             CourseResource\RelationManagers\FaqsRelationManager::class,
             CourseResource\RelationManagers\TestimonialsRelationManager::class,
+            CourseResource\RelationManagers\CertificateMilestonesRelationManager::class,
         ];
     }
 
