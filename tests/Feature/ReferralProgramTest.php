@@ -260,6 +260,74 @@ class ReferralProgramTest extends TestCase
     }
 
     /** @test */
+    public function both_sides_receive_credit_when_referred_amount_enabled(): void
+    {
+        // MG 02-08-2026: 500 ₽ each side. referred_credit_amount defaults to 0 (dark).
+        config([
+            'referral.credit_amount' => 500,
+            'referral.referred_credit_amount' => 500,
+        ]);
+        $referrer = User::factory()->create(['referral_credit' => 0]);
+        $referred = User::factory()->create([
+            'referred_by' => $referrer->id,
+            'referral_credit' => 0,
+        ]);
+
+        $this->paidPayment($referred);
+
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+        $this->assertSame(500.0, (float) $referred->fresh()->referral_credit);
+        $this->assertDatabaseHas('referral_rewards', [
+            'referrer_id' => $referrer->id,
+            'referred_id' => $referred->id,
+            'amount' => '500.00',
+            'referred_amount' => '500.00',
+        ]);
+    }
+
+    /** @test */
+    public function both_sides_clawback_when_referred_amount_was_granted(): void
+    {
+        config([
+            'referral.credit_amount' => 500,
+            'referral.referred_credit_amount' => 500,
+        ]);
+        $referrer = User::factory()->create(['referral_credit' => 0]);
+        $referred = User::factory()->create([
+            'referred_by' => $referrer->id,
+            'referral_credit' => 0,
+        ]);
+
+        $payment = $this->paidPayment($referred);
+        $this->assertSame(500.0, (float) $referred->fresh()->referral_credit);
+
+        $payment->update(['status' => 'failed']);
+
+        $this->assertSame(0.0, (float) $referrer->fresh()->referral_credit);
+        $this->assertSame(0.0, (float) $referred->fresh()->referral_credit);
+        $this->assertSame(0, ReferralReward::where('referred_id', $referred->id)->count());
+    }
+
+    /** @test */
+    public function referred_side_stays_dark_when_referred_credit_amount_is_zero(): void
+    {
+        config([
+            'referral.credit_amount' => 500,
+            'referral.referred_credit_amount' => 0,
+        ]);
+        $referrer = User::factory()->create();
+        $referred = User::factory()->create([
+            'referred_by' => $referrer->id,
+            'referral_credit' => 0,
+        ]);
+
+        $this->paidPayment($referred);
+
+        $this->assertSame(500.0, (float) $referrer->fresh()->referral_credit);
+        $this->assertSame(0.0, (float) $referred->fresh()->referral_credit);
+    }
+
+    /** @test */
     public function middleware_stores_ref_code_in_session(): void
     {
         $request = Request::create('/landing?ref=ABC123', 'GET');

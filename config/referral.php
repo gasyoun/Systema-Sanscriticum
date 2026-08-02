@@ -11,6 +11,13 @@ return [
     |
     | Раньше наградой была прана (config('prana.rewards.referral')); теперь —
     | реальный денежный кредит. Прана-награда за рефералов больше не начисляется.
+    |
+    | MG 02-08-2026: скидка обеим сторонам — 500 ₽. `credit_amount` = пригласившему
+    | (уже 500). `referred_credit_amount` = приглашённому; **default 0 = dark**
+    | (prod-inert until human sets REFERRAL_REFERRED_CREDIT_AMOUNT=500 + config:cache).
     */
     'credit_amount' => (float) env('REFERRAL_CREDIT_AMOUNT', 500),
+
+    /** ₽ кредит приглашённому при его первой оплате курса. 0 = выкл (money dark). */
+    'referred_credit_amount' => (float) env('REFERRAL_REFERRED_CREDIT_AMOUNT', 0),
 ];

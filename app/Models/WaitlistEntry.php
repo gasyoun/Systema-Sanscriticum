@@ -38,6 +38,7 @@ class WaitlistEntry extends Model
         'lead_id',
         'user_id',
         'intake_id',
+        'group_id',
         'name',
         'telegram_username',
         'contact',
@@ -91,6 +92,15 @@ class WaitlistEntry extends Model
     public function intake(): BelongsTo
     {
         return $this->belongsTo(Intake::class);
+    }
+
+    /**
+     * Конкретная ещё не запущенная (или уже forming) группа — стабильный ID
+     * (groups.id + slug) для листа желающих до старта (H1755 residual).
+     */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     // ================= Матчинг по @username =================
