@@ -415,7 +415,14 @@ class HomeworkFlowTest extends TestCase
 
         $this->assertDatabaseMissing('homework_comments', ['id' => $old->id]);
         Storage::disk('local')->assertMissing($path);
-        $this->assertSame(1, HomeworkComment::where('submission_id', $submission->id)->count());
+        // Удаление ОСТАВЛЯЕТ служебную отметку в треде (#1033 «leave audit notes
+        // when files are deleted»), поэтому сырой count строк остаётся 2 — это не
+        // регрессия, а аудит-след. Пиним то, что действительно важно, раздельно:
+        // реплик ученика осталась одна, и удаление записано в переписке.
+        $this->assertSame(1, HomeworkComment::where('submission_id', $submission->id)
+            ->where('type', HomeworkComment::TYPE_SUBMISSION)->count());
+        $this->assertSame(1, HomeworkComment::where('submission_id', $submission->id)
+            ->where('type', HomeworkComment::TYPE_MESSAGE)->count());
         $this->assertSame(HomeworkSubmission::STATUS_SUBMITTED, $submission->fresh()->status);
     }
 
