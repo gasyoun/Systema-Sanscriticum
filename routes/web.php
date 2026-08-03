@@ -10,6 +10,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\CertificateRegistryController;
 use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompanyInvoiceController;
@@ -708,7 +709,7 @@ Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'
 
 // --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.
-Route::get('/sertifikat', [\App\Http\Controllers\CertificateRegistryController::class, 'index'])
+Route::get('/sertifikat', [CertificateRegistryController::class, 'index'])
     ->name('certificate.registry');
 
 // Старый адрес /sertifikaty остаётся живым 301-редиректом: он уже попал в sitemap.
