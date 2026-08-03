@@ -19,7 +19,7 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
- // Подключаем нашу Job
+// Подключаем нашу Job
 
 class ListCertificates extends ListRecords
 {

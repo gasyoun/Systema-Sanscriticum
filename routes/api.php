@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PublicScheduleController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\Webhooks\ExamScoresWebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
 use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
@@ -110,7 +111,7 @@ Route::post('/webhooks/lead-step', [LeadStepWebhookController::class, 'handle'])
 // расписанию и шлёт батч сюда. Секрет в X-Webhook-Secret
 // (services.n8n.exam_scores_secret). Санка-вехи автовыдаются только студентам
 // с баллами (MilestoneCertificateIssuer).
-Route::post('/webhooks/exam-scores', [\App\Http\Controllers\Webhooks\ExamScoresWebhookController::class, 'handle'])
+Route::post('/webhooks/exam-scores', [ExamScoresWebhookController::class, 'handle'])
     ->middleware('verify.n8n.examscores')
     ->name('webhook.exam-scores');
 
