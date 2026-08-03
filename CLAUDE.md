@@ -157,6 +157,22 @@ Filament page under the "Продажи" group, gated by `RoleGate::finance()`:
   hardcode**). Reuses the channel derivation of `ChannelConversionReport` (which
   measures channel→paid at the *user* level monthly — a different question).
 
+**GC-C2 manager attribution is a SEPARATE page, not a breakdown on this one**
+(H2058 residual, `docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md` §4, F5 RULED
+02-08-2026). `ManagerSalesReport` ("Продажи по менеджеру",
+`/admin/manager-sales-report`, flag `manager_sales_report` default **OFF**) over
+`OrderPaymentConversionService::managerScoreboard()` groups the same order
+denominator by **`payments.created_by_user_id`** (who created the payment row —
+a blame column) — **not** `leads.assigned_to`, which is near-empty by
+construction on conversion-eligible tariffs (populated only on deposit/trial/
+marathon, and deposit/trial are excluded from the order denominator anyway).
+Visibility: `super_admin`/`admin`/`accountant` see all rows (incl. the "Без
+менеджера" unassigned bucket for self-serve/webhook orders); `manager` sees
+only their own rows, via `RoleGate::managerSalesReport()`. **Do not fold this
+breakdown into `OrderPaymentConversion` / its `RoleGate::finance()` gate** —
+that page deliberately excludes the `manager` role (locked by test), and this
+scoreboard's row-level self-scoping for managers requires its own surface.
+
 ### Group Recruitment (Набор курсов)
 
 H162: a paying student had no way to learn her forming group was under-enrolled

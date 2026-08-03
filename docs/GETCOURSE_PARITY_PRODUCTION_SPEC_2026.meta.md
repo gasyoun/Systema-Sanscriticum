@@ -1,6 +1,6 @@
 # Metadoc — GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md
 
-_Created: 18-07-2026 · Last updated: 26-07-2026_
+_Created: 18-07-2026 · Last updated: 03-08-2026_
 
 The companion record for
 [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md).
@@ -104,6 +104,7 @@ would have shipped two wrong rows and missed the document's most valuable findin
 
 | Date | Change | By |
 |---|---|---|
+| 03-08-2026 | GC-C2 row flipped `NOT_BUILT` → `SHIPPED` (H2058 residual): `ManagerSalesReport` page + `managerScoreboard()` built exactly per the F5-ruled join (`created_by_user_id`) and visibility (super_admin/admin/accountant all rows, manager own rows), separate from `OrderPaymentConversion` per §4.3. Full regression 2866 passed / 1 skipped / 0 failed. | Sonnet 5 (`claude-sonnet-5`) |
 | 26-07-2026 | **F9 ruled + implemented** (H1658): both existing boards kept, shared stage layer shipped as an additive third board (`UnifiedSalesBoard` over `UnifiedSalesStage`), view layer only — no migration, no physical merge of `lead_stages`/`deal_stages` (that stays F3, settled). §7 F9 rewritten as a decision record with the original framing kept below it; §1 GC-C1 row and §7's preamble updated; the "all eight forks are open" limitation above corrected to name F1/F2/F9 as ruled. | Opus 5 (`claude-opus-5[1m]`) |
 | 25-07-2026 | GC-A1 row flipped `NOT_BUILT` → `DONE` (H1637: `segments` migration + `Segment` model + `SegmentResource` + `marketing_segments` flag, built independently of the Wave 2-3 forks per MG ruling). Wave-map bookkeeping note added; flag-registry table annotated. | Sonnet 5 (`claude-sonnet-5`) |
 | 18-07-2026 | Created with the subject document (H1144, W1-D1). 14 tickets verified + adversarially audited; §2 precedence ladder authored; 8 forks named, none resolved. | Opus 4.8 (`claude-opus-4-8`) |

@@ -65,4 +65,16 @@ final class RoleGate
 
         return $user instanceof User && $user->isSuperAdmin();
     }
+
+    /**
+     * Доступ к «Продажи по менеджеру» (GC-C2, F5(b) RULED 02-08-2026): admin,
+     * accountant И manager — шире finance(), потому что менеджер должен видеть
+     * СВОЙ срез (страница сама сужает строки до created_by_user_id=auth id вне
+     * super_admin/admin/accountant — см. ManagerSalesReport::getViewData()).
+     * teacher/student не проходят.
+     */
+    public static function managerSalesReport(): bool
+    {
+        return self::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
+    }
 }

@@ -693,4 +693,22 @@ return [
      | created the Course/Tariff/Group rows.
      */
     'start_chteniya_cohort' => (bool) env('START_CHTENIYA_COHORT_ENABLED', false),
+
+    /*
+     | GC-C2 — «Продажи по менеджеру» (H2058 residual /
+     | docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §4). F5 RULED 02-08-2026
+     | (MG): (a) join = payments.created_by_user_id (кто создал строку платежа —
+     | blame-колонка), НЕ leads.assigned_to/deals.assigned_to (near-empty by
+     | construction — заполняется только на deposit/trial/marathon, а deposit/
+     | trial как раз исключены из знаменателя заказов); (b) видимость —
+     | super_admin/admin/accountant видят все строки, manager — только свои
+     | (created_by_user_id = auth id). Отдельная страница ManagerSalesReport,
+     | СУЩЕСТВУЮЩИЙ OrderPaymentConversion (RoleGate::finance()) не расширяется.
+     | Самостоятельные покупки/webhook-заказы остаются created_by_user_id=NULL —
+     | это by-design «Без менеджера», не баг; заполнение колонки — дисциплина
+     | продаж (менеджер создаёт/фиксирует платёж в админке), а не эта задача.
+     | ВЫКЛ по умолчанию — deploy-рубильник: пока флаг OFF, страница не
+     | регистрируется и недоступна (canAccess false) даже для admin.
+     */
+    'manager_sales_report' => (bool) env('MANAGER_SALES_REPORT', false),
 ];
