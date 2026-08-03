@@ -607,6 +607,20 @@ return [
     'dozhim_queue' => (bool) env('DOZHIM_QUEUE', false),
 
     /*
+     | Noboring dozhim Wave 1b (H2059, IMPLEMENTATION H-B п.5): линейный дрип
+     | по недожатым open Deal — day0/day3/day7 через уже существующий
+     | Messaging (TG/VK/email), шаблоны категории MessageTemplate::CATEGORY_DOZHIM.
+     | Независим от dozhim_queue (тот флаг — только видимость бакета оператору,
+     | этот — реальная отправка клиенту).
+     |
+     | ВЫКЛ по умолчанию. Пока OFF — dozhim:drip не отправляет ни одного
+     | сообщения (WorkQueueReport::agedOpenDeals() запрашивается, но письма/TG
+     | не уходят). Включение — DOZHIM_DRIP=true + config:cache после ревью
+     | (тексты 4 заготовок NF-таблицы + порядок day0/day3/day7).
+     */
+    'dozhim_drip' => (bool) env('DOZHIM_DRIP', false),
+
+    /*
      | H2186 / NOBORING Rate B: stamp Lead.converted_at on ordinary course paid path.
      | Deposit / trial / marathon already call markConverted always. Course checkout
      | historically did not (GETCOURSE_PARITY_PRODUCTION_SPEC §2.4) — Rate B on prod

@@ -26,6 +26,15 @@ class MessageTemplate extends Model
 
     public const CATEGORY_SUPPORT = 'support';
 
+    public const CATEGORY_DOZHIM = 'dozhim';
+
+    /** Шаги линейного дожим-дрипа (H2059, IMPLEMENTATION H-B п.5) — {@see MessageTemplate::$dozhim_step}. */
+    public const DOZHIM_STEP_DAY0 = 'day0';
+
+    public const DOZHIM_STEP_DAY3 = 'day3';
+
+    public const DOZHIM_STEP_DAY7 = 'day7';
+
     /** @return array<string,string> [code => human label] */
     public static function categories(): array
     {
@@ -33,6 +42,22 @@ class MessageTemplate extends Model
             self::CATEGORY_LEAD => 'Лиды (follow-up)',
             self::CATEGORY_REACTIVATION => 'Реактивация',
             self::CATEGORY_SUPPORT => 'Поддержка (канреплай)',
+            self::CATEGORY_DOZHIM => 'Дожим (недожатые сделки)',
+        ];
+    }
+
+    /**
+     * Шаги дожим-дрипа для селекта в админке. Только шаблоны категории
+     * {@see self::CATEGORY_DOZHIM} используют это поле; для остальных — null.
+     *
+     * @return array<string,string>
+     */
+    public static function dozhimSteps(): array
+    {
+        return [
+            self::DOZHIM_STEP_DAY0 => 'День 0 (порог)',
+            self::DOZHIM_STEP_DAY3 => 'День 3',
+            self::DOZHIM_STEP_DAY7 => 'День 7',
         ];
     }
 
@@ -57,6 +82,7 @@ class MessageTemplate extends Model
         'body',
         'category',
         'suggester_category',
+        'dozhim_step',
         'is_active',
     ];
 

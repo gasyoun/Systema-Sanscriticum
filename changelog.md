@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2059: dozhim Wave 1b — MessageTemplate `dozhim` scripts, auto FollowUpTask, linear drip.** Closes the remaining Wave 1b checkboxes on top of H2119's bucket: `MessageTemplateSeeder` seeds 4 `dozhim` category scripts (payment help/installment CTA/feedback/upsell), 3 tagged `dozhim_step` (day0/day3/day7) for the auto-drip. `dozhim:create-followups` (daily 08:00) creates an idempotent `FollowUpTask` per aged open Deal, gated `dozhim_queue`. `dozhim:drip` (daily 08:00) sends the next unsent linear step via `DozhimDripDispatcher` (TG/VK/email, reusing `MessagePlaceholders`/`DebtorReminderMail`), idempotent via new `DozhimDripLog` (deal_id+step unique); `WorkQueueReport::agedOpenDeals()` is the flag-independent twin of `unpaidOpenDeals()` — `dozhim_queue` gates operator visibility, `dozhim_drip` gates delivery, deliberately decoupled per IMPLEMENTATION H-B. New flag `dozhim_drip` default **OFF**. Tests: `DozhimCreateFollowUpTasksTest` (5), `DozhimDripTest` (7) — full `tests/Feature/Crm` green (55 passed). Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.87.0] - 2026-08-03
 
 ### Added

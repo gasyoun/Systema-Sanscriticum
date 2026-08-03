@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 02-08-2026_
+_Created: 01-08-2026 · Last updated: 03-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -166,13 +166,13 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 ### Wave 1b — Operator dozhim (H-B)
 
 - [x] WorkQueue bucket: **unpaid / open Deal past N hours** — **done H2119** (01-08-2026): `WorkQueueReport::unpaidOpenDeals()` + WorkQueue card; threshold `config/dozhim.php` `unpaid_deal_hours` (default 24); flag `dozhim_queue` default **OFF**. Cards need open Deals from H2102 when `crm_pipeline_board` ON. UnifiedSales surface deferred (cockpit bucket is the operator surface).
-- [ ] MessageTemplate category `dozhim` (4 scripts from NF table: payment help, installment CTA, feedback, upsell)
-- [ ] Auto FollowUpTask on open Deal age threshold
-- [ ] Auto-drip via existing Messaging channels (TG/email) — linear only; no n8n branch required for wave-1
+- [x] MessageTemplate category `dozhim` (4 scripts from NF table: payment help, installment CTA, feedback, upsell) — **done H2059** (03-08-2026): `MessageTemplateSeeder`, 3 of 4 tagged with `dozhim_step` (day0/day3/day7) for the auto-drip below; upsell ships untagged (operator sends it manually).
+- [x] Auto FollowUpTask on open Deal age threshold — **done H2059**: `dozhim:create-followups` (daily 08:00), idempotent on an existing open `FollowUpTask` per Deal, gated `dozhim_queue` (same flag as the bucket above — this is the bucket's actionable half, not a new surface).
+- [x] Auto-drip via existing Messaging channels (TG/email) — linear only; no n8n branch required for wave-1 — **done H2059**: `dozhim:drip` (daily 08:00), `WorkQueueReport::agedOpenDeals()` (ungated twin of `unpaidOpenDeals()` — visibility and delivery are independent flags), `DozhimDripDispatcher` (TG/VK/email, reuses `MessagePlaceholders` + `DebtorReminderMail`), `DozhimDripLog` idempotency (deal_id, step unique). One step per deal per run, never skips a step even if the deal aged past a later one.
 - [x] Flag `dozhim_queue` default OFF — **done H2119** (pinned in features + test)
-- [ ] Flag `dozhim_drip` default OFF
+- [x] Flag `dozhim_drip` default OFF — **done H2059** (pinned in `config/features.php` + tests)
 
-**Unblocks:** H-C front mirror; live operator use.
+**Unblocks:** H-C front mirror; live operator use. All Wave 1b checkboxes closed; H-C (below) is next.
 
 ### Wave 1c — Student recovery (H-C)
 

@@ -117,6 +117,22 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('remind-leads-followup');
 
+        // NOBORING dozhim Wave 1b (H2059): задачи менеджеру + линейный дрип по
+        // недожатым open Deal. Гейты (dozhim_queue / dozhim_drip) — внутри
+        // команд; пока оба флага выключены, прогон — no-op. Задачи — перед
+        // дрипом: тот же утренний слот, что и leads:remind-followup.
+        $schedule->command('dozhim:create-followups')
+            ->dailyAt('08:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('dozhim-create-followups');
+
+        $schedule->command('dozhim:drip')
+            ->dailyAt('08:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('dozhim-drip');
+
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.

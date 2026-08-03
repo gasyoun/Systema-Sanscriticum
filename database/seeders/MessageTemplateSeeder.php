@@ -30,13 +30,14 @@ class MessageTemplateSeeder extends Seeder
                 [
                     'body' => $tpl['body'],
                     'category' => $tpl['category'],
+                    'dozhim_step' => $tpl['dozhim_step'] ?? null,
                     'is_active' => true,
                 ],
             );
         }
     }
 
-    /** @return list<array{title:string, body:string, category:string}> */
+    /** @return list<array{title:string, body:string, category:string, dozhim_step?:string}> */
     private function templates(): array
     {
         $reactivation = [];
@@ -81,6 +82,33 @@ class MessageTemplateSeeder extends Seeder
                 'title' => 'Поддержка · F — материалы, ДЗ и сертификаты',
                 'body' => "Намасте, {name}!\n\nМатериалы и записи уроков лежат в личном кабинете, раздел «Уроки»; домашние задания — внутри своего урока. Если какого-то материала не хватает — напишите, какого именно, и мы проверим.\n\nЛичный кабинет: {pay_link}",
                 'category' => MessageTemplate::CATEGORY_SUPPORT,
+            ],
+            // Дожим-дрип (H2059, IMPLEMENTATION H-B п.3/5) — 4 заготовки из
+            // таблицы NF-кейса. Три первые несут dozhim_step и участвуют в
+            // авто-дрипе (day0/day3/day7 по порядку); апселл — без шага,
+            // оператор отправляет вручную из библиотеки шаблонов.
+            [
+                'title' => 'Дожим · День 0 — способы оплаты',
+                'body' => "Намасте, {name}!\n\nВидим, что оформление курса «{course}» ещё не завершено оплатой. Если что-то не получилось — доступны разные способы оплаты, включая рассрочку. Продолжить оформление: {pay_link}",
+                'category' => MessageTemplate::CATEGORY_DOZHIM,
+                'dozhim_step' => MessageTemplate::DOZHIM_STEP_DAY0,
+            ],
+            [
+                'title' => 'Дожим · День 3 — рассрочка и куратор',
+                'body' => "Намасте, {name}!\n\nЕсли вопрос в сумме — можно оформить курс «{course}» в рассрочку. А если остались сомнения или вопросы по программе — куратор с радостью ответит лично, просто напишите в этот же чат.\n\nОформить: {pay_link}",
+                'category' => MessageTemplate::CATEGORY_DOZHIM,
+                'dozhim_step' => MessageTemplate::DOZHIM_STEP_DAY3,
+            ],
+            [
+                'title' => 'Дожим · День 7 — обратная связь',
+                'body' => "Намасте, {name}!\n\nЗаметили, что оформление курса «{course}» пока не завершилось оплатой — расскажите, пожалуйста, что смутило или помешало? Это поможет нам сделать курс понятнее, а вам — быстрее принять решение.",
+                'category' => MessageTemplate::CATEGORY_DOZHIM,
+                'dozhim_step' => MessageTemplate::DOZHIM_STEP_DAY7,
+            ],
+            [
+                'title' => 'Дожим · апсейл смежного продукта',
+                'body' => "Намасте, {name}!\n\nПока раздумываете над курсом «{course}» — обратите внимание и на другие наши программы, которые часто берут вместе с ним. Расскажем подробнее, если интересно.\n\nЛичный кабинет: {pay_link}",
+                'category' => MessageTemplate::CATEGORY_DOZHIM,
             ],
         ]);
     }
