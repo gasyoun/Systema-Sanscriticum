@@ -708,8 +708,15 @@ Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'
 
 // --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.
-Route::get('/sertifikaty', [\App\Http\Controllers\CertificateRegistryController::class, 'index'])
+Route::get('/sertifikat', [\App\Http\Controllers\CertificateRegistryController::class, 'index'])
     ->name('certificate.registry');
+
+// Старый адрес /sertifikaty остаётся живым 301-редиректом: он уже попал в sitemap.
+Route::get('/sertifikaty', function () {
+    $query = request()->getQueryString();
+
+    return redirect('/sertifikat'.($query ? '?'.$query : ''), 301);
+});
 
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).

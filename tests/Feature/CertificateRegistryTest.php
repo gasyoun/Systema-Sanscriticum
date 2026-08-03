@@ -41,7 +41,7 @@ class CertificateRegistryTest extends TestCase
     {
         $cert = $this->cert('Иванова Мария');
 
-        $this->get('/sertifikaty')
+        $this->get('/sertifikat')
             ->assertOk()
             ->assertSee('Иванова Мария')
             ->assertSee('Санскрит с нуля')
@@ -55,13 +55,13 @@ class CertificateRegistryTest extends TestCase
         $this->cert('Яковлева Анна', ['issued_at' => now()->subDays(2)]);
         $this->cert('Абрамов Пётр', ['issued_at' => now()->subDay()]);
 
-        $byName = $this->get('/sertifikaty?sort=name')->assertOk()->getContent();
+        $byName = $this->get('/sertifikat?sort=name')->assertOk()->getContent();
         $this->assertLessThan(
             mb_strpos($byName, 'Яковлева Анна'),
             mb_strpos($byName, 'Абрамов Пётр'),
         );
 
-        $byDate = $this->get('/sertifikaty?sort=date')->assertOk()->getContent();
+        $byDate = $this->get('/sertifikat?sort=date')->assertOk()->getContent();
         $this->assertLessThan(
             mb_strpos($byDate, 'Яковлева Анна'),
             mb_strpos($byDate, 'Абрамов Пётр'), // выдан позже → выше
@@ -75,7 +75,7 @@ class CertificateRegistryTest extends TestCase
         $this->cert('С группой', ['group_id' => $group->id]);
         $this->cert('Без группы');
 
-        $this->get('/sertifikaty?sort=group')
+        $this->get('/sertifikat?sort=group')
             ->assertOk()
             ->assertSee('Поток 42')
             ->assertSee('—');
@@ -95,12 +95,12 @@ class CertificateRegistryTest extends TestCase
             'issued_at' => now()->subYears(2),
         ]);
 
-        $this->get('/sertifikaty?course='.$this->course->slug)
+        $this->get('/sertifikat?course='.$this->course->slug)
             ->assertOk()
             ->assertSee('Наш студент')
             ->assertDontSee('Чужой студент');
 
-        $this->get('/sertifikaty?year='.now()->year)
+        $this->get('/sertifikat?year='.now()->year)
             ->assertOk()
             ->assertSee('Наш студент')
             ->assertDontSee('Чужой студент');
@@ -116,7 +116,7 @@ class CertificateRegistryTest extends TestCase
             'score_flow' => 3.5,
         ]);
 
-        $this->get('/sertifikaty')
+        $this->get('/sertifikat')
             ->assertOk()
             ->assertSee('Экзаменуемая')
             ->assertDontSee('17.5')
@@ -128,7 +128,7 @@ class CertificateRegistryTest extends TestCase
     {
         $this->cert('Со справкой', ['document_type' => CertificateMilestone::DOC_SPRAVKA]);
 
-        $this->get('/sertifikaty')->assertOk()->assertSee('Справка');
+        $this->get('/sertifikat')->assertOk()->assertSee('Справка');
     }
 
     /** @test */
@@ -138,9 +138,19 @@ class CertificateRegistryTest extends TestCase
             $this->cert('Студент '.str_pad((string) $i, 2, '0', STR_PAD_LEFT));
         }
 
-        $first = $this->get('/sertifikaty')->assertOk();
+        $first = $this->get('/sertifikat')->assertOk();
         $first->assertSee('page=2');
 
-        $this->get('/sertifikaty?page=2')->assertOk();
+        $this->get('/sertifikat?page=2')->assertOk();
+    }
+
+    /** @test */
+    public function the_old_address_redirects_permanently_and_keeps_the_query(): void
+    {
+        $this->get('/sertifikaty')->assertRedirect('/sertifikat')->assertStatus(301);
+
+        // getQueryString() нормализует порядок параметров — сверяем нормализованный вид.
+        $this->get('/sertifikaty?sort=name&page=2')
+            ->assertRedirect('/sertifikat?page=2&sort=name');
     }
 }
