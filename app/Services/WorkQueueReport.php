@@ -165,6 +165,19 @@ class WorkQueueReport
             return collect();
         }
 
+        return $this->agedOpenDeals();
+    }
+
+    /**
+     * Тот же запрос, что {@see self::unpaidOpenDeals()}, но БЕЗ гейта
+     * dozhim_queue (H2059): тот флаг — только видимость бакета оператору,
+     * а `dozhim:create-followups`/`dozhim:drip` гейтятся своими флагами
+     * (dozhim_queue / dozhim_drip) в самих командах, не здесь.
+     *
+     * @return Collection<int, Deal>
+     */
+    public function agedOpenDeals(): Collection
+    {
         $hours = max(1, (int) config('dozhim.unpaid_deal_hours', 24));
         $cutoff = now()->subHours($hours);
 

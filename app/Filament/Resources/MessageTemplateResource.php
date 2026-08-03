@@ -109,6 +109,14 @@ class MessageTemplateResource extends Resource
                     ->helperText('Привязка к суггестеру (S9): у привязанной категории черновик собирается из этого шаблона, LLM не вызывается. Пусто — шаблон в суггестере не участвует.')
                     ->columnSpanFull(),
 
+                Forms\Components\Select::make('dozhim_step')
+                    ->label('Шаг дожим-дрипа')
+                    ->options(MessageTemplate::dozhimSteps())
+                    ->nullable()
+                    ->native(false)
+                    ->helperText('Только для категории «Дожим»: шаг линейного авто-дрипа (H2059) — day0/day3/day7 по порядку. Пусто — шаблон в авто-дрипе не участвует (оператор отправляет вручную).')
+                    ->columnSpanFull(),
+
                 Forms\Components\Textarea::make('body')
                     ->label('Текст сообщения')
                     ->required()
@@ -136,8 +144,16 @@ class MessageTemplateResource extends Resource
                         MessageTemplate::CATEGORY_LEAD => 'info',
                         MessageTemplate::CATEGORY_REACTIVATION => 'warning',
                         MessageTemplate::CATEGORY_SUPPORT => 'success',
+                        MessageTemplate::CATEGORY_DOZHIM => 'danger',
                         default => 'gray',
                     }),
+
+                Tables\Columns\TextColumn::make('dozhim_step')
+                    ->label('Шаг дрипа')
+                    ->badge()
+                    ->placeholder('—')
+                    ->formatStateUsing(fn (string $state): string => MessageTemplate::dozhimSteps()[$state] ?? $state)
+                    ->color('danger'),
 
                 Tables\Columns\TextColumn::make('suggester_category')
                     ->label('Суггестер')
