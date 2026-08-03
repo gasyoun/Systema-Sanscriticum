@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Reports;
 
+use App\Filament\Pages\ManagerSalesReport;
 use App\Filament\Pages\ReceivablesGovernance;
 use App\Models\Lead;
 use App\Models\Payment;
@@ -315,6 +316,60 @@ class OrderPaymentConversionService
             ->get();
 
         return $this->decorateBreakdown($rows, 'channel', $targetPct, $warnPct);
+    }
+
+    /**
+     * Снимок «Продажи по менеджеру» (GC-C2, H2058 residual /
+     * GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md §4). НЕ часть {@see snapshot()} —
+     * отдельная страница {@see ManagerSalesReport} за своим
+     * флагом/гейтом, существующий «Конверсия заказ→оплата» не расширяется
+     * (§4.3: «do not widen that page»).
+     *
+     * $onlyCreatedBy сужает разрез до одного менеджера — вызывающая страница
+     * подставляет свой auth id для роли manager (F5 b), null для
+     * admin/accountant/super_admin (видят все строки, включая «Без менеджера»).
+     *
+     * @return array{as_of:string, breakdown_window_days:int, by_manager: list<array{manager:string, orders:int, paid:int, conversion_pct:float|null, level:string}>}
+     */
+    public function managerScoreboard(?int $onlyCreatedBy = null, ?Carbon $asOf = null): array
+    {
+        $asOf = ($asOf ?? now())->copy();
+        $targetPct = (float) config('conversion.target_pct', 63);
+        $warnPct = (float) config('conversion.warn_pct', 50);
+        $breakdownWindow = (int) config('conversion.breakdown_window_days', 90);
+        $from = $asOf->copy()->subDays($breakdownWindow);
+
+        return [
+            'as_of' => $asOf->toDateTimeString(),
+            'breakdown_window_days' => $breakdownWindow,
+            'by_manager' => $this->breakdownByManager($from, $asOf, $targetPct, $warnPct, $onlyCreatedBy),
+        ];
+    }
+
+    /**
+     * Конверсия по менеджеру, СОЗДАВШЕМУ строку платежа (F5 a RULED:
+     * payments.created_by_user_id — blame-колонка, не leads.assigned_to;
+     * см. managerScoreboard() docblock). Самостоятельные покупки и
+     * webhook-заказы (created_by_user_id NULL) — отдельная строка «Без
+     * менеджера», не выбрасываются молча, чтобы разрез оставался полным
+     * знаменателем.
+     *
+     * @return list<array{manager:string, orders:int, paid:int, conversion_pct:float|null, level:string}>
+     */
+    private function breakdownByManager(Carbon $from, Carbon $to, float $targetPct, float $warnPct, ?int $onlyCreatedBy): array
+    {
+        $rows = $this->orders()
+            ->leftJoin('users as managers', 'managers.id', '=', 'payments.created_by_user_id')
+            ->where('payments.created_at', '>=', $from)
+            ->where('payments.created_at', '<', $to)
+            ->when($onlyCreatedBy !== null, fn (Builder $q) => $q->where('payments.created_by_user_id', $onlyCreatedBy))
+            ->selectRaw("COALESCE(managers.name, 'Без менеджера') as manager")
+            ->selectRaw('COUNT(*) as orders')
+            ->selectRaw($this->countIf("payments.status IN ('paid','success')").' as paid')
+            ->groupBy('manager')
+            ->get();
+
+        return $this->decorateBreakdown($rows, 'manager', $targetPct, $warnPct);
     }
 
     /**
