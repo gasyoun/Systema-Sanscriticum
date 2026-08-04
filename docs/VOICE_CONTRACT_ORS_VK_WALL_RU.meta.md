@@ -11,7 +11,7 @@ _Created: 28-07-2026 · Last updated: 28-07-2026_
 
 ## Происхождение
 
-- Handoff: [H1754](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1754-Fable_Systema-Sanscriticum_ors-vk-voice-contract-forward-draft-rewrite_27.07.26.md),
+- Handoff: [H1754](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1754-Fable_Systema-Sanscriticum_ors-vk-voice-contract-forward-draft-rewrite_27.07.26.md),
   исполнитель Fable 5 (`claude-fable-5`), 28-07-2026.
 - Данные: `vk_ors.db` (7 608 постов, 2015–2026) в
   [IndologyScholars/vk-ors/data](https://github.com/gasyoun/IndologyScholars/tree/main/vk-ors/data);

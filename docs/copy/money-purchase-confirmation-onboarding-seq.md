@@ -5,7 +5,7 @@ _Created: 19-07-2026 · Last updated: 19-07-2026_
 Лейн H1286 волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md) ·
 [контракт голоса](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md) ·
-[handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1286-Fable_Systema-Sanscriticum_money-purchase-confirmation-onboarding-seq_19.07.26.md)).
+[handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1286-Fable_Systema-Sanscriticum_money-purchase-confirmation-onboarding-seq_19.07.26.md)).
 Исполнено Fable 5 (`claude-fable-5`), 19-07-2026.
 
 ## ⚠️ Канал email инертен: прод-SMTP сломан

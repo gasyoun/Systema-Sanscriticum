@@ -8,7 +8,7 @@ Raw export of Memrise community course
 `scripts/memrise_export.py` (H1431) — 41 non-empty levels, 2 columns
 (`col_a`/`col_b`), see `manifest.json` for the per-level row counts.
 
-Feeds the [H1431](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1431-Sonnet_Systema_memrise-kochergina-lesson1-mapping_21.07.26.md)
+Feeds the [H1431](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1431-Sonnet_Systema_memrise-kochergina-lesson1-mapping_21.07.26.md)
 mapping of Kochergina textbook lesson 1 onto the SRS deck — level 1 here is
 the lesson-1 candidate word list; column semantics (which side is
 Sanskrit/IAST vs. Russian translation) still need human confirmation before

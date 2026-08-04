@@ -91,9 +91,9 @@ _Created: 26-07-2026 · Last updated: 26-07-2026_
 
 | ID | Scope | Status |
 |---|---|---|
-| [H1678](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1678-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-platform-p0_26.07.26.md) | Wave 1 platform + P0 packs G-C01–C03 | 🟡 QUEUED |
-| [H1679](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1679-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-p1-packs_26.07.26.md) | Wave 1 P1 packs G-C04–C06 | 🟡 QUEUED |
-| [H1680](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1680-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w2-srs-onboarding_26.07.26.md) | Wave 2 SRS onboarding + cabinet skill strip | 🟡 QUEUED (after H1678) |
+| [H1678](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1678-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-platform-p0_26.07.26.md) | Wave 1 platform + P0 packs G-C01–C03 | 🟡 QUEUED |
+| [H1679](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1679-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-p1-packs_26.07.26.md) | Wave 1 P1 packs G-C04–C06 | 🟡 QUEUED |
+| [H1680](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1680-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w2-srs-onboarding_26.07.26.md) | Wave 2 SRS onboarding + cabinet skill strip | 🟡 QUEUED (after H1678) |
 
 ### Starters (when Tier-0 frees — human `/go` only)
 

@@ -5,7 +5,7 @@ _Created: 20-07-2026 · Last updated: 31-07-2026_
 Лейн H1292 волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md) ·
 [контракт голоса](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md) ·
-[handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1292-Fable_Systema-Sanscriticum_money-diaspora-paypal-buyer-path_19.07.26.md)).
+[handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1292-Fable_Systema-Sanscriticum_money-diaspora-paypal-buyer-path_19.07.26.md)).
 Исполнено Fable 5 (`claude-fable-5`), 20-07-2026.
 **Prod enable + claim fields H2017** (Grok 4.5 (`grok-4.5`), 31-07-2026, [PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969)).
 

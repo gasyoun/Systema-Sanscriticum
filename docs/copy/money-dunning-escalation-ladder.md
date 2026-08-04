@@ -2,7 +2,7 @@
 
 _Created: 19-07-2026 · Last updated: 19-07-2026_
 
-Лейн волны revenue-copy ([H1289](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1289-Fable_Systema-Sanscriticum_money-dunning-escalation-ladder_19.07.26.md)).
+Лейн волны revenue-copy ([H1289](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1289-Fable_Systema-Sanscriticum_money-dunning-escalation-ladder_19.07.26.md)).
 Исполнитель: Fable 5 (`claude-fable-5`). Было: один шаблон
 ([DebtorReminderDispatcher](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/DebtorReminderDispatcher.php)),
 отправляемый повторно без эскалации. Стало: четыре стадии с разной температурой,

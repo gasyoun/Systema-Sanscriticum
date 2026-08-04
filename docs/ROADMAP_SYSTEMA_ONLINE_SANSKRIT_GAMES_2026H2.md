@@ -145,9 +145,9 @@ Minted 26-07-2026; **QUEUED** — do not auto-execute (D22).
 
 | Scope | Handoff |
 |---|---|
-| Wave 1 platform + P0 packs | [H1678](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1678-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-platform-p0_26.07.26.md) |
-| Wave 1 P1 packs | [H1679](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1679-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-p1-packs_26.07.26.md) |
-| Wave 2 SRS onboarding + cabinet strip | [H1680](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1680-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w2-srs-onboarding_26.07.26.md) |
+| Wave 1 platform + P0 packs | [H1678](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1678-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-platform-p0_26.07.26.md) |
+| Wave 1 P1 packs | [H1679](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1679-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w1-p1-packs_26.07.26.md) |
+| Wave 2 SRS onboarding + cabinet strip | [H1680](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1680-Sonnet_Systema-Sanscriticum_online-sanskrit-games-w2-srs-onboarding_26.07.26.md) |
 | Wave 1b csl-guides | not minted — open when packs live 7d |
 
 Starters: see PLAN index § Handoffs.

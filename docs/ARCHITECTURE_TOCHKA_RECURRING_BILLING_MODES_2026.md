@@ -4,7 +4,7 @@ _Created: 31-07-2026 · Last updated: 31-07-2026_
 
 **Status:** design of record for auto-subscription via Точка API  
 **Handoff:** [H2026](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2026-Grok_Systema-Sanscriticum_tochka-recurring-billing-modes_31.07.26.md)  
-**Sibling (separate lane):** [H2027 PayPal Subscriptions](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md) — **not** in this scope  
+**Sibling (separate lane):** [H2027 PayPal Subscriptions](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md) — **not** in this scope  
 **Executor / provenance:** Grok 4.5 (`grok-4.5`), 31-07-2026  
 
 Tochka product docs: [Подписки (рекуррентные платежи)](https://developers.tochka.com/docs/tochka-api/opisanie-metodov/podpiski-rekurrentnye-platezhi) · `Create Subscription With Receipt` (fiscal) · card-only · `period` Day/Month/Year · `trancheCount` caps · cancel via `Set Subscription Status` · webhooks `acquiringInternetPayment`.

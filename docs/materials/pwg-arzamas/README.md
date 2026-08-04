@@ -18,7 +18,7 @@ Source-of-truth pack for the longread about PWG (Böhtlingk–Roth,
 [Arzamas materials/1100](https://arzamas.academy/materials/1100).
 
 Plan index: [PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md) ·
-Handoff: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1620-Fable_Systema-Sanscriticum_pwg-arzamas-material_24.07.26.md)
+Handoff: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1620-Fable_Systema-Sanscriticum_pwg-arzamas-material_24.07.26.md)
 
 ## Contents
 

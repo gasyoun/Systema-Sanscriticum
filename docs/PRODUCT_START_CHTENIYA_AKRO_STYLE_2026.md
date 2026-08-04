@@ -54,7 +54,7 @@ Sibling (non-Systema) wave-1 pieces:
 | Surface | Repo | Handoff | Status |
 |---|---|---|---|
 | W1–W5 curriculum map | SanskritGrammar | [H2112](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2112-Fable_SanskritGrammar_start-chteniya-w1w5-curriculum_01.08.26.md) | ✅ merged — dual-run residual H2121 |
-| Pack freeze export | kosha | [H2109](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2109-Sonnet_kosha_start-chteniya-pack-freeze_01.08.26.md) | ✅ override PR — dual-run residual H2129 |
+| Pack freeze export | kosha | [H2109](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2109-Sonnet_kosha_start-chteniya-pack-freeze_01.08.26.md) | ✅ override PR — dual-run residual H2129 |
 | ORS landing + WC body | ORS-FAQ | [H2108](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2108-Fable_ORS-FAQ_start-chteniya-landing_01.08.26.md) | 🟡 open |
 | Natural-method story scaffold | SanskritGrammar | [H2113](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2113-Fable_SanskritGrammar_start-chteniya-natural-method-story_01.08.26.md) | 🟡 open (does not block pilot wire) |
 | Week-4 metre residual | SanskritKaraoke | [H2114](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2114-Sonnet_SanskritKaraoke_start-chteniya-week4-metre_01.08.26.md) | 🟡 open |

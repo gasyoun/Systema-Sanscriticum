@@ -2,7 +2,7 @@
 
 _Created: 20-07-2026 · Last updated: 20-07-2026_
 
-Лейн волны revenue-copy ([H1290](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1290-Fable_Systema-Sanscriticum_money-installments-no-shame-checkout-ask_19.07.26.md)).
+Лейн волны revenue-copy ([H1290](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1290-Fable_Systema-Sanscriticum_money-installments-no-shame-checkout-ask_19.07.26.md)).
 Исполнитель: Fable 5 (`claude-fable-5`). Было: полностью управляемая механика
 рассрочки ([InstallmentPlanCreator](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/InstallmentPlanCreator.php)
 + [PaymentPromise](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/PaymentPromise.php)

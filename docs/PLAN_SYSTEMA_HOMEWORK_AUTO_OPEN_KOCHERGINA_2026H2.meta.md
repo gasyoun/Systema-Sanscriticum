@@ -19,7 +19,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 ## Происхождение
 
-- Handoff: [H1764](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1764-Opus_Systema-Sanscriticum_homework-auto-open-kochergina_27.07.26.md)
+- Handoff: [H1764](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1764-Opus_Systema-Sanscriticum_homework-auto-open-kochergina_27.07.26.md)
 - Метод: `/ask` — интервью из 4 раундов по 4 вопроса, 16 рулингов, 27-07-2026
 - Планировал: Opus 5 (`claude-opus-5[1m]`)
 - Аудит до интервью: `/prior-art` по репозиторию + `hub_grep` по всем хабам организации;

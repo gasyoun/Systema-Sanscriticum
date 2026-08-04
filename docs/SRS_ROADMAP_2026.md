@@ -100,7 +100,7 @@ Whitney-hub roots — 629 have any corpus attestation at all per kosha's H950 bu
 engine change. Staged via [`/ask-batch`](https://github.com/gasyoun/claude-config/blob/main/commands/ask-batch.md);
 plan: [`docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_CORPUS_FREQUENCY_LEARNER_SURFACES_2026H2.md)
 § D4; handoff
-[H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
+[H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
 (shipped, code+data merged; deploy is the one-time seeder command at
 [DEPLOY_QUEUE №39](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)).
 
