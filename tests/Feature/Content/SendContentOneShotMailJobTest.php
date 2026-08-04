@@ -84,4 +84,19 @@ class SendContentOneShotMailJobTest extends TestCase
 
         Mail::assertNothingQueued();
     }
+
+    public function test_redelivery_does_not_queue_the_same_digest_twice(): void
+    {
+        config(['features.content_email_oneshot' => true]);
+        Mail::fake();
+        User::factory()->create(['newsletter_subscribed_at' => now()]);
+
+        $candidate = $this->digestCandidate();
+        $job = new SendContentOneShotMailJob($candidate->id);
+
+        $job->handle();
+        $job->handle();
+
+        Mail::assertQueued(ContentDigestMail::class, 1);
+    }
 }

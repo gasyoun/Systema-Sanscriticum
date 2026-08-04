@@ -122,6 +122,23 @@ class PublishSocialPostJobTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_redelivery_does_not_publish_the_same_post_twice(): void
+    {
+        config([
+            'features.content_auto_publish_pilot' => true,
+            'services.n8n.social_post_webhook' => 'https://n8n.example/webhook/social-post',
+        ]);
+        Http::fake(['n8n.example/*' => Http::response(['ok' => true])]);
+
+        $candidate = $this->socialCandidate();
+        $job = new PublishSocialPostJob($candidate->id);
+
+        $job->handle();
+        $job->handle();
+
+        Http::assertSentCount(1);
+    }
+
     public function test_skips_when_webhook_not_configured(): void
     {
         config(['features.content_auto_publish_pilot' => true, 'services.n8n.social_post_webhook' => null]);

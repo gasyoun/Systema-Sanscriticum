@@ -9,6 +9,7 @@ use App\Services\CertificateService;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -17,11 +18,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ZipArchive;
 
-class GenerateCertificatesArchive implements ShouldQueue
+class GenerateCertificatesArchive implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 600; // Разрешаем работать 10 минут
+    public int $timeout = 600; // Разрешаем работать 10 минут
+
+    /** Prevent double-click dispatches while the first archive is running. */
+    public int $uniqueFor = 720;
 
     protected $groupId;
 
@@ -29,17 +33,36 @@ class GenerateCertificatesArchive implements ShouldQueue
 
     protected $teacherId;
 
+    public readonly string $operationId;
+
     /**
      * @param  int|null  $teacherId  Если задан — в архив попадут только сертификаты
      *                               курсов этого преподавателя (course.teacher_id).
      *                               0 = преподаватель без курсов → пустой архив.
      *                               null = админ → без ограничения.
      */
-    public function __construct($groupId, $adminUserId, $teacherId = null)
+    public function __construct($groupId, $adminUserId, $teacherId = null, ?string $operationId = null)
     {
         $this->groupId = $groupId;
         $this->adminUserId = $adminUserId;
         $this->teacherId = $teacherId;
+        $this->operationId = $operationId ?? (string) Str::uuid();
+
+        // Keep sync/database development modes working. Production Redis jobs
+        // use the long reservation and the certificates-only worker.
+        if (config('queue.default') === 'redis') {
+            $this->onConnection('redis-long');
+        }
+        $this->onQueue('certificates');
+    }
+
+    public function uniqueId(): string
+    {
+        return implode(':', [
+            $this->groupId,
+            $this->adminUserId,
+            $this->teacherId ?? 'all',
+        ]);
     }
 
     public function handle(): void
@@ -72,11 +95,13 @@ class GenerateCertificatesArchive implements ShouldQueue
         if ($certificates->isEmpty()) {
             // Молча не выходим: иначе админ ждёт «архив готов», который не придёт.
             if ($recipient = User::find($this->adminUserId)) {
-                Notification::make()
-                    ->title('Архив пуст')
-                    ->warning()
-                    ->body("В группе «{$group->name}» нет сертификатов по её курсам. Проверьте, что группа привязана к курсу и сертификаты выданы.")
-                    ->sendToDatabase($recipient);
+                $this->sendNotificationOnce(
+                    $recipient,
+                    Notification::make($this->operationId)
+                        ->title('Архив пуст')
+                        ->warning()
+                        ->body("В группе «{$group->name}» нет сертификатов по её курсам. Проверьте, что группа привязана к курсу и сертификаты выданы.")
+                );
             }
 
             return;
@@ -86,14 +111,22 @@ class GenerateCertificatesArchive implements ShouldQueue
         // Имя содержит случайный токен, а не time(): иначе имя предсказуемо
         // (group_id перебираемый + узкое окно секунд) и любой залогиненный мог бы
         // скачать чужой архив сертификатов через /force-download (IDOR).
-        $fileName = 'certificates_group_'.$this->groupId.'_'.Str::random(40).'.zip';
+        // operationId is serialized with the job, so a Redis redelivery reuses
+        // the same output instead of creating a second archive and notification.
+        $fileName = 'certificates_group_'.$this->groupId.'_'.$this->operationId.'.zip';
+        $relativePath = 'archives/'.$fileName;
         // Сохраняем в storage/app/public/archives
-        $zipPath = storage_path('app/public/archives/'.$fileName);
+        $zipPath = Storage::disk('public')->path($relativePath);
+        $temporaryZipPath = $zipPath.'.tmp';
+
+        if (Storage::disk('public')->exists($relativePath)) {
+            $this->notifyArchiveReady($group, $certificates->count(), $fileName);
+
+            return;
+        }
 
         // Создаем папку если нет
-        if (! file_exists(dirname($zipPath))) {
-            mkdir(dirname($zipPath), 0755, true);
-        }
+        Storage::disk('public')->makeDirectory('archives');
 
         $zip = new ZipArchive;
         // Раньше сборка шла в `if (open === true) { ... }`, а уведомление «Архив
@@ -101,8 +134,8 @@ class GenerateCertificatesArchive implements ShouldQueue
         // несуществующий файл. Теперь при неудаче бросаем исключение (сработает
         // failed(), админ узнает о провале), а уведомление об успехе — только
         // после реальной сборки.
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException("Не удалось создать ZIP-архив: {$zipPath}");
+        if ($zip->open($temporaryZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException("Не удалось создать ZIP-архив: {$temporaryZipPath}");
         }
 
         $service = new CertificateService;
@@ -125,27 +158,49 @@ class GenerateCertificatesArchive implements ShouldQueue
                 continue;
             }
         }
-        $zip->close();
+        if (! $zip->close()) {
+            throw new \RuntimeException("Не удалось завершить ZIP-архив: {$temporaryZipPath}");
+        }
+
+        // Publish only a fully closed ZIP. A killed worker may leave a .tmp,
+        // but a redelivery will overwrite it and never mistake it for success.
+        if (! rename($temporaryZipPath, $zipPath)) {
+            throw new \RuntimeException("Не удалось опубликовать ZIP-архив: {$zipPath}");
+        }
 
         // 4. Отправляем уведомление админу
-        // Используем наш надежный маршрут для принудительного скачивания
-        $downloadUrl = url('/force-download/'.$fileName);
+        $this->notifyArchiveReady($group, $certificates->count(), $fileName);
+    }
 
-        $recipient = User::find($this->adminUserId);
+    private function notifyArchiveReady(Group $group, int $certificateCount, string $fileName): void
+    {
+        if ($recipient = User::find($this->adminUserId)) {
+            // Используем наш надежный маршрут для принудительного скачивания.
+            $downloadUrl = url('/force-download/'.$fileName);
 
-        if ($recipient) {
-            Notification::make()
-                ->title('Архив сертификатов готов!')
-                ->success()
-                ->body("Группа: {$group->name}. Файлов: {$certificates->count()}")
-                ->actions([
-                    Action::make('download')
-                        ->button()
-                        ->label('Скачать ZIP')
-                        ->url($downloadUrl, shouldOpenInNewTab: true),
-                ])
-                ->sendToDatabase($recipient);
+            $this->sendNotificationOnce(
+                $recipient,
+                Notification::make($this->operationId)
+                    ->title('Архив сертификатов готов!')
+                    ->success()
+                    ->body("Группа: {$group->name}. Файлов: {$certificateCount}")
+                    ->actions([
+                        Action::make('download')
+                            ->button()
+                            ->label('Скачать ZIP')
+                            ->url($downloadUrl, shouldOpenInNewTab: true),
+                    ])
+            );
         }
+    }
+
+    private function sendNotificationOnce(User $recipient, Notification $notification): void
+    {
+        if ($recipient->notifications()->whereKey($this->operationId)->exists()) {
+            return;
+        }
+
+        $notification->sendToDatabase($recipient);
     }
 
     /**
@@ -155,11 +210,13 @@ class GenerateCertificatesArchive implements ShouldQueue
     public function failed(\Throwable $e): void
     {
         if ($recipient = User::find($this->adminUserId)) {
-            Notification::make()
-                ->title('Не удалось собрать архив сертификатов')
-                ->danger()
-                ->body('Произошла ошибка при формировании ZIP. Попробуйте ещё раз позже или обратитесь к администратору.')
-                ->sendToDatabase($recipient);
+            $this->sendNotificationOnce(
+                $recipient,
+                Notification::make($this->operationId)
+                    ->title('Не удалось собрать архив сертификатов')
+                    ->danger()
+                    ->body('Произошла ошибка при формировании ZIP. Попробуйте ещё раз позже или обратитесь к администратору.')
+            );
         }
     }
 }
