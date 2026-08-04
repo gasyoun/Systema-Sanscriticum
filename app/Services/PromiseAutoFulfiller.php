@@ -62,8 +62,8 @@ class PromiseAutoFulfiller
             return 0;
         }
 
-        $closed = 0;
-        DB::transaction(function () use ($toClose, $payment, &$closed): void {
+        $closedPromiseIds = [];
+        DB::transaction(function () use ($toClose, $payment, &$closedPromiseIds): void {
             foreach ($toClose as $promise) {
                 // Гонка/повтор вебхука: перечитываем под локом и повторно
                 // проверяем, что обещание ещё не закрыто.
@@ -75,24 +75,26 @@ class PromiseAutoFulfiller
                 $fresh->update([
                     'status' => PaymentPromise::STATUS_FULFILLED,
                     'fulfilled_at' => now(),
-                    'fulfilled_payment_id' => $payment->id,
+                    // fulfilled_payment_id is a unique audit link. A single
+                    // self-service payment may cover several instalments, so
+                    // only its explicitly linked lead promise owns the link;
+                    // the additional covered rows remain nullable.
+                    'fulfilled_payment_id' => $fresh->id === $payment->linked_promise_id
+                        ? $payment->id
+                        : null,
                 ]);
-                $closed++;
+                $closedPromiseIds[] = (int) $fresh->id;
             }
         });
 
         // Уведомляем куратора уже после коммита — по одному на закрытое обещание.
-        if ($closed > 0) {
-            foreach ($toClose as $promise) {
-                $promise->refresh();
-                if ($promise->status === PaymentPromise::STATUS_FULFILLED
-                    && $promise->fulfilled_payment_id === $payment->id) {
-                    $this->curator->promiseFulfilled($promise, $payment);
-                }
+        if ($closedPromiseIds !== []) {
+            foreach (PaymentPromise::query()->whereKey($closedPromiseIds)->get() as $promise) {
+                $this->curator->promiseFulfilled($promise, $payment);
             }
         }
 
-        return $closed;
+        return count($closedPromiseIds);
     }
 
     /**
