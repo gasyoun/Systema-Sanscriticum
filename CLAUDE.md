@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Stack
 
-- **Backend**: Laravel 10, PHP 8.1+
-- **Frontend**: Vite 5, Tailwind CSS 4, Axios
+- **Backend**: Laravel 12, PHP 8.3
+- **Frontend**: Vite 8 (Node.js 20.19+ or 22.12+), Tailwind CSS 4, Axios
 - **Admin**: Filament v3 (two panels: `admin` at `/admin`, `editor` at `/editor`)
 - **Queue**: Laravel Horizon (Redis-backed)
 - **DB**: MySQL (production), SQLite in-memory (tests)
@@ -48,7 +48,7 @@ php artisan serve
 php artisan migrate
 php artisan migrate:fresh --seed
 
-# Tests (SQLite in-memory, no real DB needed)
+# Tests (SQLite in-memory by default; CI also runs the money/webhook slice on MySQL 8.4)
 php artisan test
 php artisan test --filter=TestName
 php artisan test tests/Unit/
@@ -425,6 +425,14 @@ LandingPage ──> JSON blocks
 - Feature flags in `config/features.php`
 - Admin seeding credentials from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars
 - Force HTTPS is applied in `AppServiceProvider` for production
+- **Composer is deliberately cross-platform, not unchecked.** `config.platform`
+  pins PHP 8.3 and the Unix-only `pcntl`/`posix` extensions so Windows can
+  resolve the same lock file; `platform-check=false` prevents Composer's
+  generated runtime guard from rejecting that Windows checkout. CI runs both
+  `composer check-platform-reqs` and `composer audit --locked`; production
+  `deploy.sh` runs
+  `composer check-platform-reqs --no-dev` against the real server after install.
+  Do not remove either enforcement step when changing the Windows workaround.
 - **Поднимайте свежий worktree через [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1), а не через `composer install` руками** (H1929). Полный `composer install` в новом дереве идёт **~11 минут** — измерено 30-07-2026 на правке, которая сама стоила сорока. Скрипт делает **физическую копию** `vendor/` из главного дерева (robocopy, ~60 с) и только при совпадении `composer.lock`; при расхождении честно зовёт `composer install`. Физическая копия безопасна там, где junction смертелен (см. следующий пункт): пути в `vendor/composer/autoload_*.php` считаются от `__DIR__` в момент выполнения, поэтому копия указывает на СВОЙ worktree — скрипт это ещё и проверяет отдельным пробником и падает, если автозагрузчик резолвится в чужое дерево. Он же ставит `.env` + `APP_KEY`, а `-Teardown` сносит worktree и доводит удаление до конца, когда Windows держит хэндл и `git worktree remove` оставляет осиротевший каталог.
 - **Ритм тестов: `--filter` на итерации, полный набор ОДИН раз в конце** (H1929). `php artisan test` целиком — ~11 минут (2478 тестов); гонять его после каждой правки означает потерять час на пустом месте. На итерации `php artisan test --filter=<Набор>` (секунды), полный прогон — один раз перед PR и лучше в фоне; `./vendor/bin/pint --test` быстр всегда.
 - **Never junction/symlink a worktree's `vendor/` to another worktree's (or the main tree's) `vendor/` to skip `composer install`.** On Windows, PHP's `__DIR__`/realpath resolution for a file accessed through an NTFS junction resolves to the junction's real physical target, not the path used to reach it — so Composer's `$baseDir` computation inside `vendor/composer/autoload_*.php` always resolves to wherever `vendor/` physically lives, never the worktree accessing it through the junction. With `"optimize-autoloader": true` in `composer.json` (this repo's default), that silently makes the whole worktree run **the vendor's owning tree's `app/` code** instead of its own — a green `php artisan test` run proves nothing about the code actually being edited. Confirmed twice in practice (25/26-07-2026, [Systema-Sanscriticum#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)): two independent sessions each hit this, then "fixed" it locally by hand-baking their own worktree's name into the shared classmap header, silently breaking every other consumer of that vendor. Run an independent `composer install` per worktree instead. If a worktree already has a `vendor/` junction (check with `Get-Item vendor | Select LinkType,Target` in PowerShell — `LinkType` shows `Junction`), remove it (`cmd /c rmdir <path>\vendor`, not `rm -rf`) and reinstall before trusting any test output from it.

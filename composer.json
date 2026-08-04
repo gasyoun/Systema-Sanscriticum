@@ -83,7 +83,7 @@
         "sort-packages": true,
         "platform-check": false,
         "audit": {
-            "block-insecure": false
+            "block-insecure": true
         },
         "platform": {
             "php": "8.3.0",

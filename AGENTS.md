@@ -13,7 +13,7 @@ As of 2026-06-30 the active order is:
 2. **Salary / finance** — teacher payouts, late payments, PayPal conversion,
    finance ledger/export.
 3. **Hardening / technical debt** — payment/access tests, webhook signatures,
-   Laravel 10 casts, dead configs.
+   Laravel 12 compatibility, dead configs.
 4. **UX / polish** — cabinet, helpdesk, Telegram support analytics, salary pages,
    landing pages.
 
@@ -30,19 +30,20 @@ handoff with concrete next steps, blockers, validation, and deploy notes.
   secret rotation before changing behavior.
 - **Telegram support analytics:** MadelineProto session/login, flood limits,
   contact auto-linking, responder mappings, sync state resets.
-- **Laravel version trap:** this project is Laravel 10. Use `protected $casts`
-  properties. Do not use Laravel 11-style `casts()` methods.
+- **Runtime baseline:** Laravel 12 on PHP 8.3. Eloquent supports both the
+  `protected $casts` property and the protected `casts(): array` method; follow
+  the convention already used by the model being edited.
 
 ## Validation Defaults
 
-Use the XAMPP PHP binary locally when plain `php` is not available:
+Use the PHP 8.3 binary locally when plain `php` is not available:
 
 ```sh
-C:\xampp\php\php.exe artisan test --filter=TelegramSupportAnalyticsTest
-C:\xampp\php\php.exe artisan test --filter=TeacherSalary
-C:\xampp\php\php.exe artisan test --filter=CheckoutPriceTest
-C:\xampp\php\php.exe artisan test --filter=TochkaWebhookTest
-C:\xampp\php\php.exe artisan pint --dirty
+C:\php83\php.exe artisan test --filter=TelegramSupportAnalyticsTest
+C:\php83\php.exe artisan test --filter=TeacherSalary
+C:\php83\php.exe artisan test --filter=CheckoutPriceTest
+C:\php83\php.exe artisan test --filter=TochkaWebhookTest
+C:\php83\php.exe artisan pint --dirty
 ```
 
 For web/Blade feature tests, build Vite assets first if `public/build/manifest.json`
