@@ -11,7 +11,7 @@ that had no row. Executed under
 by Fable 5 (`claude-fable-5`), 30-07-2026. Method: every claim re-read against the
 **actual named source** — local files
 ([pwgpref_all.ru.md](https://github.com/sanskrit-lexicon/PWG/blob/main/prefaces/pwgpref_all.ru.md)
-read in full, [pwg.txt](https://github.com/sanskrit-lexicon/csl-orig/blob/master/v02/pwg/pwg.txt)
+read in full, [pwg.txt](https://github.com/sanskrit-lexicon/csl-orig/blob/main/v02/pwg/pwg.txt)
 entries by L-number, papers/atlas reports by cited line, Вигасин гл. IV and Ольденбург «Этюды»
 full texts, [pwg.mdx](https://github.com/sanskrit-lexicon/csl-guides/blob/main/docs/dictionaries/pwg.mdx)),
 the two 1855 scans re-read as images, and external references fetched (EB1911 ×4, NIE ×1).

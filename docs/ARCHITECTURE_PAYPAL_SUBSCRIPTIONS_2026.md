@@ -3,7 +3,7 @@
 _Created: 31-07-2026 · Last updated: 02-08-2026_
 
 **Status:** design of record + P0/P1 on main (flags OFF) · **P2–P3 product-parked** (MG 02-08-2026: no PayPal Business conversion planned; diaspora remains manual claim)  
-**Handoff:** [H2027](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md)  
+**Handoff:** [H2027](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2027-Grok_Systema-Sanscriticum_paypal-subscriptions-api_31.07.26.md)  
 **Sibling (separate lane):** [H2026 Tochka multi-mode recurring](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_TOCHKA_RECURRING_BILLING_MODES_2026.md) — **not** in this PR wave  
 **Executor / provenance:** Grok 4.5 (`grok-4.5`), 31-07-2026 · park note 02-08-2026  
 

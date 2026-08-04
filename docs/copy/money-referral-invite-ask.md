@@ -4,7 +4,7 @@ _Created: 20-07-2026 · Last updated: 20-07-2026_
 
 Лейн волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md),
-[handoff H1294](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1294-Fable_Systema-Sanscriticum_money-referral-invite-ask_19.07.26.md)).
+[handoff H1294](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1294-Fable_Systema-Sanscriticum_money-referral-invite-ask_19.07.26.md)).
 Исполнитель: Fable 5 (`claude-fable-5`), 20-07-2026.
 
 ## Проверка предпосылки

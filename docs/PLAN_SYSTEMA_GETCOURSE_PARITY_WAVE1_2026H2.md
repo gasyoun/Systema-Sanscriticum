@@ -2,7 +2,7 @@
 
 _Created: 17-07-2026 · Last updated: 19-07-2026_
 
-> **R-5 timing superseded 18-07-2026 (MG ruling, [H1261](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1261-Sonnet_Systema-Sanscriticum_rq4-study-go-live_18.07.26.md)):
+> **R-5 timing superseded 18-07-2026 (MG ruling, [H1261](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1261-Sonnet_Systema-Sanscriticum_rq4-study-go-live_18.07.26.md)):
 > RQ4 recruitment does NOT wait for autumn — MG ruled GO now.** Only the *timing* clause of R-5
 > below is superseded; the contamination guard is unchanged and still fully binding: the
 > 28-08 R20 marathon cohort remains off-limits as an RQ4 recruitment source, RQ4 recruits a

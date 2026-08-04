@@ -6,7 +6,7 @@ _Created: 29-07-2026 · Last updated: 02-08-2026_
 
 Разбор зависаний samskrte.ru 23–24.07 и 28–29.07.2026 и перечень предохранителей,
 поставленных на прод 29-07-2026. Диагностика — Opus 5 (`claude-opus-5[1m]`),
-handoff [H1904](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1904-Opus_Systema-Sanscriticum_server-oom-scheduler-pileup-guards_29.07.26.md).
+handoff [H1904](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1904-Opus_Systema-Sanscriticum_server-oom-scheduler-pileup-guards_29.07.26.md).
 
 Сервер — LXC-контейнер `samskrtam150` на Proxmox, 8 vCPU, Debian 13. Было 8 ГиБ
 RAM, с 29-07-2026 — 16 ГиБ. **Свопа нет и внутри контейнера он не заводится**

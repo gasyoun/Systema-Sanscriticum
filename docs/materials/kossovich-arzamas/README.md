@@ -19,8 +19,8 @@ Slavophile Sanskrit craze, Lamansky's 1879 feuilleton). Deliberately CUT from
 the first piece ([pwg-arzamas](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/materials/pwg-arzamas),
 DECISIONS L9 / FOLLOWUPS W2-5) and told separately.
 
-Handoff: [H1696](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1696-Fable_Systema-Sanscriticum_kossovich-russia-arzamas-material_26.07.26.md) ·
-Sibling: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1620-Fable_Systema-Sanscriticum_pwg-arzamas-material_24.07.26.md)
+Handoff: [H1696](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1696-Fable_Systema-Sanscriticum_kossovich-russia-arzamas-material_26.07.26.md) ·
+Sibling: [H1620](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1620-Fable_Systema-Sanscriticum_pwg-arzamas-material_24.07.26.md)
 
 ## Contents
 

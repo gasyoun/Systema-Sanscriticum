@@ -3,7 +3,7 @@
 _Created: 24-07-2026 · Last updated: 24-07-2026_
 
 **Executor:** Grok 4.5 (`grok-4.5`) via xAI — user-authorized override of Sonnet 5 lock on
-[H1488](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1488-Sonnet_Systema-Sanscriticum_cabinet-mobile-viewport-audit-pwa_22.07.26.md).
+[H1488](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1488-Sonnet_Systema-Sanscriticum_cabinet-mobile-viewport-audit-pwa_22.07.26.md).
 
 **Roadmap:** [ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md) §5 Stream C, **C3** remainder
 («сплошной аудит студенческих страниц на мобильном вьюпорте + PWA-манифест»).

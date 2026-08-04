@@ -14,11 +14,11 @@ _Created: 19-07-2026 · Last updated: 19-07-2026_
 > сторож [`storage:check`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/CheckStorageUsage.php)
 > сообщает о своём пороге.
 >
-> Хэндофф-происхождение: [H1345](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1345-Opus_Systema_media-storage-governance-watchdog_19.07.26.md),
+> Хэндофф-происхождение: [H1345](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1345-Opus_Systema_media-storage-governance-watchdog_19.07.26.md),
 > Opus 4.8 (`claude-opus-4-8`), 19-07-2026. Продолжает
-> [H1337](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1337-Opus_Systema_homework-multi-format-upload-fix_19.07.26.md)
+> [H1337](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1337-Opus_Systema_homework-multi-format-upload-fix_19.07.26.md)
 > (вытеснение файлов в ДЗ) и
-> [H1343](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1343-Opus_Systema_homework-video-uploads_19.07.26.md)
+> [H1343](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1343-Opus_Systema_homework-video-uploads_19.07.26.md)
 > (приём видео).
 
 ---

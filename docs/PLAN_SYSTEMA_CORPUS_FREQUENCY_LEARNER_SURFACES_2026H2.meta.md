@@ -9,9 +9,9 @@ _Created: 19-07-2026 · Last updated: 19-07-2026_
 The execution brief for two queued Tier-0 integrations (frequency-ranked RU root SRS deck,
 conjunct-frequency script drill) pulling shipped corpus datasets into the student cabinet.
 Audience: the Sonnet-tier agents executing
-[H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
+[H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md)
 and
-[H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md),
+[H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md),
 plus anyone re-planning the pedagogy track.
 
 ## Provenance

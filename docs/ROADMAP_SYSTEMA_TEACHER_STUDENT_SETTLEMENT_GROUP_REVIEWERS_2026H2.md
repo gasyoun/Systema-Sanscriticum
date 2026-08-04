@@ -6,7 +6,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 ---
 
-## Волна A — групповые проверяющие ([H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md), Sonnet 5 `claude-sonnet-5`)
+## Волна A — групповые проверяющие ([H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md), Sonnet 5 `claude-sonnet-5`)
 
 Ничем не заблокирована, стартует сразу.
 
@@ -21,7 +21,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 **Готово волны A:** Ольга заходит в админку, видит счётчик у «Домашних работ», проверяет работы групп 60 и 61 и ничего сверх этого; Гасунс получает недельную сводку; его расчёт зарплаты не изменился ни на копейку.
 
-## Волна B — акт взаимозачёта ([H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md), Opus 5 `claude-opus-5`)
+## Волна B — акт взаимозачёта ([H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md), Opus 5 `claude-opus-5`)
 
 Код не заблокирован. Первая **реальная** сверка ждёт read-only доступа к прод-БД.
 

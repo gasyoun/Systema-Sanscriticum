@@ -20,8 +20,8 @@ MG (решения о провайдере, сроках хранения, ка�
 
 ## Происхождение
 
-- Хэндофф: [H1345](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1345-Opus_Systema_media-storage-governance-watchdog_19.07.26.md), Opus 4.8 (`claude-opus-4-8`), 19-07-2026.
-- Предшественники: [H1337](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1337-Opus_Systema_homework-multi-format-upload-fix_19.07.26.md) (баг вытеснения файлов в ДЗ), [H1343](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1343-Opus_Systema_homework-video-uploads_19.07.26.md) (приём видео).
+- Хэндофф: [H1345](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1345-Opus_Systema_media-storage-governance-watchdog_19.07.26.md), Opus 4.8 (`claude-opus-4-8`), 19-07-2026.
+- Предшественники: [H1337](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1337-Opus_Systema_homework-multi-format-upload-fix_19.07.26.md) (баг вытеснения файлов в ДЗ), [H1343](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1343-Opus_Systema_homework-video-uploads_19.07.26.md) (приём видео).
 - Исходный замер: ~20 МБ в `storage/app`, сообщён MG устно 19-07-2026. **Не
   подтверждён машинно** — у агентов нет доступа к проду.
 
