@@ -132,6 +132,8 @@ fi
 # ── 2. Зависимости и фронтенд ────────────────────────────────────────────────
 say "composer install (prod)"
 composer install --no-dev --optimize-autoloader --no-interaction
+say "composer check-platform-reqs (prod runtime)"
+composer check-platform-reqs --no-dev
 
 # H2104 (01-08-2026): npm ci + vite — главный потребитель wall-clock на автодеплое
 # (инцидент 11:00Z: docs-only PR → timeout 1500s → rollback снова vite → 124 →

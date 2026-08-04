@@ -255,8 +255,8 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
 
 | Слой | Технологии |
 |---|---|
-| Backend | Laravel 10, PHP 8.1+ |
-| Frontend | Vite 5, Tailwind CSS 4, Axios, Livewire |
+| Backend | Laravel 12, PHP 8.3 |
+| Frontend | Vite 8 (Node.js 20.19+ или 22.12+), Tailwind CSS 4, Axios, Livewire |
 | Admin | Filament v3 (две панели: `admin` и `editor`) |
 | Очереди | Laravel Horizon + Redis |
 | Real-time | Laravel Reverb (WebSocket, живой чат поддержки, H536) |
@@ -280,6 +280,13 @@ npm run dev                  # фронтенд на :5173
 php artisan serve            # бэкенд на :8000
 php artisan horizon          # мониторинг очередей на /horizon
 ```
+
+`composer.json` эмулирует Unix-расширения `pcntl`/`posix` при разрешении lock-файла
+на Windows и поэтому оставляет Composer `platform-check=false`. Это не отключение
+прод-проверки: CI выполняет `composer check-platform-reqs` и проверяет
+зафиксированные зависимости через `composer audit --locked`, а `deploy.sh` после
+production-install выполняет `composer check-platform-reqs --no-dev` на реальном
+сервере.
 
 Через Docker Sail:
 
@@ -571,8 +578,9 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 - **Hardening / техдолг.** Продолжить покрытие денежно- и доступно-критичных
   путей: `Tariff::upgradeCreditForUser()`, loyalty/deposit в
   `calculateFinalPriceForUser()`, ключи `block_N_hH`, webhook-подписи и
-  fail-policy для Tochka/Telegram/VK/MAX/Zoom. В Laravel 10 касты задавать через
-  `protected $casts`, не через метод `casts()`.
+  fail-policy для Tochka/Telegram/VK/MAX/Zoom. В Laravel 12 допустимы и свойство
+  `protected $casts`, и защищённый метод `casts(): array`; сохранять локальную
+  конвенцию модели.
 - **UX / polish.** Проход по `/dvaram`, helpdesk, Telegram support analytics,
   salary/finance страницам и лендингам: адаптив, ясные пустые состояния,
   формулировки, таблицы и действия без изменения денежной семантики.
