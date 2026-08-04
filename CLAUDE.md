@@ -357,6 +357,19 @@ H2110. `/dvaram/reading{,/slug}` рендерит пакеты чтения дл
 сознательно не импортирован: его схема другая, и импорт «заодно» ввёл бы вторую
 схему в кодовую базу.
 
+**Cohort SRS import (H2106, `srs:import-start-chteniya-cohort`).** Импортирует
+вендоренный `lemmas_for_srs.tsv` (тот же H2109-фриз, тот же скрипт-вендор выше)
+в **приватную** SRS-колоду на каждого оплаченного студента когорты —
+никогда не в общую `system`/`public` колоду. Причина: `SrsController` показывает
+`system`/`public` колоды всем залогиненным пользователям без проверки оплаты
+(гейт там только глобальный `srs.enabled`), поэтому единственный способ закрыть
+колоду от не-когортных студентов — держать её `visibility=private` с
+`user_id` конкретного студента; `StartChteniyaCohort::entitledUsers()` — общий
+источник списка оплативших (используется и здесь, и потенциально другими
+потребителями H2105-гейта). Гейт команды — `features.start_chteniya_cohort`
+(тот же флаг, что у H2105/H2110/H2111), **не** `config('srs.enabled')` — H2106
+фенс явно запрещает трогать глобальный SRS-флаг.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
