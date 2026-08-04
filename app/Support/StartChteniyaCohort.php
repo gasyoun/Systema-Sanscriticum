@@ -7,6 +7,7 @@ namespace App\Support;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /**
  * H2105 — «Старт чтения» Akro-style 5-week paid cohort pilot.
@@ -67,5 +68,35 @@ final class StartChteniyaCohort
             ->real()
             ->whereNotIn('tariff', ['deposit', 'trial'])
             ->exists();
+    }
+
+    /**
+     * Every user currently entitled — the batch form of hasEntitlement(), used
+     * by H2106's cohort SRS import (`srs:import-start-chteniya-cohort`), which
+     * needs the full list rather than a per-request check. Same filter, same
+     * flag gate, so a user can never appear here while hasEntitlement() would
+     * return false for them.
+     *
+     * @return Collection<int,User>
+     */
+    public static function entitledUsers(): Collection
+    {
+        if (! config('features.start_chteniya_cohort', false)) {
+            return collect();
+        }
+
+        $course = self::course();
+        if (! $course) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereHas('payments', function ($q) use ($course) {
+                $q->where('course_id', $course->id)
+                    ->paid()
+                    ->real()
+                    ->whereNotIn('tariff', ['deposit', 'trial']);
+            })
+            ->get();
     }
 }
