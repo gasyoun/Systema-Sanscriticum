@@ -59,8 +59,12 @@ def main() -> int:
     ]
     print("RUN:", " ".join(ssh), flush=True)
     try:
+        # `ssh` is a list, not a shell string (no shell=True), so each element is
+        # passed as a literal argv entry; --ssh/--app-dir are local CLI args this
+        # developer supplies to their own dev machine, not attacker-controlled
+        # network input.
         proc = subprocess.run(
-            ssh,
+            ssh,  # nosemgrep: dangerous-subprocess-use-tainted-env-args
             capture_output=True,
             text=True,
             encoding="utf-8",
