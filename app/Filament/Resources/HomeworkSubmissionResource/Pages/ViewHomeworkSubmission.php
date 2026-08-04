@@ -170,7 +170,9 @@ class ViewHomeworkSubmission extends ViewRecord
             ->disk('local')
             ->directory('homework/feedback/'.$this->getRecord()->id)
             ->preserveFilenames()
-            ->maxSize((int) config('homework.max_file_kb', 30720))
+            // Порог проверяющего свой (40 МБ): он кладёт разбор ПОВЕРХ работы.
+            // Пустой ключ — откат к студенческому порогу, а не к нулю.
+            ->maxSize((int) (config('homework.feedback_max_file_kb') ?: config('homework.max_file_kb', 30720)))
             ->maxFiles((int) config('homework.max_files', 10));
     }
 

@@ -91,26 +91,57 @@ class HomeworkFeedbackUploadTest extends TestCase
 
         // Вложения урока (LessonResource) — 100 МБ, максимум по проекту.
         $this->assertGreaterThanOrEqual(102400, $max);
-        // И заодно не ниже порога ДЗ, ради которого всё затевалось.
+        // И заодно не ниже порогов ДЗ, ради которых всё затевалось: потолок
+        // ниже порога поля означал бы, что поле снова обещает больше, чем берёт.
         $this->assertGreaterThanOrEqual((int) config('homework.max_file_kb'), $max);
+        $this->assertGreaterThanOrEqual((int) config('homework.feedback_max_file_kb'), $max);
     }
 
-    /** Пороги поля берутся из config/homework.php, а не из литералов в коде. */
+    /**
+     * Порог проверяющего свой и выше студенческого: он кладёт разбор ПОВЕРХ
+     * работы. Числа берутся из конфига, а не из литералов в коде.
+     */
     public function test_feedback_field_reads_its_limits_from_config(): void
     {
-        config(['homework.max_file_kb' => 12345, 'homework.max_files' => 3]);
+        config([
+            'homework.feedback_max_file_kb' => 40960,
+            'homework.max_file_kb' => 12345,
+            'homework.max_files' => 3,
+        ]);
 
+        $this->assertSame(40960, $this->feedbackField()->getMaxSize());
+        $this->assertSame(3, $this->feedbackField()->getMaxFiles());
+    }
+
+    /** Погашенный ключ откатывает поле к студенческому порогу, а не к нулю. */
+    public function test_feedback_field_falls_back_to_the_student_threshold(): void
+    {
+        config(['homework.feedback_max_file_kb' => 0, 'homework.max_file_kb' => 12345]);
+
+        $this->assertSame(12345, $this->feedbackField()->getMaxSize());
+    }
+
+    /** Дефолт из репозитория: проверяющему 40 МБ, студенту 30 МБ. */
+    public function test_reviewer_threshold_is_higher_than_the_student_one_by_default(): void
+    {
+        $this->assertSame(40960, (int) config('homework.feedback_max_file_kb'));
+        $this->assertSame(30720, (int) config('homework.max_file_kb'));
+        $this->assertGreaterThan(
+            (int) config('homework.max_file_kb'),
+            (int) config('homework.feedback_max_file_kb'),
+        );
+    }
+
+    private function feedbackField(): \Filament\Forms\Components\FileUpload
+    {
         $this->actingAsAdmin();
         $submission = $this->submission();
 
-        $field = Livewire::test(ViewHomeworkSubmission::class, ['record' => $submission->id])
+        return Livewire::test(ViewHomeworkSubmission::class, ['record' => $submission->id])
             ->mountAction('accept')
             ->instance()
             ->getMountedActionForm()
             ->getComponent(fn ($component): bool => $component->getName() === 'feedback_files');
-
-        $this->assertSame(12345, $field->getMaxSize());
-        $this->assertSame(3, $field->getMaxFiles());
     }
 
     /** Happy-path: приложенный проверяющим файл доезжает до комментария-вердикта. */
