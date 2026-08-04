@@ -367,6 +367,43 @@ class MutualSettlementTest extends TestCase
     }
 
     /** @test */
+    public function fixing_a_scope_already_consumed_by_a_payout_is_rejected(): void
+    {
+        [$user, $teacher] = $this->person(60);
+        $this->pay($this->otherTeachersCourse(), ['user_id' => $user->id, 'amount' => 20000]);
+
+        $act = $this->service->fix($user);
+        $payout = $teacher->payouts()->create(['amount' => 1000, 'paid_at' => now()->toDateString()]);
+        $this->assertTrue($this->service->consume($act, (int) $payout->id));
+
+        try {
+            $this->service->fix($user);
+            $this->fail('A consumed settlement scope must not be revised.');
+        } catch (\DomainException $exception) {
+            $this->assertStringContainsString('уже использован', $exception->getMessage());
+        }
+
+        $this->assertSame(1, MutualSettlement::query()->count());
+        $this->assertSame(MutualSettlement::STATUS_FIXED, $act->fresh()->status);
+    }
+
+    /** @test */
+    public function a_consumed_scope_does_not_block_a_different_period(): void
+    {
+        [$user, $teacher] = $this->person(60);
+        $this->pay($this->otherTeachersCourse(), ['user_id' => $user->id, 'amount' => 20000]);
+
+        $july = $this->service->fix($user, null, null, '2026-07-01', '2026-07-31');
+        $payout = $teacher->payouts()->create(['amount' => 1000, 'paid_at' => now()->toDateString()]);
+        $this->assertTrue($this->service->consume($july, (int) $payout->id));
+
+        $august = $this->service->fix($user, null, null, '2026-08-01', '2026-08-31');
+
+        $this->assertSame(MutualSettlement::STATUS_FIXED, $august->status);
+        $this->assertSame(2, MutualSettlement::query()->count());
+    }
+
+    /** @test */
     public function a_consumed_settlement_is_no_longer_offered_for_offset(): void
     {
         [$user, $teacher, $course] = $this->person(60);

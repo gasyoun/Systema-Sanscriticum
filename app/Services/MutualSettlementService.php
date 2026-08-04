@@ -197,21 +197,48 @@ class MutualSettlementService
      */
     public function fix(User $user, ?int $courseId = null, ?int $blockNumber = null, $from = null, $to = null, ?int $fixedBy = null, ?string $note = null): MutualSettlement
     {
-        $preview = $this->preview($user, $courseId, $blockNumber, $from, $to);
+        [$from, $to] = $this->resolvePeriod($courseId, $blockNumber, $from, $to);
+        $periodFrom = $from !== null ? Carbon::parse($from)->toDateString() : null;
+        $periodTo = $to !== null ? Carbon::parse($to)->toDateString() : null;
 
-        return DB::transaction(function () use ($preview, $user, $courseId, $blockNumber, $fixedBy, $note): MutualSettlement {
-            MutualSettlement::query()
-                ->where('user_id', $user->id)
-                ->where('status', MutualSettlement::STATUS_FIXED)
-                ->whereNull('payout_id')
+        return DB::transaction(function () use ($user, $courseId, $blockNumber, $periodFrom, $periodTo, $fixedBy, $note): MutualSettlement {
+            /** @var User $lockedUser */
+            $lockedUser = User::query()
+                ->whereKey($user->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $matchingActs = MutualSettlement::query()
+                ->where('user_id', $lockedUser->id)
                 ->where('course_id', $courseId)
                 ->where('block_number', $blockNumber)
+                ->where('period_from', $periodFrom)
+                ->where('period_to', $periodTo)
                 ->lockForUpdate()
-                ->get()
-                ->each(fn (MutualSettlement $prev) => $prev->update(['status' => MutualSettlement::STATUS_SUPERSEDED]));
+                ->get();
+
+            if ($matchingActs->contains(fn (MutualSettlement $act): bool => $act->payout_id !== null)) {
+                throw new \DomainException(
+                    'Акт этого периода уже использован в выплате и не может быть пересмотрен.'
+                );
+            }
+
+            $matchingActs
+                ->where('status', MutualSettlement::STATUS_FIXED)
+                ->each(fn (MutualSettlement $prev) => $prev->update([
+                    'status' => MutualSettlement::STATUS_SUPERSEDED,
+                ]));
+
+            $preview = $this->preview(
+                $lockedUser,
+                $courseId,
+                $blockNumber,
+                $periodFrom,
+                $periodTo,
+            );
 
             return MutualSettlement::create([
-                'user_id' => (int) $user->id,
+                'user_id' => (int) $lockedUser->id,
                 'teacher_id' => $preview['teacher_id'],
                 'course_id' => $courseId,
                 'block_number' => $blockNumber,

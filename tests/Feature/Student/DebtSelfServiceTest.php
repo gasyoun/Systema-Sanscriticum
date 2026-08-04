@@ -175,7 +175,7 @@ class DebtSelfServiceTest extends TestCase
         ]);
 
         // Платёж на весь остаток (4000) → закрываем обе строки графика.
-        Payment::create([
+        $payment = Payment::create([
             'user_id' => $user->id, 'course_id' => $course->id,
             'amount' => 4000, 'tariff' => 'block_2', 'status' => 'paid',
             'start_block' => 2, 'end_block' => 2,
@@ -184,6 +184,8 @@ class DebtSelfServiceTest extends TestCase
 
         $this->assertSame(PaymentPromise::STATUS_FULFILLED, $lead->fresh()->status);
         $this->assertSame(PaymentPromise::STATUS_FULFILLED, $second->fresh()->status);
+        $this->assertSame($payment->id, $lead->fresh()->fulfilled_payment_id);
+        $this->assertNull($second->fresh()->fulfilled_payment_id);
     }
 
     /** @test */

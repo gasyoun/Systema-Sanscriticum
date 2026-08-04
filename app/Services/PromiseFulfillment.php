@@ -40,9 +40,22 @@ class PromiseFulfillment
         $this->validate($amount, $startBlock, $endBlock);
 
         return DB::transaction(function () use ($promise, $amount, $startBlock, $endBlock, $transactionId, $silent) {
+            /** @var PaymentPromise $lockedPromise */
+            $lockedPromise = PaymentPromise::query()
+                ->whereKey($promise->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedPromise->status === PaymentPromise::STATUS_FULFILLED
+                || $lockedPromise->fulfilled_payment_id !== null) {
+                throw ValidationException::withMessages([
+                    'promise' => 'Обещание уже закрыто оплатой.',
+                ]);
+            }
+
             $payload = [
-                'user_id' => $promise->user_id,
-                'course_id' => $promise->course_id,
+                'user_id' => $lockedPromise->user_id,
+                'course_id' => $lockedPromise->course_id,
                 'amount' => $amount,
                 'tariff' => 'block_'.$startBlock,
                 'status' => 'paid',
@@ -60,16 +73,20 @@ class PromiseFulfillment
             if ($silent) {
                 /** @var Payment $payment */
                 $payment = Payment::withoutEvents(fn () => Payment::create($payload));
-                $this->runSilentHooks($payment, $promise);
+                $this->runSilentHooks($payment, $lockedPromise);
             } else {
                 $payment = Payment::create($payload);
             }
 
-            $promise->update([
+            $lockedPromise->update([
                 'status' => PaymentPromise::STATUS_FULFILLED,
                 'fulfilled_at' => now(),
                 'fulfilled_payment_id' => $payment->id,
             ]);
+
+            // Keep the caller's instance coherent even though the authoritative
+            // write used the row-locked reload above.
+            $promise->setRawAttributes($lockedPromise->getAttributes(), true);
 
             return $payment;
         });
