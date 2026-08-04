@@ -61,17 +61,16 @@ class GrantAccessTest extends TestCase
         $user = User::factory()->create();
         $course = Course::factory()->create(); // курс без привязанных групп
 
-        Payment::create([
+        $payment = Payment::create([
             'user_id' => $user->id,
             'course_id' => $course->id,
             'amount' => 4800,
             'tariff' => 'full',
-            'status' => 'paid',
+            'status' => 'pending',
         ]);
 
-        $this->assertTrue(
-            $user->fresh()->groups->isEmpty(),
-            'Без привязанных групп доступ через группы не выдаётся, но и ошибки быть не должно.'
-        );
+        $payment->grantAccess();
+
+        $this->assertTrue($user->fresh()->groups->isEmpty());
     }
 }

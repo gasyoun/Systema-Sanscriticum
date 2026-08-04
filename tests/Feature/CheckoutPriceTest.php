@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -47,8 +48,25 @@ class CheckoutPriceTest extends TestCase
     private function tariff(int $price = 5000): Tariff
     {
         $course = Course::factory()->create();
+        $group = Group::create(['name' => 'Checkout group']);
+        $course->groups()->attach($group->id);
 
         return Tariff::factory()->for($course)->create(['price' => $price]);
+    }
+
+    /** @test */
+    public function paid_course_without_group_is_rejected_before_bank_link_creation(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $tariff = Tariff::factory()->for($course)->create(['price' => 5000]);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->assertSessionHasErrors('tariff_id');
+
+        $this->assertDatabaseCount('payments', 0);
+        Http::assertNothingSent();
     }
 
     /** @test */
@@ -124,6 +142,8 @@ class CheckoutPriceTest extends TestCase
     public function second_pending_order_on_same_course_is_blocked_while_deposit_unspent(): void
     {
         $course = Course::factory()->create();
+        $group = Group::create(['name' => 'Block checkout group']);
+        $course->groups()->attach($group->id);
         $user = User::factory()->create();
 
         Payment::create([

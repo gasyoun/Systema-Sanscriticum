@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Deposit;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Tariff;
@@ -60,13 +61,22 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
     }
 
+    private function checkoutCourse(): Course
+    {
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        return $course;
+    }
+
     /** @test */
     public function residual_deposit_survives_purchase_cheaper_than_deposit(): void
     {
         // H071 #10: депозит 5000, покупка за 4000 → цена 0, доступ сразу;
         // из депозита списано 4000, остаток 1000 живёт и зачитывается дальше.
         $user = User::factory()->create();
-        $course = Course::factory()->create();
+        $course = $this->checkoutCourse();
         $deposit = $this->deposit($user, $course, 5000);
 
         $cheapHalf = Tariff::factory()->block(1)->create([
@@ -103,7 +113,7 @@ class DepositPartialConsumptionTest extends TestCase
     {
         // Покупка дороже депозита: депозит выбирается целиком и гасится штампом.
         $user = User::factory()->create();
-        $course = Course::factory()->create();
+        $course = $this->checkoutCourse();
         $deposit = $this->deposit($user, $course, 2000);
 
         $tariff = Tariff::factory()->block(1)->create([
@@ -139,7 +149,7 @@ class DepositPartialConsumptionTest extends TestCase
         // зачёт при докупке видит полную стоимость половины (3000 кэш + 2000
         // депозит) → доплата за целый блок 5000, итого ровно 10000.
         $user = User::factory()->create();
-        $course = Course::factory()->create();
+        $course = $this->checkoutCourse();
         $this->deposit($user, $course, 2000);
 
         $half = Tariff::factory()->block(1)->create([
@@ -170,7 +180,7 @@ class DepositPartialConsumptionTest extends TestCase
         // Половина, полностью покрытая депозитом (amount=0), всё равно даёт зачёт
         // при докупке целого блока — раньше отсекалась условием amount > 0.
         $user = User::factory()->create();
-        $course = Course::factory()->create();
+        $course = $this->checkoutCourse();
         $this->deposit($user, $course, 5000);
 
         $half = Tariff::factory()->block(1)->create([
@@ -219,7 +229,7 @@ class DepositPartialConsumptionTest extends TestCase
     {
         // Два депозита: списание идёт с более раннего; второй остаётся целым.
         $user = User::factory()->create();
-        $course = Course::factory()->create();
+        $course = $this->checkoutCourse();
         $first = $this->deposit($user, $course, 1000);
         $first->updateQuietly(['created_at' => now()->subDay()]);
         $second = $this->deposit($user, $course, 1000);

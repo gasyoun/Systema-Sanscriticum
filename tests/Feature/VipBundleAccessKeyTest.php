@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
@@ -48,6 +49,8 @@ class VipBundleAccessKeyTest extends TestCase
     public function checkout_stores_canonical_access_key_for_non_block_tariffs(string $type): void
     {
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
         $tariff = Tariff::factory()->for($course)->create([
             'type' => $type,
             'price' => 12000,
@@ -79,6 +82,8 @@ class VipBundleAccessKeyTest extends TestCase
     public function paid_vip_student_unlocks_lessons(): void
     {
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
         $lesson = Lesson::factory()->create([
             'course_id' => $course->id,
             'block_number' => 1,

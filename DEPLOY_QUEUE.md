@@ -65,21 +65,13 @@ _Создано: 08-07-2026 · Обновлено: 02-08-2026 (№65 H2110 «С�
 
 ### ⚙️ H2085 — silent-grant gaps (hold ≠ paid · empty groups) — **после human-merge PR**
 
-Код авто-деплоится с `main`; **флаги тёмные** (money-contour). Включать только
-после ревью PR (НЕ auto-merge) и `config:cache`:
-
-```bash
-# .env (prod) — human @DO
-TOCHKA_AUTHORIZED_NOT_PAID=true
-# only after every paid course has ≥1 group in Filament «Группы»:
-MONEY_GRANT_REQUIRE_GROUPS=true
-# TOCHKA_WEBHOOK_GUARD already defaults true on main (01-08 false-economy);
-# confirm prod is not forcing =false
-php artisan config:cache
-```
+Код авто-деплоится с `main`; границы оплаты теперь являются безусловными
+инвариантами, без прод-флагов. Перед merge проверить, что каждый продаваемый
+курс имеет ≥1 группу в Filament «Группы». `TOCHKA_WEBHOOK_GUARD` должен
+оставаться включённым (default `true`; prod не должен переопределять `false`).
 
 Memo: [docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md).
-Smoke after enable: hold JWT must leave payment `pending`; paid with groups grants;
+Smoke after deploy: hold JWT must leave payment `pending`; captured/completed with groups grants;
 course without groups → 500 until groups attached.
 
 ---

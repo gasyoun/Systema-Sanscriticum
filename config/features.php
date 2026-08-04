@@ -356,27 +356,6 @@ return [
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
-     | H2085 — hold (authorized/AUTHORIZED) не считается оплатой. Когда ВКЛ,
-     | WebhookController НЕ переводит платёж в paid и НЕ выдаёт доступ на
-     | банковский hold; журнал decision=hold_not_captured. Capture-статусы
-     | (paid/APPROVED/captured/completed) без изменений. ВЫКЛ по умолчанию —
-     | прод-инертен (legacy: hold = success). Включение после ревью:
-     | TOCHKA_AUTHORIZED_NOT_PAID=true + config:cache.
-     | Memo: docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md
-     */
-    'tochka_authorized_not_paid' => (bool) env('TOCHKA_AUTHORIZED_NOT_PAID', false),
-
-    /*
-     | H2085 — grantAccess без course_group: жёсткий отказ. Когда ВКЛ, пустой
-     | pivot course_group бросает RuntimeException (транзакция paid откатывается
-     | / вебхук 500 → ретрай банка). Когда ВЫКЛ (default): только Log::error
-     | (раньше был warning — silent-empty paid+welcome без уроков). Включение:
-     | MONEY_GRANT_REQUIRE_GROUPS=true + config:cache после того как все платные
-     | курсы в админке имеют ≥1 группу.
-     */
-    'money_grant_require_groups' => (bool) env('MONEY_GRANT_REQUIRE_GROUPS', false),
-
-    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —
