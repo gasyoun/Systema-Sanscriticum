@@ -36,6 +36,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   class: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) ·  
   danger: [Uprava DANGER_FACTS Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
 
+## Editorial style guide of record (RU copy)
+
+Весь русский текст для читателя (blade-шаблоны витрины, письма, лендинги, CTA) обязан
+следовать редакционному style guide of record:
+[Uprava/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md)
+(H1856, 04-08-2026; приватный Uprava — ссылка работает для участников org). Главное:
+только «вы» со строчной; без ALL-CAPS; ё обязательна; цены `4 800 ₽`; санскритские
+слова в прозе — практической кириллицей (IAST только в научном слое); зонтичное имя —
+«Общество ревнителей санскрита»; датированный CTA обязан иметь поведение истечения;
+голых URL в прозе нет. Proof-цифры — только из
+[config/trust.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/trust.php).
+Юридические формулировки (`dpo/ip-gasuns/CONVENTIONS.md`, «встречи сообщества», ЭО и ДОТ)
+сильнее гида. Где существующий текст расходится — прав гид, правим при касании.
+
 ## Commands
 
 ```bash
