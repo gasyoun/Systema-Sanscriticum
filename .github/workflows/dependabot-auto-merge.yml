@@ -1,10 +1,9 @@
 name: Dependabot auto-merge
 
-# Hands-off merge of Dependabot pull requests. When all required checks pass
-# GitHub merges the PR by itself; on repos with no required checks the PR is
-# squash-merged directly. To hold back major bumps for human review, gate the
-# Approve + Enable steps on:
-#   steps.meta.outputs.update-type != 'version-update:semver-major'
+# Hands-off merge of Dependabot patch/minor pull requests. `--auto` delegates
+# the actual merge to GitHub, which waits for branch-protection requirements;
+# there is deliberately no direct-merge fallback. Major bumps receive neither
+# approval nor auto-merge and therefore require human review.
 # Deployed by /cologne-dependabot-automerge-all.
 
 on: pull_request
@@ -26,13 +25,19 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Approve the PR
-        run: gh pr review --approve "$PR_URL" || true
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+          steps.meta.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge (falls back to a direct squash-merge where no required checks exist)
-        run: gh pr merge --auto --squash "$PR_URL" || gh pr merge --squash "$PR_URL"
+      - name: Enable auto-merge after required checks
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+          steps.meta.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

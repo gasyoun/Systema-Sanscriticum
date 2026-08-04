@@ -160,35 +160,36 @@ curl -s https://samskrte.ru/online/kursy/grammatika-po-kocerginoi-gr62 | grep -o
 начала). [`.github/workflows/deploy.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/deploy.yml)
 закрывает разрыв **Опцией A** из
 [`SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md`](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_DEPLOY_GATE_FACTS_OPTIONS_2026H2.md):
-CI по SSH запускает тот же `sudo bash deploy.sh`, что и раньше запускал Иван
-руками — сам скрипт не меняется, меняется только кто/что его вызывает.
+Ручной GitHub Actions run по SSH запускает тот же `sudo bash deploy.sh`, что и
+раньше запускал Иван руками. Каноническая автоматическая доставка остаётся у
+серверного cron; SSH workflow — защищённый ручной путь, а не второй автодеплой.
 
 **Инвариант безопасности сохраняется: у агентов по-прежнему нет прод-кредов.**
 SSH-ключ живет только в секретах GitHub Environment `production`; job
 запускается на GitHub-раннере, не на машине агента, и ждет approval человека
 на КАЖДЫЙ прогон.
 
-### Как работает гейт (MG-confirm)
+### Как работает ручной гейт (MG-confirm)
 
-1. PR смерджен в `main` → workflow ставится в очередь **"Waiting"** во вкладке
-   Actions — job физически не стартует.
-2. Ревьюер (MG) открывает run и жмет **Review deployments → Approve and
+1. Оператор открывает **Actions → Deploy production → Run workflow**. Push и
+   merge в `main` этот SSH workflow не запускают.
+2. Run встаёт в **"Waiting"**; ревьюер (MG) открывает его и жмет **Review deployments → Approve and
    deploy**.
 3. Только после этого раннер поднимается, SSH'ится на прод и гоняет
    `sudo /var/www/html/deploy.sh` — тот же ритуал (git pull --ff-only, composer/npm,
    migrate, optimize, reload php-fpm, restart horizon, смоук), что описан выше
    в этом файле.
-4. `workflow_dispatch` дает тот же путь вручную (Actions → Deploy production →
-   Run workflow) для внепланового деплоя между пушами в `main`.
+4. Обычный автоматический прод-деплой по-прежнему выполняет серверный cron; этот
+   путь нужен для осознанного внепланового прогона.
 
 `concurrency: deploy-production` не дает второму прогону стартовать поверх
-незавершенного — следующий push просто встает в очередь на approval.
+незавершенного — второй ручной run ждёт завершения первого.
 
 ### Первичная настройка (человек, один раз) — ещё НЕ сделано
 
 Этот PR добавляет только workflow-файл. Ниже — что должен завести человек
 (Иван и/или MG) в GitHub и на сервере, прежде чем прогон реально сработает;
-до этого push в `main` просто копит "Waiting"-раны без вреда.
+до этого ручной run безопасно пропустит SSH-шаг из-за отсутствующих секретов.
 
 **На сервере (Иван, ~15 мин, root):**
 
@@ -216,8 +217,8 @@ SSH-ключ живет только в секретах GitHub Environment `pro
    - `DEPLOY_SSH_KEY` — приватный ключ из шага 2 (весь PEM-блок, включая
      `-----BEGIN`/`-----END`).
 
-После этого следующий push в `main` (или ручной `workflow_dispatch`) впервые
-дойдет до реального approval-гейта.
+После этого следующий ручной `workflow_dispatch` впервые дойдет до реального
+approval-гейта. Push в `main` продолжит обслуживать канонический серверный cron.
 
 ## Откат
 

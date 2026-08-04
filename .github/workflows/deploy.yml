@@ -7,13 +7,11 @@ name: Deploy production
 # заводит человек (Иван/MG) в настройках репозитория — см. docs/deploy.md
 # §CI/CD.
 #
-# push -> main ставит run в очередь "Waiting" сразу; job не стартует, пока
-# ревьюер Environment не нажмет Approve в вкладке Actions — это и есть
-# MG-confirm gate. workflow_dispatch дает ручной прогон тем же путем.
+# Прод по расписанию по-прежнему доставляет серверный cron через deploy.sh.
+# Этот SSH-путь — только ручной аварийный/операторский запуск с тем же
+# Environment approval; merge/push сам по себе его не ставит в очередь.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch: {}
 
 concurrency:

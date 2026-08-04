@@ -3,13 +3,11 @@ name: Schedule guard reproduction test
 # H1973 (30-07-2026): systema-schedule-run.sh's flock-based overlap guard once
 # stayed falsely held for ~2h after a deploy restart, silently skipping every
 # scheduled command. The fix added a TTL-based stale-lock reclaim, verified by
-# scripts/server_guards/sbin/test_systema_schedule_run.sh. That test must NEVER
-# run against the prod VPS (its reap() does a system-wide `pgrep -f artisan` and
-# can kill live prod processes — see Uprava DANGER_FACTS.md §Systema-Sanscriticum
-# and this repo's own memory store) — GitHub-hosted runners are always disposable,
-# so this workflow is the safe periodic-verification channel. Runs on every
-# push/PR touching the guarded scripts, plus weekly so regressions in the
-# reclaim logic surface even if the wrapper itself hasn't changed in a while.
+# scripts/server_guards/sbin/test_systema_schedule_run.sh. The test now also
+# proves the wrapper never touches an unrelated Artisan-like process. Runs on
+# every push/PR touching the guarded scripts, plus weekly so regressions in the
+# reclaim and process-isolation logic surface even if the wrapper itself hasn't
+# changed in a while.
 
 on:
   push:
