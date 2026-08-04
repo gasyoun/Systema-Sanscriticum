@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\ContentCandidate;
 use App\Services\Content\QuotePolicy;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,7 +26,7 @@ use InvalidArgumentException;
  * Prod-inert while `features.content_auto_publish_pilot` is OFF (default) —
  * early return, no HTTP, no real post ever fires from a test/CI run.
  */
-final class PublishSocialPostJob implements ShouldQueue
+final class PublishSocialPostJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -33,7 +34,18 @@ final class PublishSocialPostJob implements ShouldQueue
 
     public int $timeout = 60;
 
-    public function __construct(public readonly int $contentCandidateId) {}
+    public function __construct(public readonly int $contentCandidateId)
+    {
+        if (config('queue.default') === 'redis') {
+            $this->onConnection('redis-long');
+        }
+        $this->onQueue('messages');
+    }
+
+    public function uniqueId(): string
+    {
+        return (string) $this->contentCandidateId;
+    }
 
     public function handle(): void
     {

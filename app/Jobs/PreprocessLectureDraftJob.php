@@ -38,6 +38,9 @@ final class PreprocessLectureDraftJob implements ShouldQueue
         public readonly int $lessonNumber,
     ) {
         // Очередь длинных лекционных задач (отдельный Horizon-супервизор).
+        if (config('queue.default') === 'redis') {
+            $this->onConnection('redis-lectures');
+        }
         $this->onQueue('lectures');
     }
 

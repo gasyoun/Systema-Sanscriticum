@@ -8,6 +8,7 @@ use App\Mail\ContentDigestMail;
 use App\Models\ContentCandidate;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Mail;
  * domain model. Gated by `content_email_oneshot`, OFF until the August SMTP
  * activation (depends on the H1449 path / #504).
  */
-final class SendContentOneShotMailJob implements ShouldQueue
+final class SendContentOneShotMailJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -29,7 +30,18 @@ final class SendContentOneShotMailJob implements ShouldQueue
 
     public int $timeout = 120;
 
-    public function __construct(public readonly int $contentCandidateId) {}
+    public function __construct(public readonly int $contentCandidateId)
+    {
+        if (config('queue.default') === 'redis') {
+            $this->onConnection('redis-long');
+        }
+        $this->onQueue('mailing');
+    }
+
+    public function uniqueId(): string
+    {
+        return (string) $this->contentCandidateId;
+    }
 
     public function handle(): void
     {

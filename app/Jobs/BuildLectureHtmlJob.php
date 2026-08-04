@@ -40,6 +40,9 @@ final class BuildLectureHtmlJob implements ShouldQueue
         public readonly bool $ownsProcessing = false,
     ) {
         // Очередь длинных лекционных задач (отдельный Horizon-супервизор).
+        if (config('queue.default') === 'redis') {
+            $this->onConnection('redis-lectures');
+        }
         $this->onQueue('lectures');
     }
 

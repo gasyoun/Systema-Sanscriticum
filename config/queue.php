@@ -66,7 +66,31 @@ return [
             'driver' => 'redis',
             'connection' => 'default',
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
+            // Fast jobs and webhook handlers are capped at 120 seconds in
+            // Horizon. Keep the reservation longer so a still-running job is
+            // never made visible to a second worker.
+            'retry_after' => 150,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'redis-long' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => env('REDIS_LONG_QUEUE', 'certificates'),
+            // Long workers/jobs are capped at 600 seconds.
+            'retry_after' => 660,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'redis-lectures' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => env('REDIS_LECTURES_QUEUE', 'lectures'),
+            // Lecture workers are capped at 960 seconds; RunLectureAiJob is
+            // capped at 900 seconds.
+            'retry_after' => 1020,
             'block_for' => null,
             'after_commit' => false,
         ],

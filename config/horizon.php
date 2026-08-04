@@ -98,6 +98,13 @@ return [
 
     'waits' => [
         'redis:default' => 60,
+        'redis:tracking' => 60,
+        'redis:webhooks' => 30,
+        'redis-long:imports' => 60,
+        'redis-long:mailing' => 60,
+        'redis-long:messages' => 60,
+        'redis-long:certificates' => 60,
+        'redis-lectures:lectures' => 300,
     ],
 
     /*
@@ -210,6 +217,31 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        'supervisor-long' => [
+            'connection' => 'redis-long',
+            'queue' => ['imports', 'mailing', 'messages', 'certificates'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 600,
+            'nice' => 0,
+        ],
+        'supervisor-lectures' => [
+            'connection' => 'redis-lectures',
+            'queue' => ['lectures'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 1,
+            'timeout' => 960,
+            'nice' => 0,
+        ],
         'supervisor-webhooks' => [
             'connection' => 'redis',
             'queue' => ['webhooks'],
@@ -225,11 +257,25 @@ return [
         'production' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['default', 'tracking', 'imports', 'mailing', 'messages', 'certificates'],
+                'queue' => ['default', 'tracking'],
                 'balance' => 'auto',
                 'autoScalingStrategy' => 'time',
                 'minProcesses' => 1,
                 'maxProcesses' => 10,
+                'tries' => 1,
+                'timeout' => 120,
+                'memory' => 128,
+                'nice' => 0,
+            ],
+            // Imports, mail/messages and certificate archives may need up to
+            // ten minutes. Their Redis reservation is 660 seconds.
+            'supervisor-long' => [
+                'connection' => 'redis-long',
+                'queue' => ['imports', 'mailing', 'messages', 'certificates'],
+                'balance' => 'auto',
+                'autoScalingStrategy' => 'time',
+                'minProcesses' => 1,
+                'maxProcesses' => 4,
                 'tries' => 1,
                 'timeout' => 600,
                 'memory' => 128,
@@ -238,7 +284,7 @@ return [
             // Длинные лекционные задачи (препроцесс/сборка/ИИ до ~15 мин) — отдельный
             // супервизор, чтобы не блокировать быстрые джобы default-очереди.
             'supervisor-lectures' => [
-                'connection' => 'redis',
+                'connection' => 'redis-lectures',
                 'queue' => ['lectures'],
                 'balance' => 'simple',
                 'minProcesses' => 1,
@@ -262,16 +308,26 @@ return [
         'local' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['default', 'tracking', 'imports', 'mailing', 'messages', 'certificates'],
+                'queue' => ['default', 'tracking'],
                 'balance' => 'simple',
                 'minProcesses' => 1,
                 'maxProcesses' => 3,
+                'tries' => 1,
+                'timeout' => 120,
+                'memory' => 128,
+            ],
+            'supervisor-long' => [
+                'connection' => 'redis-long',
+                'queue' => ['imports', 'mailing', 'messages', 'certificates'],
+                'balance' => 'simple',
+                'minProcesses' => 1,
+                'maxProcesses' => 2,
                 'tries' => 1,
                 'timeout' => 600,
                 'memory' => 128,
             ],
             'supervisor-lectures' => [
-                'connection' => 'redis',
+                'connection' => 'redis-lectures',
                 'queue' => ['lectures'],
                 'balance' => 'simple',
                 'minProcesses' => 1,
