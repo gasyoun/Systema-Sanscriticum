@@ -132,7 +132,7 @@ Route::post('/webhooks/telegram-zapisi', [TelegramZapisiWebhookController::class
 // === ПАРТНЁРСКИЙ БОТ (агентская программа) ===
 // Внешний Telegram-бот (@Partner_..._bot, ?start=agent) регистрирует партнёров
 // и запрашивает их статистику. Общий секрет — заголовок X-Partner-Bot-Secret
-// (config partner.bot_secret; enforce-if-configured). throttle против перебора.
+// (config partner.bot_secret; обязателен, когда программа включена). throttle против перебора.
 Route::prefix('partner-bot')->middleware(['verify.partner.bot', 'throttle:30,1'])->group(function () {
     Route::post('/register', [PartnerBotController::class, 'register'])->name('api.partner-bot.register');
     Route::post('/stats', [PartnerBotController::class, 'stats'])->name('api.partner-bot.stats');
