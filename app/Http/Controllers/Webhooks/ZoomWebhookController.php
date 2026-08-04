@@ -26,14 +26,21 @@ use Illuminate\Support\Facades\Log;
  * поэтому событие `recording.completed` здесь не трогаем.
  *
  * Подпись Zoom: `x-zm-signature: v0=<hmac_sha256("v0:{ts}:{body}", secret)>`.
- * При заданном секрете — fail-closed; пустой секрет (локалка) — пропускаем с логом.
+ * Секрет обязателен: без него любое событие, включая URL-validation,
+ * отвечает 503. HMAC с пустым ключом не вычисляется.
  */
 class ZoomWebhookController extends Controller
 {
     public function handle(Request $request): JsonResponse
     {
-        $secret = (string) config('services.zoom.webhook_secret', '');
+        $secret = trim((string) config('services.zoom.webhook_secret', ''));
         $event = (string) $request->input('event', '');
+
+        if ($secret === '') {
+            Log::error('Zoom webhook: ZOOM_WEBHOOK_SECRET не задан');
+
+            return response()->json(['message' => 'Webhook secret is not configured'], 503);
+        }
 
         // URL-валидация подписывается тем же секретом, но проверка подписи на ней
         // не делается (Zoom шлёт её до того, как мы «доверены») — отвечаем челленджем.
@@ -65,17 +72,9 @@ class ZoomWebhookController extends Controller
         ]);
     }
 
-    /**
-     * Проверка `x-zm-signature`. Пустой секрет → пропускаем (enforce-if-configured).
-     */
+    /** Проверка `x-zm-signature`; handle() гарантирует непустой секрет. */
     private function signatureValid(Request $request, string $secret): bool
     {
-        if ($secret === '') {
-            Log::warning('Zoom webhook: секрет не задан — подпись не проверяется');
-
-            return true;
-        }
-
         $timestamp = (string) $request->header('x-zm-request-timestamp', '');
         $signature = (string) $request->header('x-zm-signature', '');
         if ($timestamp === '' || $signature === '') {

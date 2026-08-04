@@ -9,22 +9,28 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Защита API партнёрского бота общим секретом. Enforce-if-configured: если
- * services.partner_bot.secret задан — требуем совпадающий X-Partner-Bot-Secret
- * (сравнение constant-time). Если секрет не настроен — пропускаем (как легаси
- * бот-вебхуки), чтобы локальная разработка не требовала секрета.
+ * Защита API партнёрского бота общим секретом. Когда программа
+ * включена, секрет обязателен (503 при ошибке конфигурации), а заголовок
+ * X-Partner-Bot-Secret сравнивается constant-time. При выключенной программе
+ * запрос доходит до контроллера, который сохраняет прежний 404.
  */
 class VerifyPartnerBotWebhook
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $expected = (string) config('partner.bot_secret', '');
+        if (! (bool) config('partner.enabled', false)) {
+            return $next($request);
+        }
 
-        if ($expected !== '') {
-            $provided = (string) $request->header('X-Partner-Bot-Secret', '');
-            if (! hash_equals($expected, $provided)) {
-                abort(403, 'Invalid partner-bot secret');
-            }
+        $expected = trim((string) config('partner.bot_secret', ''));
+
+        if ($expected === '') {
+            abort(503, 'Partner-bot secret is not configured');
+        }
+
+        $provided = (string) $request->header('X-Partner-Bot-Secret', '');
+        if (! hash_equals($expected, $provided)) {
+            abort(403, 'Invalid partner-bot secret');
         }
 
         return $next($request);

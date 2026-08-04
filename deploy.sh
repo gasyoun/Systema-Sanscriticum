@@ -182,18 +182,26 @@ fi
 say "php artisan filament:assets"
 php artisan filament:assets
 
-# ── 3. Maintenance (опционально) + миграции ──────────────────────────────────
-if [ "$USE_DOWN" = 1 ]; then
-  say "php artisan down"
-  php artisan down --retry=15 || true
-fi
-
-say "Сброс кэшей + миграции"
+# ── 3. Webhook-preflight + maintenance + миграции ───────────────────────────────
+say "Сброс кэшей"
 php artisan optimize:clear
 # Кеш Filament-компонентов optimize:clear НЕ трогает (bootstrap/cache/filament/);
 # без явного сброса новый виджет/страница ловит ComponentNotFoundException на
 # первом же update-запросе (см. docs/deploy.md, гочка LeadCostRangeWidget).
 php artisan filament:optimize-clear 2>/dev/null || true
+
+# На rollback команды может ещё не быть в старом коммите. Обычный деплой
+# проверяем ДО maintenance-mode и необратимых миграций.
+if [ -z "$ROLLBACK_TO" ]; then
+  say "Проверка секретов webhook"
+  php artisan deploy:webhook-preflight
+fi
+
+if [ "$USE_DOWN" = 1 ]; then
+  say "php artisan down"
+  php artisan down --retry=15 || true
+fi
+
 if [ -n "$ROLLBACK_TO" ]; then
   say "ОТКАТ: миграции пропускаются (migrate --force необратим)"
 else
