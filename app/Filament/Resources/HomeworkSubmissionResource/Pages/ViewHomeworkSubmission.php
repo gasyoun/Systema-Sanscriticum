@@ -170,8 +170,8 @@ class ViewHomeworkSubmission extends ViewRecord
             ->disk('local')
             ->directory('homework/feedback/'.$this->getRecord()->id)
             ->preserveFilenames()
-            ->maxSize(30720)
-            ->maxFiles(10);
+            ->maxSize((int) config('homework.max_file_kb', 30720))
+            ->maxFiles((int) config('homework.max_files', 10));
     }
 
     private function review(string $status, array $data): void
