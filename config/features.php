@@ -613,6 +613,19 @@ return [
     'lead_converted_at_on_course_paid' => (bool) env('LEAD_CONVERTED_AT_ON_COURSE_PAID', false),
 
     /*
+     | Noboring dozhim Wave 1 H-C (H2060): student.access ("Оплата и доступ")
+     | debt cards gain amount + FAQ payment link + curator contact + installment
+     | CTA copy. Pure presentation on top of the already-existing
+     | DebtPaymentResolver options and RecoveryStateResolver state — no new
+     | payment path, no PaymentObserver/grant change.
+     |
+     | ВЫКЛ по умолчанию. Пока OFF, student.access рендерится ровно как раньше
+     | (без блока amount/FAQ/куратор/рассрочка). Включение —
+     | PAYMENT_RECOVERY_CTA=true + config:cache после ревью.
+     */
+    'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
+
+    /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
      | page linking to short /lila drills — DISTINCT from the FSRS review loop
      | (srs.enabled, /dvaram/koloda) and orthogonal to it. Когда ВЫКЛ (по умолчанию):

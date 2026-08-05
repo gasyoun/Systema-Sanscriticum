@@ -286,6 +286,10 @@ Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
 // FAQ: как сдавать ДЗ — публично (удобно для ссылки в чат группы; без входа).
 Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 
+// FAQ: способы оплаты, рассрочка, что делать, если платёж не проходит — публично
+// (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
+Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
+
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
 Route::view('/uptime', 'uptime')->name('uptime.show');
