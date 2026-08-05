@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -59,6 +60,8 @@ class CheckoutPromoRenewalTest extends TestCase
     private function tariff(int $price = 5000): Tariff
     {
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
 
         return Tariff::factory()->for($course)->create(['price' => $price]);
     }

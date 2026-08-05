@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -206,6 +207,8 @@ class PromoReservationTest extends TestCase
     {
         $this->enableReservations();
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
         $tariff = Tariff::factory()->for($course)->create(['price' => 5000]);
         $promo = PromoCode::create([
             'code' => 'PROMOFREE',
@@ -234,6 +237,8 @@ class PromoReservationTest extends TestCase
     private function tariffAndPromo(?int $usageLimit = null): array
     {
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
         $tariff = Tariff::factory()->for($course)->create(['price' => 5000]);
         $promo = PromoCode::create([
             'code' => 'PROMO10',

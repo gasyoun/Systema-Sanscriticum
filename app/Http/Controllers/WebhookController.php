@@ -91,21 +91,18 @@ class WebhookController extends Controller
                 return response('OK', 200);
             }
 
-            // Capture-confirmed statuses. Hold (authorized/AUTHORIZED) historically sat
-            // in the same list → access on bank hold, not capture (H2085 silent-wrong).
-            // Flag OFF (default): legacy parity, hold still grants. Flag ON: hold is
-            // journalled as hold_not_captured, no paid transition.
-            $captureStatuses = ['paid', 'APPROVED', 'captured', 'completed'];
-            $holdStatuses = ['authorized', 'AUTHORIZED'];
-            $authorizedNotPaid = (bool) config('features.tochka_authorized_not_paid');
-            $successStatuses = $authorizedNotPaid
-                ? $captureStatuses
-                : array_merge($captureStatuses, $holdStatuses);
+            // Only a settled capture may open access. A bank authorization is merely a
+            // hold and must remain pending until a later captured/completed delivery.
+            $normalizedBankStatus = is_string($statusFromBank)
+                ? mb_strtolower(trim($statusFromBank))
+                : null;
+            $successStatuses = ['captured', 'completed'];
+            $holdStatuses = ['authorized'];
             $failureStatuses = ['rejected', 'canceled', 'failed'];
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
-            DB::transaction(function () use ($paymentId, $statusFromBank, $paymentMethod, $reportedAmount, $eventHash, $guard, $successStatuses, $failureStatuses, $holdStatuses, $authorizedNotPaid) {
+            DB::transaction(function () use ($paymentId, $statusFromBank, $normalizedBankStatus, $paymentMethod, $reportedAmount, $eventHash, $guard, $successStatuses, $failureStatuses, $holdStatuses) {
                 $payment = $paymentId ? Payment::lockForUpdate()->find($paymentId) : null;
 
                 // Решение по этой доставке для журнала; по умолчанию — как раньше.
@@ -119,15 +116,15 @@ class WebhookController extends Controller
                     if ($paymentId) {
                         Log::warning("Вебхук: Платеж с ID {$paymentId} не найден в базе!");
                     }
-                } elseif ($authorizedNotPaid && in_array($statusFromBank, $holdStatuses, true)) {
-                    // H2085: bank hold ≠ capture — do not grant access.
+                } elseif (in_array($normalizedBankStatus, $holdStatuses, true)) {
+                    // Bank hold ≠ capture — do not grant access.
                     $decision = PaymentWebhookEvent::DECISION_HOLD_NOT_CAPTURED;
                     $apply = false;
-                    Log::warning("⛔ Вебхук: hold (status={$statusFromBank}) для заказа №{$payment->id} — доступ НЕ выдан (ждём capture/paid).", [
+                    Log::warning("⛔ Вебхук: hold (status={$statusFromBank}) для заказа №{$payment->id} — доступ НЕ выдан (ждём captured/completed).", [
                         'payment_id' => $payment->id,
                         'bank_status' => $statusFromBank,
                     ]);
-                } elseif (in_array($statusFromBank, $successStatuses, true)) {
+                } elseif (in_array($normalizedBankStatus, $successStatuses, true)) {
                     // (b) Воскрешение: платёж был оплачен и затем отменён/возвращён.
                     // Повторный/переигранный success-JWT не должен воскрешать доступ,
                     // депозит, промо-слот и реферала (см. fireOnPaid blast radius в PR).
@@ -166,9 +163,21 @@ class WebhookController extends Controller
                     return;
                 }
 
-                // ===== Существующее поведение (при флаге OFF — без изменений) =====
-                if (in_array($statusFromBank, $successStatuses, true)) {
+                if (in_array($normalizedBankStatus, $successStatuses, true)) {
                     if ($payment->status !== 'paid') {
+                        $requiresCourseGroups = $payment->course_id !== null
+                            && ! $payment->isDeposit()
+                            && ! $payment->isTrial()
+                            && ! $payment->isMarathonPaid()
+                            && ! $payment->isExpense()
+                            && ! $payment->isSalaryPayout();
+
+                        if ($requiresCourseGroups && ! $payment->course?->groups()->exists()) {
+                            throw new \RuntimeException(
+                                "Вебхук оплаты #{$payment->id}: у курса нет группы доступа; повторите доставку после настройки."
+                            );
+                        }
+
                         $update = ['status' => 'paid'];
                         // Способ оплаты пишем только когда распознан — не затираем
                         // уже сохранённый NULL'ом на возможных повторных вебхуках.
@@ -181,7 +190,7 @@ class WebhookController extends Controller
                         // Платёж уже был отмечен оплаченным, но без способа — дозаполняем.
                         $payment->update(['payment_method' => $paymentMethod]);
                     }
-                } elseif (in_array($statusFromBank, $failureStatuses, true)) {
+                } elseif (in_array($normalizedBankStatus, $failureStatuses, true)) {
                     if ($payment->status !== 'failed') {
                         $payment->update(['status' => 'failed']);
                         Log::info("❌ ОТКАЗ: Заказ №{$payment->id} отменен банком.");

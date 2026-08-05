@@ -77,6 +77,15 @@ class PaymentController extends Controller
 
         $tariff = $tariffQuery->findOrFail($request->input('tariff_id'));
 
+        // A paid entitlement has no deliverable without a course group. Refuse the
+        // checkout before creating a Payment or asking Tochka for a bank link; once
+        // the course is configured, the customer can submit the checkout again.
+        if ($tariff->course !== null && ! $tariff->course->groups()->exists()) {
+            throw ValidationException::withMessages([
+                'tariff_id' => 'Оплата этого курса временно недоступна: группа доступа ещё не настроена.',
+            ]);
+        }
+
         // H1396 §1 — the checkout page survives its own session. The applied promo
         // used to live ONLY in session('promo_code'); the anti-419 CSRF refresh mints
         // a fresh empty session and remember-me re-auths the user, so the code was

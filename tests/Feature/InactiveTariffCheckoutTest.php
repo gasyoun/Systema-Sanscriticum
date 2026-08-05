@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,8 +94,15 @@ class InactiveTariffCheckoutTest extends TestCase
 
     private function tariff(bool $active): Tariff
     {
+        $course = Course::factory()->create();
+
+        if ($active) {
+            $group = Group::factory()->create();
+            $course->groups()->attach($group->id);
+        }
+
         return Tariff::factory()
-            ->for(Course::factory())
+            ->for($course)
             ->create([
                 'price' => 5000,
                 'is_active' => $active,

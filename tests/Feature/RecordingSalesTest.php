@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
@@ -45,7 +46,11 @@ class RecordingSalesTest extends TestCase
 
     private function completedCourse(): Course
     {
-        return Course::factory()->create(['is_completed' => true]);
+        $course = Course::factory()->create(['is_completed' => true]);
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        return $course;
     }
 
     /** @test */

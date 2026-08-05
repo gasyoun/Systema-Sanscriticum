@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Tariff;
@@ -38,7 +39,11 @@ class ReferralCreditCheckoutTest extends TestCase
 
     private function tariff(int $price = 5000): Tariff
     {
-        return Tariff::factory()->for(Course::factory()->create())->create(['price' => $price]);
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        return Tariff::factory()->for($course)->create(['price' => $price]);
     }
 
     public function test_referral_lock_is_on_by_default(): void

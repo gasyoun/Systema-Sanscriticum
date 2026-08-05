@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Tariff;
 use App\Models\User;
@@ -39,6 +40,8 @@ class CheckoutNameTest extends TestCase
     private function tariff(): Tariff
     {
         $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
 
         return Tariff::factory()->for($course)->create(['price' => 5000]);
     }

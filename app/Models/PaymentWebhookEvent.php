@@ -34,7 +34,7 @@ class PaymentWebhookEvent extends Model
 
     /**
      * Банк прислал hold (authorized/AUTHORIZED), а не capture.
-     * Только при TOCHKA_AUTHORIZED_NOT_PAID=true — доступ не выдаём (H2085).
+     * Доступ не выдаём, пока не придёт captured/completed (H2085).
      */
     public const DECISION_HOLD_NOT_CAPTURED = 'hold_not_captured';
 

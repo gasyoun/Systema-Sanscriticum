@@ -1165,16 +1165,10 @@ class Payment extends Model
         $groupIds = $course->groups()->pluck('groups.id')->toArray();
 
         if (empty($groupIds)) {
-            // H2085: was Log::warning — paid + welcome could succeed with zero lessons
-            // and no error-level signal. Always error-loud; optional hard fail via flag.
             $msg = "grantAccess: у курса '{$course->title}' (id={$course->id}) ".
                 "нет привязанных групп (payment #{$this->id}). ".
-                'Проверьте вкладку «Группы» в админке курса — студент оплатил, но уроков не увидит.';
+                'Привяжите группу в админке курса и повторите доставку оплаты.';
             Log::error($msg);
-
-            if (config('features.money_grant_require_groups')) {
-                throw new \RuntimeException($msg);
-            }
 
             return;
         }
