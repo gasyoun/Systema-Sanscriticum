@@ -18,13 +18,24 @@ $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root.'/config', FilesystemIterator::SKIP_DOTS)
 );
 
+// Sort by relative path BEFORE reading a single file. RecursiveDirectoryIterator yields
+// in filesystem order, which differs between NTFS and ext4 — and a key read from two
+// config files renders its locations in first-seen order, so the same tree produced
+// byte-different output on Windows and on CI's Linux runner. `--check` is a hash_equals
+// against the committed bytes, so it could NEVER pass for a file regenerated on the other
+// platform: the job was unfixable from a Windows workstation rather than merely stale.
+$files = [];
 foreach ($iterator as $file) {
     if (! $file->isFile() || $file->getExtension() !== 'php') {
         continue;
     }
 
-    $relativePath = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
-    $tokens = token_get_all((string) file_get_contents($file->getPathname()));
+    $files[str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1))] = $file->getPathname();
+}
+ksort($files, SORT_STRING);
+
+foreach ($files as $relativePath => $pathname) {
+    $tokens = token_get_all((string) file_get_contents($pathname));
     $count = count($tokens);
 
     for ($i = 0; $i < $count; $i++) {
