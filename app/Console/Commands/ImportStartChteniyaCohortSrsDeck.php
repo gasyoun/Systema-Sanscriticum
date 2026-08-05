@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\SrsCard;
-use App\Models\SrsDeck;
-use App\Models\SrsNoteType;
 use App\Support\StartChteniyaCohort;
+use App\Support\StartChteniyaSrsDeck;
 use Illuminate\Console\Command;
 use RuntimeException;
 
@@ -40,8 +38,6 @@ class ImportStartChteniyaCohortSrsDeck extends Command
     protected $description = 'Import the H2109 cohort lemma freeze into a private per-student SRS deck (H2106)';
 
     private const FEED_PATH = 'data/cohort_start_chteniya/lemmas_for_srs.tsv';
-
-    private const DECK_SLUG = 'start-chteniya-cohort';
 
     public function handle(): int
     {
@@ -80,59 +76,27 @@ class ImportStartChteniyaCohortSrsDeck extends Command
             return self::SUCCESS;
         }
 
-        $noteType = SrsNoteType::firstOrCreate(
-            ['key' => 'start_chteniya_cohort'],
-            [
-                'name' => '«Старт чтения» — cohort lemmas',
-                'language' => 'sa',
-                'fields' => ['pack', 'lemma_slp1', 'surface', 'gloss_ru', 'gloss_en', 'locus'],
-            ],
-        );
-
         $decksTouched = 0;
         $cardsImported = 0;
         $cardsExisting = 0;
 
         foreach ($users as $user) {
-            $deck = SrsDeck::firstOrCreate(
-                ['user_id' => $user->id, 'slug' => self::DECK_SLUG],
-                [
-                    'note_type_id' => $noteType->id,
-                    'name' => '«Старт чтения» — словарь когорты',
-                    'language' => 'sa',
-                    'visibility' => 'private',
-                    'description' => 'H2106: lemmas from the cohort reading packs (Hitopadeśa-0), pinned by the H2109 freeze.',
-                ],
-            );
+            // Deck slug, note type, field list and dedupe key all live in
+            // StartChteniyaSrsDeck (H2111) — shared with the tap-token add-to-SRS path,
+            // so the two writers can never drift into two decks or two dedupe rules.
+            $deck = StartChteniyaSrsDeck::deckFor($user);
             $decksTouched++;
 
-            $existingLemmas = SrsCard::query()
-                ->where('deck_id', $deck->id)
-                ->get(['fields'])
-                ->map(fn (SrsCard $card) => ($card->fields['pack'] ?? null).'|'.($card->fields['lemma_slp1'] ?? null))
-                ->flip();
+            $existingLemmas = StartChteniyaSrsDeck::existingKeys($deck);
 
             foreach ($rows as $row) {
-                $key = $row['pack'].'|'.$row['lemma_slp1'];
-                if ($existingLemmas->has($key)) {
+                if (isset($existingLemmas[StartChteniyaSrsDeck::cardKey($row)])) {
                     $cardsExisting++;
 
                     continue;
                 }
 
-                SrsCard::create([
-                    'deck_id' => $deck->id,
-                    'direction' => 'front_back',
-                    'source_word_id' => null,
-                    'fields' => [
-                        'pack' => $row['pack'],
-                        'lemma_slp1' => $row['lemma_slp1'],
-                        'surface' => $row['surface'],
-                        'gloss_ru' => $row['gloss_ru'],
-                        'gloss_en' => $row['gloss_en'],
-                        'locus' => $row['locus'],
-                    ],
-                ]);
+                StartChteniyaSrsDeck::createCard($deck, $row);
                 $cardsImported++;
             }
         }
