@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.87.2] - 2026-08-05
 ### Added
 - **H2060: dozhim Wave 1 H-C — cabinet payment recovery CTA (amount, FAQ payment link, curator contact, installment copy).** Adds to the already-existing `student.access` ("Оплата и доступ") debt cards: amount to pay, a link to the new public `/faq/payment` page (methods, declined-card recovery, expired-promise recovery), curator Telegram contact, and installment CTA copy reusing H2059's `dozhim` MessageTemplate tone. All gated behind new flag `payment_recovery_cta` (default **OFF** — page renders exactly as before when off). Pure presentation on top of the already-existing `DebtPaymentResolver`/`RecoveryStateResolver` — no new payment path, `PaymentObserver` grant paths untouched. Tests: `PaymentRecoveryCtaTest` (3 green: flag off hides block, flag on shows amount/FAQ link/curator link, FAQ page renders publicly). [PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110). Executor: Sonnet 5 (`claude-sonnet-5`).
 - **Security remediation 1/8, 6/8 — Tochka settlement entitlement enforcement + automated delivery path protection.** [PR #1103](https://github.com/gasyoun/Systema-Sanscriticum/pull/1103), [PR #1109](https://github.com/gasyoun/Systema-Sanscriticum/pull/1109). Executor: Codex.
