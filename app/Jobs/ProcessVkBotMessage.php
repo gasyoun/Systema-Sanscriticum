@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
+use App\Services\Support\HomeworkPauseNoteRecorder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -86,6 +87,9 @@ final class ProcessVkBotMessage implements ShouldQueue
             'is_read' => false,
             'source' => 'vk',
         ]);
+
+        // H2320: «пауза по ДЗ» → примечание куратора.
+        app(HomeworkPauseNoteRecorder::class)->recordIfMatches($user, $text, 'vk-bot');
 
         // SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ.
         if (app(StudentSelfService::class)->matchesGroupsIntent($text)) {

@@ -9,6 +9,7 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
@@ -30,6 +31,7 @@ class TelegramSupportSyncService
         private readonly SupportConversationManager $conversations,
         private readonly TechnicalIssueRouter $techRouter,
         private readonly MadelineSessionReaper $reaper,
+        private readonly HomeworkPauseNoteRecorder $homeworkPauseNotes,
     ) {}
 
     public function sync(): array
@@ -346,6 +348,17 @@ class TelegramSupportSyncService
 
         if ($direction === 'incoming') {
             $this->techRouter->handleIncoming($message, $payload, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
+
+            // H2320: «пауза по ДЗ» → users.note when student is linked.
+            if ($linkedUserId) {
+                $text = trim((string) ($payload['text'] ?? $message->text ?? ''));
+                if ($text !== '') {
+                    $user = User::query()->find((int) $linkedUserId);
+                    if ($user) {
+                        $this->homeworkPauseNotes->recordIfMatches($user, $text, 'telegram-support');
+                    }
+                }
+            }
         } elseif ($linkedUserId && $isPrivate) {
             // Исходящие в ЛС по-прежнему цепляем к треду (история ответов).
             $this->conversations->recordMessage((int) $linkedUserId, $message, $message->sent_at);
