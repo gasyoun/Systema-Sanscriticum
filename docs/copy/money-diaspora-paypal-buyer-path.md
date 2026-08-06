@@ -1,6 +1,6 @@
 # Диаспорный путь оплаты (PayPal) — финальная копия (H1292)
 
-_Created: 20-07-2026 · Last updated: 31-07-2026_
+_Created: 20-07-2026 · Last updated: 06-08-2026_
 
 Лейн H1292 волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md) ·
@@ -85,6 +85,19 @@ Personal (non-business) PayPal has no auto-match API. Admin reconciles by:
 3. **Сумма + валюта** (`foreign_amount` / `foreign_currency`)
 
 Txn id and screenshot are optional helpers, not substitutes for the triple.
+
+### Paste-to-fill (H2215)
+
+На шаге 2 формы — блок **«Вставить детали из PayPal»**: студент копирует целиком
+текст деталей платежа со страницы Activity (или из письма-чека) и жмет
+«Заполнить из вставки». Клиентский парсер
+([`public/js/paypal-claim-paste.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/js/paypal-claim-paste.js))
+заполняет `paypal_payer` / `paid_on` / `foreign_amount` / `foreign_currency` /
+`paypal_txn`, когда они находятся в тексте. Пустые поля не выдумываются; форма
+не отправляется сама — студент проверяет и жмет «Отправить уведомление…».
+Серверная валидация `StorePaypalClaimRequest` без изменений. Фикстуры EN/RU:
+[`tests/fixtures/paypal_claim_paste/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/paypal_claim_paste).
+MG-supplied anonymized real paste still open for retune (handoff sample empty at ship).
 
 ### Страница заявки (`paypal/claim.blade.php`)
 

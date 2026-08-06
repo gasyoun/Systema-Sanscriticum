@@ -1,0 +1,10 @@
+Transaction details
+
+You sent a payment of $50.00 USD to gasyoun@gmail.com
+
+Status Completed
+Date July 30, 2026
+From student.buyer@example.com
+Transaction ID 1AB23456CD789012E
+
+Note: Thank you for the Sanskrit course

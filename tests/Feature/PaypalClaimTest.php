@@ -69,6 +69,22 @@ class PaypalClaimTest extends TestCase
     }
 
     /** @test */
+    public function claim_page_includes_paste_autofill_control(): void
+    {
+        $tariff = $this->blockTariff();
+
+        // H2215: step 2 exposes paste-to-fill UI + the pure client parser script.
+        $this->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertSee('Вставить детали из PayPal', false)
+            ->assertSee('id="paypal-paste-input"', false)
+            ->assertSee('id="paypal-paste-parse"', false)
+            ->assertSee('Заполнить из вставки', false)
+            ->assertSee('paypal-claim-paste.js', false)
+            ->assertSee('id="paypal-claim-form"', false);
+    }
+
+    /** @test */
     public function claim_page_states_timeframe_and_next_steps(): void
     {
         $tariff = $this->blockTariff();
