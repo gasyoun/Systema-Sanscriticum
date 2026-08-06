@@ -23,6 +23,7 @@ use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
 use App\Services\CertificateService;
+use App\Services\CourseContinuationBanner;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
 use App\Services\Leaderboard\LeaderboardService;
@@ -761,6 +762,9 @@ class StudentController extends Controller
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
+        // H2333: “where is lesson 1?” when this shell continues another course.
+        $continuationBanner = app(CourseContinuationBanner::class)->for($course, $user);
+
         if (config('features.cabinet_hybrid')) {
             $recovery = app(RecoveryStateResolver::class)->resolve($user);
             $completedLessonIds = $user->completedLessons->pluck('id')->all();
@@ -776,10 +780,17 @@ class StudentController extends Controller
                 'recovery' => $recovery,
                 'suppressOffers' => $recovery->suppressOffers(),
                 'landmarks' => $landmarks,
+                'continuationBanner' => $continuationBanner,
             ]);
         }
 
-        return view('student.course', compact('course', 'lessons', 'unlockedTariffs', 'grantedLessonIds'));
+        return view('student.course', compact(
+            'course',
+            'lessons',
+            'unlockedTariffs',
+            'grantedLessonIds',
+            'continuationBanner',
+        ));
     }
 
     /**

@@ -52,6 +52,9 @@ class Course extends Model
         'format',
         // Уровень для витрины: beginner | continuing | advanced | null (не задан).
         'level',
+        // H2333: continuation shell → course that holds lessons 1…N−1 (cabinet banner).
+        'predecessor_course_id',
+        'continues_from_lesson',
         // --- ПРОДАЮЩАЯ СТРАНИЦА (лендинг) ---
         'audience',
         'outcomes',
@@ -148,10 +151,26 @@ class Course extends Model
         'milestones_nudge_sent_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
+        'continues_from_lesson' => 'integer',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
         'audience' => 'array',
         'outcomes' => 'array',
     ];
+
+    /**
+     * Course shell that holds the earlier part of the same programme (H2333).
+     * Example: Hindi gr.5 (from lesson 13) → gr.3 (lessons 1–12+).
+     */
+    public function predecessor(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'predecessor_course_id');
+    }
+
+    /** Streams that continue this course’s archive (inverse of predecessor). */
+    public function successors(): HasMany
+    {
+        return $this->hasMany(self::class, 'predecessor_course_id');
+    }
 
     /** Прошлые slug'и курса (для 301 после rename). */
     public function slugAliases(): HasMany
