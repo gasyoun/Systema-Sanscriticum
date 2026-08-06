@@ -98,11 +98,12 @@ final class CourseContinuationBanner
             ->orderBy('id')
             ->value('title');
 
-        if ($title !== '' && preg_match('/(?:#\s*|№\s*)(\d{1,3})/u', $title, $m)) {
+        // Prefer “13-е занятие” over “начальная №5” (group number ≠ lesson number).
+        if ($title !== '' && preg_match('/(\d{1,3})\s*[-.]?\s*(?:е|ое|й)?\s*занят/ui', $title, $m)) {
             return max(1, (int) $m[1]);
         }
 
-        if ($title !== '' && preg_match('/(\d{1,3})\s*[-.]?\s*(?:е|ое|й)?\s*занят/ui', $title, $m)) {
+        if ($title !== '' && preg_match('/#\s*(\d{1,3})\b/u', $title, $m)) {
             return max(1, (int) $m[1]);
         }
 
